@@ -46,8 +46,9 @@ describe('InMemoryRunStateStore append invariants', () => {
         planVersion: '1.0',
         logicalAttemptId: 1,
         providerRef: {
-          provider: 'mock',
+          provider: 'temporal',
           tenantId: 't1',
+          namespace: 'default',
           workflowId: `wf-${runId}`,
           runId: `pr-${runId}`,
         },
@@ -113,8 +114,9 @@ describe('InMemoryRunStateStore append invariants', () => {
         planVersion: '1.0',
         logicalAttemptId: 1,
         providerRef: {
-          provider: 'mock',
+          provider: 'temporal',
           tenantId: 't1',
+          namespace: 'default',
           workflowId: `wf-${runId}`,
           runId: `pr-${runId}`,
         },
@@ -178,8 +180,9 @@ describe('InMemoryRunStateStore append invariants', () => {
         planVersion: '1.0',
         logicalAttemptId: 1,
         providerRef: {
-          provider: 'mock',
+          provider: 'temporal',
           tenantId: 't1',
+          namespace: 'default',
           workflowId: `wf-${runId}`,
           runId: `pr-${runId}`,
         },
@@ -241,8 +244,9 @@ describe('InMemoryRunStateStore append invariants', () => {
         planVersion: '1.0',
         logicalAttemptId: 1,
         providerRef: {
-          provider: 'mock',
+          provider: 'temporal',
           tenantId: 't1',
+          namespace: 'default',
           workflowId: `wf-${runId}`,
           runId: `pr-${runId}`,
         },

@@ -1,3 +1,7 @@
+/**
+ * @ownedConcern Runtime state-store lifecycle API for run events, archive units,
+ * retention, restore, and object-store backed archive movement.
+ */
 export type { RunBootstrapCommand, RunStateCommandPort } from './types.js';
 export type {
   ArchiveDeleteEligibilityInput,
@@ -61,13 +65,20 @@ export type {
   RestoreLogRecord,
   RunArchiveDeletionPolicy,
   RunEventRetentionPolicy,
+  TenantRunEventRetentionOverride,
 } from './lifecycle/archiveRuntime.js';
 export {
   buildArchivedSnapshotsForUnit,
   createNoopArchiveLifecycleTelemetry,
+  resolveTenantHotRetentionDays,
   toArchiveFailureMessage,
+  validateRunEventRetentionPolicy,
 } from './lifecycle/archiveRuntime.js';
-export { ObjectStorageRunArchiveExporter } from './lifecycle/ObjectStorageRunArchiveExporter.js';
+export {
+  ObjectStorageRunArchiveExporter,
+  type ArchiveRedactionPolicy,
+  type ObjectStorageRunArchiveExporterOptions,
+} from './lifecycle/ObjectStorageRunArchiveExporter.js';
 export { RunArchiveCoordinator } from './lifecycle/RunArchiveCoordinator.js';
 export { RunArchiveVerifier } from './lifecycle/RunArchiveVerifier.js';
 export { RunArchiveDeleter } from './lifecycle/RunArchiveDeleter.js';

@@ -1,5 +1,13 @@
+/**
+ * Owned concern: define the API application port family for protected
+ * workspace graph draft read/write persistence.
+ *
+ * The port owns capability, audit, telemetry, schema-version, revision, and
+ * store-facing authoring draft semantics. It does not own HTTP transport,
+ * Canvas projection, compile projection, or runtime execution.
+ */
 import type {
-  DesignGraphDraft,
+  WorkspaceGraphAuthoringDraft,
   WorkspaceGraphDraftCapabilityMode,
   WorkspaceGraphDraftCapabilityOutcome,
   WorkspaceGraphDraftScope,
@@ -12,16 +20,19 @@ import type {
   TenantId,
 } from '../../domain/auth/types.js';
 
+import {
+  AUTHORIZATION_ACTION,
+  type CommandAuthorizationAction,
+  type QueryAuthorizationAction,
+} from './accessDecision.js';
+
 export const WORKSPACE_GRAPH_DRAFT_ACTION = {
-  view: {
-    kind: 'query',
-    name: 'workspace:graph-draft:view',
-  },
-  save: {
-    kind: 'command',
-    name: 'workspace:graph-draft:save',
-  },
-} as const;
+  view: AUTHORIZATION_ACTION.workspaceGraphDraftView,
+  save: AUTHORIZATION_ACTION.workspaceGraphDraftSave,
+} as const satisfies {
+  readonly view: QueryAuthorizationAction;
+  readonly save: CommandAuthorizationAction;
+};
 
 export const WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION = 'workspace-graph-draft.v1';
 export const WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION = 'initial';
@@ -67,7 +78,7 @@ export interface IWorkspaceGraphDraftStore {
     readonly schemaVersion: string;
     readonly expectedRevision: string;
     readonly idempotencyKey: string;
-    readonly draft: DesignGraphDraft;
+    readonly draft: WorkspaceGraphAuthoringDraft;
     readonly requestHash: string;
     readonly revision: string;
     readonly nowIso: string;

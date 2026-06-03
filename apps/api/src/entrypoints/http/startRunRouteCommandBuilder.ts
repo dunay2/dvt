@@ -1,6 +1,10 @@
+/**
+ * Owned concern: assemble validated start-run commands once the shared
+ * plan-source policy and field parsers have selected the allowed branch.
+ */
+import type { StartRunCommand } from '@dvt/contracts';
+
 import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
-import type { StartRunCommand } from '../../application/ports/startRunCommandContract.js';
-import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { asCanonicalNonEmptyStringOrUndefined } from './planRouteBodyParser.js';
@@ -10,18 +14,28 @@ import { evaluatePlanRoutePlanSource } from './planRoutePlanSourcePolicy.js';
 import { parsePlanRouteRunExecutionContextRef } from './planRouteRunExecutionContextRefParser.js';
 import { parsePlanRouteSelection } from './planRouteSelectionParser.js';
 import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
+import type { StartRunRunIdGenerator } from './startRunIdentity.js';
 import { parseStartRunTargetAdapter } from './startRunRouteTargetAdapterParser.js';
+
+const PLATFORM_START_RUN_ID_PATTERN =
+  /^run_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 export function parseStartRunCommand(
   record: Record<string, unknown>,
-  adapterRegistry: IStartRunTargetAdapterRegistry = DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY
+  adapterRegistry: IStartRunTargetAdapterRegistry,
+  runIdGenerator: StartRunRunIdGenerator
 ): RouteParseResult<StartRunCommand> {
   const selection = parsePlanRouteSelection(record.selection);
   if (!selection.ok) {
     return selection;
   }
 
-  const runId = parseStartRunRunId(record.runId);
+  const clientRunId = rejectClientProvidedStartRunRunId(record);
+  if (!clientRunId.ok) {
+    return clientRunId;
+  }
+
+  const runId = parseGeneratedStartRunRunId(runIdGenerator());
   if (!runId.ok) {
     return runId;
   }
@@ -61,7 +75,7 @@ export function buildPlanRefStartRunCommand(input: {
   readonly rawRunExecutionContextRef: unknown;
   readonly runId: string;
   readonly targetAdapter: StartRunCommand['targetAdapter'];
-  readonly selection: ReadonlyArray<string>;
+  readonly selection: StartRunCommand['selection'];
 }): RouteParseResult<StartRunCommand> {
   const planRef = parsePlanRoutePlanRef(input.rawPlanRef);
   if (!planRef.ok) {
@@ -94,7 +108,7 @@ export function buildPlannerBackedStartRunCommand(input: {
   readonly rawRunExecutionContextRef: unknown;
   readonly runId: string;
   readonly targetAdapter: StartRunCommand['targetAdapter'];
-  readonly selection: ReadonlyArray<string>;
+  readonly selection: StartRunCommand['selection'];
 }): RouteParseResult<StartRunCommand> {
   const plannerInput = parsePlanRoutePlannerEnvelope(input.record);
   if (!plannerInput.ok) {
@@ -122,9 +136,19 @@ export function buildPlannerBackedStartRunCommand(input: {
   };
 }
 
-function parseStartRunRunId(rawRunId: unknown): RouteParseResult<string> {
+function rejectClientProvidedStartRunRunId(
+  record: Record<string, unknown>
+): RouteParseResult<undefined> {
+  if (Object.hasOwn(record, 'runId')) {
+    return badRequestResult(HTTP_ERROR_REASON.clientRunIdNotAllowed, { target: 'runId' });
+  }
+
+  return { ok: true, value: undefined };
+}
+
+function parseGeneratedStartRunRunId(rawRunId: unknown): RouteParseResult<string> {
   const runId = asCanonicalNonEmptyStringOrUndefined(rawRunId);
-  if (runId === undefined) {
+  if (runId === undefined || !PLATFORM_START_RUN_ID_PATTERN.test(runId)) {
     return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
   return { ok: true, value: runId };

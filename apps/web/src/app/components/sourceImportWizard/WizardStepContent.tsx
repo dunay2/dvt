@@ -53,12 +53,9 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
     case 'options':
       return (
         <OptionsStep
-          includeColumns={state.includeColumns}
-          addTests={state.addTests}
-          addFreshness={state.addFreshness}
-          onIncludeColumnsChange={controller.setIncludeColumns}
-          onAddTestsChange={controller.setAddTests}
-          onAddFreshnessChange={controller.setAddFreshness}
+          sourceImportOptions={controller.sourceImportOptions}
+          sourceImportOptionValues={controller.sourceImportOptionValues}
+          onSourceImportOptionChange={controller.setSourceImportOption}
         />
       );
     case 'review':
@@ -70,9 +67,8 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
           selectedConnectionName={
             controller.selectedConnectionObject?.name ?? copy.selectConnectionError
           }
-          includeColumns={state.includeColumns}
-          addTests={state.addTests}
-          addFreshness={state.addFreshness}
+          sourceImportOptions={controller.sourceImportOptions}
+          sourceImportOptionValues={controller.sourceImportOptionValues}
         />
       );
     case 'result':

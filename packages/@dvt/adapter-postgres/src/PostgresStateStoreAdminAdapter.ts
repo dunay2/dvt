@@ -1,5 +1,6 @@
 /**
  * @file packages/@dvt/adapter-postgres/src/PostgresStateStoreAdminAdapter.ts
+ * @ownedConcern Owns Postgres administrative schema lifecycle commands, including online-compatible rollback orchestration.
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
@@ -8,8 +9,10 @@
  * @version 1.0.0
  * @date 2026-04-19
  */
-import { POSTGRES_ADAPTER_ERROR_CONSTANTS as E } from './PostgresAdapterConstants.js';
-import type { PostgresSchemaRollbackPlan } from './PostgresSchemaManager.js';
+import {
+  PostgresSchemaRollbackCompatibilityPolicy,
+  type PostgresSchemaRollbackPlan,
+} from './PostgresSchemaManager.js';
 import { PostgresStateStoreRuntime } from './PostgresStateStoreRuntime.js';
 
 export class PostgresStateStoreAdminAdapter extends PostgresStateStoreRuntime {
@@ -22,11 +25,11 @@ export class PostgresStateStoreAdminAdapter extends PostgresStateStoreRuntime {
   }
 
   async rollbackSchemaTo(targetVersion: string | null): Promise<PostgresSchemaRollbackPlan> {
-    return this.clientSession.withMaintenanceMode(async () => {
-      if (this.clientSession.hasActiveClients()) {
-        throw new Error(E.schemaRollbackActiveClientsErrorMessage);
-      }
-      return this.schemaManager.rollbackTo(targetVersion);
-    });
+    const plan = await this.schemaManager.planRollback(targetVersion);
+    PostgresSchemaRollbackCompatibilityPolicy.assertOnlineCompatible(plan);
+    if (plan.steps.length === 0) {
+      return plan;
+    }
+    return this.schemaManager.rollbackTo(targetVersion);
   }
 }

@@ -1,0 +1,21 @@
+---
+id: R-20260513-RUNTIME-ROOT-SUBDIVISION
+title: Runtime root ownership can drift back into a broad component bucket
+status: Open
+date: 2026-05-13
+owners:
+  - '@dvt/engine'
+  - Architecture / Runtime
+severity: Low
+probability: Low
+---
+summary: >
+  Future governance edits could make SYS-RUNTIME-ROOT own runtime files again, masking package-level
+  ownership, API, invariant, consumer, and test evidence.
+mitigation: >
+  The semantic governance-unit test asserts that SYS-RUNTIME-ROOT is a module with no owned files
+  and that concrete runtime package files map to package-level runtime component owners while
+  plan-store plan-ref policy remains outside the engine core owner.
+evidence:
+  - docs/evidence/ed-20260513-runtime-root-subdivision.md
+  - scripts/check-governance-unit-coverage.test.cjs

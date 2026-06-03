@@ -20,6 +20,7 @@ import type {
   CreateIntentInput,
   IStartRunIntentStore,
   StartRunIntent,
+  StartRunIntentRef,
 } from '../ports/IStartRunIntentStore.js';
 import type { IClock } from '../utils/clock.js';
 
@@ -58,33 +59,33 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
     return intent;
   }
 
-  async markDispatched(intentId: string, engineRunRef: EngineRunRef): Promise<void> {
-    const intent = this.assertExists(intentId);
+  async markDispatched(ref: StartRunIntentRef, engineRunRef: EngineRunRef): Promise<void> {
+    const intent = this.assertExists(ref);
     if (intent.status === 'DISPATCHED') {
       if (JSON.stringify(intent.engineRunRef) === JSON.stringify(engineRunRef)) return;
-      throw new IntentDispatchConflictError(intentId);
+      throw new IntentDispatchConflictError(ref.intentId);
     }
     if (!canTransitionStartRunIntent(intent.status, 'DISPATCHED')) {
-      throw new IntentInvalidTransitionError(intentId, intent.status, 'DISPATCHED');
+      throw new IntentInvalidTransitionError(ref.intentId, intent.status, 'DISPATCHED');
     }
     intent.status = 'DISPATCHED';
     intent.engineRunRef = engineRunRef;
     intent.updatedAt = this.nowIsoUtc();
   }
 
-  async markResolved(intentId: string): Promise<void> {
-    const intent = this.assertExists(intentId);
+  async markResolved(ref: StartRunIntentRef): Promise<void> {
+    const intent = this.assertExists(ref);
     if (!canTransitionStartRunIntent(intent.status, 'RESOLVED')) {
-      throw new IntentInvalidTransitionError(intentId, intent.status, 'RESOLVED');
+      throw new IntentInvalidTransitionError(ref.intentId, intent.status, 'RESOLVED');
     }
     intent.status = 'RESOLVED';
     intent.updatedAt = this.nowIsoUtc();
   }
 
-  async markExpired(intentId: string): Promise<void> {
-    const intent = this.assertExists(intentId);
+  async markExpired(ref: StartRunIntentRef): Promise<void> {
+    const intent = this.assertExists(ref);
     if (!canTransitionStartRunIntent(intent.status, 'EXPIRED')) {
-      throw new IntentInvalidTransitionError(intentId, intent.status, 'EXPIRED');
+      throw new IntentInvalidTransitionError(ref.intentId, intent.status, 'EXPIRED');
     }
     intent.status = 'EXPIRED';
     intent.updatedAt = this.nowIsoUtc();
@@ -106,13 +107,15 @@ export class InMemoryStartRunIntentStore implements IStartRunIntentStore {
     return limit === undefined ? candidates : candidates.slice(0, limit);
   }
 
-  async getIntent(intentId: string): Promise<StartRunIntent | null> {
-    return this.intents.get(intentId) ?? null;
+  async getIntent(ref: StartRunIntentRef): Promise<StartRunIntent | null> {
+    const intent = this.intents.get(ref.intentId);
+    if (intent?.tenantId !== ref.tenantId) return null;
+    return intent;
   }
 
-  private assertExists(intentId: string): StartRunIntent {
-    const intent = this.intents.get(intentId);
-    if (intent === undefined) throw new IntentNotFoundError(intentId);
+  private assertExists(ref: StartRunIntentRef): StartRunIntent {
+    const intent = this.intents.get(ref.intentId);
+    if (intent?.tenantId !== ref.tenantId) throw new IntentNotFoundError(ref.intentId);
     return intent;
   }
 }

@@ -1,9 +1,14 @@
-import { useCallback } from 'react';
+/** Owned concern: persist Canvas viewport and node-layout observations after route readiness. */
 
-function areViewportsEqual(
-  left: { x: number; y: number; zoom: number } | null,
-  right: { x: number; y: number; zoom: number } | null
-): boolean {
+import type { Node, ReactFlowProps } from '@xyflow/react';
+import { useCallback, useEffect, useRef } from 'react';
+
+type CanvasViewport = { x: number; y: number; zoom: number };
+type CanvasNodePosition = { x: number; y: number };
+type CanvasNodePositions = Record<string, CanvasNodePosition>;
+type SaveCanvasNodePositions = (positions: CanvasNodePositions) => void;
+
+function areViewportsEqual(left: CanvasViewport | null, right: CanvasViewport | null): boolean {
   if (left == null && right == null) {
     return true;
   }
@@ -19,47 +24,221 @@ type UseCanvasLayoutPersistenceArgs = {
   hasHydrated: boolean;
   isGraphQueryPending: boolean;
   workspaceLayoutKey: string;
-  persistedViewport: { x: number; y: number; zoom: number } | null;
-  setCanvasViewport: (layoutKey: string, viewport: { x: number; y: number; zoom: number }) => void;
-  setCanvasNodePositions: (
-    layoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
+  nodes: readonly Node[];
+  persistedViewport: CanvasViewport | null;
+  persistedNodePositions: CanvasNodePositions;
+  setCanvasViewport: (layoutKey: string, viewport: CanvasViewport) => void;
+  setCanvasNodePositions: (layoutKey: string, positions: CanvasNodePositions) => void;
 };
 
-export function useCanvasLayoutPersistence({
-  hasHydrated,
-  isGraphQueryPending,
+function extractNodePositions(nodes: readonly Node[]): CanvasNodePositions {
+  return Object.fromEntries(
+    nodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
+  );
+}
+
+function mergeDraggedNodePosition(allNodes: readonly Node[], draggedNode: Node): Node[] {
+  const nodesWithDraggedPosition = allNodes.map((node) =>
+    node.id === draggedNode.id ? { ...node, position: draggedNode.position } : node
+  );
+
+  return allNodes.some((node) => node.id === draggedNode.id)
+    ? nodesWithDraggedPosition
+    : [...nodesWithDraggedPosition, draggedNode];
+}
+
+function hasSettledDragFrame(nodes: readonly Node[]): boolean {
+  return nodes.some((node) => node.dragging === false);
+}
+
+function hasActiveDragFrame(nodes: readonly Node[]): boolean {
+  return nodes.some((node) => node.dragging === true);
+}
+
+function areNodePositionsEqual(left: CanvasNodePositions, right: CanvasNodePositions): boolean {
+  const leftEntries = Object.entries(left);
+
+  return (
+    leftEntries.length === Object.keys(right).length &&
+    leftEntries.every(([nodeId, position]) => {
+      const nextPosition = right[nodeId];
+
+      return position.x === nextPosition?.x && position.y === nextPosition?.y;
+    })
+  );
+}
+
+function didNodePositionsChange(
+  previousNodePositions: CanvasNodePositions | null,
+  nextNodePositions: CanvasNodePositions
+): boolean {
+  return (
+    previousNodePositions != null &&
+    !areNodePositionsEqual(previousNodePositions, nextNodePositions)
+  );
+}
+
+function shouldSaveObservedNodePositions(args: {
+  hasObservedDrag: boolean;
+  hasSettledDrag: boolean;
+  nodePositionsChanged: boolean;
+  persistedNodePositions: CanvasNodePositions;
+  nextNodePositions: CanvasNodePositions;
+}): boolean {
+  const hasSaveCandidate = args.hasObservedDrag || args.hasSettledDrag || args.nodePositionsChanged;
+
+  return (
+    hasSaveCandidate && !areNodePositionsEqual(args.persistedNodePositions, args.nextNodePositions)
+  );
+}
+
+function usePersistSettledNodePositions({
+  nodes,
+  persistedNodePositions,
+  saveNodePositions,
+}: {
+  nodes: readonly Node[];
+  persistedNodePositions: CanvasNodePositions;
+  saveNodePositions: SaveCanvasNodePositions;
+}) {
+  const observedNodeDragRef = useRef(false);
+  const lastNodePositionsRef = useRef<CanvasNodePositions | null>(null);
+
+  useEffect(() => {
+    const nextNodePositions = extractNodePositions(nodes);
+    const previousNodePositions = lastNodePositionsRef.current;
+    lastNodePositionsRef.current = nextNodePositions;
+
+    if (hasActiveDragFrame(nodes)) {
+      observedNodeDragRef.current = true;
+      return;
+    }
+
+    if (
+      !shouldSaveObservedNodePositions({
+        hasObservedDrag: observedNodeDragRef.current,
+        hasSettledDrag: hasSettledDragFrame(nodes),
+        nodePositionsChanged: didNodePositionsChange(previousNodePositions, nextNodePositions),
+        persistedNodePositions,
+        nextNodePositions,
+      })
+    ) {
+      return;
+    }
+
+    saveNodePositions(nextNodePositions);
+    observedNodeDragRef.current = false;
+  }, [nodes, persistedNodePositions, saveNodePositions]);
+}
+
+function useCanvasNodePositionSave({
+  canPersistNodePositions,
   workspaceLayoutKey,
-  persistedViewport,
-  setCanvasViewport,
   setCanvasNodePositions,
-}: UseCanvasLayoutPersistenceArgs) {
-  const handleNodePositionsSave = useCallback(
-    (positions: Record<string, { x: number; y: number }>) => {
-      if (!hasHydrated || isGraphQueryPending) {
+}: {
+  canPersistNodePositions: boolean;
+  workspaceLayoutKey: string;
+  setCanvasNodePositions: (layoutKey: string, positions: CanvasNodePositions) => void;
+}): SaveCanvasNodePositions {
+  return useCallback<SaveCanvasNodePositions>(
+    (positions) => {
+      if (!canPersistNodePositions) {
         return;
       }
 
       setCanvasNodePositions(workspaceLayoutKey, positions);
     },
-    [hasHydrated, isGraphQueryPending, setCanvasNodePositions, workspaceLayoutKey]
+    [canPersistNodePositions, setCanvasNodePositions, workspaceLayoutKey]
+  );
+}
+
+function useCanvasNodePositionPersistence({
+  canPersistNodePositions,
+  workspaceLayoutKey,
+  nodes,
+  persistedNodePositions,
+  setCanvasNodePositions,
+}: {
+  canPersistNodePositions: boolean;
+  workspaceLayoutKey: string;
+  nodes: readonly Node[];
+  persistedNodePositions: CanvasNodePositions;
+  setCanvasNodePositions: (layoutKey: string, positions: CanvasNodePositions) => void;
+}) {
+  const pendingNodePositionsRef = useRef<CanvasNodePositions | null>(null);
+  const handleNodePositionsSave = useCanvasNodePositionSave({
+    canPersistNodePositions,
+    workspaceLayoutKey,
+    setCanvasNodePositions,
+  });
+  const saveOrQueueNodePositions = useCallback<SaveCanvasNodePositions>(
+    (positions) => {
+      if (!canPersistNodePositions) {
+        pendingNodePositionsRef.current = positions;
+        return;
+      }
+
+      pendingNodePositionsRef.current = null;
+      handleNodePositionsSave(positions);
+    },
+    [canPersistNodePositions, handleNodePositionsSave]
   );
 
-  const handleNodeDragStop = useCallback<
-    NonNullable<import('@xyflow/react').ReactFlowProps['onNodeDragStop']>
-  >(
-    (_event, _node, allNodes) => {
-      handleNodePositionsSave(
-        Object.fromEntries(allNodes.map((n) => [n.id, { x: n.position.x, y: n.position.y }]))
+  useEffect(() => {
+    if (!canPersistNodePositions || pendingNodePositionsRef.current == null) {
+      return;
+    }
+
+    const pendingNodePositions = pendingNodePositionsRef.current;
+    pendingNodePositionsRef.current = null;
+    handleNodePositionsSave(pendingNodePositions);
+  }, [canPersistNodePositions, handleNodePositionsSave]);
+
+  usePersistSettledNodePositions({
+    nodes,
+    persistedNodePositions,
+    saveNodePositions: saveOrQueueNodePositions,
+  });
+
+  const handleNodeDrag = useCallback<NonNullable<ReactFlowProps['onNodeDrag']>>(
+    (_event, draggedNode, allNodes) => {
+      saveOrQueueNodePositions(
+        extractNodePositions(mergeDraggedNodePosition(allNodes, draggedNode))
       );
     },
-    [handleNodePositionsSave]
+    [saveOrQueueNodePositions]
   );
 
-  const handleViewportChange = useCallback(
-    (viewport: { x: number; y: number; zoom: number }) => {
-      if (!hasHydrated || isGraphQueryPending) {
+  const handleNodeDragStop = useCallback<NonNullable<ReactFlowProps['onNodeDragStop']>>(
+    (_event, draggedNode, allNodes) => {
+      saveOrQueueNodePositions(
+        extractNodePositions(mergeDraggedNodePosition(allNodes, draggedNode))
+      );
+    },
+    [saveOrQueueNodePositions]
+  );
+
+  return {
+    handleNodePositionsSave: saveOrQueueNodePositions,
+    handleNodeDrag,
+    handleNodeDragStop,
+  };
+}
+
+function useCanvasViewportPersistenceHandler({
+  canPersistLayout,
+  workspaceLayoutKey,
+  persistedViewport,
+  setCanvasViewport,
+}: {
+  canPersistLayout: boolean;
+  workspaceLayoutKey: string;
+  persistedViewport: CanvasViewport | null;
+  setCanvasViewport: (layoutKey: string, viewport: CanvasViewport) => void;
+}) {
+  return useCallback(
+    (viewport: CanvasViewport) => {
+      if (!canPersistLayout) {
         return;
       }
 
@@ -69,11 +248,40 @@ export function useCanvasLayoutPersistence({
 
       setCanvasViewport(workspaceLayoutKey, viewport);
     },
-    [hasHydrated, isGraphQueryPending, persistedViewport, setCanvasViewport, workspaceLayoutKey]
+    [canPersistLayout, persistedViewport, setCanvasViewport, workspaceLayoutKey]
   );
+}
+
+export function useCanvasLayoutPersistence({
+  hasHydrated,
+  isGraphQueryPending,
+  workspaceLayoutKey,
+  nodes,
+  persistedViewport,
+  persistedNodePositions,
+  setCanvasViewport,
+  setCanvasNodePositions,
+}: UseCanvasLayoutPersistenceArgs) {
+  const canPersistNodePositions = hasHydrated;
+  const canPersistViewport = hasHydrated && !isGraphQueryPending;
+  const { handleNodePositionsSave, handleNodeDrag, handleNodeDragStop } =
+    useCanvasNodePositionPersistence({
+      canPersistNodePositions,
+      workspaceLayoutKey,
+      nodes,
+      persistedNodePositions,
+      setCanvasNodePositions,
+    });
+  const handleViewportChange = useCanvasViewportPersistenceHandler({
+    canPersistLayout: canPersistViewport,
+    workspaceLayoutKey,
+    persistedViewport,
+    setCanvasViewport,
+  });
 
   return {
     handleNodePositionsSave,
+    handleNodeDrag,
     handleNodeDragStop,
     handleViewportChange,
   };

@@ -1,13 +1,14 @@
-import type { ExecutionPlan as CanonicalExecutionPlan } from '@dvt/contracts';
+/**
+ * @ownedConcern Define engine run-state persistence ports and plugin-neutral lifecycle event payloads.
+ */
+
 import type {
   EngineRunRef,
   IsoUtcString,
-  StepId,
-  PlanRef,
   Provider,
   RunExecutionEvidence,
-  RunExecutionPolicy,
   RunStatus,
+  StepId,
 } from '@dvt/contracts';
 
 export type EventType =
@@ -56,8 +57,7 @@ export type EventEnvelope = EventInput & {
  */
 export interface StepArtifactRef {
   /**
-   * Canonical artifact discriminator, e.g. `dbt.compiled-sql`, `python.script`,
-   * `spark.job-spec`.
+   * Canonical artifact discriminator, e.g. `compiled-sql`, `python.script`, `spark.job-spec`.
    */
   artifactKind: string;
   /** SHA-256 hex digest of the compiled SQL bytes (content-addressable key). */
@@ -71,7 +71,7 @@ export interface StepArtifactRef {
 }
 
 /**
- * DBT-specialized alias retained for compatibility with existing callers.
+ * Compiled-code reference view for callers that do not need the artifact discriminator.
  */
 export interface CompiledCodeRef extends Omit<StepArtifactRef, 'artifactKind'> {}
 
@@ -237,6 +237,13 @@ export interface IRunStateStoreMaintenance {
    * consume events ordered by runSeq ASC.
    * ADR-0031: tenant isolation enforced - throws when the run does not belong
    * to the given tenantId.
+   *
+   * Snapshot rebuild is a per `(tenantId, runId)` maintenance command. Only
+   * one rebuild may mutate the durable snapshot at a time for the same run.
+   * Implementations MUST serialize competing rebuild commands or fail them
+   * with a typed transient concurrency error. The contract requires equivalent
+   * mutual exclusion semantics, not PostgreSQL-specific lock technology.
+   *
    * Implementations MUST throw a typed not-found error with stable `code`
    * `RUN_NOT_FOUND`; callers MUST NOT infer semantics by parsing `message`
    * text.
@@ -253,8 +260,6 @@ export interface RunStateCommandPort {
   bootstrapRun(input: RunBootstrapInput): Promise<AppendResult>;
   appendTransitions(runId: string, events: EventInput[]): Promise<AppendResult>;
 }
-
-export type ExecutionPlan = CanonicalExecutionPlan;
 
 export interface IClock {
   nowIsoUtc(): IsoUtcString;
@@ -283,20 +288,4 @@ export interface IIdempotencyKeyBuilder {
     targetAdapter?: Provider
   ): string;
   eventId(): string;
-}
-
-export interface IPlanFetcher {
-  fetch(planRef: PlanRef): Promise<StoredPlanArtifact>;
-}
-
-export interface IPlanIntegrityValidator {
-  fetchAndValidate(
-    planRef: PlanRef,
-    fetcher: IPlanFetcher
-  ): Promise<{ plan: ExecutionPlan; executionPolicy: RunExecutionPolicy }>;
-}
-
-export interface StoredPlanArtifact {
-  bytes: Uint8Array;
-  executionPolicy: RunExecutionPolicy;
 }

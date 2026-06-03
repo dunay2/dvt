@@ -3,6 +3,7 @@ import type { Edge, Node } from '@xyflow/react';
 
 import { buildNodesWithImpact } from './canvasImpactOverlay';
 import { validateTransformationGraph } from './transformationGraphValidation';
+import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
 
@@ -31,8 +32,13 @@ type UseCanvasControllerReadModelArgs = {
   };
   graphHandlers: Pick<
     UseCanvasGraphHandlersResult,
-    'handleInspectNode' | 'handleRemoveNode' | 'handleToggleNodeSelection'
+    | 'handleInspectNode'
+    | 'handleDuplicateNode'
+    | 'handleRemoveNode'
+    | 'handleToggleNodeSelection'
+    | 'handleAttachSchemaToNode'
   >;
+  runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph: boolean;
   columnLevelLineageEnabled: boolean;
   impactOverlayEnabled: boolean;
@@ -45,6 +51,7 @@ export function useCanvasControllerReadModel({
   uiScope,
   overlayModel,
   graphHandlers,
+  runtimeCapabilities,
   canMutateGraph,
   columnLevelLineageEnabled,
   impactOverlayEnabled,
@@ -75,8 +82,10 @@ export function useCanvasControllerReadModel({
         columnLevelLineageEnabled,
         handlers: {
           onInspectNode: graphHandlers.handleInspectNode,
+          onDuplicateNode: canMutateGraph ? graphHandlers.handleDuplicateNode : undefined,
           onRemoveNode: canMutateGraph ? graphHandlers.handleRemoveNode : undefined,
           onToggleNodeSelection: graphHandlers.handleToggleNodeSelection,
+          onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
         },
       }).map((node) => ({
         ...node,
@@ -85,20 +94,24 @@ export function useCanvasControllerReadModel({
           activeRunId: overlayModel.activeRunId,
           runStatusByNodeId: overlayModel.runStatusByNodeId,
           overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
+          runtimeCapabilities,
         },
       })),
     [
       canMutateGraph,
       columnLevelLineageEnabled,
       graphHandlers.handleInspectNode,
+      graphHandlers.handleDuplicateNode,
       graphHandlers.handleRemoveNode,
       graphHandlers.handleToggleNodeSelection,
+      graphHandlers.handleAttachSchemaToNode,
       graphModel.edges,
       graphModel.nodes,
       impactOverlayEnabled,
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,
       overlayModel.runStatusByNodeId,
+      runtimeCapabilities,
       uiScope.selectedNodeIds,
     ]
   );

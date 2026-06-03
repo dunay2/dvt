@@ -104,7 +104,7 @@ DoD:
 
 ### AR-C2-T2 Dashboard wiring evidence
 
-- wire dashboard coverage for all mapped AR-C2 signals
+- [Task: RUNTIME-PROP-DISP-1] wire dashboard coverage for all mapped AR-C2 signals
 - capture evidence that panels render and align with expected dimensions
 
 DoD:
@@ -115,7 +115,7 @@ DoD:
 
 ### AR-C2-T3 Alert wiring evidence
 
-- wire alert rules to AR-C2 thresholds and severity posture
+- [Task: RUNTIME-PROP-DISP-1] wire alert rules to AR-C2 thresholds and severity posture
 - validate alert expressions against emitted metric names
 
 DoD:
@@ -162,7 +162,7 @@ as the baseline action artifact shape for this slice.
 
 ### Low
 
-- Title: AR-C2 decomposition was not explicit in lane task children.
+- [Task: RUNTIME-PROP-DISP-1] Title: AR-C2 decomposition was not explicit in lane task children.
   Why it matters: execution ownership and progress checkpoints remain coarse.
   Evidence: lane entry had one parent task without child decomposition.
   Risk: weak milestone tracking.
@@ -177,7 +177,7 @@ as the baseline action artifact shape for this slice.
   unchanged.
 - Current truth vs planned truth: current truth is `in_progress`; target truth
   is evidence-backed `done`.
-- Documentation update status: this proposal defines closure path and QA action
+- [Task: RUNTIME-PROP-DISP-1] Documentation update status: this proposal defines closure path and QA action
   artifact.
 - Evidence and risk-doc status: evidence updates are expected in AR-C2-T4;
   additional risk-doc update depends on findings during validation.
@@ -240,7 +240,7 @@ Canonical progress tracker:
 
 - Objective: establish one canonical AR-C2 mapping baseline.
 - Scope: AR-C2 signals only.
-- In current task scope: yes.
+- [Task: RUNTIME-PROP-DISP-1] In current task scope: yes.
 - Dependencies: none.
 - Documentation impact: update governed planning/runbook references as needed.
 - Evidence / risk-doc impact: supports later evidence traceability.
@@ -253,9 +253,9 @@ Canonical progress tracker:
 
 - Objective: prove dashboard coverage for each mapped signal.
 - Scope: dashboard panels tied to AR-C2 metrics.
-- In current task scope: yes.
+- [Task: RUNTIME-PROP-DISP-1] In current task scope: yes.
 - Dependencies: `AR-C2-T1`.
-- Documentation impact: add dashboard evidence references in AR-C2 outputs.
+- [Task: RUNTIME-PROP-DISP-1] Documentation impact: add dashboard evidence references in AR-C2 outputs.
 - Evidence / risk-doc impact: contributes to closure evidence package.
 - Comment with rationale: panels are required for operational visibility.
 - Definition of Done: every mapped signal has panel evidence and owner.
@@ -264,9 +264,9 @@ Canonical progress tracker:
 
 - Objective: prove alert routing and thresholds are operational.
 - Scope: alert rules for AR-C2 metric families.
-- In current task scope: yes.
+- [Task: RUNTIME-PROP-DISP-1] In current task scope: yes.
 - Dependencies: `AR-C2-T1`.
-- Documentation impact: add alert mapping and routing evidence references.
+- [Task: RUNTIME-PROP-DISP-1] Documentation impact: add alert mapping and routing evidence references.
 - Evidence / risk-doc impact: contributes to closure evidence package.
 - Comment with rationale: alertability is the enforceability layer of the SLA.
 - Definition of Done: every mapped threshold has an active alert rule.
@@ -275,7 +275,7 @@ Canonical progress tracker:
 
 - Objective: prove AR-C2 thresholds hold under sustained observation windows.
 - Scope: governed evidence + lane posture update.
-- In current task scope: yes.
+- [Task: RUNTIME-PROP-DISP-1] In current task scope: yes.
 - Dependencies: `AR-C2-T2`, `AR-C2-T3`.
 - Documentation impact: closeout/evidence and lane updates.
 - Evidence / risk-doc impact: direct; may require risk update if failures found.

@@ -7,8 +7,7 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { parseGetRunRequest } from './getRunRouteParser.js';
-import { sendHttpResponse } from './httpErrorContract.js';
-import { mapRouteParseIssue, mapRuntimeDomainError } from './httpErrorMapper.js';
+import { httpErrorTranslation } from './httpErrorTranslation.js';
 
 export async function getRunRoute(
   request: FastifyRequest<{
@@ -28,7 +27,7 @@ export async function getRunRoute(
     enriched: request.query.enriched,
   });
   if (!parsed.ok) {
-    sendHttpResponse(reply, mapRouteParseIssue(parsed.issue));
+    httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
     return;
   }
 
@@ -40,7 +39,7 @@ export async function getRunRoute(
     requestedScope: parsed.value.requestedScope,
   });
   if (!auth.ok) {
-    sendHttpResponse(reply, auth.response);
+    httpErrorTranslation.respond(reply, auth.response);
     return;
   }
 
@@ -48,9 +47,9 @@ export async function getRunRoute(
     const result = await deps.useCase.execute(parsed.value.useCaseInput, auth.context);
     reply.code(200).send(result);
   } catch (error) {
-    const mapped = mapRuntimeDomainError(error);
+    const mapped = httpErrorTranslation.runtime.domainError(error);
     if (mapped) {
-      sendHttpResponse(reply, mapped);
+      httpErrorTranslation.respond(reply, mapped);
       return;
     }
 

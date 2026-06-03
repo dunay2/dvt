@@ -2,7 +2,7 @@
 title: Outbox Worker Runbook
 status: Active
 owner: sre
-last_reviewed: 2026-04-14
+last_reviewed: 2026-05-09
 ---
 
 # Outbox Worker Runbook
@@ -56,8 +56,12 @@ Shard topology rule:
 
 - keep one deployment-stable `DVT_OUTBOX_SHARD_COUNT` across write-side and worker-side environments
 - when `DVT_OUTBOX_SHARD_COUNT>1`, every active worker must set explicit `DVT_OUTBOX_OWNED_SHARD_IDS`
+- tenant-aware shard assignment is applied when new outbox rows are enqueued:
+  one tenant maps to one persisted shard for a given `DVT_OUTBOX_SHARD_COUNT`
 - shard ownership is enforced at the claim query, not by scanning the full pending outbox and filtering in memory
 - active startup acquires advisory locks for the configured shard list on one dedicated PostgreSQL session; if any required lock is unavailable, the host stays passive
+- existing rows keep their stored `shard_id` during rollout; do not change
+  `DVT_OUTBOX_SHARD_COUNT` in the same release as a sharding-policy cutover
 
 ## Runtime states
 
@@ -131,6 +135,8 @@ Automation helper:
 - `scripts/outbox-worker-canary-evidence.ps1` captures `/readyz`, baseline/final `/metrics`, executes one trigger, and writes `docs/evidence/<class>/ED-<date>-g5-canary-<env>.md`
 - prefer `-TriggerCommand` when the environment already has a real trigger path for the event you want to observe
 - use `-PsqlDsn` only as an operational fallback when no environment-native trigger path is available; that mode inserts one `RunQueued` outbox row directly with the same shard formula used by the PostgreSQL adapter
+- after tenant-aware shard assignment is deployed, direct SQL fallback triggers
+  must compute `shard_id` from tenant identity, not from run identity
 - the script records deployment and probe state automatically when `kubectl` can reach the target cluster; if `kubectl` is missing or the current context is not reachable, the script degrades to probe/metrics evidence only
 - a human still needs to supply the proof that no second active outbox publisher path was running if that fact is known outside Kubernetes deployment state
 
@@ -152,6 +158,9 @@ Example:
 - Switch the standalone worker back to `DVT_OUTBOX_OWNERSHIP_MODE=passive` or stop it entirely before re-enabling any other publisher path for the same environment.
 - Re-enable another publisher path only after the standalone process is confirmed non-owning.
 - Do not run two active owners for the same production responsibility.
+- When rolling back the sharding-policy cutover, keep workers configured for all
+  shards until mixed old/new rows have drained or a deliberate shard migration
+  has completed.
 - After rollback, verify outbox lag stabilizes and no duplicate owner remains.
 
 ## First checks during incident triage

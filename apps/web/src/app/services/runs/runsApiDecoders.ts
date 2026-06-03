@@ -1,12 +1,19 @@
+/**
+ * Owned concern: validate and decode runtime API response fields into typed
+ * presentation DTOs, rejecting malformed or unexpected payload shapes early.
+ */
 import type { RunStatus as ContractRunStatus } from '@dvt/contracts';
 
 import type {
   MaterializationEvidence,
+  RunDiagnosticPointer,
+  RunDiagnostics,
   RunAuthoringProvenance,
   RunExecutionEvidence,
   RunExecutor,
   RunFailureEvidence,
   RunGitArtifactRef,
+  RunPlanExecutionSummary,
   RunProvenanceChain,
   UiRunStatus,
 } from '../../ports/runs';
@@ -46,9 +53,7 @@ export function parseContractRunStatus(value: unknown): ContractRunStatus | unde
   }
 }
 
-export function parseSnapshotStaleness(
-  value: unknown
-): 'FRESH' | 'STALE' | 'UNKNOWN' | undefined {
+export function parseSnapshotStaleness(value: unknown): 'FRESH' | 'STALE' | 'UNKNOWN' | undefined {
   switch (value) {
     case 'FRESH':
     case 'STALE':
@@ -78,9 +83,7 @@ export function mapContractStatusToUi(status: ContractRunStatus | undefined): Ui
   }
 }
 
-export function parseMaterializationEvidence(
-  value: unknown
-): MaterializationEvidence | undefined {
+export function parseMaterializationEvidence(value: unknown): MaterializationEvidence | undefined {
   if (!value || typeof value !== 'object') {
     return undefined;
   }
@@ -114,6 +117,49 @@ export function parseMaterializationEvidence(
     startedAt,
     completedAt,
     durationMs,
+  };
+}
+
+function parseNonEmptyStringArray(value: unknown): readonly string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const strings = value.filter(
+    (candidate): candidate is string => typeof candidate === 'string' && candidate.trim().length > 0
+  );
+
+  return strings.length === value.length && strings.length > 0 ? strings : undefined;
+}
+
+export function parsePlanExecutionSummary(value: unknown): RunPlanExecutionSummary | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const executor = parseRunExecutor(candidate.executor);
+  const nodeCount = asFiniteInteger(candidate.nodeCount);
+  const stepCount = asFiniteInteger(candidate.stepCount);
+  const sourceTables = parseNonEmptyStringArray(candidate.sourceTables);
+  const sinkTables = parseNonEmptyStringArray(candidate.sinkTables);
+
+  if (
+    executor === undefined ||
+    nodeCount === undefined ||
+    stepCount === undefined ||
+    sourceTables === undefined ||
+    sinkTables === undefined
+  ) {
+    return undefined;
+  }
+
+  return {
+    executor,
+    nodeCount,
+    stepCount,
+    sourceTables,
+    sinkTables,
   };
 }
 
@@ -242,5 +288,74 @@ export function parseRunProvenance(value: unknown): RunProvenanceChain | undefin
       canonicalPlanSha256,
     },
     ...(authoring ? { authoring } : {}),
+  };
+}
+
+function parseRunDiagnosticPointer(value: unknown): RunDiagnosticPointer | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const kind = candidate.kind === 'trace' || candidate.kind === 'log' ? candidate.kind : undefined;
+  const label = asString(candidate.label);
+  const pointerValue = asString(candidate.value);
+
+  if (kind === undefined || label === undefined || pointerValue === undefined) {
+    return undefined;
+  }
+
+  return {
+    kind,
+    label,
+    value: pointerValue,
+  };
+}
+
+function parseRunDiagnosticPointers(value: unknown): readonly RunDiagnosticPointer[] | undefined {
+  if (!Array.isArray(value) || value.length === 0) {
+    return undefined;
+  }
+
+  const pointers = value.map(parseRunDiagnosticPointer);
+  if (pointers.some((pointer) => pointer === undefined)) {
+    return undefined;
+  }
+
+  return pointers as readonly RunDiagnosticPointer[];
+}
+
+export function parseRunDiagnostics(value: unknown): RunDiagnostics | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const runId = asString(candidate.runId);
+  const contractStatus = parseContractRunStatus(candidate.status);
+  const pointers = parseRunDiagnosticPointers(candidate.pointers);
+  if (runId === undefined || contractStatus === undefined || pointers === undefined) {
+    return undefined;
+  }
+
+  const planId = asString(candidate.planId);
+  const planSha = asString(candidate.planSha);
+  const stepId = asString(candidate.stepId);
+  const attemptId = asString(candidate.attemptId);
+  const adapter = asString(candidate.adapter);
+  const durationMs = asFiniteNumber(candidate.durationMs);
+  const errorCode = asString(candidate.errorCode);
+
+  return {
+    runId,
+    ...(planId ? { planId } : {}),
+    ...(planSha ? { planSha } : {}),
+    ...(stepId ? { stepId } : {}),
+    ...(attemptId ? { attemptId } : {}),
+    ...(adapter ? { adapter } : {}),
+    ...(durationMs === undefined ? {} : { durationMs }),
+    status: mapContractStatusToUi(contractStatus),
+    ...(errorCode ? { errorCode } : {}),
+    pointers,
   };
 }

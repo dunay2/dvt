@@ -12,35 +12,41 @@
  * @date 2026-02-21
  */
 
-import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import {
+  asNonBlankString,
+  type EngineRunRef,
+  type ExecutionPlan,
+  type PlanRef,
+  type ResolvedRunContext,
+} from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_STEP_EXECUTORS, type StepExecutor } from '../src/activities/stepActivities.js';
-import {
-  loadTemporalAdapterConfig,
-  TemporalAdapter,
-  TemporalWorkerHost,
-  toTemporalTaskQueue,
-} from '../src/index.js';
+import { loadTemporalAdapterConfig, TemporalAdapter } from '../src/index.js';
 
+import { createExecutionPlan } from './helpers/contractFixtures.js';
 import {
+  assertWorkflowArtifactPresentInCi,
   createDbtActivityDeps,
-  createMultiRunDbtActivityDeps,
+  createPlanRef,
+  createRunContext,
+  createSingleRunDbtTimeSkippingHarness,
+  createTenantWorkerHost,
+  INTEGRATION_PLAN_OWNERSHIP,
   INTEGRATION_TEST_TIMEOUT,
-  type RunStatusValue,
-  type WaitForConditionFn,
+  mkLinearPlan,
+  mkLinearThreeStepPlan,
+  mkPlan,
   RunId,
   TestOutbox,
   TestProjector,
   TestStateStore,
-  WORKFLOW_PATH,
-  assertWorkflowArtifactPresentInCi,
-  createPlanRef,
-  createRunContext,
-  mkLinearThreeStepPlan,
   waitForCondition,
   withDbtRunExecutionContext,
+  WORKFLOW_PATH,
+  type RunStatusValue,
+  type WaitForConditionFn,
 } from './integration.time-skipping.shared.js';
 
 assertWorkflowArtifactPresentInCi();
@@ -66,7 +72,6 @@ async function waitForTerminalStatus(
 interface CancelScenarioRequest {
   mode: 'signal' | 'cancel';
   adapter: TemporalAdapter;
-  plan: Parameters<TemporalAdapter['startRun']>[0];
   planRef: PlanRef;
   runContext: ResolvedRunContext;
   store: TestStateStore;
@@ -78,7 +83,7 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   cancelledCount: number;
   eventTypes: string[];
 }> {
-  const runRef = await args.adapter.startRun(args.plan, args.planRef, args.runContext);
+  const runRef = await args.adapter.startRun(args.planRef, args.runContext);
   const runId = RunId.of(args.runContext.runId);
   await args.waitForCondition(
     () => args.store.listRunEvents(runId),
@@ -87,7 +92,10 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   );
 
   if (args.mode === 'signal') {
-    await args.adapter.signal(runRef, { signalId: `s-${args.runContext.runId}`, type: 'CANCEL' });
+    await args.adapter.signal(runRef, {
+      signalId: asNonBlankString(`s-${args.runContext.runId}`),
+      type: 'CANCEL',
+    });
   } else {
     await args.adapter.cancelRun(runRef);
   }
@@ -105,6 +113,8 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   return { status, cancelledCount, eventTypes };
 }
 
+type CancelScenarioResult = Awaited<ReturnType<typeof runCancelScenario>>;
+
 function assertOrderedCancellationLifecycle(eventTypes: string[]): void {
   expect(eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
   expect(eventTypes.indexOf('RunCancelled')).toBeGreaterThan(
@@ -112,6 +122,16 @@ function assertOrderedCancellationLifecycle(eventTypes: string[]): void {
   );
   expect(eventTypes).not.toContain('RunCompleted');
 }
+
+function expectCancelScenarioOutcome(
+  result: CancelScenarioResult,
+  expectedStatus: RunStatusValue
+): void {
+  expect(result.status).toBe(expectedStatus);
+  expect(result.cancelledCount).toBeLessThanOrEqual(1);
+  assertOrderedCancellationLifecycle(result.eventTypes);
+}
+
 function createBlockingExecutor(targetStepId: string): {
   executor: StepExecutor;
   waitUntilExecuting: Promise<void>;
@@ -146,49 +166,15 @@ function createBlockingExecutor(targetStepId: string): {
   };
 }
 
-function mkPlan(stepCount: number): unknown {
-  return {
-    metadata: {
-      planId: 'it-plan',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      contractVersion: '1.0.0',
-    },
-    steps: Array.from({ length: stepCount }, (_, i) => ({
-      stepId: `s-${i + 1}`,
-      kind: 'DBT_MODEL',
-    })),
-  } as const;
-}
-
-function mkLinearPlan(stepCount: number): unknown {
-  return {
-    metadata: {
-      planId: 'it-plan',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      contractVersion: '1.0.0',
-    },
-    steps: Array.from({ length: stepCount }, (_, i) => ({
-      stepId: `s-${i + 1}`,
-      kind: 'DBT_MODEL',
-      ...(i === 0 ? {} : { dependsOn: [`s-${i}`] }),
-    })),
-  } as const;
-}
-
-function mkGatewaySkipPlan(): unknown {
-  return {
-    metadata: {
-      planId: 'it-plan-gateway-skip',
-      planVersion: '1.0.0',
-      schemaVersion: 'v1.2',
-      contractVersion: '1.0.0',
-    },
+function mkGatewaySkipPlan(): ExecutionPlan {
+  return createExecutionPlan({
+    inputHashSha256: 'b'.repeat(64),
+    ownership: INTEGRATION_PLAN_OWNERSHIP,
     steps: [
-      { stepId: 's-1', kind: 'DBT_MODEL' },
+      { stepId: 's-1', kind: 'DBT_MODEL', dependsOn: [] },
       {
         stepId: 'gw-1',
+        kind: 'GATEWAY',
         type: 'gateway',
         gateway: {
           dslVersion: '1.0',
@@ -198,7 +184,79 @@ function mkGatewaySkipPlan(): unknown {
       },
       { stepId: 's-2', kind: 'DBT_MODEL', dependsOn: ['gw-1'] },
     ],
-  } as const;
+  });
+}
+
+async function createCancellationHarness(args: {
+  cancelCtx: ResolvedRunContext;
+  planBytes: Buffer;
+  planRef: PlanRef;
+  signalCtx: ResolvedRunContext;
+  taskQueue: string;
+}): Promise<{
+  adapter: TemporalAdapter;
+  env: TestWorkflowEnvironment;
+  observedProjectBundles: string[];
+  store: TestStateStore;
+  worker: ReturnType<typeof createTenantWorkerHost>;
+}> {
+  const env = await TestWorkflowEnvironment.createTimeSkipping();
+  const store = new TestStateStore();
+  const outbox = new TestOutbox();
+  const observedProjectBundles: string[] = [];
+
+  const temporalConfig = loadTemporalAdapterConfig({
+    TEMPORAL_NAMESPACE: 'default',
+    TEMPORAL_TASK_QUEUE: args.taskQueue,
+    TEMPORAL_IDENTITY: 'adapter-temporal-it',
+  });
+
+  const activityDeps = createDbtActivityDeps({
+    store,
+    outbox,
+    bindings: [
+      { ctx: args.signalCtx, planRef: args.planRef, planBytes: args.planBytes },
+      { ctx: args.cancelCtx, planRef: args.planRef, planBytes: args.planBytes },
+    ],
+    dbtPluginRunner: {
+      async execute(input) {
+        observedProjectBundles.push(input.pluginContext.projectBundleRef.uri);
+        return { stepId: input.step.stepId, status: 'COMPLETED' };
+      },
+    },
+  });
+
+  const worker = createTenantWorkerHost({
+    temporalConfig,
+    tenantId: args.signalCtx.tenantId,
+    workflowsPath: WORKFLOW_PATH,
+    activityDeps,
+    stepActivitiesByKind: activityDeps.stepActivitiesByKind,
+  });
+
+  await worker.start(env.nativeConnection);
+
+  return {
+    adapter: new TemporalAdapter({
+      workflowClient: env.client.workflow,
+      config: temporalConfig,
+    }),
+    env,
+    observedProjectBundles,
+    store,
+    worker,
+  };
+}
+
+function expectDistinctObservedProjectBundles(observedProjectBundles: readonly string[]): void {
+  const uniqueObservedProjectBundles = [...new Set(observedProjectBundles)];
+  expect(uniqueObservedProjectBundles).toHaveLength(2);
+  expect(uniqueObservedProjectBundles).toEqual(
+    expect.arrayContaining([
+      expect.stringMatching(/^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/),
+      expect.stringMatching(/^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/),
+    ])
+  );
 }
 
 describe('temporal integration (time-skipping)', () => {
@@ -211,41 +269,18 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'executes startRun -> status -> cancel against TestWorkflowEnvironment',
     async () => {
-      // Setup (ADR-0001 Section 4: usar environment-provided client)
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
       const plan = mkLinearPlan(250);
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-
-      const planRef = createPlanRef('it-plan', planBytes);
-      const ctx = withDbtRunExecutionContext(createRunContext(RunId.of('run-it-1')), planRef);
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan',
+        runId: 'run-it-1',
+        taskQueue: 'dvt-it-time-skipping',
       });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
-      });
-
-      await worker.start(env.nativeConnection); // ? usa env.nativeConnection
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow, // ? usa env.client
-        config: temporalConfig,
-      });
+      const { adapter, ctx, env, planRef, store } = harness;
+      const worker = await harness.startWorker();
 
       try {
-        const runRef = await adapter.startRun(plan, planRef, ctx);
+        const runRef = await adapter.startRun(planRef, ctx);
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
           (events) => events.some((event) => event.eventType === 'StepStarted'),
@@ -274,45 +309,19 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'executes a planner-backed stored plan ref through the Temporal runtime',
     async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
       const plan = mkLinearThreeStepPlan();
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-
-      const planRef = createPlanRef('it-plan-linear-3', planBytes, {
-        uri: 'dvt-plan://stored/it-plan-linear-3',
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan-linear-3',
+        planRefOptions: { uri: 'dvt-plan://stored/it-plan-linear-3' },
+        runId: 'run-it-stored-plan-temporal',
+        taskQueue: 'dvt-it-time-skipping-stored-plan',
       });
-      const ctx = withDbtRunExecutionContext(
-        createRunContext(RunId.of('run-it-stored-plan-temporal')),
-        planRef
-      );
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-stored-plan',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
-      });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
-      });
-
-      await worker.start(env.nativeConnection);
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
-      });
+      const { adapter, ctx, env, planRef, store } = harness;
+      const worker = await harness.startWorker();
 
       try {
-        await adapter.startRun(plan, planRef, ctx);
+        await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -332,6 +341,53 @@ describe('temporal integration (time-skipping)', () => {
     INTEGRATION_TEST_TIMEOUT
   );
 
+  it(
+    'continues as new when the configured layer budget is exhausted',
+    async () => {
+      const plan = mkLinearPlan(4);
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan-continue-as-new',
+        runId: 'run-it-continue-as-new',
+        taskQueue: 'dvt-it-time-skipping-continue-as-new',
+        temporalEnv: {
+          TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: '2',
+        },
+      });
+      const { adapter, ctx, env, planRef, store } = harness;
+      const worker = await harness.startWorker();
+
+      try {
+        const runRef = await adapter.startRun(planRef, ctx);
+        const result = await env.client.workflow.getHandle(runRef.workflowId).result();
+
+        expect(result).toMatchObject({
+          runId: ctx.runId,
+          status: 'COMPLETED',
+          continuedAsNewCount: 1,
+        });
+
+        const events = await store.listRunEvents(RunId.of(ctx.runId));
+        expect(events.map((event) => event.eventType)).toEqual([
+          'RunStarted',
+          'StepStarted',
+          'StepCompleted',
+          'StepStarted',
+          'StepCompleted',
+          'StepStarted',
+          'StepCompleted',
+          'StepStarted',
+          'StepCompleted',
+          'RunCompleted',
+        ]);
+      } finally {
+        await worker.shutdown();
+        await env.teardown();
+      }
+    },
+    INTEGRATION_TEST_TIMEOUT
+  );
+
   /**
    * @verifies ADR-0001 Section 3 — Single teardown owner
    * @verifies ADR-0011 — RunCancelled event semantics
@@ -339,10 +395,6 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'signal(CANCEL) and cancelRun() preserve ordered canonical cancellation while keeping distinct provider terminal semantics',
     async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
       const plan = mkLinearPlan(10);
       const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
       const planRef = createPlanRef('it-plan', planBytes);
@@ -354,85 +406,38 @@ describe('temporal integration (time-skipping)', () => {
         createRunContext(RunId.of('run-it-cancel-2')),
         planRef
       );
-      const observedProjectBundles: string[] = [];
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-cancel',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
-      });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue('t-it', temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createMultiRunDbtActivityDeps(
-          store,
-          outbox,
-          [
-            { ctx: signalCtx, planRef, planBytes },
-            { ctx: cancelCtx, planRef, planBytes },
-          ],
-          {
-            async execute(input) {
-              observedProjectBundles.push(input.pluginContext.projectBundleRef.uri);
-              return { stepId: input.step.stepId, status: 'COMPLETED' };
-            },
-          }
-        ),
-      });
-
-      await worker.start(env.nativeConnection);
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
-      });
+      const { adapter, env, observedProjectBundles, store, worker } =
+        await createCancellationHarness({
+          signalCtx,
+          cancelCtx,
+          planRef,
+          planBytes,
+          taskQueue: 'dvt-it-time-skipping-cancel',
+        });
 
       try {
         const signalResult = await runCancelScenario({
           mode: 'signal',
           adapter,
-          plan,
           planRef,
           runContext: signalCtx,
           store,
           waitForCondition,
         });
-        expect(signalResult.status).toBe('COMPLETED');
-        expect(signalResult.cancelledCount).toBeLessThanOrEqual(1);
-        expect(signalResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
-        expect(signalResult.eventTypes.indexOf('RunCancelled')).toBeGreaterThan(
-          signalResult.eventTypes.indexOf('RunCancelRequested')
-        );
+        expectCancelScenarioOutcome(signalResult, 'COMPLETED');
 
         const cancelResult = await runCancelScenario({
           mode: 'cancel',
           adapter,
-          plan,
           planRef,
           runContext: cancelCtx,
           store,
           waitForCondition,
         });
-        expect(cancelResult.status).toBe('CANCELLED');
-        expect(cancelResult.cancelledCount).toBeLessThanOrEqual(1);
-        expect(cancelResult.eventTypes.indexOf('RunCancelRequested')).toBeGreaterThanOrEqual(0);
-        expect(cancelResult.eventTypes.indexOf('RunCancelled')).toBeGreaterThan(
-          cancelResult.eventTypes.indexOf('RunCancelRequested')
-        );
+        expectCancelScenarioOutcome(cancelResult, 'CANCELLED');
 
         expect(signalResult.cancelledCount).toBe(cancelResult.cancelledCount);
-        const uniqueObservedProjectBundles = [...new Set(observedProjectBundles)];
-        expect(uniqueObservedProjectBundles).toHaveLength(2);
-        expect(uniqueObservedProjectBundles).toEqual(
-          expect.arrayContaining([
-            expect.stringMatching(/^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/),
-            expect.stringMatching(/^s3:\/\/bundle-bucket\/tenants\/t-it\/[a-f0-9]{64}$/),
-          ])
-        );
+        expectDistinctObservedProjectBundles(observedProjectBundles);
       } finally {
         await worker.shutdown();
         await env.teardown();
@@ -444,47 +449,21 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'cancel requested during finalization preserves runtime-owned cancellation ordering',
     async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
-      const projector = new TestProjector();
       const plan = mkPlan(1);
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-      const planRef = createPlanRef('it-plan', planBytes);
       const blocker = createBlockingExecutor('s-1');
-      const ctx = withDbtRunExecutionContext(
-        createRunContext(RunId.of('run-it-cancel-finalization-1')),
-        planRef
-      );
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-cancel-finalization',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan',
+        runId: 'run-it-cancel-finalization-1',
+        taskQueue: 'dvt-it-time-skipping-cancel-finalization',
       });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue('t-it', temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
+      const { adapter, ctx, env, planRef, store } = harness;
+      const worker = await harness.startWorker({
         stepExecutors: [blocker.executor, ...DEFAULT_STEP_EXECUTORS],
       });
 
-      await worker.start(env.nativeConnection);
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
-        stateStore: store,
-        projector,
-      });
-
       try {
-        const runRef = await adapter.startRun(plan, planRef, ctx);
+        const runRef = await adapter.startRun(planRef, ctx);
 
         await blocker.waitUntilExecuting;
         await adapter.cancelRun(runRef);
@@ -514,42 +493,18 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'native Temporal handle cancellation preserves runtime-owned cancellation ordering',
     async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
       const plan = mkLinearPlan(10);
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-      const planRef = createPlanRef('it-plan', planBytes);
-      const ctx = withDbtRunExecutionContext(
-        createRunContext(RunId.of('run-it-native-cancel-1')),
-        planRef
-      );
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-native-cancel',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan',
+        runId: 'run-it-native-cancel-1',
+        taskQueue: 'dvt-it-time-skipping-native-cancel',
       });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
-      });
-
-      await worker.start(env.nativeConnection);
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
-      });
+      const { adapter, ctx, env, planRef, store } = harness;
+      const worker = await harness.startWorker();
 
       try {
-        const runRef = await adapter.startRun(plan, planRef, ctx);
+        const runRef = await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -583,47 +538,20 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'gateway path: evaluates DSL in activity boundary and emits StepSkipped deterministically',
     async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
       const projector = new TestProjector();
       const plan = mkGatewaySkipPlan();
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-
-      const planRef = createPlanRef('it-plan-gateway-skip', planBytes);
-      const ctx: ResolvedRunContext = withDbtRunExecutionContext(
-        {
-          ...createRunContext(RunId.of('run-it-gateway-skip')),
-          tenantId: 't-it',
-        },
-        planRef
-      );
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-gateway-skip',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan-gateway-skip',
+        runId: 'run-it-gateway-skip',
+        taskQueue: 'dvt-it-time-skipping-gateway-skip',
+        contextOverrides: { tenantId: 't-it' },
       });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
-      });
-
-      await worker.start(env.nativeConnection);
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
-      });
+      const { adapter, ctx, env, planRef, store } = harness;
+      const worker = await harness.startWorker();
 
       try {
-        await adapter.startRun(plan, planRef, ctx);
+        await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -665,45 +593,18 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'crash recovery: worker restart preserves idempotency (no duplicate idempotencyKey)',
     async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
       const plan = mkLinearPlan(40);
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-
-      const planRef = createPlanRef('it-plan', planBytes);
-      const ctx = withDbtRunExecutionContext(
-        createRunContext(RunId.of('run-it-crash-recovery')),
-        planRef
-      );
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-crash-recovery',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan',
+        runId: 'run-it-crash-recovery',
+        taskQueue: 'dvt-it-time-skipping-crash-recovery',
       });
-
-      const mkWorker = (): TemporalWorkerHost =>
-        new TemporalWorkerHost({
-          temporalConfig: {
-            ...temporalConfig,
-            taskQueue: toTemporalTaskQueue(ctx.tenantId, temporalConfig),
-          },
-          workflowsPath: WORKFLOW_PATH,
-          activityDeps: createDbtActivityDeps(store, outbox, planBytes, ctx, planRef),
-        });
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
-      });
-
-      const worker1 = mkWorker();
-      await worker1.start(env.nativeConnection);
+      const { adapter, ctx, env, planRef, store } = harness;
+      const worker1 = await harness.startWorker();
 
       try {
-        const _runRef = await adapter.startRun(plan, planRef, ctx);
+        const _runRef = await adapter.startRun(planRef, ctx);
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(ctx.runId)),
@@ -715,8 +616,7 @@ describe('temporal integration (time-skipping)', () => {
 
         await worker1.shutdown();
 
-        const worker2 = mkWorker();
-        await worker2.start(env.nativeConnection);
+        const worker2 = await harness.startWorker();
 
         try {
           await new Promise((resolve) => setTimeout(resolve, 2_000));
@@ -737,49 +637,29 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'deduplicates stale PAUSE signal ids across a pause-resume cycle',
     async () => {
-      const env = await TestWorkflowEnvironment.createTimeSkipping();
-
-      const store = new TestStateStore();
-      const outbox = new TestOutbox();
       const plan = mkLinearThreeStepPlan();
-      const planBytes = Buffer.from(JSON.stringify(plan), 'utf-8');
-      const planRef = createPlanRef('it-plan-pause-signal-id-dedupe', planBytes);
       const blocker1 = createBlockingExecutor('s-1');
       const blocker2 = createBlockingExecutor('s-2');
-      const runCtx = withDbtRunExecutionContext(
-        createRunContext(RunId.of('run-it-pause-signal-id-dedupe-1')),
-        planRef
-      );
-
-      const temporalConfig = loadTemporalAdapterConfig({
-        TEMPORAL_NAMESPACE: 'default',
-        TEMPORAL_TASK_QUEUE: 'dvt-it-time-skipping-pause-signal-id-dedupe',
-        TEMPORAL_IDENTITY: 'adapter-temporal-it',
+      const harness = await createSingleRunDbtTimeSkippingHarness({
+        plan,
+        planRefId: 'it-plan-pause-signal-id-dedupe',
+        runId: 'run-it-pause-signal-id-dedupe-1',
+        taskQueue: 'dvt-it-time-skipping-pause-signal-id-dedupe',
       });
-
-      const worker = new TemporalWorkerHost({
-        temporalConfig: {
-          ...temporalConfig,
-          taskQueue: toTemporalTaskQueue('t-it', temporalConfig),
-        },
-        workflowsPath: WORKFLOW_PATH,
-        activityDeps: createDbtActivityDeps(store, outbox, planBytes, runCtx, planRef),
+      const { adapter, ctx: runCtx, env, planRef, store } = harness;
+      const worker = await harness.startWorker({
         stepExecutors: [blocker1.executor, blocker2.executor, ...DEFAULT_STEP_EXECUTORS],
-      });
-
-      await worker.start(env.nativeConnection);
-
-      const adapter = new TemporalAdapter({
-        workflowClient: env.client.workflow,
-        config: temporalConfig,
       });
 
       try {
         const runId = RunId.of(runCtx.runId);
-        const runRef = await adapter.startRun(plan, planRef, runCtx);
+        const runRef = await adapter.startRun(planRef, runCtx);
 
         await blocker1.waitUntilExecuting;
-        await adapter.signal(runRef, { signalId: 'sig-pause-1', type: 'PAUSE' });
+        await adapter.signal(runRef, {
+          signalId: asNonBlankString('sig-pause-1'),
+          type: 'PAUSE',
+        });
         blocker1.release();
 
         await waitForCondition(
@@ -788,7 +668,10 @@ describe('temporal integration (time-skipping)', () => {
           { timeoutMs: 30_000 }
         );
 
-        await adapter.signal(runRef, { signalId: 'sig-resume-1', type: 'RESUME' });
+        await adapter.signal(runRef, {
+          signalId: asNonBlankString('sig-resume-1'),
+          type: 'RESUME',
+        });
 
         await waitForCondition(
           () => store.listRunEvents(runId),
@@ -797,7 +680,10 @@ describe('temporal integration (time-skipping)', () => {
         );
 
         await blocker2.waitUntilExecuting;
-        await adapter.signal(runRef, { signalId: 'sig-pause-1', type: 'PAUSE' });
+        await adapter.signal(runRef, {
+          signalId: asNonBlankString('sig-pause-1'),
+          type: 'PAUSE',
+        });
         blocker2.release();
 
         const status = await waitForTerminalStatus(adapter, runRef, waitForCondition, 30_000);

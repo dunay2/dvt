@@ -1,12 +1,5 @@
-import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  DollarSign,
-  Zap,
-  AlertTriangle,
-  Download,
-} from 'lucide-react';
+import { XCircle, Clock, Zap, AlertTriangle, Download } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 import type { DbtEdge } from '../types/dbt';
 import type { PlanViewModel } from '../types/plans';
@@ -23,7 +16,6 @@ import {
 } from './ui/alert-dialog';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { Card } from './ui/card';
 import {
   Dialog,
   DialogContent,
@@ -32,7 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from './ui/dialog';
-import { ScrollArea } from './ui/scroll-area';
 
 interface PlanPreviewModalProps {
   open: boolean;
@@ -41,6 +32,62 @@ interface PlanPreviewModalProps {
   startRunDisabled?: boolean;
   startRunMessage?: string;
   onStartRun: () => void;
+}
+
+function formatPlanCost(estimatedCost: number | undefined): string {
+  return typeof estimatedCost === 'number' && Number.isFinite(estimatedCost)
+    ? `$${estimatedCost.toFixed(2)}`
+    : 'Not estimated';
+}
+
+function PlanPreviewSection({
+  title,
+  caption,
+  children,
+}: Readonly<{
+  title: string;
+  caption?: string;
+  children: ReactNode;
+}>) {
+  return (
+    <section className="min-w-0 rounded-lg border border-slate-700/80 bg-slate-900/75 p-3 shadow-sm sm:p-4">
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold text-slate-50">{title}</h3>
+        {caption ? <p className="mt-1 text-xs text-slate-400">{caption}</p> : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function PlanPreviewField({
+  label,
+  children,
+  long = false,
+  mono = false,
+}: Readonly<{
+  label: string;
+  children: ReactNode;
+  long?: boolean;
+  mono?: boolean;
+}>) {
+  const valueClassName = long
+    ? 'block min-w-0 break-all font-mono text-xs leading-5 text-blue-300'
+    : mono
+      ? 'font-mono text-xs text-blue-300'
+      : 'text-sm font-medium text-slate-50';
+
+  return (
+    <div className="min-w-0 rounded-md border border-slate-800 bg-slate-950/45 px-3 py-2">
+      <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</div>
+      <div
+        data-testid={long ? 'plan-preview-long-value' : undefined}
+        className={`mt-1 ${valueClassName}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export function PlanPreviewModal({
@@ -53,6 +100,10 @@ export function PlanPreviewModal({
 }: PlanPreviewModalProps) {
   if (!plan) return null;
 
+  const previewSummary = plan.preview?.summary;
+  const persistedPreview = plan.preview?.persisted;
+  const provenance = plan.preview?.provenance;
+
   return (
     <Dialog
       open={open}
@@ -62,11 +113,14 @@ export function PlanPreviewModal({
         }
       }}
     >
-      <DialogContent className="max-w-3xl bg-slate-950 border-slate-600 text-slate-50">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-slate-50">
+      <DialogContent
+        data-testid="plan-preview-modal"
+        className="min-w-0 max-h-[92vh] w-[calc(100vw-2rem)] gap-0 overflow-hidden border-slate-700 bg-slate-950 p-0 text-slate-50 shadow-2xl sm:max-w-4xl"
+      >
+        <DialogHeader className="min-w-0 border-b border-slate-800 px-4 py-4 sm:px-6 sm:py-5">
+          <DialogTitle className="flex min-w-0 flex-wrap items-center gap-2 pr-8 text-lg text-slate-50 sm:text-xl">
             Execution Plan Preview
-            <Badge variant="outline" className="ml-2">
+            <Badge variant="outline" className="border-blue-400/50 bg-blue-500/10 text-blue-100">
               Read-only
             </Badge>
           </DialogTitle>
@@ -75,187 +129,187 @@ export function PlanPreviewModal({
           </DialogDescription>
         </DialogHeader>
 
-        {startRunMessage ? (
-          <div className="rounded border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm text-slate-200">
-            {startRunMessage}
-          </div>
-        ) : null}
+        <div className="min-w-0 max-h-[70vh] overflow-y-auto overflow-x-hidden">
+          <div className="min-w-0 space-y-4 px-4 py-4 sm:px-6 sm:py-5">
+            {startRunMessage ? (
+              <div className="rounded-md border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-50">
+                {startRunMessage}
+              </div>
+            ) : null}
 
-        <ScrollArea className="max-h-[500px]">
-          <div className="space-y-4">
-            {/* Plan Metadata */}
-            <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
-              <h3 className="text-sm font-medium mb-3 text-slate-50">Plan Metadata</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-slate-300">Plan ID:</span>
-                  <code className="ml-2 text-blue-400">{plan.planId}</code>
-                </div>
-                <div>
-                  <span className="text-slate-300">Version:</span>
-                  <span className="ml-2">{plan.planVersion}</span>
-                </div>
+            <PlanPreviewSection
+              title="Plan identity"
+              caption="Immutable identifiers for the persisted preview."
+            >
+              <div className="grid min-w-0 gap-3 md:grid-cols-2">
+                <PlanPreviewField label="Plan ID" long>
+                  {plan.planId}
+                </PlanPreviewField>
+                <PlanPreviewField label="Version">{plan.planVersion}</PlanPreviewField>
                 {plan.planRef ? (
-                  <div className="col-span-2">
-                    <span className="text-slate-300">Plan Ref:</span>
-                    <code className="ml-2 break-all text-blue-400">{plan.planRef.uri}</code>
+                  <div className="md:col-span-2">
+                    <PlanPreviewField label="Plan Ref" long>
+                      {plan.planRef.uri}
+                    </PlanPreviewField>
                   </div>
                 ) : null}
-                <div>
-                  <span className="text-slate-300">Adapter:</span>
-                  <span className="ml-2">{plan.adapter}</span>
-                </div>
-                <div>
-                  <span className="text-slate-300">Target:</span>
-                  <Badge variant="secondary" className="ml-2">
-                    {plan.target}
-                  </Badge>
-                </div>
-                <div>
-                  <span className="text-slate-300">Generated:</span>
-                  <span className="ml-2 text-xs">
-                    {new Date(plan.generatedAt).toLocaleString()}
+                <PlanPreviewField label="Generated" mono>
+                  {new Date(plan.generatedAt).toLocaleString()}
+                </PlanPreviewField>
+                <PlanPreviewField label="Estimated cost">
+                  <span
+                    className={
+                      typeof plan.estimatedCost === 'number' ? 'text-green-300' : 'text-slate-300'
+                    }
+                  >
+                    {formatPlanCost(plan.estimatedCost)}
                   </span>
-                </div>
-                <div>
-                  <span className="text-slate-300">Est. Cost:</span>
-                  <span className="ml-2 text-green-400">${plan.estimatedCost?.toFixed(2)}</span>
-                </div>
+                </PlanPreviewField>
               </div>
-            </Card>
+            </PlanPreviewSection>
 
-            {plan.preview?.summary ? (
-              <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
-                <h3 className="text-sm font-medium mb-3 text-slate-50">
-                  Persisted Preview Summary
-                </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-slate-300">Executor:</span>
-                    <span className="ml-2">{plan.preview.summary.executor}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-300">Nodes:</span>
-                    <span className="ml-2">{plan.preview.summary.nodeCount}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-300">Steps:</span>
-                    <span className="ml-2">{plan.preview.summary.stepCount}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-300">Sink tables:</span>
-                    <span className="ml-2">
-                      {plan.preview.summary.sinkTables.join(', ') || 'n/a'}
-                    </span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-slate-300">Source tables:</span>
-                    <span className="ml-2">
-                      {plan.preview.summary.sourceTables.join(', ') || 'n/a'}
-                    </span>
-                  </div>
-                </div>
-              </Card>
-            ) : null}
-
-            {plan.preview?.persisted ? (
-              <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
-                <h3 className="text-sm font-medium mb-3 text-slate-50">Persistence Evidence</h3>
-                <div className="grid grid-cols-1 gap-3 text-sm">
-                  <div>
-                    <span className="text-slate-300">Plan record:</span>
-                    <code className="ml-2 text-blue-400">
-                      {plan.preview.persisted.planRecordId}
-                    </code>
-                  </div>
-                  <div>
-                    <span className="text-slate-300">Canonical SHA:</span>
-                    <code className="ml-2 break-all text-green-400">
-                      {plan.preview.persisted.canonicalPlanSha256}
-                    </code>
-                  </div>
-                </div>
-              </Card>
-            ) : null}
-
-            {plan.preview?.provenance ? (
-              <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
-                <h3 className="text-sm font-medium mb-3 text-slate-50">Provenance</h3>
-                <div className="space-y-3 text-sm">
-                  {plan.preview.provenance.graphArtifact ? (
-                    <div>
-                      <div className="text-slate-300">Graph artifact</div>
-                      <code className="text-blue-400">
-                        {plan.preview.provenance.graphArtifact.repo}:{' '}
-                        {plan.preview.provenance.graphArtifact.path}
-                      </code>
-                    </div>
-                  ) : null}
-                  {plan.preview.provenance.sqlArtifact ? (
-                    <div>
-                      <div className="text-slate-300">SQL artifact</div>
-                      <code className="text-blue-400">
-                        {plan.preview.provenance.sqlArtifact.repo}:{' '}
-                        {plan.preview.provenance.sqlArtifact.path}
-                      </code>
-                    </div>
-                  ) : null}
-                </div>
-              </Card>
-            ) : null}
-
-            {/* Capabilities */}
-            <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
-              <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-slate-50">
-                <Zap className="size-4 text-yellow-400" />
-                Capabilities
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {plan.capabilities.map((cap) => (
-                  <Badge key={cap} variant="outline">
-                    {cap}
-                  </Badge>
-                ))}
+            <PlanPreviewSection
+              title="Execution target"
+              caption="Runtime posture that will be used when the run starts."
+            >
+              <div className="grid min-w-0 gap-3 md:grid-cols-3">
+                <PlanPreviewField label="Executor">
+                  {previewSummary?.executor ?? 'Not reported'}
+                </PlanPreviewField>
+                <PlanPreviewField label="Adapter">{plan.adapter || 'Unknown'}</PlanPreviewField>
+                <PlanPreviewField label="Target">
+                  <Badge variant="secondary">{plan.target}</Badge>
+                </PlanPreviewField>
               </div>
-            </Card>
+              {plan.capabilities.length > 0 ? (
+                <div className="mt-4 flex min-w-0 flex-wrap gap-2">
+                  <span className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+                    <Zap className="size-3.5 text-yellow-300" />
+                    Capabilities
+                  </span>
+                  {plan.capabilities.map((capability) => (
+                    <Badge
+                      key={capability}
+                      variant="outline"
+                      className="border-slate-600 bg-slate-950/50 text-slate-200"
+                    >
+                      {capability}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+            </PlanPreviewSection>
 
-            {/* Steps */}
-            <Card className="bg-slate-900 border-slate-700 p-4 text-slate-50">
-              <h3 className="text-sm font-medium mb-3 text-slate-50">Execution Steps</h3>
-              <div className="space-y-3">
-                {plan.steps.map((step, idx) => (
-                  <div key={step.id} className="border-l-2 border-blue-500 pl-3 py-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-400">Step {idx + 1}</span>
-                        <span className="font-medium text-slate-50">{step.name}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {step.type}
-                        </Badge>
+            {previewSummary ? (
+              <PlanPreviewSection
+                title="Persisted preview summary"
+                caption="Graph size and table scope captured by the plan preview."
+              >
+                <div className="grid min-w-0 gap-3 md:grid-cols-2">
+                  <PlanPreviewField label="Nodes">{previewSummary.nodeCount}</PlanPreviewField>
+                  <PlanPreviewField label="Steps">{previewSummary.stepCount}</PlanPreviewField>
+                  <PlanPreviewField label="Source tables">
+                    {previewSummary.sourceTables.join(', ') || 'n/a'}
+                  </PlanPreviewField>
+                  <PlanPreviewField label="Sink tables">
+                    {previewSummary.sinkTables.join(', ') || 'n/a'}
+                  </PlanPreviewField>
+                </div>
+              </PlanPreviewSection>
+            ) : null}
+
+            {persistedPreview ? (
+              <PlanPreviewSection
+                title="Persistence evidence"
+                caption="Proof that this preview is backed by a stored canonical plan."
+              >
+                <div className="grid min-w-0 gap-3 md:grid-cols-2">
+                  <PlanPreviewField label="Plan record" long>
+                    {persistedPreview.planRecordId}
+                  </PlanPreviewField>
+                  <PlanPreviewField label="Canonical SHA" long>
+                    {persistedPreview.canonicalPlanSha256}
+                  </PlanPreviewField>
+                </div>
+              </PlanPreviewSection>
+            ) : null}
+
+            {provenance ? (
+              <PlanPreviewSection
+                title="Provenance"
+                caption="Repository artifacts used to generate the plan."
+              >
+                <div className="grid min-w-0 gap-3 md:grid-cols-2">
+                  {provenance.graphArtifact ? (
+                    <PlanPreviewField label="Graph artifact" long>
+                      {provenance.graphArtifact.repo}: {provenance.graphArtifact.path}
+                    </PlanPreviewField>
+                  ) : null}
+                  {provenance.sqlArtifact ? (
+                    <PlanPreviewField label="SQL artifact" long>
+                      {provenance.sqlArtifact.repo}: {provenance.sqlArtifact.path}
+                    </PlanPreviewField>
+                  ) : null}
+                </div>
+              </PlanPreviewSection>
+            ) : null}
+
+            <PlanPreviewSection
+              title="Execution steps"
+              caption="Step order and policy settings that will be submitted to the runtime."
+            >
+              <ol className="space-y-3">
+                {plan.steps.map((step, index) => (
+                  <li
+                    key={step.id}
+                    className="min-w-0 rounded-md border border-slate-800 bg-slate-950/45 p-3"
+                  >
+                    <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-xs text-slate-400">Step {index + 1}</span>
+                          <span className="font-medium text-slate-50">{step.name}</span>
+                          <Badge variant="secondary" className="text-xs">
+                            {step.type}
+                          </Badge>
+                        </div>
+                        <div className="mt-1 break-all font-mono text-[11px] text-slate-500">
+                          {step.id}
+                        </div>
                       </div>
                       <span className="text-xs text-slate-300">{step.nodes.length} nodes</span>
                     </div>
-                    <div className="flex gap-4 text-xs text-slate-300">
-                      {step.policies.timeout && (
-                        <div className="flex items-center gap-1">
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-300">
+                      {step.policies.timeout ? (
+                        <span className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1">
                           <Clock className="size-3" />
-                          Timeout: {step.policies.timeout}s
-                        </div>
-                      )}
-                      {step.policies.retries && <div>Retries: {step.policies.retries}</div>}
-                      {step.policies.concurrency && (
-                        <div>Concurrency: {step.policies.concurrency}</div>
-                      )}
-                      {step.policies.warehouse && <div>Warehouse: {step.policies.warehouse}</div>}
+                          Timeout {step.policies.timeout}s
+                        </span>
+                      ) : null}
+                      {step.policies.retries ? (
+                        <span className="rounded border border-slate-700 px-2 py-1">
+                          Retries {step.policies.retries}
+                        </span>
+                      ) : null}
+                      {step.policies.concurrency ? (
+                        <span className="rounded border border-slate-700 px-2 py-1">
+                          Concurrency {step.policies.concurrency}
+                        </span>
+                      ) : null}
+                      {step.policies.warehouse ? (
+                        <span className="rounded border border-slate-700 px-2 py-1">
+                          Warehouse {step.policies.warehouse}
+                        </span>
+                      ) : null}
                     </div>
-                  </div>
+                  </li>
                 ))}
-              </div>
-            </Card>
+              </ol>
+            </PlanPreviewSection>
           </div>
-        </ScrollArea>
+        </div>
 
-        <DialogFooter>
+        <DialogFooter className="min-w-0 border-t border-slate-800 bg-slate-950/95 px-4 py-4 sm:px-6">
           <Button variant="outline" onClick={onClose}>
             <Download className="size-4 mr-2" />
             Export JSON

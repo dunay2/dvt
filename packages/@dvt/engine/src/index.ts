@@ -1,31 +1,35 @@
 ﻿/**
  * @file packages/@dvt/engine/src/index.ts
+ * @ownedConcern Runtime engine stable public API for contracts, errors, ports, and role interfaces.
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Decision â€” Expose a stable public surface of the engine for orchestration decoupled from the runtime
  * @consequence Consumers integrate engine contracts/ports without depending on internal implementations
  * @version 1.0.0
  * @date 2026-02-21
  */
-export * from './contracts/IWorkflowEngine.v1.js';
 export * from './contracts/types.js';
 export * from './contracts/runEvents.js';
 export * from './contracts/executionPlan.js';
 export * from './contracts/errors.js';
 export * from './contracts/engine/index.js';
-export * from './contracts/PlanVersionPolicy.js';
+export * from './contracts/PlanAdmissionPolicy.js';
+export * from './contracts/PlanSchemaVersionPolicy.js';
+export * from './ports/IWorkflowEngine.js';
 
-export * from './core/SnapshotProjector.js';
-export * from './core/idempotency.js';
-export { buildWorkflowEngineFacade } from './core/buildWorkflowEngineFacade.js';
-export type { WorkflowEngineBuilder } from './core/buildWorkflowEngineFacade.js';
-export type { WorkflowEngineDeps } from './core/WorkflowEngine.js';
+export type {
+  IWorkflowCancelRunUseCase,
+  IWorkflowRecoverRunUseCase,
+  IWorkflowRunStatusUseCase,
+  IWorkflowSignalRunUseCase,
+  IWorkflowStartRunUseCase,
+  WorkflowEngineUseCaseDeps,
+  WorkflowEngineUseCases,
+} from './application/workflow-engine-use-cases/index.js';
 
 export type {
   EventInput,
   IClock,
   IIdempotencyKeyBuilder,
-  IPlanFetcher,
-  IPlanIntegrityValidator,
   IRunStateStore,
   IRunStateStoreMaintenance,
   IRunStateStoreRead,
@@ -36,41 +40,26 @@ export type {
   RetryAttemptReservation,
   RunBootstrapInput,
   RunStateCommandPort,
-  StoredPlanArtifact,
   StepEventInput,
 } from './ports/IRunStateStore.js';
 export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './ports/IRunStateStore.js';
+export type { IPlanIntegrityValidator } from './ports/IPlanIntegrityValidator.js';
 export * from './ports/IRunSnapshotStalenessQuery.js';
 export * from './ports/IRunMaintenanceService.js';
 export * from './ports/IStartRunIntentStore.js';
 export * from './ports/IProjector.js';
 export * from './ports/IRunExecutionContextResolver.js';
 export * from './ports/IRunExecutionContextBindingPolicy.js';
+export type { IAuthorizer } from './ports/IAuthorizer.js';
+export type { IRunAccessPolicy } from './ports/IRunAccessPolicy.js';
 export * from './adapters/IProviderAdapter.js';
+export * from './domain/IRunCommandService.js';
+export * from './domain/IRunSignalService.js';
 export * from './domain/IRunRecoveryService.js';
 export * from './domain/IRunHealthService.js';
-
-export * from './services/RunMaintenanceService.js';
-export * from './services/RunEnrichmentService.js';
-export { buildRunHealthService } from './services/RunHealthService.js';
-export { buildRunStatusQueryService } from './services/RunStatusQueryService.js';
-export { buildRunRecoveryService } from './application/RecoverRunApplicationService.js';
-export { buildRunControlService } from './core/WorkflowEngineCoreService.js';
-export * from './workers/IntentReconcilerWorker.js';
-export * from './domain/startRunIntentPolicy.js';
+export * from './domain/IRunStatusQueryService.js';
+export type { IRunEnrichmentService } from './contracts/IRunEnrichmentService.v1.js';
 
 export * from './outbox/IOutboxRateLimiter.js';
-export * from './outbox/TokenBucketRateLimiter.js';
 
-export { SequenceClock, epochMsToIsoUtc, parseIsoUtcToEpochMs } from './utils/clock.js';
-
-export * from './security/authorizer.js';
 export * from './security/AuthorizationError.js';
-export * from './security/planRefPolicy.js';
-export * from './security/planIntegrity.js';
-export * from './security/RunAccessPolicy.js';
-
-export * from './application/providerSelection.js';
-export * from './application/IStartRunApplicationService.js';
-export * from './application/StartRunAdmissionGuard.js';
-export * from './application/StartRunApplicationService.js';

@@ -1,8 +1,10 @@
+/** Owned concern: own workbench shell layout commands and visual preferences. */
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { PlatformConnectionState } from '../../capabilities/platform-health';
 import {
+  DEFAULT_CANVAS_GRID_COLOR,
   DEFAULT_CANVAS_PALETTE_ID,
+  normalizeCanvasHexColor,
   normalizeCanvasPaletteId,
   type CanvasPaletteId,
 } from '../views/canvas/canvasPalette';
@@ -20,6 +22,10 @@ interface UiLayoutState {
   focusMode: boolean;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
+  canvasGridVisible: boolean;
+  canvasGridColor: CanvasPaletteId;
+  canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
 
   activeTabs: Array<{
     id: string;
@@ -28,8 +34,6 @@ interface UiLayoutState {
     data?: unknown;
   }>;
   activeTabId: string | null;
-
-  connectionStatus: PlatformConnectionState;
 
   toggleLeftNav: () => void;
   setExplorerPanelWidth: (width: number) => void;
@@ -46,11 +50,34 @@ interface UiLayoutState {
   hideInspectorPanel: () => void;
   setGridSize: (size: number) => void;
   setCanvasPalette: (palette: CanvasPaletteId) => void;
+  setCanvasGridVisible: (visible: boolean) => void;
+  setCanvasGridColor: (color: CanvasPaletteId) => void;
+  setCanvasSnapToGrid: (enabled: boolean) => void;
+  setCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   addTab: (tab: { id: string; type: TabType; label: string; data?: unknown }) => void;
   closeTab: (tabId: string) => void;
   setActiveTab: (tabId: string) => void;
-  setConnectionStatus: (status: Partial<PlatformConnectionState>) => void;
 }
+
+type PersistedUiLayoutState = Partial<
+  Pick<
+    UiLayoutState,
+    | 'leftNavCollapsed'
+    | 'explorerPanelWidth'
+    | 'explorerPanelVisible'
+    | 'inspectorPanelWidth'
+    | 'inspectorPanelVisible'
+    | 'consolePanelHeight'
+    | 'consolePanelVisible'
+    | 'focusMode'
+    | 'gridSize'
+    | 'canvasPalette'
+    | 'canvasGridVisible'
+    | 'canvasGridColor'
+    | 'canvasSnapToGrid'
+    | 'canvasEmptyStateGuideVisible'
+  >
+>;
 
 export const useUiLayoutStore = create<UiLayoutState>()(
   persist(
@@ -65,11 +92,13 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       focusMode: false,
       gridSize: 20,
       canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+      canvasGridVisible: true,
+      canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
+      canvasSnapToGrid: false,
+      canvasEmptyStateGuideVisible: true,
 
       activeTabs: [{ id: 'main-canvas', type: 'canvas' as TabType, label: 'Main Graph' }],
       activeTabId: 'main-canvas',
-
-      connectionStatus: { rest: 'ok', liveEvents: 'connected' },
 
       toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
       setExplorerPanelWidth: (width) => set({ explorerPanelWidth: width }),
@@ -92,6 +121,11 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       hideInspectorPanel: () => set({ inspectorPanelVisible: false }),
       setGridSize: (size) => set({ gridSize: size }),
       setCanvasPalette: (palette) => set({ canvasPalette: normalizeCanvasPaletteId(palette) }),
+      setCanvasGridVisible: (visible) => set({ canvasGridVisible: visible }),
+      setCanvasGridColor: (color) =>
+        set({ canvasGridColor: normalizeCanvasHexColor(color, DEFAULT_CANVAS_GRID_COLOR) }),
+      setCanvasSnapToGrid: (enabled) => set({ canvasSnapToGrid: enabled }),
+      setCanvasEmptyStateGuideVisible: (visible) => set({ canvasEmptyStateGuideVisible: visible }),
 
       addTab: (tab) =>
         set((state) => ({
@@ -107,8 +141,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
           return { activeTabs: newTabs, activeTabId: newActiveId };
         }),
       setActiveTab: (tabId) => set({ activeTabId: tabId }),
-      setConnectionStatus: (status) =>
-        set((state) => ({ connectionStatus: { ...state.connectionStatus, ...status } })),
     }),
     {
       name: 'dvt-web-ui-layout',
@@ -116,15 +148,45 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       merge: (persistedState, currentState) => {
         const persistedLayoutState =
           typeof persistedState === 'object' && persistedState != null
-            ? (persistedState as Partial<UiLayoutState>)
+            ? (persistedState as PersistedUiLayoutState)
             : {};
-        const mergedState = { ...currentState, ...persistedLayoutState };
 
         return {
-          ...mergedState,
+          ...currentState,
+          leftNavCollapsed: persistedLayoutState.leftNavCollapsed ?? currentState.leftNavCollapsed,
+          explorerPanelWidth:
+            persistedLayoutState.explorerPanelWidth ?? currentState.explorerPanelWidth,
+          explorerPanelVisible:
+            persistedLayoutState.explorerPanelVisible ?? currentState.explorerPanelVisible,
+          inspectorPanelWidth:
+            persistedLayoutState.inspectorPanelWidth ?? currentState.inspectorPanelWidth,
+          inspectorPanelVisible:
+            persistedLayoutState.inspectorPanelVisible ?? currentState.inspectorPanelVisible,
+          consolePanelHeight:
+            persistedLayoutState.consolePanelHeight ?? currentState.consolePanelHeight,
+          consolePanelVisible:
+            persistedLayoutState.consolePanelVisible ?? currentState.consolePanelVisible,
+          focusMode: persistedLayoutState.focusMode ?? currentState.focusMode,
+          gridSize: persistedLayoutState.gridSize ?? currentState.gridSize,
           canvasPalette: normalizeCanvasPaletteId(
             persistedLayoutState.canvasPalette ?? currentState.canvasPalette
           ),
+          canvasGridVisible:
+            typeof persistedLayoutState.canvasGridVisible === 'boolean'
+              ? persistedLayoutState.canvasGridVisible
+              : currentState.canvasGridVisible,
+          canvasGridColor: normalizeCanvasHexColor(
+            persistedLayoutState.canvasGridColor,
+            DEFAULT_CANVAS_GRID_COLOR
+          ),
+          canvasSnapToGrid:
+            typeof persistedLayoutState.canvasSnapToGrid === 'boolean'
+              ? persistedLayoutState.canvasSnapToGrid
+              : currentState.canvasSnapToGrid,
+          canvasEmptyStateGuideVisible:
+            typeof persistedLayoutState.canvasEmptyStateGuideVisible === 'boolean'
+              ? persistedLayoutState.canvasEmptyStateGuideVisible
+              : currentState.canvasEmptyStateGuideVisible,
         };
       },
       partialize: (state) => ({
@@ -138,6 +200,10 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         focusMode: state.focusMode,
         gridSize: state.gridSize,
         canvasPalette: state.canvasPalette,
+        canvasGridVisible: state.canvasGridVisible,
+        canvasGridColor: state.canvasGridColor,
+        canvasSnapToGrid: state.canvasSnapToGrid,
+        canvasEmptyStateGuideVisible: state.canvasEmptyStateGuideVisible,
       }),
     }
   )

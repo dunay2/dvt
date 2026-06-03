@@ -1,46 +1,55 @@
 ---
 title: Web DDD Structure
-status: Draft
+status: Active
 owner: UI / Visualization Domain
-last_reviewed: 2026-03-28
+last_reviewed: 2026-05-08
 ---
 
 # Web DDD Structure
+
+This document summarizes the current frontend DDD boundary for the deployable
+`apps/web` workspace. The route and DTO authority for run orchestration remains
+the protected runtime contract in
+[Frontend Runtime Contract Technical Manual](./runs/frontend-runtime-contract-technical-manual.md).
 
 ## DDD Diagram
 
 ```mermaid
 classDiagram
-  class WebComponent {
-    +renderView(state: UIState): ReactElement
-    +handleUserInteraction(event: UIEvent): void
-    +fetchStatus(): Promise~RunStatus~
+  class ViewComponent {
+    +render(state: ViewModel): ReactElement
+    +onUserIntent(intent: UserIntent): void
   }
-  class APIClient {
-    +queryStatus(runId: string): Promise~RunStatus~
-    +submitRequest(payload: RequestPayload): Promise~void~
+  class RunsPort {
+    +getRunSnapshot(runId: string): Promise~RunSnapshot | null~
+    +listRunSummaries(): Promise~RunSummaryItem[]~
+    +startRun(input: StartRunInput): Promise~RunStartReceipt~
+    +listRunEvents(runId: string, afterSeq?: number): Promise~RunEventTimelinePage~
   }
-  class EngineStatusAdapter {
-    +getWorkflowStatus(runId: string): Promise~WorkflowStatus~
-  }
-  WebComponent --> APIClient : uses
-  WebComponent --> EngineStatusAdapter : uses
+  ViewComponent --> RunsPort : uses
 ```
 
 ## Aggregates & Entities
 
-- **WebComponent**: The primary UI unit in the `@dvt/web` package. Encapsulates rendering logic, user interaction handlers, and state queries for a given part of the DVT interface.
-- **APIClient**: Thin adapter that wraps HTTP calls to `apps/api`, isolating the UI layer from transport concerns.
-- **EngineStatusAdapter**: Adapter that surfaces `@dvt/engine` workflow status data to the UI components, translating engine state into displayable models.
+- **ViewComponent**: A React component in `apps/web` that renders a route or
+  workbench surface from view models and local UI state.
+- **RunsPort**: Presentation-facing run boundary implemented by
+  `runsService.api.ts`. It wraps protected HTTP calls to `apps/api` and keeps
+  transport concerns out of route views.
+- **WorkspaceScope**: Session-derived tenant, project, environment, and target
+  adapter context used by `startRun` and by list/read tenant-scope queries.
 
 ## Domain Events
 
-- `UserInteractionTriggered`: Emitted when a user action (e.g., button click, form submission) is captured by a WebComponent and dispatched for processing.
-- `StatusRefreshed`: Emitted when a UI component successfully fetches updated run or workflow status from the API or engine.
+- UI components do not own runtime domain events. They dispatch user intents
+  through ports and render read models returned by governed API rails.
+- Runtime event history is read through `listRunEvents(runId, afterSeq?)`; the
+  authoritative write-side events remain owned by the runtime backend.
 
 ## Key Files
 
-- `packages/@dvt/web/src/components/`
-- `packages/@dvt/web/src/adapters/APIClient.ts`
-- `packages/@dvt/web/src/adapters/EngineStatusAdapter.ts`
-- `packages/@dvt/web/src/index.ts`
+- `apps/web/src/app/services/runs/runsService.ts`
+- `apps/web/src/app/services/runs/runsService.api.ts`
+- `apps/web/src/app/ports/runs.ts`
+- `apps/web/src/app/ports/sessionContext.ts`
+- `apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`

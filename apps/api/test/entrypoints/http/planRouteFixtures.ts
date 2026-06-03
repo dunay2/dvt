@@ -28,7 +28,7 @@ export const VALID_PREVIEW_CONTEXT = {
   tenantId: 'tenant-1',
   projectId: 'project-1',
   environmentId: 'env-1',
-  targetAdapter: 'mock',
+  targetAdapter: 'temporal',
 } as const;
 
 export const VALID_COMPILE_CONTEXT = {
@@ -147,7 +147,10 @@ export function buildPreviewBody(overrides: Record<string, unknown> = {}): Recor
   return {
     context: { ...VALID_PREVIEW_CONTEXT },
     previewProfile: PREVIEW_PROFILE_GENERIC,
-    selectedNodeIds: ['node_1'],
+    selection: {
+      mode: 'explicit',
+      nodeIds: ['node_1'],
+    },
     graphSource: VALID_DBT_GRAPH_SOURCE,
     ...overrides,
   };

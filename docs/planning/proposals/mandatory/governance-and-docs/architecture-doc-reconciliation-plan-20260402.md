@@ -21,7 +21,7 @@ architecture", but they do not carry the same truth level:
 
 - [System Delivery Status](../../../../architecture/system-delivery-status.md) is the
   current implementation truth surface and already reflects runtime/API changes.
-- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture_atlas.md)
+- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture-atlas.md)
   still says the API exposes only infra endpoints and that engine orchestration
   is not composed as a runtime API service.
 - [Planning Execution Model Index](../../../execution-model/index.md) is still a draft
@@ -75,7 +75,7 @@ Primary files to classify first:
 - [System Delivery Status](../../../../architecture/system-delivery-status.md)
 - [Architecture Index](../../../../architecture/index.md)
 - [Concept System Map](../../../../concepts/system-map.md)
-- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture_atlas.md)
+- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture-atlas.md)
 - [Planning Execution Model Index](../../../execution-model/index.md)
 
 ### Wave 2: Truth-correct active documents
@@ -87,7 +87,7 @@ Primary files to classify first:
 
 Known drift candidates already confirmed:
 
-- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture_atlas.md)
+- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture-atlas.md)
 - [Execution Runtime Domain](../../../domains/execution-runtime.md)
 - [Event Lifecycle And Retention Domain](../../../domains/event-lifecycle-and-retention.md)
 
@@ -107,7 +107,7 @@ Additional system-level docs to review in the same pass:
 
 Candidate archive-or-rewrite set:
 
-- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture_atlas.md)
+- [Architecture Atlas](../../../../architecture/atlas/architecture/architecture-atlas.md)
   if retained only as a dated historical snapshot
 - planning execution-model drafts under
   [docs/planning/execution-model/](../../../execution-model/index.md) if they remain
@@ -115,11 +115,11 @@ Candidate archive-or-rewrite set:
 
 ### Wave 4: Add missing contributor guides
 
-- create an architecture doc maintenance guide:
+- [Task: GOV-PROP-DISP-1] create an architecture doc maintenance guide:
   "what to update when runtime behavior changes"
-- create an architecture reading-path guide:
+- [Task: GOV-PROP-DISP-1] create an architecture reading-path guide:
   "which doc to read for principle, current truth, and supporting context"
-- create a doc taxonomy guide for `canonical` versus `status` versus
+- [Task: GOV-PROP-DISP-1] create a doc taxonomy guide for `canonical` versus `status` versus
   `historical` architecture surfaces if existing guidance remains too implicit
 
 ### Wave 5: Close with governed navigation and validation
@@ -146,7 +146,7 @@ Candidate archive-or-rewrite set:
 ### Batch B: Active truth correction
 
 - update canonical and status pages first
-- fix broken domain references and stale cross-links
+- [Task: GOV-PROP-DISP-1] fix broken domain references and stale cross-links
 - make supporting docs explicitly non-authoritative where needed
 
 ### Batch C: Simplification and archive moves

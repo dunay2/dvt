@@ -7,15 +7,15 @@ last_reviewed: 2026-02-25
 
 # Contracts
 
-Normative contracts, schemas, compatibility rules, and reference entry points.
+Normative contracts, schemas, admission rules, and reference entry points.
 
 Use this section when the question is about what a boundary must accept,
-return, persist, validate, or keep compatible over time.
+return, persist, validate, or version deliberately over time.
 
 ## Start Here
 
 - [Planner Contracts](planner/index.md) for `ExecutionPlan`, planner envelopes,
-  and compatibility-oriented plan schemas
+  and admission-oriented plan schemas
 - [Shared Contracts](shared/index.md) for cross-cutting adapter, workflow, and
   validation contracts
 - [Traceability Contracts](traceability/index.md) for emitted lineage facet
@@ -26,7 +26,7 @@ return, persist, validate, or keep compatible over time.
 ## Reading Guidance
 
 - Start with [Planner](planner/index.md) when the change affects plan shape,
-  compatibility, schema validation, or planner inputs.
+  admission, schema validation, or planner inputs.
 - Start with [Shared](shared/index.md) when the change affects adapter-facing
   contracts, shared types, or validation helpers.
 - Use [Traceability](traceability/index.md) when the change affects emitted

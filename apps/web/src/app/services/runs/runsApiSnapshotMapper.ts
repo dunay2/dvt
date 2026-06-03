@@ -1,3 +1,7 @@
+/**
+ * Owned concern: map raw API snapshot records into presentation DTOs and
+ * project snapshot data into summary items for the runs list.
+ */
 import type { RunSnapshot, RunSummaryItem } from '../../ports/runs';
 
 import {
@@ -6,6 +10,8 @@ import {
   parseContractRunStatus,
   parseExecutionEvidence,
   parseMaterializationEvidence,
+  parsePlanExecutionSummary,
+  parseRunDiagnostics,
   parseRunExecutor,
   parseRunProvenance,
   parseSnapshotStaleness,
@@ -51,6 +57,8 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
     ...(materialization ? { materialization } : {}),
     provenance: parseRunProvenance(candidate.provenance),
     execution: parseExecutionEvidence(candidate.execution),
+    planSummary: parsePlanExecutionSummary(candidate.planSummary),
+    diagnostics: parseRunDiagnostics(candidate.diagnostics),
   };
 }
 

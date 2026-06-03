@@ -212,7 +212,7 @@ This is static. The plan has no per-step retry override. The `TemporalPolicyMapp
 Well-implemented per ADR-0017 and ADR-0036:
 
 - `SupportedPlanVersion` type controls which plan versions are accepted.
-- `PlanVersionPolicy` in the engine validates that the plan's version is in the supported set.
+- `PlanAdmissionPolicy` in the engine validates that the plan's version/schema pair is admitted.
 - `CURRENT_EXECUTION_PLAN_VERSION` is bumped in `@dvt/contracts`.
 
 **This is solid.** The versioning strategy allows forward-compatible plan evolution without breaking existing runs.
@@ -297,7 +297,7 @@ No database migration framework is visible in the source. `PostgresSchemaManager
 
 ### 2. Version Evolution of Contracts
 
-ADR-0017 defines the strategy, but the actual version evolution path is untested. What happens when a v1 plan is submitted to a system that only supports v2? The `PlanVersionPolicy` exists but the rejection path and client communication are not wired. There is no contract upgrade/migration tool.
+ADR-0017 defines the strategy, but the actual version evolution path is now governed by explicit admission. What happens when a plan version is submitted to a system that only admits `1.0`? The `PlanAdmissionPolicy` owns rejection and client communication. There is no contract upgrade/migration tool.
 
 ### 3. Rollback Guarantees
 

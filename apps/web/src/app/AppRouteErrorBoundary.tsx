@@ -1,7 +1,12 @@
 import { isRouteErrorResponse, useRouteError } from 'react-router';
+import {
+  resolveAppRouteErrorBoundaryCopy,
+  type AppRouteErrorBoundaryCopy,
+} from './appRouteErrorBoundaryCopy';
+import { createBootstrapFailureCommand } from './bootstrap/appBootstrapCommands';
 import { isBootstrapScreenVisible, showBootstrapFailure } from './bootstrap/appBootstrapScreen';
 
-function getErrorMessage(error: unknown): string {
+function getErrorMessage(error: unknown, copy: AppRouteErrorBoundaryCopy): string {
   if (isRouteErrorResponse(error)) {
     return `${error.status} ${error.statusText}`.trim();
   }
@@ -14,15 +19,16 @@ function getErrorMessage(error: unknown): string {
     return error;
   }
 
-  return 'An unexpected route error occurred.';
+  return copy.unexpectedRouteError;
 }
 
 export default function AppRouteErrorBoundary() {
   const error = useRouteError();
-  const message = getErrorMessage(error);
+  const copy = resolveAppRouteErrorBoundaryCopy();
+  const message = getErrorMessage(error, copy);
 
   if (isBootstrapScreenVisible()) {
-    showBootstrapFailure(message);
+    showBootstrapFailure(createBootstrapFailureCommand(message));
     return null;
   }
 
@@ -34,22 +40,17 @@ export default function AppRouteErrorBoundary() {
       <div className="w-full max-w-2xl rounded-2xl border border-(--border-default) bg-(--surface-shell) p-6 shadow-2xl shadow-black/30">
         <div className="space-y-3">
           <p className="text-sm font-medium uppercase tracking-[0.2em] text-(--text-subtle)">
-            Raven
+            {copy.brandLabel}
           </p>
-          <h1 className="text-2xl font-semibold text-(--text-strong)">
-            The application hit an unexpected error.
-          </h1>
-          <p className="text-sm leading-6 text-(--text-default)">
-            The current view could not recover cleanly. Reload the application to restore the shell,
-            or return to the workspace root.
-          </p>
+          <h1 className="text-2xl font-semibold text-(--text-strong)">{copy.title}</h1>
+          <p className="text-sm leading-6 text-(--text-default)">{copy.message}</p>
         </div>
 
         <div className="mt-5 rounded-xl border border-(--border-default) bg-(--surface-app) px-4 py-3">
           <p className="text-xs font-medium uppercase tracking-[0.16em] text-(--text-subtle)">
-            Error
+            {copy.errorLabel}
           </p>
-          <p className="mt-2 break-words text-sm text-(--text-strong)">{message}</p>
+          <p className="mt-2 wrap-break-word text-sm text-(--text-strong)">{message}</p>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
@@ -61,14 +62,14 @@ export default function AppRouteErrorBoundary() {
             }}
             type="button"
           >
-            Reload application
+            {copy.reloadLabel}
           </button>
           <a
             className="inline-flex h-10 items-center justify-center rounded-md border border-(--border-default) px-4 text-sm font-medium text-(--text-default) transition-colors hover:bg-(--surface-app) hover:text-(--text-strong)"
             data-slot="app-route-error-home"
             href="/"
           >
-            Return to workspace
+            {copy.homeLabel}
           </a>
         </div>
       </div>

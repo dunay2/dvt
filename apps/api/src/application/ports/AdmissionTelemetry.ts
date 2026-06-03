@@ -1,8 +1,13 @@
-import type { AdmissionMode } from './IAdmissionMode.js';
-import type {
+/**
+ * Owned concern: define the admission telemetry record taxonomy for the
+ * start-run application component.
+ */
+import {
   START_RUN_BACKPRESSURE_CODE,
   START_RUN_DUPLICATE_OF,
-} from './startRunResultContract.js';
+} from '@dvt/contracts';
+
+import type { AdmissionMode } from './IAdmissionMode.js';
 
 export const ADMISSION_TELEMETRY_DECISION = {
   accept: 'accept',
@@ -41,7 +46,10 @@ export type AdmissionDecisionRecord =
         | typeof ADMISSION_TELEMETRY_DECISION.wouldRejectSystem;
       readonly code:
         | typeof START_RUN_BACKPRESSURE_CODE.system
-        | typeof START_RUN_BACKPRESSURE_CODE.snapshotUnavailable;
+        | typeof START_RUN_BACKPRESSURE_CODE.snapshotUnavailable
+        | typeof START_RUN_BACKPRESSURE_CODE.executionCapacityExhausted
+        | typeof START_RUN_BACKPRESSURE_CODE.executorUnavailable
+        | typeof START_RUN_BACKPRESSURE_CODE.capacitySignalUnavailable;
       readonly retryAfterSeconds: number;
     });
 

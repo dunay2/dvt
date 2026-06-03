@@ -7,12 +7,23 @@ import { parsePlanRouteRunExecutionContextRef } from '../../../src/entrypoints/h
 import { parsePlanRouteScope as parseScopedPlanRouteScope } from '../../../src/entrypoints/http/planRouteScopeParser.js';
 import { parseStartRunBody } from '../../../src/entrypoints/http/startRunRouteParser.js';
 
+import { VALID_GENERATED_RUN_ID } from './startRunRoute.test.support.js';
+
 const VALID_PLAN_REF = {
   uri: 'https://plans.example.com/p.json',
   sha256: 'abc123',
   schemaVersion: '1.0.0',
   planId: 'p1',
   planVersion: '1.0',
+};
+
+const START_RUN_ADAPTER_REGISTRY = {
+  isSupported(value: string): value is 'temporal' {
+    return value === 'temporal';
+  },
+  listSupported(): ReadonlyArray<'temporal'> {
+    return ['temporal'];
+  },
 };
 
 describe('plan-route helper parsers', () => {
@@ -292,21 +303,24 @@ describe('plan-route helper parsers', () => {
 
   it('rejects conflicting plan inputs before planner parsing', () => {
     expect(
-      parseStartRunBody({
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: ['model_a'],
-        runId: 'run-1',
-        targetAdapter: 'mock',
-        planRef: VALID_PLAN_REF,
-        graphSource: {
-          kind: 'generic-graph-v1',
-          sourceFamily: 'dbt',
-          sourceVersion: 'manifest-v10',
-          nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
+      parseStartRunBody(
+        {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: { mode: 'explicit', nodeIds: ['model_a'] },
+          targetAdapter: 'temporal',
+          planRef: VALID_PLAN_REF,
+          graphSource: {
+            kind: 'generic-graph-v1',
+            sourceFamily: 'dbt',
+            sourceVersion: 'manifest-v10',
+            nodes: [{ nodeId: 'model_a', stepKind: 'DBT_MODEL', dependsOn: [] }],
+          },
         },
-      })
+        START_RUN_ADAPTER_REGISTRY,
+        () => VALID_GENERATED_RUN_ID
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'conflicting_plan_inputs' },
@@ -315,62 +329,75 @@ describe('plan-route helper parsers', () => {
 
   it('preserves target metadata for invalid plan ref at parser boundary', () => {
     expect(
-      parseStartRunBody({
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: ['model_a'],
-        runId: 'run-1',
-        targetAdapter: 'mock',
-        planRef: { uri: 'https://plans.example.com/p.json' },
-      })
+      parseStartRunBody(
+        {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: { mode: 'explicit', nodeIds: ['model_a'] },
+          targetAdapter: 'temporal',
+          planRef: { uri: 'https://plans.example.com/p.json' },
+        },
+        START_RUN_ADAPTER_REGISTRY,
+        () => VALID_GENERATED_RUN_ID
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_plan_ref', target: 'planRef' },
     });
   });
 
-  it('rejects non-canonical surrounding whitespace in runId, targetAdapter, and selection', () => {
+  it('rejects invalid selection, client runId, and invalid targetAdapter', () => {
     expect(
-      parseStartRunBody({
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: [' model_a '],
-        runId: 'run-1',
-        targetAdapter: 'mock',
-        planRef: VALID_PLAN_REF,
-      })
+      parseStartRunBody(
+        {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: { mode: 'explicit', nodeIds: [' model_a '] },
+          targetAdapter: 'temporal',
+          planRef: VALID_PLAN_REF,
+        },
+        START_RUN_ADAPTER_REGISTRY,
+        () => VALID_GENERATED_RUN_ID
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_selection', target: 'selection' },
     });
 
     expect(
-      parseStartRunBody({
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: ['model_a'],
-        runId: ' run-1 ',
-        targetAdapter: 'mock',
-        planRef: VALID_PLAN_REF,
-      })
+      parseStartRunBody(
+        {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: { mode: 'explicit', nodeIds: ['model_a'] },
+          runId: 'client-run-1',
+          targetAdapter: 'temporal',
+          planRef: VALID_PLAN_REF,
+        },
+        START_RUN_ADAPTER_REGISTRY,
+        () => VALID_GENERATED_RUN_ID
+      )
     ).toEqual({
       ok: false,
-      issue: { type: 'bad_request', reason: 'invalid_run_id', target: 'runId' },
+      issue: { type: 'bad_request', reason: 'client_run_id_not_allowed', target: 'runId' },
     });
 
     expect(
-      parseStartRunBody({
-        tenantId: 't1',
-        projectId: 'p1',
-        environmentId: 'e1',
-        selection: ['model_a'],
-        runId: 'run-1',
-        targetAdapter: ' mock ',
-        planRef: VALID_PLAN_REF,
-      })
+      parseStartRunBody(
+        {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          selection: { mode: 'explicit', nodeIds: ['model_a'] },
+          targetAdapter: ' mock ',
+          planRef: VALID_PLAN_REF,
+        },
+        START_RUN_ADAPTER_REGISTRY,
+        () => VALID_GENERATED_RUN_ID
+      )
     ).toEqual({
       ok: false,
       issue: { type: 'bad_request', reason: 'invalid_target_adapter', target: 'targetAdapter' },

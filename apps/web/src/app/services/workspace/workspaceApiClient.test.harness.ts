@@ -36,13 +36,13 @@ export function httpErrorResponse(args: {
   );
 }
 
-type ApiWorkspaceServiceHarnessOptions = {
+type ApiWorkspacePortHarnessOptions = {
   requestRaw?: ApiClient['requestRaw'];
   getJson?: ApiClient['getJson'];
   postJson?: ApiClient['postJson'];
 };
 
-export function createApiClientHarness(options: ApiWorkspaceServiceHarnessOptions = {}) {
+export function createApiClientHarness(options: ApiWorkspacePortHarnessOptions = {}) {
   const requestRawImpl: ApiClient['requestRaw'] =
     options.requestRaw ??
     (async () => {

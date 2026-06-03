@@ -1,40 +1,49 @@
 ---
 title: Web Sequence
-status: Draft
+status: Active
 owner: UI / Visualization Domain
-last_reviewed: 2026-03-28
+last_reviewed: 2026-05-08
 ---
 
 # Web Sequence
 
-## Main Flow: fetchStatus and Render
+This document summarizes the active `apps/web` run-detail fetch sequence. Route
+truth remains the protected runtime contract documented in
+[Frontend Runtime Contract Technical Manual](./runs/frontend-runtime-contract-technical-manual.md).
+
+## Main Flow: Run Snapshot Fetch
 
 ```mermaid
 sequenceDiagram
   participant User
-  participant WebComponent as @dvt/web WebComponent
-  participant APIClient
+  participant View as apps/web View
+  participant Service as runsService
+  participant Session as sessionContext
   participant API as apps/api
-  participant Engine as @dvt/engine
 
-  User->>WebComponent: opens run status view
-  WebComponent->>APIClient: fetchStatus(runId)
-  APIClient->>API: GET /runs/:runId/status
-  API->>Engine: getWorkflowStatus(runId)
-  Engine-->>API: WorkflowStatus
-  API-->>APIClient: RunStatus (JSON)
-  APIClient-->>WebComponent: RunStatus
-  WebComponent->>WebComponent: renderView(state)
-  WebComponent-->>User: rendered status view
+  User->>View: opens run detail view
+  View->>Service: getRunSnapshot(runId)
+  Service->>Session: getWorkspaceScope()
+  Session-->>Service: tenantId
+  Service->>API: GET /runs/:runId?tenantId=<tenantId>
+  API-->>Service: RunSnapshot | 404
+  Service-->>View: RunSnapshot | null
+  View->>View: render(state)
+  View-->>User: rendered run detail
 ```
 
 ## Global Flow Position
 
-`@dvt/web` sits at the outermost layer of the DVT system, serving as the shared UI component library for `apps/web`. It is consumed by the web application to render run status, workflow progress, and user interaction surfaces. It calls `apps/api` for data and may surface engine workflow status via the EngineStatusAdapter. It has no knowledge of the Planning, Execution, or Infra domains — all business logic and data access is delegated downstream through the API layer. The web layer is entirely read-driven with user interactions dispatched as API requests.
+`apps/web` sits at the outermost layer of the DVT system, serving as the browser
+application shell and route-level workbench host. It calls `apps/api` for data
+through governed service boundaries and port adapters. It has no knowledge of
+the Planning, Execution, or Infra domains; all business logic and data access
+is delegated downstream through the API layer.
 
 ## Key Files
 
-- `packages/@dvt/web/src/components/`
-- `packages/@dvt/web/src/adapters/APIClient.ts`
-- `packages/@dvt/web/src/adapters/EngineStatusAdapter.ts`
-- `packages/@dvt/web/src/index.ts`
+- `apps/web/src/app/services/runs/runsService.ts`
+- `apps/web/src/app/services/runs/runsService.api.ts`
+- `apps/web/src/app/ports/runs.ts`
+- `apps/web/src/app/views/RunsView.tsx`
+- `apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`

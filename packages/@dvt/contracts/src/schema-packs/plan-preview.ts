@@ -3,7 +3,7 @@ export { TransformationSqlFirstCompilerGraphSourceSchema } from '../contracts/pl
 export {
   DesignGraphDraftSchema,
   PlanPreviewProvenanceSchema,
-  PlanPreviewSelectedNodeIdsSchema,
+  PlanPreviewSelectionSchema,
   PreviewProfileSchema,
 } from './plan-preview-profile.js';
 export { PlanPreviewRequestSchema } from './plan-preview-request.js';
@@ -17,6 +17,7 @@ export {
 export type {
   DesignGraphDraftSchemaT,
   PlanPreviewProvenanceSchemaT,
+  PlanPreviewSelectionSchemaT,
   PreviewProfileSchemaT,
 } from './plan-preview-profile.js';
 export type {

@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { jcsCanonicalize, type PlannerBuildResultV1 } from '@dvt/contracts';
+import { jcsCanonicalize, type PlanStoreScope, type PlannerBuildResultV1 } from '@dvt/contracts';
 import { Client } from 'pg';
 import { describe } from 'vitest';
 
@@ -9,6 +9,11 @@ import { quoteIdentifier } from '../src/sqlUtils.js';
 
 export const NOW = '2026-03-21T00:00:00.000Z';
 export const describeIfPg = process.env.DVT_PG_INTEGRATION === '1' ? describe : describe.skip;
+export const PLAN_STORE_SCOPE = {
+  tenantId: 'tenant-a',
+  projectId: 'analytics',
+  environmentId: 'prod',
+} as const satisfies PlanStoreScope;
 
 export async function dropSchema(schema: string): Promise<void> {
   const client = await createPgClient();
@@ -36,14 +41,15 @@ export function createStore(schema: string): PostgresPlanStore {
   return new PostgresPlanStore({
     schema,
     toExecutablePlan: (buildResult) => ({
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       text: JSON.stringify({
         metadata: {
           planId: buildResult.plan.metadata.planId,
           planVersion: buildResult.plan.metadata.planVersion,
-          schemaVersion: 'v1.2',
+          schemaVersion: '1.0',
           contractVersion: '1.0.0',
           inputHashSha256: buildResult.plan.metadata.inputHashSha256,
+          ownership: buildResult.plan.metadata.ownership,
         },
         steps: buildResult.plan.steps,
       }),
@@ -63,14 +69,15 @@ export async function createPgClient(): Promise<Client> {
 
 export function makeBuildResult(planId: string): PlannerBuildResultV1 {
   const steps = [{ stepId: `${planId}.step`, kind: 'DBT_MODEL', dependsOn: [] }];
-  const plan = {
+  const plan: PlannerBuildResultV1['plan'] = {
     metadata: {
       planId,
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256: '1'.repeat(64),
       createdAtIso: NOW,
+      ownership: PLAN_STORE_SCOPE,
     },
     steps,
   };

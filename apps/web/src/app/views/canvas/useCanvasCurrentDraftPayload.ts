@@ -1,27 +1,44 @@
+/** Owned concern: derive the current Canvas authoring draft aggregate and persistence posture. */
 import { useMemo } from 'react';
 
-import { serializeWorkspaceGraphDraft } from './canvasDraftSession';
+import {
+  canPersistWorkspaceGraphAuthoringDraft,
+  serializeCanvasDraftAuthoringSignature,
+} from './canvasDraftAuthoring';
 import {
   buildCurrentDraftPayload,
   isCurrentDraftProjectable,
-  type CanvasDraftLifecycleGraphNode,
 } from './canvasDraftLifecycleSnapshot';
-import type { CanvasDraftSession } from './canvasDraftSession';
+import type { CanvasCurrentDraftPayloadDto } from './canvasDraftLifecycle.types';
 
-export function useCanvasCurrentDraftPayload(
-  graphNodes: CanvasDraftLifecycleGraphNode[],
-  draftSession: CanvasDraftSession
-) {
+export function useCanvasCurrentDraftPayload({
+  graphNodes,
+  draftSession,
+  canvasDocument,
+  baselineDraft,
+  canonicalNodes,
+  canonicalEdges,
+}: CanvasCurrentDraftPayloadDto) {
   const currentDraftPayload = useMemo(
-    () => buildCurrentDraftPayload(graphNodes, draftSession),
-    [draftSession, graphNodes]
+    () =>
+      buildCurrentDraftPayload(
+        graphNodes,
+        draftSession,
+        canvasDocument ?? { kind: '', title: '' },
+        baselineDraft,
+        canonicalNodes,
+        canonicalEdges
+      ),
+    [baselineDraft, canvasDocument, canonicalEdges, canonicalNodes, draftSession, graphNodes]
   );
   const currentDraftPayloadSignature = useMemo(
-    () => serializeWorkspaceGraphDraft(currentDraftPayload),
+    () => serializeCanvasDraftAuthoringSignature(currentDraftPayload),
     [currentDraftPayload]
   );
   const canPersistCurrentDraft = useMemo(
-    () => isCurrentDraftProjectable(currentDraftPayload, draftSession),
+    () =>
+      isCurrentDraftProjectable(currentDraftPayload, draftSession) &&
+      canPersistWorkspaceGraphAuthoringDraft(currentDraftPayload),
     [currentDraftPayload, draftSession]
   );
 

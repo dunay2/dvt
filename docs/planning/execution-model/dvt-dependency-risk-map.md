@@ -8,6 +8,11 @@ planning_type: analysis
 
 # DVT+ Dependency Risk Map
 
+F-12 note, 2026-05-18: the active web Canvas graph stack is
+`Canvas.tsx`, `CanvasShell`, `useCanvasController`, and plugin graph strategy
+registration. Any `GraphCanvas` labels in this older dependency map are
+historical drift, not active source ownership.
+
 Date: 2026-03-06
 Last updated: 2026-03-05 — full codebase audit; critical path and risk matrix revised
 Status: Architecture planning document

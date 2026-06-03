@@ -1,6 +1,4 @@
-import type { EngineRunRef, SignalRequest } from '@dvt/contracts';
+import type { IRunCommandService } from './IRunCommandService.js';
+import type { IRunSignalService } from './IRunSignalService.js';
 
-export interface IRunControlService {
-  cancel(ref: EngineRunRef): Promise<void>;
-  signal(ref: EngineRunRef, req: SignalRequest): Promise<void>;
-}
+export interface IRunControlService extends IRunCommandService, IRunSignalService {}

@@ -1,0 +1,368 @@
+/** Owned concern: provide canonical Canvas route test defaults and controller callback stubs. */
+import { vi } from 'vitest';
+
+import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
+import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import type { WorkspaceScope } from '../ports/sessionContext';
+import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
+import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
+import type { CanvasDraftAuthTransportPosture } from './canvas/canvasDraftAuthTransportPosture';
+import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
+import type { CanvasController } from './Canvas.test.controller';
+
+type CanvasWorkbenchDefaultsDto = {
+  dataSourceMode: CanvasController['dataSourceMode'];
+  workspaceScope: WorkspaceScope;
+  isBackendCheckPending: CanvasController['isBackendCheckPending'];
+  backendReady: CanvasController['backendReady'];
+  backendBlockMessage: CanvasController['backendBlockMessage'];
+  isLoadingGraph: CanvasController['isLoadingGraph'];
+  graphErrorMessage: CanvasController['graphErrorMessage'];
+  focusMode: CanvasController['focusMode'];
+  explorerPanelVisible: CanvasController['explorerPanelVisible'];
+  inspectorPanelVisible: CanvasController['inspectorPanelVisible'];
+  canOpenSourceImport: CanvasController['canOpenSourceImport'];
+  explorerNodes: CanvasController['explorerNodes'];
+  inspectorNode: CanvasController['inspectorNode'];
+  inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
+  inspectorGraphEdges: CanvasController['inspectorGraphEdges'];
+  canEditInspectorNode: CanvasController['canEditInspectorNode'];
+  activeRunId: CanvasController['activeRunId'];
+  registeredPlugins: CanvasController['registeredPlugins'];
+  runtimeCapabilities: CanvasController['runtimeCapabilities'];
+  availableCanvasKinds: CanvasController['availableCanvasKinds'];
+  canvasDocument: CanvasController['canvasDocument'];
+  canvasDocuments: CanvasController['canvasDocuments'];
+  activeCanvasId: CanvasController['activeCanvasId'];
+  executionEnvironmentOptions: CanvasController['executionEnvironmentOptions'];
+  canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
+  userPermissions: CanvasController['userPermissions'];
+  canvasAuthoringMode: CanvasController['canvasAuthoringMode'];
+  nodesWithImpact: CanvasController['nodesWithImpact'];
+  edges: CanvasController['edges'];
+  nodeTypes: CanvasController['nodeTypes'];
+  gridSize: CanvasController['gridSize'];
+  canvasPalette: CanvasController['canvasPalette'];
+  canvasGridVisible: CanvasController['canvasGridVisible'];
+  canvasGridColor: CanvasController['canvasGridColor'];
+  canvasSnapToGrid: CanvasController['canvasSnapToGrid'];
+  canvasEmptyStateGuideVisible: CanvasController['canvasEmptyStateGuideVisible'];
+  viewport: CanvasController['viewport'];
+};
+
+type CanvasDraftDefaultsDto = {
+  draftSaveStatus: CanvasController['draftSaveStatus'];
+  draftAuthTransportPosture: CanvasDraftAuthTransportPosture;
+  draftAccessPosture: CanvasController['draftAccessPosture'];
+  draftAccessMode: CanvasController['draftAccessMode'];
+  draftCapabilityReason: CanvasController['draftCapabilityReason'];
+  draftFormatError: CanvasController['draftFormatError'];
+  draftFormatMeta: CanvasController['draftFormatMeta'];
+  draftRecoveryReason: CanvasController['draftRecoveryReason'];
+  draftToolbarState: CanvasController['draftToolbarState'];
+  canExportProjectSnapshot: CanvasController['canExportProjectSnapshot'];
+  canImportProjectSnapshot: CanvasController['canImportProjectSnapshot'];
+  draftConflictRevision: CanvasController['draftConflictRevision'];
+  hasStaleDraftVersion: CanvasController['hasStaleDraftVersion'];
+  hasMissingRemoteDraft: CanvasController['hasMissingRemoteDraft'];
+  hasDraftProjectionGap: CanvasController['hasDraftProjectionGap'];
+};
+
+type CanvasExecutionDefaultsDto = {
+  canPlanGraph: CanvasController['canPlanGraph'];
+  canStartRun: CanvasController['canStartRun'];
+  planRunReadiness: CanvasController['planRunReadiness'];
+  planStatusSummary: CanvasController['planStatusSummary'];
+  exclusiveOverlayMode: CanvasController['exclusiveOverlayMode'];
+  canUseCostOverlay: CanvasController['canUseCostOverlay'];
+  impactOverlayEnabled: CanvasController['impactOverlayEnabled'];
+  columnLevelLineageEnabled: CanvasController['columnLevelLineageEnabled'];
+  transformationValidation: CanvasController['transformationValidation'];
+  planModalOpen: CanvasController['planModalOpen'];
+  currentPlan: CanvasController['currentPlan'];
+  confirmEdgeModal: CanvasController['confirmEdgeModal'];
+};
+
+type CanvasControllerStateDefaults = CanvasWorkbenchDefaultsDto &
+  CanvasDraftDefaultsDto &
+  CanvasExecutionDefaultsDto;
+
+export function buildDefaultCanvasToolbarState(): CanvasDraftToolbarState {
+  return {
+    label: 'Draft synced',
+    tone: 'neutral',
+    showReloadAction: false,
+  };
+}
+
+function buildDefaultCanvasExplorerNodes(): CanvasControllerStateDefaults['explorerNodes'] {
+  return [
+    {
+      id: 'node.orders',
+      name: 'orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    },
+  ];
+}
+
+function buildDefaultCanvasUserPermissions(): CanvasControllerStateDefaults['userPermissions'] {
+  return {
+    canPlan: true,
+    canRun: true,
+    canEditEdges: true,
+    canPersistGraphDraft: true,
+    canManagePlugins: false,
+    canManageRBAC: false,
+  };
+}
+
+function buildDefaultTransformationValidation(): CanvasControllerStateDefaults['transformationValidation'] {
+  return {
+    valid: false,
+    summaryCode: 'requires_three_nodes',
+    draftSignature: 'draft',
+    scopedNodeIds: [],
+    scopedEdgeIds: [],
+    nodeRolesById: {},
+  };
+}
+
+function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
+  return {
+    dataSourceMode: 'api',
+    workspaceScope: {
+      tenantId: 'tenant-a',
+      projectId: 'project-orders',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    },
+    isBackendCheckPending: false,
+    backendReady: true,
+    backendBlockMessage: null,
+    isLoadingGraph: false,
+    graphErrorMessage: null,
+    focusMode: false,
+    explorerPanelVisible: true,
+    inspectorPanelVisible: true,
+    canOpenSourceImport: true,
+    explorerNodes: buildDefaultCanvasExplorerNodes(),
+    inspectorNode: null,
+    inspectorGraphNodes: [],
+    inspectorGraphEdges: [],
+    canEditInspectorNode: true,
+    activeRunId: null,
+    registeredPlugins: new Set(['dbt']),
+    runtimeCapabilities: undefined,
+    availableCanvasKinds: [
+      {
+        kind: 'dbt',
+        pluginId: 'dbt',
+        label: 'dbt',
+        description: 'Model-first canvas for dbt resources and dependencies.',
+        createTitle: 'dbt canvas',
+        emptyState: {
+          title: 'Start dbt canvas',
+          editableMessage:
+            'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+          firstNodeLabel: 'Add first dbt node',
+          firstNodeHelper:
+            'Choose a governed dbt resource kind to start modeling this workspace lineage graph.',
+        },
+        nodeKinds: DBT_NODE_KINDS,
+      },
+      {
+        kind: 'transformation',
+        pluginId: 'dvt',
+        label: 'Transformation',
+        description: 'Flow-based transformation canvas for the protected authoring draft.',
+        createTitle: 'Transformation canvas',
+        emptyState: {
+          title: 'Start transformation canvas',
+          editableMessage:
+            'Start this transformation canvas by adding a governed source, SQL transform, or sink node.',
+          firstNodeLabel: 'Add first transformation node',
+          firstNodeHelper:
+            'Choose a governed transformation node kind to start this protected authoring flow.',
+        },
+        nodeKinds: DVT_AUTHORING_NODE_KINDS,
+      },
+    ],
+    canvasDocument: {
+      id: 'main-canvas',
+      kind: 'transformation',
+      title: 'Main canvas',
+    },
+    canvasDocuments: [
+      {
+        id: 'main-canvas',
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+    ],
+    activeCanvasId: 'main-canvas',
+    executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
+    canCreateCanvasDocument: false,
+    userPermissions: buildDefaultCanvasUserPermissions(),
+    canvasAuthoringMode: 'transformation',
+    nodesWithImpact: [],
+    edges: [],
+    nodeTypes: {},
+    gridSize: 24,
+    canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
+    canvasGridVisible: true,
+    canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
+    canvasSnapToGrid: false,
+    canvasEmptyStateGuideVisible: true,
+    viewport: null,
+  } satisfies CanvasWorkbenchDefaultsDto;
+}
+
+function buildDefaultCanvasDraftState(): CanvasDraftDefaultsDto {
+  const draftAccessPosture = deriveCanvasDraftAccessPosture({
+    draftAccessMode: 'writable',
+    draftCapabilityReason: 'authorized',
+    draftFormatError: null,
+    authTransportPosture: 'none',
+    recoveryReason: null,
+    draftSaveStatus: 'idle',
+  });
+
+  return {
+    draftSaveStatus: 'idle',
+    draftAuthTransportPosture: 'none',
+    draftAccessPosture,
+    draftAccessMode: 'writable',
+    draftCapabilityReason: 'authorized',
+    draftFormatError: null,
+    draftFormatMeta: null,
+    draftRecoveryReason: null,
+    draftToolbarState: buildDefaultCanvasToolbarState(),
+    canExportProjectSnapshot: true,
+    canImportProjectSnapshot: true,
+    draftConflictRevision: null,
+    hasStaleDraftVersion: false,
+    hasMissingRemoteDraft: false,
+    hasDraftProjectionGap: false,
+  } satisfies CanvasDraftDefaultsDto;
+}
+
+function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
+  return {
+    canPlanGraph: false,
+    canStartRun: false,
+    planRunReadiness: {
+      blockers: ['plan_integrity'],
+      rail: 'ObservePlanRunReadiness',
+      status: 'blocked',
+      summary: 'Preview required before running.',
+    },
+    planStatusSummary: 'Preview required before running.',
+    exclusiveOverlayMode: 'runtime',
+    canUseCostOverlay: false,
+    impactOverlayEnabled: false,
+    columnLevelLineageEnabled: false,
+    transformationValidation: buildDefaultTransformationValidation(),
+    planModalOpen: false,
+    currentPlan: null,
+    confirmEdgeModal: { open: false, edge: null },
+  } satisfies CanvasExecutionDefaultsDto;
+}
+
+export function buildDefaultCanvasControllerState(): CanvasControllerStateDefaults {
+  return {
+    ...buildDefaultCanvasWorkbenchState(),
+    ...buildDefaultCanvasDraftState(),
+    ...buildDefaultCanvasExecutionState(),
+  };
+}
+
+export function buildDefaultCanvasControllerCallbacks(): Pick<
+  CanvasController,
+  | 'onNodesChange'
+  | 'onEdgesChange'
+  | 'onConnect'
+  | 'onReconnect'
+  | 'handleNodeClick'
+  | 'onSelectionChange'
+  | 'handleViewportChange'
+  | 'handleNodeDrag'
+  | 'handleNodeDragStop'
+  | 'handleDrop'
+  | 'handleDragOver'
+  | 'handleCreateAuthoringNode'
+  | 'handleCreateCanvasDocument'
+  | 'handleSelectCanvasDocument'
+  | 'handleApplyCanvasDocumentPatch'
+  | 'handleDeleteCanvasDocument'
+  | 'handleExportProjectSnapshot'
+  | 'handleImportProjectSnapshotFile'
+  | 'applyInspectorNodeDraft'
+  | 'handleSourceImportComplete'
+  | 'handleImportedNodeFocusComplete'
+  | 'hideExplorerPanel'
+  | 'showExplorerPanel'
+  | 'hideInspectorPanel'
+  | 'showInspectorPanel'
+  | 'handleAutoLayout'
+  | 'handleToggleCostOverlay'
+  | 'toggleImpactOverlay'
+  | 'toggleColumnLevelLineage'
+  | 'setCanvasGridVisible'
+  | 'setCanvasGridColor'
+  | 'setCanvasSnapToGrid'
+  | 'setCanvasEmptyStateGuideVisible'
+  | 'handlePlan'
+  | 'handleStartRun'
+  | 'reloadLatestDraft'
+  | 'setPlanModalOpen'
+  | 'setConfirmEdgeModal'
+  | 'confirmEdgeCreation'
+> &
+  Pick<CanvasController, 'importedNodeFocusIds'> {
+  return {
+    onNodesChange: vi.fn(),
+    onEdgesChange: vi.fn(),
+    onConnect: vi.fn(),
+    onReconnect: vi.fn(),
+    handleNodeClick: vi.fn(),
+    onSelectionChange: vi.fn(),
+    handleViewportChange: vi.fn(),
+    handleNodeDrag: vi.fn(),
+    handleNodeDragStop: vi.fn(),
+    handleDrop: vi.fn(),
+    handleDragOver: vi.fn(),
+    handleCreateAuthoringNode: vi.fn(),
+    handleCreateCanvasDocument: vi.fn(),
+    handleSelectCanvasDocument: vi.fn(),
+    handleApplyCanvasDocumentPatch: vi.fn(),
+    handleDeleteCanvasDocument: vi.fn(),
+    handleExportProjectSnapshot: vi.fn(),
+    handleImportProjectSnapshotFile: vi.fn(),
+    applyInspectorNodeDraft: vi.fn(),
+    handleSourceImportComplete: vi.fn(),
+    importedNodeFocusIds: [],
+    handleImportedNodeFocusComplete: vi.fn(),
+    hideExplorerPanel: vi.fn(),
+    showExplorerPanel: vi.fn(),
+    hideInspectorPanel: vi.fn(),
+    showInspectorPanel: vi.fn(),
+    handleAutoLayout: vi.fn(),
+    handleToggleCostOverlay: vi.fn(),
+    toggleImpactOverlay: vi.fn(),
+    toggleColumnLevelLineage: vi.fn(),
+    setCanvasGridVisible: vi.fn(),
+    setCanvasGridColor: vi.fn(),
+    setCanvasSnapToGrid: vi.fn(),
+    setCanvasEmptyStateGuideVisible: vi.fn(),
+    handlePlan: vi.fn(),
+    handleStartRun: vi.fn(),
+    reloadLatestDraft: vi.fn(),
+    setPlanModalOpen: vi.fn(),
+    setConfirmEdgeModal: vi.fn(),
+    confirmEdgeCreation: vi.fn(),
+  };
+}

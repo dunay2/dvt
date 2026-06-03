@@ -1,0 +1,25 @@
+---
+id: R-20260430-TEMPORAL-SDK-1-16-1-PATCH
+title: Temporal SDK patch upgrades can drift from provider integration behavior
+status: Open
+date: 2026-04-30
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/temporal-worker
+severity: Low
+probability: Low
+context: >
+  PR #1038 upgrades the Temporal TypeScript SDK packages used by the adapter and Temporal worker
+  from 1.16.0 to 1.16.1. Although this is a patch-level dependency update, the adapter boundary is
+  governed by ARC-2 because provider SDK behavior can affect workflow execution, worker startup, and
+  integration-test harness semantics.
+risk: >
+  Temporal SDK patch behavior could change provider-side edge cases that are not covered by local
+  unit tests or dependency-only review.
+mitigations:
+  - Keep adapter-temporal type-check and unit-test validation in the PR evidence.
+  - Keep GitHub Temporal integration lanes as the merge gate for provider-level regressions.
+  - Reopen this risk if Temporal worker startup, activity execution, or workflow lifecycle tests
+    regress after merge.
+review_after: 2026-05-15
+---

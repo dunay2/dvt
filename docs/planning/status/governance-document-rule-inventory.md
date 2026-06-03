@@ -57,36 +57,46 @@ full catalog.
 
 ## Governance Hierarchy
 
-| Layer               | Purpose                                                        | Primary sources                                                                                                                                                                                                | Typical rule shape                                                            |
-| ------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `normative`         | Accepted decisions, invariants, contracts, compatibility rules | [ADRs](../../adr/index.md), [Contracts](../../contracts/index.md), [Contract Versioning Policy](../../architecture/components/engine/contracts/VERSIONING.md)                                                  | `MUST`, `MUST NOT`, compatibility, ownership, lifecycle invariants            |
-| `architectural`     | Repository-wide principles and system boundaries               | [Reference Architecture](../../architecture/reference-architecture.md), [Execution Model](../execution-model/dvt-execution-model.md), [Domain Language](../../concepts/domain-language.md)                     | architectural principles, terminology, bounded contexts, execution boundaries |
-| `operational`       | How contributors and agents must work                          | [Contributing](../../CONTRIBUTING.md), [Mandatory Work System For AI](../../guides/ai-work-protocol.md), [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md)                            | process order, validation requirements, PR rules, local commands              |
-| `enforcement`       | Automated gates and ownership routing                          | [CODEOWNERS](../../../.github/CODEOWNERS), [commitlint config](../../../commitlint.config.cjs), [package scripts](../../../package.json), [GitHub workflows](../../../.github/workflows/ci.yml)                | automatic blocking or routing rules                                           |
-| `status`            | What is true now in code or delivery                           | [Current Status](../../architecture/system-delivery-status.md), [Governance Document And Rule Inventory](./governance-document-rule-inventory.md), [Canonical Doc Code Matrix](./canonical-doc-code-matrix.md) | current implementation truth, mapping, drift signals                          |
-| `risk and evidence` | Residual debt and proof of validation                          | [Risk Register](../../risk-register/index.md), [Evidence](../../evidence/index.md), [Runbooks](../../runbooks/index.md)                                                                                        | open risk, mitigation, proof, operational procedure                           |
-| `historical`        | Archived context and prior plans                               | [Archive](../../archive/index.md), [ADR archive](../../adr/_archive/index.md)                                                                                                                                  | historical reference only                                                     |
+<!-- markdownlint-disable MD060 -->
+
+| Layer               | Purpose                                                        | Primary sources                                                                                                                                                                                                                                                                                                                                                                              | Typical rule shape                                                            |
+| ------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `normative`         | Accepted decisions, invariants, contracts, compatibility rules | [ADRs](../../adr/index.md), [Contracts](../../contracts/index.md), [Contract Versioning Policy](../../architecture/components/engine/contracts/VERSIONING.md)                                                                                                                                                                                                                                | `MUST`, `MUST NOT`, compatibility, ownership, lifecycle invariants            |
+| `architectural`     | Repository-wide principles and system boundaries               | [Reference Architecture](../../architecture/reference-architecture.md), [Command And Query Rail Governance](../../architecture/command-query-rail-governance.md), [Fowler Opportunity Planning Governance](../../architecture/fowler-opportunity-planning-governance.md), [Execution Model](../execution-model/dvt-execution-model.md), [Domain Language](../../concepts/domain-language.md) | architectural principles, terminology, bounded contexts, execution boundaries |
+| `operational`       | How contributors and agents must work                          | [Contributing](../../CONTRIBUTING.md), [Mandatory Work System For AI](../../guides/ai-work-protocol.md), [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md)                                                                                                                                                                                                          | process order, validation requirements, PR rules, local commands              |
+| `enforcement`       | Automated gates and ownership routing                          | [CODEOWNERS](../../../.github/CODEOWNERS), [commitlint config](../../../commitlint.config.cjs), [package scripts](../../../package.json), [GitHub workflows](../../../.github/workflows/ci.yml)                                                                                                                                                                                              | automatic blocking or routing rules                                           |
+| `status`            | What is true now in code or delivery                           | [Current Status](../../architecture/system-delivery-status.md), [Governance Document And Rule Inventory](./governance-document-rule-inventory.md), [Canonical Doc Code Matrix](./canonical-doc-code-matrix.md)                                                                                                                                                                               | current implementation truth, mapping, drift signals                          |
+| `risk and evidence` | Residual debt and proof of validation                          | [Risk Register](../../risk-register/index.md), [Evidence](../../evidence/index.md), [Runbooks](../../runbooks/index.md)                                                                                                                                                                                                                                                                      | open risk, mitigation, proof, operational procedure                           |
+| `historical`        | Archived context and prior plans                               | [Archive](../../archive/index.md), [ADR archive](../../adr/_archive/index.md)                                                                                                                                                                                                                                                                                                                | historical reference only                                                     |
+
+<!-- markdownlint-enable MD060 -->
 
 ## Canonical Entry Points And Classification Rules
 
-| Source                                                                                        | Type                                 | Role                               | Key rules or classification decisions                                                                                                                                                                                                                     |
-| --------------------------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [AGENTS.md](../../../AGENTS.md)                                                               | `operational-enforcement entrypoint` | Repository startup rule for agents | Startup rule for agents; includes the fixed startup sentence, closeout evidence requirements, and direct escalated `git commit`.                                                                                                                          |
-| [docs/index.md](../../index.md)                                                               | `entrypoint`                         | Canonical documentation home       | Start by intent, not by folder guessing; do not start with engine internals by default; distinguish concepts, architecture, planning, runbooks, risk, ADRs.                                                                                               |
-| [docs/DOCS_README.md](../../DOCS_README.md)                                                   | `operational`                        | Documentation structure baseline   | Single canonical ADR location under `docs/adr/`; `index.md` in every directory; explicit document status; unique ADR IDs; move historical material to archive; planning-derived indexes and rendered lane views are local/CI artifacts, not tracked docs. |
-| [docs/concepts/domain-language.md](../../concepts/domain-language.md)                         | `architectural`                      | Repository naming discipline       | `DVT` is the full system; `engine` is only the execution core; do not confuse `roadmap` with `status`; do not treat local package README files as canonical by default.                                                                                   |
-| [docs/concepts/glossary.md](../../concepts/glossary.md)                                       | `architectural`                      | Shared vocabulary                  | Canonical meanings for `run`, `plan`, `status`, `risk`, `evidence`, `workspace`, `canonical spec`, `status doc`, and `reference-only`.                                                                                                                    |
-| [docs/concepts/repository-map.md](../../concepts/repository-map.md)                           | `status`                             | Workspace-to-doc map               | Each workspace is classified as `canonical`, `linked-local`, or `reference-only`; this page is a map, not a behavioral specification.                                                                                                                     |
-| [docs/architecture/index.md](../../architecture/index.md)                                     | `entrypoint`                         | Architecture navigation            | Do not collapse the repository into engine-only reading; shared, frontend, and infra surfaces are first-class architecture entry points.                                                                                                                  |
-| [docs/planning/state/planning-dashboard.md](../state/planning-dashboard.md)                   | `entrypoint`                         | Human planning dashboard           | Start here when the question is `what is active, blocked, or next`; use it to route to the workboard, open-task view, lane YAML registry, and roadmap surfaces.                                                                                           |
-| [docs/architecture/reference-architecture.md](../../architecture/reference-architecture.md)   | `architectural`                      | Top-level principles               | Hexagonal architecture, deterministic execution, event-sourced lifecycle, explicit tenant isolation, replaceable infrastructure behind ports.                                                                                                             |
-| [docs/planning/state/planning-control-tower.md](../state/planning-control-tower.md)           | `entrypoint`                         | Planning navigation                | Planning routing starts from the control tower; lane YAML files are the tracked task registry; generated planning indexes and rendered lane/workboard pages are local/CI artifacts only.                                                                  |
-| [docs/planning/proposals/portfolio-map-20260403.md](../proposals/portfolio-map-20260403.md)   | `operational`                        | Planning proposal navigation       | Proposal navigation routes through the portfolio map instead of a generated planning-proposals landing page.                                                                                                                                              |
-| [docs/planning/reviews/review-status-board.md](../reviews/review-status-board.md)             | `operational`                        | Planning review navigation         | Active review navigation routes through the review status board instead of a generated planning-reviews landing page.                                                                                                                                     |
-| [docs/planning/roadmap/index.md](../roadmap/index.md)                                         | `operational`                        | Roadmap-of-record classification   | Do not create parallel roadmap entry points; do not use status docs as roadmap docs; classify new roadmap-like files explicitly.                                                                                                                          |
-| [docs/planning/roadmap/strategic-product-roadmap.md](../roadmap/strategic-product-roadmap.md) | `operational`                        | Strategic product direction        | Use this as the stable strategic overlay for why the active domains and lanes exist; do not let it become a second execution queue or a status board.                                                                                                     |
-| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)   | `status`                             | Current implementation truth       | This is the status doc, not the canonical behavioral spec; use it with the canonical matrix, planning control tower, and roadmap surfaces.                                                                                                                |
-| [docs/planning/status/canonical-doc-code-matrix.md](./canonical-doc-code-matrix.md)           | `status`                             | Topic-level traceability           | For each high-value topic, identify canonical spec, code paths, tests, and verification commands.                                                                                                                                                         |
+<!-- markdownlint-disable MD060 -->
+
+| Source                                                                                                                      | Type                                 | Role                               | Key rules or classification decisions                                                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [AGENTS.md](../../../AGENTS.md)                                                                                             | `operational-enforcement entrypoint` | Repository startup rule for agents | Startup rule for agents; includes the fixed startup sentence, closeout evidence requirements, and direct escalated `git commit`.                                                                                                                          |
+| [docs/index.md](../../index.md)                                                                                             | `entrypoint`                         | Canonical documentation home       | Start by intent, not by folder guessing; do not start with engine internals by default; distinguish concepts, architecture, planning, runbooks, risk, ADRs.                                                                                               |
+| [docs/DOCS_README.md](../../DOCS_README.md)                                                                                 | `operational`                        | Documentation structure baseline   | Single canonical ADR location under `docs/adr/`; `index.md` in every directory; explicit document status; unique ADR IDs; move historical material to archive; planning-derived indexes and rendered lane views are local/CI artifacts, not tracked docs. |
+| [docs/concepts/domain-language.md](../../concepts/domain-language.md)                                                       | `architectural`                      | Repository naming discipline       | `DVT` is the full system; `engine` is only the execution core; do not confuse `roadmap` with `status`; do not treat local package README files as canonical by default.                                                                                   |
+| [docs/concepts/glossary.md](../../concepts/glossary.md)                                                                     | `architectural`                      | Shared vocabulary                  | Canonical meanings for `run`, `plan`, `status`, `risk`, `evidence`, `workspace`, `canonical spec`, `status doc`, and `reference-only`.                                                                                                                    |
+| [docs/concepts/repository-map.md](../../concepts/repository-map.md)                                                         | `status`                             | Workspace-to-doc map               | Each workspace is classified as `canonical`, `linked-local`, or `reference-only`; this page is a map, not a behavioral specification.                                                                                                                     |
+| [docs/architecture/index.md](../../architecture/index.md)                                                                   | `entrypoint`                         | Architecture navigation            | Do not collapse the repository into engine-only reading; shared, frontend, and infra surfaces are first-class architecture entry points.                                                                                                                  |
+| [docs/planning/state/planning-dashboard.md](../state/planning-dashboard.md)                                                 | `entrypoint`                         | Human planning dashboard           | Start here when the question is `what is active, blocked, or next`; use it to route to the workboard, open-task view, planning DB queries, lane YAML snapshots, and roadmap surfaces.                                                                     |
+| [docs/architecture/reference-architecture.md](../../architecture/reference-architecture.md)                                 | `architectural`                      | Top-level principles               | Hexagonal architecture, deterministic execution, event-sourced lifecycle, explicit tenant isolation, replaceable infrastructure behind ports.                                                                                                             |
+| [docs/architecture/command-query-rail-governance.md](../../architecture/command-query-rail-governance.md)                   | `architectural`                      | Repository command/query rail      | Externally observable behavior must be represented by a command or query before implementation; routes, adapters, workers, plugins, UI actions, Cypress workflows, and architecture tests implement the rail instead of inventing local semantics.        |
+| [docs/architecture/fowler-opportunity-planning-governance.md](../../architecture/fowler-opportunity-planning-governance.md) | `architectural`                      | Repository Fowler planning rule    | Non-trivial behavior, boundary, workflow, adapter, route, worker, plugin, or architecture-test changes must identify root opportunities, Fowler/DDD ownership, allowed implementation surfaces, and required tests before implementation.                 |
+| [docs/planning/state/planning-control-tower.md](../state/planning-control-tower.md)                                         | `entrypoint`                         | Planning navigation                | Planning routing starts from the control tower; the planning DB is the operational task registry; lane YAML files are bootstrap/export snapshots; generated planning indexes and rendered lane/workboard pages are local/CI artifacts only.               |
+| [docs/planning/proposals/portfolio-map-20260403.md](../proposals/portfolio-map-20260403.md)                                 | `operational`                        | Planning proposal navigation       | Proposal navigation routes through the portfolio map instead of a generated planning-proposals landing page.                                                                                                                                              |
+| [docs/planning/reviews/review-status-board.md](../reviews/review-status-board.md)                                           | `operational`                        | Planning review navigation         | Active review navigation routes through the review status board instead of a generated planning-reviews landing page.                                                                                                                                     |
+| [docs/planning/roadmap/index.md](../roadmap/index.md)                                                                       | `operational`                        | Roadmap-of-record classification   | Do not create parallel roadmap entry points; do not use status docs as roadmap docs; classify new roadmap-like files explicitly.                                                                                                                          |
+| [docs/planning/roadmap/strategic-product-roadmap.md](../roadmap/strategic-product-roadmap.md)                               | `operational`                        | Strategic product direction        | Use this as the stable strategic overlay for why the active domains and lanes exist; do not let it become a second execution queue or a status board.                                                                                                     |
+| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)                                 | `status`                             | Current implementation truth       | This is the status doc, not the canonical behavioral spec; use it with the canonical matrix, planning control tower, and roadmap surfaces.                                                                                                                |
+| [docs/planning/status/canonical-doc-code-matrix.md](./canonical-doc-code-matrix.md)                                         | `status`                             | Topic-level traceability           | For each high-value topic, identify canonical spec, code paths, tests, and verification commands.                                                                                                                                                         |
+
+<!-- markdownlint-enable MD060 -->
 
 ## Core Normative Sources
 
@@ -136,9 +146,11 @@ Usage rules already declared in the ADR index:
 | `ADR-0033`  | Accepted   | Outbox worker sharding and fencing model                                                                        | [ADR-0033](../../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)                    |
 | `ADR-0034`  | Accepted   | Bounded context boundaries and communication rules                                                              | [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)          |
 | `ADR-0035`  | Accepted   | Planner public contract evolution protocol and bounded review scope                                             | [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)                  |
-| `ADR-0036`  | Accepted   | ExecutionPlan planVersion registry and runtime compatibility matrix                                             | [ADR-0036](../../adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)      |
+| `ADR-0036`  | Accepted   | ExecutionPlan planVersion registry and runtime admission matrix                                                 | [ADR-0036](../../adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md)      |
 | `ADR-0037`  | Accepted   | Run-event lifecycle archival, verification, and restore model                                                   | [ADR-0037](../../adr/ADR-0037-run-event-lifecycle-archival-verification-and-restore-model.md) |
 | `ADR-0038`  | Accepted   | Delivery-buffer retention and purge policy                                                                      | [ADR-0038](../../adr/ADR-0038-delivery-buffer-retention-and-purge-policy.md)                  |
+| `ADR-0053`  | Accepted   | File identity, content hash, governance hash, and aggregate state fingerprint governance                        | [ADR-0053](../../adr/ADR-0053-file-state-fingerprint-governance.md)                           |
+| `ADR-0055`  | Accepted   | Planning DB canonical operational source, DB-first commands, normalized read models, and export gates           | [ADR-0055](../../adr/adr-0055-planning-db-canonical-operational-source.md)                    |
 
 ### Normative contract and execution documents
 
@@ -191,7 +203,7 @@ Usage rules already declared in the ADR index:
 | [docs/CONTRIBUTING.md](../../CONTRIBUTING.md)                                                                               | `operational`             | PR title must follow Conventional Commits; PR body must be long enough and carry evidence; docs contributions must pass markdown, link, TS block, and normative contract structure checks; versioning and deprecation rules apply to normative contracts. |
 | [Mandatory Work System For AI](../../guides/ai-work-protocol.md)                                                            | `operational`             | AI-assisted work must follow phased workflow: existing material check, think-first analysis, pre-implementation brief, baseline ADR validation, traceable generation, relationship recording, documentation update, validation and closeout.              |
 | [docs/guides/testing-and-ci-capabilities.md](../../guides/testing-and-ci-capabilities.md)                                   | `operational`             | Canonical local commands and their CI mappings are declared here; GitHub workflows remain the authoritative merge gates.                                                                                                                                  |
-| [docs/architecture/atlas/engineering/engineering_playbook.md](../../architecture/atlas/engineering/engineering_playbook.md) | `operational snapshot`    | PRs should include tests, contract or ADR references for boundary changes, no package boundary violations, and docs updates when behavior changes.                                                                                                        |
+| [docs/architecture/atlas/engineering/engineering-playbook.md](../../architecture/atlas/engineering/engineering-playbook.md) | `operational snapshot`    | PRs should include tests, contract or ADR references for boundary changes, no package boundary violations, and docs updates when behavior changes.                                                                                                        |
 | [docs/runbooks/index.md](../../runbooks/index.md)                                                                           | `operational`             | Runbook entry point for incident, recovery, and worker operation procedures.                                                                                                                                                                              |
 | [docs/evidence/index.md](../../evidence/index.md)                                                                           | `evidence`                | Index of evidence docs proving closure or validation for specific changes.                                                                                                                                                                                |
 | [docs/risk-register/index.md](../../risk-register/index.md)                                                                 | `risk`                    | Index of open technical and delivery risks still requiring mitigation or explicit acceptance.                                                                                                                                                             |
@@ -216,14 +228,25 @@ Usage rules already declared in the ADR index:
   Role: `command registry`
   Enforces: root commands for lint, type-check, tests, contracts, docs sync,
   docs quality, determinism, golden validation, and ADR-0000 traceability.
-- [package.json `precommit`](../../../package.json)
+- [package.json `hooks:precommit`](../../../package.json)
   Role: `hook command`
   Enforces: `lint-staged` plus determinism lint before commit when hooks run
   normally.
 - [package.json `verify:prepush`](../../../package.json)
   Role: `pre-push gate`
   Enforces: root type-check, planning workboard drift check, changed-markdown
-  validation, and changed-file checks.
+  validation, governance file-index freshness, accepted file-fingerprint
+  baseline validation, and changed-file checks.
+- [package.json `pr:closeout`](../../../package.json)
+  Role: `PR closeout rail`
+  Enforces: ordered docs/status/governance preparation, optional targeted
+  checks, staged-mode unstaged-output guarding, commit-helper execution, one
+  final pre-push validation pass, and explicit push.
+- [package.json `governance:refresh`](../../../package.json)
+  Role: `canonical governance refresh orchestrator`
+  Enforces: ordered docs/planning/governance generation, repeat-until-stable
+  worktree convergence, planning query-store import, planning drift check, and
+  governance drift check before final docs and pre-push gates.
 - [package.json `docs:pr:fast`](../../../package.json)
   Role: `local docs preflight`
   Enforces: local fast-path docs PR validation before push or PR creation.
@@ -244,6 +267,11 @@ Usage rules already declared in the ADR index:
   Role: `deterministic docs PR wrapper`
   Enforces: ordered local docs validation, PR title/body validation, and the
   push/PR creation sequence.
+- [scripts/pr-closeout.cjs](../../../scripts/pr-closeout.cjs)
+  Role: `governed PR closeout rail`
+  Enforces: commit-before-final-prepush ordering, prevents hidden hook bypasses
+  in local PR finalization, and rejects staged-mode commits when prep leaves
+  unstaged files behind.
 - [scripts/docs-pr-local.cjs](../../../scripts/docs-pr-local.cjs)
   Role: `local docs PR orchestrator`
   Enforces: ordered local execution of fast/full docs PR checks and optional
@@ -263,9 +291,42 @@ Usage rules already declared in the ADR index:
 - [scripts/docs-canonical-check.cjs](../../../scripts/docs-canonical-check.cjs)
   Role: `canonical path gate`
   Enforces: canonical docs path and legacy segment validation.
+- [scripts/check-feature-mechanization.cjs](../../../scripts/check-feature-mechanization.cjs)
+  Role: `feature mechanization gate`
+  Enforces: feature plans with `feature-mechanization` manifests must be
+  closed mechanically, including C&Q/DDD/Fowler binding, red-green cycles,
+  symbol coverage, architecture guard, Cypress coverage, and closeout gates.
+  Its implementation mode also checks the real Git diff against
+  `allowedImplementationSurfaces`, blocks `forbiddenImplementationSurfaces`,
+  requires new top-level code symbols to be declared in the manifest, forbids
+  Cypress `cy.intercept()` for `/workspace/graph/draft`, and forbids Cypress
+  direct `PUT /workspace/graph/draft` seeding outside the UI flow.
 - [scripts/sync-docs.cjs](../../../scripts/sync-docs.cjs)
   Role: `docs generator`
   Enforces: regeneration of indexes and docs navigation surfaces.
+- [scripts/check-governance-unit-coverage.cjs](../../../scripts/check-governance-unit-coverage.cjs)
+  Role: `governance unit ownership gate`
+  Enforces: every tracked file has exactly one component/source owner in
+  `system-governance-unit-index.units.yaml`.
+- [scripts/generate-governance-document-unit-map.cjs](../../../scripts/generate-governance-document-unit-map.cjs)
+  Role: `document-to-unit map generator`
+  Enforces: every tracked Markdown document under `docs/**` is indexed to its
+  document owner and subject unit.
+- [scripts/generate-governance-file-component-index.cjs](../../../scripts/generate-governance-file-component-index.cjs)
+  Role: `file and component governance index generator`
+  Enforces: exhaustive generated projections for file-level ownership,
+  component/source ownership counts, component-to-file shards, drift/legacy
+  file visibility, and ADR-0053 file-state fingerprints.
+- [scripts/check-governance-file-fingerprint-baseline.cjs](../../../scripts/check-governance-file-fingerprint-baseline.cjs)
+  Role: `accepted file-fingerprint baseline gate`
+  Enforces: the generated file index cannot drift from the accepted
+  `system-governance-file-fingerprint-baseline.yaml` without regenerating and
+  reviewing the baseline update; can render a component-grouped impact report
+  for reviewer triage.
+- [scripts/generate-governance-remediation-queue.cjs](../../../scripts/generate-governance-remediation-queue.cjs)
+  Role: `governance remediation queue generator`
+  Enforces: coverage gaps, drift files, broad components, generic C&Q rails,
+  and drift-tracking docs are projected into component-scoped remediation work.
 
 Additional enforcement surface:
 
@@ -283,9 +344,10 @@ Additional enforcement surface:
 - [.github/workflows/pr-quality-gate.yml](../../../.github/workflows/pr-quality-gate.yml)
   Role: `PR Quality Gate`
   Enforces: ARC policy evaluation, docs sync and workboard drift checks, docs
-  quality checks, canonical docs checks, generated status checks, optional
-  workspace type-check, PR title validation, PR body minimum length, PR size
-  warning, and Temporal integration routing.
+  quality checks, canonical docs checks, generated status checks, governance
+  file-index and accepted fingerprint baseline checks, optional workspace
+  type-check, PR title validation, PR body minimum length, PR size warning,
+  and Temporal integration routing.
 - [.github/workflows/test.yml](../../../.github/workflows/test.yml)
   Role: `Test Suite`
   Enforces: affected package tests, full suite on non-PR runs, determinism
@@ -297,25 +359,39 @@ Additional enforcement surface:
 
 ## Status, Risk, Evidence, And Planning Surfaces
 
-| Source                                                                                                | Type                 | What it governs                                                                        |
-| ----------------------------------------------------------------------------------------------------- | -------------------- | -------------------------------------------------------------------------------------- |
-| [docs/planning/status/governance-document-rule-inventory.md](./governance-document-rule-inventory.md) | `status entrypoint`  | Canonical planning-status entrypoint for tracked governance and route rules.           |
-| `docs/planning/status/index.md`                                                                       | `derived local/CI`   | Generated planning-status landing page; do not treat as a tracked canonical doc.       |
-| `docs/planning/index.md`                                                                              | `derived local/CI`   | Generated planning landing page; do not treat as a tracked canonical doc.              |
-| `docs/planning/proposals/index.md`                                                                    | `derived local/CI`   | Generated proposal landing page; proposal navigation should use the portfolio map.     |
-| `docs/planning/reviews/index.md`                                                                      | `derived local/CI`   | Generated review landing page; review navigation should use the review status board.   |
-| `docs/planning/state/agent-lane-*.md`                                                                 | `derived local/CI`   | Rendered lane views generated from `agent-lane-*.yaml`; never edit or commit directly. |
-| `docs/planning/state/execution-workboard.md`                                                          | `derived local/CI`   | Generated execution summary view derived from lane YAML.                               |
-| `docs/planning/state/open-task-route.md`                                                              | `derived local/CI`   | Generated routing view derived from lane YAML.                                         |
-| [docs/planning/status/generated-code-state.md](./generated-code-state.md)                             | `generated status`   | Current workspace, source, and test inventory.                                         |
-| [docs/planning/status/generated-capability-coverage.md](./generated-capability-coverage.md)           | `generated status`   | Capability coverage signal.                                                            |
-| [docs/planning/status/generated-spec-traceability.md](./generated-spec-traceability.md)               | `generated status`   | Generated spec traceability report.                                                    |
-| [docs/planning/status/release-please-continuous.md](./release-please-continuous.md)                   | `status`             | Release process status.                                                                |
-| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)           | `status`             | Current truth by layer, open follow-up work, and reading order.                        |
-| [docs/planning/gaps/index.md](../gaps/index.md)                                                       | `planning reference` | Current tactical gap registers only; not the retired `G1`-`G10` program.               |
-| [docs/risk-register/index.md](../../risk-register/index.md)                                           | `risk`               | Open risks that still require mitigation or acceptance.                                |
-| [docs/evidence/index.md](../../evidence/index.md)                                                     | `evidence`           | Validation proof for closed or hardened work.                                          |
-| [docs/runbooks/index.md](../../runbooks/index.md)                                                     | `operations`         | Runtime procedures, incident response, and worker operation guidance.                  |
+| Source                                                                                                                                | Type                 | What it governs                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------- |
+| [docs/planning/status/governance-document-rule-inventory.md](./governance-document-rule-inventory.md)                                 | `status entrypoint`  | Canonical planning-status entrypoint for tracked governance and route rules.             |
+| `docs/planning/status/index.md`                                                                                                       | `derived local/CI`   | Generated planning-status landing page; do not treat as a tracked canonical doc.         |
+| `docs/planning/index.md`                                                                                                              | `derived local/CI`   | Generated planning landing page; do not treat as a tracked canonical doc.                |
+| `docs/planning/proposals/index.md`                                                                                                    | `derived local/CI`   | Generated proposal landing page; proposal navigation should use the portfolio map.       |
+| `docs/planning/reviews/index.md`                                                                                                      | `derived local/CI`   | Generated review landing page; review navigation should use the review status board.     |
+| `docs/planning/state/agent-lane-*.md`                                                                                                 | `derived local/CI`   | Rendered lane views generated from `agent-lane-*.yaml`; never edit or commit directly.   |
+| `docs/planning/state/execution-workboard.md`                                                                                          | `derived local/CI`   | Generated execution summary view derived from planning DB effective task views.          |
+| `docs/planning/state/open-task-route.md`                                                                                              | `derived local/CI`   | Generated routing view derived from planning DB next-task views.                         |
+| [docs/planning/status/generated-code-state.md](./generated-code-state.md)                                                             | `navigation status`  | Stable pointer to the ignored local code-state render under `.generated-docs/`.          |
+| [docs/planning/status/system-governance-unit-index-20260501.md](./system-governance-unit-index-20260501.md)                           | `status`             | Human navigation surface for governed system units.                                      |
+| [docs/planning/status/system-governance-unit-index.units.yaml](./system-governance-unit-index.units.yaml)                             | `generated status`   | Mechanical unit manifest: every tracked file must resolve to one component/source owner. |
+| [docs/planning/status/system-governance-file-index-20260501.md](./system-governance-file-index-20260501.md)                           | `generated status`   | Human summary for file-level ownership, drift, and legacy classification.                |
+| [docs/planning/status/system-governance-file-index.files.yaml](./system-governance-file-index.files.yaml)                             | `generated status`   | Exhaustive file-level ownership index with one row per tracked file.                     |
+| [docs/planning/status/system-governance-file-fingerprint-baseline.yaml](./system-governance-file-fingerprint-baseline.yaml)           | `generated status`   | Accepted file-state fingerprint baseline used to reject unreviewed drift.                |
+| [docs/planning/status/system-governance-file-fingerprint-impact-20260501.md](./system-governance-file-fingerprint-impact-20260501.md) | `generated status`   | Reviewer-facing impact report for file-state fingerprint drift.                          |
+| [docs/planning/status/system-governance-component-index-20260501.md](./system-governance-component-index-20260501.md)                 | `generated status`   | Human summary for component/source units, counts, and oversized buckets.                 |
+| [docs/planning/status/system-governance-component-index.components.yaml](./system-governance-component-index.components.yaml)         | `generated status`   | Exhaustive component/source unit index with ownership counts and status.                 |
+| [docs/planning/status/system-governance-component-file-map-20260503.md](./system-governance-component-file-map-20260503.md)           | `generated status`   | Human component-to-file shard map for exact owner inspection.                            |
+| [docs/planning/status/system-governance-component-file-map.components.yaml](./system-governance-component-file-map.components.yaml)   | `generated status`   | Machine-readable manifest for component file shards under `governance-components/`.      |
+| [docs/planning/status/system-governance-document-unit-map-20260501.md](./system-governance-document-unit-map-20260501.md)             | `generated status`   | Human summary for document-to-unit mapping.                                              |
+| [docs/planning/status/system-governance-document-unit-map.docs.yaml](./system-governance-document-unit-map.docs.yaml)                 | `generated status`   | Exhaustive document-to-unit map for tracked docs Markdown files.                         |
+| [docs/planning/status/system-governance-remediation-queue-20260502.md](./system-governance-remediation-queue-20260502.md)             | `generated status`   | Human queue for component-scoped governance remediation tasks.                           |
+| [docs/planning/status/system-governance-remediation-queue.queue.yaml](./system-governance-remediation-queue.queue.yaml)               | `generated status`   | Machine-readable governance remediation queue.                                           |
+| [docs/planning/status/generated-capability-coverage.md](./generated-capability-coverage.md)                                           | `generated status`   | Capability coverage signal.                                                              |
+| [docs/planning/status/generated-spec-traceability.md](./generated-spec-traceability.md)                                               | `generated status`   | Generated spec traceability report.                                                      |
+| [docs/planning/status/release-please-continuous.md](./release-please-continuous.md)                                                   | `status`             | Release process status.                                                                  |
+| [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)                                           | `status`             | Current truth by layer, open follow-up work, and reading order.                          |
+| [docs/planning/gaps/index.md](../gaps/index.md)                                                                                       | `planning reference` | Current tactical gap registers only; not the retired `G1`-`G10` program.                 |
+| [docs/risk-register/index.md](../../risk-register/index.md)                                                                           | `risk`               | Open risks that still require mitigation or acceptance.                                  |
+| [docs/evidence/index.md](../../evidence/index.md)                                                                                     | `evidence`           | Validation proof for closed or hardened work.                                            |
+| [docs/runbooks/index.md](../../runbooks/index.md)                                                                                     | `operations`         | Runtime procedures, incident response, and worker operation guidance.                    |
 
 ## Historical And Non-Authoritative Surfaces
 
@@ -338,16 +414,23 @@ rule set can be summarized as follows:
    filename churn.
 4. The execution model remains DVT-owned: lifecycle authority, invariants,
    ordering, idempotency, and tenant boundaries are not delegated to providers.
-5. Contributors and AI-assisted changes must follow think-first, evidence-based
+5. Externally observable behavior must be represented by a command or query in
+   the owning bounded context before implementation; transports and adapters
+   implement the rail rather than naming separate product semantics.
+6. Non-trivial behavior, boundary, workflow, adapter, route, worker, plugin, or
+   architecture-test changes must be planned through the repository Fowler
+   opportunity model before implementation, including opportunities, applied
+   patterns, DDD ownership, allowed surfaces, tests, and out-of-scope items.
+7. Contributors and AI-assisted changes must follow think-first, evidence-based
    workflow rather than ad hoc implementation.
-6. Local commands exist for lint, type-check, tests, docs checks, contracts,
+8. Local commands exist for lint, type-check, tests, docs checks, contracts,
    determinism, and traceability; GitHub workflows remain the authoritative
    merge gates.
-7. Review routing, commit syntax, PR metadata, and many documentation quality
+9. Review routing, commit syntax, PR metadata, and many documentation quality
    rules are already codified in tracked config and workflow files.
-8. Status, risk, runbook, and evidence documents are supporting governance
-   surfaces; they describe current truth, residual risk, proof, and operation,
-   but they do not replace normative decisions or contracts.
+10. Status, risk, runbook, and evidence documents are supporting governance
+    surfaces; they describe current truth, residual risk, proof, and operation,
+    but they do not replace normative decisions or contracts.
 
 ## Practical Reading Order
 
@@ -359,8 +442,10 @@ already suggests this reading order:
 3. [docs/adr/index.md](../../adr/index.md)
 4. [docs/contracts/index.md](../../contracts/index.md)
 5. [docs/architecture/reference-architecture.md](../../architecture/reference-architecture.md)
-6. [docs/planning/status/canonical-doc-code-matrix.md](./canonical-doc-code-matrix.md)
-7. [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)
-8. [docs/CONTRIBUTING.md](../../CONTRIBUTING.md)
-9. [Mandatory Work System For AI](../../guides/ai-work-protocol.md)
-10. [docs/guides/testing-and-ci-capabilities.md](../../guides/testing-and-ci-capabilities.md)
+6. [docs/architecture/command-query-rail-governance.md](../../architecture/command-query-rail-governance.md)
+7. [docs/architecture/fowler-opportunity-planning-governance.md](../../architecture/fowler-opportunity-planning-governance.md)
+8. [docs/planning/status/canonical-doc-code-matrix.md](./canonical-doc-code-matrix.md)
+9. [docs/architecture/system-delivery-status.md](../../architecture/system-delivery-status.md)
+10. [docs/CONTRIBUTING.md](../../CONTRIBUTING.md)
+11. [Mandatory Work System For AI](../../guides/ai-work-protocol.md)
+12. [docs/guides/testing-and-ci-capabilities.md](../../guides/testing-and-ci-capabilities.md)

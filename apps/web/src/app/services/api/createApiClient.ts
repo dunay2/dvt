@@ -1,7 +1,7 @@
-import { useSessionStore } from '../../stores/sessionStore';
+/** Owned concern: create typed frontend API clients with normalized auth, session headers, and transport errors. */
 
-const DEFAULT_DEV_WEB_PORT = '5173';
-const DEFAULT_API_PORT = '3000';
+import { useSessionStore } from '../../stores/sessionStore';
+import { canRefreshApiBearerToken, resolveApiBearerTokenForRequest } from './apiAuthConfig';
 
 export type ApiErrorCategory = 'network' | 'unauthorized' | 'forbidden' | 'client' | 'server';
 
@@ -49,44 +49,47 @@ export type ApiClient = {
   ) => Promise<TResponse>;
 };
 
-function normalizeBaseUrl(value: string): string {
-  return value.endsWith('/') ? value.slice(0, -1) : value;
-}
+const apiBaseUrlRuntime = {
+  defaultDevWebPort: '5173',
+  defaultApiPort: '3000',
+  normalize(value: string): string {
+    return value.endsWith('/') ? value.slice(0, -1) : value;
+  },
+  inferLocal(): string {
+    if (globalThis.window === undefined) {
+      return '';
+    }
 
-function inferLocalApiBaseUrl(): string {
-  if (typeof window === 'undefined') {
-    return '';
-  }
+    const { protocol, hostname, port } = globalThis.window.location;
+    const locationPort = port.length > 0 ? `:${port}` : '';
+    if (port === apiBaseUrlRuntime.defaultDevWebPort) {
+      return `${protocol}//${hostname}:${apiBaseUrlRuntime.defaultApiPort}`;
+    }
 
-  const { protocol, hostname, port } = window.location;
-  if (port === DEFAULT_DEV_WEB_PORT) {
-    return `${protocol}//${hostname}:${DEFAULT_API_PORT}`;
-  }
+    return `${protocol}//${hostname}${locationPort}`;
+  },
+  buildRequestUrl(endpoint: string, normalizedBaseUrl: string): string {
+    if (normalizedBaseUrl.length > 0) {
+      return `${normalizedBaseUrl}${endpoint}`;
+    }
 
-  return `${protocol}//${hostname}${port ? `:${port}` : ''}`;
-}
+    if (globalThis.window !== undefined) {
+      return `${globalThis.window.location.origin}${endpoint}`;
+    }
 
-function buildRequestUrl(endpoint: string, normalizedBaseUrl: string): string {
-  if (normalizedBaseUrl.length > 0) {
-    return `${normalizedBaseUrl}${endpoint}`;
-  }
-
-  if (typeof window !== 'undefined') {
-    return `${window.location.origin}${endpoint}`;
-  }
-
-  throw new Error(
-    'API base URL is required outside browser runtime. Set VITE_API_BASE_URL explicitly.'
-  );
-}
+    throw new Error(
+      'API base URL is required outside browser runtime. Set VITE_API_BASE_URL explicitly.'
+    );
+  },
+} as const;
 
 export function resolveApiBaseUrl(): string {
   const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL;
   if (typeof configuredBaseUrl === 'string' && configuredBaseUrl.trim().length > 0) {
-    return normalizeBaseUrl(configuredBaseUrl.trim());
+    return apiBaseUrlRuntime.normalize(configuredBaseUrl.trim());
   }
 
-  return inferLocalApiBaseUrl();
+  return apiBaseUrlRuntime.inferLocal();
 }
 
 function categorizeStatus(statusCode: number | null): ApiErrorCategory {
@@ -146,13 +149,21 @@ function toApiError(params: {
   });
 }
 
-function buildHeaders(
+async function buildHeaders(
   customHeaders: HeadersInit | undefined,
-  includeSessionHeaders: boolean
-): Record<string, string> {
+  includeSessionHeaders: boolean,
+  options: { forceRefreshBearerToken?: boolean } = {}
+): Promise<Record<string, string>> {
   const headers: Record<string, string> = {
     Accept: 'application/json',
   };
+  const bearerToken = await resolveApiBearerTokenForRequest(import.meta.env, {
+    forceRefresh: options.forceRefreshBearerToken,
+  });
+
+  if (bearerToken) {
+    headers.Authorization = `Bearer ${bearerToken}`;
+  }
 
   if (includeSessionHeaders) {
     const { tenantId, projectId } = useSessionStore.getState();
@@ -184,25 +195,44 @@ function buildHeaders(
   };
 }
 
+function canRetryRequestBody(body: BodyInit | null | undefined): boolean {
+  return body == null || typeof body === 'string';
+}
+
 export function createApiClient(baseUrl = resolveApiBaseUrl()): ApiClient {
-  const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+  const normalizedBaseUrl = apiBaseUrlRuntime.normalize(baseUrl);
 
   async function requestRaw(endpoint: string, init: ApiRequestInit = {}): Promise<Response> {
     const { includeSessionHeaders = true, jsonBody, headers: customHeaders, ...requestInit } = init;
-    const headers = buildHeaders(customHeaders, includeSessionHeaders);
 
     let body: BodyInit | null | undefined = requestInit.body;
     if (jsonBody !== undefined) {
-      headers['Content-Type'] = 'application/json';
       body = JSON.stringify(jsonBody);
     }
 
-    try {
-      return await fetch(buildRequestUrl(endpoint, normalizedBaseUrl), {
+    async function dispatchRequest(forceRefreshBearerToken = false): Promise<Response> {
+      const headers = await buildHeaders(customHeaders, includeSessionHeaders, {
+        forceRefreshBearerToken,
+      });
+
+      if (jsonBody !== undefined) {
+        headers['Content-Type'] = 'application/json';
+      }
+
+      return await fetch(apiBaseUrlRuntime.buildRequestUrl(endpoint, normalizedBaseUrl), {
         ...requestInit,
         headers,
         body,
       });
+    }
+
+    try {
+      const response = await dispatchRequest();
+      if (response.status !== 401 || !canRefreshApiBearerToken() || !canRetryRequestBody(body)) {
+        return response;
+      }
+
+      return await dispatchRequest(true);
     } catch (error) {
       throw toApiError({
         endpoint,

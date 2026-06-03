@@ -216,7 +216,9 @@ flowchart LR
     `OutboxFailureDisposition`, and `MAX_OUTBOX_ATTEMPTS`
   - removed the delivery-owned behavioral surface from
     `packages/@dvt/contracts/src/contracts/engine/IOutboxStorage.v1.ts`
-    and from the root `@dvt/contracts` barrel
+    and from the owner-of-behavior position in the root `@dvt/contracts`
+    barrel; the root barrel still re-exports `IOutboxStorage.v1` as a DTO-only
+    shared seam, not as the canonical owner-local delivery contract surface
   - cut `@dvt/adapter-postgres`, `@dvt/adapter-temporal`,
     `@dvt/engine`, and `apps/outbox-worker` over to `@dvt/delivery`
 - Lineage and traceability ownership cutover:
@@ -305,6 +307,8 @@ flowchart LR
 
 - `RC-G1-C` is closed.
 - Remaining live `RC-G1` execution is `RC-G1-D`.
+- Post-merge documentation truth-sync is closed separately under
+  `RC-G1-C-TRUTH-SYNC`.
 
 ## No-Debt Evidence
 

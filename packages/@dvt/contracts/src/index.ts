@@ -5,6 +5,25 @@ export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
 export * from './contracts/engine/StartRunBoundary.v1.js';
+export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './contracts/engine/RunStateVocabulary.v1.js';
+export type {
+  AppendResult,
+  CompiledCodeRef,
+  StepArtifactRef,
+  EventEnvelope,
+  EventIdempotencyInput,
+  EventInput,
+  EventType,
+  ListEventsOptions,
+  ListRunsOptions,
+  ProviderRefUpdate,
+  RunBootstrapInput,
+  RunEventInput,
+  RunEventInputBase,
+  RunMetadata,
+  StepEventInput,
+  WorkflowSnapshot,
+} from './contracts/engine/RunStateVocabulary.v1.js';
 export {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   getSignalDerivedEventType,
@@ -27,6 +46,17 @@ export {
   SUPPORTED_EXECUTION_PLAN_VERSIONS,
 } from './contracts/planner/PlanVersion.v1.js';
 export type { SupportedPlanVersion } from './contracts/planner/PlanVersion.v1.js';
+export {
+  EXECUTION_PLAN_ADMISSION_MATRIX,
+  EXECUTION_PLAN_ADMISSION_REGISTRY,
+  isAdmittedExecutionPlanPair,
+  SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS,
+} from './contracts/planner/PlanAdmission.v1.js';
+export type {
+  ExecutionPlanAdmissionDescriptor,
+  ExecutionPlanAdmissionPair,
+  SupportedPlanSchemaVersion,
+} from './contracts/planner/PlanAdmission.v1.js';
 export type {
   ExecutionPlan,
   ExecutionStep,
@@ -77,6 +107,51 @@ export type {
   TransformationExecutionTarget,
   TransformationSqlFirstGraphSourceV1,
 } from './contracts/planner/TransformationFlowDesignGraph.v1.js';
+export {
+  WORKSPACE_GRAPH_AUTHORING_EDGE_RELATION,
+  WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
+  WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,
+  WorkspaceGraphAuthoringCanvasDocumentSchema,
+  WorkspaceGraphAuthoringCanvasWorkspaceSchema,
+  WorkspaceGraphAuthoringDraftSchema,
+  WorkspaceGraphAuthoringEdgeSchema,
+  WorkspaceGraphAuthoringNodePositionSchema,
+  WorkspaceGraphAuthoringNodeSchema,
+} from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
+export type {
+  WorkspaceGraphAuthoringCanvasDocument,
+  WorkspaceGraphAuthoringCanvasWorkspace,
+  WorkspaceGraphAuthoringDraft,
+  WorkspaceGraphAuthoringEdge,
+  WorkspaceGraphAuthoringEdgeRelation,
+  WorkspaceGraphAuthoringNode,
+  WorkspaceGraphAuthoringNodePosition,
+  WorkspaceGraphAuthoringNodeRole,
+  WorkspaceGraphAuthoringNodeStatus,
+} from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
+export {
+  WORKSPACE_GRAPH_AUTHORING_COMMAND_TYPE,
+  WorkspaceGraphAuthoringCommandSchema,
+} from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
+export type {
+  WorkspaceGraphAuthoringCommand,
+  WorkspaceGraphAuthoringCommandType,
+  WorkspaceGraphAuthoringNodePatch,
+} from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
+export {
+  EXECUTABLE_SUBGRAPH_DIAGNOSTIC_CODE,
+  EXECUTION_SELECTION_MODE,
+  ExecutableSubgraphDiagnosticSchema,
+  ExecutableSubgraphSchema,
+  ExecutionSelectionSchema,
+} from './contracts/planner/index.js';
+export type {
+  ExecutableSubgraph,
+  ExecutableSubgraphDiagnostic,
+  ExecutableSubgraphDiagnosticCode,
+  ExecutionSelection,
+  ExecutionSelectionMode,
+} from './contracts/planner/index.js';
 export {
   WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION,
   WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME,
@@ -181,16 +256,20 @@ export { EXECUTABILITY_REJECTION_CODES } from './contracts/planner/PlanExecutabi
 export type {
   ExecutabilityRejectionCode,
   ExecutabilityValidationResult,
-  IPlanExecutabilityValidator,
 } from './contracts/planner/PlanExecutabilityValidation.v1.js';
 export type {
   BindingRejectionCode,
   ExecutionBindingVerificationResult,
-  IExecutionBindingVerifier,
   PlanBindingRecord,
   StepBindingEntry,
 } from './contracts/planner/ExecutionBindingVerification.v1.js';
-export type { PlanRecord, PlanRecordState } from './contracts/planner/PlanRecord.v1.js';
+export type {
+  PlanRecord,
+  PlanRecordState,
+  ScopedPlanId,
+  ScopedPlanRef,
+  PlanStoreScope,
+} from './contracts/planner/PlanRecord.v1.js';
 export type {
   PlanExecutabilityRecord,
   PlanExecutabilityRejectionReport,
@@ -198,17 +277,15 @@ export type {
 } from './contracts/planner/PlanExecutabilityRecord.v1.js';
 export type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
 export type {
-  IPlanValidationLifecycleStore,
-  PlanValidationRecord,
-  PlanValidationState,
-} from './contracts/planner/PlanValidationLifecycle.v1.js';
+  StoredPlanArtifactValidationRecord,
+  StoredPlanArtifactValidationState,
+} from './contracts/planner/StoredPlanArtifactValidation.v1.js';
 export type {
   CustomPolicyMap,
   CustomPolicyNamespaceEntry,
   CustomPolicyRejectionCode,
   CustomPolicySchemaValidator,
   CustomPolicyValidationError,
-  ICustomPolicyNamespaceRegistry,
 } from './contracts/planner/CustomPolicyNamespaceRegistry.v1.js';
 export {
   KNOWN_STEP_KINDS,
@@ -229,23 +306,3 @@ export * from './utils/jcsCanonicalize.js';
 export * from './utils/sha256HexUtf8.js';
 export * from './utils/contractPrimitives.js';
 export * from './validation.js';
-export type {
-  AppendResult,
-  CompiledCodeRef,
-  StepArtifactRef,
-  EventEnvelope,
-  EventIdempotencyInput,
-  EventInput,
-  EventType,
-  ListEventsOptions,
-  ListRunsOptions,
-  ProviderRefUpdate,
-  RunBootstrapInput,
-  RunEventInput,
-  RunEventInputBase,
-  RunMetadata,
-  StoredPlanArtifact,
-  StepEventInput,
-  WorkflowSnapshot,
-} from './engine/IRunStateStore.v1.js';
-export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './engine/IRunStateStore.v1.js';

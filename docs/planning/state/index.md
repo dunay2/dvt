@@ -23,8 +23,9 @@ Use this decision order to avoid searching blindly:
    for "what is true now in code".
 3. [Planning Control Tower](./planning-control-tower.md)
    for "how planning execution is updated correctly".
-4. `agent-lane-*.yaml` files for "what is active now, what is blocked,
-   and what continues next".
+4. `pnpm planning:db:query focus`, `pnpm planning:db:query next`,
+   `pnpm planning:db:query open`, or `pnpm planning:db:query tasks` for "what
+   is active now, what is blocked, and what continues next".
 5. [Roadmap Of Record](../roadmap/index.md) for "in which order it should
    ship".
 
@@ -34,11 +35,11 @@ Use this decision order to avoid searching blindly:
 - [Planning Control Tower](./planning-control-tower.md)
 - [Domain Status Board](./domain-status-board.md)
 - [Inventory and Coverage](./inventory-and-coverage.md)
-- [Agent Lane A YAML](./agent-lane-a.yaml)
-- [Agent Lane B YAML](./agent-lane-b.yaml)
-- [Agent Lane C YAML](./agent-lane-c.yaml)
-- [Agent Lane D YAML](./agent-lane-d.yaml)
-- [Agent Lane E YAML](./agent-lane-e.yaml)
+- [Agent Lane A YAML](./agent-lane-a.yaml) - bootstrap/export snapshot
+- [Agent Lane B YAML](./agent-lane-b.yaml) - bootstrap/export snapshot
+- [Agent Lane C YAML](./agent-lane-c.yaml) - bootstrap/export snapshot
+- [Agent Lane D YAML](./agent-lane-d.yaml) - bootstrap/export snapshot
+- [Agent Lane E YAML](./agent-lane-e.yaml) - bootstrap/export snapshot
 
 ## Canonical Status Anchors
 

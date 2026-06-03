@@ -1,165 +1,230 @@
 import { describe, expect, it } from 'vitest';
 
+import { parseWorkflowControlInput } from '../src/workflows/runPlanWorkflow.state.js';
 import {
   buildContinueAsNewInput,
-  parseOptionalNonNegativeInt,
-  resolveGatewayDependencyContext,
   shouldTriggerContinueAsNew,
+} from '../src/workflows/workflowCursorHelpers.js';
+import {
+  resolveGatewayDependencyContext,
   validateGatewayDependencies,
-} from '../src/workflows/workflowHelpers.js';
+} from '../src/workflows/workflowGatewayHelpers.js';
+import { parseOptionalNonNegativeInt } from '../src/workflows/workflowInputParsingHelpers.js';
 
-describe('continue-as-new policy', () => {
-  it('does not trigger when threshold is disabled', () => {
-    expect(
-      shouldTriggerContinueAsNew({
-        continueAsNewAfterLayerCount: 0,
-        processedLayersInCurrentExecution: 100,
-        nextLayerIndex: 100,
-        totalLayerCount: 200,
-      })
-    ).toBe(false);
-  });
+import { createPlanRef, createResolvedRunContext } from './helpers/contractFixtures.js';
 
-  it('does not trigger below threshold', () => {
-    expect(
-      shouldTriggerContinueAsNew({
-        continueAsNewAfterLayerCount: 3,
-        processedLayersInCurrentExecution: 2,
-        nextLayerIndex: 2,
-        totalLayerCount: 10,
-      })
-    ).toBe(false);
-  });
-
-  it('triggers exactly at threshold when there are pending layers', () => {
-    expect(
-      shouldTriggerContinueAsNew({
-        continueAsNewAfterLayerCount: 3,
-        processedLayersInCurrentExecution: 3,
-        nextLayerIndex: 3,
-        totalLayerCount: 10,
-      })
-    ).toBe(true);
-  });
-
-  it('does not trigger when no pending layers remain', () => {
-    expect(
-      shouldTriggerContinueAsNew({
-        continueAsNewAfterLayerCount: 3,
-        processedLayersInCurrentExecution: 3,
-        nextLayerIndex: 3,
-        totalLayerCount: 3,
-      })
-    ).toBe(false);
-  });
-
-  it('carries gatewayDecisions across continue-as-new rollover', () => {
-    const nextInput = buildContinueAsNewInput({
-      input: {
-        planRef: {
-          uri: 'file://plan.json',
-          sha256: 'abc',
-          schemaVersion: 'v1.0.0',
-          planId: 'plan-1',
-          planVersion: '1',
-        },
-        ctx: {
-          tenantId: 't1',
-          projectId: 'p1',
-          environmentId: 'e1',
-          runId: 'r1',
-          targetAdapter: 'temporal',
-        },
+const BASE_INPUT = {
+  planRef: createPlanRef({
+    uri: 'file://plan.json',
+    sha256: 'a'.repeat(64),
+    planId: 'plan-1',
+  }),
+  ctx: createResolvedRunContext({
+    tenantId: 't1',
+    projectId: 'p1',
+    environmentId: 'e1',
+    runId: 'r1',
+  }),
+  maxContinueAsNewPayloadBytes: 1_000_000,
+  continueAsNewAfterLayerCount: 3,
+  stepActivityRouting: {
+    routesByStepKind: {
+      PYTHON_SCRIPT: {
+        capability: 'executor.python',
+        taskQueue: 'dvt-temporal-python',
       },
+    },
+  },
+};
+
+type ContinueAsNewTriggerArgs = Parameters<typeof shouldTriggerContinueAsNew>[0];
+type ContinueAsNewBuildArgs = Parameters<typeof buildContinueAsNewInput<typeof BASE_INPUT>>[0];
+type ContinueAsNewBuildOverrides = Omit<
+  ContinueAsNewBuildArgs,
+  | 'input'
+  | 'maxContinueAsNewPayloadBytes'
+  | 'continueAsNewAfterLayerCount'
+  | 'nextLayerIndex'
+  | 'continuedAsNewCount'
+>;
+type ContinueAsNewTestOverrides = ContinueAsNewBuildOverrides & {
+  maxContinueAsNewPayloadBytes?: number;
+};
+type ContinueAsNewBuildResult = ReturnType<typeof buildContinueAsNewInput<typeof BASE_INPUT>>;
+
+const CONTINUE_AS_NEW_TRIGGER_CASES: Array<{
+  name: string;
+  input: ContinueAsNewTriggerArgs;
+  expected: boolean;
+}> = [
+  {
+    name: 'does not trigger when threshold is disabled',
+    input: {
+      continueAsNewAfterLayerCount: 0,
+      processedLayersInCurrentExecution: 100,
+      nextLayerIndex: 100,
+      totalLayerCount: 200,
+    },
+    expected: false,
+  },
+  {
+    name: 'does not trigger below threshold',
+    input: {
       continueAsNewAfterLayerCount: 3,
+      processedLayersInCurrentExecution: 2,
       nextLayerIndex: 2,
-      continuedAsNewCount: 1,
+      totalLayerCount: 10,
+    },
+    expected: false,
+  },
+  {
+    name: 'triggers exactly at threshold when there are pending layers',
+    input: {
+      continueAsNewAfterLayerCount: 3,
+      processedLayersInCurrentExecution: 3,
+      nextLayerIndex: 3,
+      totalLayerCount: 10,
+    },
+    expected: true,
+  },
+  {
+    name: 'does not trigger when no pending layers remain',
+    input: {
+      continueAsNewAfterLayerCount: 3,
+      processedLayersInCurrentExecution: 3,
+      nextLayerIndex: 3,
+      totalLayerCount: 3,
+    },
+    expected: false,
+  },
+];
+
+const CONTINUE_AS_NEW_ROLLOVER_CASES: Array<{
+  name: string;
+  overrides: ContinueAsNewBuildOverrides;
+  assert(nextInput: ContinueAsNewBuildResult): void;
+}> = [
+  {
+    name: 'carries gatewayDecisions across continue-as-new rollover',
+    overrides: {
       gatewayDecisions: {
         gwA: true,
         gwB: false,
       },
+      gatewayDependencyFacts: {},
+      latestResultEvidence: undefined,
       skippedStepIds: new Set(['skipped-step']),
       processedControlSignalIds: new Set<string>(),
-    });
-
-    expect(nextInput.resumeFromLayerIndex).toBe(2);
-    expect(nextInput.continuedAsNewCount).toBe(2);
-    expect(nextInput.gatewayDecisions).toEqual({ gwA: true, gwB: false });
-    expect(nextInput.skippedStepIds).toEqual(['skipped-step']);
-    expect(nextInput.planRef.planId).toBe('plan-1');
-  });
-
-  it('carries completedStepResults across continue-as-new rollover', () => {
-    const nextInput = buildContinueAsNewInput({
-      input: {
-        planRef: {
-          uri: 'file://plan.json',
-          sha256: 'abc',
-          schemaVersion: 'v1.0.0',
-          planId: 'plan-1',
-          planVersion: '1',
-        },
-        ctx: {
-          tenantId: 't1',
-          projectId: 'p1',
-          environmentId: 'e1',
-          runId: 'r1',
-          targetAdapter: 'temporal',
-        },
-      },
-      continueAsNewAfterLayerCount: 3,
-      nextLayerIndex: 2,
-      continuedAsNewCount: 1,
+    },
+    assert(nextInput) {
+      expect(nextInput.cursor).toEqual({
+        nextLayerIndex: 2,
+        continuedAsNewCount: 2,
+        gatewayDecisions: { gwA: true, gwB: false },
+        gatewayDependencyFacts: {},
+        skippedStepIds: ['skipped-step'],
+        processedControlSignalIds: [],
+      });
+      expect(nextInput).not.toHaveProperty('nextLayerIndex');
+      expect(nextInput).not.toHaveProperty('continuedAsNewCount');
+      expect(nextInput).not.toHaveProperty('gatewayDecisions');
+      expect(nextInput).not.toHaveProperty('skippedStepIds');
+      expect(nextInput.planRef.planId).toBe('plan-1');
+      expect(nextInput.stepActivityRouting).toEqual(BASE_INPUT.stepActivityRouting);
+    },
+  },
+  {
+    name: 'carries compact gateway dependency facts across continue-as-new rollover',
+    overrides: {
       gatewayDecisions: {
         gwA: true,
       },
-      completedStepResults: {
+      gatewayDependencyFacts: {
         's-1': { stepId: 's-1', status: 'COMPLETED', gatewayDecision: true, approval: 'yes' },
       },
+      latestResultEvidence: undefined,
       skippedStepIds: new Set(['skipped-step']),
       processedControlSignalIds: new Set<string>(),
-    });
-
-    expect(nextInput.completedStepResults).toEqual({
-      's-1': { stepId: 's-1', status: 'COMPLETED', gatewayDecision: true, approval: 'yes' },
-    });
-    expect(nextInput.completedStepResults).not.toBeUndefined();
-  });
-
-  it('carries processed control-signal ids across continue-as-new rollover', () => {
-    const nextInput = buildContinueAsNewInput({
-      input: {
-        planRef: {
-          uri: 'file://plan.json',
-          sha256: 'abc',
-          schemaVersion: 'v1.0.0',
-          planId: 'plan-1',
-          planVersion: '1',
-        },
-        ctx: {
-          tenantId: 't1',
-          projectId: 'p1',
-          environmentId: 'e1',
-          runId: 'r1',
-          targetAdapter: 'temporal',
-        },
-      },
-      continueAsNewAfterLayerCount: 3,
-      nextLayerIndex: 2,
-      continuedAsNewCount: 1,
+    },
+    assert(nextInput) {
+      expect(nextInput.cursor?.gatewayDependencyFacts).toEqual({
+        's-1': { stepId: 's-1', status: 'COMPLETED', gatewayDecision: true, approval: 'yes' },
+      });
+      expect(nextInput).not.toHaveProperty('completedStepResults');
+    },
+  },
+  {
+    name: 'carries processed control-signal ids across continue-as-new rollover',
+    overrides: {
       gatewayDecisions: {},
-      completedStepResults: {},
+      gatewayDependencyFacts: {},
+      latestResultEvidence: undefined,
       skippedStepIds: new Set<string>(),
       processedControlSignalIds: new Set(['sig-pause-1', 'sig-resume-1']),
+    },
+    assert(nextInput) {
+      expect(nextInput.cursor?.processedControlSignalIds).toEqual(['sig-pause-1', 'sig-resume-1']);
+      expect(nextInput).not.toHaveProperty('processedControlSignalIds');
+    },
+  },
+];
+
+describe('continue-as-new policy', () => {
+  it.each(CONTINUE_AS_NEW_TRIGGER_CASES)('$name', ({ input, expected }) => {
+    expect(shouldTriggerContinueAsNew(input)).toBe(expected);
+  });
+
+  it.each(CONTINUE_AS_NEW_ROLLOVER_CASES)('$name', ({ overrides, assert }) => {
+    assert(buildContinueAsNewTestInput(overrides));
+  });
+
+  it('fails closed when continue-as-new cursor state exceeds the bounded payload limit', () => {
+    expect(() =>
+      buildContinueAsNewTestInput({
+        maxContinueAsNewPayloadBytes: 1_024,
+        gatewayDecisions: {},
+        gatewayDependencyFacts: {},
+        latestResultEvidence: undefined,
+        skippedStepIds: new Set(
+          Array.from({ length: 4_000 }, (_, index) => `skipped-step-${index}-${'x'.repeat(64)}`)
+        ),
+        processedControlSignalIds: new Set(
+          Array.from({ length: 4_000 }, (_, index) => `control-signal-${index}-${'y'.repeat(64)}`)
+        ),
+      })
+    ).toThrow('TEMPORAL_CONTINUE_AS_NEW_PAYLOAD_TOO_LARGE');
+  });
+
+  it('retains only the bounded recent control-signal ids across continue-as-new rollover', () => {
+    const nextInput = buildContinueAsNewTestInput({
+      gatewayDecisions: {},
+      gatewayDependencyFacts: {},
+      latestResultEvidence: undefined,
+      skippedStepIds: new Set<string>(),
+      processedControlSignalIds: new Set(
+        Array.from({ length: 300 }, (_, index) => `control-signal-${index}`)
+      ),
     });
 
-    expect(nextInput.processedControlSignalIds).toEqual(['sig-pause-1', 'sig-resume-1']);
+    expect(nextInput.cursor?.processedControlSignalIds).toHaveLength(256);
+    expect(nextInput.cursor?.processedControlSignalIds.at(0)).toBe('control-signal-44');
+    expect(nextInput.cursor?.processedControlSignalIds.at(-1)).toBe('control-signal-299');
   });
 });
 
 describe('workflow input parsing', () => {
+  it('rejects missing continue-as-new threshold instead of silently disabling rollover', () => {
+    expect(() =>
+      parseWorkflowControlInput({
+        planRef: BASE_INPUT.planRef,
+        ctx: BASE_INPUT.ctx,
+        maxContinueAsNewPayloadBytes: BASE_INPUT.maxContinueAsNewPayloadBytes,
+      })
+    ).toThrow('INVALID_WORKFLOW_INPUT: continueAsNewAfterLayerCount_must_be_non_negative_integer');
+  });
+
   it('defaults undefined to zero', () => {
-    expect(parseOptionalNonNegativeInt(undefined, 'resumeFromLayerIndex')).toBe(0);
+    expect(parseOptionalNonNegativeInt(undefined, 'nextLayerIndex')).toBe(0);
   });
 
   it('accepts integer numeric string', () => {
@@ -167,8 +232,8 @@ describe('workflow input parsing', () => {
   });
 
   it('throws for invalid value', () => {
-    expect(() => parseOptionalNonNegativeInt('abc', 'resumeFromLayerIndex')).toThrow(
-      'INVALID_WORKFLOW_INPUT: resumeFromLayerIndex_must_be_non_negative_integer'
+    expect(() => parseOptionalNonNegativeInt('abc', 'nextLayerIndex')).toThrow(
+      'INVALID_WORKFLOW_INPUT: nextLayerIndex_must_be_non_negative_integer'
     );
   });
 });
@@ -211,6 +276,22 @@ describe('gateway dependency validation', () => {
   });
 });
 
+function buildContinueAsNewTestInput(
+  overrides: ContinueAsNewTestOverrides
+): ContinueAsNewBuildResult {
+  const { maxContinueAsNewPayloadBytes = BASE_INPUT.maxContinueAsNewPayloadBytes, ...buildArgs } =
+    overrides;
+
+  return buildContinueAsNewInput({
+    input: BASE_INPUT,
+    maxContinueAsNewPayloadBytes,
+    continueAsNewAfterLayerCount: 3,
+    nextLayerIndex: 2,
+    continuedAsNewCount: 1,
+    ...buildArgs,
+  });
+}
+
 describe('gateway dependency context', () => {
   it('uses persisted dependency facts when available', () => {
     expect(
@@ -220,10 +301,9 @@ describe('gateway dependency context', () => {
     ).toEqual({ stepId: 's-1', status: 'COMPLETED', gatewayDecision: true });
   });
 
-  it('builds deterministic completed context when dependency fact is missing', () => {
-    expect(resolveGatewayDependencyContext('s-missing', {})).toEqual({
-      stepId: 's-missing',
-      status: 'COMPLETED',
-    });
+  it('fails closed when dependency fact is missing', () => {
+    expect(() => resolveGatewayDependencyContext('s-missing', {})).toThrow(
+      'INVALID_WORKFLOW_STATE: gateway_dependency_fact_missing:s-missing'
+    );
   });
 });

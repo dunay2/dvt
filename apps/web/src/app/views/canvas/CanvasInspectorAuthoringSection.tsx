@@ -1,0 +1,612 @@
+/** Owned concern: render the route-owned Inspector authoring surface for governed node details. */
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
+
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
+import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import {
+  createCanvasInspectorNodeDraft,
+  hasCanvasInspectorNodeDraftChanges,
+  validateCanvasInspectorNodeDraft,
+} from './canvasInspectorAuthoringModel';
+import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+
+type CanvasInspectorAuthoringSectionProps = Readonly<{
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+  authoring: CanvasInspectorAuthoringContract;
+}>;
+
+export function CanvasInspectorAuthoringSection({
+  node,
+  nodes,
+  edges,
+  authoring,
+}: CanvasInspectorAuthoringSectionProps) {
+  const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
+  const [tagsText, setTagsText] = useState(() =>
+    createCanvasInspectorNodeDraft(node).tags.join(', ')
+  );
+
+  useEffect(() => {
+    const nextDraft = createCanvasInspectorNodeDraft(node);
+    setDraft(nextDraft);
+    setTagsText(nextDraft.tags.join(', '));
+  }, [node.description, node.id, node.metadata, node.name, node.tags]);
+
+  const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft), [draft]);
+  const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
+  const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
+
+  return (
+    <section
+      data-slot="node-inspector-editable-section"
+      className={graphVisualClasses.contextPanelDetailsSection}
+    >
+      <div className="space-y-3">
+        <div>
+          <h3 className={graphVisualClasses.contextPanelSectionTitle}>Editable properties</h3>
+          <p className={graphVisualClasses.inspectorBody}>
+            Name, tags, and description saved with this canvas.
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-node-name-${node.id}`}>Name</Label>
+          <Input
+            id={`inspector-node-name-${node.id}`}
+            name="node-name"
+            value={draft.name}
+            disabled={!authoring.canEditNode}
+            aria-invalid={errors.name ? 'true' : undefined}
+            onChange={(event) =>
+              setDraft((currentDraft) => ({
+                ...currentDraft,
+                name: event.target.value,
+              }))
+            }
+          />
+          {errors.name ? (
+            <p className={graphVisualClasses.inspectorErrorText}>{errors.name}</p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-node-tags-${node.id}`}>Tags</Label>
+          <Input
+            id={`inspector-node-tags-${node.id}`}
+            name="node-tags"
+            value={tagsText}
+            disabled={!authoring.canEditNode}
+            placeholder="finance, critical"
+            onChange={(event) => {
+              const nextTagsText = event.target.value;
+              setTagsText(nextTagsText);
+              setDraft((currentDraft) => ({
+                ...currentDraft,
+                tags: Array.from(
+                  new Set(
+                    nextTagsText
+                      .split(',')
+                      .map((tag) => tag.trim())
+                      .filter((tag) => tag.length > 0)
+                  )
+                ),
+              }));
+            }}
+          />
+        </div>
+
+        {draft.dbt ? (
+          <DbtAuthoringFields
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            disabled={!authoring.canEditNode}
+            draft={draft}
+            errors={errors}
+            onChange={setDraft}
+          />
+        ) : null}
+
+        {draft.dvt ? (
+          <DvtAuthoringFields
+            node={node}
+            disabled={!authoring.canEditNode}
+            draft={draft}
+            errors={errors}
+            onChange={setDraft}
+          />
+        ) : null}
+
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-node-description-${node.id}`}>Description</Label>
+          <Textarea
+            id={`inspector-node-description-${node.id}`}
+            name="node-description"
+            value={draft.description}
+            disabled={!authoring.canEditNode}
+            onChange={(event) =>
+              setDraft((currentDraft) => ({
+                ...currentDraft,
+                description: event.target.value,
+              }))
+            }
+          />
+        </div>
+
+        {!authoring.canEditNode ? (
+          <p className={graphVisualClasses.inspectorBody}>
+            Node details are read-only for this workspace state.
+          </p>
+        ) : null}
+
+        {authoring.canEditNode && isDirty ? (
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                const nextDraft = createCanvasInspectorNodeDraft(node);
+                setDraft(nextDraft);
+                setTagsText(nextDraft.tags.join(', '));
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={!canApply}
+              onClick={() => {
+                if (!canApply) {
+                  return;
+                }
+                authoring.onApplyNodeDraft(draft);
+              }}
+            >
+              Apply
+            </Button>
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
+type DbtAuthoringFieldsProps = Readonly<{
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+  disabled: boolean;
+  draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
+  errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
+  onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
+}>;
+
+function buildDbtOriginOptions(args: {
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}): Array<Readonly<{ value: string; label: string }>> {
+  const nodeById = new Map(args.nodes.map((candidate) => [candidate.id, candidate]));
+  return args.edges
+    .filter((edge) => edge.targetId === args.node.id)
+    .map((edge) => nodeById.get(edge.sourceId))
+    .filter(
+      (candidate): candidate is CanonicalNode =>
+        candidate?.pluginId === 'dbt' &&
+        (candidate.kind === 'dbt:source' || candidate.kind === 'dbt:model')
+    )
+    .map((candidate) => ({
+      value: candidate.id,
+      label: `${candidate.name} (${candidate.kind.replace('dbt:', '')})`,
+    }));
+}
+
+function DbtAuthoringFields({
+  node,
+  nodes,
+  edges,
+  disabled,
+  draft,
+  errors,
+  onChange,
+}: DbtAuthoringFieldsProps): JSX.Element | null {
+  if (!draft.dbt) {
+    return null;
+  }
+
+  const originOptions = buildDbtOriginOptions({ node, nodes, edges });
+  const selectedSourceId = draft.dbt.selectedSourceId || originOptions[0]?.value || '';
+  const selectClassName = graphVisualClasses.inspectorSelectInput;
+
+  return (
+    <div className={graphVisualClasses.inspectorDbtSection}>
+      <h3 className={graphVisualClasses.contextPanelSectionTitle}>dbt card</h3>
+
+      <div className="space-y-2">
+        <Label htmlFor={`inspector-dbt-package-${node.id}`}>Package</Label>
+        <Input
+          id={`inspector-dbt-package-${node.id}`}
+          name="dbt-package"
+          value={draft.dbt.packageName}
+          disabled={disabled}
+          aria-invalid={errors.dbt?.packageName ? 'true' : undefined}
+          onChange={(event) =>
+            onChange((currentDraft) => ({
+              ...currentDraft,
+              dbt: currentDraft.dbt
+                ? { ...currentDraft.dbt, packageName: event.target.value }
+                : undefined,
+            }))
+          }
+        />
+        {errors.dbt?.packageName ? (
+          <p className={graphVisualClasses.inspectorErrorText}>{errors.dbt.packageName}</p>
+        ) : null}
+      </div>
+
+      {node.kind === 'dbt:source' ? (
+        <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dbt-source-${node.id}`}>Source</Label>
+            <Input
+              id={`inspector-dbt-source-${node.id}`}
+              name="dbt-source"
+              value={draft.dbt.sourceName}
+              disabled={disabled}
+              aria-invalid={errors.dbt?.sourceName ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  dbt: currentDraft.dbt
+                    ? { ...currentDraft.dbt, sourceName: event.target.value }
+                    : undefined,
+                }))
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dbt-schema-${node.id}`}>Schema</Label>
+            <Input
+              id={`inspector-dbt-schema-${node.id}`}
+              name="dbt-schema"
+              value={draft.dbt.schemaName}
+              disabled={disabled}
+              aria-invalid={errors.dbt?.schemaName ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  dbt: currentDraft.dbt
+                    ? { ...currentDraft.dbt, schemaName: event.target.value }
+                    : undefined,
+                }))
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dbt-table-${node.id}`}>Table</Label>
+            <Input
+              id={`inspector-dbt-table-${node.id}`}
+              name="dbt-table"
+              value={draft.dbt.tableName}
+              disabled={disabled}
+              aria-invalid={errors.dbt?.tableName ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  dbt: currentDraft.dbt
+                    ? { ...currentDraft.dbt, tableName: event.target.value }
+                    : undefined,
+                }))
+              }
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {node.kind === 'dbt:model' ? (
+        <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dbt-materialized-${node.id}`}>Materialized</Label>
+            <select
+              id={`inspector-dbt-materialized-${node.id}`}
+              name="dbt-materialized"
+              value={draft.dbt.materialized}
+              disabled={disabled}
+              className={selectClassName}
+              aria-invalid={errors.dbt?.materialized ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) => ({
+                  ...currentDraft,
+                  dbt: currentDraft.dbt
+                    ? { ...currentDraft.dbt, materialized: event.target.value }
+                    : undefined,
+                }))
+              }
+            >
+              <option value="view">view</option>
+              <option value="table">table</option>
+              <option value="incremental">incremental</option>
+              <option value="ephemeral">ephemeral</option>
+            </select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dbt-origin-${node.id}`}>Origin</Label>
+            {originOptions.length > 0 ? (
+              <select
+                id={`inspector-dbt-origin-${node.id}`}
+                name="dbt-origin"
+                value={selectedSourceId}
+                disabled={disabled}
+                className={selectClassName}
+                onChange={(event) =>
+                  onChange((currentDraft) => ({
+                    ...currentDraft,
+                    dbt: currentDraft.dbt
+                      ? { ...currentDraft.dbt, selectedSourceId: event.target.value }
+                      : undefined,
+                  }))
+                }
+              >
+                {originOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className={graphVisualClasses.inspectorBody}>No connected dbt origins.</p>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+type DvtAuthoringFieldsProps = Readonly<{
+  node: CanonicalNode;
+  disabled: boolean;
+  draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
+  errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
+  onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
+}>;
+
+function DvtAuthoringFields({
+  node,
+  disabled,
+  draft,
+  errors,
+  onChange,
+}: DvtAuthoringFieldsProps): JSX.Element | null {
+  if (!draft.dvt) {
+    return null;
+  }
+
+  const selectClassName = graphVisualClasses.inspectorSelectInput;
+
+  if (draft.dvt.kind === 'source') {
+    return (
+      <div className={graphVisualClasses.inspectorDbtSection}>
+        <h3 className={graphVisualClasses.contextPanelSectionTitle}>DVT source</h3>
+        <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>Schema</Label>
+            <Input
+              id={`inspector-dvt-source-schema-${node.id}`}
+              name="dvt-source-schema"
+              value={draft.dvt.schema}
+              disabled={disabled}
+              aria-invalid={errors.dvt?.schema ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) =>
+                  currentDraft.dvt?.kind === 'source'
+                    ? {
+                        ...currentDraft,
+                        dvt: { ...currentDraft.dvt, schema: event.target.value },
+                      }
+                    : currentDraft
+                )
+              }
+            />
+            {errors.dvt?.schema ? (
+              <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.schema}</p>
+            ) : null}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dvt-source-table-${node.id}`}>Table</Label>
+            <Input
+              id={`inspector-dvt-source-table-${node.id}`}
+              name="dvt-source-table"
+              value={draft.dvt.table}
+              disabled={disabled}
+              aria-invalid={errors.dvt?.table ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) =>
+                  currentDraft.dvt?.kind === 'source'
+                    ? {
+                        ...currentDraft,
+                        dvt: { ...currentDraft.dvt, table: event.target.value },
+                      }
+                    : currentDraft
+                )
+              }
+            />
+            {errors.dvt?.table ? (
+              <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.table}</p>
+            ) : null}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dvt-source-alias-${node.id}`}>Alias</Label>
+            <Input
+              id={`inspector-dvt-source-alias-${node.id}`}
+              name="dvt-source-alias"
+              value={draft.dvt.alias}
+              disabled={disabled}
+              aria-invalid={errors.dvt?.alias ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) =>
+                  currentDraft.dvt?.kind === 'source'
+                    ? {
+                        ...currentDraft,
+                        dvt: { ...currentDraft.dvt, alias: event.target.value },
+                      }
+                    : currentDraft
+                )
+              }
+            />
+            {errors.dvt?.alias ? (
+              <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.alias}</p>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (draft.dvt.kind === 'sql_transform') {
+    return (
+      <div className={graphVisualClasses.inspectorDbtSection}>
+        <h3 className={graphVisualClasses.contextPanelSectionTitle}>DVT SQL transform</h3>
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-dvt-transform-sql-${node.id}`}>SQL</Label>
+          <Textarea
+            id={`inspector-dvt-transform-sql-${node.id}`}
+            name="dvt-transform-sql"
+            value={draft.dvt.sql}
+            disabled={disabled}
+            aria-invalid={errors.dvt?.sql ? 'true' : undefined}
+            onChange={(event) =>
+              onChange((currentDraft) =>
+                currentDraft.dvt?.kind === 'sql_transform'
+                  ? {
+                      ...currentDraft,
+                      dvt: { ...currentDraft.dvt, sql: event.target.value },
+                    }
+                  : currentDraft
+              )
+            }
+          />
+          {errors.dvt?.sql ? (
+            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.sql}</p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={graphVisualClasses.inspectorDbtSection}>
+      <h3 className={graphVisualClasses.contextPanelSectionTitle}>DVT sink</h3>
+      <div className="grid grid-cols-1 gap-3">
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-dvt-sink-schema-${node.id}`}>Schema</Label>
+          <Input
+            id={`inspector-dvt-sink-schema-${node.id}`}
+            name="dvt-sink-schema"
+            value={draft.dvt.schema}
+            disabled={disabled}
+            aria-invalid={errors.dvt?.schema ? 'true' : undefined}
+            onChange={(event) =>
+              onChange((currentDraft) =>
+                currentDraft.dvt?.kind === 'sink'
+                  ? {
+                      ...currentDraft,
+                      dvt: { ...currentDraft.dvt, schema: event.target.value },
+                    }
+                  : currentDraft
+              )
+            }
+          />
+          {errors.dvt?.schema ? (
+            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.schema}</p>
+          ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-dvt-sink-table-${node.id}`}>Table</Label>
+          <Input
+            id={`inspector-dvt-sink-table-${node.id}`}
+            name="dvt-sink-table"
+            value={draft.dvt.table}
+            disabled={disabled}
+            aria-invalid={errors.dvt?.table ? 'true' : undefined}
+            onChange={(event) =>
+              onChange((currentDraft) =>
+                currentDraft.dvt?.kind === 'sink'
+                  ? {
+                      ...currentDraft,
+                      dvt: { ...currentDraft.dvt, table: event.target.value },
+                    }
+                  : currentDraft
+              )
+            }
+          />
+          {errors.dvt?.table ? (
+            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.table}</p>
+          ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-dvt-sink-materialization-${node.id}`}>Materialization</Label>
+          <select
+            id={`inspector-dvt-sink-materialization-${node.id}`}
+            name="dvt-sink-materialization"
+            value={draft.dvt.materialization}
+            disabled={disabled}
+            className={selectClassName}
+            aria-invalid={errors.dvt?.materialization ? 'true' : undefined}
+            onChange={(event) =>
+              onChange((currentDraft) =>
+                currentDraft.dvt?.kind === 'sink'
+                  ? {
+                      ...currentDraft,
+                      dvt: { ...currentDraft.dvt, materialization: event.target.value },
+                    }
+                  : currentDraft
+              )
+            }
+          >
+            <option value="table">table</option>
+            <option value="view">view</option>
+          </select>
+          {errors.dvt?.materialization ? (
+            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.materialization}</p>
+          ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-dvt-sink-write-mode-${node.id}`}>Write mode</Label>
+          <select
+            id={`inspector-dvt-sink-write-mode-${node.id}`}
+            name="dvt-sink-write-mode"
+            value={draft.dvt.writeMode}
+            disabled={disabled}
+            className={selectClassName}
+            aria-invalid={errors.dvt?.writeMode ? 'true' : undefined}
+            onChange={(event) =>
+              onChange((currentDraft) =>
+                currentDraft.dvt?.kind === 'sink'
+                  ? {
+                      ...currentDraft,
+                      dvt: { ...currentDraft.dvt, writeMode: event.target.value },
+                    }
+                  : currentDraft
+              )
+            }
+          >
+            <option value="replace">replace</option>
+            <option value="append">append</option>
+          </select>
+          {errors.dvt?.writeMode ? (
+            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.writeMode}</p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}

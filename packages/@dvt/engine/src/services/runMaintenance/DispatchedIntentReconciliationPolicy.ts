@@ -29,7 +29,10 @@ export class DispatchedIntentReconciliationPolicy {
     const existingMeta = await this.getRunMetadata(intent);
 
     if (existingMeta !== null) {
-      await this.deps.intentStore.markResolved(intent.intentId);
+      await this.deps.intentStore.markResolved({
+        tenantId: intent.tenantId,
+        intentId: intent.intentId,
+      });
       this.deps.observability.incrementCounter(RUN_MAINTENANCE_METRIC.intentResolvedTotal, {
         provider: intent.provider,
         operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
@@ -59,7 +62,10 @@ export class DispatchedIntentReconciliationPolicy {
 
     try {
       await adapter.cancelRun(intent.engineRunRef);
-      await this.deps.intentStore.markResolved(intent.intentId);
+      await this.deps.intentStore.markResolved({
+        tenantId: intent.tenantId,
+        intentId: intent.intentId,
+      });
       this.deps.observability.incrementCounter(RUN_MAINTENANCE_METRIC.intentCancelledTotal, {
         provider: intent.provider,
         operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,

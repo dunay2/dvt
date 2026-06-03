@@ -161,7 +161,7 @@ Expected design:
 
 Objective:
 
-- split delivery domain rules from worker runtime orchestration and extract a
+- [Task: RUNTIME-PROP-DISP-1] split delivery domain rules from worker runtime orchestration and extract a
   shared runtime harness where that abstraction is honest
 
 Why here:
@@ -236,10 +236,10 @@ Expected design:
 
 ## Design constraints
 
-- fix live behavior bugs before moving ownership or architecture boundaries
+- [Task: RUNTIME-PROP-DISP-1] fix live behavior bugs before moving ownership or architecture boundaries
 - do not widen `@dvt/contracts` to solve owner-local seams
 - do not claim operational closure where only definitions exist
-- do not extract a fake generic worker abstraction that hides different domain
+- [Task: RUNTIME-PROP-DISP-1] do not extract a fake generic worker abstraction that hides different domain
   semantics
 - keep architecture docs, lane YAML, and status surfaces aligned after each
   slice

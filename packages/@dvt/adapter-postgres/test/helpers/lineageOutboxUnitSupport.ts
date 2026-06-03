@@ -18,6 +18,9 @@ export class RecordingClient {
     sql: string,
     params?: readonly unknown[]
   ): Promise<{ rows: T[]; rowCount?: number | null }> {
+    if (sql.includes("set_config('dvt.")) {
+      return { rows: [] };
+    }
     this.queries.push({ sql, params });
     const rows = this.rowsByQuery.shift() ?? [];
     return { rows: rows as T[] };

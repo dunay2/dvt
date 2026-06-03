@@ -1,3 +1,7 @@
+/**
+ * Owned concern: own all user-visible copy strings for runs route states,
+ * keeping presentation text out of the state model and view logic.
+ */
 export const runStatesCopy = {
   runsTitle: 'Runs',
   emptyRuns: 'No runs yet.',
@@ -6,6 +10,10 @@ export const runStatesCopy = {
   runsUnavailableTitle: 'Run list unavailable',
   loadingRuns: 'Loading runs...',
   viewDetails: 'View Details',
+  runTableSearchLabel: 'Filter runs',
+  runTableSearchPlaceholder: 'Filter by run, plan, environment, git SHA, or substatus',
+  runTableAllStatuses: 'All statuses',
+  runTableEmptyFiltered: 'No runs match the current filters.',
   environmentLabel: 'Environment:',
   runMissingTitle: 'Run not found',
   runMissingMessagePrefix: 'No data is available for run',
@@ -17,9 +25,33 @@ export const runStatesCopy = {
   runtimeSnapshotTitle: 'Runtime snapshot',
   snapshotTimelineBadge: 'snapshot+timeline',
   snapshotOnlyBadge: 'snapshot-only',
+  runItineraryTitle: 'Run itinerary',
+  runItineraryNote:
+    'Persisted execution scope for this run. Source and sink tables come from the plan snapshot; result rows come from materialization evidence.',
+  backToCanvasAction: 'Back to Canvas',
+  allRunsAction: 'All runs',
+  planLabel: 'Plan',
+  stepsLabel: 'Steps',
+  stepsUnit: 'steps',
+  nodesUnit: 'nodes',
+  sourceTablesLabel: 'Source tables',
+  sinkTablesLabel: 'Sink tables',
+  scopeUnavailable: 'Not available in this run snapshot',
+  noPlanScopeEvidence:
+    'The runtime snapshot does not include persisted plan source/sink scope for this run.',
   snapshotReadModelNote:
     'This route consumes explicit runtime read models for plan provenance and run outcome. Timeline stays visible for chronology and artifact refs, but result evidence and failure diagnostics render only from persisted snapshot fields.',
   snapshotFieldsTitle: 'Snapshot fields',
+  diagnosticsTitle: 'Diagnostics',
+  diagnosticsRunIdLabel: 'Run ID',
+  diagnosticsPlanIdLabel: 'Plan ID',
+  diagnosticsPlanShaLabel: 'Plan SHA',
+  diagnosticsStepIdLabel: 'Step ID',
+  diagnosticsAttemptIdLabel: 'Attempt ID',
+  diagnosticsAdapterLabel: 'Adapter',
+  diagnosticsStatusLabel: 'Status',
+  diagnosticsErrorCodeLabel: 'Error code',
+  diagnosticsPointersLabel: 'Trace and log pointers',
   planProvenanceTitle: 'Plan and authoring provenance',
   planRecordLabel: 'Plan record',
   planVersionLabel: 'Plan version',

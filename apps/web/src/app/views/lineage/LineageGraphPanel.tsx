@@ -3,6 +3,7 @@ import { ArrowRight, Table } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import type { CanonicalNode } from '../../types/canonical';
+import { lineageChromeClasses, resolveLineageNodeKindClassName } from './lineageChromeTokens';
 import { kindStyle } from './lineageModel';
 
 const LEVEL_LABELS: Record<number, string> = {
@@ -19,7 +20,7 @@ interface LineageGraphPanelProps {
 
 export function LineageGraphPanel({ focusNode, nodesByLevel }: LineageGraphPanelProps) {
   return (
-    <Card className="border-slate-700 bg-slate-900 p-6">
+    <Card className={`${lineageChromeClasses.panel} p-6`}>
       <h2 className="mb-4 flex items-center gap-2 font-semibold">
         <Table className="size-5" />
         {focusNode ? `Model lineage: ${focusNode.name}` : 'Full graph'}
@@ -30,10 +31,10 @@ export function LineageGraphPanel({ focusNode, nodesByLevel }: LineageGraphPanel
           <div key={level}>
             {index > 0 ? (
               <div className="mb-6 flex justify-center">
-                <ArrowRight className="size-6 rotate-90 text-slate-400" />
+                <ArrowRight className={`size-6 rotate-90 ${lineageChromeClasses.subtleText}`} />
               </div>
             ) : null}
-            <div className="mb-3 text-xs text-slate-400">
+            <div className={`mb-3 text-xs ${lineageChromeClasses.mutedText}`}>
               LEVEL {level} - {LEVEL_LABELS[level] ?? `LAYER ${level}`}
             </div>
             <div className="flex flex-wrap gap-3">
@@ -43,10 +44,14 @@ export function LineageGraphPanel({ focusNode, nodesByLevel }: LineageGraphPanel
                 return (
                   <Card
                     key={node.id}
-                    className={`${style.bg} ${style.border} min-w-[140px] flex-1 p-3 ${isFocus ? 'border-2' : ''}`}
+                    className={`${resolveLineageNodeKindClassName(node.kind)} min-w-[140px] flex-1 p-3 ${
+                      isFocus ? 'border-2' : ''
+                    }`}
                   >
                     {isFocus ? (
-                      <Badge className="mb-2 bg-green-600 text-xs">FOCUS</Badge>
+                      <Badge className={`mb-2 text-xs ${lineageChromeClasses.focusBadge}`}>
+                        FOCUS
+                      </Badge>
                     ) : (
                       <Badge variant="secondary" className="mb-2 text-xs">
                         {style.badge}
@@ -54,7 +59,9 @@ export function LineageGraphPanel({ focusNode, nodesByLevel }: LineageGraphPanel
                     )}
                     <div className="truncate font-mono text-sm">{node.name}</div>
                     {node.description ? (
-                      <div className="mt-1 truncate text-xs text-slate-300">{node.description}</div>
+                      <div className={`mt-1 truncate text-xs ${lineageChromeClasses.mutedText}`}>
+                        {node.description}
+                      </div>
                     ) : null}
                   </Card>
                 );

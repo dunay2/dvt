@@ -13,14 +13,18 @@ export function getBackpressureSnapshotSql(schema: string): string {
     WITH active_outbox AS (
       SELECT m.tenant_id, o.created_at
       FROM ${quoteIdentifier(schema)}.outbox o
-      INNER JOIN ${quoteIdentifier(schema)}.run_metadata m ON m.run_id = o.run_id
+      INNER JOIN ${quoteIdentifier(schema)}.run_metadata m
+        ON m.run_id = o.run_id
+       AND m.tenant_id = o.tenant_id
       WHERE o.delivered_at IS NULL
         AND o.created_at >= $3::timestamptz
     ),
     stuck_outbox AS (
       SELECT m.tenant_id
       FROM ${quoteIdentifier(schema)}.outbox o
-      INNER JOIN ${quoteIdentifier(schema)}.run_metadata m ON m.run_id = o.run_id
+      INNER JOIN ${quoteIdentifier(schema)}.run_metadata m
+        ON m.run_id = o.run_id
+       AND m.tenant_id = o.tenant_id
       WHERE o.delivered_at IS NULL
         AND o.created_at < $3::timestamptz
     ),

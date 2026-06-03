@@ -1,11 +1,26 @@
+/**
+ * Owned concern: define the semantic component contract for CanvasShell.
+ */
 import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
 import type { ImportSourcesResult } from '../../ports/workspace';
-import type { CanonicalNode } from '../../types/canonical';
+import type {
+  CanvasGraphAuthoringMode,
+  NodeKindRegistration,
+} from '../../plugins/nodeTypeContracts';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
+import type { CanvasRouteState } from './canvasDraftPresentationModel';
+import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
+import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import type { CanvasWorkspaceResourceGroup } from '../../components/canvasWorkspaceExplorerModel';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
-import type { CanvasDraftToolbarState } from './canvasDraftPresentationState';
+import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
+import type { WorkspaceOption } from '../../services/config/workspaceConfig';
+import type { RuntimeCapabilities } from '../../plugins/registry';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -13,34 +28,97 @@ export type UserPermissions = {
   canEditEdges: boolean;
 };
 
-export type CanvasShellProps = {
+type CanvasViewport = {
+  x: number;
+  y: number;
+  zoom: number;
+};
+
+export type CanvasShellLayout = {
   focusMode: boolean;
   explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
-  explorerNodes: CanonicalNode[];
+  canOpenSourceImport: boolean;
+  hostTabState: CanvasPlaygroundTabState;
+  hostTabStrip?: React.ReactNode;
+  workbenchTabStrip?: React.ReactNode;
+  workbenchTabPanel?: React.ReactNode;
+  centerSurfaceMode: 'replace' | 'overlay';
+  centerSurface?: React.ReactNode;
+  readOnlyBanner?: React.ReactNode;
+};
+
+export type CanvasShellPanels = {
+  explorerResourceGroups: readonly CanvasWorkspaceResourceGroup[];
+  authoringNodeKinds: readonly NodeKindRegistration[];
+  activeCanvasId: string | null;
+  activeCanvas: ProjectCanvasDocument | null;
+  canvasDocuments: readonly ProjectCanvasDocument[];
+  executionEnvironmentOptions: readonly WorkspaceOption[];
+  canEditCanvas: boolean;
+  canDeleteActiveCanvas: boolean;
   inspectorNode: CanonicalNode | null;
+  inspectorGraphNodes: readonly CanonicalNode[];
+  inspectorGraphEdges: readonly CanonicalEdge[];
+  inspectorAuthoring: CanvasInspectorAuthoringContract;
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
+  runtimeCapabilities?: RuntimeCapabilities;
   userPermissions: UserPermissions;
-  canvasAuthoringMode: 'transformation' | 'dbt';
+  importedNodeFocusIds: string[];
+};
+
+export type CanvasShellGraph = {
   nodesWithImpact: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
-  viewport: { x: number; y: number; zoom: number } | null;
+  canvasGridVisible: boolean;
+  canvasGridColor: CanvasPaletteId;
+  canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
+  viewport: CanvasViewport | null;
+};
+
+export type CanvasShellToolbar = {
+  canvasAuthoringMode: CanvasGraphAuthoringMode;
+  routeState: CanvasRouteState;
+  draftToolbarState: CanvasDraftToolbarState;
+  canPlanGraph: boolean;
+  canStartRun: boolean;
+  canExportProjectSnapshot: boolean;
+  canImportProjectSnapshot: boolean;
+  planStatusSummary: string;
+  planRunReadiness: PlanRunReadinessReadModel;
+  exclusiveOverlayMode: 'runtime' | 'cost';
+  canUseCostOverlay: boolean;
+  impactOverlayEnabled: boolean;
+  columnLevelLineageEnabled: boolean;
+  transformationValidation: TransformationGraphValidationResult;
+};
+
+export type CanvasShellGraphCommands = {
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
+  onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
+  onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
-  onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
+  onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
+  onCreateAuthoringNode: (
+    registration: NodeKindRegistration,
+    position?: { x: number; y: number }
+  ) => void;
   onSourceImportComplete: (result: ImportSourcesResult) => void;
-  importedNodeFocusIds: string[];
   onImportedNodeFocusComplete: () => void;
+};
+
+export type CanvasShellChromeCommands = {
   onHideExplorer: () => void;
   onShowExplorer: () => void;
   onHideInspector: () => void;
@@ -49,17 +127,29 @@ export type CanvasShellProps = {
   onToggleCostOverlay: () => void;
   onToggleImpact: () => void;
   onToggleColumns: () => void;
+  onToggleGridVisible: () => void;
+  onGridColorChange: (color: CanvasPaletteId) => void;
+  onToggleSnapToGrid: () => void;
+  onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
+  onExportProjectSnapshot: () => void;
+  onImportProjectSnapshotFile: (file: File) => void;
   onReloadLatestDraft: () => void;
   onPlan: () => void;
   onRun: () => void;
-  draftToolbarState: CanvasDraftToolbarState;
-  canStartRun: boolean;
-  planStatusSummary: string;
-  exclusiveOverlayMode: 'runtime' | 'cost';
-  canUseCostOverlay: boolean;
-  impactOverlayEnabled: boolean;
-  columnLevelLineageEnabled: boolean;
-  transformationValidation: TransformationGraphValidationResult;
-  centerSurface?: React.ReactNode;
-  readOnlyBanner?: React.ReactNode;
 };
+
+export type CanvasShellCanvasCommands = {
+  onSelectCanvas: (canvasId: string) => void;
+  onApplyCanvasPatch: (patch: ProjectCanvasPatch) => void;
+  onDeleteActiveCanvas: () => void;
+};
+
+export type CanvasShellProps = Readonly<{
+  layout: CanvasShellLayout;
+  panels: CanvasShellPanels;
+  graph: CanvasShellGraph;
+  toolbar: CanvasShellToolbar;
+  graphCommands: CanvasShellGraphCommands;
+  chromeCommands: CanvasShellChromeCommands;
+  canvasCommands: CanvasShellCanvasCommands;
+}>;

@@ -15,7 +15,7 @@ describe('IWorkflowEngine contract types', () => {
     const ref: PlanRef = {
       uri: 'https://example.com/plan',
       sha256: 'abc',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       planId: 'plan-1',
       planVersion: '1.0',
     };
@@ -41,21 +41,15 @@ describe('IWorkflowEngine contract types', () => {
     expect(ctx).toHaveProperty('targetAdapter');
   });
 
-  it('EngineRunRef temporal and conductor comply with the contract', () => {
+  it('EngineRunRef temporal complies with the active provider contract', () => {
     const ref1: EngineRunRef = {
       provider: 'temporal',
+      tenantId: 't',
       namespace: 'ns',
       workflowId: 'w',
       runId: 'r',
     };
-    const ref2: EngineRunRef = {
-      provider: 'conductor',
-      workflowId: 'w',
-      runId: 'r',
-      conductorUrl: 'http://conductor',
-    };
     expect(ref1.provider).toBe('temporal');
-    expect(ref2.provider).toBe('conductor');
   });
 
   it('SignalRequest minimal complies with the contract', () => {

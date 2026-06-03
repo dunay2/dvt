@@ -1,6 +1,11 @@
+/**
+ * Owned concern: stable route-level semantic reason tokens used by the HTTP
+ * runtime error translation boundary.
+ */
 export const HTTP_ERROR_REASON = Object.freeze({
   adapterNotConfigured: 'adapter_not_configured',
   cancelReasonNotSupported: 'cancel_reason_not_supported',
+  clientRunIdNotAllowed: 'client_run_id_not_allowed',
   conflictingRunIds: 'conflicting_run_ids',
   conflictingPlanInputs: 'conflicting_plan_inputs',
   internalError: 'internal_error',
@@ -13,6 +18,9 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidPlanRef: 'invalid_plan_ref',
   invalidPlanSource: 'invalid_plan_source',
   invalidProjectId: 'invalid_project_id',
+  invalidWorkspaceSourceYaml: 'invalid_workspace_source_yaml',
+  invalidWorkspaceDiffChanges: 'invalid_workspace_diff_changes',
+  invalidWorkspacePath: 'invalid_workspace_path',
   invalidRunExecutionContextRef: 'invalid_run_execution_context_ref',
   invalidRunId: 'invalid_run_id',
   invalidSelection: 'invalid_selection',
@@ -33,8 +41,8 @@ export const HTTP_ERROR_REASON = Object.freeze({
   unsupportedPlanVersion: 'unsupported_plan_version',
   workspaceGraphDraftIdempotencyKeyReused: 'workspace_graph_draft_idempotency_key_reused',
   workspaceGraphDraftNotFound: 'workspace_graph_draft_not_found',
-  workspaceGraphDraftUnsupportedSchemaVersion:
-    'workspace_graph_draft_unsupported_schema_version',
+  workspaceGraphDraftUnsupportedSchemaVersion: 'workspace_graph_draft_unsupported_schema_version',
+  workspaceFileNotFound: 'workspace_file_not_found',
 } as const);
 
 export type HttpErrorReason = (typeof HTTP_ERROR_REASON)[keyof typeof HTTP_ERROR_REASON];

@@ -1,68 +1,94 @@
-import type { UseCanvasGraphHandlersParams, UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
+/** Owned concern: compose node creation, drop, and removal handlers over node authoring contracts. */
+
+import type {
+  CanvasAuthoringNodeCreationContracts,
+  CanvasNodeAuthoringContracts,
+  CanvasNodeDuplicateContracts,
+  CanvasNodeDropContracts,
+  CanvasNodeRemovalContracts,
+  CreateCanvasAuthoringNode,
+} from './canvasGraphHandlerContracts';
+import { useCanvasAuthoringNodeCreationHandlers } from './useCanvasAuthoringNodeCreationHandlers';
+import { useCanvasNodeDuplicateHandlers } from './useCanvasNodeDuplicateHandlers';
 import { useCanvasNodeDropHandlers } from './useCanvasNodeDropHandlers';
 import { useCanvasNodeRemovalHandlers } from './useCanvasNodeRemovalHandlers';
 
-type UseCanvasNodeAuthoringHandlersArgs = Pick<
-  UseCanvasGraphHandlersParams,
-  | 'graphStrategy'
-  | 'draftSession'
-  | 'nodes'
-  | 'edges'
-  | 'selectedNodeIds'
-  | 'inspectorNodeId'
-  | 'canEditEdges'
-  | 'columnLevelLineageEnabled'
-  | 'setNodes'
-  | 'setEdges'
-  | 'setDraftSession'
-  | 'setSelectedNodes'
-  | 'setInspectorNode'
->;
+type UseCanvasNodeAuthoringHandlersArgs = CanvasNodeAuthoringContracts;
 
-type UseCanvasNodeAuthoringHandlersResult = Pick<
-  UseCanvasGraphHandlersResult,
-  'handleDrop' | 'handleDragOver' | 'handleRemoveNode'
->;
+type UseCanvasNodeAuthoringHandlersResult = {
+  handleDrop: React.DragEventHandler<HTMLDivElement>;
+  handleDragOver: React.DragEventHandler<HTMLDivElement>;
+  handleCreateAuthoringNode: CreateCanvasAuthoringNode;
+  handleDuplicateNode: (nodeId: string) => void;
+  handleRemoveNode: (nodeId: string) => void;
+  handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
+};
 
 export function useCanvasNodeAuthoringHandlers({
-  graphStrategy,
-  draftSession,
-  nodes,
-  edges,
-  selectedNodeIds,
-  inspectorNodeId,
-  canEditEdges,
-  columnLevelLineageEnabled,
-  setNodes,
-  setEdges,
-  setDraftSession,
-  setSelectedNodes,
-  setInspectorNode,
+  state,
+  effects,
+  policy,
 }: UseCanvasNodeAuthoringHandlersArgs): UseCanvasNodeAuthoringHandlersResult {
-  const nodeDropHandlers = useCanvasNodeDropHandlers({
-    graphStrategy,
-    canEditEdges,
-    columnLevelLineageEnabled,
-    setNodes,
-    setDraftSession,
-  });
+  const nodeDropContracts: CanvasNodeDropContracts = {
+    state: {
+      canonicalNodesById: state.canonicalNodesById,
+      draftSession: state.draftSession,
+      nodes: state.nodes,
+    },
+    effects,
+    policy,
+  };
+  const nodeDropHandlers = useCanvasNodeDropHandlers(nodeDropContracts);
+  const nodeCreationContracts: CanvasAuthoringNodeCreationContracts = {
+    state: {
+      draftSession: state.draftSession,
+      nodes: state.nodes,
+    },
+    effects: {
+      setNodes: effects.setNodes,
+      setDraftSession: effects.setDraftSession,
+      setSelectedNodes: effects.setSelectedNodes,
+      setInspectorNode: effects.setInspectorNode,
+    },
+    policy: {
+      canEditEdges: policy.canEditEdges,
+      columnLevelLineageEnabled: policy.columnLevelLineageEnabled,
+      allowsCanonicalNode: policy.allowsCanonicalNode,
+    },
+  };
+  const nodeCreationHandlers = useCanvasAuthoringNodeCreationHandlers(nodeCreationContracts);
+  const nodeDuplicateContracts: CanvasNodeDuplicateContracts = {
+    state: {
+      canonicalNodesById: state.canonicalNodesById,
+      draftSession: state.draftSession,
+      nodes: state.nodes,
+    },
+    effects: {
+      setNodes: effects.setNodes,
+      setDraftSession: effects.setDraftSession,
+      setSelectedNodes: effects.setSelectedNodes,
+      setInspectorNode: effects.setInspectorNode,
+    },
+    policy: {
+      canEditEdges: policy.canEditEdges,
+      columnLevelLineageEnabled: policy.columnLevelLineageEnabled,
+    },
+  };
+  const nodeDuplicateHandlers = useCanvasNodeDuplicateHandlers(nodeDuplicateContracts);
 
-  const nodeRemovalHandlers = useCanvasNodeRemovalHandlers({
-    draftSession,
-    nodes,
-    edges,
-    selectedNodeIds,
-    inspectorNodeId,
-    canEditEdges,
-    setNodes,
-    setEdges,
-    setDraftSession,
-    setSelectedNodes,
-    setInspectorNode,
-  });
+  const nodeRemovalContracts: CanvasNodeRemovalContracts = {
+    state,
+    effects,
+    policy: {
+      canEditEdges: policy.canEditEdges,
+    },
+  };
+  const nodeRemovalHandlers = useCanvasNodeRemovalHandlers(nodeRemovalContracts);
 
   return {
     ...nodeDropHandlers,
+    ...nodeCreationHandlers,
+    ...nodeDuplicateHandlers,
     ...nodeRemovalHandlers,
   };
 }

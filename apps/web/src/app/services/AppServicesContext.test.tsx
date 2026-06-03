@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -7,8 +8,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IRunsPort } from '../ports/runs';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
-import type { IWorkspacePort } from '../ports/workspace';
-import { makeMockRunRef, makeRunContext } from '../testing/contractTestUtils';
+import type {
+  IWarehouseSourceImportPort,
+  IWorkspaceAdminReadPort,
+  IWorkspaceDiffQueryPort,
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+  IWorkspaceGraphSnapshotQueryPort,
+  IWorkspacePluginCatalogQueryPort,
+} from '../ports/workspace';
+import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
+import { makeRunContext } from '../testing/contractTestUtils';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
@@ -17,7 +27,14 @@ import {
   useRunsService,
   useSessionContext,
   useShellFeedback,
-  useWorkspaceService,
+  useWarehouseSourceImportPort,
+  useWorkspaceAdminReadPort,
+  useWorkspaceDiffQueryPort,
+  useWorkspaceFileContentCommandPort,
+  useWorkspaceFilesQueryPort,
+  useWorkspaceGraphDraftAuthoringPort,
+  useWorkspaceGraphSnapshotQueryPort,
+  useWorkspacePluginCatalogQueryPort,
 } from './AppServicesContext';
 
 function clearStableContextKey(): void {
@@ -38,7 +55,14 @@ describe('AppServicesProvider', () => {
 
   const captured: {
     mode: ReturnType<typeof useAppDataSourceMode> | null;
-    workspaceService: IWorkspacePort | null;
+    workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort | null;
+    workspaceFilesQuery: IWorkspaceFilesQueryPort | null;
+    workspaceDiffQuery: IWorkspaceDiffQueryPort | null;
+    workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort | null;
+    workspaceAdminRead: IWorkspaceAdminReadPort | null;
+    warehouseSourceImport: IWarehouseSourceImportPort | null;
+    workspaceFileContentCommand: IWorkspaceFileContentCommandPort | null;
+    workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort | null;
     runsService: IRunsPort | null;
     plansService: IPlansPort | null;
     capabilitiesPort: CapabilitiesPort | null;
@@ -46,7 +70,14 @@ describe('AppServicesProvider', () => {
     shellFeedback: ReturnType<typeof useShellFeedback> | null;
   } = {
     mode: null,
-    workspaceService: null,
+    workspaceGraphSnapshotQuery: null,
+    workspaceFilesQuery: null,
+    workspaceDiffQuery: null,
+    workspacePluginCatalogQuery: null,
+    workspaceAdminRead: null,
+    warehouseSourceImport: null,
+    workspaceFileContentCommand: null,
+    workspaceGraphDraftAuthoringPort: null,
     runsService: null,
     plansService: null,
     capabilitiesPort: null,
@@ -56,7 +87,14 @@ describe('AppServicesProvider', () => {
 
   function Probe(): null {
     captured.mode = useAppDataSourceMode();
-    captured.workspaceService = useWorkspaceService();
+    captured.workspaceGraphSnapshotQuery = useWorkspaceGraphSnapshotQueryPort();
+    captured.workspaceFilesQuery = useWorkspaceFilesQueryPort();
+    captured.workspaceDiffQuery = useWorkspaceDiffQueryPort();
+    captured.workspacePluginCatalogQuery = useWorkspacePluginCatalogQueryPort();
+    captured.workspaceAdminRead = useWorkspaceAdminReadPort();
+    captured.warehouseSourceImport = useWarehouseSourceImportPort();
+    captured.workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
+    captured.workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();
     captured.runsService = useRunsService();
     captured.plansService = usePlansService();
     captured.capabilitiesPort = useCapabilitiesPort();
@@ -80,7 +118,14 @@ describe('AppServicesProvider', () => {
     });
     container.remove();
     captured.mode = null;
-    captured.workspaceService = null;
+    captured.workspaceGraphSnapshotQuery = null;
+    captured.workspaceFilesQuery = null;
+    captured.workspaceDiffQuery = null;
+    captured.workspacePluginCatalogQuery = null;
+    captured.workspaceAdminRead = null;
+    captured.warehouseSourceImport = null;
+    captured.workspaceFileContentCommand = null;
+    captured.workspaceGraphDraftAuthoringPort = null;
     captured.runsService = null;
     captured.plansService = null;
     captured.capabilitiesPort = null;
@@ -101,35 +146,41 @@ describe('AppServicesProvider', () => {
   it('builds services from mode and exposes them through hooks', async () => {
     await act(async () => {
       root.render(
-        <AppServicesProvider overrides={{ mode: 'mock' }}>
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
           <Probe />
         </AppServicesProvider>
       );
     });
 
-    expect(captured.mode).toBe('mock');
-    expect(captured.workspaceService).not.toBeNull();
+    expect(captured.mode).toBe('api');
+    expect(captured.workspaceGraphSnapshotQuery).not.toBeNull();
+    expect(captured.workspaceFilesQuery).not.toBeNull();
+    expect(captured.workspaceDiffQuery).not.toBeNull();
+    expect(captured.workspacePluginCatalogQuery).not.toBeNull();
+    expect(captured.workspaceAdminRead).not.toBeNull();
+    expect(captured.warehouseSourceImport).not.toBeNull();
+    expect(captured.workspaceFileContentCommand).not.toBeNull();
+    expect(captured.workspaceGraphDraftAuthoringPort).not.toBeNull();
     expect(captured.runsService).not.toBeNull();
     expect(captured.plansService).not.toBeNull();
     expect(captured.capabilitiesPort).not.toBeNull();
   });
 
   it('uses explicit overrides when provided', async () => {
-    const workspaceService = {
+    const workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort = {
       getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
-      getGraphDraft: async () => null,
-      saveGraphDraft: async () => ({
-        outcome: 'saved' as const,
-        record: {
-          revision: 'rev-1',
-          savedAt: '2026-04-06T00:00:00Z',
-          draft: { nodeIds: [], nodePositions: {}, edges: [] },
-        },
-      }),
+    };
+    const workspaceDiffQuery: IWorkspaceDiffQueryPort = {
       getDiffChanges: async () => [],
+    };
+    const workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort = {
       getPlugins: async () => [],
+    };
+    const workspaceAdminRead: IWorkspaceAdminReadPort = {
       getRoles: async () => [],
       getAuditLog: async () => [],
+    };
+    const warehouseSourceImport: IWarehouseSourceImportPort = {
       listWarehouseConnections: async () => [],
       listWarehouseTables: async () => [],
       importSources: async () => ({
@@ -144,6 +195,8 @@ describe('AppServicesProvider', () => {
           addFreshness: false,
         },
       }),
+    };
+    const workspaceFilesQuery: IWorkspaceFilesQueryPort = {
       listFiles: async () => [],
       getFileContent: async (path: string) => ({
         path,
@@ -152,12 +205,44 @@ describe('AppServicesProvider', () => {
         content: '',
         lastModified: '2026-04-06T00:00:00Z',
       }),
+    };
+    const workspaceFileContentCommand: IWorkspaceFileContentCommandPort = {
       saveFileContent: async (path: string, content: string) => ({
         path,
         name: path.split('/').at(-1) ?? path,
         language: 'plaintext',
         content,
         lastModified: '2026-04-06T00:00:00Z',
+      }),
+    };
+    const workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort = {
+      readGraphDraft: async () => ({ kind: 'not_found' }),
+      saveGraphDraft: async () => ({
+        kind: 'saved',
+        capability: {
+          scope: {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+          },
+          mode: 'writable',
+          canRead: true,
+          canWrite: true,
+          reason: 'authorized',
+        },
+        auditRef: {
+          correlationId: 'corr-1',
+          decisionId: 'dec-1',
+          action: 'draft_write',
+          outcome: 'allowed',
+          recordedAt: '2026-04-06T00:00:00Z',
+        },
+        formatMeta: {
+          schemaVersion: 'workspace-graph-draft.v1',
+          storedSchemaVersion: 'workspace-graph-draft.v1',
+          migrationState: 'native',
+        },
+        revision: 'rev-1',
       }),
     };
     const plansService = {
@@ -183,12 +268,10 @@ describe('AppServicesProvider', () => {
     const runsService = {
       listRunSummaries: async () => [],
       getRunSnapshot: async () => null,
-      startRun: async () =>
-        makeMockRunRef({
-          tenantId: 'tenant-a',
-          workflowId: 'workflow_1',
-          runId: 'run_1',
-        }),
+      startRun: async () => ({
+        runId: 'run_1',
+        accepted: true,
+      }),
       listRunEvents: async () => ({ events: [] }),
     };
     const sessionContext = {
@@ -196,13 +279,13 @@ describe('AppServicesProvider', () => {
         tenantId: 'tenant-a',
         projectId: 'project-a',
         environmentId: 'dev',
-        targetAdapter: 'mock' as const,
+        targetAdapter: 'temporal' as const,
       }),
       getWorkspaceScopeSnapshot: () => ({
         tenantId: 'tenant-a',
         projectId: 'project-a',
         environmentId: 'dev',
-        targetAdapter: 'mock' as const,
+        targetAdapter: 'temporal' as const,
       }),
       subscribeWorkspaceScope: () => () => undefined,
       buildRunContext: (runId: string) =>
@@ -210,7 +293,7 @@ describe('AppServicesProvider', () => {
           tenantId: 'tenant-a',
           projectId: 'project-a',
           environmentId: 'dev',
-          targetAdapter: 'mock',
+          targetAdapter: 'temporal',
         }),
     };
     const shellFeedback = {
@@ -229,8 +312,14 @@ describe('AppServicesProvider', () => {
       root.render(
         <AppServicesProvider
           overrides={{
-            mode: 'api',
-            workspaceService,
+            workspaceGraphSnapshotQuery,
+            workspaceFilesQuery,
+            workspaceDiffQuery,
+            workspacePluginCatalogQuery,
+            workspaceAdminRead,
+            warehouseSourceImport,
+            workspaceFileContentCommand,
+            workspaceGraphDraftAuthoringPort,
             plansService,
             runsService,
             capabilitiesPort,
@@ -244,7 +333,14 @@ describe('AppServicesProvider', () => {
     });
 
     expect(captured.mode).toBe('api');
-    expect(captured.workspaceService).toBe(workspaceService);
+    expect(captured.workspaceGraphSnapshotQuery).toBe(workspaceGraphSnapshotQuery);
+    expect(captured.workspaceFilesQuery).toBe(workspaceFilesQuery);
+    expect(captured.workspaceDiffQuery).toBe(workspaceDiffQuery);
+    expect(captured.workspacePluginCatalogQuery).toBe(workspacePluginCatalogQuery);
+    expect(captured.workspaceAdminRead).toBe(workspaceAdminRead);
+    expect(captured.warehouseSourceImport).toBe(warehouseSourceImport);
+    expect(captured.workspaceFileContentCommand).toBe(workspaceFileContentCommand);
+    expect(captured.workspaceGraphDraftAuthoringPort).toBe(workspaceGraphDraftAuthoringPort);
     expect(captured.plansService).toBe(plansService);
     expect(captured.runsService).toBe(runsService);
     expect(captured.capabilitiesPort).toBe(capabilitiesPort);
@@ -266,12 +362,12 @@ describe('AppServicesProvider', () => {
 
     await act(async () => {
       root.render(
-        <firstLoad.AppServicesProvider overrides={{ mode: 'mock' }}>
+        <firstLoad.AppServicesProvider overrides={createAppServicesTestOverrides()}>
           <CrossReloadProbe />
         </firstLoad.AppServicesProvider>
       );
     });
 
-    expect(captured.mode).toBe('mock');
+    expect(captured.mode).toBe('api');
   });
 });

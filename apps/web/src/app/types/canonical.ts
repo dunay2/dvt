@@ -1,4 +1,6 @@
-export type CoreNodeRole = 'input' | 'transform' | 'check' | 'output' | 'control';
+/** Owned concern: define canonical graph primitive contracts shared across web plugins and views. */
+export const CORE_NODE_ROLES = ['input', 'transform', 'check', 'output', 'control'] as const;
+export type CoreNodeRole = (typeof CORE_NODE_ROLES)[number];
 
 // ---------------------------------------------------------------------------
 // Canonical task and run shapes
@@ -6,14 +8,16 @@ export type CoreNodeRole = 'input' | 'transform' | 'check' | 'output' | 'control
 
 export const CANONICAL_NODE_DRAG_MIME_TYPE = 'application/x-dvt-canonical-node';
 
-export type CanonicalTaskStatus =
-  | 'pending'
-  | 'running'
-  | 'success'
-  | 'failed'
-  | 'skipped'
-  | 'warn'
-  | 'cancelled';
+export const CANONICAL_TASK_STATUSES = [
+  'pending',
+  'running',
+  'success',
+  'failed',
+  'skipped',
+  'warn',
+  'cancelled',
+] as const;
+export type CanonicalTaskStatus = (typeof CANONICAL_TASK_STATUSES)[number];
 
 export interface CanonicalTask {
   taskId: string;
@@ -29,7 +33,14 @@ export interface CanonicalTask {
   metadata?: Record<string, unknown>;
 }
 
-export type CanonicalRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export const CANONICAL_RUN_STATUSES = [
+  'pending',
+  'running',
+  'completed',
+  'failed',
+  'cancelled',
+] as const;
+export type CanonicalRunStatus = (typeof CANONICAL_RUN_STATUSES)[number];
 
 export interface CanonicalRun {
   runId: string;
@@ -45,11 +56,26 @@ export interface CanonicalRun {
   metadata?: Record<string, unknown>;
 }
 
-export type CanonicalNodeStatus = 'idle' | 'running' | 'success' | 'failed' | 'skipped' | 'warn';
+export const CANONICAL_NODE_STATUSES = [
+  'idle',
+  'running',
+  'success',
+  'failed',
+  'skipped',
+  'warn',
+] as const;
+export type CanonicalNodeStatus = (typeof CANONICAL_NODE_STATUSES)[number];
 
 export type PluginNodeKind = `${string}:${string}`;
 
-export type CanonicalEdgeRelation = 'lineage' | 'validation' | 'consumption' | 'metric' | 'custom';
+export const CANONICAL_EDGE_RELATIONS = [
+  'lineage',
+  'validation',
+  'consumption',
+  'metric',
+  'custom',
+] as const;
+export type CanonicalEdgeRelation = (typeof CANONICAL_EDGE_RELATIONS)[number];
 
 export interface CanonicalNode {
   id: string;

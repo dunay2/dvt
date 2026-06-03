@@ -22,7 +22,9 @@ canonical status truth.
 ### MUST
 
 - expose a stable `provider` discriminator compatible with `EngineRunRef`
-- accept the engine-verified `ExecutionPlan` plus its `PlanRef`
+- accept the engine-verified immutable `PlanRef` plus resolved run context
+- revalidate `PlanRef.sha256` before executing fetched plan bytes or resolved
+  execution segments
 - submit provider-native cancellation through `cancelRun()`
 - return provider-live observation through `getProviderStatusView()` for
   enrichment and diagnostics only
@@ -45,7 +47,7 @@ canonical status truth.
 interface IProviderAdapter {
   readonly provider: EngineRunRef['provider'];
 
-  startRun(plan: ExecutionPlan, planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
+  startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef>;
   cancelRun(runRef: EngineRunRef): Promise<void>;
   getProviderStatusView(runRef: EngineRunRef): Promise<ProviderRunStatusView>;
   signal(runRef: EngineRunRef, request: SignalRequest): Promise<void>;
@@ -71,7 +73,10 @@ interface ProviderRunStatusView {
 
 ## Semantics
 
-- `startRun()` uses the engine-verified plan plus its originating `PlanRef`.
+- `startRun()` uses the verified immutable `PlanRef` approved by the engine
+  start-run gate.
+- providers that fetch plan material at runtime MUST revalidate
+  `PlanRef.sha256` before execution.
 - `cancelRun()` is an idempotent provider-native cancellation request.
 - `getProviderStatusView()` returns provider-live observation suitable for
   diagnostics and enrichment.
@@ -100,10 +105,12 @@ read model.
 The shipped adapter boundary now matches this split:
 
 - `getProviderStatusView(): Promise<ProviderRunStatusView>`
+- `startRun(planRef, ctx): Promise<EngineRunRef>`
 - active runtime/docs now treat provider status as diagnostic-only and keep the
   caller-visible canonical read on `IWorkflowEngine.getRunStatus()`
 
 ## Change log
 
+- **1.0 (2026-04-24)**: Hard-cut `startRun()` to immutable `PlanRef` plus context; runtime fetches must revalidate `PlanRef.sha256`.
 - **1.0 (2026-04-11)**: Modeled explicit provider-live diagnostics in the active `v1` adapter contract line.
 - **1.0 (2026-04-10)**: Reset the active adapter boundary to one canonical pre-stable `v1` line and aligned it with the real adapter code surface.

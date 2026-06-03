@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { Client } from 'pg';
 import { afterAll, describe } from 'vitest';
 
@@ -9,7 +11,7 @@ import { NOW } from './runEventFixtures.js';
 const runIntegration = process.env.DVT_PG_INTEGRATION === '1';
 export const describeIfPg = runIntegration ? describe : describe.skip;
 
-const schemaPrefix = `dvt_it_${Date.now()}`;
+const schemaPrefix = `dvt_it_${randomUUID().replaceAll('-', '_')}`;
 const createdSchemas = new Set<string>();
 let schemaCounter = 0;
 

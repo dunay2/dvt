@@ -3,7 +3,7 @@
 **Audience**: Plan authors, SDK implementers, QA engineers  
 **Purpose**: Enforce deterministic execution in plans (Pre-commit gating)  
 **Status**: Phase 1 (gating enabled)  
-**References**: [ExecutionSemantics](../contracts/engine/ExecutionSemantics.v1.md), [TemporalAdapter](../adapters/temporal/TemporalAdapter.spec.md)
+**References**: [ExecutionSemantics](../contracts/engine/ExecutionSemantics.v1.md), [TemporalAdapter](../adapters/temporal/temporal-adapter-spec.md)
 
 ---
 
@@ -47,7 +47,7 @@ const parallelism = Math.random() > 0.5 ? 4 : 8;
 npm run setup-hooks
 
 # This installs:
-#   .husky/pre-commit → runs eslint + determinism-linter
+#   .husky/pre-commit → runs lint-staged + scoped determinism gate
 #   .husky/pre-push → runs integration tests
 ```
 

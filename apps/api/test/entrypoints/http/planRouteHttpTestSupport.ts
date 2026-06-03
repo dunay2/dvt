@@ -78,6 +78,7 @@ export function okAuthDeps(): TestAuthDeps {
             principalId: 'principal-1',
           },
           scope: {
+            resource: 'environment',
             tenantId: { value: 'tenant-1' },
             projectId: { value: 'project-1' },
             environmentId: { value: 'env-1' },

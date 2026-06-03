@@ -70,7 +70,7 @@ describe('useCanvasGraphHandlers selection', () => {
     expect(setInspectorNode).toHaveBeenCalledWith('source-node');
   });
 
-  it('projects React Flow selection payloads into selected node ids', async () => {
+  it('does not let React Flow visual selection overwrite execution scope', async () => {
     const setSelectedNodes = vi.fn();
     const renderedHarness = renderSelectionHarness({
       setSelectedNodes,
@@ -88,7 +88,7 @@ describe('useCanvasGraphHandlers selection', () => {
       });
     });
 
-    expect(setSelectedNodes).toHaveBeenCalledWith(['source-node', 'sink-node']);
+    expect(setSelectedNodes).not.toHaveBeenCalled();
   });
 
   it('opens the inspector panel when explicitly inspecting a node outside focus mode', async () => {

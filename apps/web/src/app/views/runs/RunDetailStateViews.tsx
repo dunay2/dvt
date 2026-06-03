@@ -1,3 +1,7 @@
+/**
+ * Owned concern: own all empty, error, degraded, loading, and missing state
+ * views for the runs detail route.
+ */
 import { Link } from 'react-router';
 
 import {

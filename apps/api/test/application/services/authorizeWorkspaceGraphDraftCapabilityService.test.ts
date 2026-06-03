@@ -85,6 +85,26 @@ describe('AuthorizeWorkspaceGraphDraftCapabilityService', () => {
     expect(result.capability.canWrite).toBe(false);
     expect(result.capability.reason).toBe('write_denied');
     expect(authorize).toHaveBeenCalledTimes(2);
+    expect(authorize).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ principalId: 'user-1' }),
+      {
+        resource: 'workspace-graph-draft',
+        ...requestedScope,
+        action: { kind: 'query', name: 'workspace:graph-draft:view' },
+      },
+      'req-2'
+    );
+    expect(authorize).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ principalId: 'user-1' }),
+      {
+        resource: 'workspace-graph-draft',
+        ...requestedScope,
+        action: { kind: 'command', name: 'workspace:graph-draft:save' },
+      },
+      'req-2'
+    );
   });
 
   it('maps token assertion conflicts to tenant_mismatch', async () => {

@@ -1,3 +1,10 @@
+/**
+ * @file packages/@dvt/traceability-service/src/lineage/errorContract.ts
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @decision Define stable lineage error codes, reason codes, and message keys for compiled-code resolution
+ * @consequence Traceability failures are structured and persistable without changing run-event contracts
+ * @version 0.1.0
+ */
 export const LINEAGE_ERROR_CODE = {
   COMPILED_CODE_READER_ERROR: 'COMPILED_CODE_READER_ERROR',
   COMPILED_CODE_NOT_FOUND: 'COMPILED_CODE_NOT_FOUND',

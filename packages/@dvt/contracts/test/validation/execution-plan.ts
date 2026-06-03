@@ -5,7 +5,7 @@ import {
   parseExecutionPlan,
   parseRunExecutionPolicy,
 } from '../../src/validation.js';
-import { VALID_EXECUTION_PLAN_V2_FIXTURE } from '../fixtures/planner-contract.fixtures.js';
+import { VALID_EXECUTION_PLAN_V1_FIXTURE } from '../fixtures/planner-contract.fixtures.js';
 
 export function registerValidationExecutionPlanSuite(): void {
   describe('execution plan and policy contracts', () => {
@@ -27,7 +27,7 @@ export function registerValidationExecutionPlanSuite(): void {
 
     it('parses ExecutionPlan when steps carry explicit retryPolicy metadata', () => {
       const plan = parseExecutionPlan({
-        ...VALID_EXECUTION_PLAN_V2_FIXTURE,
+        ...VALID_EXECUTION_PLAN_V1_FIXTURE,
         steps: [
           {
             stepId: 'model.analytics.customers',
@@ -59,9 +59,9 @@ export function registerValidationExecutionPlanSuite(): void {
     it('rejects ExecutionPlan when ownership metadata contains blank fields', () => {
       expect(() =>
         parseExecutionPlan({
-          ...VALID_EXECUTION_PLAN_V2_FIXTURE,
+          ...VALID_EXECUTION_PLAN_V1_FIXTURE,
           metadata: {
-            ...VALID_EXECUTION_PLAN_V2_FIXTURE.metadata,
+            ...VALID_EXECUTION_PLAN_V1_FIXTURE.metadata,
             ownership: {
               tenantId: 'tenant-a',
               projectId: ' ',
@@ -75,7 +75,7 @@ export function registerValidationExecutionPlanSuite(): void {
     it('rejects ExecutionPlan when retryPolicy maximumInterval is lower than initialInterval', () => {
       expect(() =>
         parseExecutionPlan({
-          ...VALID_EXECUTION_PLAN_V2_FIXTURE,
+          ...VALID_EXECUTION_PLAN_V1_FIXTURE,
           steps: [
             {
               stepId: 'model.analytics.customers',
@@ -96,7 +96,7 @@ export function registerValidationExecutionPlanSuite(): void {
     it('rejects ExecutionPlan when retryPolicy uses unsupported shape or invalid bounds', () => {
       expect(() =>
         parseExecutionPlan({
-          ...VALID_EXECUTION_PLAN_V2_FIXTURE,
+          ...VALID_EXECUTION_PLAN_V1_FIXTURE,
           steps: [
             {
               stepId: 'model.analytics.customers',

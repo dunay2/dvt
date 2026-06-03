@@ -12,18 +12,22 @@
 import type {
   AppendResult,
   EventInput,
-  IRunStateStoreWrite,
   RunId,
   RunBootstrapInput,
   RunStateCommandPort,
 } from './types.js';
+
+export interface RunStateCommandStoreWrite {
+  bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
+  appendAndEnqueueTx(runId: RunId, events: EventInput[]): Promise<AppendResult>;
+}
 
 /**
  * Bridge that adapts the Postgres transactional state store to the
  * RunStateCommandPort write boundary.
  */
 export class PostgresRunStateCommandPortBridge implements RunStateCommandPort {
-  constructor(private readonly store: IRunStateStoreWrite) {}
+  constructor(private readonly store: RunStateCommandStoreWrite) {}
 
   bootstrapRun(input: RunBootstrapInput): Promise<AppendResult> {
     return this.store.bootstrapRunTx(input);

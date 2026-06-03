@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { evaluatePluginConnectionRules } from '../contracts/ConnectionRules';
+import { getPluginPortMap } from '../registry';
 import { dvtContributions } from './dvtContributions';
 
 function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): CanonicalNode {
@@ -17,6 +18,18 @@ function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): Ca
 }
 
 describe('dvtContributions connection rules', () => {
+  it('allows source -> sql_transform inside the dvt plugin', () => {
+    const rules = dvtContributions.connectionRules ?? [];
+
+    const sourceToTransform = evaluatePluginConnectionRules(
+      buildNode('dvt:source', 'input'),
+      buildNode('dvt:sql_transform', 'transform'),
+      rules
+    );
+
+    expect(sourceToTransform).toEqual({ allowed: true });
+  });
+
   it('allows sql_transform -> sink inside the dvt plugin', () => {
     const rules = dvtContributions.connectionRules ?? [];
 
@@ -40,7 +53,16 @@ describe('dvtContributions connection rules', () => {
 
     expect(transformToTransform).toEqual({
       allowed: false,
+      reasonCode: 'plugin_rule_blocked',
       reason: 'Connection not permitted by DVT authoring rules',
+    });
+  });
+
+  it('registers imported warehouse source nodes as tabular input producers', () => {
+    expect(getPluginPortMap().get('dvt.warehouse-source')).toEqual({
+      connectionRules: [],
+      produces: [{ portType: 'data.tabular', forRoles: ['input'] }],
+      consumes: [],
     });
   });
 });

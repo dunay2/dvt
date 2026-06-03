@@ -1,4 +1,5 @@
 import { WIZARD_STEPS } from './constants';
+import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import type { TableInfo, WizardStep } from './types';
 
 export function getSelectedCount(tables: TableInfo[]): number {
@@ -29,6 +30,29 @@ export function buildPreviewGroups(
     groups.get(key)?.push(table);
   });
   return groups;
+}
+
+export function buildSourceImportOptionValues(
+  input: Readonly<Record<SourceImportOptionId, boolean>>
+): Readonly<Record<SourceImportOptionId, boolean>> {
+  return {
+    includeColumns: input.includeColumns,
+    addTests: input.addTests,
+    addFreshness: input.addFreshness,
+  };
+}
+
+export function applySourceImportOptionDefaults<T extends Record<SourceImportOptionId, boolean>>(
+  state: T,
+  options: readonly SourceImportOptionContribution[]
+): T {
+  return options.reduce<T>(
+    (nextState, option) => ({
+      ...nextState,
+      [option.id]: option.defaultEnabled,
+    }),
+    state
+  );
 }
 
 export function canProceedForStep(

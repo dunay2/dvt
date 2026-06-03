@@ -14,87 +14,69 @@ const baseScope = {
 } as const;
 
 const baseDraft = {
+  canvas: {
+    kind: 'transformation',
+    title: 'Main canvas',
+  },
+  nodeIds: ['source-1'],
+  nodePositions: {
+    'source-1': { x: 120, y: 80 },
+  },
+  nodes: [
+    {
+      id: 'source-1',
+      name: 'Orders source',
+      pluginId: 'dbt',
+      kind: 'postgres_table',
+      role: 'input',
+      status: 'idle',
+      tags: ['source'],
+    },
+  ],
+  edges: [],
+} as const;
+
+const compileShapedDraft = {
   context: {
     tenantId: baseScope.tenantId,
     projectId: baseScope.projectId,
     environmentId: baseScope.environmentId,
     executionTarget: 'postgres',
   },
-  nodes: [
-    {
-      id: 'source-1',
-      type: 'source',
-      payload: {
-        kind: 'postgres_table',
-        schema: 'raw',
-        table: 'orders',
-        alias: 'orders_src',
-      },
-    },
-    {
-      id: 'transform-1',
-      type: 'sql_transform',
-      payload: {
-        dialect: 'postgres',
-        entrypoint: 'models/orders.sql',
-        sqlArtifact: {
-          repo: 'org/repo',
-          path: 'models/orders.sql',
-          ref: 'refs/heads/main',
-          commitSha: 'commit-sql-1',
-          contentSha256: 'a'.repeat(64),
-        },
-      },
-    },
-    {
-      id: 'sink-1',
-      type: 'sink',
-      payload: {
-        kind: 'postgres_table',
-        schema: 'analytics',
-        table: 'orders_daily',
-        materialization: 'table',
-        writeMode: 'replace',
-      },
-    },
-  ],
-  edges: [
-    { fromNodeId: 'source-1', toNodeId: 'transform-1' },
-    { fromNodeId: 'transform-1', toNodeId: 'sink-1' },
-  ],
+  nodes: [],
+  edges: [],
 } as const;
 
-function buildWritableCapability(): {
+type WorkspaceGraphDraftCapabilityFixture = {
   scope: typeof baseScope;
-  mode: 'writable';
+  mode: 'writable' | 'read_only';
   canRead: true;
-  canWrite: true;
-  reason: 'authorized';
-} {
+  canWrite: boolean;
+  reason: 'authorized' | 'write_denied';
+};
+
+function buildCapabilityFixture<
+  TCapability extends Omit<WorkspaceGraphDraftCapabilityFixture, 'scope'>,
+>(capability: TCapability): { scope: typeof baseScope } & TCapability {
   return {
     scope: baseScope,
-    mode: 'writable' as const,
-    canRead: true,
-    canWrite: true,
-    reason: 'authorized' as const,
+    ...capability,
   };
 }
 
-function buildReadOnlyCapability(): {
-  scope: typeof baseScope;
-  mode: 'read_only';
-  canRead: true;
-  canWrite: false;
-  reason: 'write_denied';
-} {
-  return {
-    scope: baseScope,
-    mode: 'read_only' as const,
-    canRead: true,
-    canWrite: false,
-    reason: 'write_denied' as const,
-  };
-}
+const writableCapability = buildCapabilityFixture({
+  mode: 'writable' as const,
+  canRead: true as const,
+  canWrite: true as const,
+  reason: 'authorized' as const,
+});
+
+const readOnlyCapability = buildCapabilityFixture({
+  mode: 'read_only' as const,
+  canRead: true as const,
+  canWrite: false as const,
+  reason: 'write_denied' as const,
+});
 
 export function registerValidationWorkspaceGraphDraftSuite(): void {
   describe('workspace graph-draft persistence boundary contracts', () => {
@@ -109,13 +91,43 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
 
       expect(request.expectedRevision).toBe('rev-17');
       expect(request.idempotencyKey).toContain('save-');
+      expect(request.draft.nodeIds).toEqual(['source-1']);
+    });
+
+    it('rejects compile-shaped drafts as the editable persistence aggregate', () => {
+      expect(() =>
+        parseWorkspaceGraphDraftSaveRequest({
+          scope: baseScope,
+          schemaVersion: 'workspace-graph-draft.v1',
+          expectedRevision: 'rev-18',
+          idempotencyKey: 'save-tenant-a-project-a-prod-rev-18',
+          draft: compileShapedDraft,
+        })
+      ).toThrow(ContractValidationError);
+    });
+
+    it('rejects save requests when canvas document identity is missing', () => {
+      expect(() =>
+        parseWorkspaceGraphDraftSaveRequest({
+          scope: baseScope,
+          schemaVersion: 'workspace-graph-draft.v1',
+          expectedRevision: 'rev-18a',
+          idempotencyKey: 'save-tenant-a-project-a-prod-rev-18a',
+          draft: {
+            nodeIds: [],
+            nodePositions: {},
+            nodes: [],
+            edges: [],
+          },
+        })
+      ).toThrow(ContractValidationError);
     });
 
     it('rejects save response when denied uses writable capability mode', () => {
       expect(() =>
         parseWorkspaceGraphDraftSaveResponse({
           kind: 'denied',
-          capability: buildWritableCapability(),
+          capability: writableCapability,
           auditRef: {
             correlationId: 'corr-1',
             decisionId: 'dec-1',
@@ -130,7 +142,7 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
     it('parses read format_error outcome with read capability and audit correlation', () => {
       const response = parseWorkspaceGraphDraftReadResponse({
         kind: 'format_error',
-        capability: buildReadOnlyCapability(),
+        capability: readOnlyCapability,
         auditRef: {
           correlationId: 'corr-2',
           decisionId: 'dec-2',

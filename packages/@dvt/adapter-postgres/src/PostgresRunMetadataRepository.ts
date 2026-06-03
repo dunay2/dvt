@@ -1,4 +1,7 @@
 /**
+ * Owned concern: persist and hydrate canonical run metadata with contract-
+ * validated provider references, without storage-local provider variants.
+ *
  * @file packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts
  * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
  * @decision Run metadata persistence extracted from PostgresStateStoreAdapter
@@ -14,9 +17,14 @@ import {
 } from '@dvt/engine';
 import type { PoolClient } from 'pg';
 
+import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
+import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { quoteIdentifier } from './sqlUtils.js';
 import type { ListRunsOptions, RetryAttemptReservation, RunId, RunMetadata } from './types.js';
+
+const RUN_METADATA_TENANT_RESOLVER_SERVICE_ACCESS =
+  POSTGRES_SERVICE_ACCESS.runMetadataTenantResolver;
 
 // ---------------------------------------------------------------------------
 // Row shapes (internal)
@@ -37,7 +45,6 @@ interface RunMetadataRow {
   provider_run_id: string;
   provider_namespace: string | null;
   provider_task_queue: string | null;
-  provider_conductor_url: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -58,8 +65,7 @@ const RUN_METADATA_COLUMNS = `
   provider_workflow_id,
   provider_run_id,
   provider_namespace,
-  provider_task_queue,
-  provider_conductor_url
+  provider_task_queue
 `;
 
 // ---------------------------------------------------------------------------
@@ -89,63 +95,21 @@ function parsePersistedProviderRef(
 }
 
 function normalizeEngineRunRefShape(input: ReturnType<typeof parseEngineRunRef>): EngineRunRef {
-  if (input.provider === 'temporal') {
-    const runRef: EngineRunRef = {
-      provider: 'temporal',
-      tenantId: input.tenantId,
-      namespace: input.namespace,
-      workflowId: input.workflowId,
-      runId: input.runId,
-    };
-    if (input.taskQueue !== undefined) {
-      runRef.taskQueue = input.taskQueue;
-    }
-    return runRef;
-  }
-
-  if (input.provider === 'conductor') {
-    return {
-      provider: 'conductor',
-      tenantId: input.tenantId,
-      workflowId: input.workflowId,
-      runId: input.runId,
-      conductorUrl: input.conductorUrl,
-    };
-  }
-
-  return {
-    provider: 'mock',
+  const runRef: EngineRunRef = {
+    provider: 'temporal',
     tenantId: input.tenantId,
+    namespace: input.namespace,
     workflowId: input.workflowId,
     runId: input.runId,
   };
+  if (input.taskQueue !== undefined) {
+    runRef.taskQueue = input.taskQueue;
+  }
+  return runRef;
 }
 
 function toRunMetadata(row: RunMetadataRow): RunMetadata {
-  const rawProviderRef =
-    row.provider === 'temporal'
-      ? ({
-          provider: 'temporal',
-          tenantId: row.tenant_id,
-          namespace: row.provider_namespace ?? 'default',
-          workflowId: row.provider_workflow_id,
-          runId: row.provider_run_id,
-          ...(row.provider_task_queue !== null ? { taskQueue: row.provider_task_queue } : {}),
-        } as const)
-      : row.provider === 'conductor'
-        ? ({
-            provider: 'conductor',
-            tenantId: row.tenant_id,
-            workflowId: row.provider_workflow_id,
-            runId: row.provider_run_id,
-            conductorUrl: row.provider_conductor_url ?? '',
-          } as const)
-        : ({
-            provider: 'mock',
-            tenantId: row.tenant_id,
-            workflowId: row.provider_workflow_id,
-            runId: row.provider_run_id,
-          } as const);
+  const rawProviderRef = rawProviderRefFromRow(row);
   const providerRef = parsePersistedProviderRef(rawProviderRef, row.run_id);
 
   return {
@@ -160,6 +124,21 @@ function toRunMetadata(row: RunMetadataRow): RunMetadata {
     originRunId: row.origin_run_id ?? undefined,
     providerRef,
   } as RunMetadata;
+}
+
+function rawProviderRefFromRow(row: RunMetadataRow): unknown {
+  if (row.provider === 'temporal') {
+    return {
+      provider: 'temporal',
+      tenantId: row.tenant_id,
+      namespace: row.provider_namespace ?? 'default',
+      workflowId: row.provider_workflow_id,
+      runId: row.provider_run_id,
+      ...(row.provider_task_queue !== null ? { taskQueue: row.provider_task_queue } : {}),
+    };
+  }
+
+  throw new Error(`RUN_METADATA_PROVIDER_UNSUPPORTED: ${String(row.provider)}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -191,10 +170,9 @@ export class PostgresRunMetadataRepository {
           provider_workflow_id,
           provider_run_id,
           provider_namespace,
-          provider_task_queue,
-          provider_conductor_url
+          provider_task_queue
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       `,
       [
         meta.runId,
@@ -210,9 +188,8 @@ export class PostgresRunMetadataRepository {
         providerRef.provider,
         providerRef.workflowId,
         providerRef.runId,
-        providerRef.provider === 'temporal' ? providerRef.namespace : null,
-        providerRef.provider === 'temporal' ? (providerRef.taskQueue ?? null) : null,
-        providerRef.provider === 'conductor' ? providerRef.conductorUrl : null,
+        providerRef.namespace,
+        providerRef.taskQueue ?? null,
       ]
     );
 
@@ -263,10 +240,9 @@ export class PostgresRunMetadataRepository {
           provider_workflow_id,
           provider_run_id,
           provider_namespace,
-          provider_task_queue,
-          provider_conductor_url
+          provider_task_queue
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         ON CONFLICT (run_id) DO UPDATE SET
           tenant_id = EXCLUDED.tenant_id,
           project_id = EXCLUDED.project_id,
@@ -277,8 +253,7 @@ export class PostgresRunMetadataRepository {
           provider_workflow_id = EXCLUDED.provider_workflow_id,
           provider_run_id = EXCLUDED.provider_run_id,
           provider_namespace = EXCLUDED.provider_namespace,
-          provider_task_queue = EXCLUDED.provider_task_queue,
-          provider_conductor_url = EXCLUDED.provider_conductor_url
+          provider_task_queue = EXCLUDED.provider_task_queue
       `,
       [
         meta.runId,
@@ -290,9 +265,8 @@ export class PostgresRunMetadataRepository {
         providerRef.provider,
         providerRef.workflowId,
         providerRef.runId,
-        providerRef.provider === 'temporal' ? providerRef.namespace : null,
-        providerRef.provider === 'temporal' ? (providerRef.taskQueue ?? null) : null,
-        providerRef.provider === 'conductor' ? providerRef.conductorUrl : null,
+        providerRef.namespace,
+        providerRef.taskQueue ?? null,
       ]
     );
   }
@@ -339,19 +313,15 @@ export class PostgresRunMetadataRepository {
           SET provider_workflow_id = $1,
               provider_run_id = $2,
               provider_namespace = $3,
-              provider_task_queue = $4,
-              provider_conductor_url = $5
-          WHERE tenant_id = $6 AND run_id = $7
+              provider_task_queue = $4
+          WHERE tenant_id = $5 AND run_id = $6
           RETURNING ${RUN_METADATA_COLUMNS}
         `,
         [
           validatedProviderRef.workflowId,
           validatedProviderRef.runId,
-          validatedProviderRef.provider === 'temporal' ? validatedProviderRef.namespace : null,
-          validatedProviderRef.provider === 'temporal'
-            ? (validatedProviderRef.taskQueue ?? null)
-            : null,
-          validatedProviderRef.provider === 'conductor' ? validatedProviderRef.conductorUrl : null,
+          validatedProviderRef.namespace,
+          validatedProviderRef.taskQueue ?? null,
           tenantId,
           runId,
         ]
@@ -362,6 +332,7 @@ export class PostgresRunMetadataRepository {
   }
 
   async resolveTenantWithClient(client: PoolClient, runId: RunId): Promise<string> {
+    await enterPostgresMaintenanceContext(client, RUN_METADATA_TENANT_RESOLVER_SERVICE_ACCESS);
     const result = await client.query<{ tenant_id: string }>(
       `
         SELECT tenant_id
@@ -379,16 +350,17 @@ export class PostgresRunMetadataRepository {
   }
 
   async getByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
-    const result = await this.withClient((client) =>
-      client.query<RunMetadataRow>(
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<RunMetadataRow>(
         `
           SELECT ${RUN_METADATA_COLUMNS}
           FROM ${quoteIdentifier(this.schema)}.run_metadata
           WHERE tenant_id = $1 AND run_id = $2
         `,
         [tenantId, runId]
-      )
-    );
+      );
+    });
 
     const row = result.rows[0];
     if (!row) return null;
@@ -401,6 +373,7 @@ export class PostgresRunMetadataRepository {
     const params: unknown[] = [limit, options.tenantId];
 
     return this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, options.tenantId);
       if (options.status === undefined) {
         const result = await client.query<RunMetadataRow>(
           `
@@ -433,10 +406,11 @@ export class PostgresRunMetadataRepository {
             m.provider_workflow_id,
             m.provider_run_id,
             m.provider_namespace,
-            m.provider_task_queue,
-            m.provider_conductor_url
+            m.provider_task_queue
           FROM ${quoteIdentifier(this.schema)}.run_metadata m
-          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s ON s.run_id = m.run_id
+          INNER JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
+            ON s.run_id = m.run_id
+            AND s.tenant_id = m.tenant_id
           WHERE m.tenant_id = $2
             AND s.snapshot_status = ${statusParam}
           ORDER BY m.created_at DESC

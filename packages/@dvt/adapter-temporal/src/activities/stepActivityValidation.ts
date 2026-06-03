@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Validate runtime step shape and derive activity execution identity.
+ */
 import type { ResolvedRunContext } from '@dvt/contracts';
 import { Context } from '@temporalio/activity';
 
@@ -12,6 +15,7 @@ const ALLOWED_STEP_FIELDS = new Set([
   'stepTypeConfig',
   'compiledCodeRef',
   'dependsOn',
+  'retryPolicy',
 ]);
 
 export function resolveTemporalAttemptFromContext(): number {

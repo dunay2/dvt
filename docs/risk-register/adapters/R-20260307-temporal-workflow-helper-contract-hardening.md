@@ -15,8 +15,8 @@ probability: Medium
 ## Context
 
 `RunPlanWorkflow` now delegates DAG traversal, continue-as-new state building, and
-`StepStarted` payload construction to deterministic helpers extracted into a dedicated
-module.
+`StepStarted` payload construction to deterministic helper seams with explicit owned
+concerns instead of one mixed helper module.
 
 ## Risk
 
@@ -36,7 +36,8 @@ events, breaking downstream traceability and replay assumptions.
 ## Evidence
 
 - `packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts`
-- `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts`
 - `packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts`
 - `packages/@dvt/plan-interpreter/src/dagAnalyzer.ts`

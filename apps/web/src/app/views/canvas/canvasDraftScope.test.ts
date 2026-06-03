@@ -12,7 +12,6 @@ const draftSession: CanvasDraftSession = {
   syncState: 'editing',
   baseline: {
     record: null,
-    signature: null,
   },
   draftRevision: null,
   workingSet: {

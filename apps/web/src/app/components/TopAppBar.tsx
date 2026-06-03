@@ -1,16 +1,21 @@
+/** Owned concern: compose global shell top-bar context, health, and command menus. */
 import { useLocation } from 'react-router';
 
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
+import { buildProjectIdentityBadge } from '../shell/projectIdentityBadge';
+import { resolveShellNavigationDisposition } from '../shell/shellNavigationDisposition';
+import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
-import AppBrandMark from './AppBrandMark';
 import { topAppBarClasses } from './shell/chrome';
-import { resolveShellTopBarCopy } from './shell/copy';
+import { detectShellTopBarLocale, resolveShellTopBarCopy } from './shell/copy';
+import { ShellAppMenu } from './shell/ShellAppMenu';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
+import { ShellProjectIdentityBadge } from './shell/ShellProjectIdentityBadge';
+import { ShellWorkspaceContextMenu } from './shell/ShellWorkspaceContextMenu';
 import type { ShellTopBarProps } from './shell/types';
-import { ShellWorkspaceSelectors } from './shell/ShellWorkspaceSelectors';
 import { TooltipProvider } from './ui/tooltip';
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
@@ -19,15 +24,13 @@ export function ShellTopBar({
   connectionDetail,
   connectionStateOverride,
   isConnectionChecking = false,
+  navigationModel,
 }: ShellTopBarProps) {
   const location = useLocation();
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
-  const setSelectedTenant = useSessionStore((state) => state.setTenantId);
-  const setSelectedProject = useSessionStore((state) => state.setProjectId);
-  const setSelectedEnvironment = useSessionStore((state) => state.setEnvironmentId);
-  const connectionStatus = useUiLayoutStore((state) => state.connectionStatus);
+  const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
   const explorerPanelVisible = useUiLayoutStore((state) => state.explorerPanelVisible);
@@ -41,39 +44,34 @@ export function ShellTopBar({
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
-  const copy = resolveShellTopBarCopy();
+  const copy = resolveShellTopBarCopy(detectShellTopBarLocale());
+  const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
+  const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
+  const exposeWorkspaceNavigationMenu = focusMode || navigationDisposition.railMode === 'hidden';
+  const projectIdentityBadge = buildProjectIdentityBadge({
+    workspaceBootstrap,
+    selectedTenant,
+    selectedProject,
+    selectedEnvironment,
+  });
 
   return (
     <TooltipProvider>
       <div data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
-        <div className="mr-1 flex shrink-0 items-center gap-2">
-          <AppBrandMark className="size-6 shrink-0" />
-          <span className={topAppBarClasses.brand}>Raven</span>
-        </div>
+        <ShellAppMenu copy={copy} />
 
-        <ShellWorkspaceSelectors
-          workspaceBootstrap={workspaceBootstrap}
-          selectedTenant={selectedTenant}
-          selectedProject={selectedProject}
-          selectedEnvironment={selectedEnvironment}
-          setSelectedTenant={setSelectedTenant}
-          setSelectedProject={setSelectedProject}
-          setSelectedEnvironment={setSelectedEnvironment}
-        />
-        <ShellGitRef
-          gitBranch={workspaceBootstrap.gitBranch}
-          gitSha={workspaceBootstrap.gitSha}
-          copy={copy}
-        />
-        {location.pathname.startsWith('/canvas') ? (
-          <div
-            id="shell-top-bar-canvas-controls"
-            data-slot="shell-top-bar-canvas-controls"
-            className="ml-1 flex min-w-0 flex-1 items-center justify-end gap-2 overflow-hidden"
-          />
-        ) : (
-          <div className="flex-1" />
+        {!isWorkbenchShell && (
+          <>
+            <ShellProjectIdentityBadge badge={projectIdentityBadge} />
+            <ShellWorkspaceContextMenu badge={projectIdentityBadge} copy={copy} />
+            <ShellGitRef
+              gitBranch={workspaceBootstrap.gitBranch}
+              gitSha={workspaceBootstrap.gitSha}
+              copy={copy}
+            />
+          </>
         )}
+        <div className="flex-1" />
 
         <ShellConnectionStatus
           isConnectionChecking={isConnectionChecking}
@@ -81,13 +79,40 @@ export function ShellTopBar({
           connectionDetail={connectionDetail}
           copy={copy}
         />
+        {exposeWorkspaceNavigationMenu && (
+          <ShellMenu
+            kind="workspace"
+            explorerPanelVisible={explorerPanelVisible}
+            inspectorPanelVisible={inspectorPanelVisible}
+            consolePanelVisible={consolePanelVisible}
+            focusMode={focusMode}
+            gridSize={gridSize}
+            canvasPalette={canvasPalette}
+            navigationModel={navigationModel}
+            projectIdentityBadge={projectIdentityBadge}
+            gitBranch={workspaceBootstrap.gitBranch}
+            gitSha={workspaceBootstrap.gitSha}
+            toggleExplorerPanel={toggleExplorerPanel}
+            toggleInspectorPanel={toggleInspectorPanel}
+            toggleConsolePanel={toggleConsolePanel}
+            toggleFocusMode={toggleFocusMode}
+            setGridSize={setGridSize}
+            setCanvasPalette={setCanvasPalette}
+            copy={copy}
+          />
+        )}
         <ShellMenu
+          kind="view"
           explorerPanelVisible={explorerPanelVisible}
           inspectorPanelVisible={inspectorPanelVisible}
           consolePanelVisible={consolePanelVisible}
           focusMode={focusMode}
           gridSize={gridSize}
           canvasPalette={canvasPalette}
+          navigationModel={navigationModel}
+          projectIdentityBadge={projectIdentityBadge}
+          gitBranch={workspaceBootstrap.gitBranch}
+          gitSha={workspaceBootstrap.gitSha}
           toggleExplorerPanel={toggleExplorerPanel}
           toggleInspectorPanel={toggleInspectorPanel}
           toggleConsolePanel={toggleConsolePanel}

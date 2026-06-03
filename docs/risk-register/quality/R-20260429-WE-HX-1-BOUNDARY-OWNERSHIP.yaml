@@ -1,0 +1,29 @@
+---
+id: R-20260429-WE-HX-1-BOUNDARY-OWNERSHIP
+title: WorkflowEngine external seam ownership can drift back into broad ports
+status: Open
+date: 2026-04-29
+owners:
+  - packages/@dvt/engine
+  - docs/architecture/components/engine
+severity: Medium
+probability: Low
+---
+context: >
+  WE-HX-1 separates the plan artifact reader seam from run-state persistence and documents the
+  external ownership map for PlanRef, runExecutionContextRef, engine resolver ports, and artifact
+  readers.
+risk: >
+  Future convenience edits could reintroduce plan artifact reading into IRunStateStore or recreate
+  adapter-local duplicate contracts, weakening the ADR-0034 bounded-context map and making the
+  engine/artifacts seam ambiguous.
+mitigations:
+  - >-
+    The dedicated IPlanArtifactReader module owns IPlanFetcher, StoredPlanArtifact, and
+    IPlanIntegrityValidator.
+  - >-
+    workflowEngineBoundaryOwnership.architecture.test.ts fails if these responsibilities return to
+    IRunStateStore or if an adapter-local duplicate IPlanFetcher file is recreated.
+  - >-
+    workflow-engine-boundary-ownership-component.md keeps the public API, invariants, transitions,
+    consumers, diagrams, and drift guards together.

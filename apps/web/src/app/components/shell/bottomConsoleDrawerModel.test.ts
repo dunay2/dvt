@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildBottomConsoleDrawerModel } from './bottomConsoleDrawerModel';
 
 describe('buildBottomConsoleDrawerModel', () => {
-  it('returns API idle guidance when no run is active', () => {
+  it('returns live-log idle guidance when no run is active', () => {
     expect(
       buildBottomConsoleDrawerModel({
         title: 'Console',
@@ -17,23 +17,22 @@ describe('buildBottomConsoleDrawerModel', () => {
       modeLabel: null,
       kind: 'idle',
       runLabel: null,
-      message:
-        'Start a run to see run events here. Live log streaming is not available in API mode yet.',
+      message: 'Start a run to see live run events here.',
     });
   });
 
-  it('returns a loading model with run badge and mock badge', () => {
+  it('returns a loading model with run badge and no runtime badge', () => {
     expect(
       buildBottomConsoleDrawerModel({
         title: 'Console',
-        dataSourceMode: 'mock',
+        dataSourceMode: 'api',
         runId: 'run-42',
         isLoading: true,
         lines: [],
       })
     ).toEqual({
       title: 'Console',
-      modeLabel: 'Mock',
+      modeLabel: null,
       kind: 'loading',
       runLabel: 'Run run-42',
       message: 'Loading run events...',
@@ -44,14 +43,14 @@ describe('buildBottomConsoleDrawerModel', () => {
     expect(
       buildBottomConsoleDrawerModel({
         title: 'Console',
-        dataSourceMode: 'mock',
+        dataSourceMode: 'api',
         runId: 'run-42',
         isLoading: false,
         lines: ['step: started', 'step: finished'],
       })
     ).toEqual({
       title: 'Console',
-      modeLabel: 'Mock',
+      modeLabel: null,
       kind: 'streaming',
       runLabel: 'Run run-42',
       lines: ['step: started', 'step: finished'],

@@ -1,3 +1,12 @@
+/**
+ * @file packages/@dvt/adapter-postgres/src/lineageOutboxStorePolicy.ts
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
+ * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
+ * @decision Normalize lineage outbox claim, tenant, and query bounds at the PostgreSQL adapter boundary
+ * @consequence Lineage outbox reads remain bounded, tenant-scoped, and compatible with worker claim semantics
+ * @version 0.1.0
+ */
 const DEFAULT_LINEAGE_OUTBOX_CLAIM_TIMEOUT_MS = 5 * 60 * 1000;
 const MAX_LINEAGE_QUERY_LIMIT = 1000;
 

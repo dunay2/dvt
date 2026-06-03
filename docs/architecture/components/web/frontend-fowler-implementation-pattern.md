@@ -71,11 +71,11 @@ flowchart TB
   Timeline["RunEventTimelinePage"] --> Workspace
 ```
 
-## No-Legacy Rule
+## Canonical Route Rule
 
 For active route flows covered by a Fowler pilot:
 
-- no compatibility model that pretends snapshot payloads are full aggregates;
+- no transition model that pretends snapshot payloads are full aggregates;
 - no route-level fallback that fabricates steps, artifacts, or metrics from
   empty placeholders;
 - no direct route ownership of transport endpoints.

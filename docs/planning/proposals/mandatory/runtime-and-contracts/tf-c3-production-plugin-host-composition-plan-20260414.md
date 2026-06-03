@@ -2,7 +2,7 @@
 title: TF-C3 Production Plugin Host Composition Plan 2026-04-14
 status: Review
 owner: Runtime / Adapters / API / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-05-07
 planning_type: proposal
 lane: C
 task_id: TF-C3
@@ -68,6 +68,268 @@ flowchart TD
 | `TF-C3-C` | create the canonical standalone Temporal worker composition root                     | `5pt`  | Landed         |
 | `TF-C3-D` | run DBT through an adapter-owned CLI host behind `DbtPluginRunner`                   | `8pt`  | Landed         |
 | `TF-C3-E` | rollout/runbook/acceptance hardening and truth-surface closure                       | `3pt`  | In progress    |
+
+## Feature Mechanization
+
+```feature-mechanization
+version: 1
+featureId: TF-C3-E-TEMPORAL-WORKER-RUNBOOK-TRUTH
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
+componentGuides:
+  - docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md
+  - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+userStories:
+  - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c3-start-run-execution-capacity-admission-plan-20260422.md
+  - docs/architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
+  - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+  - docs/runbooks/temporal-worker-scaling-operations.md
+  - docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md
+  - docs/planning/closeouts/**
+  - docs/planning/roadmap/strategic-product-roadmap.md
+  - docs/planning/roadmap/roadmap-by-domain.md
+  - docs/planning/state/domain-status-board.md
+  - apps/temporal-worker/package.json
+  - apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+  - docs/planning/state/agent-lane-c.yaml
+  - docs/planning/state/agent-lane-c.md
+  - docs/planning/state/execution-workboard.md
+  - docs/planning/state/open-task-route.md # Task: RUNTIME-PROP-DISP-1
+  - docs/.manifest.json
+  - docs/planning/status/**
+forbiddenImplementationSurfaces:
+  - apps/api/**
+  - apps/lineage-worker/**
+  - apps/outbox-worker/**
+  - apps/projector-worker/**
+  - apps/web/**
+  - packages/**
+  - specs/**
+  - .github/**
+  - scripts/**
+  - tools/**
+commandQueryRails:
+  - name: DescribeTemporalWorkerOperationalReadiness
+    type: query
+    dddOwner: TemporalWorkerOperationalReadModel
+  - name: UpdateTfC3RolloutTruth
+    type: command
+    dddOwner: TfC3RolloutTruth
+domainObjects:
+  - name: TemporalWorkerOperationalReadModel
+    type: operational read model
+    owner: Runtime / SRE / Delivery
+  - name: TfC3RolloutTruth
+    type: planning aggregate
+    owner: Runtime / SRE / Delivery / Docs
+fowlerSignals:
+  - Documentation drift
+  - Test-only confidence prevention
+architectureGuards:
+  - pnpm docs:feature-mechanization --feature TF-C3-E-TEMPORAL-WORKER-RUNBOOK-TRUTH
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - operational runbook and planning truth only
+completionGate:
+  - pnpm governance:refresh
+  - pnpm docs:gov:links:changed
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: tf-c3-e-runbook-truth
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: >
+      Temporal worker DBT runbook changes are outside
+      allowedImplementationSurfaces before this manifest declares TF-C3-E
+      runbook truth.
+    patchSurfaces:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
+      - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+      - docs/planning/state/agent-lane-c.yaml
+    greenTest: pnpm docs:feature-mechanization:implementation
+  - id: tf-c3-e-docker-canary
+    redTest: pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+    expectedFailure: >
+      A DBT-enabled Temporal worker can report healthy while the real workflow
+      path is not proven against Postgres, Temporal test service, plan-store
+      artifacts, run metadata, readiness, metrics, and DBT invocation evidence.
+    patchSurfaces:
+      - apps/temporal-worker/package.json
+      - apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+      - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+    greenTest: >
+      DVT_PG_INTEGRATION=1 pnpm --filter dvt-temporal-worker test --
+      test/host/runTemporalWorkerHost.test.ts
+symbols:
+  - name: TfC3ProductionPluginHostCompositionPlan
+    path: docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
+    dddOwner: TfC3RolloutTruth
+    cqRails:
+      - UpdateTfC3RolloutTruth
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning proposal only
+    unitTests:
+      - pnpm docs:feature-mechanization --feature TF-C3-E-TEMPORAL-WORKER-RUNBOOK-TRUTH
+      - pnpm docs:feature-mechanization:implementation
+  - name: TemporalWorkerDbtRuntimeRunbook
+    path: docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Documentation drift
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - operational runbook only
+    unitTests:
+      - pnpm docs:gov:links:changed
+      - pnpm lint:md:changed
+  - name: LaneCTfC3ERolloutState
+    path: docs/planning/state/agent-lane-c.yaml
+    dddOwner: TfC3RolloutTruth
+    cqRails:
+      - UpdateTfC3RolloutTruth
+    fowlerSignals:
+      - Documentation drift
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning registry only
+    unitTests:
+      - pnpm docs:workboard:check
+      - pnpm verify:prepush
+  - name: describeIfPg
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: waitForAsync
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: createDbtProjectBundle
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: storeValidPlanArtifact
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: createDbtExecutionPlan
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: bootstrapRunMetadata
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: waitForRunCompleted
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: getOperationalJson
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: getOperationalText
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: metricValue
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+  - name: sha256Hex
+    path: apps/temporal-worker/test/host/runTemporalWorkerHost.test.ts
+    dddOwner: TemporalWorkerOperationalReadModel
+    cqRails:
+      - DescribeTemporalWorkerOperationalReadiness
+    fowlerSignals:
+      - Test-only confidence prevention
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - worker canary test
+    unitTests:
+      - pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+```
 
 ## Governing sources
 
@@ -236,7 +498,7 @@ engine core, and tests.
   worker responsibilities.
 - Engine-owned DBT behavior: rejected because it violates the provider/plugin
   boundary.
-- "Just keep the seam and wire later": rejected because it is not a design; it
+- [Task: RUNTIME-PROP-DISP-1] "Just keep the seam and wire later": rejected because it is not a design; it
   is deferred ambiguity.
 
 ## Fowler-style System Model

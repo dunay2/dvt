@@ -1,3 +1,11 @@
+/**
+ * Owned concern: define the protected persistence envelope for workspace graph
+ * authoring drafts.
+ *
+ * This boundary wraps `WorkspaceGraphAuthoringDraft` with scope, capability,
+ * audit, format metadata, revision, conflict, and save/read outcome semantics.
+ * It does not own compile-ready `DesignGraphDraft` or execution selection.
+ */
 import { z } from 'zod';
 
 import {
@@ -8,9 +16,9 @@ import {
 } from '../../utils/contractPrimitives.js';
 
 import {
-  DesignGraphDraftSchema,
-  type DesignGraphDraft,
-} from './TransformationFlowDesignGraph.v1.js';
+  WorkspaceGraphAuthoringDraftSchema,
+  type WorkspaceGraphAuthoringDraft,
+} from './WorkspaceGraphAuthoringDraft.v1.js';
 
 const NonBlankStringSchema = z
   .string()
@@ -111,7 +119,7 @@ export interface WorkspaceGraphDraftRecord {
   scope: WorkspaceGraphDraftScope;
   schemaVersion: string;
   revision: string;
-  draft: DesignGraphDraft;
+  draft: WorkspaceGraphAuthoringDraft;
   updatedAt: string;
 }
 
@@ -146,7 +154,7 @@ export interface WorkspaceGraphDraftSaveRequest {
   schemaVersion: string;
   expectedRevision: string;
   idempotencyKey: string;
-  draft: DesignGraphDraft;
+  draft: WorkspaceGraphAuthoringDraft;
 }
 
 export interface WorkspaceGraphDraftSaveSuccess {
@@ -279,7 +287,7 @@ export const WorkspaceGraphDraftRecordSchema = z
     scope: WorkspaceGraphDraftScopeSchema,
     schemaVersion: NonBlankStringSchema,
     revision: NonBlankStringSchema,
-    draft: DesignGraphDraftSchema,
+    draft: WorkspaceGraphAuthoringDraftSchema,
     updatedAt: IsoUtcStringSchema,
   })
   .strict() satisfies z.ZodType<WorkspaceGraphDraftRecord>;
@@ -350,7 +358,7 @@ export const WorkspaceGraphDraftSaveRequestSchema = z
     schemaVersion: NonBlankStringSchema,
     expectedRevision: NonBlankStringSchema,
     idempotencyKey: NonBlankStringSchema,
-    draft: DesignGraphDraftSchema,
+    draft: WorkspaceGraphAuthoringDraftSchema,
   })
   .strict() satisfies z.ZodType<WorkspaceGraphDraftSaveRequest>;
 
@@ -397,58 +405,80 @@ export const WorkspaceGraphDraftSaveResponseSchema = z
       });
     }
 
-    if (response.kind === 'saved') {
-      if (response.capability.mode !== WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['capability', 'mode'],
-          message: 'WorkspaceGraphDraft saved responses must use writable capability mode.',
-        });
-      }
-      if (response.auditRef.outcome !== WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.allowed) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['auditRef', 'outcome'],
-          message: 'WorkspaceGraphDraft saved responses must use allowed audit outcome.',
-        });
-      }
-    }
-
-    if (response.kind === 'conflict') {
-      if (response.capability.mode !== WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['capability', 'mode'],
-          message: 'WorkspaceGraphDraft conflict responses must use writable capability mode.',
-        });
-      }
-      if (response.auditRef.outcome !== WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['auditRef', 'outcome'],
-          message: 'WorkspaceGraphDraft conflict responses must use conflict audit outcome.',
-        });
-      }
-    }
-
-    if (response.kind === 'denied') {
-      const deniedOutcomes = new Set<WorkspaceGraphDraftAuditOutcome>([
-        WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.readOnly,
-        WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.forbidden,
-      ]);
-      if (!deniedOutcomes.has(response.auditRef.outcome)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['auditRef', 'outcome'],
-          message: 'WorkspaceGraphDraft denied save responses must be read_only or forbidden.',
-        });
-      }
-      if (response.capability.mode === WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['capability', 'mode'],
-          message: 'WorkspaceGraphDraft denied save responses must not use writable mode.',
-        });
-      }
-    }
+    validateWorkspaceGraphDraftSavedResponse(response, ctx);
+    validateWorkspaceGraphDraftConflictResponse(response, ctx);
+    validateWorkspaceGraphDraftDeniedResponse(response, ctx);
   }) satisfies z.ZodType<WorkspaceGraphDraftSaveResponse>;
+
+function validateWorkspaceGraphDraftSavedResponse(
+  response: WorkspaceGraphDraftSaveResponse,
+  ctx: z.RefinementCtx
+): void {
+  if (response.kind !== 'saved') {
+    return;
+  }
+  if (response.capability.mode !== WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['capability', 'mode'],
+      message: 'WorkspaceGraphDraft saved responses must use writable capability mode.',
+    });
+  }
+  if (response.auditRef.outcome !== WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.allowed) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['auditRef', 'outcome'],
+      message: 'WorkspaceGraphDraft saved responses must use allowed audit outcome.',
+    });
+  }
+}
+
+function validateWorkspaceGraphDraftConflictResponse(
+  response: WorkspaceGraphDraftSaveResponse,
+  ctx: z.RefinementCtx
+): void {
+  if (response.kind !== 'conflict') {
+    return;
+  }
+  if (response.capability.mode !== WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['capability', 'mode'],
+      message: 'WorkspaceGraphDraft conflict responses must use writable capability mode.',
+    });
+  }
+  if (response.auditRef.outcome !== WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['auditRef', 'outcome'],
+      message: 'WorkspaceGraphDraft conflict responses must use conflict audit outcome.',
+    });
+  }
+}
+
+function validateWorkspaceGraphDraftDeniedResponse(
+  response: WorkspaceGraphDraftSaveResponse,
+  ctx: z.RefinementCtx
+): void {
+  if (response.kind !== 'denied') {
+    return;
+  }
+  const deniedOutcomes = new Set<WorkspaceGraphDraftAuditOutcome>([
+    WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.readOnly,
+    WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.forbidden,
+  ]);
+  if (!deniedOutcomes.has(response.auditRef.outcome)) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['auditRef', 'outcome'],
+      message: 'WorkspaceGraphDraft denied save responses must be read_only or forbidden.',
+    });
+  }
+  if (response.capability.mode === WORKSPACE_GRAPH_DRAFT_CAPABILITY_MODE.writable) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['capability', 'mode'],
+      message: 'WorkspaceGraphDraft denied save responses must not use writable mode.',
+    });
+  }
+}

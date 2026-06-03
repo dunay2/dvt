@@ -3,14 +3,24 @@ import { createRoot, type Root } from 'react-dom/client';
 import { toast } from 'sonner';
 import { vi } from 'vitest';
 
-import type { ConnectionRuleResult } from '../../plugins/contracts/ConnectionRules';
+import type { Edge, Node } from '@xyflow/react';
+
+import type { ConnectionRuleResult, PluginPortMap } from '../../plugins/contracts/ConnectionRules';
+import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import type { TransformationConnectionGuardReasonCode } from './transformationConnectionGuard';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 
 const graphHandlersTestDoubles = vi.hoisted(() => ({
-  evaluateConnection: vi.fn<() => ConnectionRuleResult>(() => ({ allowed: true })),
+  evaluateConnection: vi.fn<
+    (
+      source: CanonicalNode,
+      target: CanonicalNode,
+      currentEdges: unknown,
+      pluginPorts: PluginPortMap
+    ) => ConnectionRuleResult
+  >(() => ({ allowed: true })),
   guardTransformationConnection: vi.fn<
     () =>
       | { allowed: true }
@@ -35,10 +45,6 @@ vi.mock('../../plugins/nodeTypeRegistry', async (importOriginal) => {
 
 vi.mock('./transformationConnectionGuard', () => ({
   guardTransformationConnection: graphHandlersTestDoubles.guardTransformationConnection,
-}));
-
-vi.mock('./transformationAuthoringGuard', () => ({
-  guardTransformationAuthoringNode: () => ({ allowed: true }),
 }));
 
 vi.mock('sonner', () => ({
@@ -74,7 +80,6 @@ export function buildDraftSession(): CanvasDraftSession {
     syncState: 'editing',
     baseline: {
       record: null,
-      signature: null,
     },
     draftRevision: 'rev-1',
     workingSet: {
@@ -87,17 +92,22 @@ export function buildDraftSession(): CanvasDraftSession {
 
 type RenderGraphHandlersHookArgs = {
   canEditEdges: boolean;
+  allowsCanonicalNode?: (node: CanonicalNode) => boolean;
+  runtimeCapabilities?: RuntimeCapabilities;
   graphStrategy?: {
     parseDropPayload: (dataTransfer: DataTransfer) => CanonicalNode | null;
   };
-  nodes?: Array<{ id: string; data: { name: string }; position: { x: number; y: number } }>;
-  edges?: Array<{ id: string; source: string; target: string }>;
+  canonicalNodes?: CanonicalNode[];
+  nodes?: Node[];
+  edges?: Edge[];
   draftSession?: CanvasDraftSession;
   selectedNodeIds?: string[];
   inspectorNodeId?: string | null;
   focusMode?: boolean;
   inspectorPanelVisible?: boolean;
   columnLevelLineageEnabled?: boolean;
+  gridSize?: number;
+  canvasSnapToGrid?: boolean;
   setNodes?: ReturnType<typeof vi.fn>;
   setEdges?: ReturnType<typeof vi.fn>;
   setDraftSession?: ReturnType<typeof vi.fn>;
@@ -109,7 +119,13 @@ type RenderGraphHandlersHookArgs = {
 
 export function renderGraphHandlersHook({
   canEditEdges,
+  allowsCanonicalNode = () => true,
+  runtimeCapabilities,
   graphStrategy,
+  canonicalNodes = [
+    buildCanonicalNode('source-node', 'input'),
+    buildCanonicalNode('sink-node', 'output'),
+  ],
   nodes = [
     { id: 'source-node', data: { name: 'source-node' }, position: { x: 0, y: 0 } },
     { id: 'sink-node', data: { name: 'sink-node' }, position: { x: 1, y: 1 } },
@@ -121,6 +137,8 @@ export function renderGraphHandlersHook({
   focusMode = false,
   inspectorPanelVisible = true,
   columnLevelLineageEnabled = false,
+  gridSize = 20,
+  canvasSnapToGrid = false,
   setNodes = vi.fn(),
   setEdges = vi.fn(),
   setDraftSession = vi.fn(),
@@ -140,10 +158,6 @@ export function renderGraphHandlersHook({
   toggleInspectorPanel: ReturnType<typeof vi.fn>;
   onLayoutComplete: ReturnType<typeof vi.fn>;
 } {
-  const canonicalNodes = [
-    buildCanonicalNode('source-node', 'input'),
-    buildCanonicalNode('sink-node', 'output'),
-  ];
   const canonicalNodesById = new Map(canonicalNodes.map((node) => [node.id, node]));
   let latest: LatestHook = null;
   const container = document.createElement('div');
@@ -165,6 +179,10 @@ export function renderGraphHandlersHook({
       inspectorNodeId,
       draftSession,
       canEditEdges,
+      gridSize,
+      canvasSnapToGrid,
+      runtimeCapabilities,
+      allowsCanonicalNode,
       focusMode,
       inspectorPanelVisible,
       columnLevelLineageEnabled,
@@ -226,7 +244,20 @@ export function rejectGraphHandlerConnectionWith(
   graphHandlersTestDoubles.evaluateConnection.mockReturnValue(rejection);
 }
 
-export function rejectTransformationConnectionWith(reasonCode: TransformationConnectionGuardReasonCode) {
+export function evaluateGraphHandlerConnectionWith(
+  implementation: (
+    source: CanonicalNode,
+    target: CanonicalNode,
+    currentEdges: unknown,
+    pluginPorts: PluginPortMap
+  ) => ConnectionRuleResult
+) {
+  graphHandlersTestDoubles.evaluateConnection.mockImplementation(implementation);
+}
+
+export function rejectTransformationConnectionWith(
+  reasonCode: TransformationConnectionGuardReasonCode
+) {
   graphHandlersTestDoubles.guardTransformationConnection.mockReturnValue({
     allowed: false,
     reasonCode,

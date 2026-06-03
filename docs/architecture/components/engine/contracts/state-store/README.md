@@ -18,6 +18,7 @@ Read these first:
 2. [ADR-0013](../../../../../adr/ADR-0013-run-state-store-bootstrapRunTx.md)
 3. [`packages/@dvt/engine/src/ports/IRunStateStore.ts`](../../../../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
 4. [`packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts`](../../../../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
+5. [Snapshot rebuild concurrency component](./snapshot-rebuild-concurrency-component.md)
 
 ## Historical Snapshots
 
@@ -38,3 +39,12 @@ win.
 - callers must treat persisted order as the canonical replay order
 - adapter-specific mechanics belong in the live TypeScript port and adapter
   implementations linked above
+
+## Snapshot Rebuild Maintenance
+
+`IRunStateStoreMaintenance.rebuildSnapshot` is a tenant-scoped maintenance
+command. The portable contract requires one active durable snapshot mutation per
+`(tenantId, runId)`; adapters may use backend-native locks, leases,
+transactions, stored procedures, or compare-and-swap as long as competing
+same-run rebuild commands serialize or fail with a typed transient concurrency
+error.

@@ -1,10 +1,9 @@
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import {
-  bootstrapSession,
-  serializeWorkspaceGraphDraft,
-  type CanvasDraftSession,
-} from './canvasDraftSession';
+import { canvasDraftSession, type CanvasDraftSession } from './canvasDraftSession';
+import { serializeCanvasDraftAuthoringBaselineSignature } from './canvasDraftAuthoring';
+import type { CanvasNodePositions } from './canvasAuthoringRuntime.types';
+import { shouldSeedCanvasLayoutFromRemoteDraft } from './canvasDraftLayoutHydrationPolicy';
 import type { DraftSaveStatus, GraphDraftQueryState } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
 
@@ -15,12 +14,11 @@ type UseCanvasDraftInitialBootstrapArgs = {
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
+  persistedNodePositions: CanvasNodePositions;
+  setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   lastSavedSignatureRef: { current: string | null };
+  lastFailedSignatureRef: { current: string | null };
 };
 
 export function useCanvasDraftInitialBootstrap({
@@ -30,26 +28,38 @@ export function useCanvasDraftInitialBootstrap({
   draftSession,
   setDraftSession,
   canonicalSnapshot,
+  persistedNodePositions,
   setCanvasNodePositions,
   setDraftSaveStatus,
   lastSavedSignatureRef,
+  lastFailedSignatureRef,
 }: UseCanvasDraftInitialBootstrapArgs) {
   useEffect(() => {
     if (shouldWaitForBootstrapReadiness || draftSession.syncState !== 'bootstrapping') {
       return;
     }
 
-    const remoteDraft = graphDraftQuery.data ?? null;
+    const remoteDraft = graphDraftQuery.data?.record ?? null;
 
     if (remoteDraft == null) {
       lastSavedSignatureRef.current = null;
     } else {
-      setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
-      lastSavedSignatureRef.current = serializeWorkspaceGraphDraft(remoteDraft.draft);
+      if (
+        shouldSeedCanvasLayoutFromRemoteDraft({
+          persistedNodePositions,
+          remoteNodePositions: remoteDraft.draft.nodePositions,
+        })
+      ) {
+        setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
+      }
+      lastSavedSignatureRef.current = serializeCanvasDraftAuthoringBaselineSignature({
+        record: remoteDraft,
+      });
     }
 
+    lastFailedSignatureRef.current = null;
     setDraftSession(
-      bootstrapSession({
+      canvasDraftSession.machine.bootstrap({
         remoteDraft,
         canonicalNodeIds: canonicalSnapshot.canonicalNodeIds,
         canonicalEdges: canonicalSnapshot.canonicalEdges,
@@ -59,8 +69,11 @@ export function useCanvasDraftInitialBootstrap({
   }, [
     canonicalSnapshot,
     draftSession.syncState,
-    graphDraftQuery.data,
+    graphDraftQuery.data?.record,
+    graphDraftQuery.data?.semanticGraph,
+    lastFailedSignatureRef,
     lastSavedSignatureRef,
+    persistedNodePositions,
     setCanvasNodePositions,
     setDraftSaveStatus,
     setDraftSession,

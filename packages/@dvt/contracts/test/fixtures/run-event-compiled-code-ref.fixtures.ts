@@ -23,7 +23,7 @@ export const VALID_COMPILED_CODE_REF_FIXTURE = {
 } as const;
 
 export const VALID_STEP_ARTIFACT_REF_FIXTURE = {
-  artifactKind: 'dbt.compiled-sql',
+  artifactKind: 'compiled-sql',
   ...VALID_COMPILED_CODE_REF_FIXTURE,
 } as const;
 

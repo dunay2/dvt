@@ -1,13 +1,19 @@
 /**
- * @baseline ADR-0003
+ * @file packages/@dvt/engine/src/state/InMemoryRunStateCore.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0004: Event Sourcing Strategy
+ * @baseline ADR-0039: Hexagonal Port Hardening And SOLID Remediation
+ * @decision Implement in-memory run-state writes through event-log authority and port-owned lifecycle state
+ * @consequence Local and test state stores replay canonical events instead of accepting provider state as truth
+ * @version 1.0.0
  */
 import { parseEngineRunRef } from '@dvt/contracts';
 
 import { InvalidRunIdError, RunAlreadyExistsError, RunNotFoundError } from '../contracts/errors.js';
 import type {
   AppendResult,
-  RunEventInput,
-  RunEventPersisted,
+  EventEnvelope,
+  EventInput,
   RunMetadata,
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
@@ -55,31 +61,31 @@ import {
 } from './runEventWritePolicy.js';
 
 type InMemoryRunStateCoreOptions = {
-  commitOutbox?: (runId: string, events: RunEventPersisted[]) => Promise<void>;
+  commitOutbox?: (runId: string, events: EventEnvelope[]) => Promise<void>;
 };
 
 type InMemoryAppendContext = {
   baseRunSeq: number;
-  existingEvents: RunEventPersisted[];
+  existingEvents: EventEnvelope[];
   tenantId: string;
 };
 
 type PlannedInMemoryAppend = {
-  appended: RunEventPersisted[];
-  committed: RunEventPersisted[];
-  deduped: RunEventPersisted[];
-  idempotencyIndex: Map<string, RunEventPersisted>;
+  appended: EventEnvelope[];
+  committed: EventEnvelope[];
+  deduped: EventEnvelope[];
+  idempotencyIndex: Map<string, EventEnvelope>;
   nextSnapshot: WorkflowSnapshot | null;
 };
 
 export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalenessQuery {
   readonly metadataByRunId = new Map<string, RunMetadata>();
-  readonly eventsByRunId = new Map<string, RunEventPersisted[]>();
-  readonly idempIndexByRunId = new Map<string, Map<string, RunEventPersisted>>();
+  readonly eventsByRunId = new Map<string, EventEnvelope[]>();
+  readonly idempIndexByRunId = new Map<string, Map<string, EventEnvelope>>();
   readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
   readonly snapshotLastRunSeqByRunId = new Map<string, number>();
   readonly nextRetryAttemptByOriginRunId = new Map<string, number>();
-  private readonly commitOutbox: (runId: string, events: RunEventPersisted[]) => Promise<void>;
+  private readonly commitOutbox: (runId: string, events: EventEnvelope[]) => Promise<void>;
 
   constructor(options: InMemoryRunStateCoreOptions = {}) {
     this.commitOutbox = options.commitOutbox ?? (async () => {});
@@ -131,7 +137,7 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
    * Atomic in this in-memory implementation: outbox enqueue and event-state commit
    * happen as a single ordered mutation from the caller's perspective.
    */
-  async appendAndEnqueueTx(runId: string, eventsToAppend: RunEventInput[]): Promise<AppendResult> {
+  async appendAndEnqueueTx(runId: string, eventsToAppend: EventInput[]): Promise<AppendResult> {
     this.assertRunExists(runId);
     const context = this.getAppendContext(runId);
 
@@ -156,7 +162,7 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
     tenantId: string,
     runId: string,
     options?: ListEventsOptions
-  ): Promise<RunEventPersisted[]> {
+  ): Promise<EventEnvelope[]> {
     return listInMemoryRunEvents(this, tenantId, runId, options?.afterSeq, options?.limit);
   }
 
@@ -215,11 +221,11 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
   private planAppendMutation(
     runId: string,
     context: InMemoryAppendContext,
-    eventsToAppend: readonly RunEventInput[]
+    eventsToAppend: readonly EventInput[]
   ): PlannedInMemoryAppend {
-    const idempotencyIndex = new Map<string, RunEventPersisted>(this.idempIndexByRunId.get(runId));
-    const appended: RunEventPersisted[] = [];
-    const deduped: RunEventPersisted[] = [];
+    const idempotencyIndex = new Map<string, EventEnvelope>(this.idempIndexByRunId.get(runId));
+    const appended: EventEnvelope[] = [];
+    const deduped: EventEnvelope[] = [];
 
     for (const [index, event] of eventsToAppend.entries()) {
       assertRunEventInput(event, index);
@@ -254,7 +260,7 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
 
   private buildNextSnapshot(
     runId: string,
-    appended: readonly RunEventPersisted[]
+    appended: readonly EventEnvelope[]
   ): WorkflowSnapshot | null {
     if (appended.length === 0) {
       return null;
@@ -283,9 +289,9 @@ function buildPlannedPersistedEvent(
   runId: string,
   baseRunSeq: number,
   appendedCount: number,
-  event: RunEventInput,
+  event: EventInput,
   index: number
-): RunEventPersisted {
+): EventEnvelope {
   const runSeq = baseRunSeq + appendedCount + 1;
   assertRunSequenceWithinSafeRange(runSeq, runId);
   return buildPersistedRunEventRecord(event, runSeq, IN_MEMORY_PERSISTED_AT_EPOCH_ISO, index);

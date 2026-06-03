@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/auth.js';
 import { GetRunStatusUseCase } from '../../../src/application/services/getRunStatusUseCase.js';
 import { TenantId } from '../../../src/domain/auth/types.js';
+import { buildTransformationStoredPlan } from '../../entrypoints/http/planRouteFixtures.js';
 
 const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view' }> = {
   principal: {
@@ -16,7 +17,7 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view'
     assertedTenantIds: ['tenant-a'],
     assertedProjectIds: [],
   },
-  scope: { tenantId: TenantId.unsafe('tenant-a') },
+  scope: { resource: 'tenant', tenantId: TenantId.unsafe('tenant-a') },
   action: { kind: 'query', name: 'run:view' },
   requestId: 'req-1',
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
@@ -38,8 +39,9 @@ function createStateStore(): {
         planVersion: '1.0',
         logicalAttemptId: 1,
         providerRef: {
-          provider: 'mock' as const,
+          provider: 'temporal' as const,
           tenantId: 'tenant-a',
+          namespace: 'default',
           workflowId: 'wf-1',
           runId: 'provider-run-1',
         },
@@ -59,8 +61,9 @@ describe('GetRunStatusUseCase', () => {
     const engine = {
       async getRunStatus(runRef: unknown) {
         expect(runRef).toEqual({
-          provider: 'mock',
+          provider: 'temporal',
           tenantId: 'tenant-a',
+          namespace: 'default',
           workflowId: 'wf-1',
           runId: 'provider-run-1',
         });
@@ -99,6 +102,24 @@ describe('GetRunStatusUseCase', () => {
       status: 'RUNNING',
       enriched: false,
       snapshotStaleness: 'FRESH',
+      diagnostics: {
+        runId: 'provider-run-1',
+        planId: 'plan-1',
+        adapter: 'temporal',
+        status: 'RUNNING',
+        pointers: [
+          {
+            kind: 'trace',
+            label: 'Trace query',
+            value: 'trace runId=provider-run-1 planId=plan-1 adapter=temporal status=RUNNING',
+          },
+          {
+            kind: 'log',
+            label: 'Log query',
+            value: 'logs runId=provider-run-1 planId=plan-1 adapter=temporal status=RUNNING',
+          },
+        ],
+      },
     });
     expect(stalenessReader.isSnapshotStale).toHaveBeenCalledWith('tenant-a', 'run-1');
     expect(telemetry.recordSnapshotStalenessResult).toHaveBeenCalledWith(
@@ -362,9 +383,9 @@ describe('GetRunStatusUseCase', () => {
             status: 'RUNNING' as const,
           },
           providerView: {
-            provider: 'mock' as const,
+            provider: 'temporal' as const,
             providerStatus: 'RUNNING',
-            providerSubstatus: 'mock/QUEUED',
+            providerSubstatus: 'temporal/QUEUED',
           },
         };
       },
@@ -393,10 +414,28 @@ describe('GetRunStatusUseCase', () => {
       status: 'RUNNING',
       enriched: true,
       snapshotStaleness: 'FRESH',
+      diagnostics: {
+        runId: 'provider-run-1',
+        planId: 'plan-1',
+        adapter: 'temporal',
+        status: 'RUNNING',
+        pointers: [
+          {
+            kind: 'trace',
+            label: 'Trace query',
+            value: 'trace runId=provider-run-1 planId=plan-1 adapter=temporal status=RUNNING',
+          },
+          {
+            kind: 'log',
+            label: 'Log query',
+            value: 'logs runId=provider-run-1 planId=plan-1 adapter=temporal status=RUNNING',
+          },
+        ],
+      },
       providerView: {
-        provider: 'mock',
+        provider: 'temporal',
         providerStatus: 'RUNNING',
-        providerSubstatus: 'mock/QUEUED',
+        providerSubstatus: 'temporal/QUEUED',
       },
     });
     expect(telemetry.recordSnapshotStalenessResult).toHaveBeenCalledWith(
@@ -451,7 +490,10 @@ describe('GetRunStatusUseCase', () => {
       } as never
     );
 
-    const result = await useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never);
+    const result = await useCase.execute(
+      { runId: 'run-1', enriched: false },
+      queryContext as never
+    );
 
     expect(result).toMatchObject({
       runId: 'provider-run-1',
@@ -523,6 +565,220 @@ describe('GetRunStatusUseCase', () => {
         executor: 'postgres',
         sinkTable: 'analytics.orders_daily',
         rowsWritten: 42,
+      },
+    });
+  });
+
+  it('projects persisted transformation plan source and sink summary into run status', async () => {
+    const persistedPlan = buildTransformationStoredPlan();
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'COMPLETED' as const,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:00:04.000Z',
+          execution: {
+            materialization: {
+              executor: 'postgres' as const,
+              environmentId: 'env-1',
+              sinkTable: 'analytics.orders_daily',
+              rowsWritten: 42,
+              startedAt: '2026-04-08T10:00:00.000Z',
+              completedAt: '2026-04-08T10:00:04.000Z',
+              durationMs: 4000,
+            },
+          },
+        };
+      },
+      async getRunEnrichment() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      undefined,
+      {
+        async getPlanRecord() {
+          return {
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: persistedPlan.metadata.planId,
+            planVersion: persistedPlan.metadata.planVersion,
+            schemaVersion: persistedPlan.metadata.schemaVersion,
+            contractVersion: persistedPlan.metadata.contractVersion,
+            canonicalHash: 'a'.repeat(64),
+            canonicalPlanJson: JSON.stringify(persistedPlan),
+            sourceRef: 'dvt-plan://postgres/orders-daily',
+            state: 'ACTIVE' as const,
+            createdAtIso: '2026-04-08T10:00:00.000Z',
+            updatedAtIso: '2026-04-08T10:00:00.000Z',
+          };
+        },
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      planSummary: {
+        executor: 'postgres',
+        nodeCount: 3,
+        stepCount: 3,
+        sourceTables: ['raw.orders'],
+        sinkTables: ['analytics.orders_daily'],
+      },
+    });
+  });
+
+  it('projects run diagnostics with trace and log pointers from the run read model', async () => {
+    const planSha = 'd'.repeat(64);
+    const engine = {
+      async getRunStatus() {
+        return {
+          runId: 'provider-run-1',
+          status: 'FAILED' as const,
+          startedAt: '2026-04-08T10:00:00.000Z',
+          completedAt: '2026-04-08T10:00:10.000Z',
+          execution: {
+            failure: {
+              stepId: 'step-load',
+              reason: 'SINK_WRITE_FAILED',
+              failedAt: '2026-04-08T10:00:09.000Z',
+            },
+          },
+        };
+      },
+      async getRunEnrichment() {
+        throw new Error('should not be called');
+      },
+    };
+
+    const stateStore = {
+      ...createStateStore(),
+      async listEvents() {
+        return [
+          {
+            eventId: 'evt-run-started',
+            eventType: 'RunStarted',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 4,
+            logicalAttemptId: 2,
+            idempotencyKey: 'idem-run-started',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:00:00.000Z',
+            persistedAt: '2026-04-08T10:00:00.100Z',
+            runSeq: 1,
+            payload: {
+              executor: 'postgres',
+            },
+          },
+          {
+            eventId: 'evt-step-failed',
+            eventType: 'StepFailed',
+            runId: 'run-1',
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            engineAttemptId: 4,
+            logicalAttemptId: 2,
+            idempotencyKey: 'idem-step-failed',
+            payloadVersion: 1,
+            emittedAt: '2026-04-08T10:00:09.000Z',
+            persistedAt: '2026-04-08T10:00:09.100Z',
+            runSeq: 2,
+            stepId: 'step-load',
+            payload: {
+              reason: 'SINK_WRITE_FAILED',
+            },
+          },
+        ];
+      },
+    };
+
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      stateStore as never,
+      {
+        isSnapshotStale: vi.fn().mockResolvedValue(false),
+      } as never,
+      undefined,
+      {
+        async getPlanRecord() {
+          return {
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+            planVersion: '1.0',
+            schemaVersion: '1.0',
+            contractVersion: '1.0.0',
+            canonicalHash: planSha,
+            canonicalPlanJson: JSON.stringify({
+              metadata: {
+                planId: 'plan-1',
+                planVersion: '1.0',
+                schemaVersion: '1.0',
+                contractVersion: '1.0.0',
+                inputHashSha256: 'b'.repeat(64),
+                createdAtIso: '2026-04-08T10:00:00.000Z',
+                ownership: {
+                  tenantId: 'tenant-a',
+                  projectId: 'proj-1',
+                  environmentId: 'env-1',
+                },
+              },
+              steps: [],
+            }),
+            sourceRef: 'plan://persisted/plan-1',
+            state: 'ACTIVE' as const,
+            createdAtIso: '2026-04-08T10:00:00.000Z',
+            updatedAtIso: '2026-04-08T10:00:00.000Z',
+          };
+        },
+      } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      diagnostics: {
+        runId: 'provider-run-1',
+        planId: 'plan-1',
+        planSha,
+        stepId: 'step-load',
+        attemptId: '2',
+        adapter: 'temporal',
+        durationMs: 10000,
+        status: 'FAILED',
+        errorCode: 'SINK_WRITE_FAILED',
+        pointers: [
+          {
+            kind: 'trace',
+            label: 'Trace query',
+            value: expect.stringContaining('runId=provider-run-1'),
+          },
+          {
+            kind: 'log',
+            label: 'Log query',
+            value: expect.stringContaining('planId=plan-1'),
+          },
+        ],
       },
     });
   });
@@ -657,21 +913,35 @@ describe('GetRunStatusUseCase', () => {
       } as never,
       undefined,
       {
-        async getPlanRecord() {
+        async getPlanRecord(input: unknown) {
+          expect(input).toEqual({
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
+            planId: 'plan-1',
+          });
           return {
+            tenantId: 'tenant-a',
+            projectId: 'proj-1',
+            environmentId: 'env-1',
             planId: '9'.repeat(64),
             planVersion: '1.0',
-            schemaVersion: 'v1.2',
+            schemaVersion: '1.0',
             contractVersion: '1.0.0',
             canonicalHash: 'a'.repeat(64),
             canonicalPlanJson: JSON.stringify({
               metadata: {
                 planId: '9'.repeat(64),
                 planVersion: '1.0',
-                schemaVersion: 'v1.2',
+                schemaVersion: '1.0',
                 contractVersion: '1.0.0',
                 inputHashSha256: 'b'.repeat(64),
                 createdAtIso: '2026-04-08T10:00:00.000Z',
+                ownership: {
+                  tenantId: 'tenant-a',
+                  projectId: 'proj-1',
+                  environmentId: 'env-1',
+                },
               },
               steps: [],
               observability: {
@@ -1295,5 +1565,3 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 });
-
-

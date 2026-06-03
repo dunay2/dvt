@@ -1,0 +1,15 @@
+---
+id: R-20260513-RUN-EVENTS-HASH-PARTITIONING
+title: Run events partitioning could drift from idempotency and tenant isolation constraints
+status: Open
+date: 2026-05-13
+owners:
+  - dvt/adapter-postgres
+severity: Medium
+probability: Low
+---
+The `run_events` table is the authoritative event log. Partitioning it could accidentally weaken
+duplicate idempotency, per-run ordering, rollback safety, or tenant RLS if the migration shape
+drifts from the adapter contract. This slice mitigates the risk by partitioning by `run_id`,
+preserving the existing primary and unique constraints, copying a fixed canonical column list during
+conversion, testing rollback, and reapplying tenant RLS after conversion.

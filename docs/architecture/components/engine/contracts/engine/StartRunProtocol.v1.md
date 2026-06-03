@@ -28,8 +28,9 @@ context)` handoff after API orchestration has already classified planner-backed
 or persisted-plan ingress.
 
 Its job is to make the existing protocol reviewable without forcing readers to
-reconstruct it from `WorkflowEngine`, `StartRunApplicationService`,
-`StartRunAdmissionGuard`, `StartRunExecutionService`, and
+reconstruct it from `WorkflowEngine`, `WorkflowStartRunUseCase`,
+`StartRunApplicationService`, `StartRunAdmissionService`,
+`StartRunIntentService`, `StartRunExecutionService`, and
 `StartRunFailurePolicy`.
 
 ---
@@ -48,11 +49,14 @@ The current implementation units are:
 
 | Role                    | Unit                                                                                                                                       | Responsibility                                                                                                                |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| Public facade           | [`WorkflowEngine`](../../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)                                                      | Parses `PlanRef` and `RunContext`, resolves initial run lineage, builds trace context, delegates to application service       |
-| Application coordinator | [`StartRunApplicationService`](../../../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)                       | Orchestrates admission, integrity verification, intent creation, dispatch, and failure policy                                 |
+| Public facade           | [`WorkflowEngine`](../../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)                                                      | Parses `PlanRef` and `RunContext`, then delegates to facade-facing use cases                                                  |
+| Facade start use case   | [`WorkflowStartRunUseCase`](../../../../../../packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts)   | Resolves initial run lineage, builds trace context, and delegates to the start-run application service                        |
+| Application coordinator | [`StartRunApplicationService`](../../../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)                       | Sequences admission, intent creation, dispatch, success metrics, and failure policy                                           |
+| Admission service       | [`StartRunAdmissionService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts)                     | Coordinates admission, provider resolution, scoped integrity verification, and capability/run-execution-context checks        |
 | Admission boundary      | [`StartRunAdmissionGuard`](../../../../../../packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts)                               | Runs preconditions, adapter resolution, capability checks, and runExecutionContext admission                                  |
 | Validation policy       | [`StartRunValidationPolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts)                     | Tenant access, `PlanRef` policy, schema/version validation, run-id validation, duplicate-run rejection, capability validation |
 | Context admission       | [`RunExecutionContextAdmissionPolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts) | Validates `runExecutionContextRef` alignment and compatibility fingerprints                                                   |
+| Intent creation         | [`StartRunIntentService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts)                           | Derives deterministic pre-dispatch intent ids and persists `PENDING` intents                                                  |
 | Dispatch + bootstrap    | [`StartRunExecutionService`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)                     | Calls provider adapter, marks intent dispatched, bootstraps run state, compensates on bootstrap failure                       |
 | Failure handling        | [`StartRunFailurePolicy`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)                           | Logs/metrics, best-effort intent resolution, guarded `RunFailed` emission after persisted metadata exists                     |
 | Metadata/event factory  | [`StartRunEventFactory`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunEventFactory.ts)                             | Constructs `RunMetadata`, `RunQueued`, provider-ref updates, and failure events                                               |
@@ -65,9 +69,12 @@ The current implementation units are:
 sequenceDiagram
     participant Caller
     participant Engine as WorkflowEngine
+    participant UseCase as WorkflowStartRunUseCase
     participant App as StartRunApplicationService
+    participant Admission as StartRunAdmissionService
     participant Guard as StartRunAdmissionGuard
     participant Verifier as PlanIntegrityValidator
+    participant IntentSvc as StartRunIntentService
     participant Intent as IStartRunIntentStore
     participant Exec as StartRunExecutionService
     participant Adapter as IProviderAdapter
@@ -75,17 +82,21 @@ sequenceDiagram
     participant Failure as StartRunFailurePolicy
 
     Caller->>Engine: startRun(planRef, runContext)
-    Engine->>App: startRun(validatedPlanRef, resolvedContext, traceContext)
-    App->>Guard: assertStartRunAllowed(planRef, resolvedContext)
-    App->>Verifier: fetchAndValidate(planRef, planFetcher)
-    App->>Guard: assertExecutionPolicyAllowed(plan, planRef, executionPolicy, resolvedContext, adapter)
-    App->>Intent: createIntent(intentId, tenantId, runId, provider)
+    Engine->>UseCase: startRun(validatedPlanRef, normalizedContext)
+    UseCase->>App: startRun(validatedPlanRef, resolvedContext, traceContext)
+    App->>Admission: admit(planRef, resolvedContext)
+    Admission->>Guard: assertStartRunAllowed(planRef, resolvedContext)
+    Admission->>Guard: resolveAdapter(resolvedContext)
+    Admission->>Verifier: fetchAndValidate(scopedPlanRef, planFetcher)
+    Admission->>Guard: assertExecutionPolicyAllowed(plan, planRef, executionPolicy, resolvedContext, adapter)
+    App->>IntentSvc: createIntent(resolvedContext, adapter.provider)
+    IntentSvc->>Intent: createIntent(intentId, tenantId, runId, provider)
     App->>Exec: executeStartRun(...)
 
     alt adapter exposes estimateRunRef()
         Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
-        Exec->>Adapter: startRun(plan, planRef, resolvedContext)
-        Exec->>Intent: markDispatched(intentId, runRef)
+        Exec->>Adapter: startRun(planRef, resolvedContext)
+        Exec->>Intent: markDispatched({tenantId, intentId}, runRef)
         Exec->>Exec: reconcile estimatedRef vs runRef
         alt same provider, different late-bound fields
             Exec->>State: saveProviderRef(tenantId, runId, runRef)
@@ -98,8 +109,8 @@ sequenceDiagram
             Exec->>Failure: markIntentResolvedBestEffort(...)
         end
     else no estimateRunRef()
-        Exec->>Adapter: startRun(plan, planRef, resolvedContext)
-        Exec->>Intent: markDispatched(intentId, runRef)
+        Exec->>Adapter: startRun(planRef, resolvedContext)
+        Exec->>Intent: markDispatched({tenantId, intentId}, runRef)
         Exec->>State: bootstrapRunTx(run_metadata.providerRef + RunQueued)
         Exec->>Failure: markIntentResolvedBestEffort(...)
     end
@@ -125,7 +136,9 @@ sequenceDiagram
 The admission phase is already implemented by:
 
 - [`WorkflowEngine.startRun()`](../../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
+- [`WorkflowStartRunUseCase.startRun()`](../../../../../../packages/@dvt/engine/src/application/workflow-engine-use-cases/WorkflowStartRunUseCase.ts)
 - [`StartRunApplicationService.startRunCore()`](../../../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
+- [`StartRunAdmissionService.admit()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts)
 - [`StartRunAdmissionGuard.assertStartRunAllowed()`](../../../../../../packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts)
 - [`StartRunValidationPolicy.validateStartRunPreconditions()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts)
 - [`StartRunAdmissionGuard.resolveAdapter()`](../../../../../../packages/@dvt/engine/src/application/StartRunAdmissionGuard.ts)
@@ -136,7 +149,7 @@ The admission phase currently performs:
 
 1. parse and normalize `PlanRef`
 2. parse and normalize `RunContext`
-3. resolve initial lineage fields:
+3. resolve initial lineage fields in `WorkflowStartRunUseCase`:
    - `logicalAttemptId = 1`
    - `originRunId = runId`
 4. tenant access check
@@ -146,16 +159,21 @@ The admission phase currently performs:
 8. `runId` format validation
 9. duplicate-run rejection through `getRunMetadataByRunId()`
 10. rate-limit check
-11. adapter lookup
-12. execution-policy capability checks
-13. `runExecutionContextRef` alignment and compatibility checks when present
-14. DBT-bearing plans reject before queueing when:
+11. adapter lookup in `StartRunAdmissionService`
+12. scoped plan artifact integrity verification in `StartRunAdmissionService`
+13. execution-policy capability checks
+14. `runExecutionContextRef` alignment and compatibility checks when present
+15. plugin-bearing plans reject before queueing when:
 
 - `runExecutionContextRef` is missing
-- resolved `pluginContexts.dbt` is missing
-- `pluginContexts.dbt.projectBundleRef.tenantId` mismatches the run tenant
-- `pluginContexts.dbt.projectBundleRef.uri` is not a canonical
-  tenant-scoped locator for the declared tenant and bundle hash
+- the engine resolver is not configured for a supplied
+  `runExecutionContextRef`
+- the resolved context omits `pluginContexts`
+- resolved plugin context is missing for a required plugin
+- the resolved context metadata mismatches the admitted `PlanRef`,
+  `RunExecutionPolicy`, or run tenant
+- the plugin binding policy rejects a plugin-specific invariant such as
+  artifact tenant ownership or canonical locator shape
 
 This phase rejects before any provider side effect.
 
@@ -164,7 +182,7 @@ This phase rejects before any provider side effect.
 The integrity phase is already implemented by:
 
 - [`PlanIntegrityValidator.fetchAndValidate()`](../../../../../../packages/@dvt/engine/src/security/planIntegrity.ts)
-- invoked from [`StartRunApplicationService.startRunCore()`](../../../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
+- invoked from [`StartRunAdmissionService.admit()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts)
 
 The integrity phase currently performs:
 
@@ -180,7 +198,7 @@ This is the authoritative integrity gate mandated by ADR-0012.
 
 The intent phase is already implemented by:
 
-- [`StartRunApplicationService.createStartRunIntent()`](../../../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
+- [`StartRunIntentService.createIntent()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts)
 - [`IStartRunIntentStore.createIntent()`](../../../../../../packages/@dvt/engine/src/ports/IStartRunIntentStore.ts)
 - [`IdempotencyKeyBuilder.startRunIntentId()`](../../../../../../packages/@dvt/engine/src/core/idempotency.ts)
 
@@ -195,6 +213,9 @@ The intent phase currently performs:
    - `createdAt`
 
 This is the crash-consistency entry point mandated by ADR-0030.
+All post-create intent command/query operations use the tenant-scoped
+`StartRunIntentRef { tenantId, intentId }`; only maintenance scanning uses the
+unscoped `listOrphaned(...)` service-context path.
 
 ### 4.4 Dispatch
 
@@ -208,14 +229,15 @@ The dispatch phase currently performs:
 1. choose between:
    - `startRunWithEstimatedRef()`
    - `startRunWithoutEstimatedRef()`
-2. call `adapter.startRun(plan, planRef, resolvedContext)`
+2. call `adapter.startRun(planRef, resolvedContext)`
 3. enforce adapter-start timeout through `withTimeout(...)`
-4. persist `DISPATCHED` intent state via `markDispatched(intentId, runRef)`
+4. persist `DISPATCHED` intent state via `markDispatched({ tenantId, intentId }, runRef)`
 5. treat post-start intent persistence failure as a first-class error
    (`PostStartIntentPersistenceError`)
 
-The adapter receives the already verified `ExecutionPlan` plus the original
-`PlanRef`.
+The adapter receives the engine-approved immutable `PlanRef` plus the resolved
+run context. Provider runtimes that fetch plan material at runtime MUST
+revalidate `PlanRef.sha256` before execution.
 
 ### 4.5 Bootstrap Behavior
 
@@ -322,8 +344,8 @@ This protocol MUST preserve:
 
 - engine-side fetch and verification before adapter dispatch
 - centralized `planId` verification from plan core
-- adapter execution of the same verified `ExecutionPlan` object the engine
-  approved
+- adapter execution from the engine-approved immutable `PlanRef`, with runtime
+  plan-material fetches revalidating `PlanRef.sha256`
 - fail-closed rejection before any adapter execution if integrity fails
 
 Implemented today by:
@@ -364,7 +386,7 @@ This protocol MUST preserve:
 
 Implemented today by:
 
-- [`StartRunApplicationService.createStartRunIntent()`](../../../../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
+- [`StartRunIntentService.createIntent()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts)
 - [`StartRunExecutionService.startAdapterAndMarkDispatched()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts)
 - [`StartRunFailurePolicy.markIntentResolvedBestEffort()`](../../../../../../packages/@dvt/engine/src/services/startRun/StartRunFailurePolicy.ts)
 - mandatory dependency checks in [`WorkflowEngine.validateDependencies()`](../../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
@@ -375,7 +397,8 @@ Implemented today by:
 
 Reviewers can verify the protocol by checking:
 
-1. `WorkflowEngine.startRun()` delegates only to `StartRunApplicationService`
+1. `WorkflowEngine.startRun()` delegates only to the facade start-run use case
+   after parsing public input
 2. admission happens before integrity and before any provider side effect
 3. integrity verification happens before adapter dispatch
 4. an intent is created before provider dispatch

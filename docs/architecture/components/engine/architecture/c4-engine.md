@@ -14,7 +14,7 @@
 - [IRunStateStore.ts](../../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
 - [IStartRunIntentStore.ts](../../../../packages/@dvt/engine/src/ports/IStartRunIntentStore.ts)
 - [IProviderAdapter.ts](../../../../packages/@dvt/engine/src/adapters/IProviderAdapter.ts)
-- [IPlanFetcher.ts](../../../../packages/@dvt/engine/src/adapters/IPlanFetcher.ts)
+- [IPlanIntegrityValidator.ts](../../../../packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts)
 - [IRunExecutionContextResolver.ts](../../../../packages/@dvt/engine/src/ports/IRunExecutionContextResolver.ts)
 - [IProjector.ts](../../../../packages/@dvt/engine/src/ports/IProjector.ts)
 - [IMetricsCollector.ts](../../../../packages/@dvt/engine/src/metrics/IMetricsCollector.ts)
@@ -46,7 +46,7 @@ Rel(ops, engine, "Operates", "IRunMaintenanceService / workers")
 Rel(engine, provider_runtime, "Orchestrates execution", "IProviderAdapter")
 Rel(engine, state_store, "Reads/writes run state", "IRunStateStore + IOutboxStorage")
 Rel(engine, intent_store, "Protects startRun against crashes", "IStartRunIntentStore")
-Rel(engine, plan_artifacts, "Fetches plan and optional run execution context", "IPlanFetcher / IRunExecutionContextResolver")
+Rel(engine, plan_artifacts, "Fetches plan and optional run execution context", "IStoredPlanArtifactReader / IRunExecutionContextResolver")
 Rel(engine, obs, "Emits", "logs / metrics / traces")
 Rel(engine, event_bus, "Publishes indirectly", "OutboxWorker")
 
@@ -82,7 +82,7 @@ Rel(api_app, engine_lib, "Invokes", "IWorkflowEngine")
 Rel(ops_user, reconcile_worker, "Schedules / supervises")
 Rel(ops_user, delivery_worker, "Schedules / supervises")
 
-Rel(engine_lib, plan_registry, "Fetches plan artifact and optional execution context", "IPlanFetcher / IRunExecutionContextResolver")
+Rel(engine_lib, plan_registry, "Fetches plan artifact and optional execution context", "IStoredPlanArtifactReader / IRunExecutionContextResolver")
 Rel(engine_lib, provider_adapter, "Delegates execution", "IProviderAdapter")
 Rel(provider_adapter, provider_runtime, "startRun / cancelRun / signal / provider-live status")
 
@@ -112,7 +112,7 @@ Container_Ext(callers, "apps/api / callers", "Node.js", "Invokes lifecycle API")
 Container_Ext(state_store, "@dvt/adapter-postgres", "TypeScript + PostgreSQL", "IRunStateStore + IOutboxStorage")
 Container_Ext(intent_store, "IStartRunIntentStore", "InMemory + Postgres", "startRun intent persistence")
 Container_Ext(provider_adapter, "@dvt/adapter-temporal", "TypeScript", "IProviderAdapter")
-Container_Ext(plan_artifacts, "Plan / artifact source", "Artifact store + resolver", "IPlanFetcher + IRunExecutionContextResolver")
+Container_Ext(plan_artifacts, "Plan / artifact source", "Artifact store + resolver", "IStoredPlanArtifactReader + IRunExecutionContextResolver")
 Container_Ext(event_bus, "Event bus", "Kafka or equivalent", "Consumes outbox publications")
 Container_Ext(obs, "Observability stack", "OTel / logs / metrics", "Telemetry backend")
 
@@ -130,7 +130,7 @@ Rel(callers, workflow, "Calls")
 
 Rel(workflow, policies, "Validates")
 Rel(workflow, idempotency, "Generates ids")
-Rel(workflow, plan_artifacts, "fetchAndValidate / resolve optional runExecutionContext", "IPlanFetcher / IRunExecutionContextResolver")
+Rel(workflow, plan_artifacts, "fetchAndValidate / resolve optional runExecutionContext", "IStoredPlanArtifactReader / IRunExecutionContextResolver")
 Rel(workflow, provider_adapter, "startRun / cancelRun / signal / getRunStatus (live provider view)", "IProviderAdapter")
 Rel(workflow, intent_store, "createIntent / markDispatched / markResolved", "IStartRunIntentStore")
 Rel(workflow, state_store, "bootstrapRunTx / appendAndEnqueueTx / getSnapshot / listEvents", "IRunStateStore")
@@ -165,7 +165,7 @@ flowchart LR
   Engine["@dvt/engine"] --> State["IRunStateStore<br/>(runtime-wired)"]
   Engine --> Intent["IStartRunIntentStore<br/>(runtime-wired)"]
   Engine --> Provider["IProviderAdapter<br/>(runtime-wired)"]
-  Engine --> Plan["IPlanFetcher<br/>(runtime-wired)"]
+  Engine --> Plan["IPlanIntegrityValidator<br/>(runtime-wired)"]
   Engine --> RunCtx["IRunExecutionContextResolver<br/>(runtime-wired when ref exists)"]
   Engine -.-> Proj["IProjector<br/>(target-line exposed)"]
   Engine -.-> Metrics["IMetricsCollector<br/>(target-line exposed)"]
@@ -177,7 +177,7 @@ flowchart LR
 | `IRunStateStore`               | `runtime-wired`       | Canonical persistence/query seam                                |
 | `IStartRunIntentStore`         | `runtime-wired`       | Crash-consistency seam                                          |
 | `IProviderAdapter`             | `runtime-wired`       | Provider runtime seam                                           |
-| `IPlanFetcher`                 | `runtime-wired`       | Plan/artifact fetch seam                                        |
+| `IPlanIntegrityValidator`      | `runtime-wired`       | Plan integrity gate using the artifacts-owned reader            |
 | `IRunExecutionContextResolver` | `runtime-wired`       | Conditional start-run seam                                      |
 | `IProjector`                   | `target-line exposed` | Declared seam; mainline still uses `SnapshotProjector` directly |
 | `IMetricsCollector`            | `target-line exposed` | Declared seam; mainline still injects `IObservability`          |
@@ -208,24 +208,24 @@ This C4 view is structural. For delivery sequencing, use
 flowchart LR
   Core["Implemented core: WorkflowEngine plus state-store plus Temporal"] --> Hex["WE-HX derivation and facade narrowing"]
   Hex --> Runtime["Landed MW-C1 plus active TF-C2 runtime vertical"]
-  Hex --> Cleanup["AR-A8 Conductor illusion cleanup"]
+  Hex --> Cleanup["AR-A8 provider-vocabulary hard cut"]
 ```
 
-| Area                                                  | Current posture                         | Code evidence                                                                                                                     | Current projection                                                             |
-| ----------------------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Engine lifecycle core                                 | Implemented                             | `WorkflowEngine`, `SnapshotProjector`, `RunMaintenanceService`, broad tests                                                       | Keep hardening under `WE-HX`, not a new MVP phase                              |
-| Postgres state, outbox, and read-model path           | Implemented                             | `@dvt/adapter-postgres`, delivery runtime, projector/read-model ownership in current docs                                         | Already absorbed into mainline; no longer a future engine roadmap claim        |
-| Temporal runtime adapter                              | Implemented with ongoing hardening      | `@dvt/adapter-temporal`, `RunPlanWorkflow`, `StepActivityDispatcher`, split baseline/transformation/Postgres integration coverage | Continue hardening via `WE-HX`, `AR-C*`, and `TF-C2`                           |
-| Compatibility facade and ownership seams              | In progress                             | `workflow-engine-subsystem-context.md`, `workflow-engine-target-architecture.v1.md`, `StartRunProtocol.v1.md`                     | Close `WE-HX-0..3`, then `WE-HX-5..6`                                          |
-| Conductor truthfulness                                | Residual debt, not active product phase | `ConductorAdapterStub`, provider typing, draft Conductor docs                                                                     | Close `AR-A8` before treating a second runtime as live roadmap work            |
-| First execution-first transformation runtime vertical | In progress                             | Lane C `MW-C1`, `TF-C2-A`, `TF-C2-B`, `PostgresRelationalExecutionCapability`, Temporal capability lanes                          | Finish the canonical local proof surface and final runtime-vertical acceptance |
+| Area                                                  | Current posture                    | Code evidence                                                                                                                     | Current projection                                                                                              |
+| ----------------------------------------------------- | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Engine lifecycle core                                 | Implemented                        | `WorkflowEngine`, `SnapshotProjector`, `RunMaintenanceService`, broad tests                                                       | Keep hardening under `WE-HX`, not a new MVP phase                                                               |
+| Postgres state, outbox, and read-model path           | Implemented                        | `@dvt/adapter-postgres`, delivery runtime, projector/read-model ownership in current docs                                         | Already absorbed into mainline; no longer a future engine roadmap claim                                         |
+| Temporal runtime adapter                              | Implemented with ongoing hardening | `@dvt/adapter-temporal`, `RunPlanWorkflow`, `StepActivityDispatcher`, split baseline/transformation/Postgres integration coverage | Continue hardening via `WE-HX`, `AR-C*`, and `TF-C2`                                                            |
+| Compatibility facade and ownership seams              | In progress                        | `workflow-engine-subsystem-context.md`, `workflow-engine-target-architecture.v1.md`, `StartRunProtocol.v1.md`                     | Close `WE-HX-0..3`, then `WE-HX-5..6`                                                                           |
+| Provider-vocabulary truthfulness                      | Closed under `AR-A8`               | Provider typing, fake stubs, capability matrices, and active docs now expose only implemented runtime providers                   | Require an ADR-backed contract line, real adapter package, and conformance suite before adding a second runtime |
+| First execution-first transformation runtime vertical | In progress                        | Lane C `MW-C1`, `TF-C2-A`, `TF-C2-B`, `PostgresRelationalExecutionCapability`, Temporal capability lanes                          | Finish the canonical local proof surface and final runtime-vertical acceptance                                  |
 
 ## 8. Current sequencing
 
 1. close the remaining `WE-HX` derivation waves so the engine boundary is
    truthful and easier to evolve;
-2. remove the Conductor illusion from runtime typing and documentation through
-   `AR-A8`;
+2. keep the `AR-A8` provider-vocabulary hard cut enforced while future-provider
+   work stays out of active runtime typing;
 3. finish the remaining `TF-C2` acceptance on top of landed `MW-C1`,
    `TF-C2-A`, and `TF-C2-B` so persisted plans can drive the first PostgreSQL
    execution-first path with caller-visible evidence and a repeatable local

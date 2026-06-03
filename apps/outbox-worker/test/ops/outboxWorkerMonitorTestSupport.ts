@@ -1,7 +1,4 @@
-import {
-  asIsoUtcString,
-  type EventEnvelope as RunEventPersisted,
-} from '@dvt/contracts';
+import { asIsoUtcString, type EventEnvelope } from '@dvt/contracts';
 import type { OutboxRecord, OutboxTickResult } from '@dvt/delivery';
 
 import { OutboxWorkerMonitor } from '../../src/ops/OutboxWorkerMonitor.js';
@@ -23,7 +20,14 @@ const DEFAULT_SERVICE_NAME = 'dvt-outbox-worker';
 const DEFAULT_NOW_MS = 1_741_392_000_000;
 
 export function createMonitorHarness(
-  options: { nowMs?: number; readyStaleAfterMs?: number; serviceName?: string } = {}
+  options: {
+    nowMs?: number;
+    readyStaleAfterMs?: number;
+    serviceName?: string;
+    purgeConfigured?: boolean;
+    retentionConfigured?: boolean;
+    filesystemArchiveStorageConfigured?: boolean;
+  } = {}
 ): MonitorTestHarness {
   const clock = { nowMs: options.nowMs ?? DEFAULT_NOW_MS };
   const { logger, entries } = makeLogger();
@@ -34,6 +38,13 @@ export function createMonitorHarness(
     ...(options.readyStaleAfterMs === undefined
       ? {}
       : { readyStaleAfterMs: options.readyStaleAfterMs }),
+    ...(options.purgeConfigured === undefined ? {} : { purgeConfigured: options.purgeConfigured }),
+    ...(options.retentionConfigured === undefined
+      ? {}
+      : { retentionConfigured: options.retentionConfigured }),
+    ...(options.filesystemArchiveStorageConfigured === undefined
+      ? {}
+      : { filesystemArchiveStorageConfigured: options.filesystemArchiveStorageConfigured }),
   });
 
   return { clock, monitor, entries };
@@ -72,7 +83,7 @@ export function makeTick(overrides: Partial<OutboxTickResult> = {}): OutboxTickR
   };
 }
 
-export function makeEvent(id: string): RunEventPersisted {
+export function makeEvent(id: string): EventEnvelope {
   return {
     eventId: `evt-${id}`,
     eventType: 'RunQueued',

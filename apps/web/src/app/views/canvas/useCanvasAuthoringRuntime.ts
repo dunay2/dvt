@@ -1,52 +1,25 @@
-import { useMemo, useState } from 'react';
+/** Owned concern: compose backend posture, draft-flow composition, and authoring state into one Canvas authoring-runtime seam. */
+import { useMemo } from 'react';
 
-import type { PlatformHealthSnapshot } from '../../../capabilities/platform-health';
-import type { IWorkspacePort } from '../../ports/workspace';
-import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { createBootstrappingCanvasDraftSession } from './canvasDraftSession';
 import { deriveCanvasAuthoringState } from './canvasAuthoringState';
+import type { UseCanvasAuthoringRuntimeArgs } from './canvasAuthoringRuntime.types';
 import { deriveCanvasBackendPosture } from './canvasBackendPosture';
-import { useCanvasAuthoringProjection } from './useCanvasAuthoringProjection';
-import { useCanvasDraftBaseline } from './useCanvasDraftBaseline';
-import { useCanvasDraftLifecycle } from './useCanvasDraftLifecycle';
-
-type UseCanvasAuthoringRuntimeArgs = {
-  dataSourceMode: 'mock' | 'api';
-  platformHealthQuery: {
-    isPending: boolean;
-    isError: boolean;
-    data?: PlatformHealthSnapshot;
-    error?: unknown;
-  };
-  workspaceService: IWorkspacePort;
-  workspaceLayoutKey: string;
-  graphStrategy: {
-    mapNodeToCanonical: (node: { id: string }) => CanonicalNode | null;
-    mapEdgeToCanonical: (edge: { id: string }) => CanonicalEdge | null;
-    id: string;
-  };
-  columnLevelLineageEnabled: boolean;
-  persistedNodePositions: Record<string, { x: number; y: number }>;
-  selectedNodeIds: string[];
-  inspectorNodeId: string | null;
-  canEditDraftTransport: boolean;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
-};
+import { deriveCanvasDraftAuthTransportPosture } from './canvasDraftAuthTransportPosture';
+import { useCanvasAuthoringRuntimeDraftFlow } from './useCanvasAuthoringRuntimeDraftFlow';
 
 export function useCanvasAuthoringRuntime({
   dataSourceMode,
   platformHealthQuery,
-  workspaceService,
+  workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
-  graphStrategy,
   columnLevelLineageEnabled,
   persistedNodePositions,
   selectedNodeIds,
   inspectorNodeId,
-  canEditDraftTransport,
+  canPersistGraphDraftTransport,
+  canMutateGraphTransport,
+  workspaceScope,
+  previewProvenanceConfig,
   setCanvasNodePositions,
 }: UseCanvasAuthoringRuntimeArgs) {
   const backendPosture = useMemo(
@@ -58,61 +31,42 @@ export function useCanvasAuthoringRuntime({
     [dataSourceMode, platformHealthQuery]
   );
   const canPersistDraftTransport =
-    canEditDraftTransport && backendPosture.backendAllowsMutations;
-  const [draftSession, setDraftSession] = useState(createBootstrappingCanvasDraftSession);
-
-  const { queryClient, draftRepository, graphDraftQuery } = useCanvasDraftBaseline({
-    workspaceService,
+    canPersistGraphDraftTransport && backendPosture.backendAllowsMutations;
+  const canMutateDraftGraphTransport = canPersistDraftTransport && canMutateGraphTransport;
+  const draftFlow = useCanvasAuthoringRuntimeDraftFlow({
+    workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
-  });
-
-  const { graphModel, canonicalSnapshot } = useCanvasAuthoringProjection({
-    workspaceLayoutKey,
-    visibleNodeIds: draftSession.workingSet.visibleNodeIds,
-    visibleEdges: draftSession.workingSet.visibleEdges,
-    workspaceService,
-    graphStrategy,
     columnLevelLineageEnabled,
     persistedNodePositions,
-  });
-  const {
-    draftSaveStatus,
-    reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
-  } = useCanvasDraftLifecycle({
-    draftRepository,
-    graphDraftQuery,
-    queryClient,
-    workspaceLayoutKey,
-    draftSession,
-    setDraftSession,
-    canonicalSnapshot,
-    graphNodes: graphModel.nodes,
-    graphSnapshotQuery: {
-      isPending: graphModel.graphSnapshotQuery.isPending,
-      isError: graphModel.graphSnapshotQuery.isError,
-    },
-    canPersistGraphDraft: canPersistDraftTransport,
+    canPersistDraftTransport,
+    workspaceScope,
+    previewProvenanceConfig,
     setCanvasNodePositions,
-    graphStrategy,
+  });
+  const draftAuthTransportPosture = deriveCanvasDraftAuthTransportPosture({
+    draftReadError: draftFlow.graphModel.graphAuthorityQuery.error,
   });
   const authoringState = useMemo(
     () =>
       deriveCanvasAuthoringState({
-        draftSession,
-        canonicalNodes: graphModel.canonicalNodes,
-        canonicalEdges: graphModel.canonicalEdges,
+        draftSession: draftFlow.draftSession,
+        canonicalNodes: draftFlow.graphModel.canonicalNodes,
+        canonicalEdges: draftFlow.graphModel.canonicalEdges,
         selectedNodeIds,
         inspectorNodeId,
-        draftSaveStatus,
-        canPersistDraftTransport,
+        draftSaveStatus: draftFlow.draftSaveStatus,
+        draftReadModel: draftFlow.draftReadModel,
+        authTransportPosture: draftAuthTransportPosture,
+        canMutateGraphTransport: canMutateDraftGraphTransport,
       }),
     [
-      canPersistDraftTransport,
-      draftSaveStatus,
-      draftSession,
-      graphModel.canonicalEdges,
-      graphModel.canonicalNodes,
+      canMutateDraftGraphTransport,
+      draftAuthTransportPosture,
+      draftFlow.draftReadModel,
+      draftFlow.draftSaveStatus,
+      draftFlow.draftSession,
+      draftFlow.graphModel.canonicalEdges,
+      draftFlow.graphModel.canonicalNodes,
       inspectorNodeId,
       selectedNodeIds,
     ]
@@ -120,12 +74,8 @@ export function useCanvasAuthoringRuntime({
 
   return {
     backendPosture,
-    graphModel,
-    draftSession,
-    setDraftSession,
-    draftSaveStatus,
-    reloadLatestDraft,
-    adoptCurrentWorkspaceSnapshot,
+    draftAuthTransportPosture,
+    ...draftFlow,
     ...authoringState,
   };
 }

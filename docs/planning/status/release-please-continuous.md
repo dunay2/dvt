@@ -22,6 +22,13 @@ Repository Actions workflow permissions were also updated on 2026-03-08 so GitHu
 - Continuous release PR / tag automation is enabled for the repository.
 - Automatic npm publication is explicitly disabled for now.
 - The workflow no longer passes the deprecated `package-name` input to `googleapis/release-please-action@v4`.
+- `release.yml` intentionally remains action-only: it does not check out the
+  repository, install Node, install pnpm, or run repository scripts because the
+  current release step delegates changelog, tag, and release-PR generation to
+  `googleapis/release-please-action`.
+- If the release workflow later needs repository-local tooling, generated
+  artifacts, package builds, or publish commands, it must add `actions/checkout`
+  and the shared `.github/actions/setup-node-pnpm` action in the same slice.
 
 Current workflow shape:
 
@@ -43,6 +50,8 @@ on:
 - `release.yml` runs on `push` to `main`.
 - A release PR is created or updated automatically after merges to `main`.
 - npm publication remains disabled until the publishable artifact strategy is formalized.
+- `tools/ci/workflow-pattern-parity.test.mjs` guards the current action-only
+  release workflow posture so setup drift is explicit instead of accidental.
 
 ## Next Decision Required
 

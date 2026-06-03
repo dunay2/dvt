@@ -1,4 +1,4 @@
-﻿# Engine Capabilities
+# Engine Capabilities
 
 ## Purpose
 

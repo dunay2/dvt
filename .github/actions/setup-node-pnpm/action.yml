@@ -1,5 +1,6 @@
-name: Setup Node + pnpm + cache + install
-description: Reusable setup for Node.js, pnpm, pnpm store cache, and dependency install
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+name: Setup Node + pnpm + install
+description: Reusable setup for Node.js, pnpm, pnpm store cache, Turbo cache, and dependency install
 
 inputs:
   node-version:
@@ -9,7 +10,7 @@ inputs:
   install-args:
     description: Arguments passed to pnpm install
     required: false
-    default: '--frozen-lockfile'
+    default: '--frozen-lockfile --prefer-offline'
 
 runs:
   using: composite
@@ -35,18 +36,17 @@ runs:
         restore-keys: |
           pnpm-store-${{ runner.os }}-
 
-    - name: Cache node_modules
-      id: nm-cache
+    - name: Cache Turbo
       uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
       with:
-        path: |
-          node_modules
-          apps/*/node_modules
-          packages/*/node_modules
-          packages/@dvt/*/node_modules
-        key: nm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        path: .turbo
+        key:
+          turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'turbo.json',
+          'pnpm-workspace.yaml', 'tsconfig.node-runtime.base.json',
+          'tsconfig.package-bundler.base.json') }}
+        restore-keys: |
+          turbo-${{ runner.os }}-
 
     - name: Install dependencies
-      if: steps.nm-cache.outputs.cache-hit != 'true'
       shell: bash
       run: pnpm install ${{ inputs.install-args }}

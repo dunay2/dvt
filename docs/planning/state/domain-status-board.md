@@ -2,7 +2,7 @@
 title: Domain Status Board
 status: Review
 owner: Product / Architecture / Docs
-last_reviewed: 2026-04-14
+last_reviewed: 2026-05-07
 planning_type: status
 ---
 
@@ -10,37 +10,41 @@ planning_type: status
 
 Operational board by domain with explicit links to task IDs and roadmap impact.
 
-For full task-level tracking use the lane YAML registry linked from
-[Planning Control Tower](./planning-control-tower.md).
+For full task-level tracking use `pnpm planning:db:query focus`,
+`pnpm planning:db:query next`, or `pnpm planning:db:query tasks`. The lane YAML
+files linked from [Planning Control Tower](./planning-control-tower.md) are
+bootstrap/export snapshots.
 
 ## Domain Board
 
 ### `Execution Runtime`
 
 - Current objective: keep the shipped PostgreSQL-backed transformation runtime
-  vertical stable while finishing `WE-HX` hardening and the remaining runtime
-  observability or operations follow-through.
+  vertical stable while finishing `WE-HX` hardening, the remaining runtime
+  observability follow-through, and the remaining runtime-boundary hardening
+  cuts after the PlanRef payload line closed.
 - Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the first PostgreSQL runtime vertical is now accepted, but
   dashboard and alert evidence for runtime SLAs still remain under
-  `AR-C2-T2/T3`, and broader boundary hardening continues under `WE-HX` while
-  Lane D now owns only post-vertical retention follow-through rather than basic
-  proof repeatability.
+  `AR-C2-T2/T3`, broader boundary hardening continues under `WE-HX`, and Lane D
+  has closed the pointer-based workflow input hardening line. Post-vertical
+  retention follow-through and worker-scale posture now remain the active Lane D
+  work rather than hidden leftovers under `AR-D-PLAN-POINTER`.
 
 ### `API and Admission`
 
-- Current objective: keep the shipped preview-persist boundary truthful and use
-  it as the fixed ingress while `TF-C3` closes the remaining rollout and
-  acceptance prerequisites for the now-landed plugin-backed dbt runtime path.
-- Active task IDs: `TF-C3`, `TF-C3-E`
+- Current objective: keep the shipped preview-persist boundary truthful now that
+  `TF-C3` has closed the plugin-backed dbt runtime path, without allowing
+  compile-time and admission-time adapter truth to drift apart again.
+- Active task IDs: none
 - Roadmap lane affected: [API and Admission lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the SQL-first preview-persist boundary is now closed in
-  code and planning. `TF-C3` now includes shared artifact-backed reader
-  convergence, a standalone `apps/temporal-worker` composition root, and an
-  adapter-owned DBT CLI host behind `DbtPluginRunner`, so the remaining
-  blockers are rollout/runbook acceptance and environment proof for that worker
-  path plus the broader runtime-boundary hardening tracked in `WE-HX`.
+- Primary blockers: the SQL-first preview-persist boundary and plugin-backed
+  dbt runtime path are now closed in code and planning. `TF-C3` includes shared
+  artifact-backed reader convergence, a standalone `apps/temporal-worker`
+  composition root, an adapter-owned DBT CLI host behind `DbtPluginRunner`, and
+  accepted DBT-enabled worker canary evidence. Remaining runtime-boundary
+  hardening is tracked outside this domain row.
 
 ### `Planner and Contracts`
 
@@ -94,21 +98,25 @@ For full task-level tracking use the lane YAML registry linked from
 
 - Current objective: institutionalize shared preflight and keep docs and code
   validation loops cheap enough to sustain the active lane tempo.
-- Active task IDs: `RC-C2`, `GOV-S2`
+- Active task IDs: `RC-C2`
 - Roadmap lane affected:
   [Documentation Governance lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: `RC-C2` still needs qualifying Lane C cycles, and metadata
-  noise still hides semantic drift.
+- Primary blockers: `RC-C2` still needs qualifying Lane C cycles. `GOV-S2` is
+  closed as the doc-driven operating framework umbrella; future query-store or
+  generated-artifact work must route through concrete follow-up tasks.
 
 ### `Documentation Governance`
 
 - Current objective: keep canonical status, archive boundaries, domain boards,
-  and generated planning surfaces synchronized with mainline truth.
-- Active task IDs: `GOV-S2`, `DOC-ARCH-01`
+  and generated planning surfaces synchronized with mainline truth without
+  reopening closed umbrella work.
+- Active task IDs: none; use concrete Lane A governance follow-up tasks when new
+  implementation work is accepted.
 - Roadmap lane affected:
   [Documentation Governance lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: active surfaces drift after merges unless archive moves,
-  lane refresh, and generators run together.
+- Primary blockers: active surfaces can still drift after merges unless archive
+  moves, lane refresh, governance refresh, and query-store checks run together,
+  but `DOC-ARCH-01` and `GOV-S2` are no longer active blockers.
 
 ## Canonical Anchors
 

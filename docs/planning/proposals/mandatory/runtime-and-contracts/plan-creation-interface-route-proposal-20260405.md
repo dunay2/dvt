@@ -138,4 +138,4 @@ From this point on:
 - decisions live in the decisions document
 - design and contract truth live in the architecture document
 - execution sequencing and phase gating live in the delivery plan
-- lane YAML files are the task registry of record
+- [Task: RUNTIME-PROP-DISP-1] lane YAML files are the task registry of record

@@ -142,6 +142,6 @@ Recommended checks before blaming runtime:
 
 ## Related documents
 
-- `docs/architecture/engine/workflow-engine-subsystem-context.md`
-- `docs/architecture/engine/workflow-engine-target-architecture.v1.md`
-- `docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md`
+- `docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md`
+- `docs/architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md`
+- `docs/architecture/components/engine/contracts/engine/ExecutionSemantics.v1.md`

@@ -1,3 +1,4 @@
+import { type PlannerBuildResultV1 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { previewPlanRoute } from '../../../src/entrypoints/http/previewPlanRoute.js';
@@ -11,10 +12,7 @@ import {
   VALID_TRANSFORMATION_GRAPH_SOURCE,
   buildPreviewBody,
 } from './planRouteFixtures.js';
-import {
-  createPreviewRequest,
-  createReply,
-} from './planRouteHttpTestSupport.js';
+import { createPreviewRequest, createReply } from './planRouteHttpTestSupport.js';
 import { createPreviewDeps } from './previewPlanRouteTestSupport.js';
 
 describe('previewPlanRoute input policy', () => {
@@ -24,7 +22,9 @@ describe('previewPlanRoute input policy', () => {
     await previewPlanRoute(
       createPreviewRequest({
         id: 'req-preview-invalid',
-        body: { selectedNodeIds: ['node_1'] },
+        body: {
+          selection: { mode: 'explicit', nodeIds: ['node_1'] },
+        },
       }) as never,
       reply as never,
       createPreviewDeps() as never
@@ -46,7 +46,7 @@ describe('previewPlanRoute input policy', () => {
       body: {
         context: VALID_PREVIEW_CONTEXT,
         previewProfile: PREVIEW_PROFILE_GENERIC,
-        selectedNodeIds: ['node_1'],
+        selection: { mode: 'explicit', nodeIds: ['node_1'] },
         planRef: VALID_PLAN_REF,
       },
     },
@@ -60,7 +60,7 @@ describe('previewPlanRoute input policy', () => {
       body: {
         context: VALID_PREVIEW_CONTEXT,
         previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-        selectedNodeIds: ['node_1'],
+        selection: { mode: 'explicit', nodeIds: ['node_1'] },
         manifestRef: { uri: 'file://manifest.json', sha256: 'f'.repeat(64) },
         provenance: VALID_PREVIEW_PROVENANCE,
       },
@@ -70,7 +70,7 @@ describe('previewPlanRoute input policy', () => {
       body: {
         context: VALID_PREVIEW_CONTEXT,
         previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-        selectedNodeIds: ['node_1'],
+        selection: { mode: 'explicit', nodeIds: ['node_1'] },
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'dbt',
@@ -93,25 +93,21 @@ describe('previewPlanRoute input policy', () => {
     const reply = createReply();
     const deps = createPreviewDeps();
 
-    await previewPlanRoute(
-      createPreviewRequest({ body }) as never,
-      reply as never,
-      deps as never
-    );
+    await previewPlanRoute(createPreviewRequest({ body }) as never, reply as never, deps as never);
 
     expect(reply.statusCode).toBe(400);
     expect(reply.payload).toEqual({
       error: { type: 'bad_request', reason: expectedReason },
     });
     expect(deps.planner.buildPlan).not.toHaveBeenCalled();
-    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
   });
 
   it('returns 400 when previewProfile is missing or padded with whitespace', async () => {
     for (const body of [
       {
         context: VALID_PREVIEW_CONTEXT,
-        selectedNodeIds: ['node_1'],
+        selection: { mode: 'explicit', nodeIds: ['node_1'] },
         graphSource: {
           kind: 'generic-graph-v1',
           sourceFamily: 'dbt',
@@ -124,7 +120,11 @@ describe('previewPlanRoute input policy', () => {
       const reply = createReply();
       const deps = createPreviewDeps();
 
-      await previewPlanRoute(createPreviewRequest({ body }) as never, reply as never, deps as never);
+      await previewPlanRoute(
+        createPreviewRequest({ body }) as never,
+        reply as never,
+        deps as never
+      );
 
       expect(reply.statusCode).toBe(400);
       expect(reply.payload).toEqual({
@@ -140,22 +140,30 @@ describe('previewPlanRoute input policy', () => {
 
   it('returns 422 when postgres transformation preview omits required provenance', async () => {
     const reply = createReply();
+    const plannerBuildResult: PlannerBuildResultV1 = {
+      plan: {
+        metadata: {
+          planId: VALID_PLAN_REF.planId,
+          planVersion: VALID_PLAN_REF.planVersion,
+          schemaVersion: VALID_PLAN_REF.schemaVersion,
+          contractVersion: '1.0.0',
+          inputHashSha256: VALID_PLAN_REF.sha256,
+          createdAtIso: '2026-04-05T00:00:00.000Z',
+        },
+        steps: [
+          {
+            stepId: 'postgres-transform',
+            kind: 'POSTGRES_SQL_TRANSFORM',
+            dependsOn: [],
+          },
+        ],
+      },
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    };
     const deps = createPreviewDeps({
       planner: {
-        buildPlan: vi.fn(async () => ({
-          plan: {
-            metadata: {
-              planId: VALID_PLAN_REF.planId,
-              planVersion: VALID_PLAN_REF.planVersion,
-              schemaVersion: VALID_PLAN_REF.schemaVersion,
-              contractVersion: '1.0.0',
-              inputHashSha256: VALID_PLAN_REF.sha256,
-              createdAtIso: '2026-04-05T00:00:00.000Z',
-            },
-            steps: [{ stepId: 'postgres-transform', kind: 'POSTGRES_SQL_TRANSFORM', dependsOn: [] }],
-          },
-          canonicalPlanJson: '{}',
-        })),
+        buildPlan: vi.fn(async () => plannerBuildResult),
       },
     });
 
@@ -165,7 +173,7 @@ describe('previewPlanRoute input policy', () => {
         body: {
           context: VALID_PREVIEW_CONTEXT,
           previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-          selectedNodeIds: ['node_1'],
+          selection: { mode: 'explicit', nodeIds: ['node_1'] },
           graphSource: {
             kind: 'generic-graph-v1',
             sourceFamily: 'dbt',
@@ -190,11 +198,11 @@ describe('previewPlanRoute input policy', () => {
         },
       },
     });
-    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
     expect(deps.planValidator.validatePlan).not.toHaveBeenCalled();
   });
 
-  it('returns stable contract issue details when transformation selection does not match the graph', async () => {
+  it('returns stable contract issue details when transformation preview uses the wrong graph family', async () => {
     const reply = createReply();
     const deps = createPreviewDeps();
 
@@ -203,8 +211,11 @@ describe('previewPlanRoute input policy', () => {
         id: 'req-preview-contract-issues',
         body: buildPreviewBody({
           previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-          selectedNodeIds: ['node_1'],
-          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+          selection: { mode: 'explicit', nodeIds: ['source-node', 'transform-node', 'sink-node'] },
+          graphSource: {
+            ...VALID_TRANSFORMATION_GRAPH_SOURCE,
+            sourceFamily: 'dbt',
+          },
           provenance: VALID_PREVIEW_PROVENANCE,
         }),
       }) as never,
@@ -220,11 +231,11 @@ describe('previewPlanRoute input policy', () => {
         details: {
           cause: 'preview_contract_validation_failed',
           previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
-          issues: [{ path: 'selectedNodeIds', code: 'custom' }],
+          issues: [{ path: 'graphSource.sourceFamily', code: 'custom' }],
         },
       },
     });
     expect(deps.planner.buildPlan).not.toHaveBeenCalled();
-    expect(deps.planStore.storePlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
   });
 });

@@ -1,0 +1,33 @@
+---
+id: R-20260424-START-RUN-ADAPTER-FACTORY-DRIFT
+title: Start-run adapter IDs can drift back into concrete runtime construction
+status: Open
+date: 2026-04-24
+owners:
+  - apps/api
+  - packages/@dvt/contracts
+severity: Medium
+probability: Medium
+context: >
+  The 2026-04-24 slice removes `mock` from the active start-run target-adapter contract and extracts
+  Temporal construction behind a provider-adapter factory seam.
+risk: >
+  Future changes could reintroduce provider-specific imports, environment checks, or mock adapter
+  support into generic start-run runtime assembly. That would blur the boundary between DVT
+  execution semantics and replaceable provider adapters.
+mitigations:
+  - >
+    Keep `buildProviderAdapters.ts` generic: it may invoke `ProviderAdapterFactory` implementations,
+    but it must not import concrete adapter packages or inspect provider-specific environment
+    variables.
+  - >
+    Keep `createTemporalProviderAdapterFactory.ts` as the Temporal-specific construction owner until
+    another provider factory is introduced through a governed slice.
+  - >
+    Keep `StartRunBoundary.v1.ts`, its contract tests, and API parser tests aligned so `mock`
+    remains a rejected start-run target adapter rather than a hidden compatibility path.
+  - >
+    Run contracts validation, API typecheck/tests, docs generation, ARC inspection, and `pnpm
+    verify:prepush` for future changes touching this seam.
+review_after: 2026-06-30
+---

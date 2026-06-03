@@ -52,7 +52,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     expect(createSpy).toHaveBeenCalledOnce();
     const intentId = createSpy.mock.results[0]?.value;
     const resolvedIntent = await intentId;
-    const intent = await intentStore.getIntent(resolvedIntent.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: resolvedIntent.tenantId,
+      intentId: resolvedIntent.intentId,
+    });
     expect(intent?.status).toBe('RESOLVED');
     expect(intent?.runId).toBe('il-resolved-1');
     expect(intent?.provider).toBe('temporal');
@@ -87,7 +90,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     expect(createSpy).toHaveBeenCalledOnce();
     const created = await createSpy.mock.results[0]?.value;
-    const intent = await intentStore.getIntent(created.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
     expect(intent?.status).toBe('PENDING');
   });
 
@@ -123,7 +129,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     ).rejects.toThrow(/Intent persistence failed after adapter.startRun succeeded/);
 
     const created = await createSpy.mock.results[0]?.value;
-    const intent = await intentStore.getIntent(created.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
     expect(intent?.status).toBe('PENDING');
     expect(intent?.engineRunRef).toBeUndefined();
 
@@ -169,11 +178,87 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
     expect(cancelCalled).toBe(true);
 
     const created = await createSpy.mock.results[0]?.value;
-    const intent = await intentStore.getIntent(created.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
     // Intent is resolved because compensation succeeded
     expect(intent?.status).toBe('RESOLVED');
     // engineRunRef was set during DISPATCHED phase
     expect(intent?.engineRunRef).toBeDefined();
+  });
+
+  it('bootstraps the exact providerRef returned by adapter.startRun on the no-estimate path', async () => {
+    const returnedProviderRef: EngineRunRef = {
+      provider: 'temporal',
+      tenantId: 't',
+      namespace: 'runtime-namespace',
+      workflowId: 'workflow-from-provider',
+      runId: 'provider-execution-id',
+      taskQueue: 'runtime-task-queue',
+    };
+    const adapters = makeAdapters({
+      async startRun() {
+        return returnedProviderRef;
+      },
+    });
+    const { engine, store } = createEngine({ adapters });
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('il-provider-ref-proof-1'))
+    ).resolves.toEqual(returnedProviderRef);
+
+    const meta = await store.getRunMetadataByRunId('t', 'il-provider-ref-proof-1');
+    expect(meta?.providerRef).toEqual(returnedProviderRef);
+  });
+
+  it('compensates bootstrap failure against the exact providerRef returned by adapter.startRun', async () => {
+    const returnedProviderRef: EngineRunRef = {
+      provider: 'temporal',
+      tenantId: 't',
+      namespace: 'runtime-namespace',
+      workflowId: 'workflow-to-cancel',
+      runId: 'provider-run-to-cancel',
+      taskQueue: 'runtime-task-queue',
+    };
+    const cancelledProviderRefs: EngineRunRef[] = [];
+    const adapters = makeAdapters({
+      async startRun() {
+        return returnedProviderRef;
+      },
+      async cancelRun(runRef) {
+        cancelledProviderRefs.push(runRef);
+      },
+    });
+    const intentStore = new InMemoryStartRunIntentStore();
+    const createSpy = vi.spyOn(intentStore, 'createIntent');
+    const store = new InMemoryTxStore();
+    const originalBootstrap = store.bootstrapRunTx.bind(store);
+    store.bootstrapRunTx = async (input) => {
+      if (input.metadata.runId === 'il-provider-ref-compensation-1') {
+        throw new Error('bootstrap unavailable');
+      }
+      return originalBootstrap(input);
+    };
+    const { engine } = createEngine({ adapters, intentStore, stateStore: store });
+
+    await expect(
+      engine.startRun(makePlanRef(), makeContext('il-provider-ref-compensation-1'))
+    ).rejects.toThrow(/bootstrap unavailable/);
+
+    expect(cancelledProviderRefs).toEqual([returnedProviderRef]);
+    await expect(
+      store.getRunMetadataByRunId('t', 'il-provider-ref-compensation-1')
+    ).resolves.toBeNull();
+    const created = await createSpy.mock.results[0]?.value;
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
+    expect(intent).toMatchObject({
+      status: 'RESOLVED',
+      engineRunRef: returnedProviderRef,
+    });
   });
 
   it('when bootstrapRunTx and cancelRun both throw, intent markResolved is still attempted', async () => {
@@ -212,7 +297,10 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
 
     // Should be resolved despite cancelRun failure
     const created = await createSpy.mock.results[0]?.value;
-    const intent = await intentStore.getIntent(created.intentId);
+    const intent = await intentStore.getIntent({
+      tenantId: created.tenantId,
+      intentId: created.intentId,
+    });
     expect(intent?.status).toBe('RESOLVED');
   });
 
@@ -279,7 +367,7 @@ describe('WorkflowEngine intent log (startRun crash consistency)', () => {
       [
         'temporal',
         makeTemporalAdapter({
-          async startRun(_plan, _planRef, ctx) {
+          async startRun(_planRef, ctx) {
             adapterCalled = true;
             return {
               provider: 'temporal',

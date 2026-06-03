@@ -34,7 +34,7 @@ The analysis is grounded in these paths:
 - `packages/@dvt/engine/src/state/InMemoryTxStore.ts`
 - `packages/@dvt/engine/src/security/planRefPolicy.ts`
 - `packages/@dvt/engine/src/application/providerSelection.ts`
-- `packages/@dvt/engine/src/contracts/PlanVersionPolicy.ts`
+- `packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts`
 - `packages/@dvt/engine/src/contracts/errors.ts`
 
 ## Executive Summary
@@ -135,7 +135,7 @@ Open gaps:
 - It is still only a URI validator.
 - It does not yet express a fuller provenance or tenancy-aware trust policy.
 
-### `PlanVersionPolicy` and provider selection helpers
+### `PlanAdmissionPolicy` and provider selection helpers
 
 What they do well:
 

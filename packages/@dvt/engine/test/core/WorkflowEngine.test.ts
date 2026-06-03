@@ -23,12 +23,13 @@ import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  ProviderRefProviderMismatchError,
   RecoverySourceNotTerminalError,
   RunAlreadyExistsError,
+  InvalidSchemaVersionError,
 } from '../../src/contracts/errors.js';
-import { UnsupportedPlanVersionError } from '../../src/contracts/PlanVersionPolicy.js';
+import { UnsupportedPlanVersionError } from '../../src/contracts/PlanAdmissionPolicy.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
+import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import { RunHealthService } from '../../src/services/RunHealthService.js';
 import { InMemoryStartRunIntentStore } from '../../src/state/InMemoryStartRunIntentStore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -130,12 +131,12 @@ async function appendRunCompleted(store: InMemoryTxStore, runId: string): Promis
   await store.appendAndEnqueueTx(runId, [event]);
 }
 
-function makeDbtBearingPlan(): ExecutionPlan {
+function makePluginBearingPlan(): ExecutionPlan {
   const basePlan = makeDefaultExecutionPlan();
   const steps: ExecutionPlan['steps'] = [
     {
-      stepId: 'dbt-model-1',
-      kind: 'DBT_MODEL',
+      stepId: 'example-model-1',
+      kind: 'EXAMPLE_MODEL',
       dependsOn: [],
     },
   ];
@@ -159,6 +160,22 @@ function makeDbtBearingPlan(): ExecutionPlan {
   };
 }
 
+function makeExamplePluginBindingPolicy(
+  assertAllowed: (pluginContext: unknown) => void = () => undefined
+): IRunExecutionContextBindingPolicy {
+  return {
+    pluginRequirements: [
+      {
+        pluginId: 'example',
+        stepKinds: ['EXAMPLE_MODEL', 'EXAMPLE_TEST', 'EXAMPLE_SNAPSHOT'],
+        assertPluginContextAllowed({ pluginContext }) {
+          assertAllowed(pluginContext);
+        },
+      },
+    ],
+  };
+}
+
 describe('WorkflowEngine (basic failure modes)', () => {
   it('exposes only the narrowed workflow facade at runtime', () => {
     const { engine } = createEngine({ adapters: makeAdapters() });
@@ -173,18 +190,24 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('keeps WorkflowEngine wired to delegated services instead of low-level collaborator regrowth', () => {
-    expect(WORKFLOW_ENGINE_SOURCE).toContain(
-      'startRunApplicationService: IStartRunApplicationService;'
-    );
-    expect(WORKFLOW_ENGINE_SOURCE).toContain('runRecoveryService: IRunRecoveryService;');
-    expect(WORKFLOW_ENGINE_SOURCE).toContain('runControlService: IRunControlService;');
-    expect(WORKFLOW_ENGINE_SOURCE).toContain('runStatusQueryService: IRunStatusQueryService;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('startRunUseCase: IWorkflowStartRunUseCase;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('recoverRunUseCase: IWorkflowRecoverRunUseCase;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('cancelRunUseCase: IWorkflowCancelRunUseCase;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('runStatusUseCase: IWorkflowRunStatusUseCase;');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('signalRunUseCase: IWorkflowSignalRunUseCase;');
 
-    expect(WORKFLOW_ENGINE_SOURCE).toContain('return this.runRecoveryService.recoverRun(');
+    expect(WORKFLOW_ENGINE_SOURCE).toContain('return this.recoverRunUseCase.recoverRun(');
     expect(WORKFLOW_ENGINE_SOURCE).toContain(
-      'return this.runStatusQueryService.getStatus(engineRunRef);'
+      'return this.runStatusUseCase.getRunStatus(engineRunRef);'
     );
 
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IStartRunApplicationService');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IRunRecoveryService');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IRunControlService');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IRunStatusQueryService');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('IObservability');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('buildTraceContext');
+    expect(WORKFLOW_ENGINE_SOURCE).not.toContain('withSpan(');
     expect(WORKFLOW_ENGINE_SOURCE).not.toContain('getRunEnrichment(');
     expect(WORKFLOW_ENGINE_SOURCE).not.toContain('healthCheck(');
     expect(WORKFLOW_ENGINE_SOURCE).not.toContain('stateStoreRead');
@@ -215,7 +238,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const invalidPlanRef = {
       uri: '',
       sha256: 'deadbeef',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       planId: TEST_PLAN_REF.planId,
       planVersion: '1.0',
     } as any;
@@ -280,7 +303,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const planRef = makePlanRef();
     const { engine } = createEngine({
       adapters: makeAdapters({
-        async startRun(_plan, _planRef, ctx) {
+        async startRun(_planRef, ctx) {
           seenContexts.push(ctx);
           return {
             provider: 'temporal',
@@ -305,10 +328,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
             createdAtIso: '2026-04-03T00:00:00.000Z',
             createdBy: 'test',
             pluginContexts: {
-              dbt: {
-                projectBundleRef: {
+              example: {
+                artifactRef: {
                   uri: `s3://bundle-bucket/tenants/t/${'b'.repeat(64)}`,
-                  kind: 'dbt-project-bundle',
+                  kind: 'example-plugin-artifact',
                   sha256: 'b'.repeat(64),
                   tenantId: 't',
                 },
@@ -317,9 +340,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           };
         },
       },
-      runExecutionContextBindingPolicy: {
-        assertDbtProjectBundleRefAllowed() {},
-      },
+      runExecutionContextBindingPolicy: makeExamplePluginBindingPolicy(),
     });
 
     const contextWithRunExecutionContextRef = {
@@ -342,33 +363,34 @@ describe('WorkflowEngine (basic failure modes)', () => {
     });
   });
 
-  it('rejects DBT-bearing runs without runExecutionContextRef before adapter dispatch', async () => {
+  it('rejects plugin-bearing runs without runExecutionContextRef before adapter dispatch', async () => {
     const startRun = vi.fn(async () => {
       throw new Error('adapter should not be called');
     });
-    const plan = makeDbtBearingPlan();
+    const plan = makePluginBearingPlan();
     const planRef = makePlanRefForPlan(plan);
     const { engine } = createWorkflowEngineFixture({
       adapter: makeTemporalAdapter({ startRun }),
       planFetcher: makePlanFetcherForPlan(plan),
+      runExecutionContextBindingPolicy: makeExamplePluginBindingPolicy(),
     });
 
     await expect(
-      engine.startRun(planRef, makeContext('dbt-missing-runctx-1'))
+      engine.startRun(planRef, makeContext('plugin-missing-runctx-1'))
     ).rejects.toMatchObject({
       code: 'RUN_EXECUTION_CONTEXT_REJECTED',
     });
     expect(startRun).not.toHaveBeenCalled();
   });
 
-  it('rejects DBT-bearing runs when the bundle locator is not allowed by admission binding policy', async () => {
+  it('rejects plugin-bearing runs when artifact locator is not allowed by admission binding policy', async () => {
     const startRun = vi.fn(async () => {
       throw new Error('adapter should not be called');
     });
-    const plan = makeDbtBearingPlan();
+    const plan = makePluginBearingPlan();
     const planRef = makePlanRefForPlan(plan);
     const runExecutionContextRef = {
-      uri: 'dvt-runctx://t/dbt-store-mismatch-1',
+      uri: 'dvt-runctx://t/plugin-store-mismatch-1',
       sha256: 'ctxsha',
       schemaVersion: 'v1.0',
       planId: planRef.planId,
@@ -391,10 +413,10 @@ describe('WorkflowEngine (basic failure modes)', () => {
             createdAtIso: '2026-04-03T00:00:00.000Z',
             createdBy: 'test',
             pluginContexts: {
-              dbt: {
-                projectBundleRef: {
+              example: {
+                artifactRef: {
                   uri: `s3://foreign-bucket/tenants/t/${'b'.repeat(64)}`,
-                  kind: 'dbt-project-bundle',
+                  kind: 'example-plugin-artifact',
                   sha256: 'b'.repeat(64),
                   tenantId: 't',
                 },
@@ -403,25 +425,22 @@ describe('WorkflowEngine (basic failure modes)', () => {
           };
         },
       },
-      runExecutionContextBindingPolicy: {
-        assertDbtProjectBundleRefAllowed() {
-          throw new Error(
-            'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket'
-          );
-        },
-      },
+      runExecutionContextBindingPolicy: makeExamplePluginBindingPolicy(() => {
+        throw new Error(
+          'plugin artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket'
+        );
+      }),
     });
 
     await expect(
       engine.startRun(planRef, {
-        ...makeContext('dbt-store-mismatch-1'),
+        ...makeContext('plugin-store-mismatch-1'),
         runExecutionContextRef,
       })
     ).rejects.toMatchObject({
       code: 'RUN_EXECUTION_CONTEXT_REJECTED',
       messageParams: {
-        reason:
-          'dbt project bundle artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket',
+        reason: 'plugin artifact bucket mismatch: expected=canonical-bucket actual=foreign-bucket',
       },
     });
     expect(startRun).not.toHaveBeenCalled();
@@ -499,15 +518,44 @@ describe('WorkflowEngine (basic failure modes)', () => {
     {
       name: 'unsupported planVersion',
       run: async (engine: WorkflowEngine): Promise<void> => {
-        const unsupported = { ...makePlanRef(), planVersion: '9.0' };
+        const unsupported = {
+          ...makePlanRef(),
+          planVersion: `${makePlanRef().planVersion}-unsupported`,
+        };
         await expect(
           engine.startRun(unsupported, makeContext('unsupported-ver-1'))
         ).rejects.toThrow(UnsupportedPlanVersionError);
       },
     },
+    {
+      name: 'future schemaVersion on a supported planVersion',
+      run: async (engine: WorkflowEngine): Promise<void> => {
+        const unsupported = { ...makePlanRef(), schemaVersion: '1.future' };
+        await expect(
+          engine.startRun(unsupported, makeContext('unsupported-schema-1'))
+        ).rejects.toThrow(InvalidSchemaVersionError);
+      },
+    },
   ])('startRun rejects $name', async ({ run }) => {
     const { engine } = createEngine({ adapters: makeAdapters() });
     await run(engine);
+  });
+
+  it('rejects unsupported schemaVersion before adapter dispatch', async () => {
+    const startRun = vi.fn(async () => {
+      throw new Error('adapter should not be called');
+    });
+    const { engine, store } = createEngine({
+      adapters: makeAdapters({ startRun }),
+    });
+    const unsupported = { ...makePlanRef(), schemaVersion: '1.future' };
+
+    await expect(
+      engine.startRun(unsupported, makeContext('unsupported-schema-no-dispatch-1'))
+    ).rejects.toThrow(InvalidSchemaVersionError);
+
+    expect(startRun).not.toHaveBeenCalled();
+    await expect(store.listEvents('t', 'unsupported-schema-no-dispatch-1')).resolves.toEqual([]);
   });
 
   it('startRun rejects and stores no events when adapter throws before bootstrap', async () => {
@@ -542,7 +590,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         const events = await store.listEvents(ctx.tenantId, ctx.runId);
         sawQueuedEventBeforeStart = events.some((event) => event.eventType === 'RunQueued');
         return {
@@ -676,7 +724,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,
@@ -722,7 +770,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,
@@ -747,7 +795,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     expect(meta?.providerRef.runId).toBe('g7-same-id-1');
   });
 
-  it('rejects startRun when providerRef reconciliation crosses provider discriminators', async () => {
+  it('rejects startRun when adapter returns an unsupported provider discriminator', async () => {
     const cancelRun = vi.fn(async () => {});
 
     const adapters = makeAdapters({
@@ -761,14 +809,14 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         return {
           provider: 'conductor',
           tenantId: ctx.tenantId,
           workflowId: `wf-${ctx.runId}`,
           runId: `actual-execution-id-for-${ctx.runId}`,
           conductorUrl: 'http://localhost:8080/api',
-        } as EngineRunRef;
+        } as unknown as EngineRunRef;
       },
     });
 
@@ -776,7 +824,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
     const { engine } = createEngine({ adapters, stateStore: store });
     await expect(
       engine.startRun(makePlanRef(), makeContext('g7-provider-drift-1'))
-    ).rejects.toBeInstanceOf(ProviderRefProviderMismatchError);
+    ).rejects.toBeInstanceOf(ContractValidationError);
     expect(cancelRun).toHaveBeenCalledTimes(1);
 
     const meta = await store.getRunMetadataByRunId('t', 'g7-provider-drift-1');
@@ -807,7 +855,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
           runId: ctx.runId,
         } as EngineRunRef;
       },
-      async startRun(_plan, _planRef, ctx) {
+      async startRun(_planRef, ctx) {
         return {
           provider: 'temporal',
           tenantId: ctx.tenantId,

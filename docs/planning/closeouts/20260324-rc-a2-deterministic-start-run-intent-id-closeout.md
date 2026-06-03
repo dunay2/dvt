@@ -29,7 +29,7 @@ produces the same intent ID while distinct logical inputs produce distinct IDs.
   uses that deterministic ID when creating start-run intents.
 - [`packages/@dvt/engine/test/core/WorkflowEngine.intent-id-deterministic.test.ts`](../../../packages/@dvt/engine/test/core/WorkflowEngine.intent-id-deterministic.test.ts)
   covers deterministic derivation and crash-recovery intent identity.
-- [`packages/@dvt/contracts/src/contracts/engine/IStartRunIntentStore.v1.ts`](../../../packages/@dvt/contracts/src/contracts/engine/IStartRunIntentStore.v1.ts)
+- [`packages/@dvt/engine/src/ports/IStartRunIntentStore.ts`](../../../packages/@dvt/engine/src/ports/IStartRunIntentStore.ts)
   documents the invariant that callers must derive the intent ID deterministically.
 
 ## Outcome

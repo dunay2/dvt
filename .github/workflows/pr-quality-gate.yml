@@ -2,6 +2,7 @@ name: PR Quality Gate
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   push:
     branches: [main]
   workflow_dispatch:
@@ -57,7 +58,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
+
+      - name: Fetch pull-request base ref
+        uses: ./.github/actions/fetch-scope-base
+        with:
+          base-ref: ${{ github.base_ref }}
 
       - name: Validate workflow scope policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
@@ -106,25 +112,63 @@ jobs:
           'true'
         run: pnpm docs:sync:check
 
+      - name: Prepare planning DB for workboard validation
+        if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
+        run: |
+          export DVT_PLANNING_DB_DATA_DIR="${RUNNER_TEMP}/dvt-planning-db/postgres-data"
+          pnpm planning:db:up
+          for attempt in {1..30}; do
+            if pnpm planning:db:health; then
+              break
+            fi
+            if [[ "$attempt" == "30" ]]; then
+              echo "planning DB did not become healthy in time" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+          pnpm planning:db:migrate
+          pnpm planning:db:import -- --if-stale --planning-only
+
       - name: Validate planning workboard outputs
         if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
-        run: pnpm docs:workboard:check
+        run: pnpm docs:workboard:generate --source yaml
 
       - name: Validate docs quality policy (English/no duplicate indexes)
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:quality:check
 
       - name: Run docs doctor (duplicates/legacy/staleness)
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:doctor
 
-      - name: Enforce Markdown location policy
+      - name: Enforce changed Markdown location policy
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:gov:locations -- --changed-only
+
+      - name: Enforce Markdown location policy
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:gov:locations
 
       - name: Enforce canonical docs paths and links
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:canonical:check
+
+      - name: Enforce changed docs filename policy
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:gov:filenames:changed
+
+      - name: Enforce changed docs frontmatter policy
+        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:gov:frontmatter:changed
 
       - name: Validate generated code-state status doc
         if:
@@ -137,6 +181,111 @@ jobs:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_capability_relevant
           == 'true'
         run: pnpm docs:capability:check
+
+      - name: Validate governance unit coverage
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:unit-coverage
+
+      - name: Validate governance document unit map
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:document-unit-map:check
+
+      - name: Validate governance file fingerprints
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:file-component-index:check
+
+      - name: Validate governance fingerprint baseline
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:file-fingerprint-baseline:check
+
+      - name: Validate governance fingerprint impact report
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:file-fingerprint-impact:check
+
+      - name: Validate governance coverage report
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:coverage-report:check
+
+      - name: Validate governance remediation queue
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          (steps.scope.outputs.governance_global_relevant == 'true' ||
+          steps.scope.outputs.governance_tooling_changed == 'true' ||
+          steps.scope.outputs.root_build_sensitive == 'true')) || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:governance:remediation-queue:check
+
+      - name: ADR-0000 traceability gate
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.traceability_adr0_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm traceability:adr0
+
+      - name: Validate governed changed files
+        if: github.event_name == 'pull_request'
+        run: pnpm docs:governance:changed-files:check
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
+      - name: Validate feature mechanization manifests
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:feature-mechanization
+
+      - name: Validate feature implementation mechanization
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:feature-mechanization:implementation
+
+      - name: Validate QA artifacts
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.docs_changed == 'true') || (github.event_name == 'workflow_dispatch'
+          && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm qa:artifact:check
+
+      - name: Validate architecture dependency boundaries
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.code_validation_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm arch:deps
 
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
@@ -173,7 +322,7 @@ jobs:
 
       - name: Label PR based on files changed
         if: github.event_name == 'pull_request'
-        uses: actions/labeler@634933edcd8ababfe52f92936142cc22ac488b1b # v6
+        uses: actions/labeler@f27b608878404679385c85cfa523b85ccb86e213 # v6
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           configuration-path: .github/labeler.yml
@@ -222,7 +371,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -249,7 +398,7 @@ jobs:
         image: postgres:15
         env:
           POSTGRES_USER: dvt_test
-          POSTGRES_PASSWORD: dvt_test
+          POSTGRES_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
           POSTGRES_DB: dvt_test
         options: >-
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
@@ -257,18 +406,35 @@ jobs:
           - 5432:5432
     env:
       DVT_PG_INTEGRATION: '1'
-      DVT_PG_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
-      DATABASE_URL: postgresql://dvt_test:dvt_test@localhost:5432/dvt_test
+      DVT_PG_ADMIN_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
+      DVT_PG_APP_USER: dvt_app
+      DVT_PG_APP_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}-app
+      DVT_PG_RLS_URL:
+        postgresql://dvt_app:${{ github.run_id }}-${{ github.run_attempt
+        }}-app@localhost:5432/dvt_test
+      DVT_PG_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
+      DATABASE_URL:
+        postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
         with:
           node-version: 22.x
+
+      - name: Provision non-bypass Postgres app role
+        run: node scripts/provision-postgres-app-role.cjs
+
+      - name: Prove adapter-postgres app-role runtime and direct RLS
+        run:
+          pnpm --filter @dvt/adapter-postgres test -- PostgresAppRoleRuntime.integration.test.ts
+          PostgresTenantRlsEnforcement.integration.test.ts
 
       - name: Prepare Temporal adapter Postgres integration runtime
         run: pnpm --filter @dvt/adapter-temporal run prepare:integration:postgres
@@ -289,7 +455,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm

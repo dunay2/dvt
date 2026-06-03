@@ -14,7 +14,7 @@ code_refs:
   - packages/@dvt/contracts/src/schemas.ts
   - packages/@dvt/planner/src/domain/policies.ts
   - packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts
-  - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
   - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
 evidence:
   tests:

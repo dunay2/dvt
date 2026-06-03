@@ -1,8 +1,9 @@
 /**
  * @file packages/@dvt/plan-interpreter/src/index.ts
+ * @ownedConcern Runtime plan-interpretation API for adapter-agnostic DAG validation and execution layering.
  * @baseline ADR-0003: Execution Model Sovereignty
  * @decision Decision — Shared plan interpretation package ensures adapter-agnostic DAG analysis
- * @consequence All adapters (Temporal, Conductor, future) produce identical execution order for the same plan
+ * @consequence Active runtime adapters produce identical execution order for the same plan
  * @version 1.0.0
  * @date 2026-02-23
  */

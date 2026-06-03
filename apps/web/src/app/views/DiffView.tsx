@@ -1,3 +1,4 @@
+/** Owned concern: compose the Diff review route from governed query state and route workbench presentation. */
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { DiffHeader } from './diff/DiffHeader';
@@ -13,11 +14,9 @@ import {
   buildDiffSqlContextState,
   buildDiffWorkbenchState,
 } from './diff/diffWorkbenchStateModel';
-import {
-  DIFF_ROUTE_ID,
-  deriveDiffRouteBootstrapPresentation,
-} from './diff/diffRouteBootstrap';
+import { deriveDiffRouteBootstrapPresentation } from './diff/diffRouteBootstrap';
 import { useDiffData } from './diff/useDiffData';
+import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
 
 export default function DiffView() {
   const {
@@ -74,7 +73,7 @@ export default function DiffView() {
     hasFileContent: fileContentQuery.data != null,
   });
   usePublishedRouteBootstrap(
-    DIFF_ROUTE_ID,
+    CANVAS_WORKBENCH_ROUTE_ID,
     deriveDiffRouteBootstrapPresentation({
       workbenchState,
       compareContextState,
@@ -95,14 +94,19 @@ export default function DiffView() {
   }
 
   return (
-    <RouteWorkbenchFrame header={header}>
-      <DiffTabs
-        catalogDocument={catalogDocument}
-        compareContextState={compareContextState}
-        changes={filteredChanges}
-        sqlDocument={sqlDocument}
-        sqlContextState={sqlContextState}
-      />
-    </RouteWorkbenchFrame>
+    <RouteWorkbenchFrame
+      header={header}
+      slots={{
+        primarySurface: (
+          <DiffTabs
+            catalogDocument={catalogDocument}
+            compareContextState={compareContextState}
+            changes={filteredChanges}
+            sqlDocument={sqlDocument}
+            sqlContextState={sqlContextState}
+          />
+        ),
+      }}
+    />
   );
 }

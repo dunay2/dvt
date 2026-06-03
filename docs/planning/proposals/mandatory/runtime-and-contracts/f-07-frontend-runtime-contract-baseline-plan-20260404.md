@@ -125,3 +125,7 @@ drifting endpoints.
 - [Frontend Runtime Contract User Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-user-manual.md)
 - [Frontend Roadmap - Prototype To Operational UI](../../nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
 - [Lane E](../../../state/agent-lane-e.yaml)
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

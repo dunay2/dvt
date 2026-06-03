@@ -18,6 +18,7 @@
     "@dvt/contracts": "workspace:*",
     "@dvt/delivery": "workspace:*",
     "@dvt/engine": "workspace:*",
+    "@dvt/planner": "workspace:*",
     "@dvt/run-domain": "workspace:*",
     "@dvt/state-store": "workspace:*",
     "@dvt/traceability-service": "workspace:*",

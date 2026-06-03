@@ -28,9 +28,9 @@ Inventory snapshot to make planning sprawl visible and navigable.
   plus domain pages to avoid browsing by filename alone.
 - Proposals and gaps hold active sequencing; status artifacts hold current truth.
 - Reviews are concentrated and should be consumed through domain mapping.
-- Active execution tracking should be centralized in the lane YAML registry and
-  [Planning Control Tower](./planning-control-tower.md) to avoid dispersed
-  follow-up.
+- Active execution tracking should be centralized in the planning DB command
+  and query rails described by [Planning Control Tower](./planning-control-tower.md)
+  to avoid dispersed follow-up. Lane YAML is a bootstrap/export snapshot.
 
 ## Current Domain Hubs
 

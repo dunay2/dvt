@@ -81,39 +81,6 @@ export class EnvironmentId {
   }
 }
 
-export type AuthorizationAction =
-  | {
-      readonly kind: 'command';
-      readonly name:
-        | 'run:start'
-        | 'run:cancel'
-        | 'run:retry'
-        | 'run:signal'
-        | 'workspace:graph-draft:save'
-        | 'admin:rebuild-snapshot';
-    }
-  | {
-      readonly kind: 'query';
-      readonly name:
-        | 'run:view'
-        | 'run:list'
-        | 'run:logs:view'
-        | 'workspace:graph-draft:view';
-    };
-
-export interface RequestedScope {
-  readonly tenantId: TenantId;
-  readonly projectId?: ProjectId;
-  readonly environmentId?: EnvironmentId;
-  readonly action: AuthorizationAction;
-}
-
-export interface ExecutionScope {
-  readonly tenantId: TenantId;
-  readonly projectId?: ProjectId;
-  readonly environmentId?: EnvironmentId;
-}
-
 export interface PrincipalRef {
   readonly principalId: string;
   readonly principalType: PrincipalType;
@@ -130,55 +97,3 @@ export interface AuthenticatedPrincipal extends PrincipalRef {
   readonly assertedTenantIds: ReadonlyArray<string>;
   readonly assertedProjectIds: ReadonlyArray<string>;
 }
-
-export interface EnvironmentGrant {
-  readonly environmentId: string;
-  readonly allowedActions: ReadonlyArray<string>;
-}
-
-export interface ProjectGrant {
-  readonly projectId: string;
-  readonly allowedActions: ReadonlyArray<string>;
-  readonly environmentAccess: ReadonlyMap<string, EnvironmentGrant>;
-}
-
-export interface TenantGrant {
-  readonly tenantId: string;
-  readonly allowedActions: ReadonlyArray<string>;
-  readonly projectAccess: ReadonlyMap<string, ProjectGrant>;
-}
-
-export interface EffectivePrincipalAccess {
-  readonly principal: PrincipalRef;
-  readonly suspended: boolean;
-  readonly tenantAccess: ReadonlyMap<string, TenantGrant>;
-}
-
-export type DeniedReason =
-  | 'PRINCIPAL_SUSPENDED'
-  | 'TENANT_NOT_GRANTED'
-  | 'PROJECT_NOT_GRANTED'
-  | 'ENVIRONMENT_NOT_GRANTED'
-  | 'ACTION_NOT_GRANTED'
-  | 'TOKEN_ASSERTION_CONFLICT';
-
-export interface AuthorizationRationale {
-  readonly evaluatedPrincipalId: string;
-  readonly source: 'effective-access';
-  readonly matchedTenantId?: string;
-  readonly matchedProjectId?: string;
-  readonly matchedEnvironmentId?: string;
-  readonly matchedAction?: string;
-}
-
-export type AuthorizationOutcome =
-  | {
-      readonly kind: 'allow';
-      readonly approvedScope: ExecutionScope;
-      readonly rationale: AuthorizationRationale;
-    }
-  | {
-      readonly kind: 'deny';
-      readonly reason: DeniedReason;
-      readonly rationale: AuthorizationRationale;
-    };

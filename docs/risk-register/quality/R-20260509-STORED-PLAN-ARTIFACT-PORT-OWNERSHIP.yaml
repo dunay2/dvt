@@ -1,0 +1,25 @@
+---
+id: R-20260509-STORED-PLAN-ARTIFACT-PORT-OWNERSHIP
+title: Stored-plan artifact ports can drift back into API, planner, or engine packages
+status: Open
+date: 2026-05-09
+owners:
+  - packages/@dvt/artifacts
+  - packages/@dvt/engine
+  - apps/api
+severity: Medium
+probability: Low
+context: >
+  The stored-plan artifact lifecycle used to be represented by duplicate or unscoped ports in
+  planner, API, and engine surfaces.
+risk: >
+  Future changes could reintroduce local stored-plan artifact ports or naked PlanRef fetches,
+  weakening tenant-scoped materialization and making dispatch integrity depend on package-local
+  vocabulary again.
+mitigations:
+  - Architecture tests require the artifact reader/writer/store port in @dvt/artifacts.
+  - Engine tests require IPlanIntegrityValidator to consume IStoredPlanArtifactReader.
+  - API and Temporal tests use ScopedPlanRef fixtures for artifact materialization.
+  - Documentation names @dvt/artifacts as the single canonical port home.
+review_after: 2026-06-15
+---

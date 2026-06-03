@@ -1,11 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 
+import { createServicesReadyBootstrapCommand } from './bootstrap/appBootstrapCommands';
 import { setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
-import {
-  AppServicesProvider,
-  type AppServicesProviderProps,
-} from './services/AppServicesContext';
+import { AppServicesProvider, type AppServicesProviderProps } from './services/AppServicesContext';
 
 function createAppQueryClient(): QueryClient {
   return new QueryClient({
@@ -24,16 +22,12 @@ type AppProvidersProps = Readonly<{
   queryClient?: QueryClient;
 }>;
 
-export default function AppProviders({
-  children,
-  overrides,
-  queryClient,
-}: AppProvidersProps) {
+export default function AppProviders({ children, overrides, queryClient }: AppProvidersProps) {
   const [ownedQueryClient] = useState(createAppQueryClient);
   const resolvedQueryClient = queryClient ?? ownedQueryClient;
 
   useEffect(() => {
-    setBootstrapStepStatus('services', 'complete', 'App services and query client ready');
+    setBootstrapStepStatus(createServicesReadyBootstrapCommand());
   }, []);
 
   return (

@@ -14,6 +14,8 @@
       "@dvt/contracts/*": ["../../../packages/@dvt/contracts/dist/*"],
       "@dvt/crypto": ["../../../packages/@dvt/canonical/dist/index.d.ts"],
       "@dvt/crypto/*": ["../../../packages/@dvt/canonical/dist/*"],
+      "@dvt/delivery": ["../../../packages/@dvt/delivery/dist/index.d.ts"],
+      "@dvt/delivery/*": ["../../../packages/@dvt/delivery/dist/*"],
       "@dvt/engine": ["../../../packages/@dvt/engine/dist/index.d.ts"],
       "@dvt/engine/*": ["../../../packages/@dvt/engine/dist/*"],
       "@dvt/dsl": ["../../../packages/@dvt/dsl/dist/index.d.ts"],

@@ -7,6 +7,7 @@ import {
 export type CanvasWorkbenchState =
   | { kind: 'loading' }
   | { kind: 'error'; message: string }
+  | { kind: 'needs_canvas' }
   | { kind: 'empty' }
   | { kind: 'ready' };
 
@@ -18,6 +19,7 @@ export type CanvasReadOnlyState = {
 
 type CanvasWorkbenchStateArgs = {
   canonicalNodeCount: number;
+  hasCanvasDocument: boolean;
   isLoadingGraph: boolean;
   graphErrorMessage?: string | null;
 };
@@ -30,6 +32,7 @@ type CanvasReadOnlyStateArgs = {
 
 export function getCanvasWorkbenchState({
   canonicalNodeCount,
+  hasCanvasDocument,
   isLoadingGraph,
   graphErrorMessage,
 }: CanvasWorkbenchStateArgs): CanvasWorkbenchState {
@@ -42,6 +45,10 @@ export function getCanvasWorkbenchState({
       kind: 'error',
       message: graphErrorMessage,
     };
+  }
+
+  if (!hasCanvasDocument) {
+    return { kind: 'needs_canvas' };
   }
 
   if (canonicalNodeCount === 0) {

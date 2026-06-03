@@ -139,13 +139,13 @@ describe('IdempotencyKeyBuilder vectors (RunEvents v1)', () => {
     );
   });
 
-  it('startRunIntentId changes when logicalAttemptId or targetAdapter changes', () => {
-    const first = builder.startRunIntentId('tenant-1', 'run-1', 1, 'temporal');
+  it('startRunIntentId changes when logicalAttemptId or targetAdapter presence changes', () => {
+    const first = builder.startRunIntentId('tenant-1', 'run-1', 1);
     const differentAttempt = builder.startRunIntentId('tenant-1', 'run-1', 2, 'temporal');
-    const differentAdapter = builder.startRunIntentId('tenant-1', 'run-1', 1, 'conductor');
+    const withTargetAdapter = builder.startRunIntentId('tenant-1', 'run-1', 1, 'temporal');
 
     expect(first).not.toBe(differentAttempt);
-    expect(first).not.toBe(differentAdapter);
+    expect(first).not.toBe(withTargetAdapter);
   });
 
   it('run event identity changes across recovery lineage because the new runId is authoritative', () => {

@@ -36,17 +36,17 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 
 ### Phase 1: Core Partition (Previously Completed)
 
-| Old Section (WORKFLOW_ENGINE.md) | New Location                                                                                     | Size              | Status        |
-| -------------------------------- | ------------------------------------------------------------------------------------------------ | ----------------- | ------------- |
-| Interface + Signals              | [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md)         | 245 lines         | ✅            |
-| State Model + Events             | [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)   | 280 lines         | ✅ Refactored |
-| Capabilities                     | [capabilities/](docs/architecture/engine/contracts/capabilities/)                                | 4 JSON files      | ✅            |
-| Temporal Adapter                 | [TemporalAdapter.spec.md](docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md)    | 312 lines         | ✅            |
-| Conductor Adapter                | [ConductorAdapter.spec.md](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md) | 156 lines (DRAFT) | ✅            |
-| Observability                    | [observability.md](docs/architecture/engine/ops/observability.md)                                | 428 lines         | ✅            |
-| Incident Runbooks                | [runbooks/incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md)      | 387 lines         | ✅            |
-| Determinism Tooling              | [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md)                    | 412 lines         | ✅            |
-| Roadmap                          | [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md)                            | 562 lines         | ✅            |
+| Old Section (WORKFLOW_ENGINE.md) | New Location                                                                                               | Size              | Status        |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------- | ------------- |
+| Interface + Signals              | [IWorkflowEngine.v1.md](docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md)                   | 245 lines         | ✅            |
+| State Model + Events             | [ExecutionSemantics.v1.md](docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md)             | 280 lines         | ✅ Refactored |
+| Capabilities                     | [capabilities/](docs/architecture/engine/contracts/capabilities/)                                          | 4 JSON files      | ✅            |
+| Temporal Adapter                 | [temporal-adapter-spec.md](docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md) | 312 lines         | ✅            |
+| Conductor Adapter                | [ConductorAdapter.spec.md](docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md)           | 156 lines (DRAFT) | ✅            |
+| Observability                    | [observability.md](docs/architecture/engine/ops/observability.md)                                          | 428 lines         | ✅            |
+| Incident Runbooks                | [runbooks/incident_response.md](docs/architecture/engine/ops/runbooks/incident_response.md)                | 387 lines         | ✅            |
+| Determinism Tooling              | [determinism-tooling.md](docs/architecture/engine/dev/determinism-tooling.md)                              | 412 lines         | ✅            |
+| Roadmap                          | [engine-phases.md](docs/architecture/engine/roadmap/engine-phases.md)                                      | 562 lines         | ✅            |
 
 ### Phase 2: Adapter Separation (This PR - NEW)
 
@@ -98,7 +98,7 @@ This PR partitions the monolithic `WORKFLOW_ENGINE.md` (3,227 lines) into **13 m
 - `docs/architecture/engine/contracts/engine/IWorkflowEngine.v1.md`
 - `docs/architecture/engine/contracts/engine/ExecutionSemantics.v1.md` (refactored in this PR)
 - `docs/architecture/engine/contracts/capabilities/` (4 files)
-- `docs/architecture/engine/adapters/temporal/TemporalAdapter.spec.md`
+- `docs/architecture/components/engine/adapters/temporal/temporal-adapter-spec.md`
 - `docs/architecture/engine/adapters/conductor/ConductorAdapter.spec.md`
 - `docs/architecture/engine/ops/observability.md`
 - `docs/architecture/engine/ops/runbooks/incident_response.md`

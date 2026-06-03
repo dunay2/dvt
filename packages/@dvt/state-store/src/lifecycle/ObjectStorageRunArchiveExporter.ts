@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Owns object-store archive artifact export, verification, and cold-payload redaction.
+ */
 import type { EventEnvelope } from '@dvt/contracts';
 import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 
@@ -13,6 +16,14 @@ import type {
 export interface ObjectStorageRunArchiveExporterOptions {
   objectStore: IArchiveObjectStore;
   prefix?: string;
+  redactionPolicy?: ArchiveRedactionPolicy;
+}
+
+export interface ArchiveRedactionPolicy {
+  readonly enabled?: boolean;
+  /** Additional key names to redact; the built-in sensitive keys always remain active. */
+  readonly sensitiveKeys?: readonly string[];
+  readonly replacement?: string;
 }
 
 interface ArchiveUnitManifest {
@@ -33,15 +44,17 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
 
   private readonly objectStore: IArchiveObjectStore;
   private readonly prefix: string;
+  private readonly redactionPolicy: ResolvedArchiveRedactionPolicy | null;
 
   constructor(options: ObjectStorageRunArchiveExporterOptions) {
     this.objectStore = options.objectStore;
     this.prefix = normalizePrefix(options.prefix ?? 'archive');
     this.destinationKind = resolveDestinationKind(options.objectStore);
+    this.redactionPolicy = resolveArchiveRedactionPolicy(options.redactionPolicy);
   }
 
   async exportArchiveUnit(input: ArchiveExportRequest): Promise<ArchiveExportedUnit> {
-    const events = sortArchiveEvents(input.events);
+    const events = sortArchiveEvents(redactArchiveEvents(input.events, this.redactionPolicy));
     const objectKey = buildEventsObjectKey(this.prefix, input.archiveUnitKey);
     const manifestObjectKey = buildManifestObjectKey(this.prefix, input.archiveUnitKey);
     const checksumObjectKey = buildChecksumObjectKey(this.prefix, input.archiveUnitKey);
@@ -203,6 +216,85 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
       throw new Error('ARCHIVE_REBUILT_MANIFEST_MISMATCH');
     }
   }
+}
+
+interface ResolvedArchiveRedactionPolicy {
+  readonly sensitiveKeys: ReadonlySet<string>;
+  readonly replacement: string;
+}
+
+const DEFAULT_ARCHIVE_REDACTION_REPLACEMENT = '[REDACTED]';
+const DEFAULT_ARCHIVE_REDACTION_KEYS: readonly string[] = [
+  'apiKey',
+  'authorization',
+  'clientSecret',
+  'connectionString',
+  'credential',
+  'credentials',
+  'idToken',
+  'password',
+  'passphrase',
+  'privateKey',
+  'refreshToken',
+  'secret',
+  'token',
+];
+
+function resolveArchiveRedactionPolicy(
+  policy: ArchiveRedactionPolicy | undefined
+): ResolvedArchiveRedactionPolicy | null {
+  if (policy?.enabled === false) {
+    return null;
+  }
+
+  return {
+    sensitiveKeys: new Set(
+      [...DEFAULT_ARCHIVE_REDACTION_KEYS, ...(policy?.sensitiveKeys ?? [])].map(normalizeKey)
+    ),
+    replacement: policy?.replacement ?? DEFAULT_ARCHIVE_REDACTION_REPLACEMENT,
+  };
+}
+
+function redactArchiveEvents(
+  events: readonly EventEnvelope[],
+  policy: ResolvedArchiveRedactionPolicy | null
+): readonly EventEnvelope[] {
+  if (policy === null) {
+    return events;
+  }
+
+  return events.map((event) => redactValue(event, policy) as EventEnvelope);
+}
+
+function redactValue(value: unknown, policy: ResolvedArchiveRedactionPolicy): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => redactValue(entry, policy));
+  }
+
+  if (!isRecord(value)) {
+    return value;
+  }
+
+  const redacted: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(value)) {
+    redacted[key] = policy.sensitiveKeys.has(normalizeKey(key))
+      ? policy.replacement
+      : redactValue(child, policy);
+  }
+  return redacted;
+}
+
+function normalizeKey(key: string): string {
+  return key.replace(/[-_\s]/g, '').toLowerCase();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || ArrayBuffer.isView(value)) {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
 }
 
 export function sortArchiveEvents(events: readonly EventEnvelope[]): readonly EventEnvelope[] {

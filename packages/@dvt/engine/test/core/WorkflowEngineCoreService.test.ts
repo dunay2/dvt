@@ -2,7 +2,7 @@ import type { EngineRunRef } from '@dvt/contracts';
 import { InvalidStateTransitionError } from '@dvt/run-domain';
 import { describe, expect, it, vi } from 'vitest';
 
-import { MockAdapter } from '../../src/adapters/mock/MockAdapter.js';
+import { InMemoryProviderAdapter } from '../../src/adapters/inMemory/InMemoryProviderAdapter.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -101,7 +101,7 @@ describe('WorkflowEngineCoreService', () => {
     const projector = new SnapshotProjector();
     const clock = new SequenceClock('2026-03-31T00:00:00.000Z');
     const idempotency = new IdempotencyKeyBuilder();
-    const adapter = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       projector,
@@ -118,8 +118,10 @@ describe('WorkflowEngineCoreService', () => {
       idempotency,
       clock,
     });
-    await bootstrapQueuedRun(store, 'core-signal-pause-resume-1', { provider: 'mock' });
-    const ref: EngineRunRef = makeRunRef('core-signal-pause-resume-1', { provider: 'mock' });
+    await bootstrapQueuedRun(store, 'core-signal-pause-resume-1', { provider: 'temporal' });
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-resume-1', {
+      provider: 'temporal',
+    });
     await appendRunStarted(store, 'core-signal-pause-resume-1');
 
     await core.signal(ref, {
@@ -142,7 +144,7 @@ describe('WorkflowEngineCoreService', () => {
     const projector = new SnapshotProjector();
     const clock = new SequenceClock('2026-03-31T00:00:00.000Z');
     const idempotency = new IdempotencyKeyBuilder();
-    const adapter = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       projector,
@@ -159,8 +161,10 @@ describe('WorkflowEngineCoreService', () => {
       idempotency,
       clock,
     });
-    await bootstrapQueuedRun(store, 'core-signal-pause-retry-1', { provider: 'mock' });
-    const ref: EngineRunRef = makeRunRef('core-signal-pause-retry-1', { provider: 'mock' });
+    await bootstrapQueuedRun(store, 'core-signal-pause-retry-1', { provider: 'temporal' });
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-retry-1', {
+      provider: 'temporal',
+    });
     await appendRunStarted(store, 'core-signal-pause-retry-1');
 
     const pauseReq = { signalId: 'sig-pause-retry-1', type: 'PAUSE' as const };
@@ -185,7 +189,7 @@ describe('WorkflowEngineCoreService', () => {
     const projector = new SnapshotProjector();
     const clock = new SequenceClock('2026-03-31T00:00:00.000Z');
     const idempotency = new IdempotencyKeyBuilder();
-    const adapter = new MockAdapter({
+    const adapter = new InMemoryProviderAdapter({
       stateStore: store,
       stateStoreWrite: store,
       projector,
@@ -202,8 +206,10 @@ describe('WorkflowEngineCoreService', () => {
       idempotency,
       clock,
     });
-    await bootstrapQueuedRun(store, 'core-signal-pause-invalid-1', { provider: 'mock' });
-    const ref: EngineRunRef = makeRunRef('core-signal-pause-invalid-1', { provider: 'mock' });
+    await bootstrapQueuedRun(store, 'core-signal-pause-invalid-1', { provider: 'temporal' });
+    const ref: EngineRunRef = makeRunRef('core-signal-pause-invalid-1', {
+      provider: 'temporal',
+    });
 
     await expect(
       core.signal(ref, {

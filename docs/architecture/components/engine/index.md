@@ -2,7 +2,7 @@
 title: '@dvt/engine'
 status: Active
 owner: Architecture / Engine
-last_reviewed: 2026-04-12
+last_reviewed: 2026-04-29
 ---
 
 # @dvt/engine
@@ -29,7 +29,7 @@ not redefine which ports belong to the seven-port surface.
 | `IRunStateStore`               | `runtime-wired`               | Canonical run metadata, event log, snapshot, and maintenance store seam                       |
 | `IStartRunIntentStore`         | `runtime-wired`               | Crash-consistency seam for pre-dispatch start-run intents                                     |
 | `IProviderAdapter`             | `runtime-wired`               | Provider runtime seam                                                                         |
-| `IPlanFetcher`                 | `runtime-wired`               | Plan/artifact fetch seam on the start-run path                                                |
+| `IPlanIntegrityValidator`      | `runtime-wired`               | Engine integrity gate that consumes `IStoredPlanArtifactReader` before dispatch               |
 | `IRunExecutionContextResolver` | `optional runtime wiring`     | Conditional seam when `runExecutionContextRef` is supplied                                    |
 | `IProjector`                   | `package-exposed target seam` | Kept visible as a projector seam even though mainline uses `SnapshotProjector` directly today |
 | `IMetricsCollector`            | `source-tree target seam`     | Declared in source; current runtime still injects `IObservability` instead                    |
@@ -87,7 +87,10 @@ Target note:
 - enrichment service:
   [RunEnrichmentService.ts](../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 - public contract:
-  [IWorkflowEngine.v1.ts](../../../../packages/@dvt/engine/src/contracts/IWorkflowEngine.v1.ts)
+  [IWorkflowEngine.ts](../../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)
+  with canonical consumer import `import type { IWorkflowEngine } from '@dvt/engine'`
+- plan integrity validator port:
+  [IPlanIntegrityValidator.ts](../../../../packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts)
 
 ## Component Topology
 
@@ -112,7 +115,7 @@ flowchart LR
   Ports --> State["IRunStateStore<br/>(runtime-wired)"]
   Ports --> Intent["IStartRunIntentStore<br/>(runtime-wired)"]
   Ports --> Providers["IProviderAdapter<br/>(runtime-wired)"]
-  Ports --> Plan["IPlanFetcher<br/>(runtime-wired)"]
+  Ports --> Plan["IPlanIntegrityValidator<br/>(runtime-wired)"]
   Ports --> RunCtx["IRunExecutionContextResolver<br/>(optional runtime wiring)"]
   Ports -.-> Projector["IProjector<br/>(package-exposed target seam)"]
   Ports -.-> Metrics["IMetricsCollector<br/>(source-tree target seam)"]
@@ -148,7 +151,6 @@ flowchart LR
 - `adapters/`
   - [index](./adapters/index.md)
   - [temporal](./adapters/temporal/index.md)
-  - [conductor](./adapters/conductor/index.md)
   - [state-store](./adapters/state-store/index.md)
 - `contracts/`
   - [index](./contracts/index.md)

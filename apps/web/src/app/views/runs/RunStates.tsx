@@ -1,7 +1,11 @@
+/**
+ * Owned concern: re-export named state views under shortened aliases for the
+ * runs route renderer.
+ */
 import {
+  RunDegradedStateView,
   RunDetailErrorStateView,
   RunDetailLoadingStateView,
-  RunDegradedStateView,
   RunMissingStateView,
   RunsEmptyStateView,
   RunsErrorStateView,

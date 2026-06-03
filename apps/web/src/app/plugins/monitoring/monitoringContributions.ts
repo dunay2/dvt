@@ -48,11 +48,26 @@ export const monitoringContributions: PluginContributions = {
       handle: {
         routeBootstrap: RUNS_ROUTE_BOOTSTRAP_HANDLE,
       },
-      nav: {
+      placement: {
+        kind: 'shell-nav',
         label: 'Runs',
         icon: Activity,
         order: 20,
         level: 'core',
+      },
+    },
+    {
+      pluginId: MONITORING_PLUGIN_ID,
+      id: 'monitoring.runs.canvas',
+      component: React.lazy(() => import('../../views/runs/CanvasRunsTabView')),
+      placement: {
+        kind: 'workbench-tab',
+        workbench: 'canvas',
+        tabId: 'runs',
+        label: 'Runs',
+        icon: Activity,
+        order: 60,
+        scope: 'run',
       },
     },
     {
@@ -64,6 +79,41 @@ export const monitoringContributions: PluginContributions = {
       handle: {
         routeBootstrap: RUN_DETAIL_ROUTE_BOOTSTRAP_HANDLE,
       },
+    },
+  ],
+
+  routeHeaderContributions: [
+    {
+      id: 'monitoring.runs.status',
+      pluginId: MONITORING_PLUGIN_ID,
+      routeId: 'runs',
+      label: 'Runtime status',
+      icon: Activity,
+      order: 20,
+      slot: 'status',
+    },
+  ],
+
+  commandPaletteContributions: [
+    {
+      id: 'monitoring.open-runs',
+      pluginId: MONITORING_PLUGIN_ID,
+      title: 'Open runs',
+      keywords: ['runtime', 'execution', 'monitoring'],
+      order: 20,
+      routeId: 'runs',
+      onSelect: () => undefined,
+    },
+  ],
+
+  bottomDiagnosticsContributions: [
+    {
+      id: 'monitoring.run-events',
+      pluginId: MONITORING_PLUGIN_ID,
+      label: 'Run events',
+      order: 20,
+      kind: 'events',
+      routeId: 'runs',
     },
   ],
 

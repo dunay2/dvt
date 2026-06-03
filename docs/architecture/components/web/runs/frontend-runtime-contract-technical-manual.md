@@ -2,7 +2,7 @@
 title: Frontend Runtime Contract Technical Manual
 status: Review
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-13
+last_reviewed: 2026-05-08
 domain: frontend
 ---
 
@@ -72,7 +72,7 @@ Active route consumers now use explicit read models and a route-level facade:
 - `listRunSummaries(): Promise<RunSummaryItem[]>`
 - `getRunSnapshot(runId): Promise<RunSnapshot | null>`
 - `listRunEvents(runId, afterSeq?): Promise<RunEventTimelinePage>`
-- `startRun(input): Promise<EngineRunRef>`
+- `startRun(input): Promise<RunStartReceipt>`
 - `loadRunWorkspace(runId): Promise<RunWorkspaceViewModel | null>`
 
 Retired from active route consumers:
@@ -207,6 +207,18 @@ The shared model owns:
 - optional detail copied from runtime event payload message when present;
 - step identity when the event belongs to one step.
 
+F-10 adds a shared event timeline model before presentation:
+
+```mermaid
+flowchart LR
+  Query["listRunEvents(runId, afterSeq)"] --> Timeline["normalize/merge timeline"]
+  Timeline --> Console["terminal line stream"]
+  Timeline --> Workspace["structured timeline rows"]
+```
+
+The timeline model owns ordering, duplicate collapse, cursor preservation, and
+active-status polling decisions. It does not own snapshot truth.
+
 The shared copy resolver owns:
 
 - the governed human-readable headline text used by both drawer and timeline
@@ -236,6 +248,48 @@ This keeps the runtime boundary consistent:
 1. preview or import returns a backend-authored `PlanRef`;
 2. `useCanvasExecutionActions` fails closed if `currentPlan.planRef` is absent;
 3. `runsService.startRun()` remains `PlanRef`-driven through `POST /runs/start`.
+
+## Platform-Owned Start-Run Identity
+
+The runtime contract now separates caller-owned start intent from
+platform-owned execution identity.
+
+Caller-owned input:
+
+- `planRef`
+- `workspaceScope`
+- `selection`
+
+Platform-owned output:
+
+- `EngineRunRef.runId`
+
+`StartRunInput` is the complete client-authored request contract for
+`/runs/start`. The API route rejects any caller-authored canonical execution
+identity with `client_run_id_not_allowed` and generates the internal
+`StartRunCommand.runId` itself as `run_<UUIDv7>`.
+
+Frontend consumers must treat `EngineRunRef.runId` as opaque. UUIDv7 provides
+platform-side locality and collision resistance, but its timestamp bits are not
+a frontend ordering, retry, or lifecycle contract.
+
+```mermaid
+flowchart LR
+  Canvas["Canvas start action"] --> Input["StartRunInput: planRef + workspaceScope + selection"]
+  Input --> Service["runsService.startRun"]
+  Service --> Api["POST /runs/start"]
+  Api --> Reject["reject client runId"]
+  Api --> Generated["platform run_<UUIDv7>"]
+  Generated --> Ref["EngineRunRef"]
+
+  Input -. "no canonical execution identity" .-> Service
+  Service -. "does not send caller-authored identity" .-> Api
+  Service -. "must not parse" .-> Ref
+```
+
+Detailed local guide:
+
+- [Start-run client identity boundary](./start-run-client-identity-boundary.md)
 
 ## Current Consumer Gap
 
@@ -287,6 +341,44 @@ Rules:
 4. `GET /runs/:runId/events` remains supplemental for execution-time artifact
    refs emitted by runtime steps and must not become the source of authoring
    truth.
+
+## Plan Execution Scope Rendering Rule
+
+Caller-visible source and sink scope belongs to `GET /runs/:runId` when the run
+can be joined back to its persisted plan record.
+
+Rules:
+
+1. `GET /runs/:runId` may carry `planSummary` derived from the persisted
+   canonical `ExecutionPlan`.
+2. `planSummary.sourceTables` and `planSummary.sinkTables` are the only
+   source/sink selection evidence rendered as plan scope in
+   `RunWorkspaceStateView`.
+3. `RunWorkspaceStateView` may use materialization evidence as result evidence,
+   but it must not use timeline events or console lines to invent plan source or
+   sink selection.
+4. The run detail route must provide direct navigation back to Canvas and the
+   runs list so a started run is not a dead end.
+
+## Run Diagnostics Pointer Rendering Rule
+
+Caller-visible run diagnostics belong to the `GET /runs/:runId` snapshot
+authority, not to a separate dashboard route or timeline heuristic.
+
+Rules:
+
+1. `GET /runs/:runId` may carry `diagnostics` with `runId`, `planId`,
+   `planSha`, `stepId`, `attemptId`, `adapter`, `durationMs`, `status`, optional
+   `errorCode`, and trace or log pointers.
+2. `RunWorkspaceStateView` renders the Diagnostics panel only from
+   `RunSnapshot.diagnostics`.
+3. `GET /runs/:runId/events` remains chronology support. It must not be used to
+   invent diagnostic pointers, plan hashes, adapter identity, attempt identity,
+   duration, or error codes when the snapshot omits them.
+4. Trace and log pointers are provider-neutral query strings until a governed
+   observability dashboard or OTel backend link contract exists.
+5. High-cardinality diagnostic identifiers are permitted in traces and logs,
+   but not as metric labels.
 
 ## Vertical Impact Map
 

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -45,7 +46,6 @@ describe('BottomConsoleDrawer', () => {
       gridSize: 20,
       activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
       activeTabId: 'main-canvas',
-      connectionStatus: { rest: 'ok', liveEvents: 'connected' },
     });
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -62,10 +62,10 @@ describe('BottomConsoleDrawer', () => {
     container.remove();
   });
 
-  it('shows API-mode non-live guidance without internal roadmap wording', async () => {
+  it('shows live-log idle guidance without internal roadmap wording', async () => {
     await act(async () => {
       root.render(
-        <AppServicesProvider overrides={{ mode: 'api' }}>
+        <AppServicesProvider>
           <BottomConsoleDrawer />
         </AppServicesProvider>
       );
@@ -73,23 +73,22 @@ describe('BottomConsoleDrawer', () => {
 
     expect(
       document.body.querySelector('[data-slot="bottom-console-drawer-idle"]')?.textContent
-    ).toContain(
-      'Start a run to see run events here. Live log streaming is not available in API mode yet.'
-    );
+    ).toContain('Start a run to see live run events here.');
     expect(
       document.body.querySelector('[data-slot="bottom-console-drawer-mode-badge"]')
     ).toBeNull();
+    expect(document.body.textContent).not.toContain('not available');
     expect(document.body.textContent).not.toContain('Runtime snapshot');
     expect(document.body.textContent).not.toContain('Event timeline');
   });
 
-  it('shows loading state with run and mode badges', async () => {
+  it('shows loading state with a run badge and no runtime badge', async () => {
     consoleLogStreamState.isLoading = true;
     consoleLogStreamState.runId = 'run-42';
 
     await act(async () => {
       root.render(
-        <AppServicesProvider overrides={{ mode: 'mock' }}>
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
           <BottomConsoleDrawer />
         </AppServicesProvider>
       );
@@ -102,8 +101,8 @@ describe('BottomConsoleDrawer', () => {
       document.body.querySelector('[data-slot="bottom-console-drawer-run-badge"]')?.textContent
     ).toContain('Run run-42');
     expect(
-      document.body.querySelector('[data-slot="bottom-console-drawer-mode-badge"]')?.textContent
-    ).toContain('Mock');
+      document.body.querySelector('[data-slot="bottom-console-drawer-mode-badge"]')
+    ).toBeNull();
   });
 
   it('renders the terminal when the stream is ready', async () => {
@@ -112,7 +111,7 @@ describe('BottomConsoleDrawer', () => {
 
     await act(async () => {
       root.render(
-        <AppServicesProvider overrides={{ mode: 'mock' }}>
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
           <BottomConsoleDrawer />
         </AppServicesProvider>
       );
@@ -127,7 +126,7 @@ describe('BottomConsoleDrawer', () => {
   it('closes the drawer by hiding it in the layout store', async () => {
     await act(async () => {
       root.render(
-        <AppServicesProvider overrides={{ mode: 'mock' }}>
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
           <BottomConsoleDrawer />
         </AppServicesProvider>
       );

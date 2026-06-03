@@ -1,55 +1,10 @@
 #!/usr/bin/env node
-const { execSync, spawnSync } = require('node:child_process');
+/** Owned concern: trigger planning workboard validation only when lane sources changed. */
+const { spawnSync } = require('node:child_process');
+const path = require('node:path');
+const { listLocalChangedFiles } = require('./git-local-changes.cjs');
 
-function parseChangedFiles(output) {
-  return output
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-function gitExec(command) {
-  return execSync(command, {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'ignore'],
-  });
-}
-
-function hasUpstream() {
-  try {
-    execSync('git rev-parse --abbrev-ref --symbolic-full-name @{u}', {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function hasRef(ref) {
-  try {
-    execSync(`git rev-parse --verify ${ref}`, {
-      stdio: ['ignore', 'ignore', 'ignore'],
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function resolveDiffCommand() {
-  if (hasRef('origin/main')) return 'git diff --name-only --diff-filter=ACMR origin/main...HEAD';
-  if (hasUpstream()) return 'git diff --name-only --diff-filter=ACMR @{u}...HEAD';
-  return 'git diff --name-only --diff-filter=ACMR HEAD~1..HEAD';
-}
-
-function listChangedFiles() {
-  try {
-    return parseChangedFiles(gitExec(resolveDiffCommand()));
-  } catch {
-    return [];
-  }
-}
+const repoRoot = path.resolve(__dirname, '..');
 
 function needsWorkboardCheck(changedFiles) {
   return changedFiles.some(
@@ -58,7 +13,7 @@ function needsWorkboardCheck(changedFiles) {
   );
 }
 
-const changedFiles = listChangedFiles();
+const changedFiles = listLocalChangedFiles({ repoRootPath: repoRoot });
 if (!needsWorkboardCheck(changedFiles)) {
   console.log(
     '[docs:workboard:check:changed] No lane YAML changes detected. Skipping workboard drift check.'

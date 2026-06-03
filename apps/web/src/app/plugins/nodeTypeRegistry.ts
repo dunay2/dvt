@@ -5,7 +5,7 @@ import {
   CONNECTION_RULES,
   EDGE_TYPE_STRATEGIES,
   FALLBACK_NODE_KIND,
-} from './nodeTypeCatalog.dbt';
+} from './nodeTypeCatalog';
 import type {
   CanvasEdgeType,
   EdgeTypeStrategyContext,

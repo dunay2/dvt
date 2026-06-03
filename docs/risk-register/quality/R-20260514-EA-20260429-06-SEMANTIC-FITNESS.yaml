@@ -1,0 +1,21 @@
+id: R-20260514-EA-20260429-06-SEMANTIC-FITNESS
+title: engine architecture fitness could drift back to source-string confidence
+status: Open
+date: 2026-05-14
+owners:
+  - '@dvt/engine'
+severity: Low
+probability: Low
+context: >
+  The engine architecture suite still contains some textual checks. Some are valid documentation or
+  import-policy guards, but facade and boundary structure should be checked through TypeScript
+  semantics where possible.
+risk: >
+  Future architecture tests could reintroduce brittle source-string assertions for code structure,
+  causing refactors to pass or fail on incidental formatting instead of owned-concern boundaries.
+mitigations:
+  - engineArchitectureTestSupport.ts now exposes a TypeScript AST helper for constructor
+    parameter-property ownership checks.
+  - engineArchitectureTestSupport.test.ts proves the helper behavior directly.
+  - workflowEngineFacadeUseCases.architecture.test.ts uses AST structure for the WorkflowEngine
+    facade dependency boundary.

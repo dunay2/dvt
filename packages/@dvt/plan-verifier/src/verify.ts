@@ -1,6 +1,6 @@
 import { sha256Hex, utf8Encode } from './crypto.js';
 import { PlanVerifierError } from './errors.js';
-import { type PlanRuntime, verifyPlanVersionOrThrow } from './planVersion.js';
+import { type PlanRuntime, verifyPlanAdmissionOrThrow } from './planVersion.js';
 
 /**
  * Primary invariant:
@@ -24,50 +24,26 @@ export async function verifyPlanIdOrThrow(params: {
 }
 
 /**
- * Convenience wrapper: checks version gate first, then planId integrity.
+ * Convenience wrapper: checks canonical plan admission first, then planId integrity.
+ * Pair compatibility is delegated to the EXECUTION_PLAN_ADMISSION_MATRIX facade.
  */
 type VerifyPlanBaseParams = {
   canonicalPlanCoreJson: string;
   planId: string;
   planVersion: string;
-};
-
-type VerifyPlanLegacyParams = VerifyPlanBaseParams & {
-  supportedMajor: number;
-  strictSameMinor?: boolean;
-  supportedMinor?: number;
+  schemaVersion: string;
 };
 
 type VerifyPlanRuntimeParams = VerifyPlanBaseParams & {
   runtime: PlanRuntime;
 };
 
-export async function verifyPlanOrThrow(
-  params: VerifyPlanLegacyParams | VerifyPlanRuntimeParams
-): Promise<void> {
-  if ('runtime' in params) {
-    verifyPlanVersionOrThrow({
-      planVersion: params.planVersion,
-      runtime: params.runtime,
-    });
-  } else {
-    const versionParams: {
-      planVersion: string;
-      supportedMajor: number;
-      strictSameMinor?: boolean;
-      supportedMinor?: number;
-    } = {
-      planVersion: params.planVersion,
-      supportedMajor: params.supportedMajor,
-    };
-    if (params.strictSameMinor !== undefined) {
-      versionParams.strictSameMinor = params.strictSameMinor;
-    }
-    if (params.supportedMinor !== undefined) {
-      versionParams.supportedMinor = params.supportedMinor;
-    }
-    verifyPlanVersionOrThrow(versionParams);
-  }
+export async function verifyPlanOrThrow(params: VerifyPlanRuntimeParams): Promise<void> {
+  verifyPlanAdmissionOrThrow({
+    planVersion: params.planVersion,
+    schemaVersion: params.schemaVersion,
+    runtime: params.runtime,
+  });
 
   await verifyPlanIdOrThrow({
     canonicalPlanCoreJson: params.canonicalPlanCoreJson,

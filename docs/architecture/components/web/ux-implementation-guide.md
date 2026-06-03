@@ -30,17 +30,22 @@ That means:
 
 - one persistent shell;
 - one active route-level work surface at a time;
-- optional left and right contextual panels;
+- no fixed left navigation rail inside the Canvas workbench;
+- no Canvas route command portal inside the persistent global top bar;
+- optional contextual panels, drawers, or overlays only when justified by
+  active context or explicit user pinning;
 - an optional bottom drawer for dense supporting context;
+- top menu and command palette discovery for global/workbench commands;
 - fast transitions between authoring, code generation, review, and monitoring
   surfaces;
 - explicit empty, loading, error, degraded, and read-only states.
 
-For open-data or public-data slices, the visual direction may diverge from the
-operator workbench. The named design direction for that slice is `Marquez`:
-editorial, curated, and explanatory rather than IDE-like. In frontend
+For public-data surfaces, the visual direction may diverge from the operator
+workbench. The named design direction for that slice is the Marquez visual
+system: editorial, curated, and explanatory rather than IDE-like. In frontend
 architecture docs, `Marquez` here is a design reference, not the OpenLineage
-backend product.
+backend product. It must not be applied to operator workbench routes such as
+Canvas, Runs, Code, Diff, Artifacts, Templates, Plugins, Admin, or Cost.
 
 ## Reuse Strategy
 
@@ -71,7 +76,8 @@ Every route-level workbench must fit this shell contract:
 
 ```mermaid
 flowchart LR
-  Nav["LeftNavigation"] --> Workbench["Active route-level workbench"]
+  Shell["Top shell menus and command palette"] --> Workbench["Active route-level workbench"]
+  Workbench --> Strip["Workbench view strip"]
   Workbench --> LeftPanel["Optional left panel"]
   Workbench --> Center["Primary surface"]
   Workbench --> RightPanel["Optional right panel"]
@@ -82,11 +88,12 @@ Implementation rules:
 
 1. Keep one persistent shell.
 2. Keep one active route-level workbench at a time.
-3. Use side panels for context, not as hidden second applications.
-4. Keep domain semantics in DVT adapters, not in third-party component objects.
-5. Reuse mature libraries for hard interaction problems before writing custom
+3. Do not introduce a fixed left navigation rail inside Canvas.
+4. Use side panels for context, not as hidden second applications.
+5. Keep domain semantics in DVT adapters, not in third-party component objects.
+6. Reuse mature libraries for hard interaction problems before writing custom
    versions.
-6. Treat the per-screen manuals and user stories as the acceptance contract for
+7. Treat the per-screen manuals and user stories as the acceptance contract for
    each route-level workbench.
 
 ## Ownership Model
@@ -97,7 +104,8 @@ Owns:
 
 - top bar;
 - health banner;
-- left navigation;
+- command/menu discovery, global navigation fallback, read-only workspace
+  context, and any remaining shell navigation compatibility surface;
 - route outlet;
 - bottom drawer visibility;
 - focus mode and global shell controls.
@@ -107,6 +115,7 @@ Does not own:
 - graph semantics;
 - run semantics;
 - diff semantics;
+- Canvas route command placement;
 - feature-local orchestration.
 
 ### Route-Level Workbenches
@@ -170,7 +179,7 @@ Primary tasks:
 
 ### Phase 2. Fix state and query ownership
 
-- decompose `appStore`;
+- keep state in named slices;
 - standardize TanStack Query boundaries and invalidation;
 - isolate mock-versus-API behavior behind services and capabilities.
 
@@ -228,7 +237,8 @@ Primary task:
 ### Phase 6. Separate open-data presentation from operator workbench
 
 - keep the workbench grammar for operator routes;
-- use `Marquez` only for public or explanatory open-data surfaces.
+- use the Marquez visual system only for public or explanatory public-data
+  surfaces.
 
 Primary task:
 
@@ -250,7 +260,9 @@ Done when:
 Done when:
 
 - explorer and inspector are optional and recoverable;
-- graph commands live in the toolbar;
+- graph commands live in the route-local toolbar and never in the persistent
+  global top bar;
+- first-canvas selection stays quiet until a canvas document exists;
 - run and plan handoff works without route confusion;
 - runtime overlays do not mutate graph truth.
 

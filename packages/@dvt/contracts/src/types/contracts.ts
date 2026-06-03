@@ -3,6 +3,9 @@ import type { $brand } from 'zod';
 import type { DbtProjectBundleRef } from './artifacts.js';
 
 /**
+ * Owned concern: declare shared serialized contract primitives and the active
+ * runtime-provider vocabulary consumed across package boundaries.
+ *
  * @file packages/@dvt/contracts/src/types/contracts.ts
  * @baseline ADR-0005: Contract Formalization Tooling
  * @baseline ADR-0006: Contract Tooling Governance
@@ -34,7 +37,11 @@ export type ContractPrimitiveBrandAssertions = [
   Assert<Sha256HexString extends NonBlankString ? true : false>,
 ];
 
-export type Provider = 'temporal' | 'conductor' | 'mock';
+export const RUNTIME_PROVIDER = {
+  temporal: 'temporal',
+} as const;
+export const RUNTIME_PROVIDER_VALUES = [RUNTIME_PROVIDER.temporal] as const;
+export type Provider = (typeof RUNTIME_PROVIDER_VALUES)[number];
 export type TransformationExecutor = 'postgres' | 'dbt';
 
 export type RunStatus =
@@ -164,7 +171,7 @@ export interface RunExecutionContext {
   tenantId: NonBlankString;
   projectId: NonBlankString;
   environmentId: NonBlankString;
-  targetAdapter: Exclude<Provider, 'mock'> | 'mock';
+  targetAdapter: Provider;
   createdAtIso: IsoUtcString;
   createdBy: NonBlankString;
   pluginContexts: Record<string, GenericPluginContext>;
@@ -175,7 +182,7 @@ export interface RunContext {
   projectId: NonBlankString;
   environmentId: NonBlankString;
   runId: NonBlankString;
-  targetAdapter: Exclude<Provider, 'mock'> | 'mock';
+  targetAdapter: Provider;
   runExecutionContextRef?: RunExecutionContextRef;
 }
 
@@ -213,28 +220,14 @@ export interface RecoverRunCommand {
   context: RunContext;
 }
 
-export type EngineRunRef =
-  | {
-      provider: 'temporal';
-      tenantId: NonBlankString;
-      namespace: NonBlankString;
-      workflowId: NonBlankString;
-      runId: NonBlankString;
-      taskQueue?: NonBlankString;
-    }
-  | {
-      provider: 'conductor';
-      tenantId: NonBlankString;
-      workflowId: NonBlankString;
-      runId: NonBlankString;
-      conductorUrl: NonBlankString;
-    }
-  | {
-      provider: 'mock';
-      tenantId: NonBlankString;
-      workflowId: NonBlankString;
-      runId: NonBlankString;
-    };
+export interface EngineRunRef {
+  provider: typeof RUNTIME_PROVIDER.temporal;
+  tenantId: NonBlankString;
+  namespace: NonBlankString;
+  workflowId: NonBlankString;
+  runId: NonBlankString;
+  taskQueue?: NonBlankString;
+}
 
 export type SignalType = 'PAUSE' | 'RESUME' | 'CANCEL';
 

@@ -1,16 +1,11 @@
+/** Owned concern: publish Code workbench file-loading posture into the route bootstrap contract. */
 import {
   createCompleteRouteBootstrapPresentation,
-  createErrorRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
   createPendingRouteBootstrapPresentation,
-  createPublishedRouteBootstrapHandle,
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapContract';
-
-export const CODE_ROUTE_ID = 'dbt.code';
-
-export const CODE_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
-  pendingDetail: 'Preparing Code route',
-});
+import { codeViewCopy, type CodeViewCopy } from './codeViewCopy';
 
 type CodeRouteBootstrapArgs = {
   isLoadingFileTree: boolean;
@@ -20,38 +15,35 @@ type CodeRouteBootstrapArgs = {
   filePreviewErrorMessage: string | null;
 };
 
-export function deriveCodeRouteBootstrapPresentation({
-  isLoadingFileTree,
-  fileTreeErrorMessage,
-  hasWorkspaceFiles,
-  isLoadingFilePreview,
-  filePreviewErrorMessage,
-}: CodeRouteBootstrapArgs): RouteBootstrapPresentation {
+export function deriveCodeRouteBootstrapPresentation(
+  {
+    isLoadingFileTree,
+    fileTreeErrorMessage,
+    hasWorkspaceFiles,
+    isLoadingFilePreview,
+    filePreviewErrorMessage,
+  }: CodeRouteBootstrapArgs,
+  copy: CodeViewCopy = codeViewCopy
+): RouteBootstrapPresentation {
   if (isLoadingFileTree) {
-    return createPendingRouteBootstrapPresentation(
-      'Loading workspace files for the code route'
-    );
+    return createPendingRouteBootstrapPresentation(copy.bootstrapLoadingFilesDetail);
   }
 
   if (fileTreeErrorMessage) {
-    return createErrorRouteBootstrapPresentation(fileTreeErrorMessage);
+    return createFailedRouteBootstrapPresentation(fileTreeErrorMessage);
   }
 
   if (!hasWorkspaceFiles) {
-    return createCompleteRouteBootstrapPresentation(
-      'Code route is ready with no workspace files'
-    );
+    return createCompleteRouteBootstrapPresentation(copy.bootstrapNoWorkspaceFilesDetail);
   }
 
   if (isLoadingFilePreview) {
-    return createPendingRouteBootstrapPresentation(
-      'Loading the initial file preview for the code route'
-    );
+    return createPendingRouteBootstrapPresentation(copy.bootstrapLoadingPreviewDetail);
   }
 
   if (filePreviewErrorMessage) {
-    return createErrorRouteBootstrapPresentation(filePreviewErrorMessage);
+    return createFailedRouteBootstrapPresentation(filePreviewErrorMessage);
   }
 
-  return createCompleteRouteBootstrapPresentation('Code route is ready');
+  return createCompleteRouteBootstrapPresentation(copy.bootstrapReadyDetail);
 }

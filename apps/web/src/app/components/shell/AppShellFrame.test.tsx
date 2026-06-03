@@ -6,6 +6,18 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { AppShellFrame } from './AppShellFrame';
 
+const PINNED_NAVIGATION_DISPOSITION = {
+  railMode: 'visible',
+  footerMode: 'pinned',
+  reason: 'global_route',
+} as const;
+
+const MENU_NAVIGATION_DISPOSITION = {
+  railMode: 'hidden',
+  footerMode: 'menu',
+  reason: 'workbench_route',
+} as const;
+
 describe('AppShellFrame', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -34,6 +46,7 @@ describe('AppShellFrame', () => {
           focusMode={false}
           healthBanner={<div data-testid="shell-banner">Shell banner</div>}
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
+          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
           showBottomDrawer
           topBar={<div data-testid="top-bar">Top bar</div>}
         >
@@ -71,6 +84,7 @@ describe('AppShellFrame', () => {
           focusMode
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
+          navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
           showBottomDrawer
           topBar={<div>Top bar</div>}
         >
@@ -88,5 +102,28 @@ describe('AppShellFrame', () => {
     expect(leftNavigation).toBeNull();
     expect(bottomDrawer).toBeNull();
     expect(outlet?.textContent).toContain('Route outlet');
+  });
+
+  it('hides permanent navigation when route posture uses menu navigation', async () => {
+    await act(async () => {
+      root.render(
+        <AppShellFrame
+          bottomDrawer={<div>Console drawer</div>}
+          focusMode={false}
+          healthBanner={<div>Shell banner</div>}
+          leftNavigation={<div>Left nav</div>}
+          navigationDisposition={MENU_NAVIGATION_DISPOSITION}
+          showBottomDrawer={false}
+          topBar={<div>Top bar</div>}
+        >
+          <div>Route outlet</div>
+        </AppShellFrame>
+      );
+    });
+
+    expect(container.querySelector('[data-slot="app-shell-left-navigation"]')).toBeNull();
+    expect(container.querySelector('[data-slot="app-shell-outlet"]')?.textContent).toContain(
+      'Route outlet'
+    );
   });
 });

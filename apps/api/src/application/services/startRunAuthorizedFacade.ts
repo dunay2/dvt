@@ -1,17 +1,23 @@
-import type { AuthorizationAction, RequestedScope } from '../../domain/auth/types.js';
+/**
+ * Owned concern: authenticate, authorize, and time the start-run application
+ * path before delegating to the bound use-case orchestrator.
+ */
+import type { StartRunCommand } from '@dvt/contracts';
+
+import type { CommandAuthorizationAction, RequestedScope } from '../ports/accessDecision.js';
 import type { IAuthenticator } from '../ports/auth.js';
-import type { StartRunCommand } from '../ports/startRunCommandContract.js';
 import {
   START_RUN_FACADE_RESULT_KIND,
   type StartRunFacadeExecutionResult,
-} from '../ports/startRunFacadeContract.js';
+} from '../ports/startRunFacadePort.js';
 import type {
   IStartRunLatencyTelemetry,
   StartRunLatencyOutcome,
 } from '../ports/StartRunSlaTelemetry.js';
-import type { IStartRunUseCase } from '../ports/startRunUseCaseContract.js';
+import type { IStartRunUseCase } from '../ports/startRunUseCasePort.js';
 
 import { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
+import { elapsedSlaSecondsSince } from './slaTiming.js';
 
 export class StartRunAuthorizedFacade {
   private static readonly NOOP_TELEMETRY: IStartRunLatencyTelemetry = {
@@ -29,9 +35,7 @@ export class StartRunAuthorizedFacade {
     token: string | undefined;
     requestId: string;
     command: StartRunCommand;
-    requestedScope: RequestedScope & {
-      readonly action: Extract<AuthorizationAction, { kind: 'command' }>;
-    };
+    requestedScope: RequestedScope<CommandAuthorizationAction>;
   }): Promise<StartRunFacadeExecutionResult> {
     const startedAtMs = Date.now();
     let outcome: StartRunLatencyOutcome = 'exception';
@@ -63,7 +67,7 @@ export class StartRunAuthorizedFacade {
       outcome = mapStartRunOutcome(result);
       return result;
     } finally {
-      this.telemetry.recordStartRunLatency(Date.now() - startedAtMs, outcome);
+      this.telemetry.recordStartRunLatency(elapsedSlaSecondsSince(startedAtMs), outcome);
     }
   }
 }

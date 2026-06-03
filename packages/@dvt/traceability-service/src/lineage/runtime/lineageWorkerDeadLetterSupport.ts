@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/traceability-service/src/lineage/runtime/lineageWorkerDeadLetterSupport.ts
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @baseline ADR-0033: Outbox Worker Sharding And Fencing Model
+ * @decision Manage lineage dead-letter counting, alerting, and replay as worker-owned recovery behavior
+ * @consequence Failed traceability delivery can be recovered without rewriting immutable run events
+ * @version 0.1.0
+ */
 import type { ILineageOutboxStore } from '../contracts.js';
 import { toLineageErrorLike } from '../errorSupport.js';
 import type { LineageWorkerRuntimeLogger } from '../LineageWorkerRuntime.js';

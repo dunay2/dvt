@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { queryKeys } from '../../queries/queryKeys';
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasViewCopy } from './copy';
 import {
@@ -134,7 +135,10 @@ describe('useCanvasExecutionActions plan preview core', () => {
             }),
           ]),
         }),
-        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
         context: expect.objectContaining({
           tenantId: 'tenant',
           projectId: 'project',
@@ -155,6 +159,229 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(harness.text('can-start-run')).toBe('false');
     expect(harness.text('plan-status-summary')).toBe(
       canvasViewCopy.planStatusPreviewRequiredMessage
+    );
+  });
+
+  it('builds a SQL-first preview directly from imported warehouse source metadata', async () => {
+    const canonicalNodes = buildCanonicalNodes().map((node) =>
+      node.id === 'source-node'
+        ? {
+            ...node,
+            name: 'Imported Orders',
+            pluginId: 'dvt.warehouse-source',
+            tags: ['source', 'erp'],
+            path: 'models/sources/src_erp.yml',
+            metadata: {
+              sourceName: 'warehouse_prod_analytics_erp',
+              tableName: 'orders',
+              database: 'analytics',
+              schema: 'erp',
+              columns: [{ name: 'id', type: 'number', nullable: false }],
+            },
+          }
+        : node
+    );
+    const plansService = createPlansServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes,
+      canonicalEdges: buildCanonicalEdges(),
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        graphSource: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: 'source-node',
+              stepTypeConfig: expect.objectContaining({
+                sourceSchema: 'erp',
+                sourceTable: 'orders',
+                sourceAlias: 'warehouse_prod_analytics_erp',
+              }),
+              metadata: expect.objectContaining({
+                displayName: 'Imported Orders',
+                sourceRef: 'models/sources/src_erp.yml',
+                tags: {
+                  pluginId: 'dvt.warehouse-source',
+                  role: 'input',
+                  kind: 'dvt:source',
+                },
+              }),
+            }),
+          ]),
+        }),
+      })
+    );
+  });
+
+  it('previews the plan with the active canvas execution environment when selected', async () => {
+    const plansService = createPlansServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      executionEnvironmentId: 'prod',
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context: expect.objectContaining({
+          tenantId: 'tenant',
+          projectId: 'project',
+          environmentId: 'prod',
+        }),
+      })
+    );
+  });
+
+  it('flushes transformation draft truth before planning so Plan matches the visible graph', async () => {
+    const plansService = createPlansServiceMock();
+    const flushedNodes = buildCanonicalNodes().map((node) =>
+      node.id === 'source-node'
+        ? {
+            ...node,
+            metadata: {
+              config: {
+                schema: 'raw',
+                table: 'payments',
+                alias: 'payments',
+              },
+            },
+          }
+        : node
+    );
+    const flushDraftForExecution = vi.fn(async () => ({
+      ok: true as const,
+      canonicalNodes: flushedNodes,
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: flushedNodes.map((node) => node.id),
+    }));
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      flushDraftForExecution,
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(flushDraftForExecution).toHaveBeenCalledTimes(1);
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        graphSource: expect.objectContaining({
+          nodes: expect.arrayContaining([
+            expect.objectContaining({
+              nodeId: 'source-node',
+              stepTypeConfig: expect.objectContaining({
+                sourceTable: 'payments',
+                sourceAlias: 'payments',
+              }),
+            }),
+          ]),
+        }),
+      })
+    );
+  });
+
+  it('keeps raw plan-preview transport failures out of user-facing feedback', async () => {
+    const plansService = {
+      ...createPlansServiceMock(),
+      previewPlan: vi.fn(async () => {
+        throw new Error('Request to /plans/preview failed (500)');
+      }),
+    };
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
+      canvasViewCopy.planUnableToCreateMessage
+    );
+    expect(harness.shellFeedback.error).not.toHaveBeenCalledWith(
+      'Request to /plans/preview failed (500)'
+    );
+  });
+
+  it('does not call previewPlan when the active canvas execution strategy is disabled', async () => {
+    const plansService = createPlansServiceMock();
+    const flushDraftForExecution = vi.fn(async () => ({
+      ok: true as const,
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: buildCanonicalNodes().map((node) => node.id),
+    }));
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      flushDraftForExecution,
+      executionStrategy: {
+        kind: 'not_executable',
+      },
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(flushDraftForExecution).not.toHaveBeenCalled();
+    expect(plansService.previewPlan).not.toHaveBeenCalled();
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
+      canvasViewCopy.canvasExecutionUnavailableMessage
+    );
+    expect(harness.text('can-start-run')).toBe('false');
+    expect(harness.text('plan-status-summary')).toBe(
+      canvasViewCopy.canvasExecutionUnavailableMessage
+    );
+  });
+
+  it('does not flush the draft when planning is not permitted', async () => {
+    const plansService = createPlansServiceMock();
+    const flushDraftForExecution = vi.fn(async () => ({
+      ok: true as const,
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: buildCanonicalNodes().map((node) => node.id),
+    }));
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+      flushDraftForExecution,
+      canPlan: false,
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(flushDraftForExecution).not.toHaveBeenCalled();
+    expect(plansService.previewPlan).not.toHaveBeenCalled();
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
+      canvasViewCopy.planPermissionDeniedMessage
     );
   });
 
@@ -195,7 +422,10 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
-        selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
         graphSource: expect.objectContaining({
           nodes: expect.arrayContaining([
             expect.objectContaining({ nodeId: 'source-node' }),
@@ -206,6 +436,36 @@ describe('useCanvasExecutionActions plan preview core', () => {
       })
     );
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
+  });
+
+  it('plans the full workspace workflow when selection is only a partial edit focus', async () => {
+    const canonicalNodes = buildCanonicalNodes();
+    const canonicalEdges = buildCanonicalEdges();
+    const plansService = createPlansServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes,
+      canonicalEdges,
+      selectedNodeIds: ['source-node'],
+      workspaceNodeIds: canonicalNodes.map((node) => node.id),
+    });
+    await harness.render();
+
+    expect(harness.text('can-plan-graph')).toBe('true');
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
+      })
+    );
   });
 
   it('stores a persisted preview result and enables Start Run after a valid plan', async () => {
@@ -229,5 +489,113 @@ describe('useCanvasExecutionActions plan preview core', () => {
     expect(harness.text('current-plan-sha')).toBe(persistedPlan.planRef?.sha256 ?? 'none');
     expect(harness.text('can-start-run')).toBe('true');
     expect(harness.text('plan-status-summary')).toBe(canvasViewCopy.planStatusPreviewReadyMessage);
+  });
+
+  it('invalidates workspace project-source queries after a successful graph artifact save', async () => {
+    const persistedPlan = buildPersistedPreviewPlan();
+    const plansService = createPlansServiceMock(persistedPlan);
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      initialPlan: null,
+      stateful: true,
+      canonicalNodes: buildCanonicalNodes(),
+      canonicalEdges: buildCanonicalEdges(),
+    });
+    await harness.render();
+
+    const invalidateQueries = vi.spyOn(harness.queryClient, 'invalidateQueries');
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.fileTree(),
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.fileContent('pipelines/sales_pipeline.yaml'),
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.workspace.artifacts(),
+    });
+  });
+
+  it('reuses the selected-subgraph preview proof when Start Run follows a partial preview', async () => {
+    const qualityNode: CanonicalNode = {
+      id: 'quality-node',
+      name: 'Quality check',
+      pluginId: 'dvt',
+      kind: 'dvt:test',
+      role: 'check' as const,
+      status: 'idle' as const,
+      tags: [],
+    };
+    const persistedSelectedPlan = {
+      ...buildPersistedPreviewPlan(),
+      steps: [
+        {
+          id: 'prepare-orders',
+          type: 'PREPARE_POSTGRES_TRANSFORM',
+          name: 'Prepare orders',
+          nodes: ['source-node'],
+          policies: {},
+        },
+        {
+          id: 'transform-orders',
+          type: 'POSTGRES_SQL_TRANSFORM',
+          name: 'Transform orders',
+          nodes: ['transform-node'],
+          policies: {},
+        },
+        {
+          id: 'capture-orders',
+          type: 'CAPTURE_MATERIALIZATION_EVIDENCE',
+          name: 'Capture evidence',
+          nodes: ['sink-node'],
+          policies: {},
+        },
+      ],
+    };
+    const plansService = createPlansServiceMock(persistedSelectedPlan);
+    const runsService = createRunsServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService,
+      initialPlan: null,
+      stateful: true,
+      canonicalNodes: [...buildCanonicalNodes(), qualityNode],
+      canonicalEdges: [
+        ...buildCanonicalEdges(),
+        {
+          id: 'edge-3',
+          sourceId: 'sink-node',
+          targetId: 'quality-node',
+          relation: 'lineage',
+        },
+      ],
+      selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+      workspaceNodeIds: ['source-node', 'transform-node', 'sink-node', 'quality-node'],
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+    await harness.clickStartRun();
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(runsService.startRun).toHaveBeenCalledTimes(1);
+    expect(runsService.startRun).toHaveBeenCalledWith({
+      planRef: persistedSelectedPlan.planRef,
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'env',
+        targetAdapter: 'temporal',
+      },
+      selection: {
+        mode: 'explicit',
+        nodeIds: ['source-node', 'transform-node', 'sink-node'],
+      },
+    });
   });
 });

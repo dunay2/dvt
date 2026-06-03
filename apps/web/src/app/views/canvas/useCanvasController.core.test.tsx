@@ -1,24 +1,70 @@
 import React, { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import {
+  buildRemoteDraftRecord,
+  createUnrenderedHarness,
+  createRenderedHarness,
+  createHarnessWithDraft,
+  setHarnessRemoteDraftRecord,
+} from './useCanvasController.draftLifecycle.test.support';
+import { projectCanvasHarnessDraftReadModel } from './useCanvasController.test.draftAuthoring';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
 describe('useCanvasController core', () => {
   let harness: ReturnType<typeof setupCanvasControllerHarness>;
 
   beforeEach(async () => {
-    harness = setupCanvasControllerHarness();
-    await harness.renderProbe();
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord({
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 100, y: 0 },
+        },
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      })
+    );
   });
 
   afterEach(() => {
     harness.cleanup();
   });
 
-  it('maps workspace graph into canonical explorer state and injects overlay decorations', () => {
+  it('maps protected draft semantics into canonical explorer state and injects overlay decorations', () => {
     const result = harness.getLatestResult();
-    expect(result?.explorerNodes).toEqual(harness.state.canonicalNodes);
-    expect(result?.edges).toEqual([{ id: 'edge_1', source: 'node_1', target: 'node_2' }]);
+    expect(result?.explorerNodes).toEqual([
+      expect.objectContaining({
+        id: 'node_1',
+        name: 'node_1',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        metadata: {
+          config: {
+            schema: 'raw',
+            table: 'node_1',
+            alias: 'node_1',
+          },
+        },
+      }),
+      expect.objectContaining({
+        id: 'node_2',
+        name: 'node_2',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        role: 'transform',
+        path: 'models/node_2.sql',
+        metadata: {
+          config: {
+            dialect: 'postgres',
+          },
+        },
+      }),
+    ]);
+    expect(result?.edges).toEqual([
+      { id: 'draft_edge_node_1_node_2', source: 'node_1', target: 'node_2' },
+    ]);
     expect(result?.nodesWithImpact).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -29,16 +75,33 @@ describe('useCanvasController core', () => {
     );
     expect(result?.impactOverlayEnabled).toBe(true);
     expect(harness.mocks.buildNodeDecorations).toHaveBeenCalledWith(
-      harness.state.canonicalNodes,
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'node_1',
+          kind: 'dvt:source',
+        }),
+        expect.objectContaining({
+          id: 'node_2',
+          kind: 'dvt:sql_transform',
+        }),
+      ]),
       [{ id: 'impact' }],
       null,
       { overlay: 'ctx' }
     );
   });
 
-  it('derives inspector node and forwards graph and execution hook results', () => {
+  it('derives inspector node from protected draft semantics and forwards graph and execution hook results', () => {
     const result = harness.getLatestResult();
-    expect(result?.inspectorNode).toEqual(harness.state.canonicalNodes[0]);
+    expect(result?.inspectorNode).toEqual(
+      expect.objectContaining({
+        id: 'node_1',
+        name: 'node_1',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+      })
+    );
     expect(result?.currentPlan).toEqual(harness.state.currentPlan);
     expect(result?.canvasAuthoringMode).toBe('transformation');
     expect(result?.transformationValidation).toEqual(
@@ -51,6 +114,8 @@ describe('useCanvasController core', () => {
     expect(result?.handlePlan).toBe(harness.state.executionActionsResult.handlePlan);
     expect(result?.handleStartRun).toBe(harness.state.executionActionsResult.handleStartRun);
     expect(result?.canStartRun).toBe(false);
+    expect(result?.canEditInspectorNode).toBe(true);
+    expect(typeof result?.applyInspectorNodeDraft).toBe('function');
     expect(result?.planStatusSummary).toBe('Preview required before running.');
     expect(result?.handleDrop).toBe(harness.state.graphHandlersResult.handleDrop);
     expect(result?.confirmEdgeCreation).toBe(harness.state.graphHandlersResult.confirmEdgeCreation);
@@ -62,6 +127,226 @@ describe('useCanvasController core', () => {
         sessionContext: harness.state.services.sessionContext,
         shellFeedback: harness.state.services.shellFeedback,
         onRunStarted: harness.state.navigationActionsResult.handleRunStarted,
+      })
+    );
+  });
+
+  it('selects graph strategy from the active canvas document kind', async () => {
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord({
+        canvas: {
+          kind: 'dbt',
+          title: 'dbt graph',
+        },
+        nodeIds: ['node_1', 'node_2'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+          node_2: { x: 100, y: 0 },
+        },
+        edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      })
+    );
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    expect(harness.mocks.findCanvasRuntimeRegistration).toHaveBeenCalledWith('dbt', undefined);
+    expect(harness.getLatestResult()?.canvasAuthoringMode).toBe('dbt');
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: true,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        graphStrategy: expect.objectContaining({
+          id: 'dbt',
+        }),
+      })
+    );
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canPlan: false,
+        canRun: false,
+      })
+    );
+  });
+
+  it('keeps first-canvas creation available while graph mutation waits for a typed document', async () => {
+    harness.cleanup();
+    harness = await createRenderedHarness();
+
+    expect(harness.getLatestResult()?.canvasDocument).toBeNull();
+    expect(harness.getLatestResult()?.canCreateCanvasDocument).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+  });
+
+  it('keeps first-canvas creation available from draft persistence when graph edits are denied', async () => {
+    harness.cleanup();
+    harness = createUnrenderedHarness();
+    const storeState = harness.state.store as unknown as {
+      userPermissions: {
+        canPlan: boolean;
+        canRun: boolean;
+        canEditEdges: boolean;
+        canPersistGraphDraft: boolean;
+        canManagePlugins: boolean;
+        canManageRBAC: boolean;
+      };
+    };
+    storeState.userPermissions = {
+      ...storeState.userPermissions,
+      canEditEdges: false,
+      canPersistGraphDraft: true,
+    };
+
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canvasDocument).toBeNull();
+    expect(harness.getLatestResult()?.canCreateCanvasDocument).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+  });
+
+  it('routes unsupported canvas kinds through the runtime policy fail-closed posture', async () => {
+    setHarnessRemoteDraftRecord(
+      harness,
+      buildRemoteDraftRecord({
+        canvas: {
+          kind: 'retired-canvas-kind',
+          title: 'retired graph',
+        },
+        nodeIds: ['node_1'],
+        nodePositions: {
+          node_1: { x: 0, y: 0 },
+        },
+        edges: [],
+      })
+    );
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(false);
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        graphStrategy: null,
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        executionStrategy: null,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+  });
+
+  it('gates source import when runtime capabilities disable the source import contribution', async () => {
+    harness.mocks.useCapabilitiesQuery.mockReturnValue({
+      data: {
+        apiVersion: '0.1.0',
+        minFrontendVersion: '0.1.0',
+        plugins: {
+          dbt: {
+            available: false,
+            reason: 'disabled for workspace',
+          },
+        },
+      },
+    });
+    harness.mocks.getSourceImportContributions.mockReturnValue([]);
+
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
+  });
+
+  it('applies draft access posture before exposing graph and execution commands', async () => {
+    const projectedRemoteDraft = projectCanvasHarnessDraftReadModel(
+      harness.state.remoteDraftRecord
+    );
+
+    harness.state.graphDraftQueryData = {
+      ...projectedRemoteDraft,
+      accessMode: 'read_only',
+      capabilityReason: 'write_denied',
+    };
+
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.draftAccessPosture.kind).toBe('read_only');
+    expect(harness.getLatestResult()?.draftToolbarState.label).toBe('Read-only draft');
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+        canPlan: false,
+        canRun: false,
+      })
+    );
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
+    expect(harness.getLatestResult()?.canEditInspectorNode).toBe(false);
+    expect(harness.getLatestResult()?.canStartRun).toBe(false);
+    expect(harness.mocks.useCanvasExecutionActions).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canPlan: false,
+        canRun: false,
+      })
+    );
+  });
+
+  it('applies inspector-authored node details back into the authoritative route projection', async () => {
+    await act(async () => {
+      harness.getLatestResult()?.applyInspectorNodeDraft({
+        name: 'orders_source_renamed',
+        description: 'Edited through the route-owned inspector',
+        tags: ['authoring', 'reviewed'],
+      });
+    });
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.inspectorNode).toEqual(
+      expect.objectContaining({
+        id: 'node_1',
+        name: 'orders_source_renamed',
+        description: 'Edited through the route-owned inspector',
+      })
+    );
+    expect(harness.getLatestResult()?.explorerNodes[0]).toEqual(
+      expect.objectContaining({
+        id: 'node_1',
+        name: 'orders_source_renamed',
+        description: 'Edited through the route-owned inspector',
       })
     );
   });
@@ -100,9 +385,10 @@ describe('useCanvasController core', () => {
     await harness.renderProbe();
 
     const latestBuildNodesCall = harness.mocks.buildNodesWithImpact.mock.calls.at(-1)?.[0] as
-      | { handlers?: { onRemoveNode?: unknown } }
+      | { handlers?: { onDuplicateNode?: unknown; onRemoveNode?: unknown } }
       | undefined;
 
+    expect(latestBuildNodesCall?.handlers?.onDuplicateNode).toBeUndefined();
     expect(latestBuildNodesCall?.handlers?.onRemoveNode).toBeUndefined();
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -111,7 +397,7 @@ describe('useCanvasController core', () => {
     );
   });
 
-  it('invalidates the graph query and prepares focus when imported sources complete', async () => {
+  it('invalidates the protected draft query and prepares focus when imported sources complete', async () => {
     const storeState = harness.state.store as Record<string, unknown>;
     storeState.inspectorPanelVisible = false;
     await harness.renderProbe();
@@ -140,7 +426,7 @@ describe('useCanvasController core', () => {
     expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith('src_erp_orders');
     expect(harness.state.store.showInspectorPanel).toHaveBeenCalledTimes(1);
     expect(harness.state.queryClient.invalidateQueries).toHaveBeenCalledWith({
-      queryKey: ['workspace', 'graph', 'tenant-a::project-a::dev'],
+      queryKey: ['workspace', 'graph-draft', 'tenant-a::project-a::dev'],
     });
     expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([
       'src_erp_orders',

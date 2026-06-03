@@ -1,8 +1,8 @@
 ---
 title: Closeout - TF-C4 protected workspace graph-draft boundary
-status: Review
+status: Done
 owner: API / Runtime / Docs
-last_reviewed: 2026-04-18
+last_reviewed: 2026-05-06
 planning_type: closeout
 slice: TF-C4-workspace-graph-draft-protected-boundary
 ---
@@ -70,8 +70,10 @@ This slice stayed SRP-aligned by separating the boundary into five concerns:
 
 ## Residuals
 
-- The slice is backend-complete for the protected draft boundary, but Canvas
-  adoption still belongs to `TF-E2-A`.
+- 2026-05-06 review update: the Lane C protected boundary is accepted as
+  closed. `TF-A2` now freezes `WorkspaceGraphDraft.v1` around
+  `WorkspaceGraphAuthoringDraft`, and Lane E `TF-E2-A` has adopted the protected
+  authoring-draft boundary in Canvas.
 - Web adoption is now splitting into two seams:
   - a protected draft authoring port that preserves contract-native read/write
     outcomes
@@ -96,3 +98,11 @@ This slice stayed SRP-aligned by separating the boundary into five concerns:
 - The protected-runtime integration lane is now documented and maintained as a
   seam-split suite under `apps/api/test/integration/protectedRuntime.integration.*.ts`;
   the executable entrypoint stays stable at `protectedRuntime.integration.test.ts`.
+
+## 2026-05-06 Review Acceptance
+
+Lane C review reconciliation accepted this closeout as closure evidence for
+`TF-C4`. The prior blocker is resolved because the active contract persists
+editable authoring-draft truth and keeps `DesignGraphDraft` as a derived
+preview/run artifact, while the protected API/store path remains the single
+tenant-scoped draft read/write boundary.

@@ -17,6 +17,7 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:list'
     assertedProjectIds: ['proj-1'],
   },
   scope: {
+    resource: 'environment',
     tenantId: TenantId.unsafe('tenant-a'),
     projectId: ProjectId.unsafe('proj-1'),
     environmentId: EnvironmentId.unsafe('env-1'),
@@ -40,8 +41,9 @@ describe('ListRunsUseCase', () => {
             planVersion: '1.0',
             logicalAttemptId: 1,
             providerRef: {
-              provider: 'mock' as const,
+              provider: 'temporal' as const,
               tenantId: 'tenant-a',
+              namespace: 'default',
               workflowId: 'wf-1',
               runId: 'provider-run-1',
             },
@@ -56,8 +58,9 @@ describe('ListRunsUseCase', () => {
             planVersion: '1.0',
             logicalAttemptId: 1,
             providerRef: {
-              provider: 'mock' as const,
+              provider: 'temporal' as const,
               tenantId: 'tenant-a',
+              namespace: 'default',
               workflowId: 'wf-2',
               runId: 'provider-run-2',
             },
@@ -81,7 +84,7 @@ describe('ListRunsUseCase', () => {
           planId: 'plan-1',
           planVersion: '1.0',
           logicalAttemptId: 1,
-          provider: 'mock',
+          provider: 'temporal',
           createdAt: '2026-03-19T00:00:00Z',
           status: 'FAILED',
         },

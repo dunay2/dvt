@@ -17,7 +17,7 @@ blocked_by:
   - board-008
   - board-014
 source_reviews:
-  - ../../../../reviews/dvt_planner_technical_vision.md
+  - ../../../archive/reviews/dvt-planner-technical-vision.md
 ---
 
 # Board Story

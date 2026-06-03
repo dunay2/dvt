@@ -2,7 +2,7 @@
 title: Test Architecture
 status: Active
 owner: engineering
-last_reviewed: 2026-03-31
+last_reviewed: 2026-05-20
 ---
 
 # Test Architecture
@@ -131,6 +131,74 @@ Shared frontend support must also follow two stability rules:
 
 Do not place capability-specific DTO or snapshot builders in shared frontend
 support.
+
+## @dvt/web Vitest suite partition
+
+`apps/web` owns a single Vitest suite catalog in
+[`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts). The package
+keeps `pnpm --filter @dvt/web test` as the full suite and adds smaller lanes
+for development and CI:
+
+- `test:unit`: `*.test.ts`, excluding architecture tests
+- `test:presentation`: `*.test.tsx`, excluding architecture tests
+- `test:architecture`: `*.architecture.test.{ts,tsx}`
+- `test:canvas`: overlapping Canvas focus lane for `Canvas*.test.tsx` and
+  `views/canvas/**`
+- `test:canvas-unit`: Canvas non-architecture `.ts` focus lane
+- `test:canvas-presentation`: Canvas non-architecture `.tsx` focus lane
+- `test:canvas-architecture`: Canvas architecture focus lane
+- `test:monaco`: Monaco focus lane for Code editing, Artifacts read-only
+  viewing, and Diff review architecture tests
+- `test:changed`: changed-file router that selects the smallest safe suite
+  command from the suite catalog for local use and ordinary web pull requests
+- `test:ci`: unit, presentation, then architecture
+
+Each public web suite command runs `test:deps` before its raw Vitest delegate.
+That keeps the split commands aligned with the package dependency-build
+contract instead of relying on package-manager lifecycle hooks for custom script
+names. `test:ci` runs `test:deps` once, then calls the internal `*:run`
+delegates in catalog order.
+
+Every web Vitest file must belong to exactly one primary suite: `unit`,
+`presentation`, or `architecture`. Focus lanes such as `test:canvas` may
+overlap with a primary suite, but they do not define ownership. The semantic
+guard is
+[`apps/web/src/testing/vitestSuites.architecture.test.ts`](../../apps/web/src/testing/vitestSuites.architecture.test.ts).
+That guard also verifies that package scripts, suite config files, and the Test
+Suite workflow stay wired to the catalog instead of carrying parallel suite
+definitions.
+
+Canvas route-level presentation tests must stay partitioned by responsibility.
+Route-level `Canvas.*.test.tsx` presentation files have a target maximum of
+eight cases and 350 lines. Shared route helpers belong in
+`Canvas.test.support.tsx` only after they have at least two real consumers.
+
+Canvas startup and draft-recovery architecture tests are split by semantics:
+
+- `canvasStartupBootstrapPublication.architecture.test.ts`
+- `canvasDraftRecoveryBoundary.architecture.test.ts`
+- `canvasRoutePosturePriority.architecture.test.ts`
+
+Do not recreate `Canvas.routeStates.test.tsx` or
+`canvasStartupAndDraftRecovery.architecture.test.ts` as catch-all files.
+
+Changed-file routing is feedback infrastructure for local loops and ordinary
+web pull requests. The router follows these semantic rules:
+
+- suite catalog, config, and frontend test-governance documentation changes run
+  the architecture suite;
+- Canvas-scoped source or test changes run the narrow Canvas focus suite that
+  matches the file type;
+- Monaco-scoped source or test changes run the Monaco focus suite so local
+  editor/viewer work does not execute the full presentation lane;
+- non-Canvas `.tsx` changes run the presentation suite;
+- non-Canvas `.ts` changes run the unit suite;
+- non-web changes skip cleanly.
+
+The changed-file router must not replace `test:ci` for pushes to `main`,
+manual workflow runs, or root-build-sensitive pull requests. It reduces local
+and ordinary pull-request feedback-loop size while the full primary-suite gate
+remains available for broad CI routes.
 
 ## Backend and worker guidance
 

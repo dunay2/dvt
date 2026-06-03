@@ -1,0 +1,100 @@
+---
+id: R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT
+title: Protected runtime rail catalog documentation source of truth is closed
+status: Closed
+date: 2026-05-03
+owners:
+  - dvt-api
+  - architecture
+severity: Medium
+probability: Medium
+---
+summary: >
+  AR-C10 closes the protected runtime command/query rail catalog, negative evidence mapping,
+  explicit compatibility posture, and source-of-truth documentation posture. The executable catalog
+  is the only row-level rail truth. Component and planning docs summarize and link to that catalog
+  instead of carrying a second manual route matrix.
+
+root_cause: >
+  The closure slice prioritized making the protected runtime rails executable and mechanically
+  testable. The follow-up closure reduced duplicated documentation truth, added architecture-test
+  coverage for the source-of-truth rule, removed ambiguous canonical-plan authorization wording, and
+  documented the signal parser constants facade as intentional.
+
+debt_items:
+  - id: AR-C10-D-01
+    status: Closed
+    title: Generate or reduce the protected runtime route matrix documentation
+    description: >
+      Keep `apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts` as the only
+      authoritative rail matrix. Either generate the component-doc table from that catalog or reduce
+      the component doc to a summary that links to the executable catalog instead of duplicating
+      every row.
+    command_query_rail: ClassifyProtectedRuntimeRouteRails
+    bounded_context: Protected runtime route governance
+    affected_surfaces:
+      - apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+      - apps/api/docs/protected-runtime-route-group-component.md
+      - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/protected-runtime-rail-closure-plan-20260503.md
+    required_tests:
+      - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+      - pnpm docs:feature-mechanization:implementation
+  - id: AR-C10-D-02
+    status: Closed
+    title: Remove ambiguous compatibility wording from canonical planner rails
+    description: >
+      `PreviewExecutablePlan`, `CompileExecutablePlan`, and `ImportExecutablePlan` are classified as
+      canonical rails, but their authorization text still says `run:start compatibility
+      authorization`. The follow-up must either rename that wording to canonical authorization or
+      model the compatibility as a first-class posture with its own owner and removal rule.
+    command_query_rail: ClassifyProtectedRuntimeRouteRails
+    bounded_context: Protected runtime route governance
+    affected_surfaces:
+      - apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts
+      - apps/api/docs/protected-runtime-route-group-component.md
+    required_tests:
+      - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - id: AR-C10-D-03
+    status: Closed
+    title: Decide whether the signal parser constants facade is intentional
+    description: >
+      `signalRunRouteParser.constants.ts` is a thin re-export facade over authorization and
+      validation constants. It is not a generic barrel, but the follow-up must either document it as
+      an intentional parser facade or remove it so imports point directly at the owning constants.
+    command_query_rail: SignalRun
+    bounded_context: Runtime control
+    affected_surfaces:
+      - apps/api/src/entrypoints/http/signalRunRouteParser.constants.ts
+      - apps/api/src/entrypoints/http/signalRunRouteParser.ts
+      - apps/api/test/entrypoints/http/signalRunRouteParser.test.ts
+    required_tests:
+      - apps/api/test/entrypoints/http/signalRunRouteParser.test.ts
+      - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+
+acceptance:
+  - '`PROTECTED_RUNTIME_COMMAND_QUERY_RAILS` is the only authoritative protected runtime rail
+    matrix.'
+  - 'Component and planning docs cannot drift from the executable catalog without a failing guard.'
+  - >
+    Canonical rails no longer use ambiguous compatibility wording unless that compatibility is
+    explicitly classified.
+  - 'The signal parser constants facade is either documented as intentional or removed.'
+  - 'No protected runtime rail accepts legacy behavior as canonical behavior.'
+
+closure_evidence:
+  - docs/architecture/components/api/protected-runtime-command-query-rail-design.md
+  - apps/api/docs/protected-runtime-route-group-component.md
+  - apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts
+  - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - docs/planning/closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md
+  - pnpm --filter dvt-api exec vitest run
+    test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
+  - pnpm verify:prepush
+
+monitoring:
+  cadence: per PR touching protected runtime route governance
+  signals:
+    - 'apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts fails on
+      duplicated or stale protected runtime rail documentation'
+    - 'docs:feature-mechanization:implementation keeps AR-C10 implementation surfaces constrained'

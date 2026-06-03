@@ -1,0 +1,133 @@
+---
+title: Plan store records v1
+status: Active
+owner: docs
+last_reviewed: 2026-05-09
+---
+
+# Plan store records v1
+
+## Purpose
+
+`S08-2` introduces the persisted planner-record family without moving
+plan-storage behavior into the shared kernel.
+
+These records are serializable planner-domain artifacts published from
+`@dvt/contracts`. They define what may be stored, validated, and linked, while
+runtime behavior ports remain owned by `@dvt/artifacts` under `ADR-0043`.
+
+## Normative sources
+
+- `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.schema.json`
+- `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.schema.json`
+- `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json`
+- `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts`
+- `packages/@dvt/contracts/src/schemas.ts`
+- `packages/@dvt/contracts/src/validation.ts`
+
+## Record family
+
+### `PlanRecord`
+
+`PlanRecord` is the single persisted canonical plan artifact. It stores the
+persisted canonical `ExecutionPlan` JSON in `canonicalPlanJson` and repeats
+query keys at the top level for storage and lookup.
+
+This field is distinct from planner-side `canonicalPlanCoreJson`, which is only
+`JCS(planCore)` used to prove `planId`.
+
+Invariants:
+
+- `canonicalPlanJson` must parse as the canonical `ExecutionPlan`.
+- `canonicalPlanJson` must equal `JCS(canonical ExecutionPlan)`.
+- `canonicalHash` must equal `sha256(canonicalPlanJson)`.
+- top-level `tenantId`, `projectId`, and `environmentId` must match
+  `canonicalPlanJson.metadata.ownership` exactly.
+- top-level `planId`, `planVersion`, `schemaVersion`, and `contractVersion`
+  must match `canonicalPlanJson.metadata` exactly.
+- `schemaVersion` and `contractVersion` inherit validity from the canonical
+  `ExecutionPlan`; arbitrary planner-record-only values are not allowed.
+- `state` is explicit:
+  - `ACTIVE`
+  - `SUPERSEDED`
+  - `ARCHIVED`
+- `archivedAtIso` is required only when `state = 'ARCHIVED'`.
+- tenant-owned record identity is `PlanStoreScope + planId`; `planId` alone is
+  only the content artifact identity.
+
+JSON Schema vs runtime parser:
+
+- `PlanRecord.v1.schema.json` enforces structural shape only.
+- semantic invariants such as
+  `canonicalHash === sha256(canonicalPlanJson)` and
+  `canonicalPlanJson === JCS(canonical ExecutionPlan)` are enforced by the
+  runtime parser in `schemas.ts` / `validation.ts`, not by JSON Schema alone.
+
+### `PlanExecutabilityRecord`
+
+`PlanExecutabilityRecord` captures adapter-scoped executability, not global plan
+truth.
+
+Invariants:
+
+- executability is keyed by `PlanStoreScope + planId + adapterId`.
+- `state` is explicit:
+  - `PENDING` with no validation timestamp and no rejection report
+  - `VALID` with `validatedAtIso`
+  - `INVALID` with both `validatedAtIso` and `rejectionReport`
+- `rejectionReport.code` must use the canonical
+  `ExecutabilityRejectionCode` vocabulary from
+  `PlanExecutabilityValidation.v1.ts`.
+
+### `PlanAdmissionLink`
+
+`PlanAdmissionLink` models admission as a relation between a persisted plan and
+the run that consumed it.
+
+Invariants:
+
+- admission is represented as a separate link record, not as mutable plan state
+- a link records `PlanStoreScope`, `planId`, `runId`, `adapterId`, and
+  `admittedAtIso`
+
+### `StoredPlanArtifactValidationRecord`
+
+`StoredPlanArtifactValidationRecord` captures validation metadata for the
+tenant-neutral stored-plan artifact blob. It is not a plan-record lifecycle
+facade and it does not own product commands or queries.
+
+Invariants:
+
+- artifact validation state is limited to `PENDING_VALIDATION`, `VALID`, or
+  `INVALID`;
+- runtime materialization is permitted only after scoped record lookup and
+  `VALID` artifact state;
+- rejection reports are audit metadata for invalid artifacts;
+- no active contract named `PlanValidationLifecycle.v1` exists in S08.
+
+## Boundary rules
+
+- `ADR-0042` remains the identity source: the planner-emitted canonical
+  `ExecutionPlan` is the system of record.
+- `ADR-0041` requires explicit state variants instead of overloaded optional
+  fields.
+- `ADR-0043` keeps serializable plan records in planner contracts while moving
+  plan-storage behavior ownership to `@dvt/artifacts`.
+- `ADR-0054` narrows tenant-owned record identity to scoped records:
+  `PlanStoreScope`, `ScopedPlanId`, and `ScopedPlanRef`.
+- stored-plan artifact validation vocabulary uses
+  `StoredPlanArtifactValidationRecord`; lifecycle-named compatibility contracts
+  are retired.
+
+## Related
+
+- [Planner Contracts Index](./index.md)
+- [ADR-0041](../../adr/ADR-0041-global-domain-state-model-and-boundary-contracts.md)
+- [ADR-0042](../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)
+- [ADR-0043](../../adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md)
+- [ADR-0054](../../adr/ADR-0054-plan-store-scoped-record-identity.md)
+- [S08 execution plan](../../planning/proposals/mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)

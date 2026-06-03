@@ -1,8 +1,12 @@
 #!/usr/bin/env node
+/** Owned concern: validate QA artifact posture for files in the local changed-file set. */
 const { execFileSync } = require('child_process');
 const fs = require('node:fs');
+const path = require('node:path');
+const { listLocalChangedFiles } = require('./git-local-changes.cjs');
 
 const WINDOWS_GIT_PATH = 'C:\\Program Files\\Git\\cmd\\git.exe';
+const repoRoot = path.resolve(__dirname, '..');
 
 function resolveGitBinary() {
   if (process.env.GIT_BINARY) return process.env.GIT_BINARY;
@@ -14,56 +18,16 @@ function resolveGitBinary() {
 
 const gitBinary = resolveGitBinary();
 
-function parseChangedFiles(output) {
-  return output
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-function runGit(args) {
-  return execFileSync(gitBinary, args, {
+function runGitLines(args) {
+  const output = execFileSync(gitBinary, args, {
+    cwd: repoRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
   });
-}
-
-function hasUpstream() {
-  try {
-    runGit(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function hasRef(ref) {
-  try {
-    runGit(['rev-parse', '--verify', ref]);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function resolveDiffRanges() {
-  const commands = [];
-  if (hasRef('origin/main')) commands.push('origin/main..HEAD');
-  if (hasUpstream()) commands.push('@{u}..HEAD');
-  commands.push('HEAD~1..HEAD');
-  return commands;
-}
-
-function gitChangedFiles() {
-  for (const range of resolveDiffRanges()) {
-    try {
-      const files = parseChangedFiles(runGit(['diff', '--name-only', range]));
-      if (files.length > 0) return files;
-    } catch {
-      // Try the next diff baseline.
-    }
-  }
-  return [];
+  return output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 function isGovernedQaArtifactPath(filePath) {
@@ -125,7 +89,7 @@ function validateArtifact(filePath, raw) {
 }
 
 function main() {
-  const changedFiles = gitChangedFiles();
+  const changedFiles = listLocalChangedFiles({ repoRootPath: repoRoot, runGitLines });
   if (changedFiles.length === 0) {
     console.log('[qa:artifact:check] No changed files detected. Skipping.');
     process.exit(0);

@@ -1,3 +1,10 @@
+/**
+ * @file packages/@dvt/traceability-service/src/lineage/mapper/mapCompiledCodeResolutionWarning.ts
+ * @baseline ADR-0032: compiledCodeRef Ownership
+ * @decision Map compiled-code resolution failures into stable lineage warnings
+ * @consequence OpenLineage output can degrade gracefully while preserving storage URI and cause diagnostics
+ * @version 0.1.0
+ */
 import type { CompiledCodeRef } from '@dvt/contracts';
 
 import {

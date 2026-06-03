@@ -46,7 +46,7 @@ function makeContext(runId = 'r1'): RunContext {
 function makeTemporalAdapter(): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_plan: unknown, _planRef: PlanRef, ctx) {
+    async startRun(_planRef: PlanRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -251,7 +251,7 @@ function createStatusSignalObservability(spy: {
 function makeAdapterWithLookup(knownRunIds: Set<string>, cancelLog?: string[]): IProviderAdapter {
   return {
     provider: 'temporal',
-    async startRun(_plan: unknown, _planRef: PlanRef, ctx) {
+    async startRun(_planRef: PlanRef, ctx) {
       return {
         provider: 'temporal',
         tenantId: ctx.tenantId,
@@ -286,55 +286,6 @@ function makeAdapterWithFailingCancel(knownRunIds: Set<string>): IProviderAdapte
     ...base,
     async cancelRun() {
       throw new Error('adapter unavailable');
-    },
-  };
-}
-
-// Module-scoped helpers to keep tests small and satisfy CodeScene rules
-function makeTemporalAdapterWithLog(cancelLog: string[]): IProviderAdapter {
-  return {
-    provider: 'temporal',
-    async startRun(_plan, _planRef, ctx) {
-      return {
-        provider: 'temporal',
-        tenantId: ctx.tenantId,
-        workflowId: `wf-${ctx.runId}`,
-        runId: ctx.runId,
-      } as EngineRunRef;
-    },
-    async cancelRun(runRef) {
-      cancelLog.push(runRef.runId);
-    },
-    async getProviderStatusView() {
-      return { provider: 'mock', providerStatus: 'RUNNING' } as any;
-    },
-    async signal() {},
-    async lookupRunRef(runId, tenantId) {
-      return { provider: 'temporal', tenantId, workflowId: `wf-${runId}`, runId } as EngineRunRef;
-    },
-  };
-}
-
-function makeMockAdapterWithLog(cancelLog: string[]): IProviderAdapter {
-  return {
-    provider: 'mock',
-    async startRun(_plan, _planRef, ctx) {
-      return {
-        provider: 'mock',
-        tenantId: ctx.tenantId,
-        workflowId: `wf-${ctx.runId}`,
-        runId: ctx.runId,
-      } as EngineRunRef;
-    },
-    async cancelRun(runRef) {
-      cancelLog.push(runRef.runId);
-    },
-    async getProviderStatusView() {
-      return { provider: 'temporal', providerStatus: 'RUNNING' } as any;
-    },
-    async signal() {},
-    async lookupRunRef(runId, tenantId) {
-      return { provider: 'mock', tenantId, workflowId: `wf-${runId}`, runId } as EngineRunRef;
     },
   };
 }
@@ -400,6 +351,10 @@ function makePendingIntent(
     provider,
     createdAt: '1970-01-01T00:00:00.000Z',
   });
+}
+
+function intentRef(intentId: string, tenantId = 't'): { tenantId: string; intentId: string } {
+  return { tenantId, intentId };
 }
 
 // Helper: creates a run in CANCELLING state (RUNNING + cancelling = true).
@@ -712,7 +667,7 @@ describe('RunMaintenanceService', () => {
       });
 
       await makePendingIntent(intentStore, 'dispatched-bootstrapped-metric', 'i-d-metric');
-      await intentStore.markDispatched('i-d-metric', {
+      await intentStore.markDispatched(intentRef('i-d-metric'), {
         provider: 'temporal',
         tenantId: 't',
         namespace: 'default',
@@ -765,7 +720,7 @@ describe('RunMaintenanceService', () => {
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual(['i-p1']);
-      expect((await intentStore.getIntent('i-p1'))?.status).toBe('PENDING');
+      expect((await intentStore.getIntent(intentRef('i-p1')))?.status).toBe('PENDING');
     });
 
     it('expires PENDING intent when lookupRunRef returns null (no workflow on provider)', async () => {
@@ -778,7 +733,7 @@ describe('RunMaintenanceService', () => {
       expect(result.resolved).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual([]);
-      expect((await intentStore.getIntent('i-p2'))?.status).toBe('EXPIRED');
+      expect((await intentStore.getIntent(intentRef('i-p2')))?.status).toBe('EXPIRED');
     });
 
     it('cancels orphaned workflow and expires PENDING intent when lookupRunRef finds a workflow', async () => {
@@ -795,7 +750,7 @@ describe('RunMaintenanceService', () => {
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('run-with-wf-1');
-      expect((await intentStore.getIntent('i-p3'))?.status).toBe('EXPIRED');
+      expect((await intentStore.getIntent(intentRef('i-p3')))?.status).toBe('EXPIRED');
     });
 
     it('keeps PENDING intent and reports cancelFailed when workflow cancel throws', async () => {
@@ -811,7 +766,7 @@ describe('RunMaintenanceService', () => {
       expect(result.resolved).toEqual([]);
       expect(result.deferred).toEqual([]);
       // Intent stays PENDING for retry on next sweep (INV-INTENT-011)
-      expect((await intentStore.getIntent('i-p4'))?.status).toBe('PENDING');
+      expect((await intentStore.getIntent(intentRef('i-p4')))?.status).toBe('PENDING');
     });
 
     it('keeps PENDING intent deferred when run is bootstrapped but provider workflow is missing', async () => {
@@ -847,7 +802,7 @@ describe('RunMaintenanceService', () => {
       expect(result.cancelled).toEqual([]);
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual(['i-p5']);
-      expect((await intentStore.getIntent('i-p5'))?.status).toBe('PENDING');
+      expect((await intentStore.getIntent(intentRef('i-p5')))?.status).toBe('PENDING');
     });
 
     it('classifies DISPATCHED bootstrapped intent as resolved without cancelling', async () => {
@@ -857,7 +812,7 @@ describe('RunMaintenanceService', () => {
       );
 
       await makePendingIntent(intentStore, 'dispatched-bootstrapped-1', 'i-d1');
-      await intentStore.markDispatched('i-d1', {
+      await intentStore.markDispatched(intentRef('i-d1'), {
         provider: 'temporal',
         tenantId: 't',
         namespace: 'default',
@@ -894,7 +849,7 @@ describe('RunMaintenanceService', () => {
       expect(result.cancelled).toEqual([]);
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toHaveLength(0); // no actual workflow cancel
-      expect((await intentStore.getIntent('i-d1'))?.status).toBe('RESOLVED');
+      expect((await intentStore.getIntent(intentRef('i-d1')))?.status).toBe('RESOLVED');
     });
 
     it('cancels orphaned workflow for DISPATCHED intent when run was never bootstrapped', async () => {
@@ -904,7 +859,7 @@ describe('RunMaintenanceService', () => {
       );
 
       await makePendingIntent(intentStore, 'dispatched-orphan-1', 'i-d2');
-      await intentStore.markDispatched('i-d2', {
+      await intentStore.markDispatched(intentRef('i-d2'), {
         provider: 'temporal',
         tenantId: 't',
         namespace: 'default',
@@ -918,14 +873,14 @@ describe('RunMaintenanceService', () => {
       expect(result.cancelled).toContain('i-d2');
       expect(result.deferred).toEqual([]);
       expect(cancelLog).toContain('dispatched-orphan-1');
-      expect((await intentStore.getIntent('i-d2'))?.status).toBe('RESOLVED');
+      expect((await intentStore.getIntent(intentRef('i-d2')))?.status).toBe('RESOLVED');
     });
 
     it('reports cancelFailed for DISPATCHED intent when cancel throws', async () => {
       const { service, intentStore } = createFixtureWith(makeAdapterWithFailingCancel(new Set()));
 
       await makePendingIntent(intentStore, 'dispatched-fail-1', 'i-d3');
-      await intentStore.markDispatched('i-d3', {
+      await intentStore.markDispatched(intentRef('i-d3'), {
         provider: 'temporal',
         tenantId: 't',
         namespace: 'default',
@@ -965,7 +920,7 @@ describe('RunMaintenanceService', () => {
       expect(result.expired).toHaveLength(0);
       expect(result.resolved).toHaveLength(0);
       expect(result.deferred).toEqual(['i-dry1']);
-      expect((await intentStore.getIntent('i-dry1'))?.status).toBe('PENDING');
+      expect((await intentStore.getIntent(intentRef('i-dry1')))?.status).toBe('PENDING');
     });
 
     it('respects limit option', async () => {
@@ -979,50 +934,23 @@ describe('RunMaintenanceService', () => {
       expect(result.inspected).toBe(1);
     });
 
-    it('reconciles intents across multiple providers using the correct adapter per provider', async () => {
-      const cancelLogTemporal: string[] = [];
-      const cancelLogMock: string[] = [];
-
-      const temporalAdapter = makeTemporalAdapterWithLog(cancelLogTemporal);
-      const mockAdapter = makeMockAdapterWithLog(cancelLogMock);
-
-      const { service, intentStore } = createServiceWithAdapters(
-        new Map<EngineRunRef['provider'], IProviderAdapter>([
-          ['temporal', temporalAdapter],
-          ['mock', mockAdapter],
-        ])
-      );
-
-      await makePendingIntent(intentStore, 'run-temporal-mp', 'i-mp-temporal', 'temporal');
-      await makePendingIntent(intentStore, 'run-mock-mp', 'i-mp-mock', 'mock');
-
-      const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
-
-      expect(result.expired).toHaveLength(2);
-      expect(result.resolved).toHaveLength(0);
-      expect(result.cancelFailed).toHaveLength(0);
-      expect(result.deferred).toHaveLength(0);
-      expect(cancelLogTemporal).toContain('run-temporal-mp');
-      expect(cancelLogMock).toContain('run-mock-mp');
-    });
-
     it('reports cancelFailed for DISPATCHED intent when adapter is not in the adapters map', async () => {
-      // Fixture has only 'temporal' adapter; intent has provider 'conductor'
-      const { service, intentStore } = createFixtureWith(makeAdapterWithLookup(new Set()));
+      const { service, intentStore } = createServiceWithAdapters(new Map());
 
       await intentStore.createIntent({
         intentId: 'i-no-adapter',
         tenantId: 't',
         runId: 'run-no-adapter',
-        provider: 'conductor' as EngineRunRef['provider'],
+        provider: 'temporal',
         createdAt: '1970-01-01T00:00:00.000Z',
       });
-      await intentStore.markDispatched('i-no-adapter', {
-        provider: 'conductor' as EngineRunRef['provider'],
+      await intentStore.markDispatched(intentRef('i-no-adapter'), {
+        provider: 'temporal',
         tenantId: 't',
+        namespace: 'default',
         workflowId: 'wf-run-no-adapter',
         runId: 'run-no-adapter',
-      } as EngineRunRef);
+      });
 
       const result = await service.reconcileOrphanedIntents({ thresholdMs: 0 });
 

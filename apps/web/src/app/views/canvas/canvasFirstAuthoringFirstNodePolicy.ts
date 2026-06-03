@@ -1,0 +1,47 @@
+/** Owned concern: resolve the expected first node for a first-authored canvas. */
+
+import type {
+  CanvasFirstAuthoringCanvas,
+  CanvasFirstAuthoringNode,
+} from './canvasFirstAuthoringLiveProof.types';
+
+export type CanvasFirstAuthoringDefault = Readonly<{
+  canvasKind: string;
+  node: CanvasFirstAuthoringNode;
+}>;
+
+export const FIRST_AUTHORING_DEFAULTS: readonly CanvasFirstAuthoringDefault[] = [
+  {
+    canvasKind: 'transformation',
+    node: {
+      id: 'dvt-source-1',
+      kind: 'dvt:source',
+      name: 'Source 1',
+    },
+  },
+  {
+    canvasKind: 'dbt',
+    node: {
+      id: 'dbt-source-1',
+      kind: 'dbt:source',
+      name: 'Source 1',
+    },
+  },
+];
+
+export function resolveExpectedFirstNode(
+  canvas: CanvasFirstAuthoringCanvas
+): CanvasFirstAuthoringNode | null {
+  return FIRST_AUTHORING_DEFAULTS.find((entry) => entry.canvasKind === canvas.kind)?.node ?? null;
+}
+
+export function matchesExpectedFirstNode(
+  node: CanvasFirstAuthoringNode,
+  expectedNode: CanvasFirstAuthoringNode
+): boolean {
+  return (
+    node.id === expectedNode.id &&
+    node.kind === expectedNode.kind &&
+    node.name === expectedNode.name
+  );
+}

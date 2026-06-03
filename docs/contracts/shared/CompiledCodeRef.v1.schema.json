@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://dvt.local/contracts/shared/CompiledCodeRef.v1.schema.json",
-  "$comment": "Normative shared-kernel mirror of CompiledCodeRef from packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts.",
+  "$comment": "Normative shared-kernel mirror of CompiledCodeRef from packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts.",
   "title": "Compiled Code Reference",
   "description": "Content-addressable reference to a compiled SQL artifact stored outside the event log.",
   "type": "object",

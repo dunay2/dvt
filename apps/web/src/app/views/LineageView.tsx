@@ -1,3 +1,4 @@
+/** Owned concern: render the Lineage route workbench from graph and column lineage read models. */
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { LineageBreadcrumb } from './lineage/LineageBreadcrumb';
@@ -16,11 +17,9 @@ import {
   buildLineageColumnState,
   buildLineageWorkbenchState,
 } from './lineage/lineageWorkbenchStateModel';
-import {
-  LINEAGE_ROUTE_ID,
-  deriveLineageRouteBootstrapPresentation,
-} from './lineage/lineageRouteBootstrap';
+import { deriveLineageRouteBootstrapPresentation } from './lineage/lineageRouteBootstrap';
 import { useLineageViewData } from './lineage/useLineageViewData';
+import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
 
 export default function LineageView() {
   const {
@@ -65,7 +64,7 @@ export default function LineageView() {
     snapshotErrorMessage: snapshotError?.message ?? copy.routeErrorFallbackMessage,
   });
   usePublishedRouteBootstrap(
-    LINEAGE_ROUTE_ID,
+    CANVAS_WORKBENCH_ROUTE_ID,
     deriveLineageRouteBootstrapPresentation(workbenchState)
   );
 
@@ -92,21 +91,25 @@ export default function LineageView() {
   });
 
   return (
-    <RouteWorkbenchFrame header={header} bodyContainerClassName="mx-auto max-w-4xl space-y-4">
-      {!columnLevel ? (
-        <>
-          <LineageGraphPanel focusNode={focusNode} nodesByLevel={nodesByLevel} />
-          <LineageImpactSummary
-            upstreamCount={upstreamCount}
-            downstreamCount={downstreamCount}
-            exposureCount={exposureCount}
-          />
-        </>
-      ) : columnState.kind === 'metadata-missing' ? (
-        <LineageMetadataMissingStateView focusNodeName={focusNode.name} />
-      ) : (
-        <LineageColumnPanel focusNode={focusNode} columnLineage={columnLineage} />
-      )}
-    </RouteWorkbenchFrame>
+    <RouteWorkbenchFrame
+      header={header}
+      bodyContainerClassName="mx-auto max-w-4xl space-y-4"
+      slots={{
+        primarySurface: !columnLevel ? (
+          <>
+            <LineageGraphPanel focusNode={focusNode} nodesByLevel={nodesByLevel} />
+            <LineageImpactSummary
+              upstreamCount={upstreamCount}
+              downstreamCount={downstreamCount}
+              exposureCount={exposureCount}
+            />
+          </>
+        ) : columnState.kind === 'metadata-missing' ? (
+          <LineageMetadataMissingStateView focusNodeName={focusNode.name} />
+        ) : (
+          <LineageColumnPanel focusNode={focusNode} columnLineage={columnLineage} />
+        ),
+      }}
+    />
   );
 }

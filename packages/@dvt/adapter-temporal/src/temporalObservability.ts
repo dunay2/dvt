@@ -13,7 +13,7 @@ export function buildTemporalContext(
 ): ObservabilityContext {
   return {
     adapter: 'temporal',
-    taskQueue: overrides.taskQueue ?? config.taskQueue,
+    taskQueue: overrides.taskQueue ?? config.connection.taskQueue,
     tenantId: overrides.tenantId,
     projectId: overrides.projectId,
     environmentId: overrides.environmentId,
@@ -36,15 +36,15 @@ export function buildTemporalMetricTags(
 export function toErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error;
   if (error instanceof Error) return error.message;
-  if (
-    typeof error === 'number' ||
-    typeof error === 'boolean' ||
-    typeof error === 'bigint' ||
-    typeof error === 'symbol'
-  ) {
-    return String(error);
+  switch (typeof error) {
+    case 'number':
+    case 'boolean':
+    case 'bigint':
+    case 'symbol':
+      return String(error);
+    default:
+      return 'Unknown error';
   }
-  return 'Unknown error';
 }
 
 type TemporalObservedLogLevel = 'debug' | 'info' | 'warn' | 'error';
@@ -55,6 +55,13 @@ interface TemporalObservedOutcome {
   readonly logMessage?: string;
   readonly logAttributes?: Attributes;
 }
+
+interface ResolvedTemporalObservedOutcome {
+  readonly outcome: TemporalObservedOutcome;
+  readonly result: string;
+}
+
+type TemporalObservedOutcomeResolver<T> = ((value: T) => TemporalObservedOutcome) | undefined;
 
 export interface ObservedTemporalOperationArgs<T> {
   readonly observability: IObservability;
@@ -85,31 +92,15 @@ export async function runObservedTemporalOperation<T>(
       async (span) => {
         try {
           const value = await args.run();
-          const outcome = args.onSuccess?.(value) ?? {};
-          const result = outcome.result ?? 'ok';
-          args.observability.metrics
-            .counter(args.counterName, buildTemporalMetricTags(args.metricOperation, result))
-            .add(1);
-          if (args.durationName) {
-            args.observability.metrics
-              .histogram(args.durationName, buildTemporalMetricTags(args.metricOperation))
-              .record(Date.now() - startedAt);
-          }
-          emitTemporalObservedLog(args.observability, args.context, outcome);
+          const observed = resolveObservedOutcome(args.onSuccess, value, 'ok');
+          recordObservedMetrics(args, observed.result, startedAt, true);
+          emitTemporalObservedLog(args.observability, args.context, observed.outcome);
           span.setStatus('ok');
           return value;
         } catch (error) {
-          const outcome = args.onError?.(error) ?? {};
-          const result = outcome.result ?? 'error';
-          args.observability.metrics
-            .counter(args.counterName, buildTemporalMetricTags(args.metricOperation, result))
-            .add(1);
-          if (args.durationName && args.recordDurationOnError) {
-            args.observability.metrics
-              .histogram(args.durationName, buildTemporalMetricTags(args.metricOperation))
-              .record(Date.now() - startedAt);
-          }
-          emitTemporalObservedLog(args.observability, args.context, outcome, error);
+          const observed = resolveObservedOutcome(args.onError, error, 'error');
+          recordObservedMetrics(args, observed.result, startedAt, args.recordDurationOnError);
+          emitTemporalObservedLog(args.observability, args.context, observed.outcome, error);
           span.recordException(error);
           span.setStatus('error', toErrorMessage(error));
           throw error;
@@ -117,6 +108,37 @@ export async function runObservedTemporalOperation<T>(
       }
     )
   );
+}
+
+function resolveObservedOutcome<T>(
+  resolver: TemporalObservedOutcomeResolver<T>,
+  value: T,
+  fallbackResult: string
+): ResolvedTemporalObservedOutcome {
+  const outcome = resolver?.(value) ?? {};
+  return {
+    outcome,
+    result: outcome.result ?? fallbackResult,
+  };
+}
+
+function recordObservedMetrics<T>(
+  args: ObservedTemporalOperationArgs<T>,
+  result: string,
+  startedAt: number,
+  recordDuration: boolean | undefined
+): void {
+  args.observability.metrics
+    .counter(args.counterName, buildTemporalMetricTags(args.metricOperation, result))
+    .add(1);
+
+  if (!args.durationName || !recordDuration) {
+    return;
+  }
+
+  args.observability.metrics
+    .histogram(args.durationName, buildTemporalMetricTags(args.metricOperation))
+    .record(Date.now() - startedAt);
 }
 
 function emitTemporalObservedLog(

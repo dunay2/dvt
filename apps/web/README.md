@@ -166,14 +166,26 @@ All data is sourced from dbt artifacts (manifest.json, run_results.json, catalog
 
 ## Getting Started
 
-Default mode: prototype with mock data.
+Default mode: API runtime.
 
 ### Data source mode (`VITE_DATA_SOURCE`)
 
 The frontend supports two runtime modes:
 
-1. `mock` (default): uses frontend mock adapters through `services/*`.
-2. `api`: calls backend endpoints through typed API services and `createApiClient`.
+1. `mock`: explicit local development mode for isolated UI and adapter
+   iteration. It is not the canonical product truth for active Canvas
+   authoring.
+2. `api` (default): calls backend endpoints through typed API services and
+   `createApiClient`. Active Canvas authoring requires this mode plus protected
+   workspace-draft authority.
+
+Important route behavior:
+
+- Canvas no longer treats `mock` and `api` as equivalent authoring paths.
+- In `api` mode, Canvas source import remains hidden until the backend import
+  endpoint exists.
+- In `mock` mode, other mock-backed surfaces can still be useful for local UI
+  work, but the governed Canvas authoring path is fail-closed.
 
 Optional environment variables:
 
@@ -184,14 +196,14 @@ Optional environment variables:
 Examples:
 
 ```bash
-# Mock mode (default)
+# Mock mode (explicit local-only)
 VITE_DATA_SOURCE=mock pnpm --filter @dvt/web dev
 
-# API mode (real backend)
+# API mode (default, real backend)
 VITE_DATA_SOURCE=api VITE_API_BASE_URL=http://localhost:3000 pnpm --filter @dvt/web dev
 ```
 
-If `VITE_DATA_SOURCE` is not provided, the app falls back to `mock`.
+If `VITE_DATA_SOURCE` is not provided, the app falls back to `api`.
 If `VITE_PLATFORM_HEALTH_OPTIONAL_PROBES` is omitted, the client probes all optional
 platform-health endpoints. Set it to an empty string to query only `/healthz`.
 

@@ -6,8 +6,18 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["planId", "adapterId", "state"],
+      "required": [
+        "tenantId",
+        "projectId",
+        "environmentId",
+        "planId",
+        "adapterId",
+        "state"
+      ],
       "properties": {
+        "tenantId": { "type": "string", "minLength": 1 },
+        "projectId": { "type": "string", "minLength": 1 },
+        "environmentId": { "type": "string", "minLength": 1 },
         "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "adapterId": { "type": "string", "minLength": 1 },
         "state": { "type": "string", "const": "PENDING" }
@@ -16,8 +26,19 @@
     {
       "type": "object",
       "additionalProperties": false,
-      "required": ["planId", "adapterId", "state", "validatedAtIso"],
+      "required": [
+        "tenantId",
+        "projectId",
+        "environmentId",
+        "planId",
+        "adapterId",
+        "state",
+        "validatedAtIso"
+      ],
       "properties": {
+        "tenantId": { "type": "string", "minLength": 1 },
+        "projectId": { "type": "string", "minLength": 1 },
+        "environmentId": { "type": "string", "minLength": 1 },
         "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "adapterId": { "type": "string", "minLength": 1 },
         "state": { "type": "string", "const": "VALID" },
@@ -29,12 +50,18 @@
       "additionalProperties": false,
       "required": [
         "planId",
+        "tenantId",
+        "projectId",
+        "environmentId",
         "adapterId",
         "state",
         "validatedAtIso",
         "rejectionReport"
       ],
       "properties": {
+        "tenantId": { "type": "string", "minLength": 1 },
+        "projectId": { "type": "string", "minLength": 1 },
+        "environmentId": { "type": "string", "minLength": 1 },
         "planId": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "adapterId": { "type": "string", "minLength": 1 },
         "state": { "type": "string", "const": "INVALID" },

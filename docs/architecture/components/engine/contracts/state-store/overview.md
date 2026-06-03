@@ -2,7 +2,7 @@
 title: State Store Overview
 status: Canonical Overview
 canonical: true
-last_reviewed: 2026-03-08
+last_reviewed: 2026-05-13
 owner: engine
 ---
 
@@ -76,6 +76,9 @@ These rules are canonical and should be treated as review gates:
 8. Snapshots may lag, but must remain consistent with a prefix of the event log.
 9. Tenant scope is mandatory on reads and writes.
 10. Provider or runtime outages must not erase persisted-state visibility.
+11. Snapshot rebuild is a per `(tenantId, runId)` maintenance command; competing
+    rebuild commands for the same run must serialize or fail with a typed
+    transient concurrency error before mutating the durable snapshot.
 
 ## Transaction Model
 
@@ -112,11 +115,18 @@ They are allowed to optimize:
 
 They are not the source of truth over the append-only event log.
 
+Snapshot rebuild commands for the same run must serialize or fail with a typed
+transient concurrency error.
+
 Operational rules:
 
 - missing snapshot is valid;
 - callers must support replay fallback when snapshot is missing;
 - snapshot rebuild must be deterministic from persisted ordered events;
+- snapshot rebuild commands for the same run must serialize or fail with a typed
+  transient concurrency error;
+- snapshot rebuild must enforce one active durable snapshot mutation per
+  `(tenantId, runId)`;
 - hot read paths should prefer `getSnapshot()`;
 - recovery and rebuild paths may fall back to `listEvents()`.
 

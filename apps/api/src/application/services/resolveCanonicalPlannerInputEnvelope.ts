@@ -3,9 +3,8 @@ import type {
   GenericGraphSourceV1,
   PlannerInputEnvelopeV1,
   PlannerPolicyClassSet,
+  StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
-
-import type { StartRunPlannerEnvironmentInput } from '../ports/startRunCommandContract.js';
 
 export interface CanonicalPlannerInputEnvelopeInput {
   readonly graphSource: GenericGraphSourceV1;

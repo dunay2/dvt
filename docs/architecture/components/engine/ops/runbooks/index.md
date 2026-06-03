@@ -9,8 +9,8 @@ last_reviewed: 2026-04-09
 
 ## Current runbooks
 
-- [Incident response](./incident_response.md)
-- [Severity matrix](./severity_matrix.md)
+- [Incident response](./incident-response.md)
+- [Severity matrix](./severity-matrix.md)
 
 ## Related pages
 

@@ -1,29 +1,41 @@
 // @vitest-environment jsdom
 
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { IWorkspacePort } from '../ports/workspace';
+import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../ports/workspace';
+import type { SourceImportOptionContribution } from '../plugins/registry';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import SourceImportWizard from './SourceImportWizard';
 
-function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspacePort {
+class TestResizeObserver implements ResizeObserver {
+  observe(): void {
+    return undefined;
+  }
+
+  unobserve(): void {
+    return undefined;
+  }
+
+  disconnect(): void {
+    return undefined;
+  }
+}
+
+function requireElement<T>(value: T | undefined, errorCode: string): T {
+  if (value === undefined) {
+    throw new Error(errorCode);
+  }
+
+  return value;
+}
+
+function buildWarehouseSourceImportPort(
+  overrides?: Partial<IWarehouseSourceImportPort>
+): IWarehouseSourceImportPort {
   return {
-    getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
-    getGraphDraft: async () => null,
-    saveGraphDraft: async () => ({
-      outcome: 'saved',
-      record: {
-        revision: 'rev-1',
-        savedAt: '2026-04-06T00:00:00Z',
-        draft: { nodeIds: [], nodePositions: {}, edges: [] },
-      },
-    }),
-    getDiffChanges: async () => [],
-    getPlugins: async () => [],
-    getRoles: async () => [],
-    getAuditLog: async () => [],
     listWarehouseConnections: async () => [
       {
         id: 'conn-1',
@@ -53,21 +65,6 @@ function buildWorkspaceService(overrides?: Partial<IWorkspacePort>): IWorkspaceP
         addFreshness: false,
       },
     }),
-    listFiles: async () => [],
-    getFileContent: async (path) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'yaml',
-      content: '',
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
-    saveFileContent: async (path, content) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'yaml',
-      content,
-      lastModified: '2026-04-06T00:00:00Z',
-    }),
     ...overrides,
   };
 }
@@ -90,11 +87,9 @@ describe('SourceImportWizard', () => {
       globalThis as typeof globalThis & {
         ResizeObserver?: new (callback: ResizeObserverCallback) => ResizeObserver;
       }
-    ).ResizeObserver = class ResizeObserver {
-      observe(): void {}
-      unobserve(): void {}
-      disconnect(): void {}
-    } as unknown as new (callback: ResizeObserverCallback) => ResizeObserver;
+    ).ResizeObserver = TestResizeObserver as unknown as new (
+      callback: ResizeObserverCallback
+    ) => ResizeObserver;
   });
 
   afterEach(() => {
@@ -105,113 +100,273 @@ describe('SourceImportWizard', () => {
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
   });
 
-  const findNextButton = (): HTMLButtonElement | undefined =>
-    Array.from(document.querySelectorAll('button')).find((button) =>
-      button.textContent?.trim().startsWith('Next')
-    ) as HTMLButtonElement | undefined;
-
-  const findClickableDivByText = (text: string): HTMLDivElement | undefined =>
-    Array.from(document.querySelectorAll('div.cursor-pointer')).find((node) =>
-      node.textContent?.includes(text)
-    ) as HTMLDivElement | undefined;
-
-  it('navigates from source type to connection and selection steps', async () => {
-    const onClose = vi.fn();
-
+  async function renderWizard(args?: {
+    open?: boolean;
+    warehouseSourceImport?: IWarehouseSourceImportPort;
+    onClose?: () => void;
+    onComplete?: (result: ImportSourcesResult) => void;
+    sourceImportOptions?: readonly SourceImportOptionContribution[];
+  }): Promise<void> {
     await act(async () => {
       root.render(
         <AppServicesProvider
           overrides={{
-            mode: 'mock',
-            workspaceService: buildWorkspaceService(),
+            ...createAppServicesTestOverrides(),
+            warehouseSourceImport: args?.warehouseSourceImport ?? buildWarehouseSourceImportPort(),
           }}
         >
-          <SourceImportWizard open={true} onClose={onClose} />
+          <SourceImportWizard
+            open={args?.open ?? true}
+            onClose={args?.onClose ?? vi.fn()}
+            onComplete={args?.onComplete}
+            sourceImportOptions={args?.sourceImportOptions}
+          />
         </AppServicesProvider>
       );
     });
+  }
+
+  const findNextButton = (): HTMLButtonElement | undefined =>
+    Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+      button.textContent?.trim().startsWith('Next')
+    );
+
+  const findButtonContaining = (text: string): HTMLButtonElement | undefined =>
+    Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+      button.textContent?.includes(text)
+    );
+
+  const findClickableDivByText = (text: string): HTMLDivElement | undefined =>
+    Array.from(document.querySelectorAll<HTMLDivElement>('div.cursor-pointer')).find((node) =>
+      node.textContent?.includes(text)
+    );
+
+  const clickNext = async (): Promise<void> => {
+    const button = requireElement(findNextButton(), 'EXPECTED_NEXT_BUTTON');
+    await act(async () => {
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  };
+
+  const clickClickableDivByText = async (text: string): Promise<void> => {
+    const node = requireElement(findClickableDivByText(text), `EXPECTED_CLICKABLE_DIV:${text}`);
+    await act(async () => {
+      node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  };
+
+  const clickButtonContaining = async (text: string): Promise<void> => {
+    const button = requireElement(findButtonContaining(text), `EXPECTED_BUTTON:${text}`);
+    await act(async () => {
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  };
+
+  it('navigates from source type to connection and selection steps', async () => {
+    const onClose = vi.fn();
+
+    await renderWizard({ onClose });
 
     expect(document.body.textContent).toContain('Choose data source type');
 
-    const nextButton = findNextButton();
-    expect(nextButton).toBeTruthy();
-
-    await act(async () => {
-      nextButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    await clickNext();
 
     expect(document.body.textContent).toContain('Choose database connection');
     expect(document.body.textContent).toContain('Snowflake PROD');
 
-    const connectionCard = findClickableDivByText('Snowflake PROD');
-    expect(connectionCard).toBeTruthy();
-
-    await act(async () => {
-      connectionCard?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    const nextButtonAfterConnection = findNextButton();
-    await act(async () => {
-      nextButtonAfterConnection?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    await clickClickableDivByText('Snowflake PROD');
+    await clickNext();
 
     expect(document.body.textContent).toContain('Select Tables');
     expect(document.body.textContent).toContain('ORDERS');
   });
 
-  it('completes import flow and renders result step', async () => {
-    await act(async () => {
-      root.render(
-        <AppServicesProvider
-          overrides={{
-            mode: 'mock',
-            workspaceService: buildWorkspaceService(),
-          }}
-        >
-          <SourceImportWizard open={true} onClose={vi.fn()} />
-        </AppServicesProvider>
-      );
+  it('explores governed database connections with search before table discovery', async () => {
+    await renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [
+          {
+            id: 'warehouse-prod',
+            name: 'Production warehouse',
+            type: 'postgres',
+            database: 'analytics',
+          },
+          {
+            id: 'warehouse-sandbox',
+            name: 'Sandbox warehouse',
+            type: 'postgres',
+            database: 'sandbox',
+          },
+        ],
+      }),
     });
 
-    const clickNext = async (): Promise<void> => {
-      const button = findNextButton();
-      expect(button).toBeTruthy();
-      await act(async () => {
-        button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      });
-    };
+    await clickNext();
+
+    const search = document.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-connection-search"]'
+    );
+
+    expect(search).not.toBeNull();
+    expect(document.body.textContent).toContain('2 connections in governed catalog');
+    expect(document.body.textContent).toContain('Production warehouse');
+    expect(document.body.textContent).toContain('Sandbox warehouse');
+
+    await act(async () => {
+      search?.focus();
+      if (search) {
+        search.value = 'prod';
+      }
+      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'prod' }));
+    });
+
+    expect(document.body.textContent).toContain('Production warehouse');
+    expect(document.body.textContent).not.toContain('Sandbox warehouse');
+  });
+
+  it('completes import flow, applies imported sources immediately, and renders a passive result step', async () => {
+    const onComplete = vi.fn();
+    const onClose = vi.fn();
+
+    await renderWizard({ onClose, onComplete });
 
     await clickNext(); // sourceType -> connection
 
-    const connectionCard = findClickableDivByText('Snowflake PROD');
-    expect(connectionCard).toBeTruthy();
-    await act(async () => {
-      connectionCard?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    await clickClickableDivByText('Snowflake PROD');
 
     await clickNext(); // connection -> selection
 
-    const tableRow = findClickableDivByText('ORDERS');
-    expect(tableRow).toBeTruthy();
-    await act(async () => {
-      tableRow?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    await clickClickableDivByText('ORDERS');
 
     await clickNext(); // selection -> grouping
     await clickNext(); // grouping -> options
     await clickNext(); // options -> review
 
-    const registerButton = Array.from(document.querySelectorAll('button')).find((candidate) =>
-      candidate.textContent?.includes('Register data objects')
-    );
-    expect(registerButton).toBeTruthy();
-    await act(async () => {
-      registerButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    await clickButtonContaining('Register data objects');
 
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(
+      expect.objectContaining({
+        importedNodeIds: ['src_erp_orders'],
+      })
+    );
     expect(document.body.textContent).toContain('Registry update complete');
     expect(document.body.textContent).toContain('Groups created:');
     expect(document.body.textContent).toContain('models/sources/erp.yml');
-    expect(document.body.textContent).toContain('Add imported sources to canvas');
+    expect(document.body.textContent).toContain(
+      'Canvas queued the imported source ids and will focus them when protected draft authority refreshes'
+    );
+    expect(document.body.textContent).not.toContain('Add imported sources to canvas');
+
+    await clickButtonContaining('Done');
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders only the source import options declared by the active plugin', async () => {
+    await renderWizard({
+      sourceImportOptions: [
+        {
+          id: 'includeColumns',
+          label: 'Include Column Metadata',
+          description: 'Add columns to the plugin-owned source artifact.',
+          defaultEnabled: false,
+          order: 10,
+        },
+      ],
+    });
+
+    await clickNext();
+    await clickClickableDivByText('Snowflake PROD');
+    await clickNext();
+    await clickClickableDivByText('ORDERS');
+    await clickNext();
+    await clickNext();
+
+    expect(document.body.textContent).toContain('Include Column Metadata');
+    expect(document.body.textContent).not.toContain('Add Generic Tests');
+    expect(document.body.textContent).not.toContain('Add Freshness Checks');
+  });
+
+  it('applies plugin option defaults when runtime declarations arrive after mount', async () => {
+    const importSources = vi.fn(buildWarehouseSourceImportPort().importSources);
+    const warehouseSourceImport = buildWarehouseSourceImportPort({ importSources });
+
+    await renderWizard({
+      warehouseSourceImport,
+      sourceImportOptions: [],
+    });
+    await renderWizard({
+      warehouseSourceImport,
+      sourceImportOptions: [
+        {
+          id: 'includeColumns',
+          label: 'Include Column Metadata',
+          description: 'Add columns to the plugin-owned source artifact.',
+          defaultEnabled: true,
+          order: 10,
+        },
+      ],
+    });
+
+    await clickNext();
+    await clickClickableDivByText('Snowflake PROD');
+    await clickNext();
+    await clickClickableDivByText('ORDERS');
+    await clickNext();
+    await clickNext();
+    await clickNext();
+
+    await clickButtonContaining('Register data objects');
+
+    expect(importSources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      })
+    );
+  });
+
+  it('surfaces a no-op result when the selected sources already exist and does not fire the canvas handoff', async () => {
+    const onComplete = vi.fn();
+
+    await renderWizard({
+      onComplete,
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        importSources: async () => ({
+          success: true,
+          sourcesCreated: 0,
+          tablesImported: 1,
+          yamlFiles: ['models/sources/erp.yml'],
+          importedNodeIds: [],
+          grouping: 'schema',
+          options: {
+            includeColumns: false,
+            addTests: false,
+            addFreshness: false,
+          },
+        }),
+      }),
+    });
+
+    await clickNext();
+
+    await clickClickableDivByText('Snowflake PROD');
+
+    await clickNext();
+
+    await clickClickableDivByText('ORDERS');
+
+    await clickNext();
+    await clickNext();
+    await clickNext();
+
+    await clickButtonContaining('Register data objects');
+
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain('No new data objects were added');
+    expect(document.body.textContent).toContain('Canvas stayed unchanged');
   });
 });

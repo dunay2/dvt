@@ -182,7 +182,7 @@ describe('ProjectorWorkerRuntime', () => {
       expect(store.listStaleSnapshotRuns).toHaveBeenCalledWith(17);
     });
 
-    it('prefers push-based claimSnapshotWork when available', async () => {
+    it('uses only push-based claimSnapshotWork when available by default', async () => {
       const rebuild = vi.fn().mockResolvedValue(undefined);
       const completeSnapshotWork = vi.fn().mockResolvedValue(undefined);
       const store: ProjectorStateStore = {
@@ -201,9 +201,9 @@ describe('ProjectorWorkerRuntime', () => {
       const result = await runtime.runOnce();
 
       expect(store.claimSnapshotWork).toHaveBeenCalledWith(9);
-      expect(store.listStaleSnapshotRuns).toHaveBeenCalledWith(7);
-      expect(result).toEqual({ processed: 3, lag: 3 });
-      expect(rebuild).toHaveBeenCalledTimes(3);
+      expect(store.listStaleSnapshotRuns).not.toHaveBeenCalled();
+      expect(result).toEqual({ processed: 2, lag: 2 });
+      expect(rebuild).toHaveBeenCalledTimes(2);
       expect(completeSnapshotWork).toHaveBeenCalledTimes(2);
     });
 
@@ -317,7 +317,7 @@ describe('ProjectorWorkerRuntime', () => {
       expect(logger.error).toHaveBeenCalledTimes(1);
     });
 
-    it('falls back to listStaleSnapshotRuns to fill uncovered stale work', async () => {
+    it('can explicitly fall back to listStaleSnapshotRuns to fill uncovered stale work', async () => {
       const rebuild = vi.fn().mockResolvedValue(undefined);
       const store: ProjectorStateStore = {
         claimSnapshotWork: vi
@@ -326,7 +326,11 @@ describe('ProjectorWorkerRuntime', () => {
         listStaleSnapshotRuns: vi.fn().mockResolvedValue([makeStaleRun('run-poll')]),
         rebuildSnapshot: rebuild,
       };
-      const runtime = new ProjectorWorkerRuntime(store, makeSilentLogger(), { batchSize: 2 });
+      const runtime = new ProjectorWorkerRuntime(store, makeSilentLogger(), {
+        batchSize: 2,
+        fallbackPollEveryTicks: 1,
+        enableFallbackPolling: true,
+      });
 
       const result = await runtime.runOnce();
 
@@ -337,7 +341,7 @@ describe('ProjectorWorkerRuntime', () => {
       expect(rebuild).toHaveBeenCalledWith('tenant-1', 'run-poll');
     });
 
-    it('does not run fallback polling every tick when queue mode is enabled', async () => {
+    it('does not run fallback polling by default when queue mode is enabled', async () => {
       const rebuild = vi.fn().mockResolvedValue(undefined);
       const store: ProjectorStateStore = {
         claimSnapshotWork: vi
@@ -349,6 +353,28 @@ describe('ProjectorWorkerRuntime', () => {
       const runtime = new ProjectorWorkerRuntime(store, makeSilentLogger(), {
         batchSize: 2,
         fallbackPollEveryTicks: 3,
+      });
+
+      await runtime.runOnce(); // tick 1 -> poll allowed
+      await runtime.runOnce(); // tick 2 -> poll skipped
+      await runtime.runOnce(); // tick 3 -> poll allowed
+
+      expect(store.listStaleSnapshotRuns).not.toHaveBeenCalled();
+    });
+
+    it('runs explicit fallback polling on the configured cadence when enabled', async () => {
+      const rebuild = vi.fn().mockResolvedValue(undefined);
+      const store: ProjectorStateStore = {
+        claimSnapshotWork: vi
+          .fn()
+          .mockResolvedValue([makeStaleRun('run-queue', 'tenant-1', 'claim-token-queue')]),
+        listStaleSnapshotRuns: vi.fn().mockResolvedValue([makeStaleRun('run-poll')]),
+        rebuildSnapshot: rebuild,
+      };
+      const runtime = new ProjectorWorkerRuntime(store, makeSilentLogger(), {
+        batchSize: 2,
+        fallbackPollEveryTicks: 3,
+        enableFallbackPolling: true,
       });
 
       await runtime.runOnce(); // tick 1 -> poll allowed
@@ -390,6 +416,7 @@ describe('ProjectorWorkerRuntime', () => {
         pollIntervalMs: 60_000,
         batchSize: 2,
         fallbackPollEveryTicks: 3,
+        enableFallbackPolling: true,
       });
 
       const firstLoop = runtime.start();

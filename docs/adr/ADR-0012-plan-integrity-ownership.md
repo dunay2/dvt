@@ -1,7 +1,8 @@
 # ADR-0012 - Plan Integrity Ownership
 
 Status: Accepted
-Date: 2026-02-20 (updated: 2026-04-07)
+Date: 2026-04-24
+Owners: Architecture / Engine / Temporal
 
 ---
 
@@ -19,7 +20,8 @@ We must define:
 - where executable plan materialization occurs before dispatch;
 - where planner identity (`planId`) is recomputed and verified;
 - where executable-plan metadata alignment is enforced;
-- how the adapter receives the exact verified plan that the engine approved.
+- how the adapter receives the immutable `PlanRef` approved by the engine;
+- how provider runtimes revalidate fetched plan material before execution.
 
 The solution must preserve deterministic planner identity and fail closed
 before adapter dispatch.
@@ -43,24 +45,28 @@ Rejected because:
 - two authoritative paths invite divergence in logic and observability;
 - review and audit still have no single source of truth.
 
-### C. Engine verifies but still dispatches only `PlanRef`
-
-Rejected because:
-
-- the adapter/runtime would still have to fetch the executable plan later;
-- execution could still depend on a later materialization step rather than the
-  exact plan object the engine approved;
-- centralized ownership would remain incomplete.
-
-### D. Engine verifies and dispatches the resolved plan (Chosen)
+### C. Engine verifies and dispatches immutable `PlanRef` (Chosen)
 
 Accepted because:
 
 - one engine-side verification point exists before any adapter call;
 - planner identity can be recomputed from the resolved plan core and matched to
   `planId`;
-- adapters execute the same verified plan object that the engine approved;
-- runtime behavior becomes auditable from a single start-run boundary.
+- Temporal workflow payloads stay bounded because the workflow receives a
+  content-addressed pointer instead of full plan bytes;
+- provider runtimes that fetch plan material must revalidate `PlanRef.sha256`
+  before resolving execution segments;
+- runtime behavior remains auditable from a single start-run admission proof.
+
+### D. Engine verifies and dispatches the resolved plan object
+
+Rejected because:
+
+- Temporal start and continue-as-new payloads must remain bounded;
+- large execution plans would couple provider start payload shape to planner
+  graph size;
+- the active Temporal implementation resolves bounded execution segments by
+  `PlanRef` inside activities.
 
 ## 4. Decision
 
@@ -75,27 +81,32 @@ MUST:
   `planId`;
 - reject `startRun()` before adapter dispatch when any integrity or compatibility
   check fails;
-- dispatch the verified `ExecutionPlan` to the adapter.
+- dispatch only the verified immutable `PlanRef` plus resolved run context to
+  the adapter.
 
 MUST NOT:
 
 - delegate the authoritative integrity proof to the adapter;
 - dispatch a run before the verified plan has been materialized;
-- treat adapter/runtime re-fetch as the source of truth for plan identity.
+- treat adapter/runtime re-fetch as the source of truth for start-run approval.
 
 ### Adapter Responsibilities (Execution Only)
 
 Adapters MUST:
 
-1. receive the verified `ExecutionPlan` plus `PlanRef`;
-2. execute the verified plan under the provider runtime;
-3. apply provider-specific execution semantics and constraints;
-4. emit runtime events and lifecycle transitions.
+1. receive the engine-approved immutable `PlanRef` plus resolved run context;
+2. execute under the provider runtime using that `PlanRef`;
+3. revalidate `PlanRef.sha256` before executing any fetched plan bytes or
+   resolved execution segment;
+4. apply provider-specific execution semantics and constraints;
+5. emit runtime events and lifecycle transitions.
 
 Adapters MUST NOT:
 
 - own the authoritative fetch-and-verify responsibility for plan identity;
-- create a second competing integrity authority after engine dispatch.
+- create a second competing integrity authority after engine dispatch;
+- execute fetched plan material when the fetched bytes differ from
+  `PlanRef.sha256`.
 
 ## 5. Architectural Rationale
 
@@ -104,7 +115,9 @@ This decision enforces:
 - one start-run admission proof before dispatch;
 - clear integrity ownership at the engine lifecycle boundary;
 - deterministic planner identity verification independent of adapter behavior;
-- auditability of the exact verified plan that enters execution.
+- auditability of the immutable plan pointer approved for execution;
+- bounded Temporal workflow payloads with fail-closed activity-time
+  revalidation.
 
 ## 6. Shared Verifier Requirement
 
@@ -115,22 +128,22 @@ To prevent drift across call sites, use shared verifier logic in
 - schema and step-type validation helpers;
 - canonical error emission for integrity and compatibility failures.
 
-The engine verification path is authoritative. Adapters may use verifier
-helpers for local defensive checks, but those checks are not the source of
-truth for plan identity approval.
+The engine verification path is authoritative for start-run approval. Adapters
+may use verifier helpers for runtime fetch revalidation, but those checks are
+not a second approval authority.
 
 ## 7. Consequences
 
 Positive:
 
 - single auditable proof before dispatch;
-- elimination of decentralized verification ownership;
-- adapters receive the exact verified plan object to execute.
+- elimination of decentralized start-run approval ownership;
+- provider payloads remain bounded while runtime fetches remain fail-closed.
 
 Negative:
 
 - engine/application wiring now includes plan materialization;
-- Temporal workflow input may grow because it now receives the verified plan;
+- provider runtimes that fetch plan material need explicit hash revalidation;
 - migration effort is required across engine, API composition, and adapter
   runtime tests/docs.
 
@@ -139,7 +152,9 @@ Negative:
 - Engine fetches and verifies the executable plan before adapter dispatch.
 - `planId` is recomputed from the resolved plan core and must match planner
   identity.
-- Adapters no longer own the authoritative fetch-and-verify responsibility.
-- Temporal execution starts from the engine-verified plan, not a runtime
-  fetch-only integrity boundary.
+- Adapter `startRun()` receives `PlanRef` and resolved run context only.
+- Adapters no longer own the authoritative start-run approval responsibility.
+- Temporal execution starts from the engine-approved immutable `PlanRef`.
+- Temporal activity segment resolution revalidates `PlanRef.sha256` before
+  execution.
 - Contract and runtime tests validate the centralized behavior.

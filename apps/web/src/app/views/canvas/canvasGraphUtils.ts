@@ -1,7 +1,31 @@
 import dagre from 'dagre';
 import type { Edge, Node } from '@xyflow/react';
 
-export function getLayoutedElements(nodes: Node[], edges: Edge[]) {
+type LayoutOptions = Readonly<{
+  gridSize?: number;
+  snapToGrid?: boolean;
+}>;
+
+function snapCoordinate(value: number, gridSize: number): number {
+  return Math.round(value / gridSize) * gridSize;
+}
+
+function resolveLayoutPosition(
+  position: { x: number; y: number },
+  options: LayoutOptions
+): { x: number; y: number } {
+  if (options.snapToGrid !== true) {
+    return position;
+  }
+
+  const gridSize = Math.max(1, options.gridSize ?? 20);
+  return {
+    x: snapCoordinate(position.x, gridSize),
+    y: snapCoordinate(position.y, gridSize),
+  };
+}
+
+export function getLayoutedElements(nodes: Node[], edges: Edge[], options: LayoutOptions = {}) {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({ rankdir: 'LR', ranksep: 150, nodesep: 100 });
@@ -20,10 +44,13 @@ export function getLayoutedElements(nodes: Node[], edges: Edge[]) {
     const nodeWithPosition = dagreGraph.node(node.id);
     return {
       ...node,
-      position: {
-        x: nodeWithPosition.x - 100,
-        y: nodeWithPosition.y - 40,
-      },
+      position: resolveLayoutPosition(
+        {
+          x: nodeWithPosition.x - 100,
+          y: nodeWithPosition.y - 40,
+        },
+        options
+      ),
     };
   });
 

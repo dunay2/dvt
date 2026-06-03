@@ -45,6 +45,20 @@ export function buildPreviewMetadata(node: CanonicalNode): {
   };
 }
 
+export function isCanvasAuthoringNode(node: CanonicalNode): boolean {
+  return node.tags.includes('authoring');
+}
+
+export function resolveAuthoringSqlArtifactPath(node: CanonicalNode): string {
+  return `models/${slugifyPathSegment(node.id || node.name || 'sql-transform')}.sql`;
+}
+
+export function resolveAuthoringSqlIdentifier(node: CanonicalNode): string {
+  const normalized = slugifySqlIdentifier(node.name) || slugifySqlIdentifier(node.id) || 'node';
+
+  return startsWithDigit(normalized) ? `n_${normalized}` : normalized;
+}
+
 export function resolveNodeRole(node: CanonicalNode): DesignNodeType {
   switch (node.role) {
     case 'input':
@@ -62,9 +76,14 @@ export function requireSourcePayload(
   node: CanonicalNode
 ): Extract<DesignGraphDraft['nodes'][number], { type: 'source' }> {
   const config = readCanonicalNodeConfig(node);
-  const schema = readConfigString(config, 'schema');
-  const table = readConfigString(config, 'table');
-  const alias = readConfigString(config, 'alias') ?? table;
+  const importedSchema = readMetadataString(node, 'schema');
+  const importedTableName = readMetadataString(node, 'tableName');
+  const importedSourceName = readMetadataString(node, 'sourceName');
+  const schema =
+    readConfigString(config, 'schema') ?? importedSchema ?? readAuthoringDefaultSchema(node);
+  const table =
+    readConfigString(config, 'table') ?? importedTableName ?? readAuthoringDefaultTable(node);
+  const alias = readConfigString(config, 'alias') ?? importedSourceName ?? table;
 
   if (!schema || !table || !alias) {
     throw new Error(
@@ -90,13 +109,17 @@ export function requireTransformPayload(
 ): Extract<DesignGraphDraft['nodes'][number], { type: 'sql_transform' }> {
   const config = readCanonicalNodeConfig(node);
   const dialect = readConfigString(config, 'dialect') ?? 'postgres';
+  const entrypoint =
+    readConfigString(config, 'entrypoint') ??
+    node.path ??
+    (isCanvasAuthoringNode(node) ? sqlArtifact.path : undefined);
 
   if (dialect !== 'postgres') {
     throw new Error(
       `Preview graph artifact requires transform node ${node.id} to use dialect postgres.`
     );
   }
-  if (!node.path) {
+  if (!entrypoint) {
     throw new Error(
       `Preview graph artifact requires transform node ${node.id} to define a workspace file path.`
     );
@@ -108,7 +131,7 @@ export function requireTransformPayload(
     payload: {
       dialect: 'postgres',
       sqlArtifact,
-      entrypoint: node.path,
+      entrypoint,
     },
   };
 }
@@ -117,11 +140,14 @@ export function requireSinkPayload(
   node: CanonicalNode
 ): Extract<DesignGraphDraft['nodes'][number], { type: 'sink' }> {
   const config = readCanonicalNodeConfig(node);
-  const schema = readConfigString(config, 'schema');
-  const table = readConfigString(config, 'table');
+  const schema = readConfigString(config, 'schema') ?? readAuthoringDefaultSchema(node);
+  const table = readConfigString(config, 'table') ?? readAuthoringDefaultTable(node);
   const materializationValue =
-    readConfigString(config, 'materialization') ?? readConfigString(config, 'materialized');
-  const writeModeValue = readConfigString(config, 'writeMode') ?? 'replace';
+    readConfigString(config, 'materialization') ??
+    readConfigString(config, 'materialized') ??
+    readAuthoringDefaultMaterialization(node);
+  const writeModeValue =
+    readConfigString(config, 'writeMode') ?? readAuthoringDefaultWriteMode(node);
 
   const materialization =
     materializationValue === 'table' || materializationValue === 'view'
@@ -153,11 +179,86 @@ function readCanonicalNodeConfig(node: CanonicalNode): Record<string, unknown> {
   return isPlainRecord(node.metadata?.config) ? node.metadata.config : {};
 }
 
+function readAuthoringDefaultSchema(node: CanonicalNode): string | undefined {
+  return isCanvasAuthoringNode(node) ? 'public' : undefined;
+}
+
+function readAuthoringDefaultTable(node: CanonicalNode): string | undefined {
+  return isCanvasAuthoringNode(node) ? resolveAuthoringSqlIdentifier(node) : undefined;
+}
+
+function readAuthoringDefaultMaterialization(node: CanonicalNode): string | undefined {
+  return isCanvasAuthoringNode(node) ? 'table' : undefined;
+}
+
+function readAuthoringDefaultWriteMode(node: CanonicalNode): string | undefined {
+  return isCanvasAuthoringNode(node) ? 'replace' : undefined;
+}
+
 function readConfigString(config: Record<string, unknown>, key: string): string | undefined {
   const value = config[key];
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 }
 
+function readMetadataString(node: CanonicalNode, key: string): string | undefined {
+  const value = node.metadata?.[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function slugifyPathSegment(value: string): string {
+  return collectAsciiWords(value).join('-') || 'sql-transform';
+}
+
+function slugifySqlIdentifier(value: string): string {
+  return collectAsciiWords(value).join('_');
+}
+
+function collectAsciiWords(value: string): string[] {
+  const words: string[] = [];
+  let currentWord = '';
+
+  for (const character of value) {
+    if (isAsciiAlphaNumeric(character)) {
+      currentWord += character.toLowerCase();
+      continue;
+    }
+
+    if (currentWord.length > 0) {
+      words.push(currentWord);
+      currentWord = '';
+    }
+  }
+
+  if (currentWord.length > 0) {
+    words.push(currentWord);
+  }
+
+  return words;
+}
+
+function isAsciiAlphaNumeric(character: string): boolean {
+  const codePoint = character.codePointAt(0);
+  if (codePoint == null) {
+    return false;
+  }
+
+  return (
+    (codePoint >= 48 && codePoint <= 57) ||
+    (codePoint >= 65 && codePoint <= 90) ||
+    (codePoint >= 97 && codePoint <= 122)
+  );
+}
+
+function startsWithDigit(value: string): boolean {
+  const firstCharacter = value.at(0);
+  if (!firstCharacter) {
+    return false;
+  }
+
+  const codePoint = firstCharacter.codePointAt(0);
+  return codePoint != null && codePoint >= 48 && codePoint <= 57;
 }

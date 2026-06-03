@@ -1,3 +1,7 @@
+/**
+ * Owned concern: semantic parser and auth-scope rejection values before they
+ * are serialized into the canonical HTTP error envelope.
+ */
 import {
   HTTP_ERROR_TYPE,
   normalizeHttpErrorReason,

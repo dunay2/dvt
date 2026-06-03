@@ -18,7 +18,7 @@ execution flow once frontend runtime contract alignment is applied.
 - run start is executed through `POST /runs/start`
 - run detail and status truth come from `GET /runs/:runId` (snapshot authority)
 - event timeline comes from `GET /runs/:runId/events`
-- legacy `GET /runs/:runId/status` is not part of supported user behavior
+- retired `GET /runs/:runId/status` is not part of supported user behavior
 - the run-detail route uses one composed workspace model, not a fake full
   aggregate
 

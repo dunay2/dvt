@@ -2,7 +2,7 @@
 title: CI Delivery Governance Consolidated Action Plan
 status: Active
 owner: engineering
-last_reviewed: 2026-03-31
+last_reviewed: 2026-05-10
 planning_type: proposal
 ---
 
@@ -14,7 +14,7 @@ This is the single active proposal for repository delivery-process hardening.
 It replaces the former audit prompt with an executable plan and absorbs the
 still-relevant work from prior CI/docs proposals and reviews, including:
 
-- [CI Performance Review And Action Plan](../../../reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
+- [Task: GOV-PROP-DISP-1] [CI Performance Review And Action Plan](../../../reviews/ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)
 - [CI, Prepush & PR Process - Observations and Improvement Log](../../../reviews/ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)
 
 This document does not reopen already-closed fixes. It carries forward only the
@@ -33,8 +33,8 @@ The review documents remain as evidence inputs, not active competing plans.
 The current delivery chain is already substantial and mostly coherent:
 
 1. Bootstrap: `prepare` runs `scripts/setup-git-hooks.cjs`.
-2. Pre-commit: `.husky/pre-commit` runs `pnpm precommit`, which executes
-   `lint-staged` plus `pnpm lint:determinism`.
+2. Pre-commit: `.husky/pre-commit` runs `pnpm run hooks:precommit`, which
+   executes `lint-staged` plus `pnpm precommit:determinism`.
 3. Commit message: `.husky/commit-msg` runs `pnpm exec commitlint --edit`.
 4. Pre-push: `.husky/pre-push` selects either a docs-only fast path or
    `pnpm verify:prepush`.
@@ -60,7 +60,7 @@ as open proposals:
 - `ci.yml` already gates markdown lint on docs-relevant scope.
 - `pr-quality-gate.yml` already scopes docs checks and skips global type-check
   on docs-only PRs.
-- `.github/actions/setup-node-pnpm/action.yml` already has pnpm-store and
+- [Task: GOV-PROP-DISP-1] `.github/actions/setup-node-pnpm/action.yml` already has pnpm-store and
   `node_modules` caching.
 - PR title, size, description, and ARC evidence checks are already wired.
 - `docs:ci` already has local-friendly regenerate-and-validate semantics.
@@ -68,6 +68,125 @@ as open proposals:
 
 The backlog below therefore focuses on residual drift, maintainability, and
 parallel-work safety.
+
+## 2026-05-23 Canonical Absorption Status
+
+The 2026-05-23 canon pass reconciles this proposal with the real repository
+state. The plan remains active for residual opportunities, but already-shipped
+delivery gates are no longer treated as open implementation work.
+
+Current absorbed state:
+
+| Plan item               | Status   | Current canonical evidence                                                                                                                                     |
+| ----------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CDG-W1-1` / `CDG-W1-2` | Absorbed | `ci.yml`, `test.yml`, and `contracts.yml` consume shared scope emitters and parity tests.                                                                      |
+| `CDG-W2-3`              | Absorbed | staged tooling coverage is now enforced through changed-file and pre-commit hardening.                                                                         |
+| `CDG-W3-3`              | Absorbed | generated-doc single-writer ownership is declared in `docs/generated-docs-policy.json` and guarded by `tools/ci/generated-docs-single-writer-policy.test.mjs`. |
+| `CDG-W4-1`              | Absorbed | `.github/workflows/ci.yml` runs the `CI tool contracts` lane with `pnpm test:ci-tools`; `tools/ci/workflow-pattern-parity.test.mjs` proves the wiring.         |
+
+Canonical component:
+
+- [CI Delivery Governance Component](../../../../architecture/components/ci-governance/ci-delivery-governance-component.md)
+- [CI Delivery Governance User Stories](../../../../architecture/components/ci-governance/ci-delivery-governance-user-stories.md)
+- [Fowler analysis mailbox entry](../../../../../buzon/20260523-codex-fowler-ci-delivery-governance-canon.md)
+
+Command/query rail:
+
+| Rail                                | Type  | Owning bounded context         | DDD owner                              | Application port     | Adapter surface                   | Negative tests                                                                                                                      |
+| ----------------------------------- | ----- | ------------------------------ | -------------------------------------- | -------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `ValidateCiDeliveryGovernanceCanon` | query | Repository delivery governance | `CiDeliveryGovernanceCanon` read model | `pnpm test:ci-tools` | `CI tool contracts` workflow lane | `tools/ci/ci-delivery-governance-canon.test.mjs` fails if the component guide, stories, analysis, or absorbed proposal state drift. |
+
+Fowler planning matrix:
+
+| Scenario                            | Opportunity                                 | Fowler pattern                   | DDD owner                              | Command/query rail                  | Implementation surfaces                                                  | Unit or package test                                         | Architecture test    | User-flow test                           | Out of scope                                                       |
+| ----------------------------------- | ------------------------------------------- | -------------------------------- | -------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------ | -------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| Canonize absorbed CI delivery gates | Documentation drift and duplicate semantics | Service Layer plus Policy Object | `CiDeliveryGovernanceCanon` read model | `ValidateCiDeliveryGovernanceCanon` | component docs, mailbox analysis, proposal status, CI-tool semantic test | `node --test tools/ci/ci-delivery-governance-canon.test.mjs` | `pnpm test:ci-tools` | none - repository delivery workflow only | changing workflow behavior, adding a new workflow, weakening gates |
+
+```feature-mechanization
+version: 1
+featureId: CI-Delivery-Governance-Canon
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+componentGuides:
+  - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+  - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
+userStories:
+  - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
+allowedImplementationSurfaces:
+  - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
+  - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+  - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+  - docs/architecture/components/ci-governance/index.md
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
+  - tools/ci/ci-delivery-governance-canon.test.mjs
+forbiddenImplementationSurfaces:
+  - .github/workflows/**
+  - apps/**
+  - packages/**
+commandQueryRails:
+  - name: ValidateCiDeliveryGovernanceCanon
+    type: query
+    dddOwner: CiDeliveryGovernanceCanon
+domainObjects:
+  - name: CiDeliveryGovernanceCanon
+    type: read-model
+    owner: Repository delivery governance
+fowlerSignals:
+  - Documentation Drift
+  - Duplicate Semantics
+  - Test-only Confidence
+  - Service Layer
+architectureGuards:
+  - node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  - pnpm test:ci-tools
+cypressFlows:
+  - not-applicable: Repository delivery governance has no browser workflow.
+completionGate:
+  - node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  - pnpm test:ci-tools
+  - pnpm docs:feature-mechanization -- --feature CI-Delivery-Governance-Canon
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: ci-delivery-canon-guard
+    redTest: node --test tools/ci/ci-delivery-governance-canon.test.mjs
+    expectedFailure: Missing CI delivery component guide, user stories, mailbox analysis, and absorbed proposal state.
+    patchSurfaces:
+      - buzon/20260523-codex-fowler-ci-delivery-governance-canon.md
+      - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+      - docs/architecture/components/ci-governance/ci-delivery-governance-user-stories.md
+      - docs/architecture/components/ci-governance/index.md
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md # Task: GOV-PROP-DISP-1
+      - tools/ci/ci-delivery-governance-canon.test.mjs
+    greenTest: node --test tools/ci/ci-delivery-governance-canon.test.mjs
+symbolDefaults: &ciDeliveryCanonSymbolDefaults
+  dddOwner: CiDeliveryGovernanceCanon
+  cqRails:
+    - ValidateCiDeliveryGovernanceCanon
+  fowlerSignals:
+    - Documentation Drift
+    - Duplicate Semantics
+    - Test-only Confidence
+  architectureGuard: node --test tools/ci/ci-delivery-governance-canon.test.mjs
+  cypressCoverage: "not-applicable: Repository delivery governance has no browser workflow."
+  unitTests:
+    - node --test tools/ci/ci-delivery-governance-canon.test.mjs
+    - pnpm test:ci-tools
+symbols:
+  - <<: *ciDeliveryCanonSymbolDefaults
+    name: ValidateCiDeliveryGovernanceCanon
+    path: tools/ci/ci-delivery-governance-canon.test.mjs
+  - <<: *ciDeliveryCanonSymbolDefaults
+    name: CiDeliveryGovernanceCanon
+    path: docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+```
 
 ## Residual Problem Set
 
@@ -244,15 +363,218 @@ these properties:
 6. No required quality gate removed; only scope, ownership, and trust are
    improved.
 
+## 2026-04-22 Integrated Execution Overlay
+
+This proposal also absorbs the
+[20260422 Environment Configuration Audit](../../../reviews/ci-and-delivery/20260422-environment-configuration-audit-review.md)
+as the current CI/delivery efficiency overlay.
+
+Do not create a parallel proposal for that audit. This section is the canonical
+execution route for the verified residual items.
+
+### Think-First Analysis
+
+- Problem summary:
+  the repository now has partial delivery-efficiency improvements, but they are
+  split across already-closed slices. Root `build` is Turbo-backed, shared
+  preflight and first-red triage are shipped, and workflow scope policy is more
+  centralized than before, yet the active operator pain still spans:
+  - Node baseline drift between local development, `engines.node`, and CI
+  - unconditional `lint:determinism` cost on irrelevant commits
+  - no CI cache layer for the existing root Turbo build path
+  - no governed follow-on path yet for Turbo-backed `test` / `typecheck`
+  - no design-ready rollout posture yet for TypeScript project references
+- Root cause:
+  the repo hardening work intentionally landed in narrow slices with explicit
+  out-of-scope boundaries. That kept prior changes safe, but it also left no
+  single active wave plan connecting the 2026-04-22 audit findings to the
+  ongoing `RC-C2` work.
+- Constraints and invariants:
+  - `AGENTS.md` requires canonical planning surfaces, validation evidence, and
+    no hidden debt
+  - `docs/guides/ai-work-protocol.md` requires think-first and
+    pre-implementation material before config/code changes land
+  - `docs/planning/state/planning-control-tower.md` requires active proposal
+    changes to update the linked lane registry
+  - [20260418 RC-C2 turbo build orchestrator closeout](../../../closeouts/20260418-rc-c2-turbo-build-orchestrator-closeout.md)
+    explicitly kept Turbo `test`, Turbo `typecheck`, remote cache, and
+    TypeScript project references out of scope of that shipped slice
+  - [Determinism Tooling](../../../../architecture/components/engine/dev/determinism-tooling.md)
+    keeps deterministic-runtime guards as a mandatory engineering baseline, so
+    pre-commit savings must come from scoping, not from removing the guard
+  - `RC-C2` is not closed by new tooling alone; its adoption-cycle gate remains
+    authoritative
+- Options considered:
+  - execute the full audit in one branch
+  - [Task: GOV-PROP-DISP-1] create a second proposal dedicated to the audit
+  - absorb the audit into the active CI/delivery proposal and execute the
+    lowest-risk wave first
+- Selected option and rationale:
+  absorb the audit into this proposal and execute the lowest-risk/highest-ROI
+  wave first. That preserves one canonical plan, keeps prior closeouts true,
+  and avoids mixing low-risk config alignment with more invasive compiler-graph
+  work.
+- Rejected alternatives:
+  - full-audit one-branch execution: rejected because it mixes hook behavior,
+    CI cache wiring, Turbo task ownership, coverage policy, and compiler-graph
+    changes into one high-blast-radius slice
+  - parallel proposal: rejected because this file is already the active
+    CI/delivery action plan of record
+
+### Integrated Gain Model
+
+The goal is not generic "cleanup". It is measurable reduction of avoidable
+delivery cost while keeping the existing governance and runtime guarantees
+intact.
+
+Primary gains to record by wave:
+
+- baseline drift removed:
+  local Node selection, `engines.node`, and CI no longer advertise different
+  expectations
+- avoided local commit waste:
+  docs-only, test-only, and unrelated UI commits no longer rebuild
+  determinism-sensitive dependencies before every commit
+- avoided CI rebuild waste:
+  the existing Turbo-backed root `build` path can reuse `.turbo` outputs across
+  CI runs
+- future-wave throughput:
+  Turbo `test` / `typecheck` adoption and package-script normalization are
+  executed only after the script contract is explicit enough to avoid fake wins
+
+### Integrated Wave Structure
+
+| Wave     | Scope                                                                                                                                                                                     | Execution posture                           | Expected gain                                                                        |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `INT-W0` | Record baseline commands and current friction points for the execute-now slice.                                                                                                           | Execute as part of Wave 1 closeout.         | Comparable before/after evidence instead of narrative-only claims.                   |
+| `INT-W1` | Align Node 22 locally, scope the deterministic-runtime pre-commit guard to relevant changes, and add CI cache support for the existing Turbo root build path.                             | Execute now.                                | Immediate reduction of avoidable commit/CI cost with low integration risk.           |
+| `INT-W2` | Normalize package-level `typecheck` ownership, then expand Turbo to governed `test` / package `typecheck` tasks and rewire affected local or CI entrypoints that can consume them safely. | Execute after Wave 1 is green and measured. | Affected test/typecheck reuse without ambiguous script ownership.                    |
+| `INT-W3` | Coverage-threshold uplift and TypeScript project-references spike or rollout.                                                                                                             | Design first; do not batch into Wave 1.     | Hardening and incremental-compiler gains after infrastructure ownership is explicit. |
+
+### Wave 1 Pre-Implementation Brief
+
+- Mode: `Full`
+- Scope:
+  - [Task: GOV-PROP-DISP-1] add local Node pin files that match the actual CI/runtime baseline
+  - align root `engines.node` with the real Node 22 baseline
+  - scope the deterministic-runtime pre-commit gate to files that actually
+    affect the engine or Temporal workflow determinism surface
+  - [Task: GOV-PROP-DISP-1] add `.turbo` cache support to the shared CI setup for the already-shipped
+    root Turbo `build` path
+  - update the canonical docs that describe the affected local/CI command
+    contract
+- Touched files or paths:
+  - `.node-version`
+  - `.nvmrc`
+  - `package.json`
+  - [Task: GOV-PROP-DISP-1] `.github/actions/setup-node-pnpm/action.yml`
+  - new helper under `scripts/` for staged-file determinism scope detection
+  - `docs/guides/testing-and-ci-capabilities.md`
+  - linked closeout/planning surfaces created or updated by the shipped slice
+- Expected outcome:
+  - local contributors get a repo-pinned Node 22 baseline
+  - `package.json` no longer claims a broader Node baseline than the CI/runtime
+    path actually uses
+  - pre-commit still blocks determinism-sensitive changes, but it stops paying
+    the full determinism build/lint cost for unrelated changes
+  - the CI shared setup can restore the root Turbo local cache across runs
+- Risks and mitigations:
+  - risk: pre-commit scoping misses a determinism-sensitive path
+  - mitigation: start from the current `lint:determinism` ownership and keep the
+    guard fail-closed for engine and adapter-temporal workflow code
+  - risk: `.turbo` cache adds complexity without measurable reuse
+  - mitigation: keep the change limited to the existing Turbo root build path
+    and record the before/after command evidence in closeout
+  - risk: Node pin drift moves to docs instead of code
+  - mitigation: update the canonical testing/CI guide in the same slice
+- Out of scope:
+  - Turbo `test`
+  - Turbo `typecheck`
+  - package-wide `typecheck` script rollout
+  - coverage-threshold changes
+  - TypeScript project references
+- Validation plan:
+  - targeted helper tests for the new staged-file scope helper
+  - `pnpm lint:md`
+  - `pnpm docs:sync`
+  - `pnpm verify:prepush`
+  - targeted smoke checks for the new pre-commit scope helper and the shared CI
+    setup action wiring
+- Test coverage plan:
+  - unit coverage for the staged-file scope helper covering
+    engine-sensitive, Temporal-workflow-sensitive, and irrelevant-file cases
+  - no fake timing claims: any performance gain reported in closeout must come
+    from recorded command evidence or from an explicit avoided-work explanation
+    tied to the new scope rules
+- Libraries evaluated:
+  - no new library is required for Wave 1
+  - Turbo remains the existing orchestrator; this slice only improves the
+    contract around it
+
+### Wave 2 Guardrail
+
+Do not execute Turbo `typecheck` adoption until the package-script contract is
+explicit. Today, the repo still mixes:
+
+- real package `typecheck` scripts in selected workspaces
+- build-as-typecheck behavior in others
+- root `type-check` orchestration that still includes a final `tsc --noEmit`
+
+That means Wave 2 must first decide which workspaces own a canonical
+package-level `typecheck` command before Turbo can claim that graph honestly.
+
+### Wave 2A Minimum Slice
+
+The first truthful Wave 2 step is package-contract normalization, not Turbo
+adoption:
+
+- every workspace that currently exposes `build` must also expose a canonical
+  package-level `typecheck`
+- workspaces whose no-emit typecheck depends on built workspace declarations
+  may keep package-local `pretypecheck` hooks
+- the existing affected command (`pnpm ci:affected:typecheck`) should become
+  more truthful through script normalization before any root or Turbo
+  orchestration changes are claimed as a gain
+
+This slice is intentionally smaller than Turbo `typecheck` rollout. It removes
+the current script-ownership blind spot without pretending the broader root
+`type-check` contract or Turbo task graph are already settled.
+
+### Wave 2B Safe Consumer Slice
+
+Once Wave 2A is green, the next truthful follow-up is to wire the now-explicit
+package contract into the smallest safe Turbo consumers:
+
+- declare governed Turbo `typecheck` and `test` tasks in `turbo.json`
+- route affected local commands through a single wrapper that sets the
+  orchestrated environment explicitly
+- rewire the lightweight `CI - Code Quality` build/typecheck matrix to that
+  same wrapper instead of maintaining a parallel raw-package path
+- keep full-root `pnpm test`, root `pnpm type-check`, and the broader PR test
+  suite out of scope until their contracts are designed as first-class slices
+
+This keeps Wave 2 honest: package ownership is explicit first, then only the
+consumers that can safely reuse that ownership move to Turbo.
+
 ## Executable Action Plan
 
 ### Wave 1 - Scope Authority Convergence
+
+`CDG-W1-0` establishes the repository command catalog so later scope work can
+classify package scripts and script files through one executable taxonomy
+instead of repeating path lists in workflows and scope helpers.
 
 | Task       | Files / surfaces                                                                                   | Action                                                                                                                                      | Validation                                                                                 | Exit criteria                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | `CDG-W1-1` | `ci.yml`, `tools/ci/emit-workspace-matrix.mjs`, `tools/ci/scope-config.mjs`                        | Rewire `detect-affected` in `ci.yml` to use `emit-workspace-matrix.mjs` instead of maintaining inline workspace inventories.                | `pnpm test:ci-tools`, targeted workflow parity tests, `pnpm verify:prepush`                | `ci.yml` no longer owns a separate workspace path inventory.                                      |
 | `CDG-W1-2` | `test.yml`, `contracts.yml`, `tools/ci/emit-scope.mjs`, `tools/ci/scope-config.mjs`                | Move remaining inline PR scope definitions into shared scope modules. Preserve the adapter-postgres policy JSON as the canonical exception. | `pnpm test:ci-tools`, `pnpm verify:prepush`                                                | `test.yml` and `contracts.yml` read scope from shared tooling rather than duplicating path rules. |
 | `CDG-W1-3` | `.husky/pre-push`, `scripts/check-changed.cjs`, new local scope helper under `tools/ci/` if needed | Replace grep-based hook scope classification with the same underlying scope policy used by CI. Standardize diff-base fallback order.        | `pnpm test:ci-tools`, manual docs-only and code-change smoke checks, `pnpm verify:prepush` | Hook and workflow scope decisions are derived from the same source of truth.                      |
+
+2026-05-10 update: `CDG-W1-2` is now the active remediation slice for
+`CI-AUDIT-CONTRACTS-SCOPE` and `CI-AUDIT-ENGINE-COVERAGE`. `test.yml` and
+`contracts.yml` consume semantic outputs from `tools/ci/emit-scope.mjs` for
+adapter-postgres, determinism, coverage, contracts, and golden lanes instead of
+owning local `dorny/paths-filter` package-root rules.
 
 ### Wave 2 - Local / CI Contract Cleanup
 
@@ -262,15 +584,104 @@ these properties:
 | `CDG-W2-2` | `package.json`, hook scripts, CI docs                                           | Make `verify:prepush` scope-aware for code changes while preserving strictness for governance-sensitive files.                                                                        | `pnpm verify:prepush`, changed-file smoke tests, affected package type-check/test runs | Pre-push no longer pays full-repo cost for every small code change.                       |
 | `CDG-W2-3` | `package.json` lint-staged config                                               | Add `scripts/**/*.{js,cjs,mjs}` and `tools/ci/**/*.{js,cjs,mjs}` to staged-file lint and format enforcement.                                                                          | `pnpm verify:prepush`, commit smoke on changed script files                            | Repo tooling receives the same local hygiene enforcement as application code.             |
 
+### Wave 2C Remaining Scope Slice
+
+Wave 2A and 2B are now live, and the staged-file tooling coverage from
+`CDG-W2-3` has already been absorbed into the shipped pre-commit hardening.
+
+The remaining Wave 2 gap is the strict pre-push type-check selector:
+
+- workspace-local TypeScript changes should reuse
+  `pnpm ci:affected:typecheck`
+- root config and other cross-workspace TypeScript graph changes should remain
+  on full `pnpm type-check`
+- the selected path should be explicit in local output so contributors can tell
+  why the stricter full-root gate was or was not used
+
 ### Wave 3 - Docs Governance Convergence
 
-| Task       | Files / surfaces                                                          | Action                                                                                                                                                                   | Validation                                                                          | Exit criteria                                                                     |
-| ---------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `CDG-W3-1` | `tools/docs/generate-docs-manifest.ts`, `package.json`, `docs:gov` wiring | Refactor the manifest generator so the committed output is deterministic. Remove or externalize timestamp noise, then wire the manifest into `docs:gov`.                 | `pnpm docs:gov:manifest`, `pnpm docs:gov`, `pnpm docs:ci`, `pnpm verify:prepush`    | The manifest becomes a real governance artifact instead of a dormant helper.      |
-| `CDG-W3-2` | docs governance tools and docs inventory                                  | Introduce changed-files fail-closed rules for new docs: strict filenames for new/changed docs, doc-class frontmatter validation, and clearer placement failure messages. | `pnpm docs:gov`, `pnpm docs:gov:locations -- --changed-only`, `pnpm verify:prepush` | New docs cannot silently land in non-canonical paths or naming patterns.          |
-| `CDG-W3-3` | `docs/DOCS_README.md`, planning docs, generator scripts                   | Document and enforce single-writer discipline for generated docs: source file, generator command, and manual-edit policy per artifact class.                             | `pnpm docs:sync`, `pnpm docs:gov`, `pnpm docs:ci`                                   | Contributors can identify canonical source vs. generated output without guessing. |
+### Wave 3A Immediate Determinism Slice
+
+The first truthful Wave 3 step is not filename policy expansion. It is making
+the existing docs manifest path stable enough to become a governed artifact.
+
+That slice should:
+
+- remove timestamp and traversal-order noise from the manifest generator
+- [Task: GOV-PROP-DISP-1] create a tracked `docs/.manifest.json` output that stays byte-stable on an
+  unchanged worktree
+- keep local-friendly regeneration under `docs:gov`
+- [Task: GOV-PROP-DISP-1] add an explicit strict drift gate for the tracked manifest in `ci:docs`
+
+This converts the existing helper into a real machine-readable docs inventory
+without reopening the broader docs-governance rollout.
+
+### Wave 3B Immediate Changed-Doc Policy Slice
+
+With the deterministic manifest path live, the next truthful `CDG-W3-2` step is
+to make changed docs fail closed on the policy surfaces that are safe to enforce
+without normalizing all historical docs debt first.
+
+That slice should:
+
+- [Task: GOV-PROP-DISP-1] add changed-only strict filename enforcement for docs Markdown files
+- [Task: GOV-PROP-DISP-1] add changed-only ADR/evidence frontmatter validation
+- keep historical filename and metadata backlog warning-only in the full-repo
+  scan
+- improve changed Markdown placement failures so contributors are told to move
+  governed documentation into `docs/`
+- [Task: GOV-PROP-DISP-1] wire the changed-doc gates into both `docs:gov` and `verify:prepush`
+
+This keeps Wave 3 honest: new or changed docs must meet the current governance
+contract, while legacy cleanup remains a separate backlog instead of becoming
+an unrelated red gate.
+
+### Wave 3C Immediate Single-Writer Slice
+
+With deterministic docs artifacts and changed-doc policy live, the final Wave 3
+ownership step is to make generated-doc source authority explicit and
+machine-checked.
+
+That slice should:
+
+- declare generated-doc artifact classes in one policy file
+- record source paths, generator command, tracked or untracked posture, and
+  manual-edit policy per class
+- validate that tracked generated outputs are actually tracked and ignored
+  planning outputs remain untracked
+- validate generated markers for declared Markdown outputs when those outputs
+  exist locally
+- [Task: GOV-PROP-DISP-1] wire the policy checker into local-friendly docs governance, strict docs CI,
+  and pre-push
+
+This keeps generated docs honest without reopening broader merge-hotspot
+extraction: the policy tells contributors where to edit and what to run, while
+future slices can still decide whether additional generated outputs should be
+split, ignored, or kept tracked.
+
+| Task       | Files / surfaces                                                                           | Action                                                                                                                                                                   | Validation                                                                          | Exit criteria                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `CDG-W3-1` | `tools/docs/generate-docs-manifest.ts`, `package.json`, `docs:gov` wiring                  | Refactor the manifest generator so the committed output is deterministic. Remove or externalize timestamp noise, then wire the manifest into `docs:gov`.                 | `pnpm docs:gov:manifest`, `pnpm docs:gov`, `pnpm docs:ci`, `pnpm verify:prepush`    | The manifest becomes a real governance artifact instead of a dormant helper.      |
+| `CDG-W3-2` | docs governance tools and docs inventory                                                   | Introduce changed-files fail-closed rules for new docs: strict filenames for new/changed docs, doc-class frontmatter validation, and clearer placement failure messages. | `pnpm docs:gov`, `pnpm docs:gov:locations -- --changed-only`, `pnpm verify:prepush` | New docs cannot silently land in non-canonical paths or naming patterns.          |
+| `CDG-W3-3` | `docs/generated-docs-policy.json`, `docs/DOCS_README.md`, planning docs, generator scripts | Document and enforce single-writer discipline for generated docs: source file, generator command, tracking posture, and manual-edit policy per artifact class.           | `pnpm docs:gov:generated-policy`, `pnpm docs:sync`, `pnpm docs:gov`, `pnpm docs:ci` | Contributors can identify canonical source vs. generated output without guessing. |
 
 ### Wave 4 - Merge-Hotspot And Trust Hardening
+
+### Wave 4A Immediate Trust Slice
+
+Now that the shared scope modules and Turbo affected-task routing are live, the
+next smallest trust-hardening move is to make `pnpm test:ci-tools` merge-gated
+inside an already-required workflow rather than leaving it as local-only
+evidence.
+
+That slice should:
+
+- run `pnpm test:ci-tools` in `CI - Code Quality`
+- keep workflow parity tests asserting that wiring remains present
+- avoid introducing a brand-new workflow surface for the same capability
+
+This closes the gap where CI policy tests exist but are not yet exercised by a
+real PR/push gate.
 
 | Task       | Files / surfaces                                                             | Action                                                                                                                                                                 | Validation                                                                      | Exit criteria                                                            |
 | ---------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |

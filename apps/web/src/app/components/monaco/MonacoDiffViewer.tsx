@@ -1,3 +1,4 @@
+/** Owned concern: lazy-load the Monaco DiffEditor surface behind a route-safe read-only viewer API. */
 import { Suspense, lazy } from 'react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';

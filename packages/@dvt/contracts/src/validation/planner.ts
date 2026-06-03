@@ -10,7 +10,11 @@ import {
   type ArtifactRefSchemaT,
   DesignGraphDraftSchema,
   type DesignGraphDraftSchemaT,
+  ExecutableSubgraphSchema,
+  type ExecutableSubgraphSchemaT,
   ExecutionPlanSchema,
+  ExecutionSelectionSchema,
+  type ExecutionSelectionSchemaT,
   type ExecutionPlanSchemaT,
   ExecutionStepV1Schema,
   type ExecutionStepV1SchemaT,
@@ -119,6 +123,14 @@ export function parsePlanCore(input: unknown): PlanCoreSchemaT {
 
 export function parseExecutionPlan(input: unknown): ExecutionPlanSchemaT {
   return parseWithSchema(ExecutionPlanSchema, input);
+}
+
+export function parseExecutionSelection(input: unknown): ExecutionSelectionSchemaT {
+  return parseWithSchema(ExecutionSelectionSchema, input);
+}
+
+export function parseExecutableSubgraph(input: unknown): ExecutableSubgraphSchemaT {
+  return parseWithSchema(ExecutableSubgraphSchema, input);
 }
 
 export function parsePlannerInputEnvelopeV1(input: unknown): PlannerInputEnvelopeV1SchemaT {

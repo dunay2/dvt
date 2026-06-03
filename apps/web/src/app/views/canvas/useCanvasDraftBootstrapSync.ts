@@ -1,71 +1,82 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useRef, type Dispatch, type SetStateAction } from 'react';
 
+import type { CanvasDraftQueryCache } from './canvasDraftQueryCache';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import type { CanvasNodePositions } from './canvasAuthoringRuntime.types';
 import type {
   DraftSaveStatus,
   GraphDraftQueryState,
-  GraphSnapshotQueryState,
-  QueryClientLike,
+  GraphAuthorityQueryState,
 } from './canvasDraftLifecycle.types';
 import type { CanvasDraftLifecycleCanonicalSnapshot } from './canvasDraftLifecycleSnapshot';
+import type { CanvasAuthoringSemanticGraph } from '../../services/workspace/workspaceGraphDraftProjection';
 import { useCanvasDraftBootstrapping } from './useCanvasDraftBootstrapping';
 import { useCanvasDraftCanonicalReconcile } from './useCanvasDraftCanonicalReconcile';
 import { useCanvasDraftReloadHydration } from './useCanvasDraftReloadHydration';
 
 type UseCanvasDraftBootstrapSyncArgs = {
   graphDraftQuery: GraphDraftQueryState;
-  graphSnapshotQuery: GraphSnapshotQueryState;
-  queryClient: QueryClientLike;
+  graphAuthorityQuery: GraphAuthorityQueryState;
+  draftQueryCache: CanvasDraftQueryCache;
   workspaceLayoutKey: string;
   draftSession: CanvasDraftSession;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   canonicalSnapshot: CanvasDraftLifecycleCanonicalSnapshot;
-  setCanvasNodePositions: (
-    workspaceLayoutKey: string,
-    positions: Record<string, { x: number; y: number }>
-  ) => void;
+  persistedNodePositions: CanvasNodePositions;
+  setCanvasNodePositions: (workspaceLayoutKey: string, positions: CanvasNodePositions) => void;
   setDraftSaveStatus: Dispatch<SetStateAction<DraftSaveStatus>>;
   invalidateInFlightSaveAttempt: () => void;
   lastSavedSignatureRef: { current: string | null };
+  lastFailedSignatureRef: { current: string | null };
 };
 
 export function useCanvasDraftBootstrapSync({
   graphDraftQuery,
-  graphSnapshotQuery,
-  queryClient,
+  graphAuthorityQuery,
+  draftQueryCache,
   workspaceLayoutKey,
   draftSession,
   setDraftSession,
   canonicalSnapshot,
+  persistedNodePositions,
   setCanvasNodePositions,
   setDraftSaveStatus,
   invalidateInFlightSaveAttempt,
   lastSavedSignatureRef,
+  lastFailedSignatureRef,
 }: UseCanvasDraftBootstrapSyncArgs) {
+  const lastAuthoritativeSemanticGraphRef = useRef<CanvasAuthoringSemanticGraph | null>(null);
+
   const applyReloadedRemoteDraft = useCanvasDraftReloadHydration({
-    queryClient,
+    draftQueryCache,
     workspaceLayoutKey,
     setDraftSession,
+    persistedNodePositions,
     setCanvasNodePositions,
     setDraftSaveStatus,
     lastSavedSignatureRef,
+    lastFailedSignatureRef,
+    lastAuthoritativeSemanticGraphRef,
   });
 
   useCanvasDraftBootstrapping({
     graphDraftQuery,
-    graphSnapshotQuery,
+    graphAuthorityQuery,
     workspaceLayoutKey,
     draftSession,
     setDraftSession,
     canonicalSnapshot,
+    persistedNodePositions,
     setCanvasNodePositions,
     setDraftSaveStatus,
     invalidateInFlightSaveAttempt,
     lastSavedSignatureRef,
+    lastFailedSignatureRef,
+    lastAuthoritativeSemanticGraphRef,
   });
 
   useCanvasDraftCanonicalReconcile({
-    graphSnapshotQuery,
+    graphAuthorityQuery,
     draftSession,
     setDraftSession,
     canonicalSnapshot,

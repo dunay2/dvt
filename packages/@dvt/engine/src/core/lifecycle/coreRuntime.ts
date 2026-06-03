@@ -8,9 +8,8 @@ import type {
   SignalRequest,
 } from '@dvt/contracts';
 
-import { AdapterNotRegisteredError, RunMetadataNotFoundError } from '../../contracts/errors.js';
+import { RunMetadataNotFoundError } from '../../contracts/errors.js';
 import type { IClock } from '../../utils/clock.js';
-import { toErrorMessage } from '../../utils/errorUtils.js';
 import type { IdempotencyKeyBuilder } from '../idempotency.js';
 import { SnapshotProjector, snapshotToStatus } from '../SnapshotProjector.js';
 
@@ -21,18 +20,8 @@ import {
 } from './coreDomainConstants.js';
 import type { StartRunTraceContext } from './StartRunTraceContext.js';
 
-type IProviderAdapter = import('../../adapters/IProviderAdapter.js').IProviderAdapter;
 type IRunStateStoreRead = import('../../ports/IRunStateStore.js').IRunStateStoreRead;
 type IRunStateStoreWrite = import('../../ports/IRunStateStore.js').IRunStateStoreWrite;
-
-export function getAdapterOrThrow(
-  adapters: Map<EngineRunRef['provider'], IProviderAdapter>,
-  provider: EngineRunRef['provider']
-): IProviderAdapter {
-  const adapter = adapters.get(provider);
-  if (adapter === undefined) throw new AdapterNotRegisteredError(provider);
-  return adapter;
-}
 
 export async function resolveMetaOrThrow(
   stateStoreRead: IRunStateStoreRead,
@@ -107,11 +96,7 @@ export function buildTraceContext(
 }
 
 export function normalizeEngineRunRef(input: ReturnType<typeof parseEngineRunRef>): EngineRunRef {
-  const normalizer = ENGINE_RUN_REF_NORMALIZER_BY_PROVIDER[input.provider];
-  if (normalizer === undefined) {
-    return throwUnsupportedProvider(input.provider);
-  }
-  return normalizer(input as never);
+  return normalizeTemporalRunRef(input);
 }
 
 export function normalizeSignalRequest(
@@ -244,16 +229,7 @@ function buildRunEvent(input: {
 }
 
 type ParsedEngineRunRef = ReturnType<typeof parseEngineRunRef>;
-type ParsedProvider = ParsedEngineRunRef['provider'];
-type ParsedEngineRunRefByProvider<P extends ParsedProvider> = Extract<
-  ParsedEngineRunRef,
-  { provider: P }
->;
-type EngineRunRefNormalizer<P extends ParsedProvider> = (
-  input: ParsedEngineRunRefByProvider<P>
-) => EngineRunRef;
-
-const normalizeTemporalRunRef: EngineRunRefNormalizer<'temporal'> = (input) => {
+function normalizeTemporalRunRef(input: ParsedEngineRunRef): EngineRunRef {
   const runRef: EngineRunRef = {
     provider: 'temporal',
     tenantId: input.tenantId,
@@ -263,31 +239,4 @@ const normalizeTemporalRunRef: EngineRunRefNormalizer<'temporal'> = (input) => {
   };
   if (input.taskQueue !== undefined) runRef.taskQueue = input.taskQueue;
   return runRef;
-};
-
-const normalizeConductorRunRef: EngineRunRefNormalizer<'conductor'> = (input) => ({
-  provider: 'conductor',
-  tenantId: input.tenantId,
-  workflowId: input.workflowId,
-  runId: input.runId,
-  conductorUrl: input.conductorUrl,
-});
-
-const normalizeMockRunRef: EngineRunRefNormalizer<'mock'> = (input) => ({
-  provider: 'mock',
-  tenantId: input.tenantId,
-  workflowId: input.workflowId,
-  runId: input.runId,
-});
-
-const ENGINE_RUN_REF_NORMALIZER_BY_PROVIDER: {
-  [K in ParsedProvider]: EngineRunRefNormalizer<K>;
-} = {
-  temporal: normalizeTemporalRunRef,
-  conductor: normalizeConductorRunRef,
-  mock: normalizeMockRunRef,
-};
-
-function throwUnsupportedProvider(provider: unknown): never {
-  throw new Error(`Unsupported provider: ${toErrorMessage(provider)}`);
 }

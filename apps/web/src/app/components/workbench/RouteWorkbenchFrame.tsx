@@ -1,3 +1,4 @@
+/** Owned concern: provide the route-level workbench frame, layout tokens, and shared panel classes. */
 import type { ReactNode } from 'react';
 
 import { ScrollArea } from '../ui/scroll-area';
@@ -32,30 +33,77 @@ export const routeWorkbenchTabListClassName =
 export const routeWorkbenchTabTriggerClassName =
   'text-[var(--text-muted)] data-[state=active]:bg-[var(--surface-elevated)] data-[state=active]:text-[var(--text-strong)]';
 
-export const routeWorkbenchMonacoSurfaceClassName =
-  'h-[420px] overflow-hidden rounded border border-[color:var(--border-default)] bg-[var(--surface-app)]';
-
 type RouteWorkbenchFrameProps = {
   readonly header?: ReactNode;
-  readonly children: ReactNode;
+  readonly slots: RouteWorkbenchFrameSlots;
   readonly className?: string;
   readonly bodyClassName?: string;
   readonly bodyContainerClassName?: string;
   readonly scroll?: boolean;
 };
 
+export type RouteWorkbenchFrameSlots = Readonly<{
+  leftPanel?: ReactNode;
+  primarySurface: ReactNode;
+  rightPanel?: ReactNode;
+  bottomDrawer?: ReactNode;
+}>;
+
+function RouteWorkbenchSlotLayout({
+  slots,
+  primarySurfaceClassName,
+}: {
+  readonly slots: RouteWorkbenchFrameSlots;
+  readonly primarySurfaceClassName?: string;
+}) {
+  return (
+    <div data-slot="route-workbench-slot-stack" className="flex h-full min-h-0 flex-col gap-4">
+      <div data-slot="route-workbench-slot-layout" className="flex min-h-0 flex-1 gap-4">
+        {slots.leftPanel ? (
+          <aside
+            data-slot="route-workbench-left-panel"
+            className="min-h-0 w-72 shrink-0 overflow-hidden"
+          >
+            {slots.leftPanel}
+          </aside>
+        ) : null}
+        <main
+          data-slot="route-workbench-primary-surface"
+          className={cn('min-w-0 flex-1', primarySurfaceClassName)}
+        >
+          {slots.primarySurface}
+        </main>
+        {slots.rightPanel ? (
+          <aside
+            data-slot="route-workbench-right-panel"
+            className="min-h-0 w-80 shrink-0 overflow-hidden"
+          >
+            {slots.rightPanel}
+          </aside>
+        ) : null}
+      </div>
+      {slots.bottomDrawer ? (
+        <section
+          data-slot="route-workbench-bottom-drawer"
+          className="min-h-0 shrink-0 overflow-hidden"
+        >
+          {slots.bottomDrawer}
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
 export function RouteWorkbenchFrame({
   header,
-  children,
+  slots,
   className,
   bodyClassName,
   bodyContainerClassName,
   scroll = true,
 }: RouteWorkbenchFrameProps) {
-  const bodyContent = bodyContainerClassName ? (
-    <div className={bodyContainerClassName}>{children}</div>
-  ) : (
-    children
+  const bodyContent = (
+    <RouteWorkbenchSlotLayout slots={slots} primarySurfaceClassName={bodyContainerClassName} />
   );
 
   return (

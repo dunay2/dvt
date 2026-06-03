@@ -75,4 +75,36 @@ describe('temporal worker env', () => {
       })
     ).toThrow(/TEMPORAL_ADDRESS/);
   });
+
+  it('accepts the Temporal continue-as-new payload budget env', () => {
+    const env = loadEnv({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+      TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: '64000',
+    });
+
+    expect((env as Record<string, unknown>).TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES).toBe(
+      '64000'
+    );
+  });
+
+  it('accepts provider-neutral step activity route env for config parity', () => {
+    const routes = JSON.stringify({
+      PYTHON_SCRIPT: {
+        capability: 'executor.python',
+        taskQueue: 'dvt-temporal-python',
+      },
+    });
+    const env = loadEnv({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+      TEMPORAL_STEP_ACTIVITY_ROUTES: routes,
+    });
+
+    expect((env as Record<string, unknown>).TEMPORAL_STEP_ACTIVITY_ROUTES).toBe(routes);
+  });
 });

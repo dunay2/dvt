@@ -30,7 +30,7 @@ class SnapshotUpsertClient {
     }
 
     if (sql.includes('INSERT INTO "dvt".run_snapshots')) {
-      const [, snapshotJson, lastRunSeq, , archiveUnitKey, eventChecksumSha256, archivedAt] =
+      const [, , snapshotJson, lastRunSeq, , archiveUnitKey, eventChecksumSha256, archivedAt] =
         params ?? [];
       const incomingSeq = Number(lastRunSeq);
       const hasCasGuard = sql.includes('WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq');
@@ -109,7 +109,7 @@ describe('PostgresRunSnapshotStore CAS guard', () => {
     );
     const staleSnapshot = makeSnapshot('run-1', 'FAILED');
 
-    await store.persistWithClient(client as never, 'run-1', staleSnapshot, 4);
+    await store.persistWithClient(client as never, 'tenant-1', 'run-1', staleSnapshot, 4);
 
     expect(client.queries[0]?.sql).toContain(
       'WHERE run_snapshots.last_run_seq <= EXCLUDED.last_run_seq'

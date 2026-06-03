@@ -2,61 +2,63 @@ export type CostViewCopy = {
   readonly title: string;
   readonly subtitle: string;
   readonly focusedRun: string;
-  readonly currentRunEstimate: string;
-  readonly costSeriesLabel: string;
-  readonly durationSeriesLabel: string;
+  readonly costCaptureUnavailable: string;
+  readonly durationByRunSeriesLabel: string;
+  readonly durationByStepSeriesLabel: string;
   readonly loadingTitle: string;
   readonly loadingDescription: string;
   readonly errorTitle: string;
   readonly errorDescription: string;
-  readonly totalObservedNodeCost: string;
-  readonly runsAvailable: string;
-  readonly averageCostPerRun: string;
-  readonly costAlerts: string;
+  readonly costCaptureStatus: string;
+  readonly runsObserved: string;
+  readonly completedSteps: string;
+  readonly failedSteps: string;
   readonly tracked: string;
-  readonly workspace: string;
-  readonly estimatedCostByRun: string;
-  readonly durationByModel: string;
-  readonly topCostDrivers: string;
-  readonly noNodeCostData: string;
+  readonly runtime: string;
+  readonly durationByRun: string;
+  readonly durationByStep: string;
+  readonly topUsageDrivers: string;
+  readonly noUsageData: string;
   readonly alerts: string;
   readonly noActiveAlerts: string;
   readonly warning: string;
   readonly coverage: string;
   readonly coverageDescription: string;
-  readonly nodesWithCostData: string;
+  readonly stepsWithUsageData: string;
   readonly totalObservedDuration: string;
+  readonly observedWindow: string;
 };
 
 const EN_COPY: CostViewCopy = {
   title: 'Cost',
-  subtitle: 'Node cost data is derived from the active workspace graph.',
+  subtitle: 'Runtime usage attribution from protected run events. Monetary capture is explicit.',
   focusedRun: 'Focused run',
-  currentRunEstimate: 'Current run estimate',
-  costSeriesLabel: 'Cost',
-  durationSeriesLabel: 'Duration (s)',
-  loadingTitle: 'Loading cost coverage',
-  loadingDescription: 'Loading cost coverage from workspace and runs...',
-  errorTitle: 'Cost data unavailable',
-  errorDescription: 'Cost data could not be loaded from the current data source.',
-  totalObservedNodeCost: 'Total observed node cost',
-  runsAvailable: 'Runs available',
-  averageCostPerRun: 'Average cost per run',
-  costAlerts: 'Cost alerts',
+  costCaptureUnavailable: 'Cost capture unavailable',
+  durationByRunSeriesLabel: 'Run duration (s)',
+  durationByStepSeriesLabel: 'Step duration (s)',
+  loadingTitle: 'Loading cost attribution',
+  loadingDescription: 'Loading runtime usage facts from protected run events...',
+  errorTitle: 'Cost attribution unavailable',
+  errorDescription: 'Runtime usage facts could not be loaded from the current data source.',
+  costCaptureStatus: 'Cost capture status',
+  runsObserved: 'Runs observed',
+  completedSteps: 'Completed steps',
+  failedSteps: 'Failed steps',
   tracked: 'tracked',
-  workspace: 'workspace',
-  estimatedCostByRun: 'Estimated cost by run',
-  durationByModel: 'Duration by model',
-  topCostDrivers: 'Top cost drivers',
-  noNodeCostData: 'No node cost data is available.',
+  runtime: 'runtime',
+  durationByRun: 'Duration by run',
+  durationByStep: 'Duration by step',
+  topUsageDrivers: 'Top runtime usage drivers',
+  noUsageData: 'No runtime usage data is available.',
   alerts: 'Alerts',
-  noActiveAlerts: 'No cost alerts are active.',
+  noActiveAlerts: 'No runtime attribution alerts are active.',
   warning: 'Warning',
   coverage: 'Coverage',
   coverageDescription:
-    'Cost coverage currently uses node-level `lastCost` and `lastDuration` data from the workspace graph. The canvas cost heatmap reads the same source when the `Cost` overlay is enabled from the canvas toolbar.',
-  nodesWithCostData: 'Nodes with cost data',
+    'This view uses the protected CostAttributionSummary read model. Monetary totals remain unavailable until provider credit capture is implemented.',
+  stepsWithUsageData: 'Steps with usage data',
   totalObservedDuration: 'Total observed duration',
+  observedWindow: 'Observed window',
 };
 
 const COPY_BY_LOCALE = {

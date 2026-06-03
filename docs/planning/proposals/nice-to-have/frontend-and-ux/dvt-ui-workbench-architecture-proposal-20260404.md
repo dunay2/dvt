@@ -39,6 +39,8 @@ Canonical truth for shipped behavior remains in:
 This is a planning synthesis document.
 
 It is not the canonical implementation spec for frontend behavior.
+For Canvas workbench shell direction, `F-28` supersedes this proposal wherever
+this file still describes a fixed left rail or primary left-rail navigation.
 
 Use it to:
 
@@ -70,8 +72,9 @@ flowchart TB
   App["Full-screen app shell"] --> Top["Top bar"]
   App --> Health["Health banner"]
   App --> Body["Main shell body"]
-  Body --> Nav["Left navigation rail"]
   Body --> Route["Active route workbench"]
+  Top --> Menu["Top menu and command palette"]
+  Route --> Strip["Workbench view strip"]
   Route --> Left["Optional left context panel"]
   Route --> Center["Primary surface"]
   Route --> Right["Optional right context panel"]
@@ -81,7 +84,8 @@ flowchart TB
 Shell rules:
 
 - the top bar owns global context only;
-- the left rail owns primary route navigation;
+- top menu and command palette own command discovery;
+- Canvas does not use a fixed left navigation rail;
 - the center owns one active workbench route at a time;
 - the bottom drawer is supporting context, not a second navigation model;
 - side panels are contextual and resizable, not fixed floating windows.
@@ -90,9 +94,9 @@ Shell rules:
 
 Primary navigation should be:
 
-1. left rail for route switching;
+1. top menu and command palette for global/workbench command discovery;
 2. top bar for tenant, project, environment, health, and session context;
-3. route toolbar for local commands;
+3. route toolbar and view strip for local commands and projections;
 4. local tabs only inside a route when they segment one job.
 
 Explicit non-goal:
@@ -286,7 +290,7 @@ This proposal rejects the following as the primary product direction:
 
 1. DVT should converge on a persistent workbench shell.
 2. The main route should be `Canvas`.
-3. Primary navigation should live in the left rail.
+3. Canvas primary navigation must not live in a fixed left rail.
 4. Global context should live in the top bar.
 5. Route-local actions should live in route toolbars.
 6. Global workbench tabs should not be the main navigation model.

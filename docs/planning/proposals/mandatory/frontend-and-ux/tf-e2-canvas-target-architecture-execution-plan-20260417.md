@@ -1,8 +1,8 @@
 ---
 title: TF-E2 Canvas Target Architecture Execution Plan 2026-04-17
-status: Draft
+status: Implemented
 owner: Product / Frontend / Architecture
-last_reviewed: 2026-04-18
+last_reviewed: 2026-05-14
 planning_type: proposal
 lane: E
 task_id: TF-E2
@@ -21,7 +21,21 @@ slice is still being productized.
 
 The working assumption is explicit: do not rewrite the current runtime in one
 pass. The target architecture must be reached by seam extraction, ownership
-clarification, and small reviewable slices.
+clarification, small reviewable slices, and one hard cut on the active
+authoring path once the typed port is ready.
+
+## 2026-05-14 Parent Closure
+
+`TF-E2` is closed as a parent architecture execution plan. Its child slices
+landed the seam-first hard cut, protected draft-authoring port adoption,
+route-owned Inspector lifecycle, selected-closure proof, first-authoring live
+proof, startup readiness, denied-posture handling, and architecture guardrails
+that keep the active Canvas path off the legacy projected DTO.
+
+This document remains the historical target architecture and traceability map.
+New work must not reopen `TF-E2` implicitly; persisted-version compatibility,
+additional live-runtime matrices, or broader Canvas UX follow-ups require their
+own planning DB task and governing evidence.
 
 ## Governing sources
 
@@ -36,6 +50,7 @@ clarification, and small reviewable slices.
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-production-node-authoring-and-persistence-plan-20260416.md`
 - `docs/planning/reviews/20260417-dvt-plus-deep-architectural-review.md`
+- `docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md`
 - `docs/architecture/components/web/frontend-data-boundary-architecture.md`
 - `docs/architecture/components/web/graph/graph-frontend-architecture.md`
 - `docs/architecture/components/web/graph/graph-route-bootstrap-architecture.md`
@@ -52,6 +67,42 @@ clarification, and small reviewable slices.
 - The deep review remains the rationale and risk intake.
 - This document is the execution companion that converts those sources into
   phased work, user stories, bounded contexts, ports, and acceptance slices.
+
+## Current Branch Baseline After 2026-04-20 Sync
+
+- `origin/main` already includes the execution-actions test split landed by
+  `test(web): Split canvas execution action tests by responsibility (#984)`.
+  Test-file sharding is baseline, not remaining TF-E2 work.
+- `origin/main` already includes the Lane E backlog alignment landed by
+  `docs(docs): Align lane E remediation backlog (#985)`.
+- The current branch now exposes `IWorkspaceGraphDraftAuthoringPort` through
+  the composition root in `AppServices`.
+- The active Canvas authoring read and write path now routes through
+  `canvasDraftRepository` over `IWorkspaceGraphDraftAuthoringPort`, while
+  `IWorkspacePort` remains the snapshot and artifact-read boundary.
+- Save attempts still build governed `DesignGraphDraft` payloads before hitting
+  the protected draft-authoring boundary, so the active edit model remains
+  compile-shaped and cannot yet represent graph-first incomplete authoring
+  states such as "first node on an empty Canvas".
+- Preview and run handoff must now route through explicit
+  `ExecutionSelection` and an `ExecutableSubgraph` projection. A loose node
+  outside the selected dependency closure must not block a selected runnable
+  SQL node.
+- The projected `WorkspaceGraphDraft` DTO still survives as a route-local
+  projection and test read model, but it is no longer the active-authoring
+  authority on the Canvas read/write path.
+- The 2026-04-22 runtime-truth review freezes the next no-legacy decision:
+  active Canvas authoring must fail closed on protected-runtime absence and
+  must not preserve snapshot-backed or mock-backed startup semantics.
+- The test strategy is now explicit as well:
+  API integration tests are producer truth for the protected runtime contract,
+  web Vitest suites are route and consumer truth, and browser-level back/front
+  proof belongs to one live-runtime Cypress lane without `cy.intercept` on the
+  authoring contract.
+- Therefore the follow-up closure work was not another compatibility layer
+  around the projected DTO. It is the authoring-draft contract reset across
+  `TF-A2`, `TF-C4`, and `TF-E2-A`, followed by graph-first empty-state entry,
+  route-owned Inspector editing, and execution handoff proof.
 
 ## Problem Statement
 
@@ -74,15 +125,20 @@ arrive there without another round of implicit local decisions".
 
 ## Decision
 
-Adopt a strangler, seam-first migration plan for the remaining TF-E2 work.
+Adopt a seam-first, hard-cut migration plan for the remaining TF-E2 work.
 
 Rules for execution:
 
 - no big-bang rewrite of the Canvas route
 - no new frontend-local persistence contract
 - no reintroduction of React Flow or `localStorage` as semantic authority
+- no dual active authoring path once the typed draft-authoring port is ready
 - no new startup or operability path that bypasses the route bootstrap
   contract
+- the active Canvas authoring path must cut over to
+  `IWorkspaceGraphDraftAuthoringPort`
+- the legacy projected `WorkspaceGraphDraft` DTO is not an accepted authority
+  for active Canvas authoring after `TF-E2-A`
 - future slices must map to the bounded contexts, ports, aggregates, and
   sequences frozen in this document
 
@@ -118,15 +174,18 @@ read models and aggregates. They are not semantic owners.
 A route that mounts is not automatically operable. Operability is published
 through a route startup contract.
 
-### 4. Keep public ports stable while refactoring internals
+### 4. Keep the protected backend contract stable while replacing the active frontend seam
 
-The current protected backend surface and `IWorkspacePort` remain stable during
-this plan. The main work is internal seam clarification in `apps/web`.
+The protected backend surface remains stable during this plan, but the active
+Canvas authoring path in `apps/web` does not. `IWorkspacePort.getGraphDraft`
+and `saveGraphDraft` are a legacy projected seam for the active route. The
+target seam for active authoring is `IWorkspaceGraphDraftAuthoringPort`.
 
-### 5. Prefer branch by abstraction over replacement by churn
+### 5. Prefer seam extraction before deletion, but do not preserve dual active paths
 
 Introduce read models, registries, and publishers beside existing code. Move
-callers. Remove the old path only when the new path already carries validation.
+callers. Remove the old active path as soon as the new typed seam already
+carries validation. Do not keep dual active authoring paths alive for comfort.
 
 ## Ubiquitous Language
 
@@ -165,6 +224,7 @@ flowchart LR
   subgraph CanvasAuthoring["Bounded context: Canvas authoring"]
     DraftSession["CanvasDraftSession"]
     DraftScope["CanvasDraftScope"]
+    ExecutionSelection["ExecutionSelection"]
     Presentation["CanvasDraftPresentationModel"]
     Commands["Canvas command handlers"]
   end
@@ -175,6 +235,7 @@ flowchart LR
   end
 
   subgraph PlanRun["External context: Plan and run handoff"]
+    ExecutableSubgraph["ExecutableSubgraph"]
     PlanPreview["Plan preview service"]
     RunStart["Run start service"]
     RunsRoute["Runs route"]
@@ -196,10 +257,14 @@ flowchart LR
   DraftScope --> Presentation
   Presentation --> Publisher
   Commands --> DraftSession
+  Commands --> ExecutionSelection
   Snapshot --> DraftSession
   DraftRecord --> DraftSession
-  DraftScope --> PlanPreview
-  DraftScope --> RunStart
+  DraftScope --> ExecutionSelection
+  DraftRecord --> ExecutableSubgraph
+  ExecutionSelection --> ExecutableSubgraph
+  ExecutableSubgraph --> PlanPreview
+  ExecutableSubgraph --> RunStart
   RunStart --> RunsRoute
   DraftSession --> Telemetry
   Presentation --> Telemetry
@@ -247,9 +312,9 @@ Owned state:
 Owned invariants:
 
 - new canonical members never auto-enter the working set without an explicit
-  route action or explicit adoption
+  route action or authoritative remote reload
 - save transitions are CAS-aware and fail closed on stale writes
-- `missing_remote` blocks mutation until explicit adoption or remote reload
+- `missing_remote` blocks mutation until authoritative remote reload
 - members missing from the canonical snapshot are either pruned or represented
   as a projection-gap posture, never silently invented
 
@@ -305,9 +370,16 @@ The target architecture keeps backend ports stable and clarifies internal ports:
 - `WorkspaceGraphSnapshotPort` (external)
   current anchor: `IWorkspacePort.getGraph`
   target role: read canonical graph members.
-- `WorkspaceGraphDraftPort` (external)
+- `WorkspaceGraphDraftAuthoringPort` (external)
+  current anchor:
+  `apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts` +
+  `apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.api.ts`
+  target role: read/write the protected typed draft contract with CAS,
+  capability, schema, and audit semantics.
+- `WorkspaceGraphDraftLegacyProjectionPort` (external, transitional only)
   current anchor: `IWorkspacePort.getGraphDraft` and `saveGraphDraft`
-  target role: read/write persisted draft with CAS semantics.
+  target role: legacy projected DTO surface scheduled for removal from the
+  active Canvas authoring path.
 - `PlanPreviewPort` (external)
   current anchor: `plansService`
   target role: preview the current authoring scope.
@@ -391,7 +463,7 @@ flowchart TB
 
   subgraph Ports["Ports"]
     SnapshotPort["WorkspaceGraphSnapshotPort"]
-    DraftPort["WorkspaceGraphDraftPort"]
+    DraftPort["WorkspaceGraphDraftAuthoringPort"]
     PlanPort["PlanPreviewPort"]
     RunPort["RunStartPort"]
     NavPort["CanvasNavigationPort"]
@@ -472,7 +544,7 @@ classDiagram
     +applySaveSuccess()
     +applyConflict()
     +markRemoteDraftMissing()
-    +adoptCurrentSnapshot()
+    +reloadFromRemote()
   }
 
   class CanvasDraftScope {
@@ -515,7 +587,7 @@ classDiagram
     <<port>>
   }
 
-  class WorkspaceGraphDraftPort {
+  class WorkspaceGraphDraftAuthoringPort {
     <<port>>
   }
 
@@ -528,7 +600,7 @@ classDiagram
   CanvasController --> CanvasDraftPresentationModel
   CanvasController --> PlanPreviewPort
   CanvasController --> RunStartPort
-  CanvasDraftSession --> WorkspaceGraphDraftPort
+  CanvasDraftSession --> WorkspaceGraphDraftAuthoringPort
   CanvasDraftSession --> WorkspaceGraphSnapshotPort
   CanvasDraftSession --> WorkspaceGraphDraftRecord
   CanvasDraftSession --> WorkspaceGraphSnapshot
@@ -593,7 +665,7 @@ sequenceDiagram
   participant Operator as Operator
   participant Controller as useCanvasController
   participant Session as CanvasDraftSession
-  participant DraftPort as WorkspaceGraphDraftPort
+  participant DraftPort as WorkspaceGraphDraftAuthoringPort
   participant Presentation as CanvasDraftPresentationModel
 
   Operator->>Controller: mutate node or edge
@@ -613,7 +685,7 @@ sequenceDiagram
     DraftPort-->>Controller: null on reload
     Controller->>Session: markRemoteDraftMissing()
     Session->>Presentation: missing_remote posture
-    Presentation-->>Operator: adopt current workspace snapshot
+    Presentation-->>Operator: reload latest draft after protected authority is restored
   end
 ```
 
@@ -649,8 +721,6 @@ stateDiagram-v2
   saving --> conflict: applyConflict
   editing --> missing_remote: markRemoteDraftMissing
   conflict --> editing: reloadFromRemote
-  conflict --> editing: adoptCurrentSnapshot
-  missing_remote --> editing: adoptCurrentSnapshot
   missing_remote --> editing: reloadFromRemote
 ```
 
@@ -688,8 +758,8 @@ presentation during normal updates.
 1. As a read-only operator, I can inspect the graph and draft posture without
    being shown fake edit affordances.
 2. As an operator, if the remote draft disappears after I had a baseline, the
-   route blocks mutation and asks me to adopt the current canonical snapshot
-   explicitly.
+   route blocks mutation and asks me to reload the authoritative remote draft;
+   it does not reopen editing from projected local state.
 3. As a shell user, I do not see the route as ready until the active route
    explicitly publishes that it is operable.
 
@@ -713,49 +783,49 @@ presentation during normal updates.
 
 ### Executable user stories
 
-| Story ID    | Story                                                                                                      | Bounded context                          | Acceptance contract                                                                                |
-| ----------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `US-E2-001` | As a shell user, route reveal depends on explicit route startup publication keyed by `route.id`.           | shell startup + route startup contract   | No implicit fallback startup for published routes; non-published routes must be explicit `static`. |
-| `US-E2-002` | As a maintainer, route startup publication is monotonic for one mounted route instance.                    | route startup contract                   | No reset during same route instance; reset only on unmount or route identity change.               |
-| `US-E2-003` | As a write-authorized operator, draft saves are CAS-aware and fail closed on stale revision.               | Canvas authoring                         | Conflict posture is explicit and blocks silent overwrite.                                          |
-| `US-E2-004` | As a write-authorized operator, missing remote draft after baseline produces explicit recovery posture.    | Canvas authoring                         | `missing_remote` state blocks mutation until `adoptCurrentSnapshot` or remote reload.              |
-| `US-E2-005` | As a read-only operator, I can inspect graph truth while mutation controls remain explicitly gated.        | Canvas authoring + workspace persistence | Read-only posture is explicit; no fake save affordance.                                            |
-| `US-E2-006` | As a write-authorized operator, node and edge lifecycle operations persist and survive hard reload.        | Canvas authoring + workspace persistence | create/delete/move/reconnect round-trip through canonical draft boundary.                          |
-| `US-E2-007` | As a write-authorized operator, Inspector edits use the same aggregate and ports as graph commands.        | Canvas authoring                         | property edits, validation, save/cancel, and reload share one draft authority.                     |
-| `US-E2-008` | As an operator, plan preview and run start consume the same route scope shown in Canvas.                   | Canvas authoring + plan/run handoff      | no plan or run path reads visual-only or stale scope.                                              |
-| `US-E2-009` | As an operator under failure, I can correlate route failure posture with backend evidence.                 | operability and telemetry                | explicit failure taxonomy + correlation-aware evidence path.                                       |
-| `US-E2-010` | As a delivery owner, I can release TF-E2 only with unit, integration, and Cypress proof of negative paths. | operability and telemetry                | proof matrix includes conflict, missing-remote, invalid edge, read-only, and startup blocking.     |
+| Story ID    | Story                                                                                                   | Bounded context                          | Acceptance contract                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `US-E2-001` | As a shell user, route reveal depends on explicit route startup publication keyed by `route.id`.        | shell startup + route startup contract   | No implicit fallback startup for published routes; non-published routes must be explicit `static`. |
+| `US-E2-002` | As a maintainer, route startup publication is monotonic for one mounted route instance.                 | route startup contract                   | No reset during same route instance; reset only on unmount or route identity change.               |
+| `US-E2-003` | As a write-authorized operator, draft saves are CAS-aware and fail closed on stale revision.            | Canvas authoring                         | Conflict posture is explicit and blocks silent overwrite.                                          |
+| `US-E2-004` | As a write-authorized operator, missing remote draft after baseline produces explicit recovery posture. | Canvas authoring                         | `missing_remote` state blocks mutation until authoritative remote reload succeeds.                 |
+| `US-E2-005` | As a read-only operator, I can inspect graph truth while mutation controls remain explicitly gated.     | Canvas authoring + workspace persistence | Read-only posture is explicit; no fake save affordance.                                            |
+| `US-E2-006` | As a write-authorized operator, node and edge lifecycle operations persist and survive hard reload.     | Canvas authoring + workspace persistence | create/delete/move/reconnect round-trip through canonical draft boundary.                          |
+| `US-E2-007` | As a write-authorized operator, Inspector edits use the same aggregate and ports as graph commands.     | Canvas authoring                         | property edits, validation, save/cancel, and reload share one draft authority.                     |
+| `US-E2-008` | As an operator, plan preview and run start consume the same route scope shown in Canvas.                | Canvas authoring + plan/run handoff      | no plan or run path reads visual-only or stale scope.                                              |
+| `US-E2-009` | As an operator under failure, I can correlate route failure posture with backend evidence.              | operability and telemetry                | explicit failure taxonomy + correlation-aware evidence path.                                       |
+| `US-E2-010` | As a delivery owner, I can release TF-E2 only with unit, integration, and Cypress negative-path proof.  | operability and telemetry                | proof matrix includes conflict, missing-remote, invalid edge, read-only, and startup blocking.     |
 
 ## Target Backlog
 
 The backlog below is executable, but it is not a promise of calendar dates.
 It is the canonical order and acceptance posture.
 
-| Backlog ID   | Maps to lane task | Slice                              | Output                                                                                                 |
-| ------------ | ----------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `E2-ARCH-01` | `TF-E2-A`         | Route bootstrap registry hardening | split contract, registration, registry, and publisher ownership with explicit `route.id` publication   |
-| `E2-ARCH-02` | `TF-E2-A`         | Draft repository seam              | isolate draft read/write operations as one repository-facing seam over `IWorkspacePort`                |
-| `E2-ARCH-03` | `TF-E2-B`         | Draft aggregate completion         | finish `CanvasDraftSession` ownership over baseline, working set, conflict, and missing-remote posture |
-| `E2-ARCH-04` | `TF-E2-B`         | Graph projector seam               | make graph rendering a projection over visible scope and persisted positions only                      |
-| `E2-ARCH-05` | `TF-E2-C`         | Command model closure              | close node and edge command handling under the draft aggregate                                         |
-| `E2-ARCH-06` | `TF-E2-D`         | Inspector application seam         | bind property editing, validation, cancel, and save to the same aggregate and ports                    |
-| `E2-ARCH-07` | `TF-E2-D`         | Plan/run handoff alignment         | ensure preview and run consume authoritative route scope and recovery posture                          |
-| `E2-ARCH-08` | `TF-E2-E`         | Operability and telemetry          | define route failure taxonomy, correlation data, and diagnosis support                                 |
-| `E2-ARCH-09` | `TF-E2-E`         | Proof matrix                       | complete unit, integration, and Cypress evidence for authoring, recovery, and startup                  |
+| Backlog ID   | Maps to lane task | Slice                              | Output                                                                                                           |
+| ------------ | ----------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `E2-ARCH-01` | `TF-E2-A`         | Route bootstrap registry hardening | split contract, registration, registry, and publisher ownership with explicit `route.id` publication             |
+| `E2-ARCH-02` | `TF-E2-A`         | Typed authoring port adoption      | move active Canvas draft reads and writes to `IWorkspaceGraphDraftAuthoringPort`; remove projected DTO authority |
+| `E2-ARCH-03` | `TF-E2-B`         | Draft aggregate completion         | finish `CanvasDraftSession` ownership over baseline, working set, conflict, and missing-remote posture           |
+| `E2-ARCH-04` | `TF-E2-B`         | Graph projector seam               | make graph rendering a projection over visible scope and persisted positions only                                |
+| `E2-ARCH-05` | `TF-E2-C`         | Command model closure              | close node and edge command handling under the draft aggregate                                                   |
+| `E2-ARCH-06` | `TF-E2-D`         | Inspector application seam         | bind property editing, validation, cancel, and save to the same aggregate and ports                              |
+| `E2-ARCH-07` | `TF-E2-D`         | Plan/run handoff alignment         | ensure preview and run consume authoritative route scope and recovery posture                                    |
+| `E2-ARCH-08` | `TF-E2-E`         | Operability and telemetry          | define route failure taxonomy, correlation data, and diagnosis support                                           |
+| `E2-ARCH-09` | `TF-E2-E`         | Proof matrix                       | complete unit, integration, and Cypress evidence for authoring, recovery, and startup                            |
 
 ### Backlog delivery cards
 
-| Backlog ID   | Entry criteria                                                  | Exit criteria                                                                 | Evidence minimum                                        |
-| ------------ | --------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------- |
-| `E2-ARCH-01` | route metadata and startup modes are explicit in route contract | static vs published is deterministic and fail-closed in active route set      | route-bootstrap tests + root route startup tests        |
-| `E2-ARCH-02` | draft read/write path is isolated behind one repository seam    | all draft reads and writes flow through repository seam over workspace port   | repository seam tests + controller integration tests    |
-| `E2-ARCH-03` | aggregate transition model is explicit                          | conflict and missing-remote transitions are aggregate-owned and deterministic | pure-model aggregate tests + recovery integration tests |
-| `E2-ARCH-04` | graph projection seam is isolated                               | rendered graph is projection-only over visible scope and persisted positions  | projector tests + route integration tests               |
-| `E2-ARCH-05` | command handlers are mapped by command type                     | node and edge commands share one mutation path and invariants                 | command tests + invalid mutation negative tests         |
-| `E2-ARCH-06` | inspector contract and form rules are typed                     | inspector save/cancel/validation round-trip through same aggregate and ports  | inspector integration tests + reload assertions         |
-| `E2-ARCH-07` | preview/run consume route scope through explicit seams          | preview/run fail closed on blocked authoring posture and stale scope          | execution handoff tests + route action tests            |
-| `E2-ARCH-08` | failure taxonomy and telemetry envelope are defined             | route exposes diagnosable failure postures with correlation-aware evidence    | telemetry mapping tests + docs/runbook links            |
-| `E2-ARCH-09` | all previous backlog items are in review                        | proof matrix closes happy + negative paths across all lifecycle slices        | unit + integration + Cypress matrix in CI               |
+| Backlog ID   | Entry criteria                                                  | Exit criteria                                                                                             | Evidence minimum                                                  |
+| ------------ | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `E2-ARCH-01` | route metadata and startup modes are explicit in route contract | static vs published is deterministic and fail-closed in active route set                                  | route-bootstrap tests + root route startup tests                  |
+| `E2-ARCH-02` | typed draft-authoring seam is available in composition          | active Canvas authoring uses `IWorkspaceGraphDraftAuthoringPort`; projected DTO path is non-authoritative | composition-root + repository seam + controller integration tests |
+| `E2-ARCH-03` | aggregate transition model is explicit                          | conflict and missing-remote transitions are aggregate-owned and deterministic                             | pure-model aggregate tests + recovery integration tests           |
+| `E2-ARCH-04` | graph projection seam is isolated                               | rendered graph is projection-only over visible scope and persisted positions                              | projector tests + route integration tests                         |
+| `E2-ARCH-05` | command handlers are mapped by command type                     | node and edge commands share one mutation path and invariants                                             | command tests + invalid mutation negative tests                   |
+| `E2-ARCH-06` | inspector contract and form rules are typed                     | inspector save/cancel/validation round-trip through same aggregate and ports                              | inspector integration tests + reload assertions                   |
+| `E2-ARCH-07` | preview/run consume route scope through explicit seams          | preview/run fail closed on blocked authoring posture and stale scope                                      | execution handoff tests + route action tests                      |
+| `E2-ARCH-08` | failure taxonomy and telemetry envelope are defined             | route exposes diagnosable failure postures with correlation-aware evidence                                | telemetry mapping tests + docs/runbook links                      |
+| `E2-ARCH-09` | all previous backlog items are in review                        | proof matrix closes happy + negative paths across all lifecycle slices                                    | unit + integration + Cypress matrix in CI                         |
 
 ## Roadmap
 
@@ -792,6 +862,8 @@ Exit criteria:
 
 - one aggregate root owns draft session transitions
 - canonical snapshot and persisted draft remain upstream authorities
+- active Canvas authoring no longer depends on the projected
+  `WorkspaceGraphDraft` DTO
 - CAS conflict and missing-remote are explicit states, not incidental code
 
 ### Phase 3. Graph projection and command closure
@@ -817,6 +889,8 @@ Primary backlog:
 Exit criteria:
 
 - Inspector edits round-trip through the same aggregate and ports
+- the route-owned Inspector is the writable property-editing surface for this
+  slice while plugin panels remain read-only
 - plan preview and run start use the same authoritative scope
 - read-only and blocked recovery posture are respected by all actions
 
@@ -834,17 +908,101 @@ Exit criteria:
 - TF-E2 can move from implementation to review based on evidence, not on
   hopeful convergence
 
+## 2026-04-22 slice order after the runtime-truth hard cut
+
+The hard-cut review narrowed the order, and the 2026-04-23 authoring-draft
+correction now inserts one explicit precondition. Future TF-E2 work should
+proceed in this sequence unless another governed review changes it first:
+
+1. Shared authoring-draft boundary reset.
+   - Owners: `TF-A2`, `TF-C4`, `TF-E2-A`
+   - Goal: separate editable workspace authoring draft from compile-ready
+     `DesignGraphDraft` so Canvas can persist incomplete graph states through
+     the protected boundary.
+   - Primary files:
+     - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
+     - `apps/api/src/entrypoints/http/workspaceGraphDraftRoutes.ts`
+     - `apps/web/src/app/views/canvas/canvasDraftAuthoring.ts`
+2. Selected-subgraph execution handoff reset.
+   - Owners: `TF-A2-C`, `TF-E2-A`
+   - Goal: make preview/run consume explicit `ExecutionSelection` plus a
+     derived `ExecutableSubgraph`, not the whole editable draft.
+   - Primary files:
+     - `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts`
+     - `apps/web/src/app/views/canvas/useCanvasExecutionActions.ts`
+     - `apps/web/src/app/views/canvas/canvasExecutionActions.ts`
+3. Route startup hard cut.
+   - Owner: `TF-E2-A`
+   - Goal: make `blocked` versus `empty` truthful and remove route startup
+     dependence on mock-backed operability.
+   - Primary files:
+     - `apps/web/src/app/views/Canvas.tsx`
+     - `apps/web/src/app/views/canvas/canvasRouteViewState.ts`
+     - `apps/web/src/app/services/config/dataSource.ts`
+4. Semantic protected-draft projection cut.
+   - Owners: `TF-E2-A`, `TF-E2-B`, `TF-E2-C`
+   - Goal: replace the still-lossy draft projection so the graph model can be
+     derived from protected draft truth without a legacy snapshot authoring
+     fallback.
+   - Primary files:
+     - `apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts`
+     - `apps/web/src/app/views/canvas/canvasDraftReadModel.ts`
+     - `apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts`
+     - `apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts`
+     - `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts`
+5. Graph-first empty authoring entrypoint.
+   - Owner: `TF-E2-A`
+   - [Task: E-PROP-DISP-1] Goal: add the route-owned `Add first node` command once the protected
+     authoring boundary can represent incomplete graph states.
+   - Primary files:
+     - `apps/web/src/app/views/canvas/CanvasCenterSurface.tsx`
+     - `apps/web/src/app/views/canvas/CanvasStateViews.tsx`
+     - `apps/web/src/app/views/Canvas.tsx`
+     - `apps/web/src/app/views/canvas/canvasRouteViewState.ts`
+6. Legacy path deletion and dev-stack alignment.
+   - Owners: `TF-E2-A`, `TF-E2-B`, `TF-E2-C`
+   - Goal: delete active-authoring use of snapshot-backed hydration and align
+     local startup so Canvas either talks to the protected runtime or reports a
+     governed blocked posture.
+   - Primary files:
+     - `apps/web/src/app/services/workspace/workspaceService.api.ts`
+     - `apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts`
+     - `scripts/run-dev-stack.cjs`
+7. Proof-matrix closure.
+   - Owner: `TF-E2-E`
+   - Goal: centralize Canvas test support, finish route and application-service
+     negative-path evidence, and add the live-runtime Cypress lane that proves
+     the hard cut end to end.
+
+## Proof taxonomy fixed by the hard-cut review
+
+The repository now has three distinct proof lanes for TF-E2. They are
+complementary, not interchangeable.
+
+| Lane                         | Owner                        | Canonical files                                                                                                                                                                                                                                                      | What it proves                                                                                                 | What it must not claim                                     |
+| ---------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `API producer truth`         | `apps/api` integration tests | `apps/api/test/integration/protectedRuntime.integration.test.ts`, `apps/api/test/integration/protectedRuntime.integration.workspaceDraft.scenarios.ts`                                                                                                               | the protected runtime and workspace-draft contract actually exists and behaves as documented                   | Canvas route behavior or browser UX                        |
+| `Web consumer truth`         | `apps/web` Vitest suites     | `apps/web/src/app/views/Canvas.routeStates.test.tsx`, `apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts`, `apps/web/src/app/views/canvas/canvasDraftRepository.conflict.test.ts`, `apps/web/src/app/views/canvas/useCanvasController*.test.tsx` | route posture, controller transitions, negative authoring paths, and fail-closed reaction to boundary outcomes | real back/front transport integration                      |
+| `Browser live-runtime truth` | `TF-E2-E`                    | one dedicated Canvas Cypress lane against the running protected runtime                                                                                                                                                                                              | the route works end to end against the real backend with no legacy startup fallback                            | deterministic UI-only behavior when the backend is stubbed |
+
+Explicit classification rule:
+
+- Cypress specs that use `cy.intercept` remain useful as consumer-contract or
+  presentation checks.
+- Those intercepted specs do not close the no-legacy hard-cut claim and do not
+  count as the canonical back/front integration proof for TF-E2 release.
+
 ## Story-To-Architecture Traceability Matrix
 
 | Story       | Backlog                    | Aggregate / model                                    | Ports                                                       | Diagrams and sequences                              | Proof anchor                               |
 | ----------- | -------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------ |
 | `US-E2-001` | `E2-ARCH-01`               | route startup contract model                         | `RouteBootstrapRegistryPort`, `RouteBootstrapPublisherPort` | DDD context map, C4 L3, Sequence 1                  | route bootstrap + root startup tests       |
 | `US-E2-002` | `E2-ARCH-01`               | route startup contract model                         | `RouteBootstrapPublisherPort`                               | Sequence 1, published route lifecycle state machine | publisher lifecycle tests                  |
-| `US-E2-003` | `E2-ARCH-03`               | `CanvasDraftSession`                                 | `WorkspaceGraphDraftPort`                                   | Sequence 2, `CanvasDraftSession` state machine      | aggregate conflict tests                   |
-| `US-E2-004` | `E2-ARCH-03`               | `CanvasDraftSession`                                 | `WorkspaceGraphDraftPort`, `WorkspaceGraphSnapshotPort`     | Sequence 2, `CanvasDraftSession` state machine      | missing-remote recovery tests              |
-| `US-E2-005` | `E2-ARCH-03`               | `CanvasDraftPresentationModel`                       | `WorkspaceGraphDraftPort`                                   | C4 L3, class diagram                                | read-only posture tests                    |
-| `US-E2-006` | `E2-ARCH-04`, `E2-ARCH-05` | `CanvasDraftSession`, `CanvasDraftScope`             | `WorkspaceGraphDraftPort`, `WorkspaceGraphSnapshotPort`     | Sequence 3, class diagram                           | node/edge lifecycle tests + Cypress reload |
-| `US-E2-007` | `E2-ARCH-06`               | `CanvasDraftSession`, `CanvasDraftPresentationModel` | `WorkspaceGraphDraftPort`                                   | C4 L3, class diagram                                | inspector integration tests                |
+| `US-E2-003` | `E2-ARCH-03`               | `CanvasDraftSession`                                 | `WorkspaceGraphDraftAuthoringPort`                          | Sequence 2, `CanvasDraftSession` state machine      | aggregate conflict tests                   |
+| `US-E2-004` | `E2-ARCH-03`               | `CanvasDraftSession`                                 | typed draft-authoring + snapshot ports                      | Sequence 2, `CanvasDraftSession` state machine      | missing-remote recovery tests              |
+| `US-E2-005` | `E2-ARCH-03`               | `CanvasDraftPresentationModel`                       | `WorkspaceGraphDraftAuthoringPort`                          | C4 L3, class diagram                                | read-only posture tests                    |
+| `US-E2-006` | `E2-ARCH-04`, `E2-ARCH-05` | `CanvasDraftSession`, `CanvasDraftScope`             | typed draft-authoring + snapshot ports                      | Sequence 3, class diagram                           | node/edge lifecycle tests + Cypress reload |
+| `US-E2-007` | `E2-ARCH-06`               | `CanvasDraftSession`, `CanvasDraftPresentationModel` | `WorkspaceGraphDraftAuthoringPort`                          | C4 L3, class diagram                                | inspector integration tests                |
 | `US-E2-008` | `E2-ARCH-07`               | `CanvasDraftScope`                                   | `PlanPreviewPort`, `RunStartPort`, `CanvasNavigationPort`   | DDD context map, C4 L3                              | preview/run handoff tests                  |
 | `US-E2-009` | `E2-ARCH-08`               | telemetry read models                                | `CanvasTelemetryPort`                                       | DDD context map, phase roadmap                      | telemetry and failure posture tests        |
 | `US-E2-010` | `E2-ARCH-09`               | all above                                            | all above                                                   | all above                                           | unit + integration + Cypress matrix        |
@@ -876,6 +1034,12 @@ Required validation when this plan is updated:
 
 Expected evidence for future implementation slices:
 
+- API producer proof:
+  - `pnpm --filter dvt-api test:integration`
+- web route and controller proof:
+  - `pnpm --filter @dvt/web test`
+- browser live-runtime proof:
+  - `pnpm --filter @dvt/web test:e2e:native`
 - route-level tests for startup posture
 - pure-model tests for draft aggregate and projection models
 - controller integration tests for authoring and recovery
@@ -885,7 +1049,9 @@ Expected evidence for future implementation slices:
 ## Why This Is The Right Shape
 
 In Fowler terms, this plan separates application service, aggregate, read
-model, and registry concerns instead of letting one mega-hook keep all of them.
+model, and registry concerns instead of letting one mega-hook keep all of
+them, and it also removes the accidental dual-authority path where a projected
+DTO can drift away from the protected draft-authoring contract.
 
 In DDD terms, the plan keeps bounded contexts small and explicit:
 

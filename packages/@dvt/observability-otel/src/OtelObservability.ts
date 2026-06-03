@@ -90,6 +90,8 @@ class NoopTraces implements ITraces {
 }
 
 class JsonConsoleLogs implements ILogs {
+  constructor(private readonly readCurrentContext: () => ObservabilityContext | undefined) {}
+
   debug(entry: Omit<LogEntry, 'level'>): void {
     this.emit({ ...entry, level: 'debug' });
   }
@@ -104,9 +106,12 @@ class JsonConsoleLogs implements ILogs {
   }
 
   private emit(entry: LogEntry): void {
+    const context = entry.context ?? this.readCurrentContext();
+    const emittedEntry = context === undefined ? entry : { ...entry, context };
+
     // Replace with OTel Logs API if/when adopted.
     // eslint-disable-next-line no-console
-    console.log(JSON.stringify(entry));
+    console.log(JSON.stringify(emittedEntry));
   }
 }
 
@@ -126,7 +131,7 @@ export class OtelObservability implements IObservability {
   constructor(_options: OtelObservabilityOptions) {
     this.metrics = new NoopMetrics();
     this.traces = new NoopTraces();
-    this.logs = new JsonConsoleLogs();
+    this.logs = new JsonConsoleLogs(() => this.currentContext);
   }
 
   withContext<T>(ctx: ObservabilityContext, fn: () => T): T {

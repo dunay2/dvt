@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Compose Temporal core activities with optional worker-provided step registries.
+ */
 import {
   asStepId,
   parsePlanRef,
@@ -6,6 +9,8 @@ import {
 } from '@dvt/contracts';
 
 import type { EventInput } from '../engine-types.js';
+import type { ResolvedExecutionSegment } from '../workflows/executionSegmentResolver.js';
+import { resolveExecutionSegmentFromPlan } from '../workflows/executionSegmentResolver.js';
 
 import type {
   ActivityDeps,
@@ -15,7 +20,6 @@ import type {
   StepInput,
   StepResult,
 } from './activityTypes.js';
-import { DbtStepActivity } from './dbtStepActivity.js';
 import { GatewayStepActivity } from './gatewayStepActivity.js';
 import {
   createDefaultStepActivityRegistry,
@@ -35,10 +39,17 @@ export function createActivities(
 ): {
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
+  resolveExecutionSegment(input: {
+    planRef: EmitEventInput['planRef'];
+    ctx: EmitEventInput['ctx'];
+    layerIndex: number;
+  }): Promise<ResolvedExecutionSegment>;
 } {
+  assertSegmentResolverConfigured(deps);
+
   const dispatcher = new StepActivityDispatcher(
     new GatewayStepActivity(),
-    resolveStepActivityRegistry(deps, stepActivitiesByKind)
+    resolveStepActivityRegistry(stepActivitiesByKind)
   );
 
   return {
@@ -96,22 +107,32 @@ export function createActivities(
 
       await deps.runStateCommandPort.appendTransitions(ctx.runId, [envelope]);
     },
+
+    async resolveExecutionSegment(input): Promise<ResolvedExecutionSegment> {
+      const validatedPlanRef = parsePlanRef(input.planRef);
+      const ctx = parseResolvedRunContext(input.ctx);
+      const { plan } = await deps.planArtifactReader.fetchForEngineDispatch({
+        planRef: validatedPlanRef,
+        ctx,
+      });
+      return resolveExecutionSegmentFromPlan(plan, input.layerIndex);
+    },
   };
 }
 
-function resolveStepActivityRegistry(
-  deps: ActivityDeps,
-  overrides?: StepActivityRegistry
-): StepActivityRegistry {
-  const runtimeRegistry = new Map(createDefaultStepActivityRegistry(deps));
+function assertSegmentResolverConfigured(deps: ActivityDeps): void {
+  if (deps.planArtifactReader === undefined) {
+    throw new Error('PLAN_SEGMENT_RESOLVER_NOT_CONFIGURED');
+  }
+}
+
+function resolveStepActivityRegistry(overrides?: StepActivityRegistry): StepActivityRegistry {
+  const runtimeRegistry = new Map(createDefaultStepActivityRegistry());
   if (overrides === undefined) {
     return runtimeRegistry;
   }
 
   for (const [stepKind, activity] of overrides.entries()) {
-    if (DbtStepActivity.SUPPORTED_STEP_KINDS.has(stepKind)) {
-      continue;
-    }
     runtimeRegistry.set(stepKind, activity);
   }
 

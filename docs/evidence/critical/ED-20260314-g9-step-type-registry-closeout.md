@@ -13,7 +13,7 @@ code_refs:
   - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v2.ts
   - packages/@dvt/contracts/src/schemas.ts
   - packages/@dvt/planner/src/domain/Planner.ts
-  - packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts
+  - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
 evidence:
   tests: []
   notes:
@@ -74,7 +74,7 @@ Delivered:
 
 ### Adapter Consumption
 
-- `packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts`
+- `packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts`
 
 Delivered:
 

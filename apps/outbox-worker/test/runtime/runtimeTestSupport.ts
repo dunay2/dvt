@@ -1,9 +1,6 @@
 import { setTimeout as sleep } from 'node:timers/promises';
 
-import type {
-  EventEnvelope as RunEventPersisted,
-  OutboxRecord,
-} from '@dvt/contracts';
+import type { EventEnvelope, OutboxRecord } from '@dvt/contracts';
 import { asIsoUtcString } from '@dvt/contracts';
 import type { IOutboxStorage } from '@dvt/delivery';
 import { InMemoryEventBus } from '@dvt/delivery/testing';
@@ -16,9 +13,9 @@ import {
   type OutboxWorkerRuntimeOptions,
 } from '../../src/runtime/OutboxWorkerRuntime.js';
 
-type RunIdentifier = RunEventPersisted['runId'];
-type EventIdentifier = RunEventPersisted['eventId'];
-type IdempotencyKey = RunEventPersisted['idempotencyKey'];
+type RunIdentifier = EventEnvelope['runId'];
+type EventIdentifier = EventEnvelope['eventId'];
+type IdempotencyKey = EventEnvelope['idempotencyKey'];
 type FailureMessage = NonNullable<OutboxRecord['lastError']>;
 
 interface RuntimeTestScenario {
@@ -37,18 +34,18 @@ interface RuntimeLoggerState {
 }
 
 interface EventFixtureContext {
-  readonly eventType: RunEventPersisted['eventType'];
+  readonly eventType: EventEnvelope['eventType'];
   readonly runId: RunIdentifier;
-  readonly tenantId: RunEventPersisted['tenantId'];
-  readonly projectId: RunEventPersisted['projectId'];
-  readonly environmentId: RunEventPersisted['environmentId'];
-  readonly planId: RunEventPersisted['planId'];
-  readonly planVersion: RunEventPersisted['planVersion'];
-  readonly logicalAttemptId: RunEventPersisted['logicalAttemptId'];
-  readonly engineAttemptId: RunEventPersisted['engineAttemptId'];
-  readonly emittedAt: RunEventPersisted['emittedAt'];
-  readonly persistedAt: RunEventPersisted['persistedAt'];
-  readonly runSeq: RunEventPersisted['runSeq'];
+  readonly tenantId: EventEnvelope['tenantId'];
+  readonly projectId: EventEnvelope['projectId'];
+  readonly environmentId: EventEnvelope['environmentId'];
+  readonly planId: EventEnvelope['planId'];
+  readonly planVersion: EventEnvelope['planVersion'];
+  readonly logicalAttemptId: EventEnvelope['logicalAttemptId'];
+  readonly engineAttemptId: EventEnvelope['engineAttemptId'];
+  readonly emittedAt: EventEnvelope['emittedAt'];
+  readonly persistedAt: EventEnvelope['persistedAt'];
+  readonly runSeq: EventEnvelope['runSeq'];
 }
 
 function defineScenario(title: string): RuntimeTestScenario {
@@ -74,7 +71,7 @@ function buildIdempotencyKey(ordinal: number): IdempotencyKey {
   return `key-${ordinal}`;
 }
 
-function buildPersistedEvent(ordinal: number): RunEventPersisted {
+function buildPersistedEvent(ordinal: number): EventEnvelope {
   return {
     eventId: buildEventIdentifier(ordinal),
     eventType: runtimeEventFixture.eventType,
@@ -183,7 +180,7 @@ export const runtimeClock = {
 export class MemoryOutboxStorage implements IOutboxStorage {
   private readonly records: OutboxRecord[] = [];
 
-  async enqueueTx(_runId: RunIdentifier, events: RunEventPersisted[]): Promise<void> {
+  async enqueueTx(_runId: RunIdentifier, events: EventEnvelope[]): Promise<void> {
     for (const event of events) {
       this.records.push({
         id: event.eventId,

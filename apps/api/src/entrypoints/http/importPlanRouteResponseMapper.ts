@@ -1,3 +1,7 @@
+/**
+ * Owned concern: internal import-plan response mapping inside the plan-route
+ * response translation component.
+ */
 import {
   IMPORT_PLAN_RESULT_KIND,
   type ImportPlanUseCaseResult,

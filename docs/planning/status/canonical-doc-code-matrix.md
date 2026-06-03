@@ -37,27 +37,28 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 
 <!-- markdownlint-disable MD060 -->
 
-| Topic                                          | Primary packages                                                                       | Canonical spec                                                                                                                                                                                                                                                        | Current status                                                                                                                   |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Workflow engine core                           | `@dvt/contracts`, `@dvt/engine`, `apps/api`, `@dvt/artifacts`                          | [WorkflowEngine subsystem context](../../architecture/components/engine/architecture/workflow-engine-subsystem-context.md), [WorkflowEngine target architecture v1](../../architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md)      | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Temporal adapter runtime                       | `@dvt/adapter-temporal`                                                                | [TemporalAdapter Specification](../../architecture/components/engine/adapters/temporal/TemporalAdapter.spec.md), [Temporal Engine Policies](../../architecture/components/engine/adapters/temporal/EnginePolicies.md)                                                 | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Postgres state store                           | `@dvt/adapter-postgres`, `@dvt/state-store`                                            | [Postgres State Store Adapter](../../architecture/components/engine/adapters/state-store/postgres/StateStoreAdapter.md)                                                                                                                                               | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Intent reconciler and pre-dispatch intent log  | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../archive/gaps/G3-TASK-SPECIFICATION.md)                                                                                                                                          | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Outbox worker runtime                          | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`                          | [G5 - Outbox Worker Consolidated Plan](../archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md), [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)                                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Read models and projector catch-up             | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres`, `@dvt/engine`       | [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md), [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md), [ED-20260316 - G7 closeout](../../evidence/critical/ED-20260316-g7-closeout.md)                                                      | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../archive/gaps/G4-TASK-SPECIFICATION.md)                                                                                                                                        | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                                                                                     | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                                                                                 | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Web frontend shell and client routing          | `apps/web`                                                                             | [web component](../../architecture/components/web/index.md), [Read subsystem](../../architecture/system/subsystems/read/index.md), [Frontend runtime contract technical manual](../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md) | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Plan integrity and compatibility verification  | `@dvt/engine`, `@dvt/adapter-temporal`, `apps/api`, `@dvt/plan-verifier`               | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                                                                                         | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| Planner typed graph-source boundary            | `@dvt/contracts`, `@dvt/planner`, `apps/api`                                           | [Planner Contracts](../../contracts/planner/index.md), [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)                                                                                                                                   | [Planner Current State Assessment](./planner-current-state-assessment.md)                                                        |
-| Deterministic DAG interpretation               | `@dvt/plan-interpreter`                                                                | [Plan Interpreter Package](../../architecture/shared/plan-interpreter.md)                                                                                                                                                                                             | [Shared Package Architecture](../../architecture/shared/index.md)                                                                |
-| Gateway DSL evaluator                          | `@dvt/dsl`                                                                             | [Gateway DSL Package](../../architecture/shared/dsl.md)                                                                                                                                                                                                               | [Shared Package Architecture](../../architecture/shared/index.md)                                                                |
-| Observability contracts and cardinality policy | `@dvt/observability`                                                                   | [Observability Guide](../../architecture/components/engine/ops/observability.md), [Metrics Catalog](../../architecture/components/engine/ops/metrics-catalog.md)                                                                                                      | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| OpenTelemetry observability binding            | `@dvt/observability-otel`                                                              | [Observability Guide](../../architecture/components/engine/ops/observability.md), [@dvt/observability-otel README](../../../packages/@dvt/observability-otel/README.md)                                                                                               | [System Delivery Status](../../architecture/system-delivery-status.md)                                                           |
-| CLI validation surface                         | `@dvt/cli`                                                                             | [CLI Package](../../architecture/shared/cli.md)                                                                                                                                                                                                                       | [Shared Package Architecture](../../architecture/shared/index.md)                                                                |
-| Canonicalization and hashing utilities         | `@dvt/crypto`                                                                          | [Crypto Package](../../architecture/shared/crypto.md), [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)                                                                                                                                                     | [Shared Package Architecture](../../architecture/shared/index.md)                                                                |
-| Documentation governance and checks            | `scripts/*`, `tools/ci/*`                                                              | [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md), [AI Work Protocol](../../guides/ai-work-protocol.md)                                                                                                                                      | [Documentation Restructuring Diagnostic and Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md) |
+| Topic                                          | Primary packages                                                                       | Canonical spec                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Current status                                                                                                                                                                |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workflow engine core                           | `@dvt/contracts`, `@dvt/engine`, `apps/api`, `@dvt/artifacts`                          | [WorkflowEngine subsystem context](../../architecture/components/engine/architecture/workflow-engine-subsystem-context.md), [WorkflowEngine target architecture v1](../../architecture/components/engine/architecture/workflow-engine-target-architecture.v1.md)                                                                                                                                                                                                                                                                                                                         | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Temporal adapter runtime                       | `@dvt/adapter-temporal`                                                                | [TemporalAdapter Specification](../../architecture/components/engine/adapters/temporal/temporal-adapter-spec.md), [Temporal Engine Policies](../../architecture/components/engine/adapters/temporal/EnginePolicies.md)                                                                                                                                                                                                                                                                                                                                                                   | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Postgres state store                           | `@dvt/adapter-postgres`, `@dvt/state-store`                                            | [Postgres State Store Adapter](../../architecture/components/engine/adapters/state-store/postgres/StateStoreAdapter.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Intent reconciler and pre-dispatch intent log  | `@dvt/adapter-postgres`, `@dvt/engine`, `apps/api`                                     | [ADR-0030](../../adr/ADR-0030-pre-dispatch-intent-log.md), [G3 Task Specification](../archive/gaps/G3-TASK-SPECIFICATION.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Outbox worker runtime                          | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`                          | [G5 - Outbox Worker Consolidated Plan](../archive/gaps/G5-OUTBOX-WORKER-CONSOLIDATED-PLAN.md), [ADR-0034](../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)                                                                                                                                                                                                                                                                                                                                                                                                      | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Read models and projector catch-up             | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres`, `@dvt/engine`       | [ADR-0004](../../adr/ADR-0004-event-sourcing-strategy.md), [ADR-0015](../../adr/ADR-0015-getRunStatus-read-model-separation.md), [ED-20260316 - G7 closeout](../../evidence/critical/ED-20260316-g7-closeout.md)                                                                                                                                                                                                                                                                                                                                                                         | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| compiledCodeRef ownership                      | `@dvt/contracts`, `@dvt/planner`, `@dvt/adapter-temporal`, `@dvt/traceability-service` | [ADR-0032](../../adr/ADR-0032-compiledcoderef-ownership.md), [G4 Task Specification](../archive/gaps/G4-TASK-SPECIFICATION.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                           | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| OpenLineage mapping and delivery debt          | `@dvt/traceability-service`                                                            | [G6 OpenLineage CI and Schema Pin Plan](../archive/gaps/g6/G6-OPENLINEAGE-CI-SCHEMA-PIN-PLAN.md), [Traceability Contracts](../../contracts/traceability/index.md)                                                                                                                                                                                                                                                                                                                                                                                                                        | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| API auth and runtime boundary                  | `apps/api`                                                                             | [G8 Real Auth Final Spec](../archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Workspace graph authoring draft persistence    | `@dvt/contracts`, `apps/api`, `apps/web`                                               | [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md), [Execution selection component](../../architecture/components/planner/execution-selection-component.md), [Workspace graph draft persistence v1](../../contracts/planner/workspace-graph-draft-persistence-v1.md), [Execution selection and executable subgraph v1](../../contracts/planner/execution-selection-and-executable-subgraph-v1.md), [Workspace graph draft application component](../../../apps/api/docs/workspace-graph-draft-application-component.md) | [TF-A2-C execution selection and executable subgraph plan](../proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md) |
+| Web frontend shell and client routing          | `apps/web`                                                                             | [web component](../../architecture/components/web/index.md), [Read subsystem](../../architecture/system/subsystems/read/index.md), [Frontend runtime contract technical manual](../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md)                                                                                                                                                                                                                                                                                                                    | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Plan integrity and admission verification      | `@dvt/engine`, `@dvt/adapter-temporal`, `apps/api`, `@dvt/plan-verifier`               | [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md), [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                            | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| Planner typed graph-source boundary            | `@dvt/contracts`, `@dvt/planner`, `apps/api`                                           | [Planner Contracts](../../contracts/planner/index.md), [ADR-0035](../../adr/ADR-0035-planner-public-contract-evolution-protocol.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                      | [Planner Current State Assessment](./planner-current-state-assessment.md)                                                                                                     |
+| Deterministic DAG interpretation               | `@dvt/plan-interpreter`                                                                | [Plan Interpreter Package](../../architecture/shared/plan-interpreter.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | [Shared Package Architecture](../../architecture/shared/index.md)                                                                                                             |
+| Gateway DSL evaluator                          | `@dvt/dsl`                                                                             | [Gateway DSL Package](../../architecture/shared/dsl.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | [Shared Package Architecture](../../architecture/shared/index.md)                                                                                                             |
+| Observability contracts and cardinality policy | `@dvt/observability`                                                                   | [Observability Guide](../../architecture/components/engine/ops/observability.md), [Metrics Catalog](../../architecture/components/engine/ops/metrics-catalog.md)                                                                                                                                                                                                                                                                                                                                                                                                                         | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| OpenTelemetry observability binding            | `@dvt/observability-otel`                                                              | [Observability Guide](../../architecture/components/engine/ops/observability.md), [@dvt/observability-otel README](../../../packages/@dvt/observability-otel/README.md)                                                                                                                                                                                                                                                                                                                                                                                                                  | [System Delivery Status](../../architecture/system-delivery-status.md)                                                                                                        |
+| CLI validation surface                         | `@dvt/cli`                                                                             | [CLI Package](../../architecture/shared/cli.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | [Shared Package Architecture](../../architecture/shared/index.md)                                                                                                             |
+| Canonicalization and hashing utilities         | `@dvt/crypto`                                                                          | [Crypto Package](../../architecture/shared/crypto.md), [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | [Shared Package Architecture](../../architecture/shared/index.md)                                                                                                             |
+| Documentation governance and checks            | `scripts/*`, `tools/ci/*`, `tools/docs/*`                                              | [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md), [AI Work Protocol](../../guides/ai-work-protocol.md), [Docs Markdown Governance Parser Component](../../guides/docs-markdown-governance-parser-component.md)                                                                                                                                                                                                                                                                                                                                                 | [Documentation Restructuring Diagnostic and Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md)                                              |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -76,7 +77,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md)
 - Primary code:
-  [packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts](../../../packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts)
+  [packages/@dvt/engine/src/ports/IWorkflowEngine.ts](../../../packages/@dvt/engine/src/ports/IWorkflowEngine.ts)
   and
   [packages/@dvt/engine/src/core/WorkflowEngine.ts](../../../packages/@dvt/engine/src/core/WorkflowEngine.ts)
   and
@@ -85,7 +86,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts),
   [packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.intentLog.test.ts),
   [packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts](../../../packages/@dvt/engine/test/core/SnapshotProjector.transitions.test.ts),
-  [packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts](../../../packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts)
+  [packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts](../../../packages/@dvt/engine/test/contracts/IWorkflowEngine.types.test.ts),
+  [packages/@dvt/engine/test/contracts/package-surface.test.ts](../../../packages/@dvt/engine/test/contracts/package-surface.test.ts)
 - Verification:
   `pnpm test:engine`
   and
@@ -94,7 +96,11 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 ### Temporal adapter runtime
 
 - Canonical spec:
-  [TemporalAdapter Specification](../../architecture/components/engine/adapters/temporal/TemporalAdapter.spec.md)
+  [TemporalAdapter Specification](../../architecture/components/engine/adapters/temporal/temporal-adapter-spec.md)
+  and
+  [Temporal step plugin profile component](../../architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md)
+  and
+  [Temporal DBT worker plugin profile](../../architecture/components/engine/adapters/temporal/temporal-dbt-worker-plugin-profile.md)
   and
   [Temporal Engine Policies](../../architecture/components/engine/adapters/temporal/EnginePolicies.md)
 - Current status source:
@@ -103,9 +109,19 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/adapter-temporal/src/TemporalAdapter.ts](../../../packages/@dvt/adapter-temporal/src/TemporalAdapter.ts)
   and
   [packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts](../../../packages/@dvt/adapter-temporal/src/TemporalWorkerHost.ts)
+  and
+  [packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts](../../../packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginProfile.ts)
+  and
+  [packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts](../../../packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts)
+  and
+  [packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts](../../../packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts)
+  and
+  [packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts](../../../packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts)
 - Key tests:
   [packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts),
   [packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts),
+  [packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts](../../../packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts),
+  [packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts](../../../packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts),
   [packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts](../../../packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts)
 - Evidence:
   [ED-20260304 - TemporalAdapter.lookupRunRef implementation](../../evidence/critical/ED-20260304-temporal-lookup-run-ref.md)
@@ -138,7 +154,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Key tests:
   [packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts](../../../packages/@dvt/adapter-postgres/test/runStateCommandPortBridge.test.ts)
   and
-  [packages/@dvt/adapter-postgres/test/showke.test.ts](../../../packages/@dvt/adapter-postgres/test/showke.test.ts)
+  [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 - Verification:
   `pnpm test:adapter-postgres`
   and
@@ -192,9 +208,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
 - Key tests:
-  [packages/@dvt/delivery/test/OutboxWorker.test.ts](../../../packages/@dvt/delivery/test/OutboxWorker.test.ts)
+  [packages/@dvt/delivery/test/OutboxWorker.delivery.test.ts](../../../packages/@dvt/delivery/test/OutboxWorker.delivery.test.ts)
   and
-  [apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts](../../../apps/outbox-worker/test/runtime/OutboxWorkerRuntime.test.ts)
+  [apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts](../../../apps/outbox-worker/test/runtime/OutboxWorkerRuntime.lifecycle.test.ts)
   and
   [apps/outbox-worker/test/plugins/env.test.ts](../../../apps/outbox-worker/test/plugins/env.test.ts)
   and
@@ -204,7 +220,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [apps/outbox-worker/test/ops/OperationalServer.test.ts](../../../apps/outbox-worker/test/ops/OperationalServer.test.ts)
   and
-  [packages/@dvt/adapter-postgres/test/showke.test.ts](../../../packages/@dvt/adapter-postgres/test/showke.test.ts)
+  [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 - Runbook:
   [docs/runbooks/outbox-worker-g5.md](../../runbooks/outbox-worker-g5.md)
 - Verification:
@@ -235,7 +251,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Primary code:
   [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
   and
-  [packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
+  [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
+  and
+  [packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts](../../../packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts)
   and
   [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
   and
@@ -251,7 +269,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [apps/projector-worker/test/env.test.ts](../../../apps/projector-worker/test/env.test.ts)
   and
-  [packages/@dvt/adapter-postgres/test/showke.test.ts](../../../packages/@dvt/adapter-postgres/test/showke.test.ts)
+  [packages/@dvt/adapter-postgres/test/smoke.test.ts](../../../packages/@dvt/adapter-postgres/test/smoke.test.ts)
 - Evidence:
   [ED-20260316 - G7 provider run-id reconciliation](../../evidence/critical/ED-20260316-g7-provider-ref-reconciliation.md)
   and
@@ -375,7 +393,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/planner/src/domain/Planner.ts](../../../packages/@dvt/planner/src/domain/Planner.ts)
   and
-  [packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts](../../../packages/@dvt/adapter-temporal/src/workflows/workflowHelpers.ts)
+  [packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts](../../../packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts)
 - Design note:
   `stepTypeConfig` remains `Record<string, unknown>` in
   [ExecutionPlan.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts)
@@ -430,53 +448,260 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 ### API auth and runtime boundary
 
 - Canonical spec:
+  [Protected runtime command/query rail design](../../architecture/components/api/protected-runtime-command-query-rail-design.md)
+  and
+  [Command And Query Rail Governance](../../architecture/command-query-rail-governance.md)
+  and
   [G8 Real Auth Final Spec](../archive/gaps/G8-REAL-AUTH-FINAL-SPEC.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md) (`G8`)
 - Current posture:
   G8 is **Closed** and the protected runtime command/query surface now has a
-  dedicated OIDC plus PostgreSQL integration lane.
+  dedicated OIDC plus PostgreSQL integration lane. `AR-C10` adds the
+  executable rail catalog as the route-family source of truth for protected
+  runtime session, plan, workspace, run, and admin repair rails.
+  The active local component guides for the protected runtime boundary are:
+  `apps/api/docs/protected-runtime-route-group-component.md`,
+  `apps/api/docs/start-run-http-entrypoint-component.md`,
+  `apps/api/docs/start-run-control-boundary-component.md`,
+  `apps/api/docs/start-run-platform-identity-component.md`,
+  `apps/api/docs/start-run-application-component.md`,
+  `apps/api/docs/start-run-execution-capacity-admission-component.md`,
+  and
+  `apps/api/docs/start-run-admission-observability-component.md`.
 - Primary code:
   [apps/api/src/app.ts](../../../apps/api/src/app.ts),
   [apps/api/src/application/services/WorkflowEngineFactory.ts](../../../apps/api/src/application/services/WorkflowEngineFactory.ts),
   [apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts](../../../apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts),
+  [apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts](../../../apps/api/src/application/ports/protectedRuntimeCommandQueryRails.ts),
+  [apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts](../../../apps/api/src/application/ports/protectedRuntimePlanCommandQueryRails.ts),
+  [apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts](../../../apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts),
+  [apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts](../../../apps/api/src/application/ports/protectedRuntimeRunCommandQueryRails.ts),
+  [apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts](../../../apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts),
   [apps/api/src/modules/buildProtectedRuntimeModule.ts](../../../apps/api/src/modules/buildProtectedRuntimeModule.ts),
+  [apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts](../../../apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts),
+  [apps/api/src/entrypoints/http/runtimeRoutes.constants.ts](../../../apps/api/src/entrypoints/http/runtimeRoutes.constants.ts),
+  [apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts](../../../apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts),
   [apps/api/src/entrypoints/http/startRunRoute.ts](../../../apps/api/src/entrypoints/http/startRunRoute.ts),
+  [apps/api/src/entrypoints/http/previewPlanRoute.ts](../../../apps/api/src/entrypoints/http/previewPlanRoute.ts),
+  [apps/api/src/entrypoints/http/compilePlanRoute.ts](../../../apps/api/src/entrypoints/http/compilePlanRoute.ts),
+  [apps/api/src/entrypoints/http/importPlanRoute.ts](../../../apps/api/src/entrypoints/http/importPlanRoute.ts),
+  [apps/api/src/entrypoints/http/workspaceGraphDraftRoutes.ts](../../../apps/api/src/entrypoints/http/workspaceGraphDraftRoutes.ts),
+  [apps/api/src/entrypoints/http/workspaceFilesRoutes.ts](../../../apps/api/src/entrypoints/http/workspaceFilesRoutes.ts),
   [apps/api/src/entrypoints/http/listRunsRoute.ts](../../../apps/api/src/entrypoints/http/listRunsRoute.ts),
   [apps/api/src/entrypoints/http/getRunRoute.ts](../../../apps/api/src/entrypoints/http/getRunRoute.ts),
   [apps/api/src/entrypoints/http/getRunEventsRoute.ts](../../../apps/api/src/entrypoints/http/getRunEventsRoute.ts),
   [apps/api/src/entrypoints/http/signalRunRoute.ts](../../../apps/api/src/entrypoints/http/signalRunRoute.ts),
+  [apps/api/src/entrypoints/http/cancelRunRoute.ts](../../../apps/api/src/entrypoints/http/cancelRunRoute.ts),
+  [apps/api/src/entrypoints/http/recoverRunRoute.ts](../../../apps/api/src/entrypoints/http/recoverRunRoute.ts),
+  [apps/api/src/entrypoints/http/adminRoutes.ts](../../../apps/api/src/entrypoints/http/adminRoutes.ts),
   [apps/api/src/infrastructure/backpressure/RawSqlBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/RawSqlBackpressureStore.ts),
   [apps/api/src/infrastructure/backpressure/CachedBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/CachedBackpressureStore.ts),
   [apps/api/src/infrastructure/backpressure/CircuitBreakingBackpressureStore.ts](../../../apps/api/src/infrastructure/backpressure/CircuitBreakingBackpressureStore.ts),
   [apps/api/src/infrastructure/backpressure/FileBackpressureFallbackStore.ts](../../../apps/api/src/infrastructure/backpressure/FileBackpressureFallbackStore.ts),
   [apps/api/src/infrastructure/auth/oidcAuthenticator.ts](../../../apps/api/src/infrastructure/auth/oidcAuthenticator.ts),
   [apps/api/src/infrastructure/auth/jwksJwtVerifier.ts](../../../apps/api/src/infrastructure/auth/jwksJwtVerifier.ts),
-  [apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts](../../../apps/api/src/infrastructure/auth/postgresPrincipalAccessRepository.ts)
+  [apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts](../../../apps/api/src/infrastructure/auth/embeddedAccessDecisionService.ts)
 - Key tests:
   [apps/api/test/app.test.ts](../../../apps/api/test/app.test.ts),
-  [apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.test.ts),
+  [apps/api/test/app/healthReadiness.test.ts](../../../apps/api/test/app/healthReadiness.test.ts),
+  [apps/api/test/app/protectedRuntimeComposition.test.ts](../../../apps/api/test/app/protectedRuntimeComposition.test.ts),
+  [apps/api/test/app/protectedRouteMounting.test.ts](../../../apps/api/test/app/protectedRouteMounting.test.ts),
+  [apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.admissionModes.test.ts),
+  [apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.duplicateFlow.test.ts),
+  [apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts](../../../apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacity.test.ts),
+  [apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts](../../../apps/api/test/application/services/startRunApplicationComponent.architecture.test.ts),
   [apps/api/test/application/services/WorkflowEngineFactory.test.ts](../../../apps/api/test/application/services/WorkflowEngineFactory.test.ts),
-  [apps/api/test/entrypoints/http/startRunRoute.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts](../../../apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts),
+  [apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts](../../../apps/api/test/entrypoints/http/startRunHttpEntrypointComponent.architecture.test.ts),
+  [apps/api/test/entrypoints/http/startRunRoute.validation.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.validation.test.ts),
+  [apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts),
+  [apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts),
+  [apps/api/test/entrypoints/http/startRunRoute.engineErrorTranslation.test.ts](../../../apps/api/test/entrypoints/http/startRunRoute.engineErrorTranslation.test.ts),
+  [apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts](../../../apps/api/test/entrypoints/http/previewPlanRoute.auth.test.ts),
+  [apps/api/test/entrypoints/http/compilePlanRoute.test.ts](../../../apps/api/test/entrypoints/http/compilePlanRoute.test.ts),
+  [apps/api/test/entrypoints/http/importPlanRoute.test.ts](../../../apps/api/test/entrypoints/http/importPlanRoute.test.ts),
+  [apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts](../../../apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts),
+  [apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts](../../../apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts),
   [apps/api/test/entrypoints/http/listRunsRoute.test.ts](../../../apps/api/test/entrypoints/http/listRunsRoute.test.ts),
   [apps/api/test/entrypoints/http/getRunRoute.test.ts](../../../apps/api/test/entrypoints/http/getRunRoute.test.ts),
   [apps/api/test/entrypoints/http/getRunEventsRoute.test.ts](../../../apps/api/test/entrypoints/http/getRunEventsRoute.test.ts),
   [apps/api/test/entrypoints/http/signalRunRoute.test.ts](../../../apps/api/test/entrypoints/http/signalRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/cancelRunRoute.test.ts](../../../apps/api/test/entrypoints/http/cancelRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/recoverRunRoute.test.ts](../../../apps/api/test/entrypoints/http/recoverRunRoute.test.ts),
+  [apps/api/test/entrypoints/http/adminRoutes.test.ts](../../../apps/api/test/entrypoints/http/adminRoutes.test.ts),
   [apps/api/test/infrastructure/backpressure/RawSqlBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/RawSqlBackpressureStore.test.ts),
   [apps/api/test/infrastructure/backpressure/CachedBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/CachedBackpressureStore.test.ts),
   [apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts](../../../apps/api/test/infrastructure/backpressure/CircuitBreakingBackpressureStore.test.ts),
-  [apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts](../../../apps/api/test/infrastructure/auth/postgresPrincipalAccessRepository.test.ts),
+  [apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts](../../../apps/api/test/infrastructure/auth/embeddedAccessDecisionService.test.ts),
   [apps/api/test/integration/protectedRuntime.integration.test.ts](../../../apps/api/test/integration/protectedRuntime.integration.test.ts)
 - Evidence:
   [ED-20260320 - API runtime query integration](../../evidence/critical/ED-20260320-api-runtime-query-integration.md)
+  and
+  [AR-C10 protected runtime rail closure closeout](../closeouts/20260505-ar-c10-protected-runtime-rail-closure-closeout.md)
 - Risk:
   [R-20260308 API auth runtime integration coverage](../../risk-register/quality/R-20260308-api-auth-runtime-integration-coverage.md)
+  and
+  [R-20260503 Protected runtime rail SSOT debt](../../risk-register/quality/R-20260503-PROTECTED-RUNTIME-RAIL-SSOT-DEBT.yaml)
 - Verification:
   `pnpm --filter dvt-api typecheck`
+  and
+  `pnpm --filter dvt-api exec vitest run test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts`
   and
   `pnpm --filter dvt-api test`
   and
   `pnpm --filter dvt-api test:integration`
+
+### Workspace graph authoring draft persistence
+
+- Canonical spec:
+  [Workspace authoring draft aggregate](../../architecture/components/planner/workspace-authoring-draft-aggregate.md)
+  and
+  [Execution selection component](../../architecture/components/planner/execution-selection-component.md)
+  and
+  [Executable subgraph derivation component](../../architecture/components/planner/executable-subgraph-derivation-component.md)
+  and
+  [Workspace graph draft persistence v1](../../contracts/planner/workspace-graph-draft-persistence-v1.md)
+  and
+  [Execution selection and executable subgraph v1](../../contracts/planner/execution-selection-and-executable-subgraph-v1.md)
+  and
+  [Workspace graph draft application component](../../../apps/api/docs/workspace-graph-draft-application-component.md)
+- Planning context:
+  [TF-A2 workspace authoring draft aggregate roots plan](../proposals/mandatory/runtime-and-contracts/tf-a2-workspace-authoring-draft-aggregate-roots-plan-20260423.md)
+  and
+  [TF-A2-C execution selection and executable subgraph plan](../proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md)
+  and
+  [TF-E2 Canvas empty authoring entrypoint design](../proposals/mandatory/frontend-and-ux/tf-e2-canvas-empty-authoring-entrypoint-design-20260422.md)
+  and
+  [TF-E2 Inspector authoring and lifecycle closure plan](../proposals/mandatory/frontend-and-ux/tf-e2-inspector-authoring-and-lifecycle-closure-plan-20260425.md)
+  and
+  [TF-E2 node and edge lifecycle closure plan](../proposals/mandatory/frontend-and-ux/tf-e2-node-and-edge-lifecycle-closure-plan-20260425.md)
+- Primary code:
+  [WorkspaceGraphAuthoringDraft.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts),
+  [WorkspaceGraphAuthoringCommand.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts),
+  [WorkspaceGraphDraft.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts),
+  [ExecutionSelection.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts),
+  [ExecutableSubgraph.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts),
+  [PlannerFacade.ts](../../../packages/@dvt/planner/src/application/PlannerFacade.ts),
+  [ExecutableSubgraphDeriver.ts](../../../packages/@dvt/planner/src/application/ExecutableSubgraphDeriver.ts),
+  [resolveAuthorizedExecutableSubgraph.ts](../../../apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts),
+  [PreviewPlanUseCase.ts](../../../apps/api/src/application/services/PreviewPlanUseCase.ts),
+  [PlannerBackedStartRunUseCase.ts](../../../apps/api/src/application/services/PlannerBackedStartRunUseCase.ts),
+  [workspaceGraphDraft.ts](../../../apps/api/src/application/ports/workspaceGraphDraft.ts),
+  [getWorkspaceGraphDraftUseCase.ts](../../../apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts),
+  [saveWorkspaceGraphDraftUseCase.ts](../../../apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts),
+  [workspaceGraphDraftAuthoring.ts](../../../apps/web/src/app/ports/workspaceGraphDraftAuthoring.ts),
+  [workspaceGraphDraftProjection.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts),
+  [protectedRuntimeRejection.ts](../../../apps/web/src/app/services/api/protectedRuntimeRejection.ts),
+  [plansService.api.ts](../../../apps/web/src/app/services/plans/plansService.api.ts),
+  [runsService.api.ts](../../../apps/web/src/app/services/runs/runsService.api.ts),
+  [canvasRunSelection.ts](../../../apps/web/src/app/views/canvas/canvasRunSelection.ts),
+  [canvasPlanAction.ts](../../../apps/web/src/app/views/canvas/canvasPlanAction.ts),
+  [canvasRunStartAction.ts](../../../apps/web/src/app/views/canvas/canvasRunStartAction.ts),
+  [canvasInspectorAuthoring.types.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts),
+  [canvasInspectorAuthoringModel.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts),
+  [canvasInspectorAuthoringCommand.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringCommand.ts),
+  [useCanvasInspectorCommands.ts](../../../apps/web/src/app/views/canvas/useCanvasInspectorCommands.ts),
+  [CanvasInspectorPanel.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx),
+  [CanvasInspectorAuthoringSection.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx),
+  [canvasDuplicateNodeCommand.ts](../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.ts),
+  [useCanvasNodeDuplicateHandlers.ts](../../../apps/web/src/app/views/canvas/useCanvasNodeDuplicateHandlers.ts),
+  [canvasConnectionAggregate.ts](../../../apps/web/src/app/views/canvas/canvasConnectionAggregate.ts),
+  [useCanvasEdgeAuthoringHandlers.ts](../../../apps/web/src/app/views/canvas/useCanvasEdgeAuthoringHandlers.ts),
+  [canvasDraftSessionWorkingSet.ts](../../../apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts),
+  [canvasAuthoringGraphProjection.ts](../../../apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.ts),
+  [useCanvasViewportGraphModel.ts](../../../apps/web/src/app/views/canvas/useCanvasViewportGraphModel.ts),
+  [app.ts](../../../apps/api/src/app.ts),
+  [planCompileBoundary.ts](../../../apps/api/src/modules/planCompileBoundary.ts),
+  [canvas-preview-run-persisted.cy.ts](../../../apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts),
+  [canvas-preview-run-live.cy.ts](../../../apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts),
+  [e2eApiStub.ts](../../../apps/web/cypress/support/e2eApiStub.ts),
+  [canvasDraftAuthoring.ts](../../../apps/web/cypress/support/canvasDraftAuthoring.ts),
+  [canvasExecutionSelection.ts](../../../apps/web/cypress/support/canvasExecutionSelection.ts),
+  [canvasPreviewArtifacts.ts](../../../apps/web/cypress/support/canvasPreviewArtifacts.ts),
+  [liveProtectedRuntime.ts](../../../apps/web/cypress/support/liveProtectedRuntime.ts),
+  [run-selected-closure-live-proof.cjs](../../../scripts/run-selected-closure-live-proof.cjs),
+  and
+  [workspaceSession.ts](../../../apps/web/cypress/support/workspaceSession.ts)
+- Key tests:
+  [execution-selection.contract.test.ts](../../../packages/@dvt/contracts/test/execution-selection.contract.test.ts),
+  [execution-selection.architecture.test.ts](../../../packages/@dvt/contracts/test/execution-selection.architecture.test.ts),
+  [executable-subgraph-deriver.test.ts](../../../packages/@dvt/planner/test/unit/executable-subgraph-deriver.test.ts),
+  [executable-subgraph-deriver.architecture.test.ts](../../../packages/@dvt/planner/test/unit/executable-subgraph-deriver.architecture.test.ts),
+  [workspace-graph-authoring-draft.contract.test.ts](../../../packages/@dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts),
+  [workspace-graph-authoring-draft.architecture.test.ts](../../../packages/@dvt/contracts/test/workspace-graph-authoring-draft.architecture.test.ts),
+  [execution-selection.ts](../../../packages/@dvt/contracts/test/validation/execution-selection.ts),
+  [workspace-graph-draft.ts](../../../packages/@dvt/contracts/test/validation/workspace-graph-draft.ts),
+  [workspaceGraphDraftApplicationComponent.architecture.test.ts](../../../apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts),
+  [resolveAuthorizedExecutableSubgraph.test.ts](../../../apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts),
+  [executableSubgraphResolutionComponent.architecture.test.ts](../../../apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts),
+  [workspaceGraphDraftRoutes.test.ts](../../../apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts),
+  [protectedRuntime.integration.test.ts](../../../apps/api/test/integration/protectedRuntime.integration.test.ts),
+  [planCompileBoundary.cases.ts](../../../apps/api/test/modules/planCompileBoundary.cases.ts),
+  [protectedRuntimeAndPlanCompileArchitecture.cases.ts](../../../apps/api/test/modules/protectedRuntimeAndPlanCompileArchitecture.cases.ts),
+  [canvasExecutionSelection.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts),
+  [canvasRunStartIdentity.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts),
+  [canvasInspectorAuthoringModel.test.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts),
+  [canvasInspectorAuthoringComponent.architecture.test.ts](../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts),
+  [CanvasInspectorPanel.test.tsx](../../../apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx),
+  [canvasDuplicateNodeCommand.test.ts](../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts),
+  [useCanvasGraphHandlers.nodeDuplicate.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDuplicate.test.tsx),
+  [canvasConnectionAggregate.test.ts](../../../apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts),
+  [useCanvasGraphHandlers.edgeReconnect.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasGraphHandlers.edgeReconnect.test.tsx),
+  [canvasAuthoringGraphProjection.test.ts](../../../apps/web/src/app/views/canvas/canvasAuthoringGraphProjection.test.ts),
+  [canvasDraftSession.test.ts](../../../apps/web/src/app/views/canvas/canvasDraftSession.test.ts),
+  [useCanvasViewportGraphModel.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx),
+  [useCanvasController.core.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasController.core.test.tsx),
+  [useCanvasExecutionActions.planPreview.core.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx),
+  [useCanvasExecutionActions.runStart.test.tsx](../../../apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx),
+  [plansService.test.ts](../../../apps/web/src/app/services/plans/plansService.test.ts),
+  [runsService.test.ts](../../../apps/web/src/app/services/runs/runsService.test.ts),
+  [canvas-preview-run-persisted.cy.ts](../../../apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts),
+  [canvas-preview-run-live.cy.ts](../../../apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts),
+  and
+  [workspaceGraphDraftProjection.test.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftProjection.test.ts)
+- Evidence:
+  [ed-20260423-tf-a2-c1-execution-selection-contract-pack.md](../../evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md)
+  and
+  [ed-20260423-tf-a2-c2-executable-subgraph-derivation.md](../../evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md)
+  and
+  [ed-20260423-tf-a2-c3-c4-api-web-adoption.md](../../evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md)
+  and
+  [20260423 TF-A2-C5 selected-closure end-to-end proof closeout](../closeouts/20260423-tf-a2-c5-selected-closure-end-to-end-proof-closeout.md)
+  and
+  [20260425 TF-E2-B/C node and edge lifecycle closure closeout](../closeouts/20260425-tf-e2-b-c-node-edge-lifecycle-closure-closeout.md)
+  and
+  [20260425 TF-E2-D Inspector authoring closeout](../closeouts/20260425-tf-e2-d-inspector-authoring-closeout.md)
+  and
+  [20260424 TF-E2-E-A/B/C selected-closure browser proof closeout](../closeouts/20260424-tf-e2-e-a-b-c-selected-closure-browser-proof-closeout.md)
+  and
+  [20260424 TF-E2-E-D live selected-closure browser proof closeout](../closeouts/20260424-tf-e2-e-d-live-selected-closure-browser-proof-closeout.md)
+  and
+  [R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE](../../risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml)
+- Verification:
+  `pnpm --filter @dvt/planner test -- executable-subgraph-deriver.test.ts executable-subgraph-deriver.architecture.test.ts`
+  and
+  `pnpm --filter @dvt/planner build`
+  and
+  `pnpm --filter @dvt/contracts test -- execution-selection.contract.test.ts execution-selection.architecture.test.ts workspace-graph-authoring-draft.contract.test.ts workspace-graph-authoring-draft.architecture.test.ts validation.test.ts`
+  and
+  `pnpm --filter @dvt/contracts build`
+  and
+  `pnpm --filter dvt-api test -- authorizeWorkspaceGraphDraftCapabilityService.test.ts workspaceGraphDraftApplicationComponent.architecture.test.ts workspaceGraphDraftRoutes.test.ts resolveAuthorizedExecutableSubgraph.test.ts executableSubgraphResolutionComponent.architecture.test.ts`
+  and
+  `pnpm --filter @dvt/web test -- src/app/views/canvas/canvasExecutionSelection.architecture.test.ts src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx`
+  and
+  `pnpm --filter @dvt/web test -- src/app/services/plans/plansService.test.ts src/app/services/runs/runsService.test.ts`
+  and
+  `docker run --rm -t -v "F:/segundodvt/dvt:/repo" -w /repo/apps/web -e CYPRESS_baseUrl=http://host.docker.internal:4173 cypress/included:13.17.0 --project /repo/apps/web --config-file /repo/apps/web/cypress.config.ts --spec /repo/apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`
+  and
+  `pnpm --filter @dvt/web test:e2e:selected-closure:live`
+  and
+  `pnpm --filter dvt-api test -- test/modules.test.ts`
+  and
+  `pnpm --filter @dvt/web test -- src/app/services/workspace/workspaceGraphDraftProjection.test.ts`
+  and
+  `pnpm --filter dvt-api test:integration -- protectedRuntime.integration.test.ts`
 
 ### Web frontend shell and client routing
 
@@ -513,20 +738,30 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   `pnpm --filter @dvt/web test:e2e`
 - Gap:
-  Mock-data paths still dominate the client surface via
-  [apps/web/src/app/data/mockData.ts](../../../apps/web/src/app/data/mockData.ts)
+  The retired broad `mockData.ts` surface is no longer present. Remaining
+  mock-data risk lives in explicit mock service and fixture surfaces such as
+  [apps/web/src/app/data/mockDbtData.ts](../../../apps/web/src/app/data/mockDbtData.ts),
+  [apps/web/src/app/services/workspace/workspaceService.mock.ts](../../../apps/web/src/app/services/workspace/workspaceService.mock.ts),
   and
-  [apps/web/src/app/data/mockDbtData.ts](../../../apps/web/src/app/data/mockDbtData.ts)
+  [apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.mock.ts](../../../apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.mock.ts)
 
-### Plan integrity and compatibility verification
+### Plan integrity and admission verification
 
 - Canonical spec:
   [ADR-0012](../../adr/ADR-0012-plan-integrity-ownership.md)
   and
   [ADR-0017](../../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)
+  and
+  [Plan admission matrix](../../architecture/components/engine/contracts/plan-admission-matrix.md)
 - Current status source:
   [System Delivery Status](../../architecture/system-delivery-status.md) (`Plan Verifier`)
 - Primary code:
+  [packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts](../../../packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts)
+  and
+  [packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts](../../../packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts)
+  and
+  [packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts](../../../packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts)
+  and
   [packages/@dvt/engine/src/application/StartRunApplicationService.ts](../../../packages/@dvt/engine/src/application/StartRunApplicationService.ts)
   and
   [packages/@dvt/engine/src/security/planIntegrity.ts](../../../packages/@dvt/engine/src/security/planIntegrity.ts)
@@ -539,6 +774,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/plan-verifier/src/planVersion.ts](../../../packages/@dvt/plan-verifier/src/planVersion.ts)
 - Key tests:
+  [packages/@dvt/contracts/test/plan-admission-matrix.contract.test.ts](../../../packages/@dvt/contracts/test/plan-admission-matrix.contract.test.ts)
+  and
+  [packages/@dvt/engine/test/core/WorkflowEngine.test.ts](../../../packages/@dvt/engine/test/core/WorkflowEngine.test.ts)
+  and
   [packages/@dvt/engine/test/contracts/engine.test.ts](../../../packages/@dvt/engine/test/contracts/engine.test.ts)
   and
   [packages/@dvt/engine/test/services/StartRunApplicationService.test.ts](../../../packages/@dvt/engine/test/services/StartRunApplicationService.test.ts)
@@ -549,6 +788,10 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/plan-verifier/test/verify.test.ts](../../../packages/@dvt/plan-verifier/test/verify.test.ts)
 - Verification:
+  `pnpm --filter @dvt/contracts test -- plan-admission-matrix.contract.test.ts`
+  and
+  `pnpm --filter @dvt/engine test -- WorkflowEngine.test.ts`
+  and
   `pnpm --filter @dvt/engine test`
   and
   `pnpm --filter @dvt/adapter-temporal test`
@@ -646,7 +889,7 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [packages/@dvt/cli/run-golden-paths.cjs](../../../packages/@dvt/cli/run-golden-paths.cjs),
   [packages/@dvt/cli/src/index.ts](../../../packages/@dvt/cli/src/index.ts)
 - Key tests:
-  [packages/@dvt/cli/test/showke.test.ts](../../../packages/@dvt/cli/test/showke.test.ts)
+  [packages/@dvt/cli/test/smoke.test.ts](../../../packages/@dvt/cli/test/smoke.test.ts)
 - Verification:
   `pnpm test:cli`
   and
@@ -682,6 +925,8 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [Testing and CI Capabilities](../../guides/testing-and-ci-capabilities.md)
   and
   [AI Work Protocol](../../guides/ai-work-protocol.md)
+  and
+  [Docs Markdown Governance Parser Component](../../guides/docs-markdown-governance-parser-component.md)
 - Current status source:
   [Documentation Restructuring Diagnostic and Roadmap](../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md)
 - Primary code:
@@ -689,9 +934,15 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   [scripts/docs-doctor.cjs](../../../scripts/docs-doctor.cjs),
   [scripts/docs-quality-check.cjs](../../../scripts/docs-quality-check.cjs),
   [scripts/docs-canonical-check.cjs](../../../scripts/docs-canonical-check.cjs),
+  [tools/docs/lib/markdown.ts](../../../tools/docs/lib/markdown.ts),
   [tools/ci/arc-check.mjs](../../../tools/ci/arc-check.mjs),
   [tools/ci/doc-check.mjs](../../../tools/ci/doc-check.mjs)
+- Key tests:
+  [tools/ci/docs-markdown-component-architecture.test.mjs](../../../tools/ci/docs-markdown-component-architecture.test.mjs),
+  [tools/ci/docs-frontmatter-bom.test.mjs](../../../tools/ci/docs-frontmatter-bom.test.mjs)
 - Verification:
+  `pnpm test:ci-tools`
+  and
   `pnpm docs:ci`
 
 ## Minimum Traceability Tuple

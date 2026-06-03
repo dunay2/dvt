@@ -1,0 +1,16 @@
+---
+id: R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP
+title: Delivery-owned in-memory outbox core can mask durable adapter parity gaps
+status: Open
+date: 2026-05-14
+owners:
+  - packages/@dvt/delivery
+  - packages/@dvt/engine
+severity: Low
+probability: Low
+mitigations:
+  - Keep Engine as a facade over the Delivery-owned in-memory core.
+  - Guard ownership with OutboxInMemoryStorageOwnership.architecture.test.ts.
+  - Keep durable adapter behavior covered by adapter-specific tests when PostgreSQL semantics
+    change.
+---

@@ -1,17 +1,11 @@
+import { CURRENT_SIGNAL_SEMANTICS_VERSION, asIsoUtcString, asNonBlankString } from '@dvt/contracts';
 import {
-  CURRENT_SIGNAL_SEMANTICS_VERSION,
-  asIsoUtcString,
-  asNonBlankString,
-} from '@dvt/contracts';
-import {
-  AllowAllAuthorizer,
-  StartRunApplicationService,
   type IProviderAdapter,
   type ProviderRunStatusView,
   type ResolvedRunContext,
   type SignalRequest,
-  type WorkflowEngineDeps,
 } from '@dvt/engine';
+import { AllowAllAuthorizer, type WorkflowEngineDeps } from '@dvt/engine/runtime';
 import { createNoopObservability } from '@dvt/observability';
 import { describe, it, expect } from 'vitest';
 
@@ -27,11 +21,11 @@ class FakeWorkflowEngine {
 function makeDeps(): WorkflowEngineDeps {
   return {
     adapters: new Map(),
-    observability: {} as never,
-    startRunApplicationService: {} as never,
-    runRecoveryService: {} as never,
-    runControlService: {} as never,
-    runStatusQueryService: {} as never,
+    startRunUseCase: {} as never,
+    recoverRunUseCase: {} as never,
+    cancelRunUseCase: {} as never,
+    runStatusUseCase: {} as never,
+    signalRunUseCase: {} as never,
   };
 }
 
@@ -50,10 +44,10 @@ describe('createWorkflowEngine', () => {
 });
 
 describe('buildWorkflowEngine', () => {
-  it('wires StartRunApplicationService and not the deprecated alias', () => {
+  it('wires facade use cases and not deprecated public services', () => {
     const adapter: IProviderAdapter = {
       provider: 'temporal',
-      async startRun(_plan, _planRef, context: ResolvedRunContext) {
+      async startRun(_planRef, context: ResolvedRunContext) {
         return {
           provider: 'temporal',
           tenantId: context.tenantId,
@@ -90,14 +84,69 @@ describe('buildWorkflowEngine', () => {
       },
     });
 
-    const startRunService = (runtime.engine as unknown as { startRunApplicationService: unknown })
-      .startRunApplicationService;
-    expect(startRunService).toBeInstanceOf(StartRunApplicationService);
+    expect(Reflect.has(runtime.engine as object, 'startRunUseCase')).toBe(true);
+    expect(Reflect.has(runtime.engine as object, 'startRunApplicationService')).toBe(false);
     expect(Reflect.has(runtime.engine as object, 'getRunEnrichment')).toBe(false);
     expect(Reflect.has(runtime.engine as object, 'healthCheck')).toBe(false);
     expect(runtime.runEnrichmentService).toBeDefined();
     expect(Reflect.has(runtime.runEnrichmentService as object, 'getRunEnrichment')).toBe(true);
     expect(runtime.runHealthService).toBeDefined();
     expect(Reflect.has(runtime.runHealthService as object, 'healthCheck')).toBe(true);
+  });
+
+  it('wraps production runtime adapters with circuit-breaker posture for health', async () => {
+    const adapter: IProviderAdapter = {
+      provider: 'temporal',
+      async startRun(_planRef, context: ResolvedRunContext) {
+        return {
+          provider: 'temporal',
+          tenantId: context.tenantId,
+          namespace: asNonBlankString('default'),
+          workflowId: asNonBlankString(`wf-${context.runId}`),
+          runId: context.runId,
+        };
+      },
+      async cancelRun(_engineRunRef) {},
+      async getProviderStatusView(_engineRunRef): Promise<ProviderRunStatusView> {
+        return { provider: 'temporal', providerStatus: 'RUNNING' };
+      },
+      async signal(_engineRunRef, _request: SignalRequest) {},
+      signalSemanticsVersions: () => [CURRENT_SIGNAL_SEMANTICS_VERSION],
+    };
+
+    const runtime = buildWorkflowEngine({
+      security: {
+        authorizer: new AllowAllAuthorizer(),
+        planRefAllowedSchemes: ['https'],
+      },
+      persistence: {
+        stateStoreRead: {} as never,
+        stateStoreWrite: {} as never,
+        intentStore: {} as never,
+        planFetcher: {} as never,
+      },
+      runtime: {
+        adapters: new Map([['temporal', adapter]]),
+      },
+      infrastructure: {
+        clock: { nowIsoUtc: () => asIsoUtcString('2026-04-05T00:00:00.000Z') },
+        observability: createNoopObservability(),
+      },
+    });
+
+    await expect(runtime.runHealthService.healthCheck()).resolves.toMatchObject({
+      status: 'healthy',
+      components: expect.arrayContaining([
+        {
+          name: 'adapter-temporal',
+          status: 'up',
+          breaker: {
+            provider: 'temporal',
+            state: 'closed',
+            failureCount: 0,
+          },
+        },
+      ]),
+    });
   });
 });

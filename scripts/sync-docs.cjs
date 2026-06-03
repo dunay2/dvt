@@ -150,11 +150,20 @@ function ensureCanonicalDocsHome() {
 }
 
 function adrSortKey(fileName) {
-  const match = /^ADR-(\d{4})([A-Za-z]?)/.exec(fileName);
+  const match = /^ADR-(\d{4})([A-Za-z]?)/i.exec(fileName);
   if (!match) {
     return { num: -1, suffix: '' };
   }
   return { num: Number(match[1]), suffix: (match[2] || '').toUpperCase() };
+}
+
+function isExcludedAdrIndexFile(fileName) {
+  const normalized = fileName.toLowerCase();
+  return (
+    normalized === 'adr-index.md' ||
+    normalized === 'adr-implementation-status.md' ||
+    normalized === 'adr-status_board_extensive.md'
+  );
 }
 
 function extractAdrTitle(content, fileName) {
@@ -237,9 +246,7 @@ function generateAdrLanding() {
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
     .filter((name) => /^ADR-.*\.md$/i.test(name))
-    .filter(
-      (name) => !/^ADR-(Index|Implementation Status|Status_Board_Extensive)\.md$/i.test(name)
-    );
+    .filter((name) => !isExcludedAdrIndexFile(name));
 
   const adrRows = entries
     .map((name) => {
@@ -260,7 +267,13 @@ function generateAdrLanding() {
       if (a.sortKey.num !== b.sortKey.num) {
         return b.sortKey.num - a.sortKey.num;
       }
-      return a.sortKey.suffix.localeCompare(b.sortKey.suffix);
+      const suffixCompare = a.sortKey.suffix.localeCompare(b.sortKey.suffix, 'en', {
+        sensitivity: 'base',
+      });
+      if (suffixCompare !== 0) {
+        return suffixCompare;
+      }
+      return a.fileName.localeCompare(b.fileName, 'en', { sensitivity: 'base' });
     });
 
   const current = readIfExists(adrLandingPath);
@@ -707,9 +720,20 @@ function renderContractDocsList(absFiles, fromDirAbs) {
 
 function generateContractSubIndexes() {
   const contractsPkgSrc = path.join(repoRoot, 'packages', '@dvt', 'contracts', 'src');
+  const engineOwnedSources = [
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IWorkflowEngine.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'adapters', 'IProviderAdapter.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IRunStateStore.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IProjector.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IStartRunIntentStore.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'domain', 'startRunIntentPolicy.ts'),
+  ];
   const engineSrc = scanFilesRecursive(
     path.join(contractsPkgSrc, 'contracts', 'engine'),
     (abs, name) => /\.(ts|json)$/i.test(name) && !/\.d\.ts\.map$|\.js\.map$/i.test(name)
+  );
+  const engineSerializableSrc = engineSrc.filter(
+    (abs) => path.basename(abs) !== 'IWorkflowEngine.v1.ts'
   );
   const plannerSrc = scanFilesRecursive(
     path.join(contractsPkgSrc, 'contracts', 'planner'),
@@ -744,9 +768,13 @@ function generateContractSubIndexes() {
     '',
     'Execution lifecycle, command, and event contracts for the workflow engine.',
     '',
-    '## Normative Sources (`@dvt/contracts`)',
+    '## Engine-owned behavior sources (`@dvt/engine`)',
     '',
-    ...renderContractSourceList(engineSrc),
+    ...renderContractSourceList(engineOwnedSources),
+    '',
+    '## Serializable normative sources (`@dvt/contracts`)',
+    '',
+    ...renderContractSourceList(engineSerializableSrc),
     '',
     '## Reference Documentation',
     '',
@@ -771,7 +799,7 @@ function generateContractSubIndexes() {
     renderFrontmatter(plannerMeta),
     '# Planner Contracts',
     '',
-    'ExecutionPlan and planner-related schemas and compatibility contracts.',
+    'ExecutionPlan and planner-related schemas and admission contracts.',
     '',
     '## Normative Sources (`@dvt/contracts`)',
     '',
@@ -1024,15 +1052,15 @@ function renderContractsIndex(meta, rows) {
     renderFrontmatter(meta),
     `# ${meta.title}`,
     '',
-    'Normative contracts, schemas, compatibility rules, and reference entry points.',
+    'Normative contracts, schemas, admission rules, and reference entry points.',
     '',
     'Use this section when the question is about what a boundary must accept,',
-    'return, persist, validate, or keep compatible over time.',
+    'return, persist, validate, or version deliberately over time.',
     '',
     '## Start Here',
     '',
     '- [Planner Contracts](planner/index.md) for `ExecutionPlan`, planner envelopes,',
-    '  and compatibility-oriented plan schemas',
+    '  and admission-oriented plan schemas',
     '- [Shared Contracts](shared/index.md) for cross-cutting adapter, workflow, and',
     '  validation contracts',
     '- [Traceability Contracts](traceability/index.md) for emitted lineage facet',
@@ -1043,7 +1071,7 @@ function renderContractsIndex(meta, rows) {
     '## Reading Guidance',
     '',
     '- Start with [Planner](planner/index.md) when the change affects plan shape,',
-    '  compatibility, schema validation, or planner inputs.',
+    '  admission, schema validation, or planner inputs.',
     '- Start with [Shared](shared/index.md) when the change affects adapter-facing',
     '  contracts, shared types, or validation helpers.',
     '- Use [Traceability](traceability/index.md) when the change affects emitted',

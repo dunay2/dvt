@@ -6,8 +6,8 @@ import type { IOutboxStorage, OutboxClaimSelection } from '@dvt/delivery';
 
 import type {
   AppendResult,
-  RunEventInput,
-  RunEventPersisted,
+  EventEnvelope,
+  EventInput,
   RunMetadata,
   WorkflowSnapshot,
 } from '../contracts/runEvents.js';
@@ -57,7 +57,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     return this.runState.bootstrapRunTx(input);
   }
 
-  appendAndEnqueueTx(runId: string, eventsToAppend: RunEventInput[]): Promise<AppendResult> {
+  appendAndEnqueueTx(runId: string, eventsToAppend: EventInput[]): Promise<AppendResult> {
     return this.runState.appendAndEnqueueTx(runId, eventsToAppend);
   }
 
@@ -65,7 +65,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     tenantId: string,
     runId: string,
     options?: ListEventsOptions
-  ): Promise<RunEventPersisted[]> {
+  ): Promise<EventEnvelope[]> {
     return this.runState.listEvents(tenantId, runId, options);
   }
 
@@ -89,7 +89,7 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     return this.runState.isSnapshotStale(tenantId, runId);
   }
 
-  async enqueueTx(_runId: string, _events: RunEventPersisted[]): Promise<void> {
+  async enqueueTx(_runId: string, _events: EventEnvelope[]): Promise<void> {
     await this.outbox.enqueueTx(_runId, _events);
   }
 

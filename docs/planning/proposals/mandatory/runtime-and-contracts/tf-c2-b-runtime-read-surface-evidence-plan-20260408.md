@@ -118,3 +118,7 @@ type RunStatusSnapshot = {
 2. run events include step-attributed failure diagnostics when execution fails
 3. row-count evidence is present or explicitly unavailable with deterministic semantics
 4. no route relies on backend log inspection for operator-level triage
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

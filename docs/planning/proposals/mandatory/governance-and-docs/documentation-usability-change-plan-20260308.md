@@ -17,7 +17,7 @@ This document is part of the repository governance proposal set.
 - Complementary proposals:
   - [Documentation Restructuring Diagnostic And Roadmap](../../../archive/proposals/documentation-restructuring-diagnostic-and-roadmap.md) is the diagnostic precursor
   - [Package Module Build Policy v2](../../../archive/proposals/package-module-build-policy-v2-20260317.md) defines the technical target model for packages and builds
-  - [CI Delivery Governance Consolidated Action Plan](./ci-delivery-governance-consolidated-action-plan-20260331.md) defines enforcement strategy for reusable CI checks
+  - [Task: GOV-PROP-DISP-1] [CI Delivery Governance Consolidated Action Plan](./ci-delivery-governance-consolidated-action-plan-20260331.md) defines enforcement strategy for reusable CI checks
 
 ## Execution Status
 
@@ -37,6 +37,11 @@ Execution status on 2026-03-08:
 
 Turn the current documentation set into a usable consultation and tracking
 system instead of a collection of disconnected artifacts.
+
+This proposal is canonized by
+[Documentation Usability Canon Plan 2026-05-24](./documentation-usability-canon-plan-20260524.md).
+The governing rails are `ClassifyDocumentationEntryPoint`,
+`QueryDocumentationConsultationPath`, and `ValidateDocumentationUsefulness`.
 
 The change is successful when a reader can find, in one navigation system:
 
@@ -60,6 +65,10 @@ Observed issues:
 - duplicate or compatibility entry points keep historical confusion alive;
 - current CI checks validate hygiene but do not validate discoverability,
   canonical ownership, or consultation usefulness.
+
+The canon slice treats that gap as `ValidateDocumentationUsefulness`: a
+semantic validation policy that guards reader outcomes in addition to markdown
+syntax, links, and generated indexes.
 
 ## Baseline
 
@@ -95,7 +104,7 @@ Interpretation of each area:
   lifecycle vocabulary;
 - `Reference`: contracts, schemas, APIs, invariants, versioned technical
   reference;
-- `How-to`: development and contributor task guides;
+- [Task: GOV-PROP-DISP-1] `How-to`: development and contributor task guides;
 - `Operations`: runbooks, observability, SLOs, incident response;
 - `Decisions`: ADRs only;
 - `Planning`: roadmap, status, gaps, proposals, reviews;
@@ -130,7 +139,7 @@ Actions:
   model;
 - stop using hidden active sections as parallel entry points;
 - remove empty or misleading landing pages from the active surface;
-- make the home page role-based and task-oriented.
+- [Task: GOV-PROP-DISP-1] make the home page role-based and task-oriented.
 
 Deliverables:
 
@@ -149,7 +158,7 @@ Acceptance:
 
 Actions:
 
-- create a `Concepts` area with at least:
+- [Task: GOV-PROP-DISP-1] create a `Concepts` area with at least:
   - glossary;
   - domain language;
   - system map;
@@ -202,7 +211,7 @@ Actions:
   - move under `docs/`;
   - be imported into the published site;
   - remain local reference-only and be linked from a canonical landing page;
-- add a package-to-doc matrix for all active workspaces;
+- [Task: GOV-PROP-DISP-1] add a package-to-doc matrix for all active workspaces;
 - eliminate "important but unpublished" documentation.
 
 Deliverables:
@@ -228,7 +237,7 @@ Actions:
   - test paths;
   - verification command;
   - evidence or risk record when applicable;
-- add CI checks for:
+- [Task: GOV-PROP-DISP-1] add CI checks for:
   - empty indexes;
   - duplicate active entry points;
   - active docs outside the allowed IA;
@@ -255,6 +264,7 @@ Acceptance:
 - freeze new top-level documentation sections unless explicitly approved;
 - classify all active entry points as canonical, alias, local-reference-only, or
   archive.
+- record entry-point purpose through `ClassifyDocumentationEntryPoint`.
 
 Exit criterion:
 
@@ -262,7 +272,7 @@ Exit criterion:
 
 ### Phase 1: Navigation and home rewrite
 
-- implement the new top-level IA;
+- [Task: GOV-PROP-DISP-1] implement the new top-level IA;
 - rewrite home and landing pages;
 - remove empty or misleading active indexes.
 
@@ -279,6 +289,7 @@ Exit criterion:
 Exit criterion:
 
 - readers can find concept definitions and roadmap status without path hunting.
+- readers can resolve the path through `QueryDocumentationConsultationPath`.
 
 ### Phase 3: Workspace integration and traceability
 
@@ -291,13 +302,15 @@ Exit criterion:
 
 ### Phase 4: CI hardening
 
-- add missing validators;
+- [Task: GOV-PROP-DISP-1] add missing validators;
 - convert warnings into failures where the baseline debt is closed.
 
 Exit criterion:
 
 - the repo can no longer drift back into the current fragmented state without
   CI surfacing it as a failure.
+- `ValidateDocumentationUsefulness` gives future CI hardening a named semantic
+  target.
 
 ## Risks
 

@@ -1,3 +1,9 @@
+/**
+ * @ownedConcern run lifecycle test fixture for in-memory run store setup.
+ *
+ * Creates persisted run events for tests without adapter or provider-runtime
+ * authority.
+ */
 import type { EngineRunRef, Provider } from '@dvt/contracts';
 
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
@@ -70,32 +76,12 @@ export function makeRunRef(
   runId: string,
   options?: { provider?: Provider; tenantId?: string }
 ): EngineRunRef {
-  const provider = options?.provider ?? 'temporal';
   const tenantId = options?.tenantId ?? 't';
-  if (provider === 'temporal') {
-    return {
-      provider: 'temporal',
-      tenantId,
-      namespace: 'default',
-      workflowId: `wf-${runId}`,
-      runId,
-    };
-  }
-
-  if (provider === 'mock') {
-    return {
-      provider: 'mock',
-      tenantId,
-      workflowId: `mock_${runId}`,
-      runId,
-    };
-  }
-
   return {
-    provider: 'conductor',
+    provider: options?.provider ?? 'temporal',
     tenantId,
+    namespace: 'default',
     workflowId: `wf-${runId}`,
     runId,
-    conductorUrl: 'http://localhost:8080',
   };
 }

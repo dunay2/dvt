@@ -57,7 +57,7 @@ status: Accepted
   `apps/api/src/entrypoints/http/startRunRouteRunExecutionContextRefParser.ts`,
   `apps/api/test/**`,
   `packages/@dvt/contracts/test/validation.test.ts`,
-  `packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.test.ts`,
+  `packages/@dvt/engine/test/services/RunExecutionContextAdmissionPolicy.*.test.ts`,
   `docs/planning/state/agent-lane-a.yaml`,
   `docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md`.
 - Risks and mitigations:

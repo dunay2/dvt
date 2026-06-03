@@ -1,23 +1,33 @@
+/** Owned concern: project canonical graph primitives into React Flow nodes and edges. */
 import { MarkerType, type Edge, type Node } from '@xyflow/react';
 
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
+import { createGraphFlowEdgeStyle, graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 
 type ColumnMeta = Array<{ name: string; type: string }>;
+type CanvasNodePosition = { x: number; y: number };
+type MapCanonicalNodeToCanvasNodeArgs = {
+  canonicalNode: CanonicalNode;
+  index: number;
+  showColumns: boolean;
+  overlayDecoration?: MergedNodeDecoration | null;
+  persistedPosition?: CanvasNodePosition;
+};
 
 function resolveColumns(value: unknown): ColumnMeta | undefined {
   return Array.isArray(value) ? (value as ColumnMeta) : undefined;
 }
 
-export function mapCanonicalNodeToCanvasNode(
-  canonicalNode: CanonicalNode,
-  index: number,
-  showColumns: boolean,
-  overlayDecoration?: MergedNodeDecoration | null,
-  persistedPosition?: { x: number; y: number }
-): Node<DbtNodeData> {
+export function mapCanonicalNodeToCanvasNode({
+  canonicalNode,
+  index,
+  showColumns,
+  overlayDecoration,
+  persistedPosition,
+}: MapCanonicalNodeToCanvasNodeArgs): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
 
   return {
@@ -31,9 +41,13 @@ export function mapCanonicalNodeToCanvasNode(
       role: canonicalNode.role,
       typeLabel: kindRegistration.label,
       status: canonicalNode.status,
+      path: canonicalNode.path,
+      description: canonicalNode.description,
       lastDuration: canonicalNode.lastDuration,
       lastCost: canonicalNode.lastCost,
       overlayDecoration: overlayDecoration ?? null,
+      tags: canonicalNode.tags,
+      metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       columns: resolveColumns(canonicalNode.metadata?.columns),
       showColumns,
     },
@@ -47,12 +61,12 @@ export function mapCanonicalEdgeToCanvasEdge(canonicalEdge: CanonicalEdge): Edge
     target: canonicalEdge.targetId,
     type: 'smoothstep',
     animated: false,
-    style: { stroke: '#6b7280', strokeWidth: 2 },
+    style: createGraphFlowEdgeStyle(),
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#6b7280',
-      width: 20,
-      height: 20,
+      color: graphFlowPalette.edgeStroke,
+      width: graphFlowPalette.edgeMarkerWidth,
+      height: graphFlowPalette.edgeMarkerHeight,
     },
   };
 }
@@ -66,12 +80,12 @@ export function createCanvasEdgeFromConnection(connection: {
     source: connection.source,
     target: connection.target,
     type: 'smoothstep',
-    style: { stroke: '#6b7280', strokeWidth: 2 },
+    style: createGraphFlowEdgeStyle(),
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#6b7280',
-      width: 20,
-      height: 20,
+      color: graphFlowPalette.edgeStroke,
+      width: graphFlowPalette.edgeMarkerWidth,
+      height: graphFlowPalette.edgeMarkerHeight,
     },
   };
 }
@@ -98,8 +112,12 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       role: canonicalNode.role,
       typeLabel: kindRegistration.label,
       status: canonicalNode.status,
+      path: canonicalNode.path,
+      description: canonicalNode.description,
       lastDuration: canonicalNode.lastDuration,
       lastCost: canonicalNode.lastCost,
+      tags: canonicalNode.tags,
+      metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       columns: resolveColumns(canonicalNode.metadata?.columns),
       showColumns,
     },

@@ -24,9 +24,15 @@ Primary code anchors:
 - [routes.ts](../../../../../apps/web/src/app/routes.ts)
 - [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)
 - [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
+- [ShellAppMenu.tsx](../../../../../apps/web/src/app/components/shell/ShellAppMenu.tsx)
+- [appBuildMetadata.ts](../../../../../apps/web/src/app/components/shell/appBuildMetadata.ts)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
 - [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)
 - [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
+
+`LeftNavigation.tsx` is a current implementation anchor, not the target Canvas
+workbench direction. `F-28` governs the next Canvas shell sequence and requires
+Canvas to render without a fixed left navigation rail.
 
 Current shell regions:
 
@@ -34,6 +40,7 @@ Current shell regions:
 flowchart TB
   Root["Root shell"] --> Frame["AppShellFrame"]
   Frame --> TopBar["TopAppBar"]
+  TopBar --> AppMenu["ShellAppMenu"]
   Frame --> Health["ShellHealthBanner"]
   Frame --> Body["Shell body"]
   Body --> Nav["LeftNavigation"]
@@ -53,14 +60,47 @@ composes typed service instances for views and plugins through hooks.
 This prevents route-level components from instantiating mode-aware services or
 reading `resolveDataSource()` directly.
 
+## Shell Application Menu
+
+The Raven brand in the top bar is the application-level menu surface. It owns
+small app-wide commands that should not consume persistent toolbar width.
+
+Current command/query rail:
+
+| Rail                             | Type  | Owner         | Surface                     |
+| -------------------------------- | ----- | ------------- | --------------------------- |
+| `GetCompiledApplicationMetadata` | query | Web App Shell | `ShellAppMenu` About dialog |
+
+`GetCompiledApplicationMetadata` reads compile-time bundle metadata from
+`import.meta.env.VITE_APP_VERSION` and `VITE_APP_BUILD_DATE`. It does not call
+the backend `/version` endpoint because the About dialog answers which Raven
+bundle is running in the browser, not which API build is reachable.
+
+```mermaid
+flowchart LR
+  Vite["vite.config.ts"] --> Env["VITE_APP_VERSION / VITE_APP_BUILD_DATE"]
+  Env --> Query["resolveCompiledApplicationMetadata"]
+  Query --> Menu["ShellAppMenu"]
+  Menu --> Dialog["About Raven dialog"]
+```
+
 ## Shell Navigation Ownership
 
-The left rail now follows the same boundary rule as the rest of the shell:
+The current left navigation implementation follows the same boundary rule as
+the rest of the shell:
 
 - runtime capability data decides which plugin-contributed views are available;
 - the shell normalizes those runtime views into a render-ready navigation model;
 - the rail renders plain navigation items and does not know plugin manifest
   structure, label resolution, or shell footer ownership.
+
+Target direction for Canvas workbench:
+
+- top menus and command palette provide command discovery;
+- Canvas view strip owns route-local projections;
+- fixed left navigation must not occupy the Canvas workbench surface;
+- on-demand context surfaces, drawers, and pinned user presentation preferences
+  must not become a second permanent navigation rail.
 
 Current flow:
 
@@ -68,7 +108,7 @@ Current flow:
 flowchart LR
   Query["useCapabilitiesQuery()"] --> Runtime["useShellRuntime()"]
   Runtime --> State["buildShellRuntimeState(capabilities)"]
-  State --> Views["getNavigationViews(capabilities)"]
+  State --> Views["getShellNavigationViews(capabilities)"]
   Views --> Model["buildShellNavigationModel(navigationViews)"]
   Model --> Primary["primaryItems"]
   Model --> Footer["footerItems"]
@@ -120,7 +160,7 @@ flowchart LR
   Inputs["dataSourceMode + runId + isLoading + lines"] --> Model["buildBottomConsoleDrawerModel(...)"]
   Model --> Idle["idle: empty-state guidance"]
   Model --> Loading["loading: run badge + loading copy"]
-  Model --> Streaming["streaming: run badge + xterm surface"]
+  Model --> Streaming["streaming: run badge + xterm-backed live companion"]
 ```
 
 Authority split with the Runs route:
@@ -136,7 +176,8 @@ flowchart LR
 
 Boundary rules for these two surfaces:
 
-- `BottomConsoleDrawer` mirrors the currently active run as a shell-level live companion;
+- `BottomConsoleDrawer` mirrors the currently active run as a shell-level
+  xterm-backed live companion;
 - `BottomConsoleDrawer` does not claim snapshot authority, failure-diagnostics authority, or full run-detail ownership;
 - `Runs` owns durable run monitoring through snapshot plus timeline composition;
 - `Runs` is the place where degraded timeline state, runtime snapshot truth, result evidence, and failure diagnostics are explained.
@@ -145,7 +186,9 @@ Shared event presentation seam:
 
 ```mermaid
 flowchart LR
-  Events["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
+  Query["GET /runs/:runId/events"] --> TimelineModel["runEventTimelineModel"]
+  TimelineModel --> Events["RunEvent"]
+  Events --> SharedModel["buildRunEventPresentationModel(event)"]
   SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
   SharedCopy --> DrawerRender["formatRunEventAsLogLine(...)"]
   SharedCopy --> RunsRender["RunWorkspaceStateView timeline cards"]
@@ -153,9 +196,12 @@ flowchart LR
 
 Rules for the shared seam:
 
+- the timeline model owns event ordering, dedupe, cursor, and active-status
+  polling decisions;
 - the shared model owns event level, headline key, optional detail, and step identity;
 - the shared copy resolver owns human-readable event headline text for shared event surfaces;
-- the shell drawer may render terminal-style lines from that shared semantics plus shared copy;
+- the shell drawer renders terminal-style lines through `XtermConsole` from
+  that shared semantics plus shared copy;
 - the Runs route may render structured timeline cards from the same shared semantics plus shared copy;
 - the shared model must not collapse snapshot authority or failure-diagnostics authority back into the drawer.
 
@@ -163,10 +209,93 @@ Rules for this seam:
 
 - `LeftNavigation.tsx` must not import `resolveString`, plugin manifests, or
   fixed shell footer item definitions;
-- plugin-contributed views become `primaryItems` inside the shell model;
+- only plugin-contributed `placement.kind === 'shell-nav'` views become
+  `primaryItems` inside the shell model;
+- Canvas-scoped Code, Lineage, Diff, Artifacts, and Canvas Runs are owned by
+  the Canvas workbench tab rail, not by shell navigation;
 - shell-owned routes such as `Plugins` and `Admin` stay in `footerItems`;
 - the rail consumes render-ready `{ to, label, icon }` items and stays focused
   on navigation chrome and routing behavior.
+
+## Shell Workspace Context Component
+
+The shell workspace context is the bounded replacement for tenant, project, and
+environment dropdowns that previously consumed the main top bar.
+
+Workspace context is breadcrumb-style read-only content on the main screen.
+Tenant, project, and environment scope are read-only inside an active project
+context. Project changes belong to a separate governed project-selection
+screen, not to the App Shell top bar or Canvas workbench.
+
+The dedicated local component guide is
+[Shell Workspace Context Component](./shell-workspace-context-component.md).
+Scenario coverage lives in
+[Shell Workspace Context User Stories](./shell-workspace-context-user-stories.md).
+
+It uses a Fowler Presentation Model split:
+
+- `buildProjectIdentityBadge(...)` resolves workspace scope into read-only
+  labels;
+- `ShellProjectIdentityBadge` renders those labels without mutation affordance;
+- `ShellWorkspaceContextMenu` owns the on-demand read-only shell context
+  surface;
+- `ShellWorkspaceContextDetails` renders tenant, project, and environment as
+  read-only context fields.
+
+### Public API
+
+| API                            | Kind          | Owner                   | Contract                                                                      |
+| ------------------------------ | ------------- | ----------------------- | ----------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`         | read model    | Web shell presentation  | Carries tenant, project, environment, compact id, slug, and draft-scope label |
+| `buildProjectIdentityBadge`    | query adapter | Web shell presentation  | Resolves granted option labels and falls back to raw ids without fabricating  |
+| `ShellProjectIdentityBadge`    | passive view  | Shell top-bar rendering | Displays read-only project identity in the persistent shell bar               |
+| `ShellWorkspaceContextMenu`    | details UI    | Shell context display   | Makes read-only workspace context reachable from an on-demand surface         |
+| `ShellWorkspaceContextDetails` | passive view  | Shell context display   | Displays tenant, project, and environment without mutation controls           |
+
+### Invariants
+
+- the main top bar renders no `role="combobox"` workspace controls;
+- `ProjectIdentityBadge` is read-only and cannot dispatch session commands;
+- Tenant, project, and environment scope are read-only inside an active project
+  context;
+- the menu must not expose tenant, project, or environment comboboxes;
+- the menu must not create a parallel auth, RBAC, tenant-admin,
+  project-selection, or environment-selection rail;
+- Git context remains read-only in this slice and does not become a branch
+  command surface.
+
+### Transitions
+
+```mermaid
+stateDiagram-v2
+  [*] --> ResolvedScope
+  ResolvedScope --> TopBarBadge: buildProjectIdentityBadge
+  TopBarBadge --> ScopeMenuClosed: render read-only context
+  ScopeMenuClosed --> ContextMenuOpen: user opens Context
+  ContextMenuOpen --> ReadOnlyDetails: show tenant/project/environment
+  ReadOnlyDetails --> ScopeMenuClosed: close Context
+```
+
+### Consumers
+
+| Consumer                   | Use                                                                 |
+| -------------------------- | ------------------------------------------------------------------- |
+| `ShellTopBar`              | Composes badge, context menu, health, Git reference, and View menu  |
+| Canvas workbench route     | Reads the same session scope through its existing query/controller  |
+| Runs and other workbenches | React to session-scope changes through their existing route queries |
+| Cypress posture proof      | Verifies badge presence, no comboboxes, and read-only details       |
+
+### Component Flow
+
+```mermaid
+flowchart LR
+  Store["sessionStore scope"] --> Model["buildProjectIdentityBadge"]
+  Config["WorkspaceBootstrapConfig"] --> Model
+  Model --> Badge["ShellProjectIdentityBadge"]
+  Model --> Menu["ShellWorkspaceContextMenu"]
+  Menu --> Details["ShellWorkspaceContextDetails"]
+  Details --> Context["tenant / project / environment read-only fields"]
+```
 
 ## UX Rules
 
@@ -185,14 +314,13 @@ Rules for this seam:
 
 ## Current Constraints
 
-- the shell store still carries too much non-shell state through `appStore.ts`;
 - some shell quick actions are placeholders and not yet connected to governed
   behavior;
-- the console drawer now has an explicit shell-owned content model, but richer
-  live-stream semantics and typed log states remain future work;
-- shared event presentation semantics now align on level, headline key, shared
-  headline copy, detail, and step identity, but typed live-log states and the
-  final structured-versus-terminal presentation choice remain future work.
+- the console drawer now has an explicit shell-owned content model, xterm-backed
+  live companion rendering, and typed idle, loading, and streaming states;
+- shared event presentation semantics align on ordering, dedupe, cursor,
+  active-status polling, level, headline key, shared headline copy, detail, and
+  step identity across drawer and Runs workspace surfaces.
 
 ## Current-To-Target Mapping
 
@@ -231,10 +359,8 @@ standalone feature files instead of as an intentional shell package boundary.
 
 ## Store Boundary Rule
 
-The current [`appStore.ts`](../../../../../apps/web/src/app/stores/appStore.ts)
-mixes shell state, route state, execution state, and graph state.
-
-Target direction:
+The shell no longer has an aggregate store surface. Runtime state is split by
+owned concern:
 
 - shell store: focus mode, shell drawer visibility, nav state, health display
   preferences;
@@ -243,11 +369,15 @@ Target direction:
 - execution state: current run and run detail should not stay coupled to shell
   layout concerns.
 
-Legacy warning:
+Implementation anchors:
 
-- [`stores/index.ts`](../../../../../apps/web/src/app/stores/index.ts) is a
-  duplicate store surface from an older architecture path and should not be the
-  basis for new shell work.
+- [`sessionStore.ts`](../../../../../apps/web/src/app/stores/sessionStore.ts)
+- [`uiLayoutStore.ts`](../../../../../apps/web/src/app/stores/uiLayoutStore.ts)
+- [`executionStore.ts`](../../../../../apps/web/src/app/stores/executionStore.ts)
+- [`canvasInteractionStore.ts`](../../../../../apps/web/src/app/stores/canvasInteractionStore.ts)
+
+Do not recreate a root store barrel or a mirror-writing aggregate store. New
+state must be placed in the smallest named slice that owns the concern.
 
 ## Related Pages
 
@@ -256,3 +386,6 @@ Legacy warning:
 - [Workbench UI Contract And Component Inventory](../workbench-ui-contract-and-component-inventory.md)
 - [Data Source Service Boundary](./data-source-service-boundary.md)
 - [Library And Open-Source Reference Stack](../library-and-open-source-reference-stack.md)
+- [Canvas Workbench Tabs Component](../graph/canvas-workbench-tabs-component.md)
+- [Shell Workspace Context Component](./shell-workspace-context-component.md)
+- [Shell Workspace Context User Stories](./shell-workspace-context-user-stories.md)

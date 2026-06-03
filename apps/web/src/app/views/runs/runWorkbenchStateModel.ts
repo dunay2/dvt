@@ -1,3 +1,8 @@
+/**
+ * Owned concern: model the runs workbench as a discriminated-union state
+ * machine so the route renderer never handles ad-hoc loading/error/data
+ * conditions.
+ */
 import type { RunSummaryItem } from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
 
