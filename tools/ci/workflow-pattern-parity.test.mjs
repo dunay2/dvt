@@ -281,6 +281,20 @@ test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
   }
 });
 
+test('draft-skipped PR workflows reopen their merge gates when marked ready', () => {
+  const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const codeql = readFileSync('.github/workflows/codeql.yml', 'utf8');
+  const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
+
+  for (const workflow of [contractsWorkflow, prQualityGate, codeql, dependencyReview]) {
+    assertWorkflowContains(workflow, 'types: [opened, synchronize, reopened, ready_for_review]');
+    assertWorkflowContains(workflow, 'github.event.pull_request.draft');
+  }
+
+  assertWorkflowContains(contractsWorkflow, 'name: Detect contracts/determinism scope');
+});
+
 test('engine coverage scope is a semantic superset of engine workspace policy', () => {
   for (const pattern of workflowScopePolicy.workspace_engine) {
     assert.ok(

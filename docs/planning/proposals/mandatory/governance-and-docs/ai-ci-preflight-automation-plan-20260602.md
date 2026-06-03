@@ -53,6 +53,9 @@ remote time and network before the scope read model could close unrelated lanes.
 - Draft pull requests keep heavy Test Suite lanes closed, but `ready_for_review`
   re-runs the Test Suite detector so the affected test matrix is restored before
   merge.
+- Draft-aware quality, contracts, and security workflows share the same posture:
+  drafts avoid non-reviewable runner spend, and `ready_for_review` reopens the
+  merge gates automatically.
 
 ## Feature Mechanization
 
@@ -74,6 +77,7 @@ userStories:
   - As an engineer, scheduled adapter-postgres smoke coverage uses the same Turbo dependency build wrapper as PR test lanes.
   - As an AI agent, changed CI-tooling files can prove the local slice through direct adjacent tests instead of the full CI tools suite.
   - As an engineer, moving a draft PR to ready reopens affected Test Suite coverage without restoring duplicate Code Quality tests.
+  - As an engineer, draft-aware quality, contracts, and security gates reopen on ready-for-review without spending draft runners.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -85,8 +89,10 @@ governingSources:
 allowedImplementationSurfaces:
   - .github/actions/fetch-scope-base/action.yml
   - .github/workflows/adapter-postgres-integration-nightly.yml
+  - .github/workflows/codeql.yml
   - .github/workflows/ci.yml
   - .github/workflows/contracts.yml
+  - .github/workflows/dependency-review.yml
   - .github/workflows/pr-quality-gate.yml
   - .github/workflows/test.yml
   - .vscode/extensions.json
@@ -94,6 +100,7 @@ allowedImplementationSurfaces:
   - package.json
   - docs/architecture/components/ci-governance/engine-coverage-scope-gate-component.md
   - docs/guides/testing-and-ci-capabilities.md
+  - docs/planning/closeouts/20260603-ci-draft-ready-workflow-gates-closeout.md
   - docs/planning/proposals/mandatory/governance-and-docs/ai-ci-preflight-automation-plan-20260602.md
   - docs/.manifest.json
   - docs/**/index.md
@@ -149,6 +156,8 @@ fowlerSignals:
   - Duplicate Work when scheduled smoke jobs use raw package filters instead of the governed Turbo workspace wrapper.
   - Duplicate Work when a one-file CI-tooling edit pushes agents to rerun the full CI tools suite.
   - Hidden Coverage Gap when draft PR test lanes stay skipped after the PR becomes ready for review.
+  - Hidden Coverage Gap when draft-skipped quality or security workflows do not reopen on ready-for-review.
+  - Over-eager Resource Use when Contracts scope detection spends a runner for non-reviewable draft PRs.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
@@ -226,6 +235,17 @@ redGreenCycles:
     expectedFailure: Test Suite skips draft PRs but does not listen for ready_for_review, so affected package test coverage may not reopen when the PR leaves draft.
     patchSurfaces:
       - .github/workflows/test.yml
+      - docs/guides/testing-and-ci-capabilities.md
+      - tools/ci/workflow-pattern-parity.test.mjs
+    greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+  - id: draft-aware-quality-security-gates
+    redTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+    expectedFailure: PR Quality, CodeQL, Dependency Review, and Contracts do not share the draft-to-ready workflow posture, so drafts either spend runners or skipped gates may not reopen on ready_for_review.
+    patchSurfaces:
+      - .github/workflows/codeql.yml
+      - .github/workflows/contracts.yml
+      - .github/workflows/dependency-review.yml
+      - .github/workflows/pr-quality-gate.yml
       - docs/guides/testing-and-ci-capabilities.md
       - tools/ci/workflow-pattern-parity.test.mjs
     greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
