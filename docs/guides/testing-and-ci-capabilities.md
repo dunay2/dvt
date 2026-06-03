@@ -410,25 +410,29 @@ Planning-generated pages that are intentionally untracked:
   at job level when their semantic scope is false.
   Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
 - `Contracts & Determinism`: schema validation, determinism scan, contract
-  compile, golden validation, hash comparison.
+  compile, golden validation, hash comparison. Draft PRs keep the detector
+  closed; `ready_for_review` reopens the detector before merge.
   Source: [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml)
 - `PR Quality Gate`: PR metadata checks, ARC evidence checks, changed-only
   docs governance checks for ordinary pull requests, and Temporal integration.
   Global docs quality, doctor, location, and canonical checks are reserved for
-  push/manual full posture.
+  push/manual full posture. Draft PRs keep the gate closed; `ready_for_review`
+  reopens it for merge-gate validation.
   Source: [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
 - `Dependency Review`: pull-request dependency review with pinned action usage
   and high-severity failure policy. It runs for public repositories and for
   private repositories that set the repository variable
   `GH_ADVANCED_SECURITY_ENABLED=true`; GitHub dependency review otherwise fails
   before evaluating the dependency diff when Dependency graph/GitHub Advanced
-  Security is unavailable.
+  Security is unavailable. Draft PRs stay closed and `ready_for_review` reopens
+  the security gate.
   Source: [`.github/workflows/dependency-review.yml`](../../.github/workflows/dependency-review.yml)
 - `CodeQL`: JavaScript/TypeScript SAST on PRs, pushes to `main`, weekly
   schedule, and manual dispatch. It runs for public repositories and for
   private repositories that set the repository variable
   `GH_ADVANCED_SECURITY_ENABLED=true`; CodeQL otherwise fails during SARIF
-  upload when code scanning/GitHub Advanced Security is unavailable.
+  upload when code scanning/GitHub Advanced Security is unavailable. Draft PRs
+  stay closed and `ready_for_review` reopens the SAST gate.
   Source: [`.github/workflows/codeql.yml`](../../.github/workflows/codeql.yml)
 - `Adapter Postgres Integration Nightly`: scheduled adapter-postgres smoke
   coverage with GitHub issue notification on failure. Its dependency graph
