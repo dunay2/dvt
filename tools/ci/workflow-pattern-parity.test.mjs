@@ -33,6 +33,8 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
   'pnpm qa:artifact:check',
   'pnpm arch:deps',
 ];
+const DRAFT_AWARE_PR_TYPES =
+  'types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]';
 
 function assertWorkflowContains(workflow, snippet) {
   assert.ok(workflow.includes(snippet), `workflow must include: ${snippet}`);
@@ -248,7 +250,7 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
 test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
-  assertWorkflowContains(testWorkflow, 'types: [opened, synchronize, reopened, ready_for_review]');
+  assertWorkflowContains(testWorkflow, DRAFT_AWARE_PR_TYPES);
   assertWorkflowContains(testWorkflow, 'github.event.pull_request.draft');
   assert.equal(countWorkflowCommand(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test'), 1);
   assert.equal(
@@ -281,14 +283,14 @@ test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
   }
 });
 
-test('draft-skipped PR workflows reopen their merge gates when marked ready', () => {
+test('draft-skipped PR workflows re-evaluate gates when reviewability changes', () => {
   const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
   const codeql = readFileSync('.github/workflows/codeql.yml', 'utf8');
   const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
 
   for (const workflow of [contractsWorkflow, prQualityGate, codeql, dependencyReview]) {
-    assertWorkflowContains(workflow, 'types: [opened, synchronize, reopened, ready_for_review]');
+    assertWorkflowContains(workflow, DRAFT_AWARE_PR_TYPES);
     assertWorkflowContains(workflow, 'github.event.pull_request.draft');
   }
 

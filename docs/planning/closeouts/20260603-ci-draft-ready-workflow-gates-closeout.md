@@ -11,7 +11,7 @@ planning_type: closeout
 ## Think-First Analysis
 
 - Problem summary: several pull-request workflows either spent detector runners
-  on draft PRs or skipped draft PRs without listening for `ready_for_review`.
+  on draft PRs or skipped draft PRs without listening for reviewability changes.
   That created both avoidable CI cost while a PR is not reviewable and coverage
   risk when a draft becomes reviewable without another synchronize event.
 - Root cause: draft posture was encoded independently per workflow instead of
@@ -20,9 +20,10 @@ planning_type: closeout
 Review` had draft skip guards without that route, while `Contracts &
 Determinism` still ran its detector for drafts.
 - Constraints and invariants: GitHub workflows remain authoritative merge
-  gates; heavy gates may be skipped for drafts but must reopen before merge;
-  security gates must keep public/GHAS availability guards; package tests remain
-  owned by `Test Suite`; the change must stay under the existing
+  gates; heavy gates may be skipped for drafts but must reopen before merge and
+  close again when a ready PR is converted back to draft; security gates must
+  keep public/GHAS availability guards; package tests remain owned by
+  `Test Suite`; the change must stay under the existing
   `EmitWorkflowCapabilityScopes` rail and architecture test contracts.
 - Options considered:
   - Keep current behavior: rejected because it preserves draft runner cost in
@@ -30,12 +31,14 @@ Determinism` still ran its detector for drafts.
   - Remove draft skips everywhere: rejected because it restores unnecessary
     runner use for work that is not yet reviewable.
   - Normalize draft-aware triggers and detector guards: selected because it
-    keeps drafts cheap and restores coverage automatically on
-    `ready_for_review`.
+    keeps drafts cheap, restores coverage automatically on `ready_for_review`,
+    and cancels ready-PR work when `converted_to_draft` makes the PR
+    non-reviewable again.
 - Selected option and rationale: add explicit `pull_request` activity types with
-  `ready_for_review` to draft-aware workflows, add a draft guard to the
-  Contracts detector, and prove the policy through the workflow architecture
-  test. This is a small CI-policy change with direct cost and coverage impact.
+  `ready_for_review` and `converted_to_draft` to draft-aware workflows, add a
+  draft guard to the Contracts detector, and prove the policy through the
+  workflow architecture test. This is a small CI-policy change with direct cost
+  and coverage impact.
 
 ## Fowler Opportunity Matrix
 
@@ -43,6 +46,7 @@ Determinism` still ran its detector for drafts.
 | ----------------------------------- | --------------------------------------- | ----------------------------------------- | -------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- | ------------------------------- |
 | Draft PR opens while still changing | Avoid runner spend before reviewability | Duplicate Work / Over-eager Resource Use  | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | `.github/workflows/contracts.yml`                                                                                  | `node --test tools/ci/workflow-pattern-parity.test.mjs` | Removing merge gates            |
 | Draft PR becomes ready              | Restore skipped merge-gate coverage     | Hidden Coverage Gap                       | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | `.github/workflows/pr-quality-gate.yml`, `.github/workflows/codeql.yml`, `.github/workflows/dependency-review.yml` | `node --test tools/ci/workflow-pattern-parity.test.mjs` | Running heavy lanes while draft |
+| Ready PR returns to draft           | Cancel stale ready-PR gate work         | Cancellation Gap                          | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | draft-aware workflows                                                                                              | `node --test tools/ci/workflow-pattern-parity.test.mjs` | Cancelling push/manual runs     |
 | CI policy evolves                   | Prevent drift between workflows         | Primitive obsession / duplicate semantics | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | `tools/ci/workflow-pattern-parity.test.mjs`, docs                                                                  | `pnpm verify:changed`                                   | New CI orchestration service    |
 
 ## Pre-Implementation Brief
@@ -55,9 +59,10 @@ Determinism` still ran its detector for drafts.
   `.github/workflows/dependency-review.yml`,
   `tools/ci/workflow-pattern-parity.test.mjs`,
   `docs/guides/testing-and-ci-capabilities.md`, and the AI CI preflight plan.
-- Expected outcome: draft PRs avoid Contracts detector runners, and all
+- Expected outcome: draft PRs avoid Contracts detector runners, all
   draft-skipped quality/security workflows rerun automatically when marked
-  ready for review.
+  ready for review, and ready-to-draft transitions re-evaluate the draft guard
+  through `converted_to_draft`.
 - Risks and mitigations: workflow trigger drift is mitigated with a static
   architecture test; security workflow availability guards remain unchanged.
 - Out of scope: branch protection changes, billing failures, changing Code
