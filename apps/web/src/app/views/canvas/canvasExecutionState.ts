@@ -2,10 +2,11 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { PlanViewModel } from '../../types/plans';
 import {
-  buildPlanStatusSummary,
   hasPersistedPreviewProof,
   hasPersistedPreviewIdentityMismatch,
   observePlanRunReadiness,
+  type PlanRunReadinessBlocker,
+  type PlanRunReadinessReadModel,
 } from './canvasPlanReadiness';
 import {
   validateTransformationGraph,
@@ -34,8 +35,25 @@ export type CanvasExecutionState = {
   isCurrentPlanStale: boolean;
   canPlanGraph: boolean;
   canStartRun: boolean;
+  planRunReadiness: PlanRunReadinessReadModel;
   planStatusSummary: string;
 };
+
+function forcePlanIntegrityBlocker(
+  readiness: PlanRunReadinessReadModel,
+  summary: string
+): PlanRunReadinessReadModel {
+  const blockers: readonly PlanRunReadinessBlocker[] = readiness.blockers.includes('plan_integrity')
+    ? readiness.blockers
+    : [...readiness.blockers, 'plan_integrity'];
+
+  return {
+    ...readiness,
+    blockers,
+    status: 'blocked',
+    summary,
+  };
+}
 
 export function deriveCanvasExecutionState({
   canRun,
@@ -92,25 +110,18 @@ export function deriveCanvasExecutionState({
     hasPersistedPlanForRun &&
     isExecutableGraphReady &&
     !isCurrentPlanStale;
-  const planStatusSummary =
-    executionStrategy == null || executionStrategy.kind === 'not_executable'
-      ? observePlanRunReadiness({
-          canRun,
-          currentPlan,
-          isCurrentPlanStale,
-          persistedPreviewIdentityMismatch,
-          hasPersistedPlanForRun,
-          capabilityMismatch: true,
-        }).summary
-      : dbtPlannerGraphSource?.ok === false
-        ? dbtPlannerGraphSource.message
-        : buildPlanStatusSummary({
-            canRun,
-            currentPlan,
-            isCurrentPlanStale,
-            persistedPreviewIdentityMismatch,
-            hasPersistedPlanForRun,
-          });
+  const planRunReadinessSource = observePlanRunReadiness({
+    canRun,
+    currentPlan,
+    isCurrentPlanStale,
+    persistedPreviewIdentityMismatch,
+    hasPersistedPlanForRun,
+    capabilityMismatch: executionStrategy == null || executionStrategy.kind === 'not_executable',
+  });
+  const planRunReadiness =
+    dbtPlannerGraphSource?.ok === false
+      ? forcePlanIntegrityBlocker(planRunReadinessSource, dbtPlannerGraphSource.message)
+      : planRunReadinessSource;
 
   return {
     transformationValidation,
@@ -119,6 +130,7 @@ export function deriveCanvasExecutionState({
     isCurrentPlanStale,
     canPlanGraph,
     canStartRun,
-    planStatusSummary,
+    planRunReadiness,
+    planStatusSummary: planRunReadiness.summary,
   };
 }

@@ -26,6 +26,7 @@ type UnavailableRunStartScenario = Readonly<{
   expectedSummary: string;
   expectedError: string;
   expectedModalState?: ExpectedModalState;
+  expectedBlocker: string;
 }>;
 
 type StartedRunConsoleScenario = Readonly<{
@@ -51,6 +52,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     expectedSummary: canvasViewCopy.runPlanRefUnavailableMessage,
     expectedError: 'Plan reference is unavailable for this mode',
     expectedModalState: 'true',
+    expectedBlocker: 'plan_integrity',
   },
   {
     name: 'blocks startRun when preview has no persisted proof',
@@ -64,6 +66,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     expectedSummary: canvasViewCopy.planStatusPreviewNotPersistedMessage,
     expectedError: PERSISTED_PREVIEW_REQUIRED_MESSAGE,
     expectedModalState: 'true',
+    expectedBlocker: 'plan_integrity',
   },
   {
     name: 'keeps startRun unavailable when route permissions block run execution',
@@ -71,6 +74,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     expectedSummary: canvasViewCopy.planStatusRunUnavailableMessage,
     expectedError: canvasViewCopy.runPermissionDeniedMessage,
     expectedModalState: 'false',
+    expectedBlocker: 'authorization_denied',
   },
   {
     name: 'blocks startRun when persisted preview identity does not match the active plan',
@@ -87,6 +91,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
     expectedSummary: canvasViewCopy.planStatusPreviewNotAlignedMessage,
     expectedError: PERSISTED_PREVIEW_REQUIRED_MESSAGE,
     expectedModalState: 'true',
+    expectedBlocker: 'plan_integrity',
   },
 ] as const;
 
@@ -171,6 +176,7 @@ async function expectUnavailableRunStart(args: {
   expectedSummary: string;
   expectedError: string;
   expectedModalState?: 'true' | 'false';
+  expectedBlocker: string;
 }): Promise<ExecutionActionsHarness> {
   const blockedScenario = await renderRunStartHarness({
     currentPlan: args.currentPlan,
@@ -179,6 +185,8 @@ async function expectUnavailableRunStart(args: {
   const harness = blockedScenario.harness;
 
   expect(harness.text('can-start-run')).toBe('false');
+  expect(harness.text('plan-run-readiness-status')).toBe('blocked');
+  expect(harness.text('plan-run-readiness-blockers')).toContain(args.expectedBlocker);
   expect(harness.text('plan-status-summary')).toBe(args.expectedSummary);
 
   await expectRunStartBlocked({
@@ -239,6 +247,7 @@ describe('useCanvasExecutionActions run start', () => {
       expectedSummary: scenario.expectedSummary,
       expectedError: scenario.expectedError,
       expectedModalState: scenario.expectedModalState,
+      expectedBlocker: scenario.expectedBlocker,
     });
   });
 
@@ -254,6 +263,8 @@ describe('useCanvasExecutionActions run start', () => {
     harness = startedScenario.harness;
 
     expect(harness.text('can-start-run')).toBe('true');
+    expect(harness.text('plan-run-readiness-status')).toBe('ready');
+    expect(harness.text('plan-run-readiness-blockers')).toBe('none');
     expect(harness.text('plan-status-summary')).toBe(canvasViewCopy.planStatusPreviewReadyMessage);
 
     await harness.clickStartRun();
