@@ -1,0 +1,21 @@
+---
+id: R-20260603-PLANNER-JSON-CANONICALIZE-2-UPGRADE
+title: Planner canonical JSON dependency upgrades can drift from deterministic hashing behavior
+status: Open
+date: 2026-06-03
+owners:
+  - packages/@dvt/planner
+severity: Low
+probability: Low
+context: >
+  PR #991 upgrades the planner package from json-canonicalize 1.2.0 to 2.0.0. The dependency is part
+  of planner canonicalization support, so dependency-only changes still require ARC-2 visibility.
+risk: >
+  A major dependency upgrade could alter canonical JSON edge-case behavior and affect deterministic
+  planner hashes even when TypeScript compilation and package metadata remain valid.
+mitigations:
+  - Keep `@dvt/planner` type-check and unit-test validation in the PR evidence.
+  - Keep pre-push validation as the merge closeout gate.
+  - Reopen this risk if planner hash, canonicalization, or determinism tests regress after merge.
+review_after: 2026-06-17
+---
