@@ -41,6 +41,17 @@ test('classifies docs-only pull request scope', () => {
   assert.equal(scope.docs_changed, true);
   assert.equal(scope.any_code, false);
   assert.equal(scope.lane_yaml_changed, false);
+  assert.equal(scope.security_analysis_relevant, false);
+});
+
+test('keeps mailbox analysis out of security analysis scope', () => {
+  const scope = computeWorkflowModeScopeOutputs('workflow', [
+    'buzon/20260531-db-first-architecture-generated-docs-fowler-analysis.md',
+  ]);
+
+  assert.equal(scope.any_code, false);
+  assert.equal(scope.docs_changed, false);
+  assert.equal(scope.security_analysis_relevant, false);
 });
 
 test('classifies lane YAML changes for workboard checks', () => {
@@ -78,6 +89,7 @@ test('classifies app/package structural changes as code and generated-status rel
   assert.equal(scope.any_code, true);
   assert.equal(scope.generated_status_relevant, true);
   assert.equal(scope.generated_capability_relevant, true);
+  assert.equal(scope.security_analysis_relevant, true);
 });
 
 test('classifies turbo root-build surfaces for test-suite root config routing', () => {
@@ -109,6 +121,7 @@ test('workflow policy changes stay on CI contracts without runtime fan-out', () 
 
     assert.equal(workflowScope.any_code, true);
     assert.equal(workflowScope.changed_file_validation_relevant, true);
+    assert.equal(workflowScope.security_analysis_relevant, true);
     assert.equal(workflowScope.code_validation_relevant, false);
     assert.equal(matrix.anyChanged, false);
     assert.deepEqual(matrix.include, []);
@@ -130,6 +143,7 @@ test('classifies dependency-cruiser config as CI policy validation without works
 
   assert.equal(scope.any_code, true);
   assert.equal(scope.changed_file_validation_relevant, true);
+  assert.equal(scope.security_analysis_relevant, true);
   assert.equal(matrix.anyChanged, false);
   assert.deepEqual(matrix.include, []);
 });

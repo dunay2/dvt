@@ -190,6 +190,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     ciWorkflow,
     'changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}'
   );
+  assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.security_analysis_relevant');
   assertWorkflowContains(ciWorkflow, 'ci_tool_executable_contracts_relevant:');
   assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.ci_tool_executable_contracts_relevant');
   assertWorkflowContains(
@@ -217,6 +218,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     generated_status_relevant: workflowScopePolicy.generated_status_relevant,
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
     changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
+    security_analysis_relevant: workflowScopePolicy.security_analysis_relevant,
     ci_tool_executable_contracts_relevant:
       workflowScopePolicy.ci_tool_executable_contracts_relevant,
   });
@@ -416,6 +418,14 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   assertWorkflowContains(codeql, 'javascript-typescript');
   assertWorkflowContains(codeql, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
   assertWorkflowContains(codeql, "github.event.repository.visibility == 'public'");
+  assertWorkflowContains(codeql, 'name: Detect security analysis scope');
+  assertWorkflowContains(codeql, 'node tools/ci/emit-scope.mjs --mode workflow');
+  assertWorkflowContains(codeql, 'security_analysis_relevant:');
+  assertWorkflowContains(
+    codeql,
+    "needs.detect-security-scope.outputs.security_analysis_relevant == 'true'"
+  );
+  assert.doesNotMatch(codeql, /paths-ignore/u);
 
   assertWorkflowContains(nightly, 'issues: write');
   assertWorkflowContains(nightly, 'name: Notify nightly failure');

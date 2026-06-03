@@ -19,14 +19,54 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  analyze:
-    name: CodeQL analyze
+  detect-security-scope:
+    name: Detect security analysis scope
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     if: >-
       !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
       (github.event.repository.visibility == 'public' ||
         vars.GH_ADVANCED_SECURITY_ENABLED == 'true')
+    outputs:
+      security_analysis_relevant:
+        ${{ steps.scope.outputs.security_analysis_relevant ||
+        steps.non_pr_scope.outputs.security_analysis_relevant }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 1
+
+      - name: Fetch pull-request base ref
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/fetch-scope-base
+        with:
+          base-ref: ${{ github.base_ref }}
+
+      - name: Validate workflow scope policy JSON
+        if: github.event_name == 'pull_request'
+        run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
+
+      - name: Emit PR security scope outputs
+        id: scope
+        if: github.event_name == 'pull_request'
+        run: node tools/ci/emit-scope.mjs --mode workflow
+        env:
+          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_HEAD: ${{ github.sha }}
+
+      - name: Open security scope for non-PR events
+        id: non_pr_scope
+        if: github.event_name != 'pull_request'
+        run: echo "security_analysis_relevant=true" >> "$GITHUB_OUTPUT"
+
+  analyze:
+    name: CodeQL analyze
+    needs: detect-security-scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: >-
+      needs.detect-security-scope.outputs.security_analysis_relevant == 'true'
     strategy:
       fail-fast: false
       matrix:
