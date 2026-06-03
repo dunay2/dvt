@@ -64,18 +64,12 @@ export function formatCanvasNodeRemovedMessage(nodeName: string, locale?: string
   return `${copy.nodeRemovedPrefix} ${nodeName} ${copy.nodeRemovedSuffix}`.trim();
 }
 
-export function formatUnsupportedCanvasKindMessage(
-  canvasKind: string,
-  locale?: string
-): string {
+export function formatUnsupportedCanvasKindMessage(canvasKind: string, locale?: string): string {
   const copy = resolveCanvasViewCopy(locale);
   return `${copy.unsupportedCanvasKindMessagePrefix}"${canvasKind}"${copy.unsupportedCanvasKindMessageSuffix}`;
 }
 
-export function formatDisabledCanvasPluginMessage(
-  canvasKind: string,
-  locale?: string
-): string {
+export function formatDisabledCanvasPluginMessage(canvasKind: string, locale?: string): string {
   const copy = resolveCanvasViewCopy(locale);
   return `${copy.disabledCanvasPluginMessagePrefix}"${canvasKind}"${copy.disabledCanvasPluginMessageSuffix}`;
 }

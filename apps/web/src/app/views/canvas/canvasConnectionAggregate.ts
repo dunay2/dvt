@@ -136,7 +136,12 @@ export function proposeConnection({
     };
   }
 
-  const connectionResult = evaluateConnection(sourceNode, targetNode, canonicalEdges, pluginPortMap);
+  const connectionResult = evaluateConnection(
+    sourceNode,
+    targetNode,
+    canonicalEdges,
+    pluginPortMap
+  );
   if (!connectionResult.allowed) {
     return {
       outcome: 'rejected',
@@ -187,7 +192,9 @@ export type ConfirmReconnectResult =
   | { outcome: 'reconnected'; nextEdges: Edge[] }
   | { outcome: 'rejected'; rejection: CanvasConnectionRejection };
 
-export function confirmReconnect(args: ConnectionCheckArgs & { edge: Edge }): ConfirmReconnectResult {
+export function confirmReconnect(
+  args: ConnectionCheckArgs & { edge: Edge }
+): ConfirmReconnectResult {
   const validationEdges = args.edges.filter((candidate) => candidate.id !== args.edge.id);
   const proposed = proposeConnection({
     ...args,

@@ -101,17 +101,17 @@ No production or release branch was used.
 
 ## DoD status
 
-| Item | Status |
-| --- | --- |
-| Roadmap with map, steps, checks and DoD | Done |
-| No public contract added | Done |
-| No `v2` contract added | Done |
-| Active three-node guard removed from canvas aggregate | Done |
-| Obsolete guard tests removed | Done |
-| New realistic connection tests added | Done |
-| System-owned capability model | Not completed in code |
-| Internal AuthoringGraph model | Not completed in code |
-| Validation executed | Not executed |
+| Item                                                  | Status                |
+| ----------------------------------------------------- | --------------------- |
+| Roadmap with map, steps, checks and DoD               | Done                  |
+| No public contract added                              | Done                  |
+| No `v2` contract added                                | Done                  |
+| Active three-node guard removed from canvas aggregate | Done                  |
+| Obsolete guard tests removed                          | Done                  |
+| New realistic connection tests added                  | Done                  |
+| System-owned capability model                         | Not completed in code |
+| Internal AuthoringGraph model                         | Not completed in code |
+| Validation executed                                   | Not executed          |
 
 ## Next slice
 

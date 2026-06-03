@@ -4,12 +4,17 @@ import { describe, expect, it } from 'vitest';
 import type { CanonicalNode } from '../../types/canonical';
 import { confirmConnection, proposeConnection } from './canvasConnectionAggregate';
 
-function node(id: string, role: CanonicalNode['role'], kind?: CanonicalNode['kind']): CanonicalNode {
+function node(
+  id: string,
+  role: CanonicalNode['role'],
+  kind?: CanonicalNode['kind']
+): CanonicalNode {
   return {
     id,
     name: id,
     pluginId: 'dvt',
-    kind: kind ?? (role === 'input' ? 'dvt:source' : role === 'output' ? 'dvt:sink' : 'dvt:transform'),
+    kind:
+      kind ?? (role === 'input' ? 'dvt:source' : role === 'output' ? 'dvt:sink' : 'dvt:transform'),
     role,
     status: 'idle',
     tags: [],

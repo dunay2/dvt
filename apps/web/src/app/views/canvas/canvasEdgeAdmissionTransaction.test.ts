@@ -62,12 +62,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
     vi.spyOn(Date, 'now').mockReturnValue(123);
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
+      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform')],
     ]);
     const connection: Connection = {
       source: 'source-node',
       sourceHandle: null,
-      target: 'sink-node',
+      target: 'transform-node',
       targetHandle: null,
     };
 
@@ -85,13 +85,13 @@ describe('canvasEdgeAdmissionTransaction', () => {
     }
     expect(transaction.edges).toMatchObject([
       {
-        id: 'source-node->sink-node:123',
+        id: 'source-node->transform-node:123',
         source: 'source-node',
-        target: 'sink-node',
+        target: 'transform-node',
       },
     ]);
     expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
-      { sourceId: 'source-node', targetId: 'sink-node' },
+      { sourceId: 'source-node', targetId: 'transform-node' },
     ]);
   });
 
@@ -146,10 +146,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
   it('rejects reverse transformation direction in constrained transformation graphs', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      [
-        'transform-node',
-        buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform'),
-      ],
+      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform')],
       ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
     ]);
 
@@ -168,17 +165,14 @@ describe('canvasEdgeAdmissionTransaction', () => {
 
     expect(transaction).toEqual({
       outcome: 'noop',
-      rejection: { code: 'transformation_invalid_edge_order' },
+      rejection: { code: 'role_rule_blocked', sourceRole: 'output', targetRole: 'input' },
     });
   });
 
   it('reconnects an edge with a stable edge identity and draft visible edges together', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      [
-        'transform-node',
-        buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform'),
-      ],
+      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform')],
       ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
     ]);
     const edge: Edge = {
@@ -222,12 +216,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
   it('keeps reconnecting to the same target idempotent instead of duplicating edges', () => {
     const canonicalNodesById = new Map([
       ['source-node', buildCanonicalNode('source-node', 'input', 'dvt:source')],
-      ['sink-node', buildCanonicalNode('sink-node', 'output', 'dvt:sink')],
+      ['transform-node', buildCanonicalNode('transform-node', 'transform', 'dvt:sql_transform')],
     ]);
     const edge: Edge = {
       id: 'edge-1',
       source: 'source-node',
-      target: 'sink-node',
+      target: 'transform-node',
     };
 
     const transaction = resolveCanvasEdgeReconnectTransaction({
@@ -235,10 +229,10 @@ describe('canvasEdgeAdmissionTransaction', () => {
       connection: {
         source: 'source-node',
         sourceHandle: null,
-        target: 'sink-node',
+        target: 'transform-node',
         targetHandle: null,
       },
-      draftSession: buildDraftSession([{ sourceId: 'source-node', targetId: 'sink-node' }]),
+      draftSession: buildDraftSession([{ sourceId: 'source-node', targetId: 'transform-node' }]),
       edge,
       edges: [edge],
       pluginPortMap,
@@ -253,12 +247,12 @@ describe('canvasEdgeAdmissionTransaction', () => {
         id: 'edge-1',
         source: 'source-node',
         sourceHandle: null,
-        target: 'sink-node',
+        target: 'transform-node',
         targetHandle: null,
       },
     ]);
     expect(transaction.draftSession.workingSet.visibleEdges).toEqual([
-      { sourceId: 'source-node', targetId: 'sink-node' },
+      { sourceId: 'source-node', targetId: 'transform-node' },
     ]);
   });
 });

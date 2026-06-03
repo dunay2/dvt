@@ -22,9 +22,13 @@ const graphHandlersTestDoubles = vi.hoisted(() => ({
   >(() => ({ allowed: true })),
 }));
 
-vi.mock('../../plugins/contracts/ConnectionRules', () => ({
-  evaluateConnection: graphHandlersTestDoubles.evaluateConnection,
-}));
+vi.mock('../../plugins/contracts/ConnectionRules', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../plugins/contracts/ConnectionRules')>();
+  return {
+    ...actual,
+    evaluateConnection: graphHandlersTestDoubles.evaluateConnection,
+  };
+});
 
 vi.mock('../../plugins/nodeTypeRegistry', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../plugins/nodeTypeRegistry')>();
@@ -55,7 +59,7 @@ export function buildCanonicalNode(id: string, role: CanonicalNode['role']): Can
     id,
     name: id,
     pluginId: 'dvt',
-    kind: role === 'input' ? 'dvt:source' : 'dvt:sink',
+    kind: role === 'input' ? 'dvt:source' : role === 'output' ? 'dvt:sink' : 'dvt:transform',
     role,
     status: 'idle',
     tags: [],
@@ -111,7 +115,7 @@ export function renderGraphHandlersHook({
   graphStrategy,
   canonicalNodes = [
     buildCanonicalNode('source-node', 'input'),
-    buildCanonicalNode('sink-node', 'output'),
+    buildCanonicalNode('sink-node', 'transform'),
   ],
   nodes = [
     { id: 'source-node', data: { name: 'source-node' }, position: { x: 0, y: 0 } },
@@ -205,4 +209,37 @@ export function renderGraphHandlersHook({
     toggleInspectorPanel,
     onLayoutComplete,
   };
+}
+
+export function resetGraphHandlersTestDoubles() {
+  (
+    globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+  ).IS_REACT_ACT_ENVIRONMENT = true;
+  graphHandlersTestDoubles.evaluateConnection.mockReset();
+  graphHandlersTestDoubles.evaluateConnection.mockReturnValue({ allowed: true });
+  toastState.error.mockReset();
+  toastState.success.mockReset();
+  toastState.info.mockReset();
+}
+
+export function restoreGraphHandlersTestDoubles() {
+  vi.clearAllMocks();
+  vi.useRealTimers();
+}
+
+export function rejectGraphHandlerConnectionWith(
+  rejection: Exclude<ConnectionRuleResult, { allowed: true }>
+) {
+  graphHandlersTestDoubles.evaluateConnection.mockReturnValue(rejection);
+}
+
+export function evaluateGraphHandlerConnectionWith(
+  implementation: (
+    source: CanonicalNode,
+    target: CanonicalNode,
+    currentEdges: unknown,
+    pluginPorts: PluginPortMap
+  ) => ConnectionRuleResult
+) {
+  graphHandlersTestDoubles.evaluateConnection.mockImplementation(implementation);
 }
