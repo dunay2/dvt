@@ -293,15 +293,21 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
+  - docs/architecture/components/engine/ops/observability.md
   - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+  - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
   - docs/evidence/**
   - docs/risk-register/quality/**
   - apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
   - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
+  - apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts
   - apps/api/src/application/ports/runtime.ts
   - apps/api/src/application/services/getRunStatusUseCase.ts
   - apps/api/src/application/services/runReadEvidenceModel.ts
   - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - packages/@dvt/observability/src/contracts/ObservabilityContext.ts
+  - packages/@dvt/observability/src/policy/cardinalityPolicy.ts
+  - packages/@dvt/observability/test/cardinalityPolicy.test.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
@@ -617,9 +623,16 @@ redGreenCycles:
     redTest: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts && pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
     expectedFailure: Completed run detail cannot show source/sink plan scope or direct return actions from persisted run read evidence.
     patchSurfaces:
+      - docs/architecture/components/engine/ops/observability.md
+      - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts
       - apps/api/src/application/ports/runtime.ts
       - apps/api/src/application/services/runReadEvidenceModel.ts
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
+      - packages/@dvt/observability/src/contracts/ObservabilityContext.ts
+      - packages/@dvt/observability/src/policy/cardinalityPolicy.ts
+      - packages/@dvt/observability/test/cardinalityPolicy.test.ts
       - apps/web/src/app/ports/runs.ts
       - apps/web/src/app/services/runs/runsApiDecoders.ts
       - apps/web/src/app/services/runs/runsApiSnapshotMapper.ts
@@ -780,6 +793,78 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: RunDiagnosticPointer
+    path: apps/api/src/application/ports/runtime.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Trace and log pointers must be explicit runtime DTOs, not strings inferred by the view.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: RunDiagnostics
+    path: apps/api/src/application/ports/runtime.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run diagnostics must carry run, plan, step, adapter, duration, status, and error evidence together.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: deriveDiagnostics
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Runtime diagnostics must be projected from persisted run evidence instead of frontend timeline guesses.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: deriveDurationMs
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run duration must be computed once at the read-model boundary.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: deriveLatestEventString
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Step, attempt, and error evidence must be extracted by named read-model helpers.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: deriveLatestStepId
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Step diagnostics must prefer persisted snapshot step evidence before falling back to events.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: formatDiagnosticPointer
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Trace and log pointers must stay provider-neutral until a concrete observability backend is configured.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: DEFAULT_FORBIDDEN
+    path: packages/@dvt/observability/src/policy/cardinalityPolicy.ts
+    dddOwner: ObservabilityCardinalityPolicy
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [High-cardinality plan and run identifiers must stay out of metrics labels.]
+    architectureGuard: pnpm --filter @dvt/observability test
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - packages/@dvt/observability/test/cardinalityPolicy.test.ts
   - name: RunPlanExecutionSummary
     path: apps/web/src/app/ports/runs.ts
     dddOwner: RunPlanExecutionScope
@@ -808,6 +893,62 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
+  - name: RunDiagnosticPointer
+    path: apps/web/src/app/ports/runs.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [The frontend runtime port must carry trace and log pointers without view-side reconstruction.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/views/runs/RunStates.test.tsx
+  - name: RunDiagnostics
+    path: apps/web/src/app/ports/runs.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run Detail must consume a cohesive diagnostics read model instead of separate ambient values.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/views/runs/RunStates.test.tsx
+  - name: parseRunDiagnosticPointer
+    path: apps/web/src/app/services/runs/runsApiDecoders.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Malformed diagnostics pointers must be rejected at the API decoder boundary.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+  - name: parseRunDiagnosticPointers
+    path: apps/web/src/app/services/runs/runsApiDecoders.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run diagnostics must expose at least one usable trace or log pointer before rendering.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+  - name: parseRunDiagnostics
+    path: apps/web/src/app/services/runs/runsApiDecoders.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run diagnostics must decode from the governed snapshot read model before entering the UI.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+  - name: RunDiagnosticsCard
+    path: apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run Detail must show trace and log pointers near persisted runtime evidence.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/runs/RunStates.test.tsx
   - name: formatRunScopeList
     path: apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
     dddOwner: RunPlanExecutionScope

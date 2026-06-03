@@ -6,7 +6,14 @@ export interface CardinalityPolicy {
   readonly maxLabelValueLength: number;
 }
 
-const DEFAULT_FORBIDDEN = new Set<string>(['runId', 'stepId', 'planId', 'attemptId', 'userId']);
+const DEFAULT_FORBIDDEN = new Set<string>([
+  'runId',
+  'stepId',
+  'planId',
+  'planSha',
+  'attemptId',
+  'userId',
+]);
 
 export const defaultCardinalityPolicy: CardinalityPolicy = {
   forbiddenLabelKeys: DEFAULT_FORBIDDEN,

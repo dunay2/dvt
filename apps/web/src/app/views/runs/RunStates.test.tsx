@@ -425,6 +425,60 @@ describe('RunStates', () => {
     expect(container.textContent).toContain('STEP_FAILURE');
   });
 
+  it('renders run diagnostics and trace pointers from snapshot fields', async () => {
+    const workspace = buildWorkspace({
+      snapshot: {
+        runId: 'run_123',
+        planId: 'plan_123',
+        status: 'failed',
+        executor: 'postgres',
+        startedAt: '2026-03-28T10:00:00.000Z',
+        completedAt: '2026-03-28T10:00:10.000Z',
+        environment: 'dev',
+        gitSha: 'abc123def',
+        diagnostics: {
+          runId: 'run_123',
+          planId: 'plan_123',
+          planSha: 'a'.repeat(64),
+          stepId: 'step-load',
+          attemptId: '2',
+          adapter: 'temporal',
+          durationMs: 10000,
+          status: 'failed',
+          errorCode: 'SINK_WRITE_FAILED',
+          pointers: [
+            {
+              kind: 'trace',
+              label: 'Trace query',
+              value: 'runId=run_123 planId=plan_123 stepId=step-load attemptId=2',
+            },
+            {
+              kind: 'log',
+              label: 'Log query',
+              value: 'runId=run_123 planSha=aaaaaaaa',
+            },
+          ],
+        },
+      } as RunWorkspaceViewModel['snapshot'],
+    });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter>
+          <RunWorkspaceState workspace={workspace} />
+        </MemoryRouter>
+      );
+    });
+
+    expect(container.textContent).toContain('Diagnostics');
+    expect(container.textContent).toContain('Trace query');
+    expect(container.textContent).toContain('Log query');
+    expect(container.textContent).toContain('runId=run_123');
+    expect(container.textContent).toContain('step-load');
+    expect(container.textContent).toContain('attemptId=2');
+    expect(container.textContent).toContain('SINK_WRITE_FAILED');
+  });
+
   it('does not render materialization evidence from timeline payload when snapshot omits it', async () => {
     const workspace = buildWorkspace(
       {

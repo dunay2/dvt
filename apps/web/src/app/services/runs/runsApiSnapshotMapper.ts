@@ -11,6 +11,7 @@ import {
   parseExecutionEvidence,
   parseMaterializationEvidence,
   parsePlanExecutionSummary,
+  parseRunDiagnostics,
   parseRunExecutor,
   parseRunProvenance,
   parseSnapshotStaleness,
@@ -57,6 +58,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
     provenance: parseRunProvenance(candidate.provenance),
     execution: parseExecutionEvidence(candidate.execution),
     planSummary: parsePlanExecutionSummary(candidate.planSummary),
+    diagnostics: parseRunDiagnostics(candidate.diagnostics),
   };
 }
 

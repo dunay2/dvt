@@ -11,6 +11,7 @@ import { Card } from '../../components/ui/card';
 import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
 import type {
   MaterializationEvidence,
+  RunDiagnostics,
   RunExecutor,
   RunPlanExecutionSummary,
 } from '../../ports/runs';
@@ -301,6 +302,62 @@ function RunItineraryCard({
   );
 }
 
+function RunDiagnosticsCard({
+  diagnostics,
+}: Readonly<{
+  diagnostics: RunDiagnostics;
+}>) {
+  const fields = [
+    [copy.diagnosticsRunIdLabel, diagnostics.runId, true],
+    [copy.diagnosticsPlanIdLabel, diagnostics.planId, true],
+    [copy.diagnosticsPlanShaLabel, diagnostics.planSha, true],
+    [copy.diagnosticsStepIdLabel, diagnostics.stepId, true],
+    [copy.diagnosticsAttemptIdLabel, diagnostics.attemptId, true],
+    [copy.diagnosticsAdapterLabel, diagnostics.adapter, false],
+    [copy.durationLabel, diagnostics.durationMs, false],
+    [copy.diagnosticsStatusLabel, diagnostics.status, false],
+    [copy.diagnosticsErrorCodeLabel, diagnostics.errorCode, false],
+  ] as const;
+
+  return (
+    <Card className="border-slate-700 bg-slate-900 p-5">
+      <h3 className="mb-3 text-sm font-semibold">{copy.diagnosticsTitle}</h3>
+      <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+        {fields.map(([label, value, monospace]) =>
+          value === undefined ? null : (
+            <div
+              key={label}
+              className={label === copy.diagnosticsPlanShaLabel ? 'md:col-span-2' : ''}
+            >
+              <span className="text-slate-400">{label}</span>
+              <div className={monospace ? 'break-all font-mono text-xs' : undefined}>
+                {typeof value === 'number' ? formatDuration(value) : value}
+              </div>
+            </div>
+          )
+        )}
+      </div>
+
+      <div className="mt-4">
+        <h4 className="mb-2 text-xs font-semibold uppercase text-slate-400">
+          {copy.diagnosticsPointersLabel}
+        </h4>
+        <div className="space-y-2">
+          {diagnostics.pointers.map((pointer) => (
+            <div
+              key={`${pointer.kind}-${pointer.value}`}
+              className="rounded border border-slate-700 bg-slate-950 p-3 text-sm text-slate-300"
+            >
+              <Badge variant="outline">{pointer.label}</Badge>
+              <div className="mt-2 break-all font-mono text-xs">{pointer.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
   const executor = deriveExecutor(workspace);
@@ -387,6 +444,8 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
             ) : null}
           </div>
         </Card>
+
+        {snapshot.diagnostics ? <RunDiagnosticsCard diagnostics={snapshot.diagnostics} /> : null}
 
         {showMaterializationSection ? (
           <Card className="border-slate-700 bg-slate-900 p-5">

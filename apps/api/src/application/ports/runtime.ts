@@ -71,6 +71,25 @@ export interface RunProvenanceChain {
   readonly authoring?: RunAuthoringProvenance;
 }
 
+export interface RunDiagnosticPointer {
+  readonly kind: 'trace' | 'log';
+  readonly label: string;
+  readonly value: string;
+}
+
+export interface RunDiagnostics {
+  readonly runId: string;
+  readonly planId?: string;
+  readonly planSha?: string;
+  readonly stepId?: string;
+  readonly attemptId?: string;
+  readonly adapter?: string;
+  readonly durationMs?: number;
+  readonly status: CanonicalRunStatus['status'];
+  readonly errorCode?: string;
+  readonly pointers: ReadonlyArray<RunDiagnosticPointer>;
+}
+
 export type GetRunStatusResult = Pick<
   CanonicalRunStatus,
   'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt' | 'execution'
@@ -86,6 +105,7 @@ export type GetRunStatusResult = Pick<
   readonly materialization?: MaterializationEvidence;
   readonly provenance?: RunProvenanceChain;
   readonly planSummary?: TransformationSqlFirstPlanSummary;
+  readonly diagnostics?: RunDiagnostics;
 };
 
 export interface IGetRunStatusUseCase {

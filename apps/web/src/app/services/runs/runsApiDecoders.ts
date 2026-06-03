@@ -6,6 +6,8 @@ import type { RunStatus as ContractRunStatus } from '@dvt/contracts';
 
 import type {
   MaterializationEvidence,
+  RunDiagnosticPointer,
+  RunDiagnostics,
   RunAuthoringProvenance,
   RunExecutionEvidence,
   RunExecutor,
@@ -286,5 +288,74 @@ export function parseRunProvenance(value: unknown): RunProvenanceChain | undefin
       canonicalPlanSha256,
     },
     ...(authoring ? { authoring } : {}),
+  };
+}
+
+function parseRunDiagnosticPointer(value: unknown): RunDiagnosticPointer | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const kind = candidate.kind === 'trace' || candidate.kind === 'log' ? candidate.kind : undefined;
+  const label = asString(candidate.label);
+  const pointerValue = asString(candidate.value);
+
+  if (kind === undefined || label === undefined || pointerValue === undefined) {
+    return undefined;
+  }
+
+  return {
+    kind,
+    label,
+    value: pointerValue,
+  };
+}
+
+function parseRunDiagnosticPointers(value: unknown): readonly RunDiagnosticPointer[] | undefined {
+  if (!Array.isArray(value) || value.length === 0) {
+    return undefined;
+  }
+
+  const pointers = value.map(parseRunDiagnosticPointer);
+  if (pointers.some((pointer) => pointer === undefined)) {
+    return undefined;
+  }
+
+  return pointers as readonly RunDiagnosticPointer[];
+}
+
+export function parseRunDiagnostics(value: unknown): RunDiagnostics | undefined {
+  if (!value || typeof value !== 'object') {
+    return undefined;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  const runId = asString(candidate.runId);
+  const contractStatus = parseContractRunStatus(candidate.status);
+  const pointers = parseRunDiagnosticPointers(candidate.pointers);
+  if (runId === undefined || contractStatus === undefined || pointers === undefined) {
+    return undefined;
+  }
+
+  const planId = asString(candidate.planId);
+  const planSha = asString(candidate.planSha);
+  const stepId = asString(candidate.stepId);
+  const attemptId = asString(candidate.attemptId);
+  const adapter = asString(candidate.adapter);
+  const durationMs = asFiniteNumber(candidate.durationMs);
+  const errorCode = asString(candidate.errorCode);
+
+  return {
+    runId,
+    ...(planId ? { planId } : {}),
+    ...(planSha ? { planSha } : {}),
+    ...(stepId ? { stepId } : {}),
+    ...(attemptId ? { attemptId } : {}),
+    ...(adapter ? { adapter } : {}),
+    ...(durationMs === undefined ? {} : { durationMs }),
+    status: mapContractStatusToUi(contractStatus),
+    ...(errorCode ? { errorCode } : {}),
+    pointers,
   };
 }
