@@ -44,6 +44,12 @@ remote time and network before the scope read model could close unrelated lanes.
   changed-file comparisons. This keeps GitHub as a merge gate, but removes
   full-history checkout from the CI, Test Suite, Contracts, and PR Quality
   scope routes.
+- Scheduled adapter-postgres smoke coverage uses the governed Turbo workspace
+  wrapper for dependency graph builds, so nightly proof jobs share the same
+  cacheable build orchestration as pull-request test lanes.
+- `pnpm verify:changed` routes CI-tooling edits to adjacent `node --test`
+  suites when available, so one-file agent iterations under `tools/ci` do not
+  require the broad `pnpm test:ci-tools` contract run.
 
 ## Feature Mechanization
 
@@ -62,6 +68,8 @@ userStories:
   - As an engineer, I can rely on tracked workspace settings to run Prettier when files are saved.
   - As an AI agent, I can rely on GitHub skipping heavy Test Suite PR lanes before runner setup when the semantic scope is false.
   - As an engineer, PR scope detectors avoid full-history checkout before deciding whether expensive lanes apply.
+  - As an engineer, scheduled adapter-postgres smoke coverage uses the same Turbo dependency build wrapper as PR test lanes.
+  - As an AI agent, changed CI-tooling files can prove the local slice through direct adjacent tests instead of the full CI tools suite.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -72,6 +80,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
   - .github/actions/fetch-scope-base/action.yml
+  - .github/workflows/adapter-postgres-integration-nightly.yml
   - .github/workflows/ci.yml
   - .github/workflows/contracts.yml
   - .github/workflows/pr-quality-gate.yml
@@ -133,9 +142,12 @@ fowlerSignals:
   - Duplicate Work when pre-push validation and push hooks repeat the same checks.
   - Duplicate Work when Test Suite jobs repeat semantic scope detection after the detector already computed the same read model.
   - Over-eager Resource Use when PR scope detectors fetch full repository history before deciding whether heavy lanes apply.
+  - Duplicate Work when scheduled smoke jobs use raw package filters instead of the governed Turbo workspace wrapper.
+  - Duplicate Work when a one-file CI-tooling edit pushes agents to rerun the full CI tools suite.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
+  - node --test tools/ci/turbo-workspace-task-contract.test.mjs
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - developer workflow and CI tooling only
@@ -143,6 +155,7 @@ completionGate:
   - pnpm governance:refresh
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
+  - node --test tools/ci/turbo-workspace-task-contract.test.mjs
   - pnpm verify:changed
   - pnpm verify:prepush
 redGreenCycles:
@@ -187,6 +200,22 @@ redGreenCycles:
       - tools/ci/scope-config.mjs
       - tools/ci/workflow-pattern-parity.test.mjs
     greenTest: node --test tools/ci/repository-change-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
+  - id: nightly-adapter-postgres-turbo-wrapper
+    redTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+    expectedFailure: Adapter Postgres Integration Nightly builds its dependency graph through a raw pnpm workspace filter instead of the governed Turbo wrapper.
+    patchSurfaces:
+      - .github/workflows/adapter-postgres-integration-nightly.yml
+      - docs/guides/testing-and-ci-capabilities.md
+      - tools/ci/workflow-pattern-parity.test.mjs
+    greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+  - id: ci-tooling-changed-test-router
+    redTest: node --test scripts/verify-changed.test.cjs
+    expectedFailure: tools/ci source changes have no adjacent-test changed-slice route, so agents escalate to the broad CI tools suite for one-file edits.
+    patchSurfaces:
+      - scripts/local-validation-plan.cjs
+      - scripts/verify-changed.test.cjs
+      - docs/guides/testing-and-ci-capabilities.md
+    greenTest: node --test scripts/verify-changed.test.cjs
 symbols:
   - name: assert
     path: scripts/ai-preflight.test.cjs
@@ -388,4 +417,31 @@ symbols:
     cypressCoverage: N/A - CI scope classification test
     unitTests:
       - tools/ci/repository-change-scope.test.mjs
+  - name: ciToolingTestPathFor
+    path: scripts/local-validation-plan.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [RunAgentPreflight]
+    fowlerSignals: [Duplicate Work]
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local validation planner
+    unitTests:
+      - scripts/verify-changed.test.cjs
+  - name: ciToolingTestSteps
+    path: scripts/local-validation-plan.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [RunAgentPreflight]
+    fowlerSignals: [Duplicate Work]
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local validation planner
+    unitTests:
+      - scripts/verify-changed.test.cjs
+  - name: fs
+    path: scripts/local-validation-plan.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [RunAgentPreflight]
+    fowlerSignals: [Duplicate Work]
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local validation planner adjacent-test lookup
+    unitTests:
+      - scripts/verify-changed.test.cjs
 ```

@@ -29,6 +29,7 @@
     "ci:code": "pnpm arch:deps && pnpm type-check && pnpm test && pnpm lint:determinism",
     "ci:full": "pnpm ci:docs && pnpm ci:code && pnpm test:coverage:engine",
     "preflight:affected": "pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck && pnpm ci:affected:test",
+    "preflight:affected:ci": "pnpm ci:affected:build && pnpm ci:affected:lint && pnpm ci:affected:typecheck",
     "docs:ai-efficiency:check": "node scripts/check-ai-efficiency-adoption.cjs --require-ready",
     "test:ai-efficiency:adoption": "node --test scripts/check-ai-efficiency-adoption.test.cjs",
     "test:ai-preflight": "node --test scripts/ai-preflight.test.cjs",
