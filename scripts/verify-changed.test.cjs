@@ -6,6 +6,7 @@ const {
   buildVerifyChangedPlan,
   commandLabel,
   executeVerifyChangedPlan,
+  main,
   parseArgs,
 } = require('./verify-changed.cjs');
 
@@ -305,6 +306,44 @@ test('executeVerifyChangedPlan stops at the first failed check', () => {
 
   assert.equal(status, 7);
   assert.deepEqual(calls, ['node first.cjs']);
+});
+
+test('main records a reusable prepush stamp after successful changed verification', () => {
+  const changedFiles = ['apps/web/src/app/AppProviders.tsx'];
+  const stamps = [];
+  const status = main([], {
+    changedFiles,
+    executeVerifyChangedPlan: () => 0,
+    printPlan: () => {},
+    writePrepushStamp: (stamp) => stamps.push(stamp),
+    buildPrepushStamp: (files) => ({
+      validationLevel: 'default',
+      changedFiles: files,
+      stateFingerprint: 'same-tree',
+    }),
+  });
+
+  assert.equal(status, 0);
+  assert.deepEqual(stamps, [
+    {
+      validationLevel: 'default',
+      changedFiles,
+      stateFingerprint: 'same-tree',
+    },
+  ]);
+});
+
+test('main does not record a prepush stamp when changed verification fails', () => {
+  const stamps = [];
+  const status = main([], {
+    changedFiles: ['apps/web/src/app/AppProviders.tsx'],
+    executeVerifyChangedPlan: () => 7,
+    printPlan: () => {},
+    writePrepushStamp: (stamp) => stamps.push(stamp),
+  });
+
+  assert.equal(status, 7);
+  assert.deepEqual(stamps, []);
 });
 
 test('parseArgs supports dry-run planning without executing commands', () => {
