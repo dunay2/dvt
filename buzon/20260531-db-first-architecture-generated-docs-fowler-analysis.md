@@ -64,7 +64,7 @@ flowchart TB
   Generator --> DriftReport["Architecture drift report"]
 ```
 
-Generated files should include generator name, query surfaces used, input fingerprints, generation timestamp, regeneration command and a clear generated-file header.
+Generated files should include generator name, query surfaces used, input fingerprints, stable source refs, generator version or content hash, regeneration command and a clear generated-file header. Tracked generated files must not include wall-clock generation timestamps; timestamps belong in untracked run logs or evidence records when operational timing matters.
 
 ## Proposed roadmap
 
@@ -111,7 +111,7 @@ A component split is weak if tests and fixtures remain parent-owned. Assign test
 
 ### Generated docs without provenance
 
-Generated docs must include query names, input fingerprints, generator metadata, regeneration command and a clear generated-file warning.
+Generated docs must include query names, input fingerprints, stable source refs, generator metadata, regeneration command and a clear generated-file warning. They must avoid wall-clock timestamps in tracked output so regenerated architecture docs remain deterministic under the repo docs gates.
 
 ## Final recommendation
 
