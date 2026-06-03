@@ -20,7 +20,7 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
       const validator = new StoredPlanExecutabilityValidator({
         fetcher: makeValidationReader(() => storedPlanArtifact()),
         adapters: new Map([
-          ['temporal', makeAdapter(['basic-execution', 'workflow.fan.parallel'])],
+          ['temporal', makeAdapter(['basic-execution', 'workflow.fan.parallel', 'executor.dbt'])],
         ]),
       });
 
@@ -40,7 +40,7 @@ export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): voi
             executionPolicy: { requiresCapabilities: [asNonBlankString('workflow.pause')] },
           })
         ),
-        adapters: new Map([['temporal', makeAdapter(['basic-execution'])]]),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution', 'executor.dbt'])]]),
       });
 
       const result = await validator.validatePlan(validationInput());

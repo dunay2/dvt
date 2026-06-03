@@ -36,6 +36,7 @@ function baseEnv(overrides?: Partial<ObservabilityEnv>): ObservabilityEnv {
     DVT_READYZ_ENABLED: false,
     DVT_VERSION_ENABLED: false,
     DVT_DB_READY_ENABLED: false,
+    DVT_TEMPORAL_DBT_ENABLED: false,
     SERVICE_NAME: 'dvt-api-test',
     OBS_ENABLED: false,
     OTEL_EXPORTER_OTLP_ENDPOINT: undefined,

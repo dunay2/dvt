@@ -17,6 +17,16 @@
             }
           }
         },
+        "executor": {
+          "type": "object",
+          "properties": {
+            "DBT": {
+              "type": "string",
+              "const": "executor.dbt",
+              "description": "DBT executor profile is available for DBT model, test, and snapshot steps."
+            }
+          }
+        },
         "signaling": {
           "type": "object",
           "properties": {

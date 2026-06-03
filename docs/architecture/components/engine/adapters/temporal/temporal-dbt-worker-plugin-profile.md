@@ -74,6 +74,9 @@ It does **not** own:
 - `ActivityDeps` remains free of `runExecutionContextReader` and
   `dbtPluginRunner`; those dependencies belong to the DBT profile.
 - DBT support is omitted entirely when `DVT_TEMPORAL_DBT_ENABLED=false`.
+- DBT step kinds require the `executor.dbt` runtime capability; API and engine
+  admission must reject DBT-bearing plans before dispatch when the target
+  Temporal adapter does not declare that capability.
 - When DBT support is enabled, the worker composes the DBT registry explicitly
   through the generic step-plugin profile composition seam and then passes the
   merged registry to `TemporalWorkerHostConfig.stepActivitiesByKind`.
@@ -97,19 +100,21 @@ It does **not** own:
    `temporalWorkerRuntimeResources.ts`.
 2. If `DVT_TEMPORAL_DBT_ENABLED=false`, no DBT runner, reader, or registry is
    constructed.
-3. If `DVT_TEMPORAL_DBT_ENABLED=true`, `temporalWorkerDbtProfile.ts` creates the
+3. API runtime composition declares `executor.dbt` for the Temporal adapter only
+   when `DVT_TEMPORAL_DBT_ENABLED=true`.
+4. If `DVT_TEMPORAL_DBT_ENABLED=true`, `temporalWorkerDbtProfile.ts` creates the
    artifact-backed run execution context reader, DBT bundle reader, availability
    probe, and `DbtCliPluginRunner`.
-4. The DBT profile returns `{ pluginId: "dbt", stepActivitiesByKind }`.
-5. `temporalWorkerRuntimeResources.ts` merges enabled plugin profiles through
+5. The DBT profile returns `{ pluginId: "dbt", stepActivitiesByKind }`.
+6. `temporalWorkerRuntimeResources.ts` merges enabled plugin profiles through
    `composeTemporalStepPluginRegistries(...)` and returns the optional merged
    registry as a runtime resource.
-6. `temporalWorkerHost.ts` passes the registry through
+7. `temporalWorkerHost.ts` passes the registry through
    `TemporalWorkerHostConfig.stepActivitiesByKind`.
-7. `temporalWorkerRuntimeHandle.ts` delegates startup to
+8. `temporalWorkerRuntimeHandle.ts` delegates startup to
    `temporalWorkerLifecycle.ts`, which runs the DBT availability probe before
    migrations and Temporal host startup.
-8. Core `StepActivityDispatcher` resolves DBT kinds only from that composed
+9. Core `StepActivityDispatcher` resolves DBT kinds only from that composed
    registry.
 
 ## Consumers
@@ -155,6 +160,7 @@ It does **not** own:
 flowchart LR
   Entry["createTemporalWorkerRuntime"] --> Resources["temporalWorkerRuntimeResources"]
   Resources --> Env["DVT_TEMPORAL_DBT_ENABLED"]
+  Env --> Capability["executor.dbt capability in API runtime"]
   Resources --> Stores["temporalWorkerStores"]
   Env --> Decision{"enabled?"}
   Decision -->|false| HostNoDbt["TemporalWorkerHost without plugin registry"]

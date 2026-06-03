@@ -138,6 +138,7 @@ describe('isKnownStepKind', () => {
 });
 
 describe('execution profile metadata', () => {
+  const dbtExecutorCapability = 'executor.dbt';
   const profile: StepKindExecutionProfile = {
     supportedAdapters: ['temporal'],
     requiredCapabilities: ['spark.submit', 'spark.observe'],
@@ -163,7 +164,21 @@ describe('execution profile metadata', () => {
       { kind: 'SPARK_JOB' },
       { kind: DBT_MODEL },
     ]);
-    expect(capabilities).toEqual(['spark.observe', 'spark.submit']);
+    expect(capabilities).toEqual([dbtExecutorCapability, 'spark.observe', 'spark.submit']);
+  });
+
+  it('requires the DBT executor capability for every built-in DBT step kind', () => {
+    const defaultRegistry = createDefaultStepTypeRegistry();
+
+    expect(defaultRegistry.getExecutionProfile?.(DBT_MODEL)?.requiredCapabilities).toContain(
+      dbtExecutorCapability
+    );
+    expect(defaultRegistry.getExecutionProfile?.(DBT_TEST)?.requiredCapabilities).toContain(
+      dbtExecutorCapability
+    );
+    expect(defaultRegistry.getExecutionProfile?.(DBT_SNAPSHOT)?.requiredCapabilities).toContain(
+      dbtExecutorCapability
+    );
   });
 });
 

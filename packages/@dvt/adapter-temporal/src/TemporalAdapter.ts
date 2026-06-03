@@ -69,9 +69,13 @@ export interface TemporalAdapterDeps {
   clientManager?: TemporalClientManager;
   workflowClient?: WorkflowClientLike;
   config: TemporalAdapterConfig;
+  additionalCapabilities?: readonly string[];
 }
 
-/** Capabilities declared by the Temporal adapter. Must stay in sync with adapters.capabilities.json. */
+/**
+ * Core capabilities declared by the Temporal adapter. Plugin executor
+ * capabilities are supplied by runtime composition through `additionalCapabilities`.
+ */
 const TEMPORAL_CAPABILITIES = [
   'basic-execution',
   'signal.pause.native',
@@ -162,7 +166,9 @@ export class TemporalAdapter implements IProviderAdapter {
   }
 
   capabilities(): readonly string[] {
-    return TEMPORAL_CAPABILITIES;
+    return Array.from(
+      new Set([...TEMPORAL_CAPABILITIES, ...(this.deps.additionalCapabilities ?? [])])
+    );
   }
 
   signalSemanticsVersions(): readonly SignalSemanticsVersion[] {

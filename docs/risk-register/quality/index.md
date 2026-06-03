@@ -42,6 +42,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Contract mapper boundary type aliases can drift from schema-level non-blank semantics](R-20260410-CONTRACT-MAPPER-BOUNDARY-TYPE-SEMANTICS.yaml)
 - [Contracts hash-compare scope change lacks PR-runtime E2E validation](R-20260515-CI-CONTRACTS-HASH-SCOPE-E2E.yaml)
 - [DBT plan-store replay reuse must keep canonical payload comparison stable](R-20260526-DBT-PLAN-STORE-REUSE.yaml)
+- [DBT runtime capability posture can drift between API and worker deployment](R-20260603-DBT-CAPABILITY-ADMISSION.yaml)
 - [Delivery-owned in-memory outbox core can mask durable adapter parity gaps](R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml)
 - [Documentary misalignment risk for snapshot ownership and fallback polling traceability](R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE.yaml)
 - [Downstream consumers may still depend on retired status helper exports or mixed status semantics](R-20260413-AR-A12-B-STATUS-MODEL-CONSUMER-DRIFT.yaml)

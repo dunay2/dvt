@@ -16,6 +16,7 @@ import {
 } from '@dvt/contracts';
 import {
   AdapterNotRegisteredError,
+  CapabilitiesNotSupportedError,
   OutboxRateLimitExceededError,
   RunExecutionContextRejectedError,
   RunAlreadyExistsError,
@@ -112,6 +113,17 @@ export function mapEngineStartRunError(
     });
   }
 
+  if (error instanceof CapabilitiesNotSupportedError) {
+    const cause = firstUnsupportedCapability(error);
+    return ok({
+      kind: START_RUN_RESULT_KIND.planRejected,
+      accepted: false,
+      code: 'MISSING_CAPABILITY',
+      reason: error.message,
+      ...(cause === undefined ? {} : { cause }),
+    });
+  }
+
   return null;
 }
 
@@ -161,6 +173,15 @@ function getErrorCode(error: unknown): string | undefined {
 
   const code = (error as Error & { code?: unknown }).code;
   return typeof code === 'string' ? code : undefined;
+}
+
+function firstUnsupportedCapability(error: CapabilitiesNotSupportedError): string | undefined {
+  const unsupported = error.details?.['unsupported'];
+  if (!Array.isArray(unsupported)) {
+    return undefined;
+  }
+
+  return unsupported.find((capability): capability is string => typeof capability === 'string');
 }
 
 function ok(value: StartRunResult): StartRunUseCaseResult {

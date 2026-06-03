@@ -103,6 +103,9 @@ application behavior ports. Local behavior remains in `startRunUseCasePort.ts`,
   `runExecutionContextRef` before engine dispatch; missing bundle store or
   missing `dbt_project.yml` rejects as `plan_rejected` instead of dispatching a
   plugin-incomplete command
+- DBT step kinds require the `executor.dbt` runtime capability; when the target
+  adapter does not declare it, start-run rejects with `MISSING_CAPABILITY`
+  before dispatching to Temporal
 - `EngineStartRunUseCase` is the only module in this component that calls
   `IWorkflowEngine.startRun(...)`
 - `buildProtectedStartRunRuntime.ts` is the only module in the protected
@@ -127,6 +130,7 @@ flowchart LR
   Planner --> DbtBinding["DbtRunExecutionContextBindingUseCase.ts"]
   DbtBinding --> Engine["EngineStartRunUseCase.ts"]
   Engine --> Bridge["startRunEngineBridge.ts"]
+  Engine --> Capability["MISSING_CAPABILITY plan_rejected"]
   Admission --> Capacity["IStartRunExecutionCapacityPort.ts"]
   Bridge --> Workflow["IWorkflowEngine.startRun(...)"]
   Admission --> Contract["@dvt/contracts StartRunCommand / StartRunResult"]
@@ -162,7 +166,7 @@ sequenceDiagram
     DbtBinding->>DbtBinding: create DBT bundle + run execution context artifact
   end
   DbtBinding->>Engine: execute enriched or unchanged command
-  Engine->>Engine: map engine result or error
+  Engine->>Engine: map engine result, including missing capabilities
 ```
 
 ## Consumers

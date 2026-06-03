@@ -60,6 +60,9 @@ It does **not** own:
 - `@dvt/temporal-dbt-plugin` MUST depend on the generic plugin ports from
   `@dvt/adapter-temporal`, not the other way around.
 - API admission imports DBT step-kind ownership from the DBT plugin package.
+- API start-run admission also consumes the contract step execution profile:
+  DBT plan steps require the runtime capability `executor.dbt`, and a Temporal
+  adapter that does not declare it rejects before worker dispatch.
 - Worker DBT profile imports DBT activity/runner construction from the DBT
   plugin package.
 - DBT support remains optional and is omitted when

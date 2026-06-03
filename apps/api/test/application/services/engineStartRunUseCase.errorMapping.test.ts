@@ -1,5 +1,6 @@
 import {
   AdapterNotRegisteredError,
+  CapabilitiesNotSupportedError,
   OutboxRateLimitExceededError,
   RunExecutionContextRejectedError,
   RunAlreadyExistsError,
@@ -133,6 +134,30 @@ describe('EngineStartRunUseCase error mapping', () => {
         code: 'REJECTED',
         reason: 'engine.error.run_execution_context_rejected',
         cause: 'run_execution_context',
+      },
+    });
+  });
+
+  it('maps missing engine capabilities to plan_rejected result', async () => {
+    const useCase = new EngineStartRunUseCase({
+      async startRun() {
+        throw new CapabilitiesNotSupportedError({
+          capabilities: ['executor.dbt'],
+          provider: 'temporal',
+        });
+      },
+    } as never);
+
+    await expect(
+      useCase.execute(buildStartRunCommand(), buildAuthorizedContext())
+    ).resolves.toEqual({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'MISSING_CAPABILITY',
+        reason: 'engine.error.capabilities_not_supported',
+        cause: 'executor.dbt',
       },
     });
   });
