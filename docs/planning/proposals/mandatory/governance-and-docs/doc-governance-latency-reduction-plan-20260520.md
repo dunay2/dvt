@@ -63,6 +63,8 @@ allowedImplementationSurfaces:
   - tools/ci/scope-config.mjs
   - tools/ci/emit-scope.test.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
+  - tools/ci/sync-docs-status-policy.test.mjs
+  - scripts/sync-docs.cjs
   - scripts/planning-db-import.cjs
   - scripts/planning-db-import.test.cjs
   - scripts/governance-refresh.cjs
@@ -96,11 +98,15 @@ fowlerSignals:
   - Pipeline duplication
   - Separate invalidation from materialization
 architectureGuards:
+  - node --test tools/ci/sync-docs-status-policy.test.mjs
+  - pnpm docs:sync:check
   - node --test scripts/planning-db-import.test.cjs
   - node --test scripts/governance-refresh.test.cjs
 cypressFlows:
   - N/A - repository governance command rail only
 completionGate:
+  - node --test tools/ci/sync-docs-status-policy.test.mjs
+  - pnpm docs:sync:check
   - node --test scripts/planning-db-import.test.cjs
   - node --test scripts/governance-refresh.test.cjs
   - pnpm governance:db:import -- --if-stale
@@ -108,6 +114,14 @@ completionGate:
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
 redGreenCycles:
+  - id: generated-index-equal-label-order
+    redTest: node --test tools/ci/sync-docs-status-policy.test.mjs
+    expectedFailure: Evidence docs with identical generated labels can preserve filesystem order, causing tracked index drift across Windows and Linux.
+    patchSurfaces:
+      - scripts/sync-docs.cjs
+      - tools/ci/sync-docs-status-policy.test.mjs
+      - docs/evidence/index.md
+    greenTest: pnpm docs:sync:check
   - id: auxiliary-source-freshness-before-rebuild
     redTest: node --test scripts/planning-db-import.test.cjs
     expectedFailure: governance import calls full auxiliary projection checks even when source freshness is already proven.
@@ -133,6 +147,18 @@ redGreenCycles:
       - docs/guides/testing-and-ci-capabilities.md
     greenTest: node --test tools/ci/emit-scope.test.mjs tools/ci/workflow-pattern-parity.test.mjs
 symbols:
+  - name: scanSectionEntries
+    path: scripts/sync-docs.cjs
+    dddOwner: Governance generated-surface pipeline
+    cqRails:
+      - GovernanceRefresh
+    fowlerSignals:
+      - Stable generated index order for equal-label rows
+      - Prevent platform-specific docs sync churn
+    architectureGuard: node --test tools/ci/sync-docs-status-policy.test.mjs
+    cypressCoverage: N/A
+    unitTests:
+      - tools/ci/sync-docs-status-policy.test.mjs
   - name: computeRepositoryValidationScope
     path: tools/ci/scope-config.mjs
     dddOwner: CI scope read model
