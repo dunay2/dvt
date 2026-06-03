@@ -16,9 +16,11 @@ planning_type: closeout
   risk when a draft becomes reviewable without another synchronize event.
 - Root cause: draft posture was encoded independently per workflow instead of
   as a consistent CI scope-policy rule. `Test Suite` already has a
-  `ready_for_review` route; `PR Quality Gate`, `CodeQL`, and `Dependency
-Review` had draft skip guards without that route, while `Contracts &
-Determinism` still ran its detector for drafts.
+  `ready_for_review` route. `PR Quality Gate`, `CodeQL`, and
+  `Dependency Review` had draft skip guards without that route, while
+  `Contracts & Determinism` still ran its detector for drafts. Remote PR
+  validation also exposed that ARC docs checks used raw triple-dot diffs against
+  a shallow merge checkout, which can lack a local merge base.
 - Constraints and invariants: GitHub workflows remain authoritative merge
   gates; heavy gates may be skipped for drafts but must reopen before merge and
   close again when a ready PR is converted back to draft; security gates must
@@ -47,6 +49,7 @@ Determinism` still ran its detector for drafts.
 | Draft PR opens while still changing | Avoid runner spend before reviewability | Duplicate Work / Over-eager Resource Use  | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | `.github/workflows/contracts.yml`                                                                                  | `node --test tools/ci/workflow-pattern-parity.test.mjs` | Removing merge gates            |
 | Draft PR becomes ready              | Restore skipped merge-gate coverage     | Hidden Coverage Gap                       | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | `.github/workflows/pr-quality-gate.yml`, `.github/workflows/codeql.yml`, `.github/workflows/dependency-review.yml` | `node --test tools/ci/workflow-pattern-parity.test.mjs` | Running heavy lanes while draft |
 | Ready PR returns to draft           | Cancel stale ready-PR gate work         | Cancellation Gap                          | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | draft-aware workflows                                                                                              | `node --test tools/ci/workflow-pattern-parity.test.mjs` | Cancelling push/manual runs     |
+| Shallow PR merge checkout           | Keep ARC/docs diff reliable             | Shallow Checkout Fragility                | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | `tools/ci/git-diff-files.mjs`, `tools/ci/arc-check.mjs`, `tools/ci/doc-check.mjs`                                  | `node --test tools/ci/git-diff-files.test.mjs`          | Full-history checkout           |
 | CI policy evolves                   | Prevent drift between workflows         | Primitive obsession / duplicate semantics | Repository CI scope policy | `EmitWorkflowCapabilityScopes` | `tools/ci/workflow-pattern-parity.test.mjs`, docs                                                                  | `pnpm verify:changed`                                   | New CI orchestration service    |
 
 ## Pre-Implementation Brief
@@ -58,6 +61,8 @@ Determinism` still ran its detector for drafts.
   `.github/workflows/pr-quality-gate.yml`, `.github/workflows/codeql.yml`,
   `.github/workflows/dependency-review.yml`,
   `tools/ci/workflow-pattern-parity.test.mjs`,
+  `tools/ci/git-diff-files.mjs`, `tools/ci/arc-check.mjs`,
+  `tools/ci/doc-check.mjs`,
   `docs/guides/testing-and-ci-capabilities.md`, and the AI CI preflight plan.
 - Expected outcome: draft PRs avoid Contracts detector runners, all
   draft-skipped quality/security workflows rerun automatically when marked
@@ -71,6 +76,7 @@ Determinism` still ran its detector for drafts.
 ## Validation Plan
 
 - `node --test tools/ci/workflow-pattern-parity.test.mjs`
+- `node --test tools/ci/git-diff-files.test.mjs`
 - `pnpm verify:changed`
 - `pnpm governance:refresh`
 - `pnpm verify:prepush`

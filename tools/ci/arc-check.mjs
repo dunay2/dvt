@@ -23,8 +23,8 @@
  */
 
 import fs from 'node:fs';
-import { execSync } from 'node:child_process';
 import yaml from 'js-yaml';
+import { listChangedFilesBetween } from './git-diff-files.mjs';
 
 const base = process.env.GIT_BASE || 'origin/main';
 const head = process.env.GIT_HEAD || 'HEAD';
@@ -35,14 +35,6 @@ function readPolicy(fp) {
   if (!fs.existsSync(fp)) throw new Error(`Policy file not found: ${fp}`);
   const raw = fs.readFileSync(fp, 'utf8');
   return yaml.load(raw);
-}
-
-function listChangedFiles() {
-  const out = execSync(`git diff --name-only ${base}...${head}`, { encoding: 'utf8' });
-  return out
-    .split('\n')
-    .map((value) => value.trim())
-    .filter(Boolean);
 }
 
 // Minimal glob matcher using picomatch-like behavior is ideal,
@@ -79,7 +71,7 @@ function maxLevel(a, b) {
 }
 
 const policy = readPolicy(policyPath);
-const changedFiles = listChangedFiles();
+const changedFiles = listChangedFilesBetween({ baseRef: base, headRef: head });
 
 let effective = 'ARC-0';
 const triggerHits = [];

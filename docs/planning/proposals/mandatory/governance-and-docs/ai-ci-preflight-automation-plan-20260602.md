@@ -118,6 +118,10 @@ allowedImplementationSurfaces:
   - tools/ci/repository-change-scope.test.mjs
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
+  - tools/ci/arc-check.mjs
+  - tools/ci/doc-check.mjs
+  - tools/ci/git-diff-files.mjs
+  - tools/ci/git-diff-files.test.mjs
   - tools/ci/scope-config.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
 forbiddenImplementationSurfaces:
@@ -162,6 +166,7 @@ fowlerSignals:
   - Hidden Coverage Gap when draft-skipped quality or security workflows do not reopen on ready-for-review.
   - Over-eager Resource Use when Contracts scope detection spends a runner for non-reviewable draft PRs.
   - Cancellation Gap when ready-to-draft transitions do not retrigger draft-aware workflows.
+  - Shallow Checkout Fragility when PR merge refs cannot provide a local merge base for raw triple-dot diffs.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
@@ -253,6 +258,16 @@ redGreenCycles:
       - docs/guides/testing-and-ci-capabilities.md
       - tools/ci/workflow-pattern-parity.test.mjs
     greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+  - id: shallow-merge-arc-diff
+    redTest: node --test tools/ci/git-diff-files.test.mjs
+    expectedFailure: ARC and ARC-doc changed-file checks use raw triple-dot diffs, so a shallow pull-request merge checkout can fail with no merge base.
+    patchSurfaces:
+      - tools/ci/git-diff-files.mjs
+      - tools/ci/git-diff-files.test.mjs
+      - tools/ci/arc-check.mjs
+      - tools/ci/doc-check.mjs
+      - docs/guides/testing-and-ci-capabilities.md
+    greenTest: node --test tools/ci/git-diff-files.test.mjs
 symbols:
   - name: assert
     path: scripts/ai-preflight.test.cjs
@@ -416,6 +431,87 @@ symbols:
     cypressCoverage: N/A - CI workflow architecture test
     unitTests:
       - tools/ci/workflow-pattern-parity.test.mjs
+  - name: listChangedFilesBetween
+    path: tools/ci/git-diff-files.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - CI changed-file utility
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
+  - name: normalizePath
+    path: tools/ci/git-diff-files.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - CI changed-file utility
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
+  - name: parseChangedFiles
+    path: tools/ci/git-diff-files.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - CI changed-file utility
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
+  - name: errorText
+    path: tools/ci/git-diff-files.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - CI changed-file utility
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
+  - name: isNoMergeBaseError
+    path: tools/ci/git-diff-files.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - CI changed-file utility
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
+  - name: defaultRunGitDiff
+    path: tools/ci/git-diff-files.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - CI changed-file utility
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
+  - name: noMergeBaseError
+    path: tools/ci/git-diff-files.test.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - CI changed-file utility test
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
+  - name: changedFiles
+    path: tools/ci/arc-check.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - ARC policy evaluator
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
+  - name: changed
+    path: tools/ci/doc-check.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Shallow Checkout Fragility]
+    architectureGuard: node --test tools/ci/git-diff-files.test.mjs
+    cypressCoverage: N/A - ARC docs validator
+    unitTests:
+      - tools/ci/git-diff-files.test.mjs
   - name: fetch-scope-base
     path: .github/actions/fetch-scope-base/action.yml
     dddOwner: Repository CI scope policy

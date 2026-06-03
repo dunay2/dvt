@@ -420,7 +420,10 @@ Planning-generated pages that are intentionally untracked:
   Global docs quality, doctor, location, and canonical checks are reserved for
   push/manual full posture. Draft PRs keep the gate closed;
   `ready_for_review` reopens it for merge-gate validation, and
-  `converted_to_draft` re-evaluates the draft guard.
+  `converted_to_draft` re-evaluates the draft guard. ARC and ARC-doc
+  changed-file checks prefer merge-base diff semantics and fall back to direct
+  tree diff only when a shallow PR merge checkout cannot provide a local merge
+  base.
   Source: [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
 - `Dependency Review`: pull-request dependency review with pinned action usage
   and high-severity failure policy. It runs for public repositories and for
