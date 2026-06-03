@@ -156,6 +156,31 @@ Rules:
 - timeline artifact refs from `GET /runs/:runId/events` remain execution-time
   evidence, not authoring truth
 
+## Run diagnostics contract
+
+`GET /runs/:runId` may expose a `diagnostics` object for the caller-visible run
+detail page:
+
+- `diagnostics.runId`
+- `diagnostics.planId`
+- `diagnostics.planSha`
+- `diagnostics.stepId`
+- `diagnostics.attemptId`
+- `diagnostics.adapter`
+- `diagnostics.durationMs`
+- `diagnostics.status`
+- `diagnostics.errorCode`
+- `diagnostics.pointers[]` with `kind = trace | log`, `label`, and `value`
+
+Rules:
+
+- diagnostics come from the runtime read model, persisted plan metadata, and
+  latest logical attempt evidence
+- trace and log pointers are provider-neutral query strings, not proof that a
+  dashboard route exists
+- `planSha`, `runId`, `stepId`, `attemptId`, and similar high-cardinality
+  identifiers must remain trace/log context and must not become metric labels
+
 ## Canonical Envelope Examples
 
 Success example (`POST /runs/start`):

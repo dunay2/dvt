@@ -24,17 +24,22 @@ test('classifies planning and governance database aliases as planning-db command
     packageJson.scripts['governance:db:query']
   );
   const planningScript = classifyScriptFilePath('scripts/planning-db-query.cjs');
+  const planningComponent = classifyScriptFilePath(
+    'scripts/planning-db/command-query-rail-catalog.cjs'
+  );
   const governanceImportScript = classifyScriptFilePath('scripts/governance-db-import.cjs');
   const governanceExportScript = classifyScriptFilePath('scripts/governance-db-export.cjs');
 
   assert.equal(planningQuery.domain, 'planning-db');
   assert.equal(governanceQuery.domain, 'planning-db');
   assert.equal(planningScript.domain, 'planning-db');
+  assert.equal(planningComponent.domain, 'planning-db');
   assert.equal(governanceImportScript.domain, 'planning-db');
   assert.equal(governanceExportScript.domain, 'planning-db');
   assert.equal(planningQuery.runtimeFanout, false);
   assert.equal(governanceQuery.runtimeFanout, false);
   assert.equal(planningScript.runtimeFanout, false);
+  assert.equal(planningComponent.runtimeFanout, false);
   assert.equal(governanceImportScript.runtimeFanout, false);
   assert.equal(governanceExportScript.runtimeFanout, false);
 });
@@ -77,6 +82,17 @@ test('classifies runtime, capability, contract, docs, workflow, and ops commands
   );
   assert.equal(
     classifyPackageScriptCommand('pr:checks:json', packageJson.scripts['pr:checks:json']).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand(
+      'pr:checks:first-failure',
+      packageJson.scripts['pr:checks:first-failure']
+    ).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand('ai:preflight', packageJson.scripts['ai:preflight']).domain,
     'developer-workflow'
   );
   assert.equal(
@@ -145,6 +161,7 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('scripts/local-validation-plan.cjs').domain,
     'developer-workflow'
   );
+  assert.equal(classifyScriptFilePath('scripts/ai-preflight.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.test.cjs').domain, 'test-tooling');
 });

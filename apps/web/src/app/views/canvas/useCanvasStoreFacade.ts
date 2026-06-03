@@ -37,9 +37,11 @@ type CanvasStoreFacade = {
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
   setCanvasGridVisible: (visible: boolean) => void;
   setCanvasGridColor: (color: CanvasPaletteId) => void;
   setCanvasSnapToGrid: (enabled: boolean) => void;
+  setCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   canvasLayouts: ReturnType<typeof useCanvasInteractionStore.getState>['canvasLayouts'];
   setCanvasViewport: ReturnType<typeof useCanvasInteractionStore.getState>['setCanvasViewport'];
   setCanvasNodePositions: ReturnType<
@@ -96,9 +98,15 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const canvasGridVisible = useUiLayoutStore((state) => state.canvasGridVisible);
   const canvasGridColor = useUiLayoutStore((state) => state.canvasGridColor);
   const canvasSnapToGrid = useUiLayoutStore((state) => state.canvasSnapToGrid);
+  const canvasEmptyStateGuideVisible = useUiLayoutStore(
+    (state) => state.canvasEmptyStateGuideVisible
+  );
   const setCanvasGridVisible = useUiLayoutStore((state) => state.setCanvasGridVisible);
   const setCanvasGridColor = useUiLayoutStore((state) => state.setCanvasGridColor);
   const setCanvasSnapToGrid = useUiLayoutStore((state) => state.setCanvasSnapToGrid);
+  const setCanvasEmptyStateGuideVisible = useUiLayoutStore(
+    (state) => state.setCanvasEmptyStateGuideVisible
+  );
   const canvasLayouts = useCanvasInteractionStore((state) => state.canvasLayouts);
   const setCanvasViewport = useCanvasInteractionStore((state) => state.setCanvasViewport);
   const setCanvasNodePositions = useCanvasInteractionStore((state) => state.setCanvasNodePositions);
@@ -158,9 +166,11 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     canvasGridVisible,
     canvasGridColor,
     canvasSnapToGrid,
+    canvasEmptyStateGuideVisible,
     setCanvasGridVisible,
     setCanvasGridColor,
     setCanvasSnapToGrid,
+    setCanvasEmptyStateGuideVisible,
     canvasLayouts,
     setCanvasViewport,
     setCanvasNodePositions,

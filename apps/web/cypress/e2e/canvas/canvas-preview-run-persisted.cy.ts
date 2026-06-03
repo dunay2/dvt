@@ -502,6 +502,45 @@ describe('Canvas preview-run persisted path', () => {
     });
   });
 
+  it('honors the empty-guide preference and restores it from Canvas settings', () => {
+    stubCanvasRuntimeApis({
+      canvasKind: 'dbt',
+      emptyCanvas: true,
+      title: 'Warehouse dbt',
+    });
+
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-ui-layout',
+          JSON.stringify({
+            state: {
+              canvasEmptyStateGuideVisible: false,
+            },
+            version: 0,
+          })
+        );
+      },
+    });
+    waitForE2eApiCall('/healthz', 'GET');
+    waitForE2eApiCall('/readyz', 'GET');
+    waitForE2eApiCall('/version', 'GET');
+    waitForE2eApiCall('/db/ready', 'GET');
+    waitForE2eApiCall('/capabilities', 'GET');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+    cy.contains('Warehouse dbt').should('be.visible');
+    cy.contains('Start dbt canvas').should('not.exist');
+    cy.get('[data-slot="canvas-toolbar-insert-command"]').should('be.enabled');
+
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.contains('[role="menuitem"]', /Canvas settings|Configuracion de canvas/).click();
+    cy.contains('[role="menuitemcheckbox"]', /Empty canvas guide|Guia de canvas vacio/).click();
+
+    cy.contains('Start dbt canvas').should('be.visible');
+    cy.contains('button', 'Add first dbt node').should('be.enabled');
+  });
+
   for (const cause of [
     'dependency_gap',
     'selected_node_missing',
@@ -559,10 +598,12 @@ describe('Canvas preview-run persisted path', () => {
     assertPreviewPlanRequest();
 
     cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains('Persisted Preview Summary').should('be.visible');
-    cy.contains('Nodes:').parent().should('contain.text', '3');
-    cy.contains('Source tables:').parent().should('contain.text', 'raw.orders');
-    cy.contains('Sink tables:').parent().should('contain.text', 'analytics.orders_daily');
+    cy.contains(/Persisted preview summary/i)
+      .scrollIntoView()
+      .should('be.visible');
+    cy.contains('Nodes').parent().should('contain.text', '3');
+    cy.contains('Source tables').parent().should('contain.text', 'raw.orders');
+    cy.contains('Sink tables').parent().should('contain.text', 'analytics.orders_daily');
     clickButtonNatively('Start Run');
 
     waitForE2eApiCall('/runs/start', 'POST');

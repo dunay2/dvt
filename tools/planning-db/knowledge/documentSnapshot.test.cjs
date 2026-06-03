@@ -94,6 +94,59 @@ test('links short-prefix planning task ids from proposal action lines', () => {
   );
 });
 
+test('ignores declarative UX rules that only mention action nouns', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments([
+    {
+      sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/declarative-ux-plan.md',
+      raw: [
+        '---',
+        'title: Declarative UX Plan',
+        'planning_type: proposal',
+        '---',
+        '# Declarative UX Plan',
+        '',
+        '- Hiding the guide must not disable node creation, toolbar Insert/Add, draft save, or keyboard insertion.',
+        '- Add palette opens as a command palette or modal-less overlay.',
+        '- Add palette only shows node types valid for the active workbench.',
+        '- Add palette, View strip, Runtime panel, Inspector, and Admin navigation are shell-owned.',
+        '- Run remains the only permanent primary action.',
+        '- Scope selection remains reachable from the shell.',
+        '- docs/planning/state/open-task-route.md',
+      ].join('\n'),
+      contentSha256: '2'.repeat(64),
+    },
+  ]);
+
+  assert.equal(snapshot.actions.length, 0);
+});
+
+test('keeps explicit unowned action lines as planning intake', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments([
+    {
+      sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/action-plan.md',
+      raw: [
+        '---',
+        'title: Action Plan',
+        'planning_type: proposal',
+        '---',
+        '# Action Plan',
+        '',
+        '- Add the protected `ListWorkspacePlugins` query rail.',
+        '- Action: classify this mandatory proposal through `E-PROP-DISP-1`.',
+      ].join('\n'),
+      contentSha256: '3'.repeat(64),
+    },
+  ]);
+
+  assert.deepEqual(
+    snapshot.actions.map((action) => action.summary),
+    [
+      'Add the protected `ListWorkspacePlugins` query rail.',
+      'Action: classify this mandatory proposal through `E-PROP-DISP-1`.',
+    ]
+  );
+});
+
 test('classifies Fowler analysis and review documents without making them tasks', () => {
   const snapshot = buildKnowledgeSnapshotFromDocuments([
     {

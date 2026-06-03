@@ -178,6 +178,98 @@ describe('ObjectStorageRunArchiveExporter', () => {
       expect(result.tenantIds).toEqual(['tenant-a', 'tenant-m', 'tenant-z']);
     });
 
+    it('redacts sensitive payload fields before writing archive objects', async () => {
+      const events = [
+        makeEvent({
+          payload: {
+            password: 'database-password',
+            token: 'runtime-token',
+            connection: {
+              authorization: 'Bearer live-secret',
+              host: 'warehouse.internal',
+            },
+            attempts: [{ clientSecret: 'client-secret-value', rows: 7 }],
+          },
+        }),
+      ];
+
+      const result = await exporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+
+      const eventObject = JSON.parse(
+        store.objects.get(`archive/${ARCHIVE_UNIT_KEY}/events.jsonl`)!.toString('utf8').trim()
+      ) as EventEnvelope;
+
+      expect(JSON.stringify(eventObject)).not.toContain('database-password');
+      expect(JSON.stringify(eventObject)).not.toContain('runtime-token');
+      expect(JSON.stringify(eventObject)).not.toContain('Bearer live-secret');
+      expect(JSON.stringify(eventObject)).not.toContain('client-secret-value');
+      expect(eventObject.payload).toEqual({
+        password: '[REDACTED]',
+        token: '[REDACTED]',
+        connection: {
+          authorization: '[REDACTED]',
+          host: 'warehouse.internal',
+        },
+        attempts: [{ clientSecret: '[REDACTED]', rows: 7 }],
+      });
+      expect(events[0]?.payload).toMatchObject({
+        password: 'database-password',
+        token: 'runtime-token',
+      });
+
+      await expect(
+        exporter.verifyArchiveUnit({
+          archiveUnitKey: ARCHIVE_UNIT_KEY,
+          tenantBucket: TENANT_BUCKET,
+          expectedRowCount: result.rowCount,
+          expectedChecksumSha256: result.checksumSha256,
+          objectKey: result.objectKey,
+        })
+      ).resolves.toBeUndefined();
+    });
+
+    it('keeps default redaction keys when custom sensitive keys are configured', async () => {
+      const customStore = new InMemoryArchiveObjectStore();
+      const customExporter = new ObjectStorageRunArchiveExporter({
+        objectStore: customStore,
+        prefix: 'archive',
+        redactionPolicy: {
+          sensitiveKeys: ['warehouseRegion'],
+        },
+      });
+      const events = [
+        makeEvent({
+          payload: {
+            password: 'database-password',
+            warehouseRegion: 'eu-west-secret',
+            host: 'warehouse.internal',
+          },
+        }),
+      ];
+
+      await customExporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+
+      const eventObject = JSON.parse(
+        customStore.objects.get(`archive/${ARCHIVE_UNIT_KEY}/events.jsonl`)!.toString('utf8').trim()
+      ) as EventEnvelope;
+
+      expect(eventObject.payload).toEqual({
+        password: '[REDACTED]',
+        warehouseRegion: '[REDACTED]',
+        host: 'warehouse.internal',
+      });
+    });
+
     it('uses a default prefix of "archive" when none is provided', async () => {
       const exp = new ObjectStorageRunArchiveExporter({ objectStore: store });
       const events = [makeEvent()];

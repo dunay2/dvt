@@ -108,12 +108,12 @@ platform, backend contract expansion, or workspace editor.
 
 ## Fowler Planning Matrix
 
-| Scenario                                                                               | Opportunity          | Fowler pattern                       | DDD owner                         | Rail                      | Implementation surfaces                                                                    | Unit or package test              | Architecture test                                    | User-flow test                            | Out of scope              |
-| -------------------------------------------------------------------------------------- | -------------------- | ------------------------------------ | --------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------ | --------------------------------- | ---------------------------------------------------- | ----------------------------------------- | ------------------------- |
-| Artifacts discovers dbt, pipeline YAML, and SQL model files from workspace file trees. | Boundary drift       | Gateway-backed read-model policy     | `WorkspaceArtifactClassification` | `ListWorkspaceFiles`      | `workspaceArtifactPolicy.ts`, `workspaceQueries.ts`                                        | `workspaceArtifactPolicy.test.ts` | `artifactsMonacoReadonlyViewer.architecture.test.ts` | `artifacts-workspace-project-files.cy.ts` | Generic file browser      |
-| Artifacts previews classified artifact content with the right language and title.      | Primitive obsession  | Value-object classification metadata | `WorkspaceArtifactPreview`        | `GetWorkspaceFileContent` | `workspaceArtifactPolicy.ts`, `useArtifactsViewModel.ts`, `ArtifactMonacoPreviewPanel.tsx` | `useArtifactsViewModel.test.tsx`  | `artifactsMonacoReadonlyViewer.architecture.test.ts` | `artifacts-workspace-project-files.cy.ts` | Editable artifact content |
-| Tabs render the available artifact set without hard-coded dbt-only slots.              | Shotgun surgery      | Presentation read model              | `ArtifactPreviewDocumentMap`      | `GetWorkspaceFileContent` | `ArtifactPreviewTabs.tsx`, `constants.ts`                                                  | `ArtifactsView.test.tsx`          | `artifactsMonacoReadonlyViewer.architecture.test.ts` | `artifacts-workspace-project-files.cy.ts` | Backend artifact catalog  |
-| Unsupported files and directories do not become fake artifacts.                        | Test-only confidence | Negative semantic policy test        | `WorkspaceArtifactClassification` | `ListWorkspaceFiles`      | `workspaceArtifactPolicy.test.ts`, `useArtifactsViewModel.test.tsx`                        | `workspaceArtifactPolicy.test.ts` | `docs:feature-mechanization:implementation`          | `artifacts-workspace-project-files.cy.ts` | Silent fallback previews  |
+| Scenario                                                                                                                     | Opportunity          | Fowler pattern                       | DDD owner                         | Rail                      | Implementation surfaces                                                                         | Unit or package test              | Architecture test                                    | User-flow test                            | Out of scope              |
+| ---------------------------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------ | --------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------------------------- | ----------------------------------------- | ------------------------- |
+| Artifacts discovers dbt, pipeline YAML, and SQL model files from workspace file trees.                                       | Boundary drift       | Gateway-backed read-model policy     | `WorkspaceArtifactClassification` | `ListWorkspaceFiles`      | `workspaceArtifactPolicy.ts`, `workspaceQueries.ts`                                             | `workspaceArtifactPolicy.test.ts` | `artifactsMonacoReadonlyViewer.architecture.test.ts` | `artifacts-workspace-project-files.cy.ts` | Generic file browser      |
+| Artifacts previews classified artifact content with the right language and title.                                            | Primitive obsession  | Value-object classification metadata | `WorkspaceArtifactPreview`        | `GetWorkspaceFileContent` | `workspaceArtifactPolicy.ts`, `useArtifactsViewModel.ts`, `ArtifactMonacoPreviewPanel.tsx`      | `useArtifactsViewModel.test.tsx`  | `artifactsMonacoReadonlyViewer.architecture.test.ts` | `artifacts-workspace-project-files.cy.ts` | Editable artifact content |
+| Tabs render the available artifact set without hard-coded dbt-only slots and list `View` selects the exact preview document. | Shotgun surgery      | Presentation read model              | `ArtifactPreviewDocumentMap`      | `GetWorkspaceFileContent` | `ArtifactsView.tsx`, `ArtifactsList.tsx`, `ArtifactPreviewTabs.tsx`, `constants.ts`, `types.ts` | `ArtifactsView.test.tsx`          | `artifactsMonacoReadonlyViewer.architecture.test.ts` | `artifacts-workspace-project-files.cy.ts` | Backend artifact catalog  |
+| Unsupported files and directories do not become fake artifacts.                                                              | Test-only confidence | Negative semantic policy test        | `WorkspaceArtifactClassification` | `ListWorkspaceFiles`      | `workspaceArtifactPolicy.test.ts`, `useArtifactsViewModel.test.tsx`                             | `workspaceArtifactPolicy.test.ts` | `docs:feature-mechanization:implementation`          | `artifacts-workspace-project-files.cy.ts` | Silent fallback previews  |
 
 ```feature-mechanization
 version: 1
@@ -140,11 +140,14 @@ allowedImplementationSurfaces:
   - apps/web/src/app/queries/workspaceArtifactPolicy.ts
   - apps/web/src/app/queries/workspaceQueries.ts
   - apps/web/src/app/views/CodeView.test.tsx
+  - apps/web/src/app/views/ArtifactsView.tsx
   - apps/web/src/app/views/ArtifactsView.test.tsx
+  - apps/web/src/app/views/artifacts/ArtifactsList.tsx
   - apps/web/src/app/views/artifacts/ArtifactMonacoPreviewPanel.tsx
   - apps/web/src/app/views/artifacts/ArtifactPreviewTabs.tsx
   - apps/web/src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts
   - apps/web/src/app/views/artifacts/constants.ts
+  - apps/web/src/app/views/artifacts/types.ts
   - apps/web/src/app/views/artifacts/useArtifactsViewModel.test.tsx
   - apps/web/src/app/views/artifacts/useArtifactsViewModel.ts
   - docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-component.md
@@ -195,8 +198,11 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/src/app/queries/workspaceArtifactPolicy.ts
       - apps/web/src/app/queries/workspaceQueries.ts
+      - apps/web/src/app/views/ArtifactsView.tsx
+      - apps/web/src/app/views/artifacts/ArtifactsList.tsx
       - apps/web/src/app/views/artifacts/useArtifactsViewModel.ts
       - apps/web/src/app/views/artifacts/ArtifactPreviewTabs.tsx
+      - apps/web/src/app/views/artifacts/types.ts
     greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/artifacts/useArtifactsViewModel.test.tsx src/app/views/ArtifactsView.test.tsx
   - id: feature-mechanization-closeout
     redTest: pnpm verify:prepush
@@ -219,6 +225,7 @@ symbols:
   - { name: classifyWorkspaceArtifact, path: apps/web/src/app/queries/workspaceArtifactPolicy.ts, dddOwner: WorkspaceArtifactClassification, cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent], fowlerSignals: [Boundary drift, Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/queries/workspaceArtifactPolicy.test.ts] }
   - { name: ArtifactFileName, path: apps/web/src/app/views/artifacts/constants.ts, dddOwner: WorkspaceArtifactPreview, cqRails: [GetWorkspaceFileContent], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/ArtifactsView.test.tsx] }
   - { name: ArtifactPreviewDocumentMap, path: apps/web/src/app/views/artifacts/constants.ts, dddOwner: WorkspaceArtifactPreview, cqRails: [GetWorkspaceFileContent], fowlerSignals: [Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/ArtifactsView.test.tsx] }
+  - { name: ArtifactsList, path: apps/web/src/app/views/artifacts/ArtifactsList.tsx, dddOwner: ArtifactPreviewDocumentMap presentation, cqRails: [GetWorkspaceFileContent], fowlerSignals: [Shotgun surgery], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/ArtifactsView.test.tsx] }
   - { name: DbtArtifactFileName, path: apps/web/src/app/views/artifacts/constants.ts, dddOwner: WorkspaceArtifactClassification, cqRails: [ListWorkspaceFiles], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/artifacts/useArtifactsViewModel.test.tsx] }
   - { name: buildWorkspaceArtifactPreview, path: apps/web/src/app/views/artifacts/useArtifactsViewModel.ts, dddOwner: WorkspaceArtifactIndex, cqRails: [ListWorkspaceFiles], fowlerSignals: [Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/artifacts/useArtifactsViewModel.test.tsx] }
   - { name: getPreviewTitle, path: apps/web/src/app/views/artifacts/useArtifactsViewModel.ts, dddOwner: WorkspaceArtifactPreview, cqRails: [GetWorkspaceFileContent], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts, unitTests: [apps/web/src/app/views/ArtifactsView.test.tsx] }

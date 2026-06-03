@@ -76,9 +76,14 @@ export function requireSourcePayload(
   node: CanonicalNode
 ): Extract<DesignGraphDraft['nodes'][number], { type: 'source' }> {
   const config = readCanonicalNodeConfig(node);
-  const schema = readConfigString(config, 'schema') ?? readAuthoringDefaultSchema(node);
-  const table = readConfigString(config, 'table') ?? readAuthoringDefaultTable(node);
-  const alias = readConfigString(config, 'alias') ?? table;
+  const importedSchema = readMetadataString(node, 'schema');
+  const importedTableName = readMetadataString(node, 'tableName');
+  const importedSourceName = readMetadataString(node, 'sourceName');
+  const schema =
+    readConfigString(config, 'schema') ?? importedSchema ?? readAuthoringDefaultSchema(node);
+  const table =
+    readConfigString(config, 'table') ?? importedTableName ?? readAuthoringDefaultTable(node);
+  const alias = readConfigString(config, 'alias') ?? importedSourceName ?? table;
 
   if (!schema || !table || !alias) {
     throw new Error(
@@ -192,6 +197,11 @@ function readAuthoringDefaultWriteMode(node: CanonicalNode): string | undefined 
 
 function readConfigString(config: Record<string, unknown>, key: string): string | undefined {
   const value = config[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function readMetadataString(node: CanonicalNode, key: string): string | undefined {
+  const value = node.metadata?.[key];
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 }
 

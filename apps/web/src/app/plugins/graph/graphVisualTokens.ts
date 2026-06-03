@@ -51,6 +51,17 @@ export const graphVisualClasses = {
   contextPanelTabsList: 'justify-start rounded-md border border-slate-700 bg-transparent p-1',
   contextPanelTabsTrigger:
     'text-slate-200 data-[state=active]:bg-slate-900 data-[state=active]:text-white',
+  contextPanelFlatTabsList:
+    'flex h-auto min-h-10 w-full flex-wrap justify-start gap-x-3 gap-y-1 overflow-visible rounded-none border-0 border-b border-slate-700 bg-transparent p-0 pb-1',
+  contextPanelFlatTabTrigger:
+    'h-10 flex-none rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 text-xs font-medium leading-none text-slate-400 shadow-none hover:bg-transparent hover:text-slate-50 data-[state=active]:border-[color:var(--focus-ring)] data-[state=active]:bg-transparent data-[state=active]:text-slate-50 data-[state=active]:shadow-none',
+  contextPanelTabBadge:
+    'ml-0.5 rounded-full border border-slate-700 bg-slate-900 px-1 py-0 text-[9px] text-slate-300',
+  contextPanelDetailsSection: 'border-b border-slate-800 pb-4',
+  contextPanelColumnsList:
+    'max-h-72 divide-y divide-slate-800 overflow-auto border-y border-slate-800',
+  contextPanelColumnType: 'shrink-0 text-xs text-slate-300',
+  contextPanelColumnMeta: 'mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400',
   inspectorErrorText: 'text-xs text-red-300',
   inspectorSelectInput:
     'border-input bg-input-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 py-1 text-sm text-slate-50 outline-none transition-[color,box-shadow] focus-visible:ring-[3px] disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',

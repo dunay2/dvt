@@ -71,8 +71,10 @@ function renderCanvasHostCycleWorkbenchSurface(
     | 'canCreateCanvasDocument'
     | 'canEditEdges'
     | 'canOpenSourceImport'
+    | 'emptyStateGuideVisible'
     | 'onCreateCanvasDocument'
     | 'onCreateAuthoringNode'
+    | 'onEmptyStateGuideVisibilityChange'
   >
 ) {
   const cycleState = deriveCanvasHostCycleState(args);
@@ -95,6 +97,10 @@ function renderCanvasHostCycleWorkbenchSurface(
     return null;
   }
 
+  if (!args.emptyStateGuideVisible) {
+    return null;
+  }
+
   return (
     <CanvasEmptyStateView
       title={cycleState.title}
@@ -103,6 +109,8 @@ function renderCanvasHostCycleWorkbenchSurface(
       firstNodeHelper={cycleState.firstNodeHelper}
       nodeKinds={cycleState.nodeKinds}
       onCreateAuthoringNode={cycleState.onCreateAuthoringNode}
+      emptyStateGuideVisible={args.emptyStateGuideVisible}
+      onEmptyStateGuideVisibilityChange={args.onEmptyStateGuideVisibilityChange}
     />
   );
 }

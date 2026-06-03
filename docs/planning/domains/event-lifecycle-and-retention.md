@@ -18,6 +18,15 @@ flows, and operational lifecycle governance.
 - [Canonical Doc Code Matrix](../status/canonical-doc-code-matrix.md)
 - [Planning Control Tower](../state/planning-control-tower.md)
 
+## Current Lifecycle Status
+
+- Deferred deletion and restore are implemented through the archive lifecycle
+  ports and Postgres archive store.
+- Cold archive export redacts sensitive payload fields by default before writing
+  object-store artifacts.
+- Regulated erasure, legal approval, and audit workflows remain governed by the
+  historical G5-PR4 follow-up and are not closed by sensitive-field redaction.
+
 ## Active Planning Inputs
 
 - [Review Remediation Roadmap 2026-04-02](../roadmap/review-remediation-roadmap-20260402.md)

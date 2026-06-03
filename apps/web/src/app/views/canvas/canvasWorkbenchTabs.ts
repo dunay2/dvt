@@ -18,9 +18,18 @@ export type CanvasWorkbenchContext =
       reason: 'missing_canvas_context';
     }>;
 
+export type CanvasWorkbenchTabIconName =
+  | 'graph'
+  | 'code'
+  | 'lineage'
+  | 'diff'
+  | 'artifacts'
+  | 'runs';
+
 export type CanvasWorkbenchTabReadModel = Readonly<{
   id: CanvasWorkbenchTabId;
   label: string;
+  iconName: CanvasWorkbenchTabIconName;
   order: number;
   scope: CanvasWorkbenchTabScope;
   isEnabled: boolean;
@@ -63,11 +72,26 @@ const CANVAS_WORKBENCH_TAB_LABEL_KEYS = {
   runs: 'workbenchRunsTabLabel',
 } satisfies Record<CanvasWorkbenchTabId, keyof CanvasWorkbenchTabsCopy>;
 
+const CANVAS_WORKBENCH_TAB_ICON_NAMES = {
+  graph: 'graph',
+  code: 'code',
+  lineage: 'lineage',
+  diff: 'diff',
+  artifacts: 'artifacts',
+  runs: 'runs',
+} satisfies Record<CanvasWorkbenchTabId, CanvasWorkbenchTabIconName>;
+
 export function resolveCanvasWorkbenchTabLabel(
   tabId: CanvasWorkbenchTabId,
   copy: CanvasWorkbenchTabsCopy = canvasViewCopy
 ): string {
   return copy[CANVAS_WORKBENCH_TAB_LABEL_KEYS[tabId]];
+}
+
+export function resolveCanvasWorkbenchTabIconName(
+  tabId: CanvasWorkbenchTabId
+): CanvasWorkbenchTabIconName {
+  return CANVAS_WORKBENCH_TAB_ICON_NAMES[tabId];
 }
 
 export function createCanvasGraphWorkbenchTab(
@@ -76,6 +100,7 @@ export function createCanvasGraphWorkbenchTab(
   return {
     id: 'graph',
     label: resolveCanvasWorkbenchTabLabel('graph', copy),
+    iconName: resolveCanvasWorkbenchTabIconName('graph'),
     order: 10,
     scope: 'canvas',
     isEnabled: true,
@@ -101,6 +126,7 @@ function projectPlacementToTab(
   return {
     id: placement.tabId,
     label: resolveCanvasWorkbenchTabLabel(placement.tabId, copy),
+    iconName: resolveCanvasWorkbenchTabIconName(placement.tabId),
     order: placement.order,
     scope: placement.scope,
     isEnabled: true,

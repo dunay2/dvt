@@ -1,11 +1,14 @@
 /** Owned concern: shared local validation plan definitions and execution helpers. */
 const path = require('node:path');
+const fs = require('node:fs');
 const { spawnSync } = require('node:child_process');
 
 const { classifyRepositoryChangedScope } = require('../tools/ci/repository-change-scope.mjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
+  'scripts/ai-preflight.cjs': 'scripts/ai-preflight.test.cjs',
+  'scripts/ai-preflight.test.cjs': 'scripts/ai-preflight.test.cjs',
   'scripts/closeout-changed.cjs': 'scripts/closeout-changed.test.cjs',
   'scripts/closeout-changed.test.cjs': 'scripts/closeout-changed.test.cjs',
   'scripts/check-governance-unit-coverage.cjs': 'scripts/check-governance-unit-coverage.test.cjs',
@@ -189,6 +192,31 @@ function planningWorkflowTestSteps(changedFiles) {
     });
 }
 
+function ciToolingTestPathFor(filePath) {
+  if (!filePath.startsWith('tools/ci/')) {
+    return null;
+  }
+  if (/\.test\.mjs$/u.test(filePath)) {
+    return filePath;
+  }
+  if (!/\.mjs$/u.test(filePath)) {
+    return null;
+  }
+
+  const parsedPath = path.posix.parse(filePath);
+  const adjacentTestPath = path.posix.join(parsedPath.dir, `${parsedPath.name}.test.mjs`);
+  return fs.existsSync(path.join(repoRoot, adjacentTestPath)) ? adjacentTestPath : null;
+}
+
+function ciToolingTestSteps(changedFiles) {
+  return changedFiles
+    .map(ciToolingTestPathFor)
+    .filter((testPath) => testPath !== null)
+    .map((testPath) =>
+      step(`test-${path.posix.basename(testPath, '.test.mjs')}`, 'node', '--test', testPath)
+    );
+}
+
 function hasWebChange(changedFiles) {
   return changedFiles.some((filePath) => filePath.startsWith('apps/web/'));
 }
@@ -277,15 +305,38 @@ function buildVerifyChangedPlan(files) {
   if (hasWebChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }
-  pushSteps(plan, planningWorkflowTestSteps(changedFiles));
-  if (hasPlanningDbMigrationChange(changedFiles)) {
+  const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
+  pushSteps(plan, directPlanningWorkflowTestSteps);
+  pushSteps(plan, ciToolingTestSteps(changedFiles));
+  const runsMigrationTestDirectly = directPlanningWorkflowTestSteps.some(
+    (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-migrate.test.cjs'
+  );
+  if (hasPlanningDbMigrationChange(changedFiles) && !runsMigrationTestDirectly) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
   }
   if (hasPlanningDbFullSuiteChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
   if (hasDeveloperWorkflowVerifierChange(changedFiles)) {
-    pushSteps(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest);
+    for (const filePath of changedFiles) {
+      if (filePath === 'scripts/local-validation-plan.cjs') {
+        pushSteps(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest);
+        continue;
+      }
+      if (
+        filePath === 'scripts/verify-changed.cjs' ||
+        filePath === 'scripts/verify-changed.test.cjs'
+      ) {
+        pushStepOnce(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest[0]);
+        continue;
+      }
+      if (
+        filePath === 'scripts/verify-prepush.cjs' ||
+        filePath === 'scripts/verify-prepush.test.cjs'
+      ) {
+        pushStepOnce(plan, VERIFY_CHANGED_GROUPS.developerWorkflowSelfTest[1]);
+      }
+    }
   }
   pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(8));
 
@@ -328,6 +379,8 @@ module.exports = {
   buildVerifyChangedPlan,
   classifyPrepushScope,
   commandLabel,
+  ciToolingTestPathFor,
+  ciToolingTestSteps,
   executeCommandPlan,
   hasDeveloperWorkflowVerifierChange,
   hasWebChange,

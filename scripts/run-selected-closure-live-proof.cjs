@@ -13,10 +13,18 @@ const { pathToFileURL } = require('node:url');
 
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 const {
+  buildCoordinatedTemporalWorkerEnv,
+  buildLocalDbtArtifactEnv,
+  seedLocalPostgresProofData,
+  seedLocalWorkspaceWarehouseCatalog,
+  waitForUrlOrProcessExit,
+} = require('./run-dev-stack.cjs');
+const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   seedLocalProtectedRuntimeGrant,
   startLocalProtectedRuntimeAuth,
 } = require('./run-dev-stack.auth.cjs');
+const { allocateFreePort, buildTemporalApiEnv } = require('./run-dev-stack.temporal.cjs');
 
 const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const DEFAULT_API_PORT = 3300;
@@ -30,6 +38,10 @@ const CYPRESS_IMAGE = 'cypress/included:13.17.0';
 const LOCAL_AUTH_HOST = '127.0.0.1';
 const API_BIND_HOST = '0.0.0.0';
 const WEB_BIND_HOST = '0.0.0.0';
+const SELECTED_CLOSURE_LIVE_PROOF_ROOT = path.resolve(
+  __dirname,
+  '../.dvt/live-proofs/selected-closure'
+);
 
 function quoteIdentifier(identifier) {
   return `"${identifier.replaceAll('"', '""')}"`;
@@ -169,6 +181,113 @@ async function dropSchemaIfExists(databaseUrl, schema) {
   }
 }
 
+function readNonEmptyEnv(value) {
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function resolveLiveProofWorkspaceFilesRoot(liveProofSchema, sourceEnv = process.env) {
+  return (
+    readNonEmptyEnv(sourceEnv.DVT_WORKSPACE_FILES_ROOT) ??
+    path.join(SELECTED_CLOSURE_LIVE_PROOF_ROOT, liveProofSchema, 'workspace-files')
+  );
+}
+
+function buildLiveProofTemporalOptions() {
+  return {
+    host: LOCAL_AUTH_HOST,
+    apiPort: DEFAULT_API_PORT,
+    skipPostgres: false,
+  };
+}
+
+function buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort) {
+  return {
+    ...sourceEnv,
+    ...(temporalWorkerAdminPort === undefined
+      ? {}
+      : { DVT_TEMPORAL_ADMIN_PORT: String(temporalWorkerAdminPort) }),
+  };
+}
+
+function buildLiveProofApiEnv({
+  databaseUrl,
+  liveProofSchema,
+  temporalWorkerAdminPort,
+  temporalAddress,
+  temporalNamespace,
+  oidcEnv = {},
+  sourceEnv = process.env,
+}) {
+  const temporalSourceEnv = buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort);
+  const artifactEnv = buildLocalDbtArtifactEnv({
+    ...temporalSourceEnv,
+    DVT_WORKSPACE_FILES_ROOT: resolveLiveProofWorkspaceFilesRoot(
+      liveProofSchema,
+      temporalSourceEnv
+    ),
+  });
+  const temporalEnv = buildTemporalApiEnv(buildLiveProofTemporalOptions(), {
+    ...temporalSourceEnv,
+    TEMPORAL_ADDRESS: temporalAddress,
+    TEMPORAL_NAMESPACE: temporalNamespace,
+    TEMPORAL_TASK_QUEUE: readNonEmptyEnv(temporalSourceEnv.TEMPORAL_TASK_QUEUE) ?? 'dvt-temporal',
+  });
+
+  return {
+    ...temporalSourceEnv,
+    HOST: API_BIND_HOST,
+    PORT: String(DEFAULT_API_PORT),
+    DATABASE_URL: databaseUrl,
+    DVT_PG_SCHEMA: liveProofSchema,
+    DVT_READYZ_ENABLED: 'true',
+    DVT_VERSION_ENABLED: 'true',
+    DVT_DB_READY_ENABLED: 'true',
+    ...temporalEnv,
+    ...artifactEnv,
+    ...oidcEnv,
+  };
+}
+
+function buildLiveProofTemporalWorkerEnv(apiEnv, sourceEnv = process.env) {
+  const workerEnv = buildCoordinatedTemporalWorkerEnv(
+    buildLiveProofTemporalOptions(),
+    apiEnv,
+    sourceEnv
+  );
+  const workspaceFilesRoot = readNonEmptyEnv(apiEnv.DVT_WORKSPACE_FILES_ROOT);
+
+  return {
+    ...workerEnv,
+    ...(workspaceFilesRoot === undefined ? {} : { DVT_WORKSPACE_FILES_ROOT: workspaceFilesRoot }),
+  };
+}
+
+async function seedSelectedClosureLocalWarehouseProof(
+  apiEnv,
+  deps = {
+    seedLocalPostgresProofData,
+    seedLocalWorkspaceWarehouseCatalog,
+    log: console.log,
+  }
+) {
+  const databaseUrl = readNonEmptyEnv(apiEnv.DATABASE_URL);
+  const workspaceFilesRoot = readNonEmptyEnv(apiEnv.DVT_WORKSPACE_FILES_ROOT);
+
+  if (!databaseUrl) {
+    throw new Error('Selected-closure live proof requires DATABASE_URL before source seeding.');
+  }
+
+  if (!workspaceFilesRoot) {
+    throw new Error(
+      'Selected-closure live proof requires DVT_WORKSPACE_FILES_ROOT before catalog seeding.'
+    );
+  }
+
+  deps.log('[selected-closure-live] Seeding local Postgres proof source data');
+  await deps.seedLocalPostgresProofData(databaseUrl);
+  deps.seedLocalWorkspaceWarehouseCatalog(workspaceFilesRoot);
+}
+
 async function runCypress(args) {
   const repoRoot = path.resolve(__dirname, '..').replaceAll('\\', '/');
   const dockerArgs = [
@@ -232,19 +351,17 @@ async function main() {
   }
 
   try {
-    const apiHandle = spawnProcess('api-live-proof', ['--filter', 'dvt-api', 'dev'], {
-      HOST: API_BIND_HOST,
-      PORT: String(DEFAULT_API_PORT),
-      DATABASE_URL: defaultPgUrl,
-      DVT_PG_SCHEMA: liveProofSchema,
-      DVT_READYZ_ENABLED: 'true',
-      DVT_VERSION_ENABLED: 'true',
-      DVT_DB_READY_ENABLED: 'true',
-      TEMPORAL_ADDRESS: temporalEnv.connection.options.address,
-      TEMPORAL_NAMESPACE: temporalEnv.namespace,
-      TEMPORAL_TASK_QUEUE: 'dvt-temporal',
-      ...localProtectedRuntimeAuth.oidcEnv,
+    const apiEnv = buildLiveProofApiEnv({
+      databaseUrl: defaultPgUrl,
+      liveProofSchema,
+      temporalWorkerAdminPort: await allocateFreePort(LOCAL_AUTH_HOST),
+      temporalAddress: temporalEnv.connection.options.address,
+      temporalNamespace: temporalEnv.namespace,
+      oidcEnv: localProtectedRuntimeAuth.oidcEnv,
     });
+    await seedSelectedClosureLocalWarehouseProof(apiEnv);
+
+    const apiHandle = spawnProcess('api-live-proof', ['--filter', 'dvt-api', 'dev'], apiEnv);
     processHandles.push(apiHandle);
 
     await waitForUrl(
@@ -275,6 +392,28 @@ async function main() {
       tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
     });
+
+    const temporalWorkerReadyzUrl = readNonEmptyEnv(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL);
+    if (temporalWorkerReadyzUrl === undefined) {
+      throw new Error('Selected-closure live proof requires DVT_TEMPORAL_WORKER_READYZ_URL.');
+    }
+
+    console.log('[selected-closure-live] Starting Temporal worker; waiting for worker readiness');
+    const temporalWorkerHandle = spawnProcess(
+      'temporal-worker-live-proof',
+      ['--filter', 'dvt-temporal-worker', 'dev'],
+      buildLiveProofTemporalWorkerEnv(apiEnv)
+    );
+    processHandles.push(temporalWorkerHandle);
+
+    await waitForUrlOrProcessExit(
+      temporalWorkerReadyzUrl,
+      (response) => response.statusCode === 200,
+      DEFAULT_READY_TIMEOUT_MS,
+      DEFAULT_POLL_INTERVAL_MS,
+      'Temporal worker readyz',
+      temporalWorkerHandle
+    );
 
     const webHandle = spawnProcess(
       'web-live-proof',
@@ -322,6 +461,12 @@ async function main() {
     await dropSchemaIfExists(defaultPgUrl, liveProofSchema);
   }
 }
+
+module.exports = {
+  buildLiveProofApiEnv,
+  buildLiveProofTemporalWorkerEnv,
+  seedSelectedClosureLocalWarehouseProof,
+};
 
 if (require.main === module) {
   main().catch((error) => {

@@ -45,21 +45,22 @@ The component does not own:
 
 ## Public API
 
-| API                                                              | Owner                       | Responsibility                                                                        |
-| ---------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------- |
-| `computeWorkflowModeScopeOutputs('test', changedFiles, context)` | `tools/ci/scope-config.mjs` | Returns `coverage_relevant` and package-scope booleans for Test Suite consumers.      |
-| `TEST_SCOPE_PATTERNS.coverage_relevant`                          | `tools/ci/scope-config.mjs` | Names the file patterns that can require engine coverage threshold enforcement.       |
-| `TEST_SCOPE_PATTERNS.engine`                                     | `tools/ci/scope-config.mjs` | Names the engine workspace package scope used by package tests and coverage canaries. |
-| `node tools/ci/emit-scope.mjs --mode test`                       | `tools/ci/emit-scope.mjs`   | Emits GitHub Action outputs for Test Suite jobs.                                      |
-| `pnpm test:coverage:engine`                                      | root `package.json`         | Runs the engine coverage command whose execution is gated by `coverage_relevant`.     |
-| `pnpm test:ci-tools`                                             | root `package.json`         | Runs semantic CI scope tests that prevent coverage false negatives.                   |
+| API                                                              | Owner                        | Responsibility                                                                        |
+| ---------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------- |
+| `computeWorkflowModeScopeOutputs('test', changedFiles, context)` | `tools/ci/scope-config.mjs`  | Returns `coverage_relevant` and package-scope booleans for Test Suite consumers.      |
+| `TEST_SCOPE_PATTERNS.coverage_relevant`                          | `tools/ci/scope-config.mjs`  | Names the file patterns that can require engine coverage threshold enforcement.       |
+| `TEST_SCOPE_PATTERNS.engine`                                     | `tools/ci/scope-config.mjs`  | Names the engine workspace package scope used by package tests and coverage canaries. |
+| `node tools/ci/emit-scope.mjs --mode test`                       | `tools/ci/emit-scope.mjs`    | Emits GitHub Action outputs for Test Suite jobs.                                      |
+| `detect_test_matrix.outputs.coverage_relevant`                   | `.github/workflows/test.yml` | Gates the Engine Coverage Gate job before runner setup on pull requests.              |
+| `pnpm test:coverage:engine`                                      | root `package.json`          | Runs the engine coverage command whose execution is gated by `coverage_relevant`.     |
+| `pnpm test:ci-tools`                                             | root `package.json`          | Runs semantic CI scope tests that prevent coverage false negatives.                   |
 
 ## Command And Query Rails
 
 | Rail                                  | Type  | DDD owner                  | Application port                  | Adapter surface               | Negative tests                                                        |
 | ------------------------------------- | ----- | -------------------------- | --------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
 | `ClassifyChangedCiScope`              | query | Repository CI scope policy | `computeWorkflowModeScopeOutputs` | GitHub Actions scope emission | Engine config changes must set `coverage_relevant=true`.              |
-| `EmitWorkflowCapabilityScopes`        | query | Repository CI scope policy | `emit-scope.mjs --mode test`      | `.github/workflows/test.yml`  | PR coverage job setup and run steps must consume `coverage_relevant`. |
+| `EmitWorkflowCapabilityScopes`        | query | Repository CI scope policy | `emit-scope.mjs --mode test`      | `.github/workflows/test.yml`  | PR coverage job must consume `coverage_relevant` before runner setup. |
 | `ValidateEngineCoverageScopeContract` | query | CI tool contract tests     | `node --test tools/ci/*.test.mjs` | `pnpm test:ci-tools`          | Test fails if coverage stops covering the engine workspace policy.    |
 
 No new user-facing command is introduced. This slice changes an internal CI
@@ -67,12 +68,12 @@ query read model consumed by GitHub Actions.
 
 ## DDD Objects
 
-| Object                     | Kind        | Invariants                                                                                                          |
-| -------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------- |
-| `ChangedFileSet`           | query input | Contains normalized repository paths for a PR or non-PR workflow event.                                             |
-| `EngineWorkspaceScope`     | policy      | `packages/@dvt/engine/**` is the package ownership boundary for engine test routing.                                |
-| `EngineCoverageScope`      | policy      | Engine workspace changes, contracts, root test config, lockfiles, and the Test Suite workflow can require coverage. |
-| `WorkflowModeScopeOutputs` | read model  | `coverage_relevant` is the only Test Suite output that controls the Engine Coverage Gate.                           |
+| Object                     | Kind        | Invariants                                                                                 |
+| -------------------------- | ----------- | ------------------------------------------------------------------------------------------ |
+| `ChangedFileSet`           | query input | Contains normalized repository paths for a PR or non-PR workflow event.                    |
+| `EngineWorkspaceScope`     | policy      | `packages/@dvt/engine/**` is the package ownership boundary for engine test routing.       |
+| `EngineCoverageScope`      | policy      | Engine workspace changes, contracts, root test config, and lockfiles can require coverage. |
+| `WorkflowModeScopeOutputs` | read model  | `coverage_relevant` is the only Test Suite output that controls the Engine Coverage Gate.  |
 
 ## Invariants
 
@@ -81,11 +82,13 @@ query read model consumed by GitHub Actions.
 - Every pattern in the governed engine workspace scope must be covered by the
   engine coverage scope.
 - `coverage_relevant` must also remain true for contracts, root package
-  dependency changes, root Vitest config, TypeScript config, lockfiles, and the
-  Test Suite workflow.
+  dependency changes, root Vitest config, TypeScript config, and lockfiles.
+- Test Suite workflow YAML changes stay on CI-tool contract and changed-file
+  validation rails; they must not open engine coverage by filename alone.
 - The coverage workflow must not introduce a second inline path filter.
-- The coverage job setup, build, and threshold steps must all consume
-  `steps.scope.outputs.coverage_relevant`.
+- The Test Suite workflow must emit `coverage_relevant` once from
+  `detect_test_matrix` and gate the Engine Coverage Gate job with
+  `needs.detect_test_matrix.outputs.coverage_relevant` before runner setup.
 - Non-PR workflow events remain fail-closed and emit all scope outputs as true.
 
 ## Transitions
@@ -93,7 +96,7 @@ query read model consumed by GitHub Actions.
 ```mermaid
 stateDiagram-v2
     [*] --> changed: pull request changed files are read
-    changed --> coverage_required: engine workspace, contract, root test config, lockfile, or test workflow changes
+    changed --> coverage_required: engine workspace, contract, root test config, or lockfile changes
     changed --> coverage_skipped: no coverage-relevant path
     coverage_required --> coverage_green: pnpm test:coverage:engine passes thresholds
     coverage_required --> coverage_rejected: threshold command fails
@@ -107,13 +110,15 @@ sequenceDiagram
     participant PR as PR diff
     participant Scope as ClassifyChangedCiScope
     participant Emit as emit-scope --mode test
+    participant Detect as detect_test_matrix outputs
     participant Workflow as Test Suite coverage job
     participant Coverage as pnpm test:coverage:engine
 
     PR->>Scope: changed files
     Scope-->>Emit: WorkflowModeScopeOutputs
-    Emit-->>Workflow: coverage_relevant
-    Workflow->>Coverage: run when coverage_relevant=true
+    Emit-->>Detect: coverage_relevant
+    Detect-->>Workflow: start job only when coverage_relevant=true
+    Workflow->>Coverage: run threshold command
     Coverage-->>Workflow: threshold pass or failure
 ```
 
@@ -130,21 +135,21 @@ sequenceDiagram
 
 ## User Stories
 
-| Story           | Scenario                                                                   | Acceptance criteria                                      | Negative coverage                                     |
-| --------------- | -------------------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- |
-| `US-CI-ECG-001` | As an engine maintainer, I change engine source.                           | Engine package tests and coverage thresholds run.        | Coverage cannot be false while `engine=true`.         |
-| `US-CI-ECG-002` | As an engine maintainer, I change `packages/@dvt/engine/vitest.config.ts`. | `coverage_relevant=true` and the coverage job runs.      | CI tool tests fail if the config path is omitted.     |
-| `US-CI-ECG-003` | As a contract maintainer, I change contracts used by engine tests.         | Coverage remains relevant.                               | Contracts cannot become coverage-silent.              |
-| `US-CI-ECG-004` | As a CI maintainer, I edit `.github/workflows/test.yml`.                   | Coverage remains relevant because the runner can change. | Workflow does not add an inline coverage path filter. |
-| `US-CI-ECG-005` | As a docs author, I edit unrelated docs.                                   | Coverage can stay skipped on PRs.                        | Docs-only changes must not fake coverage relevance.   |
+| Story           | Scenario                                                                   | Acceptance criteria                                 | Negative coverage                                   |
+| --------------- | -------------------------------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| `US-CI-ECG-001` | As an engine maintainer, I change engine source.                           | Engine package tests and coverage thresholds run.   | Coverage cannot be false while `engine=true`.       |
+| `US-CI-ECG-002` | As an engine maintainer, I change `packages/@dvt/engine/vitest.config.ts`. | `coverage_relevant=true` and the coverage job runs. | CI tool tests fail if the config path is omitted.   |
+| `US-CI-ECG-003` | As a contract maintainer, I change contracts used by engine tests.         | Coverage remains relevant.                          | Contracts cannot become coverage-silent.            |
+| `US-CI-ECG-004` | As a CI maintainer, I edit `.github/workflows/test.yml`.                   | CI tool contracts cover the workflow edit.          | Workflow edits do not open engine coverage.         |
+| `US-CI-ECG-005` | As a docs author, I edit unrelated docs.                                   | Coverage can stay skipped on PRs.                   | Docs-only changes must not fake coverage relevance. |
 
 ## Test Coverage
 
 - `tools/ci/emit-scope.test.mjs` proves engine config changes set both
   `engine=true` and `coverage_relevant=true`.
 - `tools/ci/workflow-pattern-parity.test.mjs` proves coverage scope stays
-  aligned with the engine workspace policy and workflow consumers use
-  `coverage_relevant`.
+  aligned with the engine workspace policy and that the Test Suite workflow
+  gates heavy PR lanes at job level from the shared detector outputs.
 - `pnpm test:ci-tools` runs the CI tool contract suite.
 - `pnpm verify:prepush` remains the closeout gate for changed code, docs, and
   CI policy.

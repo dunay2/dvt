@@ -130,6 +130,14 @@ function projectExecutionDependencyDraft(
   return {
     ...draft,
     edges: draft.edges.filter(isExecutionDependencyEdge),
+    ...(draft.canvases == null
+      ? {}
+      : {
+          canvases: draft.canvases.map((canvasWorkspace) => ({
+            ...canvasWorkspace,
+            edges: canvasWorkspace.edges.filter(isExecutionDependencyEdge),
+          })),
+        }),
   };
 }
 

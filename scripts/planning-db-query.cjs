@@ -12,6 +12,18 @@ const { Client } = require('pg');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 const { runPlanningImport } = require('./planning-db-import.cjs');
+const {
+  buildCommandQueryRailRows,
+  buildCreationIntentRows,
+  normalizeCreationIntentForSearch,
+  parseBooleanFilter,
+  readCommandQueryRailRows,
+  readCreationIntentRows,
+} = require('./planning-db/command-query-rail-query.cjs');
+const {
+  buildFrontendMechanicalTruthRows,
+  readFrontendMechanicalTruthRows,
+} = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
 const componentEngineeringSchemaName = 'component_engineering';
@@ -34,6 +46,10 @@ const knownQueries = new Set([
   'debt',
   'drift',
   'commands',
+  'command-query-rails',
+  'ai-project-context',
+  'creation-intent',
+  'frontend-surfaces',
   'pr-readiness',
   'docs-disposition',
   'feature-work',
@@ -74,6 +90,10 @@ const governanceProjectionQueryNames = new Set([
   'remediation',
   'debt',
   'drift',
+  'command-query-rails',
+  'ai-project-context',
+  'creation-intent',
+  'frontend-surfaces',
   'cer',
   'component-tree',
   'component-metadata',
@@ -157,6 +177,15 @@ function parseCerSchemaVersion(value) {
   return schemaVersion;
 }
 
+function parseOutputFormat(value) {
+  const normalized = String(value || '').toLowerCase();
+  if (normalized === 'json' || normalized === 'markdown') {
+    return normalized;
+  }
+
+  throw new Error(`Invalid --format "${value}". Expected json or markdown.`);
+}
+
 function normalizeResolutionFilter(value) {
   if (value === undefined || value === null || value === '') {
     return undefined;
@@ -181,6 +210,7 @@ function parseArgs(args = process.argv.slice(2)) {
   const queryName = resolveQueryName(queryNameArg);
   const filters = {};
   let autoImportGovernance;
+  let outputFormat;
   let refreshRequested = false;
   let refreshConfirmed = false;
   let noRefreshRequested = false;
@@ -284,8 +314,20 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.commandDomain = value;
       continue;
     }
+    if (arg === '--intent') {
+      filters.intent = value;
+      continue;
+    }
     if (arg === '--type') {
       filters.type = value;
+      continue;
+    }
+    if (arg === '--duplicates') {
+      filters.duplicates = parseBooleanFilter(value, '--duplicates');
+      continue;
+    }
+    if (arg === '--gaps') {
+      filters.gaps = parseBooleanFilter(value, '--gaps');
       continue;
     }
     if (arg === '--root') {
@@ -301,7 +343,11 @@ function parseArgs(args = process.argv.slice(2)) {
       continue;
     }
     if (arg === '--state') {
-      filters.governanceState = value;
+      if (queryName === 'frontend-surfaces') {
+        filters.state = value;
+      } else {
+        filters.governanceState = value;
+      }
       continue;
     }
     if (arg === '--resolution') {
@@ -324,6 +370,10 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.limit = parseLimit(value, 20);
       continue;
     }
+    if (arg === '--format') {
+      outputFormat = parseOutputFormat(value);
+      continue;
+    }
 
     throw new Error(`Unknown planning DB query option "${arg}".`);
   }
@@ -340,9 +390,19 @@ function parseArgs(args = process.argv.slice(2)) {
   if (refreshRequested && !usesGovernanceProjection(queryName)) {
     throw new Error('--refresh is only valid for governance projection queries.');
   }
+  if (outputFormat !== undefined && queryName !== 'ai-project-context') {
+    throw new Error('--format is only valid for ai-project-context.');
+  }
+  if (
+    queryName === 'creation-intent' &&
+    normalizeCreationIntentForSearch(filters.intent).length === 0
+  ) {
+    throw new Error('creation-intent requires --intent "<creation intent>".');
+  }
 
   return {
     queryName,
+    ...(outputFormat === undefined ? {} : { outputFormat }),
     ...(autoImportGovernance === undefined ? {} : { autoImportGovernance }),
     filters,
   };
@@ -358,9 +418,14 @@ function buildSummaryRows(summary) {
     ['planning.task_evidence_refs', summary.planningTaskEvidenceRefs],
     ['planning.task_status_events', summary.planningTaskStatusEvents],
     ['planning.artifacts', summary.planningArtifacts],
+    ['planning.real_work_items', summary.planningRealWorkItems],
+    ['planning.real_work_open_items', summary.planningRealWorkOpenItems],
     ['repository.commands', summary.repositoryCommands],
     ['repository.commands.unknown', summary.repositoryCommandUnknown],
     ['repository.commands.runtime_fanout', summary.repositoryCommandRuntimeFanout],
+    ['command_query.rails', summary.commandQueryRails],
+    ['command_query.rails.gaps', summary.commandQueryRailGaps],
+    ['command_query.rails.duplicates', summary.commandQueryRailDuplicates],
     ['repository.pr_readiness', summary.prReadinessChecks],
     ['repository.pr_readiness.blocking', summary.prReadinessBlocking],
     ['docs.disposition_documents', summary.docsDispositionDocuments],
@@ -386,6 +451,259 @@ function buildSummaryRows(summary) {
 
 function buildHashDriftRows(summary) {
   return [['governance.hash_drift', summary.governanceHashDrift]];
+}
+
+const aiProjectContextRecommendedQueries = Object.freeze([
+  'pnpm planning:db:query summary',
+  'pnpm planning:db:query focus',
+  'pnpm planning:db:query real-work',
+  'pnpm planning:db:query command-query-rails --gaps true',
+  'pnpm planning:db:query command-query-rails --duplicates true',
+  'pnpm planning:db:query components',
+  'pnpm planning:db:query debt --status Open',
+  'pnpm planning:db:query commands --command-domain planning-db',
+  'pnpm planning:db:query pr-readiness',
+]);
+
+function numericCount(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function normalizeAiCommandQueryRail(row) {
+  const isGap = Boolean(row.is_gap ?? row.isGap);
+  const isDuplicate = Boolean(row.is_duplicate ?? row.isDuplicate);
+  return {
+    railType: row.rail_type ?? row.railType ?? '-',
+    railName: row.rail_name ?? row.railName ?? '-',
+    dddOwner: row.ddd_owner ?? row.dddOwner ?? '-',
+    status: row.rail_status ?? row.railStatus ?? '-',
+    state: isGap
+      ? 'gap'
+      : isDuplicate
+        ? 'duplicate'
+        : numericCount(row.implementation_ref_count ?? row.implementationRefCount) > 0
+          ? 'implemented'
+          : 'declared',
+    isGap,
+    isDuplicate,
+    implementationRefCount: numericCount(
+      row.implementation_ref_count ?? row.implementationRefCount
+    ),
+    sourcePath: row.source_path ?? row.sourcePath ?? '-',
+  };
+}
+
+function normalizeAiComponent(row) {
+  return {
+    componentId: row.component_id ?? row.componentId ?? '-',
+    name: compactText(row.name),
+    status: row.status ?? '-',
+    governanceState: row.governance_state ?? row.governanceState ?? '-',
+    domainUnit: row.domain_unit ?? row.domainUnit ?? '-',
+    fileCount: numericCount(row.file_count ?? row.fileCount),
+  };
+}
+
+function normalizeAiRealWork(row) {
+  return {
+    priority: row.priority ?? '-',
+    kind: row.work_kind ?? row.workKind ?? '-',
+    status: row.work_status ?? row.workStatus ?? '-',
+    workId: row.work_id ?? row.workId ?? '-',
+    scope: taskScope(row),
+    title: compactText(row.title),
+    sourcePath: row.source_path ?? row.sourcePath ?? row.document_path ?? row.documentPath ?? '-',
+    suggestedQuery: row.suggested_query ?? row.suggestedQuery ?? '-',
+  };
+}
+
+function normalizeAiRiskDebt(row) {
+  return {
+    priority: row.priority ?? '-',
+    status: row.status ?? '-',
+    riskId: row.risk_id ?? row.riskId ?? '-',
+    componentUnit: row.component_unit ?? row.componentUnit ?? '-',
+    sourcePath: row.source_path ?? row.sourcePath ?? '-',
+    title: compactText(row.title),
+  };
+}
+
+function normalizeAiRepositoryCommand(row) {
+  return {
+    commandType: row.command_type ?? row.commandType ?? '-',
+    commandName: row.command_name ?? row.commandName ?? row.command_path ?? row.commandPath ?? '-',
+    domain: row.domain ?? '-',
+    sensitivity: row.sensitivity ?? '-',
+    runtimeFanout: Boolean(row.runtime_fanout ?? row.runtimeFanout),
+  };
+}
+
+function normalizeAiPrReadiness(row) {
+  return {
+    readinessId: row.readiness_id ?? row.readinessId ?? '-',
+    state: row.blocking ? 'blocking' : 'ready',
+    missingRequirements: row.missing_requirements ?? row.missingRequirements ?? [],
+    evidenceDocStatus: row.evidence_doc_status ?? row.evidenceDocStatus ?? '-',
+    riskUpdateStatus: row.risk_update_status ?? row.riskUpdateStatus ?? '-',
+  };
+}
+
+function buildAiProjectContext(snapshot = {}, options = {}) {
+  const summary = snapshot.summary || {};
+  return {
+    contextKind: 'db-first-ai-project-context',
+    sourceAuthority: summary.sourceAuthority || 'database',
+    generatedAt: options.generatedAt || new Date().toISOString(),
+    counts: {
+      planningTasks: numericCount(summary.tasks),
+      reviewTasks: numericCount(summary.reviewTasks),
+      repositoryCommands: numericCount(summary.repositoryCommands),
+      realWorkItems: numericCount(summary.planningRealWorkItems),
+      realWorkOpenItems: numericCount(summary.planningRealWorkOpenItems),
+      commandQueryRails: numericCount(summary.commandQueryRails),
+      commandQueryRailGaps: numericCount(summary.commandQueryRailGaps),
+      commandQueryRailDuplicates: numericCount(summary.commandQueryRailDuplicates),
+      openIncidentsAndDebt: numericCount(summary.riskDebtItemsOpen),
+      governanceComponents: numericCount(summary.governanceComponents),
+      governanceDriftFiles: numericCount(summary.driftFiles),
+      blockingPrReadinessChecks: numericCount(summary.prReadinessBlocking),
+    },
+    samples: {
+      commandQueryRails: (snapshot.commandQueryRails || []).map(normalizeAiCommandQueryRail),
+      components: (snapshot.components || []).map(normalizeAiComponent),
+      realWork: (snapshot.realWork || []).map(normalizeAiRealWork),
+      openIncidentsAndDebt: (snapshot.riskDebt || []).map(normalizeAiRiskDebt),
+      repositoryCommands: (snapshot.commands || []).map(normalizeAiRepositoryCommand),
+      prReadiness: (snapshot.prReadiness || []).map(normalizeAiPrReadiness),
+    },
+    recommendedQueries: [...aiProjectContextRecommendedQueries],
+  };
+}
+
+function markdownCell(value) {
+  return compactText(Array.isArray(value) ? value.join(', ') : value).replace(/\|/g, '\\|');
+}
+
+function markdownTable(headers, rows) {
+  const lines = [
+    `| ${headers.map(markdownCell).join(' | ')} |`,
+    `| ${headers.map(() => '---').join(' | ')} |`,
+  ];
+  for (const row of rows) {
+    lines.push(`| ${row.map(markdownCell).join(' | ')} |`);
+  }
+  return lines.join('\n');
+}
+
+function markdownSection(title, headers, rows) {
+  if (!rows.length) {
+    return [`## ${title}`, '', 'No rows returned by this DB sample.'].join('\n');
+  }
+
+  return [`## ${title}`, '', markdownTable(headers, rows)].join('\n');
+}
+
+function renderAiProjectContextMarkdown(context) {
+  const countRows = Object.entries(context.counts || {});
+  const railRows = (context.samples.commandQueryRails || []).map((row) => [
+    row.railType,
+    row.railName,
+    row.dddOwner,
+    row.status,
+    row.state,
+    row.sourcePath,
+  ]);
+  const componentRows = (context.samples.components || []).map((row) => [
+    row.componentId,
+    row.name,
+    row.status,
+    row.governanceState,
+    row.fileCount,
+  ]);
+  const debtRows = (context.samples.openIncidentsAndDebt || []).map((row) => [
+    row.priority,
+    row.riskId,
+    row.status,
+    row.componentUnit,
+    row.title,
+    row.sourcePath,
+  ]);
+  const realWorkRows = (context.samples.realWork || []).map((row) => [
+    row.priority,
+    row.kind,
+    row.status,
+    row.workId,
+    row.title,
+    row.suggestedQuery,
+  ]);
+  const commandRows = (context.samples.repositoryCommands || []).map((row) => [
+    row.commandType,
+    row.commandName,
+    row.domain,
+    row.runtimeFanout ? 'runtime-fanout' : '-',
+  ]);
+  const readinessRows = (context.samples.prReadiness || []).map((row) => [
+    row.readinessId,
+    row.state,
+    row.missingRequirements,
+    row.evidenceDocStatus,
+    row.riskUpdateStatus,
+  ]);
+
+  return [
+    '# DB-first AI project context',
+    '',
+    `Generated: ${context.generatedAt}`,
+    `Source authority: ${context.sourceAuthority}`,
+    '',
+    '## Project state',
+    '',
+    'Use this DB-first context before creating new commands, queries, components, docs, or implementation work.',
+    '',
+    markdownSection('Counts', ['Metric', 'Value'], countRows),
+    '',
+    markdownSection(
+      'Open incidents and debt',
+      ['Priority', 'Id', 'Status', 'Component', 'Title', 'Source'],
+      debtRows
+    ),
+    '',
+    markdownSection(
+      'Existing command/query rails',
+      ['Type', 'Name', 'Owner', 'Status', 'State', 'Source'],
+      railRows
+    ),
+    '',
+    markdownSection(
+      'Existing components',
+      ['Component', 'Name', 'Status', 'State', 'Files'],
+      componentRows
+    ),
+    '',
+    markdownSection(
+      'Current real work',
+      ['Priority', 'Kind', 'Status', 'Id', 'Title', 'Suggested query'],
+      realWorkRows
+    ),
+    '',
+    markdownSection('Repository commands', ['Type', 'Name', 'Domain', 'Runtime'], commandRows),
+    '',
+    markdownSection(
+      'PR readiness',
+      ['Readiness', 'State', 'Missing requirements', 'Evidence', 'Risk'],
+      readinessRows
+    ),
+    '',
+    '## Recommended follow-up queries',
+    '',
+    ...(context.recommendedQueries || []).map((query) => `- \`${query}\``),
+    '',
+  ].join('\n');
 }
 
 function normalizeProgress(value) {
@@ -1767,9 +2085,14 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.planning_task_evidence_refs) as "planningTaskEvidenceRefs",
       (select count(*)::int from ${schemaName}.planning_task_status_events) as "planningTaskStatusEvents",
       (select count(*)::int from ${schemaName}.planning_artifacts) as "planningArtifacts",
+      (select count(*)::int from ${schemaName}.planning_real_work_query) as "planningRealWorkItems",
+      (select coalesce(sum(open_item_count), 0)::int from ${schemaName}.planning_real_work_query) as "planningRealWorkOpenItems",
       (select count(*)::int from ${schemaName}.repository_commands) as "repositoryCommands",
       (select count(*)::int from ${schemaName}.repository_commands where domain = 'unknown') as "repositoryCommandUnknown",
       (select count(*)::int from ${schemaName}.repository_commands where runtime_fanout = true) as "repositoryCommandRuntimeFanout",
+      (select count(*)::int from ${schemaName}.command_query_rails) as "commandQueryRails",
+      (select count(*)::int from ${schemaName}.command_query_rail_query where is_gap = true) as "commandQueryRailGaps",
+      (select count(*)::int from ${schemaName}.command_query_rail_query where is_duplicate = true) as "commandQueryRailDuplicates",
       (select count(*)::int from ${schemaName}.pr_readiness_checks) as "prReadinessChecks",
       (select count(*)::int from ${schemaName}.pr_readiness_checks where blocking = true) as "prReadinessBlocking",
       (select count(*)::int from ${schemaName}.doc_disposition_documents) as "docsDispositionDocuments",
@@ -1793,6 +2116,36 @@ async function readSummary(client) {
   `);
 
   return result.rows[0];
+}
+
+async function readAiProjectContext(client, filters = {}) {
+  const limit = parseLimit(filters.limit, 10);
+  const limitedFilters = { ...filters, limit };
+
+  const summary = await readSummary(client);
+  const commandQueryRails = await readCommandQueryRailRows(client, limitedFilters);
+  const components = await readGovernanceComponentRows(client, limitedFilters);
+  const realWork = await readRealWorkRows(client, limitedFilters);
+  const riskDebt = await readRiskDebtRows(client, {
+    ...limitedFilters,
+    status: filters.debtStatus || 'Open',
+  });
+  const commands = await readRepositoryCommandRows(client, {
+    commandDomain: filters.commandDomain,
+    type: filters.commandType,
+    limit,
+  });
+  const prReadiness = await readPrReadinessRows(client, { limit });
+
+  return buildAiProjectContext({
+    summary,
+    commandQueryRails,
+    components,
+    realWork,
+    riskDebt,
+    commands,
+    prReadiness,
+  });
 }
 
 async function readTaskRows(client, filters = {}) {
@@ -3017,6 +3370,45 @@ async function runQuery(options = {}) {
       return commandRows;
     }
 
+    if (queryName === 'command-query-rails') {
+      const rows = await readCommandQueryRailRows(client, options.filters || {});
+      const railRows = buildCommandQueryRailRows(rows);
+      if (options.print !== false) {
+        printTaskRows(railRows);
+      }
+      return railRows;
+    }
+
+    if (queryName === 'ai-project-context') {
+      const context = await readAiProjectContext(client, options.filters || {});
+      if (options.print !== false) {
+        if ((options.outputFormat || 'json') === 'markdown') {
+          console.log(renderAiProjectContextMarkdown(context));
+        } else {
+          console.log(JSON.stringify(context, null, 2));
+        }
+      }
+      return context;
+    }
+
+    if (queryName === 'creation-intent') {
+      const rows = await readCreationIntentRows(client, options.filters || {});
+      const intentRows = buildCreationIntentRows(rows, options.filters || {});
+      if (options.print !== false) {
+        printTaskRows(intentRows);
+      }
+      return intentRows;
+    }
+
+    if (queryName === 'frontend-surfaces') {
+      const rows = await readFrontendMechanicalTruthRows(client, options.filters || {});
+      const surfaceRows = buildFrontendMechanicalTruthRows(rows);
+      if (options.print !== false) {
+        printTaskRows(surfaceRows);
+      }
+      return surfaceRows;
+    }
+
     if (queryName === 'pr-readiness') {
       const rows = await readPrReadinessRows(client, options.filters || {});
       const readinessRows = buildPrReadinessRows(rows);
@@ -3425,6 +3817,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildAiProjectContext,
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringQualityRows,
@@ -3465,6 +3858,9 @@ module.exports = {
   buildPlanningEvidenceRows,
   buildPlanningStatusEventRows,
   buildPrReadinessRows,
+  buildCommandQueryRailRows,
+  buildCreationIntentRows,
+  buildFrontendMechanicalTruthRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
   buildSummaryRows,
@@ -3476,7 +3872,9 @@ module.exports = {
   formatQueryError,
   parseArgs,
   parseCerSchemaVersion,
+  renderAiProjectContextMarkdown,
   printHashDriftSummary,
+  readAiProjectContext,
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
@@ -3513,6 +3911,9 @@ module.exports = {
   readPlanningEvidenceRows,
   readPlanningStatusEventRows,
   readPrReadinessRows,
+  readCommandQueryRailRows,
+  readCreationIntentRows,
+  readFrontendMechanicalTruthRows,
   readRepositoryCommandRows,
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,

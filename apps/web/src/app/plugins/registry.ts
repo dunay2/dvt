@@ -92,7 +92,7 @@ export type PluginContributions = {
 // Imported lazily to avoid circular deps during module init
 import { costContributions } from './cost/costContributions';
 import { dbtContributions } from './dbt/dbtContributions';
-import { dvtContributions } from './dvt/dvtContributions';
+import { dvtContributions, dvtWarehouseSourceContributions } from './dvt/dvtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
 
 export type RuntimeCapabilities = {
@@ -166,6 +166,7 @@ function isPluginAvailableAtRuntime(
 
 const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
   dbtContributions,
+  dvtWarehouseSourceContributions,
   dvtContributions,
   monitoringContributions,
   costContributions,

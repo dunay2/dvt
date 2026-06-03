@@ -1,5 +1,6 @@
 /** Owned concern: define plugin manifest vocabulary, including closed view placement variants. */
 import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import type { AppRouteHandle } from '../../bootstrap/routeBootstrapContract';
 
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
@@ -184,6 +185,7 @@ export type InspectorPanelProps = {
   node: CanonicalNode;
   activeRunId: string | null;
   onClose: () => void;
+  tagsEditor?: ReactNode;
 };
 
 // ---------------------------------------------------------------------------

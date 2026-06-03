@@ -8,6 +8,7 @@ import { DVT_AUTHORING_NODE_KINDS } from './dvtNodeTypeCatalog';
 import { transformationCanvasGraphStrategy } from './transformationGraphStrategy';
 
 const DVT_PLUGIN_ID = 'dvt';
+export const DVT_WAREHOUSE_SOURCE_PLUGIN_ID = 'dvt.warehouse-source';
 const TEMPLATES_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
   pendingDetail: 'Preparing Templates route',
 });
@@ -89,4 +90,13 @@ export const dvtContributions: PluginContributions = {
   ],
   produces: [{ portType: 'data.tabular', forRoles: ['transform'] }],
   consumes: [{ portType: 'data.tabular', forRoles: ['transform'] }],
+};
+
+export const dvtWarehouseSourceContributions: PluginContributions = {
+  id: DVT_WAREHOUSE_SOURCE_PLUGIN_ID,
+  displayName: 'DVT Warehouse Source',
+  version: '1.0.0',
+  capabilities: ['canvas.render'],
+  produces: [{ portType: 'data.tabular', forRoles: ['input'] }],
+  consumes: [],
 };

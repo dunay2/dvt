@@ -107,6 +107,7 @@ wire contracts and are not re-exported from `@dvt/contracts`.
 | `UiRunStatus`          | Presentation-level run status union                   |
 | `RunSummaryItem`       | List item projection with `startedAt` authority       |
 | `RunSnapshot`          | Run lifecycle snapshot and optional evidence fields   |
+| `RunDiagnostics`       | Run trace/log pointer projection                      |
 | `RunEventTimelinePage` | Paginated event feed                                  |
 
 ## Invariants
@@ -130,6 +131,9 @@ wire contracts and are not re-exported from `@dvt/contracts`.
 8. Event chronology is normalized through the local
    [Run Event Timeline Component](./run-event-timeline-component.md) before
    either the shell console or the Runs workspace renders it.
+9. `RunSnapshot.diagnostics` is the only frontend source for Run Detail trace
+   and log pointers. Views must not derive `runId`, `planSha`, attempt, adapter,
+   error code, or duration from timeline rows when the snapshot omits them.
 
 ## State Transitions
 

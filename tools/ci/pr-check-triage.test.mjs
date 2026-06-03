@@ -9,6 +9,8 @@ import {
   evaluateCheckGate,
   extractFailureSnippet,
   formatCheckGateText,
+  buildFirstFailurePayload,
+  isMissingActionsJobLog,
   normalizeStatusCheck,
   parseActionsJobDetailsUrl,
   pickFirstFailingGitHubActionsCheck,
@@ -159,6 +161,48 @@ test('extractFailureSnippet prefers the first error-oriented lines and limits ou
   );
 });
 
+test('isMissingActionsJobLog recognizes unstarted GitHub Actions log failures', () => {
+  const error = new Error('log not found: 123');
+  error.code = 'GH_COMMAND_FAILED';
+  error.stderr = 'log not found: 123';
+
+  assert.equal(isMissingActionsJobLog(error), true);
+  assert.equal(isMissingActionsJobLog(new Error('real test failure')), false);
+});
+
+test('buildFirstFailurePayload classifies missing Actions logs as unstarted infrastructure failures', async () => {
+  const payload = await buildFirstFailurePayload(
+    {
+      number: 1427,
+      url: 'https://github.com/dunay2/dvt/pull/1427',
+      headRefName: 'codex/dbfirst-command-query-rail-source-scan',
+      statusCheckRollup: [
+        {
+          __typename: 'CheckRun',
+          name: 'CI tool contracts',
+          status: 'COMPLETED',
+          conclusion: 'FAILURE',
+          workflowName: 'CI - Code Quality',
+          detailsUrl: 'https://github.com/dunay2/dvt/actions/runs/26831188907/job/79112657163',
+        },
+      ],
+    },
+    {
+      fetchJobLog: () => {
+        const error = new Error('log not found: 79112657163');
+        error.code = 'GH_COMMAND_FAILED';
+        error.stderr = 'log not found: 79112657163';
+        throw error;
+      },
+    }
+  );
+
+  assert.equal(payload.status, 'unstarted_actions_failure');
+  assert.equal(payload.check.name, 'CI tool contracts');
+  assert.deepEqual(payload.job, { runId: '26831188907', jobId: '79112657163' });
+  assert.match(payload.message, /GitHub Actions did not expose job logs/);
+});
+
 test('evaluateCheckGate fails fast on failed checks without waiting for pending checks', () => {
   const gate = evaluateCheckGate({
     status: 'ok',
@@ -265,5 +309,9 @@ test('package scripts expose the immediate PR check gate', () => {
   assert.equal(
     packageJson.scripts['pr:checks:json'],
     'node tools/ci/pr-check-triage.mjs gate --json'
+  );
+  assert.equal(
+    packageJson.scripts['pr:checks:first-failure'],
+    'node tools/ci/pr-check-triage.mjs first-failure'
   );
 });

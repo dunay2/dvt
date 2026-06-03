@@ -40,4 +40,13 @@ describe('buildAuthoringNodeCommand', () => {
 
     expect(command.position).toEqual({ x: 320, y: 360 });
   });
+
+  it('uses a caller-owned viewport position for context-menu node creation', () => {
+    const command = buildAuthoringNodeCommand(buildTestNodeKind('dvt:source', 'Source'), [], {
+      x: 960,
+      y: 420,
+    });
+
+    expect(command.position).toEqual({ x: 960, y: 420 });
+  });
 });

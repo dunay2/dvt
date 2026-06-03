@@ -2,6 +2,7 @@ name: PR Quality Gate
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   push:
     branches: [main]
   workflow_dispatch:
@@ -57,7 +58,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
+
+      - name: Fetch pull-request base ref
+        uses: ./.github/actions/fetch-scope-base
+        with:
+          base-ref: ${{ github.base_ref }}
 
       - name: Validate workflow scope policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
@@ -129,19 +135,31 @@ jobs:
         run: pnpm docs:workboard:generate --source yaml
 
       - name: Validate docs quality policy (English/no duplicate indexes)
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:quality:check
 
       - name: Run docs doctor (duplicates/legacy/staleness)
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:doctor
 
-      - name: Enforce Markdown location policy
+      - name: Enforce changed Markdown location policy
         if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        run: pnpm docs:gov:locations -- --changed-only
+
+      - name: Enforce Markdown location policy
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:gov:locations
 
       - name: Enforce canonical docs paths and links
-        if: github.event_name == 'pull_request' && steps.scope.outputs.docs_changed == 'true'
+        if:
+          github.event_name == 'push' || (github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:canonical:check
 
       - name: Enforce changed docs filename policy
@@ -353,7 +371,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -403,7 +421,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -437,7 +455,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
-          fetch-depth: ${{ github.event_name == 'pull_request' && '0' || '1' }}
+          fetch-depth: 1
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm

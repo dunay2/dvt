@@ -66,6 +66,8 @@ flowchart LR
 | Planner/API compile latency         | `dvt_api_plan_compile_latency_seconds`                                             | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.ts`                           |
 | Run-status freshness classification | `dvt.api.run_status.snapshot_staleness_result_total`                               | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
 | Unknown freshness fallback reasons  | `dvt.api.run_status.snapshot_staleness_fallback_unknown_total`                     | [API Runtime SLA Canonical](../../../../runbooks/api-runtime-sla-canonical-20260404.md)                   | `apps/api/src/infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.ts`                    |
+| Run diagnostics pointers            | `diagnostics.pointers[]` on `GET /runs/:runId`                                     | Frontend Runtime Contract Technical Manual                                                                | API evidence model and Web Run Detail view                                                             |
+| Ambient run diagnostic context      | `ObservabilityContext` fields attached to structured logs inside `withContext()`   | This guide and `@dvt/observability-otel` README                                                           | `@dvt/observability` port and `@dvt/observability-otel` adapter                                        |
 | Outbox claimed-lag                  | `dvt_outbox_oldest_claimed_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
 | Outbox drain lag                    | `dvt_delivery_outbox_drain_lag_seconds`                                            | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
 | Event delivery latency              | `dvt_delivery_event_delivery_latency_seconds`                                      | [AR-C2 SLA Signal Threshold Mapping](../../../../runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md) | `apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts`                                                    |
@@ -104,6 +106,14 @@ Reference:
 - Use exported underscore metric names only when writing PromQL.
 - Treat stale and unknown freshness as derived ratios from the implemented
   staleness counters, not as standalone invented metrics.
+- Treat `runId`, `planId`, `planSha`, `stepId`, and `attemptId` as trace/log
+  context only. They are intentionally forbidden as metric labels by the
+  observability cardinality policy.
+- Treat Run Detail Diagnostics pointers as provider-neutral trace/log query
+  handles until a governed dashboard or OTel backend link contract is accepted.
+- Treat `@dvt/observability-otel` as a scaffolded binding: it validates metric
+  cardinality and carries ambient diagnostic context into structured JSON logs,
+  but it does not yet prove an OTLP exporter, dashboard, or alert pipeline.
 - Treat the outbox claimed-lag metric as observational unless the canonical
   threshold docs say otherwise.
 - Do not infer a second-provider dashboard, failover lane, or adapter health

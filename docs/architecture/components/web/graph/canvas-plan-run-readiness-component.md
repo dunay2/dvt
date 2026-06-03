@@ -19,15 +19,16 @@ runs, own runtime identity, or replace planner/runtime contracts.
 
 ## Public API
 
-| API                                         | Kind                  | Owned concern                                                                                                  |
-| ------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `observePlanRunReadiness(args)`             | query adapter         | Publishes the `PlanRunReadinessReadModel` from Canvas execution inputs.                                        |
-| `PlanRunReadinessReadModel`                 | read model            | Carries `rail`, `status`, `blockers`, and `summary` for presentation consumers.                                |
-| `PlanRunReadinessBlocker`                   | value vocabulary      | Names `plan_integrity`, `backpressure`, `capability_mismatch`, `adapter_degraded`, and `authorization_denied`. |
-| `buildPlanStatusSummary(args)`              | compatibility adapter | Returns the existing Canvas summary copy from the source-owned read model.                                     |
-| `hasPersistedPreviewProof(plan)`            | policy helper         | Accepts only persisted preview proof aligned to the active plan reference.                                     |
-| `hasPersistedPreviewIdentityMismatch(plan)` | policy helper         | Detects plan-record drift before run start.                                                                    |
-| `resolvePlanRefForStartRun(plan)`           | value extractor       | Reads the plan reference used by `IRunsPort.startRun`.                                                         |
+| API                                         | Kind                   | Owned concern                                                                                                  |
+| ------------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `observePlanRunReadiness(args)`             | query adapter          | Publishes the `PlanRunReadinessReadModel` from Canvas execution inputs.                                        |
+| `PlanRunReadinessReadModel`                 | read model             | Carries `rail`, `status`, `blockers`, and `summary` for presentation consumers.                                |
+| `PlanRunReadinessBlocker`                   | value vocabulary       | Names `plan_integrity`, `backpressure`, `capability_mismatch`, `adapter_degraded`, and `authorization_denied`. |
+| `PlanRunReadinessPanel`                     | presentation component | Renders the read model status, blockers, and summary without owning blocker semantics.                         |
+| `buildPlanStatusSummary(args)`              | compatibility adapter  | Returns the existing Canvas summary copy from the source-owned read model.                                     |
+| `hasPersistedPreviewProof(plan)`            | policy helper          | Accepts only persisted preview proof aligned to the active plan reference.                                     |
+| `hasPersistedPreviewIdentityMismatch(plan)` | policy helper          | Detects plan-record drift before run start.                                                                    |
+| `resolvePlanRefForStartRun(plan)`           | value extractor        | Reads the plan reference used by `IRunsPort.startRun`.                                                         |
 
 ## Invariants
 
@@ -35,9 +36,11 @@ runs, own runtime identity, or replace planner/runtime contracts.
 - The toolbar renders readiness; it does not own blocker semantics.
 - Run start is ready only when authorization admits runs, a current plan exists,
   planRef exists, persisted preview proof exists, the persisted proof matches
-  the active plan, and no runtime blocker is present.
+  the active plan, the visible graph is executable, and no runtime blocker is
+  present.
 - `plan_integrity` covers missing plan, stale plan, missing planRef,
-  preview-identity mismatch, and missing persisted preview proof.
+  preview-identity mismatch, missing persisted preview proof, and a visible
+  graph that can no longer execute.
 - `authorization_denied` covers route permission denial before any
   `IRunsPort.startRun` call.
 - `capability_mismatch` covers canvas kinds or execution strategies that cannot
@@ -53,6 +56,8 @@ runs, own runtime identity, or replace planner/runtime contracts.
 - `ready` moves to `blocked` when authorization is removed.
 - `ready` moves to `blocked` when the active plan becomes stale or loses
   persisted preview proof.
+- `ready` moves to `blocked` when the visible graph no longer satisfies the
+  execution graph validation rules.
 - `blocked` moves to `ready` after a current persisted preview aligns with the
   active plan reference and runtime blockers clear.
 - `blocked` stays `blocked` when capability mismatch, backpressure, or adapter
@@ -72,13 +77,14 @@ stateDiagram-v2
 
 ## Consumers
 
-| Consumer                           | Use                                                                                     |
-| ---------------------------------- | --------------------------------------------------------------------------------------- |
-| `canvasExecutionState.ts`          | Builds Canvas execution state from graph validation, execution strategy, and readiness. |
-| `useCanvasExecutionActions.ts`     | Exposes `canStartRun` and `planStatusSummary` to route composition.                     |
-| `CanvasToolbarPrimaryControls.tsx` | Renders the status and buttons without owning read-model semantics.                     |
-| `useCanvasRunStartHandler.ts`      | Keeps run start fail-closed before calling `IRunsPort.startRun`.                        |
-| F-27 route gate                    | Consumes plan/run readiness evidence for the internal alpha route matrix.               |
+| Consumer                           | Use                                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------------------ |
+| `canvasExecutionState.ts`          | Builds Canvas execution state from graph validation, execution strategy, and readiness.    |
+| `useCanvasExecutionActions.ts`     | Exposes `canStartRun`, `planRunReadiness`, and compatibility summary to route composition. |
+| `CanvasToolbar.tsx`                | Renders the visible readiness panel while keeping blocker semantics in the read model.     |
+| `CanvasToolbarPrimaryControls.tsx` | Renders workflow status and buttons without owning read-model semantics.                   |
+| `useCanvasRunStartHandler.ts`      | Keeps run start fail-closed before calling `IRunsPort.startRun`.                           |
+| F-27 route gate                    | Consumes plan/run readiness evidence for the internal alpha route matrix.                  |
 
 ## Architecture Diagram
 
@@ -101,6 +107,7 @@ flowchart TB
   Runtime --> Readiness
   Readiness --> State
   State --> Toolbar
+  State --> Panel["PlanRunReadinessPanel"]
   State --> StartRun --> RunsPort
 ```
 
@@ -117,7 +124,8 @@ sequenceDiagram
   Canvas->>State: derive execution state
   State->>Readiness: plan, preview proof, authorization, capability
   Readiness-->>State: PlanRunReadinessReadModel
-  State-->>Toolbar: status summary and canStartRun
+  State-->>Toolbar: status summary, canStartRun, PlanRunReadinessReadModel
+  Toolbar-->>Toolbar: render PlanRunReadinessPanel
   Toolbar-->>Canvas: user requests Run only when admitted
   Canvas->>Runs: startRun after readiness proof
 ```
@@ -125,6 +133,7 @@ sequenceDiagram
 ## Evidence
 
 - `apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts`
+- `apps/web/src/app/views/canvas/PlanRunReadinessPanel.test.tsx`
 - `apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx`
 - `apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx`
 - `apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts`

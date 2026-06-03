@@ -179,6 +179,11 @@ export function extractFailureSnippet(logText, options = {}) {
   return lines.slice(start, start + maxLines).join('\n');
 }
 
+export function isMissingActionsJobLog(error) {
+  const text = `${error?.message ?? ''}\n${error?.stderr ?? ''}\n${error?.stdout ?? ''}`;
+  return /log not found:/iu.test(text);
+}
+
 function plural(count, singular, pluralValue = `${singular}s`) {
   return count === 1 ? singular : pluralValue;
 }
@@ -308,7 +313,7 @@ function fetchJobLog(jobId) {
   return runGh(['run', 'view', '--job', jobId, '--log']);
 }
 
-async function buildFirstFailurePayload(prData) {
+export async function buildFirstFailurePayload(prData, options = {}) {
   const summary = buildSummaryPayload(prData);
   const failingCheck = pickFirstFailingGitHubActionsCheck(prData.statusCheckRollup);
 
@@ -329,7 +334,24 @@ async function buildFirstFailurePayload(prData) {
     };
   }
 
-  const logText = fetchJobLog(parsedUrl.jobId);
+  let logText;
+  try {
+    logText = (options.fetchJobLog || fetchJobLog)(parsedUrl.jobId);
+  } catch (error) {
+    if (isMissingActionsJobLog(error)) {
+      return {
+        status: 'unstarted_actions_failure',
+        pr: summary.pr,
+        check: failingCheck,
+        job: parsedUrl,
+        message:
+          'GitHub Actions did not expose job logs for this failure. Treat it as an external CI infrastructure or billing block unless a later rerun assigns a runner and executes steps.',
+      };
+    }
+
+    throw error;
+  }
+
   return {
     status: 'ok',
     pr: summary.pr,

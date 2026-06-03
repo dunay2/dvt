@@ -7,6 +7,7 @@ import type {
 import {
   CANONICAL_ROLE_TO_TRANSFORMATION_ROLE,
   TRANSFORMATION_REQUIRED_EDGE_ROLE_PAIRS,
+  TRANSFORMATION_REQUIRED_NODE_COUNT,
   TRANSFORMATION_REQUIRED_ROLE_COUNTS,
 } from './transformationGraphValidation.types';
 
@@ -19,7 +20,9 @@ function mapCanonicalRole(
 function createEmptyTransformationRoleCounts(): Record<TransformationNodeRole, number> {
   return Object.fromEntries(
     (
-      Object.keys(TRANSFORMATION_REQUIRED_ROLE_COUNTS) as Array<keyof typeof TRANSFORMATION_REQUIRED_ROLE_COUNTS>
+      Object.keys(TRANSFORMATION_REQUIRED_ROLE_COUNTS) as Array<
+        keyof typeof TRANSFORMATION_REQUIRED_ROLE_COUNTS
+      >
     ).map((role) => [role, 0])
   ) as Record<TransformationNodeRole, number>;
 }
@@ -27,7 +30,7 @@ function createEmptyTransformationRoleCounts(): Record<TransformationNodeRole, n
 export function validateScopedNodeCount(
   context: TransformationValidationContext
 ): TransformationGraphValidationResult | null {
-  if (context.scopedNodes.length === 3) {
+  if (context.scopedNodes.length === TRANSFORMATION_REQUIRED_NODE_COUNT) {
     return null;
   }
 
@@ -70,16 +73,13 @@ function countTransformationRoles(
   scopedNodes: TransformationValidationContext['scopedNodes'],
   nodeRolesById: Record<string, TransformationNodeRole>
 ): Record<TransformationNodeRole, number> {
-  return scopedNodes.reduce(
-    (acc, node) => {
-      const mappedRole = nodeRolesById[node.id];
-      if (mappedRole) {
-        acc[mappedRole] += 1;
-      }
-      return acc;
-    },
-    createEmptyTransformationRoleCounts()
-  );
+  return scopedNodes.reduce((acc, node) => {
+    const mappedRole = nodeRolesById[node.id];
+    if (mappedRole) {
+      acc[mappedRole] += 1;
+    }
+    return acc;
+  }, createEmptyTransformationRoleCounts());
 }
 
 export function validateRoleCardinality(

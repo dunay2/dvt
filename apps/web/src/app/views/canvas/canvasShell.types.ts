@@ -20,6 +20,7 @@ import type { TransformationGraphValidationResult } from './transformationGraphV
 import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -76,6 +77,7 @@ export type CanvasShellGraph = {
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
   viewport: CanvasViewport | null;
 };
 
@@ -88,6 +90,7 @@ export type CanvasShellToolbar = {
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
   planStatusSummary: string;
+  planRunReadiness: PlanRunReadinessReadModel;
   exclusiveOverlayMode: 'runtime' | 'cost';
   canUseCostOverlay: boolean;
   impactOverlayEnabled: boolean;
@@ -107,7 +110,10 @@ export type CanvasShellGraphCommands = {
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
-  onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
+  onCreateAuthoringNode: (
+    registration: NodeKindRegistration,
+    position?: { x: number; y: number }
+  ) => void;
   onSourceImportComplete: (result: ImportSourcesResult) => void;
   onImportedNodeFocusComplete: () => void;
 };
@@ -124,6 +130,7 @@ export type CanvasShellChromeCommands = {
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
+  onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
   onExportProjectSnapshot: () => void;
   onImportProjectSnapshotFile: (file: File) => void;
   onReloadLatestDraft: () => void;

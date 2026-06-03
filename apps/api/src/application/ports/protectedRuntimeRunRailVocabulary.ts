@@ -31,7 +31,7 @@ export const PROTECTED_RUNTIME_RUN_RAIL = {
   getRunStatus: {
     name: 'GetRunStatus',
     boundedContext: 'Runtime read model',
-    dddObject: 'Run status read model',
+    dddObject: 'Run status and diagnostics read model',
     applicationPort: 'GetRunStatusUseCase',
     adapterSurface: 'GET /runs/:runId',
     scopeAndAuthorization: 'run:view, tenant scope',

@@ -21,6 +21,7 @@ import type {
   CanvasShellProps,
   CanvasShellToolbar,
 } from './canvasShell.types';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 const shellState = vi.hoisted(() => ({
   dbtExplorerProps: null as null | Record<string, unknown>,
@@ -68,6 +69,18 @@ type CanvasShellPropsOverrides = {
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
 };
+
+function buildPlanRunReadiness(
+  overrides?: Partial<PlanRunReadinessReadModel>
+): PlanRunReadinessReadModel {
+  return {
+    blockers: ['plan_integrity'],
+    rail: 'ObservePlanRunReadiness',
+    status: 'blocked',
+    summary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    ...overrides,
+  };
+}
 
 function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
   const defaultDraftToolbarState: CanvasDraftToolbarState = {
@@ -139,6 +152,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       canvasGridVisible: true,
       canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
       canvasSnapToGrid: false,
+      canvasEmptyStateGuideVisible: true,
       viewport: null,
       ...overrides?.graph,
     },
@@ -151,6 +165,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       canExportProjectSnapshot: true,
       canImportProjectSnapshot: true,
       planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+      planRunReadiness: buildPlanRunReadiness(),
       exclusiveOverlayMode: 'runtime',
       canUseCostOverlay: false,
       impactOverlayEnabled: false,
@@ -194,6 +209,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       onToggleGridVisible: vi.fn(),
       onGridColorChange: vi.fn(),
       onToggleSnapToGrid: vi.fn(),
+      onSetCanvasEmptyStateGuideVisible: vi.fn(),
       onExportProjectSnapshot: vi.fn(),
       onImportProjectSnapshotFile: vi.fn(),
       onReloadLatestDraft: vi.fn(),
@@ -311,7 +327,20 @@ describe('CanvasShell', () => {
     expect(chrome?.contains(hostTabStrip)).toBe(true);
     expect(chrome?.contains(workbenchTabStrip)).toBe(true);
     expect(chrome?.contains(canvasToolbar)).toBe(true);
+    expect(chrome?.getAttribute('class')).toContain('overflow-x-auto');
+    expect(chrome?.getAttribute('class')).not.toContain('flex-wrap');
     expect(canvasToolbar?.getAttribute('data-variant')).toBe('inline');
+  });
+
+  it('keeps the graph workbench at a stable minimum width instead of crushing panels on narrow viewports', async () => {
+    await act(async () => {
+      root.render(<CanvasShell {...buildProps()} />);
+    });
+
+    const shellPanelGroup = container.querySelector('[data-slot="canvas-shell-panel-group"]');
+
+    expect(shellPanelGroup).not.toBeNull();
+    expect(shellPanelGroup?.getAttribute('class')).toContain('min-w-[960px]');
   });
 
   it('keeps Canvas route commands hidden while the first canvas document is not created', async () => {

@@ -62,6 +62,42 @@ test('buildVerifyChangedPlan routes migration-only changes to the migration suit
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan avoids duplicate migration tests when the suite is already direct', () => {
+  const labels = labelsFor([
+    'scripts/planning-db-migrate.test.cjs',
+    'tools/planning-db/migrations/022_component_engineering_record_query.sql',
+  ]);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-migrate.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db:migrations'));
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan keeps mixed docs and planning DB slices targeted and deduped', () => {
+  const labels = labelsFor([
+    'docs/guides/testing-and-ci-capabilities.md',
+    'scripts/planning-db-import.cjs',
+    'scripts/planning-db-import.test.cjs',
+    'scripts/planning-db-migrate.test.cjs',
+    'tools/planning-db/migrations/053_command_query_rail_catalog.sql',
+  ]);
+
+  assert.deepEqual(labels, [...new Set(labels)]);
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-import.test.cjs').length,
+    1
+  );
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-migrate.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db:migrations'));
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
   const labels = labelsFor(['scripts/planning-db-surface-inventory-check.test.cjs']);
 
@@ -196,10 +232,59 @@ test('buildVerifyChangedPlan self-tests developer workflow verifier changes', ()
   assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
 });
 
-test('buildVerifyChangedPlan self-tests prepush verifier changes', () => {
-  const labels = labelsFor(['scripts/verify-prepush.cjs']);
+test('buildVerifyChangedPlan runs changed AI preflight tests directly', () => {
+  const labels = labelsFor(['scripts/ai-preflight.cjs']);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/ai-preflight.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan routes CI tooling modules to adjacent tests', () => {
+  const labels = labelsFor(['tools/ci/repository-command-catalog.mjs']);
+
+  assert.equal(
+    labels.filter((label) => label === 'node --test tools/ci/repository-command-catalog.test.mjs')
+      .length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:ci-tools'));
+});
+
+test('buildVerifyChangedPlan runs changed CI tooling tests directly and deduped', () => {
+  const labels = labelsFor([
+    'tools/ci/repository-command-catalog.mjs',
+    'tools/ci/repository-command-catalog.test.mjs',
+    'tools/ci/workflow-pattern-parity.test.mjs',
+  ]);
+
+  assert.deepEqual(labels, [...new Set(labels)]);
+  assert.equal(
+    labels.filter((label) => label === 'node --test tools/ci/repository-command-catalog.test.mjs')
+      .length,
+    1
+  );
+  assert.equal(
+    labels.filter((label) => label === 'node --test tools/ci/workflow-pattern-parity.test.mjs')
+      .length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:ci-tools'));
+});
+
+test('buildVerifyChangedPlan self-tests changed verifier changes without prepush verifier tests', () => {
+  const labels = labelsFor(['scripts/verify-changed.cjs']);
 
   assert.ok(labels.includes('node --test scripts/verify-changed.test.cjs'));
+  assert.ok(!labels.includes('node --test scripts/verify-prepush.test.cjs'));
+});
+
+test('buildVerifyChangedPlan self-tests prepush verifier changes without changed verifier tests', () => {
+  const labels = labelsFor(['scripts/verify-prepush.cjs']);
+
+  assert.ok(!labels.includes('node --test scripts/verify-changed.test.cjs'));
   assert.ok(labels.includes('node --test scripts/verify-prepush.test.cjs'));
 });
 
