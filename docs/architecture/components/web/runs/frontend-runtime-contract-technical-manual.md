@@ -360,6 +360,26 @@ Rules:
 4. The run detail route must provide direct navigation back to Canvas and the
    runs list so a started run is not a dead end.
 
+## Run Diagnostics Pointer Rendering Rule
+
+Caller-visible run diagnostics belong to the `GET /runs/:runId` snapshot
+authority, not to a separate dashboard route or timeline heuristic.
+
+Rules:
+
+1. `GET /runs/:runId` may carry `diagnostics` with `runId`, `planId`,
+   `planSha`, `stepId`, `attemptId`, `adapter`, `durationMs`, `status`, optional
+   `errorCode`, and trace or log pointers.
+2. `RunWorkspaceStateView` renders the Diagnostics panel only from
+   `RunSnapshot.diagnostics`.
+3. `GET /runs/:runId/events` remains chronology support. It must not be used to
+   invent diagnostic pointers, plan hashes, adapter identity, attempt identity,
+   duration, or error codes when the snapshot omits them.
+4. Trace and log pointers are provider-neutral query strings until a governed
+   observability dashboard or OTel backend link contract exists.
+5. High-cardinality diagnostic identifiers are permitted in traces and logs,
+   but not as metric labels.
+
 ## Vertical Impact Map
 
 ```mermaid

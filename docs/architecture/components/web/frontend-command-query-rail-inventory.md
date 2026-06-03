@@ -368,12 +368,15 @@ commands or queries are still needed for a mature end-to-end workflow.
 
 - Type: query.
 - Status: `implemented-api`.
-- Owner: run status read model.
+- Owner: run status and diagnostics read model.
 - Frontend surfaces:
   - `IRunsPort.getRunSnapshot`;
   - `useRunSnapshotQuery`;
   - run detail views.
 - Backend surface: `GET /runs/:runId`.
+- Runtime diagnostics: the same snapshot may carry `diagnostics` with `runId`,
+  `planId`, `planSha`, `stepId`, `attemptId`, `adapter`, `durationMs`,
+  `status`, optional `errorCode`, and trace or log pointers.
 - Naming drift: the frontend calls this a snapshot while backend vocabulary
   calls it status. The distinction should be documented where DTOs are mapped.
 

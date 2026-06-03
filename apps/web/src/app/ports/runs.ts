@@ -82,6 +82,25 @@ export type RunProvenanceChain = {
   authoring?: RunAuthoringProvenance;
 };
 
+export type RunDiagnosticPointer = {
+  kind: 'trace' | 'log';
+  label: string;
+  value: string;
+};
+
+export type RunDiagnostics = {
+  runId: string;
+  planId?: string;
+  planSha?: string;
+  stepId?: string;
+  attemptId?: string;
+  adapter?: string;
+  durationMs?: number;
+  status: UiRunStatus;
+  errorCode?: string;
+  pointers: readonly RunDiagnosticPointer[];
+};
+
 /**
  * Common fields shared between {@link RunSnapshot} and {@link RunSummaryItem},
  * keeping the snapshot DTO and its summary projection aligned without
@@ -114,6 +133,7 @@ export type RunSnapshot = RunCommonSnapshotFields & {
   materialization?: MaterializationEvidence;
   provenance?: RunProvenanceChain;
   planSummary?: RunPlanExecutionSummary;
+  diagnostics?: RunDiagnostics;
 };
 
 export type RunEventTimelinePage = {
