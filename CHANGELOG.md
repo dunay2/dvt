@@ -1,5 +1,37 @@
 # Changelog
 
+## [5.32.0](https://github.com/dunay2/dvt/compare/v5.31.0...v5.32.0) (2026-06-03)
+
+
+### Features
+
+* **api:** Expose run diagnostics pointers ([8b0f625](https://github.com/dunay2/dvt/commit/8b0f6253301ebea190cee6f03d40a5839bbab9fc))
+* **docs:** Add DB-first AI project context query ([d55142c](https://github.com/dunay2/dvt/commit/d55142c99d804722a4327b380febb3f3dbc26054))
+* **docs:** Add DB-first AI project context query ([04ff4d5](https://github.com/dunay2/dvt/commit/04ff4d5b22291ec1658f16496af7f967b687b515))
+* **planner:** Add AI creation intent rail preflight ([09f807b](https://github.com/dunay2/dvt/commit/09f807bc3b0bcad0197b07e47d55bc58945d6abf))
+* **planner:** Add DB-first command query rail catalog ([d878b5c](https://github.com/dunay2/dvt/commit/d878b5ca0e109c78f0be913289a48405ec37132b))
+* **planner:** Add DB-first command query rail catalog ([ada2471](https://github.com/dunay2/dvt/commit/ada2471e19dfbaad8419287df86f49204cc63f28))
+* **web:** Add canvas guide preference and front inventory ([cb8d568](https://github.com/dunay2/dvt/commit/cb8d568b1c0c921d3bf29f4b3a9671010a9f62b4))
+* **web:** Add DB-first workspace plugin catalog ([#1405](https://github.com/dunay2/dvt/issues/1405)) ([ca4205b](https://github.com/dunay2/dvt/commit/ca4205b836be76f3a5bc91f9cc487ee9243132e2))
+* **web:** Hard-cut cost attribution UI authority ([#1401](https://github.com/dunay2/dvt/issues/1401)) ([af07598](https://github.com/dunay2/dvt/commit/af07598aee1c04bfa3d39450dfde4423c3edeceb))
+* **web:** Prove first run live execution ([#1440](https://github.com/dunay2/dvt/issues/1440)) ([07d6a6e](https://github.com/dunay2/dvt/commit/07d6a6e1d168a5be8b2c1cae1cc27bc83287d94c))
+* **web:** Show canvas plan run readiness ([4f0ee37](https://github.com/dunay2/dvt/commit/4f0ee37e2a6664e24e1be194a3672581f00f249f))
+
+
+### Bug Fixes
+
+* **api:** Propagate run diagnostics context to observability logs ([#1441](https://github.com/dunay2/dvt/issues/1441)) ([5427309](https://github.com/dunay2/dvt/commit/542730915c2a29c1ad9d3447de718d8d6559b344))
+* **state-store:** Redact sensitive archive payload fields ([#1439](https://github.com/dunay2/dvt/issues/1439)) ([7855067](https://github.com/dunay2/dvt/commit/7855067cb7debc60f524a3d4551c3471fa8b057c))
+* **web:** Improve canvas authoring usability ([c469e86](https://github.com/dunay2/dvt/commit/c469e864ea349cdf45e2edecdbbc6f4fdc77d3c0))
+* **web:** Integrate local Canvas usability work ([#1428](https://github.com/dunay2/dvt/issues/1428)) ([4b20411](https://github.com/dunay2/dvt/commit/4b2041116470a4e1d06302e66911c1ea8fc4c5fe))
+
+
+### Performance Improvements
+
+* **ci:** Defer governance reports to DB refresh ([#1422](https://github.com/dunay2/dvt/issues/1422)) ([f548a61](https://github.com/dunay2/dvt/commit/f548a619e68ca785e5560211d8fe503775f649b8))
+* **ci:** Narrow changed verifier self-tests ([1d3cf24](https://github.com/dunay2/dvt/commit/1d3cf24d85fdd66f85339ce208419e79cff0a822))
+* **ci:** Narrow changed verifier self-tests ([2864d98](https://github.com/dunay2/dvt/commit/2864d988508223ab7951ec3d4eee69c12b3c1d27))
+
 ## [5.31.0](https://github.com/dunay2/dvt/compare/v5.30.0...v5.31.0) (2026-06-01)
 
 
