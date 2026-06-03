@@ -36,9 +36,11 @@ runs, own runtime identity, or replace planner/runtime contracts.
 - The toolbar renders readiness; it does not own blocker semantics.
 - Run start is ready only when authorization admits runs, a current plan exists,
   planRef exists, persisted preview proof exists, the persisted proof matches
-  the active plan, and no runtime blocker is present.
+  the active plan, the visible graph is executable, and no runtime blocker is
+  present.
 - `plan_integrity` covers missing plan, stale plan, missing planRef,
-  preview-identity mismatch, and missing persisted preview proof.
+  preview-identity mismatch, missing persisted preview proof, and a visible
+  graph that can no longer execute.
 - `authorization_denied` covers route permission denial before any
   `IRunsPort.startRun` call.
 - `capability_mismatch` covers canvas kinds or execution strategies that cannot
@@ -54,6 +56,8 @@ runs, own runtime identity, or replace planner/runtime contracts.
 - `ready` moves to `blocked` when authorization is removed.
 - `ready` moves to `blocked` when the active plan becomes stale or loses
   persisted preview proof.
+- `ready` moves to `blocked` when the visible graph no longer satisfies the
+  execution graph validation rules.
 - `blocked` moves to `ready` after a current persisted preview aligns with the
   active plan reference and runtime blockers clear.
 - `blocked` stays `blocked` when capability mismatch, backpressure, or adapter

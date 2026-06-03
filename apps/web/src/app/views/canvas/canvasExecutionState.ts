@@ -12,6 +12,7 @@ import {
   validateTransformationGraph,
   type TransformationGraphValidationResult,
 } from './transformationGraphValidation';
+import { formatTransformationGraphValidationSummary } from './canvasCopyFormatting';
 import {
   buildDbtPlannerGraphSource,
   resolveDbtExecutionScopeNodeIds,
@@ -33,6 +34,7 @@ export type CanvasExecutionState = {
   hasPersistedPlanForRun: boolean;
   persistedPreviewIdentityMismatch: boolean;
   isCurrentPlanStale: boolean;
+  executableGraphFailureMessage: string | null;
   canPlanGraph: boolean;
   canStartRun: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
@@ -110,6 +112,15 @@ export function deriveCanvasExecutionState({
     hasPersistedPlanForRun &&
     isExecutableGraphReady &&
     !isCurrentPlanStale;
+  const executableGraphFailureMessage =
+    executionStrategy != null &&
+    executionStrategy.kind !== 'not_executable' &&
+    !isCurrentPlanStale &&
+    !isExecutableGraphReady
+      ? dbtPlannerGraphSource?.ok === false
+        ? dbtPlannerGraphSource.message
+        : formatTransformationGraphValidationSummary(transformationValidation.summaryCode)
+      : null;
   const planRunReadinessSource = observePlanRunReadiness({
     canRun,
     currentPlan,
@@ -119,8 +130,8 @@ export function deriveCanvasExecutionState({
     capabilityMismatch: executionStrategy == null || executionStrategy.kind === 'not_executable',
   });
   const planRunReadiness =
-    dbtPlannerGraphSource?.ok === false
-      ? forcePlanIntegrityBlocker(planRunReadinessSource, dbtPlannerGraphSource.message)
+    executableGraphFailureMessage != null
+      ? forcePlanIntegrityBlocker(planRunReadinessSource, executableGraphFailureMessage)
       : planRunReadinessSource;
 
   return {
@@ -128,6 +139,7 @@ export function deriveCanvasExecutionState({
     hasPersistedPlanForRun,
     persistedPreviewIdentityMismatch,
     isCurrentPlanStale,
+    executableGraphFailureMessage,
     canPlanGraph,
     canStartRun,
     planRunReadiness,

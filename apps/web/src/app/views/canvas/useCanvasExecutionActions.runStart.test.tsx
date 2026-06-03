@@ -8,6 +8,7 @@ import { canvasViewCopy } from './copy';
 import {
   buildCanonicalEdges,
   buildCanonicalNodes,
+  buildPersistedPreviewPlan,
   buildRunnableExecutionPlan,
   createPlansServiceMock,
   createRunsServiceMock,
@@ -121,6 +122,8 @@ async function renderRunStartHarness(
     runsService?: ReturnType<typeof createRunsServiceMock>;
     currentPlan?: PlanViewModel | null;
     canRun?: boolean;
+    canonicalNodes?: ReturnType<typeof buildCanonicalNodes>;
+    canonicalEdges?: ReturnType<typeof buildCanonicalEdges>;
     executionEnvironmentId?: string;
     consolePanelVisible?: boolean;
     setConsolePanelHeight?: (height: number) => void;
@@ -137,8 +140,8 @@ async function renderRunStartHarness(
     plansService: createPlansServiceMock(),
     runsService,
     currentPlan,
-    canonicalNodes: buildCanonicalNodes(),
-    canonicalEdges: buildCanonicalEdges(),
+    canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
+    canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
     canRun: args.canRun,
     executionEnvironmentId: args.executionEnvironmentId,
     consolePanelVisible: args.consolePanelVisible,
@@ -248,6 +251,31 @@ describe('useCanvasExecutionActions run start', () => {
       expectedError: scenario.expectedError,
       expectedModalState: scenario.expectedModalState,
       expectedBlocker: scenario.expectedBlocker,
+    });
+  });
+
+  it('blocks readiness and run start when a persisted plan exists but the graph is no longer executable', async () => {
+    const runsService = createRunsServiceMock();
+    const invalidGraphScenario = await renderRunStartHarness({
+      runsService,
+      currentPlan: buildPersistedPreviewPlan(),
+      canonicalNodes: buildCanonicalNodes().slice(0, 2),
+      canonicalEdges: [],
+    });
+    harness = invalidGraphScenario.harness;
+
+    expect(harness.text('can-start-run')).toBe('false');
+    expect(harness.text('plan-run-readiness-status')).toBe('blocked');
+    expect(harness.text('plan-run-readiness-blockers')).toContain('plan_integrity');
+    expect(harness.text('plan-status-summary')).toBe(
+      canvasViewCopy.transformationRequiresThreeNodesMessage
+    );
+
+    await expectRunStartBlocked({
+      runsService,
+      harness,
+      expectedError: canvasViewCopy.transformationRequiresThreeNodesMessage,
+      expectedModalState: 'false',
     });
   });
 

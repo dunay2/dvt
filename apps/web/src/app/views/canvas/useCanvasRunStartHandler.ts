@@ -19,6 +19,7 @@ type UseCanvasRunStartHandlerArgs = Pick<
   | 'shellFeedback'
   | 'toggleConsolePanel'
 > & {
+  executableGraphFailureMessage: string | null;
   hasPersistedPlanForRun: boolean;
   isCurrentPlanStale: boolean;
   setPlanModalOpen: SetPlanModalOpen;
@@ -44,6 +45,7 @@ export function useCanvasRunStartHandler({
   canRun,
   consolePanelVisible,
   currentPlan,
+  executableGraphFailureMessage,
   hasPersistedPlanForRun,
   isCurrentPlanStale,
   onRunStarted,
@@ -58,6 +60,7 @@ export function useCanvasRunStartHandler({
     const result = await executeCanvasRunStartAction({
       canRun,
       currentPlan,
+      executableGraphFailureMessage,
       hasPersistedPlanForRun,
       isCurrentPlanStale,
       runsService,
@@ -85,6 +88,7 @@ export function useCanvasRunStartHandler({
     canRun,
     consolePanelVisible,
     currentPlan,
+    executableGraphFailureMessage,
     hasPersistedPlanForRun,
     isCurrentPlanStale,
     onRunStarted,
