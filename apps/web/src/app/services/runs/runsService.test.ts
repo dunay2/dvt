@@ -386,6 +386,69 @@ describe('runsService runtime contract', () => {
     });
   });
 
+  it('maps run diagnostics from GET /runs/:runId', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      runId: 'run_with_diagnostics',
+      status: 'FAILED',
+      startedAt: '2026-04-04T00:00:00.000Z',
+      completedAt: '2026-04-04T00:00:10.000Z',
+      diagnostics: {
+        runId: 'run_with_diagnostics',
+        planId: 'plan_123',
+        planSha: 'a'.repeat(64),
+        stepId: 'step-load',
+        attemptId: '2',
+        adapter: 'temporal',
+        durationMs: 10000,
+        status: 'FAILED',
+        errorCode: 'SINK_WRITE_FAILED',
+        pointers: [
+          {
+            kind: 'trace',
+            label: 'Trace query',
+            value: 'runId=run_with_diagnostics planId=plan_123 stepId=step-load attemptId=2',
+          },
+          {
+            kind: 'log',
+            label: 'Log query',
+            value: 'runId=run_with_diagnostics planSha=aaaaaaaa',
+          },
+        ],
+      },
+    });
+
+    const service = createRunsService(apiClient);
+    const snapshot = await service.getRunSnapshot('run_with_diagnostics');
+
+    expect(snapshot).toMatchObject({
+      runId: 'run_with_diagnostics',
+      diagnostics: {
+        runId: 'run_with_diagnostics',
+        planId: 'plan_123',
+        planSha: 'a'.repeat(64),
+        stepId: 'step-load',
+        attemptId: '2',
+        adapter: 'temporal',
+        durationMs: 10000,
+        status: 'failed',
+        errorCode: 'SINK_WRITE_FAILED',
+        pointers: [
+          {
+            kind: 'trace',
+            label: 'Trace query',
+            value: 'runId=run_with_diagnostics planId=plan_123 stepId=step-load attemptId=2',
+          },
+          {
+            kind: 'log',
+            label: 'Log query',
+            value: 'runId=run_with_diagnostics planSha=aaaaaaaa',
+          },
+        ],
+      },
+    });
+  });
+
   it('maps listRunEvents from runtime events result items and nextCursor', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.getJson).mockResolvedValue({

@@ -627,6 +627,7 @@ module.exports = {
   resolveDatabaseUrl,
   shouldBootstrapLocalPostgres,
   buildApiEnv,
+  buildLocalDbtArtifactEnv,
   buildCoordinatedTemporalWorkerEnv,
   buildTemporalWorkerEnv,
   shouldBootstrapLocalTemporal,

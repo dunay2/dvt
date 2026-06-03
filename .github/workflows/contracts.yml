@@ -8,6 +8,7 @@ name: Contracts & Determinism
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
   push:
     branches: [main]
   workflow_dispatch:
@@ -32,6 +33,7 @@ jobs:
   detect-changes:
     name: Detect contracts/determinism scope
     runs-on: ubuntu-latest
+    if: "!(github.event_name == 'pull_request' && github.event.pull_request.draft)"
     outputs:
       contracts_relevant: ${{ steps.scope.outputs.contracts_relevant }}
       determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}

@@ -33,6 +33,8 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
   'pnpm qa:artifact:check',
   'pnpm arch:deps',
 ];
+const DRAFT_AWARE_PR_TYPES =
+  'types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]';
 
 function assertWorkflowContains(workflow, snippet) {
   assert.ok(workflow.includes(snippet), `workflow must include: ${snippet}`);
@@ -188,6 +190,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     ciWorkflow,
     'changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}'
   );
+  assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.security_analysis_relevant');
   assertWorkflowContains(ciWorkflow, 'ci_tool_executable_contracts_relevant:');
   assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.ci_tool_executable_contracts_relevant');
   assertWorkflowContains(
@@ -215,6 +218,7 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     generated_status_relevant: workflowScopePolicy.generated_status_relevant,
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
     changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
+    security_analysis_relevant: workflowScopePolicy.security_analysis_relevant,
     ci_tool_executable_contracts_relevant:
       workflowScopePolicy.ci_tool_executable_contracts_relevant,
   });
@@ -248,6 +252,8 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
 test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
+  assertWorkflowContains(testWorkflow, DRAFT_AWARE_PR_TYPES);
+  assertWorkflowContains(testWorkflow, 'github.event.pull_request.draft');
   assert.equal(countWorkflowCommand(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test'), 1);
   assert.equal(
     countWorkflowCommand(
@@ -277,6 +283,20 @@ test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
   ]) {
     assertWorkflowContains(testWorkflow, predicate);
   }
+});
+
+test('draft-skipped PR workflows re-evaluate gates when reviewability changes', () => {
+  const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const codeql = readFileSync('.github/workflows/codeql.yml', 'utf8');
+  const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
+
+  for (const workflow of [contractsWorkflow, prQualityGate, codeql, dependencyReview]) {
+    assertWorkflowContains(workflow, DRAFT_AWARE_PR_TYPES);
+    assertWorkflowContains(workflow, 'github.event.pull_request.draft');
+  }
+
+  assertWorkflowContains(contractsWorkflow, 'name: Detect contracts/determinism scope');
 });
 
 test('engine coverage scope is a semantic superset of engine workspace policy', () => {
@@ -398,6 +418,14 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   assertWorkflowContains(codeql, 'javascript-typescript');
   assertWorkflowContains(codeql, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
   assertWorkflowContains(codeql, "github.event.repository.visibility == 'public'");
+  assertWorkflowContains(codeql, 'name: Detect security analysis scope');
+  assertWorkflowContains(codeql, 'node tools/ci/emit-scope.mjs --mode workflow');
+  assertWorkflowContains(codeql, 'security_analysis_relevant:');
+  assertWorkflowContains(
+    codeql,
+    "needs.detect-security-scope.outputs.security_analysis_relevant == 'true'"
+  );
+  assert.doesNotMatch(codeql, /paths-ignore/u);
 
   assertWorkflowContains(nightly, 'issues: write');
   assertWorkflowContains(nightly, 'name: Notify nightly failure');

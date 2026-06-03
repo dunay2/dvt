@@ -34,6 +34,7 @@ function readWorkflowScopePolicy() {
     'generated_status_relevant',
     'generated_capability_relevant',
     'changed_file_validation_relevant',
+    'security_analysis_relevant',
     'ci_tool_executable_contracts_relevant',
     'workspace_global',
     'workspace_api',
@@ -98,6 +99,7 @@ export const WORKFLOW_SCOPE_PATTERNS = {
   generated_status_relevant: WORKFLOW_SCOPE_POLICY.generated_status_relevant,
   generated_capability_relevant: WORKFLOW_SCOPE_POLICY.generated_capability_relevant,
   changed_file_validation_relevant: WORKFLOW_SCOPE_POLICY.changed_file_validation_relevant,
+  security_analysis_relevant: WORKFLOW_SCOPE_POLICY.security_analysis_relevant,
   ci_tool_executable_contracts_relevant:
     WORKFLOW_SCOPE_POLICY.ci_tool_executable_contracts_relevant,
 };
@@ -715,6 +717,13 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   return {
     ...scope,
     ...repositoryValidationScope,
+    security_analysis_relevant: Boolean(
+      scope.security_analysis_relevant ||
+      packageJsonChange?.dependencySensitive ||
+      packageJsonChange?.lifecycleSensitive ||
+      packageJsonChange?.rootBuildSensitive ||
+      packageJsonChange?.ciToolingSensitive
+    ),
     ci_tool_executable_contracts_relevant: Boolean(
       scope.ci_tool_executable_contracts_relevant ||
       packageJsonChange?.dependencySensitive ||

@@ -48,6 +48,7 @@ jobs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       docs_changed: ${{ steps.scope.outputs.docs_changed }}
       changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}
+      security_analysis_relevant: ${{ steps.scope.outputs.security_analysis_relevant }}
       ci_tool_executable_contracts_relevant:
         ${{ steps.scope.outputs.ci_tool_executable_contracts_relevant }}
     steps:

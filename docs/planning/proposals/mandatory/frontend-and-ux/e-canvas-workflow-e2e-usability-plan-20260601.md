@@ -293,15 +293,24 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
+  - docs/architecture/components/engine/ops/observability.md
   - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+  - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
   - docs/evidence/**
   - docs/risk-register/quality/**
   - apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts
   - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
+  - apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts
   - apps/api/src/application/ports/runtime.ts
   - apps/api/src/application/services/getRunStatusUseCase.ts
   - apps/api/src/application/services/runReadEvidenceModel.ts
   - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - packages/@dvt/observability/src/contracts/ObservabilityContext.ts
+  - packages/@dvt/observability/src/policy/cardinalityPolicy.ts
+  - packages/@dvt/observability/test/cardinalityPolicy.test.ts
+  - packages/@dvt/observability-otel/README.md
+  - packages/@dvt/observability-otel/src/OtelObservability.ts
+  - packages/@dvt/observability-otel/test/OtelObservability.test.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.schema-manager.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
@@ -317,6 +326,8 @@ allowedImplementationSurfaces:
   - scripts/run-dev-stack.auth.test.cjs
   - scripts/run-dev-stack.temporal.cjs
   - scripts/run-dev-stack.test.cjs
+  - scripts/run-selected-closure-live-proof.cjs
+  - scripts/run-selected-closure-live-proof.test.cjs
   - apps/web/src/app/views/canvas/**
   - apps/web/src/app/views/CodeView.tsx
   - apps/web/src/app/views/CodeView.test.tsx
@@ -617,9 +628,19 @@ redGreenCycles:
     redTest: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts && pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
     expectedFailure: Completed run detail cannot show source/sink plan scope or direct return actions from persisted run read evidence.
     patchSurfaces:
+      - docs/architecture/components/engine/ops/observability.md
+      - docs/architecture/components/web/runs/frontend-backend-mvp-contract.md
+      - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+      - apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts
       - apps/api/src/application/ports/runtime.ts
       - apps/api/src/application/services/runReadEvidenceModel.ts
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
+      - packages/@dvt/observability/src/contracts/ObservabilityContext.ts
+      - packages/@dvt/observability/src/policy/cardinalityPolicy.ts
+      - packages/@dvt/observability/test/cardinalityPolicy.test.ts
+      - packages/@dvt/observability-otel/README.md
+      - packages/@dvt/observability-otel/src/OtelObservability.ts
+      - packages/@dvt/observability-otel/test/OtelObservability.test.ts
       - apps/web/src/app/ports/runs.ts
       - apps/web/src/app/services/runs/runsApiDecoders.ts
       - apps/web/src/app/services/runs/runsApiSnapshotMapper.ts
@@ -780,6 +801,87 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: RunDiagnosticPointer
+    path: apps/api/src/application/ports/runtime.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Trace and log pointers must be explicit runtime DTOs, not strings inferred by the view.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: RunDiagnostics
+    path: apps/api/src/application/ports/runtime.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run diagnostics must carry run, plan, step, adapter, duration, status, and error evidence together.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: OtelObservability.withContext
+    path: packages/@dvt/observability-otel/src/OtelObservability.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Structured runtime logs inherit active run diagnostic context unless the log entry provides an explicit context.]
+    architectureGuard: pnpm --filter @dvt/observability-otel test
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - packages/@dvt/observability-otel/test/OtelObservability.test.ts
+  - name: deriveDiagnostics
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Runtime diagnostics must be projected from persisted run evidence instead of frontend timeline guesses.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: deriveDurationMs
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run duration must be computed once at the read-model boundary.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: deriveLatestEventString
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Step, attempt, and error evidence must be extracted by named read-model helpers.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: deriveLatestStepId
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Step diagnostics must prefer persisted snapshot step evidence before falling back to events.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: formatDiagnosticPointer
+    path: apps/api/src/application/services/runReadEvidenceModel.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Trace and log pointers must stay provider-neutral until a concrete observability backend is configured.]
+    architectureGuard: pnpm --filter dvt-api test -- test/application/services/getRunStatusUseCase.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/api/test/application/services/getRunStatusUseCase.test.ts
+  - name: DEFAULT_FORBIDDEN
+    path: packages/@dvt/observability/src/policy/cardinalityPolicy.ts
+    dddOwner: ObservabilityCardinalityPolicy
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [High-cardinality plan and run identifiers must stay out of metrics labels.]
+    architectureGuard: pnpm --filter @dvt/observability test
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - packages/@dvt/observability/test/cardinalityPolicy.test.ts
   - name: RunPlanExecutionSummary
     path: apps/web/src/app/ports/runs.ts
     dddOwner: RunPlanExecutionScope
@@ -808,6 +910,62 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/web/src/app/services/runs/runsService.test.ts
+  - name: RunDiagnosticPointer
+    path: apps/web/src/app/ports/runs.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [The frontend runtime port must carry trace and log pointers without view-side reconstruction.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/views/runs/RunStates.test.tsx
+  - name: RunDiagnostics
+    path: apps/web/src/app/ports/runs.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run Detail must consume a cohesive diagnostics read model instead of separate ambient values.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+      - apps/web/src/app/views/runs/RunStates.test.tsx
+  - name: parseRunDiagnosticPointer
+    path: apps/web/src/app/services/runs/runsApiDecoders.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Malformed diagnostics pointers must be rejected at the API decoder boundary.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+  - name: parseRunDiagnosticPointers
+    path: apps/web/src/app/services/runs/runsApiDecoders.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run diagnostics must expose at least one usable trace or log pointer before rendering.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+  - name: parseRunDiagnostics
+    path: apps/web/src/app/services/runs/runsApiDecoders.ts
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run diagnostics must decode from the governed snapshot read model before entering the UI.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/services/runs/runsService.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/services/runs/runsService.test.ts
+  - name: RunDiagnosticsCard
+    path: apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
+    dddOwner: RunDiagnosticsReadModel
+    cqRails: [GetRunSnapshot]
+    fowlerSignals: [Run Detail must show trace and log pointers near persisted runtime evidence.]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/runs/RunStates.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/runs/RunStates.test.tsx
   - name: formatRunScopeList
     path: apps/web/src/app/views/runs/RunWorkspaceStateView.tsx
     dddOwner: RunPlanExecutionScope
@@ -1312,6 +1470,222 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - scripts/run-dev-stack.test.cjs
+  - name: allocateFreePort
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must avoid hidden port coupling.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: buildTemporalCliStartDevArgs
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must be hermetic and not inherit operator CLI config.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: resolveTemporalCliExecutable
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must not depend on SDK native dev-server spawn on Windows.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: startTemporalCliDevServer
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must use an owned process lifecycle.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: terminateTemporalCliProcess
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must cleanly own child process teardown.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: waitForTcpPort
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal readiness must be a real port probe, not process-spawn optimism.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: TEMPORAL_CLI_CACHE_PREFIX
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must locate the SDK-managed CLI deterministically.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: TEMPORAL_CLI_ENV_PATH
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal bootstrap must allow an explicit operator-owned CLI override.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: TEMPORAL_CLI_POLL_INTERVAL_MS
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Temporal readiness polling must be explicit instead of hidden behind arbitrary sleeps.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: TEMPORAL_CLI_READY_TIMEOUT_MS
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Temporal readiness timeout belongs to the local runtime composition seam.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: fs
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local Temporal CLI discovery must inspect filesystem candidates explicitly.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: net
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Temporal readiness must probe TCP availability through the local runtime boundary.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: os
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Temporal CLI cache lookup must be scoped to the host temp directory.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: startLocalTemporalService
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: TemporalWorkerStepCapability
+    cqRails: [StartRun]
+    fowlerSignals: [Local protected runtime startup must expose one owned Temporal service seam.]
+    architectureGuard: node --test scripts/run-dev-stack.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-dev-stack.test.cjs
+  - name: SELECTED_CLOSURE_LIVE_PROOF_ROOT
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan, StartRun, GetRunSnapshot]
+    fowlerSignals: [Selected closure proof state must live in an explicit local proof root.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: buildLiveProofApiEnv
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Live proof API posture must compose real workspace files, catalog, and Temporal rails.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: buildLiveProofTemporalEnvOverrides
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [StartRun]
+    fowlerSignals: [Live proof Temporal overrides must be derived at the orchestration boundary.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: buildLiveProofTemporalOptions
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [StartRun]
+    fowlerSignals: [Live proof Temporal namespace and queue options must share one source of truth.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: buildLiveProofTemporalWorkerEnv
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [StartRun]
+    fowlerSignals: [Live proof worker posture must derive from the same API runtime contract.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: readNonEmptyEnv
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, StartRun]
+    fowlerSignals: [Live proof environment defaults must distinguish absent values from empty overrides.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: resolveLiveProofWorkspaceFilesRoot
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources]
+    fowlerSignals: [Workspace catalog discovery must use an explicit filesystem root.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: seedSelectedClosureLocalWarehouseProof
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, StartRun]
+    fowlerSignals: [Selected closure proof must seed real source tables and governed connection metadata.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: assert
+    path: scripts/run-selected-closure-live-proof.test.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, StartRun]
+    fowlerSignals: [Live proof unit assertions must guard orchestration environment invariants.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
+  - name: test
+    path: scripts/run-selected-closure-live-proof.test.cjs
+    dddOwner: SelectedClosureLiveProofStack
+    cqRails: [ImportWarehouseSources, StartRun]
+    fowlerSignals: [Live proof orchestration tests must remain first-class mechanized coverage.]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - scripts/run-selected-closure-live-proof.test.cjs
   - name: LiveMaterializationEvidence
     path: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     dddOwner: RunMaterializationEvidence

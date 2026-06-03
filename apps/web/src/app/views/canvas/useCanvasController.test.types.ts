@@ -13,6 +13,7 @@ import type {
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type OverlayDecoration = { borderColor?: string; dimmed?: boolean } | null;
 
@@ -53,6 +54,7 @@ export type CanvasHarnessState = {
   } & Record<string, unknown>;
   executionActionsResult: {
     canStartRun: boolean;
+    planRunReadiness: PlanRunReadinessReadModel;
     planStatusSummary: string;
     handlePlan: MockFn;
     handleStartRun: MockFn;

@@ -48,13 +48,34 @@ export interface RunReadEvidenceModel {
     durationMs: number;
   };
   readonly planSummary?: TransformationSqlFirstPlanSummary;
+  readonly diagnostics?: {
+    readonly runId: string;
+    readonly planId?: string;
+    readonly planSha?: string;
+    readonly stepId?: string;
+    readonly attemptId?: string;
+    readonly adapter?: string;
+    readonly durationMs?: number;
+    readonly status: CanonicalRunStatus['status'];
+    readonly errorCode?: string;
+    readonly pointers: ReadonlyArray<{
+      readonly kind: 'trace' | 'log';
+      readonly label: string;
+      readonly value: string;
+    }>;
+  };
 }
 
 export function deriveRunReadEvidenceModel(args: {
-  snapshot: Pick<CanonicalRunStatus, 'status' | 'execution'>;
+  snapshot: Pick<
+    CanonicalRunStatus,
+    'runId' | 'status' | 'execution' | 'startedAt' | 'completedAt'
+  >;
   workflowSnapshot: WorkflowSnapshot | null;
   events?: ReadonlyArray<EventEnvelope>;
   planRecord?: PlanRecord;
+  planId?: string;
+  runtimeAdapter?: string;
 }): RunReadEvidenceModel {
   const currentAttemptEvents = selectLatestLogicalAttemptEvents(args.events ?? []);
   const planExtra = readPlanObservabilityExtra(args.planRecord);
@@ -81,6 +102,18 @@ export function deriveRunReadEvidenceModel(args: {
     args.snapshot.execution
   );
   const planSummary = derivePlanSummary(args.planRecord);
+  const diagnostics = deriveDiagnostics({
+    snapshot: args.snapshot,
+    currentAttemptEvents,
+    ...(args.planId === undefined ? {} : { planId: args.planId }),
+    ...(args.planRecord === undefined ? {} : { planRecord: args.planRecord }),
+    ...(args.runtimeAdapter === undefined ? {} : { runtimeAdapter: args.runtimeAdapter }),
+    ...(executor === undefined ? {} : { executor }),
+    ...(currentStepId === undefined ? {} : { currentStepId }),
+    ...(failedStepId === undefined ? {} : { failedStepId }),
+    ...(errorReason === undefined ? {} : { errorReason }),
+    ...(materialization === undefined ? {} : { materialization }),
+  });
 
   return {
     ...(executor === undefined ? {} : { executor }),
@@ -90,6 +123,7 @@ export function deriveRunReadEvidenceModel(args: {
     ...(provenance === undefined ? {} : { provenance }),
     ...(materialization === undefined ? {} : { materialization }),
     ...(planSummary === undefined ? {} : { planSummary }),
+    ...(diagnostics === undefined ? {} : { diagnostics }),
   };
 }
 
@@ -281,6 +315,78 @@ function deriveMaterialization(
   return undefined;
 }
 
+function deriveDiagnostics(args: {
+  snapshot: Pick<
+    CanonicalRunStatus,
+    'runId' | 'status' | 'execution' | 'startedAt' | 'completedAt'
+  >;
+  currentAttemptEvents: ReadonlyArray<EventEnvelope>;
+  planId?: string;
+  planRecord?: PlanRecord;
+  runtimeAdapter?: string;
+  executor?: TransformationExecutor;
+  currentStepId?: string;
+  failedStepId?: string;
+  errorReason?: string;
+  materialization?: MaterializationEvidence;
+}): RunReadEvidenceModel['diagnostics'] {
+  const runId = readNonBlankString(args.snapshot.runId);
+  if (runId === undefined) {
+    return undefined;
+  }
+
+  const planId =
+    readNonBlankString(args.planId) ??
+    readNonBlankString(args.planRecord?.planId) ??
+    deriveLatestEventString(args.currentAttemptEvents, 'planId');
+  const planSha = readNonBlankString(args.planRecord?.canonicalHash);
+  const stepId =
+    args.failedStepId ??
+    args.currentStepId ??
+    readNonBlankString(args.snapshot.execution?.failure?.stepId) ??
+    readNonBlankString(args.snapshot.execution?.activeStepId) ??
+    deriveLatestStepId(args.currentAttemptEvents);
+  const attemptId = deriveLatestLogicalAttemptId(args.currentAttemptEvents)?.toString();
+  const adapter = readNonBlankString(args.runtimeAdapter) ?? args.executor;
+  const durationMs =
+    deriveDurationMs(args.snapshot.startedAt, args.snapshot.completedAt) ??
+    args.materialization?.durationMs;
+  const errorCode = args.snapshot.status === 'FAILED' ? args.errorReason : undefined;
+  const pointerFields = {
+    runId,
+    planId,
+    planSha,
+    stepId,
+    attemptId,
+    adapter,
+    status: args.snapshot.status,
+  };
+
+  return {
+    runId,
+    ...(planId === undefined ? {} : { planId }),
+    ...(planSha === undefined ? {} : { planSha }),
+    ...(stepId === undefined ? {} : { stepId }),
+    ...(attemptId === undefined ? {} : { attemptId }),
+    ...(adapter === undefined ? {} : { adapter }),
+    ...(durationMs === undefined ? {} : { durationMs }),
+    status: args.snapshot.status,
+    ...(errorCode === undefined ? {} : { errorCode }),
+    pointers: [
+      {
+        kind: 'trace',
+        label: 'Trace query',
+        value: formatDiagnosticPointer('trace', pointerFields),
+      },
+      {
+        kind: 'log',
+        label: 'Log query',
+        value: formatDiagnosticPointer('logs', pointerFields),
+      },
+    ],
+  };
+}
+
 function selectLatestLogicalAttemptEvents(
   events: ReadonlyArray<EventEnvelope>
 ): ReadonlyArray<EventEnvelope> {
@@ -307,6 +413,52 @@ function deriveLatestLogicalAttemptId(events: ReadonlyArray<EventEnvelope>): num
   }
 
   return latestLogicalAttemptId;
+}
+
+function deriveLatestStepId(events: ReadonlyArray<EventEnvelope>): string | undefined {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const stepId = readNonBlankString(events[index]?.stepId);
+    if (stepId !== undefined) {
+      return stepId;
+    }
+  }
+
+  return undefined;
+}
+
+function deriveLatestEventString(
+  events: ReadonlyArray<EventEnvelope>,
+  field: keyof EventEnvelope
+): string | undefined {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const value = readNonBlankString(events[index]?.[field]);
+    if (value !== undefined) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function deriveDurationMs(startedAt: string | undefined, completedAt: string | undefined) {
+  const startedEpoch = startedAt ? Date.parse(startedAt) : NaN;
+  const completedEpoch = completedAt ? Date.parse(completedAt) : NaN;
+  if (!Number.isFinite(startedEpoch) || !Number.isFinite(completedEpoch)) {
+    return undefined;
+  }
+
+  const durationMs = completedEpoch - startedEpoch;
+  return durationMs >= 0 ? durationMs : undefined;
+}
+
+function formatDiagnosticPointer(
+  prefix: 'trace' | 'logs',
+  fields: Readonly<Record<string, string | undefined>>
+): string {
+  const pairs = Object.entries(fields)
+    .filter((entry): entry is [string, string] => entry[1] !== undefined)
+    .map(([key, value]) => `${key}=${value}`);
+  return `${prefix} ${pairs.join(' ')}`;
 }
 
 function deriveRunningStepFromSnapshot(

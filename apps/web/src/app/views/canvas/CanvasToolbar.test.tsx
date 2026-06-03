@@ -14,6 +14,7 @@ import { useCanvasViewMenuContributionStore } from './canvasViewMenuContribution
 import type { CanvasViewMenuContribution } from './canvasViewMenuContributionStore';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 const nodeKinds: readonly NodeKindRegistration[] = [
   {
@@ -73,6 +74,7 @@ function buildToolbarProps(
     canImportProjectSnapshot: true,
     canStartRun: false,
     planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    planRunReadiness: buildPlanRunReadiness(),
     canvasAuthoringMode: 'transformation',
     exclusiveOverlayMode: 'runtime',
     canUseCostOverlay: true,
@@ -85,6 +87,18 @@ function buildToolbarProps(
     transformationValidation: buildValidationResult(),
     nodeCount: 3,
     edgeCount: 2,
+    ...overrides,
+  };
+}
+
+function buildPlanRunReadiness(
+  overrides?: Partial<PlanRunReadinessReadModel>
+): PlanRunReadinessReadModel {
+  return {
+    blockers: ['plan_integrity'],
+    rail: 'ObservePlanRunReadiness',
+    status: 'blocked',
+    summary: canvasViewCopy.planStatusPreviewRequiredMessage,
     ...overrides,
   };
 }
@@ -170,6 +184,7 @@ describe('CanvasToolbar', () => {
     });
 
     expect(container.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-slot="plan-run-readiness-panel"]')).toHaveLength(1);
     expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarLayoutLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarImpactLabel);
@@ -321,7 +336,9 @@ describe('CanvasToolbar', () => {
     const search = document.body.querySelector<HTMLInputElement>(
       '[data-slot="canvas-add-node-palette-search"]'
     );
-    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).not.toBeNull();
+    const palette = document.body.querySelector('[data-slot="canvas-add-node-palette"]');
+    expect(palette).not.toBeNull();
+    expect(palette?.parentElement).toBe(document.body);
 
     await act(async () => {
       search?.focus();

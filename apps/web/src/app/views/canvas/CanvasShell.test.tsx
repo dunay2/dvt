@@ -21,6 +21,7 @@ import type {
   CanvasShellProps,
   CanvasShellToolbar,
 } from './canvasShell.types';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 const shellState = vi.hoisted(() => ({
   dbtExplorerProps: null as null | Record<string, unknown>,
@@ -68,6 +69,18 @@ type CanvasShellPropsOverrides = {
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
 };
+
+function buildPlanRunReadiness(
+  overrides?: Partial<PlanRunReadinessReadModel>
+): PlanRunReadinessReadModel {
+  return {
+    blockers: ['plan_integrity'],
+    rail: 'ObservePlanRunReadiness',
+    status: 'blocked',
+    summary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    ...overrides,
+  };
+}
 
 function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
   const defaultDraftToolbarState: CanvasDraftToolbarState = {
@@ -152,6 +165,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       canExportProjectSnapshot: true,
       canImportProjectSnapshot: true,
       planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
+      planRunReadiness: buildPlanRunReadiness(),
       exclusiveOverlayMode: 'runtime',
       canUseCostOverlay: false,
       impactOverlayEnabled: false,

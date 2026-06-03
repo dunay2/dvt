@@ -223,7 +223,13 @@ Command semantics:
 - `pnpm docs:gov:manifest` regenerates the tracked compact docs inventory at `docs/.manifest.json`; use `pnpm exec tsx tools/docs/generate-docs-manifest.ts --full --stdout` for the exhaustive audit catalog.
 - `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
 - `pnpm docs:gov:generated-policy` validates the generated-doc single-writer registry, including source paths, generator commands, tracked versus untracked posture, and required generated markers.
-- `pnpm docs:governance:changed-files:check` compares `GIT_BASE...GIT_HEAD` against the current file index and accepted fingerprint baseline. Added and renamed files must be classified, modified files must carry an updated accepted fingerprint, deleted files must disappear from active indexes, and touched legacy/drift files fail until their governance state is resolved.
+- `pnpm docs:governance:changed-files:check` compares `GIT_BASE...GIT_HEAD`
+  against the current file index and accepted fingerprint baseline, falling
+  back to a direct tree diff only when shallow PR merge refs cannot provide a
+  local merge base. Added and renamed files must be classified, modified files
+  must carry an updated accepted fingerprint, deleted files must disappear from
+  active indexes, and touched legacy/drift files fail until their governance
+  state is resolved.
 - `pnpm docs:governance:coverage-report:check` regenerates the governance coverage report from the file/component indexes and fails if totals, drift, legacy, or subdivision reporting is stale.
 - `pnpm docs:governance:remediation-queue:check` regenerates the queue that turns coverage gaps into component-scoped remediation tasks and fails when that actionable plan is stale.
 - `pnpm docs:gov` now includes the docs manifest generation step, so the aggregate governance command keeps the tracked manifest current during local-friendly docs validation.
@@ -410,25 +416,40 @@ Planning-generated pages that are intentionally untracked:
   at job level when their semantic scope is false.
   Source: [`.github/workflows/test.yml`](../../.github/workflows/test.yml)
 - `Contracts & Determinism`: schema validation, determinism scan, contract
-  compile, golden validation, hash comparison.
+  compile, golden validation, hash comparison. Draft PRs keep the detector
+  closed; `ready_for_review` reopens the detector before merge, and
+  `converted_to_draft` re-evaluates the draft guard so in-flight ready-PR runs
+  are cancelled and replaced by a skipped draft posture.
   Source: [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml)
 - `PR Quality Gate`: PR metadata checks, ARC evidence checks, changed-only
   docs governance checks for ordinary pull requests, and Temporal integration.
   Global docs quality, doctor, location, and canonical checks are reserved for
-  push/manual full posture.
+  push/manual full posture. Draft PRs keep the gate closed;
+  `ready_for_review` reopens it for merge-gate validation, and
+  `converted_to_draft` re-evaluates the draft guard. ARC and ARC-doc
+  changed-file checks prefer merge-base diff semantics and fall back to direct
+  tree diff only when a shallow PR merge checkout cannot provide a local merge
+  base.
   Source: [`.github/workflows/pr-quality-gate.yml`](../../.github/workflows/pr-quality-gate.yml)
 - `Dependency Review`: pull-request dependency review with pinned action usage
   and high-severity failure policy. It runs for public repositories and for
   private repositories that set the repository variable
   `GH_ADVANCED_SECURITY_ENABLED=true`; GitHub dependency review otherwise fails
   before evaluating the dependency diff when Dependency graph/GitHub Advanced
-  Security is unavailable.
+  Security is unavailable. Draft PRs stay closed; `ready_for_review` reopens
+  the security gate, and `converted_to_draft` closes it again for draft PRs.
   Source: [`.github/workflows/dependency-review.yml`](../../.github/workflows/dependency-review.yml)
-- `CodeQL`: JavaScript/TypeScript SAST on PRs, pushes to `main`, weekly
-  schedule, and manual dispatch. It runs for public repositories and for
-  private repositories that set the repository variable
+- `CodeQL`: JavaScript/TypeScript SAST on pushes to `main`, weekly schedule,
+  manual dispatch, and pull requests with security-analysis-relevant changes.
+  The PR detector opens the heavy analysis lane for code, dependency manifests,
+  workflows, actions, scripts, tools, and root configuration; it keeps docs-only
+  and `buzon/**` analysis-only pull requests on the local/docs gates without
+  running the full CodeQL job. It runs for public repositories and for private
+  repositories that set the repository variable
   `GH_ADVANCED_SECURITY_ENABLED=true`; CodeQL otherwise fails during SARIF
-  upload when code scanning/GitHub Advanced Security is unavailable.
+  upload when code scanning/GitHub Advanced Security is unavailable. Draft PRs
+  stay closed; `ready_for_review` reopens the SAST gate, and
+  `converted_to_draft` closes it again for draft PRs.
   Source: [`.github/workflows/codeql.yml`](../../.github/workflows/codeql.yml)
 - `Adapter Postgres Integration Nightly`: scheduled adapter-postgres smoke
   coverage with GitHub issue notification on failure. Its dependency graph
@@ -528,6 +549,11 @@ Current workflow consumers:
   adapter-temporal, adapter-postgres, determinism/replay, and engine coverage
   jobs consume that detector's outputs at job level, so irrelevant PRs do not
   spend a runner on checkout, dependency setup, or repeated scope detection.
+  Draft PRs keep those heavy lanes closed, and the workflow listens for
+  `ready_for_review` so moving a draft PR to ready re-runs the detector and
+  restores affected package test coverage. It also listens for
+  `converted_to_draft` so ready-to-draft transitions cancel in-flight test
+  runs and return the workflow to the skipped draft posture.
   Its push/manual full-suite lane and PR `root_build_sensitive` fast-path both
   run `pnpm build`, so the merge gate exercises the same Turbo-backed root
   build path that local root builds now use. Non-root PR affected dependency
@@ -691,12 +717,16 @@ Current workflow consumers:
   capabilities. Private repositories must set
   `GH_ADVANCED_SECURITY_ENABLED=true` after enabling the required GitHub
   security features; without that capability, those workflows are intentionally
-  skipped instead of failing before diff analysis. The manual docs deploy
-  workflow pins the Zensical package version used to build the site, and the
-  label-bootstrap workflow uses a SHA-pinned `actions/github-script` reference
-  like the other active workflows. Remote Turbo cache is configured in tracked
-  workflows but requires repository owners to populate `TURBO_TOKEN` and
-  `TURBO_TEAM` before it can produce remote cache hits.
+  skipped instead of failing before diff analysis. CodeQL uses the repository
+  workflow-scope detector on pull requests so a one-file `buzon/**` or
+  docs-only PR does not wait for a full SAST run with no analyzable changed
+  surface; code, dependency, workflow/action, script/tool, and root-config
+  changes remain fail-closed into CodeQL. The manual docs deploy workflow pins
+  the Zensical package version used to build the site, and the label-bootstrap
+  workflow uses a SHA-pinned `actions/github-script` reference like the other
+  active workflows. Remote Turbo cache is configured in tracked workflows but
+  requires repository owners to populate `TURBO_TOKEN` and `TURBO_TEAM` before
+  it can produce remote cache hits.
 - Current branch-protection status checks are repository settings, not tracked
   YAML. Verify in GitHub settings that `CI - Code Quality`, `Test Suite`,
   `PR Quality Gate`, `Contracts & Determinism`, `Dependency Review`, and

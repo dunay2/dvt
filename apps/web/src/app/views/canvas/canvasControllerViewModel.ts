@@ -185,6 +185,7 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
     canPlanGraph: executionActions.canPlanGraph,
     canStartRun: executionActions.canStartRun && runtimePolicy.commands.canRun,
     planStatusSummary: executionActions.planStatusSummary,
+    planRunReadiness: executionActions.planRunReadiness,
     transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,

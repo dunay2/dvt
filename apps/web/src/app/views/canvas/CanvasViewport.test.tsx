@@ -545,4 +545,57 @@ describe('CanvasViewport', () => {
     ).toBe(false);
     expect(props.onEdgesChange).not.toHaveBeenCalled();
   });
+
+  it('dismisses the edge context menu when the user clicks outside the viewport', async () => {
+    const props = buildProps({
+      edges: [
+        {
+          id: 'edge-source-model',
+          source: 'source',
+          target: 'model',
+        },
+      ],
+      onEdgesChange: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const edgeContextMenu = xyflowState.lastReactFlowProps?.onEdgeContextMenu as
+      | ((event: React.MouseEvent<Element>, edge: NonNullable<typeof props.edges>[number]) => void)
+      | undefined;
+    const edge = props.edges[0];
+    if (edge == null) {
+      throw new Error('EXPECTED_TEST_EDGE');
+    }
+
+    await act(async () => {
+      edgeContextMenu?.(
+        {
+          preventDefault: vi.fn(),
+          clientX: 600,
+          clientY: 360,
+        } as unknown as React.MouseEvent<Element>,
+        edge
+      );
+    });
+
+    expect(
+      Array.from(container.querySelectorAll('button')).some((button) =>
+        button.textContent?.includes('Eliminar conexión')
+      )
+    ).toBe(true);
+
+    await act(async () => {
+      document.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    });
+
+    expect(
+      Array.from(container.querySelectorAll('button')).some((button) =>
+        button.textContent?.includes('Eliminar conexión')
+      )
+    ).toBe(false);
+    expect(props.onEdgesChange).not.toHaveBeenCalled();
+  });
 });
