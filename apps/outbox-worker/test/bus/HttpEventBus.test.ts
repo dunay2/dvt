@@ -1,11 +1,11 @@
 import { createServer } from 'node:http';
 
-import { asIsoUtcString, type EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { asIsoUtcString, type EventEnvelope } from '@dvt/contracts';
 import { describe, it, expect } from 'vitest';
 
 import { HttpEventBus } from '../../src/bus/HttpEventBus.js';
 
-function makeEvent(id: string): RunEventPersisted {
+function makeEvent(id: string): EventEnvelope {
   return {
     eventId: `evt-${id}`,
     eventType: 'RunQueued',

@@ -2,7 +2,9 @@ import { vi } from 'vitest';
 
 import * as pgPool from '../../src/db/pool.js';
 import { EmbeddedAccessDecisionService } from '../../src/infrastructure/auth/embeddedAccessDecisionService.js';
+import { EmbeddedProjectOnboardingRepository } from '../../src/infrastructure/auth/embeddedProjectOnboardingRepository.js';
 import { PostgresWorkspaceGraphDraftStore } from '../../src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
+import { EmbeddedWorkspacePluginCatalogRepository } from '../../src/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.js';
 
 import {
   BASE_APP_ENV,
@@ -25,6 +27,8 @@ type ProtectedRuntimeMigrationPatch = {
 
 export type ProtectedRuntimeMigrationCalls = {
   readonly accessDecision: number;
+  readonly projectOnboarding: number;
+  readonly workspacePluginCatalog: number;
   readonly planStore: number;
   readonly stateStore: number;
   readonly intentStore: number;
@@ -33,6 +37,9 @@ export type ProtectedRuntimeMigrationCalls = {
 
 function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
   const originalAccessDecisionMigrate = EmbeddedAccessDecisionService.prototype.migrate;
+  const originalProjectOnboardingMigrate = EmbeddedProjectOnboardingRepository.prototype.migrate;
+  const originalWorkspacePluginCatalogMigrate =
+    EmbeddedWorkspacePluginCatalogRepository.prototype.migrate;
   const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
   const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
   const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
@@ -40,6 +47,8 @@ function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
     PostgresWorkspaceGraphDraftStore.prototype.migrate;
 
   EmbeddedAccessDecisionService.prototype.migrate = async function migrate() {};
+  EmbeddedProjectOnboardingRepository.prototype.migrate = async function migrate() {};
+  EmbeddedWorkspacePluginCatalogRepository.prototype.migrate = async function migrate() {};
   PostgresPlanStore.prototype.migrate = async function migrate() {};
   PostgresStateStoreAdapter.prototype.migrate = async function migrate() {};
   PostgresStartRunIntentStore.prototype.migrate = async function migrate() {};
@@ -48,6 +57,9 @@ function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
   return {
     restore() {
       EmbeddedAccessDecisionService.prototype.migrate = originalAccessDecisionMigrate;
+      EmbeddedProjectOnboardingRepository.prototype.migrate = originalProjectOnboardingMigrate;
+      EmbeddedWorkspacePluginCatalogRepository.prototype.migrate =
+        originalWorkspacePluginCatalogMigrate;
       PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
       PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
       PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;
@@ -105,6 +117,9 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
   run: (calls: () => ProtectedRuntimeMigrationCalls) => Promise<T>
 ): Promise<T> {
   const originalAccessDecisionMigrate = EmbeddedAccessDecisionService.prototype.migrate;
+  const originalProjectOnboardingMigrate = EmbeddedProjectOnboardingRepository.prototype.migrate;
+  const originalWorkspacePluginCatalogMigrate =
+    EmbeddedWorkspacePluginCatalogRepository.prototype.migrate;
   const originalPlanStoreMigrate = PostgresPlanStore.prototype.migrate;
   const originalStateStoreMigrate = PostgresStateStoreAdapter.prototype.migrate;
   const originalIntentStoreMigrate = PostgresStartRunIntentStore.prototype.migrate;
@@ -112,6 +127,8 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
     PostgresWorkspaceGraphDraftStore.prototype.migrate;
   const calls = {
     accessDecision: 0,
+    projectOnboarding: 0,
+    workspacePluginCatalog: 0,
     planStore: 0,
     stateStore: 0,
     intentStore: 0,
@@ -120,6 +137,12 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
 
   EmbeddedAccessDecisionService.prototype.migrate = async function migrate() {
     calls.accessDecision += 1;
+  };
+  EmbeddedProjectOnboardingRepository.prototype.migrate = async function migrate() {
+    calls.projectOnboarding += 1;
+  };
+  EmbeddedWorkspacePluginCatalogRepository.prototype.migrate = async function migrate() {
+    calls.workspacePluginCatalog += 1;
   };
   PostgresPlanStore.prototype.migrate = async function migrate() {
     calls.planStore += 1;
@@ -138,6 +161,9 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
     return await run(() => ({ ...calls }));
   } finally {
     EmbeddedAccessDecisionService.prototype.migrate = originalAccessDecisionMigrate;
+    EmbeddedProjectOnboardingRepository.prototype.migrate = originalProjectOnboardingMigrate;
+    EmbeddedWorkspacePluginCatalogRepository.prototype.migrate =
+      originalWorkspacePluginCatalogMigrate;
     PostgresPlanStore.prototype.migrate = originalPlanStoreMigrate;
     PostgresStateStoreAdapter.prototype.migrate = originalStateStoreMigrate;
     PostgresStartRunIntentStore.prototype.migrate = originalIntentStoreMigrate;

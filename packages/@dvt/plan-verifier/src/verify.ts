@@ -1,6 +1,6 @@
 import { sha256Hex, utf8Encode } from './crypto.js';
 import { PlanVerifierError } from './errors.js';
-import { type PlanRuntime, verifyPlanVersionOrThrow } from './planVersion.js';
+import { type PlanRuntime, verifyPlanAdmissionOrThrow } from './planVersion.js';
 
 /**
  * Primary invariant:
@@ -24,12 +24,14 @@ export async function verifyPlanIdOrThrow(params: {
 }
 
 /**
- * Convenience wrapper: checks plan-version admission first, then planId integrity.
+ * Convenience wrapper: checks canonical plan admission first, then planId integrity.
+ * Pair compatibility is delegated to the EXECUTION_PLAN_ADMISSION_MATRIX facade.
  */
 type VerifyPlanBaseParams = {
   canonicalPlanCoreJson: string;
   planId: string;
   planVersion: string;
+  schemaVersion: string;
 };
 
 type VerifyPlanRuntimeParams = VerifyPlanBaseParams & {
@@ -37,8 +39,9 @@ type VerifyPlanRuntimeParams = VerifyPlanBaseParams & {
 };
 
 export async function verifyPlanOrThrow(params: VerifyPlanRuntimeParams): Promise<void> {
-  verifyPlanVersionOrThrow({
+  verifyPlanAdmissionOrThrow({
     planVersion: params.planVersion,
+    schemaVersion: params.schemaVersion,
     runtime: params.runtime,
   });
 

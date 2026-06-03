@@ -49,8 +49,9 @@ flowchart LR
   [Transformation Flow Delivery Plan 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md),
   [Runtime hardening, shared-kernel, and operations roadmap 2026-04-10](../proposals/mandatory/runtime-and-contracts/runtime-hardening-shared-kernel-and-operations-roadmap-20260410.md)
   Near-term target: keep the landed `TF-C2` PostgreSQL runtime vertical stable,
-  close the remaining `WE-HX` hardening waves, and carry the runtime follow-up
-  into `TF-C3` phase-2 plugin-backed dbt dispatch, while the broader
+  keep the accepted `TF-C3` plugin-backed DBT runtime path aligned with its
+  runbook and canary evidence, and close the remaining `WE-HX` hardening waves,
+  while the broader
   contract-pack reset and
   shared-kernel ownership cleanup continue under the Planner and Contracts
   lane, the delivery/runtime harness extraction (`AR-A7`) now continues from a
@@ -58,11 +59,11 @@ flowchart LR
   lineage-runtime decomposition follow-up (`AR-B5`) keeps worker parity moving
   without blurring ownership, and Conductor cleanup stays scoped as truthfulness
   debt (`AR-A8`) rather than a second-provider phase, while the first explicit
-  scale hardening cut on workflow payload shape now routes through
-  `AR-D-PLAN-POINTER` instead of remaining an unowned review recommendation,
-  and the remaining DBT built-in coupling inside `@dvt/adapter-temporal` stays
-  tracked as explicit runtime hardening debt rather than being mistaken for an
-  already-finished plugin extraction.
+  scale hardening cut on workflow payload shape is now closed through
+  `AR-D-PLAN-POINTER` with PlanRef capacity, continuation safety, DBT package
+  extraction, and semantic-fitness evidence. Remaining runtime scale work now
+  routes through retention, worker-scaling, and broader open scale tasks instead
+  of being hidden under the PlanRef payload line.
 - `API and Admission`
   Current sources: [API and Admission domain view](../domains/api-and-admission.md),
   [Transformation Flow Architecture And Contracts 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md),
@@ -74,10 +75,10 @@ flowchart LR
   [Closeout: TF-C1-B preview profile contract](../closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md)
   Near-term target: keep the now-closed preview-persist boundary truthful as
   the fixed protected ingress, build on the landed `runExecutionContext`
-  artifact wiring, the standalone `apps/temporal-worker` composition root, and
-  the adapter-owned DBT CLI host already landed under `TF-C3`, and then
-  sequence rollout acceptance and canary evidence without reopening
-  caller-profile or `PlanRef` drift or pushing DBT semantics into the kernel.
+  artifact wiring, the standalone `apps/temporal-worker` composition root, the
+  adapter-owned DBT CLI host, and the accepted DBT-enabled canary evidence under
+  `TF-C3`, without reopening caller-profile or `PlanRef` drift or pushing DBT
+  semantics into the kernel.
 - `Planner and Contracts`
   Current sources: [Planner and Contracts domain view](../domains/planner-and-contracts.md),
   [Transformation Flow Product Decisions 2026-04-05](../proposals/mandatory/runtime-and-contracts/transformation-flow-product-decisions-20260405.md),

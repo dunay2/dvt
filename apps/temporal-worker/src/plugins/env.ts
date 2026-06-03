@@ -50,6 +50,7 @@ const EnvSchema = z
     TEMPORAL_MAX_START_PAYLOAD_BYTES: z.string().optional(),
     TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: z.string().optional(),
     TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: z.string().optional(),
+    TEMPORAL_STEP_ACTIVITY_ROUTES: z.string().optional(),
     DVT_TEMPORAL_ADMIN_HOST: z.string().default('0.0.0.0'),
     DVT_TEMPORAL_ADMIN_PORT: z.coerce.number().int().min(1).max(65535).default(9468),
     DVT_TEMPORAL_DBT_ENABLED: envBoolean.default(false),

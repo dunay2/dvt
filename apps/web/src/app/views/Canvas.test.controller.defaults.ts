@@ -3,6 +3,7 @@ import { vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
 import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import type { WorkspaceScope } from '../ports/sessionContext';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
 import type { CanvasDraftAuthTransportPosture } from './canvas/canvasDraftAuthTransportPosture';
@@ -11,6 +12,7 @@ import type { CanvasController } from './Canvas.test.controller';
 
 type CanvasWorkbenchDefaultsDto = {
   dataSourceMode: CanvasController['dataSourceMode'];
+  workspaceScope: WorkspaceScope;
   isBackendCheckPending: CanvasController['isBackendCheckPending'];
   backendReady: CanvasController['backendReady'];
   backendBlockMessage: CanvasController['backendBlockMessage'];
@@ -22,12 +24,18 @@ type CanvasWorkbenchDefaultsDto = {
   canOpenSourceImport: CanvasController['canOpenSourceImport'];
   explorerNodes: CanvasController['explorerNodes'];
   inspectorNode: CanvasController['inspectorNode'];
+  inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
+  inspectorGraphEdges: CanvasController['inspectorGraphEdges'];
   canEditInspectorNode: CanvasController['canEditInspectorNode'];
   activeRunId: CanvasController['activeRunId'];
   registeredPlugins: CanvasController['registeredPlugins'];
   runtimeCapabilities: CanvasController['runtimeCapabilities'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
   canvasDocument: CanvasController['canvasDocument'];
+  canvasDocuments: CanvasController['canvasDocuments'];
+  activeCanvasId: CanvasController['activeCanvasId'];
+  executionEnvironmentOptions: CanvasController['executionEnvironmentOptions'];
+  canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   userPermissions: CanvasController['userPermissions'];
   canvasAuthoringMode: CanvasController['canvasAuthoringMode'];
   nodesWithImpact: CanvasController['nodesWithImpact'];
@@ -38,6 +46,7 @@ type CanvasWorkbenchDefaultsDto = {
   canvasGridVisible: CanvasController['canvasGridVisible'];
   canvasGridColor: CanvasController['canvasGridColor'];
   canvasSnapToGrid: CanvasController['canvasSnapToGrid'];
+  canvasEmptyStateGuideVisible: CanvasController['canvasEmptyStateGuideVisible'];
   viewport: CanvasController['viewport'];
 };
 
@@ -51,6 +60,8 @@ type CanvasDraftDefaultsDto = {
   draftFormatMeta: CanvasController['draftFormatMeta'];
   draftRecoveryReason: CanvasController['draftRecoveryReason'];
   draftToolbarState: CanvasController['draftToolbarState'];
+  canExportProjectSnapshot: CanvasController['canExportProjectSnapshot'];
+  canImportProjectSnapshot: CanvasController['canImportProjectSnapshot'];
   draftConflictRevision: CanvasController['draftConflictRevision'];
   hasStaleDraftVersion: CanvasController['hasStaleDraftVersion'];
   hasMissingRemoteDraft: CanvasController['hasMissingRemoteDraft'];
@@ -58,7 +69,9 @@ type CanvasDraftDefaultsDto = {
 };
 
 type CanvasExecutionDefaultsDto = {
+  canPlanGraph: CanvasController['canPlanGraph'];
   canStartRun: CanvasController['canStartRun'];
+  planRunReadiness: CanvasController['planRunReadiness'];
   planStatusSummary: CanvasController['planStatusSummary'];
   exclusiveOverlayMode: CanvasController['exclusiveOverlayMode'];
   canUseCostOverlay: CanvasController['canUseCostOverlay'];
@@ -101,6 +114,7 @@ function buildDefaultCanvasUserPermissions(): CanvasControllerStateDefaults['use
     canPlan: true,
     canRun: true,
     canEditEdges: true,
+    canPersistGraphDraft: true,
     canManagePlugins: false,
     canManageRBAC: false,
   };
@@ -120,6 +134,12 @@ function buildDefaultTransformationValidation(): CanvasControllerStateDefaults['
 function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
   return {
     dataSourceMode: 'api',
+    workspaceScope: {
+      tenantId: 'tenant-a',
+      projectId: 'project-orders',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    },
     isBackendCheckPending: false,
     backendReady: true,
     backendBlockMessage: null,
@@ -131,6 +151,8 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canOpenSourceImport: true,
     explorerNodes: buildDefaultCanvasExplorerNodes(),
     inspectorNode: null,
+    inspectorGraphNodes: [],
+    inspectorGraphEdges: [],
     canEditInspectorNode: true,
     activeRunId: null,
     registeredPlugins: new Set(['dbt']),
@@ -170,9 +192,20 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
       },
     ],
     canvasDocument: {
+      id: 'main-canvas',
       kind: 'transformation',
       title: 'Main canvas',
     },
+    canvasDocuments: [
+      {
+        id: 'main-canvas',
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+    ],
+    activeCanvasId: 'main-canvas',
+    executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
+    canCreateCanvasDocument: false,
     userPermissions: buildDefaultCanvasUserPermissions(),
     canvasAuthoringMode: 'transformation',
     nodesWithImpact: [],
@@ -183,6 +216,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canvasGridVisible: true,
     canvasGridColor: DEFAULT_CANVAS_GRID_COLOR,
     canvasSnapToGrid: false,
+    canvasEmptyStateGuideVisible: true,
     viewport: null,
   } satisfies CanvasWorkbenchDefaultsDto;
 }
@@ -207,6 +241,8 @@ function buildDefaultCanvasDraftState(): CanvasDraftDefaultsDto {
     draftFormatMeta: null,
     draftRecoveryReason: null,
     draftToolbarState: buildDefaultCanvasToolbarState(),
+    canExportProjectSnapshot: true,
+    canImportProjectSnapshot: true,
     draftConflictRevision: null,
     hasStaleDraftVersion: false,
     hasMissingRemoteDraft: false,
@@ -216,7 +252,14 @@ function buildDefaultCanvasDraftState(): CanvasDraftDefaultsDto {
 
 function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
   return {
+    canPlanGraph: false,
     canStartRun: false,
+    planRunReadiness: {
+      blockers: ['plan_integrity'],
+      rail: 'ObservePlanRunReadiness',
+      status: 'blocked',
+      summary: 'Preview required before running.',
+    },
     planStatusSummary: 'Preview required before running.',
     exclusiveOverlayMode: 'runtime',
     canUseCostOverlay: false,
@@ -252,6 +295,11 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleDragOver'
   | 'handleCreateAuthoringNode'
   | 'handleCreateCanvasDocument'
+  | 'handleSelectCanvasDocument'
+  | 'handleApplyCanvasDocumentPatch'
+  | 'handleDeleteCanvasDocument'
+  | 'handleExportProjectSnapshot'
+  | 'handleImportProjectSnapshotFile'
   | 'applyInspectorNodeDraft'
   | 'handleSourceImportComplete'
   | 'handleImportedNodeFocusComplete'
@@ -266,6 +314,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'setCanvasGridVisible'
   | 'setCanvasGridColor'
   | 'setCanvasSnapToGrid'
+  | 'setCanvasEmptyStateGuideVisible'
   | 'handlePlan'
   | 'handleStartRun'
   | 'reloadLatestDraft'
@@ -288,6 +337,11 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleDragOver: vi.fn(),
     handleCreateAuthoringNode: vi.fn(),
     handleCreateCanvasDocument: vi.fn(),
+    handleSelectCanvasDocument: vi.fn(),
+    handleApplyCanvasDocumentPatch: vi.fn(),
+    handleDeleteCanvasDocument: vi.fn(),
+    handleExportProjectSnapshot: vi.fn(),
+    handleImportProjectSnapshotFile: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
     handleSourceImportComplete: vi.fn(),
     importedNodeFocusIds: [],
@@ -303,6 +357,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     setCanvasGridVisible: vi.fn(),
     setCanvasGridColor: vi.fn(),
     setCanvasSnapToGrid: vi.fn(),
+    setCanvasEmptyStateGuideVisible: vi.fn(),
     handlePlan: vi.fn(),
     handleStartRun: vi.fn(),
     reloadLatestDraft: vi.fn(),

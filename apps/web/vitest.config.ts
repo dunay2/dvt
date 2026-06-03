@@ -1,10 +1,9 @@
+/**
+ * @ownedConcern Expose the compatibility Vitest config for the full web test
+ * suite without owning suite partition semantics.
+ */
 import { defineConfig } from 'vitest/config';
 
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['node_modules/**', 'dist/**'],
-  },
-});
+import { createWebVitestConfig } from './vitest.suites';
+
+export default defineConfig(createWebVitestConfig('all'));

@@ -5,6 +5,25 @@ export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
 export * from './contracts/engine/StartRunBoundary.v1.js';
+export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './contracts/engine/RunStateVocabulary.v1.js';
+export type {
+  AppendResult,
+  CompiledCodeRef,
+  StepArtifactRef,
+  EventEnvelope,
+  EventIdempotencyInput,
+  EventInput,
+  EventType,
+  ListEventsOptions,
+  ListRunsOptions,
+  ProviderRefUpdate,
+  RunBootstrapInput,
+  RunEventInput,
+  RunEventInputBase,
+  RunMetadata,
+  StepEventInput,
+  WorkflowSnapshot,
+} from './contracts/engine/RunStateVocabulary.v1.js';
 export {
   CURRENT_SIGNAL_SEMANTICS_VERSION,
   getSignalDerivedEventType,
@@ -93,6 +112,7 @@ export {
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
   WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,
   WorkspaceGraphAuthoringCanvasDocumentSchema,
+  WorkspaceGraphAuthoringCanvasWorkspaceSchema,
   WorkspaceGraphAuthoringDraftSchema,
   WorkspaceGraphAuthoringEdgeSchema,
   WorkspaceGraphAuthoringNodePositionSchema,
@@ -100,6 +120,7 @@ export {
 } from './contracts/planner/WorkspaceGraphAuthoringDraft.v1.js';
 export type {
   WorkspaceGraphAuthoringCanvasDocument,
+  WorkspaceGraphAuthoringCanvasWorkspace,
   WorkspaceGraphAuthoringDraft,
   WorkspaceGraphAuthoringEdge,
   WorkspaceGraphAuthoringEdgeRelation,
@@ -256,9 +277,9 @@ export type {
 } from './contracts/planner/PlanExecutabilityRecord.v1.js';
 export type { PlanAdmissionLink } from './contracts/planner/PlanAdmissionLink.v1.js';
 export type {
-  PlanValidationRecord,
-  PlanValidationState,
-} from './contracts/planner/PlanValidationLifecycle.v1.js';
+  StoredPlanArtifactValidationRecord,
+  StoredPlanArtifactValidationState,
+} from './contracts/planner/StoredPlanArtifactValidation.v1.js';
 export type {
   CustomPolicyMap,
   CustomPolicyNamespaceEntry,
@@ -285,22 +306,3 @@ export * from './utils/jcsCanonicalize.js';
 export * from './utils/sha256HexUtf8.js';
 export * from './utils/contractPrimitives.js';
 export * from './validation.js';
-export type {
-  AppendResult,
-  CompiledCodeRef,
-  StepArtifactRef,
-  EventEnvelope,
-  EventIdempotencyInput,
-  EventInput,
-  EventType,
-  ListEventsOptions,
-  ListRunsOptions,
-  ProviderRefUpdate,
-  RunBootstrapInput,
-  RunEventInput,
-  RunEventInputBase,
-  RunMetadata,
-  StepEventInput,
-  WorkflowSnapshot,
-} from './engine/IRunStateStore.v1.js';
-export { CURRENT_WORKFLOW_SNAPSHOT_SCHEMA_VERSION } from './engine/IRunStateStore.v1.js';

@@ -17,6 +17,7 @@ import type {
 import type { IStartRunUseCase } from '../ports/startRunUseCasePort.js';
 
 import { AuthorizeCommandScopeService } from './authorizeCommandScopeService.js';
+import { elapsedSlaSecondsSince } from './slaTiming.js';
 
 export class StartRunAuthorizedFacade {
   private static readonly NOOP_TELEMETRY: IStartRunLatencyTelemetry = {
@@ -66,7 +67,7 @@ export class StartRunAuthorizedFacade {
       outcome = mapStartRunOutcome(result);
       return result;
     } finally {
-      this.telemetry.recordStartRunLatency(Date.now() - startedAtMs, outcome);
+      this.telemetry.recordStartRunLatency(elapsedSlaSecondsSince(startedAtMs), outcome);
     }
   }
 }

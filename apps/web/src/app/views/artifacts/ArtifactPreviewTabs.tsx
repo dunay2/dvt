@@ -1,104 +1,54 @@
+/** Owned concern: render Artifacts preview tabs without owning Monaco runtime setup. */
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { MonacoCodeViewer } from '../../components/monaco/MonacoCodeViewer';
-import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { routeWorkbenchTabListClassName } from '../../components/workbench/RouteWorkbenchFrame';
-import { ArtifactPreviewUnavailableStateView } from './ArtifactsStateViews';
-import { artifactsViewCopy } from './copy';
+import { ArtifactMonacoPreviewPanel } from './ArtifactMonacoPreviewPanel';
 import type { ArtifactPreviewDocumentMap } from './constants';
-import { formatStructuredArtifactContent } from './structuredArtifactContent';
 
 type ArtifactPreviewTabsProps = {
   previewDocuments: ArtifactPreviewDocumentMap;
   panelClassName: string;
   tabTriggerClassName: string;
+  activePreviewKey?: string;
+  onActivePreviewKeyChange: (previewKey: string) => void;
 };
-
-function PreviewPane({
-  title,
-  fileName,
-  content,
-}: {
-  title: string;
-  fileName: string;
-  content: unknown;
-}) {
-  return (
-    <>
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-semibold">{title}</h3>
-        <Button variant="outline" size="sm">
-          {artifactsViewCopy.viewFullFile}
-        </Button>
-      </div>
-      <MonacoCodeViewer
-        ariaLabel={title}
-        language="json"
-        loadingLabel={`Loading ${fileName}...`}
-        path={fileName}
-        value={formatStructuredArtifactContent(content)}
-      />
-    </>
-  );
-}
 
 export function ArtifactPreviewTabs({
   previewDocuments,
   panelClassName,
   tabTriggerClassName,
+  activePreviewKey,
+  onActivePreviewKeyChange,
 }: ArtifactPreviewTabsProps) {
-  const manifestDocument = previewDocuments['manifest.json'];
-  const runResultsDocument = previewDocuments['run_results.json'];
-  const catalogDocument = previewDocuments['catalog.json'];
+  const documents = Object.entries(previewDocuments);
+  const fallbackValue = previewDocuments['manifest.json'] ? 'manifest.json' : documents[0]?.[0];
+  const activeValue =
+    activePreviewKey && previewDocuments[activePreviewKey] ? activePreviewKey : fallbackValue;
 
   return (
     <Card className={panelClassName}>
-      <Tabs defaultValue="manifest">
+      <Tabs value={activeValue} onValueChange={onActivePreviewKeyChange}>
         <TabsList className={routeWorkbenchTabListClassName}>
-          <TabsTrigger value="manifest" className={tabTriggerClassName}>
-            manifest.json
-          </TabsTrigger>
-          <TabsTrigger value="run_results" className={tabTriggerClassName}>
-            run_results.json
-          </TabsTrigger>
-          <TabsTrigger value="catalog" className={tabTriggerClassName}>
-            catalog.json
-          </TabsTrigger>
+          {documents.map(([key, document]) => (
+            <TabsTrigger key={key} value={key} className={tabTriggerClassName}>
+              {document.label ?? key}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="manifest" className="mt-4">
-          {manifestDocument ? (
-            <PreviewPane
-              title={artifactsViewCopy.previewManifest}
-              fileName="manifest.json"
-              content={manifestDocument.content}
-            />
-          ) : (
-            <ArtifactPreviewUnavailableStateView fileName="manifest.json" />
-          )}
-        </TabsContent>
-        <TabsContent value="run_results" className="mt-4">
-          {runResultsDocument ? (
-            <PreviewPane
-              title={artifactsViewCopy.previewRunResults}
-              fileName="run_results.json"
-              content={runResultsDocument.content}
-            />
-          ) : (
-            <ArtifactPreviewUnavailableStateView fileName="run_results.json" />
-          )}
-        </TabsContent>
-        <TabsContent value="catalog" className="mt-4">
-          {catalogDocument ? (
-            <PreviewPane
-              title={artifactsViewCopy.previewCatalog}
-              fileName="catalog.json"
-              content={catalogDocument.content}
-            />
-          ) : (
-            <ArtifactPreviewUnavailableStateView fileName="catalog.json" />
-          )}
-        </TabsContent>
+        {documents.map(([key, document]) => {
+          const label = document.label ?? key;
+
+          return (
+            <TabsContent key={key} value={key} className="mt-4">
+              <ArtifactMonacoPreviewPanel
+                title={document.title ?? `Preview: ${label}`}
+                fileName={label}
+                document={document}
+              />
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </Card>
   );

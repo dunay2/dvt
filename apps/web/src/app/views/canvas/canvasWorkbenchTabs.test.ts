@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildCanvasWorkbenchTabsReadModel,
-  createGraphCanvasWorkbenchTab,
+  createCanvasGraphWorkbenchTab,
 } from './canvasWorkbenchTabs';
 import { resolveCanvasViewCopy } from './copy';
 
@@ -28,7 +28,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
           label: 'Code',
           icon: FileCode2,
           order: 20,
-          scope: 'selection',
+          scope: 'workspace',
         },
       ],
       routeState: { kind: 'selected', tabId: 'code' },
@@ -44,7 +44,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
     expect(model.unavailableState).toBeNull();
   });
 
-  it('projects Stage 1 workbench tabs as text-only labels without icon render data', () => {
+  it('projects workbench tabs with Canvas-owned semantic icon names', () => {
     const model = buildCanvasWorkbenchTabsReadModel({
       placements: [
         {
@@ -54,16 +54,16 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
           label: 'Code',
           icon: FileCode2,
           order: 20,
-          scope: 'selection',
+          scope: 'workspace',
         },
       ],
       routeState: { kind: 'selected', tabId: 'graph' },
       context: { kind: 'ready' },
     });
 
-    expect(model.tabs.map((tab) => [tab.id, tab.label, tab.to])).toEqual([
-      ['graph', 'Graph', '/canvas'],
-      ['code', 'Code', '/canvas/code'],
+    expect(model.tabs.map((tab) => [tab.id, tab.label, tab.iconName, tab.to])).toEqual([
+      ['graph', 'Graph', 'graph', '/canvas'],
+      ['code', 'Code', 'code', '/canvas/code'],
     ]);
     expect(model.tabs.every((tab) => !('icon' in tab))).toBe(true);
   });
@@ -96,7 +96,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
           label: 'Diff',
           icon: FileCode2,
           order: 40,
-          scope: 'selection',
+          scope: 'workspace',
         },
         {
           kind: 'workbench-tab',
@@ -143,7 +143,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
             label: 'Code',
             icon: FileCode2,
             order: 20,
-            scope: 'selection',
+            scope: 'workspace',
           },
           {
             kind: 'workbench-tab',
@@ -152,7 +152,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
             label: 'Code duplicate',
             icon: FileCode2,
             order: 21,
-            scope: 'selection',
+            scope: 'workspace',
           },
         ],
         routeState: { kind: 'selected', tabId: 'graph' },
@@ -176,8 +176,39 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
     });
   });
 
-  it('does not enable scoped tabs before Canvas context is ready', () => {
-    const graphTab = createGraphCanvasWorkbenchTab();
+  it('keeps workspace tabs reachable before Canvas context is ready', () => {
+    const model = buildCanvasWorkbenchTabsReadModel({
+      placements: [
+        {
+          kind: 'workbench-tab',
+          workbench: 'canvas',
+          tabId: 'code',
+          label: 'Code',
+          icon: FileCode2,
+          order: 20,
+          scope: 'workspace',
+        },
+        {
+          kind: 'workbench-tab',
+          workbench: 'canvas',
+          tabId: 'runs',
+          label: 'Runs',
+          icon: GitGraph,
+          order: 60,
+          scope: 'run',
+        },
+      ],
+      routeState: { kind: 'selected', tabId: 'code' },
+      context: { kind: 'unavailable', reason: 'missing_canvas_context' },
+    });
+
+    expect(model.activeTabId).toBe('code');
+    expect(model.tabs.map((tab) => tab.id)).toEqual(['graph', 'code']);
+    expect(model.unavailableState).toBeNull();
+  });
+
+  it('does not enable non-workspace scoped tabs before Canvas context is ready', () => {
+    const graphTab = createCanvasGraphWorkbenchTab();
     const model = buildCanvasWorkbenchTabsReadModel({
       placements: [
         {

@@ -1,6 +1,5 @@
 /**
- * Owned concern: resolve configured engine provider ids against the active
- * implemented-provider vocabulary before runtime adapters are selected.
+ * @ownedConcern Resolve engine provider ids against the active adapter registry.
  *
  * @file packages/@dvt/engine/src/application/providerSelection.ts
  * @baseline ADR-0003: Execution Model Sovereignty
@@ -9,7 +8,7 @@
  * @version 1.0.0
  * @date 2026-02-21
  */
-import type { EngineRunRef } from '@dvt/contracts';
+import type { EngineRunRef, ResolvedRunContext } from '@dvt/contracts';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import { AdapterNotRegisteredError } from '../contracts/errors.js';
@@ -17,6 +16,32 @@ import { AdapterNotRegisteredError } from '../contracts/errors.js';
 type Provider = EngineRunRef['provider'];
 
 const VALID_PROVIDERS = new Set<Provider>(['temporal']);
+
+export interface IEngineProviderResolver {
+  resolve(provider: Provider): IProviderAdapter;
+  resolveContextTarget(context: Pick<ResolvedRunContext, 'targetAdapter'>): IProviderAdapter;
+  resolveProviderRef(providerRef: Pick<EngineRunRef, 'provider'>): IProviderAdapter;
+}
+
+export class MapBackedEngineProviderResolver implements IEngineProviderResolver {
+  constructor(private readonly adapters: ReadonlyMap<Provider, IProviderAdapter>) {}
+
+  resolve(provider: Provider): IProviderAdapter {
+    const adapter = this.adapters.get(provider);
+    if (!adapter) {
+      throw new AdapterNotRegisteredError(provider);
+    }
+    return adapter;
+  }
+
+  resolveContextTarget(context: Pick<ResolvedRunContext, 'targetAdapter'>): IProviderAdapter {
+    return this.resolve(context.targetAdapter);
+  }
+
+  resolveProviderRef(providerRef: Pick<EngineRunRef, 'provider'>): IProviderAdapter {
+    return this.resolve(providerRef.provider);
+  }
+}
 
 export function resolveEngineProvider(
   env: Record<string, string | undefined>,
@@ -49,21 +74,10 @@ export function pickDefaultAdapter(
   const hasEnvOverride = Boolean(env['ENGINE_PROVIDER']?.trim());
   if (hasEnvOverride) {
     const provider = resolveEngineProvider(env, fallback);
-    return getRegisteredAdapterOrThrow(adapters, provider);
+    return new MapBackedEngineProviderResolver(adapters).resolve(provider);
   }
 
   return pickFirstAvailableAdapterOrThrow(adapters, fallback);
-}
-
-function getRegisteredAdapterOrThrow(
-  adapters: Map<Provider, IProviderAdapter>,
-  provider: Provider
-): IProviderAdapter {
-  const adapter = adapters.get(provider);
-  if (!adapter) {
-    throw new AdapterNotRegisteredError(provider);
-  }
-  return adapter;
 }
 
 function pickFirstAvailableAdapterOrThrow(

@@ -69,6 +69,7 @@ Use the built-in `dbt` plugin as the reference slice for the current v1 model.
 | renderer and inspector panels  | [DbtNodeRenderer.tsx](../../../../apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx)                                           | node visuals and plugin-owned contextual panels                |
 | graph mapping and drag payload | [dbtNodeAdapter.ts](../../../../apps/web/src/app/plugins/dbt/dbtNodeAdapter.ts)                                               | plugin-native node and edge mapping into canonical shell types |
 | connection policy tests        | [dbtContributions.connectionRules.test.ts](../../../../apps/web/src/app/plugins/dbt/dbtContributions.connectionRules.test.ts) | pure coverage for dbt-local connection policy                  |
+| source import declaration      | [dbtContributions.ts](../../../../apps/web/src/app/plugins/dbt/dbtContributions.ts)                                           | plugin-owned source artifact options consumed by the shell     |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -91,6 +92,7 @@ route shell-facing composition only through `registry.ts`.
 | `connectionRules`       | `PluginConnectionRule` in [PluginManifest.ts](../../../../apps/web/src/app/plugins/contracts/PluginManifest.ts)       | intra-plugin edge constraints                           | shell graph invariants still run first                                 |
 | `produces` / `consumes` | `PluginDataPort` in [PluginManifest.ts](../../../../apps/web/src/app/plugins/contracts/PluginManifest.ts)             | cross-plugin bridge declarations                        | use these only for cross-plugin data compatibility                     |
 | `runAdapter`            | inline shape in [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)                                       | mapping plugin-native run data into `CanonicalRun`      | keep the shell-facing run shape canonical                              |
+| `sourceImport`          | inline shape in [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)                                       | plugin-owned import artifact options                    | shell enables only runtime-available plugin declarations               |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -131,6 +133,8 @@ Decision rule by surface:
 - new run normalization: change `runAdapter` and test canonical projection
 - new cross-plugin data bridge: change `produces` or `consumes` and verify the
   connection or authoring rules that depend on that declaration
+- new source import option: change `sourceImport`, keep the wizard reading via
+  registry selectors, and test runtime filtering plus the rendered option set
 
 ## Adding A New Plugin
 
@@ -158,6 +162,7 @@ Do not add alternate registration flows, lazy discovery outside `PLUGIN_REGISTRY
 | add an inspector panel   | plugin panel module and `inspectorPanels` registration                                                        | `shouldShow` coverage and panel rendering test        |
 | add data bridges         | `produces` or `consumes`, plus any graph-authoring rule that enforces compatibility                           | connection or authoring policy tests                  |
 | add run normalization    | `runAdapter` and the module that maps plugin-native payloads into `CanonicalRun`                              | canonical run mapping tests                           |
+| add source import option | plugin `sourceImport`, registry selector, source import wizard, shell runtime gate                            | registry projection, shell gate, and wizard tests     |
 | add a new global surface | `registry.ts`, relevant contract file under `contracts/`, this guide, and every plugin that must implement it | registry selector tests plus targeted plugin coverage |
 
 <!-- markdownlint-enable MD060 -->
@@ -182,6 +187,8 @@ Do not add alternate registration flows, lazy discovery outside `PLUGIN_REGISTRY
 - test `shouldShow` predicates for inspector panels
 - test renderer or panel rendering where the contribution owns visible behavior
 - keep plugin-specific run mapping covered if `runAdapter` is implemented
+- test source import contributions through registry projection and shell runtime
+  filtering when a plugin owns import artifact options
 
 ## Validation Checklist
 

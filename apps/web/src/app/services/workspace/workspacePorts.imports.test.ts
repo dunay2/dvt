@@ -4,20 +4,21 @@ import {
   createMockWorkspacePorts,
   createMockWorkspaceState,
 } from '../../../testing/workspacePortDoubles';
-import { resolveWorkspacePortCopy } from './workspacePortCopy';
+import { createApiClientHarness } from './workspaceApiClient.test.harness';
+import {
+  buildWorkspaceScope,
+  installWorkspaceScopeHarness,
+  setWorkspaceScope,
+} from './workspaceScope.test.harness';
 import { createWorkspacePorts, resolveWorkspacePortCapabilities } from './workspacePorts';
 
 describe('workspace ports source import', () => {
+  installWorkspaceScopeHarness();
+
   it('advertises API source import capability explicitly', () => {
     expect(resolveWorkspacePortCapabilities()).toEqual({
-      sourceImportAvailable: false,
+      sourceImportAvailable: true,
     });
-  });
-
-  it('keeps api-mode Spanish source import copy encoded as readable text', () => {
-    expect(resolveWorkspacePortCopy('es-ES').warehouseImportApiModeUnavailable).toBe(
-      'La importación de fuentes del warehouse no está disponible en modo API hasta que exista el endpoint del backend.'
-    );
   });
 
   it('imports selected warehouse tables into the mock workspace graph', async () => {
@@ -121,12 +122,33 @@ describe('workspace ports source import', () => {
     expect(secondAfter.nodes.some((node) => node.id === 'src_support_tickets')).toBe(true);
   });
 
-  it('fails explicitly in api mode until the backend endpoint exists', async () => {
-    const ports = createWorkspacePorts();
+  it('uses protected API mode warehouse endpoints when source import is available', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { apiClient, getJson, postJson } = createApiClientHarness({
+      getJson: async <TResponse>() =>
+        [
+          {
+            id: 'warehouse-prod',
+            name: 'Production warehouse',
+            type: 'snowflake',
+            database: 'analytics',
+          },
+        ] as TResponse,
+      postJson: async <_TRequest, TResponse>() =>
+        ({
+          success: true,
+          sourcesCreated: 0,
+          tablesImported: 0,
+          yamlFiles: [],
+          importedNodeIds: [],
+          grouping: 'schema',
+          options: { includeColumns: false, addTests: false, addFreshness: false },
+        }) as TResponse,
+    });
+    const ports = createWorkspacePorts(apiClient);
 
-    await expect(ports.warehouseSourceImport.listWarehouseConnections()).rejects.toThrow(
-      'Warehouse source import is not available in API mode'
-    );
+    await expect(ports.warehouseSourceImport.listWarehouseConnections()).resolves.toHaveLength(1);
     await expect(
       ports.warehouseSourceImport.importSources({
         connectionId: 'conn-1',
@@ -136,6 +158,13 @@ describe('workspace ports source import', () => {
         addTests: false,
         addFreshness: false,
       })
-    ).rejects.toThrow('Warehouse source import is not available in API mode');
+    ).resolves.toMatchObject({ success: true });
+    expect(getJson).toHaveBeenCalledWith(
+      `/workspace/warehouse/connections?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
+    );
+    expect(postJson).toHaveBeenCalledWith(
+      `/workspace/sources/import?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
+      expect.objectContaining({ connectionId: 'conn-1' })
+    );
   });
 });

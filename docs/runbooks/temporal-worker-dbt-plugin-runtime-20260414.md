@@ -200,6 +200,34 @@ Canary checks when DBT mode is enabled:
 4. `dvt_temporal_worker_state{state="running"} 1`
 5. `dvt_temporal_worker_error_total` stays flat during the observation window
 
+## Local Docker canary
+
+Use the local canary before claiming DBT-enabled worker readiness. It starts the
+canonical Docker Postgres proof environment, a Temporal local test service, the
+standalone worker host, the operational HTTP server, a file-backed DBT project
+bundle, and one DBT-enabled workflow.
+
+PowerShell:
+
+```powershell
+pnpm proof:temporal:postgres:reset
+$env:DVT_PG_INTEGRATION = '1'
+$env:DVT_PG_URL = 'postgresql://dvt:dvt@localhost:5432/dvt'
+$env:DATABASE_URL = 'postgresql://dvt:dvt@localhost:5432/dvt'
+pnpm --filter dvt-temporal-worker test -- test/host/runTemporalWorkerHost.test.ts
+pnpm proof:temporal:postgres:down
+```
+
+The canary asserts:
+
+- `/healthz` returns `200`
+- `/readyz` returns `200` with `state=running` and `dbtEnabled=true`
+- `dvt_temporal_worker_up`, `dvt_temporal_worker_ready`, and
+  `dvt_temporal_worker_dbt_enabled` are `1`
+- `dvt_temporal_worker_error_total` remains flat
+- DBT step invocations reach `s-1`, `s-2`, and `s-3`
+- Postgres run events reach `RunCompleted`
+
 ## First checks during incident triage
 
 1. Check `/healthz`
@@ -266,30 +294,38 @@ Most likely causes:
   then closes Postgres resources, then stops the operational server
 - shutdown failures must be treated as operational defects, not ignored
 
-## Rollout blocker (TF-C3-E)
+## Rollout acceptance evidence (TF-C3-E)
 
-The following validation steps MUST be executed against a real environment before
-this runbook can be considered production-accepted. These steps are not
-automated in CI — they require a deployed Temporal worker instance.
+TF-C3-E repository acceptance is closed by
+[`ed-20260514-temporal-worker-dbt-canary.md`](../evidence/ed-20260514-temporal-worker-dbt-canary.md).
+That evidence runs the canonical local Docker canary with DBT mode enabled,
+Docker-backed Postgres, a Temporal test service, plan-store artifacts,
+run metadata, readiness endpoints, metrics, a file-backed DBT project bundle,
+and one DBT-enabled workflow.
 
-1. **Deploy worker to staging** — start the worker with `DVT_TEMPORAL_DBT_ENABLED=true`
+The following validation steps remain the production rollout checklist for any
+deployed environment. They are operational release gates, not missing in-repo
+TF-C3-E closure:
+
+1. **Deploy worker to staging** - start the worker with `DVT_TEMPORAL_DBT_ENABLED=true`
    and valid Postgres + Temporal connection strings.
-2. **Verify `/healthz` returns `200` with `state: "running"`** — confirms the
+2. **Verify `/healthz` returns `200` with `state: "running"`** - confirms the
    operational server started and the monitor reports a running worker. A `200`
    without `state: "running"` is liveness evidence only.
-3. **Verify `/readyz` returns `200` with `dbtEnabled: true`** — confirms the DBT
+3. **Verify `/readyz` returns `200` with `dbtEnabled: true`** - confirms the DBT
    plugin profile was built and the runtime completed startup without error.
-4. **Verify `/metrics` target registers `dvt_temporal_worker_up 1`** — confirms
+4. **Verify `/metrics` target registers `dvt_temporal_worker_up 1`** - confirms
    Prometheus scrape target is live and the worker lifecycle metric is exposed.
-5. **Run one DBT-enabled plan end-to-end** — submit a plan with a DBT step via
+5. **Run one DBT-enabled plan end-to-end** - submit a plan with a DBT step via
    the Temporal workflow, confirm the activity completes and the DBT CLI process
    exits cleanly.
-6. **Confirm `dvt_temporal_worker_error_total` remains flat** — observe the
+6. **Confirm `dvt_temporal_worker_error_total` remains flat** - observe the
    counter during the test window; any increment indicates an unhandled error in
    the worker runtime.
 
-Until these steps pass, the worker path is **not production-accepted** and
-TF-C3-E remains blocked.
+Until these steps pass in a target environment, that environment is not
+production-accepted. The repository-level TF-C3-E canary and runbook acceptance
+are closed.
 
 ## Current limits
 

@@ -305,7 +305,7 @@ remains owned by `RunContext.targetAdapter`.
   "metadata": {
     "planId": "plan_123",
     "planVersion": "1.0",
-    "schemaVersion": "v1.2",
+    "schemaVersion": "1.0",
     "contractVersion": "1.0.0",
     "inputHashSha256": "abc123...",
     "createdAtIso": "2026-04-07T00:00:00.000Z"
@@ -340,7 +340,7 @@ The corresponding runtime policy is separate:
 {
   "uri": "artifact://plans/plan_123.json",
   "sha256": "abc123...",
-  "schemaVersion": "v1.2",
+  "schemaVersion": "1.0",
   "planId": "plan_123",
   "planVersion": "1.0"
 }

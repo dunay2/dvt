@@ -3,6 +3,7 @@
 const { spawn } = require('node:child_process');
 const { spawnSync } = require('node:child_process');
 const { once } = require('node:events');
+const fs = require('node:fs');
 const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
@@ -29,6 +30,12 @@ const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
 const PNPM_COMMAND = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
 const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
+const DEFAULT_LOCAL_WORKSPACE_FILES_ROOT = path.resolve(
+  __dirname,
+  '../.dvt/dev-stack/workspace-files'
+);
+const DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT = path.resolve(__dirname, '../.dvt/dev-stack/dbt-bundles');
+const LOCAL_WAREHOUSE_CATALOG_RELATIVE_PATH = path.join('.dvt', 'warehouse-connections.json');
 
 function parseArgs(argv) {
   const parsed = {
@@ -111,12 +118,14 @@ function shouldBootstrapLocalPostgres(options, env = process.env) {
 function buildApiEnv(options, env = process.env) {
   const databaseUrl = resolveDatabaseUrl(options, env);
   const temporalEnv = databaseUrl === undefined ? {} : buildTemporalApiEnv(options, env);
+  const dbtArtifactEnv = buildLocalDbtArtifactEnv(env);
 
   return {
     ...env,
     HOST: options.host,
     PORT: String(options.apiPort),
     DVT_READYZ_ENABLED: 'true',
+    ...dbtArtifactEnv,
     ...temporalEnv,
     ...(databaseUrl === undefined
       ? {}
@@ -125,6 +134,35 @@ function buildApiEnv(options, env = process.env) {
           DVT_DB_READY_ENABLED: 'true',
         }),
   };
+}
+
+function buildLocalDbtArtifactEnv(env = process.env) {
+  const configuredBundleBackend = readNonEmptyEnv(env.DVT_DBT_BUNDLE_STORE_BACKEND);
+  const configuredBundleRoot = readNonEmptyEnv(env.DVT_DBT_BUNDLE_FILE_ROOT);
+  const configuredWorkspaceRoot = readNonEmptyEnv(env.DVT_WORKSPACE_FILES_ROOT);
+
+  return {
+    DVT_DBT_BUNDLE_STORE_BACKEND: configuredBundleBackend ?? 'file',
+    DVT_DBT_BUNDLE_FILE_ROOT: configuredBundleRoot ?? DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT,
+    DVT_WORKSPACE_FILES_ROOT: configuredWorkspaceRoot ?? DEFAULT_LOCAL_WORKSPACE_FILES_ROOT,
+  };
+}
+
+function buildCoordinatedTemporalWorkerEnv(options, apiEnv, sourceEnv = process.env) {
+  const workerEnvBase = { ...apiEnv };
+  delete workerEnvBase.TEMPORAL_TASK_QUEUE;
+  const explicitWorkerTaskQueue = readNonEmptyEnv(sourceEnv.TEMPORAL_TASK_QUEUE);
+
+  return buildTemporalWorkerEnv(
+    options,
+    {
+      ...workerEnvBase,
+      ...(explicitWorkerTaskQueue === undefined
+        ? {}
+        : { TEMPORAL_TASK_QUEUE: explicitWorkerTaskQueue }),
+    },
+    apiEnv.DATABASE_URL
+  );
 }
 
 function ensureLocalPostgresReady(options, env = process.env) {
@@ -146,6 +184,92 @@ function ensureLocalPostgresReady(options, env = process.env) {
   if (result.status !== 0) {
     throw new Error(`Local Postgres bootstrap failed with exit code ${result.status}`);
   }
+}
+
+function buildLocalPostgresProofSeedSql() {
+  return `
+CREATE SCHEMA IF NOT EXISTS raw;
+
+DROP TABLE IF EXISTS public.source_1;
+CREATE TABLE public.source_1 (
+  order_id integer PRIMARY KEY,
+  customer text NOT NULL,
+  amount numeric(12, 2) NOT NULL
+);
+INSERT INTO public.source_1 (order_id, customer, amount) VALUES
+  (1, 'Ada', 125.50),
+  (2, 'Grace', 98.00),
+  (3, 'Linus', 212.75);
+
+DROP TABLE IF EXISTS raw.orders;
+CREATE TABLE raw.orders (
+  order_id integer PRIMARY KEY,
+  customer text NOT NULL,
+  amount numeric(12, 2) NOT NULL
+);
+INSERT INTO raw.orders (order_id, customer, amount) VALUES
+  (1, 'Ada', 125.50),
+  (2, 'Grace', 98.00),
+  (3, 'Linus', 212.75);
+`.trim();
+}
+
+function buildLocalWarehouseConnectionCatalog() {
+  return `${JSON.stringify(
+    {
+      connections: [
+        {
+          id: 'local-postgres',
+          name: 'Local Postgres proof',
+          type: 'postgres',
+          database: 'dvt',
+          tables: [
+            {
+              database: 'dvt',
+              schema: 'public',
+              table: 'source_1',
+              rowCount: 3,
+              columns: [
+                { name: 'order_id', type: 'integer', nullable: false },
+                { name: 'customer', type: 'text', nullable: false },
+                { name: 'amount', type: 'numeric', nullable: false },
+              ],
+            },
+            {
+              database: 'dvt',
+              schema: 'raw',
+              table: 'orders',
+              rowCount: 3,
+              columns: [
+                { name: 'order_id', type: 'integer', nullable: false },
+                { name: 'customer', type: 'text', nullable: false },
+                { name: 'amount', type: 'numeric', nullable: false },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    null,
+    2
+  )}\n`;
+}
+
+async function seedLocalPostgresProofData(databaseUrl) {
+  const { Client } = require('pg');
+  const client = new Client({ connectionString: databaseUrl });
+  await client.connect();
+  try {
+    await client.query(buildLocalPostgresProofSeedSql());
+  } finally {
+    await client.end();
+  }
+}
+
+function seedLocalWorkspaceWarehouseCatalog(workspaceFilesRoot) {
+  const catalogPath = path.join(workspaceFilesRoot, LOCAL_WAREHOUSE_CATALOG_RELATIVE_PATH);
+  fs.mkdirSync(path.dirname(catalogPath), { recursive: true });
+  fs.writeFileSync(catalogPath, buildLocalWarehouseConnectionCatalog(), 'utf8');
 }
 
 function pipePrefixedOutput(stream, prefix) {
@@ -285,6 +409,10 @@ async function closeReaders(processHandle) {
   processHandle.stderrReader.close();
 }
 
+function resolveProcessStartupOrder(apiEnv) {
+  return shouldStartTemporalWorker(apiEnv) ? ['api', 'temporal-worker', 'web'] : ['api', 'web'];
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const apiBaseUrl = `http://${options.host}:${options.apiPort}`;
@@ -327,6 +455,11 @@ async function main() {
         }
       : {}),
   });
+  if (apiEnv.DATABASE_URL && shouldBootstrapLocalPostgres(options, process.env)) {
+    console.log('[dev-stack] Seeding local Postgres proof source data');
+    await seedLocalPostgresProofData(apiEnv.DATABASE_URL);
+    seedLocalWorkspaceWarehouseCatalog(apiEnv.DVT_WORKSPACE_FILES_ROOT);
+  }
   const processHandles = [];
   let shuttingDown = false;
   const exitWatchers = [];
@@ -385,25 +518,7 @@ async function main() {
   });
 
   try {
-    if (shouldStartTemporalWorker(apiEnv)) {
-      console.log('[dev-stack] Starting Temporal worker; waiting for worker readiness');
-      const temporalWorker = trackProcess(
-        spawnProcess(
-          'temporal-worker',
-          ['--filter', 'dvt-temporal-worker', 'dev'],
-          buildTemporalWorkerEnv(options, apiEnv, apiEnv.DATABASE_URL)
-        )
-      );
-      await waitForUrlOrProcessExit(
-        apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL,
-        (response) => response.statusCode === 200,
-        options.readyTimeoutMs,
-        options.pollIntervalMs,
-        'Temporal worker readyz',
-        temporalWorker,
-        () => watchProcessExit(temporalWorker)
-      );
-    }
+    const processStartupOrder = resolveProcessStartupOrder(apiEnv);
 
     registerProcess(spawnProcess('api', ['--filter', 'dvt-api', 'dev'], apiEnv));
 
@@ -437,6 +552,26 @@ async function main() {
         `[dev-stack] Seeded local protected-runtime grant for ${seededGrant.principalId} ` +
           `(${seededGrant.workspaceScope.tenantId}/${seededGrant.workspaceScope.projectId}/` +
           `${seededGrant.workspaceScope.environmentId})`
+      );
+    }
+
+    if (processStartupOrder.includes('temporal-worker')) {
+      console.log('[dev-stack] Starting Temporal worker; waiting for worker readiness');
+      const temporalWorker = trackProcess(
+        spawnProcess(
+          'temporal-worker',
+          ['--filter', 'dvt-temporal-worker', 'dev'],
+          buildCoordinatedTemporalWorkerEnv(options, apiEnv)
+        )
+      );
+      await waitForUrlOrProcessExit(
+        apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL,
+        (response) => response.statusCode === 200,
+        options.readyTimeoutMs,
+        options.pollIntervalMs,
+        'Temporal worker readyz',
+        temporalWorker,
+        () => watchProcessExit(temporalWorker)
       );
     }
 
@@ -492,9 +627,16 @@ module.exports = {
   resolveDatabaseUrl,
   shouldBootstrapLocalPostgres,
   buildApiEnv,
+  buildLocalDbtArtifactEnv,
+  buildCoordinatedTemporalWorkerEnv,
   buildTemporalWorkerEnv,
   shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
+  resolveProcessStartupOrder,
+  buildLocalPostgresProofSeedSql,
+  buildLocalWarehouseConnectionCatalog,
+  seedLocalPostgresProofData,
+  seedLocalWorkspaceWarehouseCatalog,
   waitForUrlOrProcessExit,
 };
 

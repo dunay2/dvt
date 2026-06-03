@@ -9,12 +9,17 @@ export const AUTHORIZATION_ACTION_NAME = {
   runRetry: 'run:retry',
   runSignal: 'run:signal',
   workspaceGraphDraftSave: 'workspace:graph-draft:save',
+  workspaceFilesSave: 'workspace:files:save',
+  workspaceSourceImportImport: 'workspace:source-import:import',
   adminRebuildSnapshot: 'admin:rebuild-snapshot',
   runView: 'run:view',
   runList: 'run:list',
   runLogsView: 'run:logs:view',
   workspaceGraphDraftView: 'workspace:graph-draft:view',
   workspaceFilesView: 'workspace:files:view',
+  workspaceDiffView: 'workspace:diff:view',
+  workspaceSourceImportView: 'workspace:source-import:view',
+  workspacePluginsView: 'workspace:plugins:view',
 } as const;
 
 export type CommandAuthorizationActionName =
@@ -23,6 +28,8 @@ export type CommandAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.runRetry
   | typeof AUTHORIZATION_ACTION_NAME.runSignal
   | typeof AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesSave
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport
   | typeof AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot;
 
 export type QueryAuthorizationActionName =
@@ -30,7 +37,10 @@ export type QueryAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.runList
   | typeof AUTHORIZATION_ACTION_NAME.runLogsView
   | typeof AUTHORIZATION_ACTION_NAME.workspaceGraphDraftView
-  | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesView;
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesView
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceDiffView
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportView
+  | typeof AUTHORIZATION_ACTION_NAME.workspacePluginsView;
 
 export type AuthorizationAction =
   | {
@@ -67,6 +77,14 @@ export const AUTHORIZATION_ACTION = {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave,
   },
+  workspaceFilesSave: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceFilesSave,
+  },
+  workspaceSourceImportImport: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
+  },
   adminRebuildSnapshot: {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot,
@@ -90,5 +108,17 @@ export const AUTHORIZATION_ACTION = {
   workspaceFilesView: {
     kind: 'query',
     name: AUTHORIZATION_ACTION_NAME.workspaceFilesView,
+  },
+  workspaceDiffView: {
+    kind: 'query',
+    name: AUTHORIZATION_ACTION_NAME.workspaceDiffView,
+  },
+  workspaceSourceImportView: {
+    kind: 'query',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
+  },
+  workspacePluginsView: {
+    kind: 'query',
+    name: AUTHORIZATION_ACTION_NAME.workspacePluginsView,
   },
 } as const satisfies Readonly<Record<string, AuthorizationAction>>;

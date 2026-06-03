@@ -30,4 +30,5 @@ export type UseCanvasGraphHandlersResult = {
   handleDuplicateNode: (nodeId: string) => void;
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
   handleRemoveNode: (nodeId: string) => void;
+  handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
 };

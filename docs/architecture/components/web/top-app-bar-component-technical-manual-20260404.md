@@ -24,6 +24,7 @@ multi-language ready, and style-consistent.
 rendering to small UI components:
 
 - `ShellWorkspaceSelectors`
+- `ShellAppMenu`
 - `ShellGitRef`
 - `ShellConnectionStatus`
 - `ShellMenu`
@@ -35,11 +36,22 @@ flowchart LR
   A[TopAppBar Composition Root] --> B[Session Store Selectors]
   A --> C[UI Layout Store Selectors]
   A --> D[resolveShellTopBarCopy locale]
-  A --> E[ShellWorkspaceSelectors]
-  A --> F[ShellGitRef]
-  A --> G[ShellConnectionStatus]
-  A --> H[ShellMenu]
+  A --> E[ShellAppMenu]
+  E --> I[resolveCompiledApplicationMetadata]
+  A --> F[ShellWorkspaceSelectors]
+  A --> G[ShellGitRef]
+  A --> H[ShellConnectionStatus]
+  A --> J[ShellMenu]
 ```
+
+## Application Menu
+
+`ShellAppMenu` owns brand-level application commands. The current command is
+`About Raven`, backed by the `GetCompiledApplicationMetadata` query rail.
+
+The About dialog shows the compiled browser bundle version from
+`VITE_APP_VERSION` and the optional build date from `VITE_APP_BUILD_DATE`. It
+must not call backend `/version`, mutate workspace scope, or become a route.
 
 ## Multi-Language Strategy
 
@@ -66,6 +78,8 @@ flowchart LR
 - Missing locale key fallback must resolve to `en`.
 - `connectionStateOverride` must still override store state.
 - Menu controls must continue toggling layout flags.
+- About metadata must use compile-time app metadata, not API health/version
+  probes.
 - Shell-owned controls must not import `topAppBar/*` support files.
 
 ## Definition Of Done

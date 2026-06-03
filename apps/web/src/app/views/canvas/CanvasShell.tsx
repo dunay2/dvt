@@ -1,9 +1,10 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import DbtExplorer from '../../components/DbtExplorer';
 import SourceImportWizard from '../../components/SourceImportWizard';
+import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -20,25 +21,25 @@ import type {
 type CanvasShellExplorerRailProps = Readonly<{
   focusMode: boolean;
   explorerPanelVisible: boolean;
-  explorerNodes: CanvasShellPanels['explorerNodes'];
-  authoringNodeKinds: CanvasShellPanels['authoringNodeKinds'];
+  explorerResourceGroups: CanvasShellPanels['explorerResourceGroups'];
+  activeCanvasId: CanvasShellPanels['activeCanvasId'];
   canEditGraph: boolean;
   canOpenSourceImport: boolean;
-  onCreateAuthoringNode: CanvasShellProps['graphCommands']['onCreateAuthoringNode'];
   onHideExplorer: CanvasShellChromeCommands['onHideExplorer'];
   onOpenDataRegistry?: () => void;
+  onSelectCanvas: (canvasId: string) => void;
 }>;
 
 function CanvasShellExplorerRail({
   focusMode,
   explorerPanelVisible,
-  explorerNodes,
-  authoringNodeKinds,
+  explorerResourceGroups,
+  activeCanvasId,
   canEditGraph,
   canOpenSourceImport,
-  onCreateAuthoringNode,
   onHideExplorer,
   onOpenDataRegistry,
+  onSelectCanvas,
 }: CanvasShellExplorerRailProps): JSX.Element | null {
   if (focusMode || !explorerPanelVisible) {
     return null;
@@ -48,10 +49,17 @@ function CanvasShellExplorerRail({
     <>
       <ResizablePanel defaultSize={17} minSize={12} maxSize={25}>
         <DbtExplorer
-          nodes={explorerNodes}
-          nodeKinds={authoringNodeKinds}
+          resourceGroups={explorerResourceGroups}
           canEditGraph={canEditGraph}
-          onCreateAuthoringNode={onCreateAuthoringNode}
+          selectedResourceId={activeCanvasId == null ? null : `canvas:${activeCanvasId}`}
+          onResourceSelect={(resource) => {
+            if (resource.resourceType === 'canvas') {
+              const canvasId = resource.id.replace(/^canvas:/, '');
+              if (canvasId !== activeCanvasId) {
+                onSelectCanvas(canvasId);
+              }
+            }
+          }}
           onHide={onHideExplorer}
           onOpenDataRegistry={canOpenSourceImport ? onOpenDataRegistry : undefined}
         />
@@ -65,20 +73,36 @@ type CanvasShellInspectorRailProps = Readonly<{
   focusMode: boolean;
   inspectorPanelVisible: boolean;
   inspectorNode: CanvasShellPanels['inspectorNode'];
+  activeCanvas: CanvasShellPanels['activeCanvas'];
+  executionEnvironmentOptions: CanvasShellPanels['executionEnvironmentOptions'];
+  canEditCanvas: CanvasShellPanels['canEditCanvas'];
+  canDeleteActiveCanvas: CanvasShellPanels['canDeleteActiveCanvas'];
+  inspectorGraphNodes: CanvasShellPanels['inspectorGraphNodes'];
+  inspectorGraphEdges: CanvasShellPanels['inspectorGraphEdges'];
   inspectorAuthoring: CanvasShellPanels['inspectorAuthoring'];
   activeRunId: CanvasShellPanels['activeRunId'];
   registeredPlugins: CanvasShellPanels['registeredPlugins'];
   onHideInspector: CanvasShellChromeCommands['onHideInspector'];
+  onApplyCanvasPatch: CanvasShellProps['canvasCommands']['onApplyCanvasPatch'];
+  onDeleteActiveCanvas: CanvasShellProps['canvasCommands']['onDeleteActiveCanvas'];
 }>;
 
 function CanvasShellInspectorRail({
   focusMode,
   inspectorPanelVisible,
   inspectorNode,
+  activeCanvas,
+  executionEnvironmentOptions,
+  canEditCanvas,
+  canDeleteActiveCanvas,
+  inspectorGraphNodes,
+  inspectorGraphEdges,
   inspectorAuthoring,
   activeRunId,
   registeredPlugins,
   onHideInspector,
+  onApplyCanvasPatch,
+  onDeleteActiveCanvas,
 }: CanvasShellInspectorRailProps): JSX.Element | null {
   if (focusMode || !inspectorPanelVisible) {
     return null;
@@ -90,10 +114,24 @@ function CanvasShellInspectorRail({
       <ResizablePanel defaultSize={20} minSize={15} maxSize={28}>
         <CanvasInspectorPanel
           node={inspectorNode}
+          nodes={inspectorGraphNodes}
+          edges={inspectorGraphEdges}
           activeRunId={activeRunId}
           registeredPlugins={registeredPlugins}
           onHide={onHideInspector}
           authoring={inspectorAuthoring}
+          canvas={
+            activeCanvas == null
+              ? null
+              : {
+                  ...activeCanvas,
+                  executionEnvironmentOptions,
+                  canEdit: canEditCanvas,
+                  canDelete: canDeleteActiveCanvas,
+                  onApplyCanvasPatch,
+                  onDeleteCanvas: onDeleteActiveCanvas,
+                }
+          }
         />
       </ResizablePanel>
     </>
@@ -107,10 +145,20 @@ export default function CanvasShell({
   toolbar,
   graphCommands,
   chromeCommands,
+  canvasCommands,
 }: CanvasShellProps): JSX.Element {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
   const canEditGraph = panels.userPermissions.canEditEdges;
-  const canOpenDataRegistry = canEditGraph && layout.canOpenSourceImport;
+  const sourceImportContributions = useMemo(
+    () => getSourceImportContributions(panels.runtimeCapabilities),
+    [panels.runtimeCapabilities]
+  );
+  const sourceImportOptions = useMemo(
+    () => getSourceImportOptions(panels.runtimeCapabilities),
+    [panels.runtimeCapabilities]
+  );
+  const canOpenDataRegistry =
+    canEditGraph && layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const handleOpenDataRegistry = canOpenDataRegistry ? () => setDataRegistryOpen(true) : undefined;
 
   useEffect(() => {
@@ -120,17 +168,21 @@ export default function CanvasShell({
   }, [canOpenDataRegistry, dataRegistryOpen]);
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="h-full">
+    <ResizablePanelGroup
+      data-slot="canvas-shell-panel-group"
+      direction="horizontal"
+      className="h-full min-w-[960px]"
+    >
       <CanvasShellExplorerRail
         focusMode={layout.focusMode}
         explorerPanelVisible={layout.explorerPanelVisible}
-        explorerNodes={panels.explorerNodes}
-        authoringNodeKinds={panels.authoringNodeKinds}
+        explorerResourceGroups={panels.explorerResourceGroups}
+        activeCanvasId={panels.activeCanvasId}
         canEditGraph={canEditGraph}
         canOpenSourceImport={layout.canOpenSourceImport}
-        onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
         onHideExplorer={chromeCommands.onHideExplorer}
         onOpenDataRegistry={handleOpenDataRegistry}
+        onSelectCanvas={canvasCommands.onSelectCanvas}
       />
 
       <CanvasShellMainPanel
@@ -146,16 +198,25 @@ export default function CanvasShell({
         focusMode={layout.focusMode}
         inspectorPanelVisible={layout.inspectorPanelVisible}
         inspectorNode={panels.inspectorNode}
+        activeCanvas={panels.activeCanvas}
+        executionEnvironmentOptions={panels.executionEnvironmentOptions}
+        canEditCanvas={panels.canEditCanvas}
+        canDeleteActiveCanvas={panels.canDeleteActiveCanvas}
+        inspectorGraphNodes={panels.inspectorGraphNodes}
+        inspectorGraphEdges={panels.inspectorGraphEdges}
         inspectorAuthoring={panels.inspectorAuthoring}
         activeRunId={panels.activeRunId}
         registeredPlugins={panels.registeredPlugins}
         onHideInspector={chromeCommands.onHideInspector}
+        onApplyCanvasPatch={canvasCommands.onApplyCanvasPatch}
+        onDeleteActiveCanvas={canvasCommands.onDeleteActiveCanvas}
       />
 
       <SourceImportWizard
         open={dataRegistryOpen}
         onClose={() => setDataRegistryOpen(false)}
         onComplete={graphCommands.onSourceImportComplete}
+        sourceImportOptions={sourceImportOptions}
       />
     </ResizablePanelGroup>
   );

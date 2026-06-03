@@ -9,6 +9,18 @@ import { resolveCanvasDraftAccessRecoveryCommand } from './canvasDraftAccessPost
 import type { CanvasShellLayoutBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellLayout } from './canvasShell.types';
 
+function focusWorkspaceScopeControls(): void {
+  document
+    .querySelector<HTMLElement>(
+      [
+        '[data-slot="shell-workspace-context-trigger"]',
+        '[data-slot="shell-workspace-menu-trigger"]',
+        '[data-slot="select-trigger"]',
+      ].join(',')
+    )
+    ?.focus();
+}
+
 function renderCanvasShellReadOnlyBanner(
   recoveryCommands: CanvasShellLayoutBuilderArgs['recoveryCommands'],
   routePresentation: Pick<
@@ -25,12 +37,17 @@ function renderCanvasShellReadOnlyBanner(
           posture: routePresentation.draftAccessPosture,
           reloadLatestDraft: recoveryCommands.reloadLatestDraft,
           refetchDraftAfterAuthRefresh: recoveryCommands.refetchDraftAfterAuthRefresh,
-          focusScopeControls: () => {
-            document.querySelector<HTMLElement>('[data-slot="select-trigger"]')?.focus();
-          },
+          focusScopeControls: focusWorkspaceScopeControls,
         })}
       />
-      <CanvasReadOnlyBannerView state={routePresentation.readOnlyState} />
+      <CanvasReadOnlyBannerView
+        state={routePresentation.readOnlyState}
+        onRequestExecutableScope={
+          routePresentation.draftAccessPosture.kind === 'read_only'
+            ? focusWorkspaceScopeControls
+            : undefined
+        }
+      />
     </>
   );
 }
@@ -51,6 +68,7 @@ function renderCanvasShellHostTabStrip(
       tabState={routePresentation.canvasTabState}
       availableCanvasKinds={routePresentation.availableCanvasKinds}
       canEditEdges={routePresentation.effectiveUserPermissions.canEditEdges}
+      variant="inline"
       onCreateCanvasDocument={(command) => {
         void authoringCommands.handleCreateCanvasDocument(command);
       }}
@@ -61,6 +79,7 @@ function renderCanvasShellHostTabStrip(
 export function buildCanvasShellLayout({
   authoringCommands,
   layoutState,
+  preferenceCommands,
   recoveryCommands,
   routePresentation,
 }: CanvasShellLayoutBuilderArgs): CanvasShellLayout {
@@ -80,18 +99,22 @@ export function buildCanvasShellLayout({
     hostTabStrip: renderCanvasShellHostTabStrip(authoringCommands, routePresentation),
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,
+      workspaceScope: routePresentation.workspaceScope,
       startupBlockState: routePresentation.startupBlockState,
       draftTransportError: routePresentation.draftTransportError,
       workbenchErrorMessage: routePresentation.workbenchErrorMessage,
       canvasDocument: routePresentation.canvasDocument,
       draftSaveStatus: routePresentation.draftSaveStatus,
       availableCanvasKinds: routePresentation.availableCanvasKinds,
+      canCreateCanvasDocument: routePresentation.canCreateCanvasDocument,
       canEditEdges: routePresentation.effectiveUserPermissions.canEditEdges,
       canOpenSourceImport: layoutState.canOpenSourceImport,
+      emptyStateGuideVisible: layoutState.canvasEmptyStateGuideVisible,
       onCreateCanvasDocument: (command) => {
         void authoringCommands.handleCreateCanvasDocument(command);
       },
       onCreateAuthoringNode: authoringCommands.handleCreateAuthoringNode,
+      onEmptyStateGuideVisibilityChange: preferenceCommands.setCanvasEmptyStateGuideVisible,
     }),
     readOnlyBanner: renderCanvasShellReadOnlyBanner(recoveryCommands, routePresentation),
   };

@@ -1,15 +1,15 @@
-/** Owned concern: compose runtime-capabilities loading behind the app capability port. */
+/** Owned concern: compose runtime-capabilities loading behind the app capability port.
+ * @file apps/web/src/app/services/capabilities/capabilitiesPort.ts
+ * @baseline ADR-0056: Web UI authority is server-projected
+ * @decision Section 2 - Runtime capabilities are loaded from the server without browser-local fallback
+ * @consequence Browser capability state cannot silently invent backend plugin availability
+ * @version 1.0.0
+ * @date 2026-05-10
+ */
 import { createRuntimeCapabilitiesCapability } from '../../../capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability';
 import { createHttpRuntimeCapabilitiesClient } from '../../../capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient';
-import type { RuntimeCapabilitiesDto } from '../../../capabilities/runtime-capabilities';
 import type { CapabilitiesPort } from '../../ports/capabilities';
-import { ApiError, type ApiClient } from '../api/createApiClient';
-
-const LOCAL_SHELL_CAPABILITIES: RuntimeCapabilitiesDto = {
-  apiVersion: 'frontend-local',
-  minFrontendVersion: '0.0.0',
-  plugins: {},
-};
+import type { ApiClient } from '../api/createApiClient';
 
 export function createCapabilitiesPort(apiClient: ApiClient): CapabilitiesPort {
   const httpCapabilities = createRuntimeCapabilitiesCapability(
@@ -18,15 +18,7 @@ export function createCapabilitiesPort(apiClient: ApiClient): CapabilitiesPort {
 
   return {
     async loadCapabilities() {
-      try {
-        return await httpCapabilities.loadCapabilities();
-      } catch (error) {
-        if (error instanceof ApiError && error.category === 'network') {
-          return LOCAL_SHELL_CAPABILITIES;
-        }
-
-        throw error;
-      }
+      return httpCapabilities.loadCapabilities();
     },
   };
 }

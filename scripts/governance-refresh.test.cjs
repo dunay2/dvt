@@ -11,7 +11,7 @@ const {
   runGovernanceRefresh,
 } = require('./governance-refresh.cjs');
 
-test('governance refresh uses stale-aware scoped DB imports before DB-backed surfaces', () => {
+test('governance refresh defers governance reports to DB-backed final generation', () => {
   const stages = buildRefreshStages();
 
   assert.deepEqual(
@@ -27,29 +27,25 @@ test('governance refresh uses stale-aware scoped DB imports before DB-backed sur
       'docs:governance:file-fingerprint-impact',
       'planning:db:import',
       'docs:workboard:generate',
-      'governance:db:import',
-      'docs:governance:coverage-report',
-      'docs:governance:remediation-queue',
     ]
   );
   assert.deepEqual(
     stages.generationStages.find((stage) => stage.id === 'planning-db-import').args,
     ['--', '--if-stale', '--planning-only']
   );
-  assert.deepEqual(
-    stages.generationStages.find((stage) => stage.id === 'governance-db-import').args,
-    ['--', '--if-stale']
+  assert.equal(
+    stages.generationStages.some((stage) => stage.script === 'governance:db:import'),
+    false,
+    'generation passes must not run heavy governance DB imports before generated surfaces stabilize'
   );
-  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'coverage-report').args, [
-    '--',
-    '--source',
-    'db',
-  ]);
-  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'remediation-queue').args, [
-    '--',
-    '--source',
-    'db',
-  ]);
+  assert.equal(
+    stages.generationStages.some((stage) => stage.id === 'coverage-report'),
+    false
+  );
+  assert.equal(
+    stages.generationStages.some((stage) => stage.id === 'remediation-queue'),
+    false
+  );
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
     [
@@ -59,6 +55,8 @@ test('governance refresh uses stale-aware scoped DB imports before DB-backed sur
       'planning:db:export:check',
       'governance:db:import',
       'governance:db:check',
+      'docs:governance:coverage-report',
+      'docs:governance:remediation-queue',
       'governance:db:export:check',
     ]
   );
@@ -66,9 +64,17 @@ test('governance refresh uses stale-aware scoped DB imports before DB-backed sur
     stages.databaseStages.find((stage) => stage.id === 'planning-db-import-final').args,
     ['--', '--if-stale', '--planning-only']
   );
-  assert.equal(
+  assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
-    undefined
+    ['--', '--if-stale']
+  );
+  assert.deepEqual(
+    stages.databaseStages.find((stage) => stage.id === 'coverage-report-final').env,
+    { DVT_GOVERNANCE_REPORT_SOURCE: 'db' }
+  );
+  assert.deepEqual(
+    stages.databaseStages.find((stage) => stage.id === 'remediation-queue-final').env,
+    { DVT_GOVERNANCE_REPORT_SOURCE: 'db' }
   );
 });
 

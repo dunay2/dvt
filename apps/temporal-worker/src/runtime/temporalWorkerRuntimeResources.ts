@@ -13,6 +13,7 @@ import type {
   TemporalWorkerRuntimeResources,
 } from './runtimeTypes.js';
 import { createTemporalWorkerDbtProfile } from './temporalWorkerDbtProfile.js';
+import { createTemporalWorkerPostgresProfile } from './temporalWorkerPostgresProfile.js';
 import {
   createTemporalWorkerActivityDeps,
   createTemporalWorkerStores,
@@ -33,6 +34,7 @@ export function createTemporalWorkerRuntimeResources(
     TEMPORAL_MAX_START_PAYLOAD_BYTES: env.TEMPORAL_MAX_START_PAYLOAD_BYTES,
     TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: env.TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES,
     TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: env.TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS,
+    TEMPORAL_STEP_ACTIVITY_ROUTES: env.TEMPORAL_STEP_ACTIVITY_ROUTES,
   });
   const { stateStore, planArtifactReader } = createTemporalWorkerStores(
     env,
@@ -44,8 +46,12 @@ export function createTemporalWorkerRuntimeResources(
     stateStore,
     planArtifactReader
   );
+  const postgresProfile = createTemporalWorkerPostgresProfile(env, options);
   const dbtProfile = createTemporalWorkerDbtProfile(env, options);
-  const pluginProfiles = dbtProfile.pluginProfile === undefined ? [] : [dbtProfile.pluginProfile];
+  const pluginProfiles =
+    dbtProfile.pluginProfile === undefined
+      ? [postgresProfile.pluginProfile]
+      : [postgresProfile.pluginProfile, dbtProfile.pluginProfile];
   const stepActivitiesByKind =
     pluginProfiles.length === 0 ? undefined : composeTemporalStepPluginRegistries(pluginProfiles);
 
@@ -60,5 +66,6 @@ export function createTemporalWorkerRuntimeResources(
       ? {}
       : { dbtAvailabilityProbe: dbtProfile.dbtAvailabilityProbe }),
     ...(stepActivitiesByKind === undefined ? {} : { stepActivitiesByKind }),
+    closeStepActivityResources: postgresProfile.close,
   };
 }

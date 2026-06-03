@@ -19,11 +19,15 @@ import type { useCanvasController } from './useCanvasController';
 type CanvasController = ReturnType<typeof useCanvasController>;
 
 export type CanvasRouteViewState = {
+  workspaceScope: CanvasController['workspaceScope'];
   draftAccessPosture: CanvasController['draftAccessPosture'];
   draftTransportError: CanvasDraftTransportErrorState | null;
   startupBlockState: CanvasRouteInteractionState['startupBlockState'];
   workbenchErrorMessage: CanvasRouteInteractionState['workbenchErrorMessage'];
   canvasDocument: CanvasRouteInteractionState['canvasDocument'];
+  canvasDocuments: CanvasRouteInteractionState['canvasDocuments'];
+  activeCanvasId: CanvasRouteInteractionState['activeCanvasId'];
+  canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   draftSaveStatus: CanvasController['draftSaveStatus'];
   availableCanvasKinds: CanvasRouteInteractionState['availableCanvasKinds'];
   canvasTabState: CanvasRouteInteractionState['canvasTabState'];
@@ -44,11 +48,15 @@ export function deriveCanvasRouteViewState(controller: CanvasController): Canvas
   });
 
   return {
+    workspaceScope: controller.workspaceScope,
     draftAccessPosture: controller.draftAccessPosture,
     draftTransportError,
     startupBlockState: interactionState.startupBlockState,
     workbenchErrorMessage: interactionState.workbenchErrorMessage,
     canvasDocument: interactionState.canvasDocument,
+    canvasDocuments: interactionState.canvasDocuments,
+    activeCanvasId: interactionState.activeCanvasId,
+    canCreateCanvasDocument: controller.canCreateCanvasDocument,
     draftSaveStatus: controller.draftSaveStatus,
     availableCanvasKinds: interactionState.availableCanvasKinds,
     canvasTabState: interactionState.canvasTabState,

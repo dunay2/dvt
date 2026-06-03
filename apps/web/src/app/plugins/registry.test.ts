@@ -2,16 +2,21 @@ import { describe, expect, it } from 'vitest';
 
 import type { BadgeContext } from './contracts/NodeRendering';
 import {
+  getBottomDiagnosticsContributions,
+  getCommandPaletteContributions,
   getAllOverlays,
   getNodeBadges,
+  getSourceImportOptions,
+  getRuntimePlugins,
+  PLUGIN_REGISTRY,
   getPluginPortMap,
+  getSourceImportContributions,
+  getRouteHeaderContributions,
   type RuntimeCapabilities,
 } from './registry';
 import type { CanonicalNode } from '../types/canonical';
 
-function buildRuntimeCapabilities(
-  unavailablePluginId: string
-): RuntimeCapabilities {
+function buildRuntimeCapabilities(unavailablePluginId: string): RuntimeCapabilities {
   return {
     plugins: {
       [unavailablePluginId]: {
@@ -35,6 +40,29 @@ function buildCanonicalNode(): CanonicalNode {
 }
 
 describe('plugin runtime projection', () => {
+  it('excludes backend-backed plugins until the backend publishes an available capability row', () => {
+    const backendPlugin = PLUGIN_REGISTRY.find((plugin) => plugin.backendPluginId);
+
+    expect(backendPlugin?.backendPluginId).toBeDefined();
+    if (!backendPlugin?.backendPluginId) {
+      return;
+    }
+
+    expect(getRuntimePlugins().map((plugin) => plugin.id)).not.toContain(backendPlugin.id);
+    expect(getRuntimePlugins({ plugins: {} }).map((plugin) => plugin.id)).not.toContain(
+      backendPlugin.id
+    );
+    expect(
+      getRuntimePlugins({
+        plugins: {
+          [backendPlugin.backendPluginId]: {
+            available: true,
+          },
+        },
+      }).map((plugin) => plugin.id)
+    ).toContain(backendPlugin.id);
+  });
+
   it('excludes unavailable plugins from connection port maps', () => {
     const pluginPortMap = getPluginPortMap(buildRuntimeCapabilities('dbt'));
 
@@ -62,5 +90,37 @@ describe('plugin runtime projection', () => {
     );
 
     expect(badges).toEqual([]);
+  });
+
+  it('projects governed UX dock contributions through dedicated runtime rails', () => {
+    const capabilities = buildRuntimeCapabilities('monitoring');
+
+    expect(getRouteHeaderContributions().map((contribution) => contribution.id)).toContain(
+      'monitoring.runs.status'
+    );
+    expect(getCommandPaletteContributions().map((contribution) => contribution.id)).toContain(
+      'monitoring.open-runs'
+    );
+    expect(getBottomDiagnosticsContributions().map((contribution) => contribution.id)).toContain(
+      'monitoring.run-events'
+    );
+
+    expect(getRouteHeaderContributions(capabilities)).toEqual([]);
+    expect(getCommandPaletteContributions(capabilities)).toEqual([]);
+    expect(getBottomDiagnosticsContributions(capabilities)).toEqual([]);
+  });
+
+  it('projects source import properties from available plugin declarations', () => {
+    const dbtImport = getSourceImportContributions().find(
+      (contribution) => contribution.pluginId === 'dbt'
+    );
+
+    expect(dbtImport?.artifactKind).toBe('dbt-source-yaml');
+    expect(getSourceImportOptions().map((option) => option.id)).toEqual([
+      'includeColumns',
+      'addTests',
+      'addFreshness',
+    ]);
+    expect(getSourceImportOptions(buildRuntimeCapabilities('dbt'))).toEqual([]);
   });
 });

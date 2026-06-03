@@ -1,0 +1,38 @@
+{
+  "name": "@dvt/temporal-dbt-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build:runtime-deps": "node ../../../scripts/build-workspace-runtime-deps.cjs @dvt/temporal-dbt-plugin",
+    "build": "tsc -p tsconfig.json",
+    "prebuild": "node ../../../scripts/skip-prebuild-if-orchestrated.cjs || pnpm run build:runtime-deps",
+    "pretest": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
+    "test": "vitest run --config vitest.config.ts",
+    "pretypecheck": "node ../../../scripts/skip-pretest-if-ci.cjs || pnpm run build:runtime-deps",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit"
+  },
+  "dependencies": {
+    "@dvt/adapter-temporal": "workspace:*",
+    "@dvt/artifacts": "workspace:*",
+    "@dvt/contracts": "workspace:*",
+    "@dvt/engine": "workspace:*",
+    "tar": "^7.5.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

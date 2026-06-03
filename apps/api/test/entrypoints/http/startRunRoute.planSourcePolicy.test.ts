@@ -5,6 +5,8 @@ import {
   invokeStartRunRoute,
   okResult,
   VALID_BODY,
+  VALID_GENERATED_RUN_ID,
+  VALID_GENERATED_RUN_ID_ALT,
   VALID_GRAPH_SOURCE,
 } from './startRunRoute.test.support.js';
 
@@ -22,7 +24,7 @@ describe('startRunRoute plan-source policy', () => {
         received = input;
         return okResult({
           kind: 'accepted' as const,
-          runId: 'r-empty-selection',
+          runId: VALID_GENERATED_RUN_ID,
           accepted: true,
         });
       },
@@ -41,14 +43,14 @@ describe('startRunRoute plan-source policy', () => {
         },
       },
       facade,
-      runIdGenerator: () => 'run_generated_empty_selection',
+      runIdGenerator: () => VALID_GENERATED_RUN_ID,
     });
 
     expect(reply.statusCode).toBe(202);
-    expect(reply.payload).toEqual({ runId: 'r-empty-selection', accepted: true });
+    expect(reply.payload).toEqual({ runId: VALID_GENERATED_RUN_ID, accepted: true });
     expect(received?.command).toEqual({
       graphSource: VALID_GRAPH_SOURCE,
-      runId: 'run_generated_empty_selection',
+      runId: VALID_GENERATED_RUN_ID,
       targetAdapter: 'temporal',
       selection: { mode: 'explicit', nodeIds: ['model_a'] },
     });
@@ -59,7 +61,11 @@ describe('startRunRoute plan-source policy', () => {
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return okResult({ kind: 'accepted' as const, runId: 'r-graph', accepted: true });
+        return okResult({
+          kind: 'accepted' as const,
+          runId: VALID_GENERATED_RUN_ID_ALT,
+          accepted: true,
+        });
       },
     };
 
@@ -75,13 +81,13 @@ describe('startRunRoute plan-source policy', () => {
         },
       },
       facade,
-      runIdGenerator: () => 'run_generated_graph',
+      runIdGenerator: () => VALID_GENERATED_RUN_ID_ALT,
     });
 
     expect(reply.statusCode).toBe(202);
     expect(received?.command).toEqual({
       graphSource: VALID_GRAPH_SOURCE,
-      runId: 'run_generated_graph',
+      runId: VALID_GENERATED_RUN_ID_ALT,
       targetAdapter: 'temporal',
       selection: { mode: 'explicit', nodeIds: ['model_a'] },
     });

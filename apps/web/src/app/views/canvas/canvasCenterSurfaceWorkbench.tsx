@@ -64,13 +64,17 @@ function renderCanvasHostCycleWorkbenchSurface(
   args: Pick<
     CanvasWorkbenchSurfaceArgs,
     | 'presentationState'
+    | 'workspaceScope'
     | 'canvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
+    | 'canCreateCanvasDocument'
     | 'canEditEdges'
     | 'canOpenSourceImport'
+    | 'emptyStateGuideVisible'
     | 'onCreateCanvasDocument'
     | 'onCreateAuthoringNode'
+    | 'onEmptyStateGuideVisibilityChange'
   >
 ) {
   const cycleState = deriveCanvasHostCycleState(args);
@@ -81,13 +85,19 @@ function renderCanvasHostCycleWorkbenchSurface(
   if (cycleState.kind === 'needs_canvas') {
     return (
       <CanvasPlaygroundHost
+        workspaceScope={args.workspaceScope}
         canvasKinds={cycleState.availableCanvasKinds}
         onCreateCanvasDocument={cycleState.onCreateCanvasDocument}
+        unavailableMessage={cycleState.unavailableMessage}
       />
     );
   }
 
   if (cycleState.kind !== 'typed_empty') {
+    return null;
+  }
+
+  if (!args.emptyStateGuideVisible) {
     return null;
   }
 
@@ -99,6 +109,8 @@ function renderCanvasHostCycleWorkbenchSurface(
       firstNodeHelper={cycleState.firstNodeHelper}
       nodeKinds={cycleState.nodeKinds}
       onCreateAuthoringNode={cycleState.onCreateAuthoringNode}
+      emptyStateGuideVisible={args.emptyStateGuideVisible}
+      onEmptyStateGuideVisibilityChange={args.onEmptyStateGuideVisibilityChange}
     />
   );
 }

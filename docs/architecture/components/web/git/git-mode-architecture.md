@@ -59,6 +59,7 @@ an embedded full Git client.
 `F-23` adds one governed review handoff:
 
 - `Code` owns selected-file browsing and recent history entry for that file;
+- `GetWorkspaceFileHistory` owns the protected file-scoped Git history query;
 - `Diff` owns revision comparison and rendered review;
 - no left-nav Git explorer, staging model, or repository console is introduced.
 

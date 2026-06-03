@@ -1,5 +1,7 @@
+/** Owned concern: lay out shell chrome slots from already-resolved presentation posture. */
 import type { ReactNode } from 'react';
 
+import type { ShellNavigationDisposition } from '../../shell/shellNavigationDisposition';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '../ui/resizable';
 
 type AppShellFrameProps = {
@@ -9,6 +11,7 @@ type AppShellFrameProps = {
   readonly bottomDrawer: ReactNode;
   readonly children: ReactNode;
   readonly focusMode: boolean;
+  readonly navigationDisposition: ShellNavigationDisposition;
   readonly showBottomDrawer: boolean;
 };
 
@@ -19,9 +22,10 @@ export function AppShellFrame({
   bottomDrawer,
   children,
   focusMode,
+  navigationDisposition,
   showBottomDrawer,
 }: AppShellFrameProps) {
-  const showLeftNavigation = !focusMode;
+  const showLeftNavigation = !focusMode && navigationDisposition.railMode === 'visible';
   const showConsoleDrawer = !focusMode && showBottomDrawer;
 
   return (

@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import type {
@@ -14,6 +17,7 @@ import {
   getAllOverlays,
   getAllViews,
   getCanvasWorkbenchTabViews,
+  getRouteViews,
   getShellNavigationViews,
   getNodeBadges,
   getNodeRenderer,
@@ -21,6 +25,17 @@ import {
   type RuntimeCapabilities,
 } from './registry';
 import type { CanonicalNode } from '../types/canonical';
+
+const APP_ROOT = path.resolve(import.meta.dirname, '../../..');
+const REPO_ROOT = path.resolve(APP_ROOT, '../..');
+
+function readAppSource(relativePathFromApp: string): string {
+  return readFileSync(path.join(APP_ROOT, relativePathFromApp), 'utf8');
+}
+
+function readRepoDoc(relativePathFromRepo: string): string {
+  return readFileSync(path.join(REPO_ROOT, relativePathFromRepo), 'utf8');
+}
 
 function buildRuntimeCapabilities(unavailablePluginId: string): RuntimeCapabilities {
   return {
@@ -77,11 +92,21 @@ describe('plugin runtime projection architecture', () => {
     expect(getNodeBadges(buildCanonicalNode(), badgeContext, capabilities)).toEqual([]);
   });
 
-  it('keeps Cost route bootstrap ownership inside the Cost contribution', () => {
+  it('keeps Cost route bootstrap ownership inside the Cost contribution while runtime projection requires backend availability', () => {
     const costDashboard = costContributions.views?.find((view) => view.id === 'cost.dashboard');
 
     expect(costDashboard?.handle?.routeBootstrap).toBe(COST_ROUTE_BOOTSTRAP_HANDLE);
-    expect(getAllViews().find((view) => view.id === 'cost.dashboard')).toBe(costDashboard);
+    expect(getRouteViews().find((view) => view.id === 'cost.dashboard')).toBe(costDashboard);
+    expect(getAllViews().find((view) => view.id === 'cost.dashboard')).toBeUndefined();
+    expect(
+      getAllViews({
+        plugins: {
+          cost: {
+            available: true,
+          },
+        },
+      }).find((view) => view.id === 'cost.dashboard')
+    ).toBe(costDashboard);
   });
 
   it('separates shell navigation query rail from Canvas workbench tab query rail', () => {
@@ -89,6 +114,7 @@ describe('plugin runtime projection architecture', () => {
     const canvasTabIds = getCanvasWorkbenchTabViews().map((view) => view.placement.tabId);
 
     expect(shellViewIds).toContain('dbt.canvas');
+    expect(shellViewIds).toContain('dvt.templates');
     expect(shellViewIds).toContain('monitoring.runs');
     expect(shellViewIds).not.toContain('dbt.code');
     expect(shellViewIds).not.toContain('dbt.lineage');
@@ -147,5 +173,39 @@ describe('plugin runtime projection architecture', () => {
       borderColor: '#dc2626',
       backgroundColor: 'rgba(220, 38, 38, 0.18)',
     });
+  });
+
+  it('keeps governed plugin UX docks as explicit runtime rails with component documentation', () => {
+    const manifest = readAppSource('src/app/plugins/contracts/PluginManifest.ts');
+    const registry = readAppSource('src/app/plugins/registry.ts');
+    const componentGuide = readRepoDoc(
+      'docs/architecture/components/web/plugins/plugin-ux-integration-contract.md'
+    );
+
+    for (const dock of [
+      'RouteHeaderContribution',
+      'CommandPaletteContribution',
+      'BottomDiagnosticsContribution',
+    ]) {
+      expect(manifest).toContain(`interface ${dock}`);
+    }
+
+    for (const rail of [
+      'getRouteHeaderContributions',
+      'getCommandPaletteContributions',
+      'getBottomDiagnosticsContributions',
+    ]) {
+      expect(registry).toContain(`export function ${rail}`);
+    }
+
+    for (const requiredSection of [
+      '## Public API',
+      '## Invariants',
+      '## Transitions',
+      '## Consumers',
+      '## Architecture',
+    ]) {
+      expect(componentGuide).toContain(requiredSection);
+    }
   });
 });

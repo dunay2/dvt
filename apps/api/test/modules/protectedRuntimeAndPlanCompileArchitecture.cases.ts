@@ -70,12 +70,21 @@ export function describeProtectedRuntimeAndPlanCompileArchitectureCases(): void 
       expect(PLAN_COMPILE_BOUNDARY_SOURCE).not.toContain("['conductor', 'mock', 'temporal']");
     });
 
-    it('keeps generic preview planning on the protected runtime planner while compile stays on the compile boundary', () => {
-      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
+    it('routes preview plans by preview graph family while runtime planner derives selection', () => {
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).not.toMatch(
         /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planner,/s
       );
-      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).not.toMatch(
-        /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner,/s
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
+        /const previewPlanUseCase = new PreviewPlanUseCase\(\{\s*planner: \{\s*buildPlan: \(plannerInput\) =>/s
+      );
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
+        /plannerInput\.graphSource\.sourceFamily === TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY\s*\? protectedModule\.planCompilePlanner\.buildPlan\(plannerInput\)\s*: protectedModule\.planner\.buildPlan\(plannerInput\)/s
+      );
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
+        /deriveExecutableSubgraph: \(selectionInput\) =>\s*protectedModule\.planner\.deriveExecutableSubgraph\(selectionInput\)/s
+      );
+      expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
+        /new ResolveAuthorizedExecutableSubgraphService\(\{\s*planner: protectedModule\.planner,/s
       );
       expect(PROTECTED_RUNTIME_ROUTES_SOURCE).toMatch(
         /compilePlanUseCase: new CompilePlanUseCase\(\{\s*planner: protectedModule\.planCompilePlanner/s

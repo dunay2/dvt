@@ -39,13 +39,13 @@ executed and `pnpm verify:prepush` passes.
 
 Existing local commits to regularize:
 
-- `f30e3c14 fix(web): Keep Canvas workbench tab labels readable`
+- [Task: F-29] `f30e3c14 fix(web): Keep Canvas workbench tab labels readable`
 - `b6b0f469 docs(docs): Accept Canvas tab fingerprint baseline`
 
 Allowed outcomes after this plan:
 
 - keep the commits if the final evidence shows they satisfy this plan;
-- add follow-up commits for missing plan, mailbox, docs, stories, tests, and
+- [Task: F-29] add follow-up commits for missing plan, mailbox, docs, stories, tests, and
   generated governance artifacts;
 - squash later only if the user requests PR hygiene.
 
@@ -160,7 +160,7 @@ Component guide destinations:
 
 **Files:**
 
-- Create:
+- [Task: F-29] Create:
   `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 
 - [x] **Step 1: Write the analysis document**
@@ -206,18 +206,18 @@ pnpm commit docs docs "Add Canvas workbench Fowler mailbox"
 
 - Modify:
   `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
-- Create:
+- [Task: F-29] Create:
   `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
 - Modify:
   `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
-- Create:
+- [Task: F-29] Create:
   `docs/architecture/components/web/graph/canvas-layout-persistence-user-stories.md`
 
-- [x] **Step 1: Add explicit local guide links**
+- [x] [Task: F-29] **Step 1: Add explicit local guide links**
 
 Both component docs must link their mailbox and local user-story document.
 
-- [x] **Step 2: Add or normalize sections**
+- [x] [Task: F-29] **Step 2: Add or normalize sections**
 
 Each component guide must contain:
 
@@ -230,7 +230,7 @@ Each component guide must contain:
 - `## Negative Coverage`
 - `## Drift To Watch`
 
-- [x] **Step 3: Add user stories**
+- [x] [Task: F-29] **Step 3: Add user stories**
 
 Canvas workbench tab stories must cover:
 
@@ -280,10 +280,10 @@ pnpm commit docs docs "Document Canvas workbench component scenarios"
 
 - Modify:
   `apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts`
-- Modify or create:
+- [Task: F-29] Modify or create:
   `apps/web/src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts`
 
-- [x] **Step 1: Add failing semantic assertions**
+- [x] [Task: F-29] **Step 1: Add failing semantic assertions**
 
 The tests must assert:
 
@@ -309,10 +309,10 @@ assertion before implementation.
 
 **Files:**
 
-- Modify only files named by Task 2 and Task 3 unless the red test proves an
+- [Task: F-29] Modify only files named by Task 2 and Task 3 unless the red test proves an
   owned-concern docblock is missing in a touched module.
 
-- [x] **Step 1: Add missing docs and docblocks**
+- [x] [Task: F-29] **Step 1: Add missing docs and docblocks**
 
 Apply the minimal change that satisfies the failing semantic tests. Do not add
 runtime behavior during this task.
@@ -380,7 +380,7 @@ evidence artifact path for them.
 
 - Modify:
   `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
-- Create ADR only if this task introduces a new long-lived decision not already
+- [Task: F-29] Create ADR only if this task introduces a new long-lived decision not already
   covered by accepted component docs and existing planning proposal.
 
 - [x] **Step 1: Decide ADR need**
@@ -393,7 +393,7 @@ does not change backend contracts, adapters, protected draft authority, or
 cross-context ownership.
 ```
 
-- [x] **Step 2: Add drift/repetition closeout**
+- [x] [Task: F-29] **Step 2: Add drift/repetition closeout**
 
 The mailbox must name the fixed repetitions and remaining opportunities.
 
@@ -490,10 +490,10 @@ Status: implemented on `main` and ready for review. The branch is ahead of
 
 Commits:
 
-- `f30e3c149 fix(web): Keep Canvas workbench tab labels readable`
+- [Task: F-29] `f30e3c149 fix(web): Keep Canvas workbench tab labels readable`
 - `b6b0f4692 docs(docs): Accept Canvas tab fingerprint baseline`
-- `cbf90a8cf docs(docs): Add Canvas workbench Fowler plan`
-- `baa53872d docs(docs): Add Canvas workbench Fowler mailbox`
+- [Task: F-29] `cbf90a8cf docs(docs): Add Canvas workbench Fowler plan`
+- [Task: F-29] `baa53872d docs(docs): Add Canvas workbench Fowler mailbox`
 - `264802c24 docs(docs): Document Canvas workbench component scenarios`
 - `8b5cd8bca test(web): Guard Canvas workbench C&Q semantics`
 - `b917a5c5e docs(docs): Record Canvas workbench drift closure`

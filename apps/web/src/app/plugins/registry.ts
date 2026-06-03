@@ -1,4 +1,11 @@
-/** Owned concern: project static plugin contributions into route, shell, and workbench query rails. */
+/** Owned concern: project static plugin contributions into route, shell, and workbench query rails.
+ * @file apps/web/src/app/plugins/registry.ts
+ * @baseline ADR-0056: Web UI authority is server-projected
+ * @decision Section 3 - Runtime plugin projection fails closed when backend capability rows are absent
+ * @consequence Shell navigation only exposes backend-backed plugins after server projection confirms availability
+ * @version 1.0.0
+ * @date 2026-05-10
+ */
 import type React from 'react';
 
 import type { PluginPortDescriptor, PluginPortMap } from './contracts/ConnectionRules';
@@ -13,13 +20,16 @@ import type {
   NodeRendererRegistration,
 } from './contracts/NodeRendering';
 import type {
+  BottomDiagnosticsContribution,
   CanvasWorkbenchTabPlacement,
+  CommandPaletteContribution,
   InspectorContext,
   InspectorPanelContribution,
   LocalizableString,
   PluginCapabilityId,
   PluginConnectionRule,
   PluginDataPort,
+  RouteHeaderContribution,
   ShellNavigationPlacement,
   ViewContribution,
 } from './contracts/PluginManifest';
@@ -47,6 +57,9 @@ export type PluginContributions = {
   capabilities?: PluginCapabilityId[];
 
   views?: ViewContribution[];
+  routeHeaderContributions?: RouteHeaderContribution[];
+  commandPaletteContributions?: CommandPaletteContribution[];
+  bottomDiagnosticsContributions?: BottomDiagnosticsContribution[];
   overlays?: CanvasOverlayContribution[];
   inspectorPanels?: InspectorPanelContribution[];
   nodeBadges?: NodeBadgeContribution[];
@@ -56,6 +69,7 @@ export type PluginContributions = {
   connectionRules?: PluginConnectionRule[];
   produces?: PluginDataPort[];
   consumes?: PluginDataPort[];
+  sourceImport?: readonly SourceImportContribution[];
 
   /**
    * Optional run adapter — normalises plugin-specific run data to CanonicalRun.
@@ -78,11 +92,29 @@ export type PluginContributions = {
 // Imported lazily to avoid circular deps during module init
 import { costContributions } from './cost/costContributions';
 import { dbtContributions } from './dbt/dbtContributions';
-import { dvtContributions } from './dvt/dvtContributions';
+import { dvtContributions, dvtWarehouseSourceContributions } from './dvt/dvtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
 
 export type RuntimeCapabilities = {
   plugins: Record<string, { available: boolean; reason?: string }>;
+};
+
+export type SourceImportOptionId = 'includeColumns' | 'addTests' | 'addFreshness';
+
+export type SourceImportOptionContribution = {
+  id: SourceImportOptionId;
+  label: LocalizableString;
+  description: LocalizableString;
+  defaultEnabled: boolean;
+  order: number;
+};
+
+export type SourceImportContribution = {
+  id: string;
+  pluginId: string;
+  sourceType: 'database';
+  artifactKind: string;
+  options: readonly SourceImportOptionContribution[];
 };
 
 function getEnvFlagValue(envFlag: string | undefined): string | boolean | undefined {
@@ -102,6 +134,10 @@ function isPluginEnabled(plugin: PluginContributions): boolean {
   return envFlagValue !== 'false' && envFlagValue !== false;
 }
 
+function requiresBackendCapability(plugin: PluginContributions): boolean {
+  return typeof plugin.backendPluginId === 'string' && plugin.backendPluginId.trim().length > 0;
+}
+
 function isPluginAvailableAtRuntime(
   plugin: PluginContributions,
   capabilities?: RuntimeCapabilities
@@ -111,7 +147,7 @@ function isPluginAvailableAtRuntime(
   }
 
   if (!capabilities) {
-    return true;
+    return !requiresBackendCapability(plugin);
   }
 
   const capabilityIds = Array.from(
@@ -122,7 +158,7 @@ function isPluginAvailableAtRuntime(
     .filter((info): info is { available: boolean; reason?: string } => info != null);
 
   if (runtimeInfos.length === 0) {
-    return true;
+    return !requiresBackendCapability(plugin);
   }
 
   return runtimeInfos.every((info) => info.available);
@@ -130,6 +166,7 @@ function isPluginAvailableAtRuntime(
 
 const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
   dbtContributions,
+  dvtWarehouseSourceContributions,
   dvtContributions,
   monitoringContributions,
   costContributions,
@@ -150,6 +187,31 @@ export function getAllViews(capabilities?: RuntimeCapabilities): ViewContributio
   return getRuntimePlugins(capabilities).flatMap((p) => p.views ?? []);
 }
 
+export function getSourceImportContributions(
+  capabilities?: RuntimeCapabilities
+): SourceImportContribution[] {
+  return getRuntimePlugins(capabilities).flatMap((plugin) => plugin.sourceImport ?? []);
+}
+
+export function getSourceImportOptions(
+  capabilities?: RuntimeCapabilities
+): SourceImportOptionContribution[] {
+  const optionsById = new Map<SourceImportOptionId, SourceImportOptionContribution>();
+  for (const contribution of getSourceImportContributions(capabilities)) {
+    for (const option of contribution.options) {
+      if (!optionsById.has(option.id)) {
+        optionsById.set(option.id, option);
+      }
+    }
+  }
+
+  return Array.from(optionsById.values()).sort((left, right) => left.order - right.order);
+}
+
+function compareByOrder<T extends { order: number }>(a: T, b: T): number {
+  return a.order - b.order;
+}
+
 export type RouteViewContribution = ViewContribution & {
   path: string;
   handle: AppRouteHandle;
@@ -167,8 +229,8 @@ function hasRouteRegistration(view: ViewContribution): view is RouteViewContribu
   return typeof view.path === 'string' && view.handle != null;
 }
 
-export function getRouteViews(capabilities?: RuntimeCapabilities): RouteViewContribution[] {
-  return getAllViews(capabilities).filter(hasRouteRegistration);
+export function getRouteViews(): RouteViewContribution[] {
+  return PLUGIN_REGISTRY.flatMap((plugin) => plugin.views ?? []).filter(hasRouteRegistration);
 }
 
 export function getShellNavigationViews(
@@ -191,6 +253,30 @@ export function getCanvasWorkbenchTabViews(
         view.placement?.kind === 'workbench-tab' && view.placement.workbench === 'canvas'
     )
     .sort((a, b) => a.placement.order - b.placement.order);
+}
+
+export function getRouteHeaderContributions(
+  capabilities?: RuntimeCapabilities
+): RouteHeaderContribution[] {
+  return getRuntimePlugins(capabilities)
+    .flatMap((plugin) => plugin.routeHeaderContributions ?? [])
+    .sort(compareByOrder);
+}
+
+export function getCommandPaletteContributions(
+  capabilities?: RuntimeCapabilities
+): CommandPaletteContribution[] {
+  return getRuntimePlugins(capabilities)
+    .flatMap((plugin) => plugin.commandPaletteContributions ?? [])
+    .sort(compareByOrder);
+}
+
+export function getBottomDiagnosticsContributions(
+  capabilities?: RuntimeCapabilities
+): BottomDiagnosticsContribution[] {
+  return getRuntimePlugins(capabilities)
+    .flatMap((plugin) => plugin.bottomDiagnosticsContributions ?? [])
+    .sort(compareByOrder);
 }
 
 export function getDefaultCoreViewPath(capabilities?: RuntimeCapabilities): string {

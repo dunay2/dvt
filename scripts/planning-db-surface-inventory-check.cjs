@@ -74,6 +74,31 @@ const requiredSurfaces = [
     },
   },
   {
+    surface: 'Architecture design authority',
+    includes: {
+      'Canonical source': [
+        'architecture.design',
+        'architecture.component',
+        'architecture.component_relation',
+      ],
+      'Write rail': ['planning:db:operate architecture-design create', 'CreateArchitectureDesign'],
+      'Read/query rail': [
+        'architecture.design_query',
+        'architecture.component_query',
+        'planning:db:query architecture-components',
+        'architecture.implementation_violation_query',
+      ],
+      Projection: ['DB authority rows'],
+      Validation: [
+        'planning-db-query.test.cjs',
+        'planning-db-operate.test.cjs',
+        'planning:db:migrate',
+        'test:planning:db',
+      ],
+      'Migration state': ['DB-first'],
+    },
+  },
+  {
     surface: 'Governance remediation queue',
     includes: {
       'Canonical source': ['Governance DB', 'coverage', 'fingerprint'],
@@ -118,6 +143,34 @@ const requiredSurfaces = [
       Projection: ['command', 'PR-readiness'],
       Validation: ['test:ci-tools', 'docs:feature-mechanization:implementation'],
       'Migration state': ['Hybrid indexed'],
+    },
+  },
+  {
+    surface: 'Command/query rail catalog',
+    includes: {
+      'Canonical source': [
+        'feature-mechanization',
+        'commandQueryRails',
+        'Markdown command/query rail tables',
+        'source-code references',
+        'governance cqRails',
+      ],
+      'Write rail': ['planning:db:import', '--governance-only'],
+      'Read/query rail': ['planning:db:query command-query-rails', 'creation-intent'],
+      Projection: [
+        'command_query_rail_query',
+        'implementation refs',
+        'documentation refs',
+        'creation-intent reuse guidance',
+        'gaps',
+        'duplicates',
+      ],
+      Validation: [
+        'test:planning:db',
+        'docs:feature-mechanization:implementation',
+        'planning:db:query creation-intent',
+      ],
+      'Migration state': ['DB-first'],
     },
   },
   {

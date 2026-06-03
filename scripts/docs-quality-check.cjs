@@ -24,7 +24,6 @@ const spanishHints = [
 ];
 const requiredCanonicalFiles = [
   'docs/architecture/system-delivery-status.md',
-  'docs/planning/index.md',
   'docs/planning/roadmap/index.md',
   'docs/planning/gaps/index.md',
   'docs/planning/archive/gaps/g6/index.md',
@@ -32,10 +31,7 @@ const requiredCanonicalFiles = [
   'docs/concepts/repository-map.md',
   'docs/planning/status/canonical-doc-code-matrix.md',
 ];
-const explicitOwnerFiles = [
-  'docs/planning/index.md',
-  'docs/planning/gaps/index.md',
-];
+const explicitOwnerFiles = ['docs/planning/gaps/index.md'];
 const forbiddenMkdocsNavTargets = [
   'planning/DVTplus_Roadmap.md',
   'knowledge/INDEX.md',
@@ -67,9 +63,7 @@ function main() {
   const files = walk(docsRoot);
   const markdownFiles = files.filter((p) => p.endsWith('.md'));
 
-  const uppercaseIndexes = files
-    .filter((p) => path.basename(p) === 'INDEX.md')
-    .map((p) => rel(p));
+  const uppercaseIndexes = files.filter((p) => path.basename(p) === 'INDEX.md').map((p) => rel(p));
   for (const p of uppercaseIndexes) {
     failures.push(`${p} -> rename to index.md (avoid duplicate index variants).`);
   }
@@ -141,7 +135,9 @@ function main() {
     if (!fs.existsSync(absPath)) continue;
     const raw = fs.readFileSync(absPath, 'utf8');
     if (/^owner:\s*docs\s*$/im.test(raw)) {
-      failures.push(`${relativePath} -> owner must name the responsible area, not the generic placeholder "docs".`);
+      failures.push(
+        `${relativePath} -> owner must name the responsible area, not the generic placeholder "docs".`
+      );
     }
   }
 
@@ -150,7 +146,9 @@ function main() {
     const zensicalConfigRaw = fs.readFileSync(zensicalConfigPath, 'utf8');
     for (const target of forbiddenMkdocsNavTargets) {
       if (zensicalConfigRaw.includes(target)) {
-        failures.push(`zensical.yml -> must not expose legacy compatibility target ${target} in the docs config.`);
+        failures.push(
+          `zensical.yml -> must not expose legacy compatibility target ${target} in the docs config.`
+        );
       }
     }
   }

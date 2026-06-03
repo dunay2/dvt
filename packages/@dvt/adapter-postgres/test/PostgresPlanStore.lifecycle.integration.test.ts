@@ -20,6 +20,7 @@ const PLAN_ID = {
   r4_6: toCanonicalPlanId('plan-r4-6'),
   r4_7: toCanonicalPlanId('plan-r4-7'),
   r4_8: toCanonicalPlanId('plan-r4-8'),
+  r4_9: toCanonicalPlanId('plan-r4-9'),
 } as const;
 
 describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => {
@@ -109,6 +110,29 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
       expect(second).toEqual(first);
     }));
 
+  test('treats replayed plan attempts with only createdAtIso drift as idempotent', () =>
+    withStore(schema, async (store) => {
+      const firstBuild = makeBuildResult(PLAN_ID.r4_9);
+      const secondBuild = {
+        ...firstBuild,
+        plan: {
+          ...firstBuild.plan,
+          metadata: {
+            ...firstBuild.plan.metadata,
+            createdAtIso: '2026-03-21T00:00:01.000Z',
+          },
+        },
+      };
+
+      const first = await store.storePlanArtifact({ buildResult: firstBuild });
+      await expect(store.storePlanArtifact({ buildResult: secondBuild })).resolves.toEqual(first);
+      const record = await store.getPlanRecord({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_9 });
+      expect(record?.planId).toBe(PLAN_ID.r4_9);
+      expect(new Date(record?.createdAtIso ?? '').toISOString()).toBe(
+        firstBuild.plan.metadata.createdAtIso
+      );
+    }));
+
   test('rejects conflicting plan collisions for same planId', () =>
     withStore(schema, async (store) => {
       const base = makeBuildResult(PLAN_ID.r4_6);
@@ -137,7 +161,7 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
       );
     }));
 
-  test('rejects reuse of already validated plan', () =>
+  test('treats identical already validated plan store attempt as idempotent', () =>
     withStore(schema, async (store) => {
       const planRef = await store.storePlanArtifact({
         buildResult: makeBuildResult(PLAN_ID.r4_7),
@@ -145,7 +169,10 @@ describeIfPg('PostgresPlanStore lifecycle integration (real PostgreSQL)', () => 
       await store.markStoredPlanArtifactValid({ ...PLAN_STORE_SCOPE, planRef });
       await expect(
         store.storePlanArtifact({ buildResult: makeBuildResult(PLAN_ID.r4_7) })
-      ).rejects.toThrow('PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED');
+      ).resolves.toEqual(planRef);
+      await expect(
+        store.markStoredPlanArtifactValid({ ...PLAN_STORE_SCOPE, planRef })
+      ).rejects.toThrow('PLAN_VALIDATION_STATE_INVALID_TRANSITION');
     }));
 
   test('allows duplicate pending admission but only one transition succeeds', () =>

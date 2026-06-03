@@ -114,9 +114,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
   and
   [packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts](../../../packages/@dvt/adapter-temporal/src/plugins/TemporalStepPluginRunner.ts)
   and
-  [packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts](../../../packages/@dvt/adapter-temporal/src/plugins/dbt/DbtStepActivity.ts)
+  [packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts](../../../packages/@dvt/temporal-dbt-plugin/src/DbtStepActivity.ts)
   and
-  [packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts](../../../packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts)
+  [packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts](../../../packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts)
 - Key tests:
   [packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalAdapter.lookupRunRef.test.ts),
   [packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts](../../../packages/@dvt/adapter-temporal/test/TemporalWorkerHost.lifecycle.test.ts),
@@ -251,7 +251,9 @@ terms follow the meanings defined in [Glossary](../../concepts/glossary.md) and
 - Primary code:
   [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
   and
-  [packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts](../../../packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts)
+  [packages/@dvt/engine/src/ports/IRunStateStore.ts](../../../packages/@dvt/engine/src/ports/IRunStateStore.ts)
+  and
+  [packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts](../../../packages/@dvt/contracts/src/contracts/engine/RunStateVocabulary.v1.ts)
   and
   [packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts](../../../packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts)
   and

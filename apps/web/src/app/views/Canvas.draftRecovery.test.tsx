@@ -7,6 +7,18 @@ import {
   getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
 } from './Canvas.test.support';
+import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
+
+function expectCanvasActionsPaused(container: ParentNode): void {
+  const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
+
+  expect(layoutButton).toBeUndefined();
+  expect(planButton?.getAttribute('disabled')).not.toBeNull();
+  expect(runButton?.getAttribute('disabled')).not.toBeNull();
+  expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
+    canEditEdges: false,
+  });
+}
 
 describe('Canvas route draft recovery', () => {
   let harness: ReturnType<typeof createCanvasRouteHarness>;
@@ -30,7 +42,6 @@ describe('Canvas route draft recovery', () => {
       },
       reloadLatestDraft,
     });
-    const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(harness.container);
     const reloadButton = findCanvasButton(harness.container, 'Reload latest draft');
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
@@ -38,9 +49,7 @@ describe('Canvas route draft recovery', () => {
       harness.container.querySelector('[data-slot="canvas-missing-remote-draft-state"]')
     ).not.toBeNull();
     expect(harness.container.textContent).toContain('Persisted draft no longer exists');
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expectCanvasActionsPaused(harness.container);
     expect(reloadButton).not.toBeNull();
     expect(
       findCanvasButton(harness.container, 'Adopt current protected draft authority')
@@ -64,14 +73,13 @@ describe('Canvas route draft recovery', () => {
       },
       reloadLatestDraft,
     });
-    const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(harness.container);
     const reloadButton = findCanvasButton(harness.container, 'Reload latest draft');
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
-    expect(harness.container.querySelector('[data-slot="canvas-stale-draft-state"]')).not.toBeNull();
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-stale-draft-state"]')
+    ).not.toBeNull();
+    expectCanvasActionsPaused(harness.container);
     expect(reloadButton).not.toBeNull();
 
     await act(async () => {
@@ -92,7 +100,6 @@ describe('Canvas route draft recovery', () => {
       },
       reloadLatestDraft,
     });
-    const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(harness.container);
     const reloadButton = findCanvasButton(harness.container, 'Reload latest draft');
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
@@ -102,9 +109,7 @@ describe('Canvas route draft recovery', () => {
     expect(harness.container.textContent).toContain(
       'Persisted draft is ahead of the current protected draft authority'
     );
-    expect(layoutButton?.getAttribute('disabled')).not.toBeNull();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expectCanvasActionsPaused(harness.container);
     expect(
       findCanvasButton(harness.container, 'Adopt current protected draft authority')
     ).toBeUndefined();

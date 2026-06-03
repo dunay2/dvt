@@ -8,6 +8,7 @@ import {
   WORKFLOW_SCOPE_PATTERNS,
   WORKSPACE_ENTRIES,
   computeBooleanScope,
+  computeWorkflowModeScopeOutputs,
   computeWorkspaceMatrix,
   matchesAnyPattern,
 } from './scope-config.mjs';
@@ -40,6 +41,17 @@ test('classifies docs-only pull request scope', () => {
   assert.equal(scope.docs_changed, true);
   assert.equal(scope.any_code, false);
   assert.equal(scope.lane_yaml_changed, false);
+  assert.equal(scope.security_analysis_relevant, false);
+});
+
+test('keeps mailbox analysis out of security analysis scope', () => {
+  const scope = computeWorkflowModeScopeOutputs('workflow', [
+    'buzon/20260531-db-first-architecture-generated-docs-fowler-analysis.md',
+  ]);
+
+  assert.equal(scope.any_code, false);
+  assert.equal(scope.docs_changed, false);
+  assert.equal(scope.security_analysis_relevant, false);
 });
 
 test('classifies lane YAML changes for workboard checks', () => {
@@ -77,6 +89,7 @@ test('classifies app/package structural changes as code and generated-status rel
   assert.equal(scope.any_code, true);
   assert.equal(scope.generated_status_relevant, true);
   assert.equal(scope.generated_capability_relevant, true);
+  assert.equal(scope.security_analysis_relevant, true);
 });
 
 test('classifies turbo root-build surfaces for test-suite root config routing', () => {
@@ -101,6 +114,40 @@ test('classifies turbo root-build surfaces for workflow scope and workspace matr
   assert.equal(matrix.include.length, WORKSPACE_ENTRIES.length);
 });
 
+test('workflow policy changes stay on CI contracts without runtime fan-out', () => {
+  for (const file of ['.github/workflows/ci.yml', '.github/workflows/test.yml']) {
+    const workflowScope = computeWorkflowModeScopeOutputs('workflow', [file]);
+    const matrix = computeWorkspaceMatrix([file]);
+
+    assert.equal(workflowScope.any_code, true);
+    assert.equal(workflowScope.changed_file_validation_relevant, true);
+    assert.equal(workflowScope.security_analysis_relevant, true);
+    assert.equal(workflowScope.code_validation_relevant, false);
+    assert.equal(matrix.anyChanged, false);
+    assert.deepEqual(matrix.include, []);
+  }
+
+  const testScope = computeWorkflowModeScopeOutputs('test', ['.github/workflows/test.yml']);
+
+  assert.equal(testScope.any_test, false);
+  assert.equal(testScope.root_config, false);
+  assert.equal(testScope.root_build_sensitive, false);
+  assert.equal(testScope.postgres_capability_changed, false);
+  assert.equal(testScope.determinism_relevant, false);
+  assert.equal(testScope.coverage_relevant, false);
+});
+
+test('classifies dependency-cruiser config as CI policy validation without workspace fan-out', () => {
+  const scope = computeBooleanScope(['.dependency-cruiser.cjs'], WORKFLOW_SCOPE_PATTERNS);
+  const matrix = computeWorkspaceMatrix(['.dependency-cruiser.cjs']);
+
+  assert.equal(scope.any_code, true);
+  assert.equal(scope.changed_file_validation_relevant, true);
+  assert.equal(scope.security_analysis_relevant, true);
+  assert.equal(matrix.anyChanged, false);
+  assert.deepEqual(matrix.include, []);
+});
+
 test('planning db script path keeps workspace matrix empty while validation stays enabled', () => {
   const matrix = computeWorkspaceMatrix(['scripts/planning-db-query.cjs']);
   const scope = computeBooleanScope(['scripts/planning-db-query.cjs'], WORKFLOW_SCOPE_PATTERNS);
@@ -122,6 +169,22 @@ test('docs and ci helper script paths keep workspace matrix empty while validati
       true
     );
   }
+});
+
+test('classifies executable CI tool contracts separately from static CI policy tests', () => {
+  const executableScope = computeBooleanScope(
+    ['tools/ci/docs-manifest-contract.test.mjs'],
+    WORKFLOW_SCOPE_PATTERNS
+  );
+  const staticScope = computeBooleanScope(
+    ['tools/ci/workflow-pattern-parity.test.mjs'],
+    WORKFLOW_SCOPE_PATTERNS
+  );
+
+  assert.equal(executableScope.changed_file_validation_relevant, true);
+  assert.equal(executableScope.ci_tool_executable_contracts_relevant, true);
+  assert.equal(staticScope.changed_file_validation_relevant, true);
+  assert.equal(staticScope.ci_tool_executable_contracts_relevant, false);
 });
 
 test('workspace matrix covers every workspace with a build or typecheck script', () => {

@@ -1,5 +1,6 @@
 /** Owned concern: assemble web application ports at the composition root. */
 import type { CapabilitiesPort } from '../../ports/capabilities';
+import type { ICostAttributionSummaryPort } from '../../ports/cost';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -9,6 +10,7 @@ import type {
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
@@ -18,11 +20,13 @@ import { createApiClient, type ApiClient } from '../api/createApiClient';
 import { createCapabilitiesPort } from '../capabilities/capabilitiesPort';
 import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
 import { setRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
+import { createApiCostAttributionSummaryPort } from '../cost/costService.api';
 import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
 import { createPlansService } from '../plans/plansService';
 import { createRunsService } from '../runs/runsService';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import { createApiWorkspaceGraphDraftAuthoringPort } from '../workspace/workspaceGraphDraftAuthoring.api';
+import { createApiWorkspacePluginCatalogQueryPort } from '../workspace/workspacePluginCatalog.api';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
 
 export interface AppServices {
@@ -30,6 +34,7 @@ export interface AppServices {
   readonly apiClient: ApiClient;
   readonly workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  readonly workspaceFileHistoryQuery: IWorkspaceFileHistoryQueryPort;
   readonly workspaceDiffQuery: IWorkspaceDiffQueryPort;
   readonly workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
@@ -38,6 +43,7 @@ export interface AppServices {
   readonly workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
   readonly runsService: IRunsPort;
   readonly plansService: IPlansPort;
+  readonly costAttributionSummaryPort: ICostAttributionSummaryPort;
   readonly capabilitiesPort: CapabilitiesPort;
   readonly sessionContext: SessionContextPort;
   readonly shellFeedback: ShellFeedbackPort;
@@ -47,6 +53,7 @@ export interface AppServicesOverrides {
   readonly apiClient?: ApiClient;
   readonly workspaceGraphSnapshotQuery?: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery?: IWorkspaceFilesQueryPort;
+  readonly workspaceFileHistoryQuery?: IWorkspaceFileHistoryQueryPort;
   readonly workspaceDiffQuery?: IWorkspaceDiffQueryPort;
   readonly workspacePluginCatalogQuery?: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead?: IWorkspaceAdminReadPort;
@@ -55,6 +62,7 @@ export interface AppServicesOverrides {
   readonly workspaceGraphDraftAuthoringPort?: IWorkspaceGraphDraftAuthoringPort;
   readonly runsService?: IRunsPort;
   readonly plansService?: IPlansPort;
+  readonly costAttributionSummaryPort?: ICostAttributionSummaryPort;
   readonly capabilitiesPort?: CapabilitiesPort;
   readonly sessionContext?: SessionContextPort;
   readonly shellFeedback?: ShellFeedbackPort;
@@ -69,9 +77,11 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   const workspaceGraphSnapshotQuery =
     overrides.workspaceGraphSnapshotQuery ?? workspacePorts.workspaceGraphSnapshotQuery;
   const workspaceFilesQuery = overrides.workspaceFilesQuery ?? workspacePorts.workspaceFilesQuery;
+  const workspaceFileHistoryQuery =
+    overrides.workspaceFileHistoryQuery ?? workspacePorts.workspaceFileHistoryQuery;
   const workspaceDiffQuery = overrides.workspaceDiffQuery ?? workspacePorts.workspaceDiffQuery;
   const workspacePluginCatalogQuery =
-    overrides.workspacePluginCatalogQuery ?? workspacePorts.workspacePluginCatalogQuery;
+    overrides.workspacePluginCatalogQuery ?? createApiWorkspacePluginCatalogQueryPort(apiClient);
   const workspaceAdminRead = overrides.workspaceAdminRead ?? workspacePorts.workspaceAdminRead;
   const warehouseSourceImport =
     overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport;
@@ -86,6 +96,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     apiClient,
     workspaceGraphSnapshotQuery,
     workspaceFilesQuery,
+    workspaceFileHistoryQuery,
     workspaceDiffQuery,
     workspacePluginCatalogQuery,
     workspaceAdminRead,
@@ -94,6 +105,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     workspaceGraphDraftAuthoringPort,
     runsService: overrides.runsService ?? createRunsService(apiClient, { sessionContext }),
     plansService: overrides.plansService ?? createPlansService(apiClient),
+    costAttributionSummaryPort:
+      overrides.costAttributionSummaryPort ?? createApiCostAttributionSummaryPort(apiClient),
     capabilitiesPort: overrides.capabilitiesPort ?? createCapabilitiesPort(apiClient),
     sessionContext,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),

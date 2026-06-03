@@ -362,10 +362,6 @@
     },
     {
       "code": "MISSING_BASELINE",
-      "filePath": "packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts"
-    },
-    {
-      "code": "MISSING_BASELINE",
       "filePath": "packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts"
     },
     {

@@ -47,8 +47,8 @@ Acceptance criteria:
 ### US-WE-HX-2-003: control a run through command-specific use cases
 
 As a runtime maintainer, I want `cancelRun()` and `signal()` to route through
-separate facade-facing use cases, so control-service behavior remains isolated
-from contract parsing.
+separate facade-facing use cases and separate runtime services, so cancel and
+signal behavior remain isolated from contract parsing and from each other.
 
 Acceptance criteria:
 
@@ -56,6 +56,8 @@ Acceptance criteria:
 - `signal()` delegates to `IWorkflowSignalRunUseCase`.
 - `WorkflowCancelRunUseCase` and `WorkflowSignalRunUseCase` are separate
   modules with separate owned concerns.
+- `WorkflowCancelRunUseCase` depends on `IRunCommandService`.
+- `WorkflowSignalRunUseCase` depends on `IRunSignalService`.
 - `WorkflowEngine` does not import `IRunControlService`.
 
 ### US-WE-HX-2-004: read canonical run status through a query use case

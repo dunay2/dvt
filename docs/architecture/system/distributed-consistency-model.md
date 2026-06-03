@@ -189,7 +189,7 @@ sequenceDiagram
 - Failure mode when exceeded: the start call times out or fails and the run
   stays canonically queued until intent resolution or reconciliation completes.
 - Signal and operator route:
-  - `dvt.api.run_start.latency_ms`
+  - `dvt_api_run_start_latency_seconds`
   - [API Runtime SLA Canonical](../../runbooks/api-runtime-sla-canonical-20260404.md)
   - [Backend MVP Control-Plane Runbook](../../runbooks/backend-mvp-control-plane-runbook-20260329.md)
 
@@ -299,7 +299,7 @@ sequenceDiagram
   possible duplicate downstream observations; persistent failure ends in
   dead-letter.
 - Signal and operator route:
-  - `dvt_delivery_event_delivery_latency_ms`
+  - `dvt_delivery_event_delivery_latency_seconds`
   - `dvt_outbox_retried_records_total`
   - `dvt_outbox_dead_lettered_records_total`
   - [Outbox Worker Runbook](../../runbooks/outbox-worker-g5.md)

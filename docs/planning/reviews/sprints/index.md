@@ -24,6 +24,9 @@ Roadmap companion:
 
 ## Board File Rules
 
+- Planning DB is the canonical execution queue. Sprint board files can group
+  review needs, but they must not own claims, status, progress, blockers, or
+  evidence.
 - one board file per concrete need, not a mixed bucket
 - each board file MUST include status, dates, invariants, needs, and a user story
 - board files can be linked to workboard task IDs when a canonical task exists

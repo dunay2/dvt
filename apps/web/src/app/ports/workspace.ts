@@ -20,6 +20,15 @@ export type WorkspaceFileEntry = {
   children?: WorkspaceFileEntry[];
 };
 
+export type WorkspaceFileHistoryEntry = {
+  commitSha: string;
+  shortSha: string;
+  authorName: string;
+  authoredAt: string;
+  subject: string;
+  path: string;
+};
+
 export type WorkspaceGraphSnapshot = {
   nodes: DbtNode[];
   edges: DbtEdge[];
@@ -89,6 +98,11 @@ export interface IWorkspaceGraphSnapshotQueryPort {
 export interface IWorkspaceFilesQueryPort {
   listFiles: () => Promise<WorkspaceFileEntry[]>;
   getFileContent: (path: string) => Promise<FileContent>;
+}
+
+/** Owns read-only, file-scoped Git history access for workspace files. */
+export interface IWorkspaceFileHistoryQueryPort {
+  getFileHistory: (path: string) => Promise<WorkspaceFileHistoryEntry[]>;
 }
 
 /** Owns workspace diff read-model access for diff presentation consumers. */

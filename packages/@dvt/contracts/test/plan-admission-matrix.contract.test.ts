@@ -39,7 +39,12 @@ describe('ExecutionPlan admission matrix', () => {
     },
     {
       planVersion: CURRENT_EXECUTION_PLAN_VERSION,
-      schemaVersion: 'v1.future',
+      schemaVersion: 'v1.2',
+      expected: false,
+    },
+    {
+      planVersion: CURRENT_EXECUTION_PLAN_VERSION,
+      schemaVersion: '1.future',
       expected: false,
     },
     {

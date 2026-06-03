@@ -1,5 +1,8 @@
+/**
+ * Owned concern: render current-version outbox Prometheus text exposition.
+ */
 import {
-  DELIVERY_EVENT_LATENCY_BUCKETS_MS,
+  DELIVERY_EVENT_LATENCY_BUCKETS_SECONDS,
   RUNTIME_STATES,
   type OutboxDeliveryMetricsSnapshot,
   type OutboxRetentionMetricsSnapshot,
@@ -139,6 +142,31 @@ function renderLagAndTimestampMetrics(
 
 function renderRetentionMetrics(retention: OutboxRetentionMetricsSnapshot): string[] {
   return [
+    ...renderGaugeMetric(
+      'dvt_delivery_buffer_purge_configured',
+      'Whether delivery-buffer purge is configured for this worker process.',
+      retention.purgeConfigured ? 1 : 0
+    ),
+    ...renderGaugeMetric(
+      'dvt_delivery_buffer_purge_disabled',
+      'Whether delivery-buffer purge is disabled and should alert in active deployments.',
+      retention.purgeConfigured ? 0 : 1
+    ),
+    ...renderGaugeMetric(
+      'dvt_run_event_retention_configured',
+      'Whether run-event retention archival is configured for this worker process.',
+      retention.retentionConfigured ? 1 : 0
+    ),
+    ...renderGaugeMetric(
+      'dvt_run_event_retention_disabled',
+      'Whether run-event retention archival is disabled and should alert in active deployments.',
+      retention.retentionConfigured ? 0 : 1
+    ),
+    ...renderGaugeMetric(
+      'dvt_run_event_retention_filesystem_archive_storage',
+      'Whether run-event retention uses filesystem archive storage.',
+      retention.filesystemArchiveStorageConfigured ? 1 : 0
+    ),
     ...renderCounterMetric(
       'dvt_run_event_retention_cycles_total',
       'Total run-event retention cycles executed.',
@@ -174,14 +202,14 @@ function renderRetentionMetrics(retention: OutboxRetentionMetricsSnapshot): stri
 
 function renderEventDeliveryLatencyMetrics(delivery: OutboxDeliveryMetricsSnapshot): string[] {
   return [
-    '# HELP dvt_delivery_event_delivery_latency_ms End-to-end delivery attempt latency from claim to delivered/failed observer callback.',
-    '# TYPE dvt_delivery_event_delivery_latency_ms histogram',
-    ...DELIVERY_EVENT_LATENCY_BUCKETS_MS.map(
+    '# HELP dvt_delivery_event_delivery_latency_seconds End-to-end delivery attempt latency from claim to delivered/failed observer callback.',
+    '# TYPE dvt_delivery_event_delivery_latency_seconds histogram',
+    ...DELIVERY_EVENT_LATENCY_BUCKETS_SECONDS.map(
       (le, index) =>
-        `dvt_delivery_event_delivery_latency_ms_bucket{le="${le}"} ${delivery.eventDeliveryLatencyBucketCounts[index] ?? 0}`
+        `dvt_delivery_event_delivery_latency_seconds_bucket{le="${le}"} ${delivery.eventDeliveryLatencyBucketCounts[index] ?? 0}`
     ),
-    `dvt_delivery_event_delivery_latency_ms_bucket{le="+Inf"} ${delivery.eventDeliveryLatencyCount}`,
-    `dvt_delivery_event_delivery_latency_ms_sum ${roundToMillis(delivery.eventDeliveryLatencySumMs)}`,
-    `dvt_delivery_event_delivery_latency_ms_count ${delivery.eventDeliveryLatencyCount}`,
+    `dvt_delivery_event_delivery_latency_seconds_bucket{le="+Inf"} ${delivery.eventDeliveryLatencyCount}`,
+    `dvt_delivery_event_delivery_latency_seconds_sum ${roundToMillis(delivery.eventDeliveryLatencySumSeconds)}`,
+    `dvt_delivery_event_delivery_latency_seconds_count ${delivery.eventDeliveryLatencyCount}`,
   ];
 }

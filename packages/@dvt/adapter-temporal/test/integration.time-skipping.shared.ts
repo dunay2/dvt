@@ -6,10 +6,10 @@
 import type { ExecutionPlan, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 
+import type { DbtPluginRunner } from '../../temporal-dbt-plugin/src/index.js';
 import type { StepExecutor } from '../src/activities/stepActivities.js';
 import type { TemporalAdapterConfig } from '../src/config.js';
 import {
-  type DbtPluginRunner,
   loadTemporalAdapterConfig,
   TemporalAdapter,
   TemporalWorkerHost,

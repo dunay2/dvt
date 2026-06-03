@@ -4,20 +4,22 @@ import type {
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
 } from '../../ports/workspace';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
+import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import {
   apiWorkspacePortCapabilities,
   createApiWarehouseSourceImportPort,
   createApiWorkspaceAdminReadPort,
   createApiWorkspaceDiffQueryPort,
   createApiWorkspaceFileContentCommandPort,
+  createApiWorkspaceFileHistoryQueryPort,
   createApiWorkspaceFilesQueryPort,
   createApiWorkspaceGraphSnapshotQueryPort,
-  createApiWorkspacePluginCatalogQueryPort,
 } from './workspacePorts.api';
 
 export type {
@@ -39,6 +41,7 @@ export type WorkspacePortCapabilities = {
 export type WorkspacePorts = {
   readonly workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  readonly workspaceFileHistoryQuery: IWorkspaceFileHistoryQueryPort;
   readonly workspaceDiffQuery: IWorkspaceDiffQueryPort;
   readonly workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort;
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
@@ -54,10 +57,11 @@ export function createWorkspacePorts(apiClient: ApiClient = createApiClient()): 
   return {
     workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),
     workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
-    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(),
-    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
+    workspaceFileHistoryQuery: createApiWorkspaceFileHistoryQueryPort(apiClient),
+    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
+    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
-    warehouseSourceImport: createApiWarehouseSourceImportPort(),
-    workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(),
+    warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient),
+    workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
   };
 }

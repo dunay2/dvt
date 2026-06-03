@@ -1,5 +1,6 @@
 /** Owned concern: compose bootstrapping, persistence, save-attempt policy, and first-canvas creation into one narrow Canvas draft-lifecycle seam. */
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
 import type {
@@ -11,7 +12,17 @@ import { useCanvasCurrentDraftPayload } from './useCanvasCurrentDraftPayload';
 import { useCanvasDraftAttemptRefs } from './useCanvasDraftAttemptRefs';
 import { useCanvasDraftBootstrapSync } from './useCanvasDraftBootstrapSync';
 import { useCanvasDraftPersistence } from './useCanvasDraftPersistence';
+import { useCanvasExecutionDraftFlush } from './useCanvasExecutionDraftFlush';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
+import { deriveCanCreateCanvasDocument } from './canvasCreateCanvasDocumentAvailability';
+import {
+  executeDeleteCanvasDocumentCommand,
+  executeSelectCanvasDocumentCommand,
+  executeUpdateCanvasDocumentCommand,
+} from './canvasProjectCanvasLifecycleCommand';
+import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
+import { canvasProjectSnapshot } from './canvasProjectSnapshot';
+import { canvasViewCopy } from './copy';
 
 export function useCanvasDraftLifecycle({
   baseline,
@@ -43,6 +54,7 @@ export function useCanvasDraftLifecycle({
       graphNodes,
       draftSession,
       canvasDocument: graphDraftQuery.data?.record?.draft.canvas ?? null,
+      baselineDraft: graphDraftQuery.data?.record?.draft ?? null,
       canonicalNodes,
       canonicalEdges,
       workspaceScope,
@@ -81,6 +93,13 @@ export function useCanvasDraftLifecycle({
     applyReloadedRemoteDraft,
     createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
   });
+  const effectiveDraftSaveStatus =
+    draftSession.syncState === 'editing' &&
+    canPersistCurrentDraft &&
+    currentDraftPayloadSignature !== refs.lastSavedSignatureRef.current &&
+    currentDraftPayloadSignature !== refs.lastFailedSignatureRef.current
+      ? 'saving'
+      : draftSaveStatus;
 
   const handleCreateCanvasDocument = useCallback<
     CanvasDraftLifecycle['handleCreateCanvasDocument']
@@ -88,6 +107,7 @@ export function useCanvasDraftLifecycle({
     async (command) =>
       await executeCreateCanvasDocumentCommand({
         command,
+        currentDraftPayload,
         draftRepository,
         graphDraftQuery,
         draftQueryCache,
@@ -106,12 +126,153 @@ export function useCanvasDraftLifecycle({
       refs.lastSavedSignatureRef,
       setDraftSession,
       setDraftSaveStatus,
+      currentDraftPayload,
+    ]
+  );
+  const canvasLifecycleCommandDto = useMemo(
+    () => ({
+      currentDraftPayload,
+      draftRepository,
+      graphDraftQuery,
+      draftQueryCache,
+      canPersistGraphDraft,
+      setDraftSession,
+      setDraftSaveStatus,
+      lastSavedSignatureRef: refs.lastSavedSignatureRef,
+    }),
+    [
+      canPersistGraphDraft,
+      currentDraftPayload,
+      draftQueryCache,
+      draftRepository,
+      graphDraftQuery,
+      refs.lastSavedSignatureRef,
+      setDraftSession,
+      setDraftSaveStatus,
+    ]
+  );
+  const handleSelectCanvasDocument = useCallback<
+    CanvasDraftLifecycle['handleSelectCanvasDocument']
+  >(
+    async (canvasId) => {
+      await executeSelectCanvasDocumentCommand({
+        ...canvasLifecycleCommandDto,
+        canvasId,
+      });
+    },
+    [canvasLifecycleCommandDto]
+  );
+  const handleApplyCanvasDocumentPatch = useCallback<
+    CanvasDraftLifecycle['handleApplyCanvasDocumentPatch']
+  >(
+    async (command) => {
+      await executeUpdateCanvasDocumentCommand({
+        ...canvasLifecycleCommandDto,
+        command,
+      });
+    },
+    [canvasLifecycleCommandDto]
+  );
+  const handleDeleteCanvasDocument = useCallback<
+    CanvasDraftLifecycle['handleDeleteCanvasDocument']
+  >(async () => {
+    await executeDeleteCanvasDocumentCommand(canvasLifecycleCommandDto);
+  }, [canvasLifecycleCommandDto]);
+  const flushDraftForExecution = useCanvasExecutionDraftFlush({
+    draftRepository,
+    draftQueryCache,
+    graphDraftState: graphDraftQuery.data,
+    draftRevision: draftSession.draftRevision,
+    draftSyncState: draftSession.syncState,
+    currentDraftPayload,
+    currentDraftPayloadSignature,
+    canPersistGraphDraft,
+    canPersistCurrentDraft,
+    refs,
+    setDraftSession,
+    setDraftSaveStatus,
+    invalidateInFlightSaveAttempt,
+    createDraftIdempotencyKey: createCanvasDraftIdempotencyKey,
+  });
+  const canExportProjectSnapshot =
+    graphDraftQuery.data?.record != null &&
+    !graphDraftQuery.isPending &&
+    !graphDraftQuery.isError &&
+    draftSaveStatus !== 'saving' &&
+    draftSaveStatus !== 'failed';
+  const canCreateCanvasDocument = deriveCanCreateCanvasDocument({
+    canPersistGraphDraft,
+    graphDraftQuery,
+  });
+  const canImportProjectSnapshot =
+    canPersistGraphDraft && !graphDraftQuery.isPending && !graphDraftQuery.isError;
+  const handleExportProjectSnapshot = useCallback<
+    CanvasDraftLifecycle['handleExportProjectSnapshot']
+  >(() => {
+    const record = graphDraftQuery.data?.record ?? null;
+    if (!canExportProjectSnapshot || record == null) {
+      toast.error(canvasViewCopy.projectSnapshotExportUnavailableMessage);
+      return;
+    }
+
+    const exported = canvasProjectSnapshot.exportFile({
+      record,
+      workspaceScope,
+      exportedAt: new Date().toISOString(),
+    });
+    const blob = new Blob([exported.contents], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = exported.fileName;
+    anchor.rel = 'noopener';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, [canExportProjectSnapshot, graphDraftQuery.data?.record, workspaceScope]);
+  const handleImportProjectSnapshotFile = useCallback<
+    CanvasDraftLifecycle['handleImportProjectSnapshotFile']
+  >(
+    async (file) => {
+      await executeImportProjectSnapshotCommand({
+        file,
+        canImportProjectSnapshot,
+        draftRepository,
+        graphDraftQuery,
+        draftQueryCache,
+        setDraftSession,
+        setDraftSaveStatus,
+        refs,
+        invalidateInFlightSaveAttempt,
+      });
+    },
+    [
+      canImportProjectSnapshot,
+      draftQueryCache,
+      draftRepository,
+      graphDraftQuery.data?.record?.revision,
+      invalidateInFlightSaveAttempt,
+      refs,
+      setDraftSession,
+      setDraftSaveStatus,
     ]
   );
 
   return {
-    draftSaveStatus,
+    draftSaveStatus: effectiveDraftSaveStatus,
+    flushDraftForExecution,
     reloadLatestDraft,
     handleCreateCanvasDocument,
+    handleSelectCanvasDocument,
+    handleApplyCanvasDocumentPatch,
+    handleDeleteCanvasDocument,
+    canCreateCanvasDocument,
+    canExportProjectSnapshot,
+    canImportProjectSnapshot,
+    handleExportProjectSnapshot,
+    handleImportProjectSnapshotFile,
   };
 }

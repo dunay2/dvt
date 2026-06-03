@@ -1,10 +1,18 @@
-/** Owned concern: expose effective web UI authorization capabilities outside runtime evidence. */
+/** Owned concern: cache server-projected web UI authorization capabilities.
+ * @file apps/web/src/app/stores/authorizationStore.ts
+ * @baseline ADR-0056: Web UI authority is server-projected
+ * @decision Section 2 - Authorization defaults deny privileged UI actions until server projection loads
+ * @consequence The browser cannot grant plan, run, edge-edit, plugin, or RBAC authority optimistically
+ * @version 1.0.0
+ * @date 2026-05-10
+ */
 import { create } from 'zustand';
 
 export type UserPermissions = {
   canPlan: boolean;
   canRun: boolean;
   canEditEdges: boolean;
+  canPersistGraphDraft: boolean;
   canManagePlugins: boolean;
   canManageRBAC: boolean;
 };
@@ -15,11 +23,12 @@ type AuthorizationState = {
 };
 
 export const DEFAULT_USER_PERMISSIONS: UserPermissions = {
-  canPlan: true,
-  canRun: true,
-  canEditEdges: true,
-  canManagePlugins: true,
-  canManageRBAC: true,
+  canPlan: false,
+  canRun: false,
+  canEditEdges: false,
+  canPersistGraphDraft: false,
+  canManagePlugins: false,
+  canManageRBAC: false,
 };
 
 export const useAuthorizationStore = create<AuthorizationState>()((set) => ({

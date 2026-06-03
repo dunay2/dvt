@@ -3,14 +3,15 @@
  */
 import type {
   ActivityDeps,
-  DbtPluginRunner,
   RunStateCommandCircuitSnapshot,
+  StepActivityRegistry,
   TemporalAdapterConfig,
   TemporalPlanArtifactReader,
   TemporalWorkerHostConfig,
 } from '@dvt/adapter-temporal';
 import type { IDbtProjectBundleReader, IRunExecutionContextReader } from '@dvt/artifacts';
 import type { AppendResult, EventInput, RunBootstrapInput } from '@dvt/engine';
+import type { DbtPluginRunner } from '@dvt/temporal-dbt-plugin';
 
 import type { Env } from '../plugins/env.js';
 
@@ -46,9 +47,15 @@ export interface CreateTemporalWorkerRuntimeOptions {
     bundleReader: IDbtProjectBundleReader;
   }) => DbtPluginRunner;
   planArtifactReaderFactory?: (env: Env) => TemporalPlanArtifactReader;
+  postgresRelationalCapabilityFactory?: (env: Env) => TemporalWorkerStepCapability;
   hostFactory?: (config: TemporalWorkerHostConfig) => TemporalWorkerHostLike;
   connectionFactory?: (config: TemporalAdapterConfig) => Promise<TemporalConnectionLike>;
   dbtAvailabilityProbe?: (dbtBin: string) => Promise<void>;
+}
+
+export interface TemporalWorkerStepCapability {
+  stepActivitiesByKind: StepActivityRegistry;
+  close(): Promise<void>;
 }
 
 export interface TemporalWorkerRuntimeResources {
@@ -62,4 +69,5 @@ export interface TemporalWorkerRuntimeResources {
   };
   dbtAvailabilityProbe?: () => Promise<void>;
   stepActivitiesByKind?: TemporalWorkerHostConfig['stepActivitiesByKind'];
+  closeStepActivityResources?: () => Promise<void>;
 }

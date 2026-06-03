@@ -5,7 +5,9 @@ import type { FastifyInstance } from 'fastify';
 
 import { GetWorkspaceFileContentUseCase } from '../../application/services/getWorkspaceFileContentUseCase.js';
 import { ListWorkspaceFilesUseCase } from '../../application/services/listWorkspaceFilesUseCase.js';
+import { SaveWorkspaceFileContentUseCase } from '../../application/services/saveWorkspaceFileContentUseCase.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
+import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
@@ -33,13 +35,10 @@ export function registerProtectedWorkspaceFilesRouteGroup(
     ...options.runtimeAuth,
     getUseCase: new GetWorkspaceFileContentUseCase(repository),
     listUseCase: new ListWorkspaceFilesUseCase(repository),
+    saveUseCase: new SaveWorkspaceFileContentUseCase(repository),
     rateLimit: {
       max: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
       timeWindow: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
     },
   });
-}
-
-function resolveWorkspaceFilesRoot(env: Env): string {
-  return env.DVT_WORKSPACE_FILES_ROOT ?? env.DVT_DBT_BUNDLE_FILE_ROOT ?? process.cwd();
 }

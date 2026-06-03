@@ -4,6 +4,11 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
+  buildCanvasWorkspaceResourceGroups,
+  serializeCanvasWorkspaceResourceDragPayload,
+} from './canvasWorkspaceExplorerModel';
 import DbtExplorer from './DbtExplorer';
 import type { CanonicalNode } from '../types/canonical';
 import { buildTestNodeKind } from '../views/canvas/canvasKindRegistration.testSupport';
@@ -24,6 +29,14 @@ function buildNode(): CanonicalNode {
     status: 'idle' as const,
     tags: [],
   };
+}
+
+function dispatchDragStart(target: Element, dataTransfer: DataTransfer): void {
+  const event = new Event('dragstart', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'dataTransfer', {
+    value: dataTransfer,
+  });
+  target.dispatchEvent(event);
 }
 
 describe('DbtExplorer', () => {
@@ -52,11 +65,17 @@ describe('DbtExplorer', () => {
     vi.clearAllMocks();
   });
 
+  function buildResourceGroups(
+    nodes: CanonicalNode[]
+  ): ReturnType<typeof buildCanvasWorkspaceResourceGroups> {
+    return buildCanvasWorkspaceResourceGroups({ nodes });
+  }
+
   it('keeps drag affordances and import guidance when graph edits are allowed', async () => {
     await act(async () => {
       root.render(
         <DbtExplorer
-          nodes={[buildNode()]}
+          resourceGroups={buildResourceGroups([buildNode()])}
           canEditGraph={true}
           onHide={vi.fn()}
           onOpenDataRegistry={vi.fn()}
@@ -76,7 +95,7 @@ describe('DbtExplorer', () => {
     await act(async () => {
       root.render(
         <DbtExplorer
-          nodes={[buildNode()]}
+          resourceGroups={buildResourceGroups([buildNode()])}
           canEditGraph={false}
           onHide={vi.fn()}
           onOpenDataRegistry={vi.fn()}
@@ -99,7 +118,12 @@ describe('DbtExplorer', () => {
   it('keeps Add data action visible even with an empty workspace', async () => {
     await act(async () => {
       root.render(
-        <DbtExplorer nodes={[]} canEditGraph={true} onHide={vi.fn()} onOpenDataRegistry={vi.fn()} />
+        <DbtExplorer
+          resourceGroups={[]}
+          canEditGraph={true}
+          onHide={vi.fn()}
+          onOpenDataRegistry={vi.fn()}
+        />
       );
     });
 
@@ -111,18 +135,18 @@ describe('DbtExplorer', () => {
     expect(addDataButton?.getAttribute('disabled')).toBeNull();
   });
 
-  it('exposes editable node-kind creation actions beside project resources', async () => {
+  it('keeps node-kind creation out of the project-resource explorer', async () => {
     const nodeKind = buildTestNodeKind();
     const onCreateAuthoringNode = vi.fn();
 
     await act(async () => {
       root.render(
-        <DbtExplorer
-          nodes={[buildNode()]}
-          canEditGraph={true}
-          nodeKinds={[nodeKind]}
-          onCreateAuthoringNode={onCreateAuthoringNode}
-        />
+        React.createElement(DbtExplorer as React.ComponentType<Record<string, unknown>>, {
+          resourceGroups: buildResourceGroups([buildNode()]),
+          canEditGraph: true,
+          nodeKinds: [nodeKind],
+          onCreateAuthoringNode,
+        })
       );
     });
 
@@ -130,13 +154,50 @@ describe('DbtExplorer', () => {
       button.textContent?.includes('Source')
     );
 
-    expect(container.textContent).toContain('Add node');
-    expect(createButton).not.toBeNull();
+    expect(container.textContent).not.toContain('Add node');
+    expect(createButton).toBeUndefined();
+    expect(onCreateAuthoringNode).not.toHaveBeenCalled();
+  });
 
+  it('serializes schema resources with the project resource drag payload', async () => {
     await act(async () => {
-      createButton?.click();
+      root.render(
+        <DbtExplorer
+          resourceGroups={buildResourceGroups([
+            {
+              ...buildNode(),
+              metadata: {
+                config: {
+                  schema: 'mart',
+                },
+              },
+            },
+          ])}
+          canEditGraph={true}
+        />
+      );
     });
 
-    expect(onCreateAuthoringNode).toHaveBeenCalledWith(nodeKind);
+    const schemaRow = Array.from(container.querySelectorAll('[draggable="true"]')).find((row) =>
+      row.textContent?.includes('mart')
+    );
+    const setData = vi.fn();
+    const dataTransfer = {
+      effectAllowed: '',
+      setData,
+    } as unknown as DataTransfer;
+
+    expect(schemaRow).toBeDefined();
+    dispatchDragStart(schemaRow as Element, dataTransfer);
+
+    expect(setData).toHaveBeenCalledWith(
+      CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
+      serializeCanvasWorkspaceResourceDragPayload({
+        resourceId: 'schema:mart',
+        resourceType: 'schema',
+        schemaName: 'mart',
+        label: 'mart',
+      })
+    );
   });
 });

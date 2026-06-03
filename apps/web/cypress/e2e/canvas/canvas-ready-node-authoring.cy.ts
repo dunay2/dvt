@@ -1,3 +1,4 @@
+/** Owned concern: prove governed Canvas draft reads, saves, and reload posture in browser. */
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   stubFailingCanvasDraftSave,

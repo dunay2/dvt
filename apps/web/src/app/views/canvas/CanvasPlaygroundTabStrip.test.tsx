@@ -23,6 +23,21 @@ const transformationCanvasKind: CanvasKindRegistration = {
   nodeKinds: [],
 };
 
+const dbtCanvasKind: CanvasKindRegistration = {
+  kind: 'dbt',
+  pluginId: 'dbt',
+  label: 'dbt',
+  description: 'Author dbt projects.',
+  createTitle: 'dbt canvas',
+  emptyState: {
+    title: 'No dbt content loaded',
+    editableMessage: 'Add dbt resources to start authoring.',
+    firstNodeLabel: 'Add first dbt node',
+    firstNodeHelper: 'Choose a dbt resource.',
+  },
+  nodeKinds: [],
+};
+
 function renderTabStrip(props?: Partial<React.ComponentProps<typeof CanvasPlaygroundTabStrip>>): {
   container: HTMLDivElement;
   root: Root;
@@ -75,7 +90,7 @@ describe('CanvasPlaygroundTabStrip', () => {
     vi.clearAllMocks();
   });
 
-  it('requires confirmation before replacing the current draft canvas with a blank canvas', async () => {
+  it('requires confirmation before adding a blank canvas to the current draft', async () => {
     const { container, onCreateCanvasDocument, root } = renderTabStrip();
 
     const newCanvasButton = Array.from(container.querySelectorAll('button')).find((button) =>
@@ -101,7 +116,60 @@ describe('CanvasPlaygroundTabStrip', () => {
     expect(onCreateCanvasDocument).toHaveBeenCalledWith({
       kind: 'transformation',
       title: 'Transformation canvas',
-      mode: 'replace_current',
+      mode: 'create_new',
+    });
+
+    act(() => {
+      root.unmount();
+    });
+  });
+
+  it('lets the user choose SQL-first transformation when adding a canvas from a dbt canvas', async () => {
+    const { container, onCreateCanvasDocument, root } = renderTabStrip({
+      tabState: {
+        activeTabId: 'workspace-draft-canvas',
+        tabs: [
+          {
+            id: 'workspace-draft-canvas',
+            title: 'dbt authoring live',
+            kind: 'dbt',
+            kindLabel: 'dbt',
+            source: 'workspace_draft',
+          },
+        ],
+      },
+      availableCanvasKinds: [dbtCanvasKind, transformationCanvasKind],
+    });
+
+    const newCanvasButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes(canvasViewCopy.newCanvasLabel)
+    );
+
+    await act(async () => {
+      newCanvasButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const transformationOption = document.body.querySelector<HTMLElement>(
+      '[data-slot="canvas-replacement-template-option"][data-kind="transformation"]'
+    );
+    expect(transformationOption).not.toBeNull();
+
+    await act(async () => {
+      transformationOption?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const confirmButton = Array.from(document.body.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes(canvasViewCopy.replaceCanvasConfirmLabel)
+    );
+
+    await act(async () => {
+      confirmButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onCreateCanvasDocument).toHaveBeenCalledWith({
+      kind: 'transformation',
+      title: 'Transformation canvas',
+      mode: 'create_new',
     });
 
     act(() => {

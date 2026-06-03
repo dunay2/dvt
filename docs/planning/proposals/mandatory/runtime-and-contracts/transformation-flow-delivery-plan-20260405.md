@@ -386,3 +386,7 @@ true:
 3. result surfaces do not expose materialization evidence
 4. Docker proof environment is non-repeatable or undocumented
 5. dbt integration requires a second outer flow
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

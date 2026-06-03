@@ -72,7 +72,7 @@ Scenario coverage is tracked in
 - `workspaceService.api.test.ts`
 - Canvas controller draft lifecycle and reload tests under
   `apps/web/src/app/views/canvas`
-- `canvasStartupAndDraftRecovery.architecture.test.ts`
+- `canvasDraftRecoveryBoundary.architecture.test.ts`
 - `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`
 
 ## Diagrams

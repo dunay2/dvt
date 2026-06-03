@@ -56,6 +56,9 @@ export async function runPlanWorkflow(input: RunPlanWorkflowInput): Promise<RunP
     completedSteps: 0,
     processedLayersInCurrentExecution: 0,
     latestResultEvidence: ctrl.latestResultEvidence,
+    ...(input.stepActivityRouting === undefined
+      ? {}
+      : { stepActivityRouting: input.stepActivityRouting }),
   };
 
   let runtimeExecutor: TransformationExecutor | undefined;

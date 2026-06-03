@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 /**
+ * Owned concern: validate governance unit hierarchy and exact file ownership.
+ *
  * Validate the system governance unit manifest.
  */
 
@@ -39,10 +41,18 @@ const parentLevelByLevel = new Map([
   ['domain', new Set(['system'])],
   ['workspace', new Set(['system', 'domain'])],
   ['module', new Set(['domain', 'workspace'])],
-  ['component', new Set(['system', 'domain', 'workspace', 'module'])],
+  ['component', new Set(['system', 'domain', 'workspace', 'module', 'component'])],
   ['source', new Set(['component'])],
   ['symbol', new Set(['source'])],
 ]);
+
+const canonicalComponentSemanticFields = [
+  'ownedConcern',
+  'publicApi',
+  'invariants',
+  'transitions',
+  'consumers',
+];
 
 function toPosix(filePath) {
   return filePath.replace(/\\/g, '/');
@@ -102,18 +112,32 @@ function globToRegExp(pattern) {
   return new RegExp(source);
 }
 
-function findOwnerMatches(filePath, units) {
-  const normalizedPath = toPosix(filePath);
-  return units.filter((unit) => {
-    const ownsFile = (unit.owns || []).some((pattern) =>
-      globToRegExp(pattern).test(normalizedPath)
-    );
-    if (!ownsFile) {
-      return false;
-    }
+function buildOwnerMatcher(units) {
+  const ownerRules = units
+    .map((unit) => ({
+      unit,
+      owns: (unit.owns || []).map(globToRegExp),
+      excludes: (unit.excludes || []).map(globToRegExp),
+    }))
+    .filter((rule) => rule.owns.length > 0);
 
-    return !(unit.excludes || []).some((pattern) => globToRegExp(pattern).test(normalizedPath));
-  });
+  return (filePath) => {
+    const normalizedPath = toPosix(filePath);
+    return ownerRules
+      .filter((rule) => {
+        const ownsFile = rule.owns.some((pattern) => pattern.test(normalizedPath));
+        if (!ownsFile) {
+          return false;
+        }
+
+        return !rule.excludes.some((pattern) => pattern.test(normalizedPath));
+      })
+      .map((rule) => rule.unit);
+  };
+}
+
+function findOwnerMatches(filePath, units) {
+  return buildOwnerMatcher(units)(filePath);
 }
 
 function validateUnitShape(unit, unitIds, errors) {
@@ -150,6 +174,20 @@ function validateUnitShape(unit, unitIds, errors) {
     errors.push(
       `Unit ${unit.id} owns files but has level ${unit.level}; ownership belongs to component or source units.`
     );
+  }
+
+  if (unit.level === 'component' && unit.status === 'canonical') {
+    for (const field of canonicalComponentSemanticFields) {
+      const value = unit[field];
+      const missing =
+        value === undefined ||
+        value === null ||
+        value === '' ||
+        (Array.isArray(value) && value.length === 0);
+      if (missing) {
+        errors.push(`Unit ${unit.id} is canonical but missing ${field}.`);
+      }
+    }
   }
 
   if (unit.level === 'system') {
@@ -211,8 +249,10 @@ function validateNoCycles(units, unitById, errors) {
 }
 
 function validateFileOwnership(units, trackedFiles, errors) {
+  const ownerMatcher = buildOwnerMatcher(units);
+
   for (const filePath of trackedFiles) {
-    const matches = findOwnerMatches(filePath, units);
+    const matches = ownerMatcher(filePath);
     if (matches.length === 0) {
       errors.push(`Tracked file ${filePath} has no owning governance unit.`);
       continue;
@@ -291,6 +331,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  buildOwnerMatcher,
   findOwnerMatches,
   globToRegExp,
   readManifest,

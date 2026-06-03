@@ -388,7 +388,7 @@ tasks:
   - task_id: AR-C1-T4
     parent_task: AR-C1
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       extract a shared API-test snapshot fixture helper so admin/runtime tests stop embedding local
       WorkflowSnapshot builders.
@@ -398,17 +398,23 @@ tasks:
       construction in admin route coverage.
     complexity: S
     effort_points: 2
-    progress_pct: 20
+    progress_pct: 100
     evidence_refs:
+      - apps/api/test/fixtures/workflowSnapshotFixture.ts
+      - apps/api/test/architecture/workflowSnapshotFixtureSemantics.architecture.test.ts
       - apps/api/test/entrypoints/http/adminRoutes.test.ts
-      - apps/api/test/integration/protectedRuntime.integration.test.ts
+      - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
+      - buzon/20260514-codex-fowler-ar-c1-t4-snapshot-fixture-analysis.md
+      - docs/planning/closeouts/20260522-ar-c1-t4-api-snapshot-fixture-closeout.md
     status_reason: >-
-      Snapshot fixture duplication is small but recurring and creates avoidable maintenance drift.
-    last_verified: '2026-04-03'
+      Validated as already implemented: canonical admin rebuild workflow snapshot fixture exists,
+      admin route and contract tests use it, semantic architecture guard passes, and API validation
+      gates passed on 2026-05-22.
+    last_verified: '2026-05-22'
   - task_id: CFG-TS-T1
     parent_task: AR-C1
     priority: P2
-    status: in_progress
+    status: done
     objective: >-
       produce a staged migration plan for TypeScript `baseUrl` deprecation covering inventory,
       compatibility risks, rollout waves, and rollback points before any config change lands.
@@ -418,18 +424,19 @@ tasks:
       validation baseline (`typecheck`, tests, `verify:prepush`) for each wave.
     complexity: M
     effort_points: 5
-    progress_pct: 65
+    progress_pct: 100
     evidence_refs:
-      - tsconfig.node-runtime.base.json
-      - tsconfig.package-bundler.base.json
-      - apps/web/tsconfig.json
+      - docs/planning/proposals/mandatory/runtime-and-contracts/cfg-ts-t1-baseurl-deprecation-migration-plan-20260522.md
+      - docs/planning/closeouts/20260522-cfg-ts-t1-baseurl-deprecation-plan-closeout.md
+      - docs/architecture/typescript-package-classification.md
     status_reason: >-
-      `baseUrl` deprecation warnings are visible in editor/runtime configs; implementation should be
-      gated behind an explicit migration plan to avoid module-resolution regressions.
-    last_verified: '2026-04-03'
+      Canonical baseUrl deprecation migration plan added; active tsconfig inventory has no
+      compilerOptions.baseUrl and remaining paths risk is routed into staged
+      package-boundary/runtime/web validation work.
+    last_verified: '2026-05-22'
   - task_id: AR-C2
     priority: P0
-    status: in_progress
+    status: blocked
     objective: >-
       define and document formal SLA targets for event delivery latency, snapshot freshness, plan
       compilation time, run start latency, and outbox drain rate with measurable thresholds and
@@ -446,8 +453,11 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+      - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
       - docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
+      - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+      - docs/runbooks/ar-c2-evidence-generated-latest.md
       - docs/guides/api-control-plane-user-manual-20260404.md
       - docs/guides/api-control-plane-technical-manual-20260404.md
       - docs/runbooks/backend-mvp-control-plane-runbook-20260329.md
@@ -457,13 +467,11 @@ tasks:
       - apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
       - apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts
     status_reason: >-
-      Canonical SLA/manuals are delivered and all AR-C2 metrics are now emitted in code (API
-      start-run/plan-compile plus outbox drain/event-delivery in outbox-worker); remaining closure
-      is dashboard/alert wiring and sustained threshold validation evidence; decomposition now
-      tracked as `AR-C2-T1..T4` in the AR-C2 operational closure plan and reviewed in the AR-C2
-      Fowler hard QA artifact, with a single closeout checklist artifact for pending evidence
-      tracking.
-    last_verified: '2026-04-04'
+      Canonical SLA/manuals and metric emission exist, but AR-C2 is blocked by immutable operational
+      evidence: the collector reports 9 missing dashboard panels, 11 missing alert rules, and 9
+      missing sustained validation windows. Do not mark the parent done until `AR-C2-T2`,
+      `AR-C2-T3`, and `AR-C2-T4` pass their assertion-mode evidence gates.
+    last_verified: '2026-05-22'
   - task_id: AR-C2-T1
     parent_task: AR-C2
     priority: P0
@@ -489,7 +497,7 @@ tasks:
   - task_id: AR-C2-T2
     parent_task: AR-C2
     priority: P0
-    status: in_progress
+    status: blocked
     objective: >-
       complete dashboard wiring evidence for all mapped AR-C2 signals.
     dependency: AR-C2-T1
@@ -502,15 +510,16 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+      - docs/runbooks/ar-c2-evidence-generated-latest.md
+      - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
     status_reason: >-
-      Signal-to-panel mapping is frozen, and governed evidence capture baseline now exists; final
-      dashboard wiring proof is still pending because monitor configuration evidence has not yet
-      been attached, but the dashboard evidence matrix is now preloaded for row-by-row execution.
-    last_verified: '2026-04-04'
+      Blocked until an immutable dashboard snapshot supplies complete panel metadata for all 9 AR-C2
+      mapped signals; assertion mode currently fails closed with `AR-C2_IMMUTABLE_EVIDENCE_MISSING`.
+    last_verified: '2026-05-22'
   - task_id: AR-C2-T3
     parent_task: AR-C2
     priority: P0
-    status: in_progress
+    status: blocked
     objective: >-
       complete alert wiring evidence for AR-C2 SLA thresholds and routing posture.
     dependency: AR-C2-T1
@@ -523,15 +532,17 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+      - docs/runbooks/ar-c2-evidence-generated-latest.md
+      - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
     status_reason: >-
-      Alert routing expectations are defined and evidence-capture requirements are now explicit;
-      final rule-level wiring proof remains pending, but the alert evidence matrix is now preloaded
-      for row-by-row execution.
-    last_verified: '2026-04-04'
+      Blocked until an immutable alert/routing snapshot supplies complete rule metadata for all 11
+      AR-C2 threshold keys; assertion mode currently fails closed with
+      `AR-C2_IMMUTABLE_EVIDENCE_MISSING`.
+    last_verified: '2026-05-22'
   - task_id: AR-C2-T4
     parent_task: AR-C2
     priority: P0
-    status: done
+    status: blocked
     objective: >-
       capture sustained threshold-validation evidence and update AR-C2 lane posture for closure.
     dependency: AR-C2-T2, AR-C2-T3
@@ -540,15 +551,18 @@ tasks:
       done when closure criteria are met.
     complexity: S
     effort_points: 2
-    progress_pct: 100
+    progress_pct: 35
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/planning/state/agent-lane-c.yaml
       - docs/planning/closeouts/20260404-ar-c2-sla-operational-closure-closeout.md
+      - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
+      - docs/runbooks/ar-c2-evidence-generated-latest.md
+      - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
     status_reason: >-
-      AR-C2 requires sustained operational proof, not one-shot checks; this subtask owns final
-      validation evidence and closure posture.
-    last_verified: '2026-04-04'
+      Corrected stale done status: sustained validation cannot close until T2/T3 evidence exists and
+      `AR_C2_METRICS_SNAPSHOT_FILE` supplies passing windows for all 9 mapped signals.
+    last_verified: '2026-05-22'
   - task_id: AR-C3
     priority: P1
     status: done
@@ -697,7 +711,7 @@ tasks:
     last_verified: '2026-05-06'
   - task_id: AR-C5
     priority: P1
-    status: queued
+    status: done
     objective: >-
       implement adapter-call circuit breaking for Temporal-facing engine operations so adapter
       outages fail fast instead of exhausting timeout-only protection.
@@ -707,14 +721,21 @@ tasks:
       calls, emits breaker state metrics, and exposes breaker posture through health-check output.
     complexity: M
     effort_points: 5
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c5-adapter-circuit-breaker-plan-20260512.md
+      - docs/planning/closeouts/20260512-ar-c5-adapter-circuit-breaker-closeout.md
+      - docs/evidence/ed-20260512-ar-c5-adapter-circuit-breaker.md
+      - docs/risk-register/quality/R-20260512-AR-C5-ADAPTER-CIRCUIT-BREAKER.yaml
+      - packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts
+      - packages/@dvt/engine/test/adapters/CircuitBreakingProviderAdapter.test.ts
+      - packages/@dvt/engine/test/architecture/adapterCircuitBreaker.architecture.test.ts
     status_reason: >-
-      Temporal activity state-store writes now flow through a circuit-breaker-wrapped command
-      port`r`n      with timeout protection and retryable fast-fail semantics; worker ops surfaces
-      expose breaker`r`n      posture and counters so degradation is explicit.`r`n    last_verified:
-      '2026-04-15'
+      Validated as already implemented: AR-C5 decorator, protected registry composition, health
+      posture, telemetry, architecture guard, evidence, risk entry, and closeout exist. Focused
+      engine tests and typecheck pass on 2026-05-22.
+    last_verified: '2026-05-22'
   - task_id: MW-C1
     priority: P0
     status: done
@@ -741,7 +762,7 @@ tasks:
     last_verified: '2026-04-10'
   - task_id: RC-C2
     priority: P2
-    status: in_progress
+    status: blocked
     objective: >-
       institutionalize shared preflight (`hygiene.ps1`), log-first CI triage, and structured AI
       efficiency measurement for Lane C before scaling the workflow repo-wide.
@@ -803,8 +824,11 @@ tasks:
       generator commands, tracking posture, and manual-edit policy. Wave 4A then promotes `pnpm
       test:ci-tools` into the `CI - Code Quality` merge gate so workflow and scope-helper contract
       tests stop being advisory-only. Final closure still depends on three qualifying Lane C PR
-      cycles logged against the new workflow.
-    last_verified: '2026-04-23'
+      cycles logged against the new workflow. The 2026-05-22 reconciliation confirmed that recent
+      Lane C PRs are visible in GitHub, but the required interaction, tool-call, and avoidable-rerun
+      measurements are not captured in the adoption log, so RC-C2 is explicitly blocked on measured
+      adoption evidence instead of remaining an active implementation claim.
+    last_verified: '2026-05-22'
   - task_id: CI-AUDIT-ARC-STATE-STORE
     parent_task: RC-C2
     priority: P1
@@ -833,7 +857,7 @@ tasks:
   - task_id: CI-AUDIT-ENGINE-COVERAGE
     parent_task: RC-C2
     priority: P2
-    status: queued
+    status: done
     objective: >-
       align the Engine Coverage Gate change detector with the actual engine package scope so engine
       Vitest configuration changes cannot bypass coverage threshold enforcement.
@@ -844,20 +868,24 @@ tasks:
       path mapping.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-audit-engine-coverage-plan-20260515.md
       - .github/workflows/test.yml
       - tools/ci/policy/workflow-scope.json
+      - tools/ci/scope-config.mjs
+      - tools/ci/emit-scope.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
     status_reason: >-
-      The audit confirmed that engine tests run for broad engine changes, but the separate coverage
-      gate still uses a local `coverage_relevant` filter that omits the package-local engine Vitest
-      config.
-    last_verified: '2026-05-09'
+      Closed by the accepted CI Audit Engine Coverage plan: coverage routing now follows the
+      governed engine workspace policy and CI tool tests prove engine Vitest config changes are
+      coverage-relevant.
+    last_verified: '2026-05-22'
   - task_id: CI-AUDIT-CONTRACTS-SCOPE
     parent_task: RC-C2
     priority: P2
-    status: queued
+    status: done
     objective: >-
       decide whether `contracts.yml` should keep inline `dorny/paths-filter` scope rules or move to
       the central workflow-scope policy used by newer CI gates.
@@ -867,20 +895,26 @@ tasks:
       CI-tool tests lock the chosen contract-scope behavior.
     complexity: S
     effort_points: 2
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260515-ci-audit-contracts-scope-closeout.md
       - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
       - .github/workflows/contracts.yml
       - tools/ci/policy/workflow-scope.json
       - tools/ci/emit-scope.mjs
+      - tools/ci/scope-config.mjs
+      - tools/ci/emit-scope.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
+      - docs/guides/testing-and-ci-capabilities.md
     status_reason: >-
-      The audit identified workflow-scope ownership drift: most newer gates use the central scope
-      policy and emitter, while the contracts workflow still carries local inline filters.
-    last_verified: '2026-05-09'
+      Closed by accepted 2026-05-15 closeout and re-verified on 2026-05-22: contracts.yml validates
+      the central workflow-scope policy, emits scope via `emit-scope --mode contracts`, and workflow
+      parity tests prohibit reverting to inline `dorny/paths-filter` rules.
+    last_verified: '2026-05-22'
   - task_id: CI-AUDIT-ADR0-OWNER
     parent_task: RC-C2
     priority: P2
-    status: queued
+    status: done
     objective: >-
       choose one authoritative workflow owner for the ADR-0000 traceability gate so CI enforcement
       stays explicit without duplicated push coverage.
@@ -890,20 +924,21 @@ tasks:
       ownership is removed or documented with a clear reason.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
+      - docs/planning/closeouts/20260514-ci-audit-adr0-owner-closeout.md
       - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
+      - tools/ci/workflow-pattern-parity.test.mjs
       - .github/workflows/pr-quality-gate.yml
       - .github/workflows/ci.yml
-      - traceability.config.json
     status_reason: >-
-      Current main enforces `pnpm traceability:adr0` in PR quality checks and also in the CI
-      workflow for pushes. The follow-up is ownership consolidation, not adding missing coverage.
-    last_verified: '2026-05-09'
+      Closed by accepted closeout and executable workflow parity guard; PR Quality Gate is the
+      single remote owner for `pnpm traceability:adr0` and CI - Code Quality has zero invocations.
+    last_verified: '2026-05-22'
   - task_id: CI-AUDIT-RELEASE-FLOW
     parent_task: RC-C2
     priority: P3
-    status: queued
+    status: done
     objective: >-
       confirm whether the release-please workflow intentionally avoids repository checkout and the
       shared Node/pnpm setup action, or whether release automation needs repo-tooling parity.
@@ -913,15 +948,15 @@ tasks:
       or the workflow adopts the repository setup path with a focused validation note.
     complexity: S
     effort_points: 1
-    progress_pct: 0
+    progress_pct: 100
     evidence_refs:
-      - docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md
-      - .github/workflows/release.yml
-      - .github/actions/setup-node-pnpm/action.yml
+      - docs/planning/status/release-please-continuous.md
+      - tools/ci/workflow-pattern-parity.test.mjs
+      - docs/planning/closeouts/20260515-ci-audit-release-flow-closeout.md
     status_reason: >-
-      The audit found release workflow setup drift, but the correct action is a policy decision:
-      release-please may not need local repo tooling unless release generation depends on it.
-    last_verified: '2026-05-09'
+      Release workflow is intentionally action-only while it only delegates to release-please;
+      checkout/setup is required only when repository-local tooling is introduced.
+    last_verified: '2026-05-15'
   - task_id: RC-E1
     priority: P1
     status: done
@@ -1328,7 +1363,7 @@ tasks:
     last_verified: '2026-05-05'
   - task_id: TF-C3
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       add phase-2 dbt plugin-backed execution behind the same preview-persist-run contract so dbt
       stays out of engine-kernel semantics instead of becoming a second product path.
@@ -1339,7 +1374,7 @@ tasks:
       outer product loop or push dbt semantics into the engine kernel.
     complexity: M
     effort_points: 3
-    progress_pct: 85
+    progress_pct: 100
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/plan-creation-interface-route-proposal-20260405.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
@@ -1348,14 +1383,18 @@ tasks:
       - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
       - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - docs/evidence/ed-20260514-temporal-worker-dbt-canary.md
+      - docs/planning/closeouts/20260522-tf-c3-e-temporal-worker-dbt-canary-closeout.md
+      - docs/planning/closeouts/20260522-tf-c3-plugin-backed-dbt-parent-closeout.md
     status_reason: >-
-      Phase 2 now spans four concrete slices. Protected runtime already wires the governed
+      TF-C3 parent closure is accepted: protected runtime wires the governed
       `runExecutionContextRef` boundary through shared artifact-backed readers, the standalone
-      `apps/temporal-worker` composition root now owns `TemporalWorkerHost` lifecycle and ops
-      endpoints, and the adapter now runs DBT through an adapter-owned CLI host without pushing
-      semantics into the engine kernel. Remaining work is rollout acceptance and environment proof,
-      not missing in-repo host topology or a second outer product path.
-    last_verified: '2026-04-14'
+      `apps/temporal-worker` composition root owns `TemporalWorkerHost` lifecycle and ops endpoints,
+      the adapter runs DBT through an adapter-owned CLI host without pushing semantics into the
+      engine kernel, and TF-C3-E is closed by the accepted DBT-enabled Docker canary and runbook
+      evidence. Environment rollout checks remain operational release gates, not missing repo
+      closure.
+    last_verified: '2026-05-22'
   - task_id: TF-C3-A
     priority: P1
     status: done
@@ -1466,7 +1505,7 @@ tasks:
   - task_id: TF-C3-E
     parent_task: TF-C3
     priority: P1
-    status: in_progress
+    status: done
     objective: >-
       close rollout, runbook, and acceptance truth for the standalone Temporal worker so the repo
       not only contains the host topology but also tells operators how to validate and deploy it.
@@ -1476,22 +1515,21 @@ tasks:
       limited to environment rollout or canary evidence rather than missing code topology.
     complexity: S
     effort_points: 3
-    progress_pct: 70
+    progress_pct: 100
     evidence_refs:
       - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
       - docs/evidence/ed-20260414-tf-c3-production-temporal-worker-dbt-host.md
+      - docs/evidence/ed-20260514-temporal-worker-dbt-canary.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
+      - docs/planning/closeouts/20260522-tf-c3-e-temporal-worker-dbt-canary-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
     status_reason: >-
-      Runbook-to-code verification is complete. All 19 runbook claims verified accurate against
-      actual worker code across server.ts, runTemporalWorkerHost.ts, OperationalServer.ts,
-      TemporalWorkerMonitor.ts, temporalWorkerLifecycle.ts, temporalWorkerDbtProfile.ts,
-      temporalWorkerRuntimeResources.ts, createTemporalWorkerRuntime.ts, and env.ts. Closure is
-      blocked by missing environment-level canary evidence. Smallest next validation: deploy worker
-      to staging, verify /healthz (200 with state running), /readyz (200 with dbt), /metrics (scrape
-      target registers dvt_temporal_worker_up 1), run one DBT-enabled plan end-to-end, then confirm
-      dvt_temporal_worker_error_total remains flat during the observation window.
-    last_verified: '2026-05-07'
+      TF-C3-E closure is accepted: the runbook is aligned to the worker code and
+      `ed-20260514-temporal-worker-dbt-canary.md` records the DBT-enabled local Docker canary across
+      Postgres, Temporal, plan-store artifacts, run metadata, readiness endpoints, metrics,
+      file-backed DBT bundle execution, DBT invocation evidence, and `RunCompleted`. Production
+      environment rollout checks remain per-environment release gates.
+    last_verified: '2026-05-22'
   - task_id: TF-C4
     priority: P0
     status: done
@@ -1625,10 +1663,10 @@ dependency_notes:
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
-  verified_on: '2026-05-09'
+  verified_on: '2026-05-15'
   total_tasks: 58
   total_effort_points: 209
-  completed_weighted_points: 188.1
+  completed_weighted_points: 189.1
   lane_progress_pct: 90
   notes: >-
     Weighted progress uses effort_points across the current 58 task entries. The 2026-05-06 Lane C
@@ -1644,4 +1682,7 @@ verification_summary:
     Temporal worker. `F-27` now consumes closed Lane C `AR-C10` and `TF-C4` rail, authorization,
     freshness, and degraded-mode vocabulary as Lane E route-execution inputs rather than as new Lane
     C UI tasks. The 2026-05-09 review-board hygiene pass routed the CI build config audit into five
-    explicit queued Lane C follow-ups without changing CI behavior in the same slice.
+    explicit Lane C follow-ups without changing CI behavior in the same slice.
+    `CI-AUDIT-RELEASE-FLOW` is closed with an action-only release-please decision and a CI-tools
+    guard that requires checkout plus shared Node/pnpm setup only when release automation starts
+    running repository-local tooling.

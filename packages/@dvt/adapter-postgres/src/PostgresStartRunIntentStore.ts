@@ -22,7 +22,7 @@ import type {
   StartRunIntentRef,
   StartRunIntentStatus,
 } from '@dvt/engine';
-import { getAllowedFromStatuses } from '@dvt/engine';
+import { getAllowedFromStatuses } from '@dvt/engine/runtime';
 import { DatabaseError, Pool, type PoolClient } from 'pg';
 
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';

@@ -155,10 +155,14 @@ describe('Query key policy (architecture)', () => {
 
   it('forbids direct useQuery ownership in selected operator views', () => {
     const governedViewFiles = [
+      'plugins/dbt/DbtNodeRenderer.tsx',
+      'views/admin/useAdminViewData.ts',
+      'views/artifacts/useArtifactsViewModel.ts',
       'views/CodeView.tsx',
       'views/diff/useDiffData.ts',
       'views/cost/useCostData.ts',
       'views/lineage/useLineageViewData.ts',
+      'views/runs/useRunWorkspace.ts',
     ].map((relativePath) => path.join(ROOT_DIR, relativePath));
 
     const offenders = governedViewFiles

@@ -1,8 +1,8 @@
 ---
 title: TF-E2 Production Node Authoring And Persistence Plan 2026-04-16
-status: Draft
+status: Implemented
 owner: Product / Frontend / Architecture / API
-last_reviewed: 2026-04-23
+last_reviewed: 2026-05-14
 planning_type: proposal
 lane: E
 task_id: TF-E2
@@ -26,6 +26,20 @@ The active implementation posture is also explicit after the 2026-04-20 sync:
 no retrocompatibility path will be preserved on the active Canvas authoring
 route once the typed draft-authoring port is adopted.
 
+## 2026-05-14 Parent Closure
+
+`TF-E2` is closed as a parent implementation slice. The child delivery slices
+have moved the active Canvas authoring path to
+`IWorkspaceGraphDraftAuthoringPort`, made React Flow projection-only for
+semantic authoring, preserved protected-runtime failure posture, and guarded
+live proof lanes from Cypress draft-boundary shortcuts.
+
+The remaining long-horizon work is no longer hidden inside the `TF-E2` parent:
+future persisted-version compatibility or additional browser proof expansion
+must be tracked as explicit follow-up tasks with their own rail, evidence, and
+validation. The parent scope is therefore implemented, not a source of new
+compatibility work.
+
 ## Related execution companion
 
 The target-architecture execution companion for this proposal lives in
@@ -40,7 +54,7 @@ bounded contexts, ports, aggregates, and phased validation".
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/how-to-add-tasks.md`
+- [Task: E-PROP-DISP-1] `docs/planning/state/how-to-add-tasks.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-workspace-graph-draft-persistence-boundary-plan-20260416.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-architecture-and-contracts-20260405.md`
@@ -113,7 +127,7 @@ must be planned explicitly in the relevant backend lane instead of letting the
 frontend pretend that `localStorage` is the product source of truth.
 
 For the active Canvas authoring path, this proposal also rejects a long-lived
-compatibility phase. `TF-E2-A` must hard-cut from
+compatibility phase. `TF-E2-A` hard-cut from
 `IWorkspacePort.getGraphDraft/saveGraphDraft` to
 `IWorkspaceGraphDraftAuthoringPort` once the route and composition seams are
 ready.
@@ -304,9 +318,9 @@ Output:
 
 - unit tests for graph mutation reducers, guards, and serialization
 - integration tests for controller plus Inspector edit flows
-- Cypress coverage for create, connect, edit, reload, and delete behavior
+- [Task: E-PROP-DISP-1] Cypress coverage for create, connect, edit, reload, and delete behavior
 - negative-path coverage for save failure, invalid connection, and stale reload
-- execution-action test-file splitting on `main` is baseline; the remaining
+- [Task: E-PROP-DISP-1] execution-action test-file splitting on `main` is baseline; the remaining
   proof work is shared test-support and application-service/command coverage
 
 ## Operability baseline
@@ -361,7 +375,7 @@ operator documentation.
 - `useCanvasController` consumes canonical draft truth, not visual-only state
 - Inspector save updates the rendered node and persisted draft consistently
 - failed save does not leave the route in a fake-saved state
-- preview action reads the saved authoring truth after edits through
+- [Task: E-PROP-DISP-1] preview action reads the saved authoring truth after edits through
   `ExecutionSelection`
 - selected SQL node preview/run ignores unrelated loose draft nodes outside the
   selected closure
@@ -369,7 +383,7 @@ operator documentation.
   replacing the editable draft
 - stale revision writes surface an explicit conflict state instead of silent
   overwrite
-- duplicate save retries do not create duplicate semantic mutations
+- [Task: E-PROP-DISP-1] duplicate save retries do not create duplicate semantic mutations
 - read-authorized and write-forbidden callers see read-only Canvas behavior
   without hidden mutation paths
 - save failure and conflict flows preserve caller-visible correlation data

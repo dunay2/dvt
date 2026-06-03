@@ -14,7 +14,11 @@ export type CanvasShellRouteComposerArgs = Readonly<{
 export type CanvasShellLayoutBuilderArgs = Readonly<{
   layoutState: Pick<
     CanvasRouteController,
-    'focusMode' | 'explorerPanelVisible' | 'inspectorPanelVisible' | 'canOpenSourceImport'
+    | 'focusMode'
+    | 'explorerPanelVisible'
+    | 'inspectorPanelVisible'
+    | 'canOpenSourceImport'
+    | 'canvasEmptyStateGuideVisible'
   >;
   recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'> &
     Readonly<{
@@ -22,16 +26,25 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     }>;
   authoringCommands: Pick<
     CanvasRouteController,
-    'handleCreateAuthoringNode' | 'handleCreateCanvasDocument'
+    | 'handleCreateAuthoringNode'
+    | 'handleCreateCanvasDocument'
+    | 'handleSelectCanvasDocument'
+    | 'handleApplyCanvasDocumentPatch'
+    | 'handleDeleteCanvasDocument'
   >;
+  preferenceCommands: Pick<CanvasRouteController, 'setCanvasEmptyStateGuideVisible'>;
   routePresentation: Pick<
     CanvasRouteViewState,
     | 'presentationState'
+    | 'workspaceScope'
     | 'draftAccessPosture'
     | 'startupBlockState'
     | 'draftTransportError'
     | 'workbenchErrorMessage'
     | 'canvasDocument'
+    | 'canvasDocuments'
+    | 'activeCanvasId'
+    | 'canCreateCanvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
     | 'canvasTabState'
@@ -45,14 +58,21 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
     CanvasRouteController,
     | 'explorerNodes'
     | 'inspectorNode'
+    | 'inspectorGraphNodes'
+    | 'inspectorGraphEdges'
     | 'canEditInspectorNode'
     | 'applyInspectorNodeDraft'
     | 'activeRunId'
     | 'registeredPlugins'
+    | 'runtimeCapabilities'
     | 'importedNodeFocusIds'
+    | 'executionEnvironmentOptions'
   >;
   userPermissions: CanvasRouteViewState['effectiveUserPermissions'];
-  routePresentation: Pick<CanvasRouteViewState, 'canvasDocument' | 'availableCanvasKinds'>;
+  routePresentation: Pick<
+    CanvasRouteViewState,
+    'canvasDocument' | 'canvasDocuments' | 'activeCanvasId' | 'availableCanvasKinds'
+  >;
 }>;
 
 export type CanvasShellGraphBuilderArgs = Readonly<{
@@ -66,6 +86,7 @@ export type CanvasShellGraphBuilderArgs = Readonly<{
     | 'canvasGridVisible'
     | 'canvasGridColor'
     | 'canvasSnapToGrid'
+    | 'canvasEmptyStateGuideVisible'
     | 'viewport'
   >;
 }>;
@@ -74,8 +95,12 @@ export type CanvasShellToolbarBuilderArgs = Readonly<{
   toolbarState: Pick<
     CanvasRouteController,
     | 'canvasAuthoringMode'
+    | 'canPlanGraph'
     | 'canStartRun'
+    | 'canExportProjectSnapshot'
+    | 'canImportProjectSnapshot'
     | 'planStatusSummary'
+    | 'planRunReadiness'
     | 'exclusiveOverlayMode'
     | 'canUseCostOverlay'
     | 'impactOverlayEnabled'
@@ -121,6 +146,9 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'setCanvasGridVisible'
     | 'setCanvasGridColor'
     | 'setCanvasSnapToGrid'
+    | 'setCanvasEmptyStateGuideVisible'
+    | 'handleExportProjectSnapshot'
+    | 'handleImportProjectSnapshotFile'
     | 'reloadLatestDraft'
     | 'handlePlan'
     | 'handleStartRun'

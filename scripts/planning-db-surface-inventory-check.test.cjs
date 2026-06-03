@@ -5,6 +5,11 @@ const path = require('node:path');
 const test = require('node:test');
 
 const packageJson = require('../package.json');
+const {
+  buildVerifyChangedPlan,
+  commandLabel: verifyChangedCommandLabel,
+} = require('./verify-changed.cjs');
+const { buildPrepushPlan, commandLabel: prepushCommandLabel } = require('./verify-prepush.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const inventoryPath = path.join(repoRoot, 'docs', 'planning', 'status', 'db-surface-inventory.md');
@@ -61,8 +66,27 @@ test('package scripts expose and gate the DB surface inventory check', () => {
     packageJson.scripts['test:planning:db'],
     /planning-db-surface-inventory-check\.test\.cjs/
   );
+  assert.equal(
+    packageJson.scripts['test:planning:db:migrations'],
+    'node --test scripts/planning-db-migrate.test.cjs'
+  );
   assert.match(packageJson.scripts['ci:docs'], /planning:db:inventory:check/);
-  assert.match(packageJson.scripts['verify:prepush'], /planning:db:inventory:check/);
+  assert.equal(packageJson.scripts['verify:changed'], 'node scripts/verify-changed.cjs');
+  assert.equal(packageJson.scripts['verify:prepush'], 'node scripts/verify-prepush.cjs');
+
+  assert.match(
+    buildVerifyChangedPlan(['scripts/planning-db-import.cjs'])
+      .map(verifyChangedCommandLabel)
+      .join('\n'),
+    /pnpm planning:db:inventory:check/
+  );
+  assert.deepEqual(buildPrepushPlan(['scripts/planning-db-import.cjs']).map(prepushCommandLabel), [
+    'pnpm verify:changed',
+  ]);
+  assert.match(
+    buildPrepushPlan([], { full: true }).map(prepushCommandLabel).join('\n'),
+    /pnpm planning:db:inventory:check/
+  );
 });
 
 test('DB surface inventory check command exits successfully', () => {

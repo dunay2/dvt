@@ -73,6 +73,9 @@ export function createTemporalWorkerRuntimeHandle(
               closePlanArtifactReader: () =>
                 closePlanArtifactReader.call(resources.planArtifactReader),
             }),
+        ...(resources.closeStepActivityResources === undefined
+          ? {}
+          : { closeStepActivityResources: resources.closeStepActivityResources }),
       }).finally(() => {
         connection = null;
       });

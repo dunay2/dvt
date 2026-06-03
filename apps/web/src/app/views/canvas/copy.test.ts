@@ -14,6 +14,10 @@ describe('canvas copy catalog', () => {
   it('resolves Canvas workbench and autosave chrome from one locale catalog', () => {
     const spanishCopy = resolveCanvasViewCopy('es-ES');
 
+    expect(canvasViewCopy.routeNeedsCanvasTitle).toBe('Create canvas in this workspace');
+    expect(canvasViewCopy.routeNeedsCanvasTemplateLabel).toBe('Choose a canvas template');
+    expect(spanishCopy.routeNeedsCanvasTitle).toBe('Crear canvas en este workspace');
+    expect(spanishCopy.routeNeedsCanvasTemplateLabel).toBe('Elige una plantilla de canvas');
     expect(spanishCopy.toolbarLayoutLabel).toBe('Disposicion');
     expect(spanishCopy.toolbarRunLabel).toBe('Ejecutar');
     expect(spanishCopy.draftSyncedLabel).toBe('Borrador sincronizado');

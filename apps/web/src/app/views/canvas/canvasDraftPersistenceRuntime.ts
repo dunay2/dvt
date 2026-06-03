@@ -13,6 +13,7 @@ export type DraftSaveAttempt = {
 export function clearSaveDebounce(refs: DraftAttemptRefs) {
   if (refs.saveDebounceTimerRef.current != null) {
     globalThis.clearTimeout(refs.saveDebounceTimerRef.current);
+    refs.saveDebounceTimerRef.current = null;
   }
 }
 

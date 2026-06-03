@@ -8,7 +8,8 @@ describe('buildWorkflowEngineUseCases', () => {
     'observability',
     'startRunApplicationService',
     'runRecoveryService',
-    'runControlService',
+    'runCommandService',
+    'runSignalService',
     'runStatusQueryService',
   ] as const)('fails fast when %s is missing', (depName) => {
     const deps = makeDeps();
@@ -25,7 +26,8 @@ function makeDeps(): Partial<Record<keyof WorkflowEngineUseCaseDeps, unknown>> {
     observability: {},
     startRunApplicationService: {},
     runRecoveryService: {},
-    runControlService: {},
+    runCommandService: {},
+    runSignalService: {},
     runStatusQueryService: {},
   };
 }

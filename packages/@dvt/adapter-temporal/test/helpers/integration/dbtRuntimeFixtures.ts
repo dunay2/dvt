@@ -14,8 +14,8 @@ import { jcsCanonicalize, sha256Hex } from '@dvt/crypto';
 import {
   createDbtStepActivityRegistry,
   type DbtPluginRunner,
-  type StepActivityRegistry,
-} from '../../../src/index.js';
+} from '../../../../temporal-dbt-plugin/src/index.js';
+import { type StepActivityRegistry } from '../../../src/index.js';
 
 import type { TestOutbox, TestStateStore } from './runtimeState.js';
 import { createActivityDeps, type TestActivityDeps } from './testActivities.js';

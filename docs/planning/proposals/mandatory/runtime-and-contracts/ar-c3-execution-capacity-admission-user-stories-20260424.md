@@ -166,3 +166,7 @@ These stories are frozen by:
 - `apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts`
 - `apps/api/test/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.test.ts`
 - `apps/api/test/modules/buildProtectedExecutionCapacityPort.test.ts`
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

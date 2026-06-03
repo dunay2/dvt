@@ -15,6 +15,7 @@ const { pathToFileURL } = require('node:url');
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
+  resolveDevWorkspaceScope,
   startLocalProtectedRuntimeAuth,
 } = require('./run-dev-stack.auth.cjs');
 
@@ -292,12 +293,19 @@ class CanvasFirstAuthoringLiveProofRunner {
     };
     const liveProofSchema = this.allocateLiveProofSchema();
     const firstAuthoringRunId = this.allocateFirstAuthoringRunId();
+    const baseWorkspaceScope = resolveDevWorkspaceScope(this.env);
+    const firstAuthoringScopes = this.buildFirstAuthoringWorkspaceScopes(
+      baseWorkspaceScope,
+      firstAuthoringRunId
+    );
+    const firstAuthoringProjectIds = firstAuthoringScopes.map((scope) => scope.projectId);
 
     try {
       processContext.temporalEnv = await TestWorkflowEnvironment.createTimeSkipping();
       processContext.localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
         env: this.env,
         host: this.localAuthHost,
+        additionalProjectIds: firstAuthoringProjectIds,
       });
 
       const apiHandle = this.spawnProcess(
@@ -340,10 +348,6 @@ class CanvasFirstAuthoringLiveProofRunner {
         'API version'
       );
 
-      const firstAuthoringScopes = this.buildFirstAuthoringWorkspaceScopes(
-        processContext.localProtectedRuntimeAuth.workspaceScope,
-        firstAuthoringRunId
-      );
       await this.seedProtectedRuntimeGrants({
         databaseUrl: defaultPgUrl,
         schema: liveProofSchema,

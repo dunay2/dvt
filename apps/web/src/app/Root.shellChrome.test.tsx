@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 
+import { fireEvent, waitFor } from '@testing-library/dom';
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { withTestQueryClient } from '../testing/reactQueryHarness';
@@ -15,9 +17,7 @@ import {
 } from './Root.test.support';
 import {
   createHealthyPlatformCapability,
-  expectActiveRootShellNavigationLink,
-  expectRootShellFrameChrome,
-  expectRootShellNavigationChrome,
+  expectRootShellWorkbenchFrameChrome,
   waitForHealthyShellChrome,
 } from './Root.shellChrome.test.support';
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
@@ -34,29 +34,59 @@ describe('RootShell chrome', () => {
     vi.useRealTimers();
   });
 
-  it('renders shell top bar and left navigation with governed shell chrome', async () => {
+  it('renders Canvas workbench chrome without the permanent left navigation rail', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/canvas'])
     );
 
     try {
       await waitForHealthyShellChrome(mounted);
-      expectRootShellFrameChrome(mounted.container, 'Canvas route');
-      expectRootShellNavigationChrome(mounted.container, '/canvas');
+      expectRootShellWorkbenchFrameChrome(mounted.container, 'Canvas route');
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+      await act(async () => {
+        fireEvent.pointerDown(
+          mounted.container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+        );
+      });
+
+      await waitFor(() => {
+        expect(
+          [
+            ...document.body.querySelectorAll<HTMLAnchorElement>(
+              '[data-slot="shell-menu-navigation-link"]'
+            ),
+          ].map((link) => link.getAttribute('href'))
+        ).toEqual(['/canvas', '/runs', '/templates', '/plugins', '/admin']);
+      });
     } finally {
       await mounted.cleanup();
     }
   });
 
-  it('keeps the runs navigation item active for run detail routes', async () => {
+  it('renders Runs list chrome without the permanent left navigation rail', async () => {
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability(), ['/runs'])
+    );
+
+    try {
+      await waitForHealthyShellChrome(mounted);
+      expectRootShellWorkbenchFrameChrome(mounted.container, 'Runs route');
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('renders run detail chrome without changing away from workbench navigation', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/runs/run_123'])
     );
 
     try {
-      await waitForShellBootstrapSurface(mounted);
+      await waitForHealthyShellChrome(mounted);
       expect(mounted.container.textContent).toContain('Run detail route');
-      expectActiveRootShellNavigationLink(mounted.container, '/runs');
+      expectRootShellWorkbenchFrameChrome(mounted.container, 'Run detail route');
+      expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
     } finally {
       await mounted.cleanup();
     }
@@ -96,9 +126,7 @@ describe('RootShell chrome', () => {
       expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
       expect(consoleDrawer).not.toBeNull();
       expect(bottomDrawer?.textContent).toContain('Console');
-      expect(bottomDrawer?.textContent).toContain(
-        'Start a run to see run events here. Live log streaming is not available in API mode yet.'
-      );
+      expect(bottomDrawer?.textContent).toContain('Start a run to see live run events here.');
     } finally {
       await mounted.cleanup();
     }

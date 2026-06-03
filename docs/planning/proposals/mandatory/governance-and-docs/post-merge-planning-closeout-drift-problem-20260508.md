@@ -80,8 +80,8 @@ hard to miss.
 The local query store makes the state queryable, but no current post-merge guard
 forces a contributor or agent to prove that:
 
-- the child task moved out of stale active state;
-- the parent task reflects landed evidence;
+- [Task: GOV-PROP-DISP-1] the child task moved out of stale active state;
+- [Task: GOV-PROP-DISP-1] the parent task reflects landed evidence;
 - the workboard was regenerated from the updated effective state;
 - `open`, `tasks`, and `next` tell a coherent continuation story.
 
@@ -245,10 +245,10 @@ No product runtime rail is changed by this document.
 
 The affected planning/governance rails are:
 
-- `QueryPlanningEffectiveTasks`: query the effective task read model.
+- [Task: GOV-PROP-DISP-1] `QueryPlanningEffectiveTasks`: query the effective task read model.
 - `QueryPlanningOpenTasks`: query non-done, non-blocked work.
 - `QueryPlanningNextTasks`: query dependency-satisfied queued route candidates.
-- `UpdatePlanningTaskState`: command to update task status, progress, claim, and
+- [Task: GOV-PROP-DISP-1] `UpdatePlanningTaskState`: command to update task status, progress, claim, and
   evidence through the planning DB overlay.
 - `GeneratePlanningWorkboard`: command to regenerate route views from effective
   planning state.
@@ -358,11 +358,11 @@ pnpm planning:closeout:check --lane <lane-id> --task <child-task-id> --parent <p
 
 Expected fail-closed conditions:
 
-- the child task exists in `planning_effective_tasks` with `status` other than
+- [Task: GOV-PROP-DISP-1] the child task exists in `planning_effective_tasks` with `status` other than
   `done` or `review` after a closeout that claims implementation is merged;
-- the child task progress is below `100` when status is `done`;
-- the required PR or commit evidence is absent from the effective child task;
-- the parent task was provided and does not include the required PR or commit
+- [Task: GOV-PROP-DISP-1] the child task progress is below `100` when status is `done`;
+- [Task: GOV-PROP-DISP-1] the required PR or commit evidence is absent from the effective child task;
+- [Task: GOV-PROP-DISP-1] the parent task was provided and does not include the required PR or commit
   evidence;
 - `pnpm planning:db:export:check` fails after the operation;
 - generated workboard output still exposes the child as active implementation
@@ -416,8 +416,8 @@ validation apply, and the plan must remain `status: Review`.
 - Do not delete lane YAML compatibility surfaces.
 - Do not make `planning_next_tasks` include `in_progress` tasks without a
   separate command/query design decision.
-- Do not infer task closure from Git merge alone.
-- Do not add workflow enforcement before the local closeout command is proven.
+- [Task: GOV-PROP-DISP-1] Do not infer task closure from Git merge alone.
+- [Task: GOV-PROP-DISP-1] Do not add workflow enforcement before the local closeout command is proven.
 
 ## Target State
 

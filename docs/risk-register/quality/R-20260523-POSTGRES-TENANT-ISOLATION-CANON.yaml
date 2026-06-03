@@ -1,0 +1,30 @@
+---
+id: R-20260523-POSTGRES-TENANT-ISOLATION-CANON
+title: Postgres tenant isolation semantic docs can drift from runtime RLS catalog
+status: Open
+date: 2026-05-23
+owners:
+  - packages/@dvt/adapter-postgres
+severity: Medium
+probability: Low
+context: >
+  The Postgres adapter already enforces tenant isolation through adapter predicates,
+  transaction-local tenant/service context, forced RLS, and real integration proofs. The 2026-05-23
+  canonization pass adds a local component guide and semantic architecture test so future changes
+  keep the table catalog, service-owner matrix, transitions, consumers, and user stories aligned.
+risk: >
+  Future tenant-owned table or service-owner changes could still update code without updating
+  explanatory documentation if the semantic guard is narrowed or bypassed. Drift would make security
+  review harder even if lower-level RLS tests still pass.
+mitigations:
+  - >
+    Keep PostgresTenantIsolationSemantic.architecture.test.ts in the adapter suite so documentation
+    must mention every tenant-owned table and approved service owner from TENANT_ISOLATION_TABLES.
+  - >
+    Keep real RLS integration tests as the runtime authority; the semantic test is a documentation
+    and architecture fitness guard, not a substitute for database enforcement proof.
+  - >
+    Update tenant-isolation-component.md and tenant-isolation-user-stories.md in the same slice as
+    any future RLS catalog change.
+review_after: 2026-06-30
+---

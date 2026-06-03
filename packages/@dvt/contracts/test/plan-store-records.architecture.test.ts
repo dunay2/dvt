@@ -232,10 +232,14 @@ describe('Scoped plan-store records architecture', () => {
 
   it('keeps stored-plan artifact ports canonical in @dvt/artifacts instead of planner, API, or engine duplicates', () => {
     expect(existsSync(STORED_PLAN_ARTIFACT_PORT)).toBe(true);
+    expect(
+      existsSync(join(CONTRACTS_SRC_ROOT, 'contracts/planner/PlanValidationLifecycle.v1.ts'))
+    ).toBe(false);
 
     const artifactPort = readFileSync(STORED_PLAN_ARTIFACT_PORT, 'utf8');
     for (const term of [
       'Owned concern: expose stored-plan artifact lifecycle and materialization ports',
+      'StoredPlanArtifactValidationRecord',
       'StoredPlanArtifact',
       'IStoredPlanArtifactWriter',
       'IStoredPlanArtifactReader',
@@ -247,6 +251,10 @@ describe('Scoped plan-store records architecture', () => {
     ]) {
       expect(artifactPort).toContain(term);
     }
+    expect(artifactPort).not.toMatch(/\bPlanValidationRecord\b/u);
+    expect(readFileSync(join(CONTRACTS_SRC_ROOT, 'index.ts'), 'utf8')).not.toContain(
+      'PlanValidationLifecycle.v1'
+    );
 
     expect(existsSync(PLANNER_LIFECYCLE_PORT)).toBe(false);
     expect(existsSync(API_STORED_PLAN_PORT)).toBe(false);
@@ -305,6 +313,35 @@ describe('Scoped plan-store records architecture', () => {
       'Active drift: every method on `IPlanStoreReader`/`IPlanStoreWriter` is',
     ]) {
       expect(inventory).not.toContain(retiredSignature);
+    }
+  });
+
+  it('keeps the operations inventory from restating closed scoped plan-store drift as current truth', () => {
+    const inventory = readFileSync(SYSTEM_OPERATIONS_INVENTORY, 'utf8');
+
+    for (const staleClaim of [
+      'Record DTOs (no top-level scope tuple)',
+      'S08-DRIFT-32. Must add scope tuple.',
+      'Re-exports of unscoped `PlanRecord.v1`, `PlanExecutabilityRecord.v1`, `PlanAdmissionLink.v1`',
+      'Keyed by `plan_id` only — no tenant predicates',
+      'Tables lack scope columns / RLS posture (S08 matrix).',
+      'Backfills `plan_records` from `stored_plans` without ownership tuple.',
+    ]) {
+      expect(inventory).not.toContain(staleClaim);
+    }
+
+    for (const currentClaim of [
+      'Record DTOs with top-level `PlanStoreScope` tuple',
+      'schema-packs/plan-records.ts`                            | `INFRA`                            | `N/A`              | `OK`',
+      'Re-exports of scoped `PlanRecord.v1`, `PlanExecutabilityRecord.v1`, `PlanAdmissionLink.v1`',
+      'PostgresPlanRecordRepository` (tenant-scoped record SQL)',
+      'PostgresExecutableBlobRepository` (tenant-neutral artifact blob SQL)',
+      'PostgresPlanExecutabilityRepository` (tenant-scoped `(plan_id, adapter_id)` SQL)',
+      'PostgresPlanAdmissionRepository` (tenant-scoped `(plan_id, run_id, adapter_id)` SQL)',
+      '`stored_plans` remains tenant-neutral with `plan_id` primary key',
+      'Scoped tables include tenant/project/environment columns and composite scoped keys',
+    ]) {
+      expect(inventory).toContain(currentClaim);
     }
   });
 });

@@ -17,7 +17,7 @@
  * storage/worker boundary and does not require a live database.
  */
 
-import { asIsoUtcString, type EventEnvelope as RunEventPersisted } from '@dvt/contracts';
+import { asIsoUtcString, type EventEnvelope } from '@dvt/contracts';
 import { OutboxWorker } from '@dvt/delivery';
 import { InMemoryEventBus, InMemoryOutboxStorage } from '@dvt/delivery/testing';
 import { describe, it, expect } from 'vitest';
@@ -28,7 +28,7 @@ function makeEvent(
   idempotencyKey: string,
   runSeq: number,
   tenantId = 'tenant-1'
-): RunEventPersisted {
+): EventEnvelope {
   return {
     eventId,
     eventType: 'RunQueued',
@@ -48,11 +48,7 @@ function makeEvent(
   };
 }
 
-function makeRunEvents(
-  runId: string,
-  runSeqs: number[],
-  tenantId = 'tenant-1'
-): RunEventPersisted[] {
+function makeRunEvents(runId: string, runSeqs: number[], tenantId = 'tenant-1'): EventEnvelope[] {
   return runSeqs.map((seq) =>
     makeEvent(
       runId,

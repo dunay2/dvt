@@ -5,6 +5,7 @@ type NodeActionHandlers = {
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
+  onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
 };
 
 type BuildNodesWithImpactParams = {
@@ -70,16 +71,20 @@ export function buildNodesWithImpact({
   columnLevelLineageEnabled,
   handlers,
 }: BuildNodesWithImpactParams): Node[] {
+  const selectedNodeIdSet = new Set(selectedNodeIds);
+
   if (!impactOverlayEnabled || selectedNodeIds.length === 0) {
     return nodes.map((node) => ({
       ...node,
       data: {
         ...node.data,
+        selectedForExecution: selectedNodeIdSet.has(node.id),
         showColumns: columnLevelLineageEnabled,
         onInspectNode: handlers.onInspectNode,
         onDuplicateNode: handlers.onDuplicateNode,
         onRemoveNode: handlers.onRemoveNode,
         onToggleNodeSelection: handlers.onToggleNodeSelection,
+        onAttachSchemaToNode: handlers.onAttachSchemaToNode,
       },
     }));
   }
@@ -94,6 +99,7 @@ export function buildNodesWithImpact({
     ...node,
     data: {
       ...node.data,
+      selectedForExecution: selectedNodeIdSet.has(node.id),
       isHighlighted: selectedNodeIds.includes(node.id),
       impactLevel: upstream.has(node.id)
         ? 'upstream'
@@ -105,6 +111,7 @@ export function buildNodesWithImpact({
       onDuplicateNode: handlers.onDuplicateNode,
       onRemoveNode: handlers.onRemoveNode,
       onToggleNodeSelection: handlers.onToggleNodeSelection,
+      onAttachSchemaToNode: handlers.onAttachSchemaToNode,
     },
   }));
 }

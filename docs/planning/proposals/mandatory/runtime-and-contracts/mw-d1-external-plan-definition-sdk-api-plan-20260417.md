@@ -197,7 +197,7 @@ Existing repo examples examined:
 
 External mature-system posture considered:
 
-- Apache Airflow public authoring interface and Task SDK:
+- [Task: RUNTIME-PROP-DISP-1] Apache Airflow public authoring interface and Task SDK:
   stable DAG authoring must be decoupled from scheduler internals
 - Dagster declarative definitions:
   authoring should stay code-first and testable before orchestration
@@ -412,7 +412,7 @@ What this does not do:
 
 - define schemas
 - define handlers
-- create new step kinds dynamically
+- [Task: RUNTIME-PROP-DISP-1] create new step kinds dynamically
 - choose `targetAdapter`
 - choose worker routing
 

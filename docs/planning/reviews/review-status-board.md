@@ -22,6 +22,90 @@ Sprint execution board:
 
 - [Review Sprint Board](./sprints/index.md)
 
+## 2026-05-24 Planning review canonical disposition
+
+`GD-REV-PLANNING-CANON` canonizes the review status board, review naming
+policy, and sprint-board intake rules into DB-first follow-up semantics.
+
+This board is the review navigation and intake map. It may name workboard task
+linkage, but executable follow-up, claims, status, progress, dependencies, and
+evidence are owned by the Planning DB command rail.
+
+## 2026-05-25 Backlog intake reconciliation
+
+[Backlog Intake Reconciliation Review](./architecture-and-governance/20260525-backlog-intake-reconciliation-review.md)
+records the current gap between the normalized `next_task` view and the larger
+intake set in mandatory proposals, active reviews, proposed knowledge actions,
+and the risk register.
+
+[Buzon Fowler Canonization Inventory](./architecture-and-governance/20260525-buzon-fowler-canonization-inventory.md)
+classifies the tracked `buzon/` Fowler analyses into domain-owned
+canonization tasks so mailbox analysis does not remain an informal backlog.
+
+[Frontend Buzon Fowler Canonization Review](./architecture-and-governance/20260525-frontend-buzon-fowler-canonization-review.md)
+records the Lane E disposition for frontend and workbench mailbox analyses,
+including zero-reference Canvas, workbench, web API, and Runs findings.
+
+[Architecture Buzon Fowler Canonization Review](./architecture-and-governance/20260525-architecture-buzon-fowler-canonization-review.md)
+records the Lane A disposition for architecture, contracts, planner,
+state-store, DDD, and hexagonal mailbox analyses. It restores the remaining
+provider-registry/conformance debt as blocked Planning DB task
+`EA-20260429-04`.
+
+Disposition:
+
+- `D-MAND-PROP-GAP-INTAKE-1` cleared the mandatory-proposal binding gap on
+  2026-05-25: `mandatory-proposal-gaps` and `task-gaps` both return zero rows.
+- `E-PROP-DISP-1`, `GOV-PROP-DISP-1`, and `RUNTIME-PROP-DISP-1` are the
+  domain Planning DB reconciliation rails for the remaining proposal and
+  action-level intake.
+- active reviews and open risks need one explicit review/risk intake task or an
+  equivalent Planning DB linkage decision.
+- `buzon/` analyses are owned by `A-BUZON-FOWLER-CANON-1`,
+  `C-BUZON-FOWLER-CANON-1`, `D-BUZON-GOV-CANON-1`,
+  `E-BUZON-FOWLER-CANON-1`, and `D-RISK-DEBT-CANON-1`.
+- mandatory proposal gaps, open docs-disposition rows, and unlinked knowledge
+  actions are owned by `E-PROP-DISP-1`, `GOV-PROP-DISP-1`,
+  `RUNTIME-PROP-DISP-1`, `D-DOCS-DISPOSITION-QUEUE-1`, and
+  `D-KNOWLEDGE-ACTION-LINKAGE-1`.
+
+## 2026-05-27 Docs and engine component reconciliation
+
+[Docs And Engine Component Reconciliation Fowler Review](./architecture-and-governance/20260527-docs-engine-component-reconciliation-fowler-review.md)
+records the current DB-first cleanup pass for mandatory proposal gaps,
+task-like action lineage, docs-disposition rows, and the engine component
+engineering pilot.
+
+Disposition:
+
+- current `mandatory-proposal-gaps`, `task-gaps`, and `docs-disposition`
+  queries returned zero rows after task-linked updates and DB dispositions;
+- `SYS-RUNTIME-ENGINE-CORE` is mechanically mapped as an aggregator with 16
+  child components, 0 direct files, and no component-drift rows;
+- the remaining engine component residual is semantic metadata depth, now
+  tracked by `D-ENGINE-COMPONENT-METADATA-INDEX-1`;
+- closeout-specific residual scanning remains owned by
+  `GD-CLOSEOUT-DEBT-RECON-1`.
+
+## 2026-05-27 Frontend UX maturity audit
+
+[Frontend UX Maturity Audit Review](./architecture-and-governance/20260527-frontend-ux-maturity-audit-review.md)
+records the current Canvas, Runs, Templates, Plugins, and Admin UX audit
+against the local workbench rules and mature systems such as VS Code, dbt
+Cloud, Databricks Workflows, Airflow, Snowflake Snowsight, and Oracle SQL
+Developer.
+
+Disposition:
+
+- desktop Canvas and Templates show the right workbench direction, but the
+  product flow is not yet mature enough for import/edit/save/run/export;
+- narrow viewport behavior is not product-ready because route controls, tables,
+  and panels clip horizontally;
+- the next product route remains Planning DB-owned by
+  `E-SHELL-TOP-MENU-RATIONALIZATION-1`, `E-DBT-AUTHOR-RUN-1`, and
+  `E-DBT-PROJECT-ROUNDTRIP-1`;
+- no Markdown-only follow-up queue is introduced by the review.
+
 ## Active Reviews
 
 | Review                                                                                                                                            | Domain folder                     | Current review role                                     | Workboard task linkage                     | Execution status | Execution progress |
@@ -55,6 +139,24 @@ Sprint execution board:
 | [20260402 RC-C2 operational friction intake review](./ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | `ci-and-delivery`                 | current RC-C2 intake review                             | `RC-C2`                                    | `review`         | `67%`              |
 | [20260422 Environment configuration audit](./ci-and-delivery/20260422-environment-configuration-audit-review.md)                                  | `ci-and-delivery`                 | current monorepo environment and tooling audit baseline | `none`                                     | reference        | `n/a`              |
 | [20260506 CI build config audit](./ci-and-delivery/20260506-ci-build-audit-review.md)                                                             | `ci-and-delivery`                 | CI/build/config audit intake routed to Lane C tasks     | `CI-AUDIT-*`                               | reference        | `n/a`              |
+
+## 2026-05-23 Canvas Fowler Canonical Disposition
+
+`F-MAND-CANVAS-FOWLER` canonizes the mandatory Canvas workbench Fowler
+remediation proposal into a Planning DB-owned frontend governance task, a local
+component guide, user stories, and semantic architecture proof.
+
+No Canvas Fowler remediation proposal remains an orphan execution queue after
+this disposition. Runtime Canvas behavior remains owned by the existing Canvas
+component guide family; future executable behavior must be promoted to Planning
+DB before code changes begin.
+
+Canonical surfaces:
+
+- [Canvas Fowler Canon Plan 2026-05-23](../proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md)
+- [Canvas Fowler Canon Component](../../architecture/components/web/graph/canvas-fowler-canon-component.md)
+- [Canvas Fowler Canon User Stories](../../architecture/components/web/graph/canvas-fowler-canon-user-stories.md)
+- [Canvas Workbench Fowler Canon Analysis](../../../buzon/20260523-codex-fowler-canvas-workbench-canon.md)
 
 Additional active rationale:
 
@@ -130,10 +232,10 @@ Additional active rationale:
 
 - [20260429 DVT engine package audit review](./architecture-and-governance/20260429-dvt-engine-package-audit-review.md)
   - domain: `architecture-and-governance`
-  - role: current engine-package audit intake grounded on `main@2522f130`; separates resolved plugin-admission drift from live schema-version, attempt-semantics, provider-truth, public API, architecture-test, and start-run bootstrap follow-ups
+  - role: dispositioned engine-package audit intake grounded on `main@2522f130`; promoted schema-version, attempt-semantics, provider-truth, public API, architecture-test, and start-run bootstrap follow-ups into planning DB tasks
   - linkage: `S16`, `S09`, `AR-A8`, `AR-A12`, `AR-D6`, `EA-20260429-01..08`
-  - status: `active`
-  - progress: `0%`
+  - status: `reference`
+  - progress: `100%`
 
 - [20260427 AR-D plan pointer Fowler hard QA review](./architecture-and-governance/20260427-ar-d-plan-pointer-fowler-hard-qa-review.md)
   - domain: `architecture-and-governance`
@@ -334,6 +436,59 @@ Additional active QA:
   - linkage: `QA-RR-1..QA-RR-5`
   - status: `done`
   - progress: `100%`
+
+## 2026-05-23 Runtime Review Canonical Disposition
+
+`C-REV-RUNTIME-CANON` classifies runtime/API review inputs through
+`ClassifyRuntimeReviewDisposition` and records the outcome with
+`RecordRuntimeReviewCanon`. No runtime review remains an orphan execution queue;
+executable follow-up belongs in Planning DB, protected runtime rails, or an
+explicit closeout.
+
+| Review input                                                                                                                                                  | Disposition                                                                                 | Canonical owner                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------ |
+| [20260321 Planner-backed StartRun QA review](./execution-runtime/20260321-planner-backed-start-run-qa-review.md)                                              | reference rationale absorbed by protected runtime planner-ingress work                      | protected runtime rail catalog |
+| [20260326 RunMaintenanceService SRP review](./execution-runtime/20260326-run-maintenance-service-srp-review.md)                                               | reference rationale for runtime decomposition                                               | execution-runtime domain page  |
+| [20260326 S03 hard QA review](./execution-runtime/20260326-s03-hard-qa-review.md)                                                                             | superseded as active critique by AR-C10, TF-C2, and RC closeouts                            | runtime review canon component |
+| [20260410 Runtime and shared-kernel risk triage review](./architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)               | reference intake with linked Planning DB task families                                      | Lane C/A/D task families       |
+| [20260410 Contract pack and read boundary reset Fowler review](./architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md) | future/active work remains under AR-A12 task family                                         | Lane A AR-A12 task family      |
+| [20260409 TF-C2-B runtime read-surface hard QA review](execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md)                                     | done and evidence-backed                                                                    | TF-C2-B closeout               |
+| [20260510 Web API integration gap review](./20260510-web-api-integration-gap-review.md)                                                                       | runtime side must route through protected runtime command/query rails before implementation | API/runtime rail catalog       |
+
+Canonical component and stories:
+
+- [Runtime review canon component](../../architecture/components/api/runtime-review-canon-component.md)
+- [Runtime review canon user stories](../../architecture/components/api/runtime-review-canon-user-stories.md)
+- [Runtime review canon plan 2026-05-23](../proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md)
+
+## 2026-05-23 CI Delivery Retention Review Canonical Disposition
+
+`D-REV-CI-RETENTION-CANON` classifies CI, delivery, and retention review inputs
+through `ClassifyCiRetentionReviewDisposition` and records the outcome with
+`RecordCiRetentionReviewCanon`. No CI, delivery, or retention review remains an orphan execution queue;
+executable follow-up belongs in Planning DB, measured adoption gates, component
+guides, or closeouts.
+
+| Review input                                                                                                                                      | Disposition                                                         | Canonical owner                      |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------ |
+| [20260328 Lane C AI efficiency and cost review](./ci-and-delivery/20260328-lane-c-ai-efficiency-and-cost-review.md)                               | blocked on measurement; still feeds `RC-C2`                         | AI efficiency adoption status        |
+| [20260330 CI, prepush, and PR process observations](./ci-and-delivery/20260330-ci-prepush-pr-process-observations.md)                             | blocked on measurement; shipped tooling remains closeout evidence   | `RC-C2`                              |
+| [20260401 Lane C RC-C2 efficiency institutionalization review](./ci-and-delivery/20260401-lane-c-rc-c2-efficiency-institutionalization-review.md) | blocked on measurement; no closure without three qualifying cycles  | `RC-C2`                              |
+| [20260402 RC-C2 operational friction intake review](./ci-and-delivery/20260402-rc-c2-operational-friction-intake-review.md)                       | blocked on measurement; friction fixes remain closeout evidence     | `RC-C2`                              |
+| [20260330 CI performance review and action plan](./ci-and-delivery/20260330-ci-performance-review-and-action-plan.md)                             | reference rationale for CI throughput                               | CI governance component              |
+| [20260401 CI process review](./ci-and-delivery/20260401-ci-process-review.md)                                                                     | reference baseline for CI process                                   | CI governance component              |
+| [20260422 Environment configuration audit](./ci-and-delivery/20260422-environment-configuration-audit-review.md)                                  | reference intake for config/build posture                           | CI governance and CI-AUDIT tasks     |
+| [20260506 CI build config audit](./ci-and-delivery/20260506-ci-build-audit-review.md)                                                             | reference intake routed to `CI-AUDIT-*` tasks                       | CI-AUDIT task family                 |
+| [20260329 Run event retention TTL kickoff review](./event-lifecycle-and-retention/20260329-run-event-retention-ttl-kickoff-review.md)             | done/reference; component owner is run-event retention policy       | event lifecycle and retention domain |
+| [20260329 Run event retention Fowler hard review](./event-lifecycle-and-retention/20260329-run-event-retention-fowler-hard-review.md)             | done/reference; QA rationale absorbed by retention policy component | event lifecycle and retention domain |
+| [20260329 Run event retention risks and mitigations](./event-lifecycle-and-retention/20260329-run-event-retention-risks-mitigations.md)           | done/reference; residual risk handled by retention closeouts        | event lifecycle and retention domain |
+| [20260330 MVP-D1 residual risk baseline review](./event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md)                 | done/reference; baseline retained as evidence                       | MVP-D1 and AR-D5 closeouts           |
+
+Canonical component and stories:
+
+- [CI retention review canon component](../../architecture/components/ci-governance/ci-retention-review-canon-component.md)
+- [CI retention review canon user stories](../../architecture/components/ci-governance/ci-retention-review-canon-user-stories.md)
+- [CI retention review canon plan 2026-05-23](../proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md)
 
 ## Newly Classified Review
 

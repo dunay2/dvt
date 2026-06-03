@@ -2,12 +2,10 @@
  * Owned concern: own the runs workspace data-fetching lifecycle as a composable
  * hook for route consumers.
  */
-import { useQuery } from '@tanstack/react-query';
 import { useMemo, useSyncExternalStore } from 'react';
 
 import type { IRunsPort, RunSummaryItem } from '../../ports/runs';
-import { queryKeys } from '../../queries/queryKeys';
-import { useScopedRunSummariesQuery } from '../../queries/runsQueries';
+import { useRunWorkspaceQuery, useScopedRunSummariesQuery } from '../../queries/runsQueries';
 import { classifyHttpError, extractHttpStatusCode } from '../../services/api/classifyHttpError';
 import { useRunsService, useSessionContext } from '../../services/AppServicesContext';
 import {
@@ -70,11 +68,7 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
   const runsQuery = useScopedRunSummariesQuery(workspaceLayoutKey);
   const runsErrorMessage = describeRunsListError(runsQuery.error);
 
-  const runWorkspaceQuery = useQuery({
-    queryKey: queryKeys.runs.workspace(workspaceLayoutKey, runId),
-    queryFn: () => runWorkspaceFacade.loadRunWorkspace(runId ?? ''),
-    enabled: Boolean(runId),
-  });
+  const runWorkspaceQuery = useRunWorkspaceQuery(workspaceLayoutKey, runId, runWorkspaceFacade);
 
   const workspaceQueryError = runWorkspaceQuery.error;
   const isWorkspaceLoadError = workspaceQueryError instanceof RunWorkspaceLoadError;

@@ -124,7 +124,7 @@ export interface ExecutionStepV1 {
 
 export type ExecutionStep = ExecutionStepV1;
 
-export const CURRENT_EXECUTION_PLAN_SCHEMA_VERSION = 'v1.2' as const;
+export const CURRENT_EXECUTION_PLAN_SCHEMA_VERSION = '1.0' as const;
 export const CURRENT_EXECUTION_PLAN_CONTRACT_VERSION = '1.0.0' as const;
 
 export type VersionedPlanCore<TVersion extends SupportedPlanVersion> = {

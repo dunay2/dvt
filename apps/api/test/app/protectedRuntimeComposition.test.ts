@@ -23,6 +23,8 @@ describe('buildApp protected runtime composition', () => {
 
           expect(migrationCalls()).toEqual({
             accessDecision: 1,
+            projectOnboarding: 1,
+            workspacePluginCatalog: 1,
             planStore: 1,
             stateStore: 1,
             intentStore: 1,
@@ -34,11 +36,14 @@ describe('buildApp protected runtime composition', () => {
   });
 
   it('fails fast when OIDC is enabled without DATABASE_URL', async () => {
-    await withEnvPatch(mergeEnv(BASE_APP_ENV, OIDC_APP_ENV, { DATABASE_URL: undefined }), async () => {
-      await expect(() => buildApp()).rejects.toThrow(
-        /DATABASE_URL is required when OIDC-protected runtime routes are enabled/
-      );
-    });
+    await withEnvPatch(
+      mergeEnv(BASE_APP_ENV, OIDC_APP_ENV, { DATABASE_URL: undefined }),
+      async () => {
+        await expect(() => buildApp()).rejects.toThrow(
+          /DATABASE_URL is required when OIDC-protected runtime routes are enabled/
+        );
+      }
+    );
   });
 
   it('fails fast when protected runtime is enabled without Temporal configuration', async () => {

@@ -1,3 +1,4 @@
+/** Owned concern: prove Canvas draft access fail-closed posture in browser. */
 import { buildDraftReadDeniedResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { resolveCanvasViewCopy, type CanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {

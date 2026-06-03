@@ -168,11 +168,11 @@ Use this rule:
 
 ## Architectural Next Cut
 
-The next useful artifact is a route acceptance matrix owned by `F-27`. It should
-not duplicate child plans. It should list each route stage, governing rail,
-owner, happy-path fixture, fail-closed fixture, evidence source, risk decision,
-and alpha exit impact.
+The route acceptance matrix owned by `F-27` now lives at
+`20260514-internal-alpha-route-acceptance-matrix.md`. It does not duplicate
+child plans. It lists each route stage, governing rail or owner, happy-path
+fixture, fail-closed fixture, evidence source, risk decision, and alpha exit
+impact.
 
-This view intentionally does not create that matrix. It defines why the matrix
-is the next architecture-level closure artifact and why alpha full remains
-blocked without it.
+This view defines why the matrix is the architecture-level closure artifact and
+why alpha full remains blocked until child evidence fills the matrix rows.

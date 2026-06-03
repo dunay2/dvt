@@ -1,12 +1,14 @@
+/**
+ * @ownedConcern Compute repository CI scope read models from governed path policies and command semantics.
+ */
 import { execFile } from 'node:child_process';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { promisify } from 'node:util';
 import {
   classifyPackageScriptCommand,
-  classifyScriptFilePath,
   isGovernanceToolingCommand,
-  isRepositoryCommandFile,
 } from './repository-command-catalog.mjs';
+import { classifyRepositoryFileScope } from './repository-change-scope.mjs';
 
 const execFileAsync = promisify(execFile);
 
@@ -16,6 +18,10 @@ const ROOT_CONFIG_PATTERNS = [
   'pnpm-workspace.yaml',
   'turbo.json',
 ];
+
+const SHARED_CI_ACTION_PATTERNS = ['.github/actions/setup-node-pnpm/**'];
+
+const CI_SCOPE_FETCH_ACTION_PATTERNS = ['.github/actions/fetch-scope-base/**'];
 
 function readWorkflowScopePolicy() {
   const policyPath = new URL('./policy/workflow-scope.json', import.meta.url);
@@ -28,12 +34,15 @@ function readWorkflowScopePolicy() {
     'generated_status_relevant',
     'generated_capability_relevant',
     'changed_file_validation_relevant',
+    'security_analysis_relevant',
+    'ci_tool_executable_contracts_relevant',
     'workspace_global',
     'workspace_api',
     'workspace_lineage_worker',
     'workspace_outbox_worker',
     'workspace_projector_worker',
     'workspace_temporal_worker',
+    'workspace_temporal_dbt_plugin',
     'workspace_web',
     'workspace_artifacts',
     'workspace_crypto',
@@ -79,6 +88,7 @@ function readAdapterPostgresPolicy() {
 
 const WORKFLOW_SCOPE_POLICY = readWorkflowScopePolicy();
 const ADAPTER_POSTGRES_POLICY = readAdapterPostgresPolicy();
+const ENGINE_WORKSPACE_PATTERNS = WORKFLOW_SCOPE_POLICY.workspace_engine;
 export const ADAPTER_POSTGRES_RELEVANT_PATTERNS = ADAPTER_POSTGRES_POLICY.adapter_postgres_relevant;
 
 export const WORKFLOW_SCOPE_PATTERNS = {
@@ -89,6 +99,9 @@ export const WORKFLOW_SCOPE_PATTERNS = {
   generated_status_relevant: WORKFLOW_SCOPE_POLICY.generated_status_relevant,
   generated_capability_relevant: WORKFLOW_SCOPE_POLICY.generated_capability_relevant,
   changed_file_validation_relevant: WORKFLOW_SCOPE_POLICY.changed_file_validation_relevant,
+  security_analysis_relevant: WORKFLOW_SCOPE_POLICY.security_analysis_relevant,
+  ci_tool_executable_contracts_relevant:
+    WORKFLOW_SCOPE_POLICY.ci_tool_executable_contracts_relevant,
 };
 
 export const WORKSPACE_ENTRIES = [
@@ -116,6 +129,12 @@ export const WORKSPACE_ENTRIES = [
     name: 'temporal-worker',
     pkg: 'dvt-temporal-worker',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_worker,
+  },
+  {
+    key: 'temporal_dbt_plugin',
+    name: 'temporal-dbt-plugin',
+    pkg: '@dvt/temporal-dbt-plugin',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_dbt_plugin,
   },
   { key: 'web', name: 'web', pkg: '@dvt/web', patterns: WORKFLOW_SCOPE_POLICY.workspace_web },
   {
@@ -147,7 +166,7 @@ export const WORKSPACE_ENTRIES = [
     key: 'engine',
     name: 'engine',
     pkg: '@dvt/engine',
-    patterns: WORKFLOW_SCOPE_POLICY.workspace_engine,
+    patterns: ENGINE_WORKSPACE_PATTERNS,
   },
   {
     key: 'observability',
@@ -215,7 +234,12 @@ export const WORKSPACE_ENTRIES = [
     pkg: '@dvt/adapter-temporal',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_adapter_temporal,
   },
-  { key: 'cli', name: 'cli', pkg: '@dvt/cli', patterns: WORKFLOW_SCOPE_POLICY.workspace_cli },
+  {
+    key: 'cli',
+    name: 'cli',
+    pkg: '@dvt/cli',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_cli,
+  },
 ];
 
 export const CI_GLOBAL_PATTERNS = WORKFLOW_SCOPE_POLICY.workspace_global;
@@ -224,9 +248,8 @@ const TEST_ROOT_BUILD_PATTERNS = [
   ...ROOT_CONFIG_PATTERNS,
   'vitest.config.ts',
   'tsconfig*.json',
-  '.github/actions/setup-node-pnpm/**',
+  ...SHARED_CI_ACTION_PATTERNS,
   '.github/scripts/**',
-  '.github/workflows/test.yml',
   'tools/ci/**',
   'scripts/skip-pretest-if-ci.cjs',
   'scripts/skip-prebuild-if-orchestrated.cjs',
@@ -234,24 +257,27 @@ const TEST_ROOT_BUILD_PATTERNS = [
 ];
 
 const TEST_DETERMINISM_PATTERNS = [
-  'packages/@dvt/engine/**',
+  ...ENGINE_WORKSPACE_PATTERNS,
   'packages/@dvt/contracts/**',
   'package.json',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',
-  '.github/workflows/test.yml',
 ];
 
 const TEST_COVERAGE_PATTERNS = [
-  'packages/@dvt/engine/src/**',
-  'packages/@dvt/engine/test/**',
+  ...ENGINE_WORKSPACE_PATTERNS,
   'packages/@dvt/contracts/**',
   'package.json',
   'pnpm-lock.yaml',
   'pnpm-workspace.yaml',
   'vitest.config.ts',
   'tsconfig*.json',
-  '.github/workflows/test.yml',
+];
+
+const WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS = [
+  'docs/architecture/components/web/frontend-test-governance-*.md',
+  'docs/architecture/components/web/index.md',
+  'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md',
 ];
 
 const PR_QUALITY_ROOT_BUILD_PATTERNS = [
@@ -259,16 +285,15 @@ const PR_QUALITY_ROOT_BUILD_PATTERNS = [
   'vitest.config.ts',
   'tsconfig*.json',
   'tools/ci/**',
-  '.github/actions/setup-node-pnpm/**',
+  ...SHARED_CI_ACTION_PATTERNS,
   '.github/scripts/**',
-  '.github/workflows/pr-quality-gate.yml',
-  '.github/workflows/test.yml',
   'scripts/build-workspace-runtime-deps.cjs',
 ];
 
 const PR_QUALITY_CI_TOOLING_PATTERNS = [
   'tools/ci/**',
-  '.github/actions/setup-node-pnpm/**',
+  ...CI_SCOPE_FETCH_ACTION_PATTERNS,
+  ...SHARED_CI_ACTION_PATTERNS,
   '.github/scripts/**',
   '.github/workflows/**',
   'package.json',
@@ -289,18 +314,18 @@ export const TEST_SCOPE_PATTERNS = {
   any_test: [
     'apps/**',
     'packages/**',
-    '.github/actions/setup-node-pnpm/**',
+    ...SHARED_CI_ACTION_PATTERNS,
     '.github/scripts/**',
-    '.github/workflows/test.yml',
     'tools/ci/**',
     'scripts/skip-pretest-if-ci.cjs',
     'scripts/skip-prebuild-if-orchestrated.cjs',
     'scripts/build-workspace-runtime-deps.cjs',
+    ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS,
     ...ROOT_CONFIG_PATTERNS,
     'vitest.config.ts',
     'tsconfig*.json',
   ],
-  engine: ['packages/@dvt/engine/**'],
+  engine: ENGINE_WORKSPACE_PATTERNS,
   contracts: ['packages/@dvt/contracts/**'],
   adapter_temporal: ['packages/@dvt/adapter-temporal/**'],
   cli: ['packages/@dvt/cli/**'],
@@ -309,7 +334,8 @@ export const TEST_SCOPE_PATTERNS = {
   outbox_worker: ['apps/outbox-worker/**'],
   projector_worker: ['apps/projector-worker/**'],
   temporal_worker: ['apps/temporal-worker/**'],
-  web: ['apps/web/**'],
+  temporal_dbt_plugin: ['packages/@dvt/temporal-dbt-plugin/**'],
+  web: ['apps/web/**', ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS],
   artifacts: ['packages/@dvt/artifacts/**'],
   crypto: ['packages/@dvt/canonical/**'],
   delivery: ['packages/@dvt/delivery/**'],
@@ -359,6 +385,14 @@ export const CONTRACT_SCOPE_PATTERNS = {
     'package.json',
     'pnpm-lock.yaml',
   ],
+  hash_compare_relevant: [
+    'packages/@dvt/engine/test/contracts/**',
+    'docs/architecture/engine/contracts/**',
+    '.golden/**',
+    'scripts/compare-hashes.cjs',
+    'scripts/db-migrate.cjs',
+    '.github/workflows/contracts.yml',
+  ],
 };
 
 export const PR_QUALITY_SCOPE_PATTERNS = {
@@ -373,8 +407,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'scripts/build-workspace-runtime-deps.cjs',
     'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
-    '.github/workflows/pr-quality-gate.yml',
-    '.github/workflows/test.yml',
   ],
   temporal_transformation_changed: [
     'packages/@dvt/adapter-temporal/src/activities/**',
@@ -390,8 +422,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'scripts/build-workspace-runtime-deps.cjs',
     'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
-    '.github/workflows/pr-quality-gate.yml',
-    '.github/workflows/test.yml',
   ],
   temporal_postgres_changed: [
     'packages/@dvt/adapter-postgres/**',
@@ -408,8 +438,6 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'scripts/build-workspace-runtime-deps.cjs',
     'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
-    '.github/workflows/pr-quality-gate.yml',
-    '.github/workflows/test.yml',
   ],
   adapter_postgres_changed: ADAPTER_POSTGRES_RELEVANT_PATTERNS,
   root_build_sensitive: PR_QUALITY_ROOT_BUILD_PATTERNS,
@@ -424,6 +452,22 @@ export const SCOPE_MODES = {
   test: TEST_SCOPE_PATTERNS,
   workflow: WORKFLOW_SCOPE_PATTERNS,
 };
+
+const EXCLUDED_TEST_PACKAGE_NAMES = new Set([
+  '@dvt/adapter-postgres',
+  '@dvt/adapter-temporal',
+  '@dvt/planner-contracts',
+  '@dvt/web',
+]);
+
+export const TEST_PACKAGE_ENTRIES = WORKSPACE_ENTRIES.filter(
+  ({ pkg }) => !EXCLUDED_TEST_PACKAGE_NAMES.has(pkg)
+).map(({ key, name, pkg }) => ({
+  key,
+  name,
+  pkg,
+  command: `pnpm --filter ${pkg} ${pkg === 'dvt-api' ? 'test:ci' : 'test'}`,
+}));
 
 function normalizePath(path) {
   return path.replaceAll('\\', '/');
@@ -563,6 +607,20 @@ function buildFilesForPathPolicy(changedFiles, scopeContext) {
     : normalizedFiles;
 }
 
+function computeRepositoryValidationScope(changedFiles, scopeContext = {}) {
+  const fileScopes = buildFilesForPathPolicy(changedFiles, scopeContext).map((path) =>
+    classifyRepositoryFileScope(path)
+  );
+
+  return {
+    planning_db_inventory_relevant: fileScopes.some((scope) => scope.planningDbInventoryRelevant),
+    governance_global_relevant: fileScopes.some((scope) => scope.governanceGlobalRelevant),
+    feature_mechanization_relevant: fileScopes.some((scope) => scope.featureMechanizationRelevant),
+    traceability_adr0_relevant: fileScopes.some((scope) => scope.traceabilityRelevant),
+    code_validation_relevant: fileScopes.some((scope) => scope.codeValidationRelevant),
+  };
+}
+
 export function computeBooleanScope(changedFiles, scopePatterns, scopeContext = {}) {
   const normalizedFiles = buildFilesForPathPolicy(changedFiles, scopeContext);
   const scope = Object.fromEntries(
@@ -588,6 +646,7 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
   }
 
   const scope = computeBooleanScope(changedFiles, scopePatterns, scopeContext);
+  const repositoryValidationScope = computeRepositoryValidationScope(changedFiles, scopeContext);
   const packageJsonChange = scopeContext.packageJsonChange;
 
   if (mode === 'contracts') {
@@ -605,12 +664,14 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
         scope.golden_relevant ||
         packageJsonChange?.contractCapabilitySensitive
       ),
+      hash_compare_relevant: Boolean(scope.hash_compare_relevant),
     };
   }
 
   if (mode === 'pr-quality') {
     return {
       ...scope,
+      ...repositoryValidationScope,
       root_build_sensitive: Boolean(
         scope.root_build_sensitive || packageJsonChange?.rootBuildSensitive
       ),
@@ -655,6 +716,20 @@ export function computeWorkflowModeScopeOutputs(mode, changedFiles, scopeContext
 
   return {
     ...scope,
+    ...repositoryValidationScope,
+    security_analysis_relevant: Boolean(
+      scope.security_analysis_relevant ||
+      packageJsonChange?.dependencySensitive ||
+      packageJsonChange?.lifecycleSensitive ||
+      packageJsonChange?.rootBuildSensitive ||
+      packageJsonChange?.ciToolingSensitive
+    ),
+    ci_tool_executable_contracts_relevant: Boolean(
+      scope.ci_tool_executable_contracts_relevant ||
+      packageJsonChange?.dependencySensitive ||
+      packageJsonChange?.ciToolingSensitive ||
+      packageJsonChange?.governanceToolingOnly
+    ),
   };
 }
 
@@ -679,11 +754,11 @@ export function computeWorkspaceMatrix(changedFiles, options = {}) {
     packageJsonChanged &&
     (!options.packageJsonChange || options.packageJsonChange.rootBuildSensitive === true);
   const filesForPathPolicy = normalizedFiles.filter((path) => path !== 'package.json');
-  const commandFiles = filesForPathPolicy.filter(isRepositoryCommandFile);
-  const nonCommandFiles = filesForPathPolicy.filter((path) => !isRepositoryCommandFile(path));
-  const runtimeFanoutScriptChanged = commandFiles.some((path) =>
-    isRuntimeFanoutCommand(classifyScriptFilePath(path))
-  );
+  const fileScopes = filesForPathPolicy.map((path) => classifyRepositoryFileScope(path));
+  const nonCommandFiles = fileScopes
+    .filter((scope) => !scope.repositoryCommandFile)
+    .map((scope) => scope.path);
+  const runtimeFanoutScriptChanged = fileScopes.some((scope) => scope.runtimeWorkspaceFanout);
   const globalChanged =
     packageJsonRootSensitive ||
     runtimeFanoutScriptChanged ||
@@ -696,6 +771,20 @@ export function computeWorkspaceMatrix(changedFiles, options = {}) {
 
   return {
     anyChanged: include.length > 0,
+    include,
+  };
+}
+
+export function computeTestPackageMatrix(changedFiles, options = {}) {
+  const scope = computeWorkflowModeScopeOutputs('test', changedFiles, options);
+  const include = scope.root_build_sensitive
+    ? TEST_PACKAGE_ENTRIES
+    : TEST_PACKAGE_ENTRIES.filter(
+        ({ key }) => scope[key] || (key === 'planner' && scope.contracts)
+      );
+
+  return {
+    anyTests: include.length > 0,
     include,
   };
 }

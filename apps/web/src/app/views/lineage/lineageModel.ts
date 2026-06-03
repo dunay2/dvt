@@ -94,20 +94,18 @@ export function buildColumnLineage(
 }
 
 export function kindStyle(kind: string) {
-  const styles: Record<string, { bg: string; border: string; badge: string }> = {
-    'dbt:source': { bg: 'bg-purple-900/30', border: 'border-purple-500', badge: 'SOURCE' },
-    'dbt:seed': { bg: 'bg-green-900/20', border: 'border-green-500', badge: 'SEED' },
-    'dbt:model': { bg: 'bg-blue-900/30', border: 'border-blue-500', badge: 'MODEL' },
-    'dbt:snapshot': { bg: 'bg-yellow-900/20', border: 'border-yellow-500', badge: 'SNAPSHOT' },
-    'dbt:test': { bg: 'bg-red-900/20', border: 'border-red-500', badge: 'TEST' },
-    'dbt:exposure': { bg: 'bg-pink-900/30', border: 'border-pink-500', badge: 'EXPOSURE' },
-    'dbt:metric': { bg: 'bg-orange-900/20', border: 'border-orange-500', badge: 'METRIC' },
-    'dbt:macro': { bg: 'bg-slate-800', border: 'border-slate-500', badge: 'MACRO' },
+  const styles: Record<string, { badge: string }> = {
+    'dbt:source': { badge: 'SOURCE' },
+    'dbt:seed': { badge: 'SEED' },
+    'dbt:model': { badge: 'MODEL' },
+    'dbt:snapshot': { badge: 'SNAPSHOT' },
+    'dbt:test': { badge: 'TEST' },
+    'dbt:exposure': { badge: 'EXPOSURE' },
+    'dbt:metric': { badge: 'METRIC' },
+    'dbt:macro': { badge: 'MACRO' },
   };
   return (
     styles[kind] ?? {
-      bg: 'bg-slate-800',
-      border: 'border-slate-500',
       badge: kind.split(':')[1]?.toUpperCase() ?? kind,
     }
   );

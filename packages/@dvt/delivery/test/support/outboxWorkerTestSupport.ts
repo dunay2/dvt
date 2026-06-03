@@ -1,8 +1,4 @@
-import type {
-  DeadLetterRecord,
-  EventEnvelope as RunEventPersisted,
-  OutboxRecord,
-} from '@dvt/contracts';
+import type { DeadLetterRecord, EventEnvelope, OutboxRecord } from '@dvt/contracts';
 
 import type { IEventBus, IOutboxStorage } from '../../src/contracts.js';
 import { InMemoryOutboxStorage } from '../../src/testing/InMemoryOutboxStorage.js';
@@ -10,12 +6,7 @@ import { resolveOutboxShardId } from '../../src/testing/outboxSharding.js';
 
 type ReplayDeadLetterOptions = Parameters<IOutboxStorage['replayDeadLetters']>[0];
 
-export function makeEvent(
-  id: string,
-  runId = 'run-1',
-  runSeq = 1,
-  tenantId = 't1'
-): RunEventPersisted {
+export function makeEvent(id: string, runId = 'run-1', runSeq = 1, tenantId = 't1'): EventEnvelope {
   return {
     eventId: `evt-${id}`,
     eventType: 'RunQueued',
@@ -35,18 +26,18 @@ export function makeEvent(
 }
 
 export class CapturingBus implements IEventBus {
-  public readonly published: RunEventPersisted[] = [];
+  public readonly published: EventEnvelope[] = [];
 
-  async publish(events: RunEventPersisted[]): Promise<void> {
+  async publish(events: EventEnvelope[]): Promise<void> {
     this.published.push(...events);
   }
 }
 
 export class FailFirstBus implements IEventBus {
   public calls = 0;
-  public readonly published: RunEventPersisted[] = [];
+  public readonly published: EventEnvelope[] = [];
 
-  async publish(events: RunEventPersisted[]): Promise<void> {
+  async publish(events: EventEnvelope[]): Promise<void> {
     this.calls += 1;
     if (this.calls === 1) {
       throw new Error('synthetic bus failure');
@@ -60,7 +51,7 @@ export class FailFirstMarkDeliveredStorage implements IOutboxStorage {
 
   constructor(private readonly inner: InMemoryOutboxStorage) {}
 
-  async enqueueTx(runId: string, events: RunEventPersisted[]): Promise<void> {
+  async enqueueTx(runId: string, events: EventEnvelope[]): Promise<void> {
     await this.inner.enqueueTx(runId, events);
   }
 

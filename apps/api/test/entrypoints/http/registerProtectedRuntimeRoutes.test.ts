@@ -16,10 +16,13 @@ function protectedRuntimeModule(): ProtectedRuntimeModule {
     },
     authorizer: { authorize: async () => ({ ok: false, reason: 'missing_scope' }) },
     close: async () => undefined,
+    createProjectUseCase: { execute: async () => ({ kind: 'tenant_not_granted' }) },
     engine: {},
     executablePlanResolver: { fetch: async () => ({}) },
     facade: {},
     getWorkspaceGraphDraftUseCase: {},
+    listProjectsUseCase: { execute: async () => ({ tenants: [], projects: [] }) },
+    listWorkspacePluginsUseCase: { execute: async () => [] },
     migrate: async () => undefined,
     planCompilePlanner: {},
     planner: {},
@@ -88,8 +91,13 @@ describe('registerProtectedRuntimeRoutes', () => {
     expect(app.hasRoute({ method: 'POST', url: '/plans/preview' })).toBe(true);
     expect(app.hasRoute({ method: 'POST', url: '/plans/import' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/context' })).toBe(true);
+    expect(app.hasRoute({ method: 'GET', url: '/workspace/plugins' })).toBe(true);
+    expect(app.hasRoute({ method: 'GET', url: '/projects' })).toBe(true);
+    expect(app.hasRoute({ method: 'POST', url: '/projects' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/graph/draft' })).toBe(true);
+    expect(app.hasRoute({ method: 'GET', url: '/workspace/diff/changes' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/files' })).toBe(true);
+    expect(app.hasRoute({ method: 'GET', url: '/workspace/file-history/:path' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/files/:path' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/runs/:runId/events' })).toBe(true);
     expect(app.hasRoute({ method: 'POST', url: '/runs/:runId/signal' })).toBe(true);

@@ -2,7 +2,7 @@
 title: web component
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-29
+last_reviewed: 2026-05-14
 ---
 
 # web component
@@ -28,6 +28,7 @@ out of the active tree.
   [Admin route position component](./admin-route-position-component.md),
   [API client auth component](./api-client-auth-component.md),
   [App shell](./appshell/app-shell.md),
+  [Web Auth Project Onboarding Component](./appshell/web-auth-project-onboarding-component.md),
   [Data source service boundary](./appshell/data-source-service-boundary.md)
 - graph and authoring surfaces:
   [Graph docs entrypoint](./graph/index.md),
@@ -44,9 +45,17 @@ out of the active tree.
   [Frontend runtime contract user manual](./runs/frontend-runtime-contract-user-manual.md)
 - cross-cutting UX:
   [UX implementation guide](./ux-implementation-guide.md),
+  [Workbench UX Canon Component](./workbench-ux-canon-component.md),
+  [Frontend command and query rail inventory](./frontend-command-query-rail-inventory.md),
+  [Frontend mechanical truth inventory](./frontend-mechanical-truth-inventory.md),
+  [Frontend query boundary component](./frontend-query-boundary-component.md),
+  [Frontend test governance component](./frontend-test-governance-component.md),
+  [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),
   [Web store domain ownership component](./web-store-domain-ownership-component.md),
+  [Route Workbench Frame Component](./route-workbench-frame-component.md),
   [Workbench UI contract and component inventory](./workbench-ui-contract-and-component-inventory.md),
   [Library and open-source reference stack](./library-and-open-source-reference-stack.md),
+  [Marquez public-data visual system](./public-data/marquez-visual-system-component.md),
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md)
 
 ## Public Operational Surface
@@ -67,13 +76,20 @@ out of the active tree.
 - plugin and contribution boundary:
   [Plugin Contributions Developer Guide](./plugin-contributions-developer-guide.md),
   [registry.ts](../../../../apps/web/src/app/plugins/registry.ts)
+- frontend test governance:
+  [Frontend test governance component](./frontend-test-governance-component.md),
+  [Frontend test governance user stories](./frontend-test-governance-user-stories.md),
+  [Web Vitest changed suite router component](./web-vitest-changed-suite-router-component.md),
+  [Web Vitest changed suite router user stories](./web-vitest-changed-suite-router-user-stories.md),
+  [`vitest.suites.ts`](../../../../apps/web/vitest.suites.ts),
+  [`test.yml`](../../../../.github/workflows/test.yml)
 
 ## Component Topology
 
 ```mermaid
 flowchart LR
   Browser["Browser"] --> Router["React Router shell"]
-  Router --> Views["Canvas, Runs, Lineage, Code, Diff, Artifacts"]
+  Router --> Views["Canvas, Runs, Cost, and Canvas workbench tabs"]
   Router --> Shell["Plugins and Admin shell routes"]
   Views --> Services["plansService / runsService / workspaceService"]
   Views --> Plugins["plugin registry and node renderers"]
@@ -83,16 +99,17 @@ flowchart LR
 
 ## Current Route Inventory
 
-| Route                   | Main responsibility                   |
-| ----------------------- | ------------------------------------- |
-| `/canvas`               | graph workbench and run-start flow    |
-| `/runs`, `/runs/:runId` | run list and run detail inspection    |
-| `/lineage`              | graph-derived lineage and impact      |
-| `/code`                 | file and compiled-source inspection   |
-| `/diff`                 | diff and review handoff surface       |
-| `/artifacts`            | manifest import and artifact browsing |
-| `/plugins`              | plugin management shell view          |
-| `/admin`                | shell-owned administrative view       |
+| Route                   | Main responsibility                                                           |
+| ----------------------- | ----------------------------------------------------------------------------- |
+| `/`                     | authenticated shell root redirect to the default core view                    |
+| `/login`                | public bootstrap route                                                        |
+| `/canvas`               | graph workbench and run-start flow                                            |
+| `/canvas/:workbenchTab` | Canvas-scoped workbench tabs such as Code, Lineage, Diff, Artifacts, and Runs |
+| `/runs`, `/runs/:runId` | run list and run detail inspection                                            |
+| `/templates`            | DVT template catalog preview route                                            |
+| `/cost`                 | optional cost dashboard route when the cost plugin is enabled and available   |
+| `/plugins`              | plugin management shell view                                                  |
+| `/admin`                | shell-owned administrative view                                               |
 
 ## Current Posture
 
@@ -100,6 +117,30 @@ This component is real product code. The remaining work is around tightening
 service boundaries, removing mock-heavy paths, and aligning route-level flows
 with the protected backend contracts. Historical `apps/web/*.md` design and
 planning packs have been archived so this page stays the canonical entry point.
+
+## Current Reconciliation Evidence
+
+The active documentation set for `web` is rooted under
+`docs/architecture/components/web/**`. Historical `docs/architecture/frontend/**`
+references remain archive and closeout context only; they are not the current
+component home.
+
+The route inventory above is grounded in `apps/web/src/app/routes.ts` plus
+route-bearing plugin contributions in `apps/web/src/app/plugins/**`. Core routes
+are registered through the shell router, plugin routes are contributed through
+the plugin registry, Canvas workbench tabs are mounted under
+`/canvas/:workbenchTab`, and `/login` remains the public bootstrap route.
+
+Runtime run behavior is described through the presentation port in
+`apps/web/src/app/ports/runs.ts`, the API adapter in
+`apps/web/src/app/services/runs/runsService.api.ts`, and the protected runtime
+rail vocabulary in
+`apps/api/src/application/ports/protectedRuntimeRunRailVocabulary.ts`.
+
+The current roadmap reference for frontend and UX work is
+`docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`.
+The former `docs/planning/proposals/frontend-roadmap-20260219.md` location is no
+longer an active path.
 
 ## Related Pages
 

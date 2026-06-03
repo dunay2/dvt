@@ -1,5 +1,245 @@
 # Changelog
 
+## [5.32.1](https://github.com/dunay2/dvt/compare/v5.32.0...v5.32.1) (2026-06-03)
+
+
+### Bug Fixes
+
+* **docs:** Ignore declarative knowledge-action bullets ([#1445](https://github.com/dunay2/dvt/issues/1445)) ([b9b3c2f](https://github.com/dunay2/dvt/commit/b9b3c2f2a579289ec34ce32cec2e0a94f6f97df5))
+
+## [5.32.0](https://github.com/dunay2/dvt/compare/v5.31.0...v5.32.0) (2026-06-03)
+
+
+### Features
+
+* **api:** Expose run diagnostics pointers ([8b0f625](https://github.com/dunay2/dvt/commit/8b0f6253301ebea190cee6f03d40a5839bbab9fc))
+* **docs:** Add DB-first AI project context query ([d55142c](https://github.com/dunay2/dvt/commit/d55142c99d804722a4327b380febb3f3dbc26054))
+* **docs:** Add DB-first AI project context query ([04ff4d5](https://github.com/dunay2/dvt/commit/04ff4d5b22291ec1658f16496af7f967b687b515))
+* **planner:** Add AI creation intent rail preflight ([09f807b](https://github.com/dunay2/dvt/commit/09f807bc3b0bcad0197b07e47d55bc58945d6abf))
+* **planner:** Add DB-first command query rail catalog ([d878b5c](https://github.com/dunay2/dvt/commit/d878b5ca0e109c78f0be913289a48405ec37132b))
+* **planner:** Add DB-first command query rail catalog ([ada2471](https://github.com/dunay2/dvt/commit/ada2471e19dfbaad8419287df86f49204cc63f28))
+* **web:** Add canvas guide preference and front inventory ([cb8d568](https://github.com/dunay2/dvt/commit/cb8d568b1c0c921d3bf29f4b3a9671010a9f62b4))
+* **web:** Add DB-first workspace plugin catalog ([#1405](https://github.com/dunay2/dvt/issues/1405)) ([ca4205b](https://github.com/dunay2/dvt/commit/ca4205b836be76f3a5bc91f9cc487ee9243132e2))
+* **web:** Hard-cut cost attribution UI authority ([#1401](https://github.com/dunay2/dvt/issues/1401)) ([af07598](https://github.com/dunay2/dvt/commit/af07598aee1c04bfa3d39450dfde4423c3edeceb))
+* **web:** Prove first run live execution ([#1440](https://github.com/dunay2/dvt/issues/1440)) ([07d6a6e](https://github.com/dunay2/dvt/commit/07d6a6e1d168a5be8b2c1cae1cc27bc83287d94c))
+* **web:** Show canvas plan run readiness ([4f0ee37](https://github.com/dunay2/dvt/commit/4f0ee37e2a6664e24e1be194a3672581f00f249f))
+
+
+### Bug Fixes
+
+* **api:** Propagate run diagnostics context to observability logs ([#1441](https://github.com/dunay2/dvt/issues/1441)) ([5427309](https://github.com/dunay2/dvt/commit/542730915c2a29c1ad9d3447de718d8d6559b344))
+* **state-store:** Redact sensitive archive payload fields ([#1439](https://github.com/dunay2/dvt/issues/1439)) ([7855067](https://github.com/dunay2/dvt/commit/7855067cb7debc60f524a3d4551c3471fa8b057c))
+* **web:** Improve canvas authoring usability ([c469e86](https://github.com/dunay2/dvt/commit/c469e864ea349cdf45e2edecdbbc6f4fdc77d3c0))
+* **web:** Integrate local Canvas usability work ([#1428](https://github.com/dunay2/dvt/issues/1428)) ([4b20411](https://github.com/dunay2/dvt/commit/4b2041116470a4e1d06302e66911c1ea8fc4c5fe))
+
+
+### Performance Improvements
+
+* **ci:** Defer governance reports to DB refresh ([#1422](https://github.com/dunay2/dvt/issues/1422)) ([f548a61](https://github.com/dunay2/dvt/commit/f548a619e68ca785e5560211d8fe503775f649b8))
+* **ci:** Narrow changed verifier self-tests ([1d3cf24](https://github.com/dunay2/dvt/commit/1d3cf24d85fdd66f85339ce208419e79cff0a822))
+* **ci:** Narrow changed verifier self-tests ([2864d98](https://github.com/dunay2/dvt/commit/2864d988508223ab7951ec3d4eee69c12b3c1d27))
+
+## [5.31.0](https://github.com/dunay2/dvt/compare/v5.30.0...v5.31.0) (2026-06-01)
+
+
+### Features
+
+* **api:** Add backend warehouse source import rails ([#1390](https://github.com/dunay2/dvt/issues/1390)) ([3d21449](https://github.com/dunay2/dvt/commit/3d214490aca1e6779a4449cec2837b652ff4af6e))
+* **contracts:** Extend workspace graph authoring draft ([03ad06d](https://github.com/dunay2/dvt/commit/03ad06d21ba6b88b0e1fa38539412593fdc54cb1))
+* **web:** Add canvas workspace explorer ([9f6b512](https://github.com/dunay2/dvt/commit/9f6b51280080b6087b8527018fb172656e3e74d1))
+* **web:** Add DVT inspector authoring controls ([#1409](https://github.com/dunay2/dvt/issues/1409)) ([542ba36](https://github.com/dunay2/dvt/commit/542ba36620a31025ab7f10302148a769f48c3ea3))
+* **web:** Add product shell canvas integration ([79bb82f](https://github.com/dunay2/dvt/commit/79bb82fc83543498d764bddd09c20294d612647d))
+* **web:** Add product shell canvas integration ([d914059](https://github.com/dunay2/dvt/commit/d914059380cf7b2f64bcd35c9b88dd042a65e8ad))
+* **web:** Connect dbt authoring to code and run rails ([0512588](https://github.com/dunay2/dvt/commit/051258889fa75f88d638cbfcfe6b41e418696b21))
+* **web:** Integrate dbt authoring stack ([4efde99](https://github.com/dunay2/dvt/commit/4efde99b7fe46b0b1b162df00d491b2a3d55637a))
+
+
+### Bug Fixes
+
+* **api:** Align source YAML keys with database collisions ([#1397](https://github.com/dunay2/dvt/issues/1397)) ([d79bb62](https://github.com/dunay2/dvt/commit/d79bb6252f442625739f336f3ca17d06f919175c))
+* **api:** Grant source import and disambiguate imported source nodes ([#1394](https://github.com/dunay2/dvt/issues/1394)) ([89c245d](https://github.com/dunay2/dvt/commit/89c245d78b36b7d0af563d1d401e9b36ad6fc93a))
+* **api:** Harden warehouse source import for governed catalogs ([8690db5](https://github.com/dunay2/dvt/commit/8690db589c190898ea517c356c7c5ad4e7754a00))
+* **api:** Preserve dbt source metadata on warehouse import ([d85b23a](https://github.com/dunay2/dvt/commit/d85b23a3a5e6c5145804a9a4818037d80fae7e61))
+* **api:** Route preview planning through compile planner ([#1387](https://github.com/dunay2/dvt/issues/1387)) ([fbfb65e](https://github.com/dunay2/dvt/commit/fbfb65e34d7ccc8548bf87de07768a5e1faa5425))
+* **contracts:** Hard-cut pre-alpha execution plan schema version ([#1412](https://github.com/dunay2/dvt/issues/1412)) ([e6fe0c8](https://github.com/dunay2/dvt/commit/e6fe0c87c3499141f08e67915025ed2ba1422ab3))
+* **docs:** Deduplicate component ownership claims ([#1408](https://github.com/dunay2/dvt/issues/1408)) ([ed460d3](https://github.com/dunay2/dvt/commit/ed460d3395e07a08aeb2ad18f1cf651350ad59e2))
+* **docs:** Preserve normalized component invariants ([#1403](https://github.com/dunay2/dvt/issues/1403)) ([32ca3ae](https://github.com/dunay2/dvt/commit/32ca3aee15f4425927391f23ddb30c805ab1d23b))
+* **docs:** Require explicit governance query refresh ([#1400](https://github.com/dunay2/dvt/issues/1400)) ([2f16461](https://github.com/dunay2/dvt/commit/2f164618e173d3f4a4083609bce133e03f24e762))
+* **web:** Close dbt partial selection execution gaps ([39dbc47](https://github.com/dunay2/dvt/commit/39dbc4776c0284b478dc49821cf834b4585a4484))
+* **web:** Gate source import by runtime plugin capability ([0a3feac](https://github.com/dunay2/dvt/commit/0a3feacc276145930ca303d3be3b95c06fa7da76))
+* **web:** Keep canvas plan and run details aligned ([3f83ad5](https://github.com/dunay2/dvt/commit/3f83ad568286dc4a7dc3df6a0dc7767be3eb8e44))
+* **web:** Make read-only canvas non-executable ([651006e](https://github.com/dunay2/dvt/commit/651006edb497a530547233360bf568228445d30a))
+* **web:** Make read-only canvas non-executable ([93a2f81](https://github.com/dunay2/dvt/commit/93a2f81aaa4d4a7dc886d10cc36866b076a6e637))
+
+## [5.30.0](https://github.com/dunay2/dvt/compare/v5.29.0...v5.30.0) (2026-05-25)
+
+
+### Features
+
+* **api:** Add workspace file save rail ([e0222ee](https://github.com/dunay2/dvt/commit/e0222ee765addd31b53e68b9d9fe36204cf60be9))
+* **api:** Add workspace file save rail ([6fa8a26](https://github.com/dunay2/dvt/commit/6fa8a26d23051d22b61b26dea293ca7a5bcdc378))
+* **planner:** Add real work backlog query ([38f227c](https://github.com/dunay2/dvt/commit/38f227c9e76f7bfeabec1b9ffb3b245df5a923ec))
+* **web:** Add Canvas Insert palette ([d0cf581](https://github.com/dunay2/dvt/commit/d0cf581840808b9aca0d21b026bdb5b523ec9c3b))
+* **web:** Integrate Canvas and planning reconciliation ([2577e40](https://github.com/dunay2/dvt/commit/2577e40763d8d7669969e76c82042c3b73bc2098))
+* **web:** Prove graph workflow artifact parity ([dc22731](https://github.com/dunay2/dvt/commit/dc22731dc15b287b98fadc2ea7091621ad5d16a6))
+* **web:** Show workspace project artifacts ([#1369](https://github.com/dunay2/dvt/issues/1369)) ([7cc88a5](https://github.com/dunay2/dvt/commit/7cc88a5685e2172cc181cff27da5ce7d19d29b4a))
+
+
+### Bug Fixes
+
+* **ci:** Reconcile proposal gaps and pre-push validation ([ac996a7](https://github.com/dunay2/dvt/commit/ac996a7bf58e55ea74d68caf584e696cb1d813f2))
+* **ci:** Reconcile proposal gaps and pre-push validation ([4a45157](https://github.com/dunay2/dvt/commit/4a451570146730414070ecc0d0072f90c4ffb1b7))
+* **ci:** Reconcile proposal gaps and pre-push validation ([2775241](https://github.com/dunay2/dvt/commit/2775241de0b1e4526598d241277ebc69ef5f2ed5))
+* **planner:** Harden docs disposition queue classification ([5ef2d4b](https://github.com/dunay2/dvt/commit/5ef2d4b05c2cdeaba8e908f06b28e4a3ab98c35d))
+* **planner:** Harden docs disposition queue classification ([02cab97](https://github.com/dunay2/dvt/commit/02cab97d8cb8daa5bcb03a6383652962dfd3a1e8))
+* **web:** Collapse canvas workbench chrome bars ([#1371](https://github.com/dunay2/dvt/issues/1371)) ([9c88d7d](https://github.com/dunay2/dvt/commit/9c88d7df815d1c7b4c00a651c31899cbb61dd35b))
+
+## [5.29.0](https://github.com/dunay2/dvt/compare/v5.28.0...v5.29.0) (2026-05-24)
+
+
+### Features
+
+* **api:** Add cost attribution usage summary ([#1365](https://github.com/dunay2/dvt/issues/1365)) ([5831d9f](https://github.com/dunay2/dvt/commit/5831d9f749a99b86a8bc0690ce76ce6e51a9a850))
+
+## [5.28.0](https://github.com/dunay2/dvt/compare/v5.27.0...v5.28.0) (2026-05-23)
+
+
+### Features
+
+* **ci:** Enable default retention runtime baseline ([#1343](https://github.com/dunay2/dvt/issues/1343)) ([830069d](https://github.com/dunay2/dvt/commit/830069d75ea9dbca9308cf6a37ee722123a04a72))
+* **state-store:** Add tenant configurable run event retention ([#1349](https://github.com/dunay2/dvt/issues/1349)) ([cfa9b01](https://github.com/dunay2/dvt/commit/cfa9b0138bb63f5567f1bf1962f08a47a588d64c))
+* **web:** Add execution templates workbench ([06e228e](https://github.com/dunay2/dvt/commit/06e228edaef245a0e820051ecacace22f455e5d3))
+* **web:** Add governed Git file history review ([#1311](https://github.com/dunay2/dvt/issues/1311)) ([5b39901](https://github.com/dunay2/dvt/commit/5b399015e90d53b311de8d4a16eb4a73a4f0527b))
+* **web:** Add Monaco bundle isolation guardrails ([59a2ec7](https://github.com/dunay2/dvt/commit/59a2ec70fe8ea8db2e7f47c8ad4b9e50c4538b20))
+* **web:** Add plugin capability table ([#1328](https://github.com/dunay2/dvt/issues/1328)) ([af08507](https://github.com/dunay2/dvt/commit/af08507ba20040fcc3e6941fd2ee1d35670f2224))
+* **web:** Add plugin UX dock contract rails ([#1331](https://github.com/dunay2/dvt/issues/1331)) ([49c70cd](https://github.com/dunay2/dvt/commit/49c70cd6df2d3966b03a7d08afe82435b61388fa))
+* **web:** Add templates Monaco preview ([75f4239](https://github.com/dunay2/dvt/commit/75f423970f56218c01f0949dc7e1472fecd38b76))
+* **web:** Add workspace diff backend rail ([#1310](https://github.com/dunay2/dvt/issues/1310)) ([3bf84d3](https://github.com/dunay2/dvt/commit/3bf84d391a265ee9afd19f0037253b1a82a79d0c))
+* **web:** Converge dbt graph renderer visual tokens ([#1325](https://github.com/dunay2/dvt/issues/1325)) ([2bb200e](https://github.com/dunay2/dvt/commit/2bb200e85e367cbfd7e67a3be8bb15551474dfab))
+* **web:** Converge graph context panel visual tokens ([#1326](https://github.com/dunay2/dvt/issues/1326)) ([f2b8580](https://github.com/dunay2/dvt/commit/f2b8580503d3830070ceb6c5a072cfe6063aa9f7))
+* **web:** Converge Monaco visual tokens ([#1327](https://github.com/dunay2/dvt/issues/1327)) ([90a8670](https://github.com/dunay2/dvt/commit/90a8670a097cb4bb0cfb15321f152f21bc677b4b))
+* **web:** Converge React Flow graph visual tokens ([#1324](https://github.com/dunay2/dvt/issues/1324)) ([5b527a1](https://github.com/dunay2/dvt/commit/5b527a1a9af89433246ea38b8c57f65cfed5094e))
+
+
+### Bug Fixes
+
+* **api:** Enforce generated start-run identity shape ([62a4117](https://github.com/dunay2/dvt/commit/62a4117287dd564db3aadd708f1628abc1a95115))
+* **web:** Close F-18 live log console drift ([#1339](https://github.com/dunay2/dvt/issues/1339)) ([94886a1](https://github.com/dunay2/dvt/commit/94886a12f68a6f9d0318e9851f08cf78f2a7e7df))
+* **web:** Preserve route workbench body container classes ([4513502](https://github.com/dunay2/dvt/commit/4513502bd9954970b5f38afa17116aae395c298d))
+
+## [5.27.0](https://github.com/dunay2/dvt/compare/v5.26.0...v5.27.0) (2026-05-21)
+
+
+### Features
+
+* **web:** Add Artifacts Monaco read-only viewer ([#1293](https://github.com/dunay2/dvt/issues/1293)) ([46a90f9](https://github.com/dunay2/dvt/commit/46a90f97a01fbd21085a6982c38afe1cd4051dca))
+* **web:** Converge Runs dense table tokens ([d1d7896](https://github.com/dunay2/dvt/commit/d1d7896e17292c3edcbc0a9630981cf23a04e7be))
+* **web:** Enable editable Code Monaco buffer ([95fbfb3](https://github.com/dunay2/dvt/commit/95fbfb32bc693b5f775bab39b824026af8220d1c))
+
+
+### Bug Fixes
+
+* **ci:** Make local prepush mechanical ([#1295](https://github.com/dunay2/dvt/issues/1295)) ([4f8b330](https://github.com/dunay2/dvt/commit/4f8b330e81481a175980467ab37948c970d2ad4e))
+* **ci:** Scope planning workflow tests in changed verification ([#1296](https://github.com/dunay2/dvt/issues/1296)) ([abf294e](https://github.com/dunay2/dvt/commit/abf294e95fd17ea79ce96f5fe096b3d3ac8c6b36))
+* **docs:** Classify governed doc references in planning DB ([#1299](https://github.com/dunay2/dvt/issues/1299)) ([2b60dd2](https://github.com/dunay2/dvt/commit/2b60dd265afa6a3bab736c70a319aaa00eea62da))
+* **web:** Consolidate Canvas workbench screen chrome ([#1285](https://github.com/dunay2/dvt/issues/1285)) ([68e451f](https://github.com/dunay2/dvt/commit/68e451fd46d781894825b7ef3db60ee78e033d99))
+* **web:** Enable first Canvas template creation ([#1287](https://github.com/dunay2/dvt/issues/1287)) ([fdb61c5](https://github.com/dunay2/dvt/commit/fdb61c500d9caab08ad3c9e045442d97c2eb4325))
+* **web:** Fix Canvas workbench menu and template actions ([#1286](https://github.com/dunay2/dvt/issues/1286)) ([00dfadf](https://github.com/dunay2/dvt/commit/00dfadf750879616e5f9ce8e0d2c2eabfd47a9b2))
+* **web:** Hide workbench shell rail ([6b6bc0a](https://github.com/dunay2/dvt/commit/6b6bc0a0c3e5f47d3fb228849a0aaff5cbba2ab5))
+* **web:** Separate canvas draft persistence authority ([d9e3304](https://github.com/dunay2/dvt/commit/d9e3304fd0b3343e6a54762be82863ac7787ab6d))
+
+
+### Performance Improvements
+
+* **ci:** Run exact changed web tests ([#1298](https://github.com/dunay2/dvt/issues/1298)) ([ce12b36](https://github.com/dunay2/dvt/commit/ce12b363a58c841e71dbeb3b1105605f1dc75fbc))
+
+## [5.26.0](https://github.com/dunay2/dvt/compare/v5.25.0...v5.26.0) (2026-05-18)
+
+
+### Features
+
+* **planner:** Add architecture authority query rails ([#1257](https://github.com/dunay2/dvt/issues/1257)) ([6072b37](https://github.com/dunay2/dvt/commit/6072b37032319e33b47bf00248f7ae7d31d11e3a))
+* **planner:** Add architecture component graph command rails ([#1258](https://github.com/dunay2/dvt/issues/1258)) ([705dbd1](https://github.com/dunay2/dvt/commit/705dbd1902196fdec2bc13eb9db5db5a88e02744))
+* **planner:** Add architecture design create command ([#1254](https://github.com/dunay2/dvt/issues/1254)) ([485fcce](https://github.com/dunay2/dvt/commit/485fcce60ab1f5df2a1224d28e9df3ee9bd1e762))
+* **planner:** Add DB-first architecture authority schema ([5ccfa81](https://github.com/dunay2/dvt/commit/5ccfa81fdea5917f43f2c44afe4e9070ec686dff))
+* **web:** Add dense operational run tables ([#1276](https://github.com/dunay2/dvt/issues/1276)) ([dc3b47d](https://github.com/dunay2/dvt/commit/dc3b47df61baf45fe574ea80f49809ce0e416212))
+* **web:** Add Runs status refresh policy ([16be8bc](https://github.com/dunay2/dvt/commit/16be8bc4e1c4d1233936abb18807cf39c9bf1cb9))
+* **web:** Converge Runs event timeline semantics ([9dfedea](https://github.com/dunay2/dvt/commit/9dfedea3057f6ec21de2a9c58457ee8aca79ac94))
+* **web:** Route web Vitest changed suites ([c83b87d](https://github.com/dunay2/dvt/commit/c83b87db4e4851bf84ab57a9ee230da7dfa3a1dd))
+
+
+### Bug Fixes
+
+* **ci:** Harden AR-C2 evidence scope and fail-closed placeholders ([#1248](https://github.com/dunay2/dvt/issues/1248)) ([d187e31](https://github.com/dunay2/dvt/commit/d187e319cf02576387188e761faa48a29693cc19))
+* **planner:** Show active claim recovery in next planning tasks ([#1246](https://github.com/dunay2/dvt/issues/1246)) ([4919acc](https://github.com/dunay2/dvt/commit/4919acc52264d60a3f73f7e4e17a3fc4d5ad258a))
+* **web:** Integrate local alpha and canvas view work ([2ad8941](https://github.com/dunay2/dvt/commit/2ad8941739959b7fa7021952fce04e98c6455621))
+
+## [5.25.0](https://github.com/dunay2/dvt/compare/v5.24.0...v5.25.0) (2026-05-15)
+
+
+### Features
+
+* **api:** Hard-cut AR-C2 Prometheus SLA metrics ([#1214](https://github.com/dunay2/dvt/issues/1214)) ([692dbe9](https://github.com/dunay2/dvt/commit/692dbe9f2d3416cb443a772946cbde11845c35eb))
+* **contracts:** Unify plan verifier admission matrix ([fc8f341](https://github.com/dunay2/dvt/commit/fc8f34126974028cd2026b0c0f6e33e756be8942))
+* **docs:** Add component engineering schema boundary ([18709a6](https://github.com/dunay2/dvt/commit/18709a6330164f5040b1f2ee8a75a6d49f446660))
+* **engine:** Add plan schema-version admission policy ([#1212](https://github.com/dunay2/dvt/issues/1212)) ([d157740](https://github.com/dunay2/dvt/commit/d15774022bd6e6081473d7e0cae57881c034bbd5))
+* **planner:** Add governance component command rail ([#1216](https://github.com/dunay2/dvt/issues/1216)) ([e759281](https://github.com/dunay2/dvt/commit/e7592813a36bbe45e8ecc8d2079fd49a2b145b24))
+
+
+### Bug Fixes
+
+* **api:** Lock state-store role bundle boundary ([#1211](https://github.com/dunay2/dvt/issues/1211)) ([5a332c1](https://github.com/dunay2/dvt/commit/5a332c17c7b2ab13c4eceacfcb8c1b8d7b2894fb))
+* **ci:** Align engine coverage scope with engine workspace policy ([#1245](https://github.com/dunay2/dvt/issues/1245)) ([7793e84](https://github.com/dunay2/dvt/commit/7793e84af0f8724a272f695a12f0f15721bcb1a1))
+* **contracts:** Close RC-G1 contract ownership drift ([#1225](https://github.com/dunay2/dvt/issues/1225)) ([f96b55f](https://github.com/dunay2/dvt/commit/f96b55fb16cf3806cd689d48361d7ccb97f715f0))
+* **docs:** Keep stale claims out of next tasks ([cf9e962](https://github.com/dunay2/dvt/commit/cf9e9624e6c4c406967105653d1403a54eafec65))
+* **planner:** Route active planning claims through next tasks ([dbe8fe6](https://github.com/dunay2/dvt/commit/dbe8fe6f962af25074837c4091e9c5e446cb059c))
+
+## [5.24.0](https://github.com/dunay2/dvt/compare/v5.23.0...v5.24.0) (2026-05-13)
+
+
+### Features
+
+* **adapters:** Add zero-downtime schema rollback compatibility ([4461592](https://github.com/dunay2/dvt/commit/4461592eb90c8440f30e8df10f28f898205789cf))
+* **adapters:** Partition run events by run id hash ([74f0003](https://github.com/dunay2/dvt/commit/74f0003841ac48900325fd8c08c5e93cf333f01a))
+* **docs:** Add composite component hierarchy queries ([fbb65f3](https://github.com/dunay2/dvt/commit/fbb65f3c3b4af1ea0888fba280129e151a0ef2c1))
+* **docs:** Add planning knowledge document rail ([0f9e673](https://github.com/dunay2/dvt/commit/0f9e673d72200504bac46de6ac995e0149cd2c78))
+* **temporal:** Route Temporal step activities by capability ([2a9910b](https://github.com/dunay2/dvt/commit/2a9910bb14f47efe7a4724d102940b876ba90d50))
+
+
+### Bug Fixes
+
+* **adapters:** Require tenant mode in Postgres RLS ([#1173](https://github.com/dunay2/dvt/issues/1173)) ([3a8d470](https://github.com/dunay2/dvt/commit/3a8d4706ecc97d3a499bb7b02984a7b0db5561ba))
+* **ci:** Enforce AR-C2 immutable evidence gate ([aaf0e22](https://github.com/dunay2/dvt/commit/aaf0e22e69670c62392b0fedee4332b0d2925b81))
+* **ci:** Support DB-backed governance shard gate ([c4a109f](https://github.com/dunay2/dvt/commit/c4a109ff159124d572ffc5547dad16be0b32dc13))
+* **docs:** Classify review invariant references ([#1193](https://github.com/dunay2/dvt/issues/1193)) ([b3dc8ef](https://github.com/dunay2/dvt/commit/b3dc8ef047c10f90566fa0253f1268a40d3bdee9))
+* **web:** Hardcut local web authority to server projections ([#1162](https://github.com/dunay2/dvt/issues/1162)) ([bb84178](https://github.com/dunay2/dvt/commit/bb841786ab18972f3fc24cbc4b7c2330b2f8787d))
+
+## [5.23.0](https://github.com/dunay2/dvt/compare/v5.22.0...v5.23.0) (2026-05-13)
+
+
+### Features
+
+* **docs:** Add component engineering record query ([b8aeaa2](https://github.com/dunay2/dvt/commit/b8aeaa28c457b6ce57b1d3aca407d1ccb6c84cc1))
+* **docs:** Add governance unit tree query ([56c3827](https://github.com/dunay2/dvt/commit/56c3827a28ae7103deef30fc4c261e4e82a82830))
+* **docs:** Add planning work intake focus query ([efa59c0](https://github.com/dunay2/dvt/commit/efa59c04e9532466cf0c5d06803550bcfd83b262))
+* **engine:** Add adapter call circuit breaker ([0f301b8](https://github.com/dunay2/dvt/commit/0f301b8f598bb1aa2f50ae8ac464c2fa75b9bc97))
+* **planner:** Add docs resolution overlays ([#1160](https://github.com/dunay2/dvt/issues/1160)) ([cf01d8b](https://github.com/dunay2/dvt/commit/cf01d8bce6eef915c463337b7cb17179bd9cd6f3))
+* **planner:** Add relational component engineering records ([c8e4af4](https://github.com/dunay2/dvt/commit/c8e4af4842a56fe098e7ed6891261ee07ead38cc))
+* **web:** Add Canvas project snapshot round trip ([39719d6](https://github.com/dunay2/dvt/commit/39719d6ebc5d05dab003c4ab03dcf154943148a1))
+* **web:** Hardcut mock runtime from product composition ([7bca59b](https://github.com/dunay2/dvt/commit/7bca59baadaf3c03f9c076973a432abcfed62f26))
+
+
+### Bug Fixes
+
+* **ci:** Consolidate ADR-0000 workflow ownership ([#1175](https://github.com/dunay2/dvt/issues/1175)) ([a44714a](https://github.com/dunay2/dvt/commit/a44714ada60d59af862ffbd163a440770f4b0c57))
+* **docs:** Expose governed feature work query ([ee31a18](https://github.com/dunay2/dvt/commit/ee31a180b8a4cf6542cf9f026805c0425516afba))
+* **docs:** Filter task gap actions by reference ([6794527](https://github.com/dunay2/dvt/commit/67945279e323a484f10aea98fbfd287e900add2d))
+* **docs:** Make planning DB the operational task source ([2cabebf](https://github.com/dunay2/dvt/commit/2cabebfbc9a4e083e135dc2afeaafdeb6690db23))
+* **docs:** Normalize planning DB resolution filters ([9c5ab3a](https://github.com/dunay2/dvt/commit/9c5ab3aeb1b4c79587ce96f64e6628bb598c95a8))
+* **docs:** Register feature mechanization references in planning DB ([#1187](https://github.com/dunay2/dvt/issues/1187)) ([6d50a32](https://github.com/dunay2/dvt/commit/6d50a32084c0d6ae0cd9a348ec432912e47cff07))
+* **docs:** Shard governance fingerprint baseline ([88ca7eb](https://github.com/dunay2/dvt/commit/88ca7ebddc192e75007f22c48eafb80c1d12c2ad))
+* **planner:** Filter resolved docs issues from focus queue ([4cff75f](https://github.com/dunay2/dvt/commit/4cff75f453092c430dd89ddf01fe0b6946a19683))
+
 ## [5.22.0](https://github.com/dunay2/dvt/compare/v5.21.0...v5.22.0) (2026-05-10)
 
 

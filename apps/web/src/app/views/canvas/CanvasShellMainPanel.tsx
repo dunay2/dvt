@@ -38,6 +38,18 @@ type CanvasShellMainPanelProps = Readonly<{
   chromeCommands: CanvasShellChromeCommands;
 }>;
 
+type CanvasShellWorkbenchChromeProps = CanvasShellMainPanelProps;
+
+function shouldRenderCanvasToolbar(routeState: CanvasShellToolbar['routeState']): boolean {
+  return ![
+    'loading_backend',
+    'blocked_backend',
+    'loading_graph',
+    'error_graph',
+    'needs_canvas',
+  ].includes(routeState);
+}
+
 function CanvasShellViewport({
   layout,
   panels,
@@ -74,6 +86,8 @@ function CanvasShellViewport({
       onViewportChange={graphCommands.onViewportChange}
       onDrop={graphCommands.onDrop}
       onDragOver={graphCommands.onDragOver}
+      authoringNodeKinds={panels.authoringNodeKinds}
+      onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
       importedNodeFocusIds={panels.importedNodeFocusIds}
       onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
       onShowExplorer={chromeCommands.onShowExplorer}
@@ -124,6 +138,84 @@ function CanvasShellMainSurface({
   );
 }
 
+function CanvasShellWorkbenchChrome({
+  layout,
+  panels,
+  graph,
+  toolbar,
+  graphCommands,
+  chromeCommands,
+}: CanvasShellWorkbenchChromeProps): JSX.Element | null {
+  const renderToolbar = shouldRenderCanvasToolbar(toolbar.routeState);
+
+  if (!layout.hostTabStrip && !layout.workbenchTabStrip && !renderToolbar) {
+    return null;
+  }
+
+  return (
+    <div
+      data-slot="canvas-workbench-chrome"
+      className="flex min-h-12 shrink-0 items-center gap-4 overflow-x-auto border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-4"
+    >
+      {layout.hostTabStrip ? (
+        <div data-slot="canvas-workbench-chrome-host" className="min-w-0 shrink-0">
+          {layout.hostTabStrip}
+        </div>
+      ) : null}
+      {layout.workbenchTabStrip ? (
+        <div data-slot="canvas-workbench-chrome-tabs" className="min-w-0 flex-1 overflow-x-auto">
+          {layout.workbenchTabStrip}
+        </div>
+      ) : null}
+      {renderToolbar ? (
+        <div data-slot="canvas-workbench-chrome-actions" className="ml-auto shrink-0">
+          <CanvasToolbar
+            variant="inline"
+            onAutoLayout={chromeCommands.onAutoLayout}
+            onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
+            onToggleImpact={chromeCommands.onToggleImpact}
+            onToggleColumns={chromeCommands.onToggleColumns}
+            onToggleGridVisible={chromeCommands.onToggleGridVisible}
+            onGridColorChange={chromeCommands.onGridColorChange}
+            onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
+            onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
+            onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
+            onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
+            onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
+            onPlan={chromeCommands.onPlan}
+            onRun={chromeCommands.onRun}
+            onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
+            routeState={toolbar.routeState}
+            draftToolbarState={toolbar.draftToolbarState}
+            canPlan={panels.userPermissions.canPlan}
+            canPlanGraph={toolbar.canPlanGraph}
+            canRun={panels.userPermissions.canRun}
+            canEditEdges={panels.userPermissions.canEditEdges}
+            canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
+            canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
+            canStartRun={toolbar.canStartRun}
+            planStatusSummary={toolbar.planStatusSummary}
+            planRunReadiness={toolbar.planRunReadiness}
+            canvasAuthoringMode={toolbar.canvasAuthoringMode}
+            exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
+            canUseCostOverlay={toolbar.canUseCostOverlay}
+            impactOverlayEnabled={toolbar.impactOverlayEnabled}
+            columnLevelLineageEnabled={toolbar.columnLevelLineageEnabled}
+            canvasGridVisible={graph.canvasGridVisible}
+            canvasGridColor={graph.canvasGridColor}
+            canvasSnapToGrid={graph.canvasSnapToGrid}
+            canvasEmptyStateGuideVisible={graph.canvasEmptyStateGuideVisible}
+            transformationValidation={toolbar.transformationValidation}
+            nodeCount={graph.nodesWithImpact.length}
+            edgeCount={graph.edges.length}
+            authoringNodeKinds={panels.authoringNodeKinds}
+          />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function CanvasShellMainPanel({
   layout,
   panels,
@@ -135,40 +227,13 @@ export function CanvasShellMainPanel({
   return (
     <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}>
       <div className="h-full flex flex-col bg-(--surface-panel)">
-        {layout.hostTabStrip ? <div className="shrink-0">{layout.hostTabStrip}</div> : null}
-        {layout.workbenchTabStrip ? (
-          <div className="shrink-0">{layout.workbenchTabStrip}</div>
-        ) : null}
-        <CanvasToolbar
-          placement="top-bar"
-          onAutoLayout={chromeCommands.onAutoLayout}
-          onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
-          onToggleImpact={chromeCommands.onToggleImpact}
-          onToggleColumns={chromeCommands.onToggleColumns}
-          onToggleGridVisible={chromeCommands.onToggleGridVisible}
-          onGridColorChange={chromeCommands.onGridColorChange}
-          onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
-          onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
-          onPlan={chromeCommands.onPlan}
-          onRun={chromeCommands.onRun}
-          routeState={toolbar.routeState}
-          draftToolbarState={toolbar.draftToolbarState}
-          canPlan={panels.userPermissions.canPlan}
-          canRun={panels.userPermissions.canRun}
-          canEditEdges={panels.userPermissions.canEditEdges}
-          canStartRun={toolbar.canStartRun}
-          planStatusSummary={toolbar.planStatusSummary}
-          canvasAuthoringMode={toolbar.canvasAuthoringMode}
-          exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
-          canUseCostOverlay={toolbar.canUseCostOverlay}
-          impactOverlayEnabled={toolbar.impactOverlayEnabled}
-          columnLevelLineageEnabled={toolbar.columnLevelLineageEnabled}
-          canvasGridVisible={graph.canvasGridVisible}
-          canvasGridColor={graph.canvasGridColor}
-          canvasSnapToGrid={graph.canvasSnapToGrid}
-          transformationValidation={toolbar.transformationValidation}
-          nodeCount={graph.nodesWithImpact.length}
-          edgeCount={graph.edges.length}
+        <CanvasShellWorkbenchChrome
+          layout={layout}
+          panels={panels}
+          graph={graph}
+          toolbar={toolbar}
+          graphCommands={graphCommands}
+          chromeCommands={chromeCommands}
         />
         {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
         <CanvasShellMainSurface

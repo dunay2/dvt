@@ -24,6 +24,8 @@ Primary code anchors:
 - [routes.ts](../../../../../apps/web/src/app/routes.ts)
 - [AppShellFrame.tsx](../../../../../apps/web/src/app/components/shell/AppShellFrame.tsx)
 - [TopAppBar.tsx](../../../../../apps/web/src/app/components/TopAppBar.tsx)
+- [ShellAppMenu.tsx](../../../../../apps/web/src/app/components/shell/ShellAppMenu.tsx)
+- [appBuildMetadata.ts](../../../../../apps/web/src/app/components/shell/appBuildMetadata.ts)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
 - [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)
 - [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
@@ -38,6 +40,7 @@ Current shell regions:
 flowchart TB
   Root["Root shell"] --> Frame["AppShellFrame"]
   Frame --> TopBar["TopAppBar"]
+  TopBar --> AppMenu["ShellAppMenu"]
   Frame --> Health["ShellHealthBanner"]
   Frame --> Body["Shell body"]
   Body --> Nav["LeftNavigation"]
@@ -56,6 +59,30 @@ composes typed service instances for views and plugins through hooks.
 
 This prevents route-level components from instantiating mode-aware services or
 reading `resolveDataSource()` directly.
+
+## Shell Application Menu
+
+The Raven brand in the top bar is the application-level menu surface. It owns
+small app-wide commands that should not consume persistent toolbar width.
+
+Current command/query rail:
+
+| Rail                             | Type  | Owner         | Surface                     |
+| -------------------------------- | ----- | ------------- | --------------------------- |
+| `GetCompiledApplicationMetadata` | query | Web App Shell | `ShellAppMenu` About dialog |
+
+`GetCompiledApplicationMetadata` reads compile-time bundle metadata from
+`import.meta.env.VITE_APP_VERSION` and `VITE_APP_BUILD_DATE`. It does not call
+the backend `/version` endpoint because the About dialog answers which Raven
+bundle is running in the browser, not which API build is reachable.
+
+```mermaid
+flowchart LR
+  Vite["vite.config.ts"] --> Env["VITE_APP_VERSION / VITE_APP_BUILD_DATE"]
+  Env --> Query["resolveCompiledApplicationMetadata"]
+  Query --> Menu["ShellAppMenu"]
+  Menu --> Dialog["About Raven dialog"]
+```
 
 ## Shell Navigation Ownership
 
@@ -133,7 +160,7 @@ flowchart LR
   Inputs["dataSourceMode + runId + isLoading + lines"] --> Model["buildBottomConsoleDrawerModel(...)"]
   Model --> Idle["idle: empty-state guidance"]
   Model --> Loading["loading: run badge + loading copy"]
-  Model --> Streaming["streaming: run badge + xterm surface"]
+  Model --> Streaming["streaming: run badge + xterm-backed live companion"]
 ```
 
 Authority split with the Runs route:
@@ -149,7 +176,8 @@ flowchart LR
 
 Boundary rules for these two surfaces:
 
-- `BottomConsoleDrawer` mirrors the currently active run as a shell-level live companion;
+- `BottomConsoleDrawer` mirrors the currently active run as a shell-level
+  xterm-backed live companion;
 - `BottomConsoleDrawer` does not claim snapshot authority, failure-diagnostics authority, or full run-detail ownership;
 - `Runs` owns durable run monitoring through snapshot plus timeline composition;
 - `Runs` is the place where degraded timeline state, runtime snapshot truth, result evidence, and failure diagnostics are explained.
@@ -158,7 +186,9 @@ Shared event presentation seam:
 
 ```mermaid
 flowchart LR
-  Events["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
+  Query["GET /runs/:runId/events"] --> TimelineModel["runEventTimelineModel"]
+  TimelineModel --> Events["RunEvent"]
+  Events --> SharedModel["buildRunEventPresentationModel(event)"]
   SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
   SharedCopy --> DrawerRender["formatRunEventAsLogLine(...)"]
   SharedCopy --> RunsRender["RunWorkspaceStateView timeline cards"]
@@ -166,9 +196,12 @@ flowchart LR
 
 Rules for the shared seam:
 
+- the timeline model owns event ordering, dedupe, cursor, and active-status
+  polling decisions;
 - the shared model owns event level, headline key, optional detail, and step identity;
 - the shared copy resolver owns human-readable event headline text for shared event surfaces;
-- the shell drawer may render terminal-style lines from that shared semantics plus shared copy;
+- the shell drawer renders terminal-style lines through `XtermConsole` from
+  that shared semantics plus shared copy;
 - the Runs route may render structured timeline cards from the same shared semantics plus shared copy;
 - the shared model must not collapse snapshot authority or failure-diagnostics authority back into the drawer.
 
@@ -283,11 +316,11 @@ flowchart LR
 
 - some shell quick actions are placeholders and not yet connected to governed
   behavior;
-- the console drawer now has an explicit shell-owned content model, but richer
-  live-stream semantics and typed log states remain future work;
-- shared event presentation semantics now align on level, headline key, shared
-  headline copy, detail, and step identity, but typed live-log states and the
-  final structured-versus-terminal presentation choice remain future work.
+- the console drawer now has an explicit shell-owned content model, xterm-backed
+  live companion rendering, and typed idle, loading, and streaming states;
+- shared event presentation semantics align on ordering, dedupe, cursor,
+  active-status polling, level, headline key, shared headline copy, detail, and
+  step identity across drawer and Runs workspace surfaces.
 
 ## Current-To-Target Mapping
 

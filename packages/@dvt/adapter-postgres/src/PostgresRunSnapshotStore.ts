@@ -2,6 +2,8 @@
  * @file packages/@dvt/adapter-postgres/src/PostgresRunSnapshotStore.ts
  * @baseline ADR-0004: Event Sourcing Strategy (Extended)
  * @baseline ADR-0037: Run Event Lifecycle Archival, Verification, and Restore Model
+ * @ownedConcern Implement the state-store snapshot read model and the portable
+ * rebuild concurrency invariant with PostgreSQL-native exclusion.
  * @decision Run snapshot persistence extracted from PostgresStateStoreAdapter
  * @decision Terminal archive pinning metadata lives on run_snapshots as warm derived state
  * @consequence Single-responsibility class for run_snapshots table operations
@@ -281,6 +283,9 @@ export class PostgresRunSnapshotStore implements TerminalSnapshotPinStore {
   }
 
   /**
+   * Implements the portable state-store maintenance invariant: per
+   * `(tenantId, runId)`, one rebuild may mutate the durable snapshot at a time.
+   *
    * ADR-0004 section 2.2 - Event replay preserves runSeq ordering while allowing
    * incremental catch-up from the latest persisted snapshot checkpoint.
    * ADR-0031 - Tenant isolation is verified before replay; mismatches raise RunNotFoundError.

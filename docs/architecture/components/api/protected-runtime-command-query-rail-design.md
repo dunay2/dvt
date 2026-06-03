@@ -148,6 +148,7 @@ design review focused on fail-closed runtime behavior:
 - missing action or insufficient authorization;
 - tenant, project, workspace, or environment mismatch;
 - malformed payload or unsupported option;
+- missing DBT run execution context binding inputs for plugin-backed `StartRun`;
 - unknown run, missing file, or disabled admin route;
 - compatibility disabled for `CANCEL` through `/signal`.
 

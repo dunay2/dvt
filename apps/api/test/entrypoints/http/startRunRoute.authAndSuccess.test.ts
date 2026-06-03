@@ -5,6 +5,8 @@ import {
   invokeStartRunRoute,
   okResult,
   VALID_BODY,
+  VALID_GENERATED_RUN_ID,
+  VALID_GENERATED_RUN_ID_ALT,
   VALID_PLAN_REF,
 } from './startRunRoute.test.support.js';
 
@@ -14,7 +16,11 @@ describe('startRunRoute auth and success outcomes', () => {
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return okResult({ kind: 'accepted' as const, runId: 'r1', accepted: true });
+        return okResult({
+          kind: 'accepted' as const,
+          runId: VALID_GENERATED_RUN_ID,
+          accepted: true,
+        });
       },
     };
 
@@ -29,17 +35,17 @@ describe('startRunRoute auth and success outcomes', () => {
         },
       },
       facade,
-      runIdGenerator: () => 'run_generated_success',
+      runIdGenerator: () => VALID_GENERATED_RUN_ID,
     });
 
     expect(reply.statusCode).toBe(202);
-    expect(reply.payload).toEqual({ runId: 'r1', accepted: true });
+    expect(reply.payload).toEqual({ runId: VALID_GENERATED_RUN_ID, accepted: true });
     expect(received).toEqual({
       token: 'token',
       requestId: 'req-normalized',
       command: {
         planRef: VALID_PLAN_REF,
-        runId: 'run_generated_success',
+        runId: VALID_GENERATED_RUN_ID,
         targetAdapter: 'temporal',
         selection: { mode: 'explicit', nodeIds: ['model_a'] },
       },
@@ -58,7 +64,11 @@ describe('startRunRoute auth and success outcomes', () => {
     const facade = {
       async execute(input: Record<string, unknown>) {
         received = input;
-        return okResult({ kind: 'accepted' as const, runId: 'r2', accepted: true });
+        return okResult({
+          kind: 'accepted' as const,
+          runId: VALID_GENERATED_RUN_ID_ALT,
+          accepted: true,
+        });
       },
     };
 
@@ -72,7 +82,7 @@ describe('startRunRoute auth and success outcomes', () => {
     });
 
     expect(reply.statusCode).toBe(202);
-    expect(reply.payload).toEqual({ runId: 'r2', accepted: true });
+    expect(reply.payload).toEqual({ runId: VALID_GENERATED_RUN_ID_ALT, accepted: true });
     expect(received?.token).toBe('token');
   });
 

@@ -3,6 +3,7 @@ import { MarkerType, type Edge, type Node } from '@xyflow/react';
 
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
+import { createGraphFlowEdgeStyle, graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 
@@ -60,12 +61,12 @@ export function mapCanonicalEdgeToCanvasEdge(canonicalEdge: CanonicalEdge): Edge
     target: canonicalEdge.targetId,
     type: 'smoothstep',
     animated: false,
-    style: { stroke: '#6b7280', strokeWidth: 2 },
+    style: createGraphFlowEdgeStyle(),
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#6b7280',
-      width: 20,
-      height: 20,
+      color: graphFlowPalette.edgeStroke,
+      width: graphFlowPalette.edgeMarkerWidth,
+      height: graphFlowPalette.edgeMarkerHeight,
     },
   };
 }
@@ -79,12 +80,12 @@ export function createCanvasEdgeFromConnection(connection: {
     source: connection.source,
     target: connection.target,
     type: 'smoothstep',
-    style: { stroke: '#6b7280', strokeWidth: 2 },
+    style: createGraphFlowEdgeStyle(),
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#6b7280',
-      width: 20,
-      height: 20,
+      color: graphFlowPalette.edgeStroke,
+      width: graphFlowPalette.edgeMarkerWidth,
+      height: graphFlowPalette.edgeMarkerHeight,
     },
   };
 }

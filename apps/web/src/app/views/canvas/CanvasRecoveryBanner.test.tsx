@@ -47,7 +47,7 @@ describe('CanvasRecoveryBanner', () => {
     container.remove();
   });
 
-  it('renders read-only posture as passive inspect-only guidance', () => {
+  it('does not render read-only posture as a recovery action banner', () => {
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -71,11 +71,8 @@ describe('CanvasRecoveryBanner', () => {
       );
     });
 
-    const button = container.querySelector('button');
-
-    expect(container.textContent).toContain('Draft is read-only');
-    expect(button?.textContent).toBe('Inspect only');
-    expect(button?.getAttribute('disabled')).not.toBeNull();
+    expect(container.textContent).toBe('');
+    expect(container.querySelector('button')).toBeNull();
 
     act(() => root.unmount());
     container.remove();

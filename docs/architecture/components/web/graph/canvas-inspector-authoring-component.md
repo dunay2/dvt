@@ -15,6 +15,7 @@ This document defines the route-owned Inspector authoring component for Canvas.
 Use it for:
 
 - governed node-detail editing in the Inspector
+- governed dbt card configuration and model-origin selection
 - the local Inspector DTO, validation, dirty state, and apply/cancel posture
 - the command seam that writes edited node details back into the draft
   aggregate
@@ -33,37 +34,43 @@ inspector contract.
 
 ## Fowler Reading
 
-| Fowler concept      | Owner in this slice                  | Why                                                                      |
-| ------------------- | ------------------------------------ | ------------------------------------------------------------------------ |
-| DTO                 | `CanvasInspectorNodeDraft`           | one semantic editing contract for route-owned node details               |
-| Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                       |
-| Application command | `canvasInspectorAuthoringCommand.ts` | maps validated Inspector edits into aggregate mutation                   |
-| Application seam    | `useCanvasInspectorCommands.ts`      | exposes one route-safe callback instead of leaking aggregate mutation up |
-| Runtime policy      | `CanvasRuntimePolicy`                | decides whether Inspector authoring is available for the active canvas   |
-| Passive view        | `InspectorPanel.tsx`                 | still owns passive node details and plugin read-only panels              |
-| Route-owned view    | `CanvasInspectorPanel.tsx`           | composes the passive view with governed authoring UI                     |
+| Fowler concept      | Owner in this slice                  | Why                                                                            |
+| ------------------- | ------------------------------------ | ------------------------------------------------------------------------------ |
+| DTO                 | `CanvasInspectorNodeDraft`           | one semantic editing contract for route-owned node details                     |
+| Value Object        | `DbtNodeAuthoringMetadata`           | normalized dbt package, source, table, materialization, and origin state       |
+| Value Object        | `DvtNodeAuthoringMetadata`           | normalized source, SQL transform, and sink config for DVT transformation nodes |
+| Policy Object       | `DbtSourceRelationshipSelection`     | dbt model origins must come from the visible connected dbt graph               |
+| Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                             |
+| Application command | `canvasInspectorAuthoringCommand.ts` | maps validated Inspector edits into aggregate mutation                         |
+| Application seam    | `useCanvasInspectorCommands.ts`      | exposes one route-safe callback instead of leaking aggregate mutation up       |
+| Runtime policy      | `CanvasRuntimePolicy`                | decides whether Inspector authoring is available for the active canvas         |
+| Passive view        | `InspectorPanel.tsx`                 | still owns passive node details and plugin read-only panels                    |
+| Route-owned view    | `CanvasInspectorPanel.tsx`           | composes the passive view with governed authoring UI                           |
 
 The critical rule is that the generic `InspectorPanel` remains passive. The
 write surface lives one level up in the route-owned wrapper.
 
 ## Public API
 
-| API                                              | Responsibility                                                         |
-| ------------------------------------------------ | ---------------------------------------------------------------------- |
-| `CanvasInspectorNodeDraft`                       | semantic editing DTO for governed node details                         |
-| `CanvasInspectorAuthoringContract`               | route-owned contract: can edit and apply                               |
-| `createCanvasInspectorNodeDraft`                 | project a selected canonical node into the Inspector draft             |
-| `validateCanvasInspectorNodeDraft`               | validate the current Inspector draft                                   |
-| `applyCanvasInspectorNodeDraft`                  | normalize and project the edited fields back into a canonical node     |
-| `applyCanvasInspectorNodeDraftToSession`         | write the edited node back into `CanvasDraftSession` via `upsertNode`  |
-| `useCanvasInspectorCommands`                     | route-safe callback bridge from UI to aggregate                        |
-| `CanvasInspectorPanel`                           | route-owned composition of passive Inspector plus authoring section    |
-| `serializeCanvasDraftAuthoringSignature`         | semantic dirty-check signature for persisted authoring payloads        |
-| `serializeCanvasDraftAuthoringBaselineSignature` | remote-draft baseline signature policy used by bootstrap and reload    |
-| `toCanvasAuthoringMetadata`                      | JSON-compatible metadata DTO boundary for signatures and persistence   |
-| `CanvasGraphStrategy`                            | plugin-neutral graph strategy contract used by Canvas application code |
-| `CanvasGraphAuthoringMode`                       | route-facing authoring kind resolved from the active canvas document   |
-| `useLineageViewData`                             | Lineage read model over the DBT workspace snapshot                     |
+| API                                              | Responsibility                                                             |
+| ------------------------------------------------ | -------------------------------------------------------------------------- |
+| `CanvasInspectorNodeDraft`                       | semantic editing DTO for governed node details                             |
+| `DbtNodeAuthoringMetadata`                       | route-owned dbt card configuration value object                            |
+| `DvtNodeAuthoringMetadata`                       | route-owned DVT source, SQL transform, and sink configuration value object |
+| `DbtSourceRelationshipSelection`                 | policy result for selected dbt model origin                                |
+| `CanvasInspectorAuthoringContract`               | route-owned contract: can edit and apply                                   |
+| `createCanvasInspectorNodeDraft`                 | project a selected canonical node into the Inspector draft                 |
+| `validateCanvasInspectorNodeDraft`               | validate the current Inspector draft                                       |
+| `applyCanvasInspectorNodeDraft`                  | normalize and project the edited fields back into a canonical node         |
+| `applyCanvasInspectorNodeDraftToSession`         | write the edited node back into `CanvasDraftSession` via `upsertNode`      |
+| `useCanvasInspectorCommands`                     | route-safe callback bridge from UI to aggregate                            |
+| `CanvasInspectorPanel`                           | route-owned composition of passive Inspector plus authoring section        |
+| `serializeCanvasDraftAuthoringSignature`         | semantic dirty-check signature for persisted authoring payloads            |
+| `serializeCanvasDraftAuthoringBaselineSignature` | remote-draft baseline signature policy used by bootstrap and reload        |
+| `toCanvasAuthoringMetadata`                      | JSON-compatible metadata DTO boundary for signatures and persistence       |
+| `CanvasGraphStrategy`                            | plugin-neutral graph strategy contract used by Canvas application code     |
+| `CanvasGraphAuthoringMode`                       | route-facing authoring kind resolved from the active canvas document       |
+| `useLineageViewData`                             | Lineage read model over the DBT workspace snapshot                         |
 
 ## Invariants
 
@@ -72,6 +79,14 @@ write surface lives one level up in the route-owned wrapper.
   not be derived directly from draft transport mutability or raw user
   permissions.
 - Plugin-owned inspector panels remain read-only in this slice.
+- DBT card configuration that changes execution semantics belongs to the
+  route-owned Inspector DTO, not to plugin-owned passive panels.
+- DVT transformation configuration that changes preview semantics belongs to
+  the route-owned Inspector DTO and is applied to `metadata.config` or
+  `metadata.sql`, not to plugin-owned passive panels.
+- DBT model origin selection must use connected dbt source or model nodes from
+  the visible graph; it must not synthesize database catalog authority or
+  hidden edges.
 - The Inspector draft is local UI state; authoritative authoring truth remains
   `CanvasDraftSession`.
 - Applying Inspector edits must mutate the same aggregate consumed by preview
@@ -115,6 +130,8 @@ write surface lives one level up in the route-owned wrapper.
 | -------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------- |
 | `canvasInspectorAuthoring.types.ts`          | semantic DTO and route-owned authoring contract                     | React state or aggregate mutation      |
 | `canvasInspectorAuthoringModel.ts`           | draft projection, validation, dirty-state comparison, normalization | React hooks, services, or persistence  |
+| `canvasDbtAuthoringModel.ts`                 | dbt card metadata value object and origin-selection policy          | React hooks, services, or persistence  |
+| `canvasDvtAuthoringModel.ts`                 | DVT source, SQL transform, and sink config value object             | React hooks, services, or persistence  |
 | `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition  |
 | `useCanvasInspectorCommands.ts`              | route callback bridge into the aggregate                            | validation rules or persistence timing |
 | `CanvasInspectorAuthoringSection.tsx`        | route-owned edit UI                                                 | plugin panels or transport ownership   |
@@ -174,7 +191,7 @@ flowchart LR
 ```mermaid
 stateDiagram-v2
   [*] --> clean
-  clean --> dirty: edit name or description
+  clean --> dirty: edit name, description, dbt config, or origin
   dirty --> invalid: blank name
   invalid --> dirty: fix validation
   dirty --> clean: Cancel
@@ -227,6 +244,7 @@ sequenceDiagram
 - [canvasInspectorAuthoringComponent.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts)
 - [CanvasInspectorPanel.test.tsx](../../../../../apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx)
 - [canvasInspectorAuthoringModel.test.ts](../../../../../apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts)
+- [canvasDbtAuthoringModel.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDbtAuthoringModel.test.ts)
 - [canvasDraftAuthoring.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDraftAuthoring.test.ts)
 - [useCanvasController.activeDraftMutations.test.tsx](../../../../../apps/web/src/app/views/canvas/useCanvasController.activeDraftMutations.test.tsx)
 - [canvasDuplicateNodeCommand.test.ts](../../../../../apps/web/src/app/views/canvas/canvasDuplicateNodeCommand.test.ts)
@@ -239,6 +257,7 @@ sequenceDiagram
 - recomputing `canEditNode` from raw permissions, draft transport mutability,
   or workbench state instead of `CanvasRuntimePolicy`
 - letting plugin panels mutate core route-owned node fields
+- letting plugin panels mutate dbt execution config or origin selection
 - using the Inspector form as a second persistence model
 - using a structural-only dirty signature that cannot see node name,
   description, metadata, or edge semantics

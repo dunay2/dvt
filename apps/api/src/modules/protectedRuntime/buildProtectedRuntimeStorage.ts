@@ -17,7 +17,7 @@ export type BuildProtectedRuntimeStorageDeps = {
   readonly PostgresPlanStore: typeof import('@dvt/adapter-postgres').PostgresPlanStore;
   readonly PostgresStateStoreAdapter: typeof import('@dvt/adapter-postgres').PostgresStateStoreAdapter;
   readonly PostgresStartRunIntentStore: typeof import('@dvt/adapter-postgres').PostgresStartRunIntentStore;
-  readonly SnapshotProjector: typeof import('@dvt/engine').SnapshotProjector;
+  readonly SnapshotProjector: typeof import('@dvt/engine/runtime').SnapshotProjector;
   readonly databaseUrl: string;
   readonly env: Env;
   readonly pool: RuntimePool;
@@ -57,11 +57,12 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
     stepTypeRegistry,
   });
   const systemClock = { nowIsoUtc: () => asIsoUtcString(new Date().toISOString()) };
+  const dbtBundleStore = resolveDbtBundleArtifactStore(deps.env);
   const runExecutionContextResolver = new ArtifactBackedRunExecutionContextResolver({
     nodeEnv: deps.env.NODE_ENV,
   });
   const runExecutionContextBindingPolicy = new ArtifactStoreDbtProjectBundleBindingPolicy({
-    bundleStore: resolveDbtBundleArtifactStore(deps.env),
+    bundleStore: dbtBundleStore,
   });
 
   return {
@@ -73,6 +74,8 @@ export function buildProtectedRuntimeStorage(deps: BuildProtectedRuntimeStorageD
     stepTypeRegistry,
     executablePlanResolver,
     systemClock,
+    workspaceFilesRoot: resolveWorkspaceFilesRoot(deps.env),
+    dbtBundleStore,
     runExecutionContextResolver,
     runExecutionContextBindingPolicy,
   };
@@ -96,4 +99,8 @@ function resolveDbtBundleArtifactStore(env: Env) {
   }
 
   return undefined;
+}
+
+function resolveWorkspaceFilesRoot(env: Env): string {
+  return env.DVT_WORKSPACE_FILES_ROOT ?? env.DVT_DBT_BUNDLE_FILE_ROOT ?? process.cwd();
 }

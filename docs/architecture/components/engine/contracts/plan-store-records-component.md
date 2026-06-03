@@ -18,6 +18,8 @@ ExecutionPlan v1 line.
 - `PlanRecord`: tenant-owned persisted plan record.
 - `PlanExecutabilityRecord`: adapter-specific executability state.
 - `PlanAdmissionLink`: relation between scoped plan and run.
+- `StoredPlanArtifactValidationRecord`: validation metadata for a tenant-neutral
+  stored-plan artifact blob.
 - `IPlanStoreReader`: scoped queries.
 - `IPlanStoreWriter`: scoped commands.
 - `IStoredPlanArtifactReader`: scoped plan-artifact materialization queries.
@@ -74,6 +76,8 @@ semantic rail and must not be used to hide command/query ownership.
 - `PlanAdmissionLink` does not mutate `PlanRecord.state`.
 - No compatibility shim exists for an unscoped plan-record command or query.
   Missed consumers must fail fast in tests or type-checks.
+- No active `PlanValidationLifecycle.v1` contract exists. Artifact validation
+  vocabulary is published as `StoredPlanArtifactValidationRecord`.
 - Existing unscoped plan-record tables are not silently upgraded; schema
   migration must fail fast and require explicit remediation.
 
@@ -86,6 +90,7 @@ flowchart TB
     Record[PlanRecord]
     Exec[PlanExecutabilityRecord]
     Link[PlanAdmissionLink]
+    ArtifactValidation[StoredPlanArtifactValidationRecord]
   end
 
   subgraph Artifacts
@@ -108,6 +113,7 @@ flowchart TB
   Scope --> Record
   Scope --> Exec
   Scope --> Link
+  ArtifactValidation --> ArtifactReader
   Reader --> ScopedRef
   ArtifactReader --> ScopedRef
   Reader --> Store

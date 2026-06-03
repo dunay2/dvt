@@ -138,6 +138,26 @@ describe('validateTransformationGraph', () => {
     );
   });
 
+  it('falls back to the workspace transformation graph when selection is only a partial edit focus', () => {
+    const nodes = buildValidTransformationNodes();
+    const edges = buildOrderedTransformationEdges();
+
+    expectValidationSummary(
+      validateTransformationGraph({
+        nodes,
+        edges,
+        selectedNodeIds: ['src'],
+        workspaceNodeIds: nodes.map((node) => node.id),
+      }),
+      {
+        valid: true,
+        summaryCode: 'valid',
+        scopedNodeIds: ['src', 'tx', 'sink'],
+        scopedEdgeIds: ['e1', 'e2'],
+      }
+    );
+  });
+
   it('changes draftSignature when projected graph source changes without changing ids', () => {
     const nodes = buildValidTransformationNodes({
       transformNode: { kind: 'dvt:sql_transform' },

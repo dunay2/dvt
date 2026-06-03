@@ -16,7 +16,8 @@ export function useCanvasAuthoringRuntime({
   persistedNodePositions,
   selectedNodeIds,
   inspectorNodeId,
-  canEditDraftTransport,
+  canPersistGraphDraftTransport,
+  canMutateGraphTransport,
   workspaceScope,
   previewProvenanceConfig,
   setCanvasNodePositions,
@@ -29,7 +30,9 @@ export function useCanvasAuthoringRuntime({
       }),
     [dataSourceMode, platformHealthQuery]
   );
-  const canPersistDraftTransport = canEditDraftTransport && backendPosture.backendAllowsMutations;
+  const canPersistDraftTransport =
+    canPersistGraphDraftTransport && backendPosture.backendAllowsMutations;
+  const canMutateDraftGraphTransport = canPersistDraftTransport && canMutateGraphTransport;
   const draftFlow = useCanvasAuthoringRuntimeDraftFlow({
     workspaceGraphDraftAuthoringPort,
     workspaceLayoutKey,
@@ -52,12 +55,12 @@ export function useCanvasAuthoringRuntime({
         selectedNodeIds,
         inspectorNodeId,
         draftSaveStatus: draftFlow.draftSaveStatus,
-        canPersistDraftTransport,
         draftReadModel: draftFlow.draftReadModel,
         authTransportPosture: draftAuthTransportPosture,
+        canMutateGraphTransport: canMutateDraftGraphTransport,
       }),
     [
-      canPersistDraftTransport,
+      canMutateDraftGraphTransport,
       draftAuthTransportPosture,
       draftFlow.draftReadModel,
       draftFlow.draftSaveStatus,

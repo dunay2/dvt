@@ -98,7 +98,6 @@ const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.c
 describe('Canvas route authoring bootstrap integration', () => {
   let root: Root | null = null;
   let container: HTMLDivElement | null = null;
-  let toolbarPortalHost: HTMLDivElement | null = null;
   let harness: ReturnType<typeof setupCanvasControllerHarness> | null = null;
   let queryClient: QueryClient | null = null;
 
@@ -121,12 +120,10 @@ describe('Canvas route authoring bootstrap integration', () => {
     harness?.cleanup();
     resetCanvasDraftPresentationState();
     resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
-    toolbarPortalHost?.remove();
     container?.remove();
     queryClient?.clear();
     root = null;
     container = null;
-    toolbarPortalHost = null;
     harness = null;
     queryClient = null;
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
@@ -143,10 +140,6 @@ describe('Canvas route authoring bootstrap integration', () => {
       edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
     });
     harness.state.graphDraftQueryData = undefined;
-
-    toolbarPortalHost = document.createElement('div');
-    toolbarPortalHost.id = 'shell-top-bar-canvas-controls';
-    document.body.appendChild(toolbarPortalHost);
 
     queryClient = new QueryClient({
       defaultOptions: {

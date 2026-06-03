@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
 import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
+import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
 import { parseCanonicalNodeDragPayload } from './canvasNodeDropPayload';
 import { useCanvasNodeAdmissionCommandRunner } from './useCanvasNodeAdmissionCommandRunner';
@@ -14,6 +15,7 @@ type UseCanvasNodeDropHandlersArgs = CanvasNodeDropContracts;
 type UseCanvasNodeDropHandlersResult = {
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
+  handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
 };
 
 export function useCanvasNodeDropHandlers({
@@ -21,14 +23,9 @@ export function useCanvasNodeDropHandlers({
   effects,
   policy,
 }: UseCanvasNodeDropHandlersArgs): UseCanvasNodeDropHandlersResult {
-  const { draftSession, nodes } = state;
+  const { canonicalNodesById, draftSession, nodes } = state;
   const { setNodes, setDraftSession } = effects;
-  const {
-    graphStrategy,
-    canEditEdges,
-    columnLevelLineageEnabled,
-    allowsCanonicalNode,
-  } = policy;
+  const { graphStrategy, canEditEdges, columnLevelLineageEnabled, allowsCanonicalNode } = policy;
   const runAdmissionCommand = useCanvasNodeAdmissionCommandRunner({
     state: {
       draftSession,
@@ -53,9 +50,7 @@ export function useCanvasNodeDropHandlers({
       }
 
       const canonicalNode =
-        parseCanonicalNodeDragPayload(
-          event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)
-        ) ??
+        parseCanonicalNodeDragPayload(event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)) ??
         graphStrategy?.parseDropPayload(event.dataTransfer) ??
         null;
       if (!canonicalNode) {
@@ -87,8 +82,71 @@ export function useCanvasNodeDropHandlers({
     event.dataTransfer.dropEffect = 'move';
   }, []);
 
+  const handleAttachSchemaToNode = useCallback(
+    (nodeId: string, schemaName: string) => {
+      if (!canEditEdges) {
+        toast.error(canvasViewCopy.mutationUnavailableMessage);
+        return;
+      }
+
+      const normalizedSchemaName = schemaName.trim();
+      const targetNode = canonicalNodesById.get(nodeId);
+      if (targetNode == null) {
+        toast.error(canvasViewCopy.nodeNotFoundInGraphMessage);
+        return;
+      }
+      if (normalizedSchemaName.length === 0) {
+        toast.info('Schema resource is empty and cannot be assigned.');
+        return;
+      }
+
+      const readRecord = (value: unknown): Record<string, unknown> =>
+        value !== null && typeof value === 'object' && !Array.isArray(value)
+          ? (value as Record<string, unknown>)
+          : {};
+      const existingMetadata = readRecord(targetNode.metadata);
+      const nextMetadata: Record<string, unknown> = {
+        ...existingMetadata,
+        schema: normalizedSchemaName,
+        config: {
+          ...readRecord(existingMetadata.config),
+          schema: normalizedSchemaName,
+        },
+      };
+
+      if (targetNode.pluginId === 'dbt') {
+        nextMetadata.dbt = {
+          ...readRecord(existingMetadata.dbt),
+          schemaName: normalizedSchemaName,
+        };
+      }
+
+      const nextNode = {
+        ...targetNode,
+        metadata: nextMetadata,
+      };
+      const nextNodes = nodes.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...node.data,
+                metadata: nextMetadata,
+              },
+            }
+          : node
+      );
+
+      setNodes(nextNodes);
+      setDraftSession(canvasDraftSessionWorkingSet.upsertNode(draftSession, nextNode));
+      toast.success(`Schema ${normalizedSchemaName} assigned to ${targetNode.name}.`);
+    },
+    [canEditEdges, canonicalNodesById, draftSession, nodes, setDraftSession, setNodes]
+  );
+
   return {
     handleDrop,
     handleDragOver,
+    handleAttachSchemaToNode,
   };
 }

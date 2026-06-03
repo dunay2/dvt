@@ -40,10 +40,16 @@ Canonical navigation for the Graph and Canvas architecture pack.
 - [Canvas Handler Contracts Component](./canvas-handler-contracts-component.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
+- [Canvas View Menu Component](./canvas-view-menu-component.md)
+- [Canvas View Menu User Stories](./canvas-view-menu-user-stories.md)
+- [Canvas Project Snapshot Component](./canvas-project-snapshot-component.md)
+- [Canvas Project Snapshot User Stories](./canvas-project-snapshot-user-stories.md)
 - [Canvas Workbench Tabs Component](./canvas-workbench-tabs-component.md)
 - [Canvas Workbench Tab Strip Component](./canvas-workbench-tab-strip-component.md)
 - [Canvas Workbench Tabs User Stories](./canvas-workbench-tabs-user-stories.md)
 - [Canvas Workbench Command Query Catalog](./canvas-workbench-command-query-catalog.md)
+- [Canvas Fowler Canon Component](./canvas-fowler-canon-component.md)
+- [Canvas Fowler Canon User Stories](./canvas-fowler-canon-user-stories.md)
 
 ## Related Existing Reviews
 

@@ -9,6 +9,10 @@ export type CanvasViewCopy = {
   readonly routeNeedsCanvasTitle: string;
   readonly routeNeedsCanvasMessage: string;
   readonly routeNeedsCanvasHelper: string;
+  readonly routeNeedsCanvasWorkspaceLabel: string;
+  readonly routeNeedsCanvasAdapterLabel: string;
+  readonly routeNeedsCanvasTemplateLabel: string;
+  readonly routeNeedsCanvasReadOnlyMessage: string;
   readonly routeEmptyTitle: string;
   readonly routeEmptyEditableMessage: string;
   readonly routeEmptyImportUnavailableMessage: string;
@@ -29,6 +33,7 @@ export type CanvasViewCopy = {
   readonly readOnlyMessage: string;
   readonly limitedAccessTitle: string;
   readonly readOnlyNote: string;
+  readonly readOnlyActionLabel: string;
   readonly draftAccessDeniedTitle: string;
   readonly draftAccessDeniedMessage: string;
   readonly sessionRequiredDraftLabel: string;
@@ -71,8 +76,19 @@ export type CanvasViewCopy = {
   readonly toolbarGridLabel: string;
   readonly toolbarGridColorLabel: string;
   readonly toolbarSnapToGridLabel: string;
+  readonly toolbarCanvasSettingsLabel: string;
+  readonly toolbarEmptyCanvasGuideLabel: string;
+  readonly toolbarProjectSnapshotMenuLabel: string;
+  readonly toolbarExportSnapshotLabel: string;
+  readonly toolbarImportSnapshotLabel: string;
+  readonly toolbarInsertLabel: string;
   readonly toolbarPlanLabel: string;
   readonly toolbarRunLabel: string;
+  readonly addNodePaletteSearchLabel: string;
+  readonly addNodePaletteEmptyLabel: string;
+  readonly projectSnapshotExportUnavailableMessage: string;
+  readonly projectSnapshotImportRejectedMessage: string;
+  readonly projectSnapshotImportFailedMessage: string;
   readonly newCanvasLabel: string;
   readonly workbenchGraphTabLabel: string;
   readonly workbenchCodeTabLabel: string;

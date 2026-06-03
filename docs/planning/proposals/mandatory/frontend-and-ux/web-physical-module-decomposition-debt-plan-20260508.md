@@ -100,7 +100,7 @@ The future slice must prove which path is still referenced before deletion.
 ## Non-Goals
 
 - Do not move `apps/web` wholesale under `packages/@dvt`.
-- Do not create `packages/@dvt/ui` until there is a stable reusable UI contract
+- [Task: E-PROP-DISP-1] Do not create `packages/@dvt/ui` until there is a stable reusable UI contract
   and at least one real non-`apps/web` consumer.
 - Do not rename docs component folders just to match source folders.
 - Do not change runtime routes, frontend DTOs, API rails, or package exports in

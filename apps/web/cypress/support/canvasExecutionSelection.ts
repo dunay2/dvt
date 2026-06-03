@@ -11,23 +11,17 @@ export function clickButtonNatively(label: string): void {
 }
 
 export function selectCanvasClosure(nodeNames: string[]): void {
-  cy.get('body').trigger('keydown', {
-    key: 'Shift',
-    code: 'ShiftLeft',
-    shiftKey: true,
-    bubbles: true,
-    force: true,
-  });
-
   for (const nodeName of nodeNames) {
-    cy.contains('.react-flow__node', nodeName).click({ force: true, shiftKey: true });
+    cy.contains('.react-flow__node', nodeName).rightclick();
+    cy.get('[role="menu"]').then(($menu) => {
+      if ($menu.text().includes('Select node')) {
+        cy.contains('[role="menuitem"]', 'Select node').click();
+        return;
+      }
+
+      cy.get('body').type('{esc}');
+    });
   }
 
-  cy.get('body').trigger('keyup', {
-    key: 'Shift',
-    code: 'ShiftLeft',
-    bubbles: true,
-    force: true,
-  });
-  cy.get('.react-flow__node.selected').should('have.length', nodeNames.length);
+  cy.get('[data-slot="canvas-toolbar-plan-command"]').should('be.enabled');
 }

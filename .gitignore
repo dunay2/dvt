@@ -95,6 +95,7 @@ docs/planning/status/system-governance-remediation-queue.queue.yaml
 /eslint-issues.txt
 /audit.md
 /arc.json
+/.dvt/
 /x[1])
 
 # Private data (must not be public)

@@ -28,6 +28,7 @@ function buildCanvasShellLayoutArgs({
       explorerPanelVisible: controller.explorerPanelVisible,
       inspectorPanelVisible: controller.inspectorPanelVisible,
       canOpenSourceImport: controller.canOpenSourceImport,
+      canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
     },
     recoveryCommands: {
       reloadLatestDraft: controller.reloadLatestDraft,
@@ -39,14 +40,24 @@ function buildCanvasShellLayoutArgs({
     authoringCommands: {
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
       handleCreateCanvasDocument: controller.handleCreateCanvasDocument,
+      handleSelectCanvasDocument: controller.handleSelectCanvasDocument,
+      handleApplyCanvasDocumentPatch: controller.handleApplyCanvasDocumentPatch,
+      handleDeleteCanvasDocument: controller.handleDeleteCanvasDocument,
+    },
+    preferenceCommands: {
+      setCanvasEmptyStateGuideVisible: controller.setCanvasEmptyStateGuideVisible,
     },
     routePresentation: {
       presentationState: routeViewState.presentationState,
+      workspaceScope: routeViewState.workspaceScope,
       draftAccessPosture: routeViewState.draftAccessPosture,
       startupBlockState: routeViewState.startupBlockState,
       draftTransportError: routeViewState.draftTransportError,
       workbenchErrorMessage: routeViewState.workbenchErrorMessage,
       canvasDocument: routeViewState.canvasDocument,
+      canvasDocuments: routeViewState.canvasDocuments,
+      activeCanvasId: routeViewState.activeCanvasId,
+      canCreateCanvasDocument: routeViewState.canCreateCanvasDocument,
       draftSaveStatus: routeViewState.draftSaveStatus,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
       canvasTabState: routeViewState.canvasTabState,
@@ -64,16 +75,22 @@ function buildCanvasShellPanelsArgs({
     panelState: {
       explorerNodes: controller.explorerNodes,
       inspectorNode: controller.inspectorNode,
+      inspectorGraphNodes: controller.inspectorGraphNodes,
+      inspectorGraphEdges: controller.inspectorGraphEdges,
       canEditInspectorNode:
         controller.canEditInspectorNode && routeViewState.effectiveUserPermissions.canEditEdges,
       applyInspectorNodeDraft: controller.applyInspectorNodeDraft,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
+      runtimeCapabilities: controller.runtimeCapabilities,
       importedNodeFocusIds: controller.importedNodeFocusIds,
+      executionEnvironmentOptions: controller.executionEnvironmentOptions,
     },
     userPermissions: routeViewState.effectiveUserPermissions,
     routePresentation: {
       canvasDocument: routeViewState.canvasDocument,
+      canvasDocuments: routeViewState.canvasDocuments,
+      activeCanvasId: routeViewState.activeCanvasId,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
     },
   };
@@ -92,6 +109,7 @@ function buildCanvasShellGraphArgs({
       canvasGridVisible: controller.canvasGridVisible,
       canvasGridColor: controller.canvasGridColor,
       canvasSnapToGrid: controller.canvasSnapToGrid,
+      canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
       viewport: controller.viewport,
     },
   };
@@ -104,8 +122,12 @@ function buildCanvasShellToolbarArgs({
   return {
     toolbarState: {
       canvasAuthoringMode: controller.canvasAuthoringMode,
+      canPlanGraph: controller.canPlanGraph,
       canStartRun: controller.canStartRun,
+      canExportProjectSnapshot: controller.canExportProjectSnapshot,
+      canImportProjectSnapshot: controller.canImportProjectSnapshot,
       planStatusSummary: controller.planStatusSummary,
+      planRunReadiness: controller.planRunReadiness,
       exclusiveOverlayMode: controller.exclusiveOverlayMode,
       canUseCostOverlay: controller.canUseCostOverlay,
       impactOverlayEnabled: controller.impactOverlayEnabled,
@@ -159,6 +181,9 @@ function buildCanvasShellChromeCommandsArgs({
       setCanvasGridVisible: controller.setCanvasGridVisible,
       setCanvasGridColor: controller.setCanvasGridColor,
       setCanvasSnapToGrid: controller.setCanvasSnapToGrid,
+      setCanvasEmptyStateGuideVisible: controller.setCanvasEmptyStateGuideVisible,
+      handleExportProjectSnapshot: controller.handleExportProjectSnapshot,
+      handleImportProjectSnapshotFile: controller.handleImportProjectSnapshotFile,
       reloadLatestDraft: controller.reloadLatestDraft,
       handlePlan: controller.handlePlan,
       handleStartRun: controller.handleStartRun,
@@ -174,5 +199,16 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     toolbar: buildCanvasShellToolbar(buildCanvasShellToolbarArgs(args)),
     graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
+    canvasCommands: {
+      onSelectCanvas: (canvasId) => {
+        void args.controller.handleSelectCanvasDocument(canvasId);
+      },
+      onApplyCanvasPatch: (patch) => {
+        void args.controller.handleApplyCanvasDocumentPatch(patch);
+      },
+      onDeleteActiveCanvas: () => {
+        void args.controller.handleDeleteCanvasDocument();
+      },
+    },
   };
 }

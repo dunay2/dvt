@@ -1,7 +1,7 @@
 /** Owned concern: persist first or explicitly replaced typed canvas documents through authoritative draft CAS save semantics. */
 import type { CanvasCreateCanvasDocumentCommandDto } from './canvasDraftLifecycle.types';
 import {
-  buildBlankCanvasDocumentDraftInput,
+  buildCreateCanvasDocumentDraftInput,
   resolveCreateCanvasDocumentCommandEligibility,
 } from './canvasCreateCanvasDocumentCommandPolicy';
 import {
@@ -18,6 +18,7 @@ export async function executeCreateCanvasDocumentCommand({
   setDraftSession,
   setDraftSaveStatus,
   lastSavedSignatureRef,
+  currentDraftPayload,
 }: CanvasCreateCanvasDocumentCommandDto): Promise<void> {
   const eligibility = resolveCreateCanvasDocumentCommandEligibility({
     command,
@@ -32,8 +33,9 @@ export async function executeCreateCanvasDocumentCommand({
 
   try {
     const result = await draftRepository.saveGraphDraft(
-      buildBlankCanvasDocumentDraftInput({
+      buildCreateCanvasDocumentDraftInput({
         command,
+        currentDraftPayload,
         expectedRevision: eligibility.expectedRevision,
       })
     );

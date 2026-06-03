@@ -25,6 +25,8 @@ export type CanvasRouteInteractionState = {
   effectiveWorkbenchState: ReturnType<typeof getCanvasWorkbenchState>;
   startupBlockState: CanvasRouteStartupBlockState | null;
   canvasDocument: CanvasController['canvasDocument'];
+  canvasDocuments: CanvasController['canvasDocuments'];
+  activeCanvasId: CanvasController['activeCanvasId'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
   canvasTabState: CanvasPlaygroundTabState;
   effectiveUserPermissions: CanvasController['userPermissions'];
@@ -72,17 +74,13 @@ function resolveEffectiveUserPermissions(args: {
     };
   }
 
+  const mutationBlocked = isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture);
+
   return {
     ...controller.userPermissions,
-    canPlan:
-      controller.userPermissions.canPlan &&
-      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
-    canRun:
-      controller.userPermissions.canRun &&
-      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
-    canEditEdges:
-      controller.userPermissions.canEditEdges &&
-      !isCanvasDraftPostureMutationBlocked(controller.draftAccessPosture),
+    canPlan: controller.userPermissions.canPlan && !mutationBlocked,
+    canRun: controller.userPermissions.canRun && !mutationBlocked,
+    canEditEdges: controller.userPermissions.canEditEdges && !mutationBlocked,
   };
 }
 
@@ -149,6 +147,8 @@ export function deriveCanvasRouteInteractionState(
     effectiveWorkbenchState,
     startupBlockState,
     canvasDocument: controller.canvasDocument,
+    canvasDocuments: controller.canvasDocuments,
+    activeCanvasId: controller.activeCanvasId,
     availableCanvasKinds: controller.availableCanvasKinds,
     canvasTabState: deriveCanvasPlaygroundTabState({
       canvasDocument: controller.canvasDocument,

@@ -5,6 +5,7 @@ import {
   createPendingRouteBootstrapPresentation,
   type RouteBootstrapPresentation,
 } from '../../bootstrap/routeBootstrapContract';
+import { codeViewCopy, type CodeViewCopy } from './codeViewCopy';
 
 type CodeRouteBootstrapArgs = {
   isLoadingFileTree: boolean;
@@ -14,15 +15,18 @@ type CodeRouteBootstrapArgs = {
   filePreviewErrorMessage: string | null;
 };
 
-export function deriveCodeRouteBootstrapPresentation({
-  isLoadingFileTree,
-  fileTreeErrorMessage,
-  hasWorkspaceFiles,
-  isLoadingFilePreview,
-  filePreviewErrorMessage,
-}: CodeRouteBootstrapArgs): RouteBootstrapPresentation {
+export function deriveCodeRouteBootstrapPresentation(
+  {
+    isLoadingFileTree,
+    fileTreeErrorMessage,
+    hasWorkspaceFiles,
+    isLoadingFilePreview,
+    filePreviewErrorMessage,
+  }: CodeRouteBootstrapArgs,
+  copy: CodeViewCopy = codeViewCopy
+): RouteBootstrapPresentation {
   if (isLoadingFileTree) {
-    return createPendingRouteBootstrapPresentation('Loading workspace files for the code route');
+    return createPendingRouteBootstrapPresentation(copy.bootstrapLoadingFilesDetail);
   }
 
   if (fileTreeErrorMessage) {
@@ -30,18 +34,16 @@ export function deriveCodeRouteBootstrapPresentation({
   }
 
   if (!hasWorkspaceFiles) {
-    return createCompleteRouteBootstrapPresentation('Code route is ready with no workspace files');
+    return createCompleteRouteBootstrapPresentation(copy.bootstrapNoWorkspaceFilesDetail);
   }
 
   if (isLoadingFilePreview) {
-    return createPendingRouteBootstrapPresentation(
-      'Loading the initial file preview for the code route'
-    );
+    return createPendingRouteBootstrapPresentation(copy.bootstrapLoadingPreviewDetail);
   }
 
   if (filePreviewErrorMessage) {
     return createFailedRouteBootstrapPresentation(filePreviewErrorMessage);
   }
 
-  return createCompleteRouteBootstrapPresentation('Code route is ready');
+  return createCompleteRouteBootstrapPresentation(copy.bootstrapReadyDetail);
 }

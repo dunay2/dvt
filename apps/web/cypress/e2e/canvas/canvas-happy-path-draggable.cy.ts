@@ -1,6 +1,7 @@
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
+  E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -14,6 +15,13 @@ function stubRuntimeCapabilities(): void {
     plugins: {
       dvt: { available: true },
     },
+  });
+}
+
+function stubWorkspaceContext(): void {
+  stubE2eJsonApi('GET', '/workspace/context', {
+    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    availableWorkspaces: [E2E_WORKSPACE_SESSION],
   });
 }
 
@@ -71,6 +79,7 @@ function addSourceNodeIfMissing(): void {
     const hasSourceNode = $body.find('.react-flow__node:contains("Source 1")').length > 0;
     if (!hasSourceNode) {
       cy.get('[data-slot="canvas-empty-state"]', { timeout: 20_000 }).within(() => {
+        cy.get('[data-slot="canvas-add-node-palette-trigger"]').click();
         cy.contains('button', /^Source$/).click();
       });
     }
@@ -114,6 +123,7 @@ describe('Canvas happy path remains writable after create/save', () => {
   beforeEach(() => {
     stubShellBootstrapApis();
     stubRuntimeCapabilities();
+    stubWorkspaceContext();
     stubStatefulCanvasDraftAuthoring({ emptyCanvas: true, canvasKind: 'transformation' });
   });
 

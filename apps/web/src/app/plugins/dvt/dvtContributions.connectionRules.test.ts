@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { evaluatePluginConnectionRules } from '../contracts/ConnectionRules';
+import { getPluginPortMap } from '../registry';
 import { dvtContributions } from './dvtContributions';
 
 function buildNode(kind: `${string}:${string}`, role: CanonicalNode['role']): CanonicalNode {
@@ -54,6 +55,14 @@ describe('dvtContributions connection rules', () => {
       allowed: false,
       reasonCode: 'plugin_rule_blocked',
       reason: 'Connection not permitted by DVT authoring rules',
+    });
+  });
+
+  it('registers imported warehouse source nodes as tabular input producers', () => {
+    expect(getPluginPortMap().get('dvt.warehouse-source')).toEqual({
+      connectionRules: [],
+      produces: [{ portType: 'data.tabular', forRoles: ['input'] }],
+      consumes: [],
     });
   });
 });

@@ -50,11 +50,31 @@ describe('protected route session context architecture', () => {
     );
 
     expect(authGate).toContain('resolveProtectedRouteSessionContext');
-    expect(authGate).not.toContain("getJson('/session'");
-    expect(resolver).toContain("getJson('/session'");
+    expect(authGate).not.toContain("getJson<SessionResponse>('/session'");
+    expect(authGate).not.toContain(
+      "getJson<EffectiveWorkspaceContextResponse>('/workspace/context'"
+    );
+    expect(resolver).toContain("'/session'");
     expect(resolver).toContain("'/workspace/context'");
     expect(resolver.indexOf("'/session'")).toBeLessThan(resolver.indexOf("'/workspace/context'"));
     expect(resolver).toContain('setSessionContext');
+  });
+
+  it('keeps draft persistence projection separate from graph edit projection', () => {
+    const resolver = readRepoFile(
+      'src',
+      'app',
+      'services',
+      'session',
+      'protectedRouteSessionContext.ts'
+    );
+
+    expect(resolver).toContain('canPersistGraphDraft');
+    expect(resolver).toContain("readServerPermission(session.permissions, 'canPersistGraphDraft')");
+    expect(resolver).toMatch(/canPersistGraphDraft:[\s\S]{0,160}workspace:graph-draft:save/);
+    expect(resolver).not.toContain(
+      "canPersistGraphDraft: readServerPermission(session.permissions, 'canEditEdges')"
+    );
   });
 
   it('documents API, invariants, transitions, consumers, and diagrams for the component', () => {
@@ -93,5 +113,46 @@ describe('protected route session context architecture', () => {
     expect(componentGuide).toContain('GET /workspace/context');
     expect(userStories).toContain('EWC-1');
     expect(userStories).toContain('EWC-5');
+  });
+
+  it('keeps protected-route session gate semantics documented with recovery vocabulary and readiness mapping', () => {
+    const componentGuide = readRepoFile(
+      '..',
+      '..',
+      'docs',
+      'architecture',
+      'components',
+      'web',
+      'appshell',
+      'protected-route-session-gate-component.md'
+    );
+    const userStories = readRepoFile(
+      '..',
+      '..',
+      'docs',
+      'architecture',
+      'components',
+      'web',
+      'appshell',
+      'protected-route-session-gate-user-stories.md'
+    );
+
+    for (const section of [
+      '## Public API',
+      '## Invariants',
+      '## Transitions',
+      '## Recovery Vocabulary (Source-Owned)',
+      '## Plan/Run Readiness Rail Mapping',
+      '## Consumers',
+      '## Semantic Fitness Function',
+    ]) {
+      expect(componentGuide).toContain(section);
+    }
+
+    expect(componentGuide).toContain('runtime_unavailable');
+    expect(componentGuide).toContain('ObservePlanRunReadiness');
+    expect(componentGuide).toContain('```mermaid');
+    expect(userStories).toContain('PRSG-1');
+    expect(userStories).toContain('PRSG-5');
   });
 });

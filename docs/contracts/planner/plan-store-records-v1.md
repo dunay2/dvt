@@ -25,6 +25,7 @@ runtime behavior ports remain owned by `@dvt/artifacts` under `ADR-0043`.
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionLink.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts`
 - `packages/@dvt/contracts/src/schemas.ts`
 - `packages/@dvt/contracts/src/validation.ts`
 
@@ -93,6 +94,21 @@ Invariants:
 - a link records `PlanStoreScope`, `planId`, `runId`, `adapterId`, and
   `admittedAtIso`
 
+### `StoredPlanArtifactValidationRecord`
+
+`StoredPlanArtifactValidationRecord` captures validation metadata for the
+tenant-neutral stored-plan artifact blob. It is not a plan-record lifecycle
+facade and it does not own product commands or queries.
+
+Invariants:
+
+- artifact validation state is limited to `PENDING_VALIDATION`, `VALID`, or
+  `INVALID`;
+- runtime materialization is permitted only after scoped record lookup and
+  `VALID` artifact state;
+- rejection reports are audit metadata for invalid artifacts;
+- no active contract named `PlanValidationLifecycle.v1` exists in S08.
+
 ## Boundary rules
 
 - `ADR-0042` remains the identity source: the planner-emitted canonical
@@ -103,6 +119,9 @@ Invariants:
   plan-storage behavior ownership to `@dvt/artifacts`.
 - `ADR-0054` narrows tenant-owned record identity to scoped records:
   `PlanStoreScope`, `ScopedPlanId`, and `ScopedPlanRef`.
+- stored-plan artifact validation vocabulary uses
+  `StoredPlanArtifactValidationRecord`; lifecycle-named compatibility contracts
+  are retired.
 
 ## Related
 

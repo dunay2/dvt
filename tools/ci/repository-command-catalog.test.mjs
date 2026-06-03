@@ -24,17 +24,22 @@ test('classifies planning and governance database aliases as planning-db command
     packageJson.scripts['governance:db:query']
   );
   const planningScript = classifyScriptFilePath('scripts/planning-db-query.cjs');
+  const planningComponent = classifyScriptFilePath(
+    'scripts/planning-db/command-query-rail-catalog.cjs'
+  );
   const governanceImportScript = classifyScriptFilePath('scripts/governance-db-import.cjs');
   const governanceExportScript = classifyScriptFilePath('scripts/governance-db-export.cjs');
 
   assert.equal(planningQuery.domain, 'planning-db');
   assert.equal(governanceQuery.domain, 'planning-db');
   assert.equal(planningScript.domain, 'planning-db');
+  assert.equal(planningComponent.domain, 'planning-db');
   assert.equal(governanceImportScript.domain, 'planning-db');
   assert.equal(governanceExportScript.domain, 'planning-db');
   assert.equal(planningQuery.runtimeFanout, false);
   assert.equal(governanceQuery.runtimeFanout, false);
   assert.equal(planningScript.runtimeFanout, false);
+  assert.equal(planningComponent.runtimeFanout, false);
   assert.equal(governanceImportScript.runtimeFanout, false);
   assert.equal(governanceExportScript.runtimeFanout, false);
 });
@@ -68,7 +73,49 @@ test('classifies runtime, capability, contract, docs, workflow, and ops commands
     'developer-workflow'
   );
   assert.equal(
+    classifyPackageScriptCommand('pr:closeout', packageJson.scripts['pr:closeout']).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand('pr:checks', packageJson.scripts['pr:checks']).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand('pr:checks:json', packageJson.scripts['pr:checks:json']).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand(
+      'pr:checks:first-failure',
+      packageJson.scripts['pr:checks:first-failure']
+    ).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand('ai:preflight', packageJson.scripts['ai:preflight']).domain,
+    'developer-workflow'
+  );
+  assert.equal(
+    classifyPackageScriptCommand('test:pr-closeout', packageJson.scripts['test:pr-closeout'])
+      .domain,
+    'test-tooling'
+  );
+  assert.equal(
     classifyPackageScriptCommand('test:ci-tools', packageJson.scripts['test:ci-tools']).domain,
+    'ci-tooling'
+  );
+  assert.equal(
+    classifyPackageScriptCommand(
+      'test:ci-tools:static',
+      packageJson.scripts['test:ci-tools:static']
+    ).domain,
+    'ci-tooling'
+  );
+  assert.equal(
+    classifyPackageScriptCommand(
+      'test:ci-tools:executable',
+      packageJson.scripts['test:ci-tools:executable']
+    ).domain,
     'ci-tooling'
   );
   assert.equal(
@@ -92,6 +139,14 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('scripts/generate-governance-document-unit-map.cjs').domain,
     'docs-governance'
   );
+  assert.equal(
+    classifyScriptFilePath('scripts/check-ai-efficiency-adoption.cjs').domain,
+    'docs-governance'
+  );
+  assert.equal(
+    classifyScriptFilePath('scripts/lib/feature-mechanization-manifest.cjs').domain,
+    'docs-governance'
+  );
   assert.equal(classifyScriptFilePath('tools/ci/emit-scope.mjs').domain, 'ci-tooling');
   assert.equal(classifyScriptFilePath('tools/docs/check-filenames.ts').domain, 'docs-governance');
   assert.equal(
@@ -102,6 +157,13 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('.github/scripts/generate_pr_manifest.sh').domain,
     'ci-tooling'
   );
+  assert.equal(
+    classifyScriptFilePath('scripts/local-validation-plan.cjs').domain,
+    'developer-workflow'
+  );
+  assert.equal(classifyScriptFilePath('scripts/ai-preflight.cjs').domain, 'developer-workflow');
+  assert.equal(classifyScriptFilePath('scripts/pr-closeout.cjs').domain, 'developer-workflow');
+  assert.equal(classifyScriptFilePath('scripts/pr-closeout.test.cjs').domain, 'test-tooling');
 });
 
 test('detects repository command files and excludes non-command metadata', () => {

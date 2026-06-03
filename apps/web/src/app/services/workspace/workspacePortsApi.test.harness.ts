@@ -4,10 +4,11 @@ import {
   createApiWorkspaceAdminReadPort,
   createApiWorkspaceDiffQueryPort,
   createApiWorkspaceFileContentCommandPort,
+  createApiWorkspaceFileHistoryQueryPort,
   createApiWorkspaceFilesQueryPort,
   createApiWorkspaceGraphSnapshotQueryPort,
-  createApiWorkspacePluginCatalogQueryPort,
 } from './workspacePorts.api';
+import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import { createApiClientHarness } from './workspaceApiClient.test.harness';
 
 export function createApiWorkspacePortHarness(
@@ -21,10 +22,11 @@ export function createApiWorkspacePortHarness(
     postJson,
     workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),
     workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
-    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(),
-    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(),
+    workspaceFileHistoryQuery: createApiWorkspaceFileHistoryQueryPort(apiClient),
+    workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
+    workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
-    warehouseSourceImport: createApiWarehouseSourceImportPort(),
-    workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(),
+    warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient),
+    workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
   };
 }

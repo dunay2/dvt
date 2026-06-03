@@ -1,43 +1,63 @@
+/**
+ * @ownedConcern Adapter-side plan admission facade for the canonical
+ * planVersion/schemaVersion compatibility matrix owned by @dvt/contracts.
+ */
+import {
+  EXECUTION_PLAN_ADMISSION_MATRIX,
+  SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS,
+  isAdmittedExecutionPlanPair,
+  type ExecutionPlanAdmissionPair,
+} from '@dvt/contracts';
+
 import { PlanVerifierError } from './errors.js';
 
-export const PLAN_RUNTIME_ADMISSION_MATRIX = {
-  planner: {
-    admittedPlanVersions: ['1.0'],
-  },
-  engine: {
-    admittedPlanVersions: ['1.0'],
-  },
-  'adapter-temporal': {
-    admittedPlanVersions: ['1.0'],
-  },
-} as const;
+export { EXECUTION_PLAN_ADMISSION_MATRIX, SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS };
 
-export type PlanRuntime = keyof typeof PLAN_RUNTIME_ADMISSION_MATRIX;
+const PLAN_ADMISSION_RUNTIMES = ['planner', 'engine', 'adapter-temporal'] as const;
 
-export function getSupportedPlanVersionsForRuntime(runtime: PlanRuntime): readonly string[] {
-  return PLAN_RUNTIME_ADMISSION_MATRIX[runtime].admittedPlanVersions;
-}
+export type PlanRuntime = (typeof PLAN_ADMISSION_RUNTIMES)[number];
 
-export type VerifyPlanVersionParams = {
+export type VerifyPlanAdmissionParams = {
   planVersion: string;
+  schemaVersion: string;
   runtime: PlanRuntime;
 };
 
-/**
- * Plan-version admission gate:
- * - runtime support is governed by PLAN_RUNTIME_ADMISSION_MATRIX.
- * - no semver major/minor fallback is available in active development.
- */
-export function verifyPlanVersionAgainstRuntimeOrThrow(params: VerifyPlanVersionParams): void {
-  const supported = getSupportedPlanVersionsForRuntime(params.runtime);
-  if (!supported.includes(params.planVersion)) {
-    throw new PlanVerifierError(
-      'UNSUPPORTED_PLAN_VERSION',
-      `Unsupported planVersion '${params.planVersion}' for runtime '${params.runtime}'. Supported versions: ${supported.join(', ')}.`
-    );
-  }
+export function getSupportedPlanAdmissionPairsForRuntime(
+  runtime: PlanRuntime
+): readonly ExecutionPlanAdmissionPair[] {
+  assertKnownRuntime(runtime);
+  return SUPPORTED_EXECUTION_PLAN_ADMISSION_PAIRS;
 }
 
-export function verifyPlanVersionOrThrow(params: VerifyPlanVersionParams): void {
-  verifyPlanVersionAgainstRuntimeOrThrow(params);
+export function verifyPlanAdmissionAgainstRuntimeOrThrow(params: VerifyPlanAdmissionParams): void {
+  assertKnownRuntime(params.runtime);
+
+  if (isAdmittedExecutionPlanPair(params.planVersion, params.schemaVersion)) {
+    return;
+  }
+
+  const supportedPairs = getSupportedPlanAdmissionPairsForRuntime(params.runtime)
+    .map((pair) => `${pair.planVersion}/${pair.schemaVersion}`)
+    .join(', ');
+
+  throw new PlanVerifierError(
+    'UNSUPPORTED_PLAN_VERSION',
+    `Unsupported planVersion/schemaVersion admission pair for runtime '${params.runtime}': planVersion '${params.planVersion}' with schemaVersion '${params.schemaVersion}'. Supported pairs: ${supportedPairs}.`
+  );
+}
+
+export function verifyPlanAdmissionOrThrow(params: VerifyPlanAdmissionParams): void {
+  verifyPlanAdmissionAgainstRuntimeOrThrow(params);
+}
+
+function assertKnownRuntime(runtime: PlanRuntime): void {
+  if ((PLAN_ADMISSION_RUNTIMES as readonly string[]).includes(runtime)) {
+    return;
+  }
+
+  throw new PlanVerifierError(
+    'UNSUPPORTED_PLAN_VERSION',
+    `Unsupported plan admission runtime '${runtime}'. Supported runtimes: ${PLAN_ADMISSION_RUNTIMES.join(', ')}.`
+  );
 }

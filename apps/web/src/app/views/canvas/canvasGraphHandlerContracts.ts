@@ -114,6 +114,7 @@ export type CanvasNodeDropEffects = {
 };
 
 export type CanvasNodeDropState = {
+  canonicalNodesById: Map<string, CanonicalNode>;
   draftSession: CanvasDraftSession;
   nodes: Node[];
 };
@@ -155,7 +156,10 @@ export type CanvasAuthoringNodeCreationContracts = {
   policy: CanvasAuthoringNodeCreationPolicy;
 };
 
-export type CreateCanvasAuthoringNode = (registration: NodeKindRegistration) => void;
+export type CreateCanvasAuthoringNode = (
+  registration: NodeKindRegistration,
+  position?: { x: number; y: number }
+) => void;
 
 export type CanvasNodeRemovalState = {
   draftSession: CanvasDraftSession;

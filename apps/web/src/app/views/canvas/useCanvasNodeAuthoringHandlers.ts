@@ -21,6 +21,7 @@ type UseCanvasNodeAuthoringHandlersResult = {
   handleCreateAuthoringNode: CreateCanvasAuthoringNode;
   handleDuplicateNode: (nodeId: string) => void;
   handleRemoveNode: (nodeId: string) => void;
+  handleAttachSchemaToNode: (nodeId: string, schemaName: string) => void;
 };
 
 export function useCanvasNodeAuthoringHandlers({
@@ -30,6 +31,7 @@ export function useCanvasNodeAuthoringHandlers({
 }: UseCanvasNodeAuthoringHandlersArgs): UseCanvasNodeAuthoringHandlersResult {
   const nodeDropContracts: CanvasNodeDropContracts = {
     state: {
+      canonicalNodesById: state.canonicalNodesById,
       draftSession: state.draftSession,
       nodes: state.nodes,
     },
@@ -54,8 +56,7 @@ export function useCanvasNodeAuthoringHandlers({
       allowsCanonicalNode: policy.allowsCanonicalNode,
     },
   };
-  const nodeCreationHandlers =
-    useCanvasAuthoringNodeCreationHandlers(nodeCreationContracts);
+  const nodeCreationHandlers = useCanvasAuthoringNodeCreationHandlers(nodeCreationContracts);
   const nodeDuplicateContracts: CanvasNodeDuplicateContracts = {
     state: {
       canonicalNodesById: state.canonicalNodesById,

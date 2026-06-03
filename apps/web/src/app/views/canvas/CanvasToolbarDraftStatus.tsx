@@ -1,6 +1,7 @@
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { cn } from '../../components/ui/utils';
+import { canvasChromeClasses, resolveCanvasDraftStatusClassName } from './canvasChromeTokens';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 
@@ -20,10 +21,8 @@ export function CanvasToolbarDraftStatus({
           data-slot="canvas-draft-save-status"
           variant="outline"
           className={cn(
-            'h-7 border px-2 text-[11px]',
-            draftToolbarState.tone === 'danger'
-              ? 'border-rose-500/60 bg-rose-950/40 text-rose-100'
-              : 'border-amber-500/60 bg-amber-950/40 text-amber-100'
+            canvasChromeClasses.statusBadge,
+            resolveCanvasDraftStatusClassName(draftToolbarState.tone)
           )}
         >
           {draftToolbarState.label}
@@ -45,7 +44,10 @@ export function CanvasToolbarDraftStatus({
     <Badge
       data-slot="canvas-draft-save-status"
       variant="outline"
-      className="h-7 border-slate-700 bg-slate-950/60 px-2 text-[11px] text-slate-200"
+      className={cn(
+        canvasChromeClasses.statusBadge,
+        resolveCanvasDraftStatusClassName(draftToolbarState.tone)
+      )}
     >
       {draftToolbarState.label}
     </Badge>

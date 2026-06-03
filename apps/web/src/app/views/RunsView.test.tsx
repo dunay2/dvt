@@ -10,7 +10,8 @@ import type { SessionContextPort } from '../ports/sessionContext';
 import { ApiError } from '../services/api/createApiClient';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useExecutionStore } from '../stores/executionStore';
-import { makeRunContext } from '../testing/contractTestUtils';
+import type { RunEvent } from '../types/engine';
+import { iso, makeRunContext, stepId } from '../testing/contractTestUtils';
 import { withTestQueryClient, waitForReactQuery } from '../../testing/reactQueryHarness';
 import RunsView from './RunsView';
 
@@ -46,6 +47,27 @@ function buildRunsService(overrides?: Partial<IRunsPort>): IRunsPort {
     listRunEvents: async () => ({ events: [] }),
     ...overrides,
   };
+}
+
+function buildRunEvent(overrides: Partial<RunEvent>): RunEvent {
+  return {
+    eventId: 'evt-1',
+    eventType: 'StepStarted',
+    runId: 'run_1',
+    emittedAt: iso('2026-05-18T10:00:00.000Z'),
+    tenantId: 'tenant-1',
+    projectId: 'project-1',
+    environmentId: 'env-1',
+    planId: 'plan-1',
+    planVersion: '1.0.0',
+    engineAttemptId: 1,
+    logicalAttemptId: 1,
+    idempotencyKey: 'id-1',
+    payloadVersion: 1,
+    runSeq: 1,
+    persistedAt: iso('2026-05-18T10:00:00.000Z'),
+    ...overrides,
+  } as RunEvent;
 }
 
 describe('RunsView', () => {
@@ -211,6 +233,58 @@ describe('RunsView', () => {
     expect(mounted.container.textContent).toContain('postgres');
     expect(mounted.container.textContent).toContain('step-transform');
     expect(mounted.container.textContent).toContain('STEP_FAILURE');
+  });
+
+  it('renders available run timeline events as a dense semantic table', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          runsService: buildRunsService({
+            getRunSnapshot: async () => ({
+              runId: 'run_table_timeline',
+              status: 'running',
+              executor: 'postgres',
+              startedAt: '2026-05-18T10:00:00.000Z',
+            }),
+            listRunEvents: async () => ({
+              events: [
+                buildRunEvent({
+                  eventId: 'evt-step-started',
+                  eventType: 'StepStarted',
+                  stepId: stepId('step-load'),
+                  payload: { message: 'Loading source rows' },
+                }),
+                buildRunEvent({
+                  eventId: 'evt-run-started',
+                  eventType: 'RunStarted',
+                  runSeq: 2,
+                  emittedAt: iso('2026-05-18T10:00:01.000Z'),
+                }),
+              ],
+            }),
+          }),
+          sessionContext: buildSessionContext(),
+        }}
+      >
+        <MemoryRouter initialEntries={['/runs/run_table_timeline']}>
+          <Routes>
+            <Route path="/runs/:runId" element={<RunsView />} />
+          </Routes>
+        </MemoryRouter>
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('[data-slot="run-event-timeline-table"]') != null,
+      { description: 'run event timeline table' }
+    );
+
+    expect(mounted.container.textContent).toContain('Event timeline');
+    expect(mounted.container.textContent).toContain('Step started');
+    expect(mounted.container.textContent).toContain('Run started');
+    expect(mounted.container.textContent).toContain('step-load');
+    expect(mounted.container.textContent).toContain('Loading source rows');
   });
 
   it('renders the governed list error state for /runs when the summaries query fails', async () => {

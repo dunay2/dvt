@@ -26,6 +26,7 @@ export type CanvasRunStartActionResult = CanvasRunStartActionFailure | CanvasRun
 export async function executeCanvasRunStartAction({
   canRun,
   currentPlan,
+  executableGraphFailureMessage,
   hasPersistedPlanForRun,
   isCurrentPlanStale,
   runsService,
@@ -33,6 +34,7 @@ export async function executeCanvasRunStartAction({
 }: {
   canRun: boolean;
   currentPlan: PlanViewModel | null;
+  executableGraphFailureMessage: string | null;
   hasPersistedPlanForRun: boolean;
   isCurrentPlanStale: boolean;
   runsService: IRunsPort;
@@ -50,6 +52,14 @@ export async function executeCanvasRunStartAction({
     return {
       ok: false,
       message: canvasViewCopy.runNoPlanMessage,
+      shouldOpenPlanModal: false,
+    };
+  }
+
+  if (executableGraphFailureMessage != null) {
+    return {
+      ok: false,
+      message: executableGraphFailureMessage,
       shouldOpenPlanModal: false,
     };
   }

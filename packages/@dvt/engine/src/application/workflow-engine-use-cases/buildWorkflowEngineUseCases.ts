@@ -7,8 +7,9 @@
  */
 import type { IObservability } from '@dvt/observability';
 
-import type { IRunControlService } from '../../domain/IRunControlService.js';
+import type { IRunCommandService } from '../../domain/IRunCommandService.js';
 import type { IRunRecoveryService } from '../../domain/IRunRecoveryService.js';
+import type { IRunSignalService } from '../../domain/IRunSignalService.js';
 import type { IRunStatusQueryService } from '../../domain/IRunStatusQueryService.js';
 import type { IStartRunApplicationService } from '../IStartRunApplicationService.js';
 
@@ -23,7 +24,8 @@ export interface WorkflowEngineUseCaseDeps {
   observability: IObservability;
   startRunApplicationService: IStartRunApplicationService;
   runRecoveryService: IRunRecoveryService;
-  runControlService: IRunControlService;
+  runCommandService: IRunCommandService;
+  runSignalService: IRunSignalService;
   runStatusQueryService: IRunStatusQueryService;
 }
 
@@ -41,13 +43,13 @@ export function buildWorkflowEngineUseCases(
       runRecoveryService: deps.runRecoveryService,
     }),
     cancelRunUseCase: new WorkflowCancelRunUseCase({
-      runControlService: deps.runControlService,
+      runCommandService: deps.runCommandService,
     }),
     runStatusUseCase: new WorkflowRunStatusUseCase({
       runStatusQueryService: deps.runStatusQueryService,
     }),
     signalRunUseCase: new WorkflowSignalRunUseCase({
-      runControlService: deps.runControlService,
+      runSignalService: deps.runSignalService,
     }),
   };
 }
@@ -57,7 +59,8 @@ function assertWorkflowEngineUseCaseDeps(deps: WorkflowEngineUseCaseDeps): void 
     ['observability', deps.observability],
     ['startRunApplicationService', deps.startRunApplicationService],
     ['runRecoveryService', deps.runRecoveryService],
-    ['runControlService', deps.runControlService],
+    ['runCommandService', deps.runCommandService],
+    ['runSignalService', deps.runSignalService],
     ['runStatusQueryService', deps.runStatusQueryService],
   ];
 

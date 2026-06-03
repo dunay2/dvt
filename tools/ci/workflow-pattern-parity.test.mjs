@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Guard GitHub workflow wiring against drift from shared CI scope policies.
+ */
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -30,9 +33,15 @@ const PR_QUALITY_GOVERNANCE_COMMANDS = [
   'pnpm qa:artifact:check',
   'pnpm arch:deps',
 ];
+const DRAFT_AWARE_PR_TYPES =
+  'types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]';
 
 function assertWorkflowContains(workflow, snippet) {
   assert.ok(workflow.includes(snippet), `workflow must include: ${snippet}`);
+}
+
+function countWorkflowCommand(workflow, command) {
+  return workflow.split(command).length - 1;
 }
 
 test('adapter-postgres policy stays wired into the PR quality gate and test workflow', () => {
@@ -46,7 +55,7 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
   assertWorkflowContains(
     testWorkflow,
-    'adapter_postgres_changed: ${{ steps.scope.outputs.postgres_capability_changed }}'
+    'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}'
   );
   assertWorkflowContains(prQualityGate, 'node tools/ci/emit-scope.mjs --mode pr-quality');
   assert.doesNotMatch(testWorkflow, /generate-paths-filter\.js/u);
@@ -131,8 +140,9 @@ test('adapter-postgres policy stays wired into the PR quality gate and test work
   );
   assert.ok(matchesAnyPattern('tsconfig.base.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
   assert.ok(matchesAnyPattern('tsconfig.json', ADAPTER_POSTGRES_RELEVANT_PATTERNS));
-  assert.ok(
-    matchesAnyPattern('.github/workflows/pr-quality-gate.yml', ADAPTER_POSTGRES_RELEVANT_PATTERNS)
+  assert.equal(
+    matchesAnyPattern('.github/workflows/pr-quality-gate.yml', ADAPTER_POSTGRES_RELEVANT_PATTERNS),
+    false
   );
   assert.ok(
     matchesAnyPattern('apps/outbox-worker/src/server.ts', TEST_SCOPE_PATTERNS.outbox_worker)
@@ -167,7 +177,9 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
 
   assertWorkflowContains(ciWorkflow, 'name: CI tool contracts');
-  assertWorkflowContains(ciWorkflow, 'run: pnpm test:ci-tools');
+  assertWorkflowContains(ciWorkflow, 'node tools/ci/ci-tool-test-suite.mjs static');
+  assertWorkflowContains(ciWorkflow, 'name: CI tool executable contracts');
+  assertWorkflowContains(ciWorkflow, 'pnpm test:ci-tools:executable');
   assertWorkflowContains(
     ciWorkflow,
     'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
@@ -177,6 +189,13 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
   assertWorkflowContains(
     ciWorkflow,
     'changed_file_validation_relevant: ${{ steps.scope.outputs.changed_file_validation_relevant }}'
+  );
+  assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.security_analysis_relevant');
+  assertWorkflowContains(ciWorkflow, 'ci_tool_executable_contracts_relevant:');
+  assertWorkflowContains(ciWorkflow, 'steps.scope.outputs.ci_tool_executable_contracts_relevant');
+  assertWorkflowContains(
+    ciWorkflow,
+    "needs.detect-affected.outputs.ci_tool_executable_contracts_relevant == 'true'"
   );
   assertWorkflowContains(
     ciWorkflow,
@@ -199,6 +218,9 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     generated_status_relevant: workflowScopePolicy.generated_status_relevant,
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
     changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
+    security_analysis_relevant: workflowScopePolicy.security_analysis_relevant,
+    ci_tool_executable_contracts_relevant:
+      workflowScopePolicy.ci_tool_executable_contracts_relevant,
   });
 });
 
@@ -208,6 +230,15 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
 
   assertWorkflowContains(contractsWorkflow, 'node tools/ci/emit-scope.mjs --mode contracts');
   assertWorkflowContains(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test');
+  assertWorkflowContains(testWorkflow, 'node tools/ci/emit-test-matrix.mjs');
+  assertWorkflowContains(testWorkflow, 'name: Package Tests (${{ matrix.name }})');
+  assertWorkflowContains(
+    testWorkflow,
+    'matrix: ${{ fromJSON(needs.detect_test_matrix.outputs.matrix) }}'
+  );
+  assertWorkflowContains(testWorkflow, 'run: ${{ matrix.command }}');
+  assertWorkflowContains(testWorkflow, 'name: Adapter Temporal Tests');
+  assertWorkflowContains(testWorkflow, 'steps.scope.outputs.adapter_temporal');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.determinism_relevant');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.coverage_relevant');
   assertWorkflowContains(testWorkflow, 'steps.scope.outputs.root_build_sensitive');
@@ -218,12 +249,141 @@ test('contracts and test workflows consume semantic scope outputs instead of inl
   assert.doesNotMatch(testWorkflow, /steps\.cov_changes\.outputs/u);
 });
 
+test('Test Suite heavy PR lanes are gated at job level by one detector', () => {
+  const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
+
+  assertWorkflowContains(testWorkflow, DRAFT_AWARE_PR_TYPES);
+  assertWorkflowContains(testWorkflow, 'github.event.pull_request.draft');
+  assert.equal(countWorkflowCommand(testWorkflow, 'node tools/ci/emit-scope.mjs --mode test'), 1);
+  assert.equal(
+    countWorkflowCommand(
+      testWorkflow,
+      'node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json'
+    ),
+    1
+  );
+
+  for (const output of [
+    'adapter_temporal: ${{ steps.scope.outputs.adapter_temporal }}',
+    'web: ${{ steps.scope.outputs.web }}',
+    'root_build_sensitive: ${{ steps.scope.outputs.root_build_sensitive }}',
+    'determinism_relevant: ${{ steps.scope.outputs.determinism_relevant }}',
+    'coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}',
+    'postgres_capability_changed: ${{ steps.scope.outputs.postgres_capability_changed }}',
+  ]) {
+    assertWorkflowContains(testWorkflow, output);
+  }
+
+  for (const predicate of [
+    "needs.detect_test_matrix.outputs.adapter_temporal == 'true'",
+    "needs.detect_test_matrix.outputs.web == 'true'",
+    "needs.detect_test_matrix.outputs.determinism_relevant == 'true'",
+    "needs.detect_test_matrix.outputs.coverage_relevant == 'true'",
+    "needs.detect_test_matrix.outputs.postgres_capability_changed == 'true'",
+  ]) {
+    assertWorkflowContains(testWorkflow, predicate);
+  }
+});
+
+test('draft-skipped PR workflows re-evaluate gates when reviewability changes', () => {
+  const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const codeql = readFileSync('.github/workflows/codeql.yml', 'utf8');
+  const dependencyReview = readFileSync('.github/workflows/dependency-review.yml', 'utf8');
+
+  for (const workflow of [contractsWorkflow, prQualityGate, codeql, dependencyReview]) {
+    assertWorkflowContains(workflow, DRAFT_AWARE_PR_TYPES);
+    assertWorkflowContains(workflow, 'github.event.pull_request.draft');
+  }
+
+  assertWorkflowContains(contractsWorkflow, 'name: Detect contracts/determinism scope');
+});
+
+test('engine coverage scope is a semantic superset of engine workspace policy', () => {
+  for (const pattern of workflowScopePolicy.workspace_engine) {
+    assert.ok(
+      TEST_SCOPE_PATTERNS.coverage_relevant.includes(pattern),
+      `coverage_relevant must include engine workspace policy pattern: ${pattern}`
+    );
+  }
+
+  const engineCoverageCanaries = [
+    'packages/@dvt/engine/vitest.config.ts',
+    'packages/@dvt/engine/src/WorkflowEngine.ts',
+    'packages/@dvt/engine/test/contracts/RunLifecycle.contract.test.ts',
+  ];
+
+  for (const path of engineCoverageCanaries) {
+    assert.ok(matchesAnyPattern(path, workflowScopePolicy.workspace_engine));
+    assert.ok(matchesAnyPattern(path, TEST_SCOPE_PATTERNS.coverage_relevant));
+  }
+});
+
 test('PR quality gate keeps merge-blocking governance commands wired', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+
+  assertWorkflowContains(prQualityGate, 'pnpm docs:gov:locations -- --changed-only');
+  assert.doesNotMatch(
+    prQualityGate,
+    /if:\s*github\.event_name == 'pull_request'[^\n]*steps\.scope\.outputs\.docs_changed[^\n]*\n\s*run: pnpm docs:gov:locations\n/u
+  );
 
   for (const command of PR_QUALITY_GOVERNANCE_COMMANDS) {
     assertWorkflowContains(prQualityGate, command);
   }
+});
+
+test('PR quality gate consumes prepush-equivalent scope outputs for expensive gates', () => {
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+
+  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.governance_global_relevant');
+  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.traceability_adr0_relevant');
+  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.feature_mechanization_relevant');
+  assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
+});
+
+test('scope diff consumers use shallow checkout instead of full PR history', () => {
+  const fetchScopeBaseAction = readFileSync('.github/actions/fetch-scope-base/action.yml', 'utf8');
+  const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const contractsWorkflow = readFileSync('.github/workflows/contracts.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
+  const workflowBundle = [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow].join('\n');
+
+  assertWorkflowContains(fetchScopeBaseAction, 'git fetch --no-tags --depth=1 origin');
+  assertWorkflowContains(fetchScopeBaseAction, 'BASE_REF: ${{ inputs.base-ref }}');
+  assertWorkflowContains(
+    fetchScopeBaseAction,
+    '+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}'
+  );
+
+  for (const workflow of [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow]) {
+    assertWorkflowContains(workflow, 'uses: ./.github/actions/fetch-scope-base');
+  }
+
+  assertWorkflowContains(workflowBundle, 'fetch-depth: 1');
+  assert.doesNotMatch(workflowBundle, /fetch-depth:\s*0/u);
+  assert.doesNotMatch(
+    workflowBundle,
+    /fetch-depth:\s*\$\{\{\s*github\.event_name == 'pull_request' && '0' \|\| '1'\s*\}\}/u
+  );
+});
+
+test('PR quality gate is the single remote owner for ADR-0000 traceability', () => {
+  const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+
+  assert.equal(countWorkflowCommand(prQualityGate, 'pnpm traceability:adr0'), 1);
+  assert.equal(countWorkflowCommand(ciWorkflow, 'pnpm traceability:adr0'), 0);
+});
+
+test('release workflow stays action-only until it needs repository tooling', () => {
+  const releaseWorkflow = readFileSync('.github/workflows/release.yml', 'utf8');
+
+  assertWorkflowContains(releaseWorkflow, 'googleapis/release-please-action@');
+  assert.doesNotMatch(releaseWorkflow, /actions\/checkout/u);
+  assert.doesNotMatch(releaseWorkflow, /\.\/\.github\/actions\/setup-node-pnpm/u);
+  assert.doesNotMatch(releaseWorkflow, /\bpnpm\s+/u);
 });
 
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {
@@ -243,17 +403,29 @@ test('security and nightly workflows stay wired to pinned actions and failure no
     'actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0'
   );
   assertWorkflowContains(dependencyReview, 'fail-on-severity: high');
+  assertWorkflowContains(dependencyReview, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
+  assertWorkflowContains(dependencyReview, "github.event.repository.visibility == 'public'");
 
   assertWorkflowContains(
     codeql,
-    'github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2'
+    'github/codeql-action/init@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0'
   );
   assertWorkflowContains(
     codeql,
-    'github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4.35.2'
+    'github/codeql-action/analyze@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0'
   );
   assertWorkflowContains(codeql, 'security-events: write');
   assertWorkflowContains(codeql, 'javascript-typescript');
+  assertWorkflowContains(codeql, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
+  assertWorkflowContains(codeql, "github.event.repository.visibility == 'public'");
+  assertWorkflowContains(codeql, 'name: Detect security analysis scope');
+  assertWorkflowContains(codeql, 'node tools/ci/emit-scope.mjs --mode workflow');
+  assertWorkflowContains(codeql, 'security_analysis_relevant:');
+  assertWorkflowContains(
+    codeql,
+    "needs.detect-security-scope.outputs.security_analysis_relevant == 'true'"
+  );
+  assert.doesNotMatch(codeql, /paths-ignore/u);
 
   assertWorkflowContains(nightly, 'issues: write');
   assertWorkflowContains(nightly, 'name: Notify nightly failure');
@@ -261,7 +433,11 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   assertWorkflowContains(nightly, 'gh issue create --title "${NIGHTLY_ISSUE_TITLE}"');
   assertWorkflowContains(
     nightly,
-    'pnpm --workspace-concurrency=4 --filter @dvt/adapter-postgres... --if-present run build'
+    'node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-postgres...'
+  );
+  assert.doesNotMatch(
+    nightly,
+    /pnpm --workspace-concurrency=4 --filter @dvt\/adapter-postgres\.\.\. --if-present run build/u
   );
 
   assertWorkflowContains(
@@ -282,5 +458,9 @@ test('security and nightly workflows stay wired to pinned actions and failure no
     /DATABASE_URL:\s+postgresql:\/\/dvt_test:\$\{\{\s*github\.run_id\s*\}\}@localhost:5432\/dvt_test/
   );
 
-  assertWorkflowContains(setupNodePnpm, 'tools/*/node_modules');
+  assert.doesNotMatch(setupNodePnpm, /Cache node_modules/u);
+  assert.doesNotMatch(setupNodePnpm, /nm-cache/u);
+  assert.doesNotMatch(setupNodePnpm, /(?:^|\s)tools\/\*\/node_modules(?:\s|$)/u);
+  assertWorkflowContains(setupNodePnpm, "default: '--frozen-lockfile --prefer-offline'");
+  assertWorkflowContains(setupNodePnpm, 'run: pnpm install ${{ inputs.install-args }}');
 });

@@ -49,10 +49,15 @@ test('shouldBootstrapLocalProtectedRuntimeAuth only when the protected-runtime O
   );
 });
 
-test('local protected-runtime tenant actions include workspace graph draft and file reads', () => {
+test('local protected-runtime tenant actions include workspace authoring, files, plugins, and source import', () => {
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:graph-draft:view'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:graph-draft:save'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:files:view'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:files:save'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:diff:view'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:plugins:view'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-import:view'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-import:import'));
 });
 
 test('startLocalProtectedRuntimeAuth provides OIDC env and a bearer token for the coordinated dev stack', async () => {
@@ -93,6 +98,47 @@ test('startLocalProtectedRuntimeAuth issues a bounded local dev bearer token by 
     assert.equal(typeof payload.iat, 'number');
     assert.equal(typeof payload.exp, 'number');
     assert.equal(payload.exp - payload.iat, 24 * 60 * 60);
+  } finally {
+    await bootstrap.close();
+  }
+});
+
+test('startLocalProtectedRuntimeAuth publishes tenant actions for frontend permissions', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth();
+
+  try {
+    const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+    const scopes = typeof payload.scope === 'string' ? payload.scope.split(' ') : [];
+
+    assert.ok(scopes.includes('dvt:runtime'));
+    assert.ok(scopes.includes('run:start'));
+    assert.ok(scopes.includes('workspace:graph-draft:view'));
+    assert.ok(scopes.includes('workspace:graph-draft:save'));
+    assert.ok(scopes.includes('workspace:files:save'));
+    assert.ok(scopes.includes('workspace:diff:view'));
+    assert.ok(scopes.includes('workspace:plugins:view'));
+    assert.ok(scopes.includes('workspace:source-import:view'));
+    assert.ok(scopes.includes('workspace:source-import:import'));
+  } finally {
+    await bootstrap.close();
+  }
+});
+
+test('startLocalProtectedRuntimeAuth can assert additional live-proof project ids', async () => {
+  const bootstrap = await startLocalProtectedRuntimeAuth({
+    env: {
+      VITE_DEFAULT_PROJECT_ID: 'project-dev-test',
+    },
+    additionalProjectIds: ['project-dev-test-dynamic-a', 'project-dev-test-dynamic-b'],
+  });
+
+  try {
+    const payload = decodeJwtPayload(bootstrap.webEnv.VITE_API_BEARER_TOKEN);
+    assert.deepEqual(payload.project_ids, [
+      'project-dev-test',
+      'project-dev-test-dynamic-a',
+      'project-dev-test-dynamic-b',
+    ]);
   } finally {
     await bootstrap.close();
   }

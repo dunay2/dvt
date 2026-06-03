@@ -162,4 +162,14 @@ describe('startRunRoute validation', () => {
     expect(reply.statusCode).toBe(400);
     expect(reply.payload).toEqual(expectedPayload);
   });
+
+  it('returns 400 when the platform run-id generator violates the governed run_<UUIDv7> shape', async () => {
+    const { reply } = await invokeStartRunRoute({
+      facade: REJECTING_FACADE,
+      runIdGenerator: () => 'run_generated_test',
+    });
+
+    expect(reply.statusCode).toBe(400);
+    expect(reply.payload).toEqual(httpError('bad_request', 'invalid_run_id', { target: 'runId' }));
+  });
 });

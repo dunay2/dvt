@@ -1,8 +1,10 @@
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
+import { createTestQueryClient } from '../../../testing/reactQueryHarness';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -16,6 +18,7 @@ import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
+import type { CanvasExecutionDraftGraph } from './canvasExecutionActions.types';
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 
 export type PreviewProvenanceConfig = Pick<
@@ -42,6 +45,7 @@ type ExecutionActionsHookCommonProps = Readonly<{
   executionStrategy: CanvasExecutionStrategy;
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
   consolePanelVisible: boolean;
@@ -76,8 +80,10 @@ export type RenderExecutionActionsHarnessArgs = {
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
   executionStrategy?: CanvasExecutionStrategy;
+  executionEnvironmentId?: string;
   selectedNodeIds?: string[];
   workspaceNodeIds?: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan?: boolean;
   canRun?: boolean;
   consolePanelVisible?: boolean;
@@ -100,6 +106,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'workspaceFilesQuery'
   | 'workspaceFileContentCommand'
   | 'previewProvenanceConfig'
+  | 'flushDraftForExecution'
   | 'canPlan'
   | 'canRun'
   | 'consolePanelVisible'
@@ -118,8 +125,10 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   executionStrategy: CanvasExecutionStrategy;
+  executionEnvironmentId?: string;
   selectedNodeIds: string[];
   workspaceNodeIds?: string[];
+  flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
   consolePanelVisible: boolean;
@@ -146,7 +155,12 @@ function ExecutionActionsHookView({
   return (
     <div>
       <div data-testid="plan-modal-state">{String(hook.planModalOpen)}</div>
+      <div data-testid="can-plan-graph">{String(hook.canPlanGraph)}</div>
       <div data-testid="can-start-run">{String(hook.canStartRun)}</div>
+      <div data-testid="plan-run-readiness-status">{hook.planRunReadiness.status}</div>
+      <div data-testid="plan-run-readiness-blockers">
+        {hook.planRunReadiness.blockers.join(',') || 'none'}
+      </div>
       <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
       <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
       <button
@@ -211,8 +225,14 @@ function resolveCommonHookProps(
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
     executionStrategy: args.executionStrategy,
+    ...(args.executionEnvironmentId == null
+      ? {}
+      : { executionEnvironmentId: args.executionEnvironmentId }),
     selectedNodeIds: args.selectedNodeIds,
     workspaceNodeIds: args.workspaceNodeIds ?? args.canonicalNodes.map((node) => node.id),
+    ...(args.flushDraftForExecution == null
+      ? {}
+      : { flushDraftForExecution: args.flushDraftForExecution }),
     canPlan: args.canPlan,
     canRun: args.canRun,
     consolePanelVisible: args.consolePanelVisible,
@@ -253,6 +273,9 @@ function resolveHarnessArgs(
       kind: 'transformation_preview',
       previewProfile: 'transformation-sql-first-v1',
     },
+    ...(args.executionEnvironmentId == null
+      ? {}
+      : { executionEnvironmentId: args.executionEnvironmentId }),
     selectedNodeIds: args.selectedNodeIds ?? [],
     canPlan: args.canPlan ?? true,
     canRun: args.canRun ?? true,
@@ -469,20 +492,24 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   setConsolePanelHeight: ResolvedExecutionActionsHarnessArgs['setConsolePanelHeight'];
   toggleConsolePanel: ResolvedExecutionActionsHarnessArgs['toggleConsolePanel'];
+  queryClient: QueryClient;
 } {
   let currentArgs = resolveHarnessArgs(initialArgs);
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root: Root = createRoot(container);
+  const queryClient = createTestQueryClient();
 
   function buildElement(): React.JSX.Element {
     const commonProps = resolveCommonHookProps(currentArgs);
 
-    return currentArgs.stateful ? (
+    const host = currentArgs.stateful ? (
       <StatefulExecutionActionsHookHost {...commonProps} initialPlan={currentArgs.initialPlan} />
     ) : (
       <ControlledExecutionActionsHookHost {...commonProps} currentPlan={currentArgs.currentPlan} />
     );
+
+    return <QueryClientProvider client={queryClient}>{host}</QueryClientProvider>;
   }
 
   function queryButton(index: number): Element | null {
@@ -530,6 +557,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
     setConsolePanelHeight: currentArgs.setConsolePanelHeight,
     toggleConsolePanel: currentArgs.toggleConsolePanel,
+    queryClient,
   };
 }
 

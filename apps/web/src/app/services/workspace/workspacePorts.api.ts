@@ -7,14 +7,14 @@ import type {
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
-  IWorkspacePluginCatalogQueryPort,
   WorkspaceFileEntry,
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
+import type { DiffChange } from '../../types/dbt';
 import { ApiError, type ApiClient } from '../api/createApiClient';
-import { detectWorkspacePortLocale, resolveWorkspacePortCopy } from './workspacePortCopy';
 import {
   WorkspaceApiCapabilityUnsupportedError,
   WorkspaceFileLoadError,
@@ -22,11 +22,16 @@ import {
   type WorkspaceApiUnsupportedRail,
 } from './workspaceErrors';
 import {
+  buildWorkspaceDiffChangesEndpoint,
+  readWorkspaceDiffChangesScope,
+} from './workspaceDiffChangesHttp';
+import {
   buildWorkspaceFileContentEndpoint,
   buildWorkspaceFilesEndpoint,
   readWorkspaceFilesScope,
   WORKSPACE_FILES_HTTP_ERROR_REASON,
 } from './workspaceFilesHttp';
+import { buildWorkspaceFileHistoryEndpoint } from './workspaceFileHistoryHttp';
 import {
   buildWorkspaceGraphDraftEndpoint,
   createRequestFailedApiError,
@@ -38,7 +43,7 @@ import {
 import { projectWorkspaceGraphDraftReadResponseSnapshot } from './workspaceGraphDraftSnapshotProjection';
 
 export const apiWorkspacePortCapabilities = {
-  sourceImportAvailable: false,
+  sourceImportAvailable: true,
 } as const;
 
 function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
@@ -87,17 +92,21 @@ export function createApiWorkspaceGraphSnapshotQueryPort(
   };
 }
 
-export function createApiWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
+export function createApiWorkspaceDiffQueryPort(apiClient: ApiClient): IWorkspaceDiffQueryPort {
   return {
     getDiffChanges: () =>
-      rejectUnsupportedApiWorkspaceCapability('workspace.diffChanges', 'GetWorkspaceDiffChanges'),
+      apiClient.getJson<DiffChange[]>(
+        buildWorkspaceDiffChangesEndpoint(readWorkspaceDiffChangesScope())
+      ),
   };
 }
 
-export function createApiWorkspacePluginCatalogQueryPort(): IWorkspacePluginCatalogQueryPort {
+export function createApiWorkspaceFileHistoryQueryPort(
+  apiClient: ApiClient
+): IWorkspaceFileHistoryQueryPort {
   return {
-    getPlugins: () =>
-      rejectUnsupportedApiWorkspaceCapability('workspace.plugins', 'ListWorkspacePlugins'),
+    getFileHistory: (path) =>
+      apiClient.getJson(buildWorkspaceFileHistoryEndpoint(path, readWorkspaceFilesScope())),
   };
 }
 
@@ -110,23 +119,41 @@ export function createApiWorkspaceAdminReadPort(): IWorkspaceAdminReadPort {
   };
 }
 
-export function createApiWarehouseSourceImportPort(): IWarehouseSourceImportPort {
+function buildWarehouseConnectionsEndpoint(): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/warehouse/connections?tenantId=${encodeURIComponent(
+    scope.tenantId
+  )}&projectId=${encodeURIComponent(scope.projectId)}&environmentId=${encodeURIComponent(
+    scope.environmentId
+  )}`;
+}
+
+function buildWarehouseConnectionTablesEndpoint(connectionId: string): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/warehouse/connections/${encodeURIComponent(
+    connectionId
+  )}/tables?tenantId=${encodeURIComponent(scope.tenantId)}&projectId=${encodeURIComponent(
+    scope.projectId
+  )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
+}
+
+function buildWarehouseSourcesImportEndpoint(): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/sources/import?tenantId=${encodeURIComponent(
+    scope.tenantId
+  )}&projectId=${encodeURIComponent(scope.projectId)}&environmentId=${encodeURIComponent(
+    scope.environmentId
+  )}`;
+}
+
+export function createApiWarehouseSourceImportPort(
+  apiClient: ApiClient
+): IWarehouseSourceImportPort {
   return {
-    listWarehouseConnections: async () => {
-      throw new Error(
-        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
-      );
-    },
-    listWarehouseTables: async () => {
-      throw new Error(
-        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
-      );
-    },
-    importSources: async () => {
-      throw new Error(
-        resolveWorkspacePortCopy(detectWorkspacePortLocale()).warehouseImportApiModeUnavailable
-      );
-    },
+    listWarehouseConnections: () => apiClient.getJson(buildWarehouseConnectionsEndpoint()),
+    listWarehouseTables: (connectionId) =>
+      apiClient.getJson(buildWarehouseConnectionTablesEndpoint(connectionId)),
+    importSources: (input) => apiClient.postJson(buildWarehouseSourcesImportEndpoint(), input),
   };
 }
 
@@ -152,9 +179,14 @@ export function createApiWorkspaceFilesQueryPort(apiClient: ApiClient): IWorkspa
   };
 }
 
-export function createApiWorkspaceFileContentCommandPort(): IWorkspaceFileContentCommandPort {
+export function createApiWorkspaceFileContentCommandPort(
+  apiClient: ApiClient
+): IWorkspaceFileContentCommandPort {
   return {
-    saveFileContent: () =>
-      rejectUnsupportedApiWorkspaceCapability('workspace.fileWrite', 'SaveWorkspaceFileContent'),
+    saveFileContent: (path, content) =>
+      apiClient.postJson<{ content: string }, FileContent>(
+        buildWorkspaceFileContentEndpoint(path, readWorkspaceFilesScope()),
+        { content }
+      ),
   };
 }

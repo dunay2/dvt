@@ -4,7 +4,7 @@ import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import { resolveCanvasViewCopy } from './copy';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import {
-  createReplaceCurrentCanvasDocumentCommand,
+  createNewCanvasDocumentCommand,
   hasRenderableCanvasTabs,
   resolveCanvasReplacementActionState,
 } from './canvasPlaygroundTabStripModel';
@@ -20,6 +20,21 @@ const transformationCanvasKind: CanvasKindRegistration = {
     editableMessage: 'Add governed nodes to start authoring.',
     firstNodeLabel: 'Add first node',
     firstNodeHelper: 'Choose a node kind.',
+  },
+  nodeKinds: [],
+};
+
+const dbtCanvasKind: CanvasKindRegistration = {
+  kind: 'dbt',
+  pluginId: 'dbt',
+  label: 'dbt',
+  description: 'Author dbt projects.',
+  createTitle: 'dbt canvas',
+  emptyState: {
+    title: 'No dbt content loaded',
+    editableMessage: 'Add dbt resources to start authoring.',
+    firstNodeLabel: 'Add first dbt node',
+    firstNodeHelper: 'Choose a dbt resource.',
   },
   nodeKinds: [],
 };
@@ -59,16 +74,39 @@ describe('canvas playground tab strip model', () => {
         dialogDescription: copy.replaceCanvasMessage,
         cancelLabel: copy.replaceCanvasCancelLabel,
         confirmLabel: copy.replaceCanvasConfirmLabel,
+        templateLabel: copy.routeNeedsCanvasTemplateLabel,
+        templateOptions: [
+          {
+            kind: 'transformation',
+            title: 'Transformation canvas',
+            description: 'Author transformation pipelines.',
+          },
+        ],
       },
     });
   });
 
-  it('keeps replacement command construction out of the presentation template', () => {
-    expect(createReplaceCurrentCanvasDocumentCommand(transformationCanvasKind)).toEqual({
+  it('keeps new-canvas command construction out of the presentation template', () => {
+    expect(createNewCanvasDocumentCommand(transformationCanvasKind)).toEqual({
       kind: 'transformation',
       title: 'Transformation canvas',
-      mode: 'replace_current',
+      mode: 'create_new',
     });
+  });
+
+  it('offers every registered canvas runtime template for replacement', () => {
+    const state = resolveCanvasReplacementActionState({
+      tabState: populatedTabState,
+      availableCanvasKinds: [dbtCanvasKind, transformationCanvasKind],
+      canEditEdges: true,
+      onCreateCanvasDocument: vi.fn(),
+      copy: resolveCanvasViewCopy('en-US'),
+    });
+
+    expect(state.viewState.templateOptions.map((option) => option.kind)).toEqual([
+      'dbt',
+      'transformation',
+    ]);
   });
 
   it('fails closed when no authoritative canvas tab can be rendered', () => {

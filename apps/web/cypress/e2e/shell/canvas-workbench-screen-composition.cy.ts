@@ -1,0 +1,146 @@
+/** Owned concern: verify the governed Canvas entry screen chrome in browser e2e. */
+import {
+  WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+} from '../../../src/app/services/workspace/workspaceGraphDraftProtocol';
+import { buildDraftSaveSavedResponse } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import { stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  E2E_WORKSPACE_SESSION,
+  stubShellBootstrapApis,
+  visitWithE2eWorkspaceSession,
+} from '../../support/workspaceSession';
+
+describe('Canvas workbench screen composition', () => {
+  beforeEach(() => {
+    cy.viewport(1544, 868);
+    stubShellBootstrapApis();
+    stubE2eJsonApi('GET', '/capabilities', {
+      apiVersion: '1.0.0',
+      minFrontendVersion: '0.0.1',
+      plugins: {
+        dbt: { available: true },
+        dvt: { available: true },
+      },
+    });
+    stubE2eJsonApi('GET', '/workspace/context', {
+      effectiveWorkspace: E2E_WORKSPACE_SESSION,
+      availableWorkspaces: [E2E_WORKSPACE_SESSION],
+    });
+    stubE2eJsonApi(
+      'GET',
+      '/workspace/graph/draft',
+      {
+        error: {
+          type: 'not_found',
+          reason: 'workspace_graph_draft_not_found',
+        },
+      },
+      { statusCode: 404 }
+    );
+    stubE2eApi('PUT', '/workspace/graph/draft', ({ body }) => {
+      const saveRequest = body as {
+        scope: typeof E2E_WORKSPACE_SESSION;
+        schemaVersion: string;
+        expectedRevision: string;
+        draft: {
+          canvas: {
+            kind: string;
+            title: string;
+          };
+          nodeIds: string[];
+          nodes: unknown[];
+          edges: unknown[];
+        };
+      };
+
+      expect(saveRequest).to.deep.include({
+        scope: E2E_WORKSPACE_SESSION,
+        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        expectedRevision: WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+      });
+      expect(saveRequest.draft).to.deep.include({
+        canvas: {
+          kind: 'transformation',
+          title: 'Transformation canvas',
+        },
+        nodeIds: [],
+        nodes: [],
+        edges: [],
+      });
+
+      return {
+        body: buildDraftSaveSavedResponse(E2E_WORKSPACE_SESSION, {
+          revision: 'rev-e2e-first-canvas',
+        }),
+      };
+    });
+  });
+
+  it('keeps Canvas startup commands route-local and exposes global navigation in the menu', () => {
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        Object.defineProperty(window.navigator, 'language', {
+          configurable: true,
+          value: 'es-ES',
+        });
+        Object.defineProperty(window.navigator, 'languages', {
+          configurable: true,
+          value: ['es-ES'],
+        });
+        window.document.documentElement.lang = 'es-ES';
+      },
+    });
+
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+    cy.get('[data-slot="app-shell-left-navigation"]').should('not.exist');
+    cy.get('[data-slot="shell-top-bar"]').as('topBar');
+    cy.get('@topBar').should('contain.text', 'Raven');
+    cy.get('@topBar').should('contain.text', 'Vista');
+    cy.get('@topBar').should('contain.text', 'Workspace');
+    cy.get('@topBar').find('[data-slot="shell-project-identity-badge"]').should('not.exist');
+    cy.get('@topBar').find('[data-slot="shell-workspace-context-trigger"]').should('not.exist');
+    cy.get('@topBar').find('[data-slot="shell-git-ref"]').should('not.exist');
+    cy.get('@topBar').find('[data-slot="shell-top-bar-canvas-controls"]').should('not.exist');
+    cy.get('@topBar').should('not.contain.text', 'Plan');
+    cy.get('@topBar').should('not.contain.text', 'Ejecutar');
+    cy.get('@topBar').should('not.contain.text', 'Exportar');
+    cy.get('@topBar').should('not.contain.text', 'Importar');
+
+    cy.get('[data-slot="canvas-playground-empty-state"]').should('be.visible');
+    cy.contains('Crear canvas en este workspace').should('be.visible');
+    cy.contains('Canvas dbt').should('be.visible');
+    cy.contains('Canvas de transformacion').should('be.visible');
+    cy.contains('button', 'Canvas de transformacion').should('not.be.disabled');
+    cy.contains('Flow-based transformation canvas').should('not.exist');
+    cy.get('[data-slot="canvas-toolbar-plan-command"]').should('not.exist');
+    cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
+
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
+    cy.contains('Contexto del workspace').should('not.exist');
+    cy.contains('Contexto Git').should('not.exist');
+    cy.contains('Opciones de vista').should('be.visible');
+    cy.get('body').type('{esc}');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-menu-navigation-link"]').then(($links) => {
+      expect([...$links].map((link) => link.getAttribute('href'))).to.deep.equal([
+        '/canvas',
+        '/runs',
+        '/templates',
+        '/plugins',
+        '/admin',
+      ]);
+    });
+    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Plugins').should('be.visible');
+    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Admin').should('be.visible');
+    cy.contains('Contexto del workspace').should('be.visible');
+    cy.contains('Contexto Git').should('be.visible');
+    cy.get('body').type('{esc}');
+
+    cy.contains('button', 'Canvas de transformacion').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+  });
+});

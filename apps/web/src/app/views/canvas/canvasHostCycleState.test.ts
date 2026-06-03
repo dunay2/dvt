@@ -72,13 +72,22 @@ function buildArgs(
       bootstrapDetail: 'ready',
       canCompleteBootstrap: true,
     },
+    workspaceScope: {
+      tenantId: 'tenant-a',
+      projectId: 'project-orders',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    },
     startupBlockState: null,
     workbenchErrorMessage: null,
     canvasDocument: null,
     draftSaveStatus: 'saved',
     availableCanvasKinds: buildCanvasKinds(),
+    canCreateCanvasDocument: true,
     canEditEdges: true,
     canOpenSourceImport: true,
+    emptyStateGuideVisible: true,
+    onEmptyStateGuideVisibilityChange: vi.fn(),
     onCreateCanvasDocument: vi.fn(),
     onCreateAuthoringNode: vi.fn(),
     ...overrides,
@@ -93,6 +102,41 @@ describe('canvasHostCycleState', () => {
       kind: 'needs_canvas',
       availableCanvasKinds: buildCanvasKinds(),
       onCreateCanvasDocument: expect.any(Function),
+      unavailableMessage: null,
+    });
+  });
+
+  it('keeps read-only needs-canvas posture explicit and non-mutating', () => {
+    const cycle = deriveCanvasHostCycleState(
+      buildArgs({
+        canCreateCanvasDocument: false,
+        canEditEdges: false,
+      })
+    );
+
+    expect(cycle).toEqual({
+      kind: 'needs_canvas',
+      availableCanvasKinds: buildCanvasKinds(),
+      onCreateCanvasDocument: undefined,
+      unavailableMessage: canvasViewCopy.routeNeedsCanvasReadOnlyMessage,
+    });
+  });
+
+  it('keeps first-canvas document creation independent from graph edge mutation', () => {
+    const onCreateCanvasDocument = vi.fn();
+    const cycle = deriveCanvasHostCycleState(
+      buildArgs({
+        canCreateCanvasDocument: true,
+        canEditEdges: false,
+        onCreateCanvasDocument,
+      })
+    );
+
+    expect(cycle).toEqual({
+      kind: 'needs_canvas',
+      availableCanvasKinds: buildCanvasKinds(),
+      onCreateCanvasDocument,
+      unavailableMessage: null,
     });
   });
 

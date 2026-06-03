@@ -10,7 +10,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const yaml = require('js-yaml');
-const { findOwnerMatches, readManifest } = require('./check-governance-unit-coverage.cjs');
+const { buildOwnerMatcher, readManifest } = require('./check-governance-unit-coverage.cjs');
 const {
   generatedStatusDir,
   governanceGeneratedPath,
@@ -150,10 +150,14 @@ function findUnitByLevel(unitPath, level) {
   return unitPath.find((unit) => unit.level === level)?.id;
 }
 
+function findLastUnitByLevel(unitPath, level) {
+  return [...unitPath].reverse().find((unit) => unit.level === level)?.id;
+}
+
 function buildHierarchy(unit, unitById) {
   const unitPath = buildUnitPath(unit, unitById);
   const rootUnit = unitPath[0]?.id || unit?.id || 'UNOWNED';
-  const componentUnit = findUnitByLevel(unitPath, 'component') || unit?.id || 'UNOWNED';
+  const componentUnit = findLastUnitByLevel(unitPath, 'component') || unit?.id || 'UNOWNED';
   const domainUnit = findUnitByLevel(unitPath, 'domain') || rootUnit;
 
   return {
@@ -297,9 +301,10 @@ function buildFileFingerprints(filePath, contentBytes, governancePayload) {
 
 function buildFileEntries(files, units, options = {}, unitById = buildUnitIndex(units)) {
   const readFileBytes = options.readFileBytes || readTrackedFileBytes;
+  const ownerMatcher = options.ownerMatcher || buildOwnerMatcher(units);
 
   return files.map((filePath) => {
-    const matches = findOwnerMatches(filePath, units);
+    const matches = ownerMatcher(filePath);
     const owner = matches[0];
     const hierarchy = buildHierarchy(owner, unitById);
     const semantics = deriveGovernanceSemantics(owner?.status, owner?.level || 'unowned');
@@ -376,7 +381,7 @@ function countBy(entries, key) {
 
 function renderYaml(payload) {
   return yaml.dump(payload, {
-    lineWidth: 100,
+    lineWidth: 1000,
     noRefs: true,
     sortKeys: false,
   });
@@ -969,7 +974,8 @@ function buildOutputs() {
   const manifest = readManifest();
   const units = Array.isArray(manifest.units) ? manifest.units : [];
   const unitById = buildUnitIndex(units);
-  const fileEntries = buildFileEntries(getRepositoryFiles(), units, {}, unitById);
+  const ownerMatcher = buildOwnerMatcher(units);
+  const fileEntries = buildFileEntries(getRepositoryFiles(), units, { ownerMatcher }, unitById);
   const componentEntries = buildComponentEntries(units, fileEntries, unitById);
   const fileIndex = buildFileIndexManifest(fileEntries);
   const componentFileMap = buildComponentFileMapManifest(componentEntries, fileEntries);

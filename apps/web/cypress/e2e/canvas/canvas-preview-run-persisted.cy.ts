@@ -8,10 +8,12 @@ import {
 import {
   getE2eApiCalls,
   getLastE2eApiCall,
+  stubE2eApi,
   stubE2eJsonApi,
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
+  E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -247,6 +249,10 @@ function stubCanvasRuntimeApis(options: CanvasRuntimeApiOptions = {}): void {
       dvt: { available: true },
     },
   });
+  stubE2eJsonApi('GET', '/workspace/context', {
+    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+  });
   stubCanvasDraftRead(options);
 }
 
@@ -316,7 +322,7 @@ function stubPlanPreviewResponse({
     plan: {
       metadata: {
         planVersion: '1.0',
-        schemaVersion: 'v1.2',
+        schemaVersion: '1.0',
         contractVersion: '1.0.0',
         inputHashSha256: 'a'.repeat(64),
         planId,
@@ -380,7 +386,7 @@ function stubPlanPreviewResponse({
     planRef: {
       uri: 'dvt://plans/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       sha256: planRefSha,
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       planId,
       planVersion: 'v1',
     },
@@ -460,7 +466,16 @@ function stubPlanRejectedStartRun(
 
 describe('Canvas preview-run persisted path', () => {
   beforeEach(() => {
-    stubShellBootstrapApis();
+    stubShellBootstrapApis({
+      scopes: [
+        'workspace:graph-draft:view',
+        'workspace:graph-draft:save',
+        'workspace:files:save',
+        'workspace:files:view',
+        'plan:preview',
+        'run:start',
+      ],
+    });
     stubSelectedClosurePreviewArtifacts();
   });
 
@@ -475,14 +490,55 @@ describe('Canvas preview-run persisted path', () => {
 
     cy.contains('Warehouse dbt').should('be.visible');
     cy.contains('Start dbt canvas').should('be.visible');
-    cy.contains('Add first dbt node').should('be.visible');
-    cy.contains('button', 'Source').should('be.enabled');
+    cy.contains('button', 'Add first dbt node').should('be.enabled').click();
+    cy.get('[data-slot="canvas-add-node-palette"]').within(() => {
+      cy.contains('button', 'Source').should('be.enabled');
+    });
     cy.contains('button', 'Plan').should('be.disabled');
-    cy.contains('button', 'Run').should('be.disabled');
+    cy.get('[data-slot="canvas-toolbar-run-command"]').should('be.disabled');
     cy.then(() => {
       expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
     });
+  });
+
+  it('honors the empty-guide preference and restores it from Canvas settings', () => {
+    stubCanvasRuntimeApis({
+      canvasKind: 'dbt',
+      emptyCanvas: true,
+      title: 'Warehouse dbt',
+    });
+
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.localStorage.setItem(
+          'dvt-web-ui-layout',
+          JSON.stringify({
+            state: {
+              canvasEmptyStateGuideVisible: false,
+            },
+            version: 0,
+          })
+        );
+      },
+    });
+    waitForE2eApiCall('/healthz', 'GET');
+    waitForE2eApiCall('/readyz', 'GET');
+    waitForE2eApiCall('/version', 'GET');
+    waitForE2eApiCall('/db/ready', 'GET');
+    waitForE2eApiCall('/capabilities', 'GET');
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+
+    cy.contains('Warehouse dbt').should('be.visible');
+    cy.contains('Start dbt canvas').should('not.exist');
+    cy.get('[data-slot="canvas-toolbar-insert-command"]').should('be.enabled');
+
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.contains('[role="menuitem"]', /Canvas settings|Configuracion de canvas/).click();
+    cy.contains('[role="menuitemcheckbox"]', /Empty canvas guide|Guia de canvas vacio/).click();
+
+    cy.contains('Start dbt canvas').should('be.visible');
+    cy.contains('button', 'Add first dbt node').should('be.enabled');
   });
 
   for (const cause of [
@@ -542,10 +598,12 @@ describe('Canvas preview-run persisted path', () => {
     assertPreviewPlanRequest();
 
     cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains('Persisted Preview Summary').should('be.visible');
-    cy.contains('Nodes:').parent().should('contain.text', '3');
-    cy.contains('Source tables:').parent().should('contain.text', 'raw.orders');
-    cy.contains('Sink tables:').parent().should('contain.text', 'analytics.orders_daily');
+    cy.contains(/Persisted preview summary/i)
+      .scrollIntoView()
+      .should('be.visible');
+    cy.contains('Nodes').parent().should('contain.text', '3');
+    cy.contains('Source tables').parent().should('contain.text', 'raw.orders');
+    cy.contains('Sink tables').parent().should('contain.text', 'analytics.orders_daily');
     clickButtonNatively('Start Run');
 
     waitForE2eApiCall('/runs/start', 'POST');
@@ -554,17 +612,24 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('Run run_e2e_selected_1').should('exist');
   });
 
-  it('starts run when persisted preview identity matches the active plan', () => {
+  it('starts run when persisted preview identity matches the active plan and can run again', () => {
     stubCanvasRuntimeApis();
     stubRunWorkspaceApis('run_e2e_1');
+    stubRunWorkspaceApis('run_e2e_2');
     stubPlanPreviewResponse({
       planRecordId: 'b'.repeat(64),
       persistedSha: 'c'.repeat(64),
       planRefSha: 'd'.repeat(64),
     });
-    stubE2eJsonApi('POST', '/runs/start', {
-      runId: 'run_e2e_1',
-      accepted: true,
+    let startRunCount = 0;
+    stubE2eApi('POST', '/runs/start', () => {
+      startRunCount += 1;
+      return {
+        body: {
+          runId: `run_e2e_${startRunCount}`,
+          accepted: true,
+        },
+      };
     });
 
     visitCanvasWithSettledBootstrap();
@@ -593,6 +658,31 @@ describe('Canvas preview-run persisted path', () => {
 
     cy.contains('Run run_e2e_1').should('exist');
     cy.contains('Materialization evidence').should('not.exist');
+    cy.contains('Failure diagnostics').should('exist');
+    cy.contains('STEP_FAILURE').should('exist');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.visible').click();
+    cy.get('[data-slot="shell-menu-navigation-link"][href="/canvas"]').should('be.visible').click();
+    cy.location('pathname').should('eq', '/canvas');
+
+    cy.contains('button', 'Plan').should('be.enabled').click();
+    waitForSelectedClosurePreviewArtifacts();
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(2);
+    });
+    assertPreviewPlanRequest();
+
+    cy.contains('Execution Plan Preview').should('be.visible');
+    cy.contains(canvasViewCopy.planStatusPreviewReadyMessage).should('be.visible');
+    clickButtonNatively('Start Run');
+
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(2);
+    });
+    assertRunStartSelection('d'.repeat(64));
+    cy.location('pathname').should('eq', '/runs/run_e2e_2');
+
+    cy.contains('Run run_e2e_2').should('exist');
     cy.contains('Failure diagnostics').should('exist');
     cy.contains('STEP_FAILURE').should('exist');
   });
@@ -625,7 +715,7 @@ describe('Canvas preview-run persisted path', () => {
 
     cy.contains('Execution Plan Preview').should('be.visible');
     cy.contains(canvasViewCopy.planStatusPreviewNotAlignedMessage).should('be.visible');
-    cy.contains('button', 'Run').should('be.disabled');
+    cy.get('[data-slot="canvas-toolbar-run-command"]').should('be.disabled');
     cy.contains('button', 'Start Run').should('be.disabled');
     cy.then(() => {
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);

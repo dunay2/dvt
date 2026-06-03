@@ -7,11 +7,16 @@ export const canvasViewRouteCopyEs = {
   backendLoadingTitle: 'Comprobando disponibilidad del backend',
   backendLoadingMessage:
     'Canvas espera a que terminen las comprobaciones de disponibilidad del backend antes de cargar la superficie de authoring.',
-  routeNeedsCanvasTitle: 'Crear canvas',
+  routeNeedsCanvasTitle: 'Crear canvas en este workspace',
   routeNeedsCanvasMessage:
-    'Este playground del workspace todavia no tiene un documento de canvas persistido. Elige un tipo de canvas gobernado para empezar a trabajar.',
+    'Este workspace activo todavia no tiene un documento de canvas persistido. Elige una plantilla de canvas para empezar a trabajar.',
   routeNeedsCanvasHelper:
-    'El primer canvas se persiste mediante la frontera protegida del workspace graph draft antes de agregar nodos.',
+    'La plantilla de canvas elegida se persiste mediante la frontera protegida del workspace graph draft antes de agregar nodos.',
+  routeNeedsCanvasWorkspaceLabel: 'Workspace activo',
+  routeNeedsCanvasAdapterLabel: 'Adaptador',
+  routeNeedsCanvasTemplateLabel: 'Elige una plantilla de canvas',
+  routeNeedsCanvasReadOnlyMessage:
+    'La creacion de plantillas de canvas esta deshabilitada porque la edicion del grafo no esta disponible para este scope del workspace.',
   routeEmptyTitle: 'No hay contenido de grafo cargado',
   routeEmptyEditableMessage:
     'Este workspace todavia no expone nodos de grafo. Usa Add data para importar fuentes o carga contenido de grafo antes de planificar.',
@@ -36,10 +41,10 @@ export const canvasViewRouteCopyEs = {
   mutationUnavailableMessage: 'La edicion del grafo no esta disponible en este contexto.',
   readOnlyTitle: 'Canvas en solo lectura',
   readOnlyMessage:
-    'Aqui puedes inspeccionar el grafo y los overlays, pero la planificacion, el arranque de runs y la edicion del grafo estan deshabilitados en este contexto.',
-  limitedAccessTitle: 'Acceso de mutacion limitado',
-  readOnlyNote:
-    'La inspeccion del grafo y los overlays siguen disponibles mientras la mutacion este restringida.',
+    'Aqui puedes inspeccionar el grafo y los overlays. Usa un alcance ejecutable del workspace para planificar o ejecutar.',
+  limitedAccessTitle: 'Trabajo limitado',
+  readOnlyNote: 'Abre un proyecto editable o un alcance de ejecucion para seguir trabajando.',
+  readOnlyActionLabel: 'Elegir alcance de ejecucion',
   draftAccessDeniedTitle: 'Acceso al draft denegado',
   draftAccessDeniedMessage:
     'Canvas no puede leer el draft persistido para el scope actual del workspace.',
@@ -59,7 +64,7 @@ export const canvasViewRouteCopyEs = {
     'Canvas no puede leer este draft del workspace con el tenant, proyecto o permisos actuales. Cambia el scope o solicita acceso.',
   draftReadOnlyTitle: 'El draft esta en solo lectura',
   draftReadOnlyMessage:
-    'Canvas puede inspeccionar este draft, pero la edicion del grafo, la planificacion y el arranque de runs estan deshabilitados para el scope actual.',
+    'Canvas puede inspeccionar este draft, pero la edicion del grafo, la planificacion y el arranque de ejecuciones estan deshabilitados para el alcance actual. Elige un alcance ejecutable del workspace para trabajar.',
   draftUnsupportedSchemaTitle: 'El formato del draft persistido no es compatible',
   draftUnsupportedSchemaMessage:
     'Canvas no puede cargar el draft persistido porque su version de esquema almacenada todavia no es compatible con esta ruta.',

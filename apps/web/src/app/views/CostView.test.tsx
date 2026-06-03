@@ -1,86 +1,68 @@
 // @vitest-environment jsdom
 
-import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
-import React, { act, type ReactElement, type ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  createAppServicesTestOverrides,
+  createMockCostAttributionSummaryPort,
+} from '../../testing/appServicesTestDoubles';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { IWorkspaceGraphSnapshotQueryPort } from '../ports/workspace';
-import type { IRunsPort } from '../ports/runs';
+import type { CostAttributionSummary } from '../ports/cost';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useExecutionStore } from '../stores/executionStore';
 import type { Run } from '../types/dbt';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import CostView from './CostView';
 
-vi.mock('recharts', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('recharts')>();
-  const ReactModule = await import('react');
-
+function buildAttributionSummary(): CostAttributionSummary {
   return {
-    ...actual,
-    ResponsiveContainer: ({ children }: { children: unknown }) => {
-      const width = 800;
-      const height = 260;
-      const chartWithFixedSize: ReactNode = ReactModule.isValidElement(children)
-        ? ReactModule.cloneElement(
-            children as ReactElement<{ readonly width?: number; readonly height?: number }>,
-            { width, height }
-          )
-        : (children as ReactNode);
-
-      return ReactModule.createElement(
-        'div',
-        {
-          'data-slot': 'mock-responsive-container',
-          style: { width, height },
-        },
-        chartWithFixedSize
-      );
+    tenantId: 'tenant-1',
+    projectId: 'project-1',
+    environmentId: 'env-1',
+    runCount: 1,
+    completedStepCount: 1,
+    failedStepCount: 1,
+    totalStepDurationMs: 1500,
+    totalCostAmount: null,
+    currency: null,
+    costCaptureStatus: 'unavailable',
+    observedWindow: {
+      firstEventAt: '2026-05-31T10:00:00.000Z',
+      lastEventAt: '2026-05-31T10:01:00.000Z',
     },
-  };
-});
-
-function buildWorkspaceGraphSnapshotQueryPort(
-  overrides?: Partial<IWorkspaceGraphSnapshotQueryPort>
-): IWorkspaceGraphSnapshotQueryPort {
-  return {
-    getGraphSnapshot: async () => ({
-      nodes: [
-        {
-          id: 'node-1',
-          name: 'fct_sales',
-          type: 'MODEL',
-          package: 'analytics',
-          path: 'models/fct_sales.sql',
-          tags: [],
-          status: 'success',
-          lastCost: 0.8,
-          lastDuration: 20,
-          dependencies: [],
-        },
-      ],
-      edges: [],
-    }),
-    ...overrides,
-  };
-}
-
-function buildRunsService(overrides?: Partial<IRunsPort>): IRunsPort {
-  return {
-    listRunSummaries: async () => [
+    runs: [
       {
         runId: 'run_1',
-        status: 'completed',
-        startedAt: '2026-04-04T10:00:00Z',
+        projectId: 'project-1',
+        environmentId: 'env-1',
+        planId: 'plan_1',
+        planVersion: '1.0.0',
+        status: 'COMPLETED',
+        completedStepCount: 1,
+        failedStepCount: 1,
+        totalStepDurationMs: 1500,
+        costAmount: null,
+        currency: null,
       },
     ],
-    getRunSnapshot: async () => null,
-    startRun: async () => ({
-      runId: 'run_1',
-      accepted: true,
-    }),
-    listRunEvents: async () => ({ events: [] }),
-    ...overrides,
+    steps: [
+      {
+        runId: 'run_1',
+        stepId: 'step-fast',
+        eventType: 'StepCompleted',
+        durationMs: 500,
+        costAmount: null,
+        currency: null,
+      },
+      {
+        runId: 'run_1',
+        stepId: 'step-slow-failed',
+        eventType: 'StepFailed',
+        durationMs: 1000,
+        costAmount: null,
+        currency: null,
+      },
+    ],
+    nextCursor: null,
   };
 }
 
@@ -90,15 +72,11 @@ describe('CostView', () => {
   beforeEach(() => {
     mounted = null;
     useExecutionStore.setState({ currentPlan: null, currentRun: null });
-    (
-      globalThis as typeof globalThis & {
-        ResizeObserver?: new (callback: ResizeObserverCallback) => ResizeObserver;
-      }
-    ).ResizeObserver = class ResizeObserver {
+    globalThis.ResizeObserver = class ResizeObserver {
       observe(): void {}
       unobserve(): void {}
       disconnect(): void {}
-    } as unknown as new (callback: ResizeObserverCallback) => ResizeObserver;
+    };
   });
 
   afterEach(async () => {
@@ -108,7 +86,7 @@ describe('CostView', () => {
     Reflect.deleteProperty(globalThis, 'ResizeObserver');
   });
 
-  it('renders the cost summary view', async () => {
+  it('renders runtime cost attribution without local monetary estimates', async () => {
     const currentRun: Run = {
       runId: 'run_1',
       planId: 'plan_1',
@@ -125,69 +103,8 @@ describe('CostView', () => {
       <AppServicesProvider
         overrides={{
           ...createAppServicesTestOverrides(),
-          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort(),
-          runsService: buildRunsService(),
-        }}
-      >
-        <CostView />
-      </AppServicesProvider>
-    );
-
-    await waitForReactQuery(() => mounted?.container.textContent?.includes('fct_sales') === true, {
-      description: 'cost view data render',
-    });
-
-    expect(mounted.container.textContent).toContain('Cost');
-    expect(mounted.container.textContent).toContain('Top cost drivers');
-    expect(mounted.container.textContent).toContain('fct_sales');
-
-    const routeFrame = mounted.container.querySelector('[data-slot="route-workbench-frame"]');
-    const headerBand = mounted.container.querySelector('[data-slot="cost-view-header-band"]');
-    const currentRunEstimate = mounted.container.querySelector(
-      '[data-slot="cost-current-run-estimate"]'
-    );
-    const costByRunChart = mounted.container.querySelector('[data-slot="cost-chart-cost-by-run"]');
-    const durationByModelChart = mounted.container.querySelector(
-      '[data-slot="cost-chart-duration-by-model"]'
-    );
-    const driverList = mounted.container.querySelector('[data-slot="cost-driver-list"]');
-    const alertsList = mounted.container.querySelector('[data-slot="cost-alerts-list"]');
-    const alertCard = mounted.container.querySelector('[data-slot="cost-alert-card"]');
-    const coverageCard = mounted.container.querySelector('[data-slot="cost-coverage-card"]');
-
-    expect(routeFrame?.className).toContain('bg-[var(--surface-route)]');
-    expect(headerBand?.className).toContain('bg-[var(--surface-panel)]');
-    expect(headerBand?.className).toContain('border-[color:var(--border-default)]');
-    expect(currentRunEstimate?.className).toContain('bg-[var(--status-success)]');
-    expect(currentRunEstimate?.className).toContain('text-[var(--surface-app)]');
-    expect(costByRunChart?.className).toContain('bg-[var(--surface-panel)]');
-    expect(costByRunChart?.querySelector('[data-slot="chart"]')).not.toBeNull();
-    expect(durationByModelChart?.querySelector('[data-slot="chart"]')).not.toBeNull();
-    expect(driverList?.className).toContain('bg-[var(--surface-panel)]');
-    expect(alertsList?.className).toContain('bg-[var(--surface-panel)]');
-    expect(alertsList?.className).toContain('border-[color:var(--border-default)]');
-    expect(alertCard?.className).toContain('border-[color:var(--status-warning)]');
-    expect(alertCard?.className).toContain('bg-[var(--surface-elevated)]');
-    expect(coverageCard?.className).toContain('bg-[var(--surface-panel)]');
-    expect(mounted.container.innerHTML).not.toContain('bg-slate-900');
-    expect(mounted.container.innerHTML).not.toContain('bg-slate-950');
-    expect(mounted.container.innerHTML).not.toContain('border-slate-700');
-    expect(alertCard?.innerHTML).not.toContain('border-yellow-800');
-    expect(mounted.container.innerHTML).not.toContain('text-green-400');
-    expect(alertCard?.innerHTML).not.toContain('text-yellow-400');
-    expect(mounted.container.innerHTML).not.toContain('bg-emerald-700');
-  });
-
-  it('renders error state when services fail', async () => {
-    mounted = await withTestQueryClient(
-      <AppServicesProvider
-        overrides={{
-          workspaceGraphSnapshotQuery: buildWorkspaceGraphSnapshotQueryPort({
-            getGraphSnapshot: async () => {
-              throw new Error('workspace unavailable');
-            },
-          }),
-          runsService: buildRunsService(),
+          costAttributionSummaryPort:
+            createMockCostAttributionSummaryPort(buildAttributionSummary()),
         }}
       >
         <CostView />
@@ -195,11 +112,55 @@ describe('CostView', () => {
     );
 
     await waitForReactQuery(
-      () => mounted?.container.textContent?.includes('workspace unavailable') === true,
+      () => mounted?.container.textContent?.includes('step-slow-failed') === true,
+      { description: 'cost attribution data render' }
+    );
+
+    expect(mounted.container.textContent).toContain('Cost capture unavailable');
+    expect(mounted.container.textContent).toContain('Top runtime usage drivers');
+    expect(mounted.container.textContent).toContain('step-slow-failed');
+    expect(mounted.container.textContent).toContain('Duration by run');
+    expect(mounted.container.textContent).toContain('Duration by step');
+    expect(mounted.container.textContent).toContain('Unavailable');
+    expect(mounted.container.textContent).not.toContain('Current run estimate');
+    expect(mounted.container.textContent).not.toContain('Average cost per run');
+    expect(mounted.container.textContent).not.toContain('fct_sales');
+
+    expect(
+      mounted.container.querySelector('[data-slot="cost-capture-unavailable"]')
+    ).not.toBeNull();
+    expect(
+      mounted.container.querySelector('[data-slot="cost-chart-duration-by-run"]')
+    ).not.toBeNull();
+    expect(
+      mounted.container.querySelector('[data-slot="cost-chart-duration-by-step"]')
+    ).not.toBeNull();
+    expect(mounted.container.querySelector('[data-slot="cost-driver-list"]')).not.toBeNull();
+    expect(mounted.container.querySelector('[data-slot="cost-alerts-list"]')).not.toBeNull();
+    expect(mounted.container.querySelector('[data-slot="cost-coverage-card"]')).not.toBeNull();
+  });
+
+  it('renders error state when cost attribution service fails', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          costAttributionSummaryPort: {
+            getCostAttributionSummary: async () =>
+              Promise.reject(new Error('cost attribution unavailable')),
+          },
+        }}
+      >
+        <CostView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('cost attribution unavailable') === true,
       { description: 'cost error state render' }
     );
 
-    expect(mounted.container.textContent).toContain('workspace unavailable');
-    expect(mounted.container.textContent).toContain('Cost alerts');
+    expect(mounted.container.textContent).toContain('cost attribution unavailable');
+    expect(mounted.container.textContent).toContain('Cost attribution unavailable');
   });
 });

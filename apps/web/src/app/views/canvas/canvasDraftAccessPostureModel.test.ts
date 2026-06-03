@@ -61,6 +61,7 @@ describe('canvasDraftAccessPostureModel', () => {
       mutationBlocked: true,
     });
     expect(toCanvasDraftToolbarState(posture).label).toBe('Read-only draft');
+    expect(toCanvasDraftRecoveryBannerViewState(posture)).toBeNull();
   });
 
   it('keeps automatic save failure visible without blocking graph edits', () => {

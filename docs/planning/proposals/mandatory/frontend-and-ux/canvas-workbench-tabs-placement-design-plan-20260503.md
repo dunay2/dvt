@@ -409,29 +409,29 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
 - Complete the feature-mechanization manifest before red tests or code.
 - Run `pnpm docs:feature-mechanization:implementation` as the first mechanical
   gate and stop on undeclared surfaces or symbols.
-- Create this plan.
-- Add or update the component guide:
+- [Task: F-29] Create this plan.
+- [Task: F-29] Add or update the component guide:
   `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`.
-- Add the Canvas workbench C&Q rails to the component guide.
+- [Task: F-29] Add the Canvas workbench C&Q rails to the component guide.
 - Confirm the local Spanish proposal is input only, not the canonical design.
 
 ### Phase 1: Red Tests
 
-- Add `shellNavigationModel.test.ts` coverage proving workbench-tab placements
+- [Task: F-29] Add `shellNavigationModel.test.ts` coverage proving workbench-tab placements
   are excluded from shell navigation.
-- Add registry tests proving shell views and Canvas workbench tab views are
+- [Task: F-29] Add registry tests proving shell views and Canvas workbench tab views are
   separate queries.
-- Add `canvasWorkbenchTabs.test.ts` with:
+- [Task: F-29] Add `canvasWorkbenchTabs.test.ts` with:
   - default `graph` tab;
   - sorted tab order;
   - unknown tab unavailable state;
   - duplicate tab ID rejection;
   - disabled plugin exclusion.
-- Add architecture test proving:
+- [Task: F-29] Add architecture test proving:
   - no active source uses `ViewContribution.nav`;
   - `CanvasWorkbenchTabStrip` does not import shell navigation;
   - `CanvasPlaygroundTabStrip` does not import workbench tab state.
-- Add Cypress spec proving:
+- [Task: F-29] Add Cypress spec proving:
   - shell navigation no longer exposes Code, Lineage, Diff, Artifacts as global
     items;
   - Canvas shows Graph, Code, Lineage, Diff, Artifacts, Runs tabs;
@@ -447,8 +447,8 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
   - `getShellNavigationViews()`;
   - `getCanvasWorkbenchTabViews()`.
 - Update `buildShellRuntimeState()` to use shell navigation views only.
-- Add Canvas workbench tab route state model.
-- Add Canvas workbench tab read model.
+- [Task: F-29] Add Canvas workbench tab route state model.
+- [Task: F-29] Add Canvas workbench tab read model.
 - Render `CanvasWorkbenchTabStrip` in the Canvas shell header without changing
   `CanvasPlaygroundTabStrip` ownership.
 - Mount tab panels through the Canvas route state.
@@ -458,7 +458,7 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
 - Delete `getNavigationViews()`.
 - Delete all `ViewContribution.nav` type references.
 - Remove shell nav declarations for Code, Lineage, Diff, and Artifacts.
-- Add separate Canvas-scoped Runs tab contribution while keeping global Runs.
+- [Task: F-29] Add separate Canvas-scoped Runs tab contribution while keeping global Runs.
 - Update route tests and shell chrome tests to assert the new navigation shape.
 - Update docs indexes and generated governance projections.
 
@@ -536,6 +536,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/lineage/lineageRouteBootstrap.ts
   - apps/web/src/app/views/runs/CanvasRunsTabView.tsx
   - docs/architecture/components/web/appshell/app-shell.md
+  - docs/architecture/components/web/graph/canvas-legacy-retirement-component.md
+  - docs/architecture/components/web/graph/canvas-legacy-retirement-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-component.md
   - docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md
@@ -544,8 +546,12 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md
   - docs/planning/proposals/dvt-canvas-workbench-proposal-v2-repo-validated.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-tabs-placement-design-plan-20260503.md
+  - docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md
+  - docs/planning/execution-model/dvt-system-map-god-diagram.md
+  - docs/planning/execution-model/dvt-dependency-risk-map.md
   - docs/planning/proposals/portfolio-map-20260403.md
   - buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md
+  - buzon/20260518-f12-fowler-canvas-legacy-retirement-analysis.md
   - docs/planning/status/generated-code-state.md
   - docs/planning/status/governance-files/**
   - docs/planning/status/system-governance-file-fingerprint-baseline.yaml
@@ -878,7 +884,7 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts]
-  - name: createGraphCanvasWorkbenchTab
+  - name: createCanvasGraphWorkbenchTab
     path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
     dddOwner: CanvasWorkbenchTabsReadModel
     cqRails: [ListCanvasWorkbenchTabs]
@@ -1126,7 +1132,7 @@ Forbidden surfaces for this slice:
 - database migrations
 - source import provider model changes
 - Project Assets persistence
-- prepared asset add-to-canvas commands
+- [Task: F-29] prepared asset add-to-canvas commands
 
 ## User Stories
 
@@ -1220,7 +1226,7 @@ flowchart TD
 
 - Project Assets registry or persistence.
 - Prepared assets not visible in Canvas.
-- Add prepared asset to Canvas.
+- [Task: F-29] Add prepared asset to Canvas.
 - Source import provider extensibility.
 - Backend route or database changes.
 - New contract versions.

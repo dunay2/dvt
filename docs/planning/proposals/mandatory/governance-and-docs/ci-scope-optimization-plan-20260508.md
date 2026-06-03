@@ -19,9 +19,11 @@ coverage for real runtime, contract, root-build, and governance changes.
 **2026-05-10 implementation note:** The contracts, adapter-postgres,
 determinism, and coverage workflow consumers now read semantic outputs from
 `tools/ci/emit-scope.mjs` instead of retaining local `dorny/paths-filter`
-package-root rules. The slice closes the CI scope portion of
-`CI-AUDIT-CONTRACTS-SCOPE` and `CI-AUDIT-ENGINE-COVERAGE`; local hook
-convergence remains separately governed by `CDG-W1-3`.
+package-root rules. The slice closed the shared-consumer migration for
+`CI-AUDIT-CONTRACTS-SCOPE`; `CI-AUDIT-ENGINE-COVERAGE` still required the
+follow-up engine package canary documented in
+`ci-audit-engine-coverage-plan-20260515.md`. Local hook convergence remains
+separately governed by `CDG-W1-3`.
 
 **Architecture:** Keep `tools/ci/scope-config.mjs` as the workflow scope API and
 orchestrator, but move package-script and script-path semantics into the
@@ -192,28 +194,50 @@ governingSources:
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
 allowedImplementationSurfaces:
   - package.json
+  - .husky/pre-push
   - .github/workflows/ci.yml
   - .github/workflows/test.yml
   - .github/workflows/pr-quality-gate.yml
   - .github/workflows/contracts.yml
+  - .github/actions/setup-node-pnpm/action.yml
   - tools/ci/repository-command-catalog.mjs
   - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/scope-config.mjs
+  - tools/ci/ci-tool-test-suite.mjs
+  - tools/ci/ci-tool-test-suite.test.mjs
   - tools/ci/emit-scope.mjs
   - tools/ci/emit-workspace-matrix.mjs
+  - tools/ci/emit-test-matrix.mjs
   - tools/ci/policy/workflow-scope.json
   - tools/ci/policy/adapter-postgres-relevance.json
   - tools/ci/workflow-scope-classification.test.mjs
+  - tools/ci/architecture-dependency-guard.test.mjs
+  - tools/ci/generated-docs-single-writer-policy.test.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
+  - tools/ci/turbo-workspace-task-contract.test.mjs
   - tools/ci/test/path-matcher.test.mjs
   - tools/ci/package-json-scope-classification.test.mjs
   - tools/ci/prepush-typecheck-scope.mjs
   - tools/ci/emit-scope.test.mjs
   - tools/ci/emit-workspace-matrix.test.mjs
+  - tools/ci/emit-test-matrix.test.mjs
+  - scripts/local-validation-plan.cjs
+  - scripts/check-governance-unit-coverage.cjs
+  - scripts/check-governance-unit-coverage.test.cjs
+  - scripts/generate-governance-document-unit-map.cjs
+  - scripts/generate-governance-document-unit-map.test.cjs
+  - scripts/generate-governance-file-component-index.cjs
+  - scripts/generate-governance-file-component-index.test.cjs
+  - scripts/planning-db-import.cjs
+  - scripts/planning-db-import.test.cjs
+  - scripts/verify-changed.test.cjs
+  - scripts/README.md
   - docs/guides/testing-and-ci-capabilities.md
+  - docs/generated-docs-policy.json
   - docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - docs/planning/closeouts/**
   - docs/planning/state/agent-lane-c.yaml
   - docs/planning/status/**
   - docs/.manifest.json
@@ -386,7 +410,517 @@ redGreenCycles:
       - docs/guides/testing-and-ci-capabilities.md
       - docs/planning/status/**
     greenTest: pnpm docs:feature-mechanization:implementation
+  - id: planning-db-import-test-fixture-reuse
+    redTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    expectedFailure: the current passing profile rebuilds the governance snapshot for independent pure assertions and calls the full import path for an advisory-lock assertion, making one local test file take about 76.865s.
+    patchSurfaces:
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+  - id: planning-db-generated-input-reuse
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: mutation-sensitive generated artifact tests need to rebuild the governance snapshot but should not rebuild the expensive governance generated input inventory when an already-built input fixture is supplied.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+  - id: governance-owner-matcher-precompile
+    redTest: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    expectedFailure: governance file and document generators rebuild glob regex matchers for every file, so the first DB-first governance input build spends most of its time in repeated ownership matching instead of import semantics.
+    patchSurfaces:
+      - scripts/check-governance-unit-coverage.cjs
+      - scripts/check-governance-unit-coverage.test.cjs
+      - scripts/generate-governance-file-component-index.cjs
+      - scripts/generate-governance-file-component-index.test.cjs
+      - scripts/generate-governance-document-unit-map.cjs
+      - scripts/generate-governance-document-unit-map.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - id: governance-owner-generator-tests-route-through-verify-changed
+    redTest: node --test scripts/verify-changed.test.cjs
+    expectedFailure: verify:changed does not currently route check-governance-unit-coverage, governance file-component index, or document-unit map changes to their focused tests even though those tests are cheap and own the local generator behavior.
+    patchSurfaces:
+      - scripts/local-validation-plan.cjs
+      - scripts/verify-changed.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/verify-changed.test.cjs
+  - id: governance-import-heavy-table-batching
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance DB import inserts 5k-row file, component-file, and fingerprint tables one row per client.query call, making stale governance imports pay thousands of database round trips.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-import-auxiliary-table-batching
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance DB import still inserts doc disposition, knowledge, and repository command auxiliary rows one row per client.query call after the primary file table batching pass.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-import-stale-freshness-fast-fail
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance --if-stale keeps running full governance and auxiliary projection checks after source freshness has already reported stale, duplicating expensive snapshot work before importing.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: docs-disposition-combined-planning-task-reference-scan
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: docs disposition import scans every planning task id with a separate regex for every document, multiplying reference detection work across the full docs corpus.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: docs-disposition-single-pass-reference-samples
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: docs disposition still scans each document again for every task-like reference to recover sample lines after reference extraction has already found those lines.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-auxiliary-knowledge-source-hash-freshness
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance auxiliary source freshness rebuilds the full knowledge document projection even though it only compares source-path hashes.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: governance-import-shared-markdown-document-read
+    redTest: node --test scripts/planning-db-import.test.cjs
+    expectedFailure: governance import reads the same tracked Markdown corpus separately for docs disposition and knowledge snapshots.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: ci-tool-contract-static-executable-split
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: the CI tool contract split adds a new test-suite partition helper and scope output that are outside the selected mechanization manifest until this plan declares them.
+    patchSurfaces:
+      - .github/workflows/ci.yml
+      - package.json
+      - docs/generated-docs-policy.json
+      - tools/ci/ci-tool-test-suite.mjs
+      - tools/ci/ci-tool-test-suite.test.mjs
+      - tools/ci/policy/workflow-scope.json
+      - tools/ci/scope-config.mjs
+      - tools/ci/emit-scope.test.mjs
+      - tools/ci/repository-command-catalog.mjs
+      - tools/ci/repository-command-catalog.test.mjs
+      - tools/ci/workflow-pattern-parity.test.mjs
+      - tools/ci/workflow-scope-classification.test.mjs
+      - docs/planning/proposals/mandatory/governance-and-docs/ci-scope-optimization-plan-20260508.md
+      - docs/planning/closeouts/**
+    greenTest: node --test tools/ci/ci-tool-test-suite.test.mjs tools/ci/emit-scope.test.mjs tools/ci/workflow-scope-classification.test.mjs tools/ci/workflow-pattern-parity.test.mjs tools/ci/repository-command-catalog.test.mjs
 symbols:
+  - name: repoRoot
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - CI tool contracts should have one repository-rooted test partition owner
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: CI_TOOL_TEST_MODES
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep CI tool test partition modes explicit and testable
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: EXECUTABLE_CI_TOOL_TESTS
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Separate install-backed executable assertions from Node-native static CI policy assertions
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: normalizePath
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - CI tool test partitioning must be stable across Windows and Linux paths
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: discoverCiToolTests
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Avoid duplicating the full tools/ci test file list across package scripts and workflow jobs
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: assertCiToolTestPartition
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - CI tool test partitioning must fail closed when executable test paths drift
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: buildCiToolTestList
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Remove duplicate local and remote CI tool test command construction
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: runCiToolTests
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep package scripts as thin aliases over the governed test partition runner
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: parseCiToolTestMode
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Reject unknown CI tool partition modes instead of silently running the wrong suite
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: readTrackedDocumentPaths
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Governance import should not duplicate git path listing logic per document surface
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: readTrackedDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Governance import should carry source hashes with document reads instead of recomputing them downstream
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: listTrackedMarkdownDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Docs disposition and knowledge snapshots share the same tracked Markdown corpus
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: listTrackedBuzonDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Knowledge import needs buzon-only additions without rereading docs Markdown
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: listTrackedKnowledgeDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Knowledge import should reuse already-read Markdown documents during governance import
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: extractTaskLikeReferences
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Reference sample lines should be captured during extraction instead of by per-reference rescans
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: buildDocsDispositionSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Docs disposition should precompile planning task reference matching once per snapshot
+      - Docs disposition should not rescan document text per reference after extraction
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: isKnowledgeDocumentSourcePath
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Source freshness should preserve the knowledge document surface while avoiding full projection work
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: knowledgeDocumentSourceHashRows
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Freshness checks only need knowledge document source hashes, not sections, links, or actions
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: buildGovernanceAuxiliarySourceExpectedState
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Auxiliary source freshness should not rebuild full knowledge projections
+      - Auxiliary source freshness should reuse one Markdown document read for docs disposition and knowledge hashes
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: importContent
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Governance import should share tracked Markdown inputs across downstream snapshots
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: buildPlanningTaskReferencePattern
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Docs disposition should not run one planning-task regex per task per document
+      - Planning task reference detection must remain case-insensitive
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: isScopeFresh
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Stale source freshness is already sufficient evidence to reimport
+      - Full projection checks duplicate import-time snapshot construction on stale paths
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: postgresParameterLimit
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Batched governance import must stay within PostgreSQL parameter limits
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: normalizeInsertColumn
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Shared batched insert helper needs explicit per-column cast metadata
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertPlaceholder
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Shared batched insert helper must preserve parameterized SQL and casts
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertRows
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertGovernanceSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertDocsDispositionSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertKnowledgeSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: insertRepositoryCommandSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Repeated row-by-row governance import round trips in local DB-first validation
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/planning-db-import.test.cjs
+  - name: buildOwnerMatcher
+    path: scripts/check-governance-unit-coverage.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - name: findOwnerMatches
+    path: scripts/check-governance-unit-coverage.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - name: buildDocumentEntries
+    path: scripts/generate-governance-document-unit-map.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive ownership matcher construction in governance import validation
+    architectureGuard: node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/check-governance-unit-coverage.test.cjs scripts/generate-governance-file-component-index.test.cjs scripts/generate-governance-document-unit-map.test.cjs
+  - name: buildGovernanceGeneratedInputs
+    path: scripts/planning-db-import.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive fixture construction in local planning DB validation
+    architectureGuard: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+  - name: governanceFileSnapshotFixture
+    path: scripts/planning-db-import.test.cjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Duplicate expensive fixture construction in local planning DB validation
+    architectureGuard: node --test --test-reporter=spec scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test --test-reporter=spec scripts/planning-db-import.test.cjs
   - name: readJsonAtGitRef
     path: tools/ci/scope-config.mjs
     dddOwner: ChangedScopeContext
@@ -554,6 +1088,347 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/emit-scope.test.mjs
+  - name: EXCLUDED_TEST_PACKAGE_NAMES
+    path: tools/ci/scope-config.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Keep explicit runtime lanes out of package matrix duplication
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: TEST_PACKAGE_ENTRIES
+    path: tools/ci/scope-config.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Replace duplicated package test workflow steps with a governed matrix
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: computeTestPackageMatrix
+    path: tools/ci/scope-config.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Compose package test fan-out from shared scope outputs
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: buildTestMatrixOutputs
+    path: tools/ci/emit-test-matrix.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Keep workflow matrix emission behind a testable function
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: main
+    path: tools/ci/emit-test-matrix.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Emit GitHub Actions outputs from the governed CI scope model
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: DEDICATED_TEST_PACKAGES
+    path: tools/ci/emit-test-matrix.test.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Guard explicit workflow lanes against duplicate matrix ownership
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: collectWorkspaceTestPackages
+    path: tools/ci/emit-test-matrix.test.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Prove every workspace package test script is represented
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: collectWorkspacePackagesByName
+    path: tools/ci/emit-test-matrix.test.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Prevent matrix entries for workspaces without test scripts
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: repoRoot
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep local validation execution rooted at the repository boundary
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: path
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep repository-root resolution explicit in the shared validation module
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: step
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Replace duplicated command object literals with a single step factory
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: MECHANICAL_PREPUSH_STEPS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Separate mechanical local pre-push checks from full closeout validation
+    architectureGuard: node --test scripts/verify-prepush.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: VERIFY_CHANGED_BASE_STEPS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep fast changed-slice verification declarative
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: PREPUSH_GROUPS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Group expensive closeout checks behind full pre-push mode
+    architectureGuard: node --test scripts/verify-prepush.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: VERIFY_CHANGED_GROUPS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep scoped planning and verifier self-tests out of the base wrapper
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: normalizeChangedFiles
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Avoid duplicate path normalization between local validation wrappers
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: matchesAny
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Centralize local changed-path predicates
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasPlanningDbChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep planning DB validation scoped to planning/query-store surfaces
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasWebChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Run governed changed web suites for local web changes before CI
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasDeveloperWorkflowVerifierChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalChangedFileSet
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Run local verifier self-tests only when the verifier changes
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: pushStepOnce
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Avoid duplicate local validation commands after grouping
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: pushSteps
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Compose validation groups without duplicating loop logic
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: classifyPrepushScope
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Make full pre-push the explicit closeout path
+    architectureGuard: node --test scripts/verify-prepush.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: buildPrepushPlan
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Build mechanical and full local pre-push plans from one table
+    architectureGuard: node --test scripts/verify-prepush.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs
+  - name: buildVerifyChangedPlan
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep local changed verification as a focused plan builder
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: commandLabel
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Share operator-facing command labels across local validation wrappers
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: executeCommandPlan
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Remove duplicated spawn/error handling from local validation wrappers
+    architectureGuard: node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-prepush.test.cjs scripts/verify-changed.test.cjs
+  - name: PLANNING_WORKFLOW_SCRIPT_TESTS
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Route planning workflow script edits to focused adjacent tests
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasPlanningDbFullSuiteChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep full planning DB tests scoped to DB implementation surfaces
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: hasPlanningDbMigrationChange
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Route planning DB SQL migrations to the focused migration suite
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - name: planningWorkflowTestSteps
+    path: scripts/local-validation-plan.cjs
+    dddOwner: LocalValidationPlan
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Convert changed planning workflow scripts into focused test steps
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: N/A - local CI tooling only
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
 ```
 
 ## File Structure
@@ -1294,9 +2169,11 @@ coverage_relevant: ${{ steps.scope.outputs.coverage_relevant }}
 ```
 
 For pull requests, a root `package.json` scripts-only governance/planning alias
-must leave both outputs false. Engine, contracts, lockfile, `vitest.config.ts`,
-coverage source/test paths, and workflow changes that affect those lanes must
-still leave the relevant output true.
+must leave both outputs false. Engine workspace changes, contracts, lockfile,
+`vitest.config.ts`, and workflow changes that affect those lanes must still
+leave the relevant output true. The engine coverage scope is closed by
+`CI-AUDIT-ENGINE-COVERAGE-20260515`, which makes coverage follow the governed
+`packages/@dvt/engine/**` package boundary instead of a source/test-only subset.
 
 - [ ] **Step 8: Add parity assertions**
 

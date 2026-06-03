@@ -1,14 +1,16 @@
 import type { IRunExecutionContextReader } from '@dvt/artifacts';
 import { type PlanRef, type ResolvedRunContext, type RunExecutionContext } from '@dvt/contracts';
 import { sha256Hex } from '@dvt/crypto';
-import {
-  PlanIntegrityValidator,
-  RunExecutionContextRejectedError,
-  SequenceClock,
-  type RunStateCommandPort,
-} from '@dvt/engine';
+import { RunExecutionContextRejectedError, type RunStateCommandPort } from '@dvt/engine';
+import { PlanIntegrityValidator, SequenceClock } from '@dvt/engine/runtime';
 import { describe, expect, it } from 'vitest';
 
+import {
+  createDbtStepActivityRegistry,
+  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
+  type DbtPluginExecutionInput,
+  type DbtPluginRunner,
+} from '../../temporal-dbt-plugin/src/index.js';
 import {
   createActivities,
   createScopedTemporalPlanArtifactReader,
@@ -26,13 +28,7 @@ import type {
   IIdempotencyKeyBuilder,
   RunMetadata,
 } from '../src/engine-types.js';
-import {
-  composeTemporalStepPluginRegistries,
-  createDbtStepActivityRegistry,
-  TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
-  type DbtPluginExecutionInput,
-  type DbtPluginRunner,
-} from '../src/index.js';
+import { composeTemporalStepPluginRegistries } from '../src/index.js';
 
 import { createExecutionPlan, createPlanRef } from './helpers/contractFixtures.js';
 import {
@@ -806,6 +802,26 @@ describe('stepActivities', () => {
 
       const result = await acts.executeStep({
         step: { stepId: 's3', kind: 'DBT_MODEL', stepTypeConfig: { stepTimeoutMs: 5000 } },
+        ctx: CTX,
+      });
+
+      expect(result.status).toBe('COMPLETED');
+    });
+
+    it('accepts canonical ExecutionStep retryPolicy metadata', async () => {
+      const { acts } = setupActivities({ stepActivitiesByKind: createDbtRegistry() });
+
+      const result = await acts.executeStep({
+        step: {
+          stepId: 's3',
+          kind: 'DBT_MODEL',
+          retryPolicy: {
+            maxAttempts: 2,
+            initialInterval: '1s',
+            maximumInterval: '5s',
+            backoffCoefficient: 2,
+          },
+        },
         ctx: CTX,
       });
 

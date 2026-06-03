@@ -57,6 +57,30 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.snapToGridLabel',
     fallback: 'Snap',
   },
+  toolbarCanvasSettingsLabel: {
+    key: 'canvas.toolbar.canvasSettingsLabel',
+    fallback: 'Canvas settings',
+  },
+  toolbarEmptyCanvasGuideLabel: {
+    key: 'canvas.toolbar.emptyCanvasGuideLabel',
+    fallback: 'Empty canvas guide',
+  },
+  toolbarProjectSnapshotMenuLabel: {
+    key: 'canvas.toolbar.projectSnapshotMenuLabel',
+    fallback: 'Project',
+  },
+  toolbarExportSnapshotLabel: {
+    key: 'canvas.toolbar.exportSnapshotLabel',
+    fallback: 'Export',
+  },
+  toolbarImportSnapshotLabel: {
+    key: 'canvas.toolbar.importSnapshotLabel',
+    fallback: 'Import',
+  },
+  toolbarInsertLabel: {
+    key: 'canvas.toolbar.insertLabel',
+    fallback: 'Insert',
+  },
   toolbarPlanLabel: {
     key: 'canvas.toolbar.planLabel',
     fallback: 'Plan',
@@ -64,6 +88,26 @@ export const canvasViewToolbarCopyByKey = {
   toolbarRunLabel: {
     key: 'canvas.toolbar.runLabel',
     fallback: 'Run',
+  },
+  addNodePaletteSearchLabel: {
+    key: 'canvas.addNodePalette.searchLabel',
+    fallback: 'Search node types',
+  },
+  addNodePaletteEmptyLabel: {
+    key: 'canvas.addNodePalette.emptyLabel',
+    fallback: 'No node types match this search.',
+  },
+  projectSnapshotExportUnavailableMessage: {
+    key: 'canvas.projectSnapshot.exportUnavailableMessage',
+    fallback: 'Project snapshot export is available after the draft is saved.',
+  },
+  projectSnapshotImportRejectedMessage: {
+    key: 'canvas.projectSnapshot.importRejectedMessage',
+    fallback: 'Project snapshot import was rejected.',
+  },
+  projectSnapshotImportFailedMessage: {
+    key: 'canvas.projectSnapshot.importFailedMessage',
+    fallback: 'Project snapshot import failed.',
   },
   newCanvasLabel: {
     key: 'canvas.toolbar.newCanvasLabel',
@@ -95,12 +139,12 @@ export const canvasViewToolbarCopyByKey = {
   },
   replaceCanvasTitle: {
     key: 'canvas.toolbar.replaceCanvasTitle',
-    fallback: 'Replace current canvas?',
+    fallback: 'Create a new canvas?',
   },
   replaceCanvasMessage: {
     key: 'canvas.toolbar.replaceCanvasMessage',
     fallback:
-      'This creates a blank canvas in the current workspace draft. Existing nodes and edges are removed after confirmation.',
+      'This adds another worksheet to the current project draft. The active canvas stays available in the left project list.',
   },
   replaceCanvasCancelLabel: {
     key: 'canvas.toolbar.replaceCanvasCancelLabel',
@@ -108,7 +152,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   replaceCanvasConfirmLabel: {
     key: 'canvas.toolbar.replaceCanvasConfirmLabel',
-    fallback: 'Create blank canvas',
+    fallback: 'Create canvas',
   },
   draftSyncedLabel: {
     key: 'canvas.draft.toolbar.syncedLabel',

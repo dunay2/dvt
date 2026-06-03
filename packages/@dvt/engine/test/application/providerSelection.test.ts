@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import {
   buildAdapterRegistry,
+  MapBackedEngineProviderResolver,
   pickDefaultAdapter,
   resolveEngineProvider,
 } from '../../src/application/providerSelection.js';
@@ -63,5 +64,31 @@ describe('providerSelection', () => {
   it('throws when no adapters are registered', () => {
     const adapters = buildAdapterRegistry([]);
     expect(() => pickDefaultAdapter(adapters, {})).toThrow(/No adapters registered/);
+  });
+
+  it('resolves context target adapters through the provider resolver seam', () => {
+    const adapters = buildAdapterRegistry([mkAdapter('temporal')]);
+    const resolver = new MapBackedEngineProviderResolver(adapters);
+
+    const selected = resolver.resolveContextTarget({ targetAdapter: 'temporal' });
+
+    expect(selected.provider).toBe('temporal');
+  });
+
+  it('resolves persisted provider refs through the same provider resolver seam', () => {
+    const adapters = buildAdapterRegistry([mkAdapter('temporal')]);
+    const resolver = new MapBackedEngineProviderResolver(adapters);
+
+    const selected = resolver.resolveProviderRef({ provider: 'temporal' });
+
+    expect(selected.provider).toBe('temporal');
+  });
+
+  it('preserves adapter-not-registered errors for unresolved provider refs', () => {
+    const resolver = new MapBackedEngineProviderResolver(buildAdapterRegistry([]));
+
+    expect(() => resolver.resolveProviderRef({ provider: 'temporal' })).toThrow(
+      /engine\.error\.adapter_not_registered/
+    );
   });
 });

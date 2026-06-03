@@ -23,6 +23,11 @@ export function buildCanvasShellChromeCommands({
     onToggleSnapToGrid: () => {
       chromeCommands.setCanvasSnapToGrid(!chromeCommands.canvasSnapToGrid);
     },
+    onSetCanvasEmptyStateGuideVisible: chromeCommands.setCanvasEmptyStateGuideVisible,
+    onExportProjectSnapshot: chromeCommands.handleExportProjectSnapshot,
+    onImportProjectSnapshotFile: (file) => {
+      void chromeCommands.handleImportProjectSnapshotFile(file);
+    },
     onReloadLatestDraft: chromeCommands.reloadLatestDraft,
     onPlan: () => {
       void chromeCommands.handlePlan();

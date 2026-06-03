@@ -14,6 +14,8 @@ topics:
 ## Active capabilities
 
 - drain outbox records for downstream delivery
+- provide one Delivery-owned in-memory outbox storage state machine for local
+  and test adapters
 - rebuild read models through projector workers
 - emit lineage payloads from delivery-side observers and workers
 - provide explicit admission helper logic used by API/runtime orchestration
@@ -21,6 +23,7 @@ topics:
 ## Code anchors
 
 - [OutboxWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/OutboxWorkerRuntime.ts)
+- [InMemoryOutboxStorageCore.ts](../../../../packages/@dvt/delivery/src/testing/InMemoryOutboxStorageCore.ts)
 - [ProjectorWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/ProjectorWorkerRuntime.ts)
 - [LineageOutboxObserver.ts](../../../../packages/@dvt/delivery/src/application/LineageOutboxObserver.ts)
 - [LineageWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts)

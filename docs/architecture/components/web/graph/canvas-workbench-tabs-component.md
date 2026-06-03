@@ -27,6 +27,7 @@ that does not make the route a global shell destination.
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tab-strip-component.md`
+- `docs/architecture/components/web/graph/canvas-legacy-retirement-component.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-user-stories.md`
 - `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 - `buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md`
@@ -60,20 +61,23 @@ The component does not own:
 
 ## Public API
 
-| API                                               | Owner                          | Responsibility                                                         |
-| ------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------------- |
-| `ViewPlacement`                                   | `PluginManifest.ts`            | Closed value object for shell or Canvas workbench placement.           |
-| `ShellNavigationPlacement`                        | `PluginManifest.ts`            | Placement variant allowed to become a shell navigation item.           |
-| `CanvasWorkbenchTabPlacement`                     | `PluginManifest.ts`            | Placement variant allowed to become a Canvas tab.                      |
-| `getShellNavigationViews(capabilities)`           | `registry.ts`                  | Query rail for shell navigation views only.                            |
-| `getCanvasWorkbenchTabViews(capabilities)`        | `registry.ts`                  | Query rail for Canvas workbench tab views only.                        |
-| `CanvasWorkbenchRouteState`                       | `canvasWorkbenchRouteState.ts` | Parsed `/canvas/:workbenchTab?` route state.                           |
-| `parseCanvasWorkbenchRouteState(value)`           | `canvasWorkbenchRouteState.ts` | Fails closed for unknown tab route segments.                           |
-| `resolveCanvasWorkbenchTabSelectionCommand(args)` | `canvasWorkbenchRouteState.ts` | Command result for tab selection navigation.                           |
-| `CanvasWorkbenchTabsReadModel`                    | `canvasWorkbenchTabs.ts`       | Text-only render-ready tab model for the Canvas route.                 |
-| `buildCanvasWorkbenchTabsReadModel(args)`         | `canvasWorkbenchTabs.ts`       | Projects Graph plus enabled plugin tabs with active/unavailable state. |
-| `CanvasWorkbenchTabStrip`                         | `CanvasWorkbenchTabStrip.tsx`  | Passive text-only tab-list renderer; see local component guide.        |
-| `CanvasWorkbenchTabPanel`                         | `CanvasWorkbenchTabPanel.tsx`  | Renders the selected Canvas tab view or unavailable recovery surface.  |
+| API                                               | Owner                          | Responsibility                                                             |
+| ------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------- |
+| `ViewPlacement`                                   | `PluginManifest.ts`            | Closed value object for shell or Canvas workbench placement.               |
+| `ShellNavigationPlacement`                        | `PluginManifest.ts`            | Placement variant allowed to become a shell navigation item.               |
+| `CanvasWorkbenchTabPlacement`                     | `PluginManifest.ts`            | Placement variant allowed to become a Canvas tab.                          |
+| `CanvasWorkbenchTabScope`                         | `PluginManifest.ts`            | Scope value that distinguishes workspace, canvas, selection, and run tabs. |
+| `getShellNavigationViews(capabilities)`           | `registry.ts`                  | Query rail for shell navigation views only.                                |
+| `getCanvasWorkbenchTabViews(capabilities)`        | `registry.ts`                  | Query rail for Canvas workbench tab views only.                            |
+| `CanvasWorkbenchRouteState`                       | `canvasWorkbenchRouteState.ts` | Parsed `/canvas/:workbenchTab?` route state.                               |
+| `parseCanvasWorkbenchRouteState(value)`           | `canvasWorkbenchRouteState.ts` | Fails closed for unknown tab route segments.                               |
+| `resolveCanvasWorkbenchTabSelectionCommand(args)` | `canvasWorkbenchRouteState.ts` | Command result for tab selection navigation.                               |
+| `createCanvasGraphWorkbenchTab`                   | `canvasWorkbenchTabs.ts`       | Creates the canonical Graph tab without retired `GraphCanvas` naming.      |
+| `CanvasWorkbenchTabsReadModel`                    | `canvasWorkbenchTabs.ts`       | Semantic icon+label render-ready tab model for the Canvas route.           |
+| `buildCanvasWorkbenchTabsReadModel(args)`         | `canvasWorkbenchTabs.ts`       | Projects Graph plus enabled plugin tabs with active/unavailable state.     |
+| `isCanvasWorkbenchTabAvailableForContext(args)`   | `canvasWorkbenchTabs.ts`       | Decides whether a tab scope is available for the current Canvas context.   |
+| `CanvasWorkbenchTabStrip`                         | `CanvasWorkbenchTabStrip.tsx`  | Passive semantic icon+label tab-list renderer; see local component guide.  |
+| `CanvasWorkbenchTabPanel`                         | `CanvasWorkbenchTabPanel.tsx`  | Renders the selected Canvas tab view or unavailable recovery surface.      |
 
 ## Command And Query Rails
 
@@ -91,15 +95,16 @@ Canonical local catalog:
 
 ## DDD Objects
 
-| Object                               | Kind                 | Invariants                                                                     |
-| ------------------------------------ | -------------------- | ------------------------------------------------------------------------------ |
-| `ViewPlacement`                      | value object         | A view has exactly one visual placement.                                       |
-| `ShellNavigationPlacement`           | value object         | Only `kind: 'shell-nav'` can become a shell navigation item.                   |
-| `CanvasWorkbenchTabPlacement`        | value object         | Only `kind: 'workbench-tab'` and `workbench: 'canvas'` can become Canvas tabs. |
-| `ShellNavigationReadModel`           | read model           | Contains only shell placements sorted by placement order.                      |
-| `CanvasWorkbenchTabsReadModel`       | read model           | Contains Graph plus enabled Canvas tab labels, active state, and routes only.  |
-| `CanvasWorkbenchContext`             | value object         | Canvas context is either ready or explicitly unavailable.                      |
-| `CanvasWorkbenchTabSelectionCommand` | command value object | Selected tab ID must exist in the read model.                                  |
+| Object                               | Kind                 | Invariants                                                                                                   |
+| ------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ViewPlacement`                      | value object         | A view has exactly one visual placement.                                                                     |
+| `ShellNavigationPlacement`           | value object         | Only `kind: 'shell-nav'` can become a shell navigation item.                                                 |
+| `CanvasWorkbenchTabPlacement`        | value object         | Only `kind: 'workbench-tab'` and `workbench: 'canvas'` can become Canvas tabs.                               |
+| `CanvasWorkbenchTabScope`            | value object         | `workspace` tabs need only workspace scope; `canvas`, `selection`, and `run` tabs need ready Canvas context. |
+| `ShellNavigationReadModel`           | read model           | Contains only shell placements sorted by placement order.                                                    |
+| `CanvasWorkbenchTabsReadModel`       | read model           | Contains Graph plus enabled Canvas tab labels, active state, and routes only.                                |
+| `CanvasWorkbenchContext`             | value object         | Canvas context is either ready or explicitly unavailable.                                                    |
+| `CanvasWorkbenchTabSelectionCommand` | command value object | Selected tab ID must exist in the read model.                                                                |
 
 ## Invariants
 
@@ -114,10 +119,19 @@ Canonical local catalog:
 - `CanvasWorkbenchTabStrip` owns Graph/Code/Lineage/Diff/Artifacts/Runs view
   tabs only.
 - `CanvasWorkbenchTabStrip` must render those tabs as a horizontal,
-  header-scoped text-only strip with readable labels; it must not render tab
-  icons, compress labels into truncated shell-rail captions, or use shell
-  navigation visual semantics.
+  header-scoped semantic icon+label strip with readable labels; it must not use
+  plugin icon components, compress labels into truncated shell-rail captions, or
+  use shell navigation visual semantics.
 - `/canvas` resolves to Graph.
+- Workspace-scoped workbench tabs, currently Code, remain visible beside Graph
+  before a persisted Canvas document exists.
+- When a workspace-scoped workbench tab is active, its tab panel takes priority
+  over first-canvas center surfaces.
+- Canvas, selection, and run-scoped workbench tabs remain hidden or recover to
+  Graph until Canvas context is ready.
+- the built-in Graph tab factory is `createCanvasGraphWorkbenchTab`; active
+  Canvas workbench code must not use the retired `createGraphCanvasWorkbenchTab`
+  vocabulary.
 - `/canvas/:workbenchTab` resolves only known Canvas tab IDs.
 - Unknown tab route segments render unavailable state with a Graph recovery
   command.
@@ -134,6 +148,7 @@ Canonical local catalog:
 ```mermaid
 stateDiagram-v2
     [*] --> graph: /canvas
+    graph --> code: SelectCanvasWorkbenchTab(code) before document exists
     graph --> code: SelectCanvasWorkbenchTab(code)
     graph --> lineage: SelectCanvasWorkbenchTab(lineage)
     graph --> diff: SelectCanvasWorkbenchTab(diff)
@@ -176,7 +191,8 @@ sequenceDiagram
   viewport or active tab panel.
 - `routes.ts` registers `/canvas/:workbenchTab?` under the Canvas route owner.
 - `dbtContributions.ts` contributes Code, Lineage, Diff, and Artifacts as
-  Canvas workbench tabs.
+  Canvas workbench tabs. Code is `workspace` scoped; Lineage and Diff are
+  Canvas-scoped; Artifacts is run-scoped.
 - `monitoringContributions.ts` contributes global Runs as shell navigation and
   Canvas-scoped Runs as a separate workbench tab.
 - `CanvasRunsTabView.tsx` separates Canvas-scoped Runs bootstrap ownership from
@@ -185,6 +201,8 @@ sequenceDiagram
   placement query results.
 - `canvas-workbench-tabs.cy.ts` proves the user-visible route and shell
   placement behavior.
+- `canvas-legacy-retirement-component.md` records the F-12 GraphCanvas
+  retirement boundary.
 
 ## User Stories
 
@@ -193,8 +211,8 @@ sequenceDiagram
   `/canvas` does not select Code, Lineage, Diff, Artifacts, or Runs by default.
 - `US-CANVAS-WORKBENCH-002`: as a Canvas user, I select the Code tab from the
   Canvas workbench. The route becomes `/canvas/code`, Code renders inside the
-  Canvas shell, and Code cannot appear as a global shell-navigation sibling of
-  Canvas.
+  Canvas shell, remains available before first-canvas creation, and Code cannot
+  appear as a global shell-navigation sibling of Canvas.
 - `US-CANVAS-WORKBENCH-003`: as a Canvas user, I select Lineage, Diff, and
   Artifacts from the same workbench rail. Each scoped view uses the same Canvas
   context and retired global route IDs or bootstrap aliases must not return.
@@ -211,11 +229,11 @@ sequenceDiagram
   tab. The registry accepts one Canvas placement, projects it through
   `ListCanvasWorkbenchTabs`, and rejects duplicate tab IDs or shell placements
   in Canvas tab queries.
-- `US-CANVAS-WORKBENCH-010`: as a Canvas user, I see Stage 1 tabs as text-only
-  labels. Plugin icon metadata must not render in the Canvas workbench tab
-  strip.
+- `US-CANVAS-WORKBENCH-010`: as a Canvas user, I see mature workbench tabs with
+  Canvas-owned semantic icons and readable labels. Plugin icon components must
+  not render directly in the Canvas workbench tab strip.
 - `US-CANVAS-WORKBENCH-011`: as a plugin author, I can keep icon metadata for
-  icon-bearing surfaces without forcing icons into
+  plugin-owned surfaces without forcing component icons into
   `CanvasWorkbenchTabsReadModel`.
 - `US-CANVAS-WORKBENCH-012`: as a reviewer, I can inspect
   `CanvasWorkbenchTabStrip` public API, invariants, transitions, and consumers
@@ -242,7 +260,7 @@ sequenceDiagram
 - User-visible scoped tabs:
   `SelectCanvasWorkbenchTab`, `CanvasWorkbenchTabStrip`,
   `CanvasWorkbenchTabPanel`, `canvas-workbench-tabs.cy.ts`.
-- Text-only tab-strip component contract:
+- Semantic icon tab-strip component contract:
   `CanvasWorkbenchTabStrip`, `CanvasWorkbenchTabsReadModel`,
   `canvas-workbench-tab-strip-component.md`,
   `canvasWorkbenchTabs.architecture.test.ts`.
@@ -267,10 +285,10 @@ projection, tab rendering, and Canvas-scoped Runs.
   remain split by placement.
 - `canvasWorkbenchRouteState.test.ts` proves default, accepted, unknown, and
   disabled tab command results.
-- `canvasWorkbenchTabs.test.ts` proves sorted text-only tabs, duplicate
+- `canvasWorkbenchTabs.test.ts` proves sorted semantic icon tabs, duplicate
   rejection, missing context, and unknown route unavailable state.
 - `canvasWorkbenchTabs.architecture.test.ts` guards semantic separation from
-  shell nav, icon rendering in the Stage 1 strip, and
+  shell nav, plugin icon isolation in the Canvas strip, and
   `CanvasPlaygroundTabStrip`.
 - `routes.test.tsx` proves `/canvas/:workbenchTab` is registered and retired
   global Canvas-dependent paths are absent.
@@ -289,7 +307,8 @@ projection, tab rendering, and Canvas-scoped Runs.
 - Cypress verifies the shell does not expose retired global Code, Lineage,
   Diff, or Artifacts links or captions.
 - Cypress verifies the Canvas workbench tabs remain horizontal, route-scoped,
-  text-only, and readable instead of being compressed into abbreviated labels.
+  controlled-icon, and readable instead of being compressed into abbreviated
+  labels.
 
 ## Current-To-Target Map
 

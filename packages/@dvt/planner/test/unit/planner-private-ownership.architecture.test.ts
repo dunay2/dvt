@@ -83,6 +83,27 @@ describe('planner-private behavior ownership', () => {
       expect(source).not.toMatch(forbiddenImportPattern);
     }
   });
+
+  it('keeps custom policy namespace registry frozen until a real consumer reactivates it', () => {
+    const port = plannerOwnedPorts.find(
+      (candidate) => candidate.symbol === 'ICustomPolicyNamespaceRegistry'
+    );
+    expect(port).toBeDefined();
+    const source = readFile(port!.sourcePath);
+    const componentGuide = readFile(
+      'docs/architecture/components/planner/planner-private-behavior-ports-component.md'
+    );
+    const constraints = readFile('docs/architecture/components/planner/planner-constraints.md');
+
+    expect(source.slice(0, 520)).toContain('Frozen compatibility seam');
+    expect(source.slice(0, 520)).toContain('real consumer and ADR-backed reactivation');
+    expect(source).not.toMatch(/\b(register|validate|accept|authorize)Namespace\b/);
+    expect(source).not.toMatch(/export\s+(?:class|function|const)\s+/);
+    expect(componentGuide).toContain('Custom Policy Namespace Freeze');
+    expect(componentGuide).toContain('real consumer and ADR-backed reactivation');
+    expect(componentGuide).toContain('MUST NOT add registry implementations');
+    expect(constraints).toContain('Custom policy namespace registry is frozen');
+  });
 });
 
 function readFile(path: string): string {

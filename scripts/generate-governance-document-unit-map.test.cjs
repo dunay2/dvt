@@ -72,3 +72,25 @@ test('buildDocumentEntries records file owner and subject unit separately', () =
     ]
   );
 });
+
+test('buildDocumentEntries consumes a supplied owner matcher', () => {
+  const calls = [];
+
+  assert.deepEqual(
+    buildDocumentEntries(['docs/guides/local-ci-checks.md'], [], {
+      ownerMatcher: (filePath) => {
+        calls.push(filePath);
+        return [{ id: 'SYS-CI-GOVERNANCE-ROOT' }];
+      },
+    }),
+    [
+      {
+        path: 'docs/guides/local-ci-checks.md',
+        classification: 'describes unit',
+        documentOwnerUnit: 'SYS-CI-GOVERNANCE-ROOT',
+        subjectUnit: 'SYS-CI-GOVERNANCE',
+      },
+    ]
+  );
+  assert.deepEqual(calls, ['docs/guides/local-ci-checks.md']);
+});

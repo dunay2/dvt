@@ -5,6 +5,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
 import { expect, vi } from 'vitest';
 
+import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
+import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
+import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
+import type { CanonicalNode } from '../types/canonical';
 import {
   getPublishedRouteBootstrapPresentation,
   resetRouteBootstrapPresentation,
@@ -16,6 +20,7 @@ import {
   getCanvasDraftPresentationState,
   resetCanvasDraftPresentationState,
 } from './canvas/canvasDraftPresentationStore';
+import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
 export { buildController } from './Canvas.test.controller';
@@ -98,10 +103,6 @@ async function renderCanvasRoute(root: Root): Promise<void> {
 }
 
 export function createCanvasRouteHarness() {
-  const topBarCanvasControls = document.createElement('div');
-  topBarCanvasControls.id = 'shell-top-bar-canvas-controls';
-  document.body.appendChild(topBarCanvasControls);
-
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
@@ -126,14 +127,15 @@ export function createCanvasRouteHarness() {
       });
       resetCanvasDraftPresentationState();
       resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
-      document.getElementById('shell-top-bar-canvas-controls')?.remove();
       container.remove();
     },
   };
 }
 
+export type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
+
 export async function renderCanvasRouteWithController(
-  harness: ReturnType<typeof createCanvasRouteHarness>,
+  harness: CanvasRouteHarness,
   overrides?: Partial<CanvasController>
 ) {
   mockedUseCanvasController.mockReturnValue(buildController(overrides));
@@ -141,15 +143,6 @@ export async function renderCanvasRouteWithController(
 }
 
 export function findCanvasButton(container: ParentNode, label: string) {
-  const topBarControls = document.getElementById('shell-top-bar-canvas-controls');
-  const inTopBar = Array.from(topBarControls?.querySelectorAll('button') ?? []).find((button) =>
-    button.textContent?.includes(label)
-  );
-
-  if (inTopBar) {
-    return inTopBar;
-  }
-
   const inContainer = Array.from(container.querySelectorAll('button')).find((button) =>
     button.textContent?.includes(label)
   );
@@ -166,8 +159,12 @@ export function findCanvasButton(container: ParentNode, label: string) {
 export function getPrimaryCanvasButtons(container: ParentNode) {
   return {
     layoutButton: findCanvasButton(container, 'Layout'),
-    planButton: findCanvasButton(container, 'Plan'),
-    runButton: findCanvasButton(container, 'Run'),
+    planButton:
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-toolbar-plan-command"]') ??
+      undefined,
+    runButton:
+      container.querySelector<HTMLButtonElement>('[data-slot="canvas-toolbar-run-command"]') ??
+      undefined,
   };
 }
 
@@ -180,7 +177,7 @@ export function publishedCanvasRouteBootstrapPresentation() {
 }
 
 export function expectCanvasSurfaceState(args: {
-  harness: ReturnType<typeof createCanvasRouteHarness>;
+  harness: CanvasRouteHarness;
   text: string;
   slot: string;
   viewportVisible: boolean;
@@ -217,4 +214,86 @@ export function expectCanvasBootstrapState(args: {
     detail: bootstrapDetail,
     canComplete: canCompleteBootstrap,
   });
+}
+
+export function expectCanvasRegistryClosed(): void {
+  expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
+}
+
+export function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
+  const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
+
+  expect(layoutButton).toBeUndefined();
+  expect(planButton).toBeUndefined();
+  expect(runButton).toBeUndefined();
+  expect(useCanvasViewMenuContributionStore.getState().contribution).toBeNull();
+}
+
+export function expectActiveCanvasTab(args: {
+  container: ParentNode;
+  title: string;
+  kindLabel: string;
+}): void {
+  const { container, title, kindLabel } = args;
+  const tabStrip = container.querySelector('[data-slot="canvas-playground-tab-strip"]');
+
+  expect(tabStrip).not.toBeNull();
+  expect(tabStrip?.textContent).toContain(title);
+  expect(tabStrip?.textContent).toContain(kindLabel);
+}
+
+export function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
+  const registration = [...DVT_AUTHORING_NODE_KINDS, ...DBT_NODE_KINDS].find(
+    (candidate) => candidate.kind === kind
+  );
+  if (registration == null) {
+    throw new Error(`Missing authoring node kind fixture: ${kind}`);
+  }
+  return registration;
+}
+
+export function buildInspectorFixtureNode(): CanonicalNode {
+  return {
+    id: 'node.source',
+    name: 'Source',
+    pluginId: 'dvt',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+  };
+}
+
+export function expectBlockedCanvasRouteState(args: {
+  harness: CanvasRouteHarness;
+  text: string;
+  detail: string;
+  routeState: 'blocked_backend';
+  bootstrapStatus?: 'blocked' | 'complete';
+  canCompleteBootstrap?: boolean;
+}): void {
+  const {
+    harness,
+    text,
+    detail,
+    routeState,
+    bootstrapStatus = 'blocked',
+    canCompleteBootstrap = false,
+  } = args;
+
+  expectCanvasSurfaceState({
+    harness,
+    text,
+    extraText: detail,
+    slot: 'canvas-blocked-state',
+    viewportVisible: false,
+  });
+  expectPrimaryCanvasActionsBlocked(harness.container);
+  expectCanvasBootstrapState({
+    routeState,
+    bootstrapStatus,
+    bootstrapDetail: detail,
+    canCompleteBootstrap,
+  });
+  expectCanvasRegistryClosed();
 }

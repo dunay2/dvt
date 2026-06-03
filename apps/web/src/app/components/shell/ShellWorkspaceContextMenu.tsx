@@ -5,13 +5,15 @@ import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 import { Button } from '../ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { topAppBarClasses } from './chrome';
+import type { ShellTopBarCopy } from './copy';
 import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
 
 export type ShellWorkspaceContextMenuProps = {
   readonly badge: ProjectIdentityBadge;
+  readonly copy: ShellTopBarCopy;
 };
 
-export function ShellWorkspaceContextMenu({ badge }: ShellWorkspaceContextMenuProps) {
+export function ShellWorkspaceContextMenu({ badge, copy }: ShellWorkspaceContextMenuProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -23,7 +25,7 @@ export function ShellWorkspaceContextMenu({ badge }: ShellWorkspaceContextMenuPr
           aria-label="Show workspace context"
         >
           <ChevronsUpDown className="size-4" />
-          Context
+          {copy.workspaceContext}
         </Button>
       </PopoverTrigger>
       <PopoverContent data-slot="shell-workspace-context-menu" align="start" className="w-80 p-3">
@@ -41,7 +43,7 @@ export function ShellWorkspaceContextMenu({ badge }: ShellWorkspaceContextMenuPr
             {badge.tenantLabel} / {badge.environmentLabel} / {badge.draftPostureLabel}
           </div>
         </div>
-        <ShellWorkspaceContextDetails badge={badge} />
+        <ShellWorkspaceContextDetails badge={badge} copy={copy} />
       </PopoverContent>
     </Popover>
   );

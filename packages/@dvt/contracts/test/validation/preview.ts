@@ -64,7 +64,7 @@ const transformationGraphSource = {
 const transformationPlan = {
   metadata: {
     planVersion: '1.0',
-    schemaVersion: 'v1.2',
+    schemaVersion: '1.0',
     contractVersion: '1.0.0',
     inputHashSha256: 'f'.repeat(64),
     planId: '1'.repeat(64),
@@ -272,7 +272,7 @@ export function registerValidationPreviewSuite(): void {
           planRef: {
             uri: 'dvt-plan://plans/plan-1',
             sha256: 'd'.repeat(64),
-            schemaVersion: 'v1.2',
+            schemaVersion: '1.0',
             planId: transformationPlan.metadata.planId,
             planVersion: transformationPlan.metadata.planVersion,
           },

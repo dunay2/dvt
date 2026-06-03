@@ -121,6 +121,65 @@ test('tracked migrations include DB-derived governance hash projections after W7
   );
 });
 
+test('tracked migrations include the planning knowledge document relation rail', () => {
+  const migrations = readMigrationFiles();
+  const knowledgeMigration = migrations.find(
+    (migration) => migration.fileName === '034_planning_knowledge_document_relations.sql'
+  );
+
+  assert.ok(knowledgeMigration);
+  assert.match(
+    knowledgeMigration.sql,
+    /create table if not exists planning_query_store\.knowledge_documents/
+  );
+  assert.match(
+    knowledgeMigration.sql,
+    /create table if not exists planning_query_store\.knowledge_document_sections/
+  );
+  assert.match(
+    knowledgeMigration.sql,
+    /create table if not exists planning_query_store\.knowledge_action_links/
+  );
+  assert.match(
+    knowledgeMigration.sql,
+    /create or replace view planning_query_store\.knowledge_mandatory_proposal_binding_gap/
+  );
+});
+
+test('tracked migrations flag partial mandatory proposal action task linkage', () => {
+  const migrations = readMigrationFiles();
+  const partialGapMigration = migrations.find(
+    (migration) => migration.fileName === '047_knowledge_mandatory_proposal_partial_action_gaps.sql'
+  );
+
+  assert.ok(partialGapMigration);
+  assert.match(
+    partialGapMigration.sql,
+    /count\(distinct action\.action_id\) > count\(distinct task_link\.action_id\)/
+  );
+});
+
+test('tracked migrations include governance component definition command rail tables', () => {
+  const migrations = readMigrationFiles();
+  const componentDefinitionMigration = migrations.find(
+    (migration) => migration.fileName === '037_governance_component_definition_commands.sql'
+  );
+
+  assert.ok(componentDefinitionMigration);
+  assert.match(
+    componentDefinitionMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(
+    componentDefinitionMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_local_operations/
+  );
+  assert.match(
+    componentDefinitionMigration.sql,
+    /create or replace view planning_query_store\.governance_component_definition_query/
+  );
+});
+
 test('tracked migrations include the effective planning task read model after W11', () => {
   const migrations = readMigrationFiles();
   const effectiveTaskMigration = migrations.find(
@@ -479,6 +538,40 @@ test('tracked migrations include component engineering record query after W23', 
   assert.match(cerMigration.sql, /componentEngineeringRecord/);
 });
 
+test('tracked migrations expose risk register debt as DB work intake after W36', () => {
+  const migrations = readMigrationFiles();
+  const riskDebtMigration = migrations.find(
+    (migration) => migration.fileName === '036_risk_debt_work_intake.sql'
+  );
+
+  assert.ok(riskDebtMigration);
+  assert.match(
+    riskDebtMigration.sql,
+    /create table if not exists planning_query_store\.risk_debt_items/
+  );
+  assert.match(
+    riskDebtMigration.sql,
+    /create or replace view planning_query_store\.risk_debt_query/
+  );
+  assert.match(
+    riskDebtMigration.sql,
+    /create or replace view planning_query_store\.planning_work_intake_query/
+  );
+  assert.match(riskDebtMigration.sql, /'risk_debt'::text as intake_kind/);
+  assert.match(riskDebtMigration.sql, /risk_debt_query debt/);
+});
+
+test('tracked migrations keep risk debt out of the next-task table shape', () => {
+  const migrations = readMigrationFiles();
+  const riskDebtMigration = migrations.find(
+    (migration) => migration.fileName === '036_risk_debt_work_intake.sql'
+  );
+
+  assert.ok(riskDebtMigration);
+  assert.doesNotMatch(riskDebtMigration.sql, /insert into planning_query_store\.planning_tasks/);
+  assert.doesNotMatch(riskDebtMigration.sql, /alter table planning_query_store\.planning_tasks/);
+});
+
 test('tracked migrations link component engineering records to related test components after W24', () => {
   const migrations = readMigrationFiles();
   const cerTestMigration = migrations.find(
@@ -493,4 +586,819 @@ test('tracked migrations link component engineering records to related test comp
   assert.match(cerTestMigration.sql, /related_test_component_links/);
   assert.match(cerTestMigration.sql, /testComponents/);
   assert.match(cerTestMigration.sql, /related_test_files/);
+});
+
+test('tracked migrations expose governance unit tree query after W25', () => {
+  const migrations = readMigrationFiles();
+  const unitQueryMigration = migrations.find(
+    (migration) => migration.fileName === '025_governance_unit_tree_query.sql'
+  );
+
+  assert.ok(unitQueryMigration);
+  assert.match(
+    unitQueryMigration.sql,
+    /create or replace view planning_query_store\.governance_unit_query/
+  );
+  assert.match(unitQueryMigration.sql, /unitReferences/);
+  assert.match(unitQueryMigration.sql, /parent_id/);
+  assert.match(unitQueryMigration.sql, /is_materialized_component/);
+});
+
+test('tracked migrations constrain task-gap disposition actions to their referenced task after W26', () => {
+  const migrations = readMigrationFiles();
+  const taskGapMigration = migrations.find(
+    (migration) => migration.fileName === '026_task_gap_reference_filter.sql'
+  );
+
+  assert.ok(taskGapMigration);
+  assert.match(
+    taskGapMigration.sql,
+    /create or replace view planning_query_store\.planning_task_gap_raw_query/
+  );
+  assert.match(taskGapMigration.sql, /action\.reference_text is not null/);
+  assert.match(
+    taskGapMigration.sql,
+    /upper\(reference\.reference_text\) = upper\(action\.reference_text\)/
+  );
+  assert.doesNotMatch(
+    taskGapMigration.sql,
+    /on reference\.document_path = action\.document_path\s+and reference\.registered_planning_task = true\s+join/s
+  );
+});
+
+test('tracked migrations expose component engineering record v2 after W27', () => {
+  const migrations = readMigrationFiles();
+  const cerV2Migration = migrations.find(
+    (migration) => migration.fileName === '027_component_engineering_record_v2.sql'
+  );
+
+  assert.ok(cerV2Migration);
+  assert.match(
+    cerV2Migration.sql,
+    /create or replace view planning_query_store\.governance_component_engineering_record_v2_query/
+  );
+  assert.match(cerV2Migration.sql, /governance_component_engineering_record_query/);
+  assert.match(cerV2Migration.sql, /'schemaVersion', 'v2'/);
+  assert.match(cerV2Migration.sql, /'contracts'/);
+  assert.match(cerV2Migration.sql, /'capabilities'/);
+  assert.match(cerV2Migration.sql, /'failureModes'/);
+  assert.match(cerV2Migration.sql, /'costModel'/);
+});
+
+test('tracked migrations normalize component engineering record v2 surfaces after W28', () => {
+  const migrations = readMigrationFiles();
+  const cerV21Migration = migrations.find(
+    (migration) => migration.fileName === '028_component_engineering_record_v21.sql'
+  );
+
+  assert.ok(cerV21Migration);
+  assert.match(
+    cerV21Migration.sql,
+    /create or replace view planning_query_store\.governance_component_engineering_record_v2_query/
+  );
+  assert.match(cerV21Migration.sql, /governance_component_engineering_record_query/);
+  assert.match(cerV21Migration.sql, /'relatedDocuments'/);
+  assert.match(cerV21Migration.sql, /'domain'/);
+  assert.match(cerV21Migration.sql, /'composition'/);
+  assert.match(cerV21Migration.sql, /'codeSurface'/);
+  assert.match(cerV21Migration.sql, /'connections'/);
+  assert.match(cerV21Migration.sql, /missing_code_symbol_index/);
+  assert.match(cerV21Migration.sql, /missing_component_connection_index/);
+});
+
+test('tracked migrations expose relational component engineering records after W29', () => {
+  const migrations = readMigrationFiles();
+  const cerRelationalMigration = migrations.find(
+    (migration) => migration.fileName === '029_component_engineering_record_relational_core.sql'
+  );
+
+  assert.ok(cerRelationalMigration);
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_document_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_relation_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_contract_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_gap_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /from planning_query_store\.component_engineering_document_query/
+  );
+  assert.match(
+    cerRelationalMigration.sql,
+    /from planning_query_store\.component_engineering_relation_query/
+  );
+});
+
+test('tracked migrations keep component engineering owned and test files disjoint after W30', () => {
+  const migrations = readMigrationFiles();
+  const cerFileRoleMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '030_component_engineering_record_file_role_projection.sql'
+  );
+
+  assert.ok(cerFileRoleMigration);
+  assert.match(
+    cerFileRoleMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_rollup_query/
+  );
+  assert.match(
+    cerFileRoleMigration.sql,
+    /jsonb_agg\(file_path order by file_path\) filter \(where file_role = 'owned'\)/
+  );
+  assert.match(
+    cerFileRoleMigration.sql,
+    /jsonb_agg\(file_path order by file_path\) filter \(where file_role = 'test'\)/
+  );
+  assert.match(
+    cerFileRoleMigration.sql,
+    /join planning_query_store\.component_engineering_file_rollup_query/
+  );
+});
+
+test('tracked migrations keep feature mechanization links distinct from planning task links after W31', () => {
+  const migrations = readMigrationFiles();
+  const featureMechanizationMigration = migrations.find(
+    (migration) => migration.fileName === '031_feature_mechanization_task_gap_links.sql'
+  );
+
+  assert.ok(featureMechanizationMigration);
+  assert.match(
+    featureMechanizationMigration.sql,
+    /create or replace view planning_query_store\.planning_task_gap_raw_query/
+  );
+  assert.match(featureMechanizationMigration.sql, /document_governed_work_links/);
+  assert.match(
+    featureMechanizationMigration.sql,
+    /classification = 'registered_feature_mechanization'/
+  );
+  assert.match(featureMechanizationMigration.sql, /registered_planning_task = true/);
+});
+
+test('tracked migrations expose composite component hierarchy records after W32', () => {
+  const migrations = readMigrationFiles();
+  const compositeHierarchyMigration = migrations.find(
+    (migration) => migration.fileName === '032_component_engineering_composite_hierarchy.sql'
+  );
+
+  assert.ok(compositeHierarchyMigration);
+  assert.match(
+    compositeHierarchyMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_tree_query/
+  );
+  assert.match(
+    compositeHierarchyMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_ownership_query/
+  );
+  assert.match(
+    compositeHierarchyMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_metadata_query/
+  );
+  assert.match(
+    compositeHierarchyMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_drift_query/
+  );
+  assert.match(compositeHierarchyMigration.sql, /leaf_component_id/);
+  assert.match(compositeHierarchyMigration.sql, /children_required_without_children/);
+});
+
+test('tracked migrations keep component tree leaf checks source-neutral after W33', () => {
+  const migrations = readMigrationFiles();
+  const sourceChildFilterMigration = migrations.find(
+    (migration) => migration.fileName === '033_component_engineering_component_tree_leaf_filter.sql'
+  );
+
+  assert.ok(sourceChildFilterMigration);
+  assert.match(
+    sourceChildFilterMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_tree_query/
+  );
+  assert.match(
+    sourceChildFilterMigration.sql,
+    /child\.parent_id = unit\.unit_id\s+and child\.level = 'component'/
+  );
+  assert.match(sourceChildFilterMigration.sql, /where unit\.level = 'component'/);
+});
+
+test('tracked migrations expose DB-backed component engineering rules after W34', () => {
+  const migrations = readMigrationFiles();
+  const ruleRuntimeMigration = migrations.find(
+    (migration) => migration.fileName === '034_component_engineering_rule_runtime.sql'
+  );
+
+  assert.ok(ruleRuntimeMigration);
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_rule_catalog_query/
+  );
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_rule_evaluation_query/
+  );
+  assert.match(
+    ruleRuntimeMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_quality_query/
+  );
+  assert.match(ruleRuntimeMigration.sql, /CEI-ID-002/);
+  assert.match(ruleRuntimeMigration.sql, /CEI-RESP-001/);
+  assert.match(ruleRuntimeMigration.sql, /'CEI-RESP-001'[\s\S]*?'error'[\s\S]*?'component'/);
+  assert.match(ruleRuntimeMigration.sql, /'CEI-API-001'[\s\S]*?'error'[\s\S]*?'component'/);
+  assert.match(ruleRuntimeMigration.sql, /CEI-SIZE-005/);
+  assert.match(ruleRuntimeMigration.sql, /from planning_query_store\.governance_unit_query parent/);
+});
+
+test('tracked migrations separate component engineering views into an owning schema after W35', () => {
+  const migrations = readMigrationFiles();
+  const schemaBoundaryMigration = migrations.find(
+    (migration) => migration.fileName === '035_component_engineering_schema_boundary.sql'
+  );
+
+  assert.ok(schemaBoundaryMigration);
+  assert.match(schemaBoundaryMigration.sql, /create schema if not exists component_engineering/);
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /create or replace view component_engineering\.component_tree_query/
+  );
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /create or replace view component_engineering\.component_metadata_query/
+  );
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /create or replace view component_engineering\.rule_evaluation_query/
+  );
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /drop view if exists planning_query_store\.component_engineering_component_metadata_query/
+  );
+  assert.match(
+    schemaBoundaryMigration.sql,
+    /create view planning_query_store\.component_engineering_component_metadata_query as/
+  );
+  assert.match(schemaBoundaryMigration.sql, /owned_concern/);
+  assert.match(schemaBoundaryMigration.sql, /responsibilities/);
+  assert.match(schemaBoundaryMigration.sql, /metadata_state/);
+});
+
+test('tracked migrations reconcile DB-authored component file ownership after W38', () => {
+  const migrations = readMigrationFiles();
+  const ownershipReconciliationMigration = migrations.find(
+    (migration) => migration.fileName === '038_component_engineering_local_file_ownership.sql'
+  );
+
+  assert.ok(ownershipReconciliationMigration);
+  assert.match(
+    ownershipReconciliationMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_ownership_query/
+  );
+  assert.match(ownershipReconciliationMigration.sql, /governance_component_local_definitions/);
+  assert.match(ownershipReconciliationMigration.sql, /local_file_claims/);
+  assert.match(ownershipReconciliationMigration.sql, /claim_rank = 1/);
+  assert.match(ownershipReconciliationMigration.sql, /leaf_component_id/);
+  assert.match(ownershipReconciliationMigration.sql, /component_engineering\.file_ownership_query/);
+});
+
+test('tracked migrations derive component quality from effective file ownership after W39', () => {
+  const migrations = readMigrationFiles();
+  const effectiveQualityMigration = migrations.find(
+    (migration) => migration.fileName === '039_component_engineering_effective_quality.sql'
+  );
+
+  assert.ok(effectiveQualityMigration);
+  assert.match(
+    effectiveQualityMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_quality_query/
+  );
+  assert.match(effectiveQualityMigration.sql, /effective_file_counts/);
+  assert.match(effectiveQualityMigration.sql, /component_descendants/);
+  assert.match(effectiveQualityMigration.sql, /component_engineering_file_ownership_query/);
+  assert.match(effectiveQualityMigration.sql, /component_engineering\.component_quality_query/);
+});
+
+test('tracked migrations normalize local component metadata after W48', () => {
+  const migrations = readMigrationFiles();
+  const relationalComponentMetadataMigration = migrations.find(
+    (migration) => migration.fileName === '048_component_definition_relational_metadata.sql'
+  );
+
+  assert.ok(relationalComponentMetadataMigration);
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_local_semantic_items/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /primary key \(component_id, pattern_kind, pattern\)/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /primary key \(component_id, item_kind, item_value\)/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /governance_component_local_ownership_patterns_component_kind_order_idx/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /governance_component_local_semantic_items_component_kind_order_idx/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /from planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.doesNotMatch(
+    relationalComponentMetadataMigration.sql,
+    /jsonb_array_elements_text\(local_component\.owns\)/
+  );
+  assert.match(
+    relationalComponentMetadataMigration.sql,
+    /from planning_query_store\.governance_component_definition_query definition/
+  );
+});
+
+test('tracked migrations remove legacy local component JSONB storage after W49', () => {
+  const migrations = readMigrationFiles();
+  const localComponentJsonbRemovalMigration = migrations.find(
+    (migration) => migration.fileName === '049_component_definition_drop_local_jsonb_storage.sql'
+  );
+
+  assert.ok(localComponentJsonbRemovalMigration);
+  assert.match(
+    localComponentJsonbRemovalMigration.sql,
+    /create or replace view planning_query_store\.governance_component_local_metadata_query/
+  );
+  assert.match(
+    localComponentJsonbRemovalMigration.sql,
+    /create or replace view planning_query_store\.governance_unit_query/
+  );
+  assert.match(localComponentJsonbRemovalMigration.sql, /drop column if exists owns/);
+  assert.match(localComponentJsonbRemovalMigration.sql, /drop column if exists public_api/);
+  assert.match(localComponentJsonbRemovalMigration.sql, /drop column if exists raw_unit/);
+  assert.doesNotMatch(localComponentJsonbRemovalMigration.sql, /local_definition\.raw_unit/);
+  assert.doesNotMatch(localComponentJsonbRemovalMigration.sql, /local_definition\.owns/);
+});
+
+test('tracked migrations preserve normalized local component invariants after W50', () => {
+  const migrations = readMigrationFiles();
+  const normalizedInvariantMigration = migrations.find(
+    (migration) => migration.fileName === '050_component_definition_normalized_invariants.sql'
+  );
+
+  assert.ok(normalizedInvariantMigration);
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create or replace function planning_query_store\.assert_governance_component_local_definition_invariants/
+  );
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create or replace function planning_query_store\.check_governance_component_local_definition_invariants/
+  );
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create constraint trigger governance_component_local_definitions_invariants/
+  );
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create constraint trigger governance_component_local_ownership_patterns_invariants/
+  );
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /create constraint trigger governance_component_local_semantic_items_invariants/
+  );
+  assert.match(normalizedInvariantMigration.sql, /deferrable initially deferred/);
+  assert.match(normalizedInvariantMigration.sql, /pattern_kind = 'owns'/);
+  assert.match(
+    normalizedInvariantMigration.sql,
+    /item_kind in \('public_api', 'invariant', 'transition', 'consumer'\)/
+  );
+  assert.doesNotMatch(normalizedInvariantMigration.sql, /jsonb_array_length/);
+});
+
+test('tracked migrations prefer local leaf component claims after W51', () => {
+  const migrations = readMigrationFiles();
+  const leafClaimPrecedenceMigration = migrations.find(
+    (migration) => migration.fileName === '051_component_engineering_leaf_claim_precedence.sql'
+  );
+
+  assert.ok(leafClaimPrecedenceMigration);
+  assert.match(
+    leafClaimPrecedenceMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_ownership_query/
+  );
+  assert.match(leafClaimPrecedenceMigration.sql, /component_depth_rollup/);
+  assert.match(
+    leafClaimPrecedenceMigration.sql,
+    /order by\s+matched_file\.claim_depth desc,\s+matched_file\.is_leaf_component desc,\s+matched_file\.exact_match desc,\s+length\(matched_file\.own_pattern\) desc,\s+matched_file\.component_id/
+  );
+  assert.match(leafClaimPrecedenceMigration.sql, /component_engineering\.file_ownership_query/);
+  assert.doesNotMatch(
+    leafClaimPrecedenceMigration.sql,
+    /order by\s+length\(matched_file\.own_pattern\) desc,\s+matched_file\.component_id/
+  );
+});
+
+test('tracked migrations remove redundant parent ownership claims after W52', () => {
+  const migrations = readMigrationFiles();
+  const ownershipDedupeMigration = migrations.find(
+    (migration) => migration.fileName === '052_component_definition_assembly_ownership_dedupe.sql'
+  );
+
+  assert.ok(ownershipDedupeMigration);
+  assert.match(ownershipDedupeMigration.sql, /parent_child_claim_overlaps/);
+  assert.match(ownershipDedupeMigration.sql, /child_file_claims/);
+  assert.match(
+    ownershipDedupeMigration.sql,
+    /from child_pattern_files child_pattern_file[\s\S]*not exists \([\s\S]*from planning_query_store\.governance_component_local_ownership_patterns exclude_pattern[\s\S]*exclude_pattern\.component_id = child_pattern_file\.child_component_id[\s\S]*exclude_pattern\.pattern_kind = 'excludes'/
+  );
+  assert.match(ownershipDedupeMigration.sql, /children_required = true/);
+  assert.match(
+    ownershipDedupeMigration.sql,
+    /delete from planning_query_store\.governance_component_local_ownership_patterns parent_pattern/
+  );
+  assert.match(
+    ownershipDedupeMigration.sql,
+    /parent_pattern\.component_id = overlap\.parent_component_id/
+  );
+  assert.match(ownershipDedupeMigration.sql, /parent_pattern\.pattern = overlap\.parent_pattern/);
+});
+
+test('tracked migrations route claimed active work and clean queued work into next tasks', () => {
+  const migrations = readMigrationFiles();
+  const nextTaskClaimMigration = migrations.find(
+    (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
+  );
+  const activeClaimBoundaryMigration = migrations.find(
+    (migration) => migration.fileName === '041_planning_claim_recovery_active_claim_boundary.sql'
+  );
+
+  assert.ok(nextTaskClaimMigration);
+  assert.ok(activeClaimBoundaryMigration);
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /create or replace view planning_query_store\.planning_next_tasks/
+  );
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /lower\(candidate\.status\) in \('in_progress', 'review'\)/
+  );
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claimed_by is not null/);
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claim_expires_at > now\(\)/);
+  assert.match(nextTaskClaimMigration.sql, /lower\(candidate\.status\) = 'queued'/);
+  assert.match(nextTaskClaimMigration.sql, /candidate\.claimed_by is null/);
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /Dependency-satisfied active planning task with a live claim by/
+  );
+  assert.match(
+    nextTaskClaimMigration.sql,
+    /create or replace view planning_query_store\.planning_claim_recovery_tasks/
+  );
+  assert.match(
+    activeClaimBoundaryMigration.sql,
+    /create or replace view planning_query_store\.planning_claim_recovery_tasks/
+  );
+  assert.match(activeClaimBoundaryMigration.sql, /in_progress_claim_missing/);
+  assert.match(activeClaimBoundaryMigration.sql, /claim_expired/);
+  assert.match(activeClaimBoundaryMigration.sql, /queued_claim_owner_missing/);
+  assert.doesNotMatch(
+    activeClaimBoundaryMigration.sql,
+    /lower\(task\.status\) = 'queued'\s+and\s+\(\s+task\.claimed_by is not null\s+or task\.claim_expires_at is not null/s
+  );
+});
+
+test('tracked migrations expose required knowledge actions as planning intake', () => {
+  const migrations = readMigrationFiles();
+  const knowledgeRelationMigration = migrations.find(
+    (migration) => migration.fileName === '034_planning_knowledge_document_relations.sql'
+  );
+  const nextTaskClaimMigration = migrations.find(
+    (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
+  );
+
+  assert.ok(knowledgeRelationMigration);
+  assert.ok(nextTaskClaimMigration);
+  assert.match(
+    knowledgeRelationMigration.sql,
+    /create or replace view planning_query_store\.knowledge_action_work_intake_query/
+  );
+  assert.match(knowledgeRelationMigration.sql, /'knowledge_action'::text as intake_kind/);
+  assert.match(knowledgeRelationMigration.sql, /jsonb_array_elements\(action\.links\)/);
+  assert.match(knowledgeRelationMigration.sql, /targetType/);
+  assert.match(nextTaskClaimMigration.sql, /planning_work_intake_query/);
+  assert.match(nextTaskClaimMigration.sql, /knowledge_action_work_intake_query/);
+});
+
+test('tracked migrations route unowned review tasks through claim recovery', () => {
+  const migrations = readMigrationFiles();
+  const reviewClaimRecoveryMigration = migrations.find(
+    (migration) => migration.fileName === '041_planning_claim_recovery_active_claim_boundary.sql'
+  );
+  const nextTaskClaimMigration = migrations.find(
+    (migration) => migration.fileName === '040_planning_next_task_claim_boundary.sql'
+  );
+
+  assert.ok(reviewClaimRecoveryMigration);
+  assert.ok(nextTaskClaimMigration);
+  assert.match(
+    reviewClaimRecoveryMigration.sql,
+    /create or replace view planning_query_store\.planning_claim_recovery_tasks/
+  );
+  assert.match(reviewClaimRecoveryMigration.sql, /review_claim_missing/);
+  assert.match(reviewClaimRecoveryMigration.sql, /review_claim_expired/);
+  assert.match(
+    reviewClaimRecoveryMigration.sql,
+    /lower\(task\.status\) in \('in_progress', 'review'\)/
+  );
+  assert.match(nextTaskClaimMigration.sql, /planning_work_intake_query/);
+  assert.match(nextTaskClaimMigration.sql, /planning_claim_recovery_tasks/);
+});
+
+test('tracked migrations expose aggregated real work backlog query', () => {
+  const migrations = readMigrationFiles();
+  const realWorkMigration = migrations.find(
+    (migration) => migration.fileName === '044_planning_real_work_query.sql'
+  );
+
+  assert.ok(realWorkMigration);
+  assert.match(
+    realWorkMigration.sql,
+    /create or replace view planning_query_store\.planning_real_work_query/
+  );
+  assert.match(realWorkMigration.sql, /planning_open_tasks task/);
+  assert.match(realWorkMigration.sql, /planning_work_intake_query intake/);
+  assert.match(realWorkMigration.sql, /'blocked_by_dependency'/);
+  assert.match(realWorkMigration.sql, /'unlinked_required_action'/);
+  assert.match(realWorkMigration.sql, /open_item_count/);
+  assert.match(realWorkMigration.sql, /linked_task_count/);
+});
+
+test('tracked migrations keep real work disposition groups semantically aligned', () => {
+  const migrations = readMigrationFiles();
+  const groupingMigration = migrations.find(
+    (migration) => migration.fileName === '045_planning_real_work_query_grouping_hardening.sql'
+  );
+
+  assert.ok(groupingMigration);
+  assert.match(groupingMigration.sql, /work_group_key/);
+  assert.match(groupingMigration.sql, /intake\.intake_kind in \('docs_disposition', 'task_gap'\)/);
+  assert.match(
+    groupingMigration.sql,
+    /group by intake\.intake_kind, intake\.work_source_path, intake\.work_group_key/
+  );
+});
+
+test('tracked migrations create the DB-first architecture authority schema', () => {
+  const migrations = readMigrationFiles();
+  const authorityMigration = migrations.find(
+    (migration) => migration.fileName === '042_db_first_architecture_authority_schema.sql'
+  );
+
+  assert.ok(authorityMigration);
+  assert.match(authorityMigration.sql, /create schema if not exists architecture/);
+
+  for (const tableName of [
+    'design',
+    'design_scope',
+    'component',
+    'component_responsibility',
+    'component_metric',
+    'contract',
+    'component_relation',
+    'component_port',
+    'decision',
+    'component_flow',
+    'component_transformation',
+    'component_flow_step',
+    'component_event_io',
+    'component_storage_io',
+    'component_test',
+    'component_observability',
+    'risk',
+    'evidence',
+    'component_health_check',
+  ]) {
+    assert.match(
+      authorityMigration.sql,
+      new RegExp(`create table if not exists architecture\\.${tableName}\\b`)
+    );
+  }
+
+  assert.match(authorityMigration.sql, /architecture_design_status_check/);
+  assert.match(authorityMigration.sql, /architecture_component_kind_check/);
+  assert.match(authorityMigration.sql, /architecture_component_layer_check/);
+  assert.match(authorityMigration.sql, /architecture_component_relation_type_check/);
+  assert.match(authorityMigration.sql, /architecture_component_health_check_status_check/);
+  assert.match(authorityMigration.sql, /references architecture\.component\(component_id\)/);
+  assert.match(authorityMigration.sql, /references architecture\.contract\(contract_id\)/);
+  assert.match(authorityMigration.sql, /source_component_id <> target_component_id/);
+  assert.match(
+    authorityMigration.sql,
+    /create index if not exists architecture_component_owner_idx/
+  );
+  assert.match(
+    authorityMigration.sql,
+    /create index if not exists architecture_relation_source_idx/
+  );
+  assert.match(
+    authorityMigration.sql,
+    /create index if not exists architecture_evidence_subject_idx/
+  );
+});
+
+test('tracked migrations expose DB-first architecture authority query surfaces', () => {
+  const migrations = readMigrationFiles();
+  const authorityQueryMigration = migrations.find(
+    (migration) => migration.fileName === '043_db_first_architecture_authority_queries.sql'
+  );
+
+  assert.ok(authorityQueryMigration);
+
+  for (const viewName of [
+    'design_query',
+    'design_scope_query',
+    'component_query',
+    'component_relation_query',
+    'component_responsibility_query',
+    'component_io_query',
+    'component_flow_query',
+    'component_flow_step_query',
+    'component_contract_query',
+    'component_maturity_query',
+    'component_drift_query',
+    'implementation_authorization_query',
+    'implementation_violation_query',
+    'evidence_query',
+  ]) {
+    assert.match(
+      authorityQueryMigration.sql,
+      new RegExp(`create or replace view architecture\\.${viewName}\\b`)
+    );
+  }
+
+  assert.match(authorityQueryMigration.sql, /from architecture\.design_scope scope/);
+  assert.match(
+    authorityQueryMigration.sql,
+    /status in \('approved', 'implementing', 'implemented'\)/
+  );
+  assert.match(
+    authorityQueryMigration.sql,
+    /union all[\s\S]*from architecture\.component_event_io/
+  );
+  assert.match(
+    authorityQueryMigration.sql,
+    /union all[\s\S]*from architecture\.component_storage_io/
+  );
+  assert.match(authorityQueryMigration.sql, /missing_reasons/);
+  assert.match(authorityQueryMigration.sql, /required_evidence_missing/);
+  assert.match(authorityQueryMigration.sql, /health_check_failed/);
+});
+
+test('tracked migrations include architecture design command audit rail', () => {
+  const migrations = readMigrationFiles();
+  const designCommandMigration = migrations.find(
+    (migration) => migration.fileName === '044_architecture_design_command_rail.sql'
+  );
+
+  assert.ok(designCommandMigration);
+  assert.match(
+    designCommandMigration.sql,
+    /create table if not exists architecture\.design_operations/
+  );
+  assert.match(designCommandMigration.sql, /operation_type in \('architecture_design_create'\)/);
+  assert.match(designCommandMigration.sql, /idempotency_key text not null unique/);
+  assert.match(designCommandMigration.sql, /source_content_sha256/);
+  assert.match(designCommandMigration.sql, /references architecture\.design\(design_id\)/);
+});
+
+test('tracked migrations require explicit architecture design rail references', () => {
+  const migrations = readMigrationFiles();
+  const explicitRailMigration = migrations.find(
+    (migration) => migration.fileName === '045_architecture_design_explicit_rail_ref.sql'
+  );
+
+  assert.ok(explicitRailMigration);
+  assert.match(explicitRailMigration.sql, /alter column rail_ref drop default/);
+  assert.match(explicitRailMigration.sql, /architecture_design_explicit_rail_ref_check/);
+  assert.match(explicitRailMigration.sql, /raise exception/);
+  assert.match(explicitRailMigration.sql, /none - architecture-authority-only/);
+  assert.doesNotMatch(explicitRailMigration.sql, /delete from architecture\.design\b/);
+});
+
+test('tracked migrations widen architecture design operations for component graph commands', () => {
+  const migrations = readMigrationFiles();
+  const componentGraphCommandMigration = migrations.find(
+    (migration) => migration.fileName === '046_architecture_component_graph_command_rail.sql'
+  );
+
+  assert.ok(componentGraphCommandMigration);
+  assert.match(componentGraphCommandMigration.sql, /architecture_component_record/);
+  assert.match(componentGraphCommandMigration.sql, /architecture_relation_record/);
+  assert.match(componentGraphCommandMigration.sql, /architecture_design_operations_type_check/);
+  assert.doesNotMatch(
+    componentGraphCommandMigration.sql,
+    /delete from architecture\.design_operations\b/
+  );
+});
+
+test('tracked migrations include DB-first command/query rail catalog projection', () => {
+  const migrations = readMigrationFiles();
+  const railCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '053_command_query_rail_catalog.sql'
+  );
+
+  assert.ok(railCatalogMigration);
+  assert.match(
+    railCatalogMigration.sql,
+    /create table if not exists planning_query_store\.command_query_rails/
+  );
+  assert.match(railCatalogMigration.sql, /rail_type in \('command', 'query'\)/);
+  assert.match(railCatalogMigration.sql, /symbol_refs jsonb not null default '\[\]'::jsonb/);
+  assert.match(
+    railCatalogMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(
+    railCatalogMigration.sql,
+    /count\(\*\) over \(partition by rail_type, normalized_rail_name\)/
+  );
+  assert.match(railCatalogMigration.sql, /is_gap/);
+  assert.doesNotMatch(
+    railCatalogMigration.sql,
+    /delete from planning_query_store\.repository_commands\b/
+  );
+});
+
+test('tracked migrations add command/query rail implementation and documentation refs', () => {
+  const migrations = readMigrationFiles();
+  const railCatalogSourceRefsMigration = migrations.find(
+    (migration) => migration.fileName === '054_command_query_rail_catalog_source_refs.sql'
+  );
+
+  assert.ok(railCatalogSourceRefsMigration);
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /add column if not exists implementation_refs jsonb not null default '\[\]'::jsonb/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /add column if not exists documentation_refs jsonb not null default '\[\]'::jsonb/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /drop view if exists planning_query_store\.command_query_rail_query/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /jsonb_array_length\(implementation_refs\) as implementation_ref_count/
+  );
+  assert.match(
+    railCatalogSourceRefsMigration.sql,
+    /jsonb_array_length\(documentation_refs\) as documentation_ref_count/
+  );
+});
+
+test('tracked migrations include frontend mechanical truth inventory projection', () => {
+  const migrations = readMigrationFiles();
+  const frontendTruthMigration = migrations.find(
+    (migration) => migration.fileName === '055_frontend_mechanical_truth_inventory.sql'
+  );
+
+  assert.ok(frontendTruthMigration);
+  assert.match(
+    frontendTruthMigration.sql,
+    /create table if not exists planning_query_store\.frontend_mechanical_truth_surfaces/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /screen_state in \('operational-product', 'preview', 'disabled-unsupported', 'experimental'\)/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /create or replace view planning_query_store\.frontend_mechanical_truth_query/
+  );
+  assert.match(
+    frontendTruthMigration.sql,
+    /jsonb_array_length\(capability_gaps\) as capability_gap_count/
+  );
 });

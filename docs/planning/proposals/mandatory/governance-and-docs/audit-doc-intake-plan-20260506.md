@@ -31,8 +31,8 @@ live under `docs/planning/reviews/ci-and-delivery/`.
 
 In scope:
 
-- add `docs/planning/status/docs-staleness-audit-20260505.md`;
-- add `docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md`;
+- [Task: GOV-PROP-DISP-1] add `docs/planning/status/docs-staleness-audit-20260505.md`;
+- [Task: GOV-PROP-DISP-1] add `docs/planning/reviews/ci-and-delivery/20260506-ci-build-audit-review.md`;
 - update `docs/planning/reviews/review-status-board.md`;
 - run docs sync and governance generators.
 
@@ -81,6 +81,7 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/index.md
   - docs/planning/index.md
   - docs/planning/status/**
+  - docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md
   - docs/.manifest.json
 forbiddenImplementationSurfaces:
   - apps/**

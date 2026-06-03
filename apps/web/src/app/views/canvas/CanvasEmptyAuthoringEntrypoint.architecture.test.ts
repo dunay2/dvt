@@ -57,6 +57,12 @@ function buildWorkbenchArgs(
 ): CanvasWorkbenchSurfaceArgs {
   return {
     presentationState: buildPresentationState('empty'),
+    workspaceScope: {
+      tenantId: 'tenant-a',
+      projectId: 'project-orders',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    },
     startupBlockState: null,
     workbenchErrorMessage: null,
     canvasDocument: {
@@ -65,8 +71,11 @@ function buildWorkbenchArgs(
     },
     draftSaveStatus: 'saved',
     availableCanvasKinds: getCanvasRuntimeRegistrations(),
+    canCreateCanvasDocument: true,
     canEditEdges: true,
     canOpenSourceImport: true,
+    emptyStateGuideVisible: true,
+    onEmptyStateGuideVisibilityChange: vi.fn(),
     onCreateCanvasDocument: vi.fn(),
     onCreateAuthoringNode: vi.fn(),
     ...overrides,
@@ -125,6 +134,7 @@ describe('Canvas empty authoring entrypoint architecture', () => {
       'transformation',
     ]);
     expect(cycleState.onCreateCanvasDocument).toEqual(expect.any(Function));
+    expect(cycleState.unavailableMessage).toBeNull();
   });
 
   it('derives first-node copy and catalog from the active canvas kind', () => {

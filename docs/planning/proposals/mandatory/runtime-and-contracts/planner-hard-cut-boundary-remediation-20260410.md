@@ -230,7 +230,7 @@ In other words:
 - `manifestRef` and `targetProfile` leave the public `StartRunCommand` shape.
 - `preview` reuses the same plan-source policy as `start-run`.
 - `trim`-based repair helpers stop deciding planner-source validity.
-- existing callers using `manifestRef` will fail and must migrate to canonical
+- [Task: RUNTIME-PROP-DISP-1] existing callers using `manifestRef` will fail and must migrate to canonical
   `graphSource`.
 
 ## Hard-Cut Slice Sequence

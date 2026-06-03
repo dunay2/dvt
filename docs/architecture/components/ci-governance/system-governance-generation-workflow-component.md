@@ -68,6 +68,10 @@ This component does not own:
 Generated Markdown and YAML outputs are local artifacts, not manual authoring
 surfaces and not tracked review files. The editable root is the owning source
 plus the generator declared in the generated-docs policy.
+When `docs/generated-docs-policy.json` declares a generated shard family as
+DB-backed, the local shard remains an inspection artifact and the size gate must
+validate the declared DB projection contract instead of treating shard bytes as
+the authority.
 
 ## Current Workflow
 
@@ -81,8 +85,11 @@ flowchart TD
   FileComponent["docs:governance:file-component-index"]
   Fingerprint["docs:governance:file-fingerprint-baseline"]
   FingerprintImpact["docs:governance:file-fingerprint-impact"]
-  Coverage["docs:governance:coverage-report"]
-  Remediation["docs:governance:remediation-queue"]
+  GovernanceImport["governance:db:import final"]
+  QueryStore["planning_query_store governance views"]
+  Coverage["docs:governance:coverage-report\nsource=db final"]
+  Remediation["docs:governance:remediation-queue\nsource=db final"]
+  Workboard["docs:workboard:generate"]
   ChangedFiles["docs:governance:changed-files:check"]
   Prepush["verify:prepush / ci:docs"]
 
@@ -104,30 +111,36 @@ flowchart TD
   ComponentMap --> Fingerprint
   ComponentShards --> Fingerprint
   Fingerprint --> FingerprintBaseline[".generated-docs/.../system-governance-file-fingerprint-baseline.yaml"]
+  Fingerprint --> FingerprintShards[".generated-docs/.../governance-file-fingerprints/*.fingerprints.yaml"]
   FingerprintBaseline --> FingerprintImpact
+  FingerprintShards --> FingerprintImpact
   FileIndex --> FingerprintImpact
-  FileIndex --> Import["planning:db:import"]
-  ComponentIndex --> Import
-  ComponentMap --> Import
-  DocumentMapOutputs --> Import
-  FingerprintBaseline --> Import
-  FingerprintImpact --> Import
-  Import --> Coverage
+  FileIndex --> Import["planning:db:import\nplanning-only"]
+  Import --> Workboard
+  ComponentIndex --> GovernanceImport
+  ComponentMap --> GovernanceImport
+  DocumentMapOutputs --> GovernanceImport
+  FingerprintBaseline --> GovernanceImport
+  FingerprintShards --> GovernanceImport
+  FingerprintImpact --> GovernanceImport
+  FileIndex --> GovernanceImport
+  GovernanceImport --> QueryStore
+  QueryStore --> Coverage
   Coverage --> CoverageOutputs[".generated-docs/.../system-governance-coverage-report.*"]
-  Import --> Remediation
-  CoverageOutputs --> Remediation
+  QueryStore --> Remediation
   Remediation --> RemediationOutputs[".generated-docs/.../system-governance-remediation-queue.*"]
-  RemediationOutputs --> ImportFinal["planning:db:import final"]
   FileIndex --> ChangedFiles
   FingerprintBaseline --> ChangedFiles
+  FingerprintShards --> ChangedFiles
   Worktree --> ChangedFiles
   UnitCoverage --> Prepush
+  Workboard --> Prepush
   DocumentMapOutputs --> Prepush
   FileIndex --> Prepush
   FingerprintImpact --> Prepush
   CoverageOutputs --> Prepush
-  RemediationOutputs --> ImportFinal
-  ImportFinal --> Prepush
+  RemediationOutputs --> Prepush
+  GovernanceImport --> Prepush
   ChangedFiles --> Prepush
 ```
 
@@ -146,34 +159,41 @@ flowchart TD
   unit index plus tracked and untracked non-ignored files, writes the
   `.generated-docs/planning/status/system-governance-*` outputs plus the
   `governance-files/` and `governance-components/` shards, and its check command
-  regenerates ignored artifacts.
+  regenerates ignored artifacts. `governance-files/*.files.yaml` is backed by
+  `planning_query_store.governance_file_query`; `docs:gov:generated-policy`
+  validates that projection metadata before exempting that shard family from
+  local `maxBytes` enforcement.
 - `Fingerprint baseline` runs `pnpm docs:governance:file-fingerprint-baseline`
   through `scripts/check-governance-file-fingerprint-baseline.cjs --write`. It
-  reads the current generated file index and shards, writes
-  `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`,
+  reads the current generated file index and shards, writes a compact
+  `.generated-docs/planning/status/system-governance-file-fingerprint-baseline.yaml`
+  manifest plus deterministic
+  `.generated-docs/planning/status/governance-file-fingerprints/*.fingerprints.yaml`
+  shards keyed by `componentUnit` first, then `domainUnit`, then `rootUnit`,
   and its check command regenerates the ignored current baseline.
 - `Fingerprint impact` runs `pnpm docs:governance:file-fingerprint-impact`
   through `scripts/check-governance-file-fingerprint-baseline.cjs --report`. It
-  reads the current generated baseline and file index, writes
+  reads the current generated baseline manifest, fingerprint shards, and file
+  index, writes
   `.generated-docs/planning/status/system-governance-file-fingerprint-impact-20260501.md`,
   and its check command regenerates the ignored current impact report.
 - `Coverage report` runs `pnpm docs:governance:coverage-report` through
-  `scripts/generate-governance-coverage-report.cjs`. In
-  `governance:refresh`, the stage runs with
+  `scripts/generate-governance-coverage-report.cjs`. In the final
+  `governance:refresh` database-validation phase, the stage runs with
   `DVT_GOVERNANCE_REPORT_SOURCE=db` and reads
   `planning_query_store.governance_file_query` plus
   `planning_query_store.governance_component_query` after
-  `planning:db:import`. Standalone checks without that source override retain
+  `governance:db:import`. Standalone checks without that source override retain
   the deterministic local generated-input path, write
   `.generated-docs/planning/status/system-governance-coverage-report.*`, and
   regenerate the ignored artifact.
 - `Remediation queue` runs `pnpm docs:governance:remediation-queue` through
-  `scripts/generate-governance-remediation-queue.cjs`. In
-  `governance:refresh`, the stage runs with
+  `scripts/generate-governance-remediation-queue.cjs`. In the final
+  `governance:refresh` database-validation phase, the stage runs with
   `DVT_GOVERNANCE_REPORT_SOURCE=db` and reads
   `planning_query_store.governance_remediation_query` plus
   `planning_query_store.governance_coverage_query` after
-  `planning:db:import`. Standalone checks without that source override retain
+  `governance:db:import`. Standalone checks without that source override retain
   the deterministic local generated-input path, write
   `.generated-docs/planning/status/system-governance-remediation-queue.*`, and
   regenerate the ignored artifact.
@@ -200,19 +220,20 @@ The command runs the docs and governance generation stages in this order:
 6. `docs:governance:file-component-index`
 7. `docs:governance:file-fingerprint-baseline`
 8. `docs:governance:file-fingerprint-impact`
-9. `planning:db:import`
+9. `planning:db:import -- --if-stale --planning-only`
 10. `docs:workboard:generate`
-11. `docs:governance:coverage-report`
-12. `docs:governance:remediation-queue`
-13. `planning:db:import` final import for generated report parity
 
 After each generation pass, the runner hashes staged, unstaged, and untracked
 non-ignored worktree state. It repeats generation until that fingerprint stops
 changing, with a small maximum pass count. `planning:db:import` runs inside each
-generation pass after source-affecting generators and before DB-backed generated
-surfaces. Only after generated outputs are stable does it re-run
-`planning:db:import`, then `planning:db:check`, `planning:db:export:check`,
-`governance:db:check`, and `governance:db:export:check`.
+generation pass after source-affecting generators and before workboard
+generation. Coverage and remediation projections are built in-memory for
+`governance:db:import`; their local artifacts are written only after the DB is
+fresh. Only after generated outputs are stable does it re-run
+`planning:db:import`, then `planning:db:check`, `planning:db:inventory:check`,
+`planning:db:export:check`, `governance:db:import`,
+`governance:db:check`, DB-sourced coverage/remediation generation, and
+`governance:db:export:check`.
 
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain
@@ -253,6 +274,7 @@ These output families used to be tracked review files under
 - `docs/planning/status/system-governance-remediation-queue-20260502.md`
 - `docs/planning/status/governance-files/*.files.yaml`
 - `docs/planning/status/governance-components/*.component-files.yaml`
+- `docs/planning/status/governance-file-fingerprints/*.fingerprints.yaml`
 
 That fan-out is no longer expected in PR file lists. The same payload is still
 deterministically generated under `.generated-docs/planning/status/` for local
@@ -307,6 +329,9 @@ not the database import source.
   import. It may keep generated repo paths as stable source identifiers, but the
   source content hash must be computed from the in-memory projection payload
   being imported.
+- DB-backed generated shard exemptions must name the query view, import command,
+  and drift-check command in `docs/generated-docs-policy.json`; undeclared or
+  invalid metadata must fail closed and keep the local `maxBytes` rule active.
 - The migration must move local operational state into DB audit and overlay
   rows while keeping reviewer attention on root source changes and summarized
   artifact hashes.

@@ -142,7 +142,7 @@ These are the cross-route UI building blocks that should exist once and be reuse
 | `Shell workspace context` | Read-only project identity plus on-demand read-only context details       | Current Stage 1 split               |
 | `ShellHealthBanner`       | Health and degraded-state visibility                                      | Current                             |
 | `LeftNavigationRail`      | Primary route navigation                                                  | Current, should be standardized     |
-| `RouteWorkbenchFrame`     | Shared route layout with header plus body or scroll ownership contract    | Current, v1 frame primitive         |
+| `RouteWorkbenchFrame`     | Shared route layout with semantic slots only                              | Current, no-legacy slot API seeded  |
 | `RouteToolbar`            | Standard route command bar                                                | Needed as explicit shared primitive |
 | `ContextPanel`            | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
 | `PrimarySurfaceFrame`     | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
@@ -163,10 +163,11 @@ zero.
 
 The current problem is organization and extraction, not total absence.
 
-### `RouteWorkbenchFrame` v1 contract
+### `RouteWorkbenchFrame` contract
 
-The current shared frame is intentionally smaller than the long-term workbench
-vision.
+The current shared frame remains intentionally smaller than the long-term
+workbench vision, but it now owns the local semantic slot vocabulary for route
+workbenches.
 
 Its active contract is:
 
@@ -176,8 +177,15 @@ Its active contract is:
 - the scrollable body owns route padding for standard routes;
 - `scroll={false}` exists for routes like `Code` that own split-pane body
   geometry directly;
-- left or right contextual panels are not part of the current primitive and
-  remain future work under `ContextPanel` and route-toolbar extraction.
+- anonymous route body `children` are forbidden; direct consumers must use
+  `RouteWorkbenchFrameSlots`;
+- `RouteWorkbenchFrameSlots` provides the semantic slot API for `leftPanel`,
+  `primarySurface`, `rightPanel`, and route-local `bottomDrawer`;
+- richer panel behavior remains future work under `ContextPanel` and
+  route-toolbar extraction.
+
+Local guide:
+[Route Workbench Frame Component](./route-workbench-frame-component.md)
 
 Shell-specific current fit:
 
@@ -218,6 +226,9 @@ Shell-specific current fit:
 | `RouteWorkbenchFrame`                                                        | Shared frame already adopted by the `Code`, `Diff`, `Lineage`, `Artifacts`, `Admin`, and `Plugins` routes                                                           | Reuse within the v1 frame contract             | side panels, shared route toolbars, and richer shell extraction remain future primitives |
 | `ContextPanel`                                                               | [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) | Reuse panel behavior and content               | panel frame, header, collapse affordance, and scroll treatment are duplicated            |
 | `PrimarySurfaceFrame`                                                        | repeated `div` wrappers per route                                                                                                                                   | Missing shared primitive                       | each route owns its own surface chrome and spacing                                       |
+| `Lineage panel tokens`                                                       | [`lineageChromeTokens.ts`](../../../../apps/web/src/app/views/lineage/lineageChromeTokens.ts)                                                                       | Reuse within Lineage route panels              | broader shell-global token convergence remains under F-24                                |
+| `React Flow graph visual tokens`                                             | [`graphVisualTokens.ts`](../../../../apps/web/src/app/plugins/graph/graphVisualTokens.ts)                                                                           | Reuse within Canvas and plugin graph rendering | broader shell-global token convergence remains under F-24/F-25                           |
+| `Monaco visual tokens`                                                       | [`monacoVisualTokens.ts`](../../../../apps/web/src/app/components/monaco/monacoVisualTokens.ts)                                                                     | Reuse within Monaco code and diff surfaces     | richer editor theming remains governed by the Monaco component guide                     |
 | `LoadingState`, `EmptyState`, `ErrorState`, `DegradedState`, `ReadOnlyState` | shared workbench primitives in [`WorkbenchStates.tsx`](../../../../apps/web/src/app/components/workbench/state/WorkbenchStates.tsx) consumed by `Runs` and `Code`   | Shared primitive seeded from `Runs` and `Code` | broader route adoption still needs delivery                                              |
 | `AppIcon`                                                                    | direct `lucide-react` imports across shell and routes                                                                                                               | Missing shared wrapper                         | size, stroke, semantic color, and accessibility are not standardized                     |
 
@@ -371,7 +382,7 @@ Main screen composition:
 | `CodeWorkbench`     | Route composition root                    | Current, needs hardening |
 | `CodeToolbar`       | file-level actions and history entry      | Needed                   |
 | `FileTreePanel`     | workspace file selection                  | Current                  |
-| `CodePreviewPane`   | read-only Monaco file preview             | Current                  |
+| `CodePreviewPane`   | Monaco local editable buffer              | Current                  |
 | `FileHistoryPanel`  | recent commit history for selected file   | Planned                  |
 | `CodeEmptyState`    | no file or no workspace files available   | Current                  |
 | `CodeErrorState`    | preserve selected-file context on failure | Current                  |
@@ -395,40 +406,41 @@ Main screen composition:
 
 ### Artifacts
 
-| Component                     | Responsibility                      | Status                        |
-| ----------------------------- | ----------------------------------- | ----------------------------- |
-| `ArtifactsWorkbench`          | Route composition root              | Current, state model explicit |
-| `ArtifactsToolbar`            | import, filter, and inspect actions | Needed                        |
-| `ArtifactImportZone`          | local manifest import               | Current                       |
-| `ArtifactList`                | artifact inventory                  | Current in basic form         |
-| `ArtifactPreviewTabs`         | manifest, run results, catalog      | Current                       |
-| `ArtifactJsonViewer`          | structured read-only payload view   | Needed                        |
-| `ArtifactSearch`              | payload navigation                  | Needed                        |
-| `ArtifactsEmptyState`         | no artifact loaded                  | Current                       |
-| `ArtifactsInvalidImportState` | import rejection explanation        | Current                       |
+| Component                     | Responsibility                           | Status                        |
+| ----------------------------- | ---------------------------------------- | ----------------------------- |
+| `ArtifactsWorkbench`          | Route composition root                   | Current, state model explicit |
+| `ArtifactsToolbar`            | import, filter, and inspect actions      | Needed                        |
+| `ArtifactImportZone`          | local manifest import                    | Current                       |
+| `ArtifactList`                | artifact inventory                       | Current in basic form         |
+| `ArtifactPreviewTabs`         | manifest, run results, catalog           | Current                       |
+| `ArtifactMonacoPreviewPanel`  | structured read-only Monaco payload view | Current                       |
+| `ArtifactSearch`              | payload navigation                       | Needed                        |
+| `ArtifactsEmptyState`         | no artifact loaded                       | Current                       |
+| `ArtifactsInvalidImportState` | import rejection explanation             | Current                       |
 
 ### Templates
 
-| Component                  | Responsibility                    | Status  |
-| -------------------------- | --------------------------------- | ------- |
-| `TemplatesWorkbench`       | Future source-generation route    | Planned |
-| `TemplateCatalog`          | template selection                | Planned |
-| `ProviderProfileSelector`  | target platform or profile choice | Planned |
-| `TemplateParameterForm`    | schema-driven input               | Planned |
-| `GeneratedSourcePreview`   | Monaco-backed preview             | Planned |
-| `GeneratedSourceDiffPane`  | review before export or apply     | Planned |
-| `GeneratedSourceActions`   | export, copy, dispatch            | Planned |
-| `TemplatesEmptyState`      | no template or context            | Planned |
-| `TemplatesValidationState` | invalid input explanation         | Planned |
+| Component                  | Responsibility                    | Status                              |
+| -------------------------- | --------------------------------- | ----------------------------------- |
+| `TemplatesWorkbench`       | Source-generation route           | Current                             |
+| `TemplateCatalog`          | template selection                | Current                             |
+| `ProviderProfileSelector`  | target platform or profile choice | Current in catalog cards            |
+| `TemplateParameterForm`    | schema-driven input               | Current                             |
+| `GeneratedSourcePreview`   | read-only Monaco source preview   | Current                             |
+| `GeneratedSourceDiffPane`  | review before export or apply     | Planned                             |
+| `GeneratedSourceActions`   | export, copy, dispatch            | Planned after backend/provider rail |
+| `TemplatesEmptyState`      | no template or context            | Not needed for built-in catalog v1  |
+| `TemplatesValidationState` | invalid input explanation         | Current                             |
 
 ### Plugins And Admin
 
-| Component               | Responsibility                | Status  |
-| ----------------------- | ----------------------------- | ------- |
-| `PluginsWorkbench`      | Installed plugin inspection   | Current |
-| `PluginCapabilityTable` | plugin availability and state | Needed  |
-| `AdminWorkbench`        | administrative route shell    | Current |
-| `AdminSectionLayout`    | shared admin section layout   | Needed  |
+| Component                     | Responsibility                          | Status  |
+| ----------------------------- | --------------------------------------- | ------- |
+| `PluginsWorkbench`            | Installed plugin inspection             | Current |
+| `PluginCapabilityTable`       | plugin availability and state           | Current |
+| `PluginUxIntegrationContract` | governed plugin docks and runtime rails | Current |
+| `AdminWorkbench`              | administrative route shell              | Current |
+| `AdminSectionLayout`          | shared admin section layout             | Needed  |
 
 ## Common State Inventory
 
@@ -492,11 +504,13 @@ interaction model.
 1. `DiffWorkbench`
 2. `ArtifactsWorkbench`
 3. Monaco-backed review panes
+4. Monaco bundle isolation guardrails
 
 ### Future governed workbench fourth
 
 1. `TemplatesWorkbench`
 2. source-generation preview and diff
+3. bundle isolation guardrails for heavy editor vendors
 
 ## Immediate Decisions Locked By This Document
 

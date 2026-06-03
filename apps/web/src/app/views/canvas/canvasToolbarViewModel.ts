@@ -1,11 +1,9 @@
 /**
  * Owned concern: derive toolbar workflow posture from canonical route state.
  */
-import {
-  canvasViewCopy,
-  formatTransformationGraphValidationSummary,
-} from './copy';
+import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
 import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
+import { resolveCanvasWorkflowStatusClassName } from './canvasChromeTokens';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
@@ -14,13 +12,14 @@ export type CanvasToolbarViewModel = {
   workflowStatusLabel: string;
   workflowStatusClass: string;
   workflowStatusTitle: string;
-  canPlanTransformation: boolean;
+  canPlanGraph: boolean;
 };
 
 type DeriveCanvasToolbarViewModelArgs = {
   draftToolbarState: CanvasDraftToolbarState;
   routeState: CanvasRouteState;
   canPlan: boolean;
+  canPlanGraph: boolean;
   canRun: boolean;
   canStartRun: boolean;
   canvasAuthoringMode: CanvasGraphAuthoringMode;
@@ -59,24 +58,25 @@ function resolveWorkflowStatusClass(
   canStartRun: boolean
 ): string {
   if (isRecoveryActive) {
-    return draftTone === 'danger' ? 'text-rose-200' : 'text-amber-200';
+    return resolveCanvasWorkflowStatusClassName(draftTone === 'danger' ? 'danger' : 'warning');
   }
 
   if (!canPlan && !canRun) {
-    return 'text-slate-200';
+    return resolveCanvasWorkflowStatusClassName('neutral');
   }
 
   if (canStartRun) {
-    return 'text-emerald-200';
+    return resolveCanvasWorkflowStatusClassName('success');
   }
 
-  return 'text-amber-200';
+  return resolveCanvasWorkflowStatusClassName('warning');
 }
 
 export function deriveCanvasToolbarViewModel({
   draftToolbarState,
   routeState,
   canPlan,
+  canPlanGraph,
   canRun,
   canStartRun,
   canvasAuthoringMode,
@@ -91,12 +91,7 @@ export function deriveCanvasToolbarViewModel({
   );
 
   return {
-    workflowStatusLabel: resolveWorkflowStatusLabel(
-      isRecoveryActive,
-      canPlan,
-      canRun,
-      canStartRun
-    ),
+    workflowStatusLabel: resolveWorkflowStatusLabel(isRecoveryActive, canPlan, canRun, canStartRun),
     workflowStatusClass: resolveWorkflowStatusClass(
       isRecoveryActive,
       draftToolbarState.tone,
@@ -105,6 +100,6 @@ export function deriveCanvasToolbarViewModel({
       canStartRun
     ),
     workflowStatusTitle: `${canvasAuthoringMode}:${planStatusSummary}:${transformationValidationSummary}:${nodeCount}:${edgeCount}`,
-    canPlanTransformation: transformationValidation.valid,
+    canPlanGraph,
   };
 }

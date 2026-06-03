@@ -212,7 +212,7 @@ describe('resolveCanvasRuntimePolicy', () => {
     ).toBe(false);
   });
 
-  it('keeps runtime command policy closed when draft posture is read-only', () => {
+  it('blocks plan and run when draft posture is read-only', () => {
     const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
       posture: deriveCanvasDraftAccessPosture({
         draftAccessMode: 'read_only',
@@ -247,6 +247,30 @@ describe('resolveCanvasRuntimePolicy', () => {
       canOpenSourceImport: false,
       canPlan: false,
       canRun: false,
+    });
+  });
+
+  it('blocks plan and run while a writable draft save is pending', () => {
+    const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
+      posture: deriveCanvasDraftAccessPosture({
+        draftAccessMode: 'writable',
+        draftCapabilityReason: 'authorized',
+        draftFormatError: null,
+        authTransportPosture: 'none',
+        recoveryReason: null,
+        draftSaveStatus: 'saving',
+      }),
+      canMutateGraph: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+
+    expect(draftAdmission).toEqual({
+      canMutateGraph: true,
+      canPlan: false,
+      canRun: false,
+      canReloadLatestDraft: false,
     });
   });
 });

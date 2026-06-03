@@ -111,14 +111,15 @@ backlink checks and docs validation.
 
 ### Legacy Review Namespace
 
-Five active files still live under `docs/reviews/` instead of the current
-planning review or archive surfaces:
+Resolved on the archive surface. The legacy `docs/reviews/` directory is no
+longer tracked; the historical review files now live under
+`docs/planning/archive/reviews/`:
 
-- `docs/reviews/DVT+_Architectural_Review_20260319.md`
-- `docs/reviews/architectural-review-dvtplus-2026-03-24.md`
-- `docs/reviews/dvt-top3-gaps-roadmap-20260319.md`
-- `docs/reviews/dvt_planner_technical_vision.md`
-- `docs/reviews/prioritized-gaps-20260319.md`
+- `docs/planning/archive/reviews/dvt-plus-architectural-review-20260319.md`
+- `docs/planning/archive/reviews/architectural-review-dvtplus-2026-03-24.md`
+- `docs/planning/archive/reviews/dvt-top3-gaps-roadmap-20260319.md`
+- `docs/planning/archive/reviews/dvt-planner-technical-vision.md`
+- `docs/planning/archive/reviews/prioritized-gaps-20260319.md`
 
 Disposition rule: move to the current planning review namespace only if the
 file is still an active review; otherwise move to archive and preserve or update
@@ -215,6 +216,28 @@ These should be reconciled by class, not bulk-converted to tasks:
   canonical indexes and inbound links.
 - Do not create duplicate tasks for existing generated governance remediation
   queue items.
+
+## 2026-05-24 Canonical Disposition
+
+`GD-DOC-DISPOSITION-CANON` closes this inventory as a dated status snapshot, not
+as an active work queue.
+
+Current Planning DB evidence:
+
+- `planning:db:query docs-disposition --resolution open` returns no open rows.
+- `planning:db:query docs-disposition --resolution resolved` returns linked
+  disposition rows for Draft active docs, Superseded active docs, and
+  task-like identifier findings.
+
+The canonical follow-up rule is now:
+
+- use [Docs Disposition Canon Plan 2026-05-24](../proposals/mandatory/governance-and-docs/docs-disposition-canon-plan-20260524.md)
+  and the Planning DB `docs-disposition` rail for future open findings;
+- keep `ResolveDocsDispositionQueue` as the resolution command rail and
+  `ClassifyDocsDispositionClosure` as the closure query rail;
+- keep the 2026-05-10 counts below as historical triage evidence;
+- do not treat this document as a parallel backlog after the DB queue reports
+  no open rows.
 
 ## Commands Used
 

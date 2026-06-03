@@ -1,3 +1,7 @@
+/**
+ * Owned concern: format shared run event presentation semantics as one
+ * terminal-style console log line.
+ */
 import {
   buildRunEventPresentationModel,
   levelForEventType,

@@ -28,6 +28,7 @@ Code surface:
 
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts`
 - `packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts`
+- `packages/@dvt/engine/src/contracts/PlanSchemaVersionPolicy.ts`
 
 Exports:
 
@@ -36,13 +37,14 @@ Exports:
 - `EXECUTION_PLAN_ADMISSION_REGISTRY`
 - `isAdmittedExecutionPlanPair(planVersion, schemaVersion)`
 - `assertAdmittedPlanPair({ planVersion, schemaVersion })`
+- `assertSupportedPlanSchemaVersion({ planVersion, schemaVersion })`
 - `UnsupportedPlanVersionError`
 
 Current admitted pair:
 
 | `planVersion` | `schemaVersion` | Status    |
 | ------------- | --------------- | --------- |
-| `1.0`         | `v1.2`          | `current` |
+| `1.0`         | `1.0`           | `current` |
 
 ## Component Map
 
@@ -63,6 +65,8 @@ flowchart LR
 - `PlanAdmission.v1.ts`: publish the executable admitted pair registry.
 - `PlanAdmissionPolicy.ts`: convert undeclared pairs into engine ingress fail
   and plan-version rejection.
+- `PlanSchemaVersionPolicy.ts`: expose the schema-version admission language
+  consumed by start-run preconditions while delegating to the matrix.
 - `StartRunValidationPolicy`: invoke admission before run creation or dispatch.
 - `@dvt/plan-verifier`: verify runtime admission for adapter-side plan
   integrity.
@@ -77,7 +81,7 @@ flowchart LR
   literal is an active example or admitted value.
 - A valid `planVersion` does not make an unknown `schemaVersion` executable.
 - A valid `schemaVersion` does not make an unknown `planVersion` executable.
-- `schemaVersion = v1.future` is unsupported.
+- `schemaVersion = 1.future` is unsupported.
 - The engine MUST NOT use a broad `v1.*` prefix rule as runtime admission
   truth.
 - Older plan/schema pairs remain undeclared unless they are the active pair.

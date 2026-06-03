@@ -1,3 +1,4 @@
+/** Owned concern: project Canvas controller state into a shell-ready view model. */
 import { type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
@@ -13,6 +14,10 @@ import type { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import type { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import type { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import type { useCanvasOverlayModel } from './useCanvasOverlayModel';
+import {
+  listProjectCanvasDocuments,
+  resolveActiveProjectCanvasId,
+} from './canvasProjectCanvasLifecycle';
 
 const canvasControllerNodeTypes: NodeTypes = {
   dbtNode: DbtNodeComponent,
@@ -54,13 +59,20 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { dataSourceMode, capabilities, store },
     graphPolicy: { canvasAuthoringMode, runtimePolicy },
-    authoringRuntime: { backendPosture, graphModel, draftReadModel },
+    authoringRuntime: {
+      backendPosture,
+      graphModel,
+      visibleScope,
+      draftReadModel,
+      canCreateCanvasDocument,
+    },
     overlayModel,
     readModel: { nodesWithImpact, inspectorNode },
   } = args;
 
   return {
     dataSourceMode,
+    workspaceScope: args.environment.sessionContext.getWorkspaceScopeSnapshot(),
     isBackendCheckPending: backendPosture.isBackendCheckPending,
     backendReady: backendPosture.backendReady,
     backendBlockMessage: backendPosture.backendBlockMessage,
@@ -71,11 +83,17 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     inspectorPanelVisible: store.inspectorPanelVisible,
     explorerNodes: graphModel.canonicalNodes,
     inspectorNode,
+    inspectorGraphNodes: graphModel.canonicalNodes,
+    inspectorGraphEdges: visibleScope.canonicalEdges,
     activeRunId: overlayModel.activeRunId,
     registeredPlugins: getRegisteredPluginIds(capabilities),
     runtimeCapabilities: capabilities,
     availableCanvasKinds: getAllCanvasKinds(capabilities),
     canvasDocument: draftReadModel?.record?.draft.canvas ?? null,
+    canvasDocuments: listProjectCanvasDocuments(draftReadModel?.record?.draft ?? null),
+    activeCanvasId: resolveActiveProjectCanvasId(draftReadModel?.record?.draft ?? null),
+    executionEnvironmentOptions: args.environment.workspaceBootstrapConfig.environmentOptions,
+    canCreateCanvasDocument,
     userPermissions: {
       ...store.userPermissions,
       canPlan: runtimePolicy.commands.canPlan,
@@ -92,6 +110,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     canvasGridVisible: store.canvasGridVisible,
     canvasGridColor: store.canvasGridColor,
     canvasSnapToGrid: store.canvasSnapToGrid,
+    canvasEmptyStateGuideVisible: store.canvasEmptyStateGuideVisible,
     viewport: store.persistedViewport,
     canEditInspectorNode: runtimePolicy.commands.canEditInspectorNode,
     applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
@@ -122,6 +141,11 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleDragOver: graphHandlers.handleDragOver,
     handleCreateAuthoringNode: graphHandlers.handleCreateAuthoringNode,
     handleCreateCanvasDocument,
+    handleSelectCanvasDocument: args.authoringRuntime.handleSelectCanvasDocument,
+    handleApplyCanvasDocumentPatch: args.authoringRuntime.handleApplyCanvasDocumentPatch,
+    handleDeleteCanvasDocument: args.authoringRuntime.handleDeleteCanvasDocument,
+    handleExportProjectSnapshot: args.authoringRuntime.handleExportProjectSnapshot,
+    handleImportProjectSnapshotFile: args.authoringRuntime.handleImportProjectSnapshotFile,
     handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,
     importedNodeFocusIds: mutationHandlers.importedNodeFocusIds,
     handleImportedNodeFocusComplete: mutationHandlers.handleImportedNodeFocusComplete,
@@ -136,6 +160,7 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     setCanvasGridVisible: store.setCanvasGridVisible,
     setCanvasGridColor: store.setCanvasGridColor,
     setCanvasSnapToGrid: store.setCanvasSnapToGrid,
+    setCanvasEmptyStateGuideVisible: store.setCanvasEmptyStateGuideVisible,
     exclusiveOverlayMode: overlayModel.exclusiveOverlayMode,
     canUseCostOverlay: overlayModel.canUseCostOverlay,
     impactOverlayEnabled: store.impactOverlayEnabled,
@@ -157,8 +182,10 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
   return {
     handlePlan: executionActions.handlePlan,
     handleStartRun: executionActions.handleStartRun,
+    canPlanGraph: executionActions.canPlanGraph,
     canStartRun: executionActions.canStartRun && runtimePolicy.commands.canRun,
     planStatusSummary: executionActions.planStatusSummary,
+    planRunReadiness: executionActions.planRunReadiness,
     transformationValidation,
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
@@ -183,6 +210,8 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
       hasDraftProjectionGap,
       draftRecoveryReason,
       draftToolbarState,
+      canExportProjectSnapshot,
+      canImportProjectSnapshot,
     },
   } = args;
 
@@ -196,6 +225,8 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
     draftFormatMeta,
     draftRecoveryReason,
     draftToolbarState,
+    canExportProjectSnapshot,
+    canImportProjectSnapshot,
     draftConflictRevision:
       draftSession.syncState === 'conflict' ? draftSession.draftRevision : null,
     hasStaleDraftVersion: isStaleDraftConflict,

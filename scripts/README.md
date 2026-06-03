@@ -35,6 +35,9 @@ powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main 
 # summarize the current branch PR checks
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -PrCheckSummary
 
+# fail fast when the current branch PR has failed or pending Actions checks
+pnpm pr:checks
+
 # extract the first failing GitHub Actions job snippet for the current branch PR
 powershell -ExecutionPolicy Bypass -File .\scripts\hygiene.ps1 -BaseBranch main -LogFirstTriage
 
@@ -48,6 +51,10 @@ Implementation notes:
   `pnpm verify:prepush`.
 - PR check classification and failed-job selection are backed by
   `tools/ci/pr-check-triage.mjs`.
+- `pnpm pr:checks` uses the same helper as an immediate non-watch gate:
+  exit `1` for failed Actions checks, exit `2` for pending Actions checks, and
+  exit `0` only when Actions checks are settled and green. It prints a compact
+  text summary by default; use `pnpm pr:checks:json` for the full JSON payload.
 - destructive cleanup remains opt-in.
 
 ## Changed-file Gates and Autofix
@@ -114,6 +121,7 @@ Usage:
 
 ```bash
 node scripts/run-turbo-workspace-task.cjs build
+node scripts/run-turbo-workspace-task.cjs lint
 node scripts/run-turbo-workspace-task.cjs typecheck
 node scripts/run-turbo-workspace-task.cjs test
 node scripts/run-turbo-workspace-task.cjs build --filter @dvt/engine
@@ -121,7 +129,7 @@ node scripts/run-turbo-workspace-task.cjs build --filter @dvt/engine
 
 Behavior:
 
-- only allows the governed task set: `build`, `typecheck`, and `test`
+- only allows the governed task set: `build`, `lint`, `typecheck`, and `test`
 - defaults to the affected-work filter `...[origin/main]`
 - accepts an explicit `--filter <value>` override for CI/package-targeted runs
 - delegates dependency ownership to the Turbo graph, which surfaces
@@ -240,6 +248,50 @@ Diff policy:
 - prefers `origin/main...HEAD` when `origin/main` exists
 - falls back to the configured upstream or `HEAD~1..HEAD`
 
+### `verify-changed.cjs`
+
+Runs the fast changed-slice verification plan used during local iteration. It
+keeps closeout validation separate and only selects mechanical checks from the
+canonical changed-file set.
+
+The shared plan definitions, path predicates, and command execution helper live
+in `local-validation-plan.cjs`; this wrapper owns CLI argument parsing, local
+changed-file discovery, and operator output.
+
+Always runs:
+
+- changed docs location, filename, frontmatter, ARC, QA, markdown, feature
+  mechanization, lint/format, and forbidden-file checks
+
+Adds scoped checks:
+
+- `pnpm planning:db:inventory:check` when planning DB surfaces changed
+- adjacent `node --test scripts/<name>.test.cjs` checks for changed planning
+  workflow scripts that own a focused test file
+- `pnpm test:planning:db` only for planning/governance DB implementation
+  surfaces that require the full planning DB suite
+- `node --test scripts/verify-changed.test.cjs` when the verifier itself
+  changed
+
+Use `pnpm verify:changed -- --dry-run` to print the selected plan without
+executing it.
+
+### `verify-prepush.cjs`
+
+Runs the local pre-push closeout wrapper. By default it delegates changed-slice
+routing to `pnpm verify:changed` once, so package tests, changed docs checks,
+format/lint checks, and developer-workflow self-tests are selected by the same
+plan used during iteration.
+
+The Git hook calls `pnpm verify:prepush -- --hook`. A successful manual
+`verify:prepush` writes a local `.git` stamp for the current `HEAD`, changed
+file set, and diff fingerprint; the hook skips only when that same state
+already passed an equivalent or stronger gate.
+
+Use `pnpm verify:prepush -- --full` only when a full local closeout is required.
+Full mode adds the prepush-only regression, governance, traceability,
+architecture, and type-check groups after the changed-slice gate.
+
 ### `type-check-prepush.cjs`
 
 Chooses the strict pre-push type-check path from the changed diff.
@@ -320,6 +372,7 @@ GitHub CLI-backed helper used by `hygiene.ps1` for PR status inspection.
 Capabilities:
 
 - normalize GitHub Actions and external status checks
+- print compact PR check gate summaries for operator closeout
 - classify checks into failed, pending, successful, skipped, and external
 - pick the first failing GitHub Actions check deterministically
 - fetch failed-job logs and extract a compact failure snippet

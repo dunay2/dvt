@@ -49,16 +49,40 @@ sequenceDiagram
 
 ## What To Read
 
-| Signal key             | What you read                                    | Healthy posture                            | Action when unhealthy                          |
-| ---------------------- | ------------------------------------------------ | ------------------------------------------ | ---------------------------------------------- |
-| `plan_compile_latency` | p50/p99 compile latency panel                    | p50 <= 1200ms, p99 <= 6000ms               | investigate planner/API compile path           |
-| `run_start_latency`    | p50/p99 run-start latency panel                  | p50 <= 500ms, p99 <= 2500ms                | investigate API start-run admission and engine |
-| `run_status_freshness` | stale/unknown ratio panels from staleness counts | stale <= 5%, unknown <= 0.1%               | investigate projection freshness and fallback  |
-| `outbox_delivery_lag`  | outbox lag and delivery-latency panels           | drain lag p95 <= 30s, delivery p99 <= 5000 | investigate outbox drain and delivery pressure |
+Use the signal and panel names from the canonical mapping source. Dashboard and
+alert evidence must not introduce local aliases.
+
+- Start-run latency p50/p99 (`ar-c2.start-run-latency`): read the p50/p99
+  run-start latency panel. Healthy posture is p50 <= 500ms and p99 <= 2500ms;
+  investigate API start-run admission and engine behavior when unhealthy.
+- Plan compile latency p50/p99 (`ar-c2.plan-compile-latency`): read the p50/p99
+  compile latency panel. Healthy posture is p50 <= 1200ms and p99 <= 6000ms;
+  investigate the planner/API compile path when unhealthy.
+- Snapshot staleness counts (`ar-c2.snapshot-staleness-counts`): read staleness
+  classification counts as the source for stale and unknown ratios; investigate
+  projection freshness when unhealthy.
+- Snapshot unknown fallback counts (`ar-c2.snapshot-unknown-fallback`): read
+  unknown fallback reasons as the source for unknown fallback diagnostics;
+  investigate fallback cause when unhealthy.
+- Outbox claimed-lag gauge (`ar-c2.outbox-claimed-lag`): read oldest
+  claimed-record lag as an observational baseline; inspect worker ownership and
+  stuck claims when unhealthy.
+- Outbox drain lag p95 (`ar-c2.outbox-drain-lag`): read outbox drain lag.
+  Healthy posture is p95 <= 30s; investigate outbox drain pressure when
+  unhealthy.
+- Event delivery latency p95/p99 (`ar-c2.event-delivery-latency`): read event
+  delivery latency. Healthy posture is p95 <= 1500ms and p99 <= 5000ms;
+  investigate downstream delivery pressure when unhealthy.
+- Stale ratio for `GET /runs/:runId` (`ar-c2.run-status-stale-ratio`): read the
+  stale ratio from staleness counts. Healthy posture is stale <= 5%;
+  investigate projection freshness when unhealthy.
+- Unknown freshness ratio (`ar-c2.run-status-unknown-ratio`): read the unknown
+  ratio from staleness counts. Healthy posture is unknown <= 0.1%; investigate
+  projection fallback and telemetry when unhealthy.
 
 ## Daily Operating Procedure
 
-1. Open the AR-C2 dashboard and confirm all four signal families are present.
+1. Open the AR-C2 dashboard and confirm all mapped signals are present.
 2. Check warning/critical posture for each threshold-backed signal.
 3. For every breach, record incident metadata and applied mitigation.
 4. Update evidence matrices in the AR-C2 evidence runbook.

@@ -58,6 +58,7 @@ const EnvSchema = z.object({
   TEMPORAL_MAX_START_PAYLOAD_BYTES: z.string().optional(),
   TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: z.string().optional(),
   TEMPORAL_CONTINUE_AS_NEW_AFTER_LAYERS: z.string().optional(),
+  TEMPORAL_STEP_ACTIVITY_ROUTES: z.string().optional(),
   DVT_TEMPORAL_WORKER_READYZ_URL: z.string().url().optional(),
   DVT_DBT_BUNDLE_STORE_BACKEND: z.enum(['file', 's3']).optional(),
   DVT_DBT_BUNDLE_S3_BUCKET: z.string().optional(),

@@ -722,6 +722,9 @@ function generateContractSubIndexes() {
   const contractsPkgSrc = path.join(repoRoot, 'packages', '@dvt', 'contracts', 'src');
   const engineOwnedSources = [
     path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IWorkflowEngine.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'adapters', 'IProviderAdapter.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IRunStateStore.ts'),
+    path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IProjector.ts'),
     path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'ports', 'IStartRunIntentStore.ts'),
     path.join(repoRoot, 'packages', '@dvt', 'engine', 'src', 'domain', 'startRunIntentPolicy.ts'),
   ];

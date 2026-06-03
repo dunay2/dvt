@@ -79,6 +79,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/web-ddd.md
   - docs/architecture/components/web/web-functional.md
   - docs/architecture/components/web/web-sequence.md
+  - docs/architecture/components/web/graph/graph-canvas-runtime-model.md
   - docs/architecture/components/web/runs/component-runs.md
   - docs/architecture/components/web/runs/user-stories-runs.md
   - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
@@ -183,3 +184,7 @@ symbols:
     name: ArchivedFrontendArchitectureIntroduction
     path: docs/archive/architecture/components/web-app/dvt-frontend-architecture-introduction.md
 ```
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `E-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

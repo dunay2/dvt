@@ -1,8 +1,8 @@
 ---
 title: AR-D continuation safety closeout
-status: Draft
+status: Accepted
 owner: Runtime / Temporal / Contracts
-last_reviewed: 2026-04-30
+last_reviewed: 2026-05-15
 planning_type: closeout
 task_id: AR-D-PLAN-POINTER
 ---
@@ -93,3 +93,12 @@ AR-D2 remains open. This closeout improves correctness and observability of
 continuation failures, but it does not define final production thresholds for
 maximum workflow history size, segment count, or plan artifact retention by
 deployment profile.
+
+## Closure Reconciliation - 2026-05-15
+
+This closeout is accepted. The residual AR-D2 capacity concern cited above is
+now closed separately by
+`docs/planning/closeouts/20260514-ar-d2-temporal-planref-capacity-sla-closeout.md`.
+Continuation safety remains governed by ADR-0052, accepted evidence
+`docs/evidence/ed-20260430-ar-d-continuation-safety.md`, and residual risk
+`docs/risk-register/quality/r-20260430-ar-d-continuation-safety.yaml`.

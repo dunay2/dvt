@@ -1,0 +1,175 @@
+/**
+ * Owned concern: prove the dbt authoring, generated Code, and Start Run path
+ * against the live protected runtime without API stubs.
+ */
+import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
+import { clickButtonNatively } from '../../support/canvasExecutionSelection';
+import {
+  hasLiveProtectedRuntimeEnv,
+  readLiveGraphDraft,
+  readLiveRunEvents,
+  readLiveRunSnapshot,
+  seedLiveSelectedClosureDraft,
+  visitWithLiveWorkspaceSession,
+} from '../../support/liveProtectedRuntime';
+
+function waitForDraftSaveSettled(): void {
+  cy.window({ log: false }).then((window) => {
+    const copy = resolveCanvasViewCopy(
+      window.navigator.language || window.document.documentElement.lang
+    );
+
+    cy.get('[data-slot="canvas-draft-save-status"]', { timeout: 20_000 }).should(($status) => {
+      const text = $status.text();
+
+      expect(text).not.to.contain(copy.savingDraftLabel);
+      expect(
+        [copy.draftSavedLabel, copy.draftSyncedLabel].some((label) => text.includes(label)),
+        text
+      ).to.equal(true);
+    });
+  });
+}
+
+function showInspectorPanel(): void {
+  cy.get('body').then(($body) => {
+    const showInspectorButton = $body.find('button[aria-label="Show inspector panel"]');
+
+    if (showInspectorButton.length > 0) {
+      cy.wrap(showInspectorButton.first()).click({ force: true });
+    }
+  });
+}
+
+function selectNodeForInspector(nodeName: string): void {
+  showInspectorPanel();
+  cy.contains('.react-flow__node', nodeName, { timeout: 20_000 }).should('be.visible').click();
+  cy.contains('Node details', { timeout: 20_000 }).should('be.visible');
+  cy.contains('dbt card').should('be.visible');
+}
+
+function replaceInput(name: string, value: string): void {
+  cy.get(`input[name="${name}"]`).should('be.enabled').clear().type(value);
+}
+
+function clickCommandSlotNatively(slot: string): void {
+  cy.get(`[data-slot="${slot}"]`)
+    .should('be.enabled')
+    .then(($button) => {
+      ($button.get(0) as HTMLButtonElement).click();
+    });
+}
+
+function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
+  return readLiveGraphDraft().then((response) => {
+    expect(response.status).to.equal(200);
+    const nodes = (
+      response.body as {
+        record?: {
+          draft?: {
+            nodes?: Array<{ id: string; name: string; metadata?: Record<string, unknown> }>;
+          };
+        };
+      }
+    ).record?.draft?.nodes;
+    const model = nodes?.find((node) => node.id === 'orders_model');
+    const metadata = model?.metadata?.dbt as
+      | { materialized?: string; selectedSourceId?: string; packageName?: string }
+      | undefined;
+
+    if (
+      model?.name === 'payments model' &&
+      metadata?.materialized === 'table' &&
+      metadata.selectedSourceId === 'warehouse_payments' &&
+      metadata.packageName === 'finance analytics'
+    ) {
+      return;
+    }
+
+    if (attempt >= 30) {
+      throw new Error('Timed out waiting for persisted dbt model card configuration.');
+    }
+
+    return cy.wait(250).then(() => waitForPersistedDbtModelConfig(attempt + 1));
+  });
+}
+
+describe('Canvas dbt authoring Code and Run live protected runtime', () => {
+  beforeEach(function () {
+    if (!hasLiveProtectedRuntimeEnv()) {
+      this.skip();
+      return;
+    }
+
+    seedLiveSelectedClosureDraft({
+      canvasKind: 'dbt',
+      title: 'dbt authoring live',
+    });
+  });
+
+  it('lets a user configure dbt cards, select origin, inspect generated code, and execute', () => {
+    cy.viewport(1500, 900);
+    visitWithLiveWorkspaceSession('/canvas');
+
+    cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
+    cy.contains('.react-flow__node', 'raw_orders').should('be.visible');
+    cy.contains('.react-flow__node', 'warehouse_payments').should('be.visible');
+    cy.contains('.react-flow__node', 'orders_model').should('be.visible');
+
+    selectNodeForInspector('warehouse_payments');
+    replaceInput('dbt-package', 'finance analytics');
+    replaceInput('dbt-source', 'finance warehouse');
+    replaceInput('dbt-schema', 'warehouse raw');
+    replaceInput('dbt-table', 'payments final');
+    clickButtonNatively('Apply');
+    waitForDraftSaveSettled();
+
+    selectNodeForInspector('orders_model');
+    replaceInput('node-name', 'payments model');
+    replaceInput('dbt-package', 'finance analytics');
+    cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
+    cy.get('select[name="dbt-origin"]').should('be.enabled').select('warehouse_payments');
+    clickButtonNatively('Apply');
+    waitForDraftSaveSettled();
+    waitForPersistedDbtModelConfig();
+
+    clickCommandSlotNatively('canvas-toolbar-plan-command');
+    cy.contains('Execution Plan Preview', { timeout: 30_000 }).should('be.visible');
+    cy.contains('Plan Metadata').should('be.visible');
+    cy.contains('Persistence Evidence').should('be.visible');
+    cy.get('body').type('{esc}', { force: true });
+    cy.contains('Execution Plan Preview').should('not.exist');
+
+    cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
+      cy.contains('button', /^(Code|Codigo)$/).click();
+    });
+    cy.location('pathname').should('eq', '/canvas/code');
+    cy.contains('dbt_project.yml', { timeout: 20_000 }).should('be.visible');
+    cy.contains('payments_model.sql').should('be.visible').click();
+    cy.contains("{{ config(materialized='table') }}", { timeout: 20_000 }).should('be.visible');
+    cy.contains("{{ source('finance_warehouse', 'payments_final') }}").should('be.visible');
+
+    cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
+      cy.contains('button', /^(Grafo|Graph)$/).click();
+    });
+    cy.location('pathname').should('eq', '/canvas');
+    clickCommandSlotNatively('canvas-toolbar-run-command');
+
+    cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
+    cy.location('pathname').then((pathname) => {
+      const runId = pathname.split('/').pop();
+      expect(runId).to.be.a('string').and.not.to.equal('');
+
+      readLiveRunSnapshot(runId!).then((snapshotResponse) => {
+        expect(snapshotResponse.status).to.equal(200);
+        expect((snapshotResponse.body as { runId: string }).runId).to.equal(runId);
+      });
+
+      readLiveRunEvents(runId!).then((eventsResponse) => {
+        expect(eventsResponse.status).to.equal(200);
+      });
+    });
+
+    cy.contains(/^Run /, { timeout: 20_000 }).should('exist');
+  });
+});

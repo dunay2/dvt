@@ -114,7 +114,7 @@ describe('canvas draft authoring component architecture', () => {
         kind: 'dbt',
         pluginId: 'dbt',
         graphStrategyId: 'dbt',
-        executionKind: 'not_executable',
+        executionKind: 'planner_generic_preview',
       },
       {
         kind: 'transformation',
@@ -266,8 +266,8 @@ describe('canvas draft authoring component architecture', () => {
     expect(dbtPolicy.commands).toMatchObject({
       canMutateGraph: true,
       canEditInspectorNode: true,
-      canPlan: false,
-      canRun: false,
+      canPlan: true,
+      canRun: true,
     });
     expect(transformationPolicy.commands).toMatchObject({
       canMutateGraph: true,

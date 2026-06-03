@@ -1,12 +1,15 @@
-/** Owned concern: render the project-node explorer plus active canvas node creation affordances. */
+/** Owned concern: render the Canvas workspace explorer for existing project resources. */
 import { PanelLeftClose, Upload } from 'lucide-react';
-import { useMemo } from 'react';
 
-import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
-import { resolveNodeKindRegistration } from '../plugins/nodeTypeRegistry';
-import type { CanonicalNode } from '../types/canonical';
+import { graphStatusDotClasses, graphVisualClasses } from '../plugins/graph/graphVisualTokens';
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../types/canonical';
 
+import {
+  CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
+  serializeCanvasWorkspaceResourceDragPayload,
+  type CanvasWorkspaceResource,
+  type CanvasWorkspaceResourceGroup,
+} from './canvasWorkspaceExplorerModel';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -14,78 +17,53 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from './ui/utils';
 
 interface DbtExplorerProps {
-  nodes: CanonicalNode[];
-  nodeKinds?: readonly NodeKindRegistration[];
+  resourceGroups: readonly CanvasWorkspaceResourceGroup[];
   canEditGraph?: boolean;
-  onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
-  onNodeDragStart?: (node: CanonicalNode) => void;
+  selectedResourceId?: string | null;
+  onResourceSelect?: (resource: CanvasWorkspaceResource) => void;
+  onResourceDragStart?: (resource: CanvasWorkspaceResource) => void;
   onHide?: () => void;
   onOpenDataRegistry?: () => void;
 }
 
-const statusColors: Record<CanonicalNode['status'], string> = {
-  idle: 'bg-gray-600',
-  running: 'bg-blue-500',
-  success: 'bg-green-500',
-  failed: 'bg-red-500',
-  skipped: 'bg-yellow-500',
-  warn: 'bg-orange-500',
-};
-
-function resolveNodeBadgeText(node: CanonicalNode): string {
-  const packageName = typeof node.metadata?.package === 'string' ? node.metadata.package : null;
-  return packageName ?? node.pluginId;
-}
-
 export default function DbtExplorer({
-  nodes,
-  nodeKinds = [],
+  resourceGroups,
   canEditGraph = true,
-  onCreateAuthoringNode,
-  onNodeDragStart,
+  selectedResourceId,
+  onResourceSelect,
+  onResourceDragStart,
   onHide,
   onOpenDataRegistry,
 }: Readonly<DbtExplorerProps>) {
-  const canCreateAuthoringNode =
-    canEditGraph && onCreateAuthoringNode != null && nodeKinds.length > 0;
-  const groupedNodes = useMemo(() => {
-    const groups: Record<string, CanonicalNode[]> = {};
-
-    nodes.forEach((node) => {
-      if (!groups[node.kind]) {
-        groups[node.kind] = [];
-      }
-      const bucket = groups[node.kind];
-      if (bucket) {
-        bucket.push(node);
-      }
-    });
-
-    return Object.entries(groups).sort(([kindA], [kindB]) =>
-      resolveNodeKindRegistration(kindA).label.localeCompare(
-        resolveNodeKindRegistration(kindB).label
-      )
-    );
-  }, [nodes]);
-
-  const handleDragStart = (e: React.DragEvent, node: CanonicalNode) => {
-    if (!canEditGraph) {
+  const handleDragStart = (e: React.DragEvent, resource: CanvasWorkspaceResource) => {
+    const hasCanonicalNodePayload = resource.dragPayload != null;
+    const hasProjectResourcePayload = resource.projectResourceDragPayload != null;
+    if (!canEditGraph || (!hasCanonicalNodePayload && !hasProjectResourcePayload)) {
       e.preventDefault();
       return;
     }
 
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData(CANONICAL_NODE_DRAG_MIME_TYPE, JSON.stringify(node));
-    onNodeDragStart?.(node);
+    if (resource.dragPayload != null) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData(CANONICAL_NODE_DRAG_MIME_TYPE, JSON.stringify(resource.dragPayload));
+    }
+    if (resource.projectResourceDragPayload != null) {
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData(
+        CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
+        serializeCanvasWorkspaceResourceDragPayload(resource.projectResourceDragPayload)
+      );
+    }
+    onResourceDragStart?.(resource);
   };
 
   return (
-    <div className="flex h-full flex-col border-r border-slate-700 bg-slate-900">
-      <div className="border-b border-slate-700 px-4 py-3">
+    <div className={graphVisualClasses.contextPanelLeftShell}>
+      <div className={graphVisualClasses.contextPanelHeader}>
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h2 className="font-semibold text-sm">Project Nodes</h2>
-            <p className="mt-0.5 text-xs text-slate-300">
+            <h2 className={graphVisualClasses.contextPanelTitle}>Project Resources</h2>
+            <p className={graphVisualClasses.contextPanelSubtitle}>
               {canEditGraph
                 ? 'Drag resources into the graph'
                 : 'Inspect available project resources'}
@@ -96,7 +74,7 @@ export default function DbtExplorer({
               type="button"
               variant="ghost"
               size="icon"
-              className="size-7 text-slate-300 hover:text-white"
+              className={graphVisualClasses.contextPanelIconButton}
               onClick={onHide}
               aria-label="Hide explorer panel"
             >
@@ -107,8 +85,9 @@ export default function DbtExplorer({
 
         {onOpenDataRegistry && (
           <div className="mt-2 space-y-2">
-            <p className="text-[11px] leading-5 text-slate-400">
-              Explore project nodes, discover dependencies, and add new objects to this workspace.
+            <p className={graphVisualClasses.contextPanelHelpText}>
+              Explore project resources and discover dependencies before attaching them to the
+              canvas.
             </p>
             <Button
               type="button"
@@ -116,7 +95,7 @@ export default function DbtExplorer({
               size="sm"
               onClick={onOpenDataRegistry}
               disabled={!canEditGraph}
-              className="h-8 w-full justify-start gap-1.5 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
+              className={cn('w-full gap-1.5', graphVisualClasses.contextPanelActionButton)}
             >
               <Upload className="size-3.5" />
               Add data
@@ -125,81 +104,80 @@ export default function DbtExplorer({
         )}
       </div>
 
-      {canCreateAuthoringNode ? (
-        <div className="border-b border-slate-700 px-4 py-3">
-          <h3 className="text-xs font-semibold uppercase text-slate-300">Add node</h3>
-          <div className="mt-2 grid gap-2">
-            {nodeKinds.map((registration) => {
-              const Icon = registration.icon;
-              return (
-                <Button
-                  key={registration.kind}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 justify-start gap-2 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white"
-                  onClick={() => onCreateAuthoringNode(registration)}
-                >
-                  <Icon className="size-3.5" />
-                  {registration.label}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
-      ) : null}
-
       <ScrollArea className="flex-1">
         <Accordion
           type="multiple"
-          defaultValue={groupedNodes.slice(0, 3).map(([kind]) => kind)}
+          defaultValue={resourceGroups.slice(0, 3).map((group) => group.id)}
           className="px-2"
         >
-          {groupedNodes.map(([kind, kindNodes]) => {
-            const config = resolveNodeKindRegistration(kind);
-
+          {resourceGroups.map((group) => {
+            const Icon = group.icon;
             return (
-              <AccordionItem key={kind} value={kind} className="border-b border-slate-700">
-                <AccordionTrigger className="px-2 py-2 text-sm hover:bg-slate-950">
+              <AccordionItem
+                key={group.id}
+                value={group.id}
+                className={graphVisualClasses.contextPanelAccordionItem}
+              >
+                <AccordionTrigger className={graphVisualClasses.contextPanelAccordionTrigger}>
                   <div className="flex items-center gap-2">
-                    <config.icon className="size-4" style={{ color: config.minimapColor }} />
-                    <span>{config.label}</span>
+                    <Icon className="size-4" style={{ color: group.color }} />
+                    <span>{group.label}</span>
                     <Badge variant="secondary" className="ml-auto text-xs">
-                      {kindNodes.length}
+                      {group.resources.length}
                     </Badge>
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="pb-2">
                   <div className="space-y-1">
-                    {kindNodes.map((node) => (
-                      <div
-                        key={node.id}
-                        draggable={canEditGraph}
-                        onDragStart={(event) => handleDragStart(event, node)}
-                        className={cn(
-                          'group flex items-center gap-2 rounded px-3 py-2 text-sm',
-                          canEditGraph
-                            ? 'cursor-move hover:bg-slate-950'
-                            : 'cursor-default text-slate-300'
-                        )}
-                      >
-                        <div className={cn('size-2 rounded-full', statusColors[node.status])} />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate font-mono text-xs">{node.name}</div>
-                          {node.lastDuration != null && (
-                            <div className="text-[10px] text-slate-400">
-                              {node.lastDuration}s
-                              {node.lastCost != null && ` - $${node.lastCost.toFixed(2)}`}
-                            </div>
+                    {group.resources.map((resource) => {
+                      const hasDraggablePayload =
+                        resource.dragPayload != null || resource.projectResourceDragPayload != null;
+                      return (
+                        <div
+                          key={resource.id}
+                          role={onResourceSelect ? 'button' : undefined}
+                          tabIndex={onResourceSelect ? 0 : undefined}
+                          draggable={canEditGraph && hasDraggablePayload}
+                          onDragStart={(event) => handleDragStart(event, resource)}
+                          onClick={() => onResourceSelect?.(resource)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              onResourceSelect?.(resource);
+                            }
+                          }}
+                          className={cn(
+                            'group flex items-center gap-2 rounded px-3 py-2 text-sm',
+                            selectedResourceId === resource.id || resource.isActive
+                              ? graphVisualClasses.contextPanelActiveRow
+                              : '',
+                            canEditGraph && hasDraggablePayload
+                              ? graphVisualClasses.contextPanelInteractiveRow
+                              : graphVisualClasses.contextPanelReadOnlyRow
                           )}
+                        >
+                          <div
+                            className={cn(
+                              'size-2 rounded-full',
+                              graphStatusDotClasses[resource.status]
+                            )}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-mono text-xs">{resource.label}</div>
+                            {resource.detail != null && (
+                              <div className={graphVisualClasses.contextPanelSecondaryText}>
+                                {resource.detail}
+                              </div>
+                            )}
+                          </div>
+                          <div className="opacity-0 transition-opacity group-hover:opacity-100">
+                            <Badge variant="outline" className="px-1 py-0 text-[10px]">
+                              {resource.badge}
+                            </Badge>
+                          </div>
                         </div>
-                        <div className="opacity-0 transition-opacity group-hover:opacity-100">
-                          <Badge variant="outline" className="px-1 py-0 text-[10px]">
-                            {resolveNodeBadgeText(node)}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </AccordionContent>
               </AccordionItem>

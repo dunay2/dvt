@@ -1,6 +1,8 @@
 /** Owned concern: bind Canvas plan command handling to minimal execution ports. */
+import { useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 
+import { queryKeys } from '../../queries/queryKeys';
 import { canvasViewCopy } from './copy';
 import type {
   SetLastPlannedDraftSignature,
@@ -21,6 +23,7 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   | 'selectedNodeIds'
   | 'sessionContext'
   | 'shellFeedback'
+  | 'flushDraftForExecution'
   | 'workspaceNodeIds'
   | 'workspaceFilesQuery'
   | 'workspaceFileContentCommand'
@@ -41,6 +44,7 @@ export function useCanvasPlanActionHandler({
   selectedNodeIds,
   sessionContext,
   shellFeedback,
+  flushDraftForExecution,
   transformationValidation,
   workspaceNodeIds,
   workspaceFilesQuery,
@@ -49,18 +53,37 @@ export function useCanvasPlanActionHandler({
   setLastPlannedDraftSignature,
   setPlanModalOpen,
 }: UseCanvasPlanActionHandlerArgs): () => Promise<void> {
+  const queryClient = useQueryClient();
+
   return useCallback(async () => {
+    if (!canPlan) {
+      shellFeedback.error(canvasViewCopy.planPermissionDeniedMessage);
+      return;
+    }
+
+    if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
+      shellFeedback.error(canvasViewCopy.canvasExecutionUnavailableMessage);
+      return;
+    }
+
+    const flushedDraftGraph =
+      flushDraftForExecution != null ? await flushDraftForExecution() : null;
+    if (flushedDraftGraph?.ok === false) {
+      shellFeedback.error(flushedDraftGraph.message);
+      return;
+    }
+
     const result = await executeCanvasPlanAction({
       canPlan,
-      canonicalEdges,
-      canonicalNodes,
+      canonicalEdges: flushedDraftGraph?.canonicalEdges ?? canonicalEdges,
+      canonicalNodes: flushedDraftGraph?.canonicalNodes ?? canonicalNodes,
       executionStrategy,
       plansService,
       previewProvenanceConfig,
       selectedNodeIds,
       sessionContext,
       transformationValidation,
-      workspaceNodeIds,
+      workspaceNodeIds: flushedDraftGraph?.workspaceNodeIds ?? workspaceNodeIds,
       workspaceFilesQuery,
       workspaceFileContentCommand,
     });
@@ -68,6 +91,19 @@ export function useCanvasPlanActionHandler({
     if (!result.ok) {
       shellFeedback.error(result.message);
       return;
+    }
+
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.fileTree() });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.artifacts() });
+    if (previewProvenanceConfig.graphArtifactPath) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.fileContent(previewProvenanceConfig.graphArtifactPath),
+      });
+    }
+    for (const artifactPath of result.writtenArtifactPaths) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.workspace.fileContent(artifactPath),
+      });
     }
 
     setCurrentPlan(result.plan);
@@ -87,7 +123,9 @@ export function useCanvasPlanActionHandler({
     workspaceNodeIds,
     workspaceFilesQuery,
     workspaceFileContentCommand,
+    queryClient,
     shellFeedback,
+    flushDraftForExecution,
     setCurrentPlan,
     setLastPlannedDraftSignature,
     setPlanModalOpen,

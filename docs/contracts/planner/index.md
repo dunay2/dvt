@@ -30,10 +30,10 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts`
-- `packages/@dvt/contracts/src/contracts/planner/PlanValidationLifecycle.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PolicyMappingTable.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompiler.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowCompilerSummary.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/TransformationFlowDesignGraph.v1.ts`

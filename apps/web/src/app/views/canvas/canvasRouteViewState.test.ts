@@ -22,6 +22,12 @@ describe('canvasRouteViewState', () => {
     );
 
     expect(viewState.draftAccessPosture).toBe(draftAccessPosture);
+    expect(viewState.workspaceScope).toMatchObject({
+      tenantId: 'tenant-a',
+      projectId: 'project-orders',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+    });
     expect(viewState.draftTransportError).toMatchObject({
       kind: 'forbidden_scope',
       title: 'Draft scope is forbidden',

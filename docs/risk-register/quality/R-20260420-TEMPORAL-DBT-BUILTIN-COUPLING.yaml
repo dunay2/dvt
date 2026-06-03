@@ -1,7 +1,7 @@
 ---
 id: R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING
-title: Adapter-temporal still owns DBT plugin and CLI surfaces inside the package
-status: Open
+title: Temporal DBT plugin package extraction remains sandbox follow-up risk
+status: Mitigated
 date: 2026-04-20
 owners:
   - packages/@dvt/adapter-temporal
@@ -25,15 +25,14 @@ context: >
   discriminator. The 2026-04-29 DBT CLI runner SRP pass added a generic TemporalStepPluginRunner
   execution port and split DbtCliPluginRunner into focused DBT-local helper modules for argument
   derivation, process execution, project materialization, failure mapping, and helper contracts. The
-  remaining risk is narrower: @dvt/adapter-temporal still exports the DBT step activity, DBT CLI
-  runner, and plugin contracts as package-owned plugin surface.
+  2026-05-14 package extraction pass moved the concrete DBT manifest, step activity registry, CLI
+  runner, and helper modules into @dvt/temporal-dbt-plugin and removed DBT concrete exports from the
+  @dvt/adapter-temporal root API.
 risk: >
-  If new transformation executors or artifact types are added before package-level plugin extraction
-  exists, @dvt/adapter-temporal can still accumulate executor-specific plugin exports, CLI hosting,
-  and artifact assumptions instead of staying a Temporal translation boundary per ADR-0003,
-  ADR-0019, and ADR-0034. The immediate engine/core dispatcher/default-registry drift is mitigated,
-  but package-level ownership can still bias future plugin work toward DBT unless the next
-  extraction moves executor plugins behind a dedicated runtime plugin package or profile boundary.
+  Package-level DBT ownership no longer lives in @dvt/adapter-temporal. The remaining risk is that
+  the concrete DBT plugin still executes a local CLI in the worker process. Future executor plugins
+  need sandbox and dependency-isolation posture before mature multi-tenant runtime hardening is
+  claimed.
 mitigations:
   - 'Keep apps/temporal-worker as the only live composition root that wires DBT runtime
     dependencies.'
@@ -45,9 +44,10 @@ mitigations:
   - 'Require each executor profile to own its manifest and supported runtime subset; do not name a
     profile subset as the full external tool capability set.'
   - 'Keep DbtCliPluginRunner as orchestration only; DBT CLI subprocess, bundle materialization,
-    argument mapping, failure mapping, and helper contracts must remain split under src/plugins/dbt.'
-  - 'Track follow-up extraction of DbtStepActivity and DbtCliPluginRunner out of the adapter
-    package-owned plugin surface.'
+    argument mapping, failure mapping, and helper contracts must remain split under
+    packages/@dvt/temporal-dbt-plugin/src.'
+  - 'Keep @dvt/adapter-temporal free of concrete DBT exports through the package extraction
+    architecture guard.'
   - 'Keep adapter-temporal tests split between Temporal-core behavior and DBT plugin or runtime
     behavior so boundary drift remains visible.'
 review_after: 2026-06-15

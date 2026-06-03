@@ -142,29 +142,29 @@ It does **not** own:
 
 ## Component map
 
-| Module                                    | Owned concern                                                                       |
-| ----------------------------------------- | ----------------------------------------------------------------------------------- |
-| `RunPlanWorkflow.ts`                      | Temporal PlanRef workflow orchestration entrypoint                                  |
-| `runPlanWorkflow.types.ts`                | Workflow public API contracts and runtime state model                               |
-| `runPlanWorkflow.state.ts`                | Workflow control input parsing and cursor hydration                                 |
-| `workflowCursorHelpers.ts`                | Compact continue-as-new cursor construction and payload guard                       |
-| `executionSegmentResolver.ts`             | PlanRef execution-segment projection from canonical plans                           |
-| `runPlanWorkflow.layers.ts`               | Deterministic workflow layer-loop orchestration                                     |
-| `runPlanWorkflow.layerHelpers.ts`         | Layer selection and continue-as-new decision helpers                                |
-| `runPlanWorkflow.layerResults.ts`         | Layer result application and gateway fact retention                                 |
-| `runPlanWorkflow.stepExecution.ts`        | Per-layer step activity execution orchestration                                     |
-| `runPlanWorkflow.activities.ts`           | Temporal activity proxy binding for workflow ports                                  |
-| `runPlanWorkflow.lifecycle.ts`            | Workflow bootstrap, terminal, failure, and rollover outcomes                        |
-| `runPlanWorkflow.cancellation.ts`         | Runtime-owned cancellation lifecycle settlement                                     |
-| `runPlanWorkflow.signals.ts`              | Runtime control-signal registration and dedupe state                                |
-| `workflowGatewayHelpers.ts`               | Gateway dependency validation and fact lookup                                       |
-| `workflowArtifactHelpers.ts`              | Execution artifact payload interpretation                                           |
-| `workflowControlSignalRetentionPolicy.ts` | Bounded retention policy for control-signal dedupe ids across workflow continuation |
-| `workflowFailureReasonPolicy.ts`          | Governed workflow failure reason classification from runtime error evidence         |
-| `workflowRuntimePayloadHelpers.ts`        | Runtime event payload shaping                                                       |
-| `temporalPlanRefCapacitySlaPolicy.ts`     | Production capacity SLA evaluation for PlanRef workflow budgets                     |
-| `workflowErrorHelpers.ts`                 | Workflow-safe error-message normalization                                           |
-| `workflowInputParsingHelpers.ts`          | Deterministic workflow input primitive parsing                                      |
+| Module                                    | Owned concern                                                                        |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ |
+| `RunPlanWorkflow.ts`                      | Temporal PlanRef workflow orchestration entrypoint                                   |
+| `runPlanWorkflow.types.ts`                | Workflow public API contracts and runtime state model                                |
+| `runPlanWorkflow.state.ts`                | Workflow control input parsing and cursor hydration                                  |
+| `workflowCursorHelpers.ts`                | Compact continue-as-new cursor construction and payload guard                        |
+| `executionSegmentResolver.ts`             | PlanRef execution-segment projection from canonical plans                            |
+| `runPlanWorkflow.layers.ts`               | Deterministic workflow layer-loop orchestration                                      |
+| `runPlanWorkflow.layerHelpers.ts`         | Layer selection and continue-as-new decision helpers                                 |
+| `runPlanWorkflow.layerResults.ts`         | Layer result application and gateway fact retention                                  |
+| `runPlanWorkflow.stepExecution.ts`        | Per-layer step activity execution orchestration                                      |
+| `runPlanWorkflow.activities.ts`           | Temporal activity proxy binding for workflow ports                                   |
+| `runPlanWorkflow.lifecycle.ts`            | Workflow bootstrap, terminal, failure, and rollover outcomes                         |
+| `runPlanWorkflow.cancellation.ts`         | Runtime-owned cancellation lifecycle settlement                                      |
+| `runPlanWorkflow.signals.ts`              | Runtime control-signal registration and dedupe state                                 |
+| `workflowGatewayHelpers.ts`               | Gateway dependency validation and fact lookup                                        |
+| `workflowArtifactHelpers.ts`              | Execution artifact payload interpretation                                            |
+| `workflowControlSignalRetentionPolicy.ts` | Bounded retention policy for control-signal dedupe ids across workflow continuation  |
+| `workflowFailureReasonPolicy.ts`          | Governed workflow failure reason classification from runtime error evidence          |
+| `workflowRuntimePayloadHelpers.ts`        | Runtime event payload shaping                                                        |
+| `temporalPlanRefCapacitySlaPolicy.ts`     | Evaluate Temporal PlanRef workflow budgets against governed production capacity SLAs |
+| `workflowErrorHelpers.ts`                 | Workflow-safe error-message normalization                                            |
+| `workflowInputParsingHelpers.ts`          | Deterministic workflow input primitive parsing                                       |
 
 ## Diagrams
 

@@ -19,6 +19,7 @@ describe('useCanvasDraftLifecycle architecture', () => {
     expect(LIFECYCLE_SOURCE).toContain('useCanvasCurrentDraftPayload({');
     expect(LIFECYCLE_SOURCE).toContain('useCanvasDraftAttemptRefs');
     expect(LIFECYCLE_SOURCE).toContain('executeCreateCanvasDocumentCommand({');
+    expect(LIFECYCLE_SOURCE).toContain('executeImportProjectSnapshotCommand({');
     expect(LIFECYCLE_SOURCE).not.toContain('UseCanvasDraftLifecycleArgs');
     expect(LIFECYCLE_SOURCE).not.toContain('useEffect(');
     expect(LIFECYCLE_SOURCE).not.toContain('buildCanonicalSnapshotFromWorkspaceSnapshot');

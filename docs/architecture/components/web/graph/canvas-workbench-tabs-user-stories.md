@@ -16,6 +16,8 @@ aligned with:
 
 - `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
 - `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
+- `docs/architecture/components/web/graph/canvas-legacy-retirement-component.md`
+- `docs/architecture/components/web/graph/canvas-legacy-retirement-user-stories.md`
 - `buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md`
 - `buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md`
 
@@ -34,13 +36,16 @@ Acceptance:
 
 ### US-CANVAS-WORKBENCH-002 - Code Tab
 
-As a Canvas user, I want Code to open as a Canvas workbench tab so selected
-node code context is not treated as a global application destination.
+As a Canvas user, I want Code to open as a Canvas workbench tab so workspace
+files and local Monaco editing are not treated as a global application
+destination.
 
 Acceptance:
 
 - selecting Code executes `SelectCanvasWorkbenchTab(code)`;
 - the route becomes `/canvas/code`;
+- Code appears beside Graph before the first canvas document is created;
+- Monaco accepts local typing through the Code workbench;
 - Code does not appear in the left shell navigation rail.
 
 ### US-CANVAS-WORKBENCH-003 - Lineage Tab
@@ -122,17 +127,19 @@ Acceptance:
 - labels are not truncated in the desktop workbench viewport;
 - Cypress proves `scrollWidth <= clientWidth + tolerance` for each label.
 
-### US-CANVAS-WORKBENCH-010 - Stage 1 Text-Only Tabs
+### US-CANVAS-WORKBENCH-010 - Semantic Icon Tabs
 
-As a Canvas user, I want the Stage 1 workbench tabs to render as text-only
-labels so plugin icons cannot compete with the graph canvas.
+As a Canvas user, I want the workbench tabs to render as compact semantic icons
+with readable labels so the toolbar feels like a mature graph workspace.
 
 Acceptance:
 
 - `CanvasWorkbenchTabsReadModel` exposes labels, routes, active state, scope,
-  and availability only;
-- `CanvasWorkbenchTabStrip` renders one visible label span per tab trigger;
-- the tab strip does not render `svg`, `Icon`, or `tab.icon` paths.
+  availability, and Canvas-owned icon names only;
+- `CanvasWorkbenchTabStrip` renders one visible SVG icon and one visible label
+  span per tab trigger;
+- the tab strip does not render plugin placement `icon`, `tab.icon`, or plugin
+  component paths.
 
 ### US-CANVAS-WORKBENCH-011 - Plugin Icon Isolation
 
@@ -143,8 +150,8 @@ workbench tabs.
 Acceptance:
 
 - plugin placement may still carry icon metadata;
-- `ListCanvasWorkbenchTabs` does not expose that metadata in the tab read
-  model;
+- `ListCanvasWorkbenchTabs` exposes Canvas-owned semantic icon names, not plugin
+  icon component metadata;
 - future icon-bearing surfaces must create their own read model instead of
   reusing `CanvasWorkbenchTabsReadModel`.
 
@@ -157,7 +164,7 @@ entire Stage 1 proposal.
 Acceptance:
 
 - the guide names `CanvasWorkbenchTabStrip`, its props, and its consumer path;
-- the guide documents text-only and passive-view invariants;
+- the guide documents semantic-icon and passive-view invariants;
 - the guide includes transition and sequence diagrams.
 
 ### US-CANVAS-WORKBENCH-013 - Semantic Architecture Guard
@@ -169,14 +176,14 @@ Acceptance:
 
 - the guard requires the local component guide and Stage 1 mailbox review;
 - the guard requires owned-concern headers on the local tab proof modules;
-- the guard verifies the text-only read model and browser proof vocabulary.
+- the guard verifies the semantic-icon read model and browser proof vocabulary.
 
 ## Scenario Matrix
 
 | Story                   | Rail                                 | DDD owner                               | Primary proof                              | Negative proof                                     |
 | ----------------------- | ------------------------------------ | --------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
 | US-CANVAS-WORKBENCH-001 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.test.ts`              | Graph default cannot select plugin tab by accident |
-| US-CANVAS-WORKBENCH-002 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvas-workbench-tabs.cy.ts`              | Code absent from fixed shell navigation            |
+| US-CANVAS-WORKBENCH-002 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `code-workbench-workspace-files.cy.ts`     | Code absent from fixed shell navigation            |
 | US-CANVAS-WORKBENCH-003 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvas-workbench-tabs.cy.ts`              | retired Lineage route ID absent                    |
 | US-CANVAS-WORKBENCH-004 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvasWorkbenchRouteState.test.ts`        | Diff absent from fixed shell navigation            |
 | US-CANVAS-WORKBENCH-005 | `SelectCanvasWorkbenchTab`           | `CanvasWorkbenchTabSelectionCommand`    | `canvasWorkbenchTabs.test.ts`              | Artifacts absent from fixed shell navigation       |
@@ -184,7 +191,7 @@ Acceptance:
 | US-CANVAS-WORKBENCH-007 | `ResolveCanvasWorkbenchContext`      | `CanvasWorkbenchContext`                | `canvasWorkbenchRouteState.test.ts`        | unknown tab fails closed                           |
 | US-CANVAS-WORKBENCH-008 | `ListShellNavigationItems`           | `ShellNavigationReadModel`              | `shellNavigationModel.test.ts`             | workbench placement rejected                       |
 | US-CANVAS-WORKBENCH-009 | `VerifyCanvasWorkbenchVisualPosture` | `CanvasWorkbenchVisualPostureReadModel` | `canvas-workbench-tabs.cy.ts`              | truncated labels fail Cypress                      |
-| US-CANVAS-WORKBENCH-010 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.test.ts`              | icon render data absent from read model            |
+| US-CANVAS-WORKBENCH-010 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.test.ts`              | plugin icon components absent from read model      |
 | US-CANVAS-WORKBENCH-011 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.architecture.test.ts` | plugin icon metadata cannot leak into tab strip    |
 | US-CANVAS-WORKBENCH-012 | `none - docs contract`               | `CanvasWorkbenchTabStrip`               | `canvasWorkbenchTabs.architecture.test.ts` | missing API/invariant/transition docs fail guard   |
 | US-CANVAS-WORKBENCH-013 | `VerifyCanvasWorkbenchVisualPosture` | `CanvasWorkbenchVisualPostureReadModel` | `canvasWorkbenchTabs.architecture.test.ts` | missing semantic proof vocabulary fails guard      |
@@ -197,6 +204,6 @@ Acceptance:
   posture.
 - The label-readability regression was caught red by the enhanced Cypress
   geometry assertion before the tab strip layout was made non-truncating.
-- The Stage 1 semantic guard requires the tab-strip component guide, text-only
-  stories, mailbox analysis, owned-concern docblocks, and browser no-icon
+- The semantic guard requires the tab-strip component guide, controlled-icon
+  stories, mailbox analysis, owned-concern docblocks, and browser controlled-icon
   proof to stay aligned.

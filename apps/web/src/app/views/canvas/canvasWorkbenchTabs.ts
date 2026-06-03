@@ -2,6 +2,7 @@
 import type {
   CanvasWorkbenchTabId,
   CanvasWorkbenchTabPlacement,
+  CanvasWorkbenchTabScope,
 } from '../../plugins/contracts/PluginManifest';
 import type { CanvasWorkbenchRouteState } from './canvasWorkbenchRouteState';
 import { buildCanvasWorkbenchTabPath } from './canvasWorkbenchRouteState';
@@ -17,11 +18,20 @@ export type CanvasWorkbenchContext =
       reason: 'missing_canvas_context';
     }>;
 
+export type CanvasWorkbenchTabIconName =
+  | 'graph'
+  | 'code'
+  | 'lineage'
+  | 'diff'
+  | 'artifacts'
+  | 'runs';
+
 export type CanvasWorkbenchTabReadModel = Readonly<{
   id: CanvasWorkbenchTabId;
   label: string;
+  iconName: CanvasWorkbenchTabIconName;
   order: number;
-  scope: 'canvas' | 'selection' | 'run';
+  scope: CanvasWorkbenchTabScope;
   isEnabled: boolean;
   to: string;
 }>;
@@ -62,6 +72,15 @@ const CANVAS_WORKBENCH_TAB_LABEL_KEYS = {
   runs: 'workbenchRunsTabLabel',
 } satisfies Record<CanvasWorkbenchTabId, keyof CanvasWorkbenchTabsCopy>;
 
+const CANVAS_WORKBENCH_TAB_ICON_NAMES = {
+  graph: 'graph',
+  code: 'code',
+  lineage: 'lineage',
+  diff: 'diff',
+  artifacts: 'artifacts',
+  runs: 'runs',
+} satisfies Record<CanvasWorkbenchTabId, CanvasWorkbenchTabIconName>;
+
 export function resolveCanvasWorkbenchTabLabel(
   tabId: CanvasWorkbenchTabId,
   copy: CanvasWorkbenchTabsCopy = canvasViewCopy
@@ -69,12 +88,19 @@ export function resolveCanvasWorkbenchTabLabel(
   return copy[CANVAS_WORKBENCH_TAB_LABEL_KEYS[tabId]];
 }
 
-export function createGraphCanvasWorkbenchTab(
+export function resolveCanvasWorkbenchTabIconName(
+  tabId: CanvasWorkbenchTabId
+): CanvasWorkbenchTabIconName {
+  return CANVAS_WORKBENCH_TAB_ICON_NAMES[tabId];
+}
+
+export function createCanvasGraphWorkbenchTab(
   copy: CanvasWorkbenchTabsCopy = canvasViewCopy
 ): CanvasWorkbenchTabReadModel {
   return {
     id: 'graph',
     label: resolveCanvasWorkbenchTabLabel('graph', copy),
+    iconName: resolveCanvasWorkbenchTabIconName('graph'),
     order: 10,
     scope: 'canvas',
     isEnabled: true,
@@ -100,11 +126,19 @@ function projectPlacementToTab(
   return {
     id: placement.tabId,
     label: resolveCanvasWorkbenchTabLabel(placement.tabId, copy),
+    iconName: resolveCanvasWorkbenchTabIconName(placement.tabId),
     order: placement.order,
     scope: placement.scope,
     isEnabled: true,
     to: buildCanvasWorkbenchTabPath(placement.tabId),
   };
+}
+
+export function isCanvasWorkbenchTabAvailableForContext(
+  placement: CanvasWorkbenchTabPlacement,
+  context: CanvasWorkbenchContext
+): boolean {
+  return context.kind === 'ready' || placement.scope === 'workspace';
 }
 
 export function buildCanvasWorkbenchTabsReadModel(args: {
@@ -115,15 +149,25 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
 }): CanvasWorkbenchTabsReadModel {
   const routeState = args.routeState;
   const copy = args.copy ?? canvasViewCopy;
-  const graphTab = createGraphCanvasWorkbenchTab(copy);
-  const pluginTabs =
-    args.context.kind === 'ready'
-      ? args.placements
-          .map((placement) => projectPlacementToTab(placement, copy))
-          .sort((left, right) => left.order - right.order)
-      : [];
+  const graphTab = createCanvasGraphWorkbenchTab(copy);
+  const pluginTabs = args.placements
+    .filter((placement) => isCanvasWorkbenchTabAvailableForContext(placement, args.context))
+    .map((placement) => projectPlacementToTab(placement, copy))
+    .sort((left, right) => left.order - right.order);
   const tabs = [graphTab, ...pluginTabs];
   assertUniqueCanvasWorkbenchTabs(tabs);
+
+  if (
+    args.context.kind === 'unavailable' &&
+    routeState.kind === 'selected' &&
+    tabs.some((tab) => tab.id === routeState.tabId)
+  ) {
+    return {
+      activeTabId: routeState.tabId,
+      tabs,
+      unavailableState: null,
+    };
+  }
 
   if (args.context.kind === 'unavailable') {
     return {

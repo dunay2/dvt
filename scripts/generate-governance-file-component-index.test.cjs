@@ -243,6 +243,83 @@ test('buildFileEntries adds unit status and drift legacy booleans per file', () 
   ]);
 });
 
+test('buildFileEntries assigns nested component files to the leaf component', () => {
+  const nestedUnits = [
+    {
+      id: 'SYS-DVT',
+      name: 'DVT system',
+      level: 'system',
+      status: 'review',
+      governance: ['docs/root.md'],
+    },
+    {
+      id: 'SYS-RUNTIME',
+      name: 'Runtime domain',
+      parent: 'SYS-DVT',
+      level: 'domain',
+      status: 'coverage-required',
+      governance: ['docs/runtime.md'],
+    },
+    {
+      id: 'SYS-RUNTIME-ENGINE-CORE',
+      name: 'Runtime engine core',
+      parent: 'SYS-RUNTIME',
+      level: 'component',
+      status: 'coverage-required',
+      owns: [],
+      childrenRequired: true,
+      dddOwner: 'AS',
+      cqRails: 'RT-C01',
+      governance: ['docs/engine.md'],
+    },
+    {
+      id: 'SYS-RUNTIME-ENGINE-APPLICATION',
+      name: 'Runtime engine application layer',
+      parent: 'SYS-RUNTIME-ENGINE-CORE',
+      level: 'component',
+      status: 'coverage-required',
+      owns: ['packages/@dvt/engine/src/application/**'],
+      childrenRequired: false,
+      dddOwner: 'AS',
+      cqRails: 'RT-C01',
+      governance: ['docs/engine-application.md'],
+    },
+  ];
+
+  const entries = buildFileEntries(
+    ['packages/@dvt/engine/src/application/StartRunApplicationService.ts'],
+    nestedUnits,
+    {
+      readFileBytes: () => Buffer.from('export const service = true;\n', 'utf8'),
+    }
+  );
+
+  assert.equal(entries[0].owningUnit, 'SYS-RUNTIME-ENGINE-APPLICATION');
+  assert.equal(entries[0].componentUnit, 'SYS-RUNTIME-ENGINE-APPLICATION');
+  assert.deepEqual(entries[0].unitPath, [
+    'SYS-DVT',
+    'SYS-RUNTIME',
+    'SYS-RUNTIME-ENGINE-CORE',
+    'SYS-RUNTIME-ENGINE-APPLICATION',
+  ]);
+});
+
+test('buildFileEntries consumes a supplied owner matcher', () => {
+  const apiRoot = units.find((unit) => unit.id === 'SYS-API-ROOT');
+  const calls = [];
+  const entries = buildFileEntries(['virtual/generated.ts'], units, {
+    ownerMatcher: (filePath) => {
+      calls.push(filePath);
+      return [apiRoot];
+    },
+    readFileBytes: () => Buffer.from('export const generated = true;\n', 'utf8'),
+  });
+
+  assert.deepEqual(calls, ['virtual/generated.ts']);
+  assert.equal(entries[0].owningUnit, 'SYS-API-ROOT');
+  assert.deepEqual(entries[0].unitPath, ['SYS-DVT', 'SYS-RUNTIME', 'SYS-API-ROOT']);
+});
+
 test('filterExistingRepositoryFiles drops tracked files deleted from the worktree', () => {
   assert.deepEqual(
     filterExistingRepositoryFiles(['package.json', 'scripts/removed-once.cjs'], {

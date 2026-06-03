@@ -1,3 +1,4 @@
+/** Owned concern: compose the Diff review route from governed query state and route workbench presentation. */
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { RouteWorkbenchFrame } from '../components/workbench/RouteWorkbenchFrame';
 import { DiffHeader } from './diff/DiffHeader';
@@ -93,14 +94,19 @@ export default function DiffView() {
   }
 
   return (
-    <RouteWorkbenchFrame header={header}>
-      <DiffTabs
-        catalogDocument={catalogDocument}
-        compareContextState={compareContextState}
-        changes={filteredChanges}
-        sqlDocument={sqlDocument}
-        sqlContextState={sqlContextState}
-      />
-    </RouteWorkbenchFrame>
+    <RouteWorkbenchFrame
+      header={header}
+      slots={{
+        primarySurface: (
+          <DiffTabs
+            catalogDocument={catalogDocument}
+            compareContextState={compareContextState}
+            changes={filteredChanges}
+            sqlDocument={sqlDocument}
+            sqlContextState={sqlContextState}
+          />
+        ),
+      }}
+    />
   );
 }

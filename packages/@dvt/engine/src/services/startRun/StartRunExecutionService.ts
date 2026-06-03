@@ -1,12 +1,14 @@
+/**
+ * @ownedConcern Dispatch admitted start-run requests to provider adapters and
+ * bootstrap run state with compensation.
+ */
 import type { StartRunTraceContext } from '../../core/lifecycle/StartRunTraceContext.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
 import { START_RUN_MESSAGE } from './StartRunDomainConstants.js';
 import type { StartRunEventFactory } from './StartRunEventFactory.js';
-import {
-  PostStartIntentPersistenceError,
-  type StartRunFailurePolicy,
-} from './StartRunFailurePolicy.js';
+import { PostStartIntentPersistenceError } from './StartRunFailurePolicy.js';
+import type { IStartRunExecutionService, IStartRunFailurePolicy } from './StartRunTypes.js';
 
 type EngineRunRef = import('@dvt/contracts').EngineRunRef;
 type PlanRef = import('@dvt/contracts').PlanRef;
@@ -21,7 +23,7 @@ export interface StartRunExecutionServiceDeps {
   stateStoreWrite: IRunStateStoreWrite;
   intentStore: IStartRunIntentStore;
   eventFactory: StartRunEventFactory;
-  failurePolicy: StartRunFailurePolicy;
+  failurePolicy: IStartRunFailurePolicy;
   observability: IObservability;
   clock: IClock;
   timeouts?: {
@@ -30,7 +32,7 @@ export interface StartRunExecutionServiceDeps {
   };
 }
 
-export class StartRunExecutionService {
+export class StartRunExecutionService implements IStartRunExecutionService {
   constructor(private readonly deps: StartRunExecutionServiceDeps) {}
 
   async executeStartRun(input: {

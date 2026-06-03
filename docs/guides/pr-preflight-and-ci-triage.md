@@ -29,6 +29,10 @@ Use this guide for implementation slices and PR-green recovery work.
 3. Run repository gate before push:
    - `pnpm verify:prepush`
 4. Push and open/update PR.
+   - The pre-push hook re-enters `verify:prepush -- --hook`. When the same
+     `HEAD` and local changed-file fingerprint already passed the manual gate,
+     the hook skips the duplicate changed-slice run. If the tree changed, it
+     runs the gate again.
 5. If CI is red, use log-first triage:
    - extract failed job logs first
    - patch root cause

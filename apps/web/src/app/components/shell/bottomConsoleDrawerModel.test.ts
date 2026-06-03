@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { buildBottomConsoleDrawerModel } from './bottomConsoleDrawerModel';
 
 describe('buildBottomConsoleDrawerModel', () => {
-  it('returns API idle guidance when no run is active', () => {
+  it('returns live-log idle guidance when no run is active', () => {
     expect(
       buildBottomConsoleDrawerModel({
         title: 'Console',
@@ -17,8 +17,7 @@ describe('buildBottomConsoleDrawerModel', () => {
       modeLabel: null,
       kind: 'idle',
       runLabel: null,
-      message:
-        'Start a run to see run events here. Live log streaming is not available in API mode yet.',
+      message: 'Start a run to see live run events here.',
     });
   });
 

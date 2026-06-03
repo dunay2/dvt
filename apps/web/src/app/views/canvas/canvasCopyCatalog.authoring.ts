@@ -26,8 +26,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationConnectionEdgeCountMessage: {
     key: 'canvas.transformation.connectionEdgeCountMessage',
-    fallback:
-      'Plan requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
+    fallback: 'Plan requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
   },
   transformationConnectionDuplicateMessage: {
     key: 'canvas.transformation.connectionDuplicateMessage',
@@ -71,15 +70,15 @@ export const canvasViewAuthoringCopyByKey = {
   },
   limitedAccessMessagePrefix: {
     key: 'canvas.readOnly.limitedAccessMessagePrefix',
-    fallback: 'You can keep inspecting the graph, but ',
+    fallback: 'Current scope disables ',
   },
   limitedAccessSingularMessageSuffix: {
     key: 'canvas.readOnly.limitedAccessSingularMessageSuffix',
-    fallback: ' is unavailable in this context.',
+    fallback: '.',
   },
   limitedAccessPluralMessageSuffix: {
     key: 'canvas.readOnly.limitedAccessPluralMessageSuffix',
-    fallback: ' are unavailable in this context.',
+    fallback: '.',
   },
   capabilityPlanPreview: {
     key: 'canvas.readOnly.capabilityPlanPreview',
@@ -91,7 +90,7 @@ export const canvasViewAuthoringCopyByKey = {
   },
   capabilityGraphEdits: {
     key: 'canvas.readOnly.capabilityGraphEdits',
-    fallback: 'graph edits',
+    fallback: 'graph editing',
   },
   conjunctionAnd: {
     key: 'canvas.list.conjunctionAnd',

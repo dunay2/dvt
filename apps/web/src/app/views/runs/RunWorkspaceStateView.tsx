@@ -2,14 +2,22 @@
  * Owned concern: render the run workspace detail, provenance, materialization,
  * diagnostics, and timeline read model.
  */
+import { ArrowLeft, ListChecks } from 'lucide-react';
+import { Link } from 'react-router';
+
 import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
-import type { MaterializationEvidence, RunExecutor } from '../../ports/runs';
-import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
-import { buildRunEventPresentationModel } from '../../services/runs/runEventPresentationModel';
+import type {
+  MaterializationEvidence,
+  RunDiagnostics,
+  RunExecutor,
+  RunPlanExecutionSummary,
+} from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
 import { RunDegradedStateView } from './RunDetailStateViews';
+import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { runStatesCopy as copy } from './runStatesCopy';
 import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
 
@@ -54,6 +62,10 @@ function formatByteSize(sizeBytes: number): string {
   }
 
   return `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatRunScopeList(values: readonly string[] | undefined): string {
+  return values && values.length > 0 ? values.join(', ') : copy.scopeUnavailable;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -196,6 +208,156 @@ function deriveFailureDiagnostics(workspace: RunWorkspaceViewModel) {
   };
 }
 
+function RunItineraryCard({
+  workspace,
+  executor,
+  materializationEvidence,
+}: Readonly<{
+  workspace: RunWorkspaceViewModel;
+  executor: RunExecutor | undefined;
+  materializationEvidence: MaterializationEvidence | undefined;
+}>) {
+  const { snapshot } = workspace;
+  const planSummary: RunPlanExecutionSummary | undefined = snapshot.planSummary;
+  const sinkScope =
+    planSummary?.sinkTables && planSummary.sinkTables.length > 0
+      ? formatRunScopeList(planSummary.sinkTables)
+      : (materializationEvidence?.sinkTable ?? copy.scopeUnavailable);
+
+  return (
+    <Card data-slot="run-itinerary-card" className="border-slate-700 bg-slate-900 p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <h2 className="text-base font-semibold">{copy.runItineraryTitle}</h2>
+            <Badge className="bg-blue-600">{snapshot.status}</Badge>
+          </div>
+          <p className="text-sm text-slate-300">{copy.runItineraryNote}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline" size="sm">
+            <Link to="/canvas">
+              <ArrowLeft aria-hidden="true" className="size-4" />
+              {copy.backToCanvasAction}
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/runs">
+              <ListChecks aria-hidden="true" className="size-4" />
+              {copy.allRunsAction}
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+        <div>
+          <span className="text-slate-400">{copy.planLabel}</span>
+          <div className="break-all font-mono text-xs">
+            {snapshot.planId ?? copy.scopeUnavailable}
+          </div>
+        </div>
+        <div>
+          <span className="text-slate-400">{copy.executorLabel}</span>
+          <div>
+            {planSummary?.executor ??
+              executor ??
+              materializationEvidence?.executor ??
+              copy.scopeUnavailable}
+          </div>
+        </div>
+        <div>
+          <span className="text-slate-400">{copy.environmentLabel}</span>
+          <div>
+            {materializationEvidence?.environmentId ??
+              snapshot.environment ??
+              copy.scopeUnavailable}
+          </div>
+        </div>
+        <div>
+          <span className="text-slate-400">{copy.stepsLabel}</span>
+          <div>
+            {planSummary
+              ? `${planSummary.stepCount} ${copy.stepsUnit} / ${planSummary.nodeCount} ${copy.nodesUnit}`
+              : copy.scopeUnavailable}
+          </div>
+        </div>
+        <div>
+          <span className="text-slate-400">{copy.sourceTablesLabel}</span>
+          <div className="break-all font-mono text-xs">
+            {formatRunScopeList(planSummary?.sourceTables)}
+          </div>
+        </div>
+        <div>
+          <span className="text-slate-400">{copy.sinkTablesLabel}</span>
+          <div className="break-all font-mono text-xs">{sinkScope}</div>
+        </div>
+      </div>
+      {!planSummary ? (
+        <p className="mt-4 rounded border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+          {copy.noPlanScopeEvidence}
+        </p>
+      ) : null}
+    </Card>
+  );
+}
+
+function RunDiagnosticsCard({
+  diagnostics,
+}: Readonly<{
+  diagnostics: RunDiagnostics;
+}>) {
+  const fields = [
+    [copy.diagnosticsRunIdLabel, diagnostics.runId, true],
+    [copy.diagnosticsPlanIdLabel, diagnostics.planId, true],
+    [copy.diagnosticsPlanShaLabel, diagnostics.planSha, true],
+    [copy.diagnosticsStepIdLabel, diagnostics.stepId, true],
+    [copy.diagnosticsAttemptIdLabel, diagnostics.attemptId, true],
+    [copy.diagnosticsAdapterLabel, diagnostics.adapter, false],
+    [copy.durationLabel, diagnostics.durationMs, false],
+    [copy.diagnosticsStatusLabel, diagnostics.status, false],
+    [copy.diagnosticsErrorCodeLabel, diagnostics.errorCode, false],
+  ] as const;
+
+  return (
+    <Card data-slot="run-diagnostics-card" className="border-slate-700 bg-slate-900 p-5">
+      <h3 className="mb-3 text-sm font-semibold">{copy.diagnosticsTitle}</h3>
+      <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+        {fields.map(([label, value, monospace]) =>
+          value === undefined ? null : (
+            <div
+              key={label}
+              className={label === copy.diagnosticsPlanShaLabel ? 'md:col-span-2' : ''}
+            >
+              <span className="text-slate-400">{label}</span>
+              <div className={monospace ? 'break-all font-mono text-xs' : undefined}>
+                {typeof value === 'number' ? formatDuration(value) : value}
+              </div>
+            </div>
+          )
+        )}
+      </div>
+
+      <div className="mt-4">
+        <h4 className="mb-2 text-xs font-semibold uppercase text-slate-400">
+          {copy.diagnosticsPointersLabel}
+        </h4>
+        <div className="space-y-2">
+          {diagnostics.pointers.map((pointer) => (
+            <div
+              key={`${pointer.kind}-${pointer.value}`}
+              className="rounded border border-slate-700 bg-slate-950 p-3 text-sm text-slate-300"
+            >
+              <Badge variant="outline">{pointer.label}</Badge>
+              <div className="mt-2 break-all font-mono text-xs">{pointer.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
   const executor = deriveExecutor(workspace);
@@ -209,6 +371,12 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
   return (
     <WorkbenchStateFrame title={`Run ${snapshot.runId}`} slotPrefix="runs-state">
       <div className="mx-auto max-w-4xl space-y-4">
+        <RunItineraryCard
+          workspace={workspace}
+          executor={executor}
+          materializationEvidence={materializationEvidence}
+        />
+
         <Card className="border-slate-700 bg-slate-900 p-5">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <h2 className="text-base font-semibold">{copy.runtimeSnapshotTitle}</h2>
@@ -277,7 +445,49 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           </div>
         </Card>
 
-        <Card className="border-slate-700 bg-slate-900 p-5">
+        {snapshot.diagnostics ? <RunDiagnosticsCard diagnostics={snapshot.diagnostics} /> : null}
+
+        {showMaterializationSection ? (
+          <Card data-slot="run-materialization-card" className="border-slate-700 bg-slate-900 p-5">
+            <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
+            {materializationEvidence ? (
+              <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
+                <div>
+                  <span className="text-slate-400">{copy.executorLabel}</span>
+                  <div>{materializationEvidence.executor}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.environmentLabel}</span>
+                  <div>{materializationEvidence.environmentId}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.sinkTableLabel}</span>
+                  <div className="font-mono">{materializationEvidence.sinkTable}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
+                  <div>{materializationEvidence.rowsWritten.toLocaleString()}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.startedLabel}</span>
+                  <div>{new Date(materializationEvidence.startedAt).toLocaleString()}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.completedLabel}</span>
+                  <div>{new Date(materializationEvidence.completedAt).toLocaleString()}</div>
+                </div>
+                <div>
+                  <span className="text-slate-400">{copy.durationLabel}</span>
+                  <div>{formatDuration(materializationEvidence.durationMs)}</div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
+            )}
+          </Card>
+        ) : null}
+
+        <Card data-slot="run-plan-provenance-card" className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.planProvenanceTitle}</h3>
           {planProvenance ? (
             <div className="space-y-4 text-sm text-slate-300">
@@ -354,47 +564,10 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           )}
         </Card>
 
-        {showMaterializationSection ? (
-          <Card className="border-slate-700 bg-slate-900 p-5">
-            <h3 className="mb-3 text-sm font-semibold">{copy.materializationTitle}</h3>
-            {materializationEvidence ? (
-              <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
-                <div>
-                  <span className="text-slate-400">{copy.executorLabel}</span>
-                  <div>{materializationEvidence.executor}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.environmentLabel}</span>
-                  <div>{materializationEvidence.environmentId}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.sinkTableLabel}</span>
-                  <div className="font-mono">{materializationEvidence.sinkTable}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.rowsWrittenLabel}</span>
-                  <div>{materializationEvidence.rowsWritten.toLocaleString()}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.startedLabel}</span>
-                  <div>{new Date(materializationEvidence.startedAt).toLocaleString()}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.completedLabel}</span>
-                  <div>{new Date(materializationEvidence.completedAt).toLocaleString()}</div>
-                </div>
-                <div>
-                  <span className="text-slate-400">{copy.durationLabel}</span>
-                  <div>{formatDuration(materializationEvidence.durationMs)}</div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-slate-400">{copy.noResultEvidence}</p>
-            )}
-          </Card>
-        ) : null}
-
-        <Card className="border-slate-700 bg-slate-900 p-5">
+        <Card
+          data-slot="run-execution-provenance-card"
+          className="border-slate-700 bg-slate-900 p-5"
+        >
           <h3 className="mb-3 text-sm font-semibold">{copy.provenanceTitle}</h3>
           {executionProvenance.length > 0 ? (
             <div className="space-y-3">
@@ -483,42 +656,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           ) : null}
 
           {timeline.state === 'available' ? (
-            <div className="space-y-2">
-              {timeline.events.map((event) => {
-                const presentation = buildRunEventPresentationModel(event);
-                const headline = resolveRunEventHeadline(
-                  presentation.headlineKey,
-                  presentation.fallbackHeadline
-                );
-                return (
-                  <div
-                    key={event.eventId}
-                    className="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-slate-200"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold">{event.eventType}</span>
-                        <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
-                          {presentation.level}
-                        </Badge>
-                      </div>
-                      <span className="text-slate-400">
-                        {new Date(event.emittedAt).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="mt-1">{headline}</div>
-                    {presentation.detail ? (
-                      <div className="mt-1 text-slate-300">{presentation.detail}</div>
-                    ) : null}
-                    {presentation.stepId ? (
-                      <div className="mt-1 text-slate-400">
-                        {copy.stepLabel} {presentation.stepId}
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
+            <RunEventTimelineTable events={timeline.events} />
           ) : null}
         </Card>
       </div>

@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 
 import { usePlatformHealthSnapshotQuery } from '../../../capabilities/platform-health';
+import { getSourceImportContributions } from '../../plugins/registry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import { resolveWorkspacePortCapabilities } from '../../services/workspace/workspacePorts';
@@ -22,7 +23,20 @@ export function useCanvasControllerEnvironment() {
   const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
-  const workspacePortCapabilities = useMemo(() => resolveWorkspacePortCapabilities(), []);
+  const workspacePortTransportCapabilities = useMemo(() => resolveWorkspacePortCapabilities(), []);
+  const sourceImportContributions = useMemo(
+    () => getSourceImportContributions(capabilities),
+    [capabilities]
+  );
+  const workspacePortCapabilities = useMemo(
+    () => ({
+      ...workspacePortTransportCapabilities,
+      sourceImportAvailable:
+        workspacePortTransportCapabilities.sourceImportAvailable &&
+        sourceImportContributions.length > 0,
+    }),
+    [sourceImportContributions.length, workspacePortTransportCapabilities]
+  );
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();

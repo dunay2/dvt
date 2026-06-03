@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Owns outbox worker environment parsing and runtime configuration policy for active/passive worker modes.
+ */
 import { z } from 'zod';
 
 const envBoolean = z.preprocess((value) => {
@@ -22,6 +25,49 @@ const envShardIdList = z.preprocess((value) => {
   }
   return value;
 }, z.array(z.coerce.number().int().nonnegative()));
+
+const tenantRunEventRetentionOverrides = z.preprocess(
+  (value) => {
+    if (value === undefined) return undefined;
+    if (Array.isArray(value)) return value;
+    if (typeof value !== 'string') return value;
+    const trimmed = value.trim();
+    if (trimmed.length === 0) {
+      return [];
+    }
+
+    return trimmed.split(',').map((segment) => {
+      const [tenantId, hotRetentionDays, extra] = segment.split('=');
+      if (extra !== undefined) {
+        return { tenantId: '', hotRetentionDays: Number.NaN };
+      }
+      return {
+        tenantId: tenantId?.trim() ?? '',
+        hotRetentionDays: hotRetentionDays?.trim() ?? '',
+      };
+    });
+  },
+  z
+    .array(
+      z.object({
+        tenantId: z.string().min(1),
+        hotRetentionDays: z.coerce.number().int().positive(),
+      })
+    )
+    .superRefine((overrides, context) => {
+      const seenTenantIds = new Set<string>();
+      for (const override of overrides) {
+        if (seenTenantIds.has(override.tenantId)) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `duplicate tenant override: ${override.tenantId}`,
+          });
+          return;
+        }
+        seenTenantIds.add(override.tenantId);
+      }
+    })
+);
 
 const nonBlankString = z.string().refine((value) => value.trim().length > 0, {
   message: 'must not be empty',
@@ -53,17 +99,18 @@ const ActiveCommonEnvSchema = CommonEnvSchema.extend({
   DVT_OUTBOX_WORKER_ERROR_BACKOFF_MS: z.coerce.number().int().positive().default(5000),
   DVT_OUTBOX_WORKER_STOP_ON_ERROR: envBoolean.default(false),
   DVT_OUTBOX_WORKER_RUN_MIGRATIONS: envBoolean.default(false),
-  DVT_PURGE_ENABLED: envBoolean.default(false),
+  DVT_PURGE_ENABLED: envBoolean.default(true),
   DVT_PURGE_INTERVAL_MS: z.coerce.number().int().positive().default(3_600_000),
   DVT_PURGE_DELIVERED_OUTBOX_RETENTION_DAYS: z.coerce.number().int().positive().default(7),
   DVT_PURGE_OUTBOX_DEAD_LETTER_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   DVT_PURGE_LINEAGE_DEAD_LETTER_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   DVT_PURGE_MAX_ROWS_PER_RUN: z.coerce.number().int().positive().default(5_000),
-  DVT_RUN_EVENT_RETENTION_ENABLED: envBoolean.default(false),
+  DVT_RUN_EVENT_RETENTION_ENABLED: envBoolean.default(true),
   DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD: envBoolean.default(false),
   DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS: z.coerce.number().int().min(0).default(30_000),
   DVT_RUN_EVENT_RETENTION_INTERVAL_MS: z.coerce.number().int().positive().default(3_600_000),
   DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS: z.coerce.number().int().positive().default(90),
+  DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS: tenantRunEventRetentionOverrides.default([]),
   DVT_RUN_EVENT_RETENTION_ARCHIVE_BUCKET_COUNT: z.coerce.number().int().positive().default(64),
   DVT_RUN_EVENT_RETENTION_PIN_TERMINAL_SNAPSHOTS: envBoolean.default(true),
   DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY: nonBlankString.default('.dvt/archive'),

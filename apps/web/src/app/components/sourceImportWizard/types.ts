@@ -3,11 +3,13 @@ import type {
   WarehouseConnection,
   WarehouseTable,
 } from '../../ports/workspace';
+import type { SourceImportOptionContribution } from '../../plugins/registry';
 
 export interface SourceImportWizardProps {
   open: boolean;
   onClose: () => void;
   onComplete?: (result: ImportSourcesResult) => void;
+  sourceImportOptions?: readonly SourceImportOptionContribution[];
 }
 
 export type WizardStep =

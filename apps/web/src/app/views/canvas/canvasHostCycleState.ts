@@ -15,7 +15,8 @@ export type CanvasHostCycleState =
   | {
       kind: 'needs_canvas';
       availableCanvasKinds: readonly CanvasKindRegistration[];
-      onCreateCanvasDocument: CreateCanvasDocumentCommand;
+      onCreateCanvasDocument: CreateCanvasDocumentCommand | undefined;
+      unavailableMessage: string | null;
     }
   | {
       kind: 'typed_empty';
@@ -73,6 +74,12 @@ function canCreateFirstNode(
   return args.canEditEdges && args.draftSaveStatus !== 'saving';
 }
 
+function canCreateFirstCanvasDocument(
+  args: Pick<CanvasWorkbenchSurfaceArgs, 'canCreateCanvasDocument' | 'draftSaveStatus'>
+): boolean {
+  return args.canCreateCanvasDocument && args.draftSaveStatus !== 'saving';
+}
+
 export function deriveCanvasHostCycleState(
   args: Pick<
     CanvasWorkbenchSurfaceArgs,
@@ -80,6 +87,7 @@ export function deriveCanvasHostCycleState(
     | 'canvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
+    | 'canCreateCanvasDocument'
     | 'canEditEdges'
     | 'canOpenSourceImport'
     | 'onCreateCanvasDocument'
@@ -90,6 +98,7 @@ export function deriveCanvasHostCycleState(
     presentationState: { routeState },
     canvasDocument,
     availableCanvasKinds,
+    canCreateCanvasDocument,
     canEditEdges,
     canOpenSourceImport,
     onCreateCanvasDocument,
@@ -97,10 +106,20 @@ export function deriveCanvasHostCycleState(
   } = args;
 
   if (routeState === 'needs_canvas') {
+    const canCreateCanvas = canCreateFirstCanvasDocument({
+      canCreateCanvasDocument,
+      draftSaveStatus: args.draftSaveStatus,
+    });
+
     return {
       kind: 'needs_canvas',
       availableCanvasKinds,
-      onCreateCanvasDocument,
+      onCreateCanvasDocument: canCreateCanvas ? onCreateCanvasDocument : undefined,
+      unavailableMessage: canCreateCanvas
+        ? null
+        : canCreateCanvasDocument
+          ? canvasViewCopy.mutationUnavailableMessage
+          : canvasViewCopy.routeNeedsCanvasReadOnlyMessage,
     };
   }
 

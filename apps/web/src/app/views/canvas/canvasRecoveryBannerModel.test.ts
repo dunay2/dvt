@@ -4,7 +4,7 @@ import { deriveCanvasDraftAccessPosture } from './canvasDraftAccessPostureModel'
 import { resolveCanvasRecoveryBannerViewState } from './canvasRecoveryBannerModel';
 
 describe('canvasRecoveryBannerModel', () => {
-  it('maps read-only draft posture to an inspect-only banner without reload action', () => {
+  it('does not map read-only draft posture to a recovery banner', () => {
     const posture = deriveCanvasDraftAccessPosture({
       draftAccessMode: 'read_only',
       draftCapabilityReason: 'write_denied',
@@ -14,15 +14,7 @@ describe('canvasRecoveryBannerModel', () => {
       draftSaveStatus: 'idle',
     });
 
-    expect(
-      resolveCanvasRecoveryBannerViewState({
-        draftAccessPosture: posture,
-      })
-    ).toMatchObject({
-      title: 'Draft is read-only',
-      actionLabel: 'Inspect only',
-      actionEnabled: false,
-    });
+    expect(resolveCanvasRecoveryBannerViewState({ draftAccessPosture: posture })).toBeNull();
   });
 
   it('maps session-required posture to refresh-session recovery', () => {

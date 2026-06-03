@@ -183,9 +183,11 @@ describe('Canvas first-authoring live protected runtime', () => {
 
       cy.contains(variant.emptyTitle, { timeout: 20_000 }).should('be.visible');
       cy.get('[data-slot="canvas-empty-state"]').within(() => {
-        cy.contains(variant.firstNodeLabel).should('be.visible');
-        cy.contains('button', 'Source').should('be.enabled').click();
+        cy.contains('button', variant.firstNodeLabel).should('be.enabled').click();
       });
+      cy.contains('[data-slot="canvas-add-node-palette-option"]', /^Source$/)
+        .should('be.visible')
+        .click();
       waitForDraftSaveSettled();
 
       cy.contains('.react-flow__node', 'Source 1', { timeout: 20_000 }).should('be.visible');

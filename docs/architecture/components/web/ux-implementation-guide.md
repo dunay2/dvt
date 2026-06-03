@@ -31,6 +31,7 @@ That means:
 - one persistent shell;
 - one active route-level work surface at a time;
 - no fixed left navigation rail inside the Canvas workbench;
+- no Canvas route command portal inside the persistent global top bar;
 - optional contextual panels, drawers, or overlays only when justified by
   active context or explicit user pinning;
 - an optional bottom drawer for dense supporting context;
@@ -39,11 +40,12 @@ That means:
   surfaces;
 - explicit empty, loading, error, degraded, and read-only states.
 
-For open-data or public-data slices, the visual direction may diverge from the
-operator workbench. The named design direction for that slice is `Marquez`:
-editorial, curated, and explanatory rather than IDE-like. In frontend
+For public-data surfaces, the visual direction may diverge from the operator
+workbench. The named design direction for that slice is the Marquez visual
+system: editorial, curated, and explanatory rather than IDE-like. In frontend
 architecture docs, `Marquez` here is a design reference, not the OpenLineage
-backend product.
+backend product. It must not be applied to operator workbench routes such as
+Canvas, Runs, Code, Diff, Artifacts, Templates, Plugins, Admin, or Cost.
 
 ## Reuse Strategy
 
@@ -102,8 +104,8 @@ Owns:
 
 - top bar;
 - health banner;
-- command/menu discovery and any remaining shell navigation compatibility
-  surface;
+- command/menu discovery, global navigation fallback, read-only workspace
+  context, and any remaining shell navigation compatibility surface;
 - route outlet;
 - bottom drawer visibility;
 - focus mode and global shell controls.
@@ -113,6 +115,7 @@ Does not own:
 - graph semantics;
 - run semantics;
 - diff semantics;
+- Canvas route command placement;
 - feature-local orchestration.
 
 ### Route-Level Workbenches
@@ -234,7 +237,8 @@ Primary task:
 ### Phase 6. Separate open-data presentation from operator workbench
 
 - keep the workbench grammar for operator routes;
-- use `Marquez` only for public or explanatory open-data surfaces.
+- use the Marquez visual system only for public or explanatory public-data
+  surfaces.
 
 Primary task:
 
@@ -256,7 +260,9 @@ Done when:
 Done when:
 
 - explorer and inspector are optional and recoverable;
-- graph commands live in the toolbar;
+- graph commands live in the route-local toolbar and never in the persistent
+  global top bar;
+- first-canvas selection stays quiet until a canvas document exists;
 - run and plan handoff works without route confusion;
 - runtime overlays do not mutate graph truth.
 

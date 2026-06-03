@@ -1,3 +1,9 @@
+/**
+ * @ownedConcern WorkflowEngine test composition fixture using fake provider adapters and engine-owned ports.
+ *
+ * Composes in-memory stores and engine services for tests without production
+ * adapter or provider-runtime imports.
+ */
 import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifacts';
 import {
   asIsoUtcString,
@@ -16,22 +22,21 @@ import type { IObservability } from '@dvt/observability';
 import type { IProviderAdapter } from '../../src/adapters/IProviderAdapter.js';
 import { buildRunRecoveryService } from '../../src/application/RecoverRunApplicationService.js';
 import { StartRunAdmissionGuard } from '../../src/application/StartRunAdmissionGuard.js';
-import { StartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
+import { buildStartRunApplicationService } from '../../src/application/StartRunApplicationService.js';
 import { buildWorkflowEngineUseCases } from '../../src/application/workflow-engine-use-cases/index.js';
 import { buildWorkflowEngineFacade } from '../../src/core/buildWorkflowEngineFacade.js';
 import { IdempotencyKeyBuilder } from '../../src/core/idempotency.js';
 import { SnapshotProjector } from '../../src/core/SnapshotProjector.js';
 import { WorkflowEngine } from '../../src/core/WorkflowEngine.js';
-import {
-  buildRunControlService,
-  WorkflowEngineCoreService,
-} from '../../src/core/WorkflowEngineCoreService.js';
+import { WorkflowEngineCoreService } from '../../src/core/WorkflowEngineCoreService.js';
 import type { IRunExecutionContextBindingPolicy } from '../../src/ports/IRunExecutionContextBindingPolicy.js';
 import type { IRunExecutionContextResolver } from '../../src/ports/IRunExecutionContextResolver.js';
 import { AllowAllAuthorizer } from '../../src/security/authorizer.js';
 import type { IAuthorizer } from '../../src/security/authorizer.js';
 import { PlanRefPolicy } from '../../src/security/planRefPolicy.js';
 import { RunAccessPolicy } from '../../src/security/RunAccessPolicy.js';
+import { buildRunCommandService } from '../../src/services/runControl/RunCommandService.js';
+import { buildRunSignalService } from '../../src/services/runControl/RunSignalService.js';
 import { RunEnrichmentService } from '../../src/services/RunEnrichmentService.js';
 import {
   buildRunStatusQueryService,
@@ -126,8 +131,7 @@ export function createWorkflowEngineFixture(
     authorizer: input?.authorizer ?? new AllowAllAuthorizer(),
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
   });
-  const startRunApplicationService = new StartRunApplicationService({
-    policy,
+  const startRunApplicationService = buildStartRunApplicationService({
     guard: new StartRunAdmissionGuard({
       policy,
       stateStoreRead,
@@ -150,7 +154,14 @@ export function createWorkflowEngineFixture(
       ? {}
       : { observabilityFallbackThrottleMs: input.observabilityFallbackThrottleMs }),
   });
-  const runControlService = buildRunControlService({
+  const runCommandService = buildRunCommandService({
+    stateStoreRead,
+    policy,
+    adapters,
+    observability,
+    clock,
+  });
+  const runSignalService = buildRunSignalService({
     stateStoreRead,
     stateStoreWrite,
     idempotency,
@@ -187,7 +198,8 @@ export function createWorkflowEngineFixture(
     observability,
     startRunApplicationService,
     runRecoveryService,
-    runControlService,
+    runCommandService,
+    runSignalService,
     runStatusQueryService,
   });
   const engine = buildWorkflowEngineFacade({
@@ -265,7 +277,7 @@ export function makeDefaultExecutionPlan(): ExecutionPlan {
     metadata: {
       planId,
       planVersion: '1.0',
-      schemaVersion: 'v1.2',
+      schemaVersion: '1.0',
       contractVersion: '1.0.0',
       inputHashSha256,
       createdAtIso: '2026-02-12T00:00:00.000Z',
@@ -316,8 +328,15 @@ export function createWorkflowEngineCoreFixture(input?: {
     planRefPolicy: new PlanRefPolicy({ allowedSchemes: input?.allowedSchemes ?? ['https'] }),
   });
   const observability = input?.observability ?? createNoopObservability();
-
-  const core = new WorkflowEngineCoreService({
+  const runCommandService = buildRunCommandService({
+    stateStoreRead,
+    policy,
+    adapters,
+    observability,
+    clock,
+    ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+  const runSignalService = buildRunSignalService({
     stateStoreRead,
     stateStoreWrite,
     idempotency,
@@ -326,6 +345,11 @@ export function createWorkflowEngineCoreFixture(input?: {
     observability,
     clock,
     ...(input?.timeouts ? { timeouts: input.timeouts } : {}),
+  });
+
+  const core = new WorkflowEngineCoreService({
+    runCommandService,
+    runSignalService,
   });
   const runStatusQueryService = new RunStatusQueryService({
     stateStoreRead,

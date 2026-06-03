@@ -4,6 +4,7 @@
  */
 import type { RunSummaryItem } from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
+import { getRouteWorkbenchStatusToneClassName } from '../../components/workbench/routeWorkbenchTableTokens';
 
 export function isKnownRunField(value: string | undefined): value is string {
   return Boolean(value && value !== 'unknown' && value !== 'unknown-plan');
@@ -11,15 +12,15 @@ export function isKnownRunField(value: string | undefined): value is string {
 
 export function getRunStatusTone(status: RunSummaryItem['status']) {
   if (status === 'completed') {
-    return 'bg-green-600';
+    return getRouteWorkbenchStatusToneClassName('success');
   }
   if (status === 'running') {
-    return 'bg-blue-600';
+    return getRouteWorkbenchStatusToneClassName('running');
   }
   if (status === 'failed') {
-    return 'bg-red-600';
+    return getRouteWorkbenchStatusToneClassName('danger');
   }
-  return '';
+  return getRouteWorkbenchStatusToneClassName('neutral');
 }
 
 export function getDetailStateBadge(detailState: RunWorkspaceViewModel['detailState']) {

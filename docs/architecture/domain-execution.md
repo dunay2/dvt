@@ -2,7 +2,7 @@
 title: Execution Domain
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-05-14
 ---
 
 # Execution Domain
@@ -62,8 +62,8 @@ model rewrite. Start-run metadata now persists a single discriminated
   the engine.
 - `TF-C2`: finish the remaining runtime-vertical acceptance on top of the
   landed executor payload and caller-visible runtime-evidence slices.
-- `DHM` and `RC-G1`: continue DDD or hexagonal modularization and shared-kernel
-  cleanup without widening composition-root leakage.
+- `DHM`: continue DDD or hexagonal modularization without widening
+  composition-root leakage.
 
 ## Domain Rules
 

@@ -41,6 +41,7 @@ function buildDefaultCanvasUserPermissions(): CanvasController['userPermissions'
     canPlan: true,
     canRun: true,
     canEditEdges: true,
+    canPersistGraphDraft: true,
     canManagePlugins: false,
     canManageRBAC: false,
   };
@@ -120,6 +121,7 @@ export function buildCanvasHostCycleControllerState(
   if (dto.kind === 'needs_canvas') {
     return {
       canvasDocument: null,
+      canCreateCanvasDocument: true,
       availableCanvasKinds: buildCanvasKinds(),
       explorerNodes: [],
     };
@@ -132,11 +134,14 @@ export function buildCanvasHostCycleControllerState(
         title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
       },
       availableCanvasKinds: buildCanvasKinds(),
+      canCreateCanvasDocument: false,
       explorerNodes: [],
       userPermissions: {
         ...buildDefaultCanvasUserPermissions(),
         canEditEdges: dto.canEditEdges ?? true,
+        canPersistGraphDraft: true,
       },
+      canPlanGraph: false,
       canOpenSourceImport: dto.canOpenSourceImport ?? true,
       canvasAuthoringMode: dto.canvasKind,
     };
@@ -148,7 +153,9 @@ export function buildCanvasHostCycleControllerState(
       title: dto.title ?? resolveCanvasHostCycleTitle(dto.canvasKind),
     },
     availableCanvasKinds: buildCanvasKinds(),
+    canCreateCanvasDocument: false,
     explorerNodes: [buildCanvasHostCycleExplorerNode(dto.canvasKind, dto.firstNodeKind)],
     canvasAuthoringMode: dto.canvasKind,
+    canPlanGraph: true,
   };
 }

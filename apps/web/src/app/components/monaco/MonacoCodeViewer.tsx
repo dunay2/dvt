@@ -1,3 +1,4 @@
+/** Owned concern: lazy-load the Monaco code surface behind a route-safe read-only viewer API. */
 import { Suspense, lazy } from 'react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';
@@ -8,7 +9,7 @@ type MonacoCodeViewerProps = Readonly<{
   ariaLabel: string;
   containerClassName?: string;
   language: string;
-  loadingLabel?: string;
+  loadingLabel: string;
   path?: string;
   value: string;
 }>;
@@ -17,7 +18,7 @@ export function MonacoCodeViewer({
   ariaLabel,
   containerClassName = DEFAULT_MONACO_CONTAINER_CLASS_NAME,
   language,
-  loadingLabel = 'Loading Monaco viewer...',
+  loadingLabel,
   path,
   value,
 }: MonacoCodeViewerProps) {
@@ -32,6 +33,7 @@ export function MonacoCodeViewer({
         containerClassName={containerClassName}
         language={language}
         path={path}
+        readOnly={true}
         value={value}
       />
     </Suspense>

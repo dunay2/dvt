@@ -1,9 +1,10 @@
 ---
 title: Web Auth, Project Onboarding, And Actionable Product Gaps
-status: Proposed
+status: Accepted
 date: 2026-05-01
 owner: Web / Product
 planning_type: proposal
+last_reviewed: 2026-05-15
 ---
 
 # Web Auth, Project Onboarding, And Actionable Product Gaps
@@ -133,7 +134,7 @@ implementation slice stays inside these boundaries:
 - authoritative tenant/project scope discovery;
 - project creation and empty workspace/canvas startup;
 - Canvas authoring after project scope exists;
-- disabled-action capability-gap governance;
+- [Task: E-PROP-DISP-1] disabled-action capability-gap governance;
 - read-only operational evidence contracts for files, lineage, cost, diff, and
   logs.
 
@@ -150,7 +151,7 @@ Identity and session:
 - `CompleteLogin`: exchanges the provider callback for an authenticated
   product session.
 - `LogoutPrincipal`: clears the authenticated session and browser scope cache.
-- `RefreshSessionGrants`: refreshes tenant, project, role, and action grants.
+- [Task: E-PROP-DISP-1] `RefreshSessionGrants`: refreshes tenant, project, role, and action grants.
 
 Tenant administration:
 
@@ -166,9 +167,9 @@ Scope, project, and workspace:
 
 - `SelectTenantScope`: selects a tenant from the authenticated grant set.
 - `SelectProjectScope`: selects a project from the selected tenant grants.
-- `CreateProject`: creates a tenant-owned project with no sample graph data.
-- `CreateWorkspace`: creates a workspace container for a project.
-- `CreateCanvas`: creates an empty typed canvas inside a workspace.
+- [Task: F-31] `CreateProject`: creates a tenant-owned project with no sample graph data.
+- [Task: F-31] `CreateWorkspace`: creates a workspace container for a project.
+- [Task: F-31] `CreateCanvas`: creates an empty typed canvas inside a workspace.
 - `EnableDemoProjectSeed`: explicitly enables demo seed data for a project.
 
 Canvas authoring:
@@ -181,7 +182,7 @@ Canvas authoring:
 
 Capability-gap governance:
 
-- `RegisterDisabledActionGap`: maps a disabled UI action to a story ID,
+- [Task: E-PROP-DISP-1] `RegisterDisabledActionGap`: maps a disabled UI action to a story ID,
   capability, and backend contract reference.
 - `AcknowledgeUnavailableCapability`: records that an operator saw an explicit
   unavailable-capability posture.
@@ -210,13 +211,13 @@ Tenant administration:
 
 Project, workspace, and Canvas:
 
-- `ListProjects`: returns tenant-scoped project descriptors.
-- `GetProject`: returns one project descriptor and project posture.
-- `GetWorkspaceManifest`: returns workspaces, canvases, files, and openable
+- [Task: F-31] `ListProjects`: returns tenant-scoped project descriptors.
+- [Task: F-31] `GetProject`: returns one project descriptor and project posture.
+- [Task: F-31] `GetWorkspaceManifest`: returns workspaces, canvases, files, and openable
   surfaces for the selected project.
 - `GetWorkspaceGraphDraft`: returns the protected graph draft after
   authentication and project selection.
-- `ListCanvasKinds`: returns canvas kinds available to the selected project.
+- [Task: F-31] `ListCanvasKinds`: returns canvas kinds available to the selected project.
 - `ListNodeKindCatalog`: returns node kinds allowed for the active canvas kind.
 
 Capability-gap governance:
@@ -290,7 +291,7 @@ permissions **so that** teams can operate without sharing admin credentials.
 
 Acceptance criteria:
 
-- Tenant admin can invite or create users scoped to a tenant.
+- [Task: E-PROP-DISP-1] Tenant admin can invite or create users scoped to a tenant.
 - Tenant admin can grant and revoke roles per tenant and project.
 - Tenant admin cannot grant a role broader than their own authority.
 - Role changes invalidate stale sessions or force permission refresh.
@@ -359,8 +360,8 @@ Acceptance criteria:
 
 - Project creation collects name, owning tenant, and initial plugin/source
   posture.
-- New projects create no sample nodes by default.
-- User can create an empty canvas and choose its canvas kind.
+- [Task: F-31] New projects create no sample nodes by default.
+- [Task: F-31] User can create an empty canvas and choose its canvas kind.
 - First node catalog is derived from the canvas kind.
 - Negative tests cover duplicate project name, unsupported canvas kind, missing
   plugin capability, and failed draft creation.
@@ -383,7 +384,7 @@ Acceptance criteria:
 - Disabled actions include a story ID, missing capability, and expected backend
   contract.
 - The UI copy avoids "backend pending" as a terminal explanation.
-- The backlog maps each disabled action to a vertical and a negative test.
+- [Task: E-PROP-DISP-1] The backlog maps each disabled action to a vertical and a negative test.
 - Negative tests cover unavailable capability, 404 contract, 403 permission,
   409 stale revision, and 500 backend failure.
 
@@ -459,7 +460,7 @@ Acceptance criteria:
 - Queries return read models and never grant permission by themselves.
 - Every command is evaluated against an authenticated principal and an explicit
   tenant scope.
-- Create/update commands carry an idempotency key where repeat delivery is
+- [Task: E-PROP-DISP-1] Create/update commands carry an idempotency key where repeat delivery is
   possible.
 - Browser storage may cache selected scope, but server grants decide whether a
   cached scope is still valid.
@@ -739,9 +740,9 @@ Hexagonal ports:
 
 Negative tests:
 
-- disabled action without story ID is rejected by architecture test;
-- disabled action without missing capability is rejected;
-- disabled action without contract reference is rejected;
+- [Task: E-PROP-DISP-1] disabled action without story ID is rejected by architecture test;
+- [Task: E-PROP-DISP-1] disabled action without missing capability is rejected;
+- [Task: E-PROP-DISP-1] disabled action without contract reference is rejected;
 - vague "pending backend" copy is rejected by copy governance.
 
 #### WEB-GAP-2: Workspace Files Contract
@@ -941,13 +942,13 @@ Identity and access objects:
   time, expiry, and authentication provider.
 - `SessionProfile`: read model. Owns principal, grants, default scope, and
   available actions for shell startup.
-- `GrantSet`: value object. Owns tenant, project, environment, and action
+- [Task: E-PROP-DISP-1] `GrantSet`: value object. Owns tenant, project, environment, and action
   grants. Invariant: every project grant belongs to a granted tenant.
 - `ScopeRef`: value object. Owns tenant/project/environment scope. Invariant:
   tenant is always present; project is optional only before project selection.
 - `SelectedScope`: value object. Owns currently selected tenant/project and
   optional environment evidence scope.
-- `ActionName`: value object. Owns command or route action names used by
+- [Task: E-PROP-DISP-1] `ActionName`: value object. Owns command or route action names used by
   authorization.
 
 Tenant administration objects:
@@ -1000,7 +1001,7 @@ Capability governance objects:
 
 - `CapabilityRegistry`: aggregate root. Owns capability name, provider/plugin
   owner, availability, and contract reference.
-- `DisabledActionGap`: entity. Owns disabled UI action, story ID, missing
+- [Task: E-PROP-DISP-1] `DisabledActionGap`: entity. Owns disabled UI action, story ID, missing
   capability, backend contract, and user-facing reason.
 - `CapabilityContract`: value object. Owns expected route/event contract
   reference.
@@ -1046,7 +1047,7 @@ Domain services and policies:
 
 - `AuthenticationPolicy`: decides whether a provider session can become a
   product session.
-- `AuthorizationPolicy`: evaluates action plus scope against a grant set.
+- [Task: E-PROP-DISP-1] `AuthorizationPolicy`: evaluates action plus scope against a grant set.
 - `RoleAssignmentPolicy`: prevents privilege escalation and cross-tenant grants.
 
 Domain events:
@@ -1146,7 +1147,7 @@ disabled actions to executable backlog.
 Aggregates and entities:
 
 - `CapabilityRegistry`: aggregate of backend and plugin capabilities.
-- `DisabledActionGap`: entity linking a UI action to story ID, capability, and
+- [Task: E-PROP-DISP-1] `DisabledActionGap`: entity linking a UI action to story ID, capability, and
   backend contract.
 - `CapabilityContract`: expected API or event contract for a capability.
 
@@ -1246,7 +1247,7 @@ Adapter rules:
 
 - Web routes consume application hooks/facades, never raw adapters.
 - API handlers call command/query use cases, not domain entities directly.
-- Mock and API adapters implement the same ports and must not diverge in
+- [Task: E-PROP-DISP-1] Mock and API adapters implement the same ports and must not diverge in
   semantics.
 - `localStorage` is an adapter for local convenience only; it is not an
   authorization source.
@@ -1314,11 +1315,11 @@ contracts land behind explicit command/query ports.
 
 Rejected alternatives:
 
-- Add only a `/login` screen: rejected because it would not solve tenant grants,
+- [Task: E-PROP-DISP-1] Add only a `/login` screen: rejected because it would not solve tenant grants,
   user administration, or clean project startup.
 - Keep fixture nodes as default onboarding: rejected because it hides whether a
   real project exists.
-- Implement backend gaps as disabled buttons only: rejected because it creates
+- [Task: E-PROP-DISP-1] Implement backend gaps as disabled buttons only: rejected because it creates
   product drift and no executable backlog.
 
 ### Pre-Implementation Brief
@@ -1327,7 +1328,7 @@ Mode: Full.
 
 Scope:
 
-- Design and then implement web/API command/query boundaries for login, tenant
+- [Task: E-PROP-DISP-1] Design and then implement web/API command/query boundaries for login, tenant
   administration, project onboarding, clean startup, and disabled-action gaps.
 - Introduce DDD value objects and policies before route wiring.
 - Preserve Canvas authoring behavior only after authenticated project scope
@@ -1441,36 +1442,36 @@ Validation plan:
 
 Phase 1: lock contracts and tests.
 
-- Add command/query contract docs for session, tenant admin, project catalog,
+- [Task: E-PROP-DISP-1] Add command/query contract docs for session, tenant admin, project catalog,
   workspace manifest, and capability gaps.
-- Add negative tests first for unauthenticated route access, stale
+- [Task: E-PROP-DISP-1] Add negative tests first for unauthenticated route access, stale
   `localStorage`, no project selected, and cross-tenant role assignment.
 
 Phase 2: introduce domain objects and policies.
 
-- Add value objects for principal, tenant, project, role, scope, grant set,
+- [Task: E-PROP-DISP-1] Add value objects for principal, tenant, project, role, scope, grant set,
   project descriptor, workspace manifest, canvas kind, and capability.
-- Add policy tests for bootstrap, role assignment, workspace startup, demo
+- [Task: E-PROP-DISP-1] Add policy tests for bootstrap, role assignment, workspace startup, demo
   seeding, and disabled-action mapping.
 
 Phase 3: wire hexagonal ports.
 
-- Add command/query ports and API/mock adapters.
+- [Task: E-PROP-DISP-1] Add command/query ports and API/mock adapters.
 - Move route code to application hooks/facades.
 - Keep `localStorage` as a cache adapter only.
 
 Phase 4: product routes and UX states.
 
-- Add login gate, setup route, tenant-admin user management route, project
+- [Task: E-PROP-DISP-1] Add login gate, setup route, tenant-admin user management route, project
   selection/creation state, and empty project Canvas posture.
 - Ensure `src_orders`, `model_orders`, and `orders_dashboard` are visible only
   in E2E fixtures or explicit demo mode.
 
 Phase 5: browser proof and regression guard.
 
-- Add Cypress coverage for login, permissions, project creation, empty startup,
+- [Task: E-PROP-DISP-1] Add Cypress coverage for login, permissions, project creation, empty startup,
   canvas add/remove/reload, disabled actions, and denied scopes.
-- Add architecture tests preventing route components from importing concrete
+- [Task: E-PROP-DISP-1] Add architecture tests preventing route components from importing concrete
   adapters or treating `localStorage` as authority.
 
 ## Vertical Delivery Plan
@@ -1489,6 +1490,192 @@ Phase 5: browser proof and regression guard.
 - A tenant admin can manage users and permissions for at least one tenant.
 - Startup with no project renders an onboarding state and no graph nodes.
 - Demo or fixture nodes are behind explicit test/demo mode only.
-- Every disabled action has a linked story, missing capability, backend
+- [Task: E-PROP-DISP-1] Every disabled action has a linked story, missing capability, backend
   contract, and negative test.
 - Documentation and user manual state the real product prerequisites in English.
+
+## 2026-05-23 Canonical Absorption Status
+
+The current branch absorbs this broad product proposal as a governed architecture
+slice instead of pretending the full tenant-admin and project-creation product
+journey has shipped.
+
+Current code truth:
+
+- `/login` exists as the public recovery route.
+- `AuthRouteGate` wraps protected product routes.
+- `resolveProtectedRouteSessionContext` queries `/session` before
+  `/workspace/context`.
+- `sessionStore` and `authorizationStore` are browser projections after server
+  context resolution, not independent authority.
+- Project onboarding UI, tenant-admin CRUD, and first empty project creation are
+  still future vertical slices.
+
+Fowler assessment:
+
+- Pattern improved: protected route admission is now an Application Service
+  style boundary rather than Canvas or route components owning startup truth.
+- Pattern improved: browser persistence is treated as projection/cache.
+- Anti-pattern rejected: fixture nodes as product seed data.
+- Anti-pattern rejected: `localStorage` as authorization or project authority.
+- Grouping opportunity: future implementation should introduce a
+  project-onboarding component under web services/views rather than extending
+  generic shell route wiring.
+
+Canonical component guide:
+
+- [Web Auth Project Onboarding Component](../../../../architecture/components/web/appshell/web-auth-project-onboarding-component.md)
+- [Web Auth Project Onboarding User Stories](../../../../architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md)
+- [Fowler analysis in buzon](../../../../../buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md)
+
+Architecture fitness:
+
+- `apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts`
+  validates semantic ownership: protected shell admission, proposal binding,
+  component sections, user stories, and the fixture/localStorage boundary.
+
+```feature-mechanization
+version: 1
+featureId: E-MAND-WEB-AUTH-ONBOARDING-CANON
+mechanizationStatus: closed
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+componentGuides:
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
+userStories:
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+allowedImplementationSurfaces:
+  - apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts
+  - buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md
+  - docs/.manifest.json
+  - docs/**/index.md
+  - docs/architecture/components/web/index.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+  - docs/planning/proposals/portfolio-map-20260403.md
+  - docs/planning/status/**
+forbiddenImplementationSurfaces:
+  - apps/api/**
+  - packages/**
+  - specs/**
+commandQueryRails:
+  - name: StartLogin
+    type: command
+    dddOwner: ReturnRoute value object
+  - name: GetSessionProfile
+    type: query
+    dddOwner: SessionProfile read model
+  - name: GetEffectiveWorkspaceContext
+    type: query
+    dddOwner: SelectedScope read model
+  - name: ListProjects
+    type: query
+    dddOwner: ProjectDescriptor read model
+  - name: CreateProject
+    type: command
+    dddOwner: Project aggregate
+  - name: GetWorkspaceManifest
+    type: query
+    dddOwner: WorkspaceManifest read model
+  - name: GetWorkspaceGraphDraft
+    type: query
+    dddOwner: WorkspaceGraphDraft read model
+  - name: EnableDemoProjectSeed
+    type: command
+    dddOwner: DemoSeedPolicy
+domainObjects:
+  - name: SessionProfile
+    type: read model
+    owner: Identity and access
+  - name: SelectedScope
+    type: value object
+    owner: Project and workspace
+  - name: WorkspaceManifest
+    type: read model
+    owner: Project and workspace
+  - name: DemoSeedPolicy
+    type: policy
+    owner: Project and workspace
+  - name: WebAuthProjectOnboardingCanon
+    type: architecture policy
+    owner: Frontend product architecture
+fowlerSignals:
+  - Application Service
+  - Presentation Model
+  - Gateway
+  - Anti-Corruption Layer
+  - Fixture-as-product anti-pattern
+  - Browser-store authority drift
+architectureGuards:
+  - pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+  - pnpm docs:feature-mechanization -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+  - pnpm docs:feature-mechanization:implementation -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+cypressFlows:
+  - Future Cypress flow: login-required protected route.
+  - Future Cypress flow: stale dvt-web-session ignored.
+  - Future Cypress flow: empty tenant shows project onboarding with no fixture nodes.
+  - Future Cypress flow: project creation starts with empty Canvas.
+completionGate:
+  - pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+  - pnpm --filter @dvt/web test:architecture:run -- protectedRouteSessionContext.architecture.test.ts webAuthProjectOnboarding.architecture.test.ts
+  - pnpm docs:sync
+  - pnpm docs:status:generate
+  - pnpm docs:feature-mechanization -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+  - pnpm docs:feature-mechanization:implementation -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: web-auth-onboarding-semantic-canon
+    redTest: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    expectedFailure: Component guide, user stories, Fowler analysis, and proposal absorption status are absent.
+    patchSurfaces:
+      - apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts
+      - buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md
+      - docs/architecture/components/web/index.md
+      - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
+      - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
+      - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+    greenTest: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+symbols:
+  - name: readRepoFile
+    path: apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts
+    dddOwner: WebAuthProjectOnboardingCanon architecture guard
+    cqRails:
+      - GetSessionProfile
+      - GetEffectiveWorkspaceContext
+      - GetWorkspaceManifest
+    fowlerSignals:
+      - Application Service
+      - Presentation Model
+      - Browser-store authority drift
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flows are documented in this manifest; this slice adds semantic architecture coverage only.
+    unitTests:
+      - pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+  - name: WebAuthProjectOnboardingCanon
+    path: docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
+    dddOwner: Frontend product architecture
+    cqRails:
+      - StartLogin
+      - GetSessionProfile
+      - GetEffectiveWorkspaceContext
+      - ListProjects
+      - CreateProject
+      - GetWorkspaceManifest
+      - GetWorkspaceGraphDraft
+      - EnableDemoProjectSeed
+    fowlerSignals:
+      - Application Service
+      - Anti-Corruption Layer
+      - Fixture-as-product anti-pattern
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flows are documented in this manifest; this slice adds semantic architecture coverage only.
+    unitTests:
+      - pnpm docs:feature-mechanization -- --feature E-MAND-WEB-AUTH-ONBOARDING-CANON
+```

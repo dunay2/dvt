@@ -20,6 +20,10 @@ export const LIVE_WORKSPACE_SESSION: E2eWorkspaceSession = {
   environmentId: 'dev',
 };
 
+type ShellBootstrapApiOptions = {
+  scopes?: readonly string[];
+};
+
 export function seedE2eWorkspaceSession(
   window: Window,
   session: E2eWorkspaceSession = E2E_WORKSPACE_SESSION
@@ -64,7 +68,7 @@ export function visitWithLiveWorkspaceSession(
   });
 }
 
-export function stubShellBootstrapApis(): void {
+export function stubShellBootstrapApis(options: ShellBootstrapApiOptions = {}): void {
   resetE2eApiStubs();
 
   stubE2eJsonApi('GET', '/session', {
@@ -79,7 +83,7 @@ export function stubShellBootstrapApis(): void {
     grants: {
       tenantIds: [E2E_WORKSPACE_SESSION.tenantId],
       projectIds: [E2E_WORKSPACE_SESSION.projectId],
-      scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
+      scopes: options.scopes ?? ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
     },
   });
 

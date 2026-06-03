@@ -40,7 +40,7 @@ inventing a second planning line.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
-- `docs/planning/state/how-to-add-tasks.md`
+- [Task: E-PROP-DISP-1] `docs/planning/state/how-to-add-tasks.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/state/agent-lane-a.yaml`
 - `docs/architecture/reference-architecture.md`

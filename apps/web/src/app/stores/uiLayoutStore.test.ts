@@ -24,6 +24,7 @@ describe('useUiLayoutStore', () => {
       canvasGridVisible: true,
       canvasGridColor: '#94a3b8',
       canvasSnapToGrid: false,
+      canvasEmptyStateGuideVisible: true,
       activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
       activeTabId: 'main-canvas',
     });
@@ -88,6 +89,18 @@ describe('useUiLayoutStore', () => {
     expect(useUiLayoutStore.getState().canvasSnapToGrid).toBe(true);
   });
 
+  it('owns empty canvas guide visibility as a persisted visual layout command', async () => {
+    expect(useUiLayoutStore.getState().canvasEmptyStateGuideVisible).toBe(true);
+
+    useUiLayoutStore.getState().setCanvasEmptyStateGuideVisible(false);
+
+    expect(useUiLayoutStore.getState().canvasEmptyStateGuideVisible).toBe(false);
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect(useUiLayoutStore.getState().canvasEmptyStateGuideVisible).toBe(false);
+  });
+
   it('normalizes invalid persisted grid preferences back to canonical defaults', async () => {
     localStorage.setItem(
       UI_LAYOUT_STORAGE_KEY,
@@ -96,6 +109,7 @@ describe('useUiLayoutStore', () => {
           canvasGridVisible: false,
           canvasGridColor: 'not-a-color',
           canvasSnapToGrid: true,
+          canvasEmptyStateGuideVisible: 'disabled',
         },
       })
     );
@@ -105,5 +119,6 @@ describe('useUiLayoutStore', () => {
     expect(useUiLayoutStore.getState().canvasGridVisible).toBe(false);
     expect(useUiLayoutStore.getState().canvasGridColor).toBe('#94a3b8');
     expect(useUiLayoutStore.getState().canvasSnapToGrid).toBe(true);
+    expect(useUiLayoutStore.getState().canvasEmptyStateGuideVisible).toBe(true);
   });
 });

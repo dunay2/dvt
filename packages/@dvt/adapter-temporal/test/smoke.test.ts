@@ -153,6 +153,64 @@ describe('adapter-temporal foundation', () => {
     });
   });
 
+  it('parses provider-neutral step activity routes from env', () => {
+    const cfg = loadTemporalAdapterConfig({
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'dvt',
+      TEMPORAL_TASK_QUEUE: 'q-main',
+      TEMPORAL_STEP_ACTIVITY_ROUTES: JSON.stringify({
+        PYTHON_SCRIPT: {
+          capability: 'executor.python',
+          taskQueue: 'dvt-temporal-python',
+        },
+      }),
+    });
+
+    expect(cfg.activityRouting.routesByStepKind).toEqual({
+      PYTHON_SCRIPT: {
+        capability: 'executor.python',
+        taskQueue: 'dvt-temporal-python',
+      },
+    });
+  });
+
+  it.each([
+    {
+      name: 'malformed JSON',
+      value: '{not-json',
+      expected: 'TEMPORAL_CONFIG_INVALID: TEMPORAL_STEP_ACTIVITY_ROUTES must be valid JSON',
+    },
+    {
+      name: 'blank capability',
+      value: JSON.stringify({
+        PYTHON_SCRIPT: {
+          capability: '   ',
+          taskQueue: 'dvt-temporal-python',
+        },
+      }),
+      expected: 'TEMPORAL_CONFIG_INVALID: capability is required',
+    },
+    {
+      name: 'blank task queue',
+      value: JSON.stringify({
+        PYTHON_SCRIPT: {
+          capability: 'executor.python',
+          taskQueue: '   ',
+        },
+      }),
+      expected: 'TEMPORAL_CONFIG_INVALID: taskQueue is required',
+    },
+  ])('rejects invalid step activity route env: $name', ({ value, expected }) => {
+    expect(() =>
+      loadTemporalAdapterConfig({
+        TEMPORAL_ADDRESS: 'temporal:7233',
+        TEMPORAL_NAMESPACE: 'dvt',
+        TEMPORAL_TASK_QUEUE: 'q-main',
+        TEMPORAL_STEP_ACTIVITY_ROUTES: value,
+      })
+    ).toThrow(expected);
+  });
+
   it('rejects invalid numeric env overrides instead of silently using defaults', () => {
     expect(() =>
       loadTemporalAdapterConfig({

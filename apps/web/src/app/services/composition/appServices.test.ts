@@ -373,26 +373,21 @@ describe('buildAppServices', () => {
     });
   });
 
-  it('loads local shell capabilities when the backend capabilities request cannot reach the API', async () => {
+  it('fails closed when the backend capabilities request cannot reach the API', async () => {
     const apiClient = buildApiClientStub();
-    apiClient.getJson.mockRejectedValue(
-      new ApiError({
-        message: 'Request to /capabilities failed (NETWORK)',
-        endpoint: '/capabilities',
-        statusCode: null,
-        category: 'network',
-      })
-    );
+    const failure = new ApiError({
+      message: 'Request to /capabilities failed (NETWORK)',
+      endpoint: '/capabilities',
+      statusCode: null,
+      category: 'network',
+    });
+    apiClient.getJson.mockRejectedValue(failure);
 
     const appServices = buildAppServices({
       apiClient,
     });
 
-    await expect(appServices.capabilitiesPort.loadCapabilities()).resolves.toEqual({
-      apiVersion: 'frontend-local',
-      minFrontendVersion: '0.0.0',
-      plugins: {},
-    });
+    await expect(appServices.capabilitiesPort.loadCapabilities()).rejects.toBe(failure);
     expect(apiClient.getJson).toHaveBeenCalledWith('/capabilities', {
       includeSessionHeaders: false,
     });

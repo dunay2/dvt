@@ -1,5 +1,6 @@
 /** Owned concern: define plugin manifest vocabulary, including closed view placement variants. */
 import type { LucideIcon } from 'lucide-react';
+import type { ReactNode } from 'react';
 import type { AppRouteHandle } from '../../bootstrap/routeBootstrapContract';
 
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
@@ -69,6 +70,8 @@ export type ShellNavigationPlacement = Readonly<{
 
 export type CanvasWorkbenchTabId = 'graph' | 'code' | 'lineage' | 'diff' | 'artifacts' | 'runs';
 
+export type CanvasWorkbenchTabScope = 'workspace' | 'canvas' | 'selection' | 'run';
+
 export type CanvasWorkbenchTabPlacement = Readonly<{
   kind: 'workbench-tab';
   workbench: 'canvas';
@@ -76,7 +79,7 @@ export type CanvasWorkbenchTabPlacement = Readonly<{
   label: LocalizableString;
   icon: LucideIcon;
   order: number;
-  scope: 'canvas' | 'selection' | 'run';
+  scope: CanvasWorkbenchTabScope;
 }>;
 
 export type ViewPlacement = ShellNavigationPlacement | CanvasWorkbenchTabPlacement;
@@ -112,6 +115,54 @@ export type ToolbarContext = {
 };
 
 // ---------------------------------------------------------------------------
+// Governed plugin UX dock contributions
+// ---------------------------------------------------------------------------
+
+export type PluginContributionAvailability = Readonly<{
+  available: boolean;
+  reason?: LocalizableString;
+}>;
+
+export type PluginContributionAvailabilityContext = Readonly<{
+  routeId: string;
+  selectedNodeIds: readonly string[];
+  activeRunId: string | null;
+}>;
+
+export interface RouteHeaderContribution {
+  id: string;
+  pluginId: string;
+  routeId: string;
+  label: LocalizableString;
+  icon?: LucideIcon;
+  order: number;
+  slot: 'primary-action' | 'secondary-action' | 'status';
+  availability?: (ctx: PluginContributionAvailabilityContext) => PluginContributionAvailability;
+}
+
+export interface CommandPaletteContribution {
+  id: string;
+  pluginId: string;
+  title: LocalizableString;
+  keywords: readonly string[];
+  order: number;
+  routeId?: string;
+  availability?: (ctx: PluginContributionAvailabilityContext) => PluginContributionAvailability;
+  onSelect: (ctx: PluginContributionAvailabilityContext) => void;
+}
+
+export interface BottomDiagnosticsContribution {
+  id: string;
+  pluginId: string;
+  label: LocalizableString;
+  order: number;
+  kind: 'logs' | 'events' | 'traces' | 'problems' | 'output';
+  routeId?: string;
+  component?: React.ComponentType;
+  availability?: (ctx: PluginContributionAvailabilityContext) => PluginContributionAvailability;
+}
+
+// ---------------------------------------------------------------------------
 // Inspector panel contributions
 // ---------------------------------------------------------------------------
 
@@ -134,6 +185,7 @@ export type InspectorPanelProps = {
   node: CanonicalNode;
   activeRunId: string | null;
   onClose: () => void;
+  tagsEditor?: ReactNode;
 };
 
 // ---------------------------------------------------------------------------
@@ -218,6 +270,9 @@ export interface PluginManifest {
   views?: ViewContribution[];
   inspectorPanels?: InspectorPanelContribution[];
   toolbarContributions?: ToolbarContribution[];
+  routeHeaderContributions?: RouteHeaderContribution[];
+  commandPaletteContributions?: CommandPaletteContribution[];
+  bottomDiagnosticsContributions?: BottomDiagnosticsContribution[];
 
   /** Data ports for cross-plugin connections. Only needed for canvas.render plugins. */
   produces?: PluginDataPort[];

@@ -134,14 +134,12 @@ direction.
   plugin profile when enabled; the generic step-plugin profile seam also proves
   SQL-shaped plugins can compose without core dispatch edits. Workflow artifact
   emission is now `compiledCodeRef`-driven and plugin-agnostic instead of
-  DBT-kind gated. The adapter package now exposes a generic
-  `TemporalStepPluginRunner` execution port and keeps the concrete DBT CLI
-  runner split into plugin-local argument, process, materialization, failure,
-  and helper-contract modules. The adapter package still keeps DBT-specific
-  plugin/CLI exports (`DbtStepActivity`, `createDbtStepActivityRegistry`,
-  `DbtCliPluginRunner`), so package-level plugin extraction is not yet
-  complete; that residual truth is tracked in
-  [R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING](../risk-register/quality/R-20260420-TEMPORAL-DBT-BUILTIN-COUPLING.yaml).
+  DBT-kind gated. The adapter package exposes generic
+  `TemporalStepPluginRunner` and `TemporalStepPluginProfile` ports only; the
+  concrete DBT manifest, step activity registry, and CLI runner now live in
+  `@dvt/temporal-dbt-plugin`. The remaining DBT risk is sandbox and
+  dependency-isolation maturity, not package-level ownership inside the generic
+  Temporal adapter.
 
 - `Postgres adapter` — packages: `@dvt/adapter-postgres` — status:
   `Closed for Phase 1`
@@ -158,7 +156,7 @@ direction.
 | ----------------- | ----------------------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | State store       | `@dvt/state-store`, `@dvt/adapter-postgres`                       | Closed for Phase 1 | Canonical persistence boundary exists; see the state-store overview and Postgres adapter docs                                                                                                                                                                                                                                                                                           |
 | Outbox runtime    | `@dvt/delivery`, `dvt-outbox-worker`, `@dvt/adapter-postgres`     | Closed for Phase 1 | Delivery runtime ownership now lives in `@dvt/delivery`, with `dvt-outbox-worker` acting as the composition root and local-docker canary evidence delivered; downstream contract hardening and `outbox_lineage` flow remain follow-up work; purge runtime (`DeliveryBufferPurgeRuntime`) was added to `dvt-outbox-worker` on 2026-03-21, gated by `DVT_PURGE_ENABLED` (default `false`) |
-| Archive lifecycle | `@dvt/state-store`, `@dvt/adapter-postgres`, `dvt-outbox-worker`  | Partial            | Archive export plus verifier, migration `007`, `RunArchiveCoordinator`, `PostgresRunArchiveStore`, retention migration `009`, `DeliveryBufferPurger`, `PostgresDeliveryBufferPurgeStore`, and purge runtime wiring are landed; deferred deletion/restore and redaction policy remain open                                                                                               |
+| Archive lifecycle | `@dvt/state-store`, `@dvt/adapter-postgres`, `dvt-outbox-worker`  | Partial            | Archive export/verifier, deferred deletion/restore, retention purge, and cold payload redaction are landed; regulated erasure approval/audit remains open                                                                                                                                                                                                                               |
 | Read models       | `@dvt/delivery`, `apps/projector-worker`, `@dvt/adapter-postgres` | Closed for Phase 1 | `run_snapshots` migration `004`, `rebuildSnapshot`, `listStaleSnapshotRuns`, `ProjectorWorkerRuntime`, `apps/projector-worker`, and the discriminated `providerRef` metadata baseline are delivered                                                                                                                                                                                     |
 
 ### Observability And Traceability
@@ -183,23 +181,35 @@ direction.
   `pnpm --filter @dvt/traceability-service build`, and
   `pnpm --filter dvt-lineage-worker typecheck`.
 
-## Phase 2 Slice Debt
+## Legacy Slice IDs
 
-| Slice | Title                            | Status                       |
-| ----- | -------------------------------- | ---------------------------- |
-| S01   | Contract And Dead Code Cleanup   | Closed 2026-03-21            |
-| S06   | Migration Version Table          | Closed 2026-03-21            |
-| S10   | Typed Graph-Source Boundary      | Closed 2026-03-20            |
-| S02   | IRunStateStore Split             | Open (unblocked by S01)      |
-| S03   | StartRunCoordinator Extraction   | Open (unblocked by S01)      |
-| S05   | EventEnvelope.payloadVersion     | Closed 2026-04-04            |
-| S07   | OpenLineage Job Naming Fix       | Open                         |
-| S09   | Retry Ownership ADR              | Closed 2026-03-24            |
-| S04   | ProviderRefUpdated Event         | Retired 2026-04-09           |
-| S08   | Plan record and plan store model | Open (unblocked by ADR-0040) |
-| S11   | ILineageSink.jobFacets Tighten   | Open (blocked by S07)        |
+The historical `S-*` slice identifiers are not active execution authority.
 
-See [Phase 2 Architectural Debt Roadmap](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md) for full details.
+Do not use `S01`, `S02`, `S03`, `S04`, `S05`, `S06`, `S07`, `S08`, `S09`,
+`S10`, or `S11` as current backlog, active debt, roadmap lanes, or next-work
+references.
+
+Current task authority lives in:
+
+- [Planning Dashboard](../planning/state/planning-dashboard.md)
+- [Planning Control Tower](../planning/state/planning-control-tower.md)
+- Planning DB effective task views:
+  - `pnpm planning:db:query focus`
+  - `pnpm planning:db:query next`
+  - `pnpm planning:db:query open`
+  - `pnpm planning:db:query tasks`
+- [Execution Workboard](../planning/state/execution-workboard.md)
+- [Open Task Route](../planning/state/open-task-route.md)
+
+The archived Phase 2 slice roadmap remains historical context only:
+
+- [Phase 2 Architectural Debt Roadmap](../planning/archive/proposals/phase2-arch-debt-roadmap-20260315.md)
+
+Interpretation rule:
+
+- `System Delivery Status` describes implementation truth.
+- Planning DB effective task views describe active work.
+- Legacy `S-*` identifiers must not be inferred as active work from this page.
 
 ## Reading Order
 

@@ -116,18 +116,18 @@ Confirmed API surfaces:
 
 Missing or mismatched API surfaces currently referenced or implied by web:
 
-| Capability intent       | Current web surface                                                           | API status                                                              | Gap                                                          |
-| ----------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Diff changes            | `IWorkspaceDiffQueryPort.getDiffChanges()`                                    | No matching route found; API mode fails closed before transport         | UI has no authoritative diff read model                      |
-| Plugin catalog          | `IWorkspacePluginCatalogQueryPort.getPlugins()` plus static `PLUGIN_REGISTRY` | No matching route found; API mode fails closed before transport         | UI owns plugin inventory and much of readiness               |
-| Admin roles/audit       | `GET /admin/roles`, `GET /admin/audit`                                        | No matching route found; only rebuild snapshot exists                   | Admin view can read mock-only authority                      |
-| Warehouse source import | `listWarehouseConnections`, `listWarehouseTables`, `importSources`            | Explicitly unavailable in API mode                                      | Mock mode creates graph/file state                           |
-| Workspace file write    | `IWorkspaceFileContentCommandPort.saveFileContent()`                          | API exposes read-only `GET` routes; API mode fails closed before write  | Canvas preview provenance still needs an accepted write rail |
-| Cost analytics          | `CostView` derives from graph + runs + currentRun store                       | `/capabilities` says cost unavailable; no cost read model               | UI computes product metric posture locally                   |
-| Lineage read model      | `LineageView` derives from workspace graph in browser                         | No lineage query; graph draft read exists                               | UI owns traversal and column lineage interpretation          |
-| Artifact import         | local file upload + parser                                                    | No artifact ingestion/query rail                                        | Browser invents imported artifact workspace state            |
-| Authorization grants    | `authorizationStore` defaults all permissions to true                         | API has per-route authz but no web permission read model                | UI decides enabled actions before API denial                 |
-| Workspace selector      | `sessionStore` + env + localStorage                                           | `/session` returns principal/grants but not effective workspace context | UI supplies tenant/project/environment scope                 |
+| Capability intent       | Current web surface                                                           | API status                                                                       | Gap                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Diff changes            | `IWorkspaceDiffQueryPort.getDiffChanges()`                                    | No matching route found; API mode fails closed before transport                  | UI has no authoritative diff read model                                     |
+| Plugin catalog          | `IWorkspacePluginCatalogQueryPort.getPlugins()` plus static `PLUGIN_REGISTRY` | Implemented by protected `GET /workspace/plugins` through `ListWorkspacePlugins` | DB/API owns catalog rows; `PLUGIN_REGISTRY` remains presentation enrichment |
+| Admin roles/audit       | `GET /admin/roles`, `GET /admin/audit`                                        | No matching route found; only rebuild snapshot exists                            | Admin view can read mock-only authority                                     |
+| Warehouse source import | `listWarehouseConnections`, `listWarehouseTables`, `importSources`            | Explicitly unavailable in API mode                                               | Mock mode creates graph/file state                                          |
+| Workspace file write    | `IWorkspaceFileContentCommandPort.saveFileContent()`                          | API exposes read-only `GET` routes; API mode fails closed before write           | Canvas preview provenance still needs an accepted write rail                |
+| Cost analytics          | `CostView` derives from graph + runs + currentRun store                       | `/capabilities` says cost unavailable; no cost read model                        | UI computes product metric posture locally                                  |
+| Lineage read model      | `LineageView` derives from workspace graph in browser                         | No lineage query; graph draft read exists                                        | UI owns traversal and column lineage interpretation                         |
+| Artifact import         | local file upload + parser                                                    | No artifact ingestion/query rail                                                 | Browser invents imported artifact workspace state                           |
+| Authorization grants    | `authorizationStore` defaults all permissions to true                         | API has per-route authz but no web permission read model                         | UI decides enabled actions before API denial                                |
+| Workspace selector      | `sessionStore` + env + localStorage                                           | `/session` returns principal/grants but not effective workspace context          | UI supplies tenant/project/environment scope                                |
 
 ## Capability Matrix
 
@@ -357,3 +357,11 @@ The next valuable implementation slice is to replace optimistic browser-owned
 authorization and capability decisions with API-published read models. Route
 parity, server-owned workspace context, the hard-cut port split, and the
 API-only app-service composition now reduce false confidence in API mode.
+
+Implementation update on 2026-05-10: the authorization and capability authority
+hardcut closed that slice. `authorizationStore` defaults now deny every
+executable permission, `createCapabilitiesPort` no longer converts network
+failure into `frontend-local` readiness, and backend-backed plugins are
+projected only when `/capabilities` publishes an explicit available backend
+plugin row. The remaining web/API gaps are backend rails for diff, admin
+roles/audit, cost read models, lineage read models, and artifact ingestion.

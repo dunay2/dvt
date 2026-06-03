@@ -1,3 +1,4 @@
+/** Owned concern: materialize planning and governance query-store snapshots with stale-aware imports. */
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -7,7 +8,10 @@ const { Client } = require('pg');
 const yaml = require('js-yaml');
 
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
-const { buildFingerprintBaseline } = require('./check-governance-file-fingerprint-baseline.cjs');
+const {
+  buildFingerprintBaseline,
+  expandFingerprintBaseline,
+} = require('./check-governance-file-fingerprint-baseline.cjs');
 const {
   buildOutputs: buildDocumentUnitOutputs,
 } = require('./generate-governance-document-unit-map.cjs');
@@ -18,6 +22,13 @@ const { buildCoverageReport } = require('./generate-governance-coverage-report.c
 const { buildRemediationQueue } = require('./generate-governance-remediation-queue.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
+const {
+  buildKnowledgeSnapshotFromDocuments,
+} = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
+const { buildCommandQueryRailSnapshot } = require('./planning-db/command-query-rail-catalog.cjs');
+const {
+  buildFrontendMechanicalTruthSnapshot,
+} = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
@@ -38,6 +49,15 @@ const governanceRemediationQueuePath = governanceGeneratedPath(
   'system-governance-remediation-queue.queue.yaml'
 );
 const governanceImportDeleteTables = [
+  'knowledge_action_links',
+  'knowledge_document_links',
+  'knowledge_action_items',
+  'knowledge_findings',
+  'knowledge_proposals',
+  'knowledge_document_sections',
+  'knowledge_documents',
+  'frontend_mechanical_truth_surfaces',
+  'risk_debt_items',
   'governance_component_files',
   'governance_component_file_shards',
   'governance_fingerprints',
@@ -166,11 +186,14 @@ function renderYamlSourcePayload(payload) {
   });
 }
 
-function buildGeneratedYamlSource(sourcePath, parsed) {
+function buildGeneratedYamlSource(sourcePath, parsed, options = {}) {
   const absolutePath = path.join(repoRoot, sourcePath);
   const hasExistingGeneratedSource = fs.existsSync(absolutePath);
   const raw = renderYamlSourcePayload(parsed);
-  const rawSourceText = hasExistingGeneratedSource ? fs.readFileSync(absolutePath, 'utf8') : raw;
+  const rawSourceText =
+    hasExistingGeneratedSource && options.preserveExistingRawSourceText !== false
+      ? fs.readFileSync(absolutePath, 'utf8')
+      : raw;
   return {
     absolutePath,
     sourcePath,
@@ -180,18 +203,6 @@ function buildGeneratedYamlSource(sourcePath, parsed) {
     parsed,
     rawSourceText,
     sourceMode: 'in-memory-generator',
-  };
-}
-
-function readGeneratedYamlSourceOrBuild(sourcePath, parsed) {
-  const absolutePath = path.join(repoRoot, sourcePath);
-  if (!fs.existsSync(absolutePath)) {
-    return buildGeneratedYamlSource(sourcePath, parsed);
-  }
-
-  return {
-    ...readYamlSource(absolutePath),
-    sourceMode: 'generated-artifact',
   };
 }
 
@@ -217,6 +228,61 @@ function cleanJson(value) {
 
 function toJson(value) {
   return JSON.stringify(cleanJson(value));
+}
+
+const postgresParameterLimit = 60000;
+
+function normalizeInsertColumn(column) {
+  if (typeof column === 'string') {
+    return { name: column, cast: null };
+  }
+
+  return {
+    name: column.name,
+    cast: column.cast || null,
+  };
+}
+
+function insertPlaceholder(parameterIndex, cast) {
+  return `$${parameterIndex}${cast ? `::${cast}` : ''}`;
+}
+
+async function insertRows(client, tableName, columns, rows, valuesForRow, options = {}) {
+  if (!Array.isArray(rows) || rows.length === 0) {
+    return;
+  }
+
+  const normalizedColumns = columns.map(normalizeInsertColumn);
+  const parameterLimit = options.parameterLimit || postgresParameterLimit;
+  const maxRowsPerBatch = Math.max(1, Math.floor(parameterLimit / normalizedColumns.length));
+
+  for (let start = 0; start < rows.length; start += maxRowsPerBatch) {
+    const batchRows = rows.slice(start, start + maxRowsPerBatch);
+    const params = [];
+    const valueGroups = batchRows.map((row) => {
+      const values = valuesForRow(row);
+      if (values.length !== normalizedColumns.length) {
+        throw new Error(
+          `Insert row for ${tableName} returned ${values.length} values for ${normalizedColumns.length} columns.`
+        );
+      }
+
+      const placeholders = values.map((value, valueIndex) => {
+        params.push(value);
+        const column = normalizedColumns[valueIndex];
+        return insertPlaceholder(params.length, column.cast);
+      });
+
+      return `(${placeholders.join(', ')})`;
+    });
+
+    await client.query(
+      `insert into ${schemaName}.${tableName}
+        (${normalizedColumns.map((column) => column.name).join(', ')})
+       values ${valueGroups.join(', ')}${options.suffix ? `\n       ${options.suffix}` : ''}`,
+      params
+    );
+  }
 }
 
 function normalizeText(value) {
@@ -545,9 +611,10 @@ function buildPlanningContentSnapshot() {
   return { sources, lanes, tasks, dependencies, evidenceRefs };
 }
 
-function buildGovernanceGeneratedInputs() {
-  const fileComponentOutputs = buildGovernanceFileComponentOutputs();
-  const documentOutputs = buildDocumentUnitOutputs();
+function buildGovernanceGeneratedInputs(options = {}) {
+  const fileComponentOutputs =
+    options.fileComponentOutputs || buildGovernanceFileComponentOutputs();
+  const documentOutputs = options.documentOutputs || buildDocumentUnitOutputs();
   const index = fileComponentOutputs.fileIndexManifest;
   const componentIndex = fileComponentOutputs.componentIndexManifest;
   const componentFileMap = fileComponentOutputs.componentFileMapManifest;
@@ -576,16 +643,21 @@ function buildGovernanceGeneratedInputs() {
     ),
     fingerprintBaselineSource: buildGeneratedYamlSource(
       repoRelative(governanceFingerprintBaselinePath),
-      fingerprintBaseline
+      fingerprintBaseline.manifest
     ),
-    coverageReportSource: readGeneratedYamlSourceOrBuild(
+    fingerprintBaselineShardPayloads: fingerprintBaseline.shards,
+    coverageReportSource: buildGeneratedYamlSource(
       repoRelative(governanceCoverageReportPath),
-      coverageReport
+      coverageReport,
+      { preserveExistingRawSourceText: false }
     ),
-    remediationQueueSource: readGeneratedYamlSourceOrBuild(
+    remediationQueueSource: buildGeneratedYamlSource(
       repoRelative(governanceRemediationQueuePath),
-      remediationQueue
+      remediationQueue,
+      { preserveExistingRawSourceText: false }
     ),
+    fileComponentOutputs,
+    documentOutputs,
     fileShardSources: new Map(
       Object.entries(fileComponentOutputs.fileIndexShardPayloads).map(([sourcePath, payload]) => [
         sourcePath,
@@ -600,8 +672,8 @@ function buildGovernanceGeneratedInputs() {
   };
 }
 
-function buildGovernanceFileSnapshot() {
-  const generatedInputs = buildGovernanceGeneratedInputs();
+function buildGovernanceFileSnapshot(options = {}) {
+  const generatedInputs = options.generatedInputs || buildGovernanceGeneratedInputs();
   const indexSource = generatedInputs.indexSource;
   const index = indexSource.parsed;
   const componentIndexSource = generatedInputs.componentIndexSource;
@@ -807,7 +879,10 @@ function buildGovernanceFileSnapshot() {
     }
   }
 
-  for (const fingerprint of fingerprintBaseline.files || []) {
+  for (const fingerprint of expandFingerprintBaseline({
+    manifest: fingerprintBaseline,
+    shards: generatedInputs.fingerprintBaselineShardPayloads,
+  })) {
     fingerprints.push({
       path: normalizeText(fingerprint.path),
       fileId: normalizeText(fingerprint.fileId),
@@ -847,6 +922,11 @@ function buildGovernanceFileSnapshot() {
     sourceContentSha256: remediationQueueSource.contentSha256,
     rawTask: task,
   }));
+  const riskDebtSnapshotOptions = { governanceFiles: files };
+  if (options.riskDocuments !== undefined) {
+    riskDebtSnapshotOptions.riskDocuments = options.riskDocuments;
+  }
+  const { riskDebtItems } = buildRiskDebtSnapshot(riskDebtSnapshotOptions);
 
   return {
     index,
@@ -864,6 +944,7 @@ function buildGovernanceFileSnapshot() {
     fingerprints,
     coverageRows,
     remediationTasks,
+    riskDebtItems,
   };
 }
 
@@ -948,12 +1029,11 @@ function listChangedFiles(baseRef, headRef) {
     .map(toPosix);
 }
 
-function listTrackedMarkdownDocuments() {
-  const output = execFileSync('git', ['ls-files', '--', 'docs/*.md', 'docs/**/*.md'], {
+function readTrackedDocumentPaths(gitPathspecs) {
+  const output = execFileSync('git', ['ls-files', '--', ...gitPathspecs], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
-
   return [
     ...new Set(
       output
@@ -962,16 +1042,73 @@ function listTrackedMarkdownDocuments() {
         .filter(Boolean)
         .map(toPosix)
     ),
+  ].sort();
+}
+
+function readTrackedDocuments(gitPathspecs) {
+  return readTrackedDocumentPaths(gitPathspecs).map((sourcePath) => {
+    const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+    return { sourcePath, raw, contentSha256: sha256(raw) };
+  });
+}
+
+function listTrackedMarkdownDocuments() {
+  return readTrackedDocuments(['docs/*.md', 'docs/**/*.md']);
+}
+
+function listTrackedBuzonDocuments() {
+  return readTrackedDocuments(['buzon/*.md']);
+}
+
+function listTrackedKnowledgeDocuments(options = {}) {
+  const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
+  return [...markdownDocuments, ...listTrackedBuzonDocuments()].sort((left, right) =>
+    left.sourcePath.localeCompare(right.sourcePath)
+  );
+}
+
+function isRiskRegisterItemPath(sourcePath) {
+  return /^docs\/risk-register\/.+\/[Rr]-[^/]+\.(md|ya?ml)$/i.test(toPosix(sourcePath));
+}
+
+function listTrackedRiskDocuments() {
+  const output = execFileSync(
+    'git',
+    [
+      'ls-files',
+      '--',
+      'docs/risk-register/*.md',
+      'docs/risk-register/**/*.md',
+      'docs/risk-register/*.yaml',
+      'docs/risk-register/**/*.yaml',
+      'docs/risk-register/*.yml',
+      'docs/risk-register/**/*.yml',
+    ],
+    {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    }
+  );
+
+  return [
+    ...new Set(
+      output
+        .split('\n')
+        .map((value) => normalizeText(value).trim())
+        .filter(Boolean)
+        .map(toPosix)
+        .filter(isRiskRegisterItemPath)
+    ),
   ]
     .sort()
-    .map((sourcePath) => ({
-      sourcePath,
-      raw: fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8'),
-    }));
+    .map((sourcePath) => {
+      const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+      return { sourcePath, raw, contentSha256: sha256(raw) };
+    });
 }
 
 function parseMarkdownFrontmatter(raw) {
-  const text = normalizeText(raw);
+  const text = normalizeText(raw).replace(/^\uFEFF/, '');
   const lines = text.split(/\r?\n/);
   if (lines[0] !== '---') {
     return { frontmatter: {}, body: text };
@@ -997,6 +1134,93 @@ function parseMarkdownFrontmatter(raw) {
     frontmatter,
     body: lines.slice(closingIndex + 1).join('\n'),
   };
+}
+
+function riskPriorityFromSeverityProbability(severity, probability) {
+  const severityLevel = normalizeText(severity).toLowerCase();
+  const probabilityLevel = normalizeText(probability).toLowerCase();
+
+  if (severityLevel === 'high' && probabilityLevel === 'high') {
+    return 'P0';
+  }
+  if (severityLevel === 'high' || probabilityLevel === 'high') {
+    return 'P1';
+  }
+  if (severityLevel === 'medium' || probabilityLevel === 'medium') {
+    return 'P2';
+  }
+  return 'P3';
+}
+
+function governanceField(row, camelName, snakeName) {
+  return normalizeText(row?.[camelName] ?? row?.[snakeName]);
+}
+
+function buildRiskDebtSnapshot(options = {}) {
+  const riskDocuments =
+    options.riskDocuments === undefined
+      ? listTrackedRiskDocuments()
+      : normalizeArray(options.riskDocuments);
+  const governanceFiles = normalizeArray(options.governanceFiles);
+  const governanceFileByPath = new Map(
+    governanceFiles.map((file) => [normalizeText(file.path), file])
+  );
+  const seenRiskIds = new Set();
+  const riskDebtItems = [];
+
+  for (const sourceDocument of riskDocuments) {
+    const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
+    if (!isRiskRegisterItemPath(sourcePath)) {
+      continue;
+    }
+
+    const raw = normalizeText(sourceDocument.raw);
+    const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256(raw);
+    const { frontmatter } = parseMarkdownFrontmatter(raw);
+    const riskId =
+      normalizeText(frontmatter.id) || path.basename(sourcePath).replace(/\.(md|ya?ml)$/i, '');
+    if (seenRiskIds.has(riskId)) {
+      throw new Error(`Duplicate risk debt id "${riskId}" while importing ${sourcePath}.`);
+    }
+    seenRiskIds.add(riskId);
+
+    const governanceFile = governanceFileByPath.get(sourcePath);
+    if (!governanceFile) {
+      throw new Error(`Risk debt source ${sourcePath} is missing from governance_files.`);
+    }
+
+    const severity = normalizeText(frontmatter.severity || 'Unknown');
+    const probability = normalizeText(frontmatter.probability || 'Unknown');
+    const priority =
+      normalizeText(frontmatter.priority) ||
+      riskPriorityFromSeverityProbability(severity, probability);
+
+    riskDebtItems.push({
+      riskId,
+      sourcePath,
+      title: normalizeText(frontmatter.title) || riskId,
+      status: normalizeText(frontmatter.status) || 'Open',
+      owners: normalizeArray(frontmatter.owners || frontmatter.owner)
+        .map(normalizeText)
+        .filter(Boolean),
+      severity,
+      probability,
+      priority,
+      componentUnit: governanceField(governanceFile, 'componentUnit', 'component_unit'),
+      rootUnit: governanceField(governanceFile, 'rootUnit', 'root_unit'),
+      domainUnit: governanceField(governanceFile, 'domainUnit', 'domain_unit'),
+      dddOwner: governanceField(governanceFile, 'dddOwner', 'ddd_owner'),
+      cqRails: governanceField(governanceFile, 'cqRails', 'cq_rails'),
+      sourceContentSha256: contentSha256,
+      rawFrontmatter: frontmatter,
+      rawDebt: {
+        sourcePath,
+        sourceBytes: Buffer.byteLength(raw, 'utf8'),
+      },
+    });
+  }
+
+  return { riskDebtItems };
 }
 
 function parseLooseFrontmatter(frontmatterText) {
@@ -1027,7 +1251,7 @@ const pendingMarkerTerms = [
 ];
 
 const taskLikeReferencePattern =
-  /\b(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)\b/g;
+  /(?<![A-Za-z0-9-])(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)(?![A-Za-z0-9-])/g;
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -1095,20 +1319,106 @@ function referencePrefix(referenceText) {
   return normalizeText(referenceText).split('-')[0].toUpperCase();
 }
 
-function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
+function addNormalizedId(idSet, value) {
+  const normalized = normalizeText(value);
+  if (!normalized) {
+    return;
+  }
+  idSet.add(normalized);
+  idSet.add(normalized.toUpperCase());
+}
+
+function buildPlanningTaskReferencePattern(planningTaskIdSet) {
+  const planningTaskIds = [...new Set([...planningTaskIdSet].map((taskId) => taskId.toUpperCase()))]
+    .filter(Boolean)
+    .sort((left, right) => right.length - left.length || left.localeCompare(right));
+
+  if (planningTaskIds.length === 0) {
+    return null;
+  }
+
+  return new RegExp(
+    `(?<![A-Za-z0-9-])(?:${planningTaskIds.map(escapeRegExp).join('|')})(?![A-Za-z0-9-])`,
+    'gi'
+  );
+}
+
+function collectFeatureMechanizationReferenceIds(sourceDocuments) {
+  const featureIds = new Set();
+  const cycleIds = new Set();
+  const fencePattern = /```feature-mechanization\s*\r?\n([\s\S]*?)\r?\n```/g;
+
+  for (const sourceDocument of sourceDocuments) {
+    const raw = normalizeText(sourceDocument.raw);
+    let match;
+
+    while ((match = fencePattern.exec(raw)) !== null) {
+      let manifest;
+      try {
+        manifest = yaml.load(match[1]);
+      } catch {
+        continue;
+      }
+
+      if (!manifest || typeof manifest !== 'object') {
+        continue;
+      }
+
+      const status = normalizeText(manifest.mechanizationStatus).toLowerCase();
+      if (status !== 'closed' && status !== 'implemented') {
+        continue;
+      }
+
+      addNormalizedId(featureIds, manifest.featureId);
+      for (const cycle of normalizeArray(manifest.redGreenCycles)) {
+        addNormalizedId(cycleIds, cycle?.id);
+      }
+    }
+  }
+
+  return { featureIds, cycleIds };
+}
+
+function classifyTaskLikeReference(
+  referenceText,
+  planningTaskIdSet,
+  featureMechanizationIdSet = new Set(),
+  featureMechanizationCycleIdSet = new Set()
+) {
   const value = normalizeText(referenceText);
   const upperValue = value.toUpperCase();
 
   if (planningTaskIdSet.has(value) || planningTaskIdSet.has(upperValue)) {
     return { classification: 'registered_planning_task', registeredPlanningTask: true };
   }
-  if (/^ADR-\d{4}$/.test(upperValue)) {
+  if (featureMechanizationIdSet.has(value) || featureMechanizationIdSet.has(upperValue)) {
+    return {
+      classification: 'registered_feature_mechanization',
+      registeredPlanningTask: false,
+    };
+  }
+  if (featureMechanizationCycleIdSet.has(value) || featureMechanizationCycleIdSet.has(upperValue)) {
+    return { classification: 'feature_mechanization_cycle', registeredPlanningTask: false };
+  }
+  if (/^GPT-\d+(?:\.\d+)?$/.test(upperValue)) {
+    return { classification: 'model_reference', registeredPlanningTask: false };
+  }
+  if (/^[A-Z0-9]+-SKILL$/.test(upperValue)) {
+    return { classification: 'skill_reference', registeredPlanningTask: false };
+  }
+  if (/^ED-YYYYMMDD$/.test(upperValue)) {
+    return { classification: 'evidence_template_id', registeredPlanningTask: false };
+  }
+  if (/^ADR-XXXX$/.test(upperValue)) {
+    return { classification: 'adr_template_id', registeredPlanningTask: false };
+  }
+  if (/^ADR-(?:\d{3,4}[A-Z]?|[A-Z]\d+)$/.test(upperValue)) {
     return { classification: 'adr_id', registeredPlanningTask: false };
   }
   if (/^ARC-\d+$/.test(upperValue)) {
     return { classification: 'arc_level', registeredPlanningTask: false };
   }
-  if (/^ED-\d{8}-/.test(upperValue)) {
+  if (/^ED-\d{8}(?:-|$)/.test(upperValue)) {
     return { classification: 'evidence_id', registeredPlanningTask: false };
   }
   if (/^R-\d{8}-/.test(upperValue)) {
@@ -1117,11 +1427,102 @@ function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
   if (/^US-/.test(upperValue)) {
     return { classification: 'user_story', registeredPlanningTask: false };
   }
-  if (/^(?:G\d+|F\d{2}|S\d{2})-/.test(upperValue)) {
+  if (/^EPIC-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue)) {
+    return { classification: 'epic_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:[A-Z0-9]+-)*[A-Z0-9]+-US\d+$/.test(upperValue)) {
+    return { classification: 'user_story', registeredPlanningTask: false };
+  }
+  if (/^(?:WAPO|E\d+-ARCH|WEB-(?:AUTH|GAP|PROJECT|SCOPE))-\d+$/.test(upperValue)) {
+    return { classification: 'user_story', registeredPlanningTask: false };
+  }
+  if (/^(?:EWC|CODE-FILES)-\d+$/.test(upperValue)) {
+    return { classification: 'user_story', registeredPlanningTask: false };
+  }
+  if (/^TASK-\d+$/.test(upperValue)) {
+    return { classification: 'example_task_reference', registeredPlanningTask: false };
+  }
+  if (/^GOV-S\d+(?:-[A-Z0-9]+)*$/.test(upperValue) || /^CDG(?:-[A-Z0-9]+)+$/.test(upperValue)) {
+    return { classification: 'governance_workstream_reference', registeredPlanningTask: false };
+  }
+  if (/^RFC-\d+$/.test(upperValue)) {
+    return { classification: 'standards_reference', registeredPlanningTask: false };
+  }
+  if (/^AR-[A-Z]$/.test(upperValue)) {
+    return {
+      classification: 'architecture_review_stream_reference',
+      registeredPlanningTask: false,
+    };
+  }
+  if (/^(?:G\d+|F\d{2}|S\d{2}|W\d+)-/.test(upperValue)) {
     return { classification: 'historical_gap', registeredPlanningTask: false };
   }
   if (/^SHA-\d+$/.test(upperValue)) {
     return { classification: 'algorithm_reference', registeredPlanningTask: false };
+  }
+  if (/^REF-\d+$/.test(upperValue)) {
+    return { classification: 'document_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:SSE-(?:KMS|S3)|AES-GCM)$/.test(upperValue)) {
+    return { classification: 'security_algorithm_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:AES|RSA|ECDSA)-\d+$/.test(upperValue) || /^HMAC-SHA\d+$/.test(upperValue)) {
+    return { classification: 'security_algorithm_reference', registeredPlanningTask: false };
+  }
+  if (/^CVE-\d{4}-\d+$/.test(upperValue)) {
+    return { classification: 'security_advisory_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:AC|AT|AU|CA|CM|CP|IA|IR|MA|MP|PE|PL|PS|RA|SA|SC|SI|SR)-\d+$/.test(upperValue)) {
+    return { classification: 'security_control_reference', registeredPlanningTask: false };
+  }
+  if (/^ISOL(?:-[A-Z0-9]+)*$/.test(upperValue)) {
+    return { classification: 'security_test_reference', registeredPlanningTask: false };
+  }
+  if (/^YYYY-MM-DD$/.test(upperValue)) {
+    return { classification: 'date_placeholder', registeredPlanningTask: false };
+  }
+  if (/^UTF-\d+$/.test(upperValue)) {
+    return { classification: 'encoding_reference', registeredPlanningTask: false };
+  }
+  if (
+    /^(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY)-(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY)$/.test(upperValue)
+  ) {
+    return { classification: 'currency_pair_reference', registeredPlanningTask: false };
+  }
+  if (/^Q\d+-Q\d+$/.test(upperValue)) {
+    return { classification: 'range_reference', registeredPlanningTask: false };
+  }
+  if (/^P\d+-\d+$/.test(upperValue)) {
+    return { classification: 'priority_work_item_marker', registeredPlanningTask: false };
+  }
+  if (/^DL-\d+$/.test(upperValue)) {
+    return { classification: 'diagram_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:AUTO-FAIL|TEST-MODE)$/.test(upperValue)) {
+    return { classification: 'policy_state_reference', registeredPlanningTask: false };
+  }
+  if (/^CI-AUDIT$/.test(upperValue)) {
+    return { classification: 'governance_workstream_reference', registeredPlanningTask: false };
+  }
+  if (/^(?:AV|CE|DW)-\d{3}$/.test(upperValue) || /^EA-\d{8}-\d+$/.test(upperValue)) {
+    return { classification: 'review_finding_reference', registeredPlanningTask: false };
+  }
+  if (/^AR-[A-Z]\d+-INV-\d+$/.test(upperValue)) {
+    return { classification: 'review_invariant_reference', registeredPlanningTask: false };
+  }
+  if (
+    /^EA-\d{8}$/.test(upperValue) ||
+    /^QA-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue) ||
+    /^TF-[A-Z0-9]+(?:-[A-Z0-9]+)*-QA-\d+$/.test(upperValue) ||
+    /^AR-[A-Z](?:\d+)?(?:-[A-Z0-9]+)*$/.test(upperValue)
+  ) {
+    return { classification: 'review_finding_reference', registeredPlanningTask: false };
+  }
+  if (
+    /^(?:INT|PKR|PR)-[A-Z0-9]+$/.test(upperValue) ||
+    /^(?:MW|RC|TF)-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue)
+  ) {
+    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
   }
   if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
     return { classification: 'historical_planning_reference', registeredPlanningTask: false };
@@ -1135,57 +1536,85 @@ function classifyTaskLikeReference(referenceText, planningTaskIdSet) {
   if (/^PS-[CQ]\d+/.test(upperValue)) {
     return { classification: 'plan_store_matrix_reference', registeredPlanningTask: false };
   }
-
   return { classification: 'unknown_task_like_id', registeredPlanningTask: false };
 }
 
-function extractTaskLikeReferences(document, planningTaskIdSet) {
+function extractTaskLikeReferences(
+  document,
+  planningTaskIdSet,
+  featureMechanizationIdSet = new Set(),
+  featureMechanizationCycleIdSet = new Set(),
+  options = {}
+) {
   const raw = normalizeText(document.raw);
   const grouped = new Map();
+  const lineEntries =
+    options.lineEntries ||
+    raw.split(/\r?\n/).map((line, index) => ({
+      lineNumber: index + 1,
+      line,
+      sampleLine: line.trim().slice(0, 240),
+    }));
 
-  function addReference(referenceText, occurrenceCount = 1) {
-    const entry = grouped.get(referenceText) || {
+  function addReference(referenceText, lineEntry, options = {}) {
+    const groupKey = options.groupKey || referenceText;
+    const entry = grouped.get(groupKey) || {
       referenceText,
       occurrenceCount: 0,
+      sampleLineNumbers: new Set(),
+      sampleLines: [],
     };
-    entry.occurrenceCount += occurrenceCount;
-    grouped.set(referenceText, entry);
+    entry.occurrenceCount += 1;
+    if (
+      lineEntry &&
+      entry.sampleLines.length < 5 &&
+      !entry.sampleLineNumbers.has(lineEntry.lineNumber)
+    ) {
+      entry.sampleLineNumbers.add(lineEntry.lineNumber);
+      entry.sampleLines.push({
+        lineNumber: lineEntry.lineNumber,
+        line: lineEntry.sampleLine,
+      });
+    }
+    grouped.set(groupKey, entry);
   }
 
-  for (const referenceText of raw.match(taskLikeReferencePattern) || []) {
-    addReference(referenceText);
+  for (const lineEntry of lineEntries) {
+    taskLikeReferencePattern.lastIndex = 0;
+    let match;
+    while ((match = taskLikeReferencePattern.exec(lineEntry.line)) !== null) {
+      addReference(match[0], lineEntry);
+    }
   }
 
-  const planningTaskIds = [...new Set([...planningTaskIdSet].map((taskId) => taskId.toUpperCase()))]
-    .filter(Boolean)
-    .sort();
-  for (const taskId of planningTaskIds) {
-    const alreadyCaptured = [...grouped.keys()].some(
-      (referenceText) => referenceText.toUpperCase() === taskId
-    );
-    if (alreadyCaptured) {
-      continue;
-    }
+  const capturedReferenceKeys = new Set(
+    [...grouped.values()].map((entry) => entry.referenceText.toUpperCase())
+  );
+  const planningTaskPattern =
+    options.planningTaskPattern || buildPlanningTaskReferencePattern(planningTaskIdSet);
 
-    const taskPattern = new RegExp(
-      `(?<![A-Za-z0-9-])${escapeRegExp(taskId)}(?![A-Za-z0-9-])`,
-      'gi'
-    );
-    const taskMatches = raw.match(taskPattern) || [];
-    if (taskMatches.length === 0) {
-      continue;
+  if (planningTaskPattern) {
+    for (const lineEntry of lineEntries) {
+      planningTaskPattern.lastIndex = 0;
+      let match;
+      while ((match = planningTaskPattern.exec(lineEntry.line)) !== null) {
+        const matchKey = match[0].toUpperCase();
+        if (capturedReferenceKeys.has(matchKey)) {
+          continue;
+        }
+        addReference(match[0], lineEntry, { groupKey: matchKey });
+      }
     }
-    addReference(taskMatches[0], taskMatches.length);
   }
 
   return [...grouped.values()]
     .sort((left, right) => left.referenceText.localeCompare(right.referenceText))
     .map((entry) => {
-      const classification = classifyTaskLikeReference(entry.referenceText, planningTaskIdSet);
-      const escapedReference = escapeRegExp(entry.referenceText);
-      const { sampleLines } = lineNumbersForPattern(
-        raw,
-        new RegExp(`\\b${escapedReference}\\b`, 'g')
+      const classification = classifyTaskLikeReference(
+        entry.referenceText,
+        planningTaskIdSet,
+        featureMechanizationIdSet,
+        featureMechanizationCycleIdSet
       );
       return {
         referenceId: `doc-reference:${sha256(`${document.sourcePath}:${entry.referenceText}`).slice(
@@ -1198,14 +1627,14 @@ function extractTaskLikeReferences(document, planningTaskIdSet) {
         classification: classification.classification,
         registeredPlanningTask: classification.registeredPlanningTask,
         occurrenceCount: entry.occurrenceCount,
-        sampleLines,
+        sampleLines: entry.sampleLines,
         sourceContentSha256: document.contentSha256,
         rawReference: {
           referenceText: entry.referenceText,
           referencePrefix: referencePrefix(entry.referenceText),
           classification: classification.classification,
           occurrenceCount: entry.occurrenceCount,
-          sampleLines,
+          sampleLines: entry.sampleLines,
         },
       };
     });
@@ -1339,10 +1768,20 @@ function buildDocsDispositionSnapshot(options = {}) {
   const sourceDocuments = normalizeArray(options.documents).length
     ? normalizeArray(options.documents)
     : listTrackedMarkdownDocuments();
+  const collectedFeatureReferences = collectFeatureMechanizationReferenceIds(sourceDocuments);
+  const featureMechanizationIdSet = new Set(collectedFeatureReferences.featureIds);
+  const featureMechanizationCycleIdSet = new Set(collectedFeatureReferences.cycleIds);
+  for (const featureId of normalizeArray(options.featureMechanizationIds)) {
+    addNormalizedId(featureMechanizationIdSet, featureId);
+  }
+  for (const cycleId of normalizeArray(options.featureMechanizationCycleIds)) {
+    addNormalizedId(featureMechanizationCycleIdSet, cycleId);
+  }
   const pendingHotspotThreshold = Math.max(
     1,
     normalizeNumber(options.pendingHotspotThreshold) ?? 10
   );
+  const planningTaskPattern = buildPlanningTaskReferencePattern(planningTaskIdSet);
   const documents = [];
   const markers = [];
   const references = [];
@@ -1351,12 +1790,23 @@ function buildDocsDispositionSnapshot(options = {}) {
   for (const sourceDocument of sourceDocuments) {
     const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
     const raw = normalizeText(sourceDocument.raw);
-    const contentSha256 = sha256(raw);
+    const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256(raw);
+    const lineEntries = raw.split(/\r?\n/).map((line, index) => ({
+      lineNumber: index + 1,
+      line,
+      sampleLine: line.trim().slice(0, 240),
+    }));
     const { frontmatter } = parseMarkdownFrontmatter(raw);
     const isArchive = isArchivedDocumentPath(sourcePath);
     const documentInput = { sourcePath, raw, contentSha256 };
     const documentMarkers = buildPendingMarkerRows(documentInput);
-    const documentReferences = extractTaskLikeReferences(documentInput, planningTaskIdSet);
+    const documentReferences = extractTaskLikeReferences(
+      documentInput,
+      planningTaskIdSet,
+      featureMechanizationIdSet,
+      featureMechanizationCycleIdSet,
+      { lineEntries, planningTaskPattern }
+    );
     const document = {
       documentPath: sourcePath,
       title: normalizeText(frontmatter.title),
@@ -1388,6 +1838,15 @@ function buildDocsDispositionSnapshot(options = {}) {
   }
 
   return { documents, markers, references, actions };
+}
+
+function buildKnowledgeDocumentSnapshot(options = {}) {
+  const sourceDocuments = normalizeArray(options.documents).length
+    ? normalizeArray(options.documents)
+    : listTrackedKnowledgeDocuments();
+  return buildKnowledgeSnapshotFromDocuments(sourceDocuments, {
+    planningTaskIds: normalizeArray(options.planningTaskIds),
+  });
 }
 
 function globToRegExp(glob) {
@@ -1686,43 +2145,63 @@ async function insertGovernanceSnapshot(client, snapshot) {
     );
   }
 
-  for (const file of snapshot.files) {
-    await client.query(
-      `insert into ${schemaName}.governance_files
-        (path, file_id, shard_id, source_path, path_hash, content_hash, governance_hash,
-         state_fingerprint, owning_unit, root_unit, domain_unit, component_unit, owner_level,
-         unit_status, governance_state, canonical_role, evidence_state, is_drift, is_legacy,
-         ddd_owner, cq_rails, governance_refs, source_content_sha256, raw_file)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
-         $17, $18, $19, $20, $21, $22::jsonb, $23, $24::jsonb)`,
-      [
-        file.path,
-        file.fileId,
-        file.shardId,
-        file.sourcePath,
-        file.pathHash,
-        file.contentHash,
-        file.governanceHash,
-        file.stateFingerprint,
-        file.owningUnit,
-        file.rootUnit,
-        file.domainUnit,
-        file.componentUnit,
-        file.ownerLevel,
-        file.unitStatus,
-        file.governanceState,
-        file.canonicalRole,
-        file.evidenceState,
-        file.isDrift,
-        file.isLegacy,
-        file.dddOwner,
-        file.cqRails,
-        toJson(file.governanceRefs),
-        file.sourceContentSha256,
-        toJson(file.rawFile),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'governance_files',
+    [
+      'path',
+      'file_id',
+      'shard_id',
+      'source_path',
+      'path_hash',
+      'content_hash',
+      'governance_hash',
+      'state_fingerprint',
+      'owning_unit',
+      'root_unit',
+      'domain_unit',
+      'component_unit',
+      'owner_level',
+      'unit_status',
+      'governance_state',
+      'canonical_role',
+      'evidence_state',
+      'is_drift',
+      'is_legacy',
+      'ddd_owner',
+      'cq_rails',
+      { name: 'governance_refs', cast: 'jsonb' },
+      'source_content_sha256',
+      { name: 'raw_file', cast: 'jsonb' },
+    ],
+    snapshot.files,
+    (file) => [
+      file.path,
+      file.fileId,
+      file.shardId,
+      file.sourcePath,
+      file.pathHash,
+      file.contentHash,
+      file.governanceHash,
+      file.stateFingerprint,
+      file.owningUnit,
+      file.rootUnit,
+      file.domainUnit,
+      file.componentUnit,
+      file.ownerLevel,
+      file.unitStatus,
+      file.governanceState,
+      file.canonicalRole,
+      file.evidenceState,
+      file.isDrift,
+      file.isLegacy,
+      file.dddOwner,
+      file.cqRails,
+      toJson(file.governanceRefs),
+      file.sourceContentSha256,
+      toJson(file.rawFile),
+    ]
+  );
 
   for (const component of snapshot.components) {
     await client.query(
@@ -1781,51 +2260,71 @@ async function insertGovernanceSnapshot(client, snapshot) {
     );
   }
 
-  for (const file of snapshot.componentFiles) {
-    await client.query(
-      `insert into ${schemaName}.governance_component_files
-        (component_id, path, file_id, owning_unit, unit_status, governance_state,
-         is_drift, is_legacy, source_path, source_content_sha256, raw_component_file)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)`,
-      [
-        file.componentId,
-        file.path,
-        file.fileId,
-        file.owningUnit,
-        file.unitStatus,
-        file.governanceState,
-        file.isDrift,
-        file.isLegacy,
-        file.sourcePath,
-        file.sourceContentSha256,
-        toJson(file.rawComponentFile),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'governance_component_files',
+    [
+      'component_id',
+      'path',
+      'file_id',
+      'owning_unit',
+      'unit_status',
+      'governance_state',
+      'is_drift',
+      'is_legacy',
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_component_file', cast: 'jsonb' },
+    ],
+    snapshot.componentFiles,
+    (file) => [
+      file.componentId,
+      file.path,
+      file.fileId,
+      file.owningUnit,
+      file.unitStatus,
+      file.governanceState,
+      file.isDrift,
+      file.isLegacy,
+      file.sourcePath,
+      file.sourceContentSha256,
+      toJson(file.rawComponentFile),
+    ]
+  );
 
-  for (const fingerprint of snapshot.fingerprints) {
-    await client.query(
-      `insert into ${schemaName}.governance_fingerprints
-        (path, file_id, source_path, content_hash, governance_hash, state_fingerprint,
-         root_unit, domain_unit, component_unit, owning_unit, source_content_sha256,
-         raw_fingerprint)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb)`,
-      [
-        fingerprint.path,
-        fingerprint.fileId,
-        fingerprint.sourcePath,
-        fingerprint.contentHash,
-        fingerprint.governanceHash,
-        fingerprint.stateFingerprint,
-        fingerprint.rootUnit,
-        fingerprint.domainUnit,
-        fingerprint.componentUnit,
-        fingerprint.owningUnit,
-        fingerprint.sourceContentSha256,
-        toJson(fingerprint.rawFingerprint),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'governance_fingerprints',
+    [
+      'path',
+      'file_id',
+      'source_path',
+      'content_hash',
+      'governance_hash',
+      'state_fingerprint',
+      'root_unit',
+      'domain_unit',
+      'component_unit',
+      'owning_unit',
+      'source_content_sha256',
+      { name: 'raw_fingerprint', cast: 'jsonb' },
+    ],
+    snapshot.fingerprints,
+    (fingerprint) => [
+      fingerprint.path,
+      fingerprint.fileId,
+      fingerprint.sourcePath,
+      fingerprint.contentHash,
+      fingerprint.governanceHash,
+      fingerprint.stateFingerprint,
+      fingerprint.rootUnit,
+      fingerprint.domainUnit,
+      fingerprint.componentUnit,
+      fingerprint.owningUnit,
+      fingerprint.sourceContentSha256,
+      toJson(fingerprint.rawFingerprint),
+    ]
+  );
 
   for (const row of snapshot.coverageRows) {
     await client.query(
@@ -1880,35 +2379,171 @@ async function insertGovernanceSnapshot(client, snapshot) {
       ]
     );
   }
+
+  for (const debt of snapshot.riskDebtItems) {
+    await client.query(
+      `insert into ${schemaName}.risk_debt_items
+        (risk_id, source_path, title, status, owners, severity, probability, priority,
+         component_unit, root_unit, domain_unit, ddd_owner, cq_rails, source_content_sha256,
+         raw_frontmatter, raw_debt)
+       values ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+         $15::jsonb, $16::jsonb)`,
+      [
+        debt.riskId,
+        debt.sourcePath,
+        debt.title,
+        debt.status,
+        toJson(debt.owners),
+        debt.severity,
+        debt.probability,
+        debt.priority,
+        debt.componentUnit,
+        debt.rootUnit,
+        debt.domainUnit,
+        debt.dddOwner,
+        debt.cqRails,
+        debt.sourceContentSha256,
+        toJson(debt.rawFrontmatter),
+        toJson(debt.rawDebt),
+      ]
+    );
+  }
 }
 
 async function insertRepositoryCommandSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.repository_commands`);
 
-  for (const command of snapshot.commands) {
-    await client.query(
-      `insert into ${schemaName}.repository_commands
-        (command_id, command_type, command_name, command_path, command_text, domain, sensitivity,
-         runtime_fanout, changed_file_validation_relevant, referenced_files, source_path,
-         source_content_sha256, raw_command)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb, $11, $12, $13::jsonb)`,
-      [
-        command.commandId,
-        command.commandType,
-        command.commandName,
-        command.commandPath,
-        command.commandText,
-        command.domain,
-        command.sensitivity,
-        command.runtimeFanout,
-        command.changedFileValidationRelevant,
-        toJson(command.referencedFiles),
-        command.sourcePath,
-        command.sourceContentSha256,
-        toJson(command.rawCommand),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'repository_commands',
+    [
+      'command_id',
+      'command_type',
+      'command_name',
+      'command_path',
+      'command_text',
+      'domain',
+      'sensitivity',
+      'runtime_fanout',
+      'changed_file_validation_relevant',
+      { name: 'referenced_files', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_command', cast: 'jsonb' },
+    ],
+    snapshot.commands,
+    (command) => [
+      command.commandId,
+      command.commandType,
+      command.commandName,
+      command.commandPath,
+      command.commandText,
+      command.domain,
+      command.sensitivity,
+      command.runtimeFanout,
+      command.changedFileValidationRelevant,
+      toJson(command.referencedFiles),
+      command.sourcePath,
+      command.sourceContentSha256,
+      toJson(command.rawCommand),
+    ]
+  );
+}
+
+async function insertCommandQueryRailSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.command_query_rails`);
+
+  await insertRows(
+    client,
+    'command_query_rails',
+    [
+      'rail_id',
+      'feature_id',
+      'mechanization_status',
+      'rail_name',
+      'normalized_rail_name',
+      'rail_type',
+      'ddd_owner',
+      'rail_status',
+      { name: 'symbol_refs', cast: 'jsonb' },
+      { name: 'implementation_refs', cast: 'jsonb' },
+      { name: 'documentation_refs', cast: 'jsonb' },
+      { name: 'governing_sources', cast: 'jsonb' },
+      { name: 'allowed_implementation_surfaces', cast: 'jsonb' },
+      { name: 'architecture_guards', cast: 'jsonb' },
+      { name: 'completion_gate', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_rail', cast: 'jsonb' },
+      { name: 'raw_manifest', cast: 'jsonb' },
+    ],
+    snapshot.rails,
+    (rail) => [
+      rail.railId,
+      rail.featureId,
+      rail.mechanizationStatus,
+      rail.railName,
+      rail.normalizedRailName,
+      rail.railType,
+      rail.dddOwner,
+      rail.railStatus,
+      toJson(rail.symbolRefs),
+      toJson(rail.implementationRefs),
+      toJson(rail.documentationRefs),
+      toJson(rail.governingSources),
+      toJson(rail.allowedImplementationSurfaces),
+      toJson(rail.architectureGuards),
+      toJson(rail.completionGate),
+      rail.sourcePath,
+      rail.sourceContentSha256,
+      toJson(rail.rawRail),
+      toJson(rail.rawManifest),
+    ]
+  );
+}
+
+async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.frontend_mechanical_truth_surfaces`);
+
+  await insertRows(
+    client,
+    'frontend_mechanical_truth_surfaces',
+    [
+      'surface_id',
+      'surface_kind',
+      'route_path',
+      'screen_state',
+      'frontend_owner',
+      { name: 'registered_plugins', cast: 'jsonb' },
+      { name: 'consumed_endpoints', cast: 'jsonb' },
+      { name: 'zustand_stores', cast: 'jsonb' },
+      { name: 'tanstack_queries', cast: 'jsonb' },
+      { name: 'visible_no_backend_affordances', cast: 'jsonb' },
+      { name: 'capability_gaps', cast: 'jsonb' },
+      { name: 'evidence_refs', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_surface', cast: 'jsonb' },
+    ],
+    snapshot.surfaces,
+    (surface) => [
+      surface.surfaceId,
+      surface.surfaceKind,
+      surface.routePath,
+      surface.screenState,
+      surface.frontendOwner,
+      toJson(surface.registeredPlugins),
+      toJson(surface.consumedEndpoints),
+      toJson(surface.zustandStores),
+      toJson(surface.tanstackQueries),
+      toJson(surface.visibleNoBackendAffordances),
+      toJson(surface.capabilityGaps),
+      toJson(surface.evidenceRefs),
+      surface.sourcePath,
+      surface.sourceContentSha256,
+      toJson(surface.rawSurface),
+    ]
+  );
 }
 
 async function insertPrReadinessSnapshot(client, snapshot) {
@@ -1952,90 +2587,227 @@ async function insertDocsDispositionSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.doc_disposition_markers`);
   await client.query(`delete from ${schemaName}.doc_disposition_documents`);
 
-  for (const document of snapshot.documents) {
-    await client.query(
-      `insert into ${schemaName}.doc_disposition_documents
-        (document_path, title, status, planning_type, owner, is_active, is_archive,
-         pending_marker_count, task_like_reference_count, source_content_sha256,
-         raw_frontmatter, raw_document)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb)`,
-      [
-        document.documentPath,
-        document.title,
-        document.status,
-        document.planningType,
-        document.owner,
-        document.isActive,
-        document.isArchive,
-        document.pendingMarkerCount,
-        document.taskLikeReferenceCount,
-        document.sourceContentSha256,
-        toJson(document.rawFrontmatter),
-        toJson(document.rawDocument),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'doc_disposition_documents',
+    [
+      'document_path',
+      'title',
+      'status',
+      'planning_type',
+      'owner',
+      'is_active',
+      'is_archive',
+      'pending_marker_count',
+      'task_like_reference_count',
+      'source_content_sha256',
+      { name: 'raw_frontmatter', cast: 'jsonb' },
+      { name: 'raw_document', cast: 'jsonb' },
+    ],
+    snapshot.documents,
+    (document) => [
+      document.documentPath,
+      document.title,
+      document.status,
+      document.planningType,
+      document.owner,
+      document.isActive,
+      document.isArchive,
+      document.pendingMarkerCount,
+      document.taskLikeReferenceCount,
+      document.sourceContentSha256,
+      toJson(document.rawFrontmatter),
+      toJson(document.rawDocument),
+    ]
+  );
 
-  for (const marker of snapshot.markers) {
-    await client.query(
-      `insert into ${schemaName}.doc_disposition_markers
-        (marker_id, document_path, marker_kind, occurrence_count, sample_lines,
-         source_content_sha256, raw_marker)
-       values ($1, $2, $3, $4, $5::jsonb, $6, $7::jsonb)`,
-      [
-        marker.markerId,
-        marker.documentPath,
-        marker.markerKind,
-        marker.occurrenceCount,
-        toJson(marker.sampleLines),
-        marker.sourceContentSha256,
-        toJson(marker.rawMarker),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'doc_disposition_markers',
+    [
+      'marker_id',
+      'document_path',
+      'marker_kind',
+      'occurrence_count',
+      { name: 'sample_lines', cast: 'jsonb' },
+      'source_content_sha256',
+      { name: 'raw_marker', cast: 'jsonb' },
+    ],
+    snapshot.markers,
+    (marker) => [
+      marker.markerId,
+      marker.documentPath,
+      marker.markerKind,
+      marker.occurrenceCount,
+      toJson(marker.sampleLines),
+      marker.sourceContentSha256,
+      toJson(marker.rawMarker),
+    ]
+  );
 
-  for (const reference of snapshot.references) {
-    await client.query(
-      `insert into ${schemaName}.doc_task_like_references
-        (reference_id, document_path, reference_text, reference_prefix, classification,
-         registered_planning_task, occurrence_count, sample_lines, source_content_sha256,
-         raw_reference)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)`,
-      [
-        reference.referenceId,
-        reference.documentPath,
-        reference.referenceText,
-        reference.referencePrefix,
-        reference.classification,
-        reference.registeredPlanningTask,
-        reference.occurrenceCount,
-        toJson(reference.sampleLines),
-        reference.sourceContentSha256,
-        toJson(reference.rawReference),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'doc_task_like_references',
+    [
+      'reference_id',
+      'document_path',
+      'reference_text',
+      'reference_prefix',
+      'classification',
+      'registered_planning_task',
+      'occurrence_count',
+      { name: 'sample_lines', cast: 'jsonb' },
+      'source_content_sha256',
+      { name: 'raw_reference', cast: 'jsonb' },
+    ],
+    snapshot.references,
+    (reference) => [
+      reference.referenceId,
+      reference.documentPath,
+      reference.referenceText,
+      reference.referencePrefix,
+      reference.classification,
+      reference.registeredPlanningTask,
+      reference.occurrenceCount,
+      toJson(reference.sampleLines),
+      reference.sourceContentSha256,
+      toJson(reference.rawReference),
+    ]
+  );
 
-  for (const action of snapshot.actions) {
-    await client.query(
-      `insert into ${schemaName}.doc_disposition_actions
-        (action_id, priority, action_kind, document_path, reference_text, reason, blocking,
-         evidence, source_content_sha256, raw_action)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10::jsonb)`,
-      [
-        action.actionId,
-        action.priority,
-        action.actionKind,
-        action.documentPath,
-        action.referenceText,
-        action.reason,
-        action.blocking,
-        toJson(action.evidence),
-        action.sourceContentSha256,
-        toJson(action.rawAction),
-      ]
-    );
-  }
+  await insertRows(
+    client,
+    'doc_disposition_actions',
+    [
+      'action_id',
+      'priority',
+      'action_kind',
+      'document_path',
+      'reference_text',
+      'reason',
+      'blocking',
+      { name: 'evidence', cast: 'jsonb' },
+      'source_content_sha256',
+      { name: 'raw_action', cast: 'jsonb' },
+    ],
+    snapshot.actions,
+    (action) => [
+      action.actionId,
+      action.priority,
+      action.actionKind,
+      action.documentPath,
+      action.referenceText,
+      action.reason,
+      action.blocking,
+      toJson(action.evidence),
+      action.sourceContentSha256,
+      toJson(action.rawAction),
+    ]
+  );
+}
+
+async function insertKnowledgeSnapshot(client, snapshot) {
+  await insertRows(
+    client,
+    'knowledge_documents',
+    [
+      'document_id',
+      'document_path',
+      'document_type',
+      'title',
+      'status',
+      'planning_type',
+      'owner',
+      'mandatory',
+      'source_content_sha256',
+      { name: 'raw_frontmatter', cast: 'jsonb' },
+    ],
+    snapshot.documents,
+    (document) => [
+      document.documentId,
+      document.documentPath,
+      document.documentType,
+      document.title,
+      document.status,
+      document.planningType,
+      document.owner,
+      document.mandatory,
+      document.sourceContentSha256,
+      toJson(document.rawFrontmatter),
+    ]
+  );
+
+  await insertRows(
+    client,
+    'knowledge_document_sections',
+    ['section_id', 'document_id', 'heading', 'heading_level', 'ordinal', 'anchor', 'start_line'],
+    snapshot.sections,
+    (section) => [
+      section.sectionId,
+      section.documentId,
+      section.heading,
+      section.headingLevel,
+      section.ordinal,
+      section.anchor,
+      section.startLine,
+    ]
+  );
+
+  await insertRows(
+    client,
+    'knowledge_proposals',
+    ['proposal_id', 'document_id', 'proposal_status', 'mandatory', 'decision_state'],
+    snapshot.proposals,
+    (proposal) => [
+      proposal.proposalId,
+      proposal.documentId,
+      proposal.proposalStatus,
+      proposal.mandatory,
+      proposal.decisionState,
+    ]
+  );
+
+  await insertRows(
+    client,
+    'knowledge_document_links',
+    ['from_document_id', 'to_document_id', 'relation_type'],
+    snapshot.documentLinks,
+    (link) => [link.fromDocumentId, link.toDocumentId, link.relationType],
+    { suffix: 'on conflict do nothing' }
+  );
+
+  await insertRows(
+    client,
+    'knowledge_action_items',
+    [
+      'action_id',
+      'source_document_id',
+      'source_section_id',
+      'summary',
+      'status',
+      'required',
+      'line_number',
+    ],
+    snapshot.actions,
+    (action) => [
+      action.actionId,
+      action.sourceDocumentId,
+      action.sourceSectionId,
+      action.summary,
+      action.status,
+      action.required,
+      action.lineNumber,
+    ]
+  );
+
+  await insertRows(
+    client,
+    'knowledge_action_links',
+    ['action_id', 'target_type', 'target_id', 'relation_type'],
+    snapshot.actionLinks,
+    (link) => [link.actionId, link.targetType, link.targetId, link.relationType],
+    { suffix: 'on conflict do nothing' }
+  );
 }
 
 async function beginImportTransaction(client) {
@@ -2044,6 +2816,33 @@ async function beginImportTransaction(client) {
     'dvt:planning-query-store',
     'import-content-v1',
   ]);
+}
+
+function mergePlanningTaskIds(...taskIdGroups) {
+  return [
+    ...new Set(
+      taskIdGroups
+        .flat()
+        .map((taskId) => normalizeText(taskId).trim())
+        .filter(Boolean)
+    ),
+  ];
+}
+
+async function readLocalPlanningTaskIds(client) {
+  const result = await client.query(
+    `select local_definition.task_id
+     from ${schemaName}.planning_task_local_definitions local_definition
+     where not exists (
+       select 1
+       from ${schemaName}.planning_task_local_tombstones tombstone
+       where tombstone.lane_id = local_definition.lane_id
+         and tombstone.task_id = local_definition.task_id
+     )
+     order by local_definition.task_id`
+  );
+
+  return result.rows.map((row) => row.task_id ?? row.taskId);
 }
 
 async function importContent(options = {}) {
@@ -2056,14 +2855,21 @@ async function importContent(options = {}) {
   const repositoryCommandSnapshot = includeGovernance
     ? await buildRepositoryCommandSnapshot()
     : null;
+  const commandQueryRailSnapshot = includeGovernance
+    ? buildCommandQueryRailSnapshot({ governanceSnapshot })
+    : null;
+  const frontendMechanicalTruthSnapshot = includeGovernance
+    ? buildFrontendMechanicalTruthSnapshot()
+    : null;
   const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
+  const markdownDocuments = includeGovernance ? listTrackedMarkdownDocuments() : [];
+  const knowledgeDocuments = includeGovernance
+    ? listTrackedKnowledgeDocuments({ markdownDocuments })
+    : [];
   const docsDispositionPlanningSnapshot =
     includeGovernance && !planningSnapshot ? buildPlanningContentSnapshot() : planningSnapshot;
-  const docsDispositionSnapshot = includeGovernance
-    ? buildDocsDispositionSnapshot({
-        planningTaskIds: (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
-      })
-    : null;
+  let docsDispositionSnapshot;
+  let knowledgeSnapshot;
   const client = options.client || new Client({ connectionString: url });
   const ownsClient = !options.client;
 
@@ -2074,14 +2880,29 @@ async function importContent(options = {}) {
   try {
     await runMigrations({ client, silent: true });
     await beginImportTransaction(client);
+    const planningTaskIds = includeGovernance
+      ? mergePlanningTaskIds(
+          (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
+          await readLocalPlanningTaskIds(client)
+        )
+      : [];
+    docsDispositionSnapshot = includeGovernance
+      ? buildDocsDispositionSnapshot({ planningTaskIds, documents: markdownDocuments })
+      : null;
+    knowledgeSnapshot = includeGovernance
+      ? buildKnowledgeDocumentSnapshot({ planningTaskIds, documents: knowledgeDocuments })
+      : null;
     if (includePlanning) {
       await insertPlanningSnapshot(client, planningSnapshot);
     }
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
+      await insertCommandQueryRailSnapshot(client, commandQueryRailSnapshot);
+      await insertFrontendMechanicalTruthSnapshot(client, frontendMechanicalTruthSnapshot);
       await insertPrReadinessSnapshot(client, prReadinessSnapshot);
       await insertDocsDispositionSnapshot(client, docsDispositionSnapshot);
+      await insertKnowledgeSnapshot(client, knowledgeSnapshot);
     }
     await client.query('commit');
   } catch (error) {
@@ -2102,11 +2923,16 @@ async function importContent(options = {}) {
     governanceFingerprints: governanceSnapshot?.fingerprints.length ?? 0,
     governanceCoverageRows: governanceSnapshot?.coverageRows.length ?? 0,
     governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
+    riskDebtItems: governanceSnapshot?.riskDebtItems.length ?? 0,
     repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
+    commandQueryRails: commandQueryRailSnapshot?.rails.length ?? 0,
+    frontendMechanicalTruthSurfaces: frontendMechanicalTruthSnapshot?.surfaces.length ?? 0,
     prReadinessChecks: prReadinessSnapshot ? 1 : 0,
     docsDispositionDocuments: docsDispositionSnapshot?.documents.length ?? 0,
     docsDispositionActions: docsDispositionSnapshot?.actions.length ?? 0,
     docsTaskLikeReferences: docsDispositionSnapshot?.references.length ?? 0,
+    knowledgeDocuments: knowledgeSnapshot?.documents.length ?? 0,
+    knowledgeActions: knowledgeSnapshot?.actions.length ?? 0,
   };
 
   if (!silent) {
@@ -2116,9 +2942,13 @@ async function importContent(options = {}) {
       `governanceFiles=${result.governanceFiles}`,
       `governanceComponents=${result.governanceComponents}`,
       `governanceRemediationTasks=${result.governanceRemediationTasks}`,
+      `riskDebtItems=${result.riskDebtItems}`,
       `repositoryCommands=${result.repositoryCommands}`,
+      `commandQueryRails=${result.commandQueryRails}`,
+      `frontendMechanicalTruthSurfaces=${result.frontendMechanicalTruthSurfaces}`,
       `prReadinessChecks=${result.prReadinessChecks}`,
       `docsDispositionActions=${result.docsDispositionActions}`,
+      `knowledgeDocuments=${result.knowledgeDocuments}`,
     ].join(' ');
     console.log(message);
   }
@@ -2168,6 +2998,33 @@ function compareGovernanceAuxiliaryState(expected, actual) {
       keyOf: (row) => row.commandId,
       compareFields: ['commandText', 'sourcePath', 'sourceContentSha256'],
     }),
+    commandQueryRails: compareImportRows(expected.commandQueryRails, actual.commandQueryRails, {
+      keyOf: (row) => row.railId,
+      compareFields: [
+        'featureId',
+        'railName',
+        'railType',
+        'dddOwner',
+        'railStatus',
+        'sourcePath',
+        'sourceContentSha256',
+      ],
+    }),
+    frontendMechanicalTruthSurfaces: compareImportRows(
+      expected.frontendMechanicalTruthSurfaces,
+      actual.frontendMechanicalTruthSurfaces,
+      {
+        keyOf: (row) => row.surfaceId,
+        compareFields: [
+          'surfaceKind',
+          'routePath',
+          'screenState',
+          'frontendOwner',
+          'sourcePath',
+          'sourceContentSha256',
+        ],
+      }
+    ),
     prReadinessChecks: compareImportRows(expected.prReadinessChecks, actual.prReadinessChecks, {
       keyOf: (row) => row.readinessId,
       compareFields: ['sourcePath', 'sourceContentSha256', 'effectiveArcLevel', 'blocking'],
@@ -2225,6 +3082,19 @@ function compareGovernanceAuxiliaryState(expected, actual) {
         ],
       }
     ),
+    riskDebtItems: compareImportRows(expected.riskDebtItems, actual.riskDebtItems, {
+      keyOf: (row) => row.riskId,
+      compareFields: [
+        'sourcePath',
+        'title',
+        'status',
+        'severity',
+        'probability',
+        'priority',
+        'componentUnit',
+        'sourceContentSha256',
+      ],
+    }),
   };
   const ok = Object.values(sections).every(
     (section) =>
@@ -2237,6 +3107,10 @@ function compareGovernanceAuxiliaryState(expected, actual) {
 async function buildGovernanceAuxiliaryExpectedState(options = {}) {
   const repositoryCommandSnapshot =
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
+  const commandQueryRailSnapshot =
+    options.commandQueryRailSnapshot || buildCommandQueryRailSnapshot();
+  const frontendMechanicalTruthSnapshot =
+    options.frontendMechanicalTruthSnapshot || buildFrontendMechanicalTruthSnapshot();
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const docsDispositionSnapshot =
@@ -2244,6 +3118,7 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
     buildDocsDispositionSnapshot({
       planningTaskIds: planningSnapshot.tasks.map((task) => task.taskId),
     });
+  const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
 
   return {
     repositoryCommands: repositoryCommandSnapshot.commands.map((command) => ({
@@ -2251,6 +3126,25 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       commandText: command.commandText,
       sourcePath: command.sourcePath,
       sourceContentSha256: command.sourceContentSha256,
+    })),
+    commandQueryRails: commandQueryRailSnapshot.rails.map((rail) => ({
+      railId: rail.railId,
+      featureId: rail.featureId,
+      railName: rail.railName,
+      railType: rail.railType,
+      dddOwner: rail.dddOwner,
+      railStatus: rail.railStatus,
+      sourcePath: rail.sourcePath,
+      sourceContentSha256: rail.sourceContentSha256,
+    })),
+    frontendMechanicalTruthSurfaces: frontendMechanicalTruthSnapshot.surfaces.map((surface) => ({
+      surfaceId: surface.surfaceId,
+      surfaceKind: surface.surfaceKind,
+      routePath: surface.routePath,
+      screenState: surface.screenState,
+      frontendOwner: surface.frontendOwner,
+      sourcePath: surface.sourcePath,
+      sourceContentSha256: surface.sourceContentSha256,
     })),
     prReadinessChecks: [
       {
@@ -2295,17 +3189,31 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       blocking: action.blocking,
       sourceContentSha256: action.sourceContentSha256,
     })),
+    riskDebtItems: governanceSnapshot.riskDebtItems.map((debt) => ({
+      riskId: debt.riskId,
+      sourcePath: debt.sourcePath,
+      title: debt.title,
+      status: debt.status,
+      severity: debt.severity,
+      probability: debt.probability,
+      priority: debt.priority,
+      componentUnit: debt.componentUnit,
+      sourceContentSha256: debt.sourceContentSha256,
+    })),
   };
 }
 
 async function readGovernanceAuxiliaryState(client) {
   const [
     repositoryCommands,
+    commandQueryRails,
     prReadinessChecks,
     docDispositionDocuments,
     docDispositionMarkers,
     docTaskLikeReferences,
     docDispositionActions,
+    riskDebtItems,
+    frontendMechanicalTruthSurfaces,
   ] = await Promise.all([
     client.query(`
       select
@@ -2315,6 +3223,19 @@ async function readGovernanceAuxiliaryState(client) {
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.repository_commands
       order by command_id
+    `),
+    client.query(`
+      select
+        rail_id as "railId",
+        feature_id as "featureId",
+        rail_name as "railName",
+        rail_type as "railType",
+        ddd_owner as "dddOwner",
+        rail_status as "railStatus",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.command_query_rails
+      order by rail_id
     `),
     client.query(`
       select
@@ -2372,15 +3293,44 @@ async function readGovernanceAuxiliaryState(client) {
       from ${schemaName}.doc_disposition_actions
       order by action_id
     `),
+    client.query(`
+      select
+        risk_id as "riskId",
+        source_path as "sourcePath",
+        title,
+        status,
+        severity,
+        probability,
+        priority,
+        component_unit as "componentUnit",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.risk_debt_items
+      order by risk_id
+    `),
+    client.query(`
+      select
+        surface_id as "surfaceId",
+        surface_kind as "surfaceKind",
+        route_path as "routePath",
+        screen_state as "screenState",
+        frontend_owner as "frontendOwner",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.frontend_mechanical_truth_surfaces
+      order by surface_id
+    `),
   ]);
 
   return {
     repositoryCommands: repositoryCommands.rows,
+    commandQueryRails: commandQueryRails.rows,
     prReadinessChecks: prReadinessChecks.rows,
     docDispositionDocuments: docDispositionDocuments.rows,
     docDispositionMarkers: docDispositionMarkers.rows,
     docTaskLikeReferences: docTaskLikeReferences.rows,
     docDispositionActions: docDispositionActions.rows,
+    riskDebtItems: riskDebtItems.rows,
+    frontendMechanicalTruthSurfaces: frontendMechanicalTruthSurfaces.rows,
   };
 }
 
@@ -2405,6 +3355,388 @@ async function checkGovernanceAuxiliaryProjections(options = {}) {
   }
 }
 
+function uniqueSourceHashRows(rows, options = {}) {
+  const pathField = options.pathField || 'sourcePath';
+  const hashField = options.hashField || 'sourceContentSha256';
+  const normalizedRows = new Map();
+
+  for (const row of rows || []) {
+    const sourcePath = normalizeText(row[pathField]);
+    if (!sourcePath) {
+      continue;
+    }
+
+    normalizedRows.set(sourcePath, {
+      sourcePath,
+      sourceContentSha256: normalizeText(row[hashField]),
+    });
+  }
+
+  return [...normalizedRows.values()].sort((left, right) =>
+    left.sourcePath.localeCompare(right.sourcePath)
+  );
+}
+
+function documentSourceHashRows(documents) {
+  return uniqueSourceHashRows(
+    (documents || []).map((document) => {
+      const raw = normalizeText(document.raw);
+      return {
+        sourcePath: toPosix(normalizeText(document.sourcePath)),
+        sourceContentSha256: normalizeText(document.contentSha256) || sha256(raw),
+      };
+    })
+  );
+}
+
+function isKnowledgeDocumentSourcePath(sourcePath) {
+  const normalizedPath = toPosix(normalizeText(sourcePath));
+  return (
+    /^buzon\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/planning\/proposals\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/planning\/reviews\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/adr\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/evidence\/.*\.md$/i.test(normalizedPath) ||
+    /^docs\/risk-register\/.*\.md$/i.test(normalizedPath)
+  );
+}
+
+function knowledgeDocumentSourceHashRows(documents) {
+  return documentSourceHashRows(
+    normalizeArray(documents).filter((document) =>
+      isKnowledgeDocumentSourcePath(document.sourcePath)
+    )
+  );
+}
+
+function compareGovernanceAuxiliarySourceState(expected, actual) {
+  const sourceHashComparison = {
+    compareFields: ['sourceContentSha256'],
+    keyOf: (row) => row.sourcePath,
+  };
+  const sections = {
+    planningSources: compareImportRows(
+      expected.planningSources,
+      actual.planningSources,
+      sourceHashComparison
+    ),
+    repositoryCommandSources: compareImportRows(
+      expected.repositoryCommandSources,
+      actual.repositoryCommandSources,
+      sourceHashComparison
+    ),
+    commandQueryRailSources: compareImportRows(
+      expected.commandQueryRailSources,
+      actual.commandQueryRailSources,
+      sourceHashComparison
+    ),
+    docDispositionDocuments: compareImportRows(
+      expected.docDispositionDocuments,
+      actual.docDispositionDocuments,
+      sourceHashComparison
+    ),
+    knowledgeDocuments: compareImportRows(
+      expected.knowledgeDocuments,
+      actual.knowledgeDocuments,
+      sourceHashComparison
+    ),
+    riskDebtItems: compareImportRows(
+      expected.riskDebtItems,
+      actual.riskDebtItems,
+      sourceHashComparison
+    ),
+    prReadinessChecks: compareImportRows(expected.prReadinessChecks, actual.prReadinessChecks, {
+      keyOf: (row) => row.readinessId,
+      compareFields: ['sourcePath', 'sourceContentSha256', 'effectiveArcLevel', 'blocking'],
+    }),
+  };
+  const ok = Object.values(sections).every(
+    (section) =>
+      section.missing.length === 0 && section.unexpected.length === 0 && section.stale.length === 0
+  );
+
+  return { ok, sections };
+}
+
+function compareGovernanceSourceState(expected, actual) {
+  const sections = {
+    files: compareImportRows(expected.files, actual.files, {
+      keyOf: (row) => row.path,
+      compareFields: [
+        'contentHash',
+        'governanceHash',
+        'stateFingerprint',
+        'owningUnit',
+        'componentUnit',
+        'isDrift',
+        'isLegacy',
+      ],
+    }),
+    components: compareImportRows(expected.components, actual.components, {
+      keyOf: (row) => row.componentId,
+      compareFields: ['governanceState', 'isDrift', 'isLegacy', 'fileCount'],
+    }),
+    generatedReportSources: compareImportRows(
+      expected.generatedReportSources,
+      actual.generatedReportSources,
+      {
+        keyOf: (row) => row.sourcePath,
+        compareFields: ['sourceContentSha256'],
+      }
+    ),
+  };
+  const ok = Object.values(sections).every(
+    (section) =>
+      section.missing.length === 0 && section.unexpected.length === 0 && section.stale.length === 0
+  );
+
+  return { ok, sections };
+}
+
+function generatedReportSourceHashRows(generatedInputs = buildGovernanceGeneratedInputs()) {
+  return [generatedInputs.coverageReportSource, generatedInputs.remediationQueueSource]
+    .filter(Boolean)
+    .map((source) => ({
+      sourcePath: source.sourcePath,
+      sourceContentSha256: source.contentSha256,
+    }))
+    .sort((left, right) => left.sourcePath.localeCompare(right.sourcePath));
+}
+
+function buildGovernanceSourceExpectedState(options = {}) {
+  const fileComponentOutputs =
+    options.fileComponentOutputs || buildGovernanceFileComponentOutputs();
+  const generatedInputs =
+    options.generatedInputs ||
+    buildGovernanceGeneratedInputs({
+      fileComponentOutputs,
+      documentOutputs: options.documentOutputs,
+    });
+  const generatedFileComponentOutputs =
+    generatedInputs.fileComponentOutputs || fileComponentOutputs;
+
+  return {
+    files: generatedFileComponentOutputs.fileEntries.map((file) => ({
+      path: file.path,
+      contentHash: file.contentHash,
+      governanceHash: file.governanceHash,
+      stateFingerprint: file.stateFingerprint,
+      owningUnit: file.owningUnit,
+      componentUnit: file.componentUnit,
+      isDrift: file.isDrift,
+      isLegacy: file.isLegacy,
+    })),
+    components: generatedFileComponentOutputs.componentIndexManifest.components.map(
+      (component) => ({
+        componentId: component.id,
+        governanceState: component.governanceState,
+        isDrift: component.isDrift,
+        isLegacy: component.isLegacy,
+        fileCount: component.fileCount,
+      })
+    ),
+    generatedReportSources:
+      options.generatedReportSources === undefined
+        ? generatedReportSourceHashRows(generatedInputs)
+        : options.generatedReportSources,
+  };
+}
+
+async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
+  const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
+  const repositoryCommandSnapshot =
+    options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
+  const commandQueryRailSnapshot =
+    options.commandQueryRailSnapshot || buildCommandQueryRailSnapshot();
+  const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
+  const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
+  const knowledgeDocuments =
+    options.knowledgeDocuments || listTrackedKnowledgeDocuments({ markdownDocuments });
+
+  return {
+    planningSources: uniqueSourceHashRows(planningSnapshot.sources, {
+      hashField: 'contentSha256',
+    }),
+    repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
+    commandQueryRailSources: uniqueSourceHashRows(commandQueryRailSnapshot.rails),
+    docDispositionDocuments: documentSourceHashRows(markdownDocuments),
+    knowledgeDocuments: options.knowledgeSnapshotDocuments
+      ? uniqueSourceHashRows(options.knowledgeSnapshotDocuments, {
+          pathField: 'documentPath',
+        })
+      : knowledgeDocumentSourceHashRows(knowledgeDocuments),
+    riskDebtItems: documentSourceHashRows(options.riskDocuments || listTrackedRiskDocuments()),
+    prReadinessChecks: [
+      {
+        readinessId: prReadinessSnapshot.readiness.readinessId,
+        sourcePath: prReadinessSnapshot.readiness.sourcePath,
+        sourceContentSha256: prReadinessSnapshot.readiness.sourceContentSha256,
+        effectiveArcLevel: prReadinessSnapshot.readiness.effectiveArcLevel,
+        blocking: prReadinessSnapshot.readiness.blocking,
+      },
+    ],
+  };
+}
+
+async function readGovernanceSourceState(client) {
+  const [files, components, generatedReportSources] = await Promise.all([
+    client.query(`
+      select
+        path,
+        content_hash as "contentHash",
+        governance_hash as "governanceHash",
+        state_fingerprint as "stateFingerprint",
+        owning_unit as "owningUnit",
+        component_unit as "componentUnit",
+        is_drift as "isDrift",
+        is_legacy as "isLegacy"
+      from ${schemaName}.governance_files
+      order by path
+    `),
+    client.query(`
+      select
+        component_id as "componentId",
+        governance_state as "governanceState",
+        is_drift as "isDrift",
+        is_legacy as "isLegacy",
+        file_count::int as "fileCount"
+      from ${schemaName}.governance_components
+      order by component_id
+    `),
+    client.query(`
+      select
+        source_path as "sourcePath",
+        content_sha256 as "sourceContentSha256"
+      from ${schemaName}.governance_sources
+      where source_type in ('governance_coverage_report', 'governance_remediation_queue')
+      order by source_path
+    `),
+  ]);
+
+  return {
+    files: files.rows,
+    components: components.rows,
+    generatedReportSources: generatedReportSources.rows,
+  };
+}
+
+async function checkGovernanceSourceFreshness(options = {}) {
+  const expected = options.expected || buildGovernanceSourceExpectedState(options.expectedOptions);
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    const actual = options.actual || (await readGovernanceSourceState(client));
+    return compareGovernanceSourceState(expected, actual);
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function readGovernanceAuxiliarySourceState(client) {
+  const [
+    planningSources,
+    repositoryCommandSources,
+    commandQueryRailSources,
+    prReadinessChecks,
+    docDispositionDocuments,
+    knowledgeDocuments,
+    riskDebtItems,
+  ] = await Promise.all([
+    client.query(`
+      select
+        source_path as "sourcePath",
+        content_sha256 as "sourceContentSha256"
+      from ${schemaName}.planning_sources
+      order by source_path
+    `),
+    client.query(`
+      select distinct
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.repository_commands
+      order by source_path
+    `),
+    client.query(`
+      select distinct
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.command_query_rails
+      order by source_path
+    `),
+    client.query(`
+      select
+        readiness_id as "readinessId",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256",
+        effective_arc_level as "effectiveArcLevel",
+        blocking
+      from ${schemaName}.pr_readiness_checks
+      order by readiness_id
+    `),
+    client.query(`
+      select
+        document_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.doc_disposition_documents
+      order by document_path
+    `),
+    client.query(`
+      select
+        document_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.knowledge_documents
+      order by document_path
+    `),
+    client.query(`
+      select
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.risk_debt_items
+      order by source_path
+    `),
+  ]);
+
+  return {
+    planningSources: planningSources.rows,
+    repositoryCommandSources: repositoryCommandSources.rows,
+    commandQueryRailSources: commandQueryRailSources.rows,
+    prReadinessChecks: prReadinessChecks.rows,
+    docDispositionDocuments: docDispositionDocuments.rows,
+    knowledgeDocuments: knowledgeDocuments.rows,
+    riskDebtItems: riskDebtItems.rows,
+  };
+}
+
+async function checkGovernanceAuxiliarySourceFreshness(options = {}) {
+  const expected =
+    options.expected ||
+    (await buildGovernanceAuxiliarySourceExpectedState(options.expectedOptions));
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    const actual = options.actual || (await readGovernanceAuxiliarySourceState(client));
+    return compareGovernanceAuxiliarySourceState(expected, actual);
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function isScopeFresh(scope, options, deps) {
   try {
     if (scope === 'planning') {
@@ -2415,16 +3747,46 @@ async function isScopeFresh(scope, options, deps) {
     }
 
     if (scope === 'governance') {
-      const checkGovernanceDatabase =
-        deps.checkGovernanceDatabase ||
-        require('./governance-db-check.cjs').checkGovernanceDatabase;
-      const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
-      if (!report.ok) {
+      const hasGovernanceDatabaseOverride = typeof deps.checkGovernanceDatabase === 'function';
+      const shouldTryGovernanceSourceFreshness =
+        typeof deps.checkGovernanceSourceFreshness === 'function' || !hasGovernanceDatabaseOverride;
+      if (shouldTryGovernanceSourceFreshness) {
+        const sourceFreshness =
+          deps.checkGovernanceSourceFreshness || checkGovernanceSourceFreshness;
+        const sourceFreshnessReport = await sourceFreshness({
+          databaseUrl: options.databaseUrl,
+        });
+        if (!sourceFreshnessReport.ok) {
+          return false;
+        }
+      } else {
+        const checkGovernanceDatabase = deps.checkGovernanceDatabase;
+        const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
+        if (!report.ok) {
+          return false;
+        }
+      }
+
+      const hasAuxiliaryProjectionOverride =
+        typeof deps.checkGovernanceAuxiliaryProjections === 'function';
+      const shouldTrySourceFreshness =
+        typeof deps.checkGovernanceAuxiliarySourceFreshness === 'function' ||
+        !hasAuxiliaryProjectionOverride;
+      if (shouldTrySourceFreshness) {
+        const checkAuxiliarySourceFreshness =
+          deps.checkGovernanceAuxiliarySourceFreshness || checkGovernanceAuxiliarySourceFreshness;
+        const sourceFreshnessReport = await checkAuxiliarySourceFreshness({
+          databaseUrl: options.databaseUrl,
+        });
+        if (sourceFreshnessReport.ok) {
+          return true;
+        }
         return false;
       }
 
-      const checkAuxiliary =
-        deps.checkGovernanceAuxiliaryProjections || checkGovernanceAuxiliaryProjections;
+      const checkAuxiliary = hasAuxiliaryProjectionOverride
+        ? deps.checkGovernanceAuxiliaryProjections
+        : checkGovernanceAuxiliaryProjections;
       const auxiliaryReport = await checkAuxiliary({ databaseUrl: options.databaseUrl });
       return auxiliaryReport.ok;
     }
@@ -2478,7 +3840,10 @@ async function runPlanningImport(options = {}, deps = {}) {
       governanceFingerprints: 0,
       governanceCoverageRows: 0,
       governanceRemediationTasks: 0,
+      riskDebtItems: 0,
       repositoryCommands: 0,
+      commandQueryRails: 0,
+      frontendMechanicalTruthSurfaces: 0,
       prReadinessChecks: 0,
       docsDispositionDocuments: 0,
       docsDispositionActions: 0,
@@ -2488,11 +3853,16 @@ async function runPlanningImport(options = {}, deps = {}) {
     };
   }
 
-  const result = await actualDeps.importContent({
+  const importOptions = {
     databaseUrl: options.databaseUrl,
     includePlanning: selected.planning,
     includeGovernance: selected.governance,
-  });
+  };
+  if (options.silent === true) {
+    importOptions.silent = true;
+  }
+
+  const result = await actualDeps.importContent(importOptions);
 
   return {
     ...result,
@@ -2515,22 +3885,42 @@ module.exports = {
   beginImportTransaction,
   buildDocsDispositionSnapshot,
   buildGovernanceAuxiliaryExpectedState,
+  buildGovernanceAuxiliarySourceExpectedState,
   buildGovernanceFileSnapshot,
+  buildGovernanceGeneratedInputs,
+  buildGovernanceSourceExpectedState,
+  buildCommandQueryRailSnapshot,
+  buildFrontendMechanicalTruthSnapshot,
+  buildKnowledgeDocumentSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
+  buildRiskDebtSnapshot,
   buildRepositoryCommandSnapshot,
+  checkGovernanceAuxiliarySourceFreshness,
   checkGovernanceAuxiliaryProjections,
+  checkGovernanceSourceFreshness,
   clearGovernanceSnapshotTables,
+  compareGovernanceAuxiliarySourceState,
   compareGovernanceAuxiliaryState,
+  compareGovernanceSourceState,
   databaseUrl,
   evaluateArcPolicyReadiness,
   governanceImportDeleteTables,
   importContent,
+  insertGovernanceSnapshot,
+  insertRows,
+  mergePlanningTaskIds,
   insertDocsDispositionSnapshot,
+  insertCommandQueryRailSnapshot,
+  insertFrontendMechanicalTruthSnapshot,
+  insertKnowledgeSnapshot,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
   normalizeText,
   parseArgs,
+  readLocalPlanningTaskIds,
+  readGovernanceSourceState,
+  readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,
   readYamlSource,
   runPlanningImport,

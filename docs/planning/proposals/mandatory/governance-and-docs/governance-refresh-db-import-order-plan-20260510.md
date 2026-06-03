@@ -99,6 +99,13 @@ redGreenCycles:
       - scripts/planning-db-import.test.cjs
       - scripts/planning-db-import.cjs
     greenTest: node --test scripts/planning-db-import.test.cjs
+  - id: generated-write-settle-before-db-validation
+    redTest: node --test scripts/governance-refresh.test.cjs
+    expectedFailure: asynchronous generated writes can land after the DB import and make governance:db:check observe stale coverage rows.
+    patchSurfaces:
+      - scripts/governance-refresh.test.cjs
+      - scripts/governance-refresh.cjs
+    greenTest: node --test scripts/governance-refresh.test.cjs
 symbols:
   - name: buildRefreshStages
     path: scripts/governance-refresh.cjs
@@ -122,6 +129,28 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-import.test.cjs
+  - name: sleepMs
+    path: scripts/governance-refresh.cjs
+    dddOwner: Governance generated-surface pipeline
+    cqRails:
+      - GovernanceRefresh
+    fowlerSignals:
+      - Wait for generated write fingerprints to settle before DB validation
+    architectureGuard: node --test scripts/governance-refresh.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/governance-refresh.test.cjs
+  - name: waitForStableWorktreeFingerprint
+    path: scripts/governance-refresh.cjs
+    dddOwner: Governance generated-surface pipeline
+    cqRails:
+      - GovernanceRefresh
+    fowlerSignals:
+      - Wait for generated write fingerprints to settle before DB validation
+    architectureGuard: node --test scripts/governance-refresh.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/governance-refresh.test.cjs
   - name: clearGovernanceSnapshotTables
     path: scripts/planning-db-import.cjs
     dddOwner: Governance query-store import

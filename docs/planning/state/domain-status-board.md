@@ -21,37 +21,30 @@ bootstrap/export snapshots.
 
 - Current objective: keep the shipped PostgreSQL-backed transformation runtime
   vertical stable while finishing `WE-HX` hardening, the remaining runtime
-  observability follow-through, and the first workflow-payload scale hardening
-  cut.
-- Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`, `AR-D-PLAN-POINTER`
+  observability follow-through, and the remaining runtime-boundary hardening
+  cuts after the PlanRef payload line closed.
+- Active task IDs: `WE-HX`, `WE-HX-0`, `AR-C2-T2`, `AR-C2-T3`, `RC-C2`
 - Roadmap lane affected: [Execution Runtime lane](../roadmap/roadmap-by-domain.md)
 - Primary blockers: the first PostgreSQL runtime vertical is now accepted, but
   dashboard and alert evidence for runtime SLAs still remain under
   `AR-C2-T2/T3`, broader boundary hardening continues under `WE-HX`, and Lane D
-  now owns the pointer-based workflow input hardening plus the post-vertical
-  retention follow-through rather than only proof repeatability. The branch
-  review also made explicit that DBT remains partially embedded in the default
-  `@dvt/adapter-temporal` package surface even though it is no longer part of
-  engine-kernel semantics, so that coupling now remains visible as runtime
-  hardening debt instead of hidden cleanup.
+  has closed the pointer-based workflow input hardening line. Post-vertical
+  retention follow-through and worker-scale posture now remain the active Lane D
+  work rather than hidden leftovers under `AR-D-PLAN-POINTER`.
 
 ### `API and Admission`
 
-- Current objective: keep the shipped preview-persist boundary truthful and use
-  it as the fixed ingress while `TF-C3` closes the remaining rollout and
-  acceptance prerequisites for the now-landed plugin-backed dbt runtime path,
-  without allowing compile-time and admission-time adapter truth to drift apart
-  again.
-- Active task IDs: `TF-C3`, `TF-C3-E`
+- Current objective: keep the shipped preview-persist boundary truthful now that
+  `TF-C3` has closed the plugin-backed dbt runtime path, without allowing
+  compile-time and admission-time adapter truth to drift apart again.
+- Active task IDs: none
 - Roadmap lane affected: [API and Admission lane](../roadmap/roadmap-by-domain.md)
-- Primary blockers: the SQL-first preview-persist boundary is now closed in
-  code and planning. `TF-C3` now includes shared artifact-backed reader
-  convergence, a standalone `apps/temporal-worker` composition root, and an
-  adapter-owned DBT CLI host behind `DbtPluginRunner`, so the remaining
-  blockers are rollout/runbook acceptance and environment proof for that worker
-  path plus the broader runtime-boundary hardening tracked in `WE-HX`. The
-  plan-compile seam now reuses the canonical `startRun` adapter set, but
-  broader shared provider vocabulary still needs repo-level cleanup.
+- Primary blockers: the SQL-first preview-persist boundary and plugin-backed
+  dbt runtime path are now closed in code and planning. `TF-C3` includes shared
+  artifact-backed reader convergence, a standalone `apps/temporal-worker`
+  composition root, an adapter-owned DBT CLI host behind `DbtPluginRunner`, and
+  accepted DBT-enabled worker canary evidence. Remaining runtime-boundary
+  hardening is tracked outside this domain row.
 
 ### `Planner and Contracts`
 

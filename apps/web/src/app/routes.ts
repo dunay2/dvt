@@ -45,9 +45,15 @@ function PluginAvailabilityGuard({
   pluginId,
   children,
 }: Readonly<{ pluginId: string; children: ReactNode }>) {
-  const { enabledPluginIds, defaultCoreViewPath } = useShellRuntime();
+  const { capabilitiesQuery, enabledPluginIds, defaultCoreViewPath } = useShellRuntime();
+  const capabilityProbePending =
+    capabilitiesQuery.isPending && !capabilitiesQuery.data && !capabilitiesQuery.isError;
 
   if (!enabledPluginIds.has(pluginId)) {
+    if (capabilityProbePending) {
+      return createElement(PluginRouteFallback);
+    }
+
     return createElement(Navigate, {
       to: defaultCoreViewPath,
       replace: true,

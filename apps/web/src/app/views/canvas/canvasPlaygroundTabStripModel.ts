@@ -1,4 +1,4 @@
-/** Owned concern: resolve Canvas playground tab-strip replacement policy and commands without JSX. */
+/** Owned concern: resolve Canvas playground tab-strip creation policy and commands without JSX. */
 import type { CanvasKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasCreateCanvasDocumentCommand } from './canvasDraftLifecycle.types';
@@ -8,11 +8,18 @@ export type CanvasReplacementActionCopy = Pick<
   CanvasViewCopy,
   | 'newCanvasLabel'
   | 'mutationUnavailableMessage'
+  | 'routeNeedsCanvasTemplateLabel'
   | 'replaceCanvasTitle'
   | 'replaceCanvasMessage'
   | 'replaceCanvasCancelLabel'
   | 'replaceCanvasConfirmLabel'
 >;
+
+export type CanvasReplacementTemplateOption = Readonly<{
+  kind: CanvasKindRegistration['kind'];
+  title: string;
+  description: string;
+}>;
 
 export type CanvasReplacementActionViewState = Readonly<{
   canReplaceCanvas: boolean;
@@ -20,6 +27,8 @@ export type CanvasReplacementActionViewState = Readonly<{
   buttonLabel: string;
   dialogTitle: string;
   dialogDescription: string;
+  templateLabel: string;
+  templateOptions: readonly CanvasReplacementTemplateOption[];
   cancelLabel: string;
   confirmLabel: string;
 }>;
@@ -47,6 +56,16 @@ function resolveActiveReplacementCanvasKind(args: {
   );
 }
 
+function toCanvasReplacementTemplateOption(
+  registration: CanvasKindRegistration
+): CanvasReplacementTemplateOption {
+  return {
+    kind: registration.kind,
+    title: registration.createTitle,
+    description: registration.description,
+  };
+}
+
 export function resolveCanvasReplacementActionState(args: {
   tabState: CanvasPlaygroundTabState;
   availableCanvasKinds: readonly CanvasKindRegistration[];
@@ -56,7 +75,9 @@ export function resolveCanvasReplacementActionState(args: {
 }): CanvasReplacementActionState {
   const activeCanvasKind = resolveActiveReplacementCanvasKind(args);
   const canReplaceCanvas =
-    args.canEditEdges && activeCanvasKind != null && args.onCreateCanvasDocument != null;
+    args.canEditEdges &&
+    args.availableCanvasKinds.length > 0 &&
+    args.onCreateCanvasDocument != null;
 
   return {
     activeCanvasKind,
@@ -68,6 +89,8 @@ export function resolveCanvasReplacementActionState(args: {
       buttonLabel: args.copy.newCanvasLabel,
       dialogTitle: args.copy.replaceCanvasTitle,
       dialogDescription: args.copy.replaceCanvasMessage,
+      templateLabel: args.copy.routeNeedsCanvasTemplateLabel,
+      templateOptions: args.availableCanvasKinds.map(toCanvasReplacementTemplateOption),
       cancelLabel: args.copy.replaceCanvasCancelLabel,
       confirmLabel: args.copy.replaceCanvasConfirmLabel,
     },
@@ -81,5 +104,15 @@ export function createReplaceCurrentCanvasDocumentCommand(
     kind: canvasKind.kind,
     title: canvasKind.createTitle,
     mode: 'replace_current',
+  };
+}
+
+export function createNewCanvasDocumentCommand(
+  canvasKind: CanvasKindRegistration
+): CanvasCreateCanvasDocumentCommand {
+  return {
+    kind: canvasKind.kind,
+    title: canvasKind.createTitle,
+    mode: 'create_new',
   };
 }

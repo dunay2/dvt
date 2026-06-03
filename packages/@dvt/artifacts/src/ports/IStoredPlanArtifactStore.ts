@@ -7,11 +7,11 @@
 import type {
   ExecutabilityValidationResult,
   PlanRefSchemaT,
-  PlanValidationRecord,
   PlannerBuildResultV1,
   RunExecutionPolicy,
   ScopedPlanId,
   ScopedPlanRef,
+  StoredPlanArtifactValidationRecord,
 } from '@dvt/contracts';
 export interface StoredPlanArtifact {
   readonly bytes: Uint8Array;
@@ -33,7 +33,9 @@ export interface IStoredPlanArtifactWriter {
 }
 
 export interface IStoredPlanArtifactReader {
-  getStoredPlanValidationRecord(input: ScopedPlanId): Promise<PlanValidationRecord | undefined>;
+  getStoredPlanValidationRecord(
+    input: ScopedPlanId
+  ): Promise<StoredPlanArtifactValidationRecord | undefined>;
   fetchStoredPlanArtifact(input: ScopedPlanRef): Promise<StoredPlanArtifact>;
   fetchStoredPlanArtifactForValidation(input: ScopedPlanRef): Promise<StoredPlanArtifact>;
 }

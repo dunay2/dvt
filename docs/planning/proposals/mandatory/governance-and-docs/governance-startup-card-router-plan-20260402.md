@@ -14,6 +14,11 @@ Keep the mandatory governance-first startup rule, but reduce the orientation
 cost for bounded tasks by turning the inventory into a real router before the
 deep reference catalog.
 
+This proposal is now canonized by
+[Governance Startup Card Canon Plan 2026-05-24](./governance-startup-card-canon-plan-20260524.md).
+The canonical semantic rails are `ClassifyGovernanceStartupRoute`,
+`QueryGovernanceStartupRoute`, and `ValidateGovernanceStartupBaseline`.
+
 ## Problem
 
 The repository already has the right mandatory startup document, but the
@@ -38,6 +43,10 @@ The startup path is intentionally layered:
 ## Router Decisions
 
 The startup card must classify every task into one of these routes:
+
+`ClassifyGovernanceStartupRoute` owns route selection,
+`QueryGovernanceStartupRoute` owns the next-document read model, and
+`ValidateGovernanceStartupBaseline` owns the closeout validation baseline.
 
 | Route           | Open immediately                                                                        | Deep read required when                                                          | Minimum closeout baseline                                       |
 | --------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------- |
@@ -84,3 +93,7 @@ pnpm verify:prepush
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
+
+## Planning Disposition
+
+- Action: classify this mandatory proposal through `GOV-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.

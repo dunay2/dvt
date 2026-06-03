@@ -107,6 +107,9 @@ positional tuples directly.
   detail copy in place while the gate stays settled.
 - A route `complete` publication must not appear as route-ready while runtime
   capabilities are still in cold-start `pending`.
+- A route `complete` publication suppressed by runtime-capability cold-start
+  remains the visible same-route posture if the route republishes its initial
+  `pending` state before capabilities settle.
 - A same-route stable route posture, including `complete`, `failed`, `blocked`,
   or `error`, must not regress to `pending` just because a route seam republishes
   its initial posture.

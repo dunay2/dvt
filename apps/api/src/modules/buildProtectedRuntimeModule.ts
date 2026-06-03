@@ -51,7 +51,7 @@ export async function buildProtectedRuntimeModule(
     PostgresStateStoreAdapter,
     PostgresStartRunIntentStore,
   } = adapterMod;
-  const { SnapshotProjector } = await import('@dvt/engine');
+  const { SnapshotProjector } = await import('@dvt/engine/runtime');
   const storageRuntime = buildProtectedRuntimeStorage({
     PostgresPlanStore,
     PostgresStateStoreAdapter,
@@ -100,6 +100,8 @@ export async function buildProtectedRuntimeModule(
     planStore: storageRuntime.planStore,
     stepTypeRegistry: storageRuntime.stepTypeRegistry,
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
+    workspaceRoot: storageRuntime.workspaceFilesRoot,
+    dbtBundleStore: storageRuntime.dbtBundleStore,
   });
 
   return {
@@ -107,6 +109,9 @@ export async function buildProtectedRuntimeModule(
     authenticator: securityRuntime.authenticator,
     authorizer: securityRuntime.commandAuthorizer,
     workspaceContextQuery: securityRuntime.workspaceContextQuery,
+    listProjectsUseCase: securityRuntime.listProjectsUseCase,
+    createProjectUseCase: securityRuntime.createProjectUseCase,
+    listWorkspacePluginsUseCase: securityRuntime.listWorkspacePluginsUseCase,
     engine: executionRuntime.engine,
     runEnrichmentService: executionRuntime.runEnrichmentService,
     runHealthService: executionRuntime.runHealthService,
@@ -125,6 +130,8 @@ export async function buildProtectedRuntimeModule(
     saveWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.saveWorkspaceGraphDraftUseCase,
     migrate: async () => {
       await securityRuntime.migrateAccessDecisionService();
+      await securityRuntime.migrateProjectOnboardingRepository();
+      await securityRuntime.migrateWorkspacePluginCatalogRepository();
       await migratePostgresRuntimeStores({
         stateStore: storageRuntime.stateStore,
         startRunIntentStore: storageRuntime.intentStore,

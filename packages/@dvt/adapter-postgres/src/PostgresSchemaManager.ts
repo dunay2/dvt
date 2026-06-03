@@ -1,7 +1,9 @@
 /**
  * @file packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts
+ * @ownedConcern Owns PostgreSQL schema migration catalog, rollback planning/execution, and rollback compatibility classification for the state-store adapter.
  *
- * Owns all DDL lifecycle for the DVT Postgres schema.
+ * Owned concern: DVT Postgres schema DDL lifecycle, including reversible
+ * migration steps and the physical shape of adapter-owned storage tables.
  *
  * Migrations are applied as named, versioned steps using the shared
  * `schema_migrations` table (same table and schema used by
@@ -41,14 +43,35 @@ import {
 } from './PostgresSchemaManagerSql.js';
 import {
   CORE_TENANT_ISOLATION_TABLES,
+  RUN_EVENTS_HASH_PARTITION_COUNT,
+  RUN_EVENTS_TENANT_ISOLATION_TABLES,
   buildDropTenantIsolationPolicySql,
   buildTenantIsolationPolicySql,
+  runEventsHashPartitionName,
 } from './PostgresTenantIsolationPolicy.js';
 import { quoteIdentifier } from './sqlUtils.js';
 
 type MigrationState = 'not_called' | 'in_progress' | 'ready';
-
 const COMPONENT = coreComponent();
+const RUN_EVENTS_LEGACY_TABLE = 'run_events_unpartitioned_legacy';
+const RUN_EVENTS_ROLLBACK_TABLE = 'run_events_partitioned_rollback';
+const RUN_EVENTS_COLUMNS = [
+  'run_id',
+  'run_seq',
+  'event_type',
+  'emitted_at',
+  'tenant_id',
+  'project_id',
+  'environment_id',
+  'engine_attempt_id',
+  'logical_attempt_id',
+  'plan_id',
+  'plan_version',
+  'persisted_at',
+  'step_id',
+  'idempotency_key',
+  'payload',
+] as const;
 
 // ---------------------------------------------------------------------------
 // Named migration steps
@@ -66,6 +89,7 @@ export interface PostgresSchemaRollbackPlanStep {
   readonly version: string;
   readonly description: string;
   readonly rollbackDescription: string;
+  readonly rollbackCompatibility: PostgresSchemaRollbackCompatibility;
 }
 
 export interface PostgresSchemaRollbackPlan {
@@ -76,8 +100,315 @@ export interface PostgresSchemaRollbackPlan {
   readonly steps: readonly PostgresSchemaRollbackPlanStep[];
 }
 
+export interface PostgresSchemaRollbackCompatibility {
+  readonly mode: 'online' | 'offline';
+  readonly reason: string;
+}
+
+export class PostgresSchemaRollbackCompatibilityPolicy {
+  static assertOnlineCompatible(plan: PostgresSchemaRollbackPlan): void {
+    const offlineStep = plan.steps.find((step) => step.rollbackCompatibility.mode === 'offline');
+    if (offlineStep !== undefined) {
+      throw new Error(
+        `SCHEMA_ROLLBACK_REQUIRES_OFFLINE_COMPATIBILITY: ${offlineStep.version} - ${offlineStep.rollbackCompatibility.reason}`
+      );
+    }
+  }
+}
+
 function sq(schema: string): string {
   return quoteIdentifier(schema);
+}
+
+function rollbackCompatibilityFor(version: string): PostgresSchemaRollbackCompatibility {
+  switch (version) {
+    case 'core_001_initial_tables':
+      return {
+        mode: 'offline',
+        reason: 'Rollback drops canonical run metadata, event log, and outbox tables.',
+      };
+    case 'core_002_run_snapshots_table':
+      return {
+        mode: 'offline',
+        reason: 'Rollback drops the canonical run_snapshots read model table.',
+      };
+    case 'core_003_outbox_dead_letter_table':
+      return { mode: 'offline', reason: 'Rollback drops the outbox dead-letter storage table.' };
+    case 'core_004_lineage_tables':
+      return { mode: 'offline', reason: 'Rollback drops lineage outbox and dead-letter tables.' };
+    case 'core_005_archive_catalog_tables':
+      return { mode: 'offline', reason: 'Rollback drops archive catalog tables.' };
+    case 'core_006_archive_lease_restore_tables':
+      return { mode: 'offline', reason: 'Rollback drops archive lease and restore-log tables.' };
+    case 'core_007_compat_columns':
+      return {
+        mode: 'online',
+        reason: 'Rollback removes only migration bookkeeping and preserves canonical columns.',
+      };
+    case 'core_008_compat_cleanup':
+      return {
+        mode: 'offline',
+        reason:
+          'Rollback recreates historical constraints and indexes that may conflict with live writes.',
+      };
+    case 'core_009_core_indexes':
+      return {
+        mode: 'online',
+        reason: 'Rollback drops operational indexes while preserving row shape and data semantics.',
+      };
+    case 'core_010_purge_indexes':
+      return {
+        mode: 'online',
+        reason: 'Rollback drops delivery-buffer purge indexes without changing row shape.',
+      };
+    case 'core_011_retry_lineage_columns':
+      return {
+        mode: 'offline',
+        reason:
+          'Rollback drops retry lineage columns from run_metadata that active clients may still read or write.',
+      };
+    case 'core_012_lineage_outbox_retry_schedule':
+      return {
+        mode: 'offline',
+        reason:
+          'Rollback rebuilds lineage outbox pending indexes with blocking DDL inside the rollback transaction.',
+      };
+    case 'core_013_lineage_outbox_claim_timeout':
+      return {
+        mode: 'offline',
+        reason:
+          'Rollback rebuilds lineage outbox pending indexes with blocking DDL inside the rollback transaction.',
+      };
+    case 'core_014_lineage_tenant_scope_hardening':
+      return {
+        mode: 'online',
+        reason:
+          'Rollback drops tenant-oriented lineage indexes while preserving additive tenant columns.',
+      };
+    case 'core_015_run_event_heads':
+      return {
+        mode: 'offline',
+        reason: 'Rollback drops run_event_heads, which is a live projection table.',
+      };
+    case 'core_016_snapshot_work_queue':
+      return {
+        mode: 'offline',
+        reason: 'Rollback drops snapshot_work_queue, which coordinates live snapshot rebuild work.',
+      };
+    case 'core_017_tenant_rls_baseline':
+      return {
+        mode: 'offline',
+        reason: 'Rollback disables canonical tenant RLS policy and weakens isolation semantics.',
+      };
+    case 'core_018_service_access_owner_rls_hardening':
+      return {
+        mode: 'online',
+        reason:
+          'Rollback reapplies current tenant isolation policy and intentionally avoids downgrade.',
+      };
+    case 'core_019_table_scoped_service_owner_rls':
+      return {
+        mode: 'online',
+        reason:
+          'Rollback reapplies current table-scoped tenant isolation policy without downgrade.',
+      };
+    case 'core_020_run_events_tenant_run_idx':
+      return {
+        mode: 'online',
+        reason:
+          'Rollback drops an index for tenant-scoped run sequence lookups without changing rows.',
+      };
+    case 'core_021_run_events_hash_partitioning':
+      return {
+        mode: 'offline',
+        reason:
+          'Rollback rewrites the authoritative run_events table shape and requires quiesced writes.',
+      };
+    case 'core_022_tenant_mode_rls_hardening':
+      return {
+        mode: 'online',
+        reason: 'Rollback reapplies current tenant-mode tenant isolation policy without downgrade.',
+      };
+    default:
+      throw new Error(`UNKNOWN_MIGRATION_VERSION: ${version}`);
+  }
+}
+
+function runEventsColumnList(): string {
+  return RUN_EVENTS_COLUMNS.join(', ');
+}
+
+function runEventsRelation(schema: string, tableName = 'run_events'): string {
+  return `${sq(schema)}.${tableName}`;
+}
+
+function createRunEventsTableSql(
+  schema: string,
+  tableName = 'run_events',
+  options: { readonly partitioned: boolean; readonly includeConstraints: boolean }
+): string {
+  const constraints = options.includeConstraints
+    ? `,
+          PRIMARY KEY (run_id, run_seq),
+          UNIQUE (run_id, idempotency_key)`
+    : '';
+
+  return `
+        CREATE TABLE IF NOT EXISTS ${runEventsRelation(schema, tableName)} (
+          run_id TEXT NOT NULL,
+          run_seq INTEGER NOT NULL,
+          event_type TEXT NOT NULL,
+          emitted_at TIMESTAMPTZ NOT NULL,
+          tenant_id TEXT NOT NULL,
+          project_id TEXT NOT NULL,
+          environment_id TEXT NOT NULL,
+          engine_attempt_id INTEGER NOT NULL,
+          logical_attempt_id INTEGER NOT NULL,
+          plan_id TEXT,
+          plan_version TEXT,
+          persisted_at TIMESTAMPTZ,
+          step_id TEXT,
+          idempotency_key TEXT NOT NULL,
+          payload JSONB NOT NULL${constraints}
+        )${options.partitioned ? ' PARTITION BY HASH (run_id)' : ''}
+      `;
+}
+
+function addRunEventsCanonicalConstraintsSql(schema: string): readonly string[] {
+  return [
+    `
+        ALTER TABLE ${runEventsRelation(schema)}
+        ADD CONSTRAINT run_events_pkey PRIMARY KEY (run_id, run_seq)
+      `,
+    `
+        ALTER TABLE ${runEventsRelation(schema)}
+        ADD CONSTRAINT run_events_run_id_idempotency_key_key UNIQUE (run_id, idempotency_key)
+      `,
+  ];
+}
+
+function createRunEventsHashPartitionSql(schema: string, partitionIndex: number): string {
+  return `
+        CREATE TABLE IF NOT EXISTS ${runEventsRelation(schema, runEventsHashPartitionName(partitionIndex))}
+        PARTITION OF ${runEventsRelation(schema)}
+        FOR VALUES WITH (MODULUS ${RUN_EVENTS_HASH_PARTITION_COUNT}, REMAINDER ${partitionIndex})
+      `;
+}
+
+function copyRunEventsSql(schema: string, sourceTable: string): string {
+  const columns = runEventsColumnList();
+  return `
+        INSERT INTO ${runEventsRelation(schema)} (${columns})
+        SELECT ${columns}
+        FROM ${runEventsRelation(schema, sourceTable)}
+      `;
+}
+
+function createRunEventsTenantRunIndexSql(schema: string): string {
+  return `
+        CREATE INDEX IF NOT EXISTS run_events_tenant_run_id_idx
+        ON ${runEventsRelation(schema)} (tenant_id, run_id)
+      `;
+}
+
+function disableRunEventsTenantIsolationSql(schema: string, tableName: string): readonly string[] {
+  const relation = runEventsRelation(schema, tableName);
+  return [
+    `ALTER TABLE ${relation} NO FORCE ROW LEVEL SECURITY`,
+    `ALTER TABLE ${relation} DISABLE ROW LEVEL SECURITY`,
+  ];
+}
+
+async function isRunEventsPartitioned(client: PoolClient, schema: string): Promise<boolean> {
+  const result = await client.query<{ is_partitioned: boolean }>(
+    `
+      SELECT EXISTS (
+        SELECT 1
+        FROM pg_class c
+        INNER JOIN pg_namespace n ON n.oid = c.relnamespace
+        INNER JOIN pg_partitioned_table p ON p.partrelid = c.oid
+        WHERE n.nspname = $1
+          AND c.relname = 'run_events'
+      ) AS is_partitioned
+    `,
+    [schema]
+  );
+  return result.rows[0]?.is_partitioned === true;
+}
+
+async function ensureRunEventsHashPartitions(client: PoolClient, schema: string): Promise<void> {
+  for (let index = 0; index < RUN_EVENTS_HASH_PARTITION_COUNT; index += 1) {
+    await client.query(createRunEventsHashPartitionSql(schema, index));
+  }
+}
+
+async function reapplyRunEventsTenantIsolation(client: PoolClient, schema: string): Promise<void> {
+  for (const table of RUN_EVENTS_TENANT_ISOLATION_TABLES) {
+    for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+      await client.query(statement);
+    }
+  }
+}
+
+async function disableRunEventsTenantIsolation(
+  client: PoolClient,
+  schema: string,
+  tableName: string
+): Promise<void> {
+  for (const statement of disableRunEventsTenantIsolationSql(schema, tableName)) {
+    await client.query(statement);
+  }
+}
+
+async function ensureRunEventsPartitionedShape(client: PoolClient, schema: string): Promise<void> {
+  await ensureRunEventsHashPartitions(client, schema);
+  await client.query(createRunEventsTenantRunIndexSql(schema));
+  await reapplyRunEventsTenantIsolation(client, schema);
+}
+
+async function convertRunEventsHeapToHashPartitions(
+  client: PoolClient,
+  schema: string
+): Promise<void> {
+  await client.query(
+    `ALTER TABLE ${runEventsRelation(schema)} RENAME TO ${quoteIdentifier(RUN_EVENTS_LEGACY_TABLE)}`
+  );
+  await disableRunEventsTenantIsolation(client, schema, RUN_EVENTS_LEGACY_TABLE);
+  await client.query(
+    createRunEventsTableSql(schema, 'run_events', { partitioned: true, includeConstraints: false })
+  );
+  await ensureRunEventsHashPartitions(client, schema);
+  await client.query(copyRunEventsSql(schema, RUN_EVENTS_LEGACY_TABLE));
+  await client.query(`DROP TABLE ${runEventsRelation(schema, RUN_EVENTS_LEGACY_TABLE)}`);
+  for (const statement of addRunEventsCanonicalConstraintsSql(schema)) {
+    await client.query(statement);
+  }
+  await client.query(createRunEventsTenantRunIndexSql(schema));
+  await reapplyRunEventsTenantIsolation(client, schema);
+}
+
+async function rollbackRunEventsHashPartitionsToHeap(
+  client: PoolClient,
+  schema: string
+): Promise<void> {
+  if (!(await isRunEventsPartitioned(client, schema))) {
+    return;
+  }
+
+  await client.query(
+    `ALTER TABLE ${runEventsRelation(schema)} RENAME TO ${quoteIdentifier(RUN_EVENTS_ROLLBACK_TABLE)}`
+  );
+  await disableRunEventsTenantIsolation(client, schema, RUN_EVENTS_ROLLBACK_TABLE);
+  await client.query(
+    createRunEventsTableSql(schema, 'run_events', { partitioned: false, includeConstraints: false })
+  );
+  await client.query(copyRunEventsSql(schema, RUN_EVENTS_ROLLBACK_TABLE));
+  await client.query(`DROP TABLE ${runEventsRelation(schema, RUN_EVENTS_ROLLBACK_TABLE)} CASCADE`);
+  for (const statement of addRunEventsCanonicalConstraintsSql(schema)) {
+    await client.query(statement);
+  }
+  await client.query(createRunEventsTenantRunIndexSql(schema));
+  await reapplyRunEventsTenantIsolation(client, schema);
 }
 
 const MIGRATION_STEPS: readonly MigrationStep[] = [
@@ -101,27 +432,13 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
           created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
       `);
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS ${sq(schema)}.run_events (
-          run_id TEXT NOT NULL,
-          run_seq INTEGER NOT NULL,
-          event_type TEXT NOT NULL,
-          emitted_at TIMESTAMPTZ NOT NULL,
-          tenant_id TEXT NOT NULL,
-          project_id TEXT NOT NULL,
-          environment_id TEXT NOT NULL,
-          engine_attempt_id INTEGER NOT NULL,
-          logical_attempt_id INTEGER NOT NULL,
-          plan_id TEXT,
-          plan_version TEXT,
-          persisted_at TIMESTAMPTZ,
-          step_id TEXT,
-          idempotency_key TEXT NOT NULL,
-          payload JSONB NOT NULL,
-          PRIMARY KEY (run_id, run_seq),
-          UNIQUE (run_id, idempotency_key)
-        )
-      `);
+      await client.query(
+        createRunEventsTableSql(schema, 'run_events', {
+          partitioned: true,
+          includeConstraints: true,
+        })
+      );
+      await ensureRunEventsHashPartitions(client, schema);
       await client.query(`
         CREATE TABLE IF NOT EXISTS ${sq(schema)}.outbox (
           id TEXT PRIMARY KEY,
@@ -996,16 +1313,52 @@ const MIGRATION_STEPS: readonly MigrationStep[] = [
     version: 'core_020_run_events_tenant_run_idx',
     description: 'Add tenant-leading run_events index for tenant-scoped run sequence lookups',
     run: async (client, schema) => {
-      await client.query(`
-        CREATE INDEX IF NOT EXISTS run_events_tenant_run_id_idx
-        ON ${sq(schema)}.run_events (tenant_id, run_id)
-      `);
+      await client.query(createRunEventsTenantRunIndexSql(schema));
     },
     rollbackDescription: 'Drop tenant-leading run_events index',
     rollback: async (client, schema) => {
       await client.query(
         `DROP INDEX IF EXISTS ${sq(schema)}.${quoteIdentifier('run_events_tenant_run_id_idx')}`
       );
+    },
+  },
+  {
+    version: 'core_021_run_events_hash_partitioning',
+    description:
+      'Partition run_events by run_id hash while preserving run sequence and idempotency uniqueness',
+    run: async (client, schema) => {
+      if (await isRunEventsPartitioned(client, schema)) {
+        await ensureRunEventsPartitionedShape(client, schema);
+        return;
+      }
+
+      await convertRunEventsHeapToHashPartitions(client, schema);
+    },
+    rollbackDescription:
+      'Convert run_events back to a heap table while preserving rows, constraints, indexes, and RLS',
+    rollback: async (client, schema) => {
+      await rollbackRunEventsHashPartitionsToHeap(client, schema);
+    },
+  },
+  {
+    version: 'core_022_tenant_mode_rls_hardening',
+    description:
+      'Reapply current tenant isolation policy requiring explicit tenant access mode; idempotent hardening step without historical policy snapshot semantics',
+    run: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
+    },
+    rollbackDescription:
+      'Reapply current tenant-mode tenant isolation policy during rollback planning; tenant access-mode hardening is intentionally not downgraded',
+    rollback: async (client, schema) => {
+      for (const table of CORE_TENANT_ISOLATION_TABLES) {
+        for (const statement of buildTenantIsolationPolicySql(schema, table)) {
+          await client.query(statement);
+        }
+      }
     },
   },
 ];
@@ -1160,6 +1513,7 @@ export class PostgresSchemaManager {
         version: step.version,
         description: step.description,
         rollbackDescription: step.rollbackDescription,
+        rollbackCompatibility: rollbackCompatibilityFor(step.version),
       }));
 
     return {

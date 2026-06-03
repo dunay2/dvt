@@ -15,16 +15,32 @@ import {
 } from '@temporalio/workflow';
 
 import type { WorkflowActivitiesPort, WorkflowStep } from './runPlanWorkflow.types.js';
+import type { WorkflowStepActivityRouting } from './runPlanWorkflow.types.js';
 import { resolveStepActivityRetryPolicy } from './workflowArtifactHelpers.js';
 
 export function createStepActivities(
-  step: WorkflowStep
+  step: WorkflowStep,
+  stepActivityRouting?: WorkflowStepActivityRouting
 ): Pick<WorkflowActivitiesPort, 'executeStep'> {
   return proxyActivities<Pick<WorkflowActivitiesPort, 'executeStep'>>({
     startToCloseTimeout: '30m',
     cancellationType: ActivityCancellationType.TRY_CANCEL,
     retry: resolveStepActivityRetryPolicy(step),
+    ...resolveStepActivityTaskQueue(step, stepActivityRouting),
   });
+}
+
+function resolveStepActivityTaskQueue(
+  step: WorkflowStep,
+  stepActivityRouting: WorkflowStepActivityRouting | undefined
+): { taskQueue?: string } {
+  const stepKind = step.kind;
+  if (typeof stepKind !== 'string' || stepKind.length === 0) {
+    return {};
+  }
+
+  const route = stepActivityRouting?.routesByStepKind[stepKind];
+  return route === undefined ? {} : { taskQueue: route.taskQueue };
 }
 
 export const eventActivities = proxyActivities<Pick<WorkflowActivitiesPort, 'emitEvent'>>({

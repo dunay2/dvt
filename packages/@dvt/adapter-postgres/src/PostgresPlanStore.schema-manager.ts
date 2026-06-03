@@ -18,6 +18,7 @@ import {
   sqlEnsureStoredPlansCompatibilityFingerprintColumn,
   sqlEnsurePlanRecordLineageConstraints,
   sqlEnsurePlanRecordSupersedesConstraints,
+  sqlPruneLegacyExecutionPlanSchemaRows,
 } from './PostgresPlanStore.sql.js';
 import { PostgresPlanStoreTxRunner } from './PostgresPlanStore.tx.js';
 import { quoteIdentifier } from './sqlUtils.js';
@@ -39,6 +40,7 @@ export class PostgresPlanStoreSchemaManager {
       await client.query(sqlCreatePlanRecordsTable(this.schema));
       await client.query(sqlCreatePlanExecutabilityRecordsTable(this.schema));
       await client.query(sqlCreatePlanAdmissionLinksTable(this.schema));
+      await client.query(sqlPruneLegacyExecutionPlanSchemaRows(this.schema));
       await client.query(sqlAssertStoredPlansCanonicalOwnership(this.schema));
       await client.query(sqlBackfillPlanRecordsFromStoredPlans(this.schema));
       await client.query(sqlEnsurePlanRecordLineageConstraints(this.schema));

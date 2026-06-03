@@ -1,6 +1,8 @@
 /** Owned concern: render warehouse source import workflow over the source import port. */
+import { useMemo } from 'react';
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 
+import { getSourceImportOptions } from '../plugins/registry';
 import { useWarehouseSourceImportPort } from '../services/AppServicesContext';
 import { Button } from './ui/button';
 import {
@@ -18,11 +20,21 @@ import { useSourceImportWizard } from './sourceImportWizard/useSourceImportWizar
 import { WizardProgress } from './sourceImportWizard/WizardProgress';
 import { WizardStepContent } from './sourceImportWizard/WizardStepContent';
 
-export default function SourceImportWizard({ open, onClose, onComplete }: SourceImportWizardProps) {
+export default function SourceImportWizard({
+  open,
+  onClose,
+  onComplete,
+  sourceImportOptions: declaredSourceImportOptions,
+}: SourceImportWizardProps) {
   const warehouseSourceImport = useWarehouseSourceImportPort();
+  const sourceImportOptions = useMemo(
+    () => declaredSourceImportOptions ?? getSourceImportOptions(),
+    [declaredSourceImportOptions]
+  );
   const controller = useSourceImportWizard({
     open,
     warehouseSourceImport,
+    sourceImportOptions,
     onComplete,
     onClose,
   });

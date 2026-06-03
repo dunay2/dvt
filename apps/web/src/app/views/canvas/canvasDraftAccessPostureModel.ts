@@ -373,7 +373,11 @@ function resolveCanvasDraftRecoveryBannerDataSlot(posture: CanvasDraftAccessPost
 export function toCanvasDraftRecoveryBannerViewState(
   posture: CanvasDraftAccessPosture
 ): CanvasDraftRecoveryBannerState | null {
-  if (posture.recoveryAction === 'none' || posture.recoveryAction === 'wait') {
+  if (
+    posture.recoveryAction === 'none' ||
+    posture.recoveryAction === 'wait' ||
+    posture.recoveryAction === 'inspect_only'
+  ) {
     return null;
   }
 
@@ -385,8 +389,7 @@ export function toCanvasDraftRecoveryBannerViewState(
     title: posture.title,
     message: posture.message,
     actionLabel: resolveCanvasDraftRecoveryActionLabel(posture),
-    actionEnabled:
-      posture.recoveryAction !== 'inspect_only' && posture.recoveryAction !== 'escalate_format',
+    actionEnabled: posture.recoveryAction !== 'escalate_format',
     recoveryAction: posture.recoveryAction,
   };
 }
@@ -404,6 +407,15 @@ export function applyCanvasDraftPostureToRuntimePolicyInput(args: {
       canPlan: false,
       canRun: false,
       canReloadLatestDraft: args.posture.showReloadAction && args.canReloadLatestDraft,
+    };
+  }
+
+  if (args.posture.kind === 'saving') {
+    return {
+      canMutateGraph: args.canMutateGraph,
+      canPlan: false,
+      canRun: false,
+      canReloadLatestDraft: args.canReloadLatestDraft,
     };
   }
 

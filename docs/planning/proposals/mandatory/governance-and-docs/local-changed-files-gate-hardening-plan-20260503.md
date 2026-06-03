@@ -38,7 +38,10 @@ allowedImplementationSurfaces:
   - scripts/lint-markdown-changed.cjs
   - scripts/format-markdown-changed.cjs
   - scripts/docs-workboard-check-changed.cjs
-  - scripts/fix-changed.cjs
+  - scripts/fix-changed.cjs # Task: GOV-PROP-DISP-1
+  - scripts/verify-changed.cjs
+  - scripts/verify-changed.test.cjs
+  - scripts/README.md
   - scripts/qa-artifact-check.cjs
   - scripts/validate-arc-evidence-frontmatter.cjs
   - scripts/check-markdown-locations.cjs
@@ -52,6 +55,7 @@ allowedImplementationSurfaces:
   - buzon/20260503-branch-fowler-hard-qa-review.md
   - docs/architecture/components/index.md
   - docs/architecture/components/ci-governance/**
+  - docs/guides/pr-preflight-and-ci-triage.md
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/governance-and-docs/local-changed-files-gate-hardening-plan-20260503.md
   - docs/planning/proposals/portfolio-map-20260403.md
@@ -74,6 +78,12 @@ commandQueryRails:
   - name: SelectPrepushTypecheckScope
     type: query
     dddOwner: PrepushTypecheckScope
+  - name: BuildChangedSliceVerificationPlan
+    type: query
+    dddOwner: ChangedSliceVerificationPlan
+  - name: RunChangedSliceVerification
+    type: command
+    dddOwner: ChangedSliceVerificationGate
 domainObjects:
   - name: LocalChangedFileSet
     type: read-model
@@ -84,6 +94,12 @@ domainObjects:
   - name: PrepushTypecheckScope
     type: read-model
     owner: CI governance
+  - name: ChangedSliceVerificationPlan
+    type: read-model
+    owner: CI governance
+  - name: ChangedSliceVerificationGate
+    type: policy
+    owner: CI governance
 fowlerSignals:
   - Duplicate change-detection logic
   - Hidden local state
@@ -91,10 +107,13 @@ fowlerSignals:
   - Primitive git command scattering
 architectureGuards:
   - node --test scripts/git-local-changes.test.cjs scripts/check-governance-changed-files.test.cjs scripts/check-feature-mechanization.test.cjs
+  - node --test scripts/verify-changed.test.cjs
 cypressFlows:
   - not-applicable: CI governance script gate has no browser workflow.
 completionGate:
   - node --test scripts/git-local-changes.test.cjs scripts/check-governance-changed-files.test.cjs scripts/check-feature-mechanization.test.cjs
+  - node --test scripts/verify-changed.test.cjs
+  - pnpm verify:changed -- --dry-run
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
 redGreenCycles:
@@ -108,7 +127,7 @@ redGreenCycles:
       - scripts/lint-markdown-changed.cjs
       - scripts/format-markdown-changed.cjs
       - scripts/docs-workboard-check-changed.cjs
-      - scripts/fix-changed.cjs
+      - scripts/fix-changed.cjs # Task: GOV-PROP-DISP-1
       - scripts/qa-artifact-check.cjs
       - scripts/validate-arc-evidence-frontmatter.cjs
       - scripts/check-markdown-locations.cjs
@@ -122,6 +141,16 @@ redGreenCycles:
       - scripts/check-feature-mechanization.cjs
       - scripts/check-feature-mechanization.test.cjs
     greenTest: node --test scripts/check-feature-mechanization.test.cjs
+  - id: changed-slice-fast-verification-plan
+    redTest: node --test scripts/verify-changed.test.cjs
+    expectedFailure: verify:changed executes a fixed command list at import time and cannot prove planning DB or developer-workflow scope selection.
+    patchSurfaces:
+      - scripts/verify-changed.cjs
+      - scripts/verify-changed.test.cjs
+      - scripts/README.md
+      - docs/architecture/components/ci-governance/local-changed-files-gate-component.md
+      - docs/planning/proposals/mandatory/governance-and-docs/local-changed-files-gate-hardening-plan-20260503.md
+    greenTest: node --test scripts/verify-changed.test.cjs
 symbolDefaults: &ciSymbolDefaults
   dddOwner: LocalChangedFileSet
   cqRails:
@@ -229,6 +258,78 @@ symbols:
   - <<: *ciSymbolDefaults
     name: changedFiles
     path: scripts/fix-changed.cjs
+  - &verifyChangedSymbolDefaults
+    name: BASE_STEPS
+    path: scripts/verify-changed.cjs
+    dddOwner: ChangedSliceVerificationGate
+    cqRails:
+      - ListLocalChangedFiles
+      - ValidateChangedFiles
+      - SelectPrepushTypecheckScope
+      - BuildChangedSliceVerificationPlan
+      - RunChangedSliceVerification
+    fowlerSignals:
+      - Duplicate change-detection logic
+      - Hidden local state
+      - False-positive readiness
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    cypressCoverage: "not-applicable: CI governance script gate has no browser workflow."
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: PLANNING_DB_STEPS
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: DEVELOPER_WORKFLOW_SELF_TEST_STEPS
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: path
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: repoRoot
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: normalizeChangedFiles
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: matchesAny
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: hasPlanningDbChange
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: hasDeveloperWorkflowVerifierChange
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: pushStepOnce
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: buildVerifyChangedPlan
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: commandLabel
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: executeVerifyChangedPlan
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: parseArgs
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: printPlan
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: main
+    path: scripts/verify-changed.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: test
+    path: scripts/verify-changed.test.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: assert
+    path: scripts/verify-changed.test.cjs
+  - <<: *verifyChangedSymbolDefaults
+    name: labelsFor
+    path: scripts/verify-changed.test.cjs
   - <<: *ciSymbolDefaults
     name: repoRoot
     path: scripts/qa-artifact-check.cjs
@@ -277,6 +378,15 @@ testEvidence:
       - node --test scripts/check-feature-mechanization.test.cjs
     negativeTests:
       - Untracked implementation files must be validated as added content.
+  - name: changed-slice fast verifier plan
+    red: node --test scripts/verify-changed.test.cjs
+    green: node --test scripts/verify-changed.test.cjs
+    architectureGuard: node --test scripts/verify-changed.test.cjs
+    unitTests:
+      - node --test scripts/verify-changed.test.cjs
+    negativeTests:
+      - Planning DB changes must add planning DB validation. # Task: GOV-PROP-DISP-1
+      - Developer workflow verifier changes must run their own regression test.
 ```
 
 ## Root Cause
@@ -311,4 +421,4 @@ for PR CI to discover omitted files.
 - A clean branch with no worktree changes may skip changed-file-only gates.
 - A dirty worktree must not skip changed-file-only gates.
 - Untracked implementation files must be visible to feature mechanization.
-- The fix must not relax lint, typecheck, ARC, docs, or governance rules.
+- [Task: GOV-PROP-DISP-1] The fix must not relax lint, typecheck, ARC, docs, or governance rules.

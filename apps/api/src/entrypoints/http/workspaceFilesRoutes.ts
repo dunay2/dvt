@@ -1,5 +1,5 @@
 /**
- * Owned concern: adapt protected workspace-file query rails to HTTP.
+ * Owned concern: adapt protected workspace-file command/query rails to HTTP.
  */
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
@@ -15,6 +15,7 @@ import {
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { GetWorkspaceFileContentUseCase } from '../../application/services/getWorkspaceFileContentUseCase.js';
 import type { ListWorkspaceFilesUseCase } from '../../application/services/listWorkspaceFilesUseCase.js';
+import type { SaveWorkspaceFileContentUseCase } from '../../application/services/saveWorkspaceFileContentUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
@@ -34,11 +35,20 @@ type WorkspaceFilePathParams = {
   readonly path: string;
 };
 
+type SaveWorkspaceFileContentBody = {
+  readonly content?: unknown;
+};
+
+type WorkspaceFilesAction =
+  | typeof AUTHORIZATION_ACTION.workspaceFilesView
+  | typeof AUTHORIZATION_ACTION.workspaceFilesSave;
+
 type WorkspaceFilesRouteDeps = {
   readonly authenticator: IAuthenticator;
   readonly authorizer: AuthorizeCommandScopeService;
   readonly listUseCase: ListWorkspaceFilesUseCase;
   readonly getUseCase: GetWorkspaceFileContentUseCase;
+  readonly saveUseCase: SaveWorkspaceFileContentUseCase;
   readonly rateLimit: { readonly max: number; readonly timeWindow: number };
 };
 
@@ -85,12 +95,50 @@ export function registerWorkspaceFilesRoutes(
       }
     }
   );
+
+  app.post<{
+    Params: WorkspaceFilePathParams;
+    Querystring: WorkspaceFilesQuery;
+    Body: SaveWorkspaceFileContentBody;
+  }>(
+    RUNTIME_ROUTE_PATH.workspaceFileContent,
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps, {
+        action: AUTHORIZATION_ACTION.workspaceFilesSave,
+      });
+      if (!authorized) return;
+
+      const content = parseSaveWorkspaceFileContentBody(request.body);
+      if (!content.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(content.issue));
+        return;
+      }
+
+      try {
+        reply.code(200).send(await deps.saveUseCase.execute(request.params.path, content.value));
+      } catch (error) {
+        if (error instanceof InvalidWorkspacePathError) {
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.parse.issue(
+              badRequestIssue(HTTP_ERROR_REASON.invalidWorkspacePath, { target: 'path' })
+            )
+          );
+          return;
+        }
+
+        throw error;
+      }
+    }
+  );
 }
 
 async function authorizeWorkspaceFilesRequest(
   request: FastifyRequest<{ Querystring: WorkspaceFilesQuery }>,
   reply: FastifyReply,
-  deps: Pick<WorkspaceFilesRouteDeps, 'authenticator' | 'authorizer'>
+  deps: Pick<WorkspaceFilesRouteDeps, 'authenticator' | 'authorizer'>,
+  options: { readonly action?: WorkspaceFilesAction } = {}
 ): Promise<boolean> {
   const parsed = parseRequestedScope(request.query);
   if (!parsed.ok) {
@@ -105,7 +153,7 @@ async function authorizeWorkspaceFilesRequest(
     requestId: request.id,
     requestedScope: {
       ...parsed.value,
-      action: AUTHORIZATION_ACTION.workspaceFilesView,
+      action: options.action ?? AUTHORIZATION_ACTION.workspaceFilesView,
     },
   });
   if (!auth.ok) {
@@ -114,6 +162,19 @@ async function authorizeWorkspaceFilesRequest(
   }
 
   return true;
+}
+
+function parseSaveWorkspaceFileContentBody(
+  body: SaveWorkspaceFileContentBody | undefined
+): RouteParseResult<string> {
+  if (typeof body?.content !== 'string') {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.invalidWorkspacePath, { target: 'content' }),
+    };
+  }
+
+  return { ok: true, value: body.content };
 }
 
 function parseRequestedScope(

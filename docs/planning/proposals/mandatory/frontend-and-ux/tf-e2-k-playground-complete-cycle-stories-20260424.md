@@ -23,7 +23,7 @@ cycles above those seams.
 
 Today the repo proves parts of that route in isolation:
 
-- create-canvas command dispatch
+- [Task: E-PROP-DISP-1] create-canvas command dispatch
 - typed empty-canvas copy and catalog
 - first-node command dispatch
 - selected-closure proof in later execution seams
@@ -70,7 +70,7 @@ single state or single component. It is the operator-complete cycle.
 
 The route can already show:
 
-- host create-canvas posture
+- [Task: E-PROP-DISP-1] host create-canvas posture
 - typed empty-canvas posture
 - first-node catalog
 
@@ -93,7 +93,7 @@ That leaves two problems:
 - `Workspace` remains the persisted host boundary
 - Canvas remains a document/tab, not route authority
 - plugin-owned kinds own typed empty-state copy and node catalog
-- host-owned shell owns create-canvas, tab restoration, and blocked/read-only
+- [Task: E-PROP-DISP-1] host-owned shell owns create-canvas, tab restoration, and blocked/read-only
   posture
 - no fake multi-canvas persistence may be implied
 - no local-only semantic success may bypass the protected draft boundary

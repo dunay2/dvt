@@ -37,9 +37,7 @@ export function describeStartRunRuntimeCompositionCases(): void {
       expect(apiDocExists(START_RUN_RUNTIME_DOC)).toBe(true);
 
       const docText = readApiDoc(START_RUN_RUNTIME_DOC);
-      expect(
-        collectMissingTextSnippets(docText, REQUIRED_COMPONENT_GUIDE_SECTIONS)
-      ).toEqual([]);
+      expect(collectMissingTextSnippets(docText, REQUIRED_COMPONENT_GUIDE_SECTIONS)).toEqual([]);
       expect(hasMermaidDiagram(docText)).toBe(true);
 
       const startRunRuntimeSource = readModuleSource(START_RUN_RUNTIME_MODULE);
@@ -74,6 +72,7 @@ export function describeStartRunRuntimeCompositionCases(): void {
         'StartRunAuthorizedFacade',
         'BackpressureAwareStartRunUseCase',
         'PlannerBackedStartRunUseCase',
+        'DbtRunExecutionContextBindingUseCase',
         'EngineStartRunUseCase',
         'StoredPlanExecutabilityValidator',
       ]) {
@@ -106,6 +105,7 @@ export function describeStartRunRuntimeCompositionCases(): void {
         'StartRunAuthorizedFacade',
         'BackpressureAwareStartRunUseCase',
         'PlannerBackedStartRunUseCase',
+        'DbtRunExecutionContextBindingUseCase',
         'EngineStartRunUseCase',
         'StoredPlanExecutabilityValidator',
       ]) {

@@ -70,6 +70,8 @@ It does **not** own:
   never silently ignored or normalized
 - `startRunRouteCommandBuilder.ts` rejects caller-authored identity before it
   calls the injected run-id generator
+- `startRunRouteCommandBuilder.ts` rejects a generated id that does not match
+  `run_<UUIDv7>` before delegating to the authenticated facade
 - `startRunRoute.ts` never calls `sendHttpResponse(...)` directly; it always
   emits via `httpErrorTranslation.respond(...)`
 - `startRunRoute.ts` depends on `parseStartRunBody(...)`, not on lower-level
@@ -112,7 +114,8 @@ flowchart TB
   Builder --> Reject["reject client runId"]
   Builder --> Generator["startRunIdentity.ts"]
   Generator --> RunId["run_<UUIDv7>"]
-  RunId --> Command["StartRunCommand.runId"]
+  RunId --> ValidateRunId["validate generated run_<UUIDv7>"]
+  ValidateRunId --> Command["StartRunCommand.runId"]
   Command --> Facade["StartRunAuthorizedFacade"]
   Facade --> Runtime["runtime/application engine path"]
 
@@ -139,6 +142,7 @@ sequenceDiagram
     Route->>Errors: respond(...)
   else parse success
     Parser->>Identity: generate platform-owned runId
+    Parser->>Parser: reject malformed generated id
     Parser-->>Route: command + requestedScope
     Route->>Facade: execute(token, requestId, command, requestedScope)
     Facade-->>Route: facade result or engine error

@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
-import React from 'react';
+import { fireEvent } from '@testing-library/dom';
+import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { IWorkspaceFilesQueryPort } from '../ports/workspace';
@@ -22,8 +23,23 @@ vi.mock('./artifacts/useLocalManifestImport', async () => {
 });
 
 vi.mock('../components/monaco/MonacoCodeViewer', () => ({
-  MonacoCodeViewer: ({ path, value }: { path?: string; value: string }) => (
-    <div data-path={path} data-testid="monaco-code-viewer">
+  MonacoCodeViewer: ({
+    ariaLabel,
+    language,
+    path,
+    value,
+  }: {
+    ariaLabel: string;
+    language: string;
+    path?: string;
+    value: string;
+  }) => (
+    <div
+      data-aria-label={ariaLabel}
+      data-language={language}
+      data-path={path}
+      data-testid="monaco-code-viewer"
+    >
       {value}
     </div>
   ),
@@ -118,8 +134,177 @@ describe('ArtifactsView', () => {
     expect(mounted.container.textContent).toContain('run_results.json');
     expect(mounted.container.textContent).toContain('catalog.json');
     expect(mounted.container.querySelector('[data-testid="monaco-code-viewer"]')).not.toBeNull();
-    expect(mounted.container.textContent).toContain('target/manifest.json');
+    expect(mounted.container.textContent).not.toContain('View Full File');
+    const viewer = mounted.container.querySelector('[data-testid="monaco-code-viewer"]');
+    expect(viewer?.getAttribute('data-language')).toBe('json');
+    expect(viewer?.getAttribute('data-path')).toBe('target/manifest.json');
+    expect(viewer?.getAttribute('data-aria-label')).toBe('Preview: manifest.json');
+    expect(mounted.container.textContent).toContain('workspace');
     expect(mounted.container.textContent).toContain('About dbt Artifacts');
+  });
+
+  it('renders workflow project artifacts from the workspace in preview tabs', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort({
+            listFiles: async () => [
+              {
+                path: 'pipelines',
+                name: 'pipelines',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'pipelines/sales_pipeline.yaml',
+                    name: 'sales_pipeline.yaml',
+                    kind: 'file',
+                  },
+                ],
+              },
+              {
+                path: 'models',
+                name: 'models',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'models/analytics',
+                    name: 'analytics',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: 'models/analytics/model_orders.sql',
+                        name: 'model_orders.sql',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            getFileContent: async (path) => ({
+              path,
+              name: path.split('/').at(-1) ?? path,
+              language: path.endsWith('.sql') ? 'sql' : 'yaml',
+              content: path.endsWith('.sql')
+                ? 'select * from raw.orders'
+                : 'executionTarget: warehouse\nentrypoint: models/analytics/model_orders.sql',
+              lastModified: '2026-04-06T00:00:00Z',
+            }),
+          }),
+        }}
+      >
+        <ArtifactsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('pipelines/sales_pipeline.yaml') === true,
+      { description: 'workflow artifact previews render' }
+    );
+
+    expect(mounted.container.textContent).toContain('pipelines/sales_pipeline.yaml');
+    expect(mounted.container.textContent).toContain('models/analytics/model_orders.sql');
+    expect(mounted.container.textContent).toContain('executionTarget');
+    const viewer = mounted.container.querySelector('[data-testid="monaco-code-viewer"]');
+    expect(viewer?.getAttribute('data-language')).toBe('yaml');
+    expect(viewer?.getAttribute('data-path')).toBe('pipelines/sales_pipeline.yaml');
+    expect(viewer?.getAttribute('data-aria-label')).toBe('Preview: pipelines/sales_pipeline.yaml');
+  });
+
+  it('selects the exact artifact preview when the user clicks View on a list item', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          workspaceFilesQuery: buildWorkspaceFilesQueryPort({
+            listFiles: async () => [
+              {
+                path: 'models',
+                name: 'models',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'models/analytics',
+                    name: 'analytics',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: 'models/analytics/model_orders.sql',
+                        name: 'model_orders.sql',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                  {
+                    path: 'models/marts',
+                    name: 'marts',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: 'models/marts/fct_payments.sql',
+                        name: 'fct_payments.sql',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            getFileContent: async (path) => ({
+              path,
+              name: path.split('/').at(-1) ?? path,
+              language: 'sql',
+              content: path.includes('fct_payments')
+                ? 'select * from raw.payments'
+                : 'select * from raw.orders',
+              lastModified: '2026-04-06T00:00:00Z',
+            }),
+          }),
+        }}
+      >
+        <ArtifactsView />
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('models/marts/fct_payments.sql') === true,
+      { description: 'multiple SQL artifacts render' }
+    );
+
+    const viewerBeforeClick = mounted.container.querySelector('[data-testid="monaco-code-viewer"]');
+    expect(viewerBeforeClick?.getAttribute('data-path')).toBe('models/analytics/model_orders.sql');
+
+    const paymentListItem = Array.from(
+      mounted.container.querySelectorAll('[data-slot="artifact-list-item"]')
+    ).find((item) => item.textContent?.includes('models/marts/fct_payments.sql'));
+    const paymentViewButton = Array.from(paymentListItem?.querySelectorAll('button') ?? []).find(
+      (button) => button.textContent?.includes('View')
+    );
+
+    expect(paymentListItem).not.toBeUndefined();
+    expect(paymentViewButton).not.toBeUndefined();
+
+    await act(async () => {
+      fireEvent.click(paymentViewButton!);
+    });
+
+    await waitForReactQuery(
+      () =>
+        mounted?.container
+          .querySelector('[data-testid="monaco-code-viewer"]')
+          ?.getAttribute('data-path') === 'models/marts/fct_payments.sql',
+      { description: 'View selects the clicked artifact preview' }
+    );
+
+    const viewerAfterClick = mounted.container.querySelector('[data-testid="monaco-code-viewer"]');
+    expect(viewerAfterClick?.getAttribute('data-language')).toBe('sql');
+    expect(viewerAfterClick?.getAttribute('data-aria-label')).toBe(
+      'Preview: models/marts/fct_payments.sql'
+    );
+    expect(viewerAfterClick?.textContent).toContain('raw.payments');
+    expect(viewerAfterClick?.textContent).not.toContain('raw.orders');
+    expect(paymentListItem?.getAttribute('data-selected')).toBe('true');
   });
 
   it('keeps route header outside the scroll body and preserves section-title spacing', async () => {

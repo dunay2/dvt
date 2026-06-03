@@ -26,7 +26,10 @@ node admission path.
 The public API is the route/shell command seam:
 
 ```ts
-type CreateCanvasAuthoringNode = (registration: NodeKindRegistration) => void;
+type CreateCanvasAuthoringNode = (
+  registration: NodeKindRegistration,
+  position?: { x: number; y: number }
+) => void;
 ```
 
 The command is exposed through:
@@ -36,6 +39,8 @@ The command is exposed through:
 - `canvasShellGraphCommandsBuilder.ts`
 - `canvasShellLayoutBuilder.tsx`
 - `CanvasCenterSurface.tsx`
+- `CanvasViewport.tsx` when the command is invoked from the background context
+  menu
 
 The visible authoring catalog is the governed
 `CanvasRuntimeRegistration.nodeKinds` catalog for the active
@@ -69,6 +74,8 @@ back into one route-global fallback once the canvas kind is known.
 - Read-only empty posture keeps typed copy visible but removes mutating node
   choices and commands.
 - Node creation must pass through the existing draft graph lifecycle.
+- Context-menu node creation may supply a caller-owned flow position, but it
+  must not fork node admission or identity generation.
 - Consecutive node creation or drop commands in the same event turn must
   preserve every admitted node in both viewport state and the draft session.
 - The first-node path must not fabricate startup nodes or local-only success.

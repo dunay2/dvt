@@ -429,7 +429,7 @@ flowchart TB
   subgraph "Planned / In Progress"
     P1["Incremental snapshot projection<br/>(vs full event replay)"]:::planned
     P2["Parallel outbox batch delivery<br/>(currently sequential)"]:::planned
-    P4["DbtStepActivity real implementation<br/>(currently no-op stub)"]:::planned
+    P4["DBT plugin package sandbox hardening<br/>(package extraction complete)"]:::planned
     P5["ObservedTemporalAdapter metrics<br/>(currently bare pass-through)"]:::planned
     P7["Lineage worker runtime<br/>(wired but not shipping)"]:::planned
     P8["Request-level timeout in API routes"]:::planned

@@ -2,6 +2,7 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
+import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
@@ -11,6 +12,7 @@ import type {
   IWorkspaceAdminReadPort,
   IWorkspaceDiffQueryPort,
   IWorkspaceFileContentCommandPort,
+  IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
@@ -43,8 +45,10 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.apiClient,
       overrides?.plansService,
       overrides?.runsService,
+      overrides?.costAttributionSummaryPort,
       overrides?.workspaceGraphSnapshotQuery,
       overrides?.workspaceFilesQuery,
+      overrides?.workspaceFileHistoryQuery,
       overrides?.workspaceDiffQuery,
       overrides?.workspacePluginCatalogQuery,
       overrides?.workspaceAdminRead,
@@ -80,6 +84,10 @@ export function useWorkspaceFilesQueryPort(): IWorkspaceFilesQueryPort {
   return useRequiredAppServicesContext().workspaceFilesQuery;
 }
 
+export function useWorkspaceFileHistoryQueryPort(): IWorkspaceFileHistoryQueryPort {
+  return useRequiredAppServicesContext().workspaceFileHistoryQuery;
+}
+
 export function useWorkspaceDiffQueryPort(): IWorkspaceDiffQueryPort {
   return useRequiredAppServicesContext().workspaceDiffQuery;
 }
@@ -110,6 +118,10 @@ export function useRunsService(): IRunsPort {
 
 export function usePlansService(): IPlansPort {
   return useRequiredAppServicesContext().plansService;
+}
+
+export function useCostAttributionSummaryPort(): ICostAttributionSummaryPort {
+  return useRequiredAppServicesContext().costAttributionSummaryPort;
 }
 
 export function useCapabilitiesPort(): CapabilitiesPort {

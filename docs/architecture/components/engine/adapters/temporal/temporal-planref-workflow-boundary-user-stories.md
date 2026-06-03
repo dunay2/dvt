@@ -37,6 +37,9 @@ through Temporal continuation and failure settlement.
 - `US-TPW-006`: production capacity profile is violated. Outcome:
   explicit SLA violation codes. Primary test:
   `temporalPlanRefCapacitySlaPolicy.test.ts`.
+- `US-TPW-007`: resolved plan bytes do not match `PlanRef.sha256`. Outcome:
+  fail closed before step execution. Primary tests: `activities.test.ts` and
+  `runPlanWorkflow.layers.order.test.ts`.
 
 ## User stories
 
@@ -125,6 +128,19 @@ Acceptance:
   workflow-history byte estimates above the profile evaluate as explicit
   profile maximum violations.
 
+### US-TPW-007 - PlanRef hash drift fails closed before side effects
+
+As a runtime operator, I want hash mismatches between resolved plan bytes and
+`PlanRef.sha256` to fail before any step activity executes, so integrity drift
+cannot produce provider side effects.
+
+Acceptance:
+
+- Resolved bytes that do not match `PlanRef.sha256` fail as
+  `PLAN_INTEGRITY_VALIDATION_FAILED`.
+- Segment resolution does not return executable steps after hash mismatch.
+- No step execution activity is called after integrity failure.
+
 ## Scenario diagram
 
 ```mermaid
@@ -134,7 +150,9 @@ flowchart TD
   Expired -->|no| Workflow["Temporal workflow starts with PlanRef"]
   Workflow --> Segment{"plan bytes available?"}
   Segment -->|no| Unavailable["RunFailed: PLAN_REF_UNAVAILABLE"]
-  Segment -->|yes| Layer["Execute bounded layer"]
+  Segment -->|yes| Hash{"sha256 matches PlanRef?"}
+  Hash -->|no| Integrity["RunFailed: PLAN_INTEGRITY_VALIDATION_FAILED"]
+  Hash -->|yes| Layer["Execute bounded layer"]
   Layer --> Rollover{"continue-as-new needed?"}
   Rollover -->|no| Next["Next layer or terminal state"]
   Rollover -->|yes| Compact["Compact cursor"]

@@ -1,4 +1,4 @@
-﻿---
+---
 title: AI Work Protocol
 status: Active
 owner: docs
@@ -15,7 +15,7 @@ procedure. Both must be respected - they are not alternatives.
 
 - [AGENTS.md](../../AGENTS.md)
 - [PR Preflight And CI Triage](./pr-preflight-and-ci-triage.md)
-- [Engineering Playbook](../architecture/atlas/engineering/engineering_playbook.md)
+- [Engineering Playbook](../architecture/atlas/engineering/engineering-playbook.md)
 - [ADR-0000: Code Generation With Enforced Normative Traceability](../adr/ADR-0000-Code-generation-with-normative-traceability-required.en.md)
 - [ADR-0004: Event Sourcing Strategy](../adr/ADR-0004-event-sourcing-strategy.md)
 - [ADR-0005: Contract Formalization Tooling](../adr/ADR-0005-contract-formalization-tooling.md)
@@ -159,6 +159,19 @@ that already exists or reinventing what is already solved:
   constraints (ESM, TypeScript, no framework lock-in)
 - check whether the behavior is already represented by a command or query in
   the owning bounded context; reuse that rail instead of inventing a synonym
+- for externally observable command or query behavior, run the DB-first
+  creation-intent preflight before naming new code:
+
+  ```bash
+  pnpm planning:db:query creation-intent --intent "create a run status query" --limit 5
+  pnpm planning:db:query creation-intent --intent "create a governance component command" --type command --limit 5
+  ```
+
+  Treat `reuse-existing-rail`, `complete-existing-rail-before-creating`, and
+  `resolve-duplicate-before-creating` as stop signals for creating a parallel
+  rail. Treat `register-new-rail-before-creating` as the signal to update the
+  command/query rail catalog before implementation.
+
 - classify relevant findings as Fowler opportunities before implementation:
   boundary drift, responsibility overload, primitive obsession, data clumps,
   feature envy, duplicate semantics, hidden authority, anemic domain,
@@ -272,8 +285,11 @@ Before closing the work, verify all acceptance criteria:
 - [ ] tests pass in every touched package (happy path AND negative paths)
 - [ ] at least one negative-path test added if the slice introduces new behavior
 - [ ] lint and typecheck green in every touched package
-- [ ] `pnpm verify:prepush` green before the slice is presented as ready, unless
-      the user explicitly limits validation and that limit is reported
+- [ ] final commit created with `pnpm commit ...` before final pre-push
+      validation, so the pre-commit hook can apply Prettier/lint-staged fixes
+- [ ] `pnpm verify:prepush` green after the final commit and before the slice is
+      presented as ready, unless the user explicitly limits validation and that
+      limit is reported
 - [ ] `pnpm governance:refresh` run before final docs/prepush validation when
       governance, planning, docs generated surfaces, package scripts, or file
       inventory changes affect `system-governance-*`
@@ -317,6 +333,8 @@ Operational Git rule for the agent environment:
   environment does not reliably create `.git` lock files under sandboxed
   execution
 - this rule does not relax hooks or validation expectations
+- do not treat `pnpm verify:prepush` as a Prettier fixer; it verifies the
+  hook-normalized tree after `pnpm commit ...` has run pre-commit formatting
 
 The mandatory closeout file format is defined in `AGENTS.md`. See
 [`docs/planning/closeouts/G7.1-closeout.md`](../planning/closeouts/G7.1-closeout.md) for a

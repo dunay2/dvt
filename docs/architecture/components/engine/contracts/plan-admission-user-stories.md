@@ -24,15 +24,15 @@ emission, or provider execution.
 
 - `US-PA-1` - As a runtime operator, I want the current plan/schema pair
   admitted.
-  Acceptance scenario: Given the current pair `(1.0, v1.2)`, when admission
+  Acceptance scenario: Given the current pair `(1.0, 1.0)`, when admission
   runs, then the pair is accepted.
 - `US-PA-2` - As a runtime operator, I want future schemas rejected until
   deliberately admitted.
-  Acceptance scenario: Given an unsupported future schema `v1.future`, when
+  Acceptance scenario: Given an unsupported future schema `1.future`, when
   admission runs, then the pair is rejected before provider work.
 - `US-PA-3` - As a runtime operator, I want older schemas rejected by default
   after the hard cut.
-  Acceptance scenario: Given an older schema `v1.0`, when admission runs, then
+  Acceptance scenario: Given an older schema `0.9`, when admission runs, then
   the pair is rejected even though the plan version is current.
 - `US-PA-4` - As a contract maintainer, I want unknown plan versions rejected.
   Acceptance scenario: Given an unknown plan version that is not `1.0`, when
@@ -61,11 +61,11 @@ emission, or provider execution.
 
 ## Negative Scenarios
 
-- Future schema: `planVersion = 1.0`, `schemaVersion = v1.future`.
-- Older schema: `planVersion = 1.0`, `schemaVersion = v1.0`.
+- Future schema: `planVersion = 1.0`, `schemaVersion = 1.future`.
+- Older schema: `planVersion = 1.0`, `schemaVersion = 0.9`.
 - Unknown plan version: `planVersion` is any nonblank value other than `1.0`,
-  `schemaVersion = v1.2`.
-- Blank plan version: `planVersion = ""`, `schemaVersion = v1.2`.
+  `schemaVersion = 1.0`.
+- Blank plan version: `planVersion = ""`, `schemaVersion = 1.0`.
 - Blank schema version: `planVersion = 1.0`, `schemaVersion = ""`.
 - Verifier unsupported version: `planVersion` is derived from `1.0` but is not
   equal to `1.0`.

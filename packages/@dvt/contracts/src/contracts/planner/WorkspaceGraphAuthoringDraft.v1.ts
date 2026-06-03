@@ -68,8 +68,11 @@ export interface WorkspaceGraphAuthoringVisibleEdge {
 }
 
 export interface WorkspaceGraphAuthoringCanvasDocument {
+  id?: string | undefined;
   kind: string;
   title: string;
+  environmentId?: string | undefined;
+  defaultPermission?: 'read' | 'write' | undefined;
 }
 
 export interface WorkspaceGraphAuthoringNode {
@@ -95,8 +98,18 @@ export interface WorkspaceGraphAuthoringEdge {
   metadata?: Record<string, unknown> | undefined;
 }
 
+export interface WorkspaceGraphAuthoringCanvasWorkspace {
+  canvas: WorkspaceGraphAuthoringCanvasDocument & { id: string };
+  nodeIds: string[];
+  nodePositions: Record<string, WorkspaceGraphAuthoringNodePosition>;
+  nodes: WorkspaceGraphAuthoringNode[];
+  edges: WorkspaceGraphAuthoringEdge[];
+}
+
 export interface WorkspaceGraphAuthoringDraft {
   canvas: WorkspaceGraphAuthoringCanvasDocument;
+  activeCanvasId?: string | undefined;
+  canvases?: WorkspaceGraphAuthoringCanvasWorkspace[] | undefined;
   nodeIds: string[];
   nodePositions: Record<string, WorkspaceGraphAuthoringNodePosition>;
   nodes: WorkspaceGraphAuthoringNode[];
@@ -119,8 +132,11 @@ export const WorkspaceGraphAuthoringVisibleEdgeSchema = z
 
 export const WorkspaceGraphAuthoringCanvasDocumentSchema = z
   .object({
+    id: NonBlankStringSchema.optional(),
     kind: NonBlankStringSchema,
     title: NonBlankStringSchema,
+    environmentId: NonBlankStringSchema.optional(),
+    defaultPermission: z.enum(['read', 'write']).optional(),
   })
   .strict() satisfies z.ZodType<WorkspaceGraphAuthoringCanvasDocument>;
 
@@ -170,9 +186,122 @@ export const WorkspaceGraphAuthoringEdgeSchema = z
   })
   .strict() satisfies z.ZodType<WorkspaceGraphAuthoringEdge>;
 
+export const WorkspaceGraphAuthoringCanvasWorkspaceSchema = z
+  .object({
+    canvas: WorkspaceGraphAuthoringCanvasDocumentSchema.and(
+      z.object({ id: NonBlankStringSchema }).strict()
+    ),
+    nodeIds: z.array(NonBlankStringSchema),
+    nodePositions: z.record(NonBlankStringSchema, WorkspaceGraphAuthoringNodePositionSchema),
+    nodes: z.array(WorkspaceGraphAuthoringNodeSchema),
+    edges: z.array(WorkspaceGraphAuthoringEdgeSchema),
+  })
+  .strict() satisfies z.ZodType<WorkspaceGraphAuthoringCanvasWorkspace>;
+
+type WorkspaceGraphAuthoringGraphShape = Pick<
+  WorkspaceGraphAuthoringDraft,
+  'nodeIds' | 'nodePositions' | 'nodes' | 'edges'
+>;
+
+function addGraphShapeIssues(
+  graph: WorkspaceGraphAuthoringGraphShape,
+  ctx: z.RefinementCtx,
+  pathPrefix: Array<string | number> = []
+): void {
+  const visibleNodeIds = new Set<string>(graph.nodeIds);
+  if (visibleNodeIds.size !== graph.nodeIds.length) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [...pathPrefix, 'nodeIds'],
+      message: 'WorkspaceGraphAuthoringDraft nodeIds must be unique.',
+    });
+  }
+
+  const positionedNodeIds = Object.keys(graph.nodePositions);
+  if (
+    positionedNodeIds.length !== graph.nodeIds.length ||
+    positionedNodeIds.some((nodeId) => !visibleNodeIds.has(nodeId))
+  ) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [...pathPrefix, 'nodePositions'],
+      message:
+        'WorkspaceGraphAuthoringDraft nodePositions must exist for exactly the visible nodeIds.',
+    });
+  }
+
+  const semanticNodeIds = new Set(graph.nodes.map((node) => node.id));
+  if (semanticNodeIds.size !== graph.nodes.length) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [...pathPrefix, 'nodes'],
+      message: 'WorkspaceGraphAuthoringDraft nodes must have unique ids.',
+    });
+  }
+
+  for (const nodeId of graph.nodeIds) {
+    if (!semanticNodeIds.has(nodeId)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [...pathPrefix, 'nodeIds'],
+        message:
+          'WorkspaceGraphAuthoringDraft visible nodeIds must reference declared semantic nodes.',
+      });
+      break;
+    }
+  }
+
+  const semanticEdgeIds = new Set(graph.edges.map((edge) => edge.id));
+  if (semanticEdgeIds.size !== graph.edges.length) {
+    ctx.addIssue({
+      code: 'custom',
+      path: [...pathPrefix, 'edges'],
+      message: 'WorkspaceGraphAuthoringDraft edges must have unique ids.',
+    });
+  }
+
+  for (const edge of graph.edges) {
+    if (!semanticNodeIds.has(edge.sourceId) || !semanticNodeIds.has(edge.targetId)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [...pathPrefix, 'edges'],
+        message: 'WorkspaceGraphAuthoringDraft edges must reference declared semantic node ids.',
+      });
+      break;
+    }
+  }
+}
+
+function areCanvasDocumentsEquivalent(
+  left: WorkspaceGraphAuthoringCanvasDocument,
+  right: WorkspaceGraphAuthoringCanvasDocument
+): boolean {
+  return (
+    left.id === right.id &&
+    left.kind === right.kind &&
+    left.title === right.title &&
+    left.environmentId === right.environmentId &&
+    left.defaultPermission === right.defaultPermission
+  );
+}
+
+function areGraphShapesEquivalent(
+  left: WorkspaceGraphAuthoringGraphShape,
+  right: WorkspaceGraphAuthoringGraphShape
+): boolean {
+  return (
+    JSON.stringify(left.nodeIds) === JSON.stringify(right.nodeIds) &&
+    JSON.stringify(left.nodePositions) === JSON.stringify(right.nodePositions) &&
+    JSON.stringify(left.nodes) === JSON.stringify(right.nodes) &&
+    JSON.stringify(left.edges) === JSON.stringify(right.edges)
+  );
+}
+
 export const WorkspaceGraphAuthoringDraftSchema = z
   .object({
     canvas: WorkspaceGraphAuthoringCanvasDocumentSchema,
+    activeCanvasId: NonBlankStringSchema.optional(),
+    canvases: z.array(WorkspaceGraphAuthoringCanvasWorkspaceSchema).optional(),
     nodeIds: z.array(NonBlankStringSchema),
     nodePositions: z.record(NonBlankStringSchema, WorkspaceGraphAuthoringNodePositionSchema),
     nodes: z.array(WorkspaceGraphAuthoringNodeSchema),
@@ -180,66 +309,66 @@ export const WorkspaceGraphAuthoringDraftSchema = z
   })
   .strict()
   .superRefine((draft, ctx) => {
-    const visibleNodeIds = new Set<string>(draft.nodeIds);
-    if (visibleNodeIds.size !== draft.nodeIds.length) {
+    addGraphShapeIssues(draft, ctx);
+
+    if (draft.canvases == null) {
+      return;
+    }
+
+    if (draft.canvases.length === 0) {
       ctx.addIssue({
         code: 'custom',
-        path: ['nodeIds'],
-        message: 'WorkspaceGraphAuthoringDraft nodeIds must be unique.',
+        path: ['canvases'],
+        message: 'WorkspaceGraphAuthoringDraft canvases must not be empty when declared.',
+      });
+      return;
+    }
+
+    const canvasIds = draft.canvases.map((workspace) => workspace.canvas.id);
+    const canvasIdSet = new Set(canvasIds);
+    if (canvasIdSet.size !== canvasIds.length) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['canvases'],
+        message: 'WorkspaceGraphAuthoringDraft canvases must have unique ids.',
       });
     }
 
-    const positionedNodeIds = Object.keys(draft.nodePositions);
-    if (
-      positionedNodeIds.length !== draft.nodeIds.length ||
-      positionedNodeIds.some((nodeId) => !visibleNodeIds.has(nodeId))
-    ) {
+    if (draft.activeCanvasId == null || !canvasIdSet.has(draft.activeCanvasId)) {
       ctx.addIssue({
         code: 'custom',
-        path: ['nodePositions'],
+        path: ['activeCanvasId'],
         message:
-          'WorkspaceGraphAuthoringDraft nodePositions must exist for exactly the visible nodeIds.',
+          'WorkspaceGraphAuthoringDraft activeCanvasId must reference a declared canvas workspace.',
       });
     }
 
-    const semanticNodeIds = new Set(draft.nodes.map((node) => node.id));
-    if (semanticNodeIds.size !== draft.nodes.length) {
+    draft.canvases.forEach((workspace, index) => {
+      addGraphShapeIssues(workspace, ctx, ['canvases', index]);
+    });
+
+    const activeWorkspace = draft.canvases.find(
+      (workspace) => workspace.canvas.id === draft.activeCanvasId
+    );
+    if (activeWorkspace == null) {
+      return;
+    }
+
+    if (!areCanvasDocumentsEquivalent(draft.canvas, activeWorkspace.canvas)) {
       ctx.addIssue({
         code: 'custom',
-        path: ['nodes'],
-        message: 'WorkspaceGraphAuthoringDraft nodes must have unique ids.',
+        path: ['canvas'],
+        message:
+          'WorkspaceGraphAuthoringDraft canvas must mirror the active canvas workspace identity.',
       });
     }
 
-    for (const nodeId of draft.nodeIds) {
-      if (!semanticNodeIds.has(nodeId)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['nodeIds'],
-          message:
-            'WorkspaceGraphAuthoringDraft visible nodeIds must reference declared semantic nodes.',
-        });
-        break;
-      }
-    }
-
-    const semanticEdgeIds = new Set(draft.edges.map((edge) => edge.id));
-    if (semanticEdgeIds.size !== draft.edges.length) {
+    if (!areGraphShapesEquivalent(draft, activeWorkspace)) {
       ctx.addIssue({
         code: 'custom',
-        path: ['edges'],
-        message: 'WorkspaceGraphAuthoringDraft edges must have unique ids.',
+        path: ['canvases'],
+        message:
+          'WorkspaceGraphAuthoringDraft active canvas workspace must mirror the top-level graph.',
       });
-    }
-
-    for (const edge of draft.edges) {
-      if (!semanticNodeIds.has(edge.sourceId) || !semanticNodeIds.has(edge.targetId)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['edges'],
-          message: 'WorkspaceGraphAuthoringDraft edges must reference declared semantic node ids.',
-        });
-        break;
-      }
     }
   }) satisfies z.ZodType<WorkspaceGraphAuthoringDraft>;

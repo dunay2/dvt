@@ -11,14 +11,18 @@ export function renderCanvasCenterSurface(args: RenderCanvasCenterSurfaceArgs) {
 
   return renderCanvasWorkbenchSurface({
     presentationState: args.presentationState,
+    workspaceScope: args.workspaceScope,
     startupBlockState: args.startupBlockState,
     workbenchErrorMessage: args.workbenchErrorMessage,
     canvasDocument: args.canvasDocument,
     draftSaveStatus: args.draftSaveStatus,
     availableCanvasKinds: args.availableCanvasKinds,
+    canCreateCanvasDocument: args.canCreateCanvasDocument,
     canEditEdges: args.canEditEdges,
     canOpenSourceImport: args.canOpenSourceImport,
+    emptyStateGuideVisible: args.emptyStateGuideVisible,
     onCreateCanvasDocument: args.onCreateCanvasDocument,
     onCreateAuthoringNode: args.onCreateAuthoringNode,
+    onEmptyStateGuideVisibilityChange: args.onEmptyStateGuideVisibilityChange,
   });
 }

@@ -135,6 +135,15 @@ export function configureCanvasHarnessHookAndProjectionMocks(
     },
   ]);
   mocks.getRegisteredPluginIds.mockReturnValue(new Set(['dbt', 'monitoring', 'cost']));
+  mocks.getSourceImportContributions.mockReturnValue([
+    {
+      id: 'dbt.source-yaml',
+      pluginId: 'dbt',
+      sourceType: 'database',
+      artifactKind: 'dbt-source-yaml',
+      options: [],
+    },
+  ]);
   mocks.buildNodesWithImpact.mockImplementation(({ nodes }: { nodes: unknown[] }) => nodes);
   mocks.useCanvasGraphHandlers.mockImplementation(() => state.graphHandlersResult);
   mocks.useCanvasExecutionActions.mockImplementation(() => state.executionActionsResult);

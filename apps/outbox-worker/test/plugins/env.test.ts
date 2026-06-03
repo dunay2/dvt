@@ -35,16 +35,46 @@ describe('loadEnv', () => {
     }
     expect(env.DVT_OUTBOX_HTTP_TARGET_URL).toBe('http://localhost:8080/outbox/events');
     expect(env.DVT_OUTBOX_HTTP_TIMEOUT_MS).toBe(10000);
-    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(false);
+    expect(env.DVT_PURGE_ENABLED).toBe(true);
+    expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(true);
     expect(env.DVT_RUN_EVENT_RETENTION_INITIAL_DELAY_MS).toBe(30_000);
     expect(env.DVT_RUN_EVENT_RETENTION_INTERVAL_MS).toBe(3_600_000);
     expect(env.DVT_RUN_EVENT_RETENTION_HOT_RETENTION_DAYS).toBe(90);
+    expect(env.DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS).toEqual([]);
     expect(env.DVT_RUN_EVENT_RETENTION_ARCHIVE_BUCKET_COUNT).toBe(64);
     expect(env.DVT_RUN_EVENT_RETENTION_PIN_TERMINAL_SNAPSHOTS).toBe(true);
     expect(env.DVT_RUN_EVENT_RETENTION_ARCHIVE_DIRECTORY).toBe('.dvt/archive');
     expect(env.DVT_OUTBOX_ADMIN_HOST).toBe('0.0.0.0');
     expect(env.DVT_OUTBOX_ADMIN_PORT).toBe(9464);
     expect(env.SERVICE_NAME).toBe('dvt-outbox-worker');
+  });
+
+  it('parses tenant-specific run-event retention overrides', () => {
+    const env = loadEnv({
+      NODE_ENV: 'test',
+      DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+      DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS: 'free-tier=7, enterprise=365',
+    });
+
+    assertActiveEnv(env);
+    expect(env.DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS).toEqual([
+      { tenantId: 'free-tier', hotRetentionDays: 7 },
+      { tenantId: 'enterprise', hotRetentionDays: 365 },
+    ]);
+  });
+
+  it('fails fast when tenant-specific run-event retention overrides contain duplicate tenants', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'test',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_HTTP_TARGET_URL: 'http://localhost:8080/outbox/events',
+        DVT_RUN_EVENT_RETENTION_TENANT_HOT_RETENTION_DAYS: 'free-tier=7,free-tier=30',
+      })
+    ).toThrow(/duplicate tenant/i);
   });
 
   it('applies passive worker defaults without runtime dependencies', () => {
@@ -367,6 +397,17 @@ describe('loadEnv', () => {
     ).toThrow(/DVT_OUTBOX_OWNED_SHARD_IDS/);
   });
 
+  it('fails in production by default because retention requires explicit filesystem opt-in', () => {
+    expect(() =>
+      loadEnv({
+        NODE_ENV: 'production',
+        DVT_OUTBOX_OWNERSHIP_MODE: 'active',
+        DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+        DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      })
+    ).toThrow(/DVT_RUN_EVENT_RETENTION_ALLOW_FILESYSTEM_IN_PROD/);
+  });
+
   it('fails in production when retention is enabled without explicit filesystem opt-in', () => {
     expect(() =>
       loadEnv({
@@ -448,10 +489,12 @@ describe('loadEnv', () => {
       DVT_OUTBOX_OWNERSHIP_MODE: 'active',
       DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
       DVT_OUTBOX_EVENT_BUS_MODE: 'log',
+      DVT_PURGE_ENABLED: 'false',
       DVT_RUN_EVENT_RETENTION_ENABLED: 'false',
     });
 
     assertActiveEnv(env);
+    expect(env.DVT_PURGE_ENABLED).toBe(false);
     expect(env.DVT_RUN_EVENT_RETENTION_ENABLED).toBe(false);
     expect(warningSpy).not.toHaveBeenCalled();
     warningSpy.mockRestore();

@@ -1,3 +1,4 @@
+/** Owned concern: render Diff route loading, empty, and error states inside the workbench slot contract. */
 import type { ReactNode } from 'react';
 
 import { Card } from '../../components/ui/card';
@@ -71,9 +72,14 @@ function DiffWorkbenchStateLayout({
   children,
 }: DiffWorkbenchStateViewProps & { children: ReactNode }) {
   return (
-    <RouteWorkbenchFrame header={header}>
-      <div className="flex min-h-[420px] items-center justify-center">{children}</div>
-    </RouteWorkbenchFrame>
+    <RouteWorkbenchFrame
+      header={header}
+      slots={{
+        primarySurface: (
+          <div className="flex min-h-[420px] items-center justify-center">{children}</div>
+        ),
+      }}
+    />
   );
 }
 

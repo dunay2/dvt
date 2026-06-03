@@ -9,13 +9,18 @@ import type {
   CanvasGraphAuthoringMode,
   NodeKindRegistration,
 } from '../../plugins/nodeTypeContracts';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import type { CanvasWorkspaceResourceGroup } from '../../components/canvasWorkspaceExplorerModel';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
+import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
+import type { WorkspaceOption } from '../../services/config/workspaceConfig';
+import type { RuntimeCapabilities } from '../../plugins/registry';
+import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -44,12 +49,21 @@ export type CanvasShellLayout = {
 };
 
 export type CanvasShellPanels = {
-  explorerNodes: CanonicalNode[];
+  explorerResourceGroups: readonly CanvasWorkspaceResourceGroup[];
   authoringNodeKinds: readonly NodeKindRegistration[];
+  activeCanvasId: string | null;
+  activeCanvas: ProjectCanvasDocument | null;
+  canvasDocuments: readonly ProjectCanvasDocument[];
+  executionEnvironmentOptions: readonly WorkspaceOption[];
+  canEditCanvas: boolean;
+  canDeleteActiveCanvas: boolean;
   inspectorNode: CanonicalNode | null;
+  inspectorGraphNodes: readonly CanonicalNode[];
+  inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;
   activeRunId: string | null;
   registeredPlugins: ReadonlySet<string>;
+  runtimeCapabilities?: RuntimeCapabilities;
   userPermissions: UserPermissions;
   importedNodeFocusIds: string[];
 };
@@ -63,6 +77,7 @@ export type CanvasShellGraph = {
   canvasGridVisible: boolean;
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
+  canvasEmptyStateGuideVisible: boolean;
   viewport: CanvasViewport | null;
 };
 
@@ -70,8 +85,12 @@ export type CanvasShellToolbar = {
   canvasAuthoringMode: CanvasGraphAuthoringMode;
   routeState: CanvasRouteState;
   draftToolbarState: CanvasDraftToolbarState;
+  canPlanGraph: boolean;
   canStartRun: boolean;
+  canExportProjectSnapshot: boolean;
+  canImportProjectSnapshot: boolean;
   planStatusSummary: string;
+  planRunReadiness: PlanRunReadinessReadModel;
   exclusiveOverlayMode: 'runtime' | 'cost';
   canUseCostOverlay: boolean;
   impactOverlayEnabled: boolean;
@@ -91,7 +110,10 @@ export type CanvasShellGraphCommands = {
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
-  onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
+  onCreateAuthoringNode: (
+    registration: NodeKindRegistration,
+    position?: { x: number; y: number }
+  ) => void;
   onSourceImportComplete: (result: ImportSourcesResult) => void;
   onImportedNodeFocusComplete: () => void;
 };
@@ -108,9 +130,18 @@ export type CanvasShellChromeCommands = {
   onToggleGridVisible: () => void;
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
+  onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
+  onExportProjectSnapshot: () => void;
+  onImportProjectSnapshotFile: (file: File) => void;
   onReloadLatestDraft: () => void;
   onPlan: () => void;
   onRun: () => void;
+};
+
+export type CanvasShellCanvasCommands = {
+  onSelectCanvas: (canvasId: string) => void;
+  onApplyCanvasPatch: (patch: ProjectCanvasPatch) => void;
+  onDeleteActiveCanvas: () => void;
 };
 
 export type CanvasShellProps = Readonly<{
@@ -120,4 +151,5 @@ export type CanvasShellProps = Readonly<{
   toolbar: CanvasShellToolbar;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
+  canvasCommands: CanvasShellCanvasCommands;
 }>;

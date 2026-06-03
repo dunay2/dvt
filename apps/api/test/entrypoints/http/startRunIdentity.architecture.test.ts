@@ -95,7 +95,7 @@ describe('start-run identity architecture', () => {
     const parsed = parseStartRunBody(
       VALID_START_RUN_BODY,
       START_RUN_ADAPTER_REGISTRY,
-      () => 'run_architecture_generated'
+      () => 'run_0196454a-f0c8-7d37-a8e8-8a7f9afac0f1'
     );
 
     expect(parsed.ok).toBe(true);
@@ -103,7 +103,7 @@ describe('start-run identity architecture', () => {
       return;
     }
 
-    expect(parsed.value.command.runId).toBe('run_architecture_generated');
+    expect(parsed.value.command.runId).toBe('run_0196454a-f0c8-7d37-a8e8-8a7f9afac0f1');
     expect(parsed.value.command).toEqual(
       expect.objectContaining({
         planRef: VALID_PLAN_REF,
@@ -119,6 +119,15 @@ describe('start-run identity architecture', () => {
     expect(source.indexOf('rejectClientProvidedStartRunRunId(record)')).toBeLessThan(
       source.indexOf('runIdGenerator()')
     );
+  });
+
+  it('keeps generated identity format validation at the command-building boundary', () => {
+    const source = START_RUN_COMMAND_BUILDER_SOURCE.sourceText;
+
+    expect(source).toContain('PLATFORM_START_RUN_ID_PATTERN');
+    expect(source).toContain('parseGeneratedStartRunRunId(runIdGenerator())');
+    expect(source).toContain('HTTP_ERROR_REASON.invalidRunId');
+    expect(source).toContain('!PLATFORM_START_RUN_ID_PATTERN.test(runId)');
   });
 
   it('keeps API identity allocation out of engine and persistence semantics', () => {

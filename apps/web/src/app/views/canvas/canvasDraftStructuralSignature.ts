@@ -32,9 +32,19 @@ export function serializeWorkspaceGraphAuthoringDraftStructuralSignature(
   const edges = [...draft.edges].sort(compareAuthoringEdges);
   const signaturePayload = toCanvasAuthoringSerializableValue({
     canvas: {
+      id: draft.canvas.id,
       kind: draft.canvas.kind,
       title: draft.canvas.title,
+      environmentId: draft.canvas.environmentId,
+      defaultPermission: draft.canvas.defaultPermission,
     },
+    activeCanvasId: draft.activeCanvasId,
+    canvases: draft.canvases?.map((workspace) => ({
+      canvas: workspace.canvas,
+      nodeIds: workspace.nodeIds,
+      nodes: [...workspace.nodes].sort(compareAuthoringNodes),
+      edges: [...workspace.edges].sort(compareAuthoringEdges),
+    })),
     nodeIds: [...draft.nodeIds],
     nodes,
     edges,

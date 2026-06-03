@@ -9,9 +9,9 @@ last_reviewed: 2026-04-30
 
 ## Purpose
 
-This component owns the compatibility seam between the public
-`IWorkflowEngine` contract and the internal application services that perform
-execution behavior.
+This component owns the hardcut delegation seam between the public
+`IWorkflowEngine` command/query boundary and the internal application services
+that perform execution behavior.
 
 ## Public API
 
@@ -19,9 +19,9 @@ execution behavior.
 | ----------------------------- | ------------- | ---------------------------------------------------------------------- |
 | `IWorkflowStartRunUseCase`    | `@dvt/engine` | Receives normalized `PlanRef` and `RunContext`, then runs start logic. |
 | `IWorkflowRecoverRunUseCase`  | `@dvt/engine` | Delegates governed recovery to the recovery application service.       |
-| `IWorkflowCancelRunUseCase`   | `@dvt/engine` | Delegates cancellation to the run-control service.                     |
+| `IWorkflowCancelRunUseCase`   | `@dvt/engine` | Delegates cancellation to the run command service.                     |
 | `IWorkflowRunStatusUseCase`   | `@dvt/engine` | Delegates canonical status reads to the query service.                 |
-| `IWorkflowSignalRunUseCase`   | `@dvt/engine` | Delegates runtime signals to the run-control service.                  |
+| `IWorkflowSignalRunUseCase`   | `@dvt/engine` | Delegates runtime signals to the run signal service.                   |
 | `buildWorkflowEngineUseCases` | `@dvt/engine` | Composition helper for wiring facade-facing use cases.                 |
 
 ## Local Modules
@@ -44,18 +44,19 @@ execution behavior.
   application or control service names.
 - `WorkflowStartRunUseCase` owns resolved-context construction and start-run
   tracing because those are execution-use-case concerns, not facade concerns.
-- `IWorkflowEngine` remains unchanged: commands plus canonical status read.
+- `IWorkflowEngine` is the current command plus canonical status read boundary.
 - Enrichment and health remain outside `IWorkflowEngine`.
 
 ## Transitions
 
-| Transition       | From             | To                            | Rule                                               |
-| ---------------- | ---------------- | ----------------------------- | -------------------------------------------------- |
-| `startRun` input | `WorkflowEngine` | `IWorkflowStartRunUseCase`    | Input is parsed and normalized before delegation.  |
-| start tracing    | start use case   | `IStartRunApplicationService` | Trace/span behavior stays outside the facade.      |
-| recovery input   | `WorkflowEngine` | `IWorkflowRecoverRunUseCase`  | Recovery command is parsed before delegation.      |
-| control command  | `WorkflowEngine` | cancel/signal use cases       | Control behavior stays in the run-control service. |
-| status query     | `WorkflowEngine` | `IWorkflowRunStatusUseCase`   | Canonical read remains separate from enrichment.   |
+| Transition       | From             | To                            | Rule                                              |
+| ---------------- | ---------------- | ----------------------------- | ------------------------------------------------- |
+| `startRun` input | `WorkflowEngine` | `IWorkflowStartRunUseCase`    | Input is parsed and normalized before delegation. |
+| start tracing    | start use case   | `IStartRunApplicationService` | Trace/span behavior stays outside the facade.     |
+| recovery input   | `WorkflowEngine` | `IWorkflowRecoverRunUseCase`  | Recovery command is parsed before delegation.     |
+| cancel command   | `WorkflowEngine` | cancel use case               | Cancel behavior stays in the run command service. |
+| signal command   | `WorkflowEngine` | signal use case               | Signal behavior stays in the run signal service.  |
+| status query     | `WorkflowEngine` | `IWorkflowRunStatusUseCase`   | Canonical read remains separate from enrichment.  |
 
 ## Consumers
 
@@ -83,8 +84,8 @@ flowchart LR
 
   Start --> StartApp["IStartRunApplicationService"]
   Recover --> RecoverySvc["IRunRecoveryService"]
-  Cancel --> ControlSvc["IRunControlService.cancel"]
-  Signal --> ControlSignal["IRunControlService.signal"]
+  Cancel --> CommandSvc["IRunCommandService.cancel"]
+  Signal --> SignalSvc["IRunSignalService.signal"]
   Status --> QuerySvc["IRunStatusQueryService"]
 ```
 

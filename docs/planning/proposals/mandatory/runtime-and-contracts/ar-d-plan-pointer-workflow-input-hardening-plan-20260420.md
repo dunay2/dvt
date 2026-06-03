@@ -250,7 +250,7 @@ Freeze the target workflow input semantics and the cutover rule.
 Outputs:
 
 - proposal accepted as plan of record
-- lane task linked
+- [Task: RUNTIME-PROP-DISP-1] lane task linked
 - review truth updated from "proposed" to queued execution work
 
 ### AR-D-PLAN-POINTER-B

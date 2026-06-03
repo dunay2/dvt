@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   buildRemoteDraftRecord,
+  createUnrenderedHarness,
+  createRenderedHarness,
   createHarnessWithDraft,
   setHarnessRemoteDraftRecord,
 } from './useCanvasController.draftLifecycle.test.support';
@@ -174,6 +176,59 @@ describe('useCanvasController core', () => {
     );
   });
 
+  it('keeps first-canvas creation available while graph mutation waits for a typed document', async () => {
+    harness.cleanup();
+    harness = await createRenderedHarness();
+
+    expect(harness.getLatestResult()?.canvasDocument).toBeNull();
+    expect(harness.getLatestResult()?.canCreateCanvasDocument).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+  });
+
+  it('keeps first-canvas creation available from draft persistence when graph edits are denied', async () => {
+    harness.cleanup();
+    harness = createUnrenderedHarness();
+    const storeState = harness.state.store as unknown as {
+      userPermissions: {
+        canPlan: boolean;
+        canRun: boolean;
+        canEditEdges: boolean;
+        canPersistGraphDraft: boolean;
+        canManagePlugins: boolean;
+        canManageRBAC: boolean;
+      };
+    };
+    storeState.userPermissions = {
+      ...storeState.userPermissions,
+      canEditEdges: false,
+      canPersistGraphDraft: true,
+    };
+
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canvasDocument).toBeNull();
+    expect(harness.getLatestResult()?.canCreateCanvasDocument).toBe(true);
+    expect(harness.getLatestResult()?.userPermissions).toEqual(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+    expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        canEditEdges: false,
+      })
+    );
+  });
+
   it('routes unsupported canvas kinds through the runtime policy fail-closed posture', async () => {
     setHarnessRemoteDraftRecord(
       harness,
@@ -217,6 +272,26 @@ describe('useCanvasController core', () => {
     );
   });
 
+  it('gates source import when runtime capabilities disable the source import contribution', async () => {
+    harness.mocks.useCapabilitiesQuery.mockReturnValue({
+      data: {
+        apiVersion: '0.1.0',
+        minFrontendVersion: '0.1.0',
+        plugins: {
+          dbt: {
+            available: false,
+            reason: 'disabled for workspace',
+          },
+        },
+      },
+    });
+    harness.mocks.getSourceImportContributions.mockReturnValue([]);
+
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(false);
+  });
+
   it('applies draft access posture before exposing graph and execution commands', async () => {
     const projectedRemoteDraft = projectCanvasHarnessDraftReadModel(
       harness.state.remoteDraftRecord
@@ -255,6 +330,7 @@ describe('useCanvasController core', () => {
       harness.getLatestResult()?.applyInspectorNodeDraft({
         name: 'orders_source_renamed',
         description: 'Edited through the route-owned inspector',
+        tags: ['authoring', 'reviewed'],
       });
     });
     await harness.renderProbe();

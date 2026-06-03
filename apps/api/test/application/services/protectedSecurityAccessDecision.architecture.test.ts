@@ -29,10 +29,7 @@ const artifacts = {
     'services/workspaceGraphDraftCapabilityPolicy.ts'
   ),
   workspaceGraphDraftPort: defineArtifact(APPLICATION_ROOT, 'ports/workspaceGraphDraft.ts'),
-  planRoutePolicyCatalog: defineArtifact(
-    APPLICATION_ROOT,
-    'services/planRoutePolicyCatalog.ts'
-  ),
+  planRoutePolicyCatalog: defineArtifact(APPLICATION_ROOT, 'services/planRoutePolicyCatalog.ts'),
   embeddedAccessDecisionService: defineArtifact(
     INFRA_ROOT,
     'auth/embeddedAccessDecisionService.ts'
@@ -42,24 +39,15 @@ const artifacts = {
     'protectedRuntime/buildProtectedSecurityRuntime.ts'
   ),
   authorizeExecutionScope: defineArtifact(ENTRYPOINTS_ROOT, 'authorizeExecutionScope.ts'),
-  authorizeAdminExecutionScope: defineArtifact(
-    ENTRYPOINTS_ROOT,
-    'authorizeAdminExecutionScope.ts'
-  ),
+  authorizeAdminExecutionScope: defineArtifact(ENTRYPOINTS_ROOT, 'authorizeAdminExecutionScope.ts'),
   startRunRouteParser: defineArtifact(ENTRYPOINTS_ROOT, 'startRunRouteParser.ts'),
   getRunActionConstants: defineArtifact(ENTRYPOINTS_ROOT, 'getRunRouteParser.constants.ts'),
   getRunEventsActionConstants: defineArtifact(
     ENTRYPOINTS_ROOT,
     'getRunEventsRouteParser.constants.ts'
   ),
-  listRunsActionConstants: defineArtifact(
-    ENTRYPOINTS_ROOT,
-    'listRunsRouteParser.constants.ts'
-  ),
-  runCommandActionConstants: defineArtifact(
-    ENTRYPOINTS_ROOT,
-    'runCommandRoute.constants.ts'
-  ),
+  listRunsActionConstants: defineArtifact(ENTRYPOINTS_ROOT, 'listRunsRouteParser.constants.ts'),
+  runCommandActionConstants: defineArtifact(ENTRYPOINTS_ROOT, 'runCommandRoute.constants.ts'),
   adminRoutes: defineArtifact(ENTRYPOINTS_ROOT, 'adminRoutes.ts'),
   domainAuthTypes: defineArtifact(DOMAIN_ROOT, 'auth/types.ts'),
   componentGuide: defineArtifact(DOCS_ROOT, 'protected-security-access-decision-component.md'),
@@ -123,6 +111,7 @@ describe('Protected security access-decision architecture', () => {
       'run:logs:view',
       'workspace:graph-draft:view',
       'workspace:graph-draft:save',
+      'workspace:files:save',
       'ExecutionScope',
       'RequestedScope',
       'DeniedReason',
@@ -168,12 +157,10 @@ describe('Protected security access-decision architecture', () => {
     }
 
     expect(
-      artifacts.runCommandActionConstants
-        .readSource()
-        .hasNamedImport({
-          importedName: 'AUTHORIZATION_ACTION_NAME',
-          moduleSpecifier: '../../application/ports/accessDecision.js',
-        })
+      artifacts.runCommandActionConstants.readSource().hasNamedImport({
+        importedName: 'AUTHORIZATION_ACTION_NAME',
+        moduleSpecifier: '../../application/ports/accessDecision.js',
+      })
     ).toBe(true);
   });
 
@@ -191,7 +178,9 @@ describe('Protected security access-decision architecture', () => {
         moduleSpecifier: '../ports/auth.js',
       })
     ).toBe(true);
-    expect(artifacts.authorizeCommandScopeService.readText()).not.toContain('../../infrastructure/');
+    expect(artifacts.authorizeCommandScopeService.readText()).not.toContain(
+      '../../infrastructure/'
+    );
 
     const workspaceDraftSource =
       artifacts.authorizeWorkspaceGraphDraftCapabilityService.readSource();
@@ -213,18 +202,16 @@ describe('Protected security access-decision architecture', () => {
         moduleSpecifier: './workspaceGraphDraftCapabilityPolicy.js',
       })
     ).toBe(true);
-    expect(
-      artifacts.authorizeWorkspaceGraphDraftCapabilityService.readText()
-    ).not.toContain('const WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY =');
+    expect(artifacts.authorizeWorkspaceGraphDraftCapabilityService.readText()).not.toContain(
+      'const WORKSPACE_GRAPH_DRAFT_CAPABILITY_POLICY ='
+    );
 
     const embeddedText = artifacts.embeddedAccessDecisionService.readText();
     expect(
-      artifacts.embeddedAccessDecisionService
-        .readSource()
-        .hasNamedImport({
-          importedName: 'ACCESS_SCOPE_RESOURCE',
-          moduleSpecifier: '../../application/ports/accessDecision.js',
-        })
+      artifacts.embeddedAccessDecisionService.readSource().hasNamedImport({
+        importedName: 'ACCESS_SCOPE_RESOURCE',
+        moduleSpecifier: '../../application/ports/accessDecision.js',
+      })
     ).toBe(true);
     expect(embeddedText).toContain('switch (requestedScope.resource)');
     expect(embeddedText).not.toContain('requestedScope.projectId === undefined');

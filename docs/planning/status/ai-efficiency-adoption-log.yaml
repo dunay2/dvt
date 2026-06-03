@@ -1,4 +1,5 @@
 initiative_id: RC-C2
+schema_version: 1
 baseline:
   interactive_rounds: 22
   tool_calls: 58
@@ -8,4 +9,20 @@ baseline:
 targets:
   min_round_reduction_pct: 20
   required_consecutive_cycles: 3
+qualification_rules:
+  lane: C
+  required_fields:
+    - pr.number
+    - pr.url
+    - used_hygiene_preflight
+    - verify_prepush_before_push
+    - ci_first_red_triage
+    - no_push_time_format_lint_surprises
+    - interactive_rounds
+    - tool_calls
+    - avoidable_validation_reruns
+  accepted_ci_first_red_triage:
+    - log_first
+    - not_applicable
+  closure_check: pnpm docs:ai-efficiency:check
 cycles: []

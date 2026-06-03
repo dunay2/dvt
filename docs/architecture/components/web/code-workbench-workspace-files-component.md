@@ -1,8 +1,8 @@
 ---
 title: Code Workbench Workspace Files Component
-status: Proposed
+status: Accepted
 owner: Web / API Architecture
-last_reviewed: 2026-05-04
+last_reviewed: 2026-05-20
 planning_type: architecture
 ---
 
@@ -10,13 +10,15 @@ planning_type: architecture
 
 ## Purpose
 
-This component governs the read-only Code tab file explorer and file preview
-flow.
+This component governs the Code tab file explorer, file content query flow,
+route-local Monaco editor buffer, and the shared workspace-file persistence rail
+used by product workflows that must publish project artifacts before preview or
+execution.
 
-The component exists because the web Code route already consumes workspace file
-queries, while the live API route is not yet implemented. The component closes
-that drift by naming the public API, invariants, transitions, consumers, and
-tests before implementation.
+The component exists because the web Code route consumes workspace file queries
+and product workflows can persist generated workspace artifacts through the live
+command rail. The component closes the old read/write drift by naming the public
+API, invariants, transitions, consumers, and tests.
 
 Use with:
 
@@ -28,12 +30,15 @@ Use with:
 
 ## Owned Concern
 
-Owned concern: expose tenant/project-scoped workspace files as read-only
-operational evidence for the Code workbench.
+Owned concern: expose tenant/project-scoped workspace files as operational
+evidence for the Code workbench, let the browser hold a local editable buffer
+for the selected file, and provide the governed `SaveWorkspaceFileContent`
+command for workflow artifacts that must be persisted before backend admission.
 
-The component does not own editing, project creation, graph draft mutation, or
+The component does not own project creation, graph draft mutation, or
 authorization policy design. It consumes the protected runtime authorization
-boundary and returns read models.
+boundary, returns read models, and routes persistence through the governed
+workspace file command rail.
 
 ## Public API
 
@@ -44,12 +49,19 @@ boundary and returns read models.
 | `ListWorkspaceFiles`      | query | `tenantId`, `projectId`, `environmentId`                  | `WorkspaceFileTree`    | unauthenticated, unauthorized, missing scope                               |
 | `GetWorkspaceFileContent` | query | `tenantId`, `projectId`, `environmentId`, `WorkspacePath` | `WorkspaceFileContent` | unauthenticated, unauthorized, missing scope, invalid path, file not found |
 
+### Commands
+
+| Command                    | Type    | Input                                                                | Output                 | Failure states                                                   |
+| -------------------------- | ------- | -------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------- |
+| `SaveWorkspaceFileContent` | command | `tenantId`, `projectId`, `environmentId`, `WorkspacePath`, `content` | `WorkspaceFileContent` | unauthenticated, unauthorized, missing scope, invalid path, size |
+
 ### HTTP Adapter
 
-| Route                        | Implements                | Scope                                                                    |
-| ---------------------------- | ------------------------- | ------------------------------------------------------------------------ |
-| `GET /workspace/files`       | `ListWorkspaceFiles`      | query params: `tenantId`, `projectId`, `environmentId`                   |
-| `GET /workspace/files/:path` | `GetWorkspaceFileContent` | encoded path plus query params: `tenantId`, `projectId`, `environmentId` |
+| Route                         | Implements                 | Scope                                                                    |
+| ----------------------------- | -------------------------- | ------------------------------------------------------------------------ |
+| `GET /workspace/files`        | `ListWorkspaceFiles`       | query params: `tenantId`, `projectId`, `environmentId`                   |
+| `GET /workspace/files/:path`  | `GetWorkspaceFileContent`  | encoded path plus query params: `tenantId`, `projectId`, `environmentId` |
+| `POST /workspace/files/:path` | `SaveWorkspaceFileContent` | encoded path, query params: `tenantId`, `projectId`, `environmentId`     |
 
 ### Web Port
 
@@ -57,20 +69,41 @@ boundary and returns read models.
 
 - `listFiles(): Promise<WorkspaceFileEntry[]>`
 - `getFileContent(path: string): Promise<FileContent>`
+- `saveFileContent(path: string, content: string): Promise<FileContent>`
 
 The API adapter must build scoped endpoints from the active session store. The
 mock adapter may remain a test/demo adapter, but it must not define live API
 semantics.
 
+### Web Presentation API
+
+| Surface              | Type                 | Responsibility                                                          |
+| -------------------- | -------------------- | ----------------------------------------------------------------------- |
+| `CodeEditableBuffer` | presentation model   | Holds unsaved editor text per selected workspace path in the browser.   |
+| `CodeFileSelection`  | read-model projector | Resolves the first selectable file from the authorized workspace tree.  |
+| `MonacoCodeEditor`   | presentation gateway | Opens the shared Monaco surface in editable mode for Code.              |
+| `MonacoCodeViewer`   | presentation gateway | Opens the shared Monaco surface in read-only mode for Artifacts/review. |
+
+### Initial Selection Policy
+
+`CodeFileSelection` opens the file most likely to explain the graph the user
+just planned. It must prefer `pipelines/*.yaml|yml` workflow artifacts over
+root project configuration files such as `dbt_project.yml`. If no workflow
+artifact exists, it falls back to the first reachable file in the workspace
+tree.
+
 ## DDD Model
 
-| Object                    | Kind          | Responsibility                                                         |
-| ------------------------- | ------------- | ---------------------------------------------------------------------- |
-| `WorkspaceFileTree`       | read model    | File hierarchy under an authorized workspace root.                     |
-| `WorkspaceFileContent`    | read model    | Text content, language, path, name, and last modified metadata.        |
-| `WorkspacePath`           | value object  | Normalized relative path; rejects absolute paths and parent traversal. |
-| `WorkspaceFileReadPolicy` | policy        | Allows only authenticated, tenant/project/environment-scoped reads.    |
-| `WorkspaceFileRepository` | outbound port | Lists files and reads content from the configured backing store.       |
+| Object                     | Kind               | Responsibility                                                         |
+| -------------------------- | ------------------ | ---------------------------------------------------------------------- |
+| `WorkspaceFileTree`        | read model         | File hierarchy under an authorized workspace root.                     |
+| `WorkspaceFileContent`     | read model         | Text content, language, path, name, and last modified metadata.        |
+| `WorkspacePath`            | value object       | Normalized relative path; rejects absolute paths and parent traversal. |
+| `WorkspaceFileReadPolicy`  | policy             | Allows only authenticated, tenant/project/environment-scoped reads.    |
+| `WorkspaceFileWritePolicy` | policy             | Allows only authenticated, tenant/project/environment-scoped writes.   |
+| `WorkspaceFileRepository`  | outbound port      | Lists files and reads content from the configured backing store.       |
+| `CodeFileSelection`        | read model         | Keeps file-tree traversal out of route rendering components.           |
+| `CodeEditableBuffer`       | presentation model | Unsaved browser-local editor text keyed by workspace path.             |
 
 ## Invariants
 
@@ -81,7 +114,15 @@ semantics.
 - Invalid path maps to `invalid_workspace_path`.
 - The repository adapter rejects parent traversal, absolute paths, unsupported
   file types, and oversized files.
-- The Code workbench stays read-only even after the file route works.
+- The Code workbench may edit a browser-local buffer. Any persisted content must
+  use `SaveWorkspaceFileContent` and must not bypass the scoped command rail.
+- Initial Code file selection must prioritize workflow artifacts under
+  `pipelines/` so the Code tab opens the artifact that matches the visible graph
+  before lower-context project configuration files.
+- Code route copy resolves through `resolveCodeViewCopy(locale)`; route,
+  bootstrap, error, and Monaco surfaces must not own fixed-language strings.
+- Canvas preview provenance may persist generated graph artifacts through
+  `SaveWorkspaceFileContent` before calling `PreviewExecutablePlan`.
 - Cypress must not seed `/workspace/files` by intercepting the route when proving
   the live happy path.
 
@@ -96,8 +137,31 @@ stateDiagram-v2
   TreeLoaded --> LoadingContent: first or selected file exists
   LoadingContent --> PreviewLoaded: GetWorkspaceFileContent succeeds
   LoadingContent --> PreviewError: file missing or invalid
+  PreviewLoaded --> DirtyLocalBuffer: user types in Monaco
+  PreviewLoaded --> PersistingFile: command saves workspace artifact
+  PersistingFile --> PreviewLoaded: SaveWorkspaceFileContent succeeds
+  DirtyLocalBuffer --> PreviewLoaded: user reloads or selects another file
   PreviewLoaded --> LoadingContent: user selects another file
   PreviewError --> LoadingContent: user selects another file
+```
+
+## Selection Flow
+
+```mermaid
+flowchart LR
+  Tree["WorkspaceFileTree"]
+  Flatten["CodeFileSelection flattens files"]
+  Workflow{"Has pipelines/*.yaml|yml?"}
+  WorkflowFile["Open workflow artifact"]
+  FirstFile["Open first reachable file"]
+  Editor["MonacoCodeEditor local buffer"]
+
+  Tree --> Flatten
+  Flatten --> Workflow
+  Workflow -->|yes| WorkflowFile
+  Workflow -->|no| FirstFile
+  WorkflowFile --> Editor
+  FirstFile --> Editor
 ```
 
 ## Component Diagram
@@ -106,9 +170,12 @@ stateDiagram-v2
 flowchart TB
   subgraph Web["apps/web"]
     CodeView["CodeView"]
+    Selection["CodeFileSelection"]
     Queries["workspaceQueries"]
-    WorkspacePort["IWorkspacePort"]
-    ApiWorkspaceService["workspaceService.api"]
+    Editor["MonacoCodeEditor"]
+    FileQueryPort["IWorkspaceFilesQueryPort"]
+    FileCommandPort["IWorkspaceFileContentCommandPort"]
+    ApiWorkspacePorts["workspacePorts.api"]
     CodeStates["CodeStateViews"]
   end
 
@@ -116,15 +183,19 @@ flowchart TB
     Composer["workspaceFilesRouteGroup"]
     Routes["workspaceFilesRoutes"]
     Auth["authorizeExecutionScope"]
-    UseCases["List/Get Workspace Files Use Cases"]
+    UseCases["List/Get/Save Workspace Files Use Cases"]
     Port["WorkspaceFileRepository"]
     Adapter["LocalWorkspaceFileRepository"]
   end
 
   CodeView --> Queries
-  Queries --> WorkspacePort
-  WorkspacePort --> ApiWorkspaceService
-  ApiWorkspaceService --> Routes
+  CodeView --> Selection
+  CodeView --> Editor
+  Queries --> FileQueryPort
+  CodeView -. local buffer only .-> FileCommandPort
+  FileQueryPort --> ApiWorkspacePorts
+  FileCommandPort --> ApiWorkspacePorts
+  ApiWorkspacePorts --> Routes
   Composer --> Routes
   Composer --> UseCases
   Composer --> Adapter
@@ -137,26 +208,40 @@ flowchart TB
 
 ## Consumers
 
-| Consumer                | Uses                          | Rule                                                                  |
-| ----------------------- | ----------------------------- | --------------------------------------------------------------------- |
-| `CodeView`              | file tree and content queries | May render loading, empty, error, read-only, and preview states only. |
-| `Diff` views            | selected file content         | Must keep read-only posture and canonical error handling.             |
-| Artifact views          | workspace tree                | Must not infer authorization from file presence.                      |
-| Cypress Code happy path | browser proof                 | Must prove real route behavior in live API mode.                      |
+| Consumer                | Uses                                                                 | Rule                                                                  |
+| ----------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `CodeView`              | file tree, content queries, local buffer, `RouteWorkbenchFrameSlots` | May render loading, empty, error, local edit, and preview states.     |
+| `useCodeEditableBuffer` | selected file content                                                | Owns browser-local edit state keyed by workspace path.                |
+| `FileTreePanel`         | localized title, selected path, entries                              | Must render tree controls only; it does not own Code copy or queries. |
+| `resolveCodeViewCopy`   | locale                                                               | Supplies Code route copy; Spanish text exists only in the locale map. |
+| `Diff` views            | selected file content                                                | Must keep read-only posture and canonical error handling.             |
+| Artifact views          | workspace tree                                                       | Must not infer authorization from file presence.                      |
+| Canvas preview/run path | `SaveWorkspaceFileContent`                                           | Must persist graph artifacts before protected plan preview.           |
+| Cypress Code happy path | browser proof                                                        | Must prove real route behavior in live API mode.                      |
 
 ## Architecture Test Requirement
 
 Add a semantic architecture test that checks:
 
-- component docs list `ListWorkspaceFiles` and `GetWorkspaceFileContent`;
+- component docs list `ListWorkspaceFiles`, `GetWorkspaceFileContent`, and
+  `SaveWorkspaceFileContent`;
 - global API route registration delegates to `registerProtectedWorkspaceFilesRouteGroup`;
 - `registerProtectedRuntimeRoutes.ts` does not construct
   `LocalWorkspaceFileRepository`, `ListWorkspaceFilesUseCase`, or
   `GetWorkspaceFileContentUseCase`;
 - web API adapter does not call bare `/workspace/files` without scope;
 - no route component imports a concrete filesystem adapter;
-- `saveFileContent` is not wired to a live API write route as part of this
-  read-only component.
+- `CodeView` delegates initial file selection to `CodeFileSelection` instead
+  of owning file-tree traversal logic, and `CodeFileSelection` prefers
+  `pipelines/*.yaml|yml` workflow artifacts before generic project config
+  files;
+- `CodeView` delegates local edit storage to `CodeEditableBuffer` instead of
+  owning a path-keyed buffer map inline;
+- `CodeView` delegates route frame semantics to `RouteWorkbenchFrameSlots` so
+  file navigation is `leftPanel` and local-buffer preview is `primarySurface`;
+- Code bootstrap/error tests assert resolved copy objects, not fixed-language
+  literals outside the locale catalog tests;
+- `saveFileContent` is wired only to the scoped live API write route.
 
 This guard must validate semantics, not only barrel thinness.
 
@@ -177,8 +262,8 @@ Allowed surfaces:
 
 Forbidden in this slice:
 
-- adding file write support;
 - changing Canvas graph draft semantics;
 - adding fixture fallback for API mode;
 - relaxing authorization or scope requirements;
-- introducing a second workspace file query name.
+- introducing a second workspace file query name;
+- presenting local Monaco edits as persisted changes.

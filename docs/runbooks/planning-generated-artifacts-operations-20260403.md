@@ -10,6 +10,11 @@ last_reviewed: 2026-04-03
 This runbook defines how to operate planning-generated pages that are
 intentionally not tracked in git.
 
+> Owned concern: this runbook operates generated planning artifacts through
+> `ClassifyGeneratedDocsSurface`, `ExtractGeneratedDocsSurface`, and
+> `ValidateGeneratedDocsArtifact` so generated pages do not become hidden
+> authored governance policy.
+
 ## Scope
 
 Derived planning pages:
@@ -27,6 +32,23 @@ Canonical tracked inputs:
 - `docs/planning/state/agent-lane-*.yaml`
 - tracked planning docs (control tower, portfolio maps, proposals, reviews,
   closeouts, roadmap)
+
+## Generated Surface Registry
+
+Every generated planning surface is classified before extraction:
+
+| Classification             | Meaning                                                                                                                                 | Rail                           |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `must-track`               | The generated surface carries governance-critical navigation or publication continuity that still requires a tracked file.              | `ClassifyGeneratedDocsSurface` |
+| `candidate-for-extraction` | The generated surface can become artifact-only after deterministic validation, discoverability checks, and rollback instructions exist. | `ClassifyGeneratedDocsSurface` |
+
+`ExtractGeneratedDocsSurface` is the command rail for a future task that stops
+tracking an eligible generated page. It must name the surface, source
+generator, owning docs area, rollback path, and acceptance evidence.
+
+`ValidateGeneratedDocsArtifact` is the query rail used by CI and local checks
+to prove marker integrity, deterministic output, and discoverability for
+artifact-only generated pages.
 
 ## Standard local workflow
 
@@ -46,8 +68,10 @@ For isolated local preview that must not touch tracked docs files:
 ## CI expectations
 
 - `PR Quality Gate` runs `pnpm docs:sync:check` for tracked generated docs.
-- `PR Quality Gate` runs `pnpm docs:workboard:check` for planning-generated
-  artifact integrity and determinism.
+- When lane YAML changes, `PR Quality Gate` starts an ephemeral planning DB,
+  runs migrations, imports planning state with `pnpm planning:db:import --
+--if-stale --planning-only`, and then runs `pnpm docs:workboard:check` for
+  planning-generated artifact integrity and determinism.
 - planning-generated pages must not be tracked in git.
 
 ## Failure triage

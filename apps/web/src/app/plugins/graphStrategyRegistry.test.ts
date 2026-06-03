@@ -15,7 +15,7 @@ describe('resolveCanvasGraphStrategy', () => {
         graphStrategyId: registration.graphStrategy.id,
       }))
     ).toEqual([
-      { kind: 'dbt', executionKind: 'not_executable', graphStrategyId: 'dbt' },
+      { kind: 'dbt', executionKind: 'planner_generic_preview', graphStrategyId: 'dbt' },
       {
         kind: 'transformation',
         executionKind: 'transformation_preview',

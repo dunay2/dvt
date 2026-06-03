@@ -157,7 +157,7 @@ allowedImplementationSurfaces:
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/state/agent-lane-e.md
   - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md
+  - docs/planning/state/open-task-route.md # Task: E-PROP-DISP-1
   - docs/planning/status/**
   - package.json
 forbiddenImplementationSurfaces:
@@ -252,7 +252,7 @@ redGreenCycles:
       - docs/planning/state/agent-lane-e.yaml
       - docs/planning/state/agent-lane-e.md
       - docs/planning/state/execution-workboard.md
-      - docs/planning/state/open-task-route.md
+      - docs/planning/state/open-task-route.md # Task: E-PROP-DISP-1
       - docs/.manifest.json
       - docs/planning/status/**
       - package.json
@@ -325,6 +325,20 @@ symbols:
     unitTests:
       - routeBootstrapStartupReadiness.test.ts
   - name: resolveEffectiveRoutePresentation
+    path: apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
+    dddOwner: RouteBootstrapStartupReadinessState internal policy helper
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - PublishAppBootstrapStepStatus
+      - CompleteAppBootstrapScreen
+    fowlerSignals:
+      - Boundary drift
+      - Temporal coupling
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routeBootstrapStartupReadiness.test.ts
+  - name: resolveCapabilitiesSuppressedPresentation
     path: apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
     dddOwner: RouteBootstrapStartupReadinessState internal policy helper
     cqRails:

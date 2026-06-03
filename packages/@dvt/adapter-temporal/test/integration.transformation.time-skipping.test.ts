@@ -17,8 +17,9 @@ import { ApplicationFailure } from '@temporalio/activity';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
+import type { DbtPluginRunner } from '../../temporal-dbt-plugin/src/index.js';
 import { DEFAULT_STEP_EXECUTORS } from '../src/activities/stepActivities.js';
-import { loadTemporalAdapterConfig, TemporalAdapter, type DbtPluginRunner } from '../src/index.js';
+import { loadTemporalAdapterConfig, TemporalAdapter } from '../src/index.js';
 
 import {
   createDbtActivityDeps,

@@ -189,7 +189,7 @@ flowchart LR
 | --------------------------------------------- | ------------------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------- |
 | Platform connection inside shell layout       | `apps/web/src/app/stores/uiLayoutStore.ts`  | `apps/web/src/app/stores/platformConnectionStore.ts` | `uiLayoutStore.test.ts`, `platformConnectionStore.test.ts`.                   |
 | Permission projection inside runtime evidence | `apps/web/src/app/stores/executionStore.ts` | `apps/web/src/app/stores/authorizationStore.ts`      | `authorizationStore.test.ts`, `webStoreDomainOwnership.architecture.test.ts`. |
-| Retired global aggregate store                | `apps/web/src/app/stores/appStore.ts`       | No active owner; surface remains absent.             | `canvasStartupAndDraftRecovery.architecture.test.ts`, query-key guard.        |
+| Retired global aggregate store                | `apps/web/src/app/stores/appStore.ts`       | No active owner; surface remains absent.             | `canvasRoutePosturePriority.architecture.test.ts`, query-key guard.           |
 
 Hard cut complete: no open F-05 store ownership drift remains in this branch.
 Historical documents may still mention retired surfaces as historical evidence,
@@ -208,7 +208,7 @@ but active component governance routes through this page and the local guide.
 
 | Rule                                    | Current proof                                                                                       |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| No legacy aggregate store               | `canvasStartupAndDraftRecovery.architecture.test.ts` asserts `appStore.ts` does not exist.          |
+| No legacy aggregate store               | `canvasRoutePosturePriority.architecture.test.ts` asserts `appStore.ts` does not exist.             |
 | No query imports from retired aggregate | `queryKeyPolicy.architecture.test.ts` forbids `stores/appStore` imports in query surfaces.          |
 | Canvas layout remains route-local       | `canvasInteractionStore.test.ts` covers persisted layout hydration.                                 |
 | Shell layout remains bounded            | `uiLayoutStore.test.ts` covers persisted layout normalization.                                      |

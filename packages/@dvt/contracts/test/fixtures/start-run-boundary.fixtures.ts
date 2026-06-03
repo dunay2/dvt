@@ -19,7 +19,7 @@ export const VALID_START_RUN_PLAN_REF_COMMAND_FIXTURE: StartRunCommand = {
   planRef: parsePlanRef({
     uri: 's3://plans/plan-1.json',
     sha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    schemaVersion: 'v1.2',
+    schemaVersion: '1.0',
     planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     planVersion: '1.0',
   }),

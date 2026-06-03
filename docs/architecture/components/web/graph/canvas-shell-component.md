@@ -80,7 +80,7 @@ The canonical route builds one `CanvasShellProps` value and passes it to
 `CanvasShell`.
 
 `CanvasShellPanels.authoringNodeKinds` is the ready-canvas node creation
-catalog exposed to the Explorer rail. It must be derived from the active
+catalog exposed to the `Insert` surface. It must be derived from the active
 `canvasDocument.kind` and its matching `CanvasKindRegistration.nodeKinds`.
 
 ## Contract rationale
@@ -172,8 +172,8 @@ flowchart LR
   Permissions["effective permissions"] --> PanelsBuilder
   PanelsBuilder --> NodeKinds["panels.authoringNodeKinds"]
   NodeKinds --> Shell["CanvasShell"]
-  Shell --> Explorer["DbtExplorer Add node"]
-  Explorer --> Command["graphCommands.onCreateAuthoringNode"]
+  Shell --> Insert["CanvasToolbar Insert"]
+  Insert --> Command["graphCommands.onCreateAuthoringNode"]
 ```
 
 ## Transitions
@@ -207,8 +207,10 @@ flowchart TD
   context belong to `panels`.
 - Ready-canvas node creation choices belong to `panels.authoringNodeKinds` and
   must be resolved from the active canvas runtime registration.
-- `CanvasShell.tsx` must pass ready-canvas creation through
+- `CanvasShell.tsx` must keep ready-canvas creation on the `Insert` path through
   `graphCommands.onCreateAuthoringNode`; it must not mutate draft state.
+- `CanvasShell.tsx` must not pass node-kind creation catalogs or creation
+  commands to the Workspace Explorer.
 - `CanvasShell.tsx` may compose local UI state such as import dialog openness,
   but it must not become a persistence or route-state authority.
 - `CanvasShell.tsx` must keep sizing and rail composition behind named local
@@ -248,5 +250,8 @@ The canonical checks for this component are:
   composition has leaked into presentation policy
 - if `CanvasShell.tsx` or `DbtExplorer.tsx` starts constructing a global node
   catalog, ready-canvas authoring has drifted away from runtime policy
+- if `DbtExplorer.tsx` receives `authoringNodeKinds`, `nodeKinds`, or
+  `onCreateAuthoringNode`, resource browsing and object creation have drifted
+  back together
 - if viewport and chrome callbacks mix again inside one command bag, command
   ownership has drifted backwards

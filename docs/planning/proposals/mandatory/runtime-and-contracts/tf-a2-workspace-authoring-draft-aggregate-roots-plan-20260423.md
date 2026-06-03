@@ -697,7 +697,7 @@ Scope:
 
 - promote `WorkspaceGraphAuthoringDraft` to the active persisted draft shape
 - define and document aggregate versus application command ownership
-- add semantic architecture tests proving the persistence boundary no longer
+- [Task: RUNTIME-PROP-DISP-1] add semantic architecture tests proving the persistence boundary no longer
   imports `DesignGraphDraft`
 - document that run/preview must enter through `ExecutionSelection`, not the
   full editable draft

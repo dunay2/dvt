@@ -55,6 +55,8 @@ No other production module should call private UUID formatting helpers.
 ## Invariants
 
 - generated ids use the `run_<UUIDv7>` shape;
+- `startRunRouteCommandBuilder.ts` validates the generated value before
+  building `StartRunCommand`;
 - consumers treat returned ids as opaque strings;
 - UUID timestamp bits are platform-local diagnostic data, not ordering,
   authorization, retry, or lifecycle input;
@@ -134,6 +136,8 @@ That test validates semantics, not barrel thinness:
 
 - caller-authored `runId` is rejected before allocation;
 - platform identity is injected only after caller-owned fields are valid;
+- malformed generated identity is rejected before application/runtime
+  orchestration;
 - `run_<UUIDv7>` shape and timestamp locality are enforced;
 - forbidden engine, persistence, adapter, facade, retry, idempotency, recovery,
   cancel, and workflow vocabulary stays out of the allocator;

@@ -20,13 +20,13 @@ import {
   type PlanRecord,
   type ScopedPlanId,
   type ScopedPlanRef,
-  type PlanValidationRecord,
   parsePlanAdmissionLink,
   parsePlanExecutabilityRecord,
   parsePlanRecord,
   parsePlanRef,
   type PlannerBuildResultV1,
   type RunExecutionPolicy,
+  type StoredPlanArtifactValidationRecord,
 } from '@dvt/contracts';
 import { Pool, type PoolClient } from 'pg';
 
@@ -143,14 +143,22 @@ export class PostgresPlanStore
         executablePlanJson: executable.text,
       });
 
-      if (persisted.validation_state !== 'PENDING_VALIDATION') {
+      if (persisted.validation_state === 'INVALID') {
         throw new Error(
           `PLAN_VALIDATION_STATE_REUSE_UNSUPPORTED: ${planId}:${persisted.validation_state}`
         );
       }
-      await this.planRecordRepository.upsert(client, buildPlanRecord(buildResult, planRef));
+      const persistedPlanRef = buildPlanRefFromStoredRow(persisted);
+      const planRecordOptions =
+        persisted.canonical_plan_json === undefined
+          ? {}
+          : { canonicalPlanJson: persisted.canonical_plan_json };
+      await this.planRecordRepository.upsert(
+        client,
+        buildPlanRecord(buildResult, persistedPlanRef, planRecordOptions)
+      );
 
-      return buildPlanRefFromStoredRow(persisted);
+      return persistedPlanRef;
     });
   }
 
@@ -246,7 +254,7 @@ export class PostgresPlanStore
 
   public async getStoredPlanValidationRecord(
     input: ScopedPlanId
-  ): Promise<PlanValidationRecord | undefined> {
+  ): Promise<StoredPlanArtifactValidationRecord | undefined> {
     const row = await this.withClient(async (client) => {
       const record = await this.planRecordRepository.get(client, input);
       if (!record) {

@@ -1,22 +1,17 @@
+/**
+ * Owned concern: measure outbox delivery SLA counters, lag, and latency seconds.
+ */
 import type { OutboxRecord } from '@dvt/contracts';
-import type {
-  OutboxFailureDisposition,
-  OutboxTickResult,
-} from '@dvt/delivery';
+import type { OutboxFailureDisposition, OutboxTickResult } from '@dvt/delivery';
 
 import type { OutboxWorkerRuntimeLogger } from '../../runtime/OutboxWorkerRuntime.js';
 
 import {
-  DELIVERY_EVENT_LATENCY_BUCKETS_MS,
+  DELIVERY_EVENT_LATENCY_BUCKETS_SECONDS,
   type DeliveryFailureSignal,
   type OutboxDeliveryMetricsSnapshot,
 } from './model.js';
-import {
-  resolveLagSeconds,
-  resolveOldestRecord,
-  roundToMillis,
-  toRecordLog,
-} from './support.js';
+import { resolveLagSeconds, resolveOldestRecord, roundToMillis, toRecordLog } from './support.js';
 
 interface OutboxDeliveryTelemetryOptions {
   logger: OutboxWorkerRuntimeLogger;
@@ -37,11 +32,11 @@ export class OutboxDeliveryTelemetry {
   private pendingDeliveryFailureAtMs: number | null = null;
   private pendingDeliveryFailureMessage: string | null = null;
   private readonly claimedAtByRecordId = new Map<string, number>();
-  private readonly eventDeliveryLatencyBucketCounts = DELIVERY_EVENT_LATENCY_BUCKETS_MS.map(
+  private readonly eventDeliveryLatencyBucketCounts = DELIVERY_EVENT_LATENCY_BUCKETS_SECONDS.map(
     () => 0
   );
   private eventDeliveryLatencyCount = 0;
-  private eventDeliveryLatencySumMs = 0;
+  private eventDeliveryLatencySumSeconds = 0;
 
   constructor(options: OutboxDeliveryTelemetryOptions) {
     this.logger = options.logger;
@@ -86,11 +81,7 @@ export class OutboxDeliveryTelemetry {
     this.logger.info(toRecordLog(record), 'outbox record delivered');
   }
 
-  onRecordFailed(
-    record: OutboxRecord,
-    error: string,
-    disposition: OutboxFailureDisposition
-  ): void {
+  onRecordFailed(record: OutboxRecord, error: string, disposition: OutboxFailureDisposition): void {
     this.observeEventDeliveryLatency(record.id);
     this.pendingDeliveryFailureMessage = error;
     this.pendingDeliveryFailureAtMs = this.nowMs();
@@ -110,10 +101,7 @@ export class OutboxDeliveryTelemetry {
   }
 
   consumePendingFailure(): DeliveryFailureSignal | null {
-    if (
-      this.pendingDeliveryFailureAtMs === null &&
-      this.pendingDeliveryFailureMessage === null
-    ) {
+    if (this.pendingDeliveryFailureAtMs === null && this.pendingDeliveryFailureMessage === null) {
       return null;
     }
 
@@ -141,7 +129,7 @@ export class OutboxDeliveryTelemetry {
       lastBatchClaimedCount: this.lastBatchClaimedCount,
       eventDeliveryLatencyBucketCounts: [...this.eventDeliveryLatencyBucketCounts],
       eventDeliveryLatencyCount: this.eventDeliveryLatencyCount,
-      eventDeliveryLatencySumMs: this.eventDeliveryLatencySumMs,
+      eventDeliveryLatencySumSeconds: this.eventDeliveryLatencySumSeconds,
     };
   }
 
@@ -152,12 +140,12 @@ export class OutboxDeliveryTelemetry {
     }
 
     this.claimedAtByRecordId.delete(recordId);
-    const elapsedMs = Math.max(0, this.nowMs() - claimedAtMs);
+    const elapsedSeconds = Math.max(0, this.nowMs() - claimedAtMs) / 1000;
     this.eventDeliveryLatencyCount += 1;
-    this.eventDeliveryLatencySumMs += elapsedMs;
+    this.eventDeliveryLatencySumSeconds += elapsedSeconds;
 
-    for (const [index, bucketUpperBound] of DELIVERY_EVENT_LATENCY_BUCKETS_MS.entries()) {
-      if (elapsedMs <= bucketUpperBound) {
+    for (const [index, bucketUpperBound] of DELIVERY_EVENT_LATENCY_BUCKETS_SECONDS.entries()) {
+      if (elapsedSeconds <= bucketUpperBound) {
         const bucketCount = this.eventDeliveryLatencyBucketCounts[index] ?? 0;
         this.eventDeliveryLatencyBucketCounts[index] = bucketCount + 1;
       }

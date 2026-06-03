@@ -1,3 +1,6 @@
+/**
+ * @ownedConcern Owns PostgreSQL run-event archive-unit eligibility, export/verification state transitions, restore writes, and hot-store deletion for the state-store adapter.
+ */
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -5,6 +8,7 @@ import {
   calculateDeleteAfterIso,
   deriveTenantBucket,
   parseArchiveUnitKey,
+  resolveTenantHotRetentionDays,
   type ArchiveBatchDroppedRecord,
   type ArchiveBatchExportedRecord,
   type ArchiveBatchFailureRecord,
@@ -23,6 +27,7 @@ import {
   type RunEventRetentionPolicy,
   type TerminalSnapshotPinResult,
   type TerminalSnapshotPinStore,
+  validateRunEventRetentionPolicy,
 } from '@dvt/state-store';
 import type { PoolClient } from 'pg';
 
@@ -40,6 +45,7 @@ interface EligibleRunRow {
   row_count: number | string;
   min_run_seq: number | string;
   max_run_seq: number | string;
+  max_persisted_at: Date | string;
   snapshot_status: string | null;
 }
 
@@ -102,8 +108,9 @@ export class PostgresRunArchiveStore
     policy: RunEventRetentionPolicy,
     nowIso: string
   ): Promise<readonly EligibleArchiveUnit[]> {
-    validateRetentionPolicy(policy);
-    const cutoffIso = computeCutoffIso(nowIso, policy.hotRetentionDays);
+    validateRunEventRetentionPolicy(policy);
+    validateArchiveNow(nowIso);
+    const scanCutoffIso = computeCutoffIso(nowIso, getShortestHotRetentionDays(policy));
 
     return this.withTransaction(async (client) => {
       await enterPostgresMaintenanceContext(client, RUN_ARCHIVE_SERVICE_ACCESS);
@@ -116,6 +123,7 @@ export class PostgresRunArchiveStore
             COUNT(*) AS row_count,
             MIN(e.run_seq) AS min_run_seq,
             MAX(e.run_seq) AS max_run_seq,
+            MAX(e.persisted_at) AS max_persisted_at,
             s.snapshot_status
           FROM ${quoteIdentifier(this.schema)}.run_events e
           LEFT JOIN ${quoteIdentifier(this.schema)}.run_snapshots s
@@ -129,7 +137,7 @@ export class PostgresRunArchiveStore
             s.snapshot_status
           ORDER BY persisted_at_day ASC, e.tenant_id ASC, e.run_id ASC
         `,
-        [cutoffIso]
+        [scanCutoffIso]
       );
 
       const candidatesByKey = new Map<
@@ -141,6 +149,7 @@ export class PostgresRunArchiveStore
           minRunSeq: number;
           maxRunSeq: number;
           hasNonTerminalRun: boolean;
+          hasTenantOutsideRetention: boolean;
         }
       >();
 
@@ -153,6 +162,14 @@ export class PostgresRunArchiveStore
         const candidate = ensureCandidate(candidatesByKey, archiveUnitKey, tenantBucket);
 
         candidate.tenantIds.add(row.tenant_id);
+
+        const tenantHotRetentionDays = resolveTenantHotRetentionDays(policy, row.tenant_id);
+        const cutoffIso = computeCutoffIso(nowIso, tenantHotRetentionDays);
+        if (!isBeforeCutoff(row.max_persisted_at, cutoffIso)) {
+          candidate.hasTenantOutsideRetention = true;
+          continue;
+        }
+
         candidate.rowCount += Number(row.row_count);
         candidate.minRunSeq = Math.min(candidate.minRunSeq, Number(row.min_run_seq));
         candidate.maxRunSeq = Math.max(candidate.maxRunSeq, Number(row.max_run_seq));
@@ -180,6 +197,9 @@ export class PostgresRunArchiveStore
       const eligible: EligibleArchiveUnit[] = [];
       for (const [archiveUnitKey, candidate] of candidatesByKey) {
         const existing = existingByKey.get(archiveUnitKey);
+        if (candidate.hasTenantOutsideRetention) {
+          continue;
+        }
         if (candidate.hasNonTerminalRun) {
           continue;
         }
@@ -865,21 +885,35 @@ export class PostgresRunArchiveStore
   }
 }
 
-function validateRetentionPolicy(policy: RunEventRetentionPolicy): void {
-  if (!Number.isInteger(policy.hotRetentionDays) || policy.hotRetentionDays <= 0) {
-    throw new Error('ARCHIVE_HOT_RETENTION_DAYS_INVALID');
-  }
-  if (!Number.isInteger(policy.archiveBucketCount) || policy.archiveBucketCount <= 0) {
-    throw new Error('ARCHIVE_BUCKET_COUNT_INVALID');
-  }
-}
-
 function computeCutoffIso(nowIso: string, hotRetentionDays: number): string {
   const now = new Date(nowIso);
   if (Number.isNaN(now.getTime())) {
     throw new Error('ARCHIVE_NOW_INVALID');
   }
   return new Date(now.getTime() - hotRetentionDays * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function getShortestHotRetentionDays(policy: RunEventRetentionPolicy): number {
+  return Math.min(
+    policy.hotRetentionDays,
+    ...(policy.tenantHotRetentionDays ?? []).map((override) => override.hotRetentionDays)
+  );
+}
+
+function validateArchiveNow(nowIso: string): void {
+  const now = new Date(nowIso);
+  if (Number.isNaN(now.getTime())) {
+    throw new Error('ARCHIVE_NOW_INVALID');
+  }
+}
+
+function isBeforeCutoff(value: Date | string, cutoffIso: string): boolean {
+  const persistedAt = value instanceof Date ? value : new Date(value);
+  const cutoff = new Date(cutoffIso);
+  if (Number.isNaN(persistedAt.getTime()) || Number.isNaN(cutoff.getTime())) {
+    throw new Error('ARCHIVE_PERSISTED_AT_INVALID');
+  }
+  return persistedAt.getTime() < cutoff.getTime();
 }
 
 function ensureCandidate(
@@ -892,6 +926,7 @@ function ensureCandidate(
       minRunSeq: number;
       maxRunSeq: number;
       hasNonTerminalRun: boolean;
+      hasTenantOutsideRetention: boolean;
     }
   >,
   archiveUnitKey: string,
@@ -903,6 +938,7 @@ function ensureCandidate(
   minRunSeq: number;
   maxRunSeq: number;
   hasNonTerminalRun: boolean;
+  hasTenantOutsideRetention: boolean;
 } {
   const existing = candidatesByKey.get(archiveUnitKey);
   if (existing) {
@@ -915,6 +951,7 @@ function ensureCandidate(
     minRunSeq: Number.POSITIVE_INFINITY,
     maxRunSeq: Number.NEGATIVE_INFINITY,
     hasNonTerminalRun: false,
+    hasTenantOutsideRetention: false,
   };
   candidatesByKey.set(archiveUnitKey, created);
   return created;

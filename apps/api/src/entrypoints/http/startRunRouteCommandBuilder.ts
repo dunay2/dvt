@@ -17,6 +17,9 @@ import { badRequestResult, type RouteParseResult } from './routeParseIssue.js';
 import type { StartRunRunIdGenerator } from './startRunIdentity.js';
 import { parseStartRunTargetAdapter } from './startRunRouteTargetAdapterParser.js';
 
+const PLATFORM_START_RUN_ID_PATTERN =
+  /^run_[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
 export function parseStartRunCommand(
   record: Record<string, unknown>,
   adapterRegistry: IStartRunTargetAdapterRegistry,
@@ -145,7 +148,7 @@ function rejectClientProvidedStartRunRunId(
 
 function parseGeneratedStartRunRunId(rawRunId: unknown): RouteParseResult<string> {
   const runId = asCanonicalNonEmptyStringOrUndefined(rawRunId);
-  if (runId === undefined) {
+  if (runId === undefined || !PLATFORM_START_RUN_ID_PATTERN.test(runId)) {
     return badRequestResult(HTTP_ERROR_REASON.invalidRunId, { target: 'runId' });
   }
   return { ok: true, value: runId };

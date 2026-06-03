@@ -11,9 +11,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createPlanRef, createResolvedRunContext } from './helpers/contractFixtures.js';
 
 const {
+  bootstrapFirstExecutionIfNeeded,
   emitSkippedStepsInLayer,
   finalizeCancellationIfRequested,
+  finalizeNativeCancellationIfNeeded,
   handlePreLayerLifecycle,
+  markWorkflowFailedIfNeeded,
   maybeBuildContinueAsNewOutcome,
   segmentActivities,
   selectExecutableLayer,
@@ -23,9 +26,18 @@ const {
   },
   handlePreLayerLifecycle: vi.fn(),
   finalizeCancellationIfRequested: vi.fn(),
+  finalizeNativeCancellationIfNeeded: vi.fn(),
   emitSkippedStepsInLayer: vi.fn(),
   selectExecutableLayer: vi.fn(),
   maybeBuildContinueAsNewOutcome: vi.fn(),
+  bootstrapFirstExecutionIfNeeded: vi.fn(),
+  markWorkflowFailedIfNeeded: vi.fn(),
+}));
+
+vi.mock('@temporalio/workflow', () => ({
+  defineQuery: vi.fn((name: string) => ({ kind: 'query', name })),
+  defineSignal: vi.fn((name: string) => ({ kind: 'signal', name })),
+  setHandler: vi.fn(),
 }));
 
 vi.mock('../src/workflows/runPlanWorkflow.activities.js', () => ({
@@ -33,8 +45,15 @@ vi.mock('../src/workflows/runPlanWorkflow.activities.js', () => ({
 }));
 
 vi.mock('../src/workflows/runPlanWorkflow.cancellation.js', () => ({
+  finalizeNativeCancellationIfNeeded,
   finalizeCancellationIfRequested,
   handlePreLayerLifecycle,
+}));
+
+vi.mock('../src/workflows/runPlanWorkflow.lifecycle.js', () => ({
+  bootstrapFirstExecutionIfNeeded,
+  markWorkflowFailedIfNeeded,
+  resolveLayerLoopOutcome: vi.fn(),
 }));
 
 vi.mock('../src/workflows/runPlanWorkflow.layerHelpers.js', () => ({
@@ -57,6 +76,8 @@ describe('executePlanLayers lifecycle ordering', () => {
     vi.clearAllMocks();
     selectExecutableLayer.mockReturnValue([{ stepId: 's-1', kind: 'DBT_MODEL', dependsOn: [] }]);
     finalizeCancellationIfRequested.mockResolvedValue(null);
+    finalizeNativeCancellationIfNeeded.mockResolvedValue(false);
+    markWorkflowFailedIfNeeded.mockResolvedValue(undefined);
     maybeBuildContinueAsNewOutcome.mockReturnValue(null);
   });
 
@@ -126,5 +147,36 @@ describe('executePlanLayers lifecycle ordering', () => {
     });
     expect(handlePreLayerLifecycle).toHaveBeenCalledTimes(1);
     expect(emitSkippedStepsInLayer).not.toHaveBeenCalled();
+  });
+
+  it('does not execute layers when initial segment resolution fails integrity validation', async () => {
+    const layersModule = await import('../src/workflows/runPlanWorkflow.layers.js');
+    const executePlanLayersSpy = vi.spyOn(layersModule, 'executePlanLayers');
+    const { runPlanWorkflow } = await import('../src/workflows/RunPlanWorkflow.js');
+    const integrityError = new Error('PLAN_INTEGRITY_VALIDATION_FAILED');
+
+    segmentActivities.resolveExecutionSegment.mockRejectedValue(integrityError);
+
+    await expect(
+      runPlanWorkflow({
+        planRef: createPlanRef({
+          uri: 'file://plan.json',
+          sha256: 'a'.repeat(64),
+          planId: 'plan-1',
+        }),
+        ctx: createResolvedRunContext({
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'env-1',
+          runId: 'run-1',
+        }),
+        maxContinueAsNewPayloadBytes: 1_024,
+        continueAsNewAfterLayerCount: 1,
+      })
+    ).rejects.toThrow('PLAN_INTEGRITY_VALIDATION_FAILED');
+
+    expect(executePlanLayersSpy).not.toHaveBeenCalled();
+    expect(bootstrapFirstExecutionIfNeeded).not.toHaveBeenCalled();
+    expect(markWorkflowFailedIfNeeded).toHaveBeenCalledTimes(1);
   });
 });

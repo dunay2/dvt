@@ -59,6 +59,7 @@ belongs to the protected-runtime dependency builders, not to `startRun`.
   `BackpressureAwareStartRunUseCase`,
   `PlannerBackedStartRunUseCase`,
   `ResolveAuthorizedExecutableSubgraphService`,
+  `DbtRunExecutionContextBindingUseCase`,
   `EngineStartRunUseCase`,
   and `StoredPlanExecutabilityValidator`
 - the outer composition root passes abstract runtime dependencies into this
@@ -82,6 +83,7 @@ flowchart LR
   StartRunRuntime --> Admission["BackpressureAwareStartRunUseCase"]
   StartRunRuntime --> Planner["PlannerBackedStartRunUseCase"]
   StartRunRuntime --> Resolver["ResolveAuthorizedExecutableSubgraphService"]
+  StartRunRuntime --> DbtBinding["DbtRunExecutionContextBindingUseCase"]
   StartRunRuntime --> Engine["EngineStartRunUseCase"]
   StartRunRuntime --> Validator["StoredPlanExecutabilityValidator"]
   StartRunRuntime --> Compile["buildPlanCompilePlanner()"]
@@ -99,6 +101,7 @@ sequenceDiagram
   participant Admission as BackpressureAwareStartRunUseCase
   participant Planner as PlannerBackedStartRunUseCase
   participant Resolver as ResolveAuthorizedExecutableSubgraphService
+  participant DbtBinding as DbtRunExecutionContextBindingUseCase
   participant Engine as EngineStartRunUseCase
 
   Root->>StartRun: pass authenticator, authorizer, engine, adapters, stores, telemetry deps
@@ -106,6 +109,7 @@ sequenceDiagram
   Binding-->>Root: abstract IStartRunExecutionCapacityPort
   StartRun->>StartRun: bind plan validator + compile planner
   StartRun->>Engine: construct execution delegate
+  StartRun->>DbtBinding: wrap execution delegate for DBT PlanRef contexts
   StartRun->>Resolver: bind protected workspace-graph draft store + planner
   StartRun->>Planner: construct planner-backed delegate
   StartRun->>Admission: construct admission use case
