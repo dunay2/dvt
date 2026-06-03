@@ -5,8 +5,16 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
+
+type GitOutputRunner = (args: readonly string[], cwd: string) => string[];
+
+type ReadChangedFilesOptions = Readonly<{
+  env?: Readonly<Record<string, string | undefined>>;
+  gitOutput?: GitOutputRunner;
+}>;
 
 function parseExplicitFiles(argv: readonly string[]): string[] {
   const filesFlagIndex = argv.indexOf('--files');
@@ -30,29 +38,54 @@ function gitOutput(args: readonly string[], cwd: string): string[] {
     .filter((line) => line.length > 0);
 }
 
-function readChangedFiles(repoRoot: string): string[] {
-  const baseRef = process.env.GIT_BASE || 'origin/main';
-  const mergeBase = gitOutput(['merge-base', baseRef, 'HEAD'], repoRoot)[0] ?? baseRef;
-  const files = new Set<string>();
+function tryGitOutput(
+  runGitOutput: GitOutputRunner,
+  args: readonly string[],
+  cwd: string
+): string[] | null {
+  try {
+    return runGitOutput(args, cwd);
+  } catch {
+    return null;
+  }
+}
 
-  for (const filePath of gitOutput(
-    ['diff', '--name-only', '--diff-filter=ACMR', mergeBase, 'HEAD'],
-    repoRoot
-  )) {
+function addChangedFiles(files: Set<string>, filePaths: readonly string[] | null): void {
+  for (const filePath of filePaths ?? []) {
     files.add(filePath);
   }
-  for (const filePath of gitOutput(
-    ['diff', '--name-only', '--diff-filter=ACMR', '--cached'],
-    repoRoot
-  )) {
-    files.add(filePath);
+}
+
+export function readChangedFiles(
+  repoRoot: string,
+  options: ReadChangedFilesOptions = {}
+): string[] {
+  const runGitOutput = options.gitOutput ?? gitOutput;
+  const env = options.env ?? process.env;
+  const baseRef = env.GIT_BASE || 'origin/main';
+  const headRef = env.GIT_HEAD || 'HEAD';
+  const files = new Set<string>();
+  const diffArgs = ['diff', '--name-only', '--diff-filter=ACMR'] as const;
+  const directDiffFiles = tryGitOutput(runGitOutput, [...diffArgs, baseRef, headRef], repoRoot);
+
+  if (directDiffFiles !== null) {
+    addChangedFiles(files, directDiffFiles);
+  } else {
+    const mergeBase = tryGitOutput(runGitOutput, ['merge-base', baseRef, headRef], repoRoot)?.[0];
+    addChangedFiles(
+      files,
+      mergeBase === undefined
+        ? tryGitOutput(runGitOutput, [...diffArgs, baseRef, 'HEAD'], repoRoot)
+        : tryGitOutput(runGitOutput, [...diffArgs, mergeBase, headRef], repoRoot)
+    );
   }
-  for (const filePath of gitOutput(['diff', '--name-only', '--diff-filter=ACMR'], repoRoot)) {
-    files.add(filePath);
-  }
-  for (const filePath of gitOutput(['ls-files', '--others', '--exclude-standard'], repoRoot)) {
-    files.add(filePath);
-  }
+
+  addChangedFiles(files, tryGitOutput(runGitOutput, [...diffArgs, '--cached'], repoRoot));
+  addChangedFiles(files, tryGitOutput(runGitOutput, diffArgs, repoRoot));
+  addChangedFiles(
+    files,
+    tryGitOutput(runGitOutput, ['ls-files', '--others', '--exclude-standard'], repoRoot)
+  );
 
   return [...files].sort((left, right) => left.localeCompare(right));
 }
@@ -147,4 +180,6 @@ function main(): void {
   }
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}
