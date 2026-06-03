@@ -96,9 +96,37 @@ function actionRows(document, body, planningTaskIds) {
   const actions = [];
   const links = [];
   const actionLinePattern = /^\s*[-*]\s+(?:\[[ xX]\]\s*)?(.+)$/;
+  const isActionLine = (line, summary) => {
+    if (/^\s*[-*]\s+\[[ xX]\]/.test(line)) {
+      return true;
+    }
+    if (/^\s*[-*]\s+(?:\[[ xX]\]\s*)?(?:Action:|Task:|\[Task:)/i.test(line)) {
+      return true;
+    }
+    if (extractTaskIds(line, planningTaskIds).length > 0) {
+      return true;
+    }
+    if (/^Add\s+palette\b/.test(summary)) {
+      return false;
+    }
+    if (
+      /^Add\s+[\w/-]+\s+(?:can|is|are|must|opens|reads|remains|should|shows|supports)\b/.test(
+        summary
+      )
+    ) {
+      return false;
+    }
+    return /^(?:Add|Classify|Create|Design|Extract|Fix|Implement|Migrate|Modify|Refactor|Reuse|Update|Validate|Wire)\b/.test(
+      summary
+    );
+  };
   for (const [lineIndex, line] of normalizeText(body).split(/\r?\n/).entries()) {
     const match = actionLinePattern.exec(line);
-    if (!match || !/\b(action|task|implement|fix|add|create|extract|wire|migrate)\b/i.test(line)) {
+    if (!match) {
+      continue;
+    }
+    const summary = match[1].trim();
+    if (!isActionLine(line, summary, planningTaskIds)) {
       continue;
     }
     const actionId = `${document.documentId}::A${actions.length + 1}`;
@@ -106,7 +134,7 @@ function actionRows(document, body, planningTaskIds) {
       actionId,
       sourceDocumentId: document.documentId,
       sourceSectionId: null,
-      summary: match[1].trim(),
+      summary,
       status: actionStatusFromLine(line),
       required: document.mandatory,
       lineNumber: lineIndex + 1,
