@@ -439,9 +439,13 @@ Planning-generated pages that are intentionally untracked:
   Security is unavailable. Draft PRs stay closed; `ready_for_review` reopens
   the security gate, and `converted_to_draft` closes it again for draft PRs.
   Source: [`.github/workflows/dependency-review.yml`](../../.github/workflows/dependency-review.yml)
-- `CodeQL`: JavaScript/TypeScript SAST on PRs, pushes to `main`, weekly
-  schedule, and manual dispatch. It runs for public repositories and for
-  private repositories that set the repository variable
+- `CodeQL`: JavaScript/TypeScript SAST on pushes to `main`, weekly schedule,
+  manual dispatch, and pull requests with security-analysis-relevant changes.
+  The PR detector opens the heavy analysis lane for code, dependency manifests,
+  workflows, actions, scripts, tools, and root configuration; it keeps docs-only
+  and `buzon/**` analysis-only pull requests on the local/docs gates without
+  running the full CodeQL job. It runs for public repositories and for private
+  repositories that set the repository variable
   `GH_ADVANCED_SECURITY_ENABLED=true`; CodeQL otherwise fails during SARIF
   upload when code scanning/GitHub Advanced Security is unavailable. Draft PRs
   stay closed; `ready_for_review` reopens the SAST gate, and
@@ -713,12 +717,16 @@ Current workflow consumers:
   capabilities. Private repositories must set
   `GH_ADVANCED_SECURITY_ENABLED=true` after enabling the required GitHub
   security features; without that capability, those workflows are intentionally
-  skipped instead of failing before diff analysis. The manual docs deploy
-  workflow pins the Zensical package version used to build the site, and the
-  label-bootstrap workflow uses a SHA-pinned `actions/github-script` reference
-  like the other active workflows. Remote Turbo cache is configured in tracked
-  workflows but requires repository owners to populate `TURBO_TOKEN` and
-  `TURBO_TEAM` before it can produce remote cache hits.
+  skipped instead of failing before diff analysis. CodeQL uses the repository
+  workflow-scope detector on pull requests so a one-file `buzon/**` or
+  docs-only PR does not wait for a full SAST run with no analyzable changed
+  surface; code, dependency, workflow/action, script/tool, and root-config
+  changes remain fail-closed into CodeQL. The manual docs deploy workflow pins
+  the Zensical package version used to build the site, and the label-bootstrap
+  workflow uses a SHA-pinned `actions/github-script` reference like the other
+  active workflows. Remote Turbo cache is configured in tracked workflows but
+  requires repository owners to populate `TURBO_TOKEN` and `TURBO_TEAM` before
+  it can produce remote cache hits.
 - Current branch-protection status checks are repository settings, not tracked
   YAML. Verify in GitHub settings that `CI - Code Quality`, `Test Suite`,
   `PR Quality Gate`, `Contracts & Determinism`, `Dependency Review`, and

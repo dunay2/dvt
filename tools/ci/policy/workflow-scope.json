@@ -73,6 +73,28 @@
     "eslint.config.cjs",
     ".prettierrc.json"
   ],
+  "security_analysis_relevant": [
+    "apps/**",
+    "packages/**",
+    "specs/**",
+    "scripts/**",
+    "tools/**",
+    ".github/actions/**",
+    ".github/workflows/**",
+    ".github/scripts/**",
+    ".github/dependabot.yml",
+    ".github/dependabot.yaml",
+    ".dependency-cruiser.cjs",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "turbo.json",
+    "tsconfig*.json",
+    "vitest.config.ts",
+    "eslint.config.cjs",
+    ".prettierrc.json",
+    "commitlint.config.cjs"
+  ],
   "ci_tool_executable_contracts_relevant": [
     "package.json",
     "pnpm-lock.yaml",
