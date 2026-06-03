@@ -52,6 +52,8 @@ planning_type: closeout
 - Added changed-slice routing for `tools/ci` source and test edits so one-file
   CI-tooling iterations run direct adjacent `node --test` suites instead of
   escalating to the broad `pnpm test:ci-tools` contract by default.
+- Kept draft PRs cheap while adding `ready_for_review` Test Suite routing so
+  draft-to-ready PRs regain affected package test coverage before merge.
 
 ## Validation Plan
 
@@ -61,6 +63,7 @@ planning_type: closeout
 - `pnpm docs:sync`
 - `pnpm governance:refresh`
 - `node --test scripts/verify-changed.test.cjs`
+- `node --test tools/ci/workflow-pattern-parity.test.mjs`
 - `pnpm verify:prepush`
 
 ## No-Debt And No-Stub Evidence

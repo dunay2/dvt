@@ -50,6 +50,9 @@ remote time and network before the scope read model could close unrelated lanes.
 - `pnpm verify:changed` routes CI-tooling edits to adjacent `node --test`
   suites when available, so one-file agent iterations under `tools/ci` do not
   require the broad `pnpm test:ci-tools` contract run.
+- Draft pull requests keep heavy Test Suite lanes closed, but `ready_for_review`
+  re-runs the Test Suite detector so the affected test matrix is restored before
+  merge.
 
 ## Feature Mechanization
 
@@ -70,6 +73,7 @@ userStories:
   - As an engineer, PR scope detectors avoid full-history checkout before deciding whether expensive lanes apply.
   - As an engineer, scheduled adapter-postgres smoke coverage uses the same Turbo dependency build wrapper as PR test lanes.
   - As an AI agent, changed CI-tooling files can prove the local slice through direct adjacent tests instead of the full CI tools suite.
+  - As an engineer, moving a draft PR to ready reopens affected Test Suite coverage without restoring duplicate Code Quality tests.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -144,6 +148,7 @@ fowlerSignals:
   - Over-eager Resource Use when PR scope detectors fetch full repository history before deciding whether heavy lanes apply.
   - Duplicate Work when scheduled smoke jobs use raw package filters instead of the governed Turbo workspace wrapper.
   - Duplicate Work when a one-file CI-tooling edit pushes agents to rerun the full CI tools suite.
+  - Hidden Coverage Gap when draft PR test lanes stay skipped after the PR becomes ready for review.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
@@ -216,6 +221,14 @@ redGreenCycles:
       - scripts/verify-changed.test.cjs
       - docs/guides/testing-and-ci-capabilities.md
     greenTest: node --test scripts/verify-changed.test.cjs
+  - id: draft-pr-ready-review-test-coverage
+    redTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+    expectedFailure: Test Suite skips draft PRs but does not listen for ready_for_review, so affected package test coverage may not reopen when the PR leaves draft.
+    patchSurfaces:
+      - .github/workflows/test.yml
+      - docs/guides/testing-and-ci-capabilities.md
+      - tools/ci/workflow-pattern-parity.test.mjs
+    greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
 symbols:
   - name: assert
     path: scripts/ai-preflight.test.cjs
