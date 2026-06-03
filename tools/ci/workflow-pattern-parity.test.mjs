@@ -400,7 +400,7 @@ test('security and nightly workflows stay wired to pinned actions and failure no
 
   assertWorkflowContains(
     dependencyReview,
-    'actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0'
+    'actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0'
   );
   assertWorkflowContains(dependencyReview, 'fail-on-severity: high');
   assertWorkflowContains(dependencyReview, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
