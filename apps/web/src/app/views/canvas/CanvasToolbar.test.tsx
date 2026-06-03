@@ -336,7 +336,9 @@ describe('CanvasToolbar', () => {
     const search = document.body.querySelector<HTMLInputElement>(
       '[data-slot="canvas-add-node-palette-search"]'
     );
-    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).not.toBeNull();
+    const palette = document.body.querySelector('[data-slot="canvas-add-node-palette"]');
+    expect(palette).not.toBeNull();
+    expect(palette?.parentElement).toBe(document.body);
 
     await act(async () => {
       search?.focus();
