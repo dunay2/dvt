@@ -420,11 +420,12 @@ with ADR-0012A canonical error codes. Should throw typed errors like
 
 ### 3.9 `lifecycle/ObjectStorageRunArchiveExporter.ts`
 
-| Symbol                                                     | DDD                           | C&Q          | Legacy | Notes                   |
-| ---------------------------------------------------------- | ----------------------------- | ------------ | ------ | ----------------------- |
-| `ObjectStorageRunArchiveExporter.exportArchiveUnit(input)` | `ADP` (`IRunArchiveExporter`) | `CMD-RET`    | `OK`   | Object storage adapter. |
-| `ObjectStorageRunArchiveExporter.verifyArchiveUnit(input)` | `ADP`                         | `CMD`        | `OK`   |                         |
-| `sortArchiveEvents(events)`                                | `INFRA`                       | `QRY` (pure) | `OK`   | Deterministic ordering. |
+| Symbol                                                     | DDD                           | C&Q          | Legacy | Notes                                                            |
+| ---------------------------------------------------------- | ----------------------------- | ------------ | ------ | ---------------------------------------------------------------- |
+| `ArchiveRedactionPolicy`                                   | `DS`                          | policy       | `OK`   | Secure archive-export redaction policy; default keys are sticky. |
+| `ObjectStorageRunArchiveExporter.exportArchiveUnit(input)` | `ADP` (`IRunArchiveExporter`) | `CMD-RET`    | `OK`   | Object storage adapter; redacts sensitive cold payload fields.   |
+| `ObjectStorageRunArchiveExporter.verifyArchiveUnit(input)` | `ADP`                         | `CMD`        | `OK`   |                                                                  |
+| `sortArchiveEvents(events)`                                | `INFRA`                       | `QRY` (pure) | `OK`   | Deterministic ordering.                                          |
 
 ### 3.10 `lifecycle/adapters/{FileSystemArchiveObjectStore,S3ArchiveObjectStore}.ts`
 
