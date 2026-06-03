@@ -16,13 +16,17 @@ type BuiltInStepTypeEntry = {
   readonly profile: StepKindExecutionProfile;
 };
 
+export const DBT_STEP_REQUIRED_CAPABILITY = 'executor.dbt';
+
 export function createBuiltInStepTypeEntries(
   defaultProfile: StepKindExecutionProfile
 ): ReadonlyMap<string, BuiltInStepTypeEntry> {
+  const dbtProfile = withRequiredCapability(defaultProfile, DBT_STEP_REQUIRED_CAPABILITY);
+
   return new Map([
-    [KNOWN_STEP_KINDS.DBT_MODEL, { schema: DbtStepTypeConfigSchema, profile: defaultProfile }],
-    [KNOWN_STEP_KINDS.DBT_TEST, { schema: DbtStepTypeConfigSchema, profile: defaultProfile }],
-    [KNOWN_STEP_KINDS.DBT_SNAPSHOT, { schema: DbtStepTypeConfigSchema, profile: defaultProfile }],
+    [KNOWN_STEP_KINDS.DBT_MODEL, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
+    [KNOWN_STEP_KINDS.DBT_TEST, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
+    [KNOWN_STEP_KINDS.DBT_SNAPSHOT, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
     [
       TRANSFORMATION_STEP_KIND.preparePostgresTransform,
       { schema: PreparePostgresTransformStepTypeConfigSchema, profile: defaultProfile },
@@ -39,4 +43,14 @@ export function createBuiltInStepTypeEntries(
       },
     ],
   ] as const);
+}
+
+function withRequiredCapability(
+  profile: StepKindExecutionProfile,
+  capability: string
+): StepKindExecutionProfile {
+  return {
+    supportedAdapters: [...profile.supportedAdapters],
+    requiredCapabilities: Array.from(new Set([...profile.requiredCapabilities, capability])),
+  };
 }

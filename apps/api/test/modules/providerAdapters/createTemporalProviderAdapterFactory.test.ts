@@ -92,6 +92,35 @@ describe('createTemporalProviderAdapterFactory', () => {
       })
     );
   });
+
+  it('declares DBT executor capability only when the API runtime profile enables DBT', async () => {
+    const factory = createTemporalProviderAdapterFactory();
+
+    await factory.build(
+      createContext({
+        TEMPORAL_ADDRESS: 'temporal.test:7233',
+      })
+    );
+
+    expect(temporalAdapterDepsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        additionalCapabilities: [],
+      })
+    );
+
+    await factory.build(
+      createContext({
+        TEMPORAL_ADDRESS: 'temporal.test:7233',
+        DVT_TEMPORAL_DBT_ENABLED: 'true',
+      })
+    );
+
+    expect(temporalAdapterDepsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        additionalCapabilities: ['executor.dbt'],
+      })
+    );
+  });
 });
 
 function createContext(envOverrides: Record<string, string>): ProviderAdapterFactoryContext {

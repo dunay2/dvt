@@ -67,6 +67,9 @@ belongs to the protected-runtime dependency builders, not to `startRun`.
 - the outer composition root may bind a concrete execution-capacity probe, but
   it passes only the abstract `IStartRunExecutionCapacityPort` into this
   builder
+- the Temporal provider adapter factory declares plugin executor capabilities
+  from runtime profile configuration; `DVT_TEMPORAL_DBT_ENABLED=true` is the
+  API-side source for the dynamic `executor.dbt` capability
 - compile-planner construction for the authenticated start-run path lives in
   this subcomponent, not back in the outer root
 - the fail-closed default execution-capacity binding stays inside start-run
@@ -78,7 +81,9 @@ belongs to the protected-runtime dependency builders, not to `startRun`.
 flowchart LR
   Root["buildProtectedRuntimeModule.ts"] --> StartRunRuntime["buildProtectedStartRunRuntime.ts"]
   Root --> Binding["buildProtectedExecutionCapacityPort.ts"]
+  Root --> ProviderFactory["createTemporalProviderAdapterFactory.ts"]
   Binding --> StartRunRuntime
+  ProviderFactory --> Capability["runtime executor capabilities"]
   StartRunRuntime --> Facade["StartRunAuthorizedFacade"]
   StartRunRuntime --> Admission["BackpressureAwareStartRunUseCase"]
   StartRunRuntime --> Planner["PlannerBackedStartRunUseCase"]

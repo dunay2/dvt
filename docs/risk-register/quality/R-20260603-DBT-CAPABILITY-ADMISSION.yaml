@@ -1,0 +1,30 @@
+---
+id: R-20260603-DBT-CAPABILITY-ADMISSION
+title: DBT runtime capability posture can drift between API and worker deployment
+status: Open
+date: 2026-06-03
+owners:
+  - apps/api
+  - apps/temporal-worker
+  - packages/@dvt/adapter-temporal
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+context: >
+  DBT step kinds now require executor.dbt and the API declares that capability for the Temporal
+  adapter only when DVT_TEMPORAL_DBT_ENABLED=true. The worker also uses the same flag to compose DBT
+  activities.
+risk: >
+  A deployment can misconfigure API and worker independently: API could advertise executor.dbt while
+  the worker lacks DBT activities, or the worker could be DBT-enabled while API never declares the
+  capability. The first case reintroduces late UNSUPPORTED_STEP_KIND failures; the second case
+  rejects valid DBT runs.
+mitigations:
+  - 'Keep DVT_TEMPORAL_DBT_ENABLED documented as an API and worker runtime posture flag.'
+  - 'Keep start-run tests proving the API factory declares executor.dbt only for explicit true.'
+  - 'Keep Temporal adapter capabilities plugin-agnostic and driven by composition-time
+    additionalCapabilities.'
+  - 'Use the worker readyz dbtEnabled signal in future runtime-capability health checks before broad
+    rollout.'
+review_after: 2026-07-15
+---

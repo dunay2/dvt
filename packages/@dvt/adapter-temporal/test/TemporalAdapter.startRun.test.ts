@@ -41,6 +41,7 @@ function makeAdapter(
     timeouts?: TemporalAdapterConfigOverrides['timeouts'];
     workflowBudget?: TemporalAdapterConfigOverrides['workflowBudget'];
     activityRouting?: unknown;
+    additionalCapabilities?: readonly string[];
   } = {}
 ): {
   adapter: TemporalAdapter;
@@ -63,6 +64,9 @@ function makeAdapter(
       ...createTemporalAdapterConfig(args),
       ...(args.activityRouting === undefined ? {} : { activityRouting: args.activityRouting }),
     },
+    ...(args.additionalCapabilities === undefined
+      ? {}
+      : { additionalCapabilities: args.additionalCapabilities }),
   });
 
   return { adapter, workflowClient };
@@ -187,5 +191,32 @@ describe('TemporalAdapter.startRun', () => {
       })
     );
     expect(runRef.taskQueue).toBe('q-main-tenant-1');
+  });
+});
+
+describe('TemporalAdapter.capabilities', () => {
+  it('keeps the core Temporal capabilities plugin-free by default', () => {
+    const { adapter } = makeAdapter();
+
+    expect(adapter.capabilities()).toEqual([
+      'basic-execution',
+      'signal.pause.native',
+      'workflow.fan.parallel',
+      'history.rotation',
+    ]);
+  });
+
+  it('adds runtime-declared plugin capabilities without duplicating core entries', () => {
+    const { adapter } = makeAdapter({
+      additionalCapabilities: ['executor.dbt', 'basic-execution'],
+    });
+
+    expect(adapter.capabilities()).toEqual([
+      'basic-execution',
+      'signal.pause.native',
+      'workflow.fan.parallel',
+      'history.rotation',
+      'executor.dbt',
+    ]);
   });
 });

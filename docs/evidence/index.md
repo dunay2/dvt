@@ -29,6 +29,7 @@ Evidence documents that justify or validate relevant changes.
 - [Context](ED-20260405-mwa2-policy-unbounded-precedence.md)
 - [DBT Authoring Run Vertical And Plan-Store Replay Reuse](ed-20260526-dbt-authoring-run-plan-store-reuse.md)
 - [DBT CLI Plugin Runner SRP Hardening](ed-20260429-dbt-cli-plugin-runner-srp.md)
+- [DBT step capability admission](ed-20260603-dbt-step-capability-admission.md)
 - [Dev Stack Local Temporal Bootstrap](ed-20260427-dev-stack-local-temporal-bootstrap.md)
 - [DHM DB-first engine component modeling](ed-20260514-dhm-db-first-engine-components.md)
 - [DHM effective component file ownership](ed-20260514-dhm-effective-component-ownership.md)

@@ -10,6 +10,7 @@ export {
   DbtStepTypeConfigSchema,
   StepArtifactRefSchema,
 } from './DbtStepTypeConfig.js';
+export { DBT_STEP_REQUIRED_CAPABILITY } from './BuiltInStepTypeEntries.js';
 export type { DbtStepTypeConfig } from './DbtStepTypeConfig.js';
 
 export type StepTypeValidationResult =

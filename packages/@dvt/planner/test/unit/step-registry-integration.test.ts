@@ -150,3 +150,11 @@ describe('Planner â†’ PlannerOptions.stepTypeRegistry injection', () => {
     expect(executionPolicy.requiresCapabilities).toEqual(['spark.observe', 'spark.submit']);
   });
 });
+
+describe('Planner -> default step execution profiles', () => {
+  it('projects DBT executor capability into DBT plan executionPolicy', async () => {
+    const { executionPolicy } = await buildPlanWithSingleStep('DBT_MODEL');
+
+    expect(executionPolicy.requiresCapabilities).toContain('executor.dbt');
+  });
+});

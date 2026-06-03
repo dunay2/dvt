@@ -116,6 +116,7 @@ test('buildApiEnv preserves explicit temporal posture when provided', () => {
       DVT_DBT_BUNDLE_STORE_BACKEND: 'file',
       DVT_DBT_BUNDLE_FILE_ROOT: 'C:\\custom\\dbt-bundles',
       DVT_WORKSPACE_FILES_ROOT: 'C:\\custom\\workspace-files',
+      DVT_TEMPORAL_DBT_ENABLED: 'true',
     }
   );
 
@@ -126,6 +127,7 @@ test('buildApiEnv preserves explicit temporal posture when provided', () => {
   assert.equal(apiEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(apiEnv.DVT_DBT_BUNDLE_FILE_ROOT, 'C:\\custom\\dbt-bundles');
   assert.equal(apiEnv.DVT_WORKSPACE_FILES_ROOT, 'C:\\custom\\workspace-files');
+  assert.equal(apiEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
 });
 
 test('buildTemporalWorkerEnv injects local protected-runtime tenant queue posture', () => {
@@ -240,6 +242,30 @@ test('buildTemporalWorkerEnv forwards configured DBT bundle store settings', () 
 
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, 'C:\\custom\\dbt-bundles');
+});
+
+test('buildCoordinatedTemporalWorkerEnv keeps DBT execution profile aligned with API env', () => {
+  const apiEnv = buildApiEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    { DVT_TEMPORAL_DBT_ENABLED: 'true' }
+  );
+
+  const workerEnv = buildCoordinatedTemporalWorkerEnv(
+    {
+      host: '127.0.0.1',
+      apiPort: 3000,
+      skipPostgres: false,
+    },
+    apiEnv,
+    { DVT_TEMPORAL_DBT_ENABLED: 'true' }
+  );
+
+  assert.equal(apiEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
+  assert.equal(workerEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
 });
 
 test('shouldStartTemporalWorker follows protected runtime posture', () => {
