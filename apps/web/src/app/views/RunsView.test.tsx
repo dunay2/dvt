@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
-import React from 'react';
+import { fireEvent } from '@testing-library/dom';
+import React, { act } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -233,6 +234,55 @@ describe('RunsView', () => {
     expect(mounted.container.textContent).toContain('postgres');
     expect(mounted.container.textContent).toContain('step-transform');
     expect(mounted.container.textContent).toContain('STEP_FAILURE');
+  });
+
+  it('keeps the shell console observed run when returning from run detail to canvas', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          runsService: buildRunsService({
+            getRunSnapshot: async () => ({
+              runId: 'run_console_observed',
+              status: 'failed',
+              executor: 'postgres',
+              startedAt: '2026-04-07T00:00:00.000Z',
+              completedAt: '2026-04-07T00:00:10.000Z',
+            }),
+            listRunEvents: async () => ({ events: [] }),
+          }),
+          sessionContext: buildSessionContext(),
+        }}
+      >
+        <MemoryRouter initialEntries={['/runs/run_console_observed']}>
+          <Routes>
+            <Route path="/runs/:runId" element={<RunsView />} />
+            <Route path="/canvas" element={<div data-testid="canvas-route">Canvas route</div>} />
+          </Routes>
+        </MemoryRouter>
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => useExecutionStore.getState().currentRun?.runId === 'run_console_observed',
+      { description: 'focused run published to shell console evidence' }
+    );
+
+    const backToCanvasLink = Array.from(mounted.container.querySelectorAll('a')).find((link) =>
+      link.textContent?.includes('Back to Canvas')
+    );
+
+    expect(backToCanvasLink).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(backToCanvasLink!);
+    });
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Canvas route') ?? false,
+      { description: 'canvas route after leaving run detail' }
+    );
+
+    expect(useExecutionStore.getState().currentRun?.runId).toBe('run_console_observed');
   });
 
   it('renders available run timeline events as a dense semantic table', async () => {

@@ -129,6 +129,7 @@ describe('Runs domain boundary', () => {
       'US-F10-08',
       'US-F10-09',
       'US-F10-10',
+      'US-F10-11',
     ]) {
       expect(eventTimelineStories).toContain(storyId);
     }
@@ -333,6 +334,7 @@ describe('Runs domain boundary', () => {
       'final structured-versus-terminal presentation choice remain future'
     );
     expect(timelineGuide).toContain('xterm-backed shell companion');
+    expect(timelineGuide).toContain('observation cursor across');
   });
 
   it('guards dense operational table semantics instead of only table component presence', () => {

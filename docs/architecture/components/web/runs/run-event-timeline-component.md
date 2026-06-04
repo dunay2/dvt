@@ -36,9 +36,11 @@ or artifact authority. Those remain snapshot and workspace concerns.
 4. `nextAfterSeq` is preserved when supplied by the adapter.
 5. Active event streams poll only while the run status is `pending` or
    `running`.
-6. Console lines and Runs timeline rows share event severity and headline
+6. The shell console keeps the last focused run as an observation cursor across
+   Canvas and Runs route navigation.
+7. Console lines and Runs timeline rows share event severity and headline
    semantics.
-7. Timeline events must not infer snapshot status, materialization evidence,
+8. Timeline events must not infer snapshot status, materialization evidence,
    failed step diagnostics, or authoring provenance.
 
 ## Transitions
@@ -53,7 +55,9 @@ stateDiagram-v2
   Streaming --> Streaming: overlapping page deduped
   Streaming --> Stopped: status terminal
   Empty --> Streaming: later page returns events
-  Streaming --> NoRun: active run changes or clears
+  Streaming --> InitialFetch: another run is focused
+  Streaming --> Streaming: route changes but observed run stays selected
+  Streaming --> NoRun: user explicitly clears the observed run
 ```
 
 ## Consumer Diagram
@@ -61,7 +65,8 @@ stateDiagram-v2
 ```mermaid
 flowchart TB
   Port["IRunsPort.listRunEvents"] --> Model["runEventTimelineModel"]
-  Model --> ConsoleHook["useConsoleLogStream"]
+  Store["useExecutionStore.currentRun"] --> ConsoleHook["useConsoleLogStream"]
+  Model --> ConsoleHook
   Model --> Facade["RunWorkspaceFacade"]
 
   Presentation["runEventPresentationModel"] --> ConsoleFormat["formatRunEventAsLogLine"]
@@ -81,7 +86,7 @@ flowchart TB
 | Consumer                | File                                                                                                                          | Responsibility                                           |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `RunWorkspaceFacade`    | [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)                                  | Builds durable snapshot-plus-timeline workspace state    |
-| `useConsoleLogStream`   | [useConsoleLogStream.ts](../../../../../apps/web/src/app/components/console/useConsoleLogStream.ts)                           | Mirrors active run events into the shell console         |
+| `useConsoleLogStream`   | [useConsoleLogStream.ts](../../../../../apps/web/src/app/components/console/useConsoleLogStream.ts)                           | Mirrors the shell-observed run into the shell console    |
 | `XtermConsole`          | [XtermConsole.tsx](../../../../../apps/web/src/app/components/console/XtermConsole.tsx)                                       | Renders terminal-grade live companion lines              |
 | `RunEventTimelineTable` | [RunEventTimelineTable.tsx](../../../../../apps/web/src/app/views/runs/RunEventTimelineTable.tsx)                             | Renders dense event rows from shared event semantics     |
 | `BottomConsoleDrawer`   | [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)                                                         | Renders terminal companion state                         |
@@ -97,5 +102,6 @@ Mature log and workflow systems separate transport, stream state, and rendering:
 - Datadog Logs separates ingestion identity from display rows and facets.
 - VS Code keeps terminal lines separate from problem diagnostics.
 
-This component follows the same split: one stream model owns chronology; each
-surface renders the chronology in its own visual language.
+This component follows the same split: one stream model owns chronology; the
+shell store owns the observation cursor; each surface renders the chronology in
+its own visual language.
