@@ -8,8 +8,8 @@ import {
 
 describe('canvas draft recovery boundary architecture', () => {
   it('documents and guards protected-runtime token refresh and layout persistence semantics', () => {
-    const mailbox = readRepoFile(
-      'buzon/20260429-codex-canvas-operability-auth-and-drag-fowler-review.md'
+    const operabilityBacklog = readRepoFile(
+      'docs/planning/proposals/web-frontend-operability-backlog-20260430.md'
     );
     const authGuide = readRepoFile('docs/architecture/components/web/api-client-auth-component.md');
     const layoutGuide = readRepoFile(
@@ -19,11 +19,10 @@ describe('canvas draft recovery boundary architecture', () => {
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
     );
 
-    expect(mailbox).toContain('## Fowler verdict');
-    expect(mailbox).toContain('## Pattern improvements');
-    expect(mailbox).toContain('## Antipatterns removed or reduced');
-    expect(mailbox).toContain('## Drift fixed');
-    expect(mailbox).toContain('## ADR decision');
+    expect(operabilityBacklog).toContain('## User Stories');
+    expect(operabilityBacklog).toContain('## Scenario Coverage Matrix');
+    expect(operabilityBacklog).toContain('protected API call');
+    expect(operabilityBacklog).toContain('drag');
 
     for (const guide of [authGuide, layoutGuide]) {
       expect(guide).toContain('## Public API');

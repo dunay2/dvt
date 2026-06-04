@@ -194,7 +194,6 @@ describe('canvas route posture priority architecture', () => {
       readRepoFile('apps/web/src/app/views/canvas/CanvasViewport.test.tsx'),
       readRepoFile('apps/web/src/app/views/canvas/canvasPalette.ts'),
       readRepoFile('apps/web/src/app/views/canvas/canvasPalette.test.ts'),
-      readRepoFile('buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md'),
       readRepoFile(
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
       ),

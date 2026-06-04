@@ -19,8 +19,8 @@ import {
 
 describe('canvas startup bootstrap publication architecture', () => {
   it('documents the Fowler analysis, user stories, and local component guide for the branch semantics', () => {
-    const mailbox = readRepoFile(
-      'buzon/20260429-codex-static-analysis-followup-fowler-architecture-review.md'
+    const closeout = readRepoFile(
+      'docs/planning/closeouts/20260429-static-analysis-followup-closeout.md'
     );
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
@@ -29,14 +29,9 @@ describe('canvas startup bootstrap publication architecture', () => {
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
     );
 
-    expect(mailbox).toContain('## Fowler verdict');
-    expect(mailbox).toContain('## Comparison with mature systems');
-    expect(mailbox).toContain('## Antipatterns detected');
-    expect(mailbox).toContain('## Drift fixed');
-    expect(mailbox).toContain('## Opportunities');
-    expect(mailbox).toContain('## Lessons for future slices');
-    expect(mailbox).toContain('## User-story coverage');
-    expect(mailbox).toContain('## ADR decision');
+    expect(closeout).toContain('## Think-First Analysis');
+    expect(closeout).toContain('## Validation Evidence');
+    expect(closeout).toContain('Canvas startup');
 
     expect(componentGuide).toContain('## Public API');
     expect(componentGuide).toContain('## Invariants');

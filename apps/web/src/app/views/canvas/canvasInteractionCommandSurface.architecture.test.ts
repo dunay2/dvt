@@ -19,11 +19,11 @@ describe('Canvas interaction command surface architecture', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/graph/canvas-interaction-command-surface-user-stories.md'
     );
-    const mailbox = readRepoFile(
-      'buzon/20260602-codex-fowler-canvas-interaction-command-surface-analysis.md'
-    );
     const commandQueryCatalog = readRepoFile(
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'
+    );
+    const workflowPlan = readRepoFile(
+      'docs/planning/proposals/mandatory/frontend-and-ux/e-canvas-workflow-e2e-usability-plan-20260601.md'
     );
 
     for (const requiredSection of [
@@ -55,19 +55,16 @@ describe('Canvas interaction command surface architecture', () => {
       expect(userStories).toContain(requiredStory);
     }
 
-    for (const requiredMailboxSection of [
+    for (const requiredCanonicalSignal of [
       '## Fowler Reading',
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions Fixed',
-      '## Code And Documentation Drift',
-      '## Opportunities',
-      '## Teachings For Future Work',
-      '## ADR Decision',
+      '## Component Flow',
+      '## Scenario Matrix',
+      'canvasInteractionCommandSurface.architecture.test.ts',
+      'CanvasContextMenuModel',
     ]) {
-      expect(mailbox).toContain(requiredMailboxSection);
+      expect(`${componentGuide}\n${userStories}\n${workflowPlan}`).toContain(
+        requiredCanonicalSignal
+      );
     }
 
     for (const requiredRail of [

@@ -38,9 +38,6 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     const userStories = readRepoDoc(
       'docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-user-stories.md'
     );
-    const mailboxAnalysis = readRepoDoc(
-      'buzon/20260520-f17c-fowler-artifacts-monaco-readonly-viewer-analysis.md'
-    );
     const implementationPlan = readRepoDoc(
       'docs/planning/proposals/mandatory/frontend-and-ux/f17c-artifacts-monaco-readonly-viewer-plan-20260520.md'
     );
@@ -77,18 +74,14 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
       expect(userStories).toContain(requiredStory);
     }
 
-    for (const requiredAnalysisSection of [
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions',
-      '## Code And Documentation Drift',
-      '## Opportunities',
-      '## ADR Decision',
+    for (const requiredPlanSignal of [
+      '## Fowler Opportunity Matrix',
+      'fowlerSignals:',
+      'Documentation drift',
+      'Hidden authority',
       'Semantic Fitness Function',
     ]) {
-      expect(mailboxAnalysis).toContain(requiredAnalysisSection);
+      expect(implementationPlan).toContain(requiredPlanSignal);
     }
 
     expect(implementationPlan).toContain(

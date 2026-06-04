@@ -35,8 +35,8 @@ describe('Templates workbench architecture', () => {
     const storiesDoc = readRepoDoc(
       'docs/architecture/components/web/templates/execution-template-source-generation-user-stories.md'
     );
-    const fowlerAnalysis = readRepoDoc(
-      'buzon/20260522-codex-fowler-f21-execution-template-workbench-analysis.md'
+    const implementationPlan = readRepoDoc(
+      'docs/planning/proposals/mandatory/frontend-and-ux/f21-execution-template-source-generation-workbench-plan-20260522.md'
     );
 
     expect(componentDoc).toContain('## Public API');
@@ -46,8 +46,11 @@ describe('Templates workbench architecture', () => {
     expect(componentDoc).toContain('GenerateExecutionTemplatePreview');
     expect(storiesDoc).toContain('US-TEMPLATES-001');
     expect(storiesDoc).toContain('US-TEMPLATES-005');
-    expect(fowlerAnalysis).toContain('Documentation drift');
-    expect(fowlerAnalysis).toContain('Hidden authority');
+    expect(implementationPlan).toContain(
+      'featureId: F21-EXECUTION-TEMPLATE-SOURCE-GENERATION-WORKBENCH-20260522'
+    );
+    expect(implementationPlan).toContain('Documentation drift');
+    expect(implementationPlan).toContain('Hidden authority');
   });
 
   it('registers Templates as a DVT shell route instead of a Canvas workbench tab', () => {

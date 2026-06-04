@@ -56,8 +56,8 @@ function repoFileExists(relativePath: string): boolean {
 
 describe('web store domain ownership architecture', () => {
   it('keeps branch Fowler analysis, component API, user stories, and local guide discoverable', () => {
-    const mailboxPath =
-      'buzon/20260503-codex-fowler-web-store-domain-ownership-analysis-and-remediation.md';
+    const implementationPlanPath =
+      'docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md';
     const componentGuidePath =
       'docs/architecture/components/web/web-store-domain-ownership-component.md';
     const localGuidePath =
@@ -65,29 +65,24 @@ describe('web store domain ownership architecture', () => {
     const userStoriesPath =
       'docs/architecture/components/web/web-store-domain-ownership-user-stories.md';
 
-    expect(repoFileExists(mailboxPath)).toBe(true);
+    expect(repoFileExists(implementationPlanPath)).toBe(true);
     expect(repoFileExists(localGuidePath)).toBe(true);
     expect(repoFileExists(userStoriesPath)).toBe(true);
     expect(repoFileExists('apps/web/src/app/stores/authorizationStore.ts')).toBe(true);
 
-    const mailbox = readRepoFile(mailboxPath);
+    const implementationPlan = readRepoFile(implementationPlanPath);
     const componentGuide = readRepoFile(componentGuidePath);
     const localGuide = readRepoFile(localGuidePath);
     const userStories = readRepoFile(userStoriesPath);
 
-    for (const requiredSection of [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Pattern Improvements',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions',
-      '## Opportunities',
-      '## Drift Review',
-      '## Future Lessons',
-      '## ADR Decision',
+    for (const requiredPlanSignal of [
+      'featureId: F05-STORE-DOMAIN-OWNERSHIP',
+      '## Drift Register',
+      'fowlerSignals:',
+      'Documentation drift',
+      'webStoreDomainOwnership.architecture.test.ts',
     ]) {
-      expect(mailbox).toContain(requiredSection);
+      expect(implementationPlan).toContain(requiredPlanSignal);
     }
 
     for (const componentSection of [
@@ -129,7 +124,6 @@ describe('web store domain ownership architecture', () => {
     expect(componentGuide).not.toContain('## Residual Drift');
     expect(componentGuide).toContain(localGuidePath);
     expect(componentGuide).toContain(userStoriesPath);
-    expect(componentGuide).toContain(mailboxPath);
 
     expect(localGuide).toContain('usePlatformConnectionStore');
     expect(localGuide).toContain('useUiLayoutStore');
@@ -140,9 +134,12 @@ describe('web store domain ownership architecture', () => {
     expect(localGuide).toContain('connectionStatus is not layout state');
     expect(localGuide).toContain('Authorization capability display');
 
-    expect(mailbox).toContain('No open F-05 store ownership drift remains in this branch');
-    expect(mailbox).not.toContain('`executionStore.userPermissions` still');
-    expect(mailbox).not.toContain('authorization split is a future F-05 implementation task');
+    expect(implementationPlan).toContain('Closed in this slice');
+    expect(implementationPlan).toContain('`authorizationStore.ts`');
+    expect(implementationPlan).toContain('Target owner for `Authorization capability display`');
+    expect(componentGuide).not.toContain(
+      'authorization split is a future F-05 implementation task'
+    );
 
     for (const storyId of [
       'US-WEB-STORE-001',

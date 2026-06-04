@@ -86,12 +86,6 @@ describe('ShellTopBar workspace context architecture', () => {
     const stage1Plan = readRepoSource(
       'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md'
     );
-    const mailboxReview = readRepoSource(
-      'buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md'
-    );
-    const hardeningMailboxReview = readRepoSource(
-      'buzon/20260506-codex-fowler-canvas-workbench-shell-context-hardening-review.md'
-    );
     const componentGuide = readRepoSource(
       'docs/architecture/components/web/appshell/shell-workspace-context-component.md'
     );
@@ -131,8 +125,6 @@ describe('ShellTopBar workspace context architecture', () => {
       'ProjectIdentityBadge',
       'ShellWorkspaceContextMenu',
       'ShellWorkspaceContextDetails',
-      'buzon/20260506-codex-fowler-canvas-workbench-shell-context-review-and-risk.md',
-      'buzon/20260506-codex-fowler-canvas-workbench-shell-context-hardening-review.md',
       'ShellWorkspaceContextComponentGuide',
       'ShellWorkspaceContextUserStories',
       'workspace-context-read-only-main-screen',
@@ -140,33 +132,13 @@ describe('ShellTopBar workspace context architecture', () => {
       expect(stage1Plan).toContain(requiredPlanSignal);
     }
 
-    for (const requiredMailboxSection of [
-      '## Mature-System Comparison',
-      '## Antipatterns Detected',
-      '## Patterns Applied',
-      '## Repetitions Fixed',
-      '## Drift Fixed',
-      '## Recommendations And Risks',
+    for (const requiredCanonicalSignal of [
       'ShellWorkspaceContextMenu',
       'Semantic Fitness Function',
+      '## Scenario Matrix',
+      'workspace-context-read-only-main-screen',
     ]) {
-      expect(mailboxReview).toContain(requiredMailboxSection);
-    }
-
-    for (const requiredHardeningSection of [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Patterns Improved',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions Fixed',
-      '## Drift Fixed',
-      '## Opportunities',
-      '## Teachings For Future Work',
-      '## Recommendations And Risks',
-      '## ADR Decision',
-    ]) {
-      expect(hardeningMailboxReview).toContain(requiredHardeningSection);
+      expect(`${stage1Plan}\n${componentGuide}\n${userStories}`).toContain(requiredCanonicalSignal);
     }
 
     for (const requiredComponentGuideSection of [
