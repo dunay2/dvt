@@ -47,6 +47,7 @@ allowedImplementationSurfaces:
   - .github/workflows/test.yml
   - package.json
   - apps/web/package.json
+  - apps/web/scripts/run-vitest-changed-suites.ts
   - apps/web/vitest*.ts
   - apps/web/src/testing/vitestSuites.architecture.test.ts
   - apps/web/src/testing/workspaceServicesVitestLane.architecture.test.ts
@@ -235,6 +236,15 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture
     cypressCoverage: N/A - Vitest-only test tooling.
     unitTests: [pnpm --filter @dvt/web test:architecture]
+  - name: runVitestFilesCommand
+    path: apps/web/scripts/run-vitest-changed-suites.ts
+    dddOwner: WebVitestChangedSuiteRouter
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: N/A - Vitest-only test tooling.
+    unitTests:
+      - pnpm --filter @dvt/web test:changed -- --files apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts apps/web/src/testing/vitestSuites.architecture.test.ts
   - name: normalizeWebVitestPath
     path: apps/web/vitest.suites.ts
     dddOwner: WebVitestSuiteCatalog

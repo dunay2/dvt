@@ -33,7 +33,7 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 | `test:monaco`                       | command  | Runs Monaco route-surface focus tests.                      |
 | `test:workspace-services`           | command  | Runs workspace service port/facade focus tests.             |
 | `test:web:changed`                  | command  | Root alias for the package-local changed-suite command.     |
-| `run-vitest-changed-suites.ts`      | adapter  | Reads Git change sets or explicit `--files` arguments.      |
+| `run-vitest-changed-suites.ts`      | adapter  | Reads Git/`--files` inputs and runs grouped suite commands. |
 | `Web Frontend Tests` PR route       | CI job   | Runs changed-suite routing for ordinary web PR changes.     |
 
 <!-- markdownlint-enable MD060 -->
@@ -54,6 +54,9 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 - When a non-governance change set selects a focus or primary suite and also
   contains exact changed tests for that same suite, the router runs the exact
   tests instead of duplicating them with the broader suite command.
+- Exact changed-test execution is batched by Vitest config, so one changed set
+  with many architecture files still pays for one Vitest process for that
+  architecture config.
 - Governance changes to the suite catalog, configs, package scripts, or router
   docs still force the governed architecture suite even when exact tests are
   also present.
@@ -82,8 +85,8 @@ stateDiagram-v2
   ChangedFiles --> TsxPath: non-Canvas TSX
   ChangedFiles --> TsPath: non-Canvas TS
   GovernedPath --> ArchitectureCommand
-  PairedSource --> ExactTestCommand
-  ExactSuiteTests --> ExactTestCommand
+  PairedSource --> ExactTestBatch
+  ExactSuiteTests --> ExactTestBatch
   CanvasPath --> CanvasUnitCommand: .ts
   CanvasPath --> CanvasPresentationCommand: .tsx
   CanvasPath --> CanvasArchitectureCommand: architecture
@@ -92,7 +95,7 @@ stateDiagram-v2
   TsxPath --> PresentationCommand
   TsPath --> UnitCommand
   ArchitectureCommand --> Evidence
-  ExactTestCommand --> Evidence
+  ExactTestBatch --> Evidence
   CanvasUnitCommand --> Evidence
   CanvasPresentationCommand --> Evidence
   CanvasArchitectureCommand --> Evidence
@@ -121,7 +124,9 @@ flowchart LR
   Adapter --> Router["resolveWebVitestChangedSuitePlan"]
   Router --> Catalog["WebVitestSuiteCatalog"]
   Router --> Commands["WEB_VITEST_CHANGED_SUITE_COMMANDS"]
+  Router --> ExactBatches["Grouped exact test filters by config"]
   Commands --> Vitest["Vitest suite delegates"]
+  ExactBatches --> Vitest
   Workflow["Web Frontend Tests PR"] --> Adapter
 ```
 
@@ -131,4 +136,6 @@ flowchart LR
   root-build-sensitive pull requests.
 - Do not add route-local changed-test scripts when the catalog can route them.
 - Do not duplicate include/exclude glob semantics in the command adapter.
+- Do not spawn one Vitest process per exact test when the same config can run
+  the exact filters together.
 - Do not make source files under `apps/web/src/testing/**` production services.
