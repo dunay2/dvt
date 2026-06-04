@@ -112,6 +112,19 @@ test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan runs focused frontend component inventory tests directly', () => {
+  const labels = labelsFor(['scripts/planning-db/frontend-component-inventory.cjs']);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(
+    labels.filter(
+      (label) => label === 'node --test scripts/planning-db-frontend-component-inventory.test.cjs'
+    ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs changed governance DB tests directly', () => {
   const labels = labelsFor(['scripts/governance-db-import.test.cjs']);
 

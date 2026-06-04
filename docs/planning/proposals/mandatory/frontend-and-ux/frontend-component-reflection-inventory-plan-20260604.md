@@ -1,6 +1,6 @@
 ---
 title: Frontend Component Reflection Inventory Plan
-status: Proposed
+status: Accepted
 owner: Web / Architecture
 date: 2026-06-04
 last_reviewed: 2026-06-04
@@ -77,17 +77,310 @@ returns existing rail candidates, including:
 - `ListFrontendCommandQueryRails`
 - `ListFrontendMechanicalTruthSurfaces`
 
-Therefore this proposal must not start by creating a parallel frontend behavior
-rail. The first slice should add a component read model that references those
-rails and only introduce a named query such as `ListFrontendComponentReflection`
-after the accepted implementation plan proves that surface and rail queries
-cannot answer the lower-level component question directly.
+Therefore this proposal must not create a browser product rail. The accepted
+slice adds a planning DB query-store read model that references those rails and
+registers `ListFrontendComponentReflection` for the lower-level component
+question that surface and rail queries cannot answer directly.
 
-Proposed status for the new query:
+Accepted status for the new query:
 
-| Query                             | Status   | DDD owner                              | Reason                                                                                                                                         |
-| --------------------------------- | -------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ListFrontendComponentReflection` | proposed | `FrontendComponentReflectionInventory` | Needed only if the component-level read model has its own schema, filters, and drift checks beyond existing frontend surface and rail queries. |
+<!-- markdownlint-disable MD060 -->
+
+| Query                             | Status      | DDD owner                              | Reason                                                                                                            |
+| --------------------------------- | ----------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ListFrontendComponentReflection` | implemented | `FrontendComponentReflectionInventory` | The component-level read model has its own schema, filters, and joins beyond existing frontend surface and rails. |
+
+<!-- markdownlint-enable MD060 -->
+
+```feature-mechanization
+version: 1
+featureId: FRONTEND-COMPONENT-REFLECTION-INVENTORY-20260604
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md
+componentGuides:
+  - docs/architecture/components/web/frontend-component-inventory.md
+userStories:
+  - docs/architecture/components/web/frontend-component-inventory.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/architecture/components/web/frontend-mechanical-truth-inventory.md
+  - docs/architecture/components/web/frontend-command-query-rail-inventory.md
+  - docs/guides/testing-and-ci-capabilities.md
+allowedImplementationSurfaces:
+  - buzon/dvt_front_component_inventory_app_reflection_study_20260604.md
+  - docs/architecture/components/web/frontend-component-inventory.md
+  - docs/architecture/components/web/index.md
+  - docs/guides/testing-and-ci-capabilities.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md
+  - package.json
+  - scripts/local-validation-plan.cjs
+  - scripts/planning-db/frontend-component-inventory.cjs
+  - scripts/planning-db-frontend-component-inventory.test.cjs
+  - scripts/planning-db-import.cjs
+  - scripts/planning-db-import.test.cjs
+  - scripts/planning-db-migrate.test.cjs
+  - scripts/planning-db-query.cjs
+  - scripts/planning-db-query.test.cjs
+  - scripts/verify-changed.test.cjs
+  - tools/planning-db/migrations/056_frontend_component_reflection_inventory.sql
+forbiddenImplementationSurfaces:
+  - apps/api/**
+  - apps/web/src/**
+  - packages/@dvt/contracts/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+commandQueryRails:
+  - name: ListFrontendComponentReflection
+    type: query
+    dddOwner: FrontendComponentReflectionInventory
+    status: implemented
+domainObjects:
+  - name: FrontendComponentReflectionInventory
+    type: query-store read model
+    owner: scripts/planning-db
+fowlerSignals:
+  - Hidden authority
+  - Documentation drift
+  - Data clumps
+  - Test-only confidence
+architectureGuards:
+  - node --test scripts/planning-db-frontend-component-inventory.test.cjs
+cypressFlows:
+  - N/A - planning DB component reflection only; no browser runtime behavior changes.
+completionGate:
+  - node --test scripts/planning-db-frontend-component-inventory.test.cjs
+  - node --test scripts/planning-db-query.test.cjs scripts/planning-db-import.test.cjs scripts/planning-db-migrate.test.cjs scripts/verify-changed.test.cjs
+  - pnpm governance:refresh
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: frontend-component-reflection-parser
+    redTest: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    expectedFailure: frontend component reflection inventory component does not exist.
+    patchSurfaces:
+      - scripts/planning-db/frontend-component-inventory.cjs
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - docs/architecture/components/web/frontend-component-inventory.md
+    greenTest: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+  - id: frontend-component-reflection-import-query
+    redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-import.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: frontend component reflection migration, import, and query CLI are not wired.
+    patchSurfaces:
+      - scripts/planning-db-import.cjs
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+      - tools/planning-db/migrations/056_frontend_component_reflection_inventory.sql
+    greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-import.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: frontend-component-reflection-changed-routing
+    redTest: node --test scripts/verify-changed.test.cjs
+    expectedFailure: changed-file validation routes component inventory edits through broad planning DB tests.
+    patchSurfaces:
+      - scripts/local-validation-plan.cjs
+      - scripts/verify-changed.test.cjs
+      - package.json
+    greenTest: node --test scripts/verify-changed.test.cjs
+symbols:
+  - name: buildFrontendComponentReflectionSnapshot
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Hidden authority, Documentation drift]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - DB read model imported from governed frontend component inventory.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: buildFrontendComponentRows
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Data clumps]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - DB query output formatter.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: buildFrontendComponentFileRows
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Data clumps]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - DB query output formatter.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: buildFrontendComponentRailRows
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Data clumps]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - DB query output formatter.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: readFrontendComponentRows
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Explicit Read Model]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - planning DB query CLI.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: readFrontendComponentFileRows
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Explicit Read Model]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - planning DB query CLI.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: readFrontendComponentRailRows
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Explicit Read Model]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - planning DB query CLI.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: insertFrontendComponentReflectionSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Documentation drift]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - planning DB import wiring.
+    unitTests: [node --test scripts/planning-db-import.test.cjs]
+  - name: normalizeList
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Data clumps]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - parser normalization.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: parseInventoryDocument
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - parser implementation.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: sectionTableRows
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Documentation drift]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - parser implementation.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: appendFilter
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Explicit Read Model]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - SQL filter builder.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: test
+    path: scripts/planning-db-frontend-component-inventory.test.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - Node test harness.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: assert
+    path: scripts/planning-db-frontend-component-inventory.test.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - Node test harness.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: inventoryDocument
+    path: scripts/planning-db-frontend-component-inventory.test.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - test fixture builder.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - name: sampleInventory
+    path: scripts/planning-db-frontend-component-inventory.test.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - test fixture builder.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - &frontendComponentInternalSymbol
+    name: countField
+    path: scripts/planning-db/frontend-component-inventory.cjs
+    dddOwner: FrontendComponentReflectionInventory
+    cqRails: [ListFrontendComponentReflection]
+    fowlerSignals: [Data clumps]
+    architectureGuard: node --test scripts/planning-db-frontend-component-inventory.test.cjs
+    cypressCoverage: N/A - parser and query helper.
+    unitTests: [node --test scripts/planning-db-frontend-component-inventory.test.cjs]
+  - <<: *frontendComponentInternalSymbol
+    name: crypto
+  - <<: *frontendComponentInternalSymbol
+    name: defaultInventoryPath
+  - <<: *frontendComponentInternalSymbol
+    name: expectVocabulary
+  - <<: *frontendComponentInternalSymbol
+    name: fs
+  - <<: *frontendComponentInternalSymbol
+    name: headerIndexes
+  - <<: *frontendComponentInternalSymbol
+    name: isSeparatorRow
+  - <<: *frontendComponentInternalSymbol
+    name: markdownCells
+  - <<: *frontendComponentInternalSymbol
+    name: normalizeCell
+  - <<: *frontendComponentInternalSymbol
+    name: normalizeHeader
+  - <<: *frontendComponentInternalSymbol
+    name: normalizeOptional
+  - <<: *frontendComponentInternalSymbol
+    name: parseInteger
+  - <<: *frontendComponentInternalSymbol
+    name: parseLimit
+  - <<: *frontendComponentInternalSymbol
+    name: path
+  - <<: *frontendComponentInternalSymbol
+    name: rawRow
+  - <<: *frontendComponentInternalSymbol
+    name: readDefaultInventoryDocument
+  - <<: *frontendComponentInternalSymbol
+    name: repoRelative
+  - <<: *frontendComponentInternalSymbol
+    name: repoRoot
+  - <<: *frontendComponentInternalSymbol
+    name: requiredHeadersBySection
+  - <<: *frontendComponentInternalSymbol
+    name: rowValue
+  - <<: *frontendComponentInternalSymbol
+    name: sha256
+  - <<: *frontendComponentInternalSymbol
+    name: stripInlineCode
+  - <<: *frontendComponentInternalSymbol
+    name: toPosix
+  - <<: *frontendComponentInternalSymbol
+    name: validComponentKinds
+  - <<: *frontendComponentInternalSymbol
+    name: validComponentStatuses
+  - <<: *frontendComponentInternalSymbol
+    name: validFileRoles
+  - <<: *frontendComponentInternalSymbol
+    name: validRailKinds
+  - <<: *frontendComponentInternalSymbol
+    name: validRailStatuses
+  - <<: *frontendComponentInternalSymbol
+    name: validReuseDecisions
+```
 
 ## Fowler Opportunity Matrix
 
@@ -119,7 +412,9 @@ flowchart LR
 
 ## Implementation Slices
 
-### Slice 1 - Governed Proposal Only
+### Slice 1 - Governed Proposal
+
+Status: implemented.
 
 Objective: decide whether the inbox study fits the model and record the
 accepted constraints.
@@ -129,9 +424,11 @@ Allowed surfaces:
 - this proposal;
 - docs indexes generated by `pnpm docs:sync`.
 
-No schema, CLI, or product behavior changes belong in this slice.
+No product behavior changes belong in this slice.
 
 ### Slice 2 - Minimal DB Model
+
+Status: implemented for the P0 component set.
 
 Objective: add the smallest relational component reflection model that can
 answer component-to-surface, component-to-file, component-to-rail, and
@@ -156,6 +453,9 @@ Reason for deferral: those surfaces need either richer manual inventory rules
 or AST validation to avoid creating unverifiable prose tables.
 
 ### Slice 3 - Governed Inventory And Query CLI
+
+Status: implemented for `frontend-components`, `frontend-component-files`, and
+`frontend-component-rails`.
 
 Objective: create `docs/architecture/components/web/frontend-component-inventory.md`,
 an importer, and query commands.
@@ -215,26 +515,22 @@ component seeds are deferred until the P0 schema and importer are proven.
 - The first implementation slice does not add product behavior.
 - Existing frontend surface and command/query inventories remain the authority
   for surface maturity and rail semantics.
-- Any future implementation adds tests before relying on the new DB projection.
+- The P0 DB projection has parser, migration, import, query, and changed-gate
+  tests before agents rely on it.
+- Future AST/drift implementation adds negative tests before expanding the
+  projection authority.
 
 ## Validation Plan
 
-For this proposal-only slice:
+For the implemented proposal, DB model, and query CLI slices:
 
 ```bash
-pnpm docs:sync
-pnpm docs:sync:check
-pnpm lint:md:changed
-pnpm verify:changed
-```
-
-For future implementation slices:
-
-```bash
-node --test scripts/planning-db-migrate.test.cjs
-node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+node --test scripts/planning-db-frontend-component-inventory.test.cjs
+node --test scripts/planning-db-query.test.cjs scripts/planning-db-import.test.cjs scripts/planning-db-migrate.test.cjs scripts/verify-changed.test.cjs
 pnpm planning:db:import -- --governance-only
 pnpm planning:db:query frontend-components --limit 20
+pnpm docs:sync
+pnpm docs:sync:check
 pnpm docs:feature-mechanization:implementation
 pnpm verify:prepush
 ```

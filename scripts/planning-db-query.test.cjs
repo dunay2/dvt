@@ -28,6 +28,9 @@ const {
   buildPrReadinessRows,
   buildCommandQueryRailRows,
   buildCreationIntentRows,
+  buildFrontendComponentFileRows,
+  buildFrontendComponentRailRows,
+  buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
   buildSummaryRows,
   buildTaskRows,
@@ -52,6 +55,9 @@ const {
   readAiProjectContext,
   readCommandQueryRailRows,
   readCreationIntentRows,
+  readFrontendComponentFileRows,
+  readFrontendComponentRailRows,
+  readFrontendComponentRows,
   readFrontendMechanicalTruthRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
@@ -103,6 +109,35 @@ test('frontend mechanical truth query behavior lives in a focused read-model com
   );
 });
 
+test('frontend component reflection query behavior lives in a focused read-model component', () => {
+  const frontendComponentReflectionComponent = require('./planning-db/frontend-component-inventory.cjs');
+
+  assert.equal(
+    frontendComponentReflectionComponent.buildFrontendComponentRows,
+    buildFrontendComponentRows
+  );
+  assert.equal(
+    frontendComponentReflectionComponent.buildFrontendComponentFileRows,
+    buildFrontendComponentFileRows
+  );
+  assert.equal(
+    frontendComponentReflectionComponent.buildFrontendComponentRailRows,
+    buildFrontendComponentRailRows
+  );
+  assert.equal(
+    frontendComponentReflectionComponent.readFrontendComponentRows,
+    readFrontendComponentRows
+  );
+  assert.equal(
+    frontendComponentReflectionComponent.readFrontendComponentFileRows,
+    readFrontendComponentFileRows
+  );
+  assert.equal(
+    frontendComponentReflectionComponent.readFrontendComponentRailRows,
+    readFrontendComponentRailRows
+  );
+});
+
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');
   assert.equal(resolveQueryName('summary'), 'summary');
@@ -126,6 +161,9 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('ai-project-context'), 'ai-project-context');
   assert.equal(resolveQueryName('creation-intent'), 'creation-intent');
   assert.equal(resolveQueryName('frontend-surfaces'), 'frontend-surfaces');
+  assert.equal(resolveQueryName('frontend-components'), 'frontend-components');
+  assert.equal(resolveQueryName('frontend-component-files'), 'frontend-component-files');
+  assert.equal(resolveQueryName('frontend-component-rails'), 'frontend-component-rails');
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
   assert.equal(resolveQueryName('feature-work'), 'feature-work');
@@ -328,6 +366,86 @@ test('parseArgs parses frontend mechanical truth filters for DB-first screen ins
       limit: 5,
     },
   });
+});
+
+test('parseArgs parses frontend component reflection filters for DB-first component inspection', () => {
+  assert.deepEqual(
+    parseArgs([
+      'frontend-components',
+      '--component',
+      'web.component.canvas.CanvasToolbar',
+      '--kind',
+      'route-toolbar',
+      '--state',
+      'current',
+      '--owner',
+      'Canvas workbench',
+      '--surface',
+      'web.canvas.graph',
+      '--limit',
+      '5',
+    ]),
+    {
+      queryName: 'frontend-components',
+      filters: {
+        component: 'web.component.canvas.CanvasToolbar',
+        kind: 'route-toolbar',
+        state: 'current',
+        owner: 'Canvas workbench',
+        surface: 'web.canvas.graph',
+        limit: 5,
+      },
+    }
+  );
+
+  assert.deepEqual(
+    parseArgs([
+      'frontend-component-files',
+      '--component',
+      'web.component.canvas.CanvasToolbar',
+      '--kind',
+      'component',
+      '--path',
+      'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
+      '--limit',
+      '3',
+    ]),
+    {
+      queryName: 'frontend-component-files',
+      filters: {
+        component: 'web.component.canvas.CanvasToolbar',
+        kind: 'component',
+        path: 'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
+        limit: 3,
+      },
+    }
+  );
+
+  assert.deepEqual(
+    parseArgs([
+      'frontend-component-rails',
+      '--component',
+      'web.component.canvas.CanvasToolbar',
+      '--rail',
+      'PreviewExecutablePlan',
+      '--kind',
+      'command',
+      '--status',
+      'implemented-api',
+      '--limit',
+      '4',
+    ]),
+    {
+      queryName: 'frontend-component-rails',
+      filters: {
+        component: 'web.component.canvas.CanvasToolbar',
+        rail: 'PreviewExecutablePlan',
+        kind: 'command',
+        status: 'implemented-api',
+        limit: 4,
+      },
+    }
+  );
 });
 
 test('parseArgs parses creation intent preflight filters for AI reuse checks', () => {
@@ -1774,6 +1892,101 @@ test('runQuery dispatches frontend-surfaces through the screen truth query', asy
       'docs/architecture/components/web/frontend-mechanical-truth-inventory.md',
     ],
   ]);
+});
+
+test('runQuery dispatches frontend component reflection through focused queries', async () => {
+  const calls = [];
+  const client = {
+    async query(sql) {
+      calls.push(sql);
+      if (sql.includes('frontend_component_file_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'web.component.canvas.CanvasToolbar',
+              file_path: 'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
+              file_role: 'component',
+              exported_symbol: 'CanvasToolbar',
+            },
+          ],
+        };
+      }
+      if (sql.includes('frontend_component_rail_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'web.component.canvas.CanvasToolbar',
+              rail_name: 'PreviewExecutablePlan',
+              rail_kind: 'command',
+              rail_status: 'implemented-api',
+            },
+          ],
+        };
+      }
+      return {
+        rows: [
+          {
+            component_id: 'web.component.canvas.CanvasToolbar',
+            component_name: 'CanvasToolbar',
+            component_kind: 'route-toolbar',
+            component_status: 'current',
+            reuse_decision: 'extract',
+            surface_count: 1,
+            file_count: 3,
+            rail_count: 2,
+            evidence_count: 2,
+            source_path: 'docs/architecture/components/web/frontend-component-inventory.md',
+          },
+        ],
+      };
+    },
+  };
+
+  const componentRows = await runQuery({
+    queryName: 'frontend-components',
+    filters: { component: 'web.component.canvas.CanvasToolbar', limit: 5 },
+    client,
+    print: false,
+  });
+  const fileRows = await runQuery({
+    queryName: 'frontend-component-files',
+    filters: { component: 'web.component.canvas.CanvasToolbar', limit: 5 },
+    client,
+    print: false,
+  });
+  const railRows = await runQuery({
+    queryName: 'frontend-component-rails',
+    filters: { component: 'web.component.canvas.CanvasToolbar', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(componentRows, [
+    [
+      'web.component.canvas.CanvasToolbar',
+      'CanvasToolbar',
+      'route-toolbar',
+      'current',
+      'extract',
+      1,
+      3,
+      2,
+      2,
+      'docs/architecture/components/web/frontend-component-inventory.md',
+    ],
+  ]);
+  assert.deepEqual(fileRows, [
+    [
+      'web.component.canvas.CanvasToolbar',
+      'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
+      'component',
+      'CanvasToolbar',
+    ],
+  ]);
+  assert.deepEqual(railRows, [
+    ['web.component.canvas.CanvasToolbar', 'PreviewExecutablePlan', 'command', 'implemented-api'],
+  ]);
+  assert.equal(calls.length, 3);
 });
 
 test('buildRepositoryCommandRows formats DB-owned repository command catalog rows', () => {

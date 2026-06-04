@@ -10,12 +10,14 @@ const {
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
   buildCommandQueryRailSnapshot,
+  buildFrontendComponentReflectionSnapshot,
   buildFrontendMechanicalTruthSnapshot,
   buildRepositoryCommandSnapshot,
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
   importContent,
   insertDocsDispositionSnapshot,
+  insertFrontendComponentReflectionSnapshot,
   insertFrontendMechanicalTruthSnapshot,
   insertGovernanceSnapshot,
   insertKnowledgeSnapshot,
@@ -105,6 +107,15 @@ test('frontend mechanical truth import behavior lives in a focused inventory com
   assert.equal(
     frontendMechanicalTruthComponent.buildFrontendMechanicalTruthSnapshot,
     buildFrontendMechanicalTruthSnapshot
+  );
+});
+
+test('frontend component reflection import behavior lives in a focused inventory component', () => {
+  const frontendComponentReflectionComponent = require('./planning-db/frontend-component-inventory.cjs');
+
+  assert.equal(
+    frontendComponentReflectionComponent.buildFrontendComponentReflectionSnapshot,
+    buildFrontendComponentReflectionSnapshot
   );
 });
 
@@ -938,6 +949,8 @@ test('governance import clears every repopulated governance table before insert'
   );
   assert.ok(governanceImportDeleteTables.includes('governance_coverage'));
   assert.ok(governanceImportDeleteTables.includes('governance_remediation'));
+  assert.ok(governanceImportDeleteTables.includes('frontend_components'));
+  assert.ok(governanceImportDeleteTables.includes('frontend_component_files'));
   assert.ok(governanceImportDeleteTables.includes('frontend_mechanical_truth_surfaces'));
   assert.ok(governanceImportDeleteTables.includes('risk_debt_items'));
   assert.equal(governanceImportDeleteTables.at(-1), 'governance_sources');
@@ -990,6 +1003,123 @@ test('frontend mechanical truth import reloads surface rows with JSONB metadata'
     'Runs workbench',
   ]);
   assert.equal(insertQuery.params[5], JSON.stringify(['monitoring']));
+});
+
+test('frontend component reflection import reloads normalized component rows', async () => {
+  const queries = [];
+
+  await insertFrontendComponentReflectionSnapshot(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      components: [
+        {
+          componentId: 'web.component.canvas.CanvasToolbar',
+          componentName: 'CanvasToolbar',
+          componentKind: 'route-toolbar',
+          componentStatus: 'current',
+          reuseDecision: 'extract',
+          frontendOwner: 'Canvas workbench',
+          responsibility: 'Render canvas commands.',
+          packageName: '@dvt/web',
+          routeScope: '/canvas',
+          pluginScope: 'dbt',
+          capabilityGaps: ['server-readable readiness'],
+          evidenceRefs: ['CanvasToolbar.test.tsx'],
+          sourcePath: 'docs/architecture/components/web/frontend-component-inventory.md',
+          sourceContentSha256: 'source-b',
+          rawComponent: { componentId: 'web.component.canvas.CanvasToolbar' },
+        },
+      ],
+      surfaceLinks: [
+        {
+          componentId: 'web.component.canvas.CanvasToolbar',
+          surfaceId: 'web.canvas.graph',
+          routePath: '/canvas',
+          placementKind: 'route-toolbar',
+          placementOrder: 20,
+          rawLink: { placementKind: 'route-toolbar' },
+        },
+      ],
+      files: [
+        {
+          componentId: 'web.component.canvas.CanvasToolbar',
+          filePath: 'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
+          fileRole: 'component',
+          exportedSymbol: 'CanvasToolbar',
+          rawFile: { fileRole: 'component' },
+        },
+      ],
+      rails: [
+        {
+          componentId: 'web.component.canvas.CanvasToolbar',
+          railName: 'PreviewExecutablePlan',
+          railKind: 'command',
+          railStatus: 'implemented-api',
+          rawRail: { railName: 'PreviewExecutablePlan' },
+        },
+      ],
+      evidence: [
+        {
+          evidenceId: 'web.component.canvas.CanvasToolbar.unit',
+          componentId: 'web.component.canvas.CanvasToolbar',
+          evidenceKind: 'unit-test',
+          evidenceRef: 'apps/web/src/app/views/canvas/CanvasToolbar.test.tsx',
+          evidenceStatus: 'accepted',
+          rawEvidence: { evidenceKind: 'unit-test' },
+        },
+      ],
+    }
+  );
+
+  assert.deepEqual(
+    queries.slice(0, 5).map((query) => query.sql),
+    [
+      `delete from ${schemaName}.frontend_component_evidence`,
+      `delete from ${schemaName}.frontend_component_cq_rails`,
+      `delete from ${schemaName}.frontend_component_files`,
+      `delete from ${schemaName}.frontend_surface_component_links`,
+      `delete from ${schemaName}.frontend_components`,
+    ]
+  );
+  const componentInsert = queries.find((query) =>
+    query.sql.includes(`insert into ${schemaName}.frontend_components`)
+  );
+  const linkInsert = queries.find((query) =>
+    query.sql.includes(`insert into ${schemaName}.frontend_surface_component_links`)
+  );
+  const railInsert = queries.find((query) =>
+    query.sql.includes(`insert into ${schemaName}.frontend_component_cq_rails`)
+  );
+
+  assert.ok(componentInsert);
+  assert.ok(linkInsert);
+  assert.ok(railInsert);
+  assert.deepEqual(componentInsert.params.slice(0, 6), [
+    'web.component.canvas.CanvasToolbar',
+    'CanvasToolbar',
+    'route-toolbar',
+    'current',
+    'extract',
+    'Canvas workbench',
+  ]);
+  assert.equal(componentInsert.params[10], JSON.stringify(['server-readable readiness']));
+  assert.deepEqual(linkInsert.params.slice(0, 5), [
+    'web.component.canvas.CanvasToolbar',
+    'web.canvas.graph',
+    '/canvas',
+    'route-toolbar',
+    20,
+  ]);
+  assert.deepEqual(railInsert.params.slice(0, 4), [
+    'web.component.canvas.CanvasToolbar',
+    'PreviewExecutablePlan',
+    'command',
+    'implemented-api',
+  ]);
 });
 
 test('governance import batches heavy file table inserts', async () => {
