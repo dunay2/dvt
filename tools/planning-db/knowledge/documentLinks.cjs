@@ -24,20 +24,35 @@ function normalizeRelativeDocumentPath(sourcePath, linkPath) {
 
 function documentLinks(document, body, knownDocumentIds, slugify) {
   const links = [];
-  const markdownLinkPattern = /\[[^\]]+\]\(([^)]+)\)/g;
-  for (const match of normalizeText(body).matchAll(markdownLinkPattern)) {
-    const targetPath = normalizeRelativeDocumentPath(document.documentPath, match[1].trim());
+  const linkedDocumentIds = new Set();
+  const addLink = (targetPath) => {
     if (!targetPath) {
-      continue;
+      return;
     }
     const targetId = slugify(targetPath);
-    if (knownDocumentIds.has(targetId) && targetId !== document.documentId) {
+    if (
+      knownDocumentIds.has(targetId) &&
+      targetId !== document.documentId &&
+      !linkedDocumentIds.has(targetId)
+    ) {
+      linkedDocumentIds.add(targetId);
       links.push({
         fromDocumentId: document.documentId,
         toDocumentId: targetId,
         relationType: 'references',
       });
     }
+  };
+
+  const normalizedBody = normalizeText(body);
+  const markdownLinkPattern = /\[[^\]]+\]\(([^)]+)\)/g;
+  for (const match of normalizedBody.matchAll(markdownLinkPattern)) {
+    addLink(normalizeRelativeDocumentPath(document.documentPath, match[1].trim()));
+  }
+
+  const directPathPattern = /(?:^|[\s`"'(])((?:docs|buzon)\/[^\s`"')]+?\.md)(?=$|[\s`"'),.;:])/g;
+  for (const match of normalizedBody.matchAll(directPathPattern)) {
+    addLink(normalizeRelativeDocumentPath(document.documentPath, match[1].trim()));
   }
   return links;
 }
