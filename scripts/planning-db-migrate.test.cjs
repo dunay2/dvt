@@ -159,6 +159,22 @@ test('tracked migrations flag partial mandatory proposal action task linkage', (
   );
 });
 
+test('tracked migrations expose DB-first knowledge intake retirement state', () => {
+  const migrations = readMigrationFiles();
+  const retirementMigration = migrations.find(
+    (migration) => migration.fileName === '057_knowledge_intake_retirement_query.sql'
+  );
+
+  assert.ok(retirementMigration);
+  assert.match(
+    retirementMigration.sql,
+    /create or replace view planning_query_store\.knowledge_intake_retirement_query/
+  );
+  assert.match(retirementMigration.sql, /document_path like 'buzon\/%'/);
+  assert.match(retirementMigration.sql, /canonical_disposition/);
+  assert.match(retirementMigration.sql, /open_action_count/);
+});
+
 test('tracked migrations include governance component definition command rail tables', () => {
   const migrations = readMigrationFiles();
   const componentDefinitionMigration = migrations.find(

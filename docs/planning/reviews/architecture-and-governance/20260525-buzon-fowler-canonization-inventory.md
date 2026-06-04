@@ -122,9 +122,17 @@ Use this decision order for every `buzon/` analysis:
 
 ## Next Iteration
 
-The next unattended sweep should process the zero-reference set first, then the
-referenced analyses with proposed knowledge actions. Each sweep should reduce
-one of these counts:
+The next unattended sweep should use the DB-first retirement query before
+reading raw files:
+
+```bash
+pnpm planning:db:query knowledge-intake --state unclassified --limit 30
+pnpm planning:db:query knowledge-intake --state open-actions --limit 30
+pnpm planning:db:query knowledge-intake --state referenced --limit 30
+```
+
+Process the unclassified set first, then intake with proposed knowledge actions.
+Each sweep should reduce one of these counts:
 
 - zero-reference `buzon/` analyses;
 - proposed knowledge-action rows with no target link;

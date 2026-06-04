@@ -32,6 +32,7 @@ const {
   buildFrontendComponentRailRows,
   buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
+  buildKnowledgeIntakeRetirementRows,
   buildSummaryRows,
   buildTaskRows,
   buildTaskTraceRows,
@@ -59,6 +60,7 @@ const {
   readFrontendComponentRailRows,
   readFrontendComponentRows,
   readFrontendMechanicalTruthRows,
+  readKnowledgeIntakeRetirementRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
@@ -135,6 +137,19 @@ test('frontend component reflection query behavior lives in a focused read-model
   assert.equal(
     frontendComponentReflectionComponent.readFrontendComponentRailRows,
     readFrontendComponentRailRows
+  );
+});
+
+test('knowledge intake retirement query behavior lives in a focused read-model component', () => {
+  const knowledgeIntakeRetirementComponent = require('./planning-db/knowledge-intake-retirement-query.cjs');
+
+  assert.equal(
+    knowledgeIntakeRetirementComponent.buildKnowledgeIntakeRetirementRows,
+    buildKnowledgeIntakeRetirementRows
+  );
+  assert.equal(
+    knowledgeIntakeRetirementComponent.readKnowledgeIntakeRetirementRows,
+    readKnowledgeIntakeRetirementRows
   );
 });
 
@@ -625,6 +640,29 @@ test('parseArgs parses planning knowledge filters', () => {
       path: 'x.md',
     },
   });
+
+  assert.deepEqual(
+    parseArgs([
+      'knowledge-intake',
+      '--state',
+      'unclassified',
+      '--type',
+      'fowler_analysis',
+      '--path',
+      'buzon/example.md',
+      '--limit',
+      '7',
+    ]),
+    {
+      queryName: 'knowledge-intake',
+      filters: {
+        state: 'unclassified',
+        type: 'fowler_analysis',
+        path: 'buzon/example.md',
+        limit: 7,
+      },
+    }
+  );
 });
 
 test('parseArgs normalizes open resolution filters to pending', () => {
@@ -1798,6 +1836,95 @@ test('readCreationIntentRows queries existing rails from the DB-first rail catal
     ['listwidgets'],
     'query',
     5,
+  ]);
+});
+
+test('buildKnowledgeIntakeRetirementRows exposes DB-first retirement posture', () => {
+  assert.deepEqual(
+    buildKnowledgeIntakeRetirementRows([
+      {
+        retirement_state: 'unclassified',
+        open_action_count: 2,
+        inbound_reference_count: 1,
+        action_count: 3,
+        canonical_disposition: null,
+        document_path: 'buzon/example.md',
+        title: 'Example Fowler Analysis',
+      },
+    ]),
+    [['unclassified', 2, 1, 3, '-', 'buzon/example.md', 'Example Fowler Analysis']]
+  );
+});
+
+test('readKnowledgeIntakeRetirementRows queries the DB-first intake retirement view', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readKnowledgeIntakeRetirementRows(client, {
+    state: 'open-actions',
+    type: 'fowler_analysis',
+    path: 'buzon/example.md',
+    status: 'Review',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.knowledge_intake_retirement_query/);
+  assert.match(captured.sql, /retirement_state = \$1/);
+  assert.match(captured.sql, /document_type = \$2/);
+  assert.match(captured.sql, /document_path = \$3/);
+  assert.match(captured.sql, /status = \$4/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'open-actions',
+    'fowler_analysis',
+    'buzon/example.md',
+    'Review',
+    5,
+  ]);
+});
+
+test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
+  const client = {
+    async query() {
+      return {
+        rows: [
+          {
+            retirement_state: 'canonized',
+            open_action_count: 0,
+            inbound_reference_count: 4,
+            action_count: 1,
+            canonical_disposition: 'docs/planning/proposals/mandatory/example.md',
+            document_path: 'buzon/example.md',
+            title: 'Example Fowler Analysis',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'knowledge-intake',
+    filters: { state: 'canonized', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'canonized',
+      0,
+      4,
+      1,
+      'docs/planning/proposals/mandatory/example.md',
+      'buzon/example.md',
+      'Example Fowler Analysis',
+    ],
   ]);
 });
 

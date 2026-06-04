@@ -243,3 +243,34 @@ test('extracts governed document references as document links', () => {
     },
   ]);
 });
+
+test('extracts governed direct path references as document links', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments([
+    {
+      sourcePath: 'docs/planning/reviews/example-review.md',
+      raw: [
+        '---',
+        'title: Example Review',
+        'planning_type: review',
+        '---',
+        '# Example Review',
+        '',
+        'The intake source is `buzon/example-analysis.md`.',
+      ].join('\n'),
+      contentSha256: 'f'.repeat(64),
+    },
+    {
+      sourcePath: 'buzon/example-analysis.md',
+      raw: '# Example Analysis\n',
+      contentSha256: '1'.repeat(64),
+    },
+  ]);
+
+  assert.deepEqual(snapshot.documentLinks, [
+    {
+      fromDocumentId: 'docs-planning-reviews-example-review-md',
+      toDocumentId: 'buzon-example-analysis-md',
+      relationType: 'references',
+    },
+  ]);
+});

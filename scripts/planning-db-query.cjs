@@ -32,6 +32,10 @@ const {
   readFrontendComponentRailRows,
   readFrontendComponentRows,
 } = require('./planning-db/frontend-component-inventory.cjs');
+const {
+  buildKnowledgeIntakeRetirementRows,
+  readKnowledgeIntakeRetirementRows,
+} = require('./planning-db/knowledge-intake-retirement-query.cjs');
 
 const architectureSchemaName = 'architecture';
 const componentEngineeringSchemaName = 'component_engineering';
@@ -72,6 +76,7 @@ const knownQueries = new Set([
   'cer',
   'knowledge-documents',
   'knowledge-actions',
+  'knowledge-intake',
   'mandatory-proposal-gaps',
   'component-tree',
   'component-metadata',
@@ -117,6 +122,7 @@ const governanceProjectionQueryNames = new Set([
   'component-quality',
   'knowledge-documents',
   'knowledge-actions',
+  'knowledge-intake',
   'mandatory-proposal-gaps',
 ]);
 
@@ -365,7 +371,11 @@ function parseArgs(args = process.argv.slice(2)) {
       continue;
     }
     if (arg === '--state') {
-      if (queryName === 'frontend-surfaces' || queryName === 'frontend-components') {
+      if (
+        queryName === 'frontend-surfaces' ||
+        queryName === 'frontend-components' ||
+        queryName === 'knowledge-intake'
+      ) {
         filters.state = value;
       } else {
         filters.governanceState = value;
@@ -3548,6 +3558,15 @@ async function runQuery(options = {}) {
       return actionRows;
     }
 
+    if (queryName === 'knowledge-intake') {
+      const rows = await readKnowledgeIntakeRetirementRows(client, options.filters || {});
+      const intakeRows = buildKnowledgeIntakeRetirementRows(rows);
+      if (options.print !== false) {
+        printTaskRows(intakeRows);
+      }
+      return intakeRows;
+    }
+
     if (queryName === 'mandatory-proposal-gaps') {
       const rows = await readMandatoryProposalGapRows(client, options.filters || {});
       const gapRows = buildMandatoryProposalGapRows(rows);
@@ -3913,6 +3932,7 @@ module.exports = {
   buildFrontendComponentRailRows,
   buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
+  buildKnowledgeIntakeRetirementRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
   buildSummaryRows,
@@ -3957,6 +3977,7 @@ module.exports = {
   readRiskDebtRows,
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,
+  readKnowledgeIntakeRetirementRows,
   readMandatoryProposalGapRows,
   readPlanningArtifactRows,
   readPlanningDependencyRows,
