@@ -239,6 +239,39 @@ describe('web Vitest suite partition', () => {
 
     expect(
       resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx',
+        'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        'apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts',
+        'apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts',
+        'apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts',
+      ])
+    ).toMatchObject({
+      commands: [
+        'pnpm exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts',
+        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts',
+      ],
+      requiresDependencies: false,
+      suites: ['canvas-unit', 'canvas-presentation', 'canvas-architecture'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/vitest.suites.ts',
+        'apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx',
+        'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+      ])
+    ).toMatchObject({
+      commands: [
+        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+      ],
+      requiresDependencies: true,
+      suites: ['canvas-presentation', 'architecture'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
         'apps/web/src/app/views/cost/costViewModel.ts',
         'apps/web/src/app/views/cost/costViewModel.test.ts',
       ])

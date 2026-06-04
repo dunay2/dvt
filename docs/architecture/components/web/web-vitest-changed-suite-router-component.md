@@ -51,6 +51,12 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 - When a changed source file and its same-stem `*.test.*` or `*.spec.*` file
   both appear in the same diff, the router may run that exact test file instead
   of the broader suite.
+- When a non-governance change set selects a focus or primary suite and also
+  contains exact changed tests for that same suite, the router runs the exact
+  tests instead of duplicating them with the broader suite command.
+- Governance changes to the suite catalog, configs, package scripts, or router
+  docs still force the governed architecture suite even when exact tests are
+  also present.
 - Source files without a changed same-stem test keep the existing suite
   fallback, so unpaired source edits do not silently lose coverage.
 - Non-Canvas `.tsx` paths route to `presentation`.
@@ -69,6 +75,7 @@ stateDiagram-v2
   [*] --> ChangedFiles
   ChangedFiles --> GovernedPath: suite catalog/config/docs
   ChangedFiles --> PairedSource: source plus changed same-stem test
+  ChangedFiles --> ExactSuiteTests: non-governance source plus exact tests
   ChangedFiles --> CanvasPath: Canvas route or canvas module
   ChangedFiles --> MonacoPath: Monaco route/editor surface
   ChangedFiles --> WorkspaceServicePath: workspace service port/facade
@@ -76,6 +83,7 @@ stateDiagram-v2
   ChangedFiles --> TsPath: non-Canvas TS
   GovernedPath --> ArchitectureCommand
   PairedSource --> ExactTestCommand
+  ExactSuiteTests --> ExactTestCommand
   CanvasPath --> CanvasUnitCommand: .ts
   CanvasPath --> CanvasPresentationCommand: .tsx
   CanvasPath --> CanvasArchitectureCommand: architecture
