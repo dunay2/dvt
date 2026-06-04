@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 
 const {
   assertArchitectureDesignIdempotentReplayMatches,
@@ -23,6 +25,13 @@ const {
   writePlannedComponentCreateOperation,
 } = require('./planning-db-operate.cjs');
 
+function runPlanningDbOperateCli(args) {
+  return spawnSync(process.execPath, [path.join(__dirname, 'planning-db-operate.cjs'), ...args], {
+    cwd: path.resolve(__dirname, '..'),
+    encoding: 'utf8',
+  });
+}
+
 const importedTask = {
   laneId: 'A',
   taskId: 'GOV-S3',
@@ -35,6 +44,26 @@ const importedTask = {
     'docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md',
   ],
 };
+
+test('planning DB operate CLI prints root help without opening a DB connection', () => {
+  const result = runPlanningDbOperateCli(['--help']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Planning DB operate CLI/);
+  assert.match(result.stdout, /Resources:/);
+  assert.match(result.stdout, /component/);
+  assert.doesNotMatch(result.stderr, /Unknown planning DB operation|Missing value/);
+});
+
+test('planning DB operate CLI prints action help before parsing flag values', () => {
+  const result = runPlanningDbOperateCli(['component', 'create', '--help']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Planning DB operate: component create/);
+  assert.match(result.stdout, /pnpm planning:db:operate component create/);
+  assert.match(result.stdout, /CreateGovernanceComponent/);
+  assert.doesNotMatch(result.stderr, /Missing value for --help/);
+});
 
 test('parseArgs builds a task update command with actor, revision, and evidence', () => {
   const command = parseArgs([
