@@ -179,6 +179,8 @@ const requiredSurfaces = [
       'Canonical source': [
         'knowledge_intake_retirement_query',
         'knowledge_documents',
+        'knowledge_document_links',
+        'component_engineering_file_ownership_query',
         'buzon/',
         'import input',
       ],
@@ -189,6 +191,7 @@ const requiredSurfaces = [
       ],
       'Read/query rail': [
         'planning:db:query knowledge-intake',
+        'planning:db:query knowledge-intake --references',
         'generated-knowledge-intake-literature.md',
       ],
       Projection: [

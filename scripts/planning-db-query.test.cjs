@@ -34,6 +34,7 @@ const {
   buildFrontendComponentRailRows,
   buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
+  buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
   buildSummaryRows,
   buildTaskRows,
@@ -62,6 +63,7 @@ const {
   readFrontendComponentRailRows,
   readFrontendComponentRows,
   readFrontendMechanicalTruthRows,
+  readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
@@ -177,9 +179,19 @@ test('knowledge intake retirement query behavior lives in a focused read-model c
     knowledgeIntakeRetirementComponent.buildKnowledgeIntakeRetirementRows,
     buildKnowledgeIntakeRetirementRows
   );
+  assert.equal(typeof buildKnowledgeIntakeReferenceRows, 'function');
+  assert.equal(
+    knowledgeIntakeRetirementComponent.buildKnowledgeIntakeReferenceRows,
+    buildKnowledgeIntakeReferenceRows
+  );
   assert.equal(
     knowledgeIntakeRetirementComponent.readKnowledgeIntakeRetirementRows,
     readKnowledgeIntakeRetirementRows
+  );
+  assert.equal(typeof readKnowledgeIntakeReferenceRows, 'function');
+  assert.equal(
+    knowledgeIntakeRetirementComponent.readKnowledgeIntakeReferenceRows,
+    readKnowledgeIntakeReferenceRows
   );
 });
 
@@ -670,6 +682,18 @@ test('parseArgs parses planning knowledge filters', () => {
       path: 'x.md',
     },
   });
+
+  assert.deepEqual(
+    parseArgs(['knowledge-intake', '--references', '--path', 'buzon/example.md', '--limit', '7']),
+    {
+      queryName: 'knowledge-intake',
+      filters: {
+        references: true,
+        path: 'buzon/example.md',
+        limit: 7,
+      },
+    }
+  );
 
   assert.deepEqual(
     parseArgs([
@@ -1919,6 +1943,72 @@ test('readKnowledgeIntakeRetirementRows queries the DB-first intake retirement v
   ]);
 });
 
+test('buildKnowledgeIntakeReferenceRows exposes DB-first intake backrefs', () => {
+  assert.deepEqual(
+    buildKnowledgeIntakeReferenceRows([
+      {
+        document_path: 'buzon/example.md',
+        reference_path: 'docs/planning/example.md',
+        relation_type: 'markdown_link',
+        reference_component_id: 'ci-governance',
+        reference_file_role: 'doc',
+        reference_title: 'Planning Example',
+      },
+      {
+        documentPath: 'buzon/missing-owner.md',
+        referencePath: 'docs/archive/example.md',
+        relationType: 'direct_path',
+        referenceTitle: 'Archive Example',
+      },
+    ]),
+    [
+      [
+        'buzon/example.md',
+        'markdown_link',
+        'docs/planning/example.md',
+        'ci-governance',
+        'doc',
+        'Planning Example',
+      ],
+      [
+        'buzon/missing-owner.md',
+        'direct_path',
+        'docs/archive/example.md',
+        '-',
+        '-',
+        'Archive Example',
+      ],
+    ]
+  );
+});
+
+test('readKnowledgeIntakeReferenceRows queries DB document links and ownership projections', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readKnowledgeIntakeReferenceRows(client, {
+    path: 'buzon/example.md',
+    component: 'ci-governance',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.knowledge_document_links/);
+  assert.match(captured.sql, /join planning_query_store\.knowledge_documents from_document/);
+  assert.match(captured.sql, /join planning_query_store\.knowledge_documents to_document/);
+  assert.match(captured.sql, /component_engineering_file_ownership_query/);
+  assert.match(captured.sql, /to_document\.document_path like 'buzon\/%'/);
+  assert.match(captured.sql, /to_document\.document_path = \$1/);
+  assert.match(captured.sql, /ownership\.leaf_component_id = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['buzon/example.md', 'ci-governance', 5]);
+});
+
 test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
   const client = {
     async query() {
@@ -1954,6 +2044,43 @@ test('runQuery dispatches knowledge-intake through the DB-first retirement query
       'docs/planning/proposals/mandatory/example.md',
       'buzon/example.md',
       'Example Fowler Analysis',
+    ],
+  ]);
+});
+
+test('runQuery dispatches knowledge-intake references through the DB-first link query', async () => {
+  const client = {
+    async query() {
+      return {
+        rows: [
+          {
+            document_path: 'buzon/example.md',
+            reference_path: 'docs/planning/example.md',
+            relation_type: 'direct_path',
+            reference_component_id: 'ci-governance',
+            reference_file_role: 'doc',
+            reference_title: 'Planning Example',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'knowledge-intake',
+    filters: { references: true, limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'buzon/example.md',
+      'direct_path',
+      'docs/planning/example.md',
+      'ci-governance',
+      'doc',
+      'Planning Example',
     ],
   ]);
 });
