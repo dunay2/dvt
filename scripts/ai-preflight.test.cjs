@@ -26,8 +26,16 @@ test('workspace settings make Prettier on save a tracked repository contract', (
   const extensions = readJson('.vscode/extensions.json');
 
   assert.equal(settings['editor.formatOnSave'], true);
+  assert.equal(settings['editor.formatOnSaveMode'], 'file');
   assert.equal(settings['editor.defaultFormatter'], 'esbenp.prettier-vscode');
+  assert.equal(settings['editor.codeActionsOnSave']['source.fixAll.eslint'], 'always');
+  assert.equal(settings['eslint.codeActionsOnSave.mode'], 'all');
+  assert.equal(settings['eslint.run'], 'onSave');
   assert.equal(settings['prettier.requireConfig'], true);
+  assert.equal(settings['[typescript]']['editor.defaultFormatter'], 'esbenp.prettier-vscode');
+  assert.equal(settings['[typescript]']['editor.formatOnSave'], true);
+  assert.equal(settings['[typescriptreact]']['editor.defaultFormatter'], 'esbenp.prettier-vscode');
+  assert.equal(settings['[typescriptreact]']['editor.formatOnSave'], true);
   assert.equal(settings['[markdown]']['editor.formatOnSave'], true);
   assert.equal(settings['[yaml]']['editor.formatOnSave'], true);
   assert.ok(extensions.recommendations.includes('esbenp.prettier-vscode'));

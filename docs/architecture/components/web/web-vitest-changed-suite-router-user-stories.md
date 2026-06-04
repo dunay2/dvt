@@ -119,6 +119,23 @@ Acceptance:
 - When the command runs
 - Then it exits successfully and reports that no web suite was selected.
 
+## US-5A Paired Source And Test Change
+
+As a frontend developer changing a small source module and its directly paired
+test, I want the changed-suite router to execute that exact test file so that a
+one-module fix does not pay for the whole unit or presentation lane.
+
+Acceptance:
+
+- Given `apps/web/src/app/views/cost/costViewModel.ts` and
+  `apps/web/src/app/views/cost/costViewModel.test.ts` are both changed
+- When the changed-suite plan is resolved
+- Then the selected command is a direct `vitest run` for
+  `src/app/views/cost/costViewModel.test.ts`.
+- Given only the source file is changed
+- When the changed-suite plan is resolved
+- Then the router falls back to the governed suite for that file type.
+
 ## US-6 Pull-Request Web Change
 
 As a reviewer of an ordinary web-only pull request, I want the `Web Frontend

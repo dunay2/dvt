@@ -226,6 +226,32 @@ describe('web Vitest suite partition', () => {
 
     expect(
       resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
+        'apps/web/src/app/views/canvas/CanvasToolbar.test.tsx',
+      ])
+    ).toMatchObject({
+      commands: [
+        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasToolbar.test.tsx',
+      ],
+      requiresDependencies: false,
+      suites: ['canvas-presentation'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/views/cost/costViewModel.ts',
+        'apps/web/src/app/views/cost/costViewModel.test.ts',
+      ])
+    ).toMatchObject({
+      commands: [
+        'pnpm exec vitest run --config vitest.unit.config.ts src/app/views/cost/costViewModel.test.ts',
+      ],
+      requiresDependencies: false,
+      suites: ['unit'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
         'apps/web/src/app/views/canvas/canvasDraftRepository.architecture.test.ts',
       ])
     ).toMatchObject({

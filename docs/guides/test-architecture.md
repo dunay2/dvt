@@ -191,6 +191,10 @@ web pull requests. The router follows these semantic rules:
   matches the file type;
 - Monaco-scoped source or test changes run the Monaco focus suite so local
   editor/viewer work does not execute the full presentation lane;
+- source files changed together with a same-stem `*.test.*` or `*.spec.*` file
+  may run that exact test file directly;
+- source files without a changed same-stem test still fall back to the governed
+  suite for their route or file type;
 - non-Canvas `.tsx` changes run the presentation suite;
 - non-Canvas `.ts` changes run the unit suite;
 - non-web changes skip cleanly.
