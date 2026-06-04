@@ -122,11 +122,75 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
   assert.equal(testWorkflow.includes('declare -A seen'), false);
 });
 
-test('GitHub workflows expose optional remote Turbo cache environment safely', () => {
-  for (const workflow of [ciWorkflow, testWorkflow]) {
-    assert.match(workflow, /TURBO_TOKEN:\s+\$\{\{\s*secrets\.TURBO_TOKEN\s*\}\}/);
-    assert.match(workflow, /TURBO_TEAM:\s+\$\{\{\s*secrets\.TURBO_TEAM\s*\}\}/);
+test('GitHub workflows restrict optional remote Turbo cache credentials to trusted steps', () => {
+  const findStepContainingCommand = (workflow, command) => {
+    const runLine = `run: ${command}`;
+    const runIndex = workflow.indexOf(runLine);
+    assert.notEqual(runIndex, -1, `expected workflow command: ${command}`);
+    const nextStepIndex = workflow.indexOf('\n      - name:', runIndex + runLine.length);
+
+    return workflow.slice(runIndex, nextStepIndex === -1 ? workflow.length : nextStepIndex);
+  };
+  const findStepNamed = (workflow, stepName) => {
+    const marker = `      - name: ${stepName}`;
+    const start = workflow.indexOf(marker);
+    assert.notEqual(start, -1, `expected workflow step: ${stepName}`);
+    const next = workflow.indexOf('\n      - name:', start + marker.length);
+
+    return workflow.slice(start, next === -1 ? workflow.length : next);
+  };
+  const assertTrustedTurboEnv = (step, commandName) => {
+    assert.match(
+      step,
+      /\bTURBO_TOKEN: \$\{\{ github\.event_name != 'pull_request' && secrets\.TURBO_TOKEN \|\| '' \}\}/u,
+      `expected trusted-event TURBO_TOKEN env for ${commandName}`
+    );
+    assert.match(
+      step,
+      /\bTURBO_TEAM: \$\{\{ github\.event_name != 'pull_request' && secrets\.TURBO_TEAM \|\| '' \}\}/u,
+      `expected trusted-event TURBO_TEAM env for ${commandName}`
+    );
+  };
+
+  for (const [workflowName, workflow] of [
+    ['CI - Code Quality', ciWorkflow],
+    ['Test Suite', testWorkflow],
+  ]) {
+    const jobsIndex = workflow.indexOf('\njobs:\n');
+    assert.notEqual(jobsIndex, -1, `${workflowName} must define jobs`);
+    const workflowHeader = workflow.slice(0, jobsIndex);
+
+    assert.doesNotMatch(
+      workflowHeader,
+      /TURBO_TOKEN:/u,
+      `${workflowName} must not expose TURBO_TOKEN at workflow scope`
+    );
+    assert.doesNotMatch(
+      workflowHeader,
+      /TURBO_TEAM:/u,
+      `${workflowName} must not expose TURBO_TEAM at workflow scope`
+    );
   }
+
+  assertTrustedTurboEnv(findStepContainingCommand(ciWorkflow, 'pnpm ci:full'), 'pnpm ci:full');
+  assertTrustedTurboEnv(
+    findStepContainingCommand(
+      testWorkflow,
+      'node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}'
+    ),
+    'package matrix dependency build'
+  );
+
+  const prAffectedPreflightStep = findStepNamed(
+    ciWorkflow,
+    'Run affected workspace build, lint and type-check preflight'
+  );
+  assert.doesNotMatch(prAffectedPreflightStep, /TURBO_TOKEN:/u);
+  assert.doesNotMatch(prAffectedPreflightStep, /TURBO_TEAM:/u);
+
+  const packageTestStep = findStepNamed(testWorkflow, 'Run package tests');
+  assert.doesNotMatch(packageTestStep, /TURBO_TOKEN:/u);
+  assert.doesNotMatch(packageTestStep, /TURBO_TEAM:/u);
 
   const setupAction = readFileSync('.github/actions/setup-node-pnpm/action.yml', 'utf8');
   assert.match(setupAction, /Cache Turbo/);
@@ -134,6 +198,26 @@ test('GitHub workflows expose optional remote Turbo cache environment safely', (
 });
 
 test('Test Suite cacheable dependency graph builds use the governed Turbo wrapper', () => {
+  const findStepContainingCommand = (workflow, command) => {
+    const runLine = `run: ${command}`;
+    const runIndex = workflow.indexOf(runLine);
+    assert.notEqual(runIndex, -1, `expected Test Suite build command for ${command}`);
+    const nextStepIndex = workflow.indexOf('\n      - name:', runIndex + runLine.length);
+
+    return workflow.slice(runIndex, nextStepIndex === -1 ? workflow.length : nextStepIndex);
+  };
+  const assertTrustedTurboEnv = (step, filter) => {
+    assert.match(
+      step,
+      /\bTURBO_TOKEN: \$\{\{ github\.event_name != 'pull_request' && secrets\.TURBO_TOKEN \|\| '' \}\}/u,
+      `expected trusted-event TURBO_TOKEN env for ${filter}`
+    );
+    assert.match(
+      step,
+      /\bTURBO_TEAM: \$\{\{ github\.event_name != 'pull_request' && secrets\.TURBO_TEAM \|\| '' \}\}/u,
+      `expected trusted-event TURBO_TEAM env for ${filter}`
+    );
+  };
   const expectedBuildFilters = [
     '@dvt/adapter-temporal^...',
     '@dvt/web^...',
@@ -142,10 +226,12 @@ test('Test Suite cacheable dependency graph builds use the governed Turbo wrappe
   ];
 
   for (const filter of expectedBuildFilters) {
+    const buildCommand = `node scripts/run-turbo-workspace-task.cjs build --filter=${filter}`;
     assert.ok(
-      testWorkflow.includes(`node scripts/run-turbo-workspace-task.cjs build --filter=${filter}`),
+      testWorkflow.includes(buildCommand),
       `expected Test Suite to build ${filter} through the Turbo workspace wrapper`
     );
+    assertTrustedTurboEnv(findStepContainingCommand(testWorkflow, buildCommand), filter);
   }
 
   assert.equal(

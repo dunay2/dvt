@@ -16,10 +16,6 @@ concurrency:
     github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-env:
-  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-
 jobs:
   detect_test_matrix:
     name: Detect package test matrix
@@ -85,6 +81,9 @@ jobs:
 
       - name: Build package dependency graph
         run: node scripts/run-turbo-workspace-task.cjs build --filter=${{ matrix.pkg }}
+        env:
+          TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
       - name: Run package tests
         run: ${{ matrix.command }}
@@ -114,6 +113,9 @@ jobs:
 
       - name: Build adapter-temporal dependency graph
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-temporal^...
+        env:
+          TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
       - name: Run adapter-temporal tests
         run: pnpm test:adapter-temporal
@@ -147,6 +149,9 @@ jobs:
 
       - name: Build web dependency graph
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/web^...
+        env:
+          TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
       - name: Run governed web Vitest changed suites (PR)
         if:
@@ -216,6 +221,9 @@ jobs:
 
       - name: Build adapter-postgres dependency graph
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/adapter-postgres...
+        env:
+          TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
       - name: Prove adapter-postgres app-role runtime and direct RLS
         run:
@@ -247,6 +255,9 @@ jobs:
 
       - name: Build engine dependency graph (once, before tests)
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
+        env:
+          TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
       - name: Run determinism tests
         run: pnpm test:determinism
@@ -280,6 +291,9 @@ jobs:
 
       - name: Build engine dependency graph (once, before tests)
         run: node scripts/run-turbo-workspace-task.cjs build --filter=@dvt/engine^...
+        env:
+          TURBO_TOKEN: ${{ github.event_name != 'pull_request' && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name != 'pull_request' && secrets.TURBO_TEAM || '' }}
 
       - name: Run engine coverage (with threshold enforcement)
         run: pnpm test:coverage:engine

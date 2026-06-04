@@ -64,11 +64,11 @@ Warm-build note:
 - The shared GitHub Actions setup now restores `.turbo` in addition to the
   pnpm store and `node_modules`, so the existing root Turbo `build` path can
   reuse prior task outputs across CI runs.
-- `CI - Code Quality` and `Test Suite` expose `TURBO_TOKEN` and `TURBO_TEAM`
-  from repository secrets at workflow scope. When those secrets exist,
-  Turborepo can use remote cache for governed Turbo tasks; when they are absent
-  (for example on fork pull requests), the workflows continue with local task
-  execution and the restored `.turbo` cache.
+- `CI - Code Quality` and `Test Suite` do not expose `TURBO_TOKEN` or
+  `TURBO_TEAM` at workflow scope. Remote Turbo cache credentials are scoped to
+  trusted non-PR invocations of the governed Turbo build paths; pull-request
+  runs keep package scripts on local task execution plus the restored `.turbo`
+  cache.
 - The shared GitHub Actions setup defaults to
   `pnpm install --frozen-lockfile --prefer-offline`, so jobs prefer the restored
   pnpm store while keeping lockfile enforcement.
@@ -724,9 +724,9 @@ Current workflow consumers:
   changes remain fail-closed into CodeQL. The manual docs deploy workflow pins
   the Zensical package version used to build the site, and the label-bootstrap
   workflow uses a SHA-pinned `actions/github-script` reference like the other
-  active workflows. Remote Turbo cache is configured in tracked workflows but
-  requires repository owners to populate `TURBO_TOKEN` and `TURBO_TEAM` before
-  it can produce remote cache hits.
+  active workflows. Remote Turbo cache is configured for trusted non-PR
+  workflow steps but requires repository owners to populate `TURBO_TOKEN` and
+  `TURBO_TEAM` before it can produce remote cache hits.
 - Current branch-protection status checks are repository settings, not tracked
   YAML. Verify in GitHub settings that `CI - Code Quality`, `Test Suite`,
   `PR Quality Gate`, `Contracts & Determinism`, `Dependency Review`, and
