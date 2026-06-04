@@ -89,14 +89,19 @@ function createEmptyCostViewModel(): CostViewModel {
 }
 
 function buildCostDrivers(steps: readonly CostAttributionStep[]): CostDriver[] {
-  return [...steps]
+  return steps
+    .map((step, sourceIndex) => ({ sourceIndex, step }))
     .sort(
-      (left, right) => right.durationMs - left.durationMs || left.stepId.localeCompare(right.stepId)
+      (left, right) =>
+        right.step.durationMs - left.step.durationMs ||
+        left.step.stepId.localeCompare(right.step.stepId) ||
+        left.step.eventType.localeCompare(right.step.eventType) ||
+        left.sourceIndex - right.sourceIndex
     )
-    .map((step) => {
+    .map(({ sourceIndex, step }) => {
       const status = step.eventType === 'StepFailed' ? 'failed' : 'success';
       return {
-        id: [step.runId, step.stepId, step.eventType].join(':'),
+        id: [step.runId, step.stepId, step.eventType, sourceIndex].join(':'),
         name: step.stepId,
         runId: step.runId,
         eventType: step.eventType,
@@ -109,9 +114,10 @@ function buildCostDrivers(steps: readonly CostAttributionStep[]): CostDriver[] {
 
 function buildCostAlerts(steps: readonly CostAttributionStep[]): CostAlert[] {
   return steps
-    .filter((step) => step.eventType === 'StepFailed')
-    .map((step) => ({
-      id: [step.runId, step.stepId].join(':'),
+    .map((step, sourceIndex) => ({ sourceIndex, step }))
+    .filter(({ step }) => step.eventType === 'StepFailed')
+    .map(({ sourceIndex, step }) => ({
+      id: [step.runId, step.stepId, step.eventType, sourceIndex].join(':'),
       title: step.stepId + ' failed during runtime attribution',
       description:
         'Run ' +
