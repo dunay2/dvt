@@ -54,6 +54,7 @@ test('governance refresh defers governance reports to DB-backed final generation
       'planning:db:inventory:check',
       'planning:db:export:check',
       'governance:db:import',
+      'docs:knowledge-intake:generate',
       'governance:db:check',
       'docs:governance:coverage-report',
       'docs:governance:remediation-queue',
@@ -67,6 +68,12 @@ test('governance refresh defers governance reports to DB-backed final generation
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
     ['--', '--if-stale']
+  );
+  assert.equal(
+    stages.databaseStages.findIndex((stage) => stage.id === 'knowledge-intake-literature') >
+      stages.databaseStages.findIndex((stage) => stage.id === 'governance-db-import-final'),
+    true,
+    'knowledge intake literature must render after the governance DB import is fresh'
   );
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'coverage-report-final').env,
@@ -161,6 +168,8 @@ test('package scripts expose governance refresh instead of the obsolete artifact
   assert.equal(typeof packageJson.scripts['governance:db:import'], 'string');
   assert.equal(typeof packageJson.scripts['governance:db:export'], 'string');
   assert.equal(typeof packageJson.scripts['governance:db:export:check'], 'string');
+  assert.equal(typeof packageJson.scripts['docs:knowledge-intake:generate'], 'string');
+  assert.equal(typeof packageJson.scripts['docs:knowledge-intake:check'], 'string');
   assert.equal(Object.hasOwn(packageJson.scripts, 'governance:artifacts:generate'), false);
 });
 

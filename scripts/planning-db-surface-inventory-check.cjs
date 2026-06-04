@@ -174,6 +174,32 @@ const requiredSurfaces = [
     },
   },
   {
+    surface: 'Knowledge intake literature',
+    includes: {
+      'Canonical source': [
+        'knowledge_intake_retirement_query',
+        'knowledge_documents',
+        'buzon/',
+        'import input',
+      ],
+      'Write rail': ['governance:refresh', 'docs:knowledge-intake:generate'],
+      'Read/query rail': [
+        'planning:db:query knowledge-intake',
+        'generated-knowledge-intake-literature.md',
+      ],
+      Projection: [
+        '.generated-docs/planning/status/generated-knowledge-intake-literature.md',
+        'docs/planning/status/generated-knowledge-intake-literature.md',
+      ],
+      Validation: [
+        'docs:knowledge-intake:check',
+        'docs:gov:generated-policy',
+        'generate-knowledge-intake-literature.test.cjs',
+      ],
+      'Migration state': ['DB-first'],
+    },
+  },
+  {
     surface: 'Docs task disposition inventory',
     includes: {
       'Canonical source': ['docs-task-disposition-inventory-20260510.md'],
