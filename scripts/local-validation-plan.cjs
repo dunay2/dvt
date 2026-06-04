@@ -55,6 +55,10 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs',
   'scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs':
     'scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs',
+  'scripts/planning-db/knowledge-intake-retirement-guard.cjs':
+    'scripts/planning-db-knowledge-intake-retirement-guard.test.cjs',
+  'scripts/planning-db-knowledge-intake-retirement-guard.test.cjs':
+    'scripts/planning-db-knowledge-intake-retirement-guard.test.cjs',
   'scripts/planning-db-import.cjs': 'scripts/planning-db-import.test.cjs',
   'scripts/planning-db-import.test.cjs': 'scripts/planning-db-import.test.cjs',
   'scripts/planning-db-migrate.cjs': 'scripts/planning-db-migrate.test.cjs',
@@ -79,6 +83,11 @@ const MECHANICAL_PREPUSH_STEPS = Object.freeze([step('verify-changed', 'pnpm', '
 
 const VERIFY_CHANGED_BASE_STEPS = Object.freeze([
   step('docs-workboard-check-changed', 'node', 'scripts/docs-workboard-check-changed.cjs'),
+  step(
+    'knowledge-intake-retirement-check',
+    'pnpm',
+    'planning:db:knowledge-intake:retirement:check'
+  ),
   step('docs-gov-locations-changed', 'pnpm', 'docs:gov:locations', '--', '--changed-only'),
   step('docs-gov-filenames-changed', 'pnpm', 'docs:gov:filenames:changed'),
   step('docs-gov-frontmatter-changed', 'pnpm', 'docs:gov:frontmatter:changed'),
@@ -309,7 +318,7 @@ function buildVerifyChangedPlan(files) {
   if (hasPlanningDbChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[0]);
   }
-  pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(1, 8));
+  pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(1, 9));
   if (hasWebChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }
@@ -346,7 +355,7 @@ function buildVerifyChangedPlan(files) {
       }
     }
   }
-  pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(8));
+  pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(9));
 
   return plan;
 }

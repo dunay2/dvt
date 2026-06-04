@@ -19,6 +19,7 @@ test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', (
 
   assert.deepEqual(labels, [
     'node scripts/docs-workboard-check-changed.cjs',
+    'pnpm planning:db:knowledge-intake:retirement:check',
     'pnpm docs:gov:locations -- --changed-only',
     'pnpm docs:gov:filenames:changed',
     'pnpm docs:gov:frontmatter:changed',
@@ -51,6 +52,16 @@ test('buildVerifyChangedPlan adds planning DB validation for planning query-stor
   );
   assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
   assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan runs the buzon retirement guard before markdown gates', () => {
+  const labels = labelsFor(['buzon/new-fowler-analysis.md']);
+
+  assert.ok(labels.includes('pnpm planning:db:knowledge-intake:retirement:check'));
+  assert.ok(
+    labels.indexOf('pnpm planning:db:knowledge-intake:retirement:check') <
+      labels.indexOf('pnpm docs:gov:locations -- --changed-only')
+  );
 });
 
 test('buildVerifyChangedPlan routes migration-only changes to the migration suite', () => {
