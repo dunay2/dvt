@@ -5,6 +5,7 @@ import {
   createCanonizationGuard,
   requiredCanonPlanTokens,
   requiredComponentGuideHeadings,
+  requiredFowlerAnalysisCategories,
 } from './canonization-guard.mjs';
 
 test('canonization guard checks canonical plans instead of raw intake files', () => {
@@ -14,6 +15,9 @@ test('canonization guard checks canonical plans instead of raw intake files', ()
       [
         '# Example Canon Plan',
         '## Fowler Analysis',
+        '## Mature-System Comparison',
+        '## Antipatterns',
+        '## Applied Pattern',
         '```feature-mechanization',
         'commandQueryRails:',
         'fowlerSignals:',
@@ -44,6 +48,7 @@ test('canonization guard checks canonical plans instead of raw intake files', ()
   });
 
   assert.equal(requiredCanonPlanTokens.includes('## Fowler Analysis'), true);
+  assert.equal(requiredFowlerAnalysisCategories.length, 3);
   assert.equal(requiredComponentGuideHeadings.includes('## Command And Query Rail'), true);
   assert.doesNotThrow(() =>
     guard.assertCanonPlan('docs/planning/proposals/mandatory/example-canon-plan.md')
@@ -63,5 +68,26 @@ test('canonization guard reports missing canonical semantics', () => {
   assert.throws(
     () => guard.assertCanonPlan('docs/planning/proposals/mandatory/thin-plan.md'),
     /must contain ## Fowler Analysis/
+  );
+});
+
+test('canonization guard rejects plans without substantive Fowler analysis categories', () => {
+  const guard = createCanonizationGuard({
+    readFile() {
+      return [
+        '# Sparse Canon Plan',
+        '## Fowler Analysis',
+        '```feature-mechanization',
+        'commandQueryRails:',
+        'fowlerSignals:',
+        'completionGate:',
+        '```',
+      ].join('\n');
+    },
+  });
+
+  assert.throws(
+    () => guard.assertCanonPlan('docs/planning/proposals/mandatory/sparse-plan.md'),
+    /must contain a Fowler analysis category: mature-system comparison or improved pattern/
   );
 });

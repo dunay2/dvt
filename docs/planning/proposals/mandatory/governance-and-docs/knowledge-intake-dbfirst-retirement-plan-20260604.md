@@ -341,6 +341,14 @@ symbols:
     architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
     cypressCoverage: N/A - CI governance tests.
     unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: requiredFowlerAnalysisCategories
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
   - name: requiredComponentGuideHeadings
     path: tools/ci/canonization-guard.mjs
     dddOwner: CI canonization semantic guard

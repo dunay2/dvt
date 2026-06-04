@@ -9,6 +9,44 @@ export const requiredCanonPlanTokens = [
   'completionGate:',
 ];
 
+export const requiredFowlerAnalysisCategories = [
+  {
+    label: 'mature-system comparison or improved pattern',
+    patterns: [
+      /## Mature-System Comparison/u,
+      /### Mature-System Comparison/u,
+      /## Improved Patterns/u,
+      /### Improved Patterns/u,
+      /Mature workbench/u,
+    ],
+  },
+  {
+    label: 'antipattern or drift',
+    patterns: [
+      /## Antipatterns/u,
+      /### Antipatterns/u,
+      /## Anti-patterns/u,
+      /### Anti-patterns/u,
+      /Drift/u,
+    ],
+  },
+  {
+    label: 'applied pattern, grouping, or future lesson',
+    patterns: [
+      /## Applied Pattern/u,
+      /### Applied Pattern/u,
+      /## Grouping Opportunities/u,
+      /### Grouping Opportunities/u,
+      /## Component Grouping/u,
+      /### Component Grouping/u,
+      /## Future Lessons/u,
+      /### Future Lessons/u,
+      /## Lessons For Future Work/u,
+      /### Lessons For Future Work/u,
+    ],
+  },
+];
+
 export const requiredComponentGuideHeadings = [
   '## Public API',
   '## Invariants',
@@ -52,6 +90,12 @@ export function createCanonizationGuard(deps = {}) {
     const plan = readRepoFile(path);
     for (const token of [...requiredCanonPlanTokens, ...extraTokens]) {
       assertTextContains(path, plan, token);
+    }
+    for (const category of requiredFowlerAnalysisCategories) {
+      assert.ok(
+        category.patterns.some((pattern) => pattern.test(plan)),
+        `${path} must contain a Fowler analysis category: ${category.label}`
+      );
     }
     return plan;
   }

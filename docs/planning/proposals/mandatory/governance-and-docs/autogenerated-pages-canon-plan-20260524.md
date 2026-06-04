@@ -55,6 +55,13 @@ mailbox analysis now use the same rails:
 - `ExtractGeneratedDocsSurface`
 - `ValidateGeneratedDocsArtifact`
 
+## Applied Pattern
+
+The applied pattern is a generated-surface registry backed by a semantic
+fitness function. Generated pages are classified before extraction, extraction
+is expressed as a governed command, and artifact validation remains a query
+that proves determinism before tracked navigation can change.
+
 ## User Stories
 
 1. As a documentation maintainer, I want generated pages classified before
