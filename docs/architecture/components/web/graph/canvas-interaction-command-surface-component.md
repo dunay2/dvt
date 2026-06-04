@@ -10,11 +10,11 @@ last_reviewed: 2026-06-02
 ## Purpose
 
 This component owns route-local contextual interaction semantics for the Canvas
-viewport.
+viewport and node shell.
 
-It turns a user gesture on a graph background or edge into an intention-revealing
-command model without making React Flow, the browser context menu, or a toolbar
-dropdown the source of graph meaning.
+It turns a user gesture on a graph background, edge, or node into an
+intention-revealing command model without making React Flow, the browser context
+menu, a node renderer, or a toolbar dropdown the source of graph meaning.
 
 ## Governing Sources
 
@@ -35,6 +35,11 @@ type CanvasContextMenuTarget =
   | { kind: 'pane'; screenPosition: Point; flowPosition: Point }
   | { kind: 'edge'; edgeId: string; screenPosition: Point };
 
+type CanvasNodeContextMenuModel = {
+  target: { kind: 'node'; nodeId: string };
+  actionGroups: CanvasNodeContextMenuActionGroup[];
+};
+
 type CanvasContextMenuModel = {
   kind: 'pane' | 'edge';
   screenPosition: Point;
@@ -45,6 +50,7 @@ type CanvasContextMenuModel = {
 };
 
 function buildCanvasContextMenuModel(args): CanvasContextMenuModel;
+function buildCanvasNodeContextMenuModel(args): CanvasNodeContextMenuModel;
 function buildCanvasEdgeContextRemovalChange(edge): EdgeChange<Edge>;
 ```
 
@@ -56,13 +62,18 @@ Related command seams:
 - `RemoveCanvasEdgeFromContext` converts an edge gesture into the existing
   React Flow edge-change contract, which is then consumed by
   `canvasGraphLifecycle.edge`.
+- Node-level actions use the same `ResolveCanvasContextMenu` rail, then dispatch
+  to existing selection, duplicate, inspect, and remove-node callbacks supplied
+  by the Canvas route.
 
 ## File Responsibilities
 
 - `canvasInteractionCommandSurface.ts`: pure contextual menu read model and
   edge-removal change construction.
+- `canvasNodeContextMenuModel.ts`: pure node-target contextual menu read model.
 - `CanvasViewport.tsx`: React Flow gesture adapter and rendered contextual
   menu.
+- `DbtNodeComponent.tsx`: node-shell gesture adapter and menu renderer.
 - `canvasAuthoringNodeCommand.ts`: canonical authoring-node command, including
   optional caller-owned origin.
 - `useCanvasAuthoringNodeCreationHandlers.ts`: node admission command execution
@@ -76,6 +87,10 @@ Related command seams:
   default menu.
 - Edge right-click opens an edge-specific menu; it does not show node creation
   actions.
+- Node right-click opens node-specific actions; it does not show background
+  creation or edge-removal actions.
+- Node Properties/Open Inspector always remains available because it is a
+  route-local read/selection action.
 - Read-only or blocked mutation posture produces no mutating contextual action.
 - Context-menu node creation uses the clicked flow position, not a hidden
   default slot.
@@ -96,12 +111,16 @@ stateDiagram-v2
   [*] --> Idle
   Idle --> PaneMenu: right-click pane
   Idle --> EdgeMenu: right-click edge
+  Idle --> NodeMenu: right-click node
   PaneMenu --> CreateNode: choose node kind
   CreateNode --> NodeAdmission: CreateCanvasAuthoringNode
   NodeAdmission --> DraftGraph: canvasGraphLifecycle.node.admitExplicit
   EdgeMenu --> RemoveEdge: choose delete
   RemoveEdge --> EdgeChange: EdgeChange remove
   EdgeChange --> DraftGraph: canvasGraphLifecycle.edge.applyChanges
+  NodeMenu --> Inspector: choose Properties
+  NodeMenu --> NodeCommand: choose duplicate/select/remove
+  NodeCommand --> DraftGraph
   DraftGraph --> Idle
 ```
 
@@ -110,19 +129,25 @@ stateDiagram-v2
 ```mermaid
 flowchart LR
   Gesture["React Flow context gesture"] --> Viewport["CanvasViewport.tsx"]
+  NodeGesture["Node shell context gesture"] --> NodeRenderer["DbtNodeComponent.tsx"]
   Viewport --> Model["ResolveCanvasContextMenu<br>CanvasContextMenuModel"]
+  NodeRenderer --> NodeModel["ResolveCanvasContextMenu<br>CanvasNodeContextMenuModel"]
   Model --> Pane["pane actions"]
   Model --> Edge["edge actions"]
+  NodeModel --> NodeActions["node actions"]
   Pane --> Create["CreateCanvasAuthoringNode"]
   Create --> Admission["useCanvasNodeAdmissionCommandRunner"]
   Admission --> NodeLifecycle["canvasGraphLifecycle.node"]
   Edge --> Remove["RemoveCanvasEdgeFromContext"]
   Remove --> EdgeLifecycle["canvasGraphLifecycle.edge"]
+  NodeActions --> Inspector["Canvas Inspector selection"]
+  NodeActions --> ExistingNodeCommands["duplicate / select / remove callbacks"]
 ```
 
 ## Consumers
 
 - `CanvasViewport.tsx` consumes the pure model and renders the menu.
+- `DbtNodeComponent.tsx` consumes the node model and renders node-shell actions.
 - `CanvasShellMainPanel.tsx` passes the active authoring catalog and graph
   command seam into the viewport.
 - `CanvasToolbar.tsx` and `CanvasAddNodePalette.tsx` continue to use the same
@@ -132,11 +157,10 @@ flowchart LR
 
 ## Fowler Reading
 
-The previous posture mixed a working node-level context menu with missing
-pane/edge behavior. That is duplicate semantics plus boundary drift: users
-could right-click one graph object and get an app action, but right-clicking the
-background delegated to the browser and right-clicking an edge had no graph
-meaning.
+The previous posture mixed a working but hard-coded node-level context menu with
+pure pane/edge read models. That is duplicate semantics plus boundary drift:
+users could right-click each graph target and see app actions, but only
+background and edge gestures were governed by a reusable contextual read model.
 
 The applied pattern is Presentation Model plus Command Gateway. The component
 builds a contextual read model, then routes selected actions to existing command
@@ -145,8 +169,12 @@ seams. It does not create a second graph aggregate.
 ## Drift To Prevent
 
 - Do not put context-menu action decisions directly in `CanvasViewport.tsx`.
+- Do not put node context-menu action decisions directly in
+  `DbtNodeComponent.tsx`.
 - Do not call draft-session mutation directly from a context-menu button.
 - Do not create another node creation command for background clicks.
+- Do not create another node properties command for the context menu; use the
+  existing Inspector selection/opening behavior.
 - Do not fabricate source connectivity in the context menu; source import
   remains behind `ListWarehouseConnections`, `ListWarehouseConnectionTables`,
   and `ImportWarehouseSources`.
@@ -155,5 +183,6 @@ seams. It does not create a second graph aggregate.
 ## Validation
 
 - `apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts`
+- `apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts`
 - `apps/web/src/app/views/canvas/CanvasViewport.test.tsx`
 - `apps/web/src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts`

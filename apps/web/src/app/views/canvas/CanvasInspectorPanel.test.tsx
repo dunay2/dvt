@@ -739,10 +739,14 @@ describe('CanvasInspectorPanel', () => {
     expect(tabsList).not.toBeNull();
     expect(tabsList?.getAttribute('class')).toContain('border-b');
     expect(tabsList?.getAttribute('class')).not.toContain('rounded-lg');
-    expect(container.querySelector('[data-slot="node-inspector-details-section"]')).not.toBeNull();
-    expect(container.textContent).toContain('Details');
+    expect(container.querySelector('[data-slot="node-inspector-general-section"]')).not.toBeNull();
+    expect(container.textContent).toContain('General');
     expect(container.textContent).toContain('Columns');
-    expect(container.textContent).toContain('Depends On');
+    expect(container.textContent).toContain('Summary');
+    expect(container.textContent).toContain('Keys');
+    expect(container.textContent).toContain('Indexes');
+    expect(container.textContent).toContain('Foreign Keys');
+    expect(container.textContent).toContain('Constraints');
     expect(container.textContent).not.toContain('Node details');
     expect(container.textContent).toContain('Editable properties');
     expect(container.textContent).toContain('Imported source for analytics.erp.orders');
@@ -764,23 +768,24 @@ describe('CanvasInspectorPanel', () => {
     });
 
     expect(container.querySelector('[data-slot="node-inspector-columns-section"]')).not.toBeNull();
-    expect(container.textContent).toContain('Columns (1)');
+    expect(
+      container.querySelector('[data-slot="node-inspector-columns-section"] table')
+    ).not.toBeNull();
     expect(container.textContent).toContain('id');
     expect(container.textContent).toContain('number');
 
-    const dependsTab = container.querySelector<HTMLButtonElement>(
-      '[data-slot="node-inspector-tab-depends"]'
+    const summaryTab = container.querySelector<HTMLButtonElement>(
+      '[data-slot="node-inspector-tab-summary"]'
     );
-    expect(dependsTab).not.toBeNull();
+    expect(summaryTab).not.toBeNull();
 
     await act(async () => {
-      fireEvent.mouseDown(dependsTab!, { button: 0, ctrlKey: false });
-      fireEvent.click(dependsTab!);
+      fireEvent.mouseDown(summaryTab!, { button: 0, ctrlKey: false });
+      fireEvent.click(summaryTab!);
     });
 
-    expect(container.querySelector('[data-slot="node-inspector-depends-section"]')).not.toBeNull();
-    expect(container.textContent).toContain('Connected graph');
-    expect(container.textContent).toContain('Downstream');
+    expect(container.querySelector('[data-slot="node-inspector-summary-section"]')).not.toBeNull();
+    expect(container.textContent).toContain('Downstream nodes');
     expect(container.textContent).toContain('Clean Orders');
     expect(container.textContent).not.toContain('No plugin inspector panels are registered');
   });
@@ -805,10 +810,10 @@ describe('CanvasInspectorPanel', () => {
     });
 
     const tabsList = container.querySelector('[data-slot="node-inspector-core-tabs-list"]');
-    const detailsTab = container.querySelector('[data-slot="node-inspector-tab-details"]');
+    const generalTab = container.querySelector('[data-slot="node-inspector-tab-general"]');
 
-    expect(container.textContent).toContain('Details');
-    expect(container.textContent).toContain('Depends On');
+    expect(container.textContent).toContain('General');
+    expect(container.textContent).toContain('Summary');
     expect(container.textContent).toContain('Overview');
     expect(container.textContent).toContain('Config');
     expect(container.textContent).toContain('History');
@@ -816,7 +821,7 @@ describe('CanvasInspectorPanel', () => {
     expect(tabsList?.getAttribute('class')).toContain('gap-x-3');
     expect(tabsList?.getAttribute('class')).toContain('overflow-visible');
     expect(tabsList?.getAttribute('class')).not.toContain('overflow-x-auto');
-    expect(detailsTab?.getAttribute('class')).toContain('text-xs');
+    expect(generalTab?.getAttribute('class')).toContain('text-xs');
   });
 
   it('lets dbt overview tags be edited through the route-owned node draft', async () => {

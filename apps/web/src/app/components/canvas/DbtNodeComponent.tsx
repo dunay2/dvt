@@ -2,7 +2,7 @@
 import styles from './DbtNodeComponent.module.css';
 import { Handle, Node, NodeProps, Position } from '@xyflow/react';
 import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
-import { memo, type CSSProperties, type DragEvent } from 'react';
+import { Fragment, memo, type CSSProperties, type DragEvent } from 'react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
 import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
@@ -29,6 +29,10 @@ import {
   parseCanvasWorkspaceResourceDragPayload,
 } from '../canvasWorkspaceExplorerModel';
 import { cn } from '../ui/utils';
+import {
+  buildCanvasNodeContextMenuModel,
+  type CanvasNodeContextMenuActionId,
+} from './canvasNodeContextMenuModel';
 
 // ---------------------------------------------------------------------------
 // Canvas node data
@@ -164,6 +168,14 @@ function buildCanonicalNode(
   };
 }
 
+const CONTEXT_MENU_ACTION_ICONS: Record<CanvasNodeContextMenuActionId, typeof Info> = {
+  'inspect-node': Info,
+  'duplicate-node': Copy,
+  'select-node-for-execution': MousePointer,
+  'deselect-node-from-execution': MousePointer,
+  'remove-node': Trash2,
+};
+
 function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
   const { id, selected } = props;
@@ -189,6 +201,14 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;
   const canAttachSchema = typeof data.onAttachSchemaToNode === 'function';
+  const contextMenuModel = buildCanvasNodeContextMenuModel({
+    target: { kind: 'node', nodeId: id, nodeName: data.name },
+    selectedForExecution,
+    canInspectNode: typeof data.onInspectNode === 'function',
+    canDuplicateNode: typeof data.onDuplicateNode === 'function',
+    canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',
+    canRemoveNode: typeof data.onRemoveNode === 'function',
+  });
 
   const handleSchemaResourceDragOver = (event: DragEvent<HTMLDivElement>) => {
     if (
@@ -218,6 +238,24 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     event.preventDefault();
     event.stopPropagation();
     data.onAttachSchemaToNode?.(id, payload.schemaName);
+  };
+
+  const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
+    switch (actionId) {
+      case 'inspect-node':
+        data.onInspectNode?.(id);
+        return;
+      case 'duplicate-node':
+        data.onDuplicateNode?.(id);
+        return;
+      case 'select-node-for-execution':
+      case 'deselect-node-from-execution':
+        data.onToggleNodeSelection?.(id, !selectedForExecution);
+        return;
+      case 'remove-node':
+        data.onRemoveNode?.(id);
+        return;
+    }
   };
 
   return (
@@ -265,36 +303,35 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
         </div>
       </ContextMenuTrigger>
 
-      <ContextMenuContent className="w-48 bg-slate-900 border-slate-600 text-slate-50">
-        <ContextMenuLabel className="font-mono text-xs">{data.name}</ContextMenuLabel>
-        <ContextMenuSeparator className="bg-slate-600" />
-        <ContextMenuItem onSelect={() => data.onInspectNode?.(id)}>
-          <Info className="size-4" />
-          Open inspector panel
-        </ContextMenuItem>
-        <ContextMenuItem
-          onSelect={() => data.onDuplicateNode?.(id)}
-          disabled={!data.onDuplicateNode}
-        >
-          <Copy className="size-4" />
-          Duplicate node
-        </ContextMenuItem>
-        <ContextMenuItem
-          onSelect={() => data.onToggleNodeSelection?.(id, !selectedForExecution)}
-          disabled={!data.onToggleNodeSelection}
-        >
-          <MousePointer className="size-4" />
-          {selectedForExecution ? 'Deselect node' : 'Select node'}
-        </ContextMenuItem>
-        <ContextMenuSeparator className="bg-slate-600" />
-        <ContextMenuItem
-          variant="destructive"
-          onSelect={() => data.onRemoveNode?.(id)}
-          disabled={!data.onRemoveNode}
-        >
-          <Trash2 className="size-4" />
-          Remove node
-        </ContextMenuItem>
+      <ContextMenuContent className="w-56 bg-slate-900 border-slate-600 text-slate-50">
+        <ContextMenuLabel className="truncate font-mono text-xs">
+          {contextMenuModel.target.nodeName}
+        </ContextMenuLabel>
+        {contextMenuModel.actionGroups.map((group, groupIndex) => (
+          <Fragment key={group.id}>
+            <ContextMenuSeparator className="bg-slate-600" />
+            {groupIndex > 0 ? (
+              <ContextMenuLabel className="text-[10px] uppercase tracking-wide text-slate-400">
+                {group.label}
+              </ContextMenuLabel>
+            ) : null}
+            {group.actions.map((action) => {
+              const Icon = CONTEXT_MENU_ACTION_ICONS[action.id];
+              return (
+                <ContextMenuItem
+                  key={action.id}
+                  variant={action.destructive ? 'destructive' : undefined}
+                  disabled={action.disabled}
+                  title={action.disabledReason}
+                  onSelect={() => handleContextMenuAction(action.id)}
+                >
+                  <Icon className="size-4" />
+                  {action.label}
+                </ContextMenuItem>
+              );
+            })}
+          </Fragment>
+        ))}
       </ContextMenuContent>
     </ContextMenu>
   );

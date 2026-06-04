@@ -25,4 +25,9 @@ describe('DbtNodeComponent architecture', () => {
     expect(DbtNodeComponentSource).toContain('onAttachSchemaToNode');
     expect(DbtNodeComponentSource).toContain('data.onAttachSchemaToNode?.(id, payload.schemaName)');
   });
+
+  it('renders node context-menu actions from the governed read model', () => {
+    expect(DbtNodeComponentSource).toContain('buildCanvasNodeContextMenuModel');
+    expect(DbtNodeComponentSource).toContain('CanvasNodeContextMenuActionId');
+  });
 });

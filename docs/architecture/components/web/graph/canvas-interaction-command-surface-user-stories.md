@@ -33,6 +33,19 @@ last_reviewed: 2026-06-02
 - `US-CANVAS-INTERACTION-008`: as a QA reviewer, I can test contextual behavior
   without native browser menus. Acceptance: presentation tests call React Flow
   context callbacks and assert rendered app actions.
+- `US-CANVAS-INTERACTION-009`: as a workflow author, I can right-click a node
+  and open its Properties in the route-local Inspector. Acceptance: the action
+  uses the existing Inspector selection/opening behavior and does not create a
+  second node-properties command.
+- `US-CANVAS-INTERACTION-010`: as a read-only reviewer, I can still inspect a
+  node but I do not see duplicate, remove, or execution-selection mutation
+  actions. Acceptance: the node context-menu read model keeps inspect available
+  and fails closed for mutating actions.
+- `US-CANVAS-INTERACTION-011`: as a data modeler, the node Properties panel
+  presents available node facts in table-like sections. Acceptance: General,
+  Columns, Keys, Indexes, Foreign Keys, Constraints, Comments, Code, and Summary
+  sections render available facts or explicit empty states without fabricated
+  records.
 
 ## Scenario Matrix
 
@@ -46,13 +59,21 @@ last_reviewed: 2026-06-02
   `canvasAuthoringNodeCommand.test.ts`.
 - Architecture drift guard: all rails above; primary test:
   `canvasInteractionCommandSurface.architecture.test.ts`.
+- Node properties: `ResolveCanvasContextMenu` -> Inspector selection; primary
+  tests: `canvasNodeContextMenuModel.test.ts`,
+  `CanvasInspectorPanel.test.tsx`.
 
 ```mermaid
 flowchart LR
   User["User gesture"] --> Target["Pane or edge target"]
   Target --> Model["CanvasContextMenuModel"]
+  Target --> NodeModel["CanvasNodeContextMenuModel"]
   Model --> Allowed{"mutation allowed?"}
   Allowed -->|yes, pane| Create["CreateCanvasAuthoringNode"]
   Allowed -->|yes, edge| Remove["RemoveCanvasEdgeFromContext"]
   Allowed -->|no| Empty["No mutating actions"]
+  NodeModel --> Inspect["Inspect node"]
+  NodeModel --> NodeAllowed{"node mutation allowed?"}
+  NodeAllowed -->|yes| NodeActions["duplicate / select / remove"]
+  NodeAllowed -->|no| Inspect
 ```
