@@ -72,14 +72,10 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
   const focusedRunModel = runId && workspace ? toFocusedRunModel(workspace) : null;
 
   useEffect(() => {
-    setCurrentRun(focusedRunModel);
+    if (focusedRunModel) {
+      setCurrentRun(focusedRunModel);
+    }
   }, [focusedRunModel, setCurrentRun]);
-
-  useEffect(() => {
-    return () => {
-      setCurrentRun(null);
-    };
-  }, [setCurrentRun]);
 
   const state = buildRunsWorkbenchState({
     runId,

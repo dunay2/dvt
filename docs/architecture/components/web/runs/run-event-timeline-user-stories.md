@@ -150,6 +150,21 @@ Acceptance:
 - When architecture tests run
 - Then they prove both consumers use the shared run event timeline model
 
+### US-F10-11: Console Observation Survives Route Navigation
+
+**As** an operator,
+**I want** the bottom console to keep the last focused run while I move between
+Canvas and Runs,
+**So that** runtime logs do not disappear just because I changed workbench view.
+
+Acceptance:
+
+- Given a run detail route has focused `run_123`
+- And the bottom console is open
+- When I navigate back to the Canvas route or the Runs list
+- Then the shell console still observes `run_123`
+- And event polling remains governed by that run status
+
 ## Coverage Matrix
 
 | Story  | Primary surface           | Test surface                                      |
@@ -164,3 +179,4 @@ Acceptance:
 | F10-08 | `RunWorkspaceStateView`   | `RunStates.test.tsx`                              |
 | F10-09 | `RunWorkspaceFacade`      | `runWorkspaceFacade.test.ts`                      |
 | F10-10 | architecture guard        | `runsDomainBoundary.architecture.test.ts`         |
+| F10-11 | `RunsWorkbenchSurface`    | `RunsView.test.tsx`                               |
