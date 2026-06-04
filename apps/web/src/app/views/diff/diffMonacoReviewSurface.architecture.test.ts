@@ -23,9 +23,6 @@ describe('Diff Monaco review surface architecture', () => {
     const userStories = readRepoDoc(
       'docs/architecture/components/web/diff/diff-monaco-review-surface-user-stories.md'
     );
-    const mailboxAnalysis = readRepoDoc(
-      'buzon/20260519-f17b-fowler-monaco-diff-review-surface-analysis.md'
-    );
     const implementationPlan = readRepoDoc(
       'docs/planning/proposals/mandatory/frontend-and-ux/f17b-monaco-diff-review-surface-plan-20260519.md'
     );
@@ -63,18 +60,14 @@ describe('Diff Monaco review surface architecture', () => {
       expect(userStories).toContain(requiredStory);
     }
 
-    for (const requiredAnalysisSection of [
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions',
-      '## Code And Documentation Drift',
-      '## Opportunities',
-      '## ADR Decision',
+    for (const requiredPlanSignal of [
+      '## Fowler Opportunity Matrix',
+      'fowlerSignals:',
+      'Documentation drift',
+      'Hidden authority',
       'Semantic Fitness Function',
     ]) {
-      expect(mailboxAnalysis).toContain(requiredAnalysisSection);
+      expect(implementationPlan).toContain(requiredPlanSignal);
     }
 
     expect(implementationPlan).toContain('featureId: F17B-MONACO-DIFF-REVIEW-SURFACE-20260519');

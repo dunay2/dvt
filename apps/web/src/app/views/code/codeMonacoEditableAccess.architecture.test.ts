@@ -26,9 +26,6 @@ describe('Code Monaco editable access architecture', () => {
     const rationale = readRepoDoc(
       'docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md'
     );
-    const mailboxAnalysis = readRepoDoc(
-      'buzon/20260520-f17g-fowler-code-monaco-editable-workspace-access-analysis.md'
-    );
     const implementationPlan = readRepoDoc(
       'docs/planning/proposals/mandatory/frontend-and-ux/f17g-code-monaco-editable-workspace-access-plan-20260520.md'
     );
@@ -56,11 +53,11 @@ describe('Code Monaco editable access architecture', () => {
 
     expect(rationale).toContain('route-local editable buffer without persistence');
     expect(rationale).toContain('Code is a Canvas workbench tab');
-    expect(mailboxAnalysis).toContain('MonacoCodeEditor');
-    expect(mailboxAnalysis).toContain('Semantic Fitness Function');
     expect(implementationPlan).toContain(
       'featureId: F17G-CODE-MONACO-EDITABLE-WORKSPACE-ACCESS-20260520'
     );
+    expect(implementationPlan).toContain('MonacoCodeEditor');
+    expect(implementationPlan).toContain('Semantic fitness function');
   });
 
   it('keeps Code editable, Artifacts read-only, and persistence outside the route', () => {

@@ -22,8 +22,8 @@ describe('Canvas project snapshot architecture', () => {
     const commandQueryCatalog = readRepoFile(
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'
     );
-    const mailboxReview = readRepoFile(
-      'buzon/20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md'
+    const implementationPlan = readRepoFile(
+      'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-3-project-snapshot-roundtrip-plan-20260511.md'
     );
 
     for (const requiredGuideSection of [
@@ -41,7 +41,6 @@ describe('Canvas project snapshot architecture', () => {
       'canvasProjectSnapshot.architecture.test.ts',
       'canvas-project-snapshot-roundtrip.cy.ts',
       'canvas-project-snapshot-user-stories.md',
-      '20260511-codex-fowler-canvas-project-snapshot-analysis-and-remediation.md',
       '```mermaid',
       'canvasProjectSnapshot.exportFile',
       'canvasProjectSnapshot.validateImport',
@@ -66,21 +65,13 @@ describe('Canvas project snapshot architecture', () => {
       expect(userStories).toContain(requiredStory);
     }
 
-    for (const requiredMailboxSection of [
-      '## Fowler Verdict',
-      '## Mature-System Comparison',
-      '## Pattern Improvements',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions Fixed',
-      '## Code And Documentation Drift',
-      '## Opportunities',
-      '## Lessons For Future Work',
-      '## User-Story Coverage',
-      '## ADR Decision',
-      '```mermaid',
+    for (const requiredPlanSignal of [
+      'ProjectSnapshot',
+      'ProjectSnapshotImportReadModel',
+      'canvasProjectSnapshot.architecture.test.ts',
+      'canvas-project-snapshot-roundtrip.cy.ts',
     ]) {
-      expect(mailboxReview).toContain(requiredMailboxSection);
+      expect(implementationPlan).toContain(requiredPlanSignal);
     }
 
     for (const requiredCatalogEntry of [

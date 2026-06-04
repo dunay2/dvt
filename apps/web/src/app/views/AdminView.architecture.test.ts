@@ -19,23 +19,12 @@ function readViewSource(relativePathFromViews: string): string {
 
 describe('Admin route architecture', () => {
   it('documents the Fowler review and route-position component semantics for this branch', () => {
-    const mailbox = readRepoFile('buzon/20260430-codex-frontend-operability-fowler-review.md');
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/admin-route-position-component.md'
     );
     const backlog = readRepoFile(
       'docs/planning/proposals/web-frontend-operability-backlog-20260430.md'
     );
-
-    expect(mailbox).toContain('## Fowler verdict');
-    expect(mailbox).toContain('## Comparison with mature systems');
-    expect(mailbox).toContain('## Pattern improvements');
-    expect(mailbox).toContain('## Antipatterns detected');
-    expect(mailbox).toContain('## Repetitions and grouping');
-    expect(mailbox).toContain('## Drift fixed in this branch');
-    expect(mailbox).toContain('## Opportunities');
-    expect(mailbox).toContain('## Lessons for future slices');
-    expect(mailbox).toContain('## ADR decision');
 
     expect(componentGuide).toContain('## Public API');
     expect(componentGuide).toContain('## Invariants');
@@ -50,6 +39,8 @@ describe('Admin route architecture', () => {
     expect(backlog).toContain('US-FRONT-OPERABILITY-006');
     expect(backlog).toContain('## Scenario Coverage Matrix');
     expect(backlog).toContain('## TDD Traceability');
+    expect(backlog).toContain('Preserve Admin route position');
+    expect(backlog).toContain('Selecting Audit Log writes `/admin?tab=audit`');
   });
 
   it('keeps route-position semantics in AdminView and tests the browser refresh contract', () => {

@@ -38,9 +38,6 @@ describe('Templates Monaco preview architecture', () => {
     const userStories = readRepoDoc(
       'docs/architecture/components/web/templates/execution-template-monaco-preview-user-stories.md'
     );
-    const mailboxAnalysis = readRepoDoc(
-      'buzon/20260522-f17d-fowler-templates-monaco-preview-analysis.md'
-    );
     const implementationPlan = readRepoDoc(
       'docs/planning/proposals/mandatory/frontend-and-ux/f17d-templates-monaco-preview-plan-20260522.md'
     );
@@ -74,18 +71,14 @@ describe('Templates Monaco preview architecture', () => {
       expect(userStories).toContain(requiredStory);
     }
 
-    for (const requiredAnalysisSection of [
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions',
-      '## Code And Documentation Drift',
-      '## Opportunities',
-      '## ADR Decision',
+    for (const requiredPlanSignal of [
+      '## Fowler Opportunity Matrix',
+      'fowlerSignals:',
+      'Documentation drift',
+      'Hidden authority',
       'Semantic Fitness Function',
     ]) {
-      expect(mailboxAnalysis).toContain(requiredAnalysisSection);
+      expect(implementationPlan).toContain(requiredPlanSignal);
     }
 
     expect(implementationPlan).toContain('featureId: F17D-TEMPLATES-MONACO-PREVIEW-20260522');

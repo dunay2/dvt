@@ -28,7 +28,6 @@ describe('Monaco bundle isolation architecture', () => {
     const plan = readRepoDoc(
       'docs/planning/proposals/mandatory/frontend-and-ux/f17e-monaco-bundle-isolation-plan-20260522.md'
     );
-    const analysis = readRepoDoc('buzon/20260522-f17e-fowler-monaco-bundle-isolation-analysis.md');
 
     for (const requiredText of [
       'resolveWebManualChunk',
@@ -48,7 +47,9 @@ describe('Monaco bundle isolation architecture', () => {
     expect(plan).toContain('featureId: F17E-MONACO-BUNDLE-ISOLATION-20260522');
     expect(plan).toContain('cdn.jsdelivr.net');
     expect(plan).toContain('monacoBundleIsolation.architecture.test.ts');
-    expect(analysis).toContain('Semantic Configuration');
+    expect(plan).toContain('fowlerSignals:');
+    expect(plan).toContain('Hidden config semantics');
+    expect(plan).toContain('Semantic Configuration');
   });
 
   it('keeps Monaco and terminal vendor chunk decisions explicit and pure', () => {

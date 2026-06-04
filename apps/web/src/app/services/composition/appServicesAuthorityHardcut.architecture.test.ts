@@ -10,7 +10,6 @@ const REQUIRED_DOCS = [
   'docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md',
   'docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md',
   'docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md',
-  'buzon/20260510-codex-fowler-web-api-authority-hardcut-analysis.md',
 ] as const;
 
 function readRepoFile(relativePath: string): string {
@@ -33,8 +32,8 @@ describe('web API authority hardcut architecture', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md'
     );
-    const analysis = readRepoFile(
-      'buzon/20260510-codex-fowler-web-api-authority-hardcut-analysis.md'
+    const implementationPlan = readRepoFile(
+      'docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md'
     );
 
     for (const section of ['## Public API', '## Invariants', '## Transitions', '## Consumers']) {
@@ -53,19 +52,14 @@ describe('web API authority hardcut architecture', () => {
       expect(userStories).toContain(storyId);
     }
 
-    for (const section of [
-      '## Fowler Architecture Analysis',
-      '## Mature-System Comparison',
-      '## Pattern Improvements',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions',
-      '## Opportunities',
-      '## Drift Review',
-      '## Future Lessons',
-      '## ADR Decision',
+    for (const planSignal of [
+      'featureId: WEB-API-AUTHORITY-HARDCUT-20260510',
+      'fowlerSignals:',
+      'Replace Implicit Authority With Explicit',
+      'Hidden Authority in optimistic browser permissions',
+      'appServicesAuthorityHardcut.architecture.test.ts',
     ]) {
-      expect(analysis).toContain(section);
+      expect(implementationPlan).toContain(planSignal);
     }
   });
 

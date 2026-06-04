@@ -25,8 +25,8 @@ describe('RouteWorkbenchFrame architecture', () => {
     const userStories = readRepoDoc(
       'docs/architecture/components/web/route-workbench-frame-user-stories.md'
     );
-    const fowlerAnalysis = readRepoDoc(
-      'buzon/20260521-codex-fowler-route-workbench-frame-analysis-and-remediation.md'
+    const implementationPlan = readRepoDoc(
+      'docs/planning/proposals/mandatory/frontend-and-ux/f15-route-workbench-frame-semantic-slots-plan-20260521.md'
     );
     const cypressProof = readRepoDoc('apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts');
 
@@ -80,19 +80,14 @@ describe('RouteWorkbenchFrame architecture', () => {
     expect(cypressProof).toContain('route-workbench-left-panel');
     expect(cypressProof).toContain('select 7 as slot_verified');
 
-    for (const requiredAnalysisSection of [
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Teachings For Future Work',
-      '## Repetitions',
-      '## Opportunities',
-      '## Code And Documentation Drift',
-      '## Applied Patterns',
-      '## ADR Decision',
+    for (const requiredPlanSignal of [
+      'featureId: F15-ROUTE-WORKBENCH-FRAME-SEMANTIC-SLOTS-20260521',
+      '## Fowler Opportunity Matrix',
+      'fowlerSignals:',
+      'Documentation drift',
+      'routeWorkbenchFrame.architecture.test.ts',
     ]) {
-      expect(fowlerAnalysis).toContain(requiredAnalysisSection);
+      expect(implementationPlan).toContain(requiredPlanSignal);
     }
   });
 

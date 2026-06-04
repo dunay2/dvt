@@ -11,7 +11,7 @@ function readAppSource(relativePathFromApp: string): string {
 }
 
 describe('Canvas workbench tabs architecture', () => {
-  it('documents semantic API, stories, mailbox analysis, and owned-concern modules', () => {
+  it('documents semantic API, stories, canonical analysis, and owned-concern modules', () => {
     const componentGuide = readFileSync(
       path.join(
         APP_ROOT,
@@ -54,24 +54,17 @@ describe('Canvas workbench tabs architecture', () => {
       ),
       'utf8'
     );
-    const mailboxReview = readFileSync(
+    const tabsRemediationPlan = readFileSync(
       path.join(
         APP_ROOT,
-        '../../../../buzon/20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md'
+        '../../../../docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md'
       ),
       'utf8'
     );
-    const stage1MailboxReview = readFileSync(
+    const stage1Plan = readFileSync(
       path.join(
         APP_ROOT,
-        '../../../../buzon/20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md'
-      ),
-      'utf8'
-    );
-    const legacyRetirementMailboxReview = readFileSync(
-      path.join(
-        APP_ROOT,
-        '../../../../buzon/20260518-f12-fowler-canvas-legacy-retirement-analysis.md'
+        '../../../../docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md'
       ),
       'utf8'
     );
@@ -79,6 +72,7 @@ describe('Canvas workbench tabs architecture', () => {
       path.join(APP_ROOT, '../../cypress/e2e/canvas/canvas-workbench-tabs.cy.ts'),
       'utf8'
     );
+    const legacyRetirementCanon = `${legacyRetirementGuide}\n${legacyRetirementStories}`;
 
     for (const requiredSection of [
       '## Public API',
@@ -102,8 +96,6 @@ describe('Canvas workbench tabs architecture', () => {
       'canvas-workbench-tab-strip-component.md',
       'canvas-workbench-command-query-catalog.md',
       'canvas-workbench-tabs-user-stories.md',
-      '20260504-codex-fowler-canvas-workbench-tabs-and-layout-analysis-and-remediation.md',
-      '20260506-codex-fowler-canvas-workbench-stage-1-text-only-tabs-review.md',
     ]) {
       expect(componentGuide).toContain(requiredSection);
     }
@@ -177,41 +169,32 @@ describe('Canvas workbench tabs architecture', () => {
       expect(legacyRetirementStories).toContain(requiredLegacyRetirementStory);
     }
 
-    for (const requiredMailboxSection of [
-      '## Mature-System Comparison',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions',
-      '## Code And Documentation Drift',
-      '## ADR Decision',
+    for (const requiredTabsPlanSignal of [
+      'canvasWorkbenchTabs.architecture.test.ts',
+      'CanvasWorkbenchTabsReadModel',
+      'ListCanvasWorkbenchTabs',
+      'SelectCanvasWorkbenchTab',
+      'Code And Documentation Drift',
     ]) {
-      expect(mailboxReview).toContain(requiredMailboxSection);
+      expect(tabsRemediationPlan).toContain(requiredTabsPlanSignal);
     }
 
-    for (const requiredStage1MailboxSection of [
-      '## Mature-System Comparison',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Teachings For Future Work',
-      '## Code And Documentation Drift',
-      '## ADR Decision',
+    for (const requiredStage1PlanSignal of [
+      'shell-context-relocation',
       'CanvasWorkbenchTabStrip',
-      'Semantic Fitness Function',
+      'canvas-workbench-tabs.cy.ts',
+      'workspace-context-read-only-main-screen',
     ]) {
-      expect(stage1MailboxReview).toContain(requiredStage1MailboxSection);
+      expect(stage1Plan).toContain(requiredStage1PlanSignal);
     }
 
-    for (const requiredLegacyRetirementMailboxSection of [
-      '## Mature-System Comparison',
-      '## Improved Patterns',
-      '## Antipatterns Detected',
-      '## Component Grouping',
-      '## Repetitions',
-      '## Code And Documentation Drift',
-      '## Opportunities',
-      '## ADR Decision',
+    for (const requiredLegacyRetirementSignal of [
+      'Canvas Legacy Retirement Component',
+      'GraphCanvas.tsx',
+      'US-CANVAS-LEGACY-001',
+      '## Scenario Matrix',
     ]) {
-      expect(legacyRetirementMailboxReview).toContain(requiredLegacyRetirementMailboxSection);
+      expect(legacyRetirementCanon).toContain(requiredLegacyRetirementSignal);
     }
 
     for (const requiredCypressProof of [

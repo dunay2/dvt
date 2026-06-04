@@ -52,20 +52,11 @@ describe('CanvasPlaygroundHost architecture', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md'
     );
-    const fowlerReview = readRepoFile(
-      'buzon/20260518-codex-fowler-f15e-canvas-startup-template-selection.md'
-    );
     const implementationPlan = readRepoFile(
       'docs/planning/proposals/mandatory/frontend-and-ux/f15e-canvas-startup-template-selection-plan-20260518.md'
     );
 
-    for (const document of [
-      componentGuide,
-      hostGuide,
-      userStories,
-      fowlerReview,
-      implementationPlan,
-    ]) {
+    for (const document of [componentGuide, hostGuide, userStories, implementationPlan]) {
       expect(document).toContain('active workspace');
       expect(document).toContain('canvas template');
     }

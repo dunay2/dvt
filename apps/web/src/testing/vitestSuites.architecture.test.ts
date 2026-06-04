@@ -474,8 +474,8 @@ describe('web Vitest suite partition', () => {
     const userStories = readRepoFile(
       'docs/architecture/components/web/frontend-test-governance-user-stories.md'
     );
-    const mailboxAnalysis = readRepoFile(
-      'buzon/20260518-f14-fowler-frontend-test-governance-analysis.md'
+    const suitePartitionPlan = readRepoFile(
+      'docs/planning/proposals/mandatory/frontend-and-ux/web-vitest-suite-partition-plan-20260517.md'
     );
     const webIndex = readRepoFile('docs/architecture/components/web/index.md');
 
@@ -487,7 +487,29 @@ describe('web Vitest suite partition', () => {
     expect(componentGuide).toContain('WebVitestSuiteCatalog');
     expect(webIndex).toContain('Web Vitest changed suite router component');
     expect(userStories).toContain('F-14');
-    expect(mailboxAnalysis).toContain('Fowler Analysis');
+    expect(suitePartitionPlan).toContain('featureId: WEB-VITEST-SUITE-PARTITION-20260517');
+    expect(suitePartitionPlan).toContain('fowlerSignals:');
+    expect(suitePartitionPlan).toContain('vitestSuites.architecture.test.ts');
     expect(webIndex).toContain('Frontend test governance component');
+  });
+
+  it('keeps web architecture tests from using raw intake files as semantic proof', () => {
+    const rawIntakeDirectoryName = ['buz', 'on'].join('');
+    const rawIntakePathPrefix = [rawIntakeDirectoryName, '/'].join('');
+    const rawIntakePathSegmentPattern = new RegExp(
+      String.raw`['"\`]${rawIntakeDirectoryName}['"\`]`
+    );
+    const architectureFiles = listWebVitestFiles().filter((filePath) =>
+      filePath.includes('.architecture.test.')
+    );
+
+    expect(architectureFiles.length).toBeGreaterThan(0);
+
+    for (const filePath of architectureFiles) {
+      const source = readFileSync(resolve(webRoot, filePath), 'utf8');
+
+      expect(source, filePath).not.toContain(rawIntakePathPrefix);
+      expect(source, filePath).not.toMatch(rawIntakePathSegmentPattern);
+    }
   });
 });
