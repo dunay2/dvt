@@ -182,7 +182,11 @@ const requiredSurfaces = [
         'buzon/',
         'import input',
       ],
-      'Write rail': ['governance:refresh', 'docs:knowledge-intake:generate'],
+      'Write rail': [
+        'governance:refresh',
+        'docs:knowledge-intake:generate',
+        'planning:db:knowledge-intake:retirement:check',
+      ],
       'Read/query rail': [
         'planning:db:query knowledge-intake',
         'generated-knowledge-intake-literature.md',
@@ -194,6 +198,7 @@ const requiredSurfaces = [
       Validation: [
         'docs:knowledge-intake:check',
         'docs:gov:generated-policy',
+        'planning-db-knowledge-intake-retirement-guard.test.cjs',
         'generate-knowledge-intake-literature.test.cjs',
       ],
       'Migration state': ['DB-first'],

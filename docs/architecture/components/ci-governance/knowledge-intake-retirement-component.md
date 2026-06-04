@@ -19,10 +19,11 @@ before moving or removing files.
 
 ## Command And Query Rails
 
-| Rail                                | Type    | DDD owner                             | Read model or projection                         | Negative guard                                                         |
-| ----------------------------------- | ------- | ------------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- |
-| `ListKnowledgeIntakeRetirement`     | query   | `KnowledgeIntakeRetirementReadModel`  | `knowledge_intake_retirement_query`              | Query must read DB rows and must not parse `buzon/*.md` directly.      |
-| `GenerateKnowledgeIntakeLiterature` | command | `KnowledgeIntakeLiteratureProjection` | generated local knowledge-intake literature view | Generator must read the DB retirement query and must not walk `buzon`. |
+| Rail                                | Type    | DDD owner                             | Read model or projection                         | Negative guard                                                            |
+| ----------------------------------- | ------- | ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
+| `ListKnowledgeIntakeRetirement`     | query   | `KnowledgeIntakeRetirementReadModel`  | `knowledge_intake_retirement_query`              | Query must read DB rows and must not parse `buzon/*.md` directly.         |
+| `GenerateKnowledgeIntakeLiterature` | command | `KnowledgeIntakeLiteratureProjection` | generated local knowledge-intake literature view | Generator must read the DB retirement query and must not walk `buzon`.    |
+| `CheckBuzonIntakeRetirement`        | command | `KnowledgeIntakeRetirementGuard`      | changed-file diff against the repository base    | Changed-slice validation must reject added or renamed `buzon/*.md` files. |
 
 ## Retirement States
 
@@ -59,9 +60,23 @@ The tracked status page
 `docs/planning/status/generated-knowledge-intake-literature.md` is only a
 stable navigation pointer. It must not duplicate the generated literature.
 
+## Write Retirement Guard
+
+```bash
+pnpm planning:db:knowledge-intake:retirement:check
+pnpm verify:changed
+```
+
+The guard is changed-only. It blocks added or renamed Markdown files under
+`buzon/` while allowing existing files to be deleted or moved through governed
+canonization work. New Fowler analysis intake must be captured through the
+Planning DB command/query rails and then rendered from DB-backed projections.
+
 ## Invariants
 
 - `buzon/` is an intake import source, not a canonical planning queue.
+- No added or renamed `buzon/*.md` file may enter a changed slice after the
+  DB-first retirement guard is active.
 - Retirement state is derived from Planning DB knowledge tables and links.
 - Generated literature must use this DB read model or a later DB projection,
   not raw directory traversal as authority.
@@ -80,13 +95,17 @@ flowchart LR
   Knowledge --> Retirement["knowledge_intake_retirement_query"]
   Retirement --> Agents["planning:db:query knowledge-intake"]
   Retirement --> Literature["docs:knowledge-intake:generate"]
+  ChangedFiles["Changed files"] --> Guard["CheckBuzonIntakeRetirement"]
+  Guard --> VerifyChanged["verify:changed"]
   Agents --> CanonicalDocs["canonical docs / tasks / risk"]
   Literature --> LocalRender[".generated-docs literature"]
 ```
 
 ## Validation
 
+- `node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs`
 - `node --test scripts/generate-knowledge-intake-literature.test.cjs`
 - `node --test scripts/planning-db-query.test.cjs`
 - `node --test scripts/planning-db-migrate.test.cjs`
+- `pnpm planning:db:knowledge-intake:retirement:check`
 - `pnpm docs:knowledge-intake:check`

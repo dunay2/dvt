@@ -103,11 +103,18 @@ allowedImplementationSurfaces:
   - docs/planning/closeouts/20260604-knowledge-intake-dbfirst-retirement-closeout.md
   - docs/planning/proposals/mandatory/governance-and-docs/knowledge-intake-dbfirst-retirement-plan-20260604.md
   - docs/planning/reviews/architecture-and-governance/20260525-buzon-fowler-canonization-inventory.md
+  - docs/planning/status/db-surface-inventory.md
   - docs/planning/status/system-governance-*
+  - package.json
+  - scripts/local-validation-plan.cjs
+  - scripts/planning-db/knowledge-intake-retirement-guard.cjs
   - scripts/planning-db/knowledge-intake-retirement-query.cjs
+  - scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db-migrate.test.cjs
+  - scripts/planning-db-surface-inventory-check.cjs
+  - scripts/verify-changed.test.cjs
   - tools/planning-db/knowledge/documentLinks.cjs
   - tools/planning-db/knowledge/documentSnapshot.test.cjs
   - tools/planning-db/migrations/057_knowledge_intake_retirement_query.sql
@@ -120,9 +127,16 @@ commandQueryRails:
     type: query
     dddOwner: KnowledgeIntakeRetirementReadModel
     status: implemented
+  - name: CheckBuzonIntakeRetirement
+    type: command
+    dddOwner: KnowledgeIntakeRetirementGuard
+    status: implemented
 domainObjects:
   - name: KnowledgeIntakeRetirementReadModel
     type: query-store read model
+    owner: scripts/planning-db
+  - name: KnowledgeIntakeRetirementGuard
+    type: changed-slice command guard
     owner: scripts/planning-db
 fowlerSignals:
   - Hidden authority
@@ -130,12 +144,15 @@ fowlerSignals:
   - Test-only confidence
 architectureGuards:
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs
 cypressFlows:
   - N/A - Planning DB governance query only; no browser runtime behavior changes.
 completionGate:
+  - node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
   - pnpm planning:db:import -- --governance-only
   - pnpm planning:db:query knowledge-intake --limit 10
+  - pnpm planning:db:knowledge-intake:retirement:check
   - pnpm docs:sync
   - pnpm docs:feature-mechanization:implementation
   - pnpm governance:refresh
@@ -163,7 +180,25 @@ redGreenCycles:
       - tools/planning-db/knowledge/documentLinks.cjs
       - tools/planning-db/knowledge/documentSnapshot.test.cjs
     greenTest: node --test tools/planning-db/knowledge/documentSnapshot.test.cjs
+  - id: knowledge-intake-write-retirement-guard
+    redTest: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs
+    expectedFailure: changed-slice validation permits new buzon Markdown intake files after the DB-first read model exists.
+    patchSurfaces:
+      - package.json
+      - scripts/local-validation-plan.cjs
+      - scripts/planning-db/knowledge-intake-retirement-guard.cjs
+      - scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
+      - scripts/verify-changed.test.cjs
+    greenTest: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs
 symbols:
+  - name: createKnowledgeIntakeRetirementGuardComponent
+    path: scripts/planning-db/knowledge-intake-retirement-guard.cjs
+    dddOwner: KnowledgeIntakeRetirementGuard
+    cqRails: [CheckBuzonIntakeRetirement]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
+    cypressCoverage: N/A - local changed-slice guard.
+    unitTests: [node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs]
   - name: createKnowledgeIntakeRetirementReadModelComponent
     path: scripts/planning-db/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
@@ -204,6 +239,30 @@ symbols:
     architectureGuard: node --test tools/planning-db/knowledge/documentSnapshot.test.cjs
     cypressCoverage: N/A - DB import projection.
     unitTests: [node --test tools/planning-db/knowledge/documentSnapshot.test.cjs]
+  - name: assert
+    path: scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
+    dddOwner: KnowledgeIntakeRetirementGuard
+    cqRails: [CheckBuzonIntakeRetirement]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
+    cypressCoverage: N/A - unit test dependency.
+    unitTests: [node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs]
+  - name: createComponent
+    path: scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
+    dddOwner: KnowledgeIntakeRetirementGuard
+    cqRails: [CheckBuzonIntakeRetirement]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
+    cypressCoverage: N/A - unit test helper.
+    unitTests: [node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs]
+  - name: test
+    path: scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
+    dddOwner: KnowledgeIntakeRetirementGuard
+    cqRails: [CheckBuzonIntakeRetirement]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
+    cypressCoverage: N/A - unit test dependency.
+    unitTests: [node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs]
 ```
 
 ## Next Slices
