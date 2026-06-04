@@ -132,6 +132,45 @@ test('DB-backed governance file shards are exempt from maxBytes when projection 
   }
 });
 
+test('DB-backed knowledge intake literature can be declared as an ignored local artifact', () => {
+  const checker = loadChecker();
+  const failures = checker.validatePolicy(
+    {
+      version: 1,
+      artifactClasses: [
+        {
+          id: 'local-knowledge-intake-literature',
+          artifacts: ['.generated-docs/planning/status/generated-knowledge-intake-literature.md'],
+          sourcePaths: ['scripts/generate-knowledge-intake-literature.cjs'],
+          generatorCommand: 'pnpm docs:knowledge-intake:generate',
+          tracking: 'untracked',
+          manualEditPolicy: 'generator-owned',
+          dbBackedArtifacts: [
+            {
+              artifacts: [
+                '.generated-docs/planning/status/generated-knowledge-intake-literature.md',
+              ],
+              queryView: 'planning_query_store.knowledge_intake_retirement_query',
+              importCommand: 'pnpm governance:db:import',
+              checkCommand: 'pnpm docs:knowledge-intake:check',
+            },
+          ],
+        },
+      ],
+    },
+    new Set(['scripts/generate-knowledge-intake-literature.cjs']),
+    new Set(['scripts/generate-knowledge-intake-literature.cjs']),
+    {
+      'docs:knowledge-intake:generate': 'node scripts/generate-knowledge-intake-literature.cjs',
+      'docs:knowledge-intake:check':
+        'node scripts/generate-knowledge-intake-literature.cjs --check',
+      'governance:db:import': 'node scripts/governance-db-import.cjs',
+    }
+  );
+
+  assert.deepEqual(failures, []);
+});
+
 test('oversized governance file shards fail without DB-backed projection metadata', () => {
   const { artifactRoot, artifactRelPath } = makeOversizedArtifact();
   try {

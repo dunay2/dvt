@@ -76,6 +76,10 @@ function buildRefreshStages() {
         args: ['--', '--if-stale'],
       },
       {
+        id: 'knowledge-intake-literature',
+        script: 'docs:knowledge-intake:generate',
+      },
+      {
         id: 'governance-db-check',
         script: 'governance:db:check',
       },
