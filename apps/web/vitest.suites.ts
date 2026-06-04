@@ -54,25 +54,45 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
     include: [
       'src/app/views/Canvas*.{test,spec}.tsx',
       'src/app/views/canvas/**/*.{test,spec}.{ts,tsx}',
+      'src/app/components/canvas/**/*.{test,spec}.{ts,tsx}',
+      'src/app/components/inspector/**/*.{test,spec}.{ts,tsx}',
     ],
     exclude: WEB_VITEST_DEFAULT_EXCLUDE,
   },
   'canvas-unit': {
-    include: ['src/app/views/canvas/**/*.{test,spec}.ts'],
-    exclude: [...WEB_VITEST_DEFAULT_EXCLUDE, 'src/app/views/canvas/**/*.architecture.test.ts'],
+    include: [
+      'src/app/views/canvas/**/*.{test,spec}.ts',
+      'src/app/components/canvas/**/*.{test,spec}.ts',
+      'src/app/components/inspector/**/*.{test,spec}.ts',
+    ],
+    exclude: [
+      ...WEB_VITEST_DEFAULT_EXCLUDE,
+      'src/app/views/canvas/**/*.architecture.test.ts',
+      'src/app/components/canvas/**/*.architecture.test.ts',
+      'src/app/components/inspector/**/*.architecture.test.ts',
+    ],
   },
   'canvas-presentation': {
-    include: ['src/app/views/Canvas*.{test,spec}.tsx', 'src/app/views/canvas/**/*.{test,spec}.tsx'],
+    include: [
+      'src/app/views/Canvas*.{test,spec}.tsx',
+      'src/app/views/canvas/**/*.{test,spec}.tsx',
+      'src/app/components/canvas/**/*.{test,spec}.tsx',
+      'src/app/components/inspector/**/*.{test,spec}.tsx',
+    ],
     exclude: [
       ...WEB_VITEST_DEFAULT_EXCLUDE,
       'src/app/views/Canvas*.architecture.test.tsx',
       'src/app/views/canvas/**/*.architecture.test.tsx',
+      'src/app/components/canvas/**/*.architecture.test.tsx',
+      'src/app/components/inspector/**/*.architecture.test.tsx',
     ],
   },
   'canvas-architecture': {
     include: [
       'src/app/views/Canvas*.architecture.test.tsx',
       'src/app/views/canvas/**/*.architecture.test.{ts,tsx}',
+      'src/app/components/canvas/**/*.architecture.test.{ts,tsx}',
+      'src/app/components/inspector/**/*.architecture.test.{ts,tsx}',
     ],
     exclude: WEB_VITEST_DEFAULT_EXCLUDE,
   },
@@ -423,7 +443,11 @@ function isArchitectureTestPath(filePath: string): boolean {
 function isCanvasFocusPath(filePath: string): boolean {
   return (
     /^src\/app\/views\/Canvas.*\.(?:test|spec)\.tsx$/.test(filePath) ||
-    filePath.startsWith('src/app/views/canvas/')
+    filePath.startsWith('src/app/views/canvas/') ||
+    filePath.startsWith('src/app/components/canvas/') ||
+    filePath.startsWith('src/app/components/inspector/') ||
+    filePath === 'src/app/components/InspectorPanel.tsx' ||
+    /^src\/app\/components\/InspectorPanel\.(?:test|spec)\.tsx$/.test(filePath)
   );
 }
 

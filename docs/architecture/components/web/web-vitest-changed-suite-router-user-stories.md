@@ -16,7 +16,10 @@ small Canvas iteration.
 
 Acceptance:
 
-- Given a changed file under `apps/web/src/app/views/canvas/**`
+- Given a changed file under `apps/web/src/app/views/canvas/**`,
+  `apps/web/src/app/components/canvas/**`,
+  `apps/web/src/app/components/inspector/**`, or
+  `apps/web/src/app/components/InspectorPanel.tsx`
 - When I run `pnpm --filter @dvt/web test:changed`
 - Then the command routes to the narrow Canvas suite that matches the changed
   file type.
@@ -41,7 +44,10 @@ full Canvas test loop.
 
 Acceptance:
 
-- Given a changed `.tsx` file under `apps/web/src/app/views/canvas/**`
+- Given a changed `.tsx` file under `apps/web/src/app/views/canvas/**`,
+  `apps/web/src/app/components/canvas/**`,
+  `apps/web/src/app/components/inspector/**`, or
+  `apps/web/src/app/components/InspectorPanel.tsx`
 - When the changed-suite plan is resolved
 - Then the selected command is `test:canvas-presentation:run`.
 
@@ -66,7 +72,8 @@ not run Canvas presentation tests by default.
 Acceptance:
 
 - Given a changed non-architecture `.ts` file under
-  `apps/web/src/app/views/canvas/**`
+  `apps/web/src/app/views/canvas/**`, `apps/web/src/app/components/canvas/**`,
+  or `apps/web/src/app/components/inspector/**`
 - When the changed-suite plan is resolved
 - Then the selected command is `test:canvas-unit:run`.
 
@@ -91,7 +98,8 @@ stays bounded to Canvas governance.
 Acceptance:
 
 - Given a changed `*.architecture.test.*` file under
-  `apps/web/src/app/views/canvas/**`
+  `apps/web/src/app/views/canvas/**`, `apps/web/src/app/components/canvas/**`,
+  or `apps/web/src/app/components/inspector/**`
 - When the changed-suite plan is resolved
 - Then the selected command is `test:canvas-architecture:run`.
 
@@ -135,6 +143,25 @@ Acceptance:
 - Given only the source file is changed
 - When the changed-suite plan is resolved
 - Then the router falls back to the governed suite for that file type.
+
+## US-5B Canvas Component With Explicit Focus Tests
+
+As a reviewer of a small Canvas component or Inspector patch, I want exact
+changed tests to stay inside Canvas focus configs so the router does not run the
+full presentation lane only because the component lives outside
+`views/canvas`.
+
+Acceptance:
+
+- Given changed Canvas/Inspector component files and changed exact Canvas focus
+  tests for the same lane
+- When the changed-suite plan is resolved
+- Then the selected commands are direct `vitest run` batches using
+  `vitest.canvas-unit.config.ts`, `vitest.canvas-presentation.config.ts`, or
+  `vitest.canvas-architecture.config.ts`.
+- Then the selected suites do not include the full `unit`, `presentation`, or
+  `architecture` primary suite unless a non-Canvas or governance file also
+  selects one.
 
 ## US-6 Pull-Request Web Change
 
