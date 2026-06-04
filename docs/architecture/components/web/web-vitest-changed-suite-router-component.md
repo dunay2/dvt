@@ -42,8 +42,14 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 
 - The router never changes primary suite ownership.
 - Architecture-governance paths route to `architecture`.
-- Canvas-scoped paths route to `canvas-unit`, `canvas-presentation`, or
-  `canvas-architecture` when the file type makes that safe.
+- Canvas route paths and Canvas-owned component/inspector surfaces route to
+  `canvas-unit`, `canvas-presentation`, or `canvas-architecture` when the file
+  type makes that safe.
+- Canvas-owned component surfaces under `src/app/components/canvas/**`,
+  `src/app/components/inspector/**`, and `src/app/components/InspectorPanel.tsx`
+  stay in Canvas focus lanes. They must not fall back to the full `unit`,
+  `presentation`, or `architecture` primary suites only because they live
+  outside `src/app/views/canvas/**`.
 - Monaco-scoped paths route to `monaco` when the change is local to Code,
   Artifacts/Diff Monaco guards, or shared Monaco code surfaces.
 - Workspace service paths under `src/app/services/workspace/**` route to
@@ -79,7 +85,7 @@ stateDiagram-v2
   ChangedFiles --> GovernedPath: suite catalog/config/docs
   ChangedFiles --> PairedSource: source plus changed same-stem test
   ChangedFiles --> ExactSuiteTests: non-governance source plus exact tests
-  ChangedFiles --> CanvasPath: Canvas route or canvas module
+  ChangedFiles --> CanvasPath: Canvas route, canvas component, or inspector surface
   ChangedFiles --> MonacoPath: Monaco route/editor surface
   ChangedFiles --> WorkspaceServicePath: workspace service port/facade
   ChangedFiles --> TsxPath: non-Canvas TSX

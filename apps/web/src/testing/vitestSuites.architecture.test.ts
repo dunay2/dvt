@@ -92,6 +92,18 @@ describe('web Vitest suite partition', () => {
         primarySuites: ['architecture'],
       }
     );
+    expect(
+      classifyWebVitestFile('src/app/components/canvas/DbtNodeComponent.architecture.test.ts')
+    ).toEqual({
+      focusSuites: ['canvas', 'canvas-architecture'],
+      primarySuites: ['architecture'],
+    });
+    expect(
+      classifyWebVitestFile('src/app/components/inspector/nodePropertiesReadModel.test.ts')
+    ).toEqual({
+      focusSuites: ['canvas', 'canvas-unit'],
+      primarySuites: ['unit'],
+    });
   });
 
   it('keeps suite commands, config files, and CI wired to the suite catalog', () => {
@@ -250,6 +262,32 @@ describe('web Vitest suite partition', () => {
         'pnpm exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts',
         'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx',
         'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts',
+      ],
+      requiresDependencies: false,
+      suites: ['canvas-unit', 'canvas-presentation', 'canvas-architecture'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/components/InspectorPanel.tsx',
+        'apps/web/src/app/components/canvas/DbtNodeComponent.tsx',
+        'apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts',
+        'apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts',
+        'apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts',
+        'apps/web/src/app/components/inspector/NodePropertiesTabs.tsx',
+        'apps/web/src/app/components/inspector/nodePropertiesReadModel.ts',
+        'apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts',
+        'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+      ])
+    ).toMatchObject({
+      commands: [
+        [
+          'pnpm exec vitest run --config vitest.canvas-unit.config.ts',
+          'src/app/components/canvas/canvasNodeContextMenuModel.test.ts',
+          'src/app/components/inspector/nodePropertiesReadModel.test.ts',
+        ].join(' '),
+        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/components/canvas/DbtNodeComponent.architecture.test.ts',
       ],
       requiresDependencies: false,
       suites: ['canvas-unit', 'canvas-presentation', 'canvas-architecture'],
