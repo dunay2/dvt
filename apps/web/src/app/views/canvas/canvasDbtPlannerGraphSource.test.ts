@@ -162,6 +162,33 @@ describe('canvas dbt planner graph source', () => {
     });
   });
 
+  it('keeps model definition policy in the dbt plugin instead of the generic graph projection', () => {
+    const emptyModelNode: CanonicalNode = {
+      ...modelNode,
+      metadata: {
+        dbt: {
+          selectedSourceId: 'source-orders',
+        },
+      },
+    };
+
+    const result = buildDbtPlannerGraphSource({
+      nodes: [sourceNode, emptyModelNode],
+      edges,
+      scopedNodeIds: ['source-orders', 'model-orders'],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.graphSource.nodes).toHaveLength(1);
+    expect(result.graphSource.nodes[0]?.metadata).toEqual(
+      expect.objectContaining({
+        displayName: 'Orders Model',
+        sourceRef: 'source-orders',
+      })
+    );
+  });
+
   it('falls back to the visible dbt workflow when the selected node is non-executable', () => {
     expect(
       resolveDbtExecutionScopeNodeIds({

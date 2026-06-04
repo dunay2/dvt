@@ -83,6 +83,31 @@ describe('canvas dbt workspace artifacts', () => {
     });
   });
 
+  it('generates model SQL from the selected dbt origin instead of requiring core SQL metadata', () => {
+    const emptyModelNode: CanonicalNode = {
+      ...modelNode,
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'table',
+          selectedSourceId: 'source-orders',
+        },
+      },
+    };
+
+    const result = buildDbtWorkspaceArtifacts({
+      nodes: [sourceNode, emptyModelNode],
+      edges: [sourceEdge],
+      scopedNodeIds: ['source-orders', 'model-orders'],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.artifacts[1]?.content).toContain('select *');
+    expect(result.artifacts[1]?.content).toContain("from {{ source('raw', 'orders') }}");
+  });
+
   it('serializes free-form model descriptions as valid YAML scalars', () => {
     const describedModelNode: CanonicalNode = {
       ...modelNode,

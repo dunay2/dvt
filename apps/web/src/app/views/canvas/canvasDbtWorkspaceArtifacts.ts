@@ -219,7 +219,6 @@ export function buildDbtWorkspaceArtifacts(args: {
     if (!origin.ok) {
       return origin;
     }
-
     models.push({
       node: modelNode,
       name: normalizeIdentifier(modelNode.name, modelNode.id),
