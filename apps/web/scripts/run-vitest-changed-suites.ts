@@ -120,11 +120,15 @@ function pnpmInvocation(): { command: string; argsPrefix: string[] } {
   return { command: 'pnpm.cmd', argsPrefix: [] };
 }
 
-function runVitestFileCommand(config: string, filePath: string, cwd: string): void {
+function runVitestFilesCommand(config: string, filePaths: readonly string[], cwd: string): void {
+  if (filePaths.length === 0) {
+    throw new Error(`Cannot run Vitest config ${config} without file filters.`);
+  }
+
   const pnpm = pnpmInvocation();
   const result = spawnSync(
     pnpm.command,
-    [...pnpm.argsPrefix, 'exec', 'vitest', 'run', '--config', config, filePath],
+    [...pnpm.argsPrefix, 'exec', 'vitest', 'run', '--config', config, ...filePaths],
     {
       cwd,
       shell: false,
@@ -175,7 +179,7 @@ function main(): void {
     if (entry.kind === 'shell') {
       runCommand(entry.command, webRoot);
     } else {
-      runVitestFileCommand(entry.config, entry.filePath, webRoot);
+      runVitestFilesCommand(entry.config, entry.filePaths, webRoot);
     }
   }
 }

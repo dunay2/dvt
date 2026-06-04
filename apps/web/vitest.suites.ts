@@ -24,7 +24,7 @@ export type WebVitestChangedSuiteName =
 
 export type WebVitestChangedCommandPlanEntry =
   | Readonly<{ kind: 'shell'; command: string }>
-  | Readonly<{ kind: 'vitest-file'; config: string; filePath: string }>;
+  | Readonly<{ kind: 'vitest-files'; config: string; filePaths: readonly string[] }>;
 
 type WebVitestSuiteDefinition = Readonly<{
   include: readonly string[];
@@ -270,12 +270,12 @@ function isWebVitestTestPath(filePath: string): boolean {
 
 function createExactChangedTestCommandPlanEntry(
   suiteName: WebVitestChangedSuiteName,
-  webPath: string
+  webPaths: readonly string[]
 ): WebVitestChangedCommandPlanEntry {
   return {
-    kind: 'vitest-file',
+    kind: 'vitest-files',
     config: WEB_VITEST_CHANGED_SUITE_CONFIGS[suiteName],
-    filePath: webPath,
+    filePaths: [...webPaths],
   };
 }
 
@@ -364,18 +364,17 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
     (suiteName) => selectedSuites.has(suiteName) || exactTestPaths.has(suiteName)
   );
   const commandPlan = suites.flatMap((suiteName): WebVitestChangedCommandPlanEntry[] => {
-    const exactEntries = [...(exactTestPaths.get(suiteName) ?? [])].map((webPath) =>
-      createExactChangedTestCommandPlanEntry(suiteName, webPath)
+    const exactPaths = [...(exactTestPaths.get(suiteName) ?? [])].sort((left, right) =>
+      left.localeCompare(right)
     );
 
-    if (
-      selectedSuites.has(suiteName) &&
-      (exactEntries.length === 0 || forcedSuites.has(suiteName))
-    ) {
+    if (selectedSuites.has(suiteName) && (exactPaths.length === 0 || forcedSuites.has(suiteName))) {
       return [{ kind: 'shell', command: WEB_VITEST_CHANGED_SUITE_COMMANDS[suiteName] }];
     }
 
-    return exactEntries;
+    return exactPaths.length === 0
+      ? []
+      : [createExactChangedTestCommandPlanEntry(suiteName, exactPaths)];
   });
 
   return {
@@ -383,7 +382,9 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
     commands: commandPlan.map((entry) =>
       entry.kind === 'shell'
         ? entry.command
-        : `pnpm exec vitest run --config ${entry.config} ${quoteShellArg(entry.filePath)}`
+        : `pnpm exec vitest run --config ${entry.config} ${entry.filePaths
+            .map((filePath) => quoteShellArg(filePath))
+            .join(' ')}`
     ),
     commandPlan,
     requiresDependencies: commandPlan.some((entry) => entry.kind === 'shell'),

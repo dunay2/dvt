@@ -304,8 +304,8 @@ describe('web Vitest suite partition', () => {
       commandPlan: [
         {
           config: 'vitest.architecture.config.ts',
-          filePath: 'src/testing/vitestSuites.architecture.test.ts',
-          kind: 'vitest-file',
+          filePaths: ['src/testing/vitestSuites.architecture.test.ts'],
+          kind: 'vitest-files',
         },
       ],
       requiresDependencies: false,
@@ -323,8 +323,35 @@ describe('web Vitest suite partition', () => {
       commandPlan: [
         {
           config: 'vitest.architecture.config.ts',
-          filePath: 'src/testing/vitest suite; echo nope.architecture.test.ts',
-          kind: 'vitest-file',
+          filePaths: ['src/testing/vitest suite; echo nope.architecture.test.ts'],
+          kind: 'vitest-files',
+        },
+      ],
+      requiresDependencies: false,
+      suites: ['architecture'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts',
+        'apps/web/src/testing/vitestSuites.architecture.test.ts',
+      ])
+    ).toMatchObject({
+      commands: [
+        [
+          'pnpm exec vitest run --config vitest.architecture.config.ts',
+          'src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts',
+          'src/testing/vitestSuites.architecture.test.ts',
+        ].join(' '),
+      ],
+      commandPlan: [
+        {
+          config: 'vitest.architecture.config.ts',
+          filePaths: [
+            'src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts',
+            'src/testing/vitestSuites.architecture.test.ts',
+          ],
+          kind: 'vitest-files',
         },
       ],
       requiresDependencies: false,
