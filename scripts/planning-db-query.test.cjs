@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 
 const {
   buildDocsDispositionRows,
@@ -89,6 +91,34 @@ const {
   resolveQueryName,
   runQuery,
 } = require('./planning-db-query.cjs');
+
+function runPlanningDbQueryCli(args) {
+  return spawnSync(process.execPath, [path.join(__dirname, 'planning-db-query.cjs'), ...args], {
+    cwd: path.resolve(__dirname, '..'),
+    encoding: 'utf8',
+  });
+}
+
+test('planning DB query CLI prints root help without opening a DB connection', () => {
+  const result = runPlanningDbQueryCli(['--help']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Planning DB query CLI/);
+  assert.match(result.stdout, /Usage:/);
+  assert.match(result.stdout, /component-metadata/);
+  assert.doesNotMatch(result.stderr, /Unknown planning DB query|Missing value/);
+});
+
+test('planning DB query CLI prints per-query help before parsing flag values', () => {
+  const result = runPlanningDbQueryCli(['component-metadata', '--help']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Planning DB query: component-metadata/);
+  assert.match(result.stdout, /pnpm planning:db:query component-metadata/);
+  assert.match(result.stdout, /--component <id>/);
+  assert.doesNotMatch(result.stderr, /Missing value for --help/);
+});
+
 test('command/query rail query behavior lives in a focused read-model component', () => {
   const commandQueryRailQueryComponent = require('./planning-db/command-query-rail-query.cjs');
 

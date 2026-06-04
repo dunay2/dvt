@@ -122,6 +122,171 @@ const componentListOptionKeys = new Set([
   'fowler-signal',
   'scope',
 ]);
+const operationHelp = Object.freeze({
+  task: {
+    operations: ['claim', 'release', 'update', 'create', 'delete', 'show'],
+    usage:
+      'pnpm planning:db:operate task <claim|release|update|create|delete|show> --lane <lane> --task <task> --actor <actor>',
+    details: [
+      'Lifecycle commands require --lane, --task, and --actor except task show, which is read-only.',
+      'Write commands accept --expected-revision and --idempotency-key for guarded replays.',
+    ],
+  },
+  component: {
+    operations: ['create'],
+    usage:
+      'pnpm planning:db:operate component create --component <SYS-ID> --parent <SYS-ID> --actor <actor>',
+    details: [
+      'CreateGovernanceComponent records DB-authored governance component ownership.',
+      'Required semantic fields include --name, --owned-concern, --owns or --children-required true, --ddd-owner, and --cq-rails.',
+    ],
+  },
+  'architecture-design': {
+    operations: ['create'],
+    usage:
+      'pnpm planning:db:operate architecture-design create --design <DESIGN-ID> --actor <actor>',
+    details: [
+      'CreateArchitectureDesign records DB-first architecture authority before implementation.',
+      'Requires --work-item, --title, --owner, --rationale, --rail-ref, --scope, --source-ref, and --source-content-sha256.',
+    ],
+  },
+  'architecture-component': {
+    operations: ['record'],
+    usage:
+      'pnpm planning:db:operate architecture-component record --design <DESIGN-ID> --component <SYS-ID> --actor <actor>',
+    details: [
+      'RecordArchitectureComponent adds a scoped component to an approved or review design authority.',
+      'Requires taxonomy fields --kind, --layer, --owner, --repo-path, --public-contract, and at least one --responsibility.',
+    ],
+  },
+  'architecture-relation': {
+    operations: ['record'],
+    usage:
+      'pnpm planning:db:operate architecture-relation record --design <DESIGN-ID> --relation <REL-ID> --actor <actor>',
+    details: [
+      'RecordArchitectureRelation adds scoped graph edges between two architecture components.',
+      'Requires --source, --target, --type, --direction, --sync-async, --failure-mode, --authorization-scope, --source-ref, and --source-content-sha256.',
+    ],
+  },
+  'docs-disposition': {
+    operations: ['resolve'],
+    usage:
+      'pnpm planning:db:operate docs-disposition resolve --kind <kind> --path <path> --actor <actor> --reason <reason>',
+    details: [
+      'ResolveDocsDispositionQueue records source-hash guarded disposition for planning document findings.',
+      'Use --resolution resolved|accepted|ignored|linked to choose the durable disposition.',
+    ],
+  },
+  'task-gap': {
+    operations: ['resolve'],
+    usage:
+      'pnpm planning:db:operate task-gap resolve --kind <kind> --actor <actor> --reason <reason>',
+    details: [
+      'ResolveTaskGapQueue records disposition for Planning DB task gap findings.',
+      'Provide --path or both --lane and --task to select the source finding.',
+    ],
+  },
+  audit: {
+    operations: [],
+    usage: 'pnpm planning:db:operate audit [--lane <lane>] [--task <task>] [--limit <n>]',
+    details: ['Reads durable local operation audit rows without modifying Planning DB state.'],
+  },
+});
+
+function isHelpCommand(value) {
+  return value === 'help' || value === '--help' || value === '-h';
+}
+
+function isHelpFlag(value) {
+  return value === '--help' || value === '-h';
+}
+
+function unknownOperationMessage() {
+  return 'Unknown planning DB operation. Expected "task", "component", "architecture-design", "architecture-component", "architecture-relation", "docs-disposition", "task-gap", or "audit".';
+}
+
+function buildPlanningDbOperateHelpText(resource, action) {
+  if (!resource) {
+    return [
+      'Planning DB operate CLI',
+      '',
+      'Usage:',
+      '  pnpm planning:db:operate <resource> <operation> [--flag value]',
+      '  pnpm planning:db:operate --help',
+      '  pnpm planning:db:operate <resource> --help',
+      '  pnpm planning:db:operate <resource> <operation> --help',
+      '',
+      'Resources:',
+      `  ${Object.keys(operationHelp).join(', ')}`,
+      '',
+      'Examples:',
+      '  pnpm planning:db:operate task update --lane E --task F-29 --actor codex --status review',
+      '  pnpm planning:db:operate component create --component SYS-WEB-EXAMPLE --parent SYS-WEB-ROOT --actor codex',
+    ].join('\n');
+  }
+
+  const resourceHelp = operationHelp[resource];
+  if (!resourceHelp) {
+    throw new Error(unknownOperationMessage());
+  }
+
+  if (action) {
+    if (!resourceHelp.operations.includes(action)) {
+      throw new Error(
+        `Unknown ${resource} operation "${action}". Expected ${resourceHelp.operations.join(', ')}.`
+      );
+    }
+
+    return [
+      `Planning DB operate: ${resource} ${action}`,
+      '',
+      'Usage:',
+      `  ${resourceHelp.usage}`,
+      `  pnpm planning:db:operate ${resource} ${action} --help`,
+      '',
+      'Notes:',
+      ...resourceHelp.details.map((detail) => `  ${detail}`),
+    ].join('\n');
+  }
+
+  return [
+    `Planning DB operate resource: ${resource}`,
+    '',
+    'Usage:',
+    `  ${resourceHelp.usage}`,
+    `  pnpm planning:db:operate ${resource} --help`,
+    '',
+    'Operations:',
+    `  ${resourceHelp.operations.length > 0 ? resourceHelp.operations.join(', ') : '(none)'}`,
+    '',
+    'Notes:',
+    ...resourceHelp.details.map((detail) => `  ${detail}`),
+  ].join('\n');
+}
+
+function resolveOperateHelpRequest(args) {
+  const [resource, action, ...rest] = args;
+  if (resource === undefined) {
+    return null;
+  }
+
+  if (isHelpCommand(resource)) {
+    if (resource === 'help' && action) {
+      return buildPlanningDbOperateHelpText(action, rest[0]);
+    }
+    return buildPlanningDbOperateHelpText();
+  }
+
+  if (isHelpFlag(action)) {
+    return buildPlanningDbOperateHelpText(resource);
+  }
+
+  if (rest.some(isHelpFlag)) {
+    return buildPlanningDbOperateHelpText(resource, action);
+  }
+
+  return null;
+}
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -1347,6 +1512,11 @@ function parseArchitectureRelationCommand(action, args) {
 }
 
 function parseArgs(args = process.argv.slice(2)) {
+  const helpText = resolveOperateHelpRequest(args);
+  if (helpText) {
+    return { kind: 'help', helpText };
+  }
+
   const [resource, action, ...rest] = args;
 
   if (resource === 'task') {
@@ -1409,9 +1579,7 @@ function parseArgs(args = process.argv.slice(2)) {
     return parseDocsResolutionCommand(resource, action, rest);
   }
 
-  throw new Error(
-    'Unknown planning DB operation. Expected "task", "component", "architecture-design", "architecture-component", "architecture-relation", "docs-disposition", "task-gap", or "audit".'
-  );
+  throw new Error(unknownOperationMessage());
 }
 
 function normalizeState(row) {
@@ -3467,6 +3635,10 @@ function printOperationResult(result) {
 
 async function main() {
   const command = parseArgs();
+  if (command.kind === 'help') {
+    console.log(command.helpText);
+    return;
+  }
 
   if (command.kind === 'task_show') {
     const task = await showTask(command);
@@ -3518,6 +3690,7 @@ module.exports = {
   assertIdempotentReplayMatches,
   buildAuditRows,
   buildDocsResolutionAuditRows,
+  buildPlanningDbOperateHelpText,
   databaseUrl,
   materializeDocsResolutionCommand,
   parseArgs,
@@ -3533,5 +3706,6 @@ module.exports = {
   validateArchitectureDesignStatus,
   validateComponentStatus,
   validateTaskStatus,
+  resolveOperateHelpRequest,
   writePlannedComponentCreateOperation,
 };

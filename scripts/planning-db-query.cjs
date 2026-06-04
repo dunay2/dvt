@@ -126,6 +126,85 @@ const governanceProjectionQueryNames = new Set([
   'mandatory-proposal-gaps',
 ]);
 
+function isHelpCommand(value) {
+  return value === 'help' || value === '--help' || value === '-h';
+}
+
+function isHelpFlag(value) {
+  return value === '--help' || value === '-h';
+}
+
+function buildPlanningDbQueryHelpText(queryName) {
+  const sortedQueries = [...knownQueries].sort();
+  const commonOptions = [
+    '--limit <n>',
+    '--component <id>',
+    '--state <state>',
+    '--kind <kind>',
+    '--path <path>',
+    '--owner <owner>',
+    '--refresh --confirm-expensive-governance-refresh',
+    '--no-refresh',
+  ];
+
+  if (queryName) {
+    return [
+      `Planning DB query: ${queryName}`,
+      '',
+      'Usage:',
+      `  pnpm planning:db:query ${queryName} [--filter value]`,
+      `  pnpm planning:db:query ${queryName} --help`,
+      '',
+      'Common filters:',
+      `  ${commonOptions.join(', ')}`,
+      '',
+      'Examples:',
+      `  pnpm planning:db:query ${queryName} --limit 20`,
+      `  pnpm planning:db:query ${queryName} --component SYS-WEB-ROOT --limit 20`,
+    ].join('\n');
+  }
+
+  return [
+    'Planning DB query CLI',
+    '',
+    'Usage:',
+    '  pnpm planning:db:query [query] [--filter value]',
+    '  pnpm planning:db:query --help',
+    '  pnpm planning:db:query <query> --help',
+    '',
+    'Queries:',
+    `  ${sortedQueries.join(', ')}`,
+    '',
+    'Common filters:',
+    `  ${commonOptions.join(', ')}`,
+    '',
+    'Examples:',
+    '  pnpm planning:db:query summary',
+    '  pnpm planning:db:query component-metadata --component SYS-WEB-ROOT --limit 20',
+    '  pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 20',
+  ].join('\n');
+}
+
+function resolveQueryHelpRequest(args) {
+  const [queryNameArg, ...rest] = args;
+  if (queryNameArg === undefined) {
+    return null;
+  }
+
+  if (isHelpCommand(queryNameArg)) {
+    if (queryNameArg === 'help' && rest[0]) {
+      return buildPlanningDbQueryHelpText(resolveQueryName(rest[0]));
+    }
+    return buildPlanningDbQueryHelpText();
+  }
+
+  if (rest.some(isHelpFlag)) {
+    return buildPlanningDbQueryHelpText(resolveQueryName(queryNameArg));
+  }
+
+  return null;
+}
+
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
 }
@@ -226,6 +305,11 @@ function normalizeResolutionFilter(value) {
 }
 
 function parseArgs(args = process.argv.slice(2)) {
+  const helpText = resolveQueryHelpRequest(args);
+  if (helpText) {
+    return { kind: 'help', helpText };
+  }
+
   const [queryNameArg, ...rest] = args;
   const queryName = resolveQueryName(queryNameArg);
   const filters = {};
@@ -3874,6 +3958,11 @@ function formatQueryError(error) {
 
 async function main() {
   const command = parseArgs();
+  if (command.kind === 'help') {
+    console.log(command.helpText);
+    return;
+  }
+
   await runQuery(command);
 }
 
@@ -3917,6 +4006,7 @@ module.exports = {
   buildArchitectureRelationRows,
   buildArchitectureResponsibilityRows,
   buildHashDriftRows,
+  buildPlanningDbQueryHelpText,
   buildComponentEngineeringComponentMetadataRows,
   buildKnowledgeActionRows,
   buildKnowledgeDocumentRows,
@@ -3944,6 +4034,7 @@ module.exports = {
   formatQueryError,
   parseArgs,
   parseCerSchemaVersion,
+  resolveQueryHelpRequest,
   renderAiProjectContextMarkdown,
   printHashDriftSummary,
   readAiProjectContext,
