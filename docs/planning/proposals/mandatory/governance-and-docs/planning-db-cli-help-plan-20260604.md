@@ -209,6 +209,8 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/**/index.md
   - docs/planning/status/**
+  - scripts/generate-governance-file-component-index.cjs
+  - scripts/generate-governance-file-component-index.test.cjs
 forbiddenImplementationSurfaces:
   - apps/web/src/**
   - apps/api/**
@@ -238,11 +240,13 @@ fowlerSignals:
 architectureGuards:
   - pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
   - pnpm planning:db:query files --component SYS-WEB-ROOT --limit 100
+  - node --test scripts/generate-governance-file-component-index.test.cjs
 cypressFlows:
   - N/A - governance DB component registry only
 completionGate:
   - pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
   - pnpm planning:db:query files --component SYS-WEB-ROOT --limit 100
+  - node --test scripts/generate-governance-file-component-index.test.cjs
   - pnpm docs:sync
   - pnpm governance:refresh
   - pnpm docs:feature-mechanization:implementation
@@ -254,6 +258,13 @@ redGreenCycles:
     patchSurfaces:
       - docs/planning/proposals/mandatory/governance-and-docs/planning-db-cli-help-plan-20260604.md
     greenTest: pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
+  - id: governance-component-metadata-db-import
+    redTest: node --test scripts/generate-governance-file-component-index.test.cjs
+    expectedFailure: generated component entries drop ownedConcern/publicApi metadata before Planning DB import.
+    patchSurfaces:
+      - scripts/generate-governance-file-component-index.cjs
+      - scripts/generate-governance-file-component-index.test.cjs
+    greenTest: node --test scripts/generate-governance-file-component-index.test.cjs
 symbols:
   - name: WebGovernanceComponentBatch
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-db-cli-help-plan-20260604.md
@@ -271,4 +282,43 @@ symbols:
     unitTests:
       - pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
       - pnpm planning:db:query files --component SYS-WEB-ROOT --limit 100
+  - name: semanticUnitFields
+    path: scripts/generate-governance-file-component-index.cjs
+    dddOwner: Governance component import semantic field policy
+    cqRails:
+      - CreateGovernanceComponent
+      - ReadComponentDrift
+    fowlerSignals:
+      - Boundary drift
+      - Semantic Fitness Function
+    architectureGuard: node --test scripts/generate-governance-file-component-index.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/generate-governance-file-component-index.test.cjs
+  - name: addNonEmptyField
+    path: scripts/generate-governance-file-component-index.cjs
+    dddOwner: Governance component import semantic field policy
+    cqRails:
+      - CreateGovernanceComponent
+      - ReadComponentDrift
+    fowlerSignals:
+      - Preserve Whole Object
+      - Semantic Fitness Function
+    architectureGuard: node --test scripts/generate-governance-file-component-index.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/generate-governance-file-component-index.test.cjs
+  - name: buildSemanticUnitFields
+    path: scripts/generate-governance-file-component-index.cjs
+    dddOwner: Governance component import semantic field policy
+    cqRails:
+      - CreateGovernanceComponent
+      - ReadComponentDrift
+    fowlerSignals:
+      - Preserve Whole Object
+      - Boundary drift
+    architectureGuard: node --test scripts/generate-governance-file-component-index.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/generate-governance-file-component-index.test.cjs
 ```
