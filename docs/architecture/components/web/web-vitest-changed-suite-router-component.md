@@ -57,9 +57,9 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 - Exact changed-test execution is batched by Vitest config, so one changed set
   with many architecture files still pays for one Vitest process for that
   architecture config.
-- Governance changes to the suite catalog, configs, package scripts, or router
-  docs still force the governed architecture suite even when exact tests are
-  also present.
+- Governance changes to the suite catalog, configs, package scripts, router
+  adapter, or router docs still force the governed architecture suite even when
+  exact tests are also present.
 - Source files without a changed same-stem test keep the existing suite
   fallback, so unpaired source edits do not silently lose coverage.
 - Non-Canvas `.tsx` paths route to `presentation`.
