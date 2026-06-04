@@ -368,9 +368,12 @@ Command semantics:
   after edits because format-only drift is fixed before the validation stamp is
   written.
 - Workspace VS Code settings are tracked under `.vscode/` and make Prettier the
-  default formatter on save with `prettier.requireConfig` enabled. The
-  `test:ai-preflight` contract checks those settings so format-on-save remains
-  part of the repository automation posture.
+  default formatter on save with `prettier.requireConfig` enabled. They also
+  run ESLint code actions on save for TypeScript, TSX, JavaScript, and JSX so
+  local editors catch and fix most format/lint drift before a validation gate
+  runs. The `test:ai-preflight` contract checks those settings so save-time
+  formatting and lint-fix behavior remain part of the repository automation
+  posture.
 - `pnpm verify:prepush -- --full` keeps three outcomes for code diffs:
   - skip when no TypeScript-affecting files changed
   - run `pnpm ci:affected:typecheck` when the diff is workspace-scoped

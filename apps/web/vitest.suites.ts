@@ -292,6 +292,39 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
 } {
   const selectedSuites = new Set<WebVitestChangedSuiteName>();
   const exactTestPaths = new Map<WebVitestChangedSuiteName, Set<string>>();
+  const changedWebPaths = new Set(
+    filePaths
+      .map((filePath) => normalizeWebVitestChangedPath(filePath))
+      .filter((webPath): webPath is string => webPath !== null)
+  );
+
+  function addExactTestPath(suiteName: WebVitestChangedSuiteName, webPath: string): void {
+    const paths = exactTestPaths.get(suiteName) ?? new Set<string>();
+    paths.add(webPath);
+    exactTestPaths.set(suiteName, paths);
+  }
+
+  function findDirectChangedTestPath(webPath: string): string | null {
+    if (!webPath.startsWith('src/') || isWebVitestTestPath(webPath)) {
+      return null;
+    }
+
+    const match = /^(.*)\.(ts|tsx)$/.exec(webPath);
+    if (!match) {
+      return null;
+    }
+
+    const [, stem, extension] = match;
+    const alternateExtension = extension === 'ts' ? 'tsx' : 'ts';
+    const candidates = [
+      `${stem}.test.${extension}`,
+      `${stem}.spec.${extension}`,
+      `${stem}.test.${alternateExtension}`,
+      `${stem}.spec.${alternateExtension}`,
+    ];
+
+    return candidates.find((candidate) => changedWebPaths.has(candidate)) ?? null;
+  }
 
   for (const filePath of filePaths) {
     const webPath = normalizeWebVitestChangedPath(filePath);
@@ -305,11 +338,18 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
     if (isWebVitestTestPath(webPath) && !isWebVitestGovernancePath(filePath)) {
       const suiteName = resolveChangedSuiteForWebPath(filePath, webPath);
       if (suiteName) {
-        const paths = exactTestPaths.get(suiteName) ?? new Set<string>();
-        paths.add(webPath);
-        exactTestPaths.set(suiteName, paths);
+        addExactTestPath(suiteName, webPath);
       }
       continue;
+    }
+
+    const directChangedTestPath = findDirectChangedTestPath(webPath);
+    if (directChangedTestPath && !isWebVitestGovernancePath(filePath)) {
+      const suiteName = resolveChangedSuiteForWebPath(filePath, directChangedTestPath);
+      if (suiteName) {
+        addExactTestPath(suiteName, directChangedTestPath);
+        continue;
+      }
     }
 
     resolveSuiteForWebPath(filePath, webPath, selectedSuites);

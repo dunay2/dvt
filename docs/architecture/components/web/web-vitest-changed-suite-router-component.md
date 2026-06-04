@@ -48,6 +48,11 @@ Tests` pull-request lane while preserving full primary-suite coverage on
   Artifacts/Diff Monaco guards, or shared Monaco code surfaces.
 - Workspace service paths under `src/app/services/workspace/**` route to
   `workspace-services` before the broad `unit` fallback.
+- When a changed source file and its same-stem `*.test.*` or `*.spec.*` file
+  both appear in the same diff, the router may run that exact test file instead
+  of the broader suite.
+- Source files without a changed same-stem test keep the existing suite
+  fallback, so unpaired source edits do not silently lose coverage.
 - Non-Canvas `.tsx` paths route to `presentation`.
 - Non-Canvas `.ts` paths route to `unit`.
 - If no web-relevant changed file exists, the command exits successfully
@@ -63,12 +68,14 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 stateDiagram-v2
   [*] --> ChangedFiles
   ChangedFiles --> GovernedPath: suite catalog/config/docs
+  ChangedFiles --> PairedSource: source plus changed same-stem test
   ChangedFiles --> CanvasPath: Canvas route or canvas module
   ChangedFiles --> MonacoPath: Monaco route/editor surface
   ChangedFiles --> WorkspaceServicePath: workspace service port/facade
   ChangedFiles --> TsxPath: non-Canvas TSX
   ChangedFiles --> TsPath: non-Canvas TS
   GovernedPath --> ArchitectureCommand
+  PairedSource --> ExactTestCommand
   CanvasPath --> CanvasUnitCommand: .ts
   CanvasPath --> CanvasPresentationCommand: .tsx
   CanvasPath --> CanvasArchitectureCommand: architecture
@@ -77,6 +84,7 @@ stateDiagram-v2
   TsxPath --> PresentationCommand
   TsPath --> UnitCommand
   ArchitectureCommand --> Evidence
+  ExactTestCommand --> Evidence
   CanvasUnitCommand --> Evidence
   CanvasPresentationCommand --> Evidence
   CanvasArchitectureCommand --> Evidence
