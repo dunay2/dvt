@@ -1,5 +1,6 @@
 /** Owned concern: derive and apply route-owned DVT transformation authoring metadata. */
 import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
 export type DvtSourceAuthoringMetadata = Readonly<{
   kind: 'source';
@@ -27,7 +28,10 @@ export type DvtNodeAuthoringMetadata =
   | DvtSinkAuthoringMetadata;
 
 export type DvtNodeAuthoringMetadataErrors = Partial<
-  Record<'schema' | 'table' | 'alias' | 'sql' | 'materialization' | 'writeMode', string>
+  Record<
+    'schema' | 'table' | 'alias' | 'sql' | 'materialization' | 'writeMode',
+    CanvasInspectorNodeDraftErrorCode
+  >
 >;
 
 const DEFAULT_SCHEMA_NAME = 'public';
@@ -152,29 +156,29 @@ export function validateDvtNodeAuthoringMetadata(
 
   if (metadata.kind === 'source' || metadata.kind === 'sink') {
     if (metadata.schema.trim().length === 0) {
-      errors.schema = 'Schema is required.';
+      errors.schema = 'dvt_schema_required';
     }
     if (metadata.table.trim().length === 0) {
-      errors.table = 'Table is required.';
+      errors.table = 'dvt_table_required';
     }
   }
 
   if (metadata.kind === 'source' && metadata.alias.trim().length === 0) {
-    errors.alias = 'Alias is required.';
+    errors.alias = 'dvt_alias_required';
   }
 
   if (
     metadata.kind === 'sink' &&
     !VALID_MATERIALIZATIONS.has(normalizeIdentifier(metadata.materialization, ''))
   ) {
-    errors.materialization = 'Materialization must be table or view.';
+    errors.materialization = 'dvt_materialization_invalid';
   }
 
   if (
     metadata.kind === 'sink' &&
     !VALID_WRITE_MODES.has(normalizeIdentifier(metadata.writeMode, ''))
   ) {
-    errors.writeMode = 'Write mode must be replace or append.';
+    errors.writeMode = 'dvt_write_mode_invalid';
   }
 
   return errors;

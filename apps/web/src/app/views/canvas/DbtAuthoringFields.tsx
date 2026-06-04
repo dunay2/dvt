@@ -6,6 +6,8 @@ import { Label } from '../../components/ui/label';
 import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import { canvasViewCopy } from './copy';
+import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
@@ -21,23 +23,29 @@ type DbtAuthoringFieldsProps = Readonly<{
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
+type DbtOriginNode = CanonicalNode & Readonly<{ kind: 'dbt:source' | 'dbt:model' }>;
+
+function isDbtOriginNode(candidate: CanonicalNode | undefined): candidate is DbtOriginNode {
+  return (
+    candidate?.pluginId === 'dbt' &&
+    (candidate.kind === 'dbt:source' || candidate.kind === 'dbt:model')
+  );
+}
+
 function buildDbtOriginOptions(args: {
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
+  kindLabels: Readonly<Record<'dbt:source' | 'dbt:model', string>>;
 }): Array<Readonly<{ value: string; label: string }>> {
   const nodeById = new Map(args.nodes.map((candidate) => [candidate.id, candidate]));
   return args.edges
     .filter((edge) => edge.targetId === args.node.id)
     .map((edge) => nodeById.get(edge.sourceId))
-    .filter(
-      (candidate): candidate is CanonicalNode =>
-        candidate?.pluginId === 'dbt' &&
-        (candidate.kind === 'dbt:source' || candidate.kind === 'dbt:model')
-    )
+    .filter(isDbtOriginNode)
     .map((candidate) => ({
       value: candidate.id,
-      label: `${candidate.name} (${candidate.kind.replace('dbt:', '')})`,
+      label: `${candidate.name} (${args.kindLabels[candidate.kind]})`,
     }));
 }
 
@@ -62,11 +70,7 @@ function resolveDbtModelOrigin(args: {
   const incomingOrigins = args.edges
     .filter((edge) => edge.targetId === args.node.id)
     .map((edge) => nodeById.get(edge.sourceId))
-    .filter(
-      (candidate): candidate is CanonicalNode =>
-        candidate?.pluginId === 'dbt' &&
-        (candidate.kind === 'dbt:source' || candidate.kind === 'dbt:model')
-    );
+    .filter(isDbtOriginNode);
 
   return (
     incomingOrigins.find((candidate) => candidate.id === args.selectedOriginId) ??
@@ -113,9 +117,23 @@ export function DbtAuthoringFields({
     return null;
   }
 
-  const originOptions = buildDbtOriginOptions({ node, nodes, edges });
+  const originOptions = buildDbtOriginOptions({
+    node,
+    nodes,
+    edges,
+    kindLabels: {
+      'dbt:source': canvasViewCopy.inspectorDbtOriginKindSourceLabel,
+      'dbt:model': canvasViewCopy.inspectorDbtOriginKindModelLabel,
+    },
+  });
   const selectedSourceId = draft.dbt.selectedSourceId || originOptions[0]?.value || '';
   const selectClassName = graphVisualClasses.inspectorSelectInput;
+  const materializedOptions = [
+    { value: 'view', label: canvasViewCopy.inspectorDbtMaterializedViewLabel },
+    { value: 'table', label: canvasViewCopy.inspectorDbtMaterializedTableLabel },
+    { value: 'incremental', label: canvasViewCopy.inspectorDbtMaterializedIncrementalLabel },
+    { value: 'ephemeral', label: canvasViewCopy.inspectorDbtMaterializedEphemeralLabel },
+  ] as const;
   const generatedModelSql =
     node.kind === 'dbt:model'
       ? buildGeneratedDbtModelSqlPreview({
@@ -128,10 +146,14 @@ export function DbtAuthoringFields({
 
   return (
     <div className={graphVisualClasses.inspectorDbtSection}>
-      <h3 className={graphVisualClasses.contextPanelSectionTitle}>dbt card</h3>
+      <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+        {canvasViewCopy.inspectorDbtCardTitle}
+      </h3>
 
       <div className="space-y-2">
-        <Label htmlFor={`inspector-dbt-package-${node.id}`}>Package</Label>
+        <Label htmlFor={`inspector-dbt-package-${node.id}`}>
+          {canvasViewCopy.inspectorDbtPackageLabel}
+        </Label>
         <Input
           id={`inspector-dbt-package-${node.id}`}
           name="dbt-package"
@@ -148,14 +170,18 @@ export function DbtAuthoringFields({
           }
         />
         {errors.dbt?.packageName ? (
-          <p className={graphVisualClasses.inspectorErrorText}>{errors.dbt.packageName}</p>
+          <p className={graphVisualClasses.inspectorErrorText}>
+            {formatCanvasInspectorNodeDraftError(errors.dbt.packageName, canvasViewCopy)}
+          </p>
         ) : null}
       </div>
 
       {node.kind === 'dbt:source' ? (
         <div className="grid grid-cols-1 gap-3">
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dbt-source-${node.id}`}>Source</Label>
+            <Label htmlFor={`inspector-dbt-source-${node.id}`}>
+              {canvasViewCopy.inspectorDbtSourceLabel}
+            </Label>
             <Input
               id={`inspector-dbt-source-${node.id}`}
               name="dbt-source"
@@ -171,9 +197,16 @@ export function DbtAuthoringFields({
                 }))
               }
             />
+            {errors.dbt?.sourceName ? (
+              <p className={graphVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.dbt.sourceName, canvasViewCopy)}
+              </p>
+            ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dbt-schema-${node.id}`}>Schema</Label>
+            <Label htmlFor={`inspector-dbt-schema-${node.id}`}>
+              {canvasViewCopy.inspectorDbtSchemaLabel}
+            </Label>
             <Input
               id={`inspector-dbt-schema-${node.id}`}
               name="dbt-schema"
@@ -189,9 +222,16 @@ export function DbtAuthoringFields({
                 }))
               }
             />
+            {errors.dbt?.schemaName ? (
+              <p className={graphVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.dbt.schemaName, canvasViewCopy)}
+              </p>
+            ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dbt-table-${node.id}`}>Table</Label>
+            <Label htmlFor={`inspector-dbt-table-${node.id}`}>
+              {canvasViewCopy.inspectorDbtTableLabel}
+            </Label>
             <Input
               id={`inspector-dbt-table-${node.id}`}
               name="dbt-table"
@@ -207,6 +247,11 @@ export function DbtAuthoringFields({
                 }))
               }
             />
+            {errors.dbt?.tableName ? (
+              <p className={graphVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.dbt.tableName, canvasViewCopy)}
+              </p>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -214,7 +259,9 @@ export function DbtAuthoringFields({
       {node.kind === 'dbt:model' ? (
         <div className="grid grid-cols-1 gap-3">
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dbt-materialized-${node.id}`}>Materialized</Label>
+            <Label htmlFor={`inspector-dbt-materialized-${node.id}`}>
+              {canvasViewCopy.inspectorDbtMaterializedLabel}
+            </Label>
             <select
               id={`inspector-dbt-materialized-${node.id}`}
               name="dbt-materialized"
@@ -231,14 +278,22 @@ export function DbtAuthoringFields({
                 }))
               }
             >
-              <option value="view">view</option>
-              <option value="table">table</option>
-              <option value="incremental">incremental</option>
-              <option value="ephemeral">ephemeral</option>
+              {materializedOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
+            {errors.dbt?.materialized ? (
+              <p className={graphVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.dbt.materialized, canvasViewCopy)}
+              </p>
+            ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dbt-origin-${node.id}`}>Origin</Label>
+            <Label htmlFor={`inspector-dbt-origin-${node.id}`}>
+              {canvasViewCopy.inspectorDbtOriginLabel}
+            </Label>
             {originOptions.length > 0 ? (
               <select
                 id={`inspector-dbt-origin-${node.id}`}
@@ -262,11 +317,15 @@ export function DbtAuthoringFields({
                 ))}
               </select>
             ) : (
-              <p className={graphVisualClasses.inspectorBody}>No connected dbt origins.</p>
+              <p className={graphVisualClasses.inspectorBody}>
+                {canvasViewCopy.inspectorDbtNoConnectedOriginsMessage}
+              </p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dbt-generated-sql-${node.id}`}>Generated SQL</Label>
+            <Label htmlFor={`inspector-dbt-generated-sql-${node.id}`}>
+              {canvasViewCopy.inspectorDbtGeneratedSqlLabel}
+            </Label>
             {generatedModelSql ? (
               <pre
                 id={`inspector-dbt-generated-sql-${node.id}`}
@@ -277,8 +336,7 @@ export function DbtAuthoringFields({
               </pre>
             ) : (
               <p className={graphVisualClasses.inspectorBody}>
-                Connect this model to a dbt source or model to preview the SQL generated by the dbt
-                plugin.
+                {canvasViewCopy.inspectorDbtGeneratedSqlUnavailableMessage}
               </p>
             )}
           </div>

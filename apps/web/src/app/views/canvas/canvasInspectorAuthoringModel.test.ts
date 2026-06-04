@@ -82,7 +82,7 @@ describe('canvasInspectorAuthoringModel', () => {
         tags: [],
       })
     ).toEqual({
-      name: 'Node name is required.',
+      name: 'node_name_required',
     });
   });
 

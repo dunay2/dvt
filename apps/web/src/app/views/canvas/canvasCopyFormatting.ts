@@ -1,4 +1,5 @@
 import type { CanvasConnectionRejection } from './canvasConnectionAggregate';
+import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type { TransformationGraphValidationSummaryCode } from './transformationGraphValidation';
 import type { CanvasDisabledCapability, CanvasViewCopy } from './canvasCopy.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
@@ -62,6 +63,36 @@ export function formatCanvasNodeAddedMessage(nodeName: string, locale?: string):
 export function formatCanvasNodeRemovedMessage(nodeName: string, locale?: string): string {
   const copy = resolveCanvasViewCopy(locale);
   return `${copy.nodeRemovedPrefix} ${nodeName} ${copy.nodeRemovedSuffix}`.trim();
+}
+
+export function formatCanvasInspectorNodeDraftError(
+  errorCode: CanvasInspectorNodeDraftErrorCode,
+  copy: CanvasViewCopy
+): string {
+  switch (errorCode) {
+    case 'node_name_required':
+      return copy.inspectorErrorNodeNameRequired;
+    case 'dbt_package_required':
+      return copy.inspectorErrorDbtPackageRequired;
+    case 'dbt_source_required':
+      return copy.inspectorErrorDbtSourceRequired;
+    case 'dbt_schema_required':
+      return copy.inspectorErrorDbtSchemaRequired;
+    case 'dbt_table_required':
+      return copy.inspectorErrorDbtTableRequired;
+    case 'dbt_materialization_invalid':
+      return copy.inspectorErrorDbtMaterializationInvalid;
+    case 'dvt_schema_required':
+      return copy.inspectorErrorDvtSchemaRequired;
+    case 'dvt_table_required':
+      return copy.inspectorErrorDvtTableRequired;
+    case 'dvt_alias_required':
+      return copy.inspectorErrorDvtAliasRequired;
+    case 'dvt_materialization_invalid':
+      return copy.inspectorErrorDvtMaterializationInvalid;
+    case 'dvt_write_mode_invalid':
+      return copy.inspectorErrorDvtWriteModeInvalid;
+  }
 }
 
 export function formatUnsupportedCanvasKindMessage(canvasKind: string, locale?: string): string {

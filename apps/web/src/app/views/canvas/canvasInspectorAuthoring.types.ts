@@ -4,6 +4,7 @@ import type {
   DvtNodeAuthoringMetadata,
   DvtNodeAuthoringMetadataErrors,
 } from './canvasDvtAuthoringModel';
+import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -14,8 +15,8 @@ export type CanvasInspectorNodeDraft = Readonly<{
 }>;
 
 export type CanvasInspectorNodeDraftErrors = Readonly<{
-  name?: string;
-  dbt?: Partial<Record<keyof DbtNodeAuthoringMetadata, string>>;
+  name?: CanvasInspectorNodeDraftErrorCode;
+  dbt?: Partial<Record<keyof DbtNodeAuthoringMetadata, CanvasInspectorNodeDraftErrorCode>>;
   dvt?: DvtNodeAuthoringMetadataErrors;
 }>;
 

@@ -7,12 +7,14 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import {
   createCanvasInspectorNodeDraft,
   hasCanvasInspectorNodeDraftChanges,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import { canvasViewCopy } from './copy';
 import { DbtAuthoringFields } from './DbtAuthoringFields';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 
@@ -51,14 +53,18 @@ export function CanvasInspectorAuthoringSection({
     >
       <div className="space-y-3">
         <div>
-          <h3 className={graphVisualClasses.contextPanelSectionTitle}>Editable properties</h3>
+          <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+            {canvasViewCopy.inspectorEditablePropertiesTitle}
+          </h3>
           <p className={graphVisualClasses.inspectorBody}>
-            Name, tags, and description saved with this canvas.
+            {canvasViewCopy.inspectorEditablePropertiesDescription}
           </p>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`inspector-node-name-${node.id}`}>Name</Label>
+          <Label htmlFor={`inspector-node-name-${node.id}`}>
+            {canvasViewCopy.inspectorNodeNameLabel}
+          </Label>
           <Input
             id={`inspector-node-name-${node.id}`}
             name="node-name"
@@ -73,18 +79,22 @@ export function CanvasInspectorAuthoringSection({
             }
           />
           {errors.name ? (
-            <p className={graphVisualClasses.inspectorErrorText}>{errors.name}</p>
+            <p className={graphVisualClasses.inspectorErrorText}>
+              {formatCanvasInspectorNodeDraftError(errors.name, canvasViewCopy)}
+            </p>
           ) : null}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor={`inspector-node-tags-${node.id}`}>Tags</Label>
+          <Label htmlFor={`inspector-node-tags-${node.id}`}>
+            {canvasViewCopy.inspectorNodeTagsLabel}
+          </Label>
           <Input
             id={`inspector-node-tags-${node.id}`}
             name="node-tags"
             value={tagsText}
             disabled={!authoring.canEditNode}
-            placeholder="finance, critical"
+            placeholder={canvasViewCopy.inspectorNodeTagsPlaceholder}
             onChange={(event) => {
               const nextTagsText = event.target.value;
               setTagsText(nextTagsText);
@@ -122,7 +132,9 @@ export function CanvasInspectorAuthoringSection({
         />
 
         <div className="space-y-2">
-          <Label htmlFor={`inspector-node-description-${node.id}`}>Description</Label>
+          <Label htmlFor={`inspector-node-description-${node.id}`}>
+            {canvasViewCopy.inspectorNodeDescriptionLabel}
+          </Label>
           <Textarea
             id={`inspector-node-description-${node.id}`}
             name="node-description"
@@ -139,7 +151,7 @@ export function CanvasInspectorAuthoringSection({
 
         {!authoring.canEditNode ? (
           <p className={graphVisualClasses.inspectorBody}>
-            Node details are read-only for this workspace state.
+            {canvasViewCopy.inspectorNodeReadOnlyMessage}
           </p>
         ) : null}
 
@@ -155,7 +167,7 @@ export function CanvasInspectorAuthoringSection({
                 setTagsText(nextDraft.tags.join(', '));
               }}
             >
-              Cancel
+              {canvasViewCopy.inspectorCancelLabel}
             </Button>
             <Button
               type="button"
@@ -168,7 +180,7 @@ export function CanvasInspectorAuthoringSection({
                 authoring.onApplyNodeDraft(draft);
               }}
             >
-              Apply
+              {canvasViewCopy.inspectorApplyLabel}
             </Button>
           </div>
         ) : null}

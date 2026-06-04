@@ -141,12 +141,21 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
   - apps/web/src/app/views/canvas/DbtAuthoringFields.tsx
   - apps/web/src/app/views/canvas/DvtAuthoringFields.tsx
+  - apps/web/src/app/views/canvas/canvasCopy.types.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
+  - apps/web/src/app/views/canvas/canvasCopyFormatting.ts
   - apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts
   - apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts
   - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts
   - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts
+  - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
+  - apps/web/src/app/views/canvas/copy.test.ts
   - apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx
   - apps/web/src/testing/vitestSuites.architecture.test.ts
   - apps/web/vitest.suites.ts
@@ -228,20 +237,46 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.dbt.test.tsx
     greenTest: pnpm --filter @dvt/web test:canvas
+  - id: inspector-plugin-authoring-i18n-boundary
+    redTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts
+    expectedFailure: Plugin authoring fields embed visible English labels and validation messages instead of resolving Canvas copy.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx
+      - apps/web/src/app/views/canvas/DbtAuthoringFields.tsx
+      - apps/web/src/app/views/canvas/DvtAuthoringFields.tsx
+      - apps/web/src/app/views/canvas/canvasCopy.types.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts
+      - apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts
+      - apps/web/src/app/views/canvas/canvasCopyFormatting.ts
+      - apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
+      - apps/web/src/app/views/canvas/copy.test.ts
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts
+    greenTest: pnpm --filter @dvt/web test:canvas:run -- src/app/views/canvas/copy.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts
 symbols:
   - { name: DbtAuthoringFields, path: apps/web/src/app/views/canvas/DbtAuthoringFields.tsx, dddOwner: dbt authoring fields presentation, cqRails: [ConfigureCanvasDbtNode, SelectDbtModelOrigin], fowlerSignals: [Extract Component, Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A - Canvas inspector unit coverage, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: DbtAuthoringFieldsProps, path: apps/web/src/app/views/canvas/DbtAuthoringFields.tsx, dddOwner: dbt authoring fields presentation DTO, cqRails: [ConfigureCanvasDbtNode], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: DbtOriginNode, path: apps/web/src/app/views/canvas/DbtAuthoringFields.tsx, dddOwner: DbtSourceRelationshipSelection presentation node guard, cqRails: [SelectDbtModelOrigin], fowlerSignals: [Introduce Assertion, Replace Type Code with Explicit Type], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: isDbtOriginNode, path: apps/web/src/app/views/canvas/DbtAuthoringFields.tsx, dddOwner: DbtSourceRelationshipSelection presentation node guard, cqRails: [SelectDbtModelOrigin], fowlerSignals: [Introduce Assertion, Replace Type Code with Explicit Type], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: buildDbtOriginOptions, path: apps/web/src/app/views/canvas/DbtAuthoringFields.tsx, dddOwner: DbtSourceRelationshipSelection presentation, cqRails: [SelectDbtModelOrigin], fowlerSignals: [Policy Object], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: buildGeneratedDbtModelSqlPreview, path: apps/web/src/app/views/canvas/DbtAuthoringFields.tsx, dddOwner: dbt generated SQL preview projection, cqRails: [GenerateDbtWorkspaceArtifacts], fowlerSignals: [Hidden authority], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: normalizeDbtIdentifier, path: apps/web/src/app/views/canvas/DbtAuthoringFields.tsx, dddOwner: dbt generated SQL preview value normalization, cqRails: [GenerateDbtWorkspaceArtifacts], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: resolveDbtModelOrigin, path: apps/web/src/app/views/canvas/DbtAuthoringFields.tsx, dddOwner: dbt origin presentation policy, cqRails: [SelectDbtModelOrigin], fowlerSignals: [Policy Object], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: DvtAuthoringFields, path: apps/web/src/app/views/canvas/DvtAuthoringFields.tsx, dddOwner: DVT authoring fields presentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Extract Component], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: DvtAuthoringFieldsProps, path: apps/web/src/app/views/canvas/DvtAuthoringFields.tsx, dddOwner: DVT authoring fields presentation DTO, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: CanvasInspectorNodeDraftErrorCode, path: apps/web/src/app/views/canvas/canvasInspectorAuthoringErrorCodes.ts, dddOwner: Inspector authoring validation vocabulary, cqRails: [ConfigureCanvasDbtNode, ConfigureCanvasDvtNode], fowlerSignals: [Primitive obsession, Boundary drift], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: formatCanvasInspectorNodeDraftError, path: apps/web/src/app/views/canvas/canvasCopyFormatting.ts, dddOwner: Inspector authoring copy formatter, cqRails: [ConfigureCanvasDbtNode, ConfigureCanvasDvtNode], fowlerSignals: [Replace Conditional with Polymorphism - not selected, Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: canvasViewAuthoringCopyByKey, path: apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.ts, dddOwner: Canvas authoring i18n catalog, cqRails: [ConfigureCanvasDbtNode, ConfigureCanvasDvtNode], fowlerSignals: [Duplicate semantics], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: canvasViewAuthoringCopyEs, path: apps/web/src/app/views/canvas/canvasCopyCatalog.authoring.es.ts, dddOwner: Canvas authoring i18n catalog, cqRails: [ConfigureCanvasDbtNode, ConfigureCanvasDvtNode], fowlerSignals: [Duplicate semantics], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: INSPECTOR_DRAFT_ERROR_COPY_KEYS, path: apps/web/src/app/views/canvas/copy.test.ts, dddOwner: Inspector authoring copy formatter coverage, cqRails: [ConfigureCanvasDbtNode, ConfigureCanvasDvtNode], fowlerSignals: [Semantic Fitness Function, Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: tryAddGovernanceSuite, path: apps/web/vitest.suites.ts, dddOwner: WebVitestChangedSuiteRouter governance-path routing policy, cqRails: [ResolveWebVitestChangedSuitePlan], fowlerSignals: [Test-only confidence], architectureGuard: pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:changed] }
   - { name: resolveSuiteForWebPath, path: apps/web/vitest.suites.ts, dddOwner: WebVitestChangedSuiteRouter path-to-suite policy, cqRails: [ResolveWebVitestChangedSuitePlan], fowlerSignals: [Test-only confidence], architectureGuard: pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:changed] }
   - { name: resolveWebVitestChangedSuitePlan, path: apps/web/vitest.suites.ts, dddOwner: WebVitestChangedSuiteRouter changed-file read model, cqRails: [ResolveWebVitestChangedSuitePlan], fowlerSignals: [Semantic Fitness Function], architectureGuard: pnpm --filter @dvt/web test:changed -- --files apps/web/vitest.suites.ts apps/web/src/testing/vitestSuites.architecture.test.ts, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:changed] }
   - { name: DBT_FIELDS_SOURCE, path: apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts, dddOwner: inspector authoring architecture guard fixture, cqRails: [N/A - architecture test constant], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: DVT_FIELDS_SOURCE, path: apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts, dddOwner: inspector authoring architecture guard fixture, cqRails: [N/A - architecture test constant], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
+  - { name: ERROR_CODES_SOURCE, path: apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts, dddOwner: inspector authoring architecture guard fixture, cqRails: [N/A - architecture test constant], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
   - { name: PANEL_SOURCE, path: apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts, dddOwner: inspector authoring architecture guard fixture, cqRails: [N/A - architecture test constant], fowlerSignals: [Test-only confidence], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-INSPECTOR-PLUGIN-AUTHORING-FIELDS-20260604, cypressCoverage: N/A, unitTests: [pnpm --filter @dvt/web test:canvas] }
 ```
 
