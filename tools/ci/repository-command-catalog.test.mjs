@@ -27,6 +27,9 @@ test('classifies planning and governance database aliases as planning-db command
   const planningComponent = classifyScriptFilePath(
     'scripts/planning-db/command-query-rail-catalog.cjs'
   );
+  const knowledgeIntakeLiteratureScript = classifyScriptFilePath(
+    'scripts/generate-knowledge-intake-literature.cjs'
+  );
   const governanceImportScript = classifyScriptFilePath('scripts/governance-db-import.cjs');
   const governanceExportScript = classifyScriptFilePath('scripts/governance-db-export.cjs');
 
@@ -34,12 +37,14 @@ test('classifies planning and governance database aliases as planning-db command
   assert.equal(governanceQuery.domain, 'planning-db');
   assert.equal(planningScript.domain, 'planning-db');
   assert.equal(planningComponent.domain, 'planning-db');
+  assert.equal(knowledgeIntakeLiteratureScript.domain, 'planning-db');
   assert.equal(governanceImportScript.domain, 'planning-db');
   assert.equal(governanceExportScript.domain, 'planning-db');
   assert.equal(planningQuery.runtimeFanout, false);
   assert.equal(governanceQuery.runtimeFanout, false);
   assert.equal(planningScript.runtimeFanout, false);
   assert.equal(planningComponent.runtimeFanout, false);
+  assert.equal(knowledgeIntakeLiteratureScript.runtimeFanout, false);
   assert.equal(governanceImportScript.runtimeFanout, false);
   assert.equal(governanceExportScript.runtimeFanout, false);
 });

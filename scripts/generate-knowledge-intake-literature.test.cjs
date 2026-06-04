@@ -102,6 +102,17 @@ test('knowledge-intake literature render is deterministic and timestamp-free', (
   assert.doesNotMatch(first, /\d{4}-\d{2}-\d{2}T\d{2}:/);
 });
 
+test('knowledge-intake literature escapes markdown table cells from DB content', () => {
+  const rendered = renderKnowledgeIntakeLiterature([
+    {
+      ...fixtureRows[0],
+      title: 'Open | Analysis \\ Draft',
+    },
+  ]);
+
+  assert.ok(rendered.includes('Open \\| Analysis \\\\ Draft'));
+});
+
 test('knowledge-intake literature generator writes and checks the local render', async () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'knowledge-intake-literature-'));
   const outputPath = path.join(tempRoot, 'generated-knowledge-intake-literature.md');
