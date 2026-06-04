@@ -1402,3 +1402,36 @@ test('tracked migrations include frontend mechanical truth inventory projection'
     /jsonb_array_length\(capability_gaps\) as capability_gap_count/
   );
 });
+
+test('tracked migrations include frontend component reflection inventory projection', () => {
+  const migrations = readMigrationFiles();
+  const frontendComponentMigration = migrations.find(
+    (migration) => migration.fileName === '056_frontend_component_reflection_inventory.sql'
+  );
+
+  assert.ok(frontendComponentMigration);
+  assert.match(
+    frontendComponentMigration.sql,
+    /create table if not exists planning_query_store\.frontend_components/
+  );
+  assert.match(
+    frontendComponentMigration.sql,
+    /create table if not exists planning_query_store\.frontend_surface_component_links/
+  );
+  assert.match(
+    frontendComponentMigration.sql,
+    /references planning_query_store\.frontend_mechanical_truth_surfaces\(surface_id\)/
+  );
+  assert.match(
+    frontendComponentMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.match(
+    frontendComponentMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_file_query/
+  );
+  assert.match(
+    frontendComponentMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_rail_query/
+  );
+});

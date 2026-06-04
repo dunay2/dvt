@@ -47,6 +47,14 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-check.test.cjs': 'scripts/planning-db-check.test.cjs',
   'scripts/planning-db-export.cjs': 'scripts/planning-db-export.test.cjs',
   'scripts/planning-db-export.test.cjs': 'scripts/planning-db-export.test.cjs',
+  'scripts/planning-db/frontend-component-inventory.cjs':
+    'scripts/planning-db-frontend-component-inventory.test.cjs',
+  'scripts/planning-db-frontend-component-inventory.test.cjs':
+    'scripts/planning-db-frontend-component-inventory.test.cjs',
+  'scripts/planning-db/frontend-mechanical-truth-inventory.cjs':
+    'scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs',
+  'scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs':
+    'scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs',
   'scripts/planning-db-import.cjs': 'scripts/planning-db-import.test.cjs',
   'scripts/planning-db-import.test.cjs': 'scripts/planning-db-import.test.cjs',
   'scripts/planning-db-migrate.cjs': 'scripts/planning-db-migrate.test.cjs',

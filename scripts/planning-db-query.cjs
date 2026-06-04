@@ -24,6 +24,14 @@ const {
   buildFrontendMechanicalTruthRows,
   readFrontendMechanicalTruthRows,
 } = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+const {
+  buildFrontendComponentFileRows,
+  buildFrontendComponentRailRows,
+  buildFrontendComponentRows,
+  readFrontendComponentFileRows,
+  readFrontendComponentRailRows,
+  readFrontendComponentRows,
+} = require('./planning-db/frontend-component-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
 const componentEngineeringSchemaName = 'component_engineering';
@@ -50,6 +58,9 @@ const knownQueries = new Set([
   'ai-project-context',
   'creation-intent',
   'frontend-surfaces',
+  'frontend-components',
+  'frontend-component-files',
+  'frontend-component-rails',
   'pr-readiness',
   'docs-disposition',
   'feature-work',
@@ -94,6 +105,9 @@ const governanceProjectionQueryNames = new Set([
   'ai-project-context',
   'creation-intent',
   'frontend-surfaces',
+  'frontend-components',
+  'frontend-component-files',
+  'frontend-component-rails',
   'cer',
   'component-tree',
   'component-metadata',
@@ -274,6 +288,14 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.relation = value;
       continue;
     }
+    if (arg === '--rail') {
+      filters.rail = value;
+      continue;
+    }
+    if (arg === '--surface') {
+      filters.surface = value;
+      continue;
+    }
     if (arg === '--flow') {
       filters.flow = value;
       continue;
@@ -343,7 +365,7 @@ function parseArgs(args = process.argv.slice(2)) {
       continue;
     }
     if (arg === '--state') {
-      if (queryName === 'frontend-surfaces') {
+      if (queryName === 'frontend-surfaces' || queryName === 'frontend-components') {
         filters.state = value;
       } else {
         filters.governanceState = value;
@@ -3409,6 +3431,33 @@ async function runQuery(options = {}) {
       return surfaceRows;
     }
 
+    if (queryName === 'frontend-components') {
+      const rows = await readFrontendComponentRows(client, options.filters || {});
+      const componentRows = buildFrontendComponentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(componentRows);
+      }
+      return componentRows;
+    }
+
+    if (queryName === 'frontend-component-files') {
+      const rows = await readFrontendComponentFileRows(client, options.filters || {});
+      const fileRows = buildFrontendComponentFileRows(rows);
+      if (options.print !== false) {
+        printTaskRows(fileRows);
+      }
+      return fileRows;
+    }
+
+    if (queryName === 'frontend-component-rails') {
+      const rows = await readFrontendComponentRailRows(client, options.filters || {});
+      const railRows = buildFrontendComponentRailRows(rows);
+      if (options.print !== false) {
+        printTaskRows(railRows);
+      }
+      return railRows;
+    }
+
     if (queryName === 'pr-readiness') {
       const rows = await readPrReadinessRows(client, options.filters || {});
       const readinessRows = buildPrReadinessRows(rows);
@@ -3860,6 +3909,9 @@ module.exports = {
   buildPrReadinessRows,
   buildCommandQueryRailRows,
   buildCreationIntentRows,
+  buildFrontendComponentFileRows,
+  buildFrontendComponentRailRows,
+  buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
@@ -3913,6 +3965,9 @@ module.exports = {
   readPrReadinessRows,
   readCommandQueryRailRows,
   readCreationIntentRows,
+  readFrontendComponentFileRows,
+  readFrontendComponentRailRows,
+  readFrontendComponentRows,
   readFrontendMechanicalTruthRows,
   readRepositoryCommandRows,
   readComponentEngineeringRuleCatalogRows,

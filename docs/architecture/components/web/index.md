@@ -46,6 +46,7 @@ out of the active tree.
 - cross-cutting UX:
   [UX implementation guide](./ux-implementation-guide.md),
   [Workbench UX Canon Component](./workbench-ux-canon-component.md),
+  [Frontend component inventory](./frontend-component-inventory.md),
   [Frontend command and query rail inventory](./frontend-command-query-rail-inventory.md),
   [Frontend mechanical truth inventory](./frontend-mechanical-truth-inventory.md),
   [Frontend query boundary component](./frontend-query-boundary-component.md),

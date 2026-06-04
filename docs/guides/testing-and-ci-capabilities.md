@@ -299,6 +299,25 @@ Command semantics:
   `operational-product`, `preview`, `disabled-unsupported`, and
   `experimental`.
 
+- Frontend component reflection is DB-first and intentionally separate from
+  web runtime validation. After governance import,
+  `pnpm planning:db:query frontend-components` reads the component-to-surface
+  inventory, while the file and rail views answer narrower questions without
+  scanning Markdown or running Vitest:
+
+  ```bash
+  pnpm planning:db:query frontend-components --surface web.canvas.graph --limit 20
+  pnpm planning:db:query frontend-component-files --component web.component.canvas.CanvasToolbar
+  pnpm planning:db:query frontend-component-rails --status gap-needed --limit 20
+  ```
+
+  Changes to `scripts/planning-db/frontend-component-inventory.cjs` route to
+  `node --test scripts/planning-db-frontend-component-inventory.test.cjs`
+  through `pnpm verify:changed`. That keeps component-inventory iterations on
+  Node planning DB contracts unless the slice also changes runtime web files,
+  shared planning DB infrastructure, or migrations that require the broader DB
+  suite.
+
 - Planning/governance DB test-file edits under
   `scripts/planning-db-*.test.cjs`, `scripts/governance-db-*.test.cjs`, and
   the generated planning DB report tests route to the changed `node --test`
