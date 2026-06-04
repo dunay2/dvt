@@ -33,7 +33,9 @@ const {
   readFrontendComponentRows,
 } = require('./planning-db/frontend-component-inventory.cjs');
 const {
+  buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
+  readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
 } = require('./planning-db/knowledge-intake-retirement-query.cjs');
 
@@ -257,6 +259,13 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--confirm-expensive-governance-refresh') {
       refreshConfirmed = true;
+      continue;
+    }
+    if (arg === '--references') {
+      if (queryName !== 'knowledge-intake') {
+        throw new Error(`Unknown planning DB query option "${arg}".`);
+      }
+      filters.references = true;
       continue;
     }
 
@@ -3559,6 +3568,15 @@ async function runQuery(options = {}) {
     }
 
     if (queryName === 'knowledge-intake') {
+      if ((options.filters || {}).references === true) {
+        const rows = await readKnowledgeIntakeReferenceRows(client, options.filters || {});
+        const referenceRows = buildKnowledgeIntakeReferenceRows(rows);
+        if (options.print !== false) {
+          printTaskRows(referenceRows);
+        }
+        return referenceRows;
+      }
+
       const rows = await readKnowledgeIntakeRetirementRows(client, options.filters || {});
       const intakeRows = buildKnowledgeIntakeRetirementRows(rows);
       if (options.print !== false) {
@@ -3932,6 +3950,7 @@ module.exports = {
   buildFrontendComponentRailRows,
   buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
+  buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
@@ -3977,6 +3996,7 @@ module.exports = {
   readRiskDebtRows,
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,
+  readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readMandatoryProposalGapRows,
   readPlanningArtifactRows,

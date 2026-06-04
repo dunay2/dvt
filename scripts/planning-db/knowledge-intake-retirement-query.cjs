@@ -37,6 +37,17 @@ function createKnowledgeIntakeRetirementReadModelComponent(deps = {}) {
     ]);
   }
 
+  function buildKnowledgeIntakeReferenceRows(rows) {
+    return rows.map((row) => [
+      row.document_path ?? row.documentPath,
+      row.relation_type ?? row.relationType,
+      row.reference_path ?? row.referencePath,
+      row.reference_component_id ?? row.referenceComponentId ?? '-',
+      row.reference_file_role ?? row.referenceFileRole ?? '-',
+      row.reference_title ?? row.referenceTitle,
+    ]);
+  }
+
   function knowledgeIntakeRetirementSelect(activeSchemaName = defaultSchemaName) {
     return `
       select
@@ -55,6 +66,26 @@ function createKnowledgeIntakeRetirementReadModelComponent(deps = {}) {
         suggested_query,
         source_content_sha256
       from ${activeSchemaName}.knowledge_intake_retirement_query`;
+  }
+
+  function knowledgeIntakeReferenceSelect(activeSchemaName = defaultSchemaName) {
+    return `
+      select
+        to_document.document_path,
+        link.relation_type,
+        from_document.document_path as reference_path,
+        ownership.leaf_component_id as reference_component_id,
+        ownership.file_role as reference_file_role,
+        from_document.title as reference_title,
+        from_document.document_type as reference_document_type,
+        from_document.source_content_sha256 as reference_source_content_sha256
+      from ${activeSchemaName}.knowledge_document_links link
+      join ${activeSchemaName}.knowledge_documents from_document
+        on from_document.document_id = link.from_document_id
+      join ${activeSchemaName}.knowledge_documents to_document
+        on to_document.document_id = link.to_document_id
+      left join ${activeSchemaName}.component_engineering_file_ownership_query ownership
+        on ownership.file_path = from_document.document_path`;
   }
 
   async function readKnowledgeIntakeRetirementRows(client, filters = {}) {
@@ -88,9 +119,35 @@ function createKnowledgeIntakeRetirementReadModelComponent(deps = {}) {
     return result.rows;
   }
 
+  async function readKnowledgeIntakeReferenceRows(client, filters = {}) {
+    const params = [];
+    const predicates = ["to_document.document_path like 'buzon/%'"];
+    appendFilter(predicates, params, 'to_document.document_path', filters.path);
+    appendFilter(predicates, params, 'link.relation_type', filters.relation);
+    appendFilter(predicates, params, 'ownership.leaf_component_id', filters.component);
+    const limit = parseLimit(filters.limit, 50);
+    params.push(limit);
+
+    const result = await client.query(
+      `${knowledgeIntakeReferenceSelect()}
+       where ${predicates.join(' and ')}
+       order by
+         to_document.document_path,
+         link.relation_type,
+         from_document.document_path
+       limit $${params.length}`,
+      params
+    );
+
+    return result.rows;
+  }
+
   return {
+    buildKnowledgeIntakeReferenceRows,
     buildKnowledgeIntakeRetirementRows,
+    knowledgeIntakeReferenceSelect,
     knowledgeIntakeRetirementSelect,
+    readKnowledgeIntakeReferenceRows,
     readKnowledgeIntakeRetirementRows,
   };
 }

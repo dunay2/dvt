@@ -40,7 +40,14 @@ before moving or removing files.
 pnpm planning:db:query knowledge-intake --state unclassified --limit 30
 pnpm planning:db:query knowledge-intake --state open-actions --limit 30
 pnpm planning:db:query knowledge-intake --path buzon/example.md --limit 5
+pnpm planning:db:query knowledge-intake --references --limit 30
+pnpm planning:db:query knowledge-intake --references --path buzon/example.md --limit 5
 ```
+
+The `--references` variant lists DB-backed inbound references from
+`knowledge_document_links` plus the current component ownership projection for
+the referencing document. It is the operator surface for retiring live
+`buzon/` backrefs without running ad-hoc repository searches.
 
 ## Generated Literature Surface
 
@@ -78,6 +85,8 @@ Planning DB command/query rails and then rendered from DB-backed projections.
 - No added or renamed `buzon/*.md` file may enter a changed slice after the
   DB-first retirement guard is active.
 - Retirement state is derived from Planning DB knowledge tables and links.
+- Active reference cleanup is derived from Planning DB document links and file
+  ownership projections, not from raw `rg` output.
 - Generated literature must use this DB read model or a later DB projection,
   not raw directory traversal as authority.
 - Generated literature must remain outside Git unless a later accepted plan
@@ -93,7 +102,9 @@ flowchart LR
   Buzon["Tracked intake files"] --> Importer["Planning DB knowledge import"]
   Importer --> Knowledge["knowledge_documents / links / actions"]
   Knowledge --> Retirement["knowledge_intake_retirement_query"]
+  Knowledge --> References["knowledge_document_links"]
   Retirement --> Agents["planning:db:query knowledge-intake"]
+  References --> Agents
   Retirement --> Literature["docs:knowledge-intake:generate"]
   ChangedFiles["Changed files"] --> Guard["CheckBuzonIntakeRetirement"]
   Guard --> VerifyChanged["verify:changed"]

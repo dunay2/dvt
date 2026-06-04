@@ -68,11 +68,12 @@ DB-backed fixtures.
 
 <!-- markdownlint-disable MD060 -->
 
-| Scenario                                                    | Opportunity          | Fowler pattern             | DDD owner                            | Command/query rail              | Implementation surfaces                                    | Tests                                                                                 | Out of scope                            |
-| ----------------------------------------------------------- | -------------------- | -------------------------- | ------------------------------------ | ------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------- |
-| Agents need to know which intake files can be retired       | Hidden authority     | Explicit Read Model        | `KnowledgeIntakeRetirementReadModel` | `ListKnowledgeIntakeRetirement` | Planning DB migration, query module, CLI router            | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs` | Deleting `buzon/`                       |
-| Analysis literature exists in prose and DB at the same time | Duplicate semantics  | Repository / Query Service | Knowledge intake read model          | `ListKnowledgeIntakeRetirement` | DB view over `knowledge_documents`, links, and action rows | Migration test for view columns and query test for DB view usage                      | Full literature generator               |
-| Tests directly read raw `buzon` files as semantic proof     | Test-only confidence | Semantic fitness function  | CI governance                        | existing canon query rails      | Later guard migration                                      | Later tests must assert DB-backed dispositions instead of raw file strings            | Rewriting every existing canon test now |
+| Scenario                                                    | Opportunity          | Fowler pattern             | DDD owner                            | Command/query rail              | Implementation surfaces                                     | Tests                                                                                 | Out of scope                            |
+| ----------------------------------------------------------- | -------------------- | -------------------------- | ------------------------------------ | ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------- |
+| Agents need to know which intake files can be retired       | Hidden authority     | Explicit Read Model        | `KnowledgeIntakeRetirementReadModel` | `ListKnowledgeIntakeRetirement` | Planning DB migration, query module, CLI router             | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs` | Deleting `buzon/`                       |
+| Analysis literature exists in prose and DB at the same time | Duplicate semantics  | Repository / Query Service | Knowledge intake read model          | `ListKnowledgeIntakeRetirement` | DB view over `knowledge_documents`, links, and action rows  | Migration test for view columns and query test for DB view usage                      | Full literature generator               |
+| Agents need to retire active `buzon` backrefs without `rg`  | Hidden coupling      | Explicit Read Model        | `KnowledgeIntakeRetirementReadModel` | `ListKnowledgeIntakeRetirement` | Query module and CLI router over `knowledge_document_links` | `node --test scripts/planning-db-query.test.cjs`                                      | Automatic physical deletion             |
+| Tests directly read raw `buzon` files as semantic proof     | Test-only confidence | Semantic fitness function  | CI governance                        | existing canon query rails      | Later guard migration                                       | Later tests must assert DB-backed dispositions instead of raw file strings            | Rewriting every existing canon test now |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -152,6 +153,7 @@ completionGate:
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
   - pnpm planning:db:import -- --governance-only
   - pnpm planning:db:query knowledge-intake --limit 10
+  - pnpm planning:db:query knowledge-intake --references --limit 10
   - pnpm planning:db:knowledge-intake:retirement:check
   - pnpm docs:sync
   - pnpm docs:feature-mechanization:implementation
@@ -190,6 +192,17 @@ redGreenCycles:
       - scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
       - scripts/verify-changed.test.cjs
     greenTest: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs
+  - id: knowledge-intake-reference-query
+    redTest: node --test scripts/planning-db-query.test.cjs
+    expectedFailure: knowledge-intake cannot list active DB-backed references to intake documents.
+    patchSurfaces:
+      - docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md
+      - docs/planning/status/db-surface-inventory.md
+      - scripts/planning-db/knowledge-intake-retirement-query.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+      - scripts/planning-db-surface-inventory-check.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs
 symbols:
   - name: createKnowledgeIntakeRetirementGuardComponent
     path: scripts/planning-db/knowledge-intake-retirement-guard.cjs
@@ -224,6 +237,30 @@ symbols:
     cypressCoverage: N/A - DB query only.
     unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: readKnowledgeIntakeRetirementRows
+    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    dddOwner: KnowledgeIntakeRetirementReadModel
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Explicit Read Model]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - DB query only.
+    unitTests: [node --test scripts/planning-db-query.test.cjs]
+  - name: buildKnowledgeIntakeReferenceRows
+    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    dddOwner: KnowledgeIntakeRetirementReadModel
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Explicit Read Model]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - DB query only.
+    unitTests: [node --test scripts/planning-db-query.test.cjs]
+  - name: knowledgeIntakeReferenceSelect
+    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    dddOwner: KnowledgeIntakeRetirementReadModel
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Explicit Read Model]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - DB query only.
+    unitTests: [node --test scripts/planning-db-query.test.cjs]
+  - name: readKnowledgeIntakeReferenceRows
     path: scripts/planning-db/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
     cqRails: [ListKnowledgeIntakeRetirement]
