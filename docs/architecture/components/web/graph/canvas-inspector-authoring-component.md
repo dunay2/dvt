@@ -41,6 +41,7 @@ inspector contract.
 | Value Object        | `DvtNodeAuthoringMetadata`           | normalized source, SQL transform, and sink config for DVT transformation nodes |
 | Policy Object       | `DbtSourceRelationshipSelection`     | dbt model origins must come from the visible connected dbt graph               |
 | Domain policy       | `canvasInspectorAuthoringModel.ts`   | validation and normalization are explicit and pure                             |
+| Presentation policy | Canvas i18n copy catalog             | visible labels and validation messages are resolved at render time             |
 | Application command | `canvasInspectorAuthoringCommand.ts` | maps validated Inspector edits into aggregate mutation                         |
 | Application seam    | `useCanvasInspectorCommands.ts`      | exposes one route-safe callback instead of leaking aggregate mutation up       |
 | Runtime policy      | `CanvasRuntimePolicy`                | decides whether Inspector authoring is available for the active canvas         |
@@ -61,6 +62,8 @@ write surface lives one level up in the route-owned wrapper.
 | `CanvasInspectorAuthoringContract`               | route-owned contract: can edit and apply                                   |
 | `createCanvasInspectorNodeDraft`                 | project a selected canonical node into the Inspector draft                 |
 | `validateCanvasInspectorNodeDraft`               | validate the current Inspector draft                                       |
+| `CanvasInspectorNodeDraftErrorCode`              | locale-neutral validation result code for Inspector authoring errors       |
+| `formatCanvasInspectorNodeDraftError`            | resolve an Inspector validation code through Canvas copy                   |
 | `applyCanvasInspectorNodeDraft`                  | normalize and project the edited fields back into a canonical node         |
 | `applyCanvasInspectorNodeDraftToSession`         | write the edited node back into `CanvasDraftSession` via `upsertNode`      |
 | `useCanvasInspectorCommands`                     | route-safe callback bridge from UI to aggregate                            |
@@ -81,6 +84,10 @@ write surface lives one level up in the route-owned wrapper.
   not be derived directly from draft transport mutability or raw user
   permissions.
 - Plugin-owned inspector panels remain read-only in this slice.
+- Inspector authoring labels, helper text, option labels, placeholders, and
+  validation messages must resolve through the Canvas copy catalog. The model
+  returns locale-neutral error codes; components must not embed visible English
+  copy as validation truth.
 - DBT card configuration that changes execution semantics belongs to the
   route-owned Inspector DTO, not to plugin-owned passive panels.
 - The route-owned Inspector may compose plugin-specific authoring field
@@ -139,7 +146,11 @@ write surface lives one level up in the route-owned wrapper.
 | File                                         | Owns                                                                | Must not own                            |
 | -------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------- |
 | `canvasInspectorAuthoring.types.ts`          | semantic DTO and route-owned authoring contract                     | React state or aggregate mutation       |
+| `canvasInspectorAuthoringErrorCodes.ts`      | locale-neutral authoring validation error code vocabulary           | presentation copy or validation logic   |
 | `canvasInspectorAuthoringModel.ts`           | draft projection, validation, dirty-state comparison, normalization | React hooks, services, or persistence   |
+| `canvasCopyCatalog.authoring.ts`             | English fallback copy for Canvas authoring surfaces                 | node semantics or persisted names       |
+| `canvasCopyCatalog.authoring.es.ts`          | Spanish copy for Canvas authoring surfaces                          | node semantics or persisted names       |
+| `canvasCopyFormatting.ts`                    | copy-backed formatting for authoring errors and Canvas messages     | validation rules                        |
 | `canvasDbtAuthoringModel.ts`                 | dbt card metadata value object and origin-selection policy          | React hooks, services, or persistence   |
 | `canvasDvtAuthoringModel.ts`                 | DVT source, SQL transform, and sink config value object             | React hooks, services, or persistence   |
 | `canvasInspectorAuthoringCommand.ts`         | aggregate mutation from validated Inspector draft                   | UI state or passive panel composition   |
@@ -198,6 +209,10 @@ flowchart LR
   Section --> DbtFields["DbtAuthoringFields.tsx"]
   Section --> DvtFields["DvtAuthoringFields.tsx"]
   Section --> Model["canvasInspectorAuthoringModel.ts"]
+  Model --> ErrorCodes["canvasInspectorAuthoringErrorCodes.ts"]
+  Section --> Copy["Canvas copy catalog"]
+  DbtFields --> Copy
+  DvtFields --> Copy
   Section --> Commands
   Passive --> PluginPanels["plugin inspector panels (read-only)"]
 ```

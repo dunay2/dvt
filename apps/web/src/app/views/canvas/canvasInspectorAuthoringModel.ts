@@ -43,26 +43,26 @@ export function validateCanvasInspectorNodeDraft(
 ): CanvasInspectorNodeDraftErrors {
   if (normalizeNodeName(draft.name).length === 0) {
     return {
-      name: 'Node name is required.',
+      name: 'node_name_required',
     };
   }
 
   if (draft.dbt) {
     const dbtErrors: NonNullable<CanvasInspectorNodeDraftErrors['dbt']> = {};
     if (draft.dbt.packageName.trim().length === 0) {
-      dbtErrors.packageName = 'Package is required.';
+      dbtErrors.packageName = 'dbt_package_required';
     }
     if (draft.dbt.sourceName.trim().length === 0) {
-      dbtErrors.sourceName = 'Source is required.';
+      dbtErrors.sourceName = 'dbt_source_required';
     }
     if (draft.dbt.schemaName.trim().length === 0) {
-      dbtErrors.schemaName = 'Schema is required.';
+      dbtErrors.schemaName = 'dbt_schema_required';
     }
     if (draft.dbt.tableName.trim().length === 0) {
-      dbtErrors.tableName = 'Table is required.';
+      dbtErrors.tableName = 'dbt_table_required';
     }
     if (!['view', 'table', 'incremental', 'ephemeral'].includes(draft.dbt.materialized)) {
-      dbtErrors.materialized = 'Materialization must be view, table, incremental, or ephemeral.';
+      dbtErrors.materialized = 'dbt_materialization_invalid';
     }
     if (Object.keys(dbtErrors).length > 0) {
       return {

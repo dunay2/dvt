@@ -6,6 +6,10 @@ const TYPES_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasInspectorAuthoring.types.ts'
 );
+const ERROR_CODES_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasInspectorAuthoringErrorCodes.ts'
+);
 const MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasInspectorAuthoringModel.ts'
@@ -39,6 +43,9 @@ describe('canvas inspector authoring component architecture', () => {
     );
     expect(TYPES_SOURCE).toContain('export type CanvasInspectorNodeDraft');
     expect(TYPES_SOURCE).toContain('export type CanvasInspectorAuthoringContract');
+    expect(ERROR_CODES_SOURCE).toContain(
+      'Owned concern: declare locale-neutral Inspector authoring validation error codes.'
+    );
 
     expect(MODEL_SOURCE).toContain(
       'Owned concern: derive, validate, and apply the route-owned Inspector DTO'
@@ -89,5 +96,24 @@ describe('canvas inspector authoring component architecture', () => {
     );
     expect(PANEL_SOURCE).toContain('CanvasInspectorAuthoringSection');
     expect(PANEL_SOURCE).toContain('InspectorPanel');
+  });
+
+  it('keeps Inspector authoring visible copy behind the Canvas i18n catalog', () => {
+    expect(SECTION_SOURCE).toContain('canvasViewCopy');
+    expect(DBT_FIELDS_SOURCE).toContain('canvasViewCopy');
+    expect(DVT_FIELDS_SOURCE).toContain('canvasViewCopy');
+    expect(SECTION_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
+    expect(DBT_FIELDS_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
+    expect(DVT_FIELDS_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
+
+    expect(SECTION_SOURCE).toContain('canvasViewCopy.inspectorEditablePropertiesTitle');
+    expect(DBT_FIELDS_SOURCE).toContain('canvasViewCopy.inspectorDbtPackageLabel');
+    expect(DBT_FIELDS_SOURCE).toContain('canvasViewCopy.inspectorDbtGeneratedSqlLabel');
+    expect(DVT_FIELDS_SOURCE).toContain('canvasViewCopy.inspectorDvtWriteModeLabel');
+    expect(ERROR_CODES_SOURCE).toContain('export type CanvasInspectorNodeDraftErrorCode');
+    expect(MODEL_SOURCE).not.toContain('canvasViewCopy');
+    expect(MODEL_SOURCE).not.toContain('inspectorError');
+    expect(MODEL_SOURCE).toContain('node_name_required');
+    expect(MODEL_SOURCE).toContain('dbt_package_required');
   });
 });

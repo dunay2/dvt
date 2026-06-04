@@ -607,6 +607,11 @@ units:
     parent: SYS-PLANSTORE
     level: component
     status: review
+    ownedConcern: Plan-store reader and writer contract ownership.
+    publicApi:
+      - docs/contracts/planner/plan-store-records-v1.md
+      - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
+      - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
     owns:
       - docs/contracts/planner/plan-store-records-v1.md
       - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
@@ -626,6 +631,12 @@ units:
     parent: SYS-PLANSTORE
     level: component
     status: review
+    ownedConcern:
+      Artifact ports, compiled-code storage, and runtime artifact reader ownership for PlanStore.
+    publicApi:
+      - packages/@dvt/artifacts/src/index.ts
+      - packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
+      - packages/@dvt/artifacts/src/runtime/validateArtifactIntegrity.ts
     owns:
       - packages/@dvt/artifacts/**
     excludes:
@@ -646,6 +657,10 @@ units:
     parent: SYS-PLANSTORE
     level: component
     status: review
+    ownedConcern: Postgres PlanStore persistence adapter ownership.
+    publicApi:
+      - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
+      - packages/@dvt/adapter-postgres/src/PostgresPlanStoreComposer.ts
     owns:
       - packages/@dvt/adapter-postgres/src/PostgresPlanStore*.ts
       - packages/@dvt/adapter-postgres/test/PostgresPlanStore*.ts
@@ -665,6 +680,11 @@ units:
     parent: SYS-PLANSTORE
     level: component
     status: review
+    ownedConcern: API stored-plan composition, planRef parsing, and artifact resolver ownership.
+    publicApi:
+      - apps/api/src/application/services/StoredExecutablePlanResolver.ts
+      - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
+      - apps/api/src/entrypoints/http/planRoutePlanRefParser.ts
     owns:
       - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
       - apps/api/src/application/services/StoredExecutablePlanResolver.ts
@@ -697,6 +717,13 @@ units:
     parent: SYS-PLANSTORE
     level: component
     status: review
+    ownedConcern:
+      Temporal PlanStore artifact, planRef workflow boundary, and worker store composition
+      ownership.
+    publicApi:
+      - packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts
+      - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
+      - apps/temporal-worker/src/runtime/temporalWorkerStores.ts
     owns:
       - apps/temporal-worker/src/runtime/runtimeTypes.ts
       - apps/temporal-worker/src/runtime/temporalWorkerRuntimeHandle.ts
@@ -726,6 +753,10 @@ units:
     parent: SYS-PLANSTORE
     level: component
     status: review
+    ownedConcern: Engine-side planRef policy exception and plan integrity validator ownership.
+    publicApi:
+      - packages/@dvt/engine/src/security/planRefPolicy.ts
+      - packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
     owns:
       - packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts
       - packages/@dvt/engine/src/security/planRefPolicy.ts
@@ -747,6 +778,10 @@ units:
     parent: SYS-PLANSTORE
     level: component
     status: review
+    ownedConcern: PlanStore-specific documentation, review, evidence, and risk ownership.
+    publicApi:
+      - docs/planning/status/system-governance-planstore-file-ownership-20260501.md
+      - docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md
     owns:
       - docs/adr/ADR-0043-plan-record-plan-store-and-artifacts-ownership.md
       - docs/adr/adr-0052-planref-continuation-safety.md

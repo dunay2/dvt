@@ -136,6 +136,47 @@ function buildUnitPath(unit, unitById) {
   return path;
 }
 
+const semanticUnitFields = [
+  'ownedConcern',
+  'responsibilities',
+  'nonGoals',
+  'reasonsToChange',
+  'publicApi',
+  'invariants',
+  'transitions',
+  'consumers',
+];
+
+function addNonEmptyField(target, source, field) {
+  const value = source[field];
+  if (Array.isArray(value)) {
+    if (value.length > 0) {
+      target[field] = value;
+    }
+    return;
+  }
+
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim();
+    if (trimmedValue.length > 0) {
+      target[field] = value;
+    }
+    return;
+  }
+
+  if (value !== undefined && value !== null) {
+    target[field] = value;
+  }
+}
+
+function buildSemanticUnitFields(unit) {
+  const fields = {};
+  for (const field of semanticUnitFields) {
+    addNonEmptyField(fields, unit, field);
+  }
+  return fields;
+}
+
 function buildUnitReferences(unitPath) {
   return unitPath.map((unit) => ({
     id: unit.id,
@@ -143,6 +184,7 @@ function buildUnitReferences(unitPath) {
     level: unit.level || 'unknown',
     status: unit.status || 'unknown',
     governance: unit.governance || [],
+    ...buildSemanticUnitFields(unit),
   }));
 }
 
@@ -362,6 +404,7 @@ function buildComponentEntries(units, fileEntries, unitById = buildUnitIndex(uni
         cqRails: unit.cqRails || 'none',
         owns: unit.owns || [],
         excludes: unit.excludes || [],
+        ...buildSemanticUnitFields(unit),
         governance: unit.governance || [],
         fowlerSignals: unit.fowlerSignals || [],
       };

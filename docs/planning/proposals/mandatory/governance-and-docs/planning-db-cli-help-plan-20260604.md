@@ -127,3 +127,198 @@ symbols:
   - { name: path, path: scripts/planning-db-query.test.cjs, dddOwner: PlanningDbQueryCliHelp, cqRails: [RunPlanningDbQueryHelp], fowlerSignals: [Semantic Fitness Function], architectureGuard: node --test scripts/planning-db-query.test.cjs, cypressCoverage: N/A, unitTests: [node --test scripts/planning-db-query.test.cjs] }
   - { name: runPlanningDbQueryCli, path: scripts/planning-db-query.test.cjs, dddOwner: PlanningDbQueryCliHelp, cqRails: [RunPlanningDbQueryHelp], fowlerSignals: [Semantic Fitness Function], architectureGuard: node --test scripts/planning-db-query.test.cjs, cypressCoverage: N/A, unitTests: [node --test scripts/planning-db-query.test.cjs] }
 ```
+
+## Web Component DB Map Addendum
+
+This addendum covers the unattended follow-up requested in the same prompt:
+map real `apps/web` components into the Planning DB so `SYS-WEB-ROOT` stops
+owning files directly.
+
+### Current And Target Shape
+
+```mermaid
+flowchart LR
+  Root["SYS-WEB-ROOT owns apps/web/**"]
+  Drift["file_without_leaf_component"]
+  Command["CreateGovernanceComponent"]
+  Leaves["web leaf components"]
+  Files["component_engineering.file_ownership_query"]
+
+  Root --> Drift
+  Drift --> Command
+  Command --> Leaves
+  Leaves --> Files
+```
+
+Target rule: `SYS-WEB-ROOT` remains the umbrella. Existing directories and
+top-level file groups own files only when they have a distinct reason to
+change.
+
+### Web Component Fowler Matrix
+
+<!-- markdownlint-disable MD060 -->
+
+| Scenario                                           | Opportunity             | Fowler pattern                        | DDD owner                 | Rail                        | Validation                                                           | Out of scope                 |
+| -------------------------------------------------- | ----------------------- | ------------------------------------- | ------------------------- | --------------------------- | -------------------------------------------------------------------- | ---------------------------- |
+| `SYS-WEB-ROOT` owns every web file.                | Responsibility overload | Extract component by reason-to-change | Web governance components | `CreateGovernanceComponent` | `component-drift --component SYS-WEB-ROOT` returns no rows           | Component update/delete rail |
+| Top-level view files sit beside nested view dirs.  | Boundary drift          | Separate entrypoint from feature body | Web view entrypoints      | `CreateGovernanceComponent` | `files --component SYS-WEB-VIEW-ENTRYPOINTS` returns top-level views | Moving source files          |
+| Shell test support sits beside product root files. | Test-only confidence    | Split test support ownership          | Web shell test support    | `CreateGovernanceComponent` | `files --component SYS-WEB-APP-SHELL-TEST-SUPPORT` returns support   | Changing tests               |
+
+<!-- markdownlint-enable MD060 -->
+
+Created or verified through `CreateGovernanceComponent`: `SYS-WEB-APP-SHELL`,
+`SYS-WEB-APP-SHELL-TEST-SUPPORT`, `SYS-WEB-APP-BOOTSTRAP`,
+`SYS-WEB-APP-COMPONENTS`, `SYS-WEB-APP-PLUGINS`, `SYS-WEB-APP-PORTS`,
+`SYS-WEB-APP-QUERIES`, `SYS-WEB-APP-SERVICES`, `SYS-WEB-APP-STORES`,
+`SYS-WEB-APP-TYPES`, `SYS-WEB-APP-TESTING`,
+`SYS-WEB-SRC-CAPABILITIES`, `SYS-WEB-SRC-STYLES`,
+`SYS-WEB-VIEW-ENTRYPOINTS`, `SYS-WEB-VIEW-ADMIN`,
+`SYS-WEB-VIEW-ARTIFACTS`, `SYS-WEB-VIEW-CANVAS`, `SYS-WEB-VIEW-CODE`,
+`SYS-WEB-VIEW-COST`, `SYS-WEB-VIEW-DIFF`, `SYS-WEB-VIEW-LINEAGE`,
+`SYS-WEB-VIEW-PLUGINS`, `SYS-WEB-VIEW-RUNS`,
+`SYS-WEB-VIEW-TEMPLATES`, `SYS-WEB-E2E-CYPRESS`, `SYS-WEB-TOOLING`,
+`SYS-WEB-STATIC-ASSETS`, and `SYS-WEB-DOCS`.
+
+Evidence commands:
+
+- `pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100`
+- `pnpm planning:db:query files --component SYS-WEB-ROOT --limit 100`
+- `pnpm planning:db:query files --component SYS-WEB-VIEW-ENTRYPOINTS --limit 80`
+- `pnpm planning:db:query files --component SYS-WEB-APP-SHELL-TEST-SUPPORT --limit 20`
+
+```feature-mechanization
+version: 1
+featureId: WEB-COMPONENT-DB-MAP-20260604
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/planning-db-cli-help-plan-20260604.md
+componentGuides:
+  - docs/architecture/components/ci-governance/component-engineering-record-component.md
+  - docs/architecture/components/ci-governance/component-engineering-invariants.md
+userStories:
+  - docs/architecture/components/ci-governance/component-engineering-record-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/planning/status/db-surface-inventory.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/governance-and-docs/planning-db-cli-help-plan-20260604.md
+  - docs/.manifest.json
+  - docs/**/index.md
+  - docs/planning/status/**
+  - scripts/generate-governance-file-component-index.cjs
+  - scripts/generate-governance-file-component-index.test.cjs
+forbiddenImplementationSurfaces:
+  - apps/web/src/**
+  - apps/api/**
+  - packages/@dvt/contracts/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+  - specs/contracts/**
+commandQueryRails:
+  - name: CreateGovernanceComponent
+    type: command
+    dddOwner: GovernanceComponentDefinition
+  - name: ReadComponentDrift
+    type: query
+    dddOwner: ComponentEngineeringReadModel
+  - name: ReadComponentFiles
+    type: query
+    dddOwner: ComponentEngineeringReadModel
+domainObjects:
+  - name: WebGovernanceComponentBatch
+    type: governance component definitions
+    owner: Web application governance
+fowlerSignals:
+  - Responsibility overload
+  - Boundary drift
+  - Test-only confidence
+architectureGuards:
+  - pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
+  - pnpm planning:db:query files --component SYS-WEB-ROOT --limit 100
+  - node --test scripts/generate-governance-file-component-index.test.cjs
+cypressFlows:
+  - N/A - governance DB component registry only
+completionGate:
+  - pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
+  - pnpm planning:db:query files --component SYS-WEB-ROOT --limit 100
+  - node --test scripts/generate-governance-file-component-index.test.cjs
+  - pnpm docs:sync
+  - pnpm governance:refresh
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: web-root-component-map
+    redTest: pnpm planning:db:query component-metadata --component SYS-WEB-ROOT --limit 50
+    expectedFailure: SYS-WEB-ROOT reports file_without_leaf_component because web files have no narrower component owner.
+    patchSurfaces:
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-cli-help-plan-20260604.md
+    greenTest: pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
+  - id: governance-component-metadata-db-import
+    redTest: node --test scripts/generate-governance-file-component-index.test.cjs
+    expectedFailure: generated component entries drop ownedConcern/publicApi metadata before Planning DB import.
+    patchSurfaces:
+      - scripts/generate-governance-file-component-index.cjs
+      - scripts/generate-governance-file-component-index.test.cjs
+    greenTest: node --test scripts/generate-governance-file-component-index.test.cjs
+symbols:
+  - name: WebGovernanceComponentBatch
+    path: docs/planning/proposals/mandatory/governance-and-docs/planning-db-cli-help-plan-20260604.md
+    dddOwner: GovernanceComponentDefinition
+    cqRails:
+      - CreateGovernanceComponent
+      - ReadComponentDrift
+      - ReadComponentFiles
+    fowlerSignals:
+      - Responsibility overload
+      - Boundary drift
+      - Test-only confidence
+    architectureGuard: pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
+    cypressCoverage: N/A
+    unitTests:
+      - pnpm planning:db:query component-drift --component SYS-WEB-ROOT --limit 100
+      - pnpm planning:db:query files --component SYS-WEB-ROOT --limit 100
+  - name: semanticUnitFields
+    path: scripts/generate-governance-file-component-index.cjs
+    dddOwner: Governance component import semantic field policy
+    cqRails:
+      - CreateGovernanceComponent
+      - ReadComponentDrift
+    fowlerSignals:
+      - Boundary drift
+      - Semantic Fitness Function
+    architectureGuard: node --test scripts/generate-governance-file-component-index.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/generate-governance-file-component-index.test.cjs
+  - name: addNonEmptyField
+    path: scripts/generate-governance-file-component-index.cjs
+    dddOwner: Governance component import semantic field policy
+    cqRails:
+      - CreateGovernanceComponent
+      - ReadComponentDrift
+    fowlerSignals:
+      - Preserve Whole Object
+      - Semantic Fitness Function
+    architectureGuard: node --test scripts/generate-governance-file-component-index.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/generate-governance-file-component-index.test.cjs
+  - name: buildSemanticUnitFields
+    path: scripts/generate-governance-file-component-index.cjs
+    dddOwner: Governance component import semantic field policy
+    cqRails:
+      - CreateGovernanceComponent
+      - ReadComponentDrift
+    fowlerSignals:
+      - Preserve Whole Object
+      - Boundary drift
+    architectureGuard: node --test scripts/generate-governance-file-component-index.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/generate-governance-file-component-index.test.cjs
+```

@@ -6,10 +6,12 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
+import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
+import { canvasViewCopy } from './copy';
 
 type DvtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -31,14 +33,26 @@ export function DvtAuthoringFields({
   }
 
   const selectClassName = graphVisualClasses.inspectorSelectInput;
+  const materializationOptions = [
+    { value: 'table', label: canvasViewCopy.inspectorDvtMaterializationTableLabel },
+    { value: 'view', label: canvasViewCopy.inspectorDvtMaterializationViewLabel },
+  ] as const;
+  const writeModeOptions = [
+    { value: 'replace', label: canvasViewCopy.inspectorDvtWriteModeReplaceLabel },
+    { value: 'append', label: canvasViewCopy.inspectorDvtWriteModeAppendLabel },
+  ] as const;
 
   if (draft.dvt.kind === 'source') {
     return (
       <div className={graphVisualClasses.inspectorDbtSection}>
-        <h3 className={graphVisualClasses.contextPanelSectionTitle}>DVT source</h3>
+        <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+          {canvasViewCopy.inspectorDvtSourceTitle}
+        </h3>
         <div className="grid grid-cols-1 gap-3">
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>Schema</Label>
+            <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>
+              {canvasViewCopy.inspectorDvtSchemaLabel}
+            </Label>
             <Input
               id={`inspector-dvt-source-schema-${node.id}`}
               name="dvt-source-schema"
@@ -57,11 +71,15 @@ export function DvtAuthoringFields({
               }
             />
             {errors.dvt?.schema ? (
-              <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.schema}</p>
+              <p className={graphVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.dvt.schema, canvasViewCopy)}
+              </p>
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dvt-source-table-${node.id}`}>Table</Label>
+            <Label htmlFor={`inspector-dvt-source-table-${node.id}`}>
+              {canvasViewCopy.inspectorDvtTableLabel}
+            </Label>
             <Input
               id={`inspector-dvt-source-table-${node.id}`}
               name="dvt-source-table"
@@ -80,11 +98,15 @@ export function DvtAuthoringFields({
               }
             />
             {errors.dvt?.table ? (
-              <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.table}</p>
+              <p className={graphVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.dvt.table, canvasViewCopy)}
+              </p>
             ) : null}
           </div>
           <div className="space-y-2">
-            <Label htmlFor={`inspector-dvt-source-alias-${node.id}`}>Alias</Label>
+            <Label htmlFor={`inspector-dvt-source-alias-${node.id}`}>
+              {canvasViewCopy.inspectorDvtAliasLabel}
+            </Label>
             <Input
               id={`inspector-dvt-source-alias-${node.id}`}
               name="dvt-source-alias"
@@ -103,7 +125,9 @@ export function DvtAuthoringFields({
               }
             />
             {errors.dvt?.alias ? (
-              <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.alias}</p>
+              <p className={graphVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.dvt.alias, canvasViewCopy)}
+              </p>
             ) : null}
           </div>
         </div>
@@ -114,9 +138,13 @@ export function DvtAuthoringFields({
   if (draft.dvt.kind === 'sql_transform') {
     return (
       <div className={graphVisualClasses.inspectorDbtSection}>
-        <h3 className={graphVisualClasses.contextPanelSectionTitle}>DVT SQL transform</h3>
+        <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+          {canvasViewCopy.inspectorDvtSqlTransformTitle}
+        </h3>
         <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-transform-sql-${node.id}`}>SQL</Label>
+          <Label htmlFor={`inspector-dvt-transform-sql-${node.id}`}>
+            {canvasViewCopy.inspectorDvtSqlLabel}
+          </Label>
           <Textarea
             id={`inspector-dvt-transform-sql-${node.id}`}
             name="dvt-transform-sql"
@@ -135,7 +163,9 @@ export function DvtAuthoringFields({
             }
           />
           {errors.dvt?.sql ? (
-            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.sql}</p>
+            <p className={graphVisualClasses.inspectorErrorText}>
+              {formatCanvasInspectorNodeDraftError(errors.dvt.sql, canvasViewCopy)}
+            </p>
           ) : null}
         </div>
       </div>
@@ -144,10 +174,14 @@ export function DvtAuthoringFields({
 
   return (
     <div className={graphVisualClasses.inspectorDbtSection}>
-      <h3 className={graphVisualClasses.contextPanelSectionTitle}>DVT sink</h3>
+      <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+        {canvasViewCopy.inspectorDvtSinkTitle}
+      </h3>
       <div className="grid grid-cols-1 gap-3">
         <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-schema-${node.id}`}>Schema</Label>
+          <Label htmlFor={`inspector-dvt-sink-schema-${node.id}`}>
+            {canvasViewCopy.inspectorDvtSchemaLabel}
+          </Label>
           <Input
             id={`inspector-dvt-sink-schema-${node.id}`}
             name="dvt-sink-schema"
@@ -166,11 +200,15 @@ export function DvtAuthoringFields({
             }
           />
           {errors.dvt?.schema ? (
-            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.schema}</p>
+            <p className={graphVisualClasses.inspectorErrorText}>
+              {formatCanvasInspectorNodeDraftError(errors.dvt.schema, canvasViewCopy)}
+            </p>
           ) : null}
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-table-${node.id}`}>Table</Label>
+          <Label htmlFor={`inspector-dvt-sink-table-${node.id}`}>
+            {canvasViewCopy.inspectorDvtTableLabel}
+          </Label>
           <Input
             id={`inspector-dvt-sink-table-${node.id}`}
             name="dvt-sink-table"
@@ -189,11 +227,15 @@ export function DvtAuthoringFields({
             }
           />
           {errors.dvt?.table ? (
-            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.table}</p>
+            <p className={graphVisualClasses.inspectorErrorText}>
+              {formatCanvasInspectorNodeDraftError(errors.dvt.table, canvasViewCopy)}
+            </p>
           ) : null}
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-materialization-${node.id}`}>Materialization</Label>
+          <Label htmlFor={`inspector-dvt-sink-materialization-${node.id}`}>
+            {canvasViewCopy.inspectorDvtMaterializationLabel}
+          </Label>
           <select
             id={`inspector-dvt-sink-materialization-${node.id}`}
             name="dvt-sink-materialization"
@@ -212,15 +254,22 @@ export function DvtAuthoringFields({
               )
             }
           >
-            <option value="table">table</option>
-            <option value="view">view</option>
+            {materializationOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
           {errors.dvt?.materialization ? (
-            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.materialization}</p>
+            <p className={graphVisualClasses.inspectorErrorText}>
+              {formatCanvasInspectorNodeDraftError(errors.dvt.materialization, canvasViewCopy)}
+            </p>
           ) : null}
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`inspector-dvt-sink-write-mode-${node.id}`}>Write mode</Label>
+          <Label htmlFor={`inspector-dvt-sink-write-mode-${node.id}`}>
+            {canvasViewCopy.inspectorDvtWriteModeLabel}
+          </Label>
           <select
             id={`inspector-dvt-sink-write-mode-${node.id}`}
             name="dvt-sink-write-mode"
@@ -239,11 +288,16 @@ export function DvtAuthoringFields({
               )
             }
           >
-            <option value="replace">replace</option>
-            <option value="append">append</option>
+            {writeModeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
           {errors.dvt?.writeMode ? (
-            <p className={graphVisualClasses.inspectorErrorText}>{errors.dvt.writeMode}</p>
+            <p className={graphVisualClasses.inspectorErrorText}>
+              {formatCanvasInspectorNodeDraftError(errors.dvt.writeMode, canvasViewCopy)}
+            </p>
           ) : null}
         </div>
       </div>
