@@ -408,6 +408,13 @@ describe('web Vitest suite partition', () => {
       suites: ['architecture'],
     });
     expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/scripts/run-vitest-changed-suites.ts'])
+    ).toMatchObject({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
+      requiresDependencies: true,
+      suites: ['architecture'],
+    });
+    expect(
       resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-unit.config.ts'])
     ).toMatchObject({
       commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],

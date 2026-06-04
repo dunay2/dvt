@@ -465,6 +465,8 @@ function isWebVitestGovernancePath(filePath: string): boolean {
   return (
     /^apps\/web\/vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
     /^vitest(?:\.suites|(?:\.[a-z-]+)?\.config)\.ts$/.test(normalizedPath) ||
+    normalizedPath === 'apps/web/scripts/run-vitest-changed-suites.ts' ||
+    normalizedPath === 'scripts/run-vitest-changed-suites.ts' ||
     normalizedPath === 'apps/web/package.json' ||
     normalizedPath === 'package.json' ||
     normalizedPath === '.github/workflows/test.yml' ||
