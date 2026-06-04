@@ -69,8 +69,8 @@ stateDiagram-v2
 ## Semantic Fitness Function
 
 `tools/ci/planning-review-canon.test.mjs` validates that planning review
-canonization has a plan, component guide, user stories, mailbox analysis, board
-notes, and consistent rails.
+canonization has a plan, component guide, user stories, board notes, canonical
+Fowler mechanization tokens, and consistent rails.
 
 The test prevents a future regression where review or sprint docs imply
 executable work without a Planning DB task.

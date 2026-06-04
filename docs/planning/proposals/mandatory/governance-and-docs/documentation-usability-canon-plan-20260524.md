@@ -53,6 +53,13 @@ component guide, user stories, and mailbox analysis now share the same rails:
 - `QueryDocumentationConsultationPath`
 - `ValidateDocumentationUsefulness`
 
+## Applied Pattern
+
+The applied pattern is a consultation-path read model with explicit entry-point
+classification. Reader intent is translated into canonical documentation
+routes, while usefulness validation checks the semantic outcome instead of only
+formatting, link health, or generated index shape.
+
 ## User Stories
 
 1. As a new contributor, I want one consultation path for concepts, roadmap,

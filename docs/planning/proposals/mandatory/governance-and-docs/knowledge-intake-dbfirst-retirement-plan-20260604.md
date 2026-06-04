@@ -68,12 +68,12 @@ DB-backed fixtures.
 
 <!-- markdownlint-disable MD060 -->
 
-| Scenario                                                    | Opportunity          | Fowler pattern             | DDD owner                            | Command/query rail              | Implementation surfaces                                     | Tests                                                                                 | Out of scope                            |
-| ----------------------------------------------------------- | -------------------- | -------------------------- | ------------------------------------ | ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------- |
-| Agents need to know which intake files can be retired       | Hidden authority     | Explicit Read Model        | `KnowledgeIntakeRetirementReadModel` | `ListKnowledgeIntakeRetirement` | Planning DB migration, query module, CLI router             | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs` | Deleting `buzon/`                       |
-| Analysis literature exists in prose and DB at the same time | Duplicate semantics  | Repository / Query Service | Knowledge intake read model          | `ListKnowledgeIntakeRetirement` | DB view over `knowledge_documents`, links, and action rows  | Migration test for view columns and query test for DB view usage                      | Full literature generator               |
-| Agents need to retire active `buzon` backrefs without `rg`  | Hidden coupling      | Explicit Read Model        | `KnowledgeIntakeRetirementReadModel` | `ListKnowledgeIntakeRetirement` | Query module and CLI router over `knowledge_document_links` | `node --test scripts/planning-db-query.test.cjs`                                      | Automatic physical deletion             |
-| Tests directly read raw `buzon` files as semantic proof     | Test-only confidence | Semantic fitness function  | CI governance                        | existing canon query rails      | Later guard migration                                       | Later tests must assert DB-backed dispositions instead of raw file strings            | Rewriting every existing canon test now |
+| Scenario                                                    | Opportunity          | Fowler pattern             | DDD owner                            | Command/query rail              | Implementation surfaces                                     | Tests                                                                                 | Out of scope                          |
+| ----------------------------------------------------------- | -------------------- | -------------------------- | ------------------------------------ | ------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------- |
+| Agents need to know which intake files can be retired       | Hidden authority     | Explicit Read Model        | `KnowledgeIntakeRetirementReadModel` | `ListKnowledgeIntakeRetirement` | Planning DB migration, query module, CLI router             | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs` | Deleting `buzon/`                     |
+| Analysis literature exists in prose and DB at the same time | Duplicate semantics  | Repository / Query Service | Knowledge intake read model          | `ListKnowledgeIntakeRetirement` | DB view over `knowledge_documents`, links, and action rows  | Migration test for view columns and query test for DB view usage                      | Full literature generator             |
+| Agents need to retire active `buzon` backrefs without `rg`  | Hidden coupling      | Explicit Read Model        | `KnowledgeIntakeRetirementReadModel` | `ListKnowledgeIntakeRetirement` | Query module and CLI router over `knowledge_document_links` | `node --test scripts/planning-db-query.test.cjs`                                      | Automatic physical deletion           |
+| Tests directly read raw `buzon` files as semantic proof     | Test-only confidence | Semantic fitness function  | CI governance                        | existing canon query rails      | Shared canonization guard plus `tools/ci/*canon.test.mjs`   | Canon tests assert canonical plan mechanization instead of raw file strings           | Rewriting non-canon package tests now |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -116,6 +116,9 @@ allowedImplementationSurfaces:
   - scripts/planning-db-migrate.test.cjs
   - scripts/planning-db-surface-inventory-check.cjs
   - scripts/verify-changed.test.cjs
+  - tools/ci/*canon.test.mjs
+  - tools/ci/canonization-guard.mjs
+  - tools/ci/canonization-guard.test.mjs
   - tools/planning-db/knowledge/documentLinks.cjs
   - tools/planning-db/knowledge/documentSnapshot.test.cjs
   - tools/planning-db/migrations/057_knowledge_intake_retirement_query.sql
@@ -146,11 +149,13 @@ fowlerSignals:
 architectureGuards:
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
   - node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs
+  - node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
 cypressFlows:
   - N/A - Planning DB governance query only; no browser runtime behavior changes.
 completionGate:
   - node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
   - pnpm planning:db:import -- --governance-only
   - pnpm planning:db:query knowledge-intake --limit 10
   - pnpm planning:db:query knowledge-intake --references --limit 10
@@ -203,6 +208,18 @@ redGreenCycles:
       - scripts/planning-db-query.test.cjs
       - scripts/planning-db-surface-inventory-check.cjs
     greenTest: node --test scripts/planning-db-query.test.cjs
+  - id: knowledge-intake-canon-test-decoupling
+    redTest: node --test tools/ci/canonization-guard.test.mjs
+    expectedFailure: canonization tests have no shared guard for canonical plans and still depend on raw buzon analysis files.
+    patchSurfaces:
+      - docs/architecture/components/ci-governance/**
+      - docs/architecture/components/api/runtime-review-canon-component.md
+      - docs/architecture/components/web/graph/canvas-fowler-canon-component.md
+      - docs/architecture/components/web/workbench-ux-canon-component.md
+      - tools/ci/*canon.test.mjs
+      - tools/ci/canonization-guard.mjs
+      - tools/ci/canonization-guard.test.mjs
+    greenTest: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
 symbols:
   - name: createKnowledgeIntakeRetirementGuardComponent
     path: scripts/planning-db/knowledge-intake-retirement-guard.cjs
@@ -300,12 +317,108 @@ symbols:
     architectureGuard: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
     cypressCoverage: N/A - unit test dependency.
     unitTests: [node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs]
+  - name: createCanonizationGuard
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: defaultCanonizationGuard
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: requiredCanonPlanTokens
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: requiredFowlerAnalysisCategories
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: requiredComponentGuideHeadings
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: assertCanonPlan
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: assertComponentGuide
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: assertContains
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: assertFilesExist
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: assertTextContains
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: readRepoFile
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
+  - name: escapeRegExp
+    path: tools/ci/canonization-guard.mjs
+    dddOwner: CI canonization semantic guard
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Semantic fitness function]
+    architectureGuard: node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
+    cypressCoverage: N/A - CI governance tests.
+    unitTests: [node --test tools/ci/canonization-guard.test.mjs]
 ```
 
 ## Next Slices
 
-1. Replace canon tests that read `buzon/*.md` directly with DB-backed
-   disposition fixtures.
+1. Replace non-canon package and app architecture tests that read `buzon/*.md`
+   directly with DB-backed disposition fixtures or canonical plan assertions.
 2. Add a generated literature page from `knowledge_intake_retirement_query`.
 3. Block new active docs from requiring new `buzon/` analysis files.
 4. Remove or archive only the intake files whose DB state is `canonized` and

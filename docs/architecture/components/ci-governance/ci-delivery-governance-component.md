@@ -16,13 +16,13 @@ assertion.
 
 ## Public API
 
-| Surface                                          | Owner               | Contract                                                                                                               |
-| ------------------------------------------------ | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:ci-tools`                             | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                             |
-| `.github/workflows/ci.yml` `CI tool contracts`   | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                          |
-| `tools/ci/workflow-pattern-parity.test.mjs`      | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters.           |
-| `tools/ci/ci-delivery-governance-canon.test.mjs` | CI governance tests | Canonical absorption guard for the local component guide, user stories, Fowler analysis, and mandatory proposal state. |
-| `docs/guides/testing-and-ci-capabilities.md`     | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                           |
+| Surface                                          | Owner               | Contract                                                                                                     |
+| ------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `pnpm test:ci-tools`                             | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                   |
+| `.github/workflows/ci.yml` `CI tool contracts`   | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                |
+| `tools/ci/workflow-pattern-parity.test.mjs`      | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters. |
+| `tools/ci/ci-delivery-governance-canon.test.mjs` | CI governance tests | Canonical absorption guard for the local component guide, user stories, and mandatory proposal state.        |
+| `docs/guides/testing-and-ci-capabilities.md`     | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                 |
 
 Command/query rail:
 
@@ -50,7 +50,7 @@ Command/query rail:
 stateDiagram-v2
   [*] --> Planned: delivery action plan records residual gap
   Planned --> Implemented: workflow and tool tests land
-  Implemented --> Canonized: component guide, user stories, analysis, and semantic guard align
+  Implemented --> Canonized: component guide, user stories, plan state, and semantic guard align
   Canonized --> Regression: workflow loses CI tool lane or plan reopens absorbed work
   Regression --> Canonized: restore wiring and docs/test alignment
 ```

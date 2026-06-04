@@ -4,8 +4,15 @@
  * a parallel board-file backlog.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+
+import {
+  assertCanonPlan,
+  assertContains,
+  assertFilesExist,
+  escapeRegExp,
+  readRepoFile,
+} from './canonization-guard.mjs';
 
 const requiredFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md',
@@ -15,31 +22,12 @@ const requiredFiles = [
   'docs/architecture/components/ci-governance/planning-review-canon-component.md',
   'docs/architecture/components/ci-governance/planning-review-canon-user-stories.md',
   'docs/architecture/components/ci-governance/index.md',
-  'buzon/20260524-codex-fowler-planning-review-canon.md',
 ];
 
-function readRepoFile(path) {
-  return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
-}
-
-function assertContains(path, expected) {
-  assert.match(
-    readRepoFile(path),
-    typeof expected === 'string' ? new RegExp(escapeRegExp(expected)) : expected,
-    `${path} must contain ${expected.toString()}`
-  );
-}
-
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 test('planning review canonization preserves DB-first review intake semantics', () => {
-  for (const path of requiredFiles) {
-    assert.doesNotThrow(() => readRepoFile(path), `${path} must exist`);
-  }
+  assertFilesExist(requiredFiles);
 
-  const plan = readRepoFile(
+  const plan = assertCanonPlan(
     'docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md'
   );
   for (const rail of [
@@ -84,21 +72,6 @@ test('planning review canonization preserves DB-first review intake semantics', 
     'Agent selects the next task from DB state',
   ]) {
     assert.match(userStories, new RegExp(escapeRegExp(scenario)));
-  }
-
-  const analysis = readRepoFile('buzon/20260524-codex-fowler-planning-review-canon.md');
-  for (const section of [
-    '## Fowler Analysis',
-    '## Mature-System Comparison',
-    '## Improved Patterns',
-    '## Antipatterns',
-    '## Component Grouping',
-    '## Future Lessons',
-    '## Repetition And Drift',
-    '## Applied Pattern',
-    '## Opportunities',
-  ]) {
-    assert.match(analysis, new RegExp(escapeRegExp(section)));
   }
 
   assertContains(

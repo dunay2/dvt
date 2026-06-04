@@ -33,8 +33,8 @@ component_type: governance
 - `ValidateDocumentationUsefulness` cannot pass when a governed docs change
   removes the reader path to concepts, status, decisions, contracts, or
   verification.
-- Docs, proposal, component guide, user stories, mailbox analysis, and semantic
-  test must name the same rails.
+- Docs, proposal, component guide, user stories, canonical Fowler
+  mechanization, and semantic test must name the same rails.
 
 ## Transitions
 
@@ -78,8 +78,8 @@ stateDiagram-v2
 
 `tools/ci/documentation-usability-canon.test.mjs` validates that the canon
 plan, component guide, user stories, documentation-governance domain, original
-usability proposal, and mailbox analysis exist together and name the same
-rails.
+usability proposal, and canonical Fowler mechanization tokens exist together
+and name the same rails.
 
 The test protects consultation semantics and usefulness ownership, not only
 markdown syntax or link validity.

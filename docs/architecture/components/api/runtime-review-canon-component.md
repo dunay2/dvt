@@ -40,8 +40,8 @@ canonical runtime rail, a closed task, or an explicit future task.
   not as an implicit queue.
 - New protected runtime route behavior must reuse the existing command/query
   rail catalog before creating another route, service, mock, or document name.
-- The component guide, user stories, review board, and buzón analysis must stay
-  aligned so docs do not drift from planning state.
+- The component guide, user stories, review board, and canonical Fowler
+  mechanization must stay aligned so docs do not drift from planning state.
 
 ## Transitions
 
@@ -88,7 +88,7 @@ than file shape. It requires:
   and semantic fitness-function sections;
 - user stories for runtime maintainer, API maintainer, and planning steward
   personas;
-- a Fowler analysis in `buzon/`;
+- canonical Fowler mechanization tokens in the runtime review canon plan;
 - execution-runtime domain navigation to the canon plan.
 
 ## Current Architecture

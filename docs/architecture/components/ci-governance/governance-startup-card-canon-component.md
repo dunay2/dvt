@@ -32,8 +32,8 @@ component_type: governance
 - `contracts`, `ci`, and `cross-cutting` routes always require deeper reading.
 - No second active governance inventory or startup note may own the same
   product intent.
-- Docs, proposal, component guide, user stories, mailbox analysis, and semantic
-  test must name the same rails.
+- Docs, proposal, component guide, user stories, canonical Fowler
+  mechanization, and semantic test must name the same rails.
 
 ## Transitions
 
@@ -75,9 +75,9 @@ stateDiagram-v2
 
 `tools/ci/startup-card-canon.test.mjs` validates that the canon plan, component
 guide, user stories, original router plan, documentation-governance domain, and
-mailbox analysis all retain the same rails. It also checks that the active
-inventory still lists every route: `code`, `docs`, `planning`, `contracts`,
-`ci`, and `cross-cutting`.
+canonical Fowler mechanization tokens all retain the same rails. It also checks
+that the active inventory still lists every route: `code`, `docs`, `planning`,
+`contracts`, `ci`, and `cross-cutting`.
 
 ## Current State Diagram
 

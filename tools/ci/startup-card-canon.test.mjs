@@ -3,8 +3,15 @@
  * semantic startup-card component instead of scattered orientation prose.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+
+import {
+  assertCanonPlan,
+  assertContains,
+  assertFilesExist,
+  escapeRegExp,
+  readRepoFile,
+} from './canonization-guard.mjs';
 
 const requiredFiles = [
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md',
@@ -12,7 +19,6 @@ const requiredFiles = [
   'docs/architecture/components/ci-governance/governance-startup-card-canon-user-stories.md',
   'docs/planning/domains/documentation-governance.md',
   'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-router-plan-20260402.md',
-  'buzon/20260524-codex-fowler-governance-startup-card-canon.md',
 ];
 
 const requiredRails = [
@@ -48,26 +54,11 @@ const requiredRouteBaselines = [
   },
 ];
 
-function readRepoFile(path) {
-  return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
-}
-
-function assertContains(path, expected) {
-  assert.match(
-    readRepoFile(path),
-    typeof expected === 'string' ? new RegExp(escapeRegExp(expected)) : expected,
-    `${path} must contain ${expected.toString()}`
-  );
-}
-
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 test('governance startup card canonization preserves routing semantics and baseline rails', () => {
-  for (const path of requiredFiles) {
-    assert.doesNotThrow(() => readRepoFile(path), `${path} must exist`);
-  }
+  assertFilesExist(requiredFiles);
+  assertCanonPlan(
+    'docs/planning/proposals/mandatory/governance-and-docs/governance-startup-card-canon-plan-20260524.md'
+  );
 
   for (const path of requiredFiles) {
     for (const rail of requiredRails) {
@@ -111,16 +102,5 @@ test('governance startup card canonization preserves routing semantics and basel
     'PR reviewer',
   ]) {
     assert.match(userStories, new RegExp(escapeRegExp(persona)));
-  }
-
-  const analysis = readRepoFile('buzon/20260524-codex-fowler-governance-startup-card-canon.md');
-  for (const section of [
-    '## Fowler Analysis',
-    '## Mature-System Comparison',
-    '## Antipatterns',
-    '## Drift',
-    '## Applied Pattern',
-  ]) {
-    assert.match(analysis, new RegExp(escapeRegExp(section)));
   }
 });

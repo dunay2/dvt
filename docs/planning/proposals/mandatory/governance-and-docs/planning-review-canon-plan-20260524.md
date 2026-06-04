@@ -42,6 +42,13 @@ The local implementation keeps that separation:
 - Planning DB is the write surface for claims, status, progress, dependencies,
   evidence, task creation, and closeout.
 
+## Drift And Repetition Fixed
+
+Planning review documents, sprint grouping notes, mailbox analysis, component
+guidance, and semantic tests now use one published language: review boards are
+intake, Planning DB tasks are executable work, and generated planning views are
+read models rather than write surfaces.
+
 ## Disposition
 
 `GD-REV-PLANNING-CANON` closes the governance gap where active review index and
