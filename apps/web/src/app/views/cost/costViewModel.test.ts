@@ -92,4 +92,32 @@ describe('costViewModel', () => {
   it('formats duration in seconds for runtime usage rows', () => {
     expect(formatDurationMs(1234)).toBe('1.2s');
   });
+
+  it('keeps render row identifiers unique across repeated terminal step attempts', () => {
+    const repeatedFailedStep = {
+      runId: 'run-1',
+      stepId: 'retrying-step',
+      eventType: 'StepFailed' as const,
+      durationMs: 1000,
+      costAmount: null,
+      currency: null,
+    };
+    const model = buildCostViewModel(
+      buildSummary({
+        failedStepCount: 2,
+        steps: [
+          repeatedFailedStep,
+          {
+            ...repeatedFailedStep,
+            durationMs: 1250,
+          },
+        ],
+      })
+    );
+
+    expect(new Set(model.costByModel.map((driver) => driver.id)).size).toBe(
+      model.costByModel.length
+    );
+    expect(new Set(model.costAlerts.map((alert) => alert.id)).size).toBe(model.costAlerts.length);
+  });
 });
