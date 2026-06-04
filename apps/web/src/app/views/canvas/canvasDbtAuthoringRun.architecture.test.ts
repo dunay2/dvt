@@ -24,7 +24,7 @@ const DBT_GRAPH_SOURCE = readArchitectureSiblingSource(
 );
 const INSPECTOR_SECTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  'CanvasInspectorAuthoringSection.tsx'
+  'DbtAuthoringFields.tsx'
 );
 const COMMAND_CATALOG_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -62,6 +62,8 @@ describe('canvas dbt authoring/code/run architecture', () => {
   it('keeps dbt card configuration in route-owned inspector authoring', () => {
     expect(INSPECTOR_SECTION_SOURCE).toContain('name="dbt-origin"');
     expect(INSPECTOR_SECTION_SOURCE).toContain('name="dbt-materialized"');
+    expect(INSPECTOR_SECTION_SOURCE).toContain('data-slot="dbt-generated-model-sql"');
+    expect(INSPECTOR_SECTION_SOURCE).not.toContain('name="dbt-model-sql"');
     expect(INSPECTOR_SECTION_SOURCE).not.toContain('workspaceService');
     expect(COMMAND_CATALOG_SOURCE).toContain('ConfigureCanvasDbtNode');
     expect(COMMAND_CATALOG_SOURCE).toContain('SelectDbtModelOrigin');

@@ -509,6 +509,9 @@ describe('CanvasInspectorPanel', () => {
     const materializedSelect = container.querySelector(
       'select[name="dbt-materialized"]'
     ) as HTMLSelectElement | null;
+    const generatedSqlPreview = container.querySelector('[data-slot="dbt-generated-model-sql"]');
+
+    expect(generatedSqlPreview?.textContent).toContain("{{ source('raw', 'orders') }}");
 
     await act(async () => {
       if (originSelect != null) {
@@ -528,6 +531,8 @@ describe('CanvasInspectorPanel', () => {
         materializedSelect.dispatchEvent(new Event('change', { bubbles: true }));
       }
     });
+
+    expect(generatedSqlPreview?.textContent).toContain("{{ source('staging', 'orders') }}");
 
     const applyButton = Array.from(container.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Apply')

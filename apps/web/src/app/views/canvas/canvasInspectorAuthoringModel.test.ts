@@ -123,6 +123,24 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual(['finance', 'critical']);
   });
 
+  it('keeps dbt model SQL ownership outside the route-owned generic inspector draft', () => {
+    expect(
+      validateCanvasInspectorNodeDraft({
+        name: 'Orders Model',
+        description: '',
+        tags: [],
+        dbt: {
+          packageName: 'analytics',
+          sourceName: 'raw',
+          schemaName: 'raw',
+          tableName: 'orders',
+          materialized: 'view',
+          selectedSourceId: 'source-orders',
+        },
+      })
+    ).toEqual({});
+  });
+
   it('creates DVT source authoring metadata from existing node config', () => {
     expect(
       createCanvasInspectorNodeDraft(
