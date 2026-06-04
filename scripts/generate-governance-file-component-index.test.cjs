@@ -454,6 +454,48 @@ test('buildComponentEntries counts owned files per component', () => {
   );
 });
 
+test('buildComponentEntries preserves component semantics in unit references for DB import', () => {
+  const semanticUnits = units.map((unit) =>
+    unit.id === 'SYS-REPO-METADATA-ROOT'
+      ? {
+          ...unit,
+          ownedConcern: 'Repository metadata and workspace configuration ownership.',
+          publicApi: ['package.json', 'pnpm workspace scripts'],
+          invariants: ['Repository metadata remains governed through explicit root files.'],
+          transitions: ['Workspace metadata changes update repository governance state.'],
+          consumers: ['CI scope detection', 'planning database imports'],
+        }
+      : unit
+  );
+  const fileEntries = buildFileEntries(['package.json'], semanticUnits, {
+    readFileBytes: () => Buffer.from('{"name":"dvt"}\n', 'utf8'),
+  });
+  const components = buildComponentEntries(semanticUnits, fileEntries);
+
+  const repoComponent = components.find((entry) => entry.id === 'SYS-REPO-METADATA-ROOT');
+  const repoReference = repoComponent.unitReferences.find(
+    (reference) => reference.id === 'SYS-REPO-METADATA-ROOT'
+  );
+
+  assert.equal(
+    repoComponent.ownedConcern,
+    'Repository metadata and workspace configuration ownership.'
+  );
+  assert.deepEqual(repoComponent.publicApi, ['package.json', 'pnpm workspace scripts']);
+  assert.equal(
+    repoReference.ownedConcern,
+    'Repository metadata and workspace configuration ownership.'
+  );
+  assert.deepEqual(repoReference.publicApi, ['package.json', 'pnpm workspace scripts']);
+  assert.deepEqual(repoReference.invariants, [
+    'Repository metadata remains governed through explicit root files.',
+  ]);
+  assert.deepEqual(repoReference.transitions, [
+    'Workspace metadata changes update repository governance state.',
+  ]);
+  assert.deepEqual(repoReference.consumers, ['CI scope detection', 'planning database imports']);
+});
+
 test('buildFileIndexManifest splits file rows into deterministic unit shards', () => {
   const fileEntries = [
     {
