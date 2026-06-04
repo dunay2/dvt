@@ -9,12 +9,17 @@ last_reviewed: 2026-06-02
 
 ## Purpose
 
-This component owns route-local contextual interaction semantics for the Canvas
-viewport and node shell.
+This component owns the route-local contextual interaction contract for Canvas
+graph targets.
 
 It turns a user gesture on a graph background, edge, or node into an
 intention-revealing command model without making React Flow, the browser context
 menu, a node renderer, or a toolbar dropdown the source of graph meaning.
+
+It does not own viewport state, node-shell rendering, node identity, graph
+lifecycle mutation, or Inspector content. Those concerns stay in their owning
+components; this component only normalizes target gestures into rail-backed
+context-menu read models and routes selected actions to existing command seams.
 
 ## Governing Sources
 
@@ -68,12 +73,13 @@ Related command seams:
 
 ## File Responsibilities
 
-- `canvasInteractionCommandSurface.ts`: pure contextual menu read model and
-  edge-removal change construction.
+- `canvasInteractionCommandSurface.ts`: pure pane/edge contextual menu read
+  model and edge-removal change construction.
 - `canvasNodeContextMenuModel.ts`: pure node-target contextual menu read model.
-- `CanvasViewport.tsx`: React Flow gesture adapter and rendered contextual
-  menu.
-- `DbtNodeComponent.tsx`: node-shell gesture adapter and menu renderer.
+- `CanvasViewport.tsx`: React Flow pane/edge gesture adapter and menu renderer;
+  it does not own contextual action policy.
+- `DbtNodeComponent.tsx`: node-shell gesture adapter and menu renderer; it does
+  not own contextual action policy or node identity semantics.
 - `canvasAuthoringNodeCommand.ts`: canonical authoring-node command, including
   optional caller-owned origin.
 - `useCanvasAuthoringNodeCreationHandlers.ts`: node admission command execution
@@ -99,6 +105,8 @@ Related command seams:
   bypassing draft-session edge replacement.
 - `canvasInteractionCommandSurface.ts` is pure: no React hooks, no React Flow
   rendering, and no direct draft mutation.
+- `canvasNodeContextMenuModel.ts` is pure: no React hooks, no node rendering,
+  and no direct draft mutation.
 - React Flow nodes and edges remain projection state; protected draft
   authority stays behind the existing graph lifecycle and draft session.
 - Source connection authority remains server-projected through ADR-0058 rails;
