@@ -20,8 +20,8 @@ component_type: governance
 - `RecordArchitectureGovernanceReviewDisposition(input)`: records the canonical
   task, ADR, evidence, risk, or planning owner for a finding.
 - `ValidateArchitectureGovernanceReviewTraceability(input)`: validates that the
-  review, plan, component guide, user stories, mailbox analysis, and semantic
-  guard name the same ownership model.
+  review, plan, component guide, user stories, canonical Fowler mechanization,
+  and semantic guard name the same ownership model.
 
 ## Invariants
 
@@ -79,7 +79,8 @@ stateDiagram-v2
 
 `tools/ci/architecture-governance-review-canon.test.mjs` validates that:
 
-- the plan, guide, stories, review note, and mailbox analysis exist together;
+- the plan, guide, stories, review note, and canonical Fowler mechanization
+  tokens exist together;
 - the command/query rails are named consistently;
 - P0/P1/P2 findings from the deep review have explicit disposition rows;
 - the component guide exposes public API, invariants, transitions, consumers,

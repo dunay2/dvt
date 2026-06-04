@@ -72,8 +72,8 @@ stateDiagram-v2
 ## Semantic Fitness Function
 
 `tools/ci/canvas-fowler-canon.test.mjs` validates that the plan, component
-guide, user stories, review-board disposition, graph index, and buzon analysis
-exist together and use the same semantic rails.
+guide, user stories, review-board disposition, graph index, and canonical
+Fowler mechanization tokens exist together and use the same semantic rails.
 
 It intentionally checks semantic ownership, not only barrel thinness or link
 presence.

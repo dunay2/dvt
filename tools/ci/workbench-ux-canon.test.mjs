@@ -3,8 +3,15 @@
  * governed frontend delivery work instead of remaining a parallel UX backlog.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+
+import {
+  assertCanonPlan,
+  assertContains,
+  assertFilesExist,
+  escapeRegExp,
+  readRepoFile,
+} from './canonization-guard.mjs';
 
 const requiredFiles = [
   'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md',
@@ -14,29 +21,13 @@ const requiredFiles = [
   'docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md',
   'docs/architecture/components/web/index.md',
   'docs/planning/proposals/portfolio-map-20260403.md',
-  'buzon/20260524-codex-fowler-workbench-ux-canon.md',
 ];
 
-function readRepoFile(path) {
-  return readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8');
-}
-
-function assertContains(path, expected) {
-  assert.match(
-    readRepoFile(path),
-    typeof expected === 'string' ? new RegExp(escapeRegExp(expected)) : expected,
-    `${path} must contain ${expected.toString()}`
-  );
-}
-
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
 test('DVT workbench UX draft canonization has semantic ownership', () => {
-  for (const path of requiredFiles) {
-    assert.doesNotThrow(() => readRepoFile(path), `${path} must exist`);
-  }
+  assertFilesExist(requiredFiles);
+  assertCanonPlan(
+    'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md'
+  );
 
   assertContains(
     'docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-specification-v0-4-20260505-draft.md',
@@ -74,18 +65,6 @@ test('DVT workbench UX draft canonization has semantic ownership', () => {
     'Planning Steward',
   ]) {
     assert.match(userStories, new RegExp(escapeRegExp(persona)));
-  }
-
-  const analysis = readRepoFile('buzon/20260524-codex-fowler-workbench-ux-canon.md');
-  for (const section of [
-    '## Fowler Analysis',
-    '## Mature-System Comparison',
-    '## Antipatterns',
-    '## Repetitions',
-    '## Drift',
-    '## Applied Pattern',
-  ]) {
-    assert.match(analysis, new RegExp(escapeRegExp(section)));
   }
 
   assertContains('docs/architecture/components/web/index.md', 'Workbench UX Canon Component');

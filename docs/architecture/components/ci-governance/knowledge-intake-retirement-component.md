@@ -94,6 +94,8 @@ Planning DB command/query rails and then rendered from DB-backed projections.
   single-writer store.
 - Physical deletion is allowed only after the DB state shows a safe
   disposition and active docs/tests no longer require the raw file.
+- Canonization semantic tests must validate canonical plans and mechanization
+  tokens instead of reading raw `buzon/*.md` files as proof.
 
 ## Flow
 
@@ -118,5 +120,6 @@ flowchart LR
 - `node --test scripts/generate-knowledge-intake-literature.test.cjs`
 - `node --test scripts/planning-db-query.test.cjs`
 - `node --test scripts/planning-db-migrate.test.cjs`
+- `node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs`
 - `pnpm planning:db:knowledge-intake:retirement:check`
 - `pnpm docs:knowledge-intake:check`

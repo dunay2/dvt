@@ -31,8 +31,8 @@ component_type: governance
 - Drafts and snapshots must be marked supporting, historical, superseded, or
   child-task-owned before they guide implementation.
 - Child remediation tasks remain separate from this parent canon task.
-- Docs, domain page, component guide, user stories, analysis, and semantic test
-  must name the same command/query rails.
+- Docs, domain page, component guide, user stories, canonical Fowler
+  mechanization, and semantic test must name the same command/query rails.
 
 ## Transitions
 
@@ -77,8 +77,8 @@ stateDiagram-v2
 
 `tools/ci/architecture-doc-reconciliation-canon.test.mjs` validates that the
 canon plan, component guide, user stories, documentation-governance domain,
-component index, and buzon analysis exist together and name the same semantic
-rails.
+component index, and canonical Fowler mechanization tokens exist together and
+name the same semantic rails.
 
 It validates ownership and truth classification rather than only checking that
 a barrel or index is thin.

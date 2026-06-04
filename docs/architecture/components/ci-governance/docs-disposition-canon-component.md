@@ -27,8 +27,8 @@ component_type: governance
   evidence documents without owner and backlink checks.
 - Task-like identifiers are classified by semantic family before any planning
   task is created.
-- Docs, component guide, user stories, buzon analysis, and semantic test must
-  name the same command/query rails.
+- Docs, component guide, user stories, canonical Fowler mechanization, and
+  semantic test must name the same command/query rails.
 
 ## Transitions
 
@@ -70,8 +70,8 @@ stateDiagram-v2
 
 `tools/ci/docs-disposition-canon.test.mjs` validates that the canon plan,
 component guide, user stories, documentation-governance domain, inventory
-status note, and buzon analysis exist together and name the same semantic
-rails.
+status note, and canonical Fowler mechanization tokens exist together and name
+the same semantic rails.
 
 It validates disposition ownership and DB-first closure rather than only
 checking generated index freshness.

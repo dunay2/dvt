@@ -70,7 +70,8 @@ stateDiagram-v2
 
 `tools/ci/workbench-ux-canon.test.mjs` validates that the canon plan, draft
 frontmatter disposition, component guide, user stories, portfolio map, web
-component index, and buzon analysis agree on the same semantic rails.
+component index, and canonical Fowler mechanization tokens agree on the same
+semantic rails.
 
 It checks ownership and disposition rather than only checking barrel thinness or
 link presence.
