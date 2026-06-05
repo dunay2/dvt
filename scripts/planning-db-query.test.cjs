@@ -273,6 +273,16 @@ test('parseArgs parses task query filters for daily DB-first planning work', () 
   });
 });
 
+test('parseArgs accepts common --filter for task id planning queries', () => {
+  assert.deepEqual(parseArgs(['tasks', '--filter', 'E-PROP-DISP-1', '--limit', '10']), {
+    queryName: 'tasks',
+    filters: {
+      taskId: 'E-PROP-DISP-1',
+      limit: 10,
+    },
+  });
+});
+
 test('parseArgs parses governance query filters for DB-first governance inspection', () => {
   const command = parseArgs([
     'files',
@@ -744,6 +754,14 @@ test('parseArgs rejects unknown resolution filters before querying the DB', () =
 
 test('parseArgs parses task provenance query filters for DB-first task triage', () => {
   assert.deepEqual(parseArgs(['task-trace', 'F-28-C', '--limit', '20']), {
+    queryName: 'task-trace',
+    filters: {
+      taskId: 'F-28-C',
+      limit: 20,
+    },
+  });
+
+  assert.deepEqual(parseArgs(['task-trace', '--filter', 'F-28-C', '--limit', '20']), {
     queryName: 'task-trace',
     filters: {
       taskId: 'F-28-C',
@@ -1693,6 +1711,7 @@ test('readTaskRows queries the effective task view with stable filters', async (
     laneId: 'C',
     status: 'review',
     claimedBy: 'codex',
+    taskId: 'AR-C10',
     limit: 10,
   });
 
@@ -1700,8 +1719,9 @@ test('readTaskRows queries the effective task view with stable filters', async (
   assert.match(captured.sql, /lane_id = \$1/);
   assert.match(captured.sql, /status = \$2/);
   assert.match(captured.sql, /claimed_by = \$3/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, ['C', 'review', 'codex', 10]);
+  assert.match(captured.sql, /task_id = \$4/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, ['C', 'review', 'codex', 'AR-C10', 10]);
 });
 
 test('readOpenTaskRows queries the DB open-task view without duplicating status logic', async () => {
