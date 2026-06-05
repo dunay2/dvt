@@ -65,6 +65,21 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-migrate.test.cjs': 'scripts/planning-db-migrate.test.cjs',
   'scripts/planning-db-operate.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate.test.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/architecture-parse.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/architecture-plan.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/cli.test.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/component-create.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/db-surface.test.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/docs-resolution.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/helpers.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/task-idempotency.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/task-parse.test.cjs': 'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/task-plan.test.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query.test.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-run.cjs': 'scripts/planning-db-run.test.cjs',

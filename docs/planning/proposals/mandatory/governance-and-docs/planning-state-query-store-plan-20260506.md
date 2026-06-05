@@ -1612,6 +1612,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/**
   - tools/governance-db/**
   - scripts/planning-db-*.cjs
+  - scripts/planning-db-operate-tests/*.cjs
   - scripts/governance-db-*.cjs
   - scripts/governance-refresh*.cjs
   - scripts/generate-code-status*.cjs
@@ -3397,11 +3398,53 @@ symbols:
     name: test
     path: scripts/planning-db-operate.test.cjs
   - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/architecture-parse.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/architecture-plan.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/cli.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/component-create.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/db-surface.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/docs-resolution.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/task-idempotency.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/task-parse.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/task-plan.test.cjs
+  - <<: *planningDbLocalOperationSymbol
     name: assert
     path: scripts/planning-db-operate.test.cjs
   - <<: *planningDbLocalOperationSymbol
+    name: assert
+    path: scripts/planning-db-operate-tests/helpers.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: path
+    path: scripts/planning-db-operate-tests/helpers.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: operate
+    path: scripts/planning-db-operate-tests/helpers.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: runPlanningDbOperateCli
+    path: scripts/planning-db-operate-tests/helpers.cjs
+  - <<: *planningDbLocalOperationSymbol
     name: importedTask
     path: scripts/planning-db-operate.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: importedTask
+    path: scripts/planning-db-operate-tests/helpers.cjs
   - <<: *planningDbLocalOperationSymbol
     name: assertIdempotentReplayMatches
     path: scripts/planning-db-operate.test.cjs

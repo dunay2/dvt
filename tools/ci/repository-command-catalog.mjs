@@ -138,6 +138,7 @@ const SCRIPT_FILE_RULES = [
   ],
   [/^scripts\/planning-db-[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db\/[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
+  [/^scripts\/planning-db-operate-tests\/[\w-]+\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-db-(check|import|export)(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-generated-paths(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-refresh(\.test)?\.cjs$/u, 'planning-db'],
