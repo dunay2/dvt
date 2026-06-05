@@ -36,6 +36,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.transformation.requiresThreeNodesMessage',
     fallback: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
   },
+  transformationAmbiguousExecutablePathMessage: {
+    key: 'canvas.transformation.ambiguousExecutablePathMessage',
+    fallback: 'Plan requires one selected source -> sql_transform -> sink path.',
+  },
+  transformationRequiresExecutablePathMessage: {
+    key: 'canvas.transformation.requiresExecutablePathMessage',
+    fallback: 'Plan requires a connected source -> sql_transform -> sink path.',
+  },
   transformationUnsupportedRolesMessage: {
     key: 'canvas.transformation.unsupportedRolesMessage',
     fallback: 'Plan supports only input, transform, and output nodes in this vertical.',

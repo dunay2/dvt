@@ -141,6 +141,8 @@ export type CanvasViewCopy = {
   readonly planStatusPreviewNotAlignedMessage: string;
   readonly planStatusPreviewNotPersistedMessage: string;
   readonly planStatusPreviewReadyMessage: string;
+  readonly transformationAmbiguousExecutablePathMessage: string;
+  readonly transformationRequiresExecutablePathMessage: string;
   readonly transformationRequiresThreeNodesMessage: string;
   readonly transformationUnsupportedRolesMessage: string;
   readonly transformationRequiresOneOfEachRoleMessage: string;

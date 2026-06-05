@@ -14,6 +14,10 @@ export const canvasViewAuthoringCopyEs = {
     'La dependencia ya existe en este draft de transformacion.',
   transformationRequiresThreeNodesMessage:
     'El plan requiere exactamente 3 nodos: source, sql_transform y sink.',
+  transformationAmbiguousExecutablePathMessage:
+    'El plan requiere seleccionar un unico path source -> sql_transform -> sink.',
+  transformationRequiresExecutablePathMessage:
+    'El plan requiere un path conectado source -> sql_transform -> sink.',
   transformationUnsupportedRolesMessage:
     'El plan solo admite nodos input, transform y output en esta vertical.',
   transformationRequiresOneOfEachRoleMessage:

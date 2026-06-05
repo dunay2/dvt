@@ -1,10 +1,13 @@
-import { buildValidResult } from './transformationGraphValidationResults';
 import {
+  buildContextInvalidResult,
+  buildValidResult,
+} from './transformationGraphValidationResults';
+import {
+  resolveExecutableTransformationPath,
   resolveValidatedNodeRoles,
   validateEdgeCount,
   validateEdgeOrder,
   validateRoleCardinality,
-  validateScopedNodeCount,
 } from './transformationGraphValidationRules';
 import { resolveTransformationValidationContext } from './transformationGraphValidationScope';
 import type {
@@ -13,6 +16,7 @@ import type {
   TransformationNodeRole,
   ValidateTransformationGraphArgs,
 } from './transformationGraphValidation.types';
+import { TRANSFORMATION_REQUIRED_NODE_COUNT } from './transformationGraphValidation.types';
 
 export type {
   TransformationGraphValidationResult,
@@ -20,24 +24,9 @@ export type {
   TransformationNodeRole,
 };
 
-export function validateTransformationGraph({
-  nodes,
-  edges,
-  selectedNodeIds = [],
-  workspaceNodeIds = [],
-}: ValidateTransformationGraphArgs): TransformationGraphValidationResult {
-  const context = resolveTransformationValidationContext({
-    nodes,
-    edges,
-    selectedNodeIds,
-    workspaceNodeIds,
-  });
-
-  const nodeCountResult = validateScopedNodeCount(context);
-  if (nodeCountResult) {
-    return nodeCountResult;
-  }
-
+function validateThreeNodeTransformationContext(
+  context: ReturnType<typeof resolveTransformationValidationContext>
+): TransformationGraphValidationResult {
   const nodeRoles = resolveValidatedNodeRoles(context);
   if (!nodeRoles.ok) {
     return nodeRoles.result;
@@ -59,4 +48,43 @@ export function validateTransformationGraph({
   }
 
   return buildValidResult(context, nodeRoles.nodeRolesById);
+}
+
+export function validateTransformationGraph({
+  nodes,
+  edges,
+  selectedNodeIds = [],
+  workspaceNodeIds = [],
+}: ValidateTransformationGraphArgs): TransformationGraphValidationResult {
+  const context = resolveTransformationValidationContext({
+    nodes,
+    edges,
+    selectedNodeIds,
+    workspaceNodeIds,
+  });
+
+  if (context.scopedNodes.length !== TRANSFORMATION_REQUIRED_NODE_COUNT) {
+    const executablePath = resolveExecutableTransformationPath(context);
+    if (executablePath.status === 'one') {
+      const scopedNodeIdSet = new Set(executablePath.path.scopedNodeIds);
+      const scopedEdges = context.scopedEdges.filter(
+        (edge) => scopedNodeIdSet.has(edge.sourceId) && scopedNodeIdSet.has(edge.targetId)
+      );
+      return validateThreeNodeTransformationContext({
+        ...context,
+        scopedNodes: executablePath.path.scopedNodes,
+        scopedNodeIds: executablePath.path.scopedNodeIds,
+        scopedEdges,
+        scopedEdgeIds: scopedEdges.map((edge) => edge.id),
+      });
+    }
+
+    if (executablePath.status === 'ambiguous') {
+      return buildContextInvalidResult(context, 'ambiguous_executable_paths');
+    }
+
+    return buildContextInvalidResult(context, 'requires_executable_path');
+  }
+
+  return validateThreeNodeTransformationContext(context);
 }

@@ -114,6 +114,10 @@ export function formatTransformationGraphValidationSummary(
   switch (summaryCode) {
     case 'valid':
       return copy.transformationDraftValidMessage;
+    case 'ambiguous_executable_paths':
+      return copy.transformationAmbiguousExecutablePathMessage;
+    case 'requires_executable_path':
+      return copy.transformationRequiresExecutablePathMessage;
     case 'requires_three_nodes':
       return copy.transformationRequiresThreeNodesMessage;
     case 'unsupported_roles':

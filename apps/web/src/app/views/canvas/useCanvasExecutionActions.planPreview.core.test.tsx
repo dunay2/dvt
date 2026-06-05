@@ -45,7 +45,7 @@ describe('useCanvasExecutionActions plan preview core', () => {
 
     expect(plansService.previewPlan).not.toHaveBeenCalled();
     expect(harness.shellFeedback.error).toHaveBeenCalledWith(
-      canvasViewCopy.transformationRequiresThreeNodesMessage
+      canvasViewCopy.transformationRequiresExecutablePathMessage
     );
   });
 
@@ -436,6 +436,53 @@ describe('useCanvasExecutionActions plan preview core', () => {
       })
     );
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
+  });
+
+  it('plans the uniquely discoverable SQL-first path when the canvas also has extra source nodes', async () => {
+    const canonicalNodes = buildCanonicalNodes();
+    const extraSource: CanonicalNode = {
+      id: 'source-copy',
+      name: 'Source copy',
+      pluginId: 'dvt',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: ['authoring'],
+      metadata: {
+        config: {
+          schema: 'raw',
+          table: 'orders_copy',
+          alias: 'orders_copy',
+        },
+      },
+    };
+    const plansService = createPlansServiceMock();
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      canonicalNodes: [...canonicalNodes, extraSource],
+      canonicalEdges: buildCanonicalEdges(),
+      workspaceNodeIds: [...canonicalNodes.map((node) => node.id), extraSource.id],
+    });
+    await harness.render();
+
+    expect(harness.text('can-plan-graph')).toBe('true');
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(plansService.previewPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selection: {
+          mode: 'explicit',
+          nodeIds: ['source-node', 'transform-node', 'sink-node'],
+        },
+        graphSource: expect.objectContaining({
+          nodes: expect.not.arrayContaining([expect.objectContaining({ nodeId: 'source-copy' })]),
+        }),
+      })
+    );
   });
 
   it('plans the full workspace workflow when selection is only a partial edit focus', async () => {

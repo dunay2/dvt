@@ -1,4 +1,5 @@
 import { buildContextInvalidResult } from './transformationGraphValidationResults';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type {
   TransformationGraphValidationResult,
   TransformationNodeRole,
@@ -9,7 +10,20 @@ import {
   TRANSFORMATION_REQUIRED_EDGE_ROLE_PAIRS,
   TRANSFORMATION_REQUIRED_NODE_COUNT,
   TRANSFORMATION_REQUIRED_ROLE_COUNTS,
+  TRANSFORMATION_NODE_ROLES,
 } from './transformationGraphValidation.types';
+
+export type ExecutableTransformationPath = {
+  scopedNodes: CanonicalNode[];
+  scopedNodeIds: string[];
+  scopedEdges: CanonicalEdge[];
+  scopedEdgeIds: string[];
+};
+
+export type ExecutableTransformationPathResolution =
+  | { status: 'none' }
+  | { status: 'one'; path: ExecutableTransformationPath }
+  | { status: 'ambiguous' };
 
 function mapCanonicalRole(
   role: TransformationValidationContext['scopedNodes'][number]['role']
@@ -125,4 +139,79 @@ export function validateEdgeOrder(
   }
 
   return buildContextInvalidResult(context, 'invalid_edge_order');
+}
+
+function collectNodesByRole(scopedNodes: TransformationValidationContext['scopedNodes']): {
+  nodesByRole: Record<TransformationNodeRole, CanonicalNode[]>;
+  nodeRolesById: Record<string, TransformationNodeRole>;
+} {
+  const nodesByRole: Record<TransformationNodeRole, CanonicalNode[]> = {
+    source: [],
+    sql_transform: [],
+    sink: [],
+  };
+  const nodeRolesById: Record<string, TransformationNodeRole> = {};
+
+  for (const node of scopedNodes) {
+    const mappedRole = mapCanonicalRole(node.role);
+    if (!mappedRole) {
+      continue;
+    }
+
+    nodesByRole[mappedRole].push(node);
+    nodeRolesById[node.id] = mappedRole;
+  }
+
+  return { nodesByRole, nodeRolesById };
+}
+
+export function resolveExecutableTransformationPath(
+  context: TransformationValidationContext
+): ExecutableTransformationPathResolution {
+  const { nodesByRole, nodeRolesById } = collectNodesByRole(context.scopedNodes);
+  const nodesById = new Map(context.scopedNodes.map((node) => [node.id, node]));
+  let resolvedPath: ExecutableTransformationPath | null = null;
+
+  for (const source of nodesByRole.source) {
+    const sourceToTransformEdges = context.scopedEdges.filter(
+      (edge) =>
+        edge.sourceId === source.id &&
+        nodeRolesById[edge.targetId] === TRANSFORMATION_NODE_ROLES.sqlTransform
+    );
+
+    for (const sourceToTransformEdge of sourceToTransformEdges) {
+      const transform = nodesById.get(sourceToTransformEdge.targetId);
+      if (!transform) {
+        continue;
+      }
+
+      const transformToSinkEdges = context.scopedEdges.filter(
+        (edge) =>
+          edge.sourceId === transform.id &&
+          nodeRolesById[edge.targetId] === TRANSFORMATION_NODE_ROLES.sink
+      );
+
+      for (const transformToSinkEdge of transformToSinkEdges) {
+        const sink = nodesById.get(transformToSinkEdge.targetId);
+        if (!sink) {
+          continue;
+        }
+
+        const nextPath = {
+          scopedNodes: [source, transform, sink],
+          scopedNodeIds: [source.id, transform.id, sink.id],
+          scopedEdges: [sourceToTransformEdge, transformToSinkEdge],
+          scopedEdgeIds: [sourceToTransformEdge.id, transformToSinkEdge.id],
+        };
+
+        if (resolvedPath) {
+          return { status: 'ambiguous' };
+        }
+
+        resolvedPath = nextPath;
+      }
+    }
+  }
+
+  return resolvedPath ? { status: 'one', path: resolvedPath } : { status: 'none' };
 }
