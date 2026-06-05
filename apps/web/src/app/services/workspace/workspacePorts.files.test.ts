@@ -7,6 +7,7 @@ import { createApiWorkspacePortHarness } from './workspacePortsApi.test.harness'
 import { WorkspaceFileLoadError, WORKSPACE_HTTP_ERROR_REASON } from './workspaceErrors';
 import {
   buildWorkspaceScope,
+  clearGrantedWorkspaceScope,
   installWorkspaceScopeHarness,
   setWorkspaceScope,
 } from './workspaceScope.test.harness';
@@ -74,6 +75,7 @@ describe('workspace ports files', () => {
   });
 
   it('maps canonical workspace file-not-found envelopes to a typed workspace file load error', async () => {
+    setWorkspaceScope(buildWorkspaceScope());
     const { workspaceFilesQuery } = createApiWorkspacePortHarness({
       getJson: async () => {
         throw new ApiError({
@@ -114,6 +116,16 @@ describe('workspace ports files', () => {
     );
   });
 
+  it('does not build workspace file requests before server-granted scope resolves', () => {
+    clearGrantedWorkspaceScope();
+    const { getJson, workspaceFilesQuery } = createApiWorkspacePortHarness({
+      getJson: async <TResponse>() => [] as TResponse,
+    });
+
+    expect(() => workspaceFilesQuery.listFiles()).toThrow('workspace_scope_unresolved');
+    expect(getJson).not.toHaveBeenCalled();
+  });
+
   it('loads file content through the scoped workspace file content query endpoint', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
@@ -136,6 +148,7 @@ describe('workspace ports files', () => {
   });
 
   it('does not collapse unrelated not-found envelopes into workspace file load errors', async () => {
+    setWorkspaceScope(buildWorkspaceScope());
     const unrelatedNotFound = new ApiError({
       message: 'Request to /workspace/files/models%2Fmissing.sql failed (404)',
       endpoint: '/workspace/files/models%2Fmissing.sql',

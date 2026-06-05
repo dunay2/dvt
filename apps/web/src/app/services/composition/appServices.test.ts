@@ -7,6 +7,7 @@ import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
+import type { WorkspaceScopeSelectionPort } from '../../ports/workspaceScopeSelection';
 import type {
   IWarehouseSourceImportPort,
   IWorkspaceAdminReadPort,
@@ -321,6 +322,22 @@ describe('buildAppServices', () => {
       success: vi.fn(),
       error: vi.fn(),
     };
+    const workspaceScopeSelection: WorkspaceScopeSelectionPort = {
+      getSelection: () => ({
+        selectedScope: {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'env-1',
+        },
+        availableScopes: [],
+        status: 'selected',
+      }),
+      selectWorkspaceScope: (selectedScope) => ({
+        status: 'selected',
+        selectedScope,
+      }),
+      subscribeSelection: () => () => undefined,
+    };
 
     const appServices = buildAppServices({
       apiClient,
@@ -329,6 +346,7 @@ describe('buildAppServices', () => {
       plansService,
       capabilitiesPort,
       sessionContext,
+      workspaceScopeSelection,
       shellFeedback,
     });
 
@@ -351,6 +369,7 @@ describe('buildAppServices', () => {
     expect(appServices.plansService).toBe(plansService);
     expect(appServices.capabilitiesPort).toBe(capabilitiesPort);
     expect(appServices.sessionContext).toBe(sessionContext);
+    expect(appServices.workspaceScopeSelection).toBe(workspaceScopeSelection);
     expect(appServices.shellFeedback).toBe(shellFeedback);
   });
 

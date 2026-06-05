@@ -1,5 +1,5 @@
 /** Owned concern: centralize scoped workspace-file HTTP endpoints and reason tokens. */
-import { useSessionStore } from '../../stores/sessionStore';
+import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPort';
 
 export const WORKSPACE_FILES_ENDPOINT = '/workspace/files';
 
@@ -15,7 +15,7 @@ export type WorkspaceFilesScope = {
 };
 
 export function readWorkspaceFilesScope(): WorkspaceFilesScope {
-  const { tenantId, projectId, environmentId } = useSessionStore.getState();
+  const { tenantId, projectId, environmentId } = readGrantedWorkspaceScope();
   return { tenantId, projectId, environmentId };
 }
 

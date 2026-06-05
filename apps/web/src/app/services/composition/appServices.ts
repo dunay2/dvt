@@ -5,6 +5,7 @@ import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
+import type { WorkspaceScopeSelectionPort } from '../../ports/workspaceScopeSelection';
 import type {
   IWarehouseSourceImportPort,
   IWorkspaceAdminReadPort,
@@ -25,6 +26,7 @@ import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
 import { createPlansService } from '../plans/plansService';
 import { createRunsService } from '../runs/runsService';
 import { createSessionContextPort } from '../session/sessionContextPort';
+import { createWorkspaceScopeSelectionPort } from '../session/workspaceScopeSelectionPort';
 import { createApiWorkspaceGraphDraftAuthoringPort } from '../workspace/workspaceGraphDraftAuthoring.api';
 import { createApiWorkspacePluginCatalogQueryPort } from '../workspace/workspacePluginCatalog.api';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
@@ -46,6 +48,7 @@ export interface AppServices {
   readonly costAttributionSummaryPort: ICostAttributionSummaryPort;
   readonly capabilitiesPort: CapabilitiesPort;
   readonly sessionContext: SessionContextPort;
+  readonly workspaceScopeSelection: WorkspaceScopeSelectionPort;
   readonly shellFeedback: ShellFeedbackPort;
 }
 
@@ -65,6 +68,7 @@ export interface AppServicesOverrides {
   readonly costAttributionSummaryPort?: ICostAttributionSummaryPort;
   readonly capabilitiesPort?: CapabilitiesPort;
   readonly sessionContext?: SessionContextPort;
+  readonly workspaceScopeSelection?: WorkspaceScopeSelectionPort;
   readonly shellFeedback?: ShellFeedbackPort;
 }
 
@@ -73,6 +77,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   setRuntimeDataSourceMode(dataSourceMode);
   const apiClient = overrides.apiClient ?? createApiClient();
   const sessionContext = overrides.sessionContext ?? createSessionContextPort();
+  const workspaceScopeSelection =
+    overrides.workspaceScopeSelection ?? createWorkspaceScopeSelectionPort();
   const workspacePorts = createWorkspacePorts(apiClient);
   const workspaceGraphSnapshotQuery =
     overrides.workspaceGraphSnapshotQuery ?? workspacePorts.workspaceGraphSnapshotQuery;
@@ -109,6 +115,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
       overrides.costAttributionSummaryPort ?? createApiCostAttributionSummaryPort(apiClient),
     capabilitiesPort: overrides.capabilitiesPort ?? createCapabilitiesPort(apiClient),
     sessionContext,
+    workspaceScopeSelection,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
   };
 }

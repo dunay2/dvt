@@ -113,6 +113,7 @@ Warm-build note:
 | Web app Canvas UI focus tests      | `pnpm --filter @dvt/web test:canvas-presentation`                          | Canvas non-architecture `.tsx` tests                 | [`apps/web/vitest.canvas-presentation.config.ts`](../../apps/web/vitest.canvas-presentation.config.ts) |
 | Web app Canvas architecture focus  | `pnpm --filter @dvt/web test:canvas-architecture`                          | Canvas architecture tests                            | [`apps/web/vitest.canvas-architecture.config.ts`](../../apps/web/vitest.canvas-architecture.config.ts) |
 | Web app Monaco focus tests         | `pnpm --filter @dvt/web test:monaco`                                       | Code/Artifacts/Diff Monaco route surfaces            | [`apps/web/vitest.monaco.config.ts`](../../apps/web/vitest.monaco.config.ts)                           |
+| Web app shell/session focus tests  | `pnpm --filter @dvt/web test:shell-session`                                | App shell, session, scope, and composition surfaces  | [`apps/web/vitest.shell-session.config.ts`](../../apps/web/vitest.shell-session.config.ts)             |
 | Web app E2E (Cypress)              | `pnpm --filter @dvt/web test:e2e`                                          | `apps/web` browser runtime contract                  | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
 | Web app E2E native (Cypress)       | `pnpm --filter @dvt/web test:e2e:native -- --spec <path>`                  | `apps/web` local browser proof                       | [`tools/ci/run-web-cypress-native.mjs`](../../tools/ci/run-web-cypress-native.mjs)                     |
 | Engine package tests               | `pnpm test:engine`                                                         | `@dvt/engine`                                        | [`package.json`](../../package.json)                                                                   |
@@ -519,6 +520,8 @@ remain fail-closed and root-build sensitive.
   `test:canvas-unit`, `test:canvas-presentation`, and
   `test:canvas-architecture`. The broad `test:canvas` command remains available
   for full Canvas focus validation.
+- Shell/session/context changes route to `test:shell-session` before the broad
+  unit or presentation lanes.
 
 ## Shared CI Scope Logic
 

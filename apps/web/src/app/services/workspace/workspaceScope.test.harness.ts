@@ -28,25 +28,50 @@ function readWorkspaceScopeSnapshot(): WorkspaceScope {
 }
 
 export function setWorkspaceScope(scope: WorkspaceScope): void {
-  useSessionStore.getState().setSessionContext({
+  const selectedScope = {
     tenantId: nb(scope.tenantId),
     projectId: nb(scope.projectId),
     environmentId: nb(scope.environmentId),
+  };
+  useSessionStore.getState().setWorkspaceScopeSelectionContext({
+    selectedScope,
+    availableWorkspaces: [selectedScope],
+  });
+}
+
+export function clearGrantedWorkspaceScope(): void {
+  useSessionStore.setState({
+    availableWorkspaces: [],
+    workspaceScopeSelectionStatus: 'unresolved',
+    workspaceScopeSelectionRejectionReason: undefined,
+    rejectedWorkspaceScope: undefined,
   });
 }
 
 export function installWorkspaceScopeHarness(): void {
   let initialWorkspaceScope = readWorkspaceScopeSnapshot();
+  let initialAvailableWorkspaces = useSessionStore.getState().availableWorkspaces;
+  let initialSelectionStatus = useSessionStore.getState().workspaceScopeSelectionStatus;
+  let initialRejectionReason = useSessionStore.getState().workspaceScopeSelectionRejectionReason;
+  let initialRejectedWorkspaceScope = useSessionStore.getState().rejectedWorkspaceScope;
 
   beforeEach(() => {
     initialWorkspaceScope = readWorkspaceScopeSnapshot();
+    initialAvailableWorkspaces = useSessionStore.getState().availableWorkspaces;
+    initialSelectionStatus = useSessionStore.getState().workspaceScopeSelectionStatus;
+    initialRejectionReason = useSessionStore.getState().workspaceScopeSelectionRejectionReason;
+    initialRejectedWorkspaceScope = useSessionStore.getState().rejectedWorkspaceScope;
   });
 
   afterEach(() => {
-    useSessionStore.getState().setSessionContext({
+    useSessionStore.setState({
       tenantId: nb(initialWorkspaceScope.tenantId),
       projectId: nb(initialWorkspaceScope.projectId),
       environmentId: nb(initialWorkspaceScope.environmentId),
+      availableWorkspaces: initialAvailableWorkspaces,
+      workspaceScopeSelectionStatus: initialSelectionStatus,
+      workspaceScopeSelectionRejectionReason: initialRejectionReason,
+      rejectedWorkspaceScope: initialRejectedWorkspaceScope,
     });
   });
 }

@@ -7,6 +7,7 @@ import {
 import { createApiClientHarness } from './workspaceApiClient.test.harness';
 import {
   buildWorkspaceScope,
+  clearGrantedWorkspaceScope,
   installWorkspaceScopeHarness,
   setWorkspaceScope,
 } from './workspaceScope.test.harness';
@@ -166,5 +167,25 @@ describe('workspace ports source import', () => {
       `/workspace/sources/import?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
       expect.objectContaining({ connectionId: 'conn-1' })
     );
+  });
+
+  it('does not import warehouse sources before server-granted scope resolves', () => {
+    clearGrantedWorkspaceScope();
+    const { apiClient, postJson } = createApiClientHarness({
+      postJson: async <_TRequest, TResponse>() => ({}) as TResponse,
+    });
+    const ports = createWorkspacePorts(apiClient);
+
+    expect(() =>
+      ports.warehouseSourceImport.importSources({
+        connectionId: 'conn-1',
+        tables: [],
+        groupingStrategy: 'schema',
+        includeColumns: false,
+        addTests: false,
+        addFreshness: false,
+      })
+    ).toThrow('workspace_scope_unresolved');
+    expect(postJson).not.toHaveBeenCalled();
   });
 });

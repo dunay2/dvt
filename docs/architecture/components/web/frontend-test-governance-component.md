@@ -80,7 +80,7 @@ stateDiagram-v2
 
 - Local developers use `pnpm --filter @dvt/web test:unit`,
   `test:presentation`, `test:architecture`, `test:canvas`, `test:monaco`, and
-  `test:workspace-services`.
+  `test:shell-session`, and `test:workspace-services`.
 - GitHub Actions uses `pnpm test:web:changed` for ordinary web pull requests
   and `pnpm test:web:ci` for full web coverage routes.
 - Architecture tests use `classifyWebVitestFile` to prevent suite drift.

@@ -101,15 +101,20 @@ commands or queries are still needed for a mature end-to-end workflow.
 ### `SelectWorkspaceScope`
 
 - Type: command.
-- Status: `gap-needed`.
-- Owner: workspace scope selection.
-- Needed because: users can create or discover projects, but there is no
-  explicit frontend rail for selecting an existing tenant/project/environment
-  scope and making it visible before plan/run execution.
-- Candidate surfaces: project onboarding route, workspace scope controls, and
+- Status: `implemented-local`.
+- Owner: workspace scope selection command.
+- DB-first authority: `WEB-SCOPE-SELECTION-20260605` and
+  `WEB-SCOPE-SELECTION-RELATIONS-20260605`.
+- Frontend surfaces: `WorkspaceScopeSelectionPort`,
+  `createWorkspaceScopeSelectionPort`, `ShellWorkspaceScopeSelector`, and
   `SessionContextPort`.
-- Negative tests needed: unknown tenant, unauthorized project, unavailable
-  environment, stale route scope, and run-start using an unselected scope.
+- Backend authority read model: `GetEffectiveWorkspaceContext`.
+- Notes: the command accepts only tenant/project/environment scopes present in
+  server-granted `availableWorkspaces`; rejected selections leave the current
+  session projection unchanged.
+- Negative tests: unavailable workspace scope, unresolved server context,
+  protected workspace-file requests before grant resolution, and source import
+  before grant resolution.
 
 ## Workspace Graph Draft Rails
 

@@ -1,9 +1,9 @@
 /** Owned concern: assemble explicit app-service test doubles outside the product runtime. */
 import type { CostAttributionSummary, ICostAttributionSummaryPort } from '../app/ports/cost';
+import type { WorkspaceScopeSelectionPort } from '../app/ports/workspaceScopeSelection';
 import type { AppServicesOverrides } from '../app/services/composition/appServices';
-import { createSessionContextPort } from '../app/services/session/sessionContextPort';
 import { createMockPlansService } from './plansPortDoubles';
-import { createMockRunsService } from './runsPortDoubles';
+import { createMockRunsService, createMockSessionContextPort } from './runsPortDoubles';
 import { createMockWorkspaceGraphDraftAuthoringPort } from './workspaceGraphDraftAuthoringPortDoubles';
 import {
   createMockWorkspacePorts,
@@ -39,10 +39,29 @@ export function createMockCostAttributionSummaryPort(
   };
 }
 
+export function createMockWorkspaceScopeSelectionPort(): WorkspaceScopeSelectionPort {
+  return {
+    getSelection: () => ({
+      selectedScope: {
+        tenantId: 'tenant-1',
+        projectId: 'project-1',
+        environmentId: 'env-1',
+      },
+      availableScopes: [],
+      status: 'selected',
+    }),
+    selectWorkspaceScope: (selectedScope) => ({
+      status: 'selected',
+      selectedScope,
+    }),
+    subscribeSelection: () => () => undefined,
+  };
+}
+
 export function createAppServicesTestOverrides(
   options: AppServicesTestOverridesOptions = {}
 ): AppServicesOverrides {
-  const sessionContext = createSessionContextPort();
+  const sessionContext = createMockSessionContextPort();
   const workspaceState = options.workspaceState ?? createMockWorkspaceState();
   const workspacePorts = createMockWorkspacePorts(workspaceState);
 
@@ -56,5 +75,6 @@ export function createAppServicesTestOverrides(
     runsService: createMockRunsService(sessionContext),
     costAttributionSummaryPort: createMockCostAttributionSummaryPort(),
     sessionContext,
+    workspaceScopeSelection: createMockWorkspaceScopeSelectionPort(),
   };
 }

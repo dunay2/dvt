@@ -8,6 +8,10 @@ import {
   type UserPermissions,
 } from '../../stores/authorizationStore';
 import { useSessionStore } from '../../stores/sessionStore';
+import {
+  resolveSelectedWorkspaceScope,
+  sameWorkspaceScopeIdentity,
+} from './workspaceScopeSelectionPort';
 
 type SessionResponse = {
   readonly permissions?: Partial<UserPermissions>;
@@ -27,21 +31,13 @@ type EffectiveWorkspaceContextResponse = {
   readonly availableWorkspaces: readonly EffectiveWorkspaceContext[];
 };
 
-function sameWorkspaceContext(left: EffectiveWorkspaceContext, right: EffectiveWorkspaceContext) {
-  return (
-    left.tenantId === right.tenantId &&
-    left.projectId === right.projectId &&
-    left.environmentId === right.environmentId
-  );
-}
-
 function resolveRouteWorkspaceContext(
   currentContext: EffectiveWorkspaceContext,
   workspaceContext: EffectiveWorkspaceContextResponse
 ): EffectiveWorkspaceContext {
   return (
     workspaceContext.availableWorkspaces.find((workspace) =>
-      sameWorkspaceContext(workspace, currentContext)
+      sameWorkspaceScopeIdentity(workspace, currentContext)
     ) ?? workspaceContext.effectiveWorkspace
   );
 }
@@ -98,13 +94,25 @@ export async function resolveProtectedRouteSessionContext(apiClient: Pick<ApiCli
     useSessionStore.getState(),
     workspaceContext
   );
+  const resolvedWorkspaceContext = resolveSelectedWorkspaceScope({
+    currentScope: selectedWorkspaceContext,
+    effectiveWorkspace: workspaceContext.effectiveWorkspace,
+    availableWorkspaces: workspaceContext.availableWorkspaces,
+  });
 
   useAuthorizationStore
     .getState()
     .setUserPermissions({ ...DEFAULT_USER_PERMISSIONS, ...projectPermissionsFromSession(session) });
-  useSessionStore.getState().setSessionContext({
-    tenantId: asNonBlankString(selectedWorkspaceContext.tenantId),
-    projectId: asNonBlankString(selectedWorkspaceContext.projectId),
-    environmentId: asNonBlankString(selectedWorkspaceContext.environmentId),
+  useSessionStore.getState().setWorkspaceScopeSelectionContext({
+    selectedScope: {
+      tenantId: asNonBlankString(resolvedWorkspaceContext.selectedScope.tenantId),
+      projectId: asNonBlankString(resolvedWorkspaceContext.selectedScope.projectId),
+      environmentId: asNonBlankString(resolvedWorkspaceContext.selectedScope.environmentId),
+    },
+    availableWorkspaces: resolvedWorkspaceContext.availableWorkspaces.map((workspace) => ({
+      tenantId: asNonBlankString(workspace.tenantId),
+      projectId: asNonBlankString(workspace.projectId),
+      environmentId: asNonBlankString(workspace.environmentId),
+    })),
   });
 }

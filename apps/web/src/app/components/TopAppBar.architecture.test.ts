@@ -22,6 +22,7 @@ describe('ShellTopBar workspace context architecture', () => {
     const identityRendererSource = readAppSource('components/shell/ShellProjectIdentityBadge.tsx');
     const contextMenuSource = readAppSource('components/shell/ShellWorkspaceContextMenu.tsx');
     const contextDetailsSource = readAppSource('components/shell/ShellWorkspaceContextDetails.tsx');
+    const scopeSelectorSource = readAppSource('components/shell/ShellWorkspaceScopeSelector.tsx');
     const chromeSource = readAppSource('components/shell/chrome.ts');
     const rootShellTestSupportSource = readAppSource('Root.shellChrome.test.support.ts');
 
@@ -31,6 +32,7 @@ describe('ShellTopBar workspace context architecture', () => {
       ['ShellProjectIdentityBadge', identityRendererSource],
       ['ShellWorkspaceContextMenu', contextMenuSource],
       ['ShellWorkspaceContextDetails', contextDetailsSource],
+      ['ShellWorkspaceScopeSelector', scopeSelectorSource],
       ['shell chrome class contract', chromeSource],
       ['Root shell chrome test support', rootShellTestSupportSource],
     ] as const) {
@@ -47,12 +49,13 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(identityRendererSource).toContain('data-slot="shell-project-identity-badge"');
     expect(contextMenuSource).toContain('data-slot="shell-workspace-context-trigger"');
     expect(contextMenuSource).toContain('ShellWorkspaceContextDetails');
-    expect(contextMenuSource).toContain(
-      'Owned concern: expose active workspace scope as read-only shell context.'
-    );
+    expect(contextMenuSource).toContain('ShellWorkspaceScopeSelector');
     expect(contextMenuSource).not.toContain('workspace-scope commands');
     expect(contextMenuSource).not.toContain('ShellWorkspaceScopeCommands');
     expect(contextMenuSource).not.toContain('ShellWorkspaceSelectors');
+    expect(scopeSelectorSource).toContain('useWorkspaceScopeSelection');
+    expect(scopeSelectorSource).toContain('selectWorkspaceScope');
+    expect(scopeSelectorSource).not.toContain('useSessionStore');
 
     for (const forbiddenMutationSignal of [
       'setSelectedTenant',
