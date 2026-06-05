@@ -20,6 +20,13 @@ test('post-Git formatter CLI requires an explicit ref range', () => {
     label: 'post-merge',
     toRef: 'HEAD',
   });
+  assert.deepEqual(parseArgs(['--', '--from', 'a', '--to', 'b']), {
+    dryRun: false,
+    fromRef: 'a',
+    hook: false,
+    label: 'post-git',
+    toRef: 'b',
+  });
   assert.deepEqual(parseArgs(['--from', 'a', '--to', 'b', '--hook', '--dry-run']).hook, true);
   assert.throws(() => parseArgs(['--from', 'a']), /Missing required --to <ref>/);
   assert.throws(() => parseArgs(['--to', 'b']), /Missing required --from <ref>/);
