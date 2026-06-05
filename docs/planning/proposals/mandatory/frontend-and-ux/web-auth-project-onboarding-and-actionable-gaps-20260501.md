@@ -1551,10 +1551,14 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
+  - apps/web/src/app/routes.test.tsx
   - apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts
+  - apps/web/src/app/services/api/apiAuthConfig.ts
+  - apps/web/src/app/views/LoginView.tsx
   - buzon/20260523-codex-fowler-web-auth-project-onboarding-canon.md
   - docs/.manifest.json
   - docs/**/index.md
+  - docs/architecture/components/web/api-client-auth-component.md
   - docs/architecture/components/web/index.md
   - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
   - docs/architecture/components/web/appshell/web-auth-project-onboarding-user-stories.md
@@ -1567,6 +1571,9 @@ forbiddenImplementationSurfaces:
   - specs/**
 commandQueryRails:
   - name: StartLogin
+    type: command
+    dddOwner: ReturnRoute value object
+  - name: RecoverLocalApiBearerSession
     type: command
     dddOwner: ReturnRoute value object
   - name: GetSessionProfile
@@ -1643,6 +1650,108 @@ redGreenCycles:
       - docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md
     greenTest: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
 symbols:
+  - name: canRecoverLocalApiBearerSession
+    path: apps/web/src/app/services/api/apiAuthConfig.ts
+    dddOwner: LocalApiBearerSession recovery policy
+    cqRails:
+      - RecoverLocalApiBearerSession
+    fowlerSignals:
+      - Policy Object
+      - Gateway
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flow covers login-required protected route.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/routes.test.tsx
+  - name: recoverLocalApiBearerSession
+    path: apps/web/src/app/services/api/apiAuthConfig.ts
+    dddOwner: LocalApiBearerSession recovery policy
+    cqRails:
+      - RecoverLocalApiBearerSession
+    fowlerSignals:
+      - Policy Object
+      - Gateway
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flow covers login-required protected route.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/routes.test.tsx
+  - name: jsonHeaders
+    path: apps/web/src/app/routes.test.tsx
+    dddOwner: WebAuthProjectOnboardingCanon route recovery test fixture
+    cqRails:
+      - RecoverLocalApiBearerSession
+      - GetSessionProfile
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - Application Service
+      - Gateway
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flow covers login-required protected route.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/routes.test.tsx
+  - name: buildAuthenticatedSessionResponse
+    path: apps/web/src/app/routes.test.tsx
+    dddOwner: WebAuthProjectOnboardingCanon route recovery test fixture
+    cqRails:
+      - GetSessionProfile
+    fowlerSignals:
+      - Application Service
+      - Gateway
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flow covers login-required protected route.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/routes.test.tsx
+  - name: buildWorkspaceContextResponse
+    path: apps/web/src/app/routes.test.tsx
+    dddOwner: WebAuthProjectOnboardingCanon route recovery test fixture
+    cqRails:
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - Application Service
+      - Gateway
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flow covers login-required protected route.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/routes.test.tsx
+  - name: buildEmptyJsonResponse
+    path: apps/web/src/app/routes.test.tsx
+    dddOwner: WebAuthProjectOnboardingCanon route recovery test fixture
+    cqRails:
+      - RecoverLocalApiBearerSession
+      - GetSessionProfile
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - Application Service
+      - Gateway
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flow covers login-required protected route.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/routes.test.tsx
+  - name: buildAuthenticatedRouteResponse
+    path: apps/web/src/app/routes.test.tsx
+    dddOwner: WebAuthProjectOnboardingCanon route recovery test fixture
+    cqRails:
+      - GetSessionProfile
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - Application Service
+      - Gateway
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flow covers login-required protected route.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/routes.test.tsx
+  - name: stubAuthenticatedSessionFetch
+    path: apps/web/src/app/routes.test.tsx
+    dddOwner: WebAuthProjectOnboardingCanon route recovery test fixture
+    cqRails:
+      - GetSessionProfile
+      - GetEffectiveWorkspaceContext
+    fowlerSignals:
+      - Application Service
+      - Gateway
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- webAuthProjectOnboarding.architecture.test.ts
+    cypressCoverage: Future Cypress flow covers login-required protected route.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/routes.test.tsx
   - name: readRepoFile
     path: apps/web/src/app/bootstrap/webAuthProjectOnboarding.architecture.test.ts
     dddOwner: WebAuthProjectOnboardingCanon architecture guard
