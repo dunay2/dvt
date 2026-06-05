@@ -52,6 +52,11 @@ state-store, DDD, and hexagonal mailbox analyses. It restores the remaining
 provider-registry/conformance debt as blocked Planning DB task
 `EA-20260429-04`.
 
+[Buzon Fowler DB Activation Review](./architecture-and-governance/20260605-buzon-fowler-db-activation-review.md)
+records the 2026-06-05 DB-first activation pass for unclassified Fowler intake,
+including safe raw `buzon/` retirements, retained active backrefs, restored
+Planning DB tasks, and frontend proposal classification follow-up.
+
 Disposition:
 
 - `D-MAND-PROP-GAP-INTAKE-1` cleared the mandatory-proposal binding gap on

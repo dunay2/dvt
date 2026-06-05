@@ -45,6 +45,8 @@ planning_type: proposal
   2026-05-13](./mandatory/governance-and-docs/component-engineering-composite-hierarchy-plan-20260513.md)
 - [DB-First Architecture Authority Plan
   2026-05-15](./mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md)
+- [Feature Mechanization DB-First Read Model Plan
+  2026-06-05](./mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md)
 - [Governance file index sharding plan
   2026-05-03](./mandatory/governance-and-docs/governance-file-index-sharding-plan-20260503.md)
 - [Runtime And Contracts](./mandatory/runtime-and-contracts/s08-plan-record-plan-store-execution-plan-20260402.md)
@@ -94,6 +96,8 @@ planning_type: proposal
   2026-05-27](./mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md)
 - [dbt project round-trip product plan
   2026-05-27](./mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md)
+- [Frontend and UX mandatory proposal classification
+  2026-06-05](./mandatory/frontend-and-ux/index.md)
 
 ## Nice To Have
 
