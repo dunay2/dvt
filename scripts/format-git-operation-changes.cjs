@@ -21,6 +21,9 @@ function parseArgs(argv = process.argv.slice(2)) {
 
   for (let index = 0; index < argv.length; index += 1) {
     const current = argv[index];
+    if (current === '--') {
+      continue;
+    }
     if (current === '--dry-run' || current === '--plan') {
       parsed.dryRun = true;
       continue;
