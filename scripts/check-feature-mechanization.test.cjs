@@ -313,7 +313,7 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
     },
   ]);
   assert.equal(queryCalls.length, 2);
-  assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_query/);
+  assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
   assert.deepEqual(result, [
     {
       sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
@@ -365,7 +365,7 @@ test('readFeatureMechanizationManifestsFromDb skips import when DB manifests are
   });
 
   assert.deepEqual(importCalls, []);
-  assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_query/);
+  assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
   assert.equal(result.length, 1);
 });
 
