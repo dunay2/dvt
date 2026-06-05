@@ -846,7 +846,7 @@ async function readFeatureMechanizationManifestsFromDb(options = {}) {
       select distinct on (source_path, raw_manifest->>'featureId')
         source_path,
         raw_manifest
-      from planning_query_store.command_query_rails
+      from planning_query_store.command_query_rail_query
       where raw_manifest ? 'featureId'
       order by source_path, raw_manifest->>'featureId'
     `);
