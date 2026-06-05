@@ -15,7 +15,6 @@ import type {
 import type { SessionContextPort } from '../app/ports/sessionContext';
 import type { Run, RunEvent as DbtRunEvent } from '../app/types/dbt';
 import type { RunEvent } from '../app/types/engine';
-import { createSessionContextPort } from '../app/services/session/sessionContextPort';
 
 function buildMockRunList(): Run[] {
   const completedRun: Run = {
@@ -134,8 +133,33 @@ function buildRunStartReceipt(runId: string): RunStartReceipt {
   };
 }
 
+export function createMockSessionContextPort(): SessionContextPort {
+  return {
+    getWorkspaceScope: () => ({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      targetAdapter: 'temporal',
+    }),
+    getWorkspaceScopeSnapshot: () => ({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      targetAdapter: 'temporal',
+    }),
+    subscribeWorkspaceScope: () => () => undefined,
+    buildRunContext: (runId) => ({
+      tenantId: asNonBlankString('tenant-1'),
+      projectId: asNonBlankString('project-1'),
+      environmentId: asNonBlankString('env-1'),
+      targetAdapter: 'temporal',
+      runId: asNonBlankString(runId),
+    }),
+  };
+}
+
 export function createMockRunsService(
-  sessionContext: SessionContextPort = createSessionContextPort()
+  sessionContext: SessionContextPort = createMockSessionContextPort()
 ): IRunsPort {
   return {
     listRunSummaries: async () =>

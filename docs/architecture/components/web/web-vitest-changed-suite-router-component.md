@@ -22,19 +22,20 @@ Tests` pull-request lane while preserving full primary-suite coverage on
 
 <!-- markdownlint-disable MD060 -->
 
-| Surface                             | Type     | Responsibility                                              |
-| ----------------------------------- | -------- | ----------------------------------------------------------- |
-| `resolveWebVitestChangedSuitePlan`  | function | Maps changed paths to ordered suite names and commands.     |
-| `WEB_VITEST_CHANGED_SUITE_COMMANDS` | constant | Names the package-local command for each routed suite.      |
-| `test:changed`                      | command  | Runs dependency build once, then routed web suite commands. |
-| `test:canvas-unit`                  | command  | Runs Canvas unit-model focus tests.                         |
-| `test:canvas-presentation`          | command  | Runs Canvas presentation focus tests.                       |
-| `test:canvas-architecture`          | command  | Runs Canvas architecture focus tests.                       |
-| `test:monaco`                       | command  | Runs Monaco route-surface focus tests.                      |
-| `test:workspace-services`           | command  | Runs workspace service port/facade focus tests.             |
-| `test:web:changed`                  | command  | Root alias for the package-local changed-suite command.     |
-| `run-vitest-changed-suites.ts`      | adapter  | Reads Git/`--files` inputs and runs grouped suite commands. |
-| `Web Frontend Tests` PR route       | CI job   | Runs changed-suite routing for ordinary web PR changes.     |
+| Surface                             | Type     | Responsibility                                                 |
+| ----------------------------------- | -------- | -------------------------------------------------------------- |
+| `resolveWebVitestChangedSuitePlan`  | function | Maps changed paths to ordered suite names and commands.        |
+| `WEB_VITEST_CHANGED_SUITE_COMMANDS` | constant | Names the package-local command for each routed suite.         |
+| `test:changed`                      | command  | Runs dependency build once, then routed web suite commands.    |
+| `test:canvas-unit`                  | command  | Runs Canvas unit-model focus tests.                            |
+| `test:canvas-presentation`          | command  | Runs Canvas presentation focus tests.                          |
+| `test:canvas-architecture`          | command  | Runs Canvas architecture focus tests.                          |
+| `test:monaco`                       | command  | Runs Monaco route-surface focus tests.                         |
+| `test:shell-session`                | command  | Runs app shell, session, scope, and service-composition tests. |
+| `test:workspace-services`           | command  | Runs workspace service port/facade focus tests.                |
+| `test:web:changed`                  | command  | Root alias for the package-local changed-suite command.        |
+| `run-vitest-changed-suites.ts`      | adapter  | Reads Git/`--files` inputs and runs grouped suite commands.    |
+| `Web Frontend Tests` PR route       | CI job   | Runs changed-suite routing for ordinary web PR changes.        |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -52,6 +53,10 @@ Tests` pull-request lane while preserving full primary-suite coverage on
   outside `src/app/views/canvas/**`.
 - Monaco-scoped paths route to `monaco` when the change is local to Code,
   Artifacts/Diff Monaco guards, or shared Monaco code surfaces.
+- App shell, session context, workspace-scope selection, session store,
+  API-client context propagation, service composition, and their shared test
+  doubles route to `shell-session` before the broad `unit` or `presentation`
+  fallback.
 - Workspace service paths under `src/app/services/workspace/**` route to
   `workspace-services` before the broad `unit` fallback.
 - When a changed source file and its same-stem `*.test.*` or `*.spec.*` file
@@ -64,8 +69,9 @@ Tests` pull-request lane while preserving full primary-suite coverage on
   with many architecture files still pays for one Vitest process for that
   architecture config.
 - Governance changes to the suite catalog, configs, package scripts, router
-  adapter, or router docs still force the governed architecture suite even when
-  exact tests are also present.
+  adapter, or router docs route to the governed router architecture guard
+  `src/testing/vitestSuites.architecture.test.ts` instead of the broad
+  architecture suite.
 - Source files without a changed same-stem test keep the existing suite
   fallback, so unpaired source edits do not silently lose coverage.
 - Non-Canvas `.tsx` paths route to `presentation`.
@@ -87,6 +93,7 @@ stateDiagram-v2
   ChangedFiles --> ExactSuiteTests: non-governance source plus exact tests
   ChangedFiles --> CanvasPath: Canvas route, canvas component, or inspector surface
   ChangedFiles --> MonacoPath: Monaco route/editor surface
+  ChangedFiles --> ShellSessionPath: shell/session/scope/composition surface
   ChangedFiles --> WorkspaceServicePath: workspace service port/facade
   ChangedFiles --> TsxPath: non-Canvas TSX
   ChangedFiles --> TsPath: non-Canvas TS
@@ -97,6 +104,7 @@ stateDiagram-v2
   CanvasPath --> CanvasPresentationCommand: .tsx
   CanvasPath --> CanvasArchitectureCommand: architecture
   MonacoPath --> MonacoCommand
+  ShellSessionPath --> ShellSessionCommand
   WorkspaceServicePath --> WorkspaceServicesCommand
   TsxPath --> PresentationCommand
   TsPath --> UnitCommand
@@ -106,6 +114,7 @@ stateDiagram-v2
   CanvasPresentationCommand --> Evidence
   CanvasArchitectureCommand --> Evidence
   MonacoCommand --> Evidence
+  ShellSessionCommand --> Evidence
   WorkspaceServicesCommand --> Evidence
   PresentationCommand --> Evidence
   UnitCommand --> Evidence

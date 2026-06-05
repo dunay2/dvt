@@ -57,7 +57,9 @@ describe('protected route session context architecture', () => {
     expect(resolver).toContain("'/session'");
     expect(resolver).toContain("'/workspace/context'");
     expect(resolver.indexOf("'/session'")).toBeLessThan(resolver.indexOf("'/workspace/context'"));
-    expect(resolver).toContain('setSessionContext');
+    expect(resolver).toContain('resolveSelectedWorkspaceScope');
+    expect(resolver).toContain('setWorkspaceScopeSelectionContext');
+    expect(resolver).not.toContain('setSessionContext');
   });
 
   it('keeps draft persistence projection separate from graph edit projection', () => {

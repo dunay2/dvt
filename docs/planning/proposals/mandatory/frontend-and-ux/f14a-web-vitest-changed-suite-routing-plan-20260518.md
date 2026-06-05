@@ -79,6 +79,7 @@ allowedImplementationSurfaces:
   - apps/web/vitest.suites.ts
   - apps/web/scripts/run-vitest-changed-suites.ts
   - apps/web/vitest.canvas-*.config.ts
+  - apps/web/vitest.shell-session.config.ts
   - apps/web/package.json
   - apps/web/src/testing/vitestSuites.architecture.test.ts
   - package.json
@@ -249,6 +250,14 @@ symbols:
     fowlerSignals: [Feedback-loop drag]
     architectureGuard: pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts
     cypressCoverage: N/A - Canvas local suite routing only.
+    unitTests: [pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts]
+  - name: isShellSessionFocusPath
+    path: apps/web/vitest.suites.ts
+    dddOwner: Frontend test governance
+    cqRails: [WebVitestChangedSuiteRoute]
+    fowlerSignals: [Feedback-loop drag]
+    architectureGuard: pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A - shell/session local suite routing only.
     unitTests: [pnpm --filter @dvt/web test -- src/testing/vitestSuites.architecture.test.ts]
   - name: run-vitest-changed-suites
     path: apps/web/scripts/run-vitest-changed-suites.ts

@@ -1,5 +1,5 @@
 /** Owned concern: centralize scoped workspace diff-change HTTP endpoints. */
-import { useSessionStore } from '../../stores/sessionStore';
+import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPort';
 
 export const WORKSPACE_DIFF_CHANGES_ENDPOINT = '/workspace/diff/changes';
 
@@ -10,7 +10,7 @@ export type WorkspaceDiffChangesScope = {
 };
 
 export function readWorkspaceDiffChangesScope(): WorkspaceDiffChangesScope {
-  const { tenantId, projectId, environmentId } = useSessionStore.getState();
+  const { tenantId, projectId, environmentId } = readGrantedWorkspaceScope();
   return { tenantId, projectId, environmentId };
 }
 

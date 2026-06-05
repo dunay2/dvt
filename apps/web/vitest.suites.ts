@@ -12,6 +12,7 @@ export const WEB_VITEST_FOCUS_SUITE_NAMES = [
   'canvas-presentation',
   'canvas-architecture',
   'monaco',
+  'shell-session',
   'workspace-services',
 ] as const;
 
@@ -108,6 +109,20 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
     ],
     exclude: WEB_VITEST_DEFAULT_EXCLUDE,
   },
+  'shell-session': {
+    include: [
+      'src/app/components/TopAppBar.{test,spec}.{ts,tsx}',
+      'src/app/components/shell/**/*.{test,spec}.{ts,tsx}',
+      'src/app/services/AppServicesContext.{test,spec}.{ts,tsx}',
+      'src/app/services/api/createApiClient.{test,spec}.{ts,tsx}',
+      'src/app/services/composition/appServices*.{test,spec}.{ts,tsx}',
+      'src/app/services/session/**/*.{test,spec}.{ts,tsx}',
+      'src/app/stores/sessionStore.{test,spec}.{ts,tsx}',
+      'src/testing/appServicesTestDoubles.{test,spec}.{ts,tsx}',
+      'src/testing/runsPortDoubles.{test,spec}.{ts,tsx}',
+    ],
+    exclude: WEB_VITEST_DEFAULT_EXCLUDE,
+  },
   'workspace-services': {
     include: ['src/app/services/workspace/**/*.{test,spec}.{ts,tsx}'],
     exclude: WEB_VITEST_DEFAULT_EXCLUDE,
@@ -122,6 +137,7 @@ export const WEB_VITEST_CHANGED_SUITE_COMMANDS: Record<WebVitestChangedSuiteName
   'canvas-presentation': 'pnpm run test:canvas-presentation:run',
   'canvas-architecture': 'pnpm run test:canvas-architecture:run',
   monaco: 'pnpm run test:monaco:run',
+  'shell-session': 'pnpm run test:shell-session:run',
   'workspace-services': 'pnpm run test:workspace-services:run',
 };
 
@@ -133,6 +149,7 @@ const WEB_VITEST_CHANGED_SUITE_CONFIGS: Record<WebVitestChangedSuiteName, string
   'canvas-presentation': 'vitest.canvas-presentation.config.ts',
   'canvas-architecture': 'vitest.canvas-architecture.config.ts',
   monaco: 'vitest.monaco.config.ts',
+  'shell-session': 'vitest.shell-session.config.ts',
   'workspace-services': 'vitest.workspace-services.config.ts',
 };
 
@@ -141,6 +158,7 @@ const WEB_VITEST_CHANGED_SUITE_ORDER: readonly WebVitestChangedSuiteName[] = [
   'canvas-presentation',
   'canvas-architecture',
   'monaco',
+  'shell-session',
   'workspace-services',
   'unit',
   'presentation',
@@ -189,6 +207,10 @@ export function classifyWebVitestFile(filePath: string): {
     focusSuites.push('monaco');
   }
 
+  if (isShellSessionFocusPath(normalizedPath)) {
+    focusSuites.push('shell-session');
+  }
+
   if (isWorkspaceServicesFocusPath(normalizedPath)) {
     focusSuites.push('workspace-services');
   }
@@ -224,6 +246,11 @@ function tryAddFocusSuite(
 
   if (isMonacoFocusPath(webPath)) {
     selectedSuites.add('monaco');
+    return true;
+  }
+
+  if (isShellSessionFocusPath(webPath)) {
+    selectedSuites.add('shell-session');
     return true;
   }
 
@@ -354,9 +381,13 @@ export function resolveWebVitestChangedSuitePlan(filePaths: readonly string[]): 
     const webPath = normalizeWebVitestChangedPath(filePath);
     if (!webPath) {
       if (isWebVitestGovernancePath(filePath)) {
-        selectedSuites.add('architecture');
-        forcedSuites.add('architecture');
+        addExactTestPath('architecture', 'src/testing/vitestSuites.architecture.test.ts');
       }
+      continue;
+    }
+
+    if (isWebVitestGovernancePath(filePath) || isWebVitestGovernancePath(webPath)) {
+      addExactTestPath('architecture', 'src/testing/vitestSuites.architecture.test.ts');
       continue;
     }
 
@@ -464,6 +495,25 @@ function isMonacoFocusPath(filePath: string): boolean {
     filePath === 'src/app/components/monaco/monacoBundleIsolation.architecture.test.ts' ||
     filePath === 'vite.manualChunks.ts' ||
     filePath === 'vite.config.ts'
+  );
+}
+
+function isShellSessionFocusPath(filePath: string): boolean {
+  return (
+    filePath.startsWith('src/app/components/shell/') ||
+    filePath === 'src/app/components/TopAppBar.tsx' ||
+    filePath === 'src/app/components/TopAppBar.test.tsx' ||
+    filePath === 'src/app/components/TopAppBar.architecture.test.ts' ||
+    filePath === 'src/app/services/AppServicesContext.tsx' ||
+    filePath.startsWith('src/app/services/session/') ||
+    filePath.startsWith('src/app/services/composition/') ||
+    filePath === 'src/app/services/api/createApiClient.ts' ||
+    filePath === 'src/app/services/api/createApiClient.test.ts' ||
+    filePath === 'src/app/stores/sessionStore.ts' ||
+    filePath === 'src/app/stores/sessionStore.test.ts' ||
+    filePath === 'src/app/ports/workspaceScopeSelection.ts' ||
+    filePath === 'src/testing/appServicesTestDoubles.ts' ||
+    filePath === 'src/testing/runsPortDoubles.ts'
   );
 }
 

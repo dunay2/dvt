@@ -8,9 +8,13 @@ const path = require('node:path');
 const {
   extractFeatureMechanizationManifests,
   FeatureMechanizationGitDiffReader,
+  normalizeDbFeatureMechanizationManifestRows,
+  readFeatureMechanizationManifestsFromDb,
+  shouldRefreshFeatureMechanizationManifestDb,
   validateFeatureImplementationManifests,
   validateFeatureMechanizationManifest,
   validateFeatureMechanizationDocs,
+  validateFeatureMechanizationManifestEntries,
 } = require('./check-feature-mechanization.cjs');
 
 const validManifest = {
@@ -193,6 +197,183 @@ test('validateFeatureMechanizationDocs accepts requested closed feature manifest
   );
 
   assert.deepEqual(result.errors, []);
+});
+
+test('normalizeDbFeatureMechanizationManifestRows returns distinct manifest entries from query rows', () => {
+  const rows = [
+    {
+      source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+      raw_manifest: validManifest,
+    },
+    {
+      source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+      raw_manifest: validManifest,
+    },
+    {
+      source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/other.md',
+      raw_manifest: {
+        ...validManifest,
+        featureId: 'TF-E2-OTHER',
+      },
+    },
+  ];
+
+  assert.deepEqual(normalizeDbFeatureMechanizationManifestRows(rows), [
+    {
+      sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+      manifest: validManifest,
+    },
+    {
+      sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/other.md',
+      manifest: {
+        ...validManifest,
+        featureId: 'TF-E2-OTHER',
+      },
+    },
+  ]);
+});
+
+test('validateFeatureMechanizationManifestEntries validates DB-backed manifests', () => {
+  const result = validateFeatureMechanizationManifestEntries(
+    [
+      {
+        sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+        manifest: validManifest,
+      },
+    ],
+    {
+      requiredFeatureIds: ['TF-E2-M-B'],
+    }
+  );
+
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.manifestCount, 1);
+  assert.deepEqual(result.features, ['TF-E2-M-B']);
+});
+
+test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests', async () => {
+  const importCalls = [];
+  const queryCalls = [];
+  const client = {
+    async query(sql, params) {
+      queryCalls.push({ sql, params });
+      assert.match(sql, /planning_query_store\.command_query_rails/);
+      assert.match(sql, /raw_manifest \? 'featureId'/);
+
+      if (params) {
+        return {
+          rows: [
+            {
+              source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+              source_content_sha256: 'stale',
+            },
+          ],
+        };
+      }
+
+      return {
+        rows: [
+          {
+            source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+            raw_manifest: validManifest,
+          },
+        ],
+      };
+    },
+  };
+
+  const result = await readFeatureMechanizationManifestsFromDb({
+    client,
+    databaseUrl: 'postgresql://example.local/planning',
+    currentSourceHashes: new Map([
+      ['docs/planning/proposals/mandatory/frontend-and-ux/example.md', 'fresh'],
+    ]),
+    deps: {
+      async runPlanningImport(options, deps) {
+        importCalls.push({
+          databaseUrl: options.databaseUrl,
+          ifStale: options.ifStale,
+          includePlanning: options.includePlanning,
+          includeGovernance: options.includeGovernance,
+          silent: options.silent,
+          logger: typeof deps.logger.log,
+        });
+      },
+    },
+  });
+
+  assert.deepEqual(importCalls, [
+    {
+      databaseUrl: 'postgresql://example.local/planning',
+      ifStale: false,
+      includePlanning: false,
+      includeGovernance: true,
+      silent: true,
+      logger: 'function',
+    },
+  ]);
+  assert.equal(queryCalls.length, 2);
+  assert.deepEqual(result, [
+    {
+      sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+      manifest: validManifest,
+    },
+  ]);
+});
+
+test('readFeatureMechanizationManifestsFromDb skips import when DB manifests are fresh', async () => {
+  const importCalls = [];
+  const client = {
+    async query(sql, params) {
+      assert.match(sql, /planning_query_store\.command_query_rails/);
+
+      if (params) {
+        return {
+          rows: [
+            {
+              source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+              source_content_sha256: 'fresh',
+            },
+          ],
+        };
+      }
+
+      return {
+        rows: [
+          {
+            source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
+            raw_manifest: validManifest,
+          },
+        ],
+      };
+    },
+  };
+
+  const result = await readFeatureMechanizationManifestsFromDb({
+    client,
+    currentSourceHashes: new Map([
+      ['docs/planning/proposals/mandatory/frontend-and-ux/example.md', 'fresh'],
+    ]),
+    deps: {
+      async runPlanningImport() {
+        importCalls.push('unexpected');
+      },
+    },
+  });
+
+  assert.deepEqual(importCalls, []);
+  assert.equal(result.length, 1);
+});
+
+test('shouldRefreshFeatureMechanizationManifestDb refreshes an empty DB projection', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /count\(\*\)::int as manifest_count/);
+      return { rows: [{ manifest_count: 0 }] };
+    },
+  };
+
+  assert.equal(await shouldRefreshFeatureMechanizationManifestDb(client, new Map()), true);
 });
 
 test('validateFeatureImplementationManifests rejects changed files outside allowed implementation surfaces', () => {
@@ -469,6 +650,32 @@ test('FeatureMechanizationGitDiffReader includes untracked files in implementati
     readGitCalls.some((call) => call.startsWith('ls-files --others')),
     true
   );
+});
+
+test('FeatureMechanizationGitDiffReader avoids two-dot base diffs that include unrelated branch drift', () => {
+  const reader = new FeatureMechanizationGitDiffReader({
+    baseRef: 'origin/main',
+    repoRootPath: process.cwd(),
+  });
+  const runGitCalls = [];
+
+  reader.runGit = (args) => {
+    runGitCalls.push(args.join(' '));
+    return '';
+  };
+
+  reader.read();
+
+  assert.ok(runGitCalls.includes('diff --name-only --diff-filter=ACMR origin/main...HEAD'));
+  assert.ok(runGitCalls.includes('diff --cached --name-only --diff-filter=ACMR'));
+  assert.ok(runGitCalls.includes('diff --name-only --diff-filter=ACMR'));
+  assert.ok(
+    runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMR origin/main...HEAD')
+  );
+  assert.ok(runGitCalls.includes('diff --cached --unified=0 --no-ext-diff --diff-filter=ACMR'));
+  assert.ok(runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMR'));
+  assert.ok(!runGitCalls.includes('diff --name-only --diff-filter=ACMR origin/main'));
+  assert.ok(!runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMR origin/main'));
 });
 
 test('FeatureMechanizationGitDiffReader treats untracked file contents as added lines', () => {

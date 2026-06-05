@@ -15,6 +15,10 @@ describe('resolveProtectedRouteSessionContext', () => {
       projectId: 'local-project',
       environmentId: 'local-env',
       targetAdapter: 'temporal',
+      availableWorkspaces: [],
+      workspaceScopeSelectionStatus: 'unresolved',
+      workspaceScopeSelectionRejectionReason: undefined,
+      rejectedWorkspaceScope: undefined,
     });
     useAuthorizationStore.setState({
       userPermissions: DEFAULT_USER_PERMISSIONS,
@@ -28,6 +32,11 @@ describe('resolveProtectedRouteSessionContext', () => {
       projectId: originalSessionState.projectId,
       environmentId: originalSessionState.environmentId,
       targetAdapter: originalSessionState.targetAdapter,
+      availableWorkspaces: originalSessionState.availableWorkspaces,
+      workspaceScopeSelectionStatus: originalSessionState.workspaceScopeSelectionStatus,
+      workspaceScopeSelectionRejectionReason:
+        originalSessionState.workspaceScopeSelectionRejectionReason,
+      rejectedWorkspaceScope: originalSessionState.rejectedWorkspaceScope,
     });
     useAuthorizationStore.setState({
       userPermissions: originalAuthorizationState.userPermissions,
@@ -84,6 +93,14 @@ describe('resolveProtectedRouteSessionContext', () => {
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'prod',
+      availableWorkspaces: [
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'prod',
+        },
+      ],
+      workspaceScopeSelectionStatus: 'selected',
     });
     expect(useAuthorizationStore.getState().userPermissions).toEqual({
       canPlan: true,

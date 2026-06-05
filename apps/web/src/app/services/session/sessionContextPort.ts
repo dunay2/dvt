@@ -1,5 +1,8 @@
+import { asNonBlankString } from '@dvt/contracts';
+
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import { useSessionStore, type SessionState } from '../../stores/sessionStore';
+import { readGrantedWorkspaceScope } from './workspaceScopeSelectionPort';
 
 function readWorkspaceScope(
   state: Pick<SessionState, 'tenantId' | 'projectId' | 'environmentId' | 'targetAdapter'>
@@ -26,9 +29,9 @@ export function createSessionContextPort(): SessionContextPort {
   let cachedWorkspaceScope = readWorkspaceScope(useSessionStore.getState());
 
   return {
-    getWorkspaceScope: () => readWorkspaceScope(useSessionStore.getState()),
+    getWorkspaceScope: () => readGrantedWorkspaceScope(),
     getWorkspaceScopeSnapshot: () => {
-      const nextWorkspaceScope = readWorkspaceScope(useSessionStore.getState());
+      const nextWorkspaceScope = readGrantedWorkspaceScope();
       if (!areWorkspaceScopesEqual(cachedWorkspaceScope, nextWorkspaceScope)) {
         cachedWorkspaceScope = nextWorkspaceScope;
       }
@@ -49,6 +52,15 @@ export function createSessionContextPort(): SessionContextPort {
         onStoreChange();
       });
     },
-    buildRunContext: (runId) => useSessionStore.getState().buildRunContext(runId),
+    buildRunContext: (runId) => {
+      const workspaceScope = readGrantedWorkspaceScope();
+      return {
+        tenantId: asNonBlankString(workspaceScope.tenantId),
+        projectId: asNonBlankString(workspaceScope.projectId),
+        environmentId: asNonBlankString(workspaceScope.environmentId),
+        targetAdapter: workspaceScope.targetAdapter,
+        runId: asNonBlankString(runId),
+      };
+    },
   };
 }

@@ -1,6 +1,6 @@
 /** Owned concern: create typed frontend API clients with normalized auth, session headers, and transport errors. */
 
-import { useSessionStore } from '../../stores/sessionStore';
+import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPort';
 import { canRefreshApiBearerToken, resolveApiBearerTokenForRequest } from './apiAuthConfig';
 
 export type ApiErrorCategory = 'network' | 'unauthorized' | 'forbidden' | 'client' | 'server';
@@ -166,7 +166,7 @@ async function buildHeaders(
   }
 
   if (includeSessionHeaders) {
-    const { tenantId, projectId } = useSessionStore.getState();
+    const { tenantId, projectId } = readGrantedWorkspaceScope();
     headers['X-Tenant-Id'] = tenantId;
     headers['X-Project-Id'] = projectId;
   }

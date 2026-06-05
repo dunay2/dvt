@@ -36,6 +36,16 @@ describe('createApiClient', () => {
       projectId: 'project-test',
       environmentId: 'env-test',
       targetAdapter: 'temporal',
+      availableWorkspaces: [
+        {
+          tenantId: 'tenant-test',
+          projectId: 'project-test',
+          environmentId: 'env-test',
+        },
+      ],
+      workspaceScopeSelectionStatus: 'selected',
+      workspaceScopeSelectionRejectionReason: undefined,
+      rejectedWorkspaceScope: undefined,
     });
   });
 
@@ -45,6 +55,11 @@ describe('createApiClient', () => {
       projectId: originalSessionState.projectId,
       environmentId: originalSessionState.environmentId,
       targetAdapter: originalSessionState.targetAdapter,
+      availableWorkspaces: originalSessionState.availableWorkspaces,
+      workspaceScopeSelectionStatus: originalSessionState.workspaceScopeSelectionStatus,
+      workspaceScopeSelectionRejectionReason:
+        originalSessionState.workspaceScopeSelectionRejectionReason,
+      rejectedWorkspaceScope: originalSessionState.rejectedWorkspaceScope,
     });
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
