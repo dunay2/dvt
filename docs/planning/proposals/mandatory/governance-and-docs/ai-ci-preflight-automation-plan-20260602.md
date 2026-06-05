@@ -81,6 +81,7 @@ userStories:
   - As an engineer, moving a draft PR to ready reopens affected Test Suite coverage without restoring duplicate Code Quality tests.
   - As an engineer, draft-aware quality, contracts, and security gates reopen on ready-for-review without spending draft runners.
   - As an engineer, converting a ready PR back to draft cancels stale ready-PR gate work and records skipped draft posture.
+  - As an engineer, files introduced by pull, merge, or branch checkout are Prettier-normalized even when editor save hooks did not run.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -98,6 +99,9 @@ allowedImplementationSurfaces:
   - .github/workflows/dependency-review.yml
   - .github/workflows/pr-quality-gate.yml
   - .github/workflows/test.yml
+  - .gitattributes
+  - .husky/post-checkout
+  - .husky/post-merge
   - .vscode/extensions.json
   - .vscode/settings.json
   - package.json
@@ -109,6 +113,8 @@ allowedImplementationSurfaces:
   - docs/**/index.md
   - scripts/ai-preflight.cjs
   - scripts/ai-preflight.test.cjs
+  - scripts/format-git-operation-changes.cjs
+  - scripts/format-git-operation-changes.test.cjs
   - scripts/check-governance-changed-files.cjs
   - scripts/check-governance-changed-files.test.cjs
   - scripts/local-validation-plan.cjs
@@ -134,6 +140,9 @@ commandQueryRails:
   - name: RunAgentPreflight
     type: command
     dddOwner: DeveloperWorkflow
+  - name: FormatPostGitOperationChanges
+    type: command
+    dddOwner: DeveloperWorkflow
   - name: QueryPrCheckFirstFailure
     type: query
     dddOwner: CiCheckTriage
@@ -146,6 +155,9 @@ domainObjects:
     owner: Engineering / CI
   - name: WorkspaceFormatOnSavePolicy
     type: editor automation contract
+    owner: Engineering / CI
+  - name: PostGitFormatPlan
+    type: developer workflow command plan
     owner: Engineering / CI
   - name: PrCheckFailureTriage
     type: CI read model
@@ -169,8 +181,10 @@ fowlerSignals:
   - Over-eager Resource Use when Contracts scope detection spends a runner for non-reviewable draft PRs.
   - Cancellation Gap when ready-to-draft transitions do not retrigger draft-aware workflows.
   - Shallow Checkout Fragility when PR merge refs cannot provide a local merge base for raw triple-dot diffs.
+  - Automation Gap when files arrive through Git operations without editor save hooks firing.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
+  - node --test scripts/format-git-operation-changes.test.cjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
   - node --test tools/ci/turbo-workspace-task-contract.test.mjs
   - pnpm docs:feature-mechanization:implementation
@@ -179,6 +193,7 @@ cypressFlows:
 completionGate:
   - pnpm governance:refresh
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
+  - node --test scripts/format-git-operation-changes.test.cjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
   - node --test tools/ci/turbo-workspace-task-contract.test.mjs
   - pnpm verify:changed
@@ -272,6 +287,18 @@ redGreenCycles:
       - scripts/check-governance-changed-files.test.cjs
       - docs/guides/testing-and-ci-capabilities.md
     greenTest: node --test tools/ci/git-diff-files.test.mjs scripts/check-governance-changed-files.test.cjs
+  - id: post-git-prettier-format
+    redTest: node --test scripts/format-git-operation-changes.test.cjs
+    expectedFailure: files introduced by pull, merge, or branch checkout are not formatted unless an editor save hook fires.
+    patchSurfaces:
+      - .husky/post-checkout
+      - .husky/post-merge
+      - .gitattributes
+      - package.json
+      - scripts/format-git-operation-changes.cjs
+      - scripts/format-git-operation-changes.test.cjs
+      - docs/guides/testing-and-ci-capabilities.md
+    greenTest: node --test scripts/format-git-operation-changes.test.cjs
 symbols:
   - name: assert
     path: scripts/ai-preflight.test.cjs
@@ -617,4 +644,184 @@ symbols:
     cypressCoverage: N/A - local validation planner adjacent-test lookup
     unitTests:
       - scripts/verify-changed.test.cjs
+  - name: DEFAULT_BATCH_SIZE
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: chunk
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: formatGitOperationChanges
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: fs
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: ignoredPrettierPaths
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: isPrettierCandidate
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: isSkippedByEnvironment
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: listGitOperationChangedFiles
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: main
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: parseArgs
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: path
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: prettierPattern
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: repoRoot
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: resolveCliPath
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: resolvePackageBin
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: resolvePrettierCli
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: runPrettierOnFiles
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: selectExistingPrettierFiles
+    path: scripts/format-git-operation-changes.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - local Git hook automation
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: assert
+    path: scripts/format-git-operation-changes.test.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - Node test assertion dependency
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
+  - name: test
+    path: scripts/format-git-operation-changes.test.cjs
+    dddOwner: DeveloperWorkflow
+    cqRails: [FormatPostGitOperationChanges]
+    fowlerSignals: [Automation Gap]
+    architectureGuard: node --test scripts/format-git-operation-changes.test.cjs
+    cypressCoverage: N/A - Node test harness dependency
+    unitTests:
+      - scripts/format-git-operation-changes.test.cjs
 ```
