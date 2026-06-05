@@ -257,10 +257,10 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
   const client = {
     async query(sql, params) {
       queryCalls.push({ sql, params });
-      assert.match(sql, /planning_query_store\.command_query_rails/);
       assert.match(sql, /raw_manifest \? 'featureId'/);
 
       if (params) {
+        assert.match(sql, /planning_query_store\.command_query_rails/);
         return {
           rows: [
             {
@@ -313,6 +313,7 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
     },
   ]);
   assert.equal(queryCalls.length, 2);
+  assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_query/);
   assert.deepEqual(result, [
     {
       sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
@@ -323,11 +324,13 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
 
 test('readFeatureMechanizationManifestsFromDb skips import when DB manifests are fresh', async () => {
   const importCalls = [];
+  const queryCalls = [];
   const client = {
     async query(sql, params) {
-      assert.match(sql, /planning_query_store\.command_query_rails/);
+      queryCalls.push({ sql, params });
 
       if (params) {
+        assert.match(sql, /planning_query_store\.command_query_rails/);
         return {
           rows: [
             {
@@ -362,6 +365,7 @@ test('readFeatureMechanizationManifestsFromDb skips import when DB manifests are
   });
 
   assert.deepEqual(importCalls, []);
+  assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_query/);
   assert.equal(result.length, 1);
 });
 

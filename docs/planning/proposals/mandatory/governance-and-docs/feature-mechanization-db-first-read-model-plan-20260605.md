@@ -62,10 +62,13 @@ when frontend proposal docs are classified or archived.
 
 ## Mechanization Posture
 
-The current slice implements the DB-backed read path for
-`ValidateFeatureMechanizationImplementation`. The broader operator query rails
-for features, components, symbols, rails, and validations remain planned in the
-next migration phase.
+The first slice implemented the DB-backed read path for
+`ValidateFeatureMechanizationImplementation`. The current writer slice adds
+`RecordFeatureMechanizationRail` so new command/query rail declarations can be
+written through `planning:db:operate` into local Planning DB rows, then read
+through the effective `command_query_rail_query` projection. Compatibility
+Markdown manifests remain an import surface until generated feature literature
+is fully DB-sourced.
 
 ```feature-mechanization
 version: 1
@@ -246,6 +249,324 @@ symbols:
       - scripts/check-feature-mechanization.test.cjs
 ```
 
+```feature-mechanization
+version: 1
+featureId: FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md
+componentGuides:
+  - docs/architecture/command-query-rail-governance.md
+userStories:
+  - docs/architecture/components/ci-governance/component-engineering-record-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/adr/adr-0055-planning-db-canonical-operational-source.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md
+  - docs/planning/status/db-surface-inventory.md
+  - scripts/planning-db-operate.cjs
+  - scripts/planning-db-operate.test.cjs
+  - scripts/check-feature-mechanization.cjs
+  - scripts/check-feature-mechanization.test.cjs
+  - scripts/planning-db-migrate.test.cjs
+  - tools/planning-db/migrations/059_feature_mechanization_local_writer.sql
+  - tools/planning-db/migrations/060_command_query_rail_effective_manifest_projection.sql
+  - tools/planning-db/migrations/061_command_query_rail_local_precedence.sql
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/contracts/**
+  - docs/archive/**
+commandQueryRails:
+  - name: RecordFeatureMechanizationRail
+    type: command
+    dddOwner: Planning DB governance writer
+  - name: ListFeatureMechanizationRails
+    type: query
+    dddOwner: Planning DB governance read model
+  - name: ValidateFeatureMechanizationImplementation
+    type: command
+    dddOwner: CI governance implementation gate
+domainObjects:
+  - name: FeatureMechanizationLocalRail
+    type: aggregate row
+    owner: Planning DB governance writer
+  - name: FeatureMechanizationLocalOperation
+    type: audit row
+    owner: Planning DB governance writer
+  - name: FeatureMechanizationEffectiveRailProjection
+    type: read model
+    owner: Planning DB governance read model
+fowlerSignals:
+  - Markdown import was the only rail declaration writer even after DB-first posture.
+  - Implementation validation read the imported table and ignored local DB-authored rails.
+  - A local rail writer can produce invalid raw manifests unless the command owns the complete manifest projection contract.
+architectureGuards:
+  - node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs
+cypressFlows:
+  - N/A - repository governance CLI gate
+completionGate:
+  - node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs
+  - pnpm planning:db:migrate
+  - pnpm docs:feature-mechanization:implementation
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: feature-mechanization-writer-records-valid-local-rails
+    redTest: node --test scripts/planning-db-operate.test.cjs
+    expectedFailure: feature-mechanization record is an unknown operation or emits an invalid local manifest projection.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate.test.cjs
+      - tools/planning-db/migrations/059_feature_mechanization_local_writer.sql
+    greenTest: node --test scripts/planning-db-operate.test.cjs
+  - id: implementation-gate-reads-effective-rail-projection
+    redTest: node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: implementation manifests are read from command_query_rails instead of command_query_rail_query.
+    patchSurfaces:
+      - scripts/check-feature-mechanization.cjs
+      - scripts/check-feature-mechanization.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - tools/planning-db/migrations/060_command_query_rail_effective_manifest_projection.sql
+    greenTest: node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs
+symbols:
+  - name: allowedFeatureMechanizationStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Writer command validates lifecycle states before DB writes.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedFeatureMechanizationRailTypes
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Writer command rejects non-command/query rail types at the boundary.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedFeatureMechanizationRailStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Writer command preserves gap and implementation rail statuses.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: featureMechanizationListOptionKeys
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Repeated manifest fields stay explicit at the command boundary.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateFeatureMechanizationStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Feature status validation happens before DB mutation.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateFeatureMechanizationRailType
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Rail type validation keeps the command/query catalog normalized.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateFeatureMechanizationRailStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Rail status validation protects gap and duplicate queries.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateFeatureMechanizationFeatureId
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Stable feature ids keep local records replayable.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: normalizeFeatureMechanizationRailName
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Normalized names give duplicate detection a deterministic key.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: assertFeatureMechanizationRailIdempotentReplayMatches
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Idempotency replays cannot silently rewrite rail payloads.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: featureMechanizationRailId
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Rail identity is deterministic across command replays.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateFeatureMechanizationRecordCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - The writer rejects incomplete manifests before persistence.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: parseFeatureMechanizationCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - CLI input is normalized into a single command shape.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: normalizeFeatureMechanizationRail
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Existing local rows are normalized before revision checks.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: buildFeatureMechanizationSymbols
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - The writer projects implementation refs into manifest symbols for existing gates.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: planFeatureMechanizationRailRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Planning separates command validation from DB mutation.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readExistingFeatureMechanizationOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Durable operation history owns idempotency replay checks.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readLocalFeatureMechanizationRail
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Local rail revision checks happen against the DB row, not Markdown.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: writePlannedFeatureMechanizationRailRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Persistence writes local rails and local operations without mutating imported rails.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: applyFeatureMechanizationRailRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: Planning DB governance writer
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Runtime command application wraps migration, transaction, idempotency, and write.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: featureMechanizationRecordArgs
+    path: scripts/planning-db-operate.test.cjs
+    dddOwner: Planning DB governance writer tests
+    cqRails:
+      - RecordFeatureMechanizationRail
+    fowlerSignals:
+      - Tests reuse a full command contract fixture instead of narrow ad-hoc argument lists.
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+```
+
 ## Data Model
 
 ```mermaid
@@ -280,6 +601,11 @@ Included:
 
 - Reuse the existing command/query rail DB import projection for implementation
   gate reads.
+- Add `RecordFeatureMechanizationRail` as the Planning DB command writer for
+  DB-authored local command/query rails.
+- Project local rails and imported compatibility rails through one effective
+  `command_query_rail_query`, preferring local records for the same
+  feature/type/name key.
 - Keep structural manifest validation by validating DB manifest rows.
 - Share the Planning DB import path and DSN used by `planning:db:query`.
 - Add focused Node tests for DB row normalization, DB read path, and
@@ -309,15 +635,24 @@ Excluded:
   lists completion-gate commands.
 - `pnpm governance:refresh` imports the new read model through the existing
   governance import path.
+- `pnpm planning:db:operate feature-mechanization record ...` records a local
+  rail with a structurally valid raw manifest projection and durable operation
+  audit row.
+- `pnpm planning:db:query command-query-rails --rail <name>` filters by the
+  requested rail name and reads the effective local/import projection.
 
 ## Migration Phases
 
 1. Read-model import from docs. First implementation slice.
-2. Component-state reconciliation: link imported component refs to
+2. Local writer slice: record DB-authored rails through
+   `planning:db:operate`, expose raw manifests from the effective rail
+   projection, and prefer local rails over matching imported compatibility
+   rows.
+3. Component-state reconciliation: link imported component refs to
    `frontend_components`, `governance_components`, and architecture component
    records.
-3. Single-writer migration: decide whether Planning DB becomes the writer and
-   docs are rendered from DB.
+4. Single-writer migration: render feature literature from DB and retire
+   compatibility Markdown fences.
 
 ## Validation
 
@@ -332,9 +667,12 @@ Future implementation validation, once the read model and query rails exist:
 
 ```bash
 node --test scripts/feature-mechanization-manifest.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-feature-mechanization.test.cjs
+node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
 pnpm planning:db:migrate
+pnpm planning:db:operate feature-mechanization record ...
 pnpm governance:refresh
 pnpm planning:db:query feature-mechanization --limit 10
+pnpm planning:db:query command-query-rails --rail RecordFeatureMechanizationRail --limit 10
 pnpm planning:db:query feature-mechanization-components --state implemented --limit 10
 pnpm verify:prepush
 ```
