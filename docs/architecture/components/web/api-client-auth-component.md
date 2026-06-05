@@ -30,6 +30,8 @@ The component is intentionally narrow:
 | `resolveApiBearerTokenRefreshUrl`   | `apiAuthConfig.ts`               | Read `VITE_API_BEARER_TOKEN_REFRESH_URL` when present.                |
 | `canRefreshApiBearerToken(...)`     | `apiAuthConfig.ts`               | Tell transport code whether a refresh path is available.              |
 | `resolveApiBearerTokenForRequest`   | `apiAuthConfig.ts`               | Return a fresh usable token or omit auth when a token is expired.     |
+| `canRecoverLocalApiBearerSession`   | `apiAuthConfig.ts`               | Tell public recovery UI whether local dev-session recovery is wired.  |
+| `recoverLocalApiBearerSession`      | `apiAuthConfig.ts`               | Force one local refresh and cache the bearer token for later use.     |
 | `createApiClient().requestRaw(...)` | `createApiClient.ts`             | Attach auth/session headers and retry one retryable `401` request.    |
 | `startLocalProtectedRuntimeAuth`    | `scripts/run-dev-stack.auth.cjs` | Start the local JWKS posture and refresh endpoint for `pnpm dev:app`. |
 
@@ -43,6 +45,8 @@ The component is intentionally narrow:
 - Expired tokens are omitted when no refresh endpoint is available.
 - The local refresh endpoint is a dev-stack bootstrap aid. It is not a product
   login flow and must not be documented as one.
+- Public recovery UI may ask this component to force one local refresh, but it
+  must not decode JWTs, mint permissions, or infer backend authorization.
 - Session headers remain attached by `createApiClient()` when requested; token
   refresh must not bypass tenant/project scoping.
 - Local protected-runtime tokens publish the same tenant action vocabulary that
@@ -94,6 +98,7 @@ sequenceDiagram
 Direct consumers:
 
 - `createApiClient.ts`
+- `/login` public route recovery UI
 - API-mode workspace, plans, runs, capabilities, and plugin services
 - `scripts/run-dev-stack.auth.cjs`
 - `scripts/run-selected-closure-live-proof.cjs`

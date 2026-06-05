@@ -163,6 +163,10 @@ export function canRefreshApiBearerToken(env: EnvSource = import.meta.env): bool
   return resolveApiBearerTokenRefreshUrl(env) !== undefined;
 }
 
+export function canRecoverLocalApiBearerSession(env: EnvSource = import.meta.env): boolean {
+  return canRefreshApiBearerToken(env);
+}
+
 async function refreshApiBearerToken(
   refreshUrl: string,
   fetcher: FetchLike
@@ -218,4 +222,22 @@ export async function resolveApiBearerTokenForRequest(
   }
 
   return configuredToken;
+}
+
+export async function recoverLocalApiBearerSession(
+  env: EnvSource = import.meta.env,
+  options: { fetcher?: FetchLike } = {}
+): Promise<boolean> {
+  let bearerToken: string | undefined;
+
+  try {
+    bearerToken = await resolveApiBearerTokenForRequest(env, {
+      fetcher: options.fetcher,
+      forceRefresh: true,
+    });
+  } catch {
+    return false;
+  }
+
+  return bearerToken !== undefined;
 }

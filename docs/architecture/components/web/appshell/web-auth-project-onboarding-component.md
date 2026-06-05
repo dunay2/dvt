@@ -30,6 +30,7 @@ authenticated users who have tenant scope but no effective project/workspace.
 | API                                   | Kind               | Owned concern                                                                  |
 | ------------------------------------- | ------------------ | ------------------------------------------------------------------------------ |
 | `/login`                              | public route       | Public recovery surface for unauthenticated product navigation.                |
+| `RecoverLocalApiBearerSession`        | command            | Dev-only local session recovery through the API auth component.                |
 | `AuthRouteGate`                       | route gate         | Admit protected shell routes only after session and workspace context resolve. |
 | `resolveProtectedRouteSessionContext` | query orchestrator | Query `/session`, then `/workspace/context`, then update browser projections.  |
 | `classifyProtectedRouteSessionError`  | mapper             | Convert API failures to source-owned route recovery vocabulary.                |
@@ -59,7 +60,7 @@ authenticated users who have tenant scope but no effective project/workspace.
 stateDiagram-v2
   [*] --> PublicLogin: unauthenticated protected route
   [*] --> SessionChecking: protected route
-  PublicLogin --> SessionChecking: login completed with return route
+  PublicLogin --> SessionChecking: product login or local dev-session recovery completed with return route
   SessionChecking --> WorkspaceContextChecking: GetSessionProfile succeeds
   SessionChecking --> PublicLogin: unauthenticated | transport_error | runtime_unavailable
   WorkspaceContextChecking --> ProjectOnboarding: no granted project or manifest empty
@@ -112,6 +113,7 @@ sequenceDiagram
 | Rail                           | Type    | DDD owner                        | Application port / adapter surface                                 | Negative tests                                                       |
 | ------------------------------ | ------- | -------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------- |
 | `StartLogin`                   | command | `ReturnRoute` value object       | `/login` route                                                     | protected deep link without session redirects with return route      |
+| `RecoverLocalApiBearerSession` | command | `ReturnRoute` value object       | `/login` route via API auth component                              | missing refresh URL or unusable token leaves user on public recovery |
 | `GetSessionProfile`            | query   | `SessionProfile` read model      | `resolveProtectedRouteSessionContext` via `GET /session`           | missing, expired, malformed, or unauthorized session fails closed    |
 | `GetEffectiveWorkspaceContext` | query   | `SelectedScope` read model       | `resolveProtectedRouteSessionContext` via `GET /workspace/context` | revoked tenant, deleted project, stale browser storage, denied scope |
 | `ListProjects`                 | query   | `ProjectDescriptor` read model   | project onboarding catalog                                         | empty tenant returns onboarding, not sample graph data               |

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { fireEvent } from '@testing-library/dom';
 import { createAppServicesTestOverrides } from '../testing/appServicesTestDoubles';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -27,6 +28,10 @@ import { createAppRoutes } from './routes';
 import { createTestQueryClient, waitForReactQuery } from '../testing/reactQueryHarness';
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from './views/canvas/canvasDraftPresentationStore';
 
+const jsonHeaders = {
+  'content-type': 'application/json',
+};
+
 function mountBootstrapDom(): void {
   document.body.insertAdjacentHTML(
     'beforeend',
@@ -50,60 +55,71 @@ function mountBootstrapDom(): void {
   );
 }
 
-function stubAuthenticatedSessionFetch(): ReturnType<typeof vi.fn> {
-  const jsonHeaders = {
-    'content-type': 'application/json',
-  };
-  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
-    const url = String(input);
-
-    if (url.endsWith('/session')) {
-      return new Response(
-        JSON.stringify({
-          authenticated: true,
-          permissions: {
-            canPlan: true,
-            canRun: true,
-            canEditEdges: true,
-            canPersistGraphDraft: true,
-            canManagePlugins: false,
-            canManageRBAC: false,
-          },
-        }),
-        {
-          status: 200,
-          headers: jsonHeaders,
-        }
-      );
-    }
-
-    if (url.endsWith('/workspace/context')) {
-      return new Response(
-        JSON.stringify({
-          effectiveWorkspace: {
-            tenantId: 'tenant-a',
-            projectId: 'project-a',
-            environmentId: 'dev',
-          },
-          availableWorkspaces: [
-            {
-              tenantId: 'tenant-a',
-              projectId: 'project-a',
-              environmentId: 'dev',
-            },
-          ],
-        }),
-        {
-          status: 200,
-          headers: jsonHeaders,
-        }
-      );
-    }
-
-    return new Response(JSON.stringify({}), {
+function buildAuthenticatedSessionResponse(): Response {
+  return new Response(
+    JSON.stringify({
+      authenticated: true,
+      permissions: {
+        canPlan: true,
+        canRun: true,
+        canEditEdges: true,
+        canPersistGraphDraft: true,
+        canManagePlugins: false,
+        canManageRBAC: false,
+      },
+    }),
+    {
       status: 200,
       headers: jsonHeaders,
-    });
+    }
+  );
+}
+
+function buildWorkspaceContextResponse(): Response {
+  return new Response(
+    JSON.stringify({
+      effectiveWorkspace: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+      },
+      availableWorkspaces: [
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        },
+      ],
+    }),
+    {
+      status: 200,
+      headers: jsonHeaders,
+    }
+  );
+}
+
+function buildEmptyJsonResponse(status = 200): Response {
+  return new Response(JSON.stringify({}), {
+    status,
+    headers: jsonHeaders,
+  });
+}
+
+function buildAuthenticatedRouteResponse(url: string): Response | undefined {
+  if (url.endsWith('/session')) {
+    return buildAuthenticatedSessionResponse();
+  }
+
+  if (url.endsWith('/workspace/context')) {
+    return buildWorkspaceContextResponse();
+  }
+
+  return undefined;
+}
+
+function stubAuthenticatedSessionFetch(): ReturnType<typeof vi.fn> {
+  const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    return buildAuthenticatedRouteResponse(String(input)) ?? buildEmptyJsonResponse();
   });
 
   vi.stubGlobal('fetch', fetchMock);
@@ -111,9 +127,6 @@ function stubAuthenticatedSessionFetch(): ReturnType<typeof vi.fn> {
 }
 
 function stubMissingSessionRouteFetch(): ReturnType<typeof vi.fn> {
-  const jsonHeaders = {
-    'content-type': 'application/json',
-  };
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
     const url = String(input);
     if (url.endsWith('/session')) {
@@ -131,10 +144,7 @@ function stubMissingSessionRouteFetch(): ReturnType<typeof vi.fn> {
       );
     }
 
-    return new Response(JSON.stringify({}), {
-      status: 200,
-      headers: jsonHeaders,
-    });
+    return buildEmptyJsonResponse();
   });
 
   vi.stubGlobal('fetch', fetchMock);
@@ -249,7 +259,119 @@ describe('app routes', () => {
     });
 
     expect(document.getElementById('app-loading-screen')).toBeNull();
+    expect(container.textContent).toContain('VITE_API_BEARER_TOKEN_REFRESH_URL');
     expect(mockUsePublishedRouteBootstrap).not.toHaveBeenCalled();
+  });
+
+  it('recovers a configured local bearer session from the login route and returns to the protected route', async () => {
+    const refreshUrl = 'http://auth.example/__dvt/local-protected-runtime/token';
+    vi.stubEnv('VITE_API_BEARER_TOKEN_REFRESH_URL', refreshUrl);
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+
+      if (url === refreshUrl) {
+        return new Response(JSON.stringify({ bearerToken: 'fresh-dev-bearer-token' }), {
+          status: 200,
+          headers: jsonHeaders,
+        });
+      }
+
+      return buildAuthenticatedRouteResponse(url) ?? buildEmptyJsonResponse();
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    const capabilitiesPort = {
+      loadCapabilities: vi.fn().mockResolvedValue({
+        apiVersion: '1.0.0',
+        minFrontendVersion: '1.0.0',
+        plugins: {},
+      }),
+    };
+    const router = createMemoryRouter(createAppRoutes(), {
+      initialEntries: ['/login?returnTo=%2Fcanvas'],
+    });
+
+    await act(async () => {
+      root.render(
+        <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+          <RouterProvider router={router} />
+        </AppProviders>
+      );
+    });
+
+    await waitForReactQuery(() => container.textContent?.includes('Login required') === true, {
+      description: 'public login route',
+    });
+    const recoveryButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Start local dev session')
+    );
+
+    expect(recoveryButton).toBeInstanceOf(HTMLButtonElement);
+
+    await act(async () => {
+      fireEvent.click(recoveryButton as HTMLButtonElement);
+      await Promise.resolve();
+    });
+
+    await waitForReactQuery(
+      () => container.querySelector('[data-slot="app-shell-frame"]') !== null,
+      {
+        description: 'protected shell after local session recovery',
+      }
+    );
+
+    expect(router.state.location.pathname).toBe('/canvas');
+    expect(fetchMock).toHaveBeenCalledWith(refreshUrl, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+    });
+  });
+
+  it('keeps the user on login when local bearer session recovery fails', async () => {
+    const refreshUrl = 'http://auth.example/__dvt/local-protected-runtime/token';
+    vi.stubEnv('VITE_API_BEARER_TOKEN_REFRESH_URL', refreshUrl);
+    const fetchMock = vi.fn(async () => buildEmptyJsonResponse(500));
+    vi.stubGlobal('fetch', fetchMock);
+    const router = createMemoryRouter(createAppRoutes(), {
+      initialEntries: ['/login?returnTo=%2Fcanvas'],
+    });
+
+    await act(async () => {
+      root.render(
+        <AppProviders overrides={createAppServicesTestOverrides()}>
+          <RouterProvider router={router} />
+        </AppProviders>
+      );
+    });
+
+    await waitForReactQuery(() => container.textContent?.includes('Login required') === true, {
+      description: 'public login route',
+    });
+    const recoveryButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Start local dev session')
+    );
+
+    expect(recoveryButton).toBeInstanceOf(HTMLButtonElement);
+
+    await act(async () => {
+      fireEvent.click(recoveryButton as HTMLButtonElement);
+      await Promise.resolve();
+    });
+
+    await waitForReactQuery(
+      () =>
+        container.textContent?.includes(
+          'Local session recovery did not return a usable bearer token'
+        ) === true,
+      {
+        description: 'local session recovery failure',
+      }
+    );
+
+    expect(router.state.location.pathname).toBe('/login');
+    expect(fetchMock).toHaveBeenCalledWith(refreshUrl, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+    });
   });
 
   it('renders the canvas route when app providers are present', async () => {
