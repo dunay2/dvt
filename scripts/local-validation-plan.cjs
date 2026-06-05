@@ -73,6 +73,9 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/planning-db-surface-inventory-check.test.cjs',
   'scripts/planning-db-surface-inventory-check.test.cjs':
     'scripts/planning-db-surface-inventory-check.test.cjs',
+  'scripts/generate-db-surface-inventory.cjs': 'scripts/generate-db-surface-inventory.test.cjs',
+  'scripts/generate-db-surface-inventory.test.cjs':
+    'scripts/generate-db-surface-inventory.test.cjs',
 });
 
 function step(id, command, ...args) {

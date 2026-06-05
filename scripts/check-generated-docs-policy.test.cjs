@@ -171,6 +171,42 @@ test('DB-backed knowledge intake literature can be declared as an ignored local 
   assert.deepEqual(failures, []);
 });
 
+test('DB-backed surface inventory can be declared as an ignored local artifact', () => {
+  const checker = loadChecker();
+  const failures = checker.validatePolicy(
+    {
+      version: 1,
+      artifactClasses: [
+        {
+          id: 'local-db-surface-inventory',
+          artifacts: ['.generated-docs/planning/status/generated-db-surface-inventory.md'],
+          sourcePaths: ['scripts/generate-db-surface-inventory.cjs'],
+          generatorCommand: 'pnpm docs:db-surface-inventory:generate',
+          tracking: 'untracked',
+          manualEditPolicy: 'generator-owned',
+          dbBackedArtifacts: [
+            {
+              artifacts: ['.generated-docs/planning/status/generated-db-surface-inventory.md'],
+              queryView: 'planning_query_store.db_governance_surface_query',
+              importCommand: 'pnpm planning:db:migrate',
+              checkCommand: 'pnpm docs:db-surface-inventory:check',
+            },
+          ],
+        },
+      ],
+    },
+    new Set(['scripts/generate-db-surface-inventory.cjs']),
+    new Set(['scripts/generate-db-surface-inventory.cjs']),
+    {
+      'docs:db-surface-inventory:generate': 'node scripts/generate-db-surface-inventory.cjs',
+      'docs:db-surface-inventory:check': 'node scripts/generate-db-surface-inventory.cjs --check',
+      'planning:db:migrate': 'node scripts/planning-db-migrate.cjs',
+    }
+  );
+
+  assert.deepEqual(failures, []);
+});
+
 test('oversized governance file shards fail without DB-backed projection metadata', () => {
   const { artifactRoot, artifactRelPath } = makeOversizedArtifact();
   try {

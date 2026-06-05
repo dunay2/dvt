@@ -38,6 +38,7 @@ const {
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
 } = require('./planning-db/knowledge-intake-retirement-query.cjs');
+const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
 const componentEngineeringSchemaName = 'component_engineering';
@@ -80,6 +81,7 @@ const knownQueries = new Set([
   'knowledge-actions',
   'knowledge-intake',
   'mandatory-proposal-gaps',
+  'db-surfaces',
   'component-tree',
   'component-metadata',
   'component-drift',
@@ -538,7 +540,8 @@ function parseArgs(args = process.argv.slice(2)) {
       if (
         queryName === 'frontend-surfaces' ||
         queryName === 'frontend-components' ||
-        queryName === 'knowledge-intake'
+        queryName === 'knowledge-intake' ||
+        queryName === 'db-surfaces'
       ) {
         filters.state = value;
       } else {
@@ -3635,6 +3638,15 @@ async function runQuery(options = {}) {
       return railRows;
     }
 
+    if (queryName === 'db-surfaces') {
+      const rows = await readDbSurfaceRows(client, options.filters || {});
+      const surfaceRows = buildDbSurfaceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(surfaceRows);
+      }
+      return surfaceRows;
+    }
+
     if (queryName === 'pr-readiness') {
       const rows = await readPrReadinessRows(client, options.filters || {});
       const readinessRows = buildPrReadinessRows(rows);
@@ -4114,6 +4126,7 @@ module.exports = {
   buildFrontendComponentRailRows,
   buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
+  buildDbSurfaceRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
   buildRepositoryCommandRows,
@@ -4175,6 +4188,7 @@ module.exports = {
   readFrontendComponentRailRows,
   readFrontendComponentRows,
   readFrontendMechanicalTruthRows,
+  readDbSurfaceRows,
   readRepositoryCommandRows,
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,

@@ -193,6 +193,32 @@ test('tracked migrations count only canonical docs as knowledge intake retiremen
   assert.match(retirementMigration.sql, /from_document\.document_path not like 'buzon\/%'/);
 });
 
+test('tracked migrations include DB-first surface inventory command rail tables', () => {
+  const migrations = readMigrationFiles();
+  const surfaceInventoryMigration = migrations.find(
+    (migration) => migration.fileName === '059_db_surface_inventory.sql'
+  );
+
+  assert.ok(surfaceInventoryMigration);
+  assert.match(
+    surfaceInventoryMigration.sql,
+    /create table if not exists planning_query_store\.db_governance_surfaces/
+  );
+  assert.match(
+    surfaceInventoryMigration.sql,
+    /create table if not exists planning_query_store\.db_governance_surface_operations/
+  );
+  assert.match(
+    surfaceInventoryMigration.sql,
+    /create or replace view planning_query_store\.db_governance_surface_query/
+  );
+  assert.match(
+    surfaceInventoryMigration.sql,
+    /migration_state <> 'DB-first'\s+or write_rail_kind = 'db_command'/s
+  );
+  assert.match(surfaceInventoryMigration.sql, /Architecture design authority/);
+});
+
 test('tracked migrations include governance component definition command rail tables', () => {
   const migrations = readMigrationFiles();
   const componentDefinitionMigration = migrations.find(

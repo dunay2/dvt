@@ -52,6 +52,7 @@ test('governance refresh defers governance reports to DB-backed final generation
       'planning:db:import',
       'planning:db:check',
       'planning:db:inventory:check',
+      'docs:db-surface-inventory:generate',
       'planning:db:export:check',
       'governance:db:import',
       'docs:knowledge-intake:generate',

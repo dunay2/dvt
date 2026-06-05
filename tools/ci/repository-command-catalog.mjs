@@ -77,6 +77,7 @@ const EXACT_PACKAGE_SCRIPT_DOMAINS = new Map([
   ['pr:checks', 'developer-workflow'],
   ['pr:checks:json', 'developer-workflow'],
   ['pr:checks:first-failure', 'developer-workflow'],
+  ['postgit:format', 'developer-workflow'],
   ['test:ai-preflight', 'test-tooling'],
   ['test:verify-prepush', 'test-tooling'],
   ['test:pr-closeout', 'test-tooling'],
@@ -142,6 +143,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/governance-refresh(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/generate-workboard(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/generate-knowledge-intake-literature(\.test)?\.cjs$/u, 'planning-db'],
+  [/^scripts\/generate-db-surface-inventory(\.test)?\.cjs$/u, 'planning-db'],
   [
     /^scripts\/(align-markdown-tables|backfill-planning-last-reviewed|docs-[\w-]+|sync-docs|generate-(capability-coverage|code-status|governance-[\w-]+|planning-lanes|spec-traceability-report)|generated-doc-date|gen-ai-index|check-(ai-efficiency-adoption|feature-mechanization|generated-docs-policy|governance-[\w-]+|markdown-locations)|validate-arc-evidence-frontmatter|qa-artifact-check|lint-markdown-changed)(\.test)?\.(cjs|js)$/u,
     'docs-governance',
@@ -149,7 +151,7 @@ const SCRIPT_FILE_RULES = [
   [/^scripts\/lib\/feature-mechanization-manifest\.cjs$/u, 'docs-governance'],
   [/^tools\/docs\/.+\.ts$/u, 'docs-governance'],
   [
-    /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-markdown-changed|git-local-changes|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
+    /^scripts\/(ai-preflight|closeout-changed|commit|fix-changed|format-git-operation-changes|format-markdown-changed|git-local-changes|local-validation-plan|pr-closeout|run-determinism-precommit|setup-git-hooks|validate-pr-title|verify-changed|verify-prepush)\.cjs$/u,
     'developer-workflow',
   ],
   [

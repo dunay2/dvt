@@ -36,6 +36,7 @@ const {
   buildFrontendMechanicalTruthRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
+  buildDbSurfaceRows,
   buildSummaryRows,
   buildTaskRows,
   buildTaskTraceRows,
@@ -65,6 +66,7 @@ const {
   readFrontendMechanicalTruthRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
+  readDbSurfaceRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
@@ -195,6 +197,13 @@ test('knowledge intake retirement query behavior lives in a focused read-model c
   );
 });
 
+test('DB surface inventory query behavior lives in a focused read-model component', () => {
+  const dbSurfaceInventoryComponent = require('./planning-db/db-surface-inventory.cjs');
+
+  assert.equal(dbSurfaceInventoryComponent.buildDbSurfaceRows, buildDbSurfaceRows);
+  assert.equal(dbSurfaceInventoryComponent.readDbSurfaceRows, readDbSurfaceRows);
+});
+
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');
   assert.equal(resolveQueryName('summary'), 'summary');
@@ -233,6 +242,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('knowledge-documents'), 'knowledge-documents');
   assert.equal(resolveQueryName('knowledge-actions'), 'knowledge-actions');
   assert.equal(resolveQueryName('mandatory-proposal-gaps'), 'mandatory-proposal-gaps');
+  assert.equal(resolveQueryName('db-surfaces'), 'db-surfaces');
   assert.equal(resolveQueryName('component-tree'), 'component-tree');
   assert.equal(resolveQueryName('component-metadata'), 'component-metadata');
   assert.equal(resolveQueryName('component-drift'), 'component-drift');
@@ -247,6 +257,26 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('architecture-enforcement'), 'architecture-enforcement');
   assert.equal(resolveQueryName('architecture-evidence'), 'architecture-evidence');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
+});
+
+test('parseArgs parses DB surface inventory query filters', () => {
+  const command = parseArgs([
+    'db-surfaces',
+    '--surface',
+    'Architecture design authority',
+    '--state',
+    'DB-first',
+    '--kind',
+    'db_command',
+    '--limit',
+    '5',
+  ]);
+
+  assert.equal(command.queryName, 'db-surfaces');
+  assert.equal(command.filters.surface, 'Architecture design authority');
+  assert.equal(command.filters.state, 'DB-first');
+  assert.equal(command.filters.kind, 'db_command');
+  assert.equal(command.filters.limit, 5);
 });
 
 test('parseArgs parses task query filters for daily DB-first planning work', () => {
@@ -656,6 +686,34 @@ test('buildCreationIntentRows explicitly reports when no existing rail matches',
       'docs/architecture/command-query-rail-governance.md',
     ],
   ]);
+});
+
+test('buildDbSurfaceRows shows DB authority and migration state for operators', () => {
+  assert.deepEqual(
+    buildDbSurfaceRows([
+      {
+        surface_name: 'Architecture design authority',
+        migration_state: 'DB-first',
+        write_rail_kind: 'db_command',
+        read_query_rail: 'pnpm planning:db:query architecture-designs',
+        source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+        db_first_eligible: true,
+        revision: 0,
+        updated_by: 'migration',
+      },
+    ]),
+    [
+      [
+        'Architecture design authority',
+        'DB-first',
+        'db_command',
+        'true',
+        '0',
+        'migration',
+        'tools/planning-db/migrations/059_db_surface_inventory.sql',
+      ],
+    ]
+  );
 });
 
 test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
@@ -2038,6 +2096,31 @@ test('readKnowledgeIntakeReferenceRows queries DB document links and ownership p
   assert.deepEqual(captured.params, ['buzon/example.md', 'ci-governance', 5]);
 });
 
+test('readDbSurfaceRows queries the DB-first surface inventory view with real predicates', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readDbSurfaceRows(client, {
+    surface: 'Architecture design authority',
+    state: 'DB-first',
+    kind: 'db_command',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.db_governance_surface_query/);
+  assert.match(captured.sql, /surface_name = \$1/);
+  assert.match(captured.sql, /migration_state = \$2/);
+  assert.match(captured.sql, /write_rail_kind = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['Architecture design authority', 'DB-first', 'db_command', 5]);
+});
+
 test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
   const client = {
     async query() {
@@ -2073,6 +2156,46 @@ test('runQuery dispatches knowledge-intake through the DB-first retirement query
       'docs/planning/proposals/mandatory/example.md',
       'buzon/example.md',
       'Example Fowler Analysis',
+    ],
+  ]);
+});
+
+test('runQuery dispatches DB surface inventory through the DB query rail', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /db_governance_surface_query/);
+      return {
+        rows: [
+          {
+            surface_name: 'Architecture design authority',
+            migration_state: 'DB-first',
+            write_rail_kind: 'db_command',
+            source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+            db_first_eligible: true,
+            revision: 0,
+            updated_by: 'migration',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'db-surfaces',
+    filters: { state: 'DB-first', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'Architecture design authority',
+      'DB-first',
+      'db_command',
+      'true',
+      '0',
+      'migration',
+      'tools/planning-db/migrations/059_db_surface_inventory.sql',
     ],
   ]);
 });
