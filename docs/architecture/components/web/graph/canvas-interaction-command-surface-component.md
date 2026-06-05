@@ -2,7 +2,7 @@
 title: Canvas Interaction Command Surface Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-06-02
+last_reviewed: 2026-06-05
 ---
 
 # Canvas Interaction Command Surface Component
@@ -19,7 +19,9 @@ menu, a node renderer, or a toolbar dropdown the source of graph meaning.
 It does not own viewport state, node-shell rendering, node identity, graph
 lifecycle mutation, or Inspector content. Those concerns stay in their owning
 components; this component only normalizes target gestures into rail-backed
-context-menu read models and routes selected actions to existing command seams.
+node action read models and routes selected actions to existing command seams.
+The right Inspector may consume the same node action model for its local
+modeler command strip, but the Inspector remains the owner of property content.
 
 ## Governing Sources
 
@@ -45,6 +47,11 @@ type CanvasNodeContextMenuModel = {
   actionGroups: CanvasNodeContextMenuActionGroup[];
 };
 
+type CanvasNodeModelerActionModel = {
+  target: { kind: 'node'; nodeId: string };
+  actionGroups: CanvasNodeModelerActionGroup[];
+};
+
 type CanvasContextMenuModel = {
   kind: 'pane' | 'edge';
   screenPosition: Point;
@@ -56,6 +63,7 @@ type CanvasContextMenuModel = {
 
 function buildCanvasContextMenuModel(args): CanvasContextMenuModel;
 function buildCanvasNodeContextMenuModel(args): CanvasNodeContextMenuModel;
+function buildCanvasNodeModelerActionModel(args): CanvasNodeModelerActionModel;
 function buildCanvasEdgeContextRemovalChange(edge): EdgeChange<Edge>;
 ```
 
@@ -70,16 +78,23 @@ Related command seams:
 - Node-level actions use the same `ResolveCanvasContextMenu` rail, then dispatch
   to existing selection, duplicate, inspect, and remove-node callbacks supplied
   by the Canvas route.
+- The Inspector modeler action strip reuses the node action model minus the
+  current Properties action. It is not a new command/query rail and does not
+  own role, status, or catalog vocabularies.
 
 ## File Responsibilities
 
 - `canvasInteractionCommandSurface.ts`: pure pane/edge contextual menu read
   model and edge-removal change construction.
-- `canvasNodeContextMenuModel.ts`: pure node-target contextual menu read model.
+- `canvasNodeContextMenuModel.ts`: pure node-target contextual menu and
+  Inspector modeler-action read models.
 - `CanvasViewport.tsx`: React Flow pane/edge gesture adapter and menu renderer;
   it does not own contextual action policy.
 - `DbtNodeComponent.tsx`: node-shell gesture adapter and menu renderer; it does
   not own contextual action policy or node identity semantics.
+- `CanvasInspectorPanel.tsx`: right-panel consumer of the node modeler-action
+  read model; it delegates command execution to route-supplied handlers and
+  does not declare graph mutation policy.
 - `canvasAuthoringNodeCommand.ts`: canonical authoring-node command, including
   optional caller-owned origin.
 - `useCanvasAuthoringNodeCreationHandlers.ts`: node admission command execution
@@ -107,6 +122,10 @@ Related command seams:
   rendering, and no direct draft mutation.
 - `canvasNodeContextMenuModel.ts` is pure: no React hooks, no node rendering,
   and no direct draft mutation.
+- The action model may reflect route-local selection state, such as
+  execution-selection posture, but domain statuses, roles, node-kind catalogs,
+  and authorization vocabularies must come from their owning canonical read
+  models or plugin registrations rather than component literals.
 - React Flow nodes and edges remain projection state; protected draft
   authority stays behind the existing graph lifecycle and draft session.
 - Source connection authority remains server-projected through ADR-0058 rails;
@@ -128,6 +147,7 @@ stateDiagram-v2
   EdgeChange --> DraftGraph: canvasGraphLifecycle.edge.applyChanges
   NodeMenu --> Inspector: choose Properties
   NodeMenu --> NodeCommand: choose duplicate/select/remove
+  Inspector --> NodeCommand: choose modeler action
   NodeCommand --> DraftGraph
   DraftGraph --> Idle
 ```
@@ -140,9 +160,11 @@ flowchart LR
   NodeGesture["Node shell context gesture"] --> NodeRenderer["DbtNodeComponent.tsx"]
   Viewport --> Model["ResolveCanvasContextMenu<br>CanvasContextMenuModel"]
   NodeRenderer --> NodeModel["ResolveCanvasContextMenu<br>CanvasNodeContextMenuModel"]
+  InspectorPanel["CanvasInspectorPanel.tsx"] --> NodeModeler["CanvasNodeModelerActionModel"]
   Model --> Pane["pane actions"]
   Model --> Edge["edge actions"]
   NodeModel --> NodeActions["node actions"]
+  NodeModeler --> InspectorActions["right-panel node actions"]
   Pane --> Create["CreateCanvasAuthoringNode"]
   Create --> Admission["useCanvasNodeAdmissionCommandRunner"]
   Admission --> NodeLifecycle["canvasGraphLifecycle.node"]
@@ -150,12 +172,15 @@ flowchart LR
   Remove --> EdgeLifecycle["canvasGraphLifecycle.edge"]
   NodeActions --> Inspector["Canvas Inspector selection"]
   NodeActions --> ExistingNodeCommands["duplicate / select / remove callbacks"]
+  InspectorActions --> ExistingNodeCommands
 ```
 
 ## Consumers
 
 - `CanvasViewport.tsx` consumes the pure model and renders the menu.
 - `DbtNodeComponent.tsx` consumes the node model and renders node-shell actions.
+- `CanvasInspectorPanel.tsx` consumes the node modeler-action model through the
+  route-owned Inspector authoring contract.
 - `CanvasShellMainPanel.tsx` passes the active authoring catalog and graph
   command seam into the viewport.
 - `CanvasToolbar.tsx` and `CanvasAddNodePalette.tsx` continue to use the same
@@ -179,6 +204,8 @@ seams. It does not create a second graph aggregate.
 - Do not put context-menu action decisions directly in `CanvasViewport.tsx`.
 - Do not put node context-menu action decisions directly in
   `DbtNodeComponent.tsx`.
+- Do not put node modeler action decisions directly in `CanvasInspectorPanel.tsx`;
+  consume the shared node action model and route-owned handlers.
 - Do not call draft-session mutation directly from a context-menu button.
 - Do not create another node creation command for background clicks.
 - Do not create another node properties command for the context menu; use the

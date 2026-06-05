@@ -2,7 +2,7 @@
 title: Canvas Node Context Properties Panel Plan
 status: Proposed
 date: 2026-06-04
-last_reviewed: 2026-06-04
+last_reviewed: 2026-06-05
 owners:
   - apps/web
 planning_type: mandatory-plan
@@ -78,11 +78,14 @@ flowchart LR
 flowchart LR
   NodeGesture["Node right-click"] --> NodeModel["buildCanvasNodeContextMenuModel"]
   NodeModel --> NodeMenu["DbtNodeComponent menu renderer"]
+  NodeModel --> PanelActions["CanvasNodeModelerActionModel"]
   NodeMenu --> Inspect["Open existing Inspector"]
   NodeMenu --> Duplicate["Existing duplicate command"]
   NodeMenu --> Toggle["Existing execution-selection command"]
   NodeMenu --> Remove["Existing remove-node command"]
   Inspect --> Inspector["CanvasInspectorPanel"]
+  PanelActions --> Inspector
+  Inspector --> ExistingHandlers["Route-owned node handlers"]
   Inspector --> Passive["InspectorPanel shell"]
   Passive --> ReadModel["nodePropertiesReadModel.ts"]
   Passive --> Tabs["NodePropertiesTabs.tsx"]
@@ -93,13 +96,14 @@ flowchart LR
 
 <!-- markdownlint-disable MD060 -->
 
-| Scenario                                                              | Opportunity             | Fowler pattern                               | DDD owner                         | Command/query rail                                 | Implementation surfaces                                                                                       | Unit or package test                                               | Architecture or user-flow test                                            | Out of scope                                    |
-| --------------------------------------------------------------------- | ----------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------- | ----------------------------------------------- |
-| Node menu duplicates local semantics already governed for pane/edge.  | Duplicate semantics     | Presentation Model / Intention-Revealing API | `CanvasContextMenuReadModel`      | `ResolveCanvasContextMenu`                         | `canvasNodeContextMenuModel.ts`, `DbtNodeComponent.tsx`, C&Q catalog, interaction component docs              | `canvasNodeContextMenuModel.test.ts`                               | `DbtNodeComponent.architecture.test.ts`                                   | New global command palette behavior             |
-| Read-only node menus still need inspect but must not expose mutation. | Hidden authority        | Policy Object                                | Canvas interaction posture        | `ResolveCanvasContextMenu`, existing commands      | `canvasNodeContextMenuModel.ts`, `DbtNodeComponent.tsx`                                                       | `canvasNodeContextMenuModel.test.ts`                               | `DbtNodeComponent.architecture.test.ts`                                   | Backend authorization changes                   |
-| Inspector broad module owns extraction and table rendering.           | Responsibility overload | Extract Component / Compose Method           | Canvas node properties read model | `GetWorkspaceGraphDraft`, `ImportWarehouseSources` | `nodePropertiesReadModel.ts`, `NodePropertiesTabs.tsx`, `InspectorPanel.tsx`, `CanvasInspectorPanel.test.tsx` | `nodePropertiesReadModel.test.ts`, `CanvasInspectorPanel.test.tsx` | `canvasInspectorAuthoringComponent.architecture.test.ts` or sibling guard | Moving route-owned authoring into passive panel |
-| Node properties should feel like a mature table modeler.              | Primitive obsession     | Read Model / Table Module                    | Canvas node properties            | `GetWorkspaceGraphDraft`, `ImportWarehouseSources` | `NodePropertiesTabs.tsx`, `nodePropertiesReadModel.ts`, `InspectorPanel.tsx`                                  | `CanvasInspectorPanel.test.tsx`                                    | Browser smoke on `/canvas` inspector                                      | Real DB index/key persistence                   |
-| Unsupported table panes must not pretend to exist.                    | Test-only confidence    | Explicit Unavailable State                   | Canvas node properties            | Existing read rails                                | `nodePropertiesReadModel.ts`, `NodePropertiesTabs.tsx`                                                        | `nodePropertiesReadModel.test.ts`                                  | Presentation test for empty/unsupported pane copy                         | Creating fake constraints/indexes               |
+| Scenario                                                              | Opportunity             | Fowler pattern                               | DDD owner                         | Command/query rail                                 | Implementation surfaces                                                                                       | Unit or package test                                                | Architecture or user-flow test                                            | Out of scope                                    |
+| --------------------------------------------------------------------- | ----------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------- |
+| Node menu duplicates local semantics already governed for pane/edge.  | Duplicate semantics     | Presentation Model / Intention-Revealing API | `CanvasContextMenuReadModel`      | `ResolveCanvasContextMenu`                         | `canvasNodeContextMenuModel.ts`, `DbtNodeComponent.tsx`, C&Q catalog, interaction component docs              | `canvasNodeContextMenuModel.test.ts`                                | `DbtNodeComponent.architecture.test.ts`                                   | New global command palette behavior             |
+| Read-only node menus still need inspect but must not expose mutation. | Hidden authority        | Policy Object                                | Canvas interaction posture        | `ResolveCanvasContextMenu`, existing commands      | `canvasNodeContextMenuModel.ts`, `DbtNodeComponent.tsx`                                                       | `canvasNodeContextMenuModel.test.ts`                                | `DbtNodeComponent.architecture.test.ts`                                   | Backend authorization changes                   |
+| Inspector node actions must not duplicate context-menu semantics.     | Divergent change        | Presentation Model / Command Gateway         | `CanvasContextMenuReadModel`      | `ResolveCanvasContextMenu`, existing commands      | `CanvasInspectorPanel.tsx`, `canvasShellPanelsBuilder.ts`, `canvasNodeContextMenuModel.ts`                    | `CanvasInspectorPanel.test.tsx`, `canvasShellPanelsBuilder.test.ts` | `canvas-interaction-command-surface-component.md`                         | New backend commands for existing graph actions |
+| Inspector broad module owns extraction and table rendering.           | Responsibility overload | Extract Component / Compose Method           | Canvas node properties read model | `GetWorkspaceGraphDraft`, `ImportWarehouseSources` | `nodePropertiesReadModel.ts`, `NodePropertiesTabs.tsx`, `InspectorPanel.tsx`, `CanvasInspectorPanel.test.tsx` | `nodePropertiesReadModel.test.ts`, `CanvasInspectorPanel.test.tsx`  | `canvasInspectorAuthoringComponent.architecture.test.ts` or sibling guard | Moving route-owned authoring into passive panel |
+| Node properties should feel like a mature table modeler.              | Primitive obsession     | Read Model / Table Module                    | Canvas node properties            | `GetWorkspaceGraphDraft`, `ImportWarehouseSources` | `NodePropertiesTabs.tsx`, `nodePropertiesReadModel.ts`, `InspectorPanel.tsx`                                  | `CanvasInspectorPanel.test.tsx`                                     | Browser smoke on `/canvas` inspector                                      | Real DB index/key persistence                   |
+| Unsupported table panes must not pretend to exist.                    | Test-only confidence    | Explicit Unavailable State                   | Canvas node properties            | Existing read rails                                | `nodePropertiesReadModel.ts`, `NodePropertiesTabs.tsx`                                                        | `nodePropertiesReadModel.test.ts`                                   | Presentation test for empty/unsupported pane copy                         | Creating fake constraints/indexes               |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -122,6 +126,10 @@ Rail decisions:
   create a new persistence command.
 - The properties panel reads already selected `CanonicalNode`, `CanonicalEdge`,
   and plugin metadata; it does not query backend state directly.
+- Domain role, status, node-kind, authorization, and modeler catalog
+  vocabularies must come from canonical node contracts, plugin registrations,
+  or DB-backed read models. Components may render received vocabularies, but
+  they must not become the source of those vocabularies.
 
 ## Implementation Plan
 
@@ -173,11 +181,24 @@ Rail decisions:
 - Keep the route-owned authoring section inside Details/General; do not move
   write behavior into the passive component.
 
+### Task 4A: Inspector modeler action strip
+
+- Reuse `buildCanvasNodeModelerActionModel` in the right Inspector.
+- Wire duplicate, execution-selection, and remove actions through the
+  route-owned graph handlers already supplied by the Canvas controller.
+- Render action buttons by semantic action ID so presentation tests do not
+  depend on mutable button labels.
+- Keep destructive actions unavailable when graph mutation permissions are
+  blocked.
+- Do not introduce embedded role/status/action catalogs; only route-local
+  execution-selection posture is passed as UI state.
+
 ### Task 5: Browser QA and closeout
 
 - Run targeted canvas/unit/presentation commands first.
 - Run typecheck and lint for `@dvt/web`.
-- Run docs sync/status generation because docs and source files are added.
+- Run docs sync/status generation when docs or source files are added, removed,
+  or renamed.
 - Run `governance:refresh` if governance/generated surfaces move.
 - Commit with `pnpm commit`, then run `pnpm verify:prepush`, create PR, resolve
   comments, merge, return to `main`, and prune/sanitize.
@@ -213,8 +234,16 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/inspector/NodePropertiesTabs.tsx
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts
+  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
+  - apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
   - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+  - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
   - apps/web/src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts
+  - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
+  - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
+  - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
+  - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
   - docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md
   - docs/architecture/components/web/graph/canvas-interaction-command-surface-user-stories.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
@@ -243,6 +272,12 @@ domainObjects:
   - name: CanvasNodeContextMenuModel
     type: presentation read model
     owner: Canvas interaction surface
+  - name: CanvasNodeModelerActionModel
+    type: presentation read model
+    owner: Canvas interaction surface
+  - name: CanvasInspectorNodeModelerActions
+    type: route authoring contract
+    owner: Canvas Inspector authoring
   - name: CanvasNodePropertiesReadModel
     type: presentation read model
     owner: Canvas node properties
@@ -261,7 +296,8 @@ architectureGuards:
 cypressFlows:
   - Browser smoke on /canvas node context menu and Inspector panel
 completionGate:
-  - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/canvas/canvasNodeContextMenuModel.test.ts src/app/components/inspector/nodePropertiesReadModel.test.ts
+  - pnpm --filter @dvt/web exec vitest run --config vitest.canvas-unit.config.ts src/app/components/canvas/canvasNodeContextMenuModel.test.ts src/app/views/canvas/canvasShellPanelsBuilder.test.ts
+  - pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/inspector/nodePropertiesReadModel.test.ts
   - pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web lint
@@ -278,6 +314,21 @@ redGreenCycles:
       - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
       - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
     greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/canvas/canvasNodeContextMenuModel.test.ts
+  - id: inspector-modeler-action-strip
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx
+    expectedFailure: Inspector does not render semantic modeler action buttons.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx
+      - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
+      - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
+      - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
+      - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
+      - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
+      - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx
   - id: node-properties-read-model
     redTest: pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/components/inspector/nodePropertiesReadModel.test.ts
     expectedFailure: nodePropertiesReadModel module does not exist.
@@ -298,12 +349,24 @@ symbols:
   - { name: CanvasNodeContextMenuAction, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
   - { name: CanvasNodeContextMenuActionGroup, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
   - { name: CanvasNodeContextMenuActionId, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
+  - { name: CanvasNodeModelerActionId, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
+  - { name: CanvasNodeModelerAction, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Presentation Model], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
+  - { name: CanvasNodeModelerActionGroup, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
+  - { name: CanvasNodeModelerActionModel, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Presentation Model], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
   - { name: CanvasNodeContextMenuModel, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Duplicate semantics], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
   - { name: CanvasNodeContextMenuTarget, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
   - { name: BuildCanvasNodeContextMenuModelArgs, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel input DTO, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
+  - { name: BuildCanvasNodeModelerActionModelArgs, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel input DTO, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
+  - { name: buildCanvasNodeModelerActionModel, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
   - { name: buildCanvasNodeContextMenuModel, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Policy Object], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
+  - { name: CanvasInspectorNodeModelerActions, path: apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts, dddOwner: Canvas Inspector authoring contract, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }
+  - { name: MODELER_ACTION_ICONS, path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx, dddOwner: Inspector modeler action renderer, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Presentation Model], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }
+  - { name: CanvasInspectorModelerActions, path: apps/web/src/app/views/canvas/CanvasInspectorPanel.tsx, dddOwner: Inspector modeler action renderer, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Command Gateway], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }
   - { name: actionById, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts, dddOwner: CanvasContextMenuReadModel test helper, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Semantic test helper], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: N/A, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
   - { name: actionIds, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts, dddOwner: CanvasContextMenuReadModel test helper, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Semantic test helper], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: N/A, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
+  - { name: INSPECTOR_TEST_NODE_KIND, path: apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts, dddOwner: Inspector modeler action semantic fixture, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Semantic test fixture], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: N/A, unitTests: [apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts] }
+  - { name: buildInspectorNode, path: apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts, dddOwner: Inspector modeler action semantic fixture, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Semantic test fixture], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: N/A, unitTests: [apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts] }
+  - { name: modelerActionButton, path: apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx, dddOwner: Inspector modeler action semantic test helper, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Semantic test helper], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: N/A, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }
   - { name: NodePropertySectionId, path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts, dddOwner: Canvas node properties section vocabulary, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts] }
   - { name: NodePropertyRow, path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts, dddOwner: Canvas node properties scalar row, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts] }
   - { name: NodePropertySection, path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts, dddOwner: Canvas node properties, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts] }

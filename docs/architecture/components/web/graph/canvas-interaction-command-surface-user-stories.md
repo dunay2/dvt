@@ -2,7 +2,7 @@
 title: Canvas Interaction Command Surface User Stories
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-06-02
+last_reviewed: 2026-06-05
 ---
 
 # Canvas Interaction Command Surface User Stories
@@ -46,6 +46,11 @@ last_reviewed: 2026-06-02
   Columns, Keys, Indexes, Foreign Keys, Constraints, Comments, Code, and Summary
   sections render available facts or explicit empty states without fabricated
   records.
+- `US-CANVAS-INTERACTION-012`: as a data modeler, I can run available node
+  commands from the right Properties panel while inspecting a node. Acceptance:
+  the panel action strip reuses the node command model, dispatches through
+  route-owned handlers, keeps destructive actions unavailable when mutation is
+  blocked, and does not embed role, status, or catalog vocabularies.
 
 ## Scenario Matrix
 
@@ -59,8 +64,9 @@ last_reviewed: 2026-06-02
   `canvasAuthoringNodeCommand.test.ts`.
 - Architecture drift guard: all rails above; primary test:
   `canvasInteractionCommandSurface.architecture.test.ts`.
-- Node properties: `ResolveCanvasContextMenu` -> Inspector selection; primary
-  tests: `canvasNodeContextMenuModel.test.ts`,
+- Node properties: `ResolveCanvasContextMenu` -> Inspector selection and
+  Inspector modeler-action strip; primary tests:
+  `canvasNodeContextMenuModel.test.ts`, `canvasShellPanelsBuilder.test.ts`,
   `CanvasInspectorPanel.test.tsx`.
 
 ```mermaid
@@ -76,4 +82,7 @@ flowchart LR
   NodeModel --> NodeAllowed{"node mutation allowed?"}
   NodeAllowed -->|yes| NodeActions["duplicate / select / remove"]
   NodeAllowed -->|no| Inspect
+  Inspect --> Inspector["Right Inspector"]
+  Inspector --> PanelActions["same node action model"]
+  PanelActions --> NodeActions
 ```

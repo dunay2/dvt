@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildCanvasNodeContextMenuModel } from './canvasNodeContextMenuModel';
+import {
+  buildCanvasNodeContextMenuModel,
+  buildCanvasNodeModelerActionModel,
+} from './canvasNodeContextMenuModel';
 
 function actionIds(model: ReturnType<typeof buildCanvasNodeContextMenuModel>): string[] {
   return model.actionGroups.flatMap((group) => group.actions.map((action) => action.id));
@@ -16,6 +19,27 @@ function actionById(
 }
 
 describe('canvasNodeContextMenuModel', () => {
+  it('projects command actions for modeler panels without the current properties action', () => {
+    const model = buildCanvasNodeModelerActionModel({
+      target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },
+      selectedForExecution: false,
+      canDuplicateNode: true,
+      canToggleNodeSelection: true,
+      canRemoveNode: true,
+    });
+
+    expect(model.target.nodeId).toBe('source-orders');
+    expect(actionIds(model)).toEqual(
+      expect.arrayContaining(['duplicate-node', 'select-node-for-execution', 'remove-node'])
+    );
+    expect(actionById(model, 'inspect-node')).toBeUndefined();
+    expect(actionById(model, 'remove-node')).toMatchObject({
+      intent: 'command',
+      destructive: true,
+      disabled: false,
+    });
+  });
+
   it('maps editable node posture to semantic context actions', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },

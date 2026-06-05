@@ -24,6 +24,7 @@ type CanvasWorkbenchDefaultsDto = {
   canOpenSourceImport: CanvasController['canOpenSourceImport'];
   explorerNodes: CanvasController['explorerNodes'];
   inspectorNode: CanvasController['inspectorNode'];
+  inspectorNodeSelectedForExecution: CanvasController['inspectorNodeSelectedForExecution'];
   inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
   inspectorGraphEdges: CanvasController['inspectorGraphEdges'];
   canEditInspectorNode: CanvasController['canEditInspectorNode'];
@@ -151,6 +152,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canOpenSourceImport: true,
     explorerNodes: buildDefaultCanvasExplorerNodes(),
     inspectorNode: null,
+    inspectorNodeSelectedForExecution: false,
     inspectorGraphNodes: [],
     inspectorGraphEdges: [],
     canEditInspectorNode: true,
@@ -301,6 +303,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleExportProjectSnapshot'
   | 'handleImportProjectSnapshotFile'
   | 'applyInspectorNodeDraft'
+  | 'handleDuplicateNode'
+  | 'handleToggleNodeSelection'
+  | 'handleRemoveNode'
   | 'handleSourceImportComplete'
   | 'handleImportedNodeFocusComplete'
   | 'hideExplorerPanel'
@@ -343,6 +348,9 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleExportProjectSnapshot: vi.fn(),
     handleImportProjectSnapshotFile: vi.fn(),
     applyInspectorNodeDraft: vi.fn(),
+    handleDuplicateNode: vi.fn(),
+    handleToggleNodeSelection: vi.fn(),
+    handleRemoveNode: vi.fn(),
     handleSourceImportComplete: vi.fn(),
     importedNodeFocusIds: [],
     handleImportedNodeFocusComplete: vi.fn(),

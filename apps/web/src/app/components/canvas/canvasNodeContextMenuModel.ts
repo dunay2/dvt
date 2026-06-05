@@ -13,6 +13,8 @@ export type CanvasNodeContextMenuActionId =
   | 'deselect-node-from-execution'
   | 'remove-node';
 
+export type CanvasNodeModelerActionId = Exclude<CanvasNodeContextMenuActionId, 'inspect-node'>;
+
 export type CanvasNodeContextMenuAction = Readonly<{
   id: CanvasNodeContextMenuActionId;
   label: string;
@@ -33,6 +35,20 @@ export type CanvasNodeContextMenuModel = Readonly<{
   actionGroups: readonly CanvasNodeContextMenuActionGroup[];
 }>;
 
+export type CanvasNodeModelerAction = CanvasNodeContextMenuAction &
+  Readonly<{ id: CanvasNodeModelerActionId; intent: 'command' }>;
+
+export type CanvasNodeModelerActionGroup = Readonly<{
+  id: string;
+  label: string;
+  actions: readonly CanvasNodeModelerAction[];
+}>;
+
+export type CanvasNodeModelerActionModel = Readonly<{
+  target: CanvasNodeContextMenuTarget;
+  actionGroups: readonly CanvasNodeModelerActionGroup[];
+}>;
+
 type BuildCanvasNodeContextMenuModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
@@ -42,31 +58,20 @@ type BuildCanvasNodeContextMenuModelArgs = Readonly<{
   canRemoveNode: boolean;
 }>;
 
-export function buildCanvasNodeContextMenuModel({
+type BuildCanvasNodeModelerActionModelArgs = Omit<
+  BuildCanvasNodeContextMenuModelArgs,
+  'canInspectNode'
+>;
+
+export function buildCanvasNodeModelerActionModel({
   target,
   selectedForExecution,
-  canInspectNode,
   canDuplicateNode,
   canToggleNodeSelection,
   canRemoveNode,
-}: BuildCanvasNodeContextMenuModelArgs): CanvasNodeContextMenuModel {
-  const groups: CanvasNodeContextMenuActionGroup[] = [
-    {
-      id: 'inspect',
-      label: 'Inspect',
-      actions: [
-        {
-          id: 'inspect-node',
-          label: 'Properties',
-          intent: 'read',
-          disabled: !canInspectNode,
-          ...(canInspectNode ? {} : { disabledReason: 'Inspector is unavailable for this node.' }),
-        },
-      ],
-    },
-  ];
-
-  const editActions: CanvasNodeContextMenuAction[] = [];
+}: BuildCanvasNodeModelerActionModelArgs): CanvasNodeModelerActionModel {
+  const groups: CanvasNodeModelerActionGroup[] = [];
+  const editActions: CanvasNodeModelerAction[] = [];
 
   if (canDuplicateNode) {
     editActions.push({
@@ -109,6 +114,45 @@ export function buildCanvasNodeContextMenuModel({
       ],
     });
   }
+
+  return {
+    target,
+    actionGroups: groups,
+  };
+}
+
+export function buildCanvasNodeContextMenuModel({
+  target,
+  selectedForExecution,
+  canInspectNode,
+  canDuplicateNode,
+  canToggleNodeSelection,
+  canRemoveNode,
+}: BuildCanvasNodeContextMenuModelArgs): CanvasNodeContextMenuModel {
+  const groups: CanvasNodeContextMenuActionGroup[] = [
+    {
+      id: 'inspect',
+      label: 'Inspect',
+      actions: [
+        {
+          id: 'inspect-node',
+          label: 'Properties',
+          intent: 'read',
+          disabled: !canInspectNode,
+          ...(canInspectNode ? {} : { disabledReason: 'Inspector is unavailable for this node.' }),
+        },
+      ],
+    },
+  ];
+  groups.push(
+    ...buildCanvasNodeModelerActionModel({
+      target,
+      selectedForExecution,
+      canDuplicateNode,
+      canToggleNodeSelection,
+      canRemoveNode,
+    }).actionGroups
+  );
 
   return {
     target,

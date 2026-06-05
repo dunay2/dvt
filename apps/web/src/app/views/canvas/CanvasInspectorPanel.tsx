@@ -1,16 +1,23 @@
 /** Owned concern: compose the passive Inspector view with the route-owned Inspector authoring surface. */
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Copy, MousePointer, Plus, Trash2, X } from 'lucide-react';
 import InspectorPanel from '../../components/InspectorPanel';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import {
+  buildCanvasNodeModelerActionModel,
+  type CanvasNodeModelerActionId,
+} from '../../components/canvas/canvasNodeContextMenuModel';
 import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
-import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import type {
+  CanvasInspectorAuthoringContract,
+  CanvasInspectorNodeModelerActions,
+} from './canvasInspectorAuthoring.types';
 import {
   createCanvasInspectorNodeDraft,
   hasCanvasInspectorNodeDraftChanges,
@@ -52,6 +59,10 @@ export function CanvasInspectorPanel({
     node != null && (authoring.canEditNode || node.tags.length > 0) ? (
       <CanvasInspectorOverviewTagsEditor key={node.id} node={node} authoring={authoring} />
     ) : undefined;
+  const modelerActions =
+    node != null && authoring.modelerActions != null ? (
+      <CanvasInspectorModelerActions node={node} actions={authoring.modelerActions} />
+    ) : null;
 
   return (
     <InspectorPanel
@@ -64,18 +75,95 @@ export function CanvasInspectorPanel({
       tagsEditor={tagsEditor}
       beforePanels={
         node ? (
-          <CanvasInspectorAuthoringSection
-            key={node.id}
-            node={node}
-            nodes={nodes}
-            edges={edges}
-            authoring={authoring}
-          />
+          <>
+            {modelerActions}
+            <CanvasInspectorAuthoringSection
+              key={node.id}
+              node={node}
+              nodes={nodes}
+              edges={edges}
+              authoring={authoring}
+            />
+          </>
         ) : canvas != null ? (
           <CanvasInspectorCanvasSection canvas={canvas} />
         ) : null
       }
     />
+  );
+}
+
+const MODELER_ACTION_ICONS: Record<CanvasNodeModelerActionId, typeof Copy> = {
+  'duplicate-node': Copy,
+  'select-node-for-execution': MousePointer,
+  'deselect-node-from-execution': MousePointer,
+  'remove-node': Trash2,
+};
+
+function CanvasInspectorModelerActions({
+  node,
+  actions,
+}: Readonly<{
+  node: CanonicalNode;
+  actions: CanvasInspectorNodeModelerActions;
+}>): JSX.Element | null {
+  const model = buildCanvasNodeModelerActionModel({
+    target: { kind: 'node', nodeId: node.id, nodeName: node.name },
+    selectedForExecution: actions.selectedForExecution,
+    canDuplicateNode: typeof actions.onDuplicateNode === 'function',
+    canToggleNodeSelection: typeof actions.onToggleNodeSelection === 'function',
+    canRemoveNode: typeof actions.onRemoveNode === 'function',
+  });
+  const actionItems = model.actionGroups.flatMap((group) => group.actions);
+
+  if (actionItems.length === 0) {
+    return null;
+  }
+
+  function handleAction(actionId: CanvasNodeModelerActionId): void {
+    switch (actionId) {
+      case 'duplicate-node':
+        actions.onDuplicateNode?.(node.id);
+        return;
+      case 'select-node-for-execution':
+        actions.onToggleNodeSelection?.(node.id, true);
+        return;
+      case 'deselect-node-from-execution':
+        actions.onToggleNodeSelection?.(node.id, false);
+        return;
+      case 'remove-node':
+        actions.onRemoveNode?.(node.id);
+        return;
+    }
+  }
+
+  return (
+    <section data-slot="node-inspector-modeler-actions" className="border-b border-slate-800 pb-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h3 className={graphVisualClasses.contextPanelSectionTitle}>Modeler actions</h3>
+        <span className={graphVisualClasses.inspectorSubtle}>Node command surface</span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {actionItems.map((action) => {
+          const Icon = MODELER_ACTION_ICONS[action.id];
+          return (
+            <Button
+              key={action.id}
+              type="button"
+              size="sm"
+              variant={action.destructive ? 'destructive' : 'outline'}
+              data-action-id={action.id}
+              disabled={action.disabled}
+              title={action.disabledReason}
+              onClick={() => handleAction(action.id)}
+            >
+              <Icon className="size-3.5" />
+              {action.label}
+            </Button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

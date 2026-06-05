@@ -20,7 +20,15 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
   dvt?: DvtNodeAuthoringMetadataErrors;
 }>;
 
+export type CanvasInspectorNodeModelerActions = Readonly<{
+  selectedForExecution: boolean;
+  onDuplicateNode?: (nodeId: string) => void;
+  onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
+  onRemoveNode?: (nodeId: string) => void;
+}>;
+
 export type CanvasInspectorAuthoringContract = Readonly<{
   canEditNode: boolean;
   onApplyNodeDraft: (draft: CanvasInspectorNodeDraft) => void;
+  modelerActions?: CanvasInspectorNodeModelerActions;
 }>;

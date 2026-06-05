@@ -62,6 +62,20 @@ export function buildCanvasShellPanels({
     inspectorAuthoring: {
       canEditNode: panelState.canEditInspectorNode,
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,
+      ...(panelState.inspectorNode == null
+        ? {}
+        : {
+            modelerActions: {
+              selectedForExecution: panelState.inspectorNodeSelectedForExecution,
+              onToggleNodeSelection: panelState.handleToggleNodeSelection,
+              ...(userPermissions.canEditEdges
+                ? {
+                    onDuplicateNode: panelState.handleDuplicateNode,
+                    onRemoveNode: panelState.handleRemoveNode,
+                  }
+                : {}),
+            },
+          }),
     },
     activeRunId: panelState.activeRunId,
     registeredPlugins: panelState.registeredPlugins,

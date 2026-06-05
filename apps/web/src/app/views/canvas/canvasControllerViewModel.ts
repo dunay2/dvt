@@ -83,6 +83,9 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     inspectorPanelVisible: store.inspectorPanelVisible,
     explorerNodes: graphModel.canonicalNodes,
     inspectorNode,
+    inspectorNodeSelectedForExecution: inspectorNode
+      ? store.selectedNodeIds.includes(inspectorNode.id)
+      : false,
     inspectorGraphNodes: graphModel.canonicalNodes,
     inspectorGraphEdges: visibleScope.canonicalEdges,
     activeRunId: overlayModel.activeRunId,
@@ -140,6 +143,9 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,
     handleCreateAuthoringNode: graphHandlers.handleCreateAuthoringNode,
+    handleDuplicateNode: graphHandlers.handleDuplicateNode,
+    handleToggleNodeSelection: graphHandlers.handleToggleNodeSelection,
+    handleRemoveNode: graphHandlers.handleRemoveNode,
     handleCreateCanvasDocument,
     handleSelectCanvasDocument: args.authoringRuntime.handleSelectCanvasDocument,
     handleApplyCanvasDocumentPatch: args.authoringRuntime.handleApplyCanvasDocumentPatch,
