@@ -175,6 +175,24 @@ test('tracked migrations expose DB-first knowledge intake retirement state', () 
   assert.match(retirementMigration.sql, /open_action_count/);
 });
 
+test('tracked migrations count only canonical docs as knowledge intake retirement references', () => {
+  const migrations = readMigrationFiles();
+  const retirementMigration = migrations
+    .filter((migration) =>
+      /create or replace view planning_query_store\.knowledge_intake_retirement_query/.test(
+        migration.sql
+      )
+    )
+    .at(-1);
+
+  assert.ok(retirementMigration);
+  assert.match(
+    retirementMigration.sql,
+    /join planning_query_store\.knowledge_documents from_document\s+on from_document\.document_id = link\.from_document_id/
+  );
+  assert.match(retirementMigration.sql, /from_document\.document_path not like 'buzon\/%'/);
+});
+
 test('tracked migrations include governance component definition command rail tables', () => {
   const migrations = readMigrationFiles();
   const componentDefinitionMigration = migrations.find(
