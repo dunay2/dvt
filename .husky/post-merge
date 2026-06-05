@@ -1,5 +1,9 @@
 #!/bin/sh
-# Non-mutating hook: never write tracked files after merge/pull.
+# Keep files introduced by pull/merge normalized for local AI and editor loops.
+if command -v pnpm >/dev/null 2>&1; then
+  pnpm -s postgit:format -- --from ORIG_HEAD --to HEAD --label post-merge --hook || true
+fi
+
 CHANGED=$(git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD 2>/dev/null || true)
 
 if echo "$CHANGED" | grep -q "docs/planning/state/agent-lane-.*\.yaml"; then
