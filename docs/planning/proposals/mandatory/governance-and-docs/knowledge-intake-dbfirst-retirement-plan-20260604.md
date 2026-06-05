@@ -122,6 +122,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/knowledge/documentLinks.cjs
   - tools/planning-db/knowledge/documentSnapshot.test.cjs
   - tools/planning-db/migrations/057_knowledge_intake_retirement_query.sql
+  - tools/planning-db/migrations/058_knowledge_intake_canonical_reference_counts.sql
 forbiddenImplementationSurfaces:
   - buzon/**
   - apps/**
@@ -178,6 +179,7 @@ redGreenCycles:
     expectedFailure: knowledge_intake_retirement_query migration does not exist.
     patchSurfaces:
       - tools/planning-db/migrations/057_knowledge_intake_retirement_query.sql
+      - tools/planning-db/migrations/058_knowledge_intake_canonical_reference_counts.sql
       - scripts/planning-db-migrate.test.cjs
     greenTest: node --test scripts/planning-db-migrate.test.cjs
   - id: knowledge-intake-direct-path-backrefs
