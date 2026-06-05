@@ -127,6 +127,51 @@ const governanceProjectionQueryNames = new Set([
   'knowledge-intake',
   'mandatory-proposal-gaps',
 ]);
+const taskIdCommonFilterQueryNames = new Set([
+  'tasks',
+  'open',
+  'next',
+  'task-trace',
+  'task-gaps',
+  'focus',
+  'real-work',
+]);
+const pathCommonFilterQueryNames = new Set([
+  'files',
+  'frontend-component-files',
+  'docs-disposition',
+  'knowledge-documents',
+  'knowledge-actions',
+  'knowledge-intake',
+  'mandatory-proposal-gaps',
+]);
+const componentCommonFilterQueryNames = new Set([
+  'components',
+  'units',
+  'coverage',
+  'remediation',
+  'debt',
+  'drift',
+  'frontend-components',
+  'frontend-component-rails',
+  'component-tree',
+  'component-metadata',
+  'component-drift',
+  'component-rules',
+  'component-rule-evaluations',
+  'component-quality',
+  'architecture-components',
+  'architecture-relations',
+  'architecture-responsibilities',
+  'architecture-io',
+  'architecture-flows',
+  'architecture-flow-steps',
+  'architecture-contracts',
+  'architecture-maturity',
+  'architecture-drift',
+  'architecture-enforcement',
+  'architecture-evidence',
+]);
 
 function isHelpCommand(value) {
   return value === 'help' || value === '--help' || value === '-h';
@@ -139,6 +184,7 @@ function isHelpFlag(value) {
 function buildPlanningDbQueryHelpText(queryName) {
   const sortedQueries = [...knownQueries].sort();
   const commonOptions = [
+    '--filter <value> (task id, path, or component where supported)',
     '--limit <n>',
     '--component <id>',
     '--state <state>',
@@ -154,7 +200,7 @@ function buildPlanningDbQueryHelpText(queryName) {
       `Planning DB query: ${queryName}`,
       '',
       'Usage:',
-      `  pnpm planning:db:query ${queryName} [--filter value]`,
+      `  pnpm planning:db:query ${queryName} [filters]`,
       `  pnpm planning:db:query ${queryName} --help`,
       '',
       'Common filters:',
@@ -162,7 +208,7 @@ function buildPlanningDbQueryHelpText(queryName) {
       '',
       'Examples:',
       `  pnpm planning:db:query ${queryName} --limit 20`,
-      `  pnpm planning:db:query ${queryName} --component SYS-WEB-ROOT --limit 20`,
+      `  pnpm planning:db:query ${queryName} --filter E-PROP-DISP-1 --limit 20`,
     ].join('\n');
   }
 
@@ -170,7 +216,7 @@ function buildPlanningDbQueryHelpText(queryName) {
     'Planning DB query CLI',
     '',
     'Usage:',
-    '  pnpm planning:db:query [query] [--filter value]',
+    '  pnpm planning:db:query [query] [filters]',
     '  pnpm planning:db:query --help',
     '  pnpm planning:db:query <query> --help',
     '',
@@ -287,6 +333,27 @@ function parseOutputFormat(value) {
   throw new Error(`Invalid --format "${value}". Expected json or markdown.`);
 }
 
+function applyCommonFilter(filters, queryName, value) {
+  if (taskIdCommonFilterQueryNames.has(queryName)) {
+    filters.taskId = value;
+    return;
+  }
+
+  if (pathCommonFilterQueryNames.has(queryName)) {
+    filters.path = value;
+    return;
+  }
+
+  if (componentCommonFilterQueryNames.has(queryName)) {
+    filters.component = value;
+    return;
+  }
+
+  throw new Error(
+    `--filter is not supported for planning DB query "${queryName}". Use a query-specific filter flag.`
+  );
+}
+
 function normalizeResolutionFilter(value) {
   if (value === undefined || value === null || value === '') {
     return undefined;
@@ -369,6 +436,10 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--claimed-by') {
       filters.claimedBy = value;
+      continue;
+    }
+    if (arg === '--filter') {
+      applyCommonFilter(filters, queryName, value);
       continue;
     }
     if (arg === '--priority') {
@@ -2280,6 +2351,7 @@ async function readTaskRows(client, filters = {}) {
   appendFilter(predicates, params, 'status', filters.status);
   appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
   appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
 
   const limit = parseLimit(filters.limit, 50);
   params.push(limit);
@@ -2302,6 +2374,7 @@ async function readOpenTaskRows(client, filters = {}) {
   appendFilter(predicates, params, 'status', filters.status);
   appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
   appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
 
   const limit = parseLimit(filters.limit, 50);
   params.push(limit);
@@ -2324,6 +2397,7 @@ async function readNextTaskRows(client, filters = {}) {
   appendFilter(predicates, params, 'status', filters.status);
   appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
   appendFilter(predicates, params, 'priority', filters.priority);
+  appendFilter(predicates, params, 'task_id', filters.taskId);
 
   const limit = parseLimit(filters.limit, 20);
   params.push(limit);
