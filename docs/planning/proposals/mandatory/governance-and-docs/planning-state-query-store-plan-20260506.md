@@ -3949,6 +3949,9 @@ symbols:
     name: allowedMigrationStates
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
+    name: dbFirstWriteRailBlockers
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
     name: requiredSurfaces
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
@@ -3965,6 +3968,9 @@ symbols:
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
     name: includesTerm
+    path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: dbFirstWriteRailBlocker
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
     name: findSurfaceTable

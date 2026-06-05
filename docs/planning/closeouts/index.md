@@ -22,6 +22,7 @@ navigation. The folder contains additional historical entries.
 
 ## Representative Recent Closeouts
 
+- [20260531 DVT21 Cost Attribution UI Hard-Cut Closeout](./20260531-dvt21-cost-attribution-ui-hard-cut-closeout.md)
 - [20260515 AR-D PlanRef Workflow Payload Hardening Final Closeout](./20260515-ar-d-plan-pointer-final-closeout.md)
 - [20260514 AR-D PlanRef DBT Plugin Package Extraction Closeout](./20260514-ar-d-plan-pointer-dbt-package-extraction-closeout.md)
 - [20260514 AR-D2 Temporal PlanRef Capacity SLA Closeout](./20260514-ar-d2-temporal-planref-capacity-sla-closeout.md)

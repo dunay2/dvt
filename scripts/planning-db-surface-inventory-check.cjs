@@ -28,6 +28,14 @@ const allowedMigrationStates = new Set([
   'Hybrid indexed',
 ]);
 
+const dbFirstWriteRailBlockers = [
+  'Git edit',
+  'No write rail',
+  'planning:db:import',
+  'governance:db:import',
+  'governance:refresh',
+];
+
 const requiredSurfaces = [
   {
     surface: 'Planning task lifecycle',
@@ -170,7 +178,7 @@ const requiredSurfaces = [
         'docs:feature-mechanization:implementation',
         'planning:db:query creation-intent',
       ],
-      'Migration state': ['DB-first'],
+      'Migration state': ['Hybrid indexed'],
     },
   },
   {
@@ -204,7 +212,7 @@ const requiredSurfaces = [
         'planning-db-knowledge-intake-retirement-guard.test.cjs',
         'generate-knowledge-intake-literature.test.cjs',
       ],
-      'Migration state': ['DB-first'],
+      'Migration state': ['Hybrid indexed'],
     },
   },
   {
@@ -301,6 +309,10 @@ function includesTerm(value, term) {
   return normalizeText(value).includes(normalizeText(term));
 }
 
+function dbFirstWriteRailBlocker(row) {
+  return dbFirstWriteRailBlockers.find((term) => includesTerm(row['Write rail'], term));
+}
+
 function findSurfaceTable(markdown) {
   return parseMarkdownTables(markdown).find((table) =>
     requiredColumns.every((column) => table.headers.includes(column))
@@ -341,6 +353,14 @@ function validateInventory(markdown, options = {}) {
     if (!allowedMigrationStates.has(state)) {
       errors.push(
         `${inventoryPath}: surface "${row.Surface}" has invalid migration state "${state}".`
+      );
+    }
+
+    const writeRailBlocker = state === 'DB-first' ? dbFirstWriteRailBlocker(row) : undefined;
+
+    if (writeRailBlocker) {
+      errors.push(
+        `${inventoryPath}: surface "${row.Surface}" is marked DB-first but write rail "${row['Write rail']}" relies on "${writeRailBlocker}" instead of an authoritative DB write rail.`
       );
     }
   }
@@ -397,6 +417,7 @@ if (require.main === module) {
 
 module.exports = {
   allowedMigrationStates,
+  dbFirstWriteRailBlockers,
   findSurfaceTable,
   parseMarkdownTables,
   requiredColumns,

@@ -57,6 +57,23 @@ test('DB surface inventory validator rejects missing required surfaces', () => {
   assert.match(result.errors.join('\n'), /Planning task lifecycle/);
 });
 
+test('DB surface inventory validator rejects DB-first labels on imported or read-only surfaces', () => {
+  const { validateInventory } = loadInventoryCheck();
+  const inventory = fs.readFileSync(inventoryPath, 'utf8');
+  const mislabeledAiContext = inventory.replace(
+    /^(\|\s*AI project context\s*\|.*\|\s*)Hybrid indexed(\s*\|)$/m,
+    '$1DB-first$2'
+  );
+
+  assert.notEqual(mislabeledAiContext, inventory);
+
+  const result = validateInventory(mislabeledAiContext, { inventoryPath });
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /AI project context/);
+  assert.match(result.errors.join('\n'), /authoritative DB write rail/);
+});
+
 test('package scripts expose and gate the DB surface inventory check', () => {
   assert.equal(
     packageJson.scripts['planning:db:inventory:check'],
