@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 import type { CanvasViewCopy } from './canvasCopy.types';
-import { canvasViewCopy, formatCanvasInspectorNodeDraftError } from './copy';
+import {
+  canvasViewCopy,
+  formatCanvasInspectorNodeDraftError,
+  formatTransformationGraphValidationSummary,
+} from './copy';
 
 const INSPECTOR_DRAFT_ERROR_COPY_KEYS = [
   ['node_name_required', 'inspectorErrorNodeNameRequired'],
@@ -84,5 +88,20 @@ describe('canvas copy catalog', () => {
     }
 
     expect(coveredErrorCodes.size).toBe(INSPECTOR_DRAFT_ERROR_COPY_KEYS.length);
+  });
+
+  it('formats transformation graph validation summaries from locale copy', () => {
+    expect(formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')).toBe(
+      'Plan requires a connected source -> sql_transform -> sink path.'
+    );
+    expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'en-US')).toBe(
+      'Plan requires one selected source -> sql_transform -> sink path.'
+    );
+    expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toBe(
+      'El plan requiere un path conectado source -> sql_transform -> sink.'
+    );
+    expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'es-ES')).toBe(
+      'El plan requiere seleccionar un unico path source -> sql_transform -> sink.'
+    );
   });
 });

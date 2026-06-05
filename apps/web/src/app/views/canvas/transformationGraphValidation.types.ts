@@ -31,6 +31,8 @@ export const TRANSFORMATION_REQUIRED_EDGE_ROLE_PAIRS = [
 
 export type TransformationGraphValidationSummaryCode =
   | 'valid'
+  | 'ambiguous_executable_paths'
+  | 'requires_executable_path'
   | 'requires_three_nodes'
   | 'unsupported_roles'
   | 'requires_one_of_each_role'

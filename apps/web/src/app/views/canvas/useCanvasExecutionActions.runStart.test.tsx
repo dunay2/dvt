@@ -268,13 +268,13 @@ describe('useCanvasExecutionActions run start', () => {
     expect(harness.text('plan-run-readiness-status')).toBe('blocked');
     expect(harness.text('plan-run-readiness-blockers')).toContain('plan_integrity');
     expect(harness.text('plan-status-summary')).toBe(
-      canvasViewCopy.transformationRequiresThreeNodesMessage
+      canvasViewCopy.transformationRequiresExecutablePathMessage
     );
 
     await expectRunStartBlocked({
       runsService,
       harness,
-      expectedError: canvasViewCopy.transformationRequiresThreeNodesMessage,
+      expectedError: canvasViewCopy.transformationRequiresExecutablePathMessage,
       expectedModalState: 'false',
     });
   });

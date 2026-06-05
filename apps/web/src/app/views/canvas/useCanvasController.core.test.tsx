@@ -107,7 +107,7 @@ describe('useCanvasController core', () => {
     expect(result?.transformationValidation).toEqual(
       expect.objectContaining({
         valid: false,
-        summaryCode: 'requires_three_nodes',
+        summaryCode: 'requires_executable_path',
       })
     );
     expect(result?.registeredPlugins).toEqual(new Set(['dbt', 'monitoring', 'cost']));

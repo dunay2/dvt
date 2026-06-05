@@ -71,7 +71,71 @@ describe('validateTransformationGraph', () => {
     });
   });
 
-  it('rejects graphs with the wrong node count', () => {
+  it('accepts an executable path inside a larger DVT authoring canvas', () => {
+    const nodes = buildValidTransformationNodes({
+      extraNodes: [
+        buildNode({ id: 'src-copy-1', name: 'Source copy 1', role: 'input' }),
+        buildNode({ id: 'src-copy-2', name: 'Source copy 2', role: 'input' }),
+      ],
+    });
+    const edges = buildOrderedTransformationEdges();
+
+    expectValidationSummary(validateTransformationGraph({ nodes, edges }), {
+      valid: true,
+      summaryCode: 'valid',
+      scopedNodeIds: ['src', 'tx', 'sink'],
+      scopedEdgeIds: ['e1', 'e2'],
+    });
+  });
+
+  it('rejects a larger canvas when the discovered executable path has extra scoped edges', () => {
+    const nodes = buildValidTransformationNodes({
+      extraNodes: [buildNode({ id: 'note', name: 'Unrelated note', role: 'check' })],
+    });
+    const edges = [
+      ...buildOrderedTransformationEdges(),
+      buildEdge({ id: 'e3', sourceId: 'src', targetId: 'sink' }),
+    ];
+
+    expectValidationSummary(validateTransformationGraph({ nodes, edges }), {
+      valid: false,
+      summaryCode: 'requires_two_edges',
+      scopedNodeIds: ['src', 'tx', 'sink'],
+      scopedEdgeIds: ['e1', 'e2', 'e3'],
+    });
+  });
+
+  it('fails closed when a larger canvas has multiple executable paths and no explicit selection', () => {
+    const nodes = buildValidTransformationNodes({
+      extraNodes: [buildNode({ id: 'src-copy', name: 'Source copy', role: 'input' })],
+    });
+    const edges = [
+      ...buildOrderedTransformationEdges(),
+      buildEdge({ id: 'e3', sourceId: 'src-copy', targetId: 'tx' }),
+    ];
+
+    expectValidationSummary(validateTransformationGraph({ nodes, edges }), {
+      valid: false,
+      summaryCode: 'ambiguous_executable_paths',
+    });
+  });
+
+  it('fails closed when one transform can reach multiple sinks without explicit selection', () => {
+    const nodes = buildValidTransformationNodes({
+      extraNodes: [buildNode({ id: 'sink-copy', name: 'Sink copy', role: 'output' })],
+    });
+    const edges = [
+      ...buildOrderedTransformationEdges(),
+      buildEdge({ id: 'e3', sourceId: 'tx', targetId: 'sink-copy' }),
+    ];
+
+    expectValidationSummary(validateTransformationGraph({ nodes, edges }), {
+      valid: false,
+      summaryCode: 'ambiguous_executable_paths',
+    });
+  });
+
+  it('blocks partial DVT authoring graphs by executable path instead of canvas node count', () => {
     const nodes = [
       buildNode({ id: 'src', name: 'Source', role: 'input' }),
       buildNode({ id: 'tx', name: 'Transform', role: 'transform' }),
@@ -79,7 +143,7 @@ describe('validateTransformationGraph', () => {
 
     expectValidationSummary(validateTransformationGraph({ nodes, edges: [] }), {
       valid: false,
-      summaryCode: 'requires_three_nodes',
+      summaryCode: 'requires_executable_path',
     });
   });
 

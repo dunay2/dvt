@@ -1216,6 +1216,62 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
     unitTests:
       - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
+  - name: validateTransformationGraph
+    path: apps/web/src/app/views/canvas/transformationGraphValidation.ts
+    dddOwner: TransformationGraphValidationReadModel
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Readiness validates executable workflow scope instead of total canvas node count.]
+    architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts useCanvasExecutionActions.planPreview.core.test.tsx useCanvasExecutionActions.runStart.test.tsx
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx
+  - name: validateThreeNodeTransformationContext
+    path: apps/web/src/app/views/canvas/transformationGraphValidation.ts
+    dddOwner: TransformationGraphValidationReadModel
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [The inferred executable path still reuses strict three-node validation rules.]
+    architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
+  - name: ExecutableTransformationPath
+    path: apps/web/src/app/views/canvas/transformationGraphValidationRules.ts
+    dddOwner: TransformationGraphValidationReadModel
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Execution readiness can isolate one SQL-first path inside a larger authoring canvas.]
+    architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
+  - name: ExecutableTransformationPathResolution
+    path: apps/web/src/app/views/canvas/transformationGraphValidationRules.ts
+    dddOwner: TransformationGraphValidationReadModel
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Missing or ambiguous executable paths remain plan-integrity blockers.]
+    architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
+  - name: collectNodesByRole
+    path: apps/web/src/app/views/canvas/transformationGraphValidationRules.ts
+    dddOwner: TransformationGraphValidationReadModel
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Role mapping is centralized before executable-path discovery.]
+    architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
+  - name: resolveExecutableTransformationPath
+    path: apps/web/src/app/views/canvas/transformationGraphValidationRules.ts
+    dddOwner: TransformationGraphValidationReadModel
+    cqRails: [PreviewExecutablePlan, StartRun]
+    fowlerSignals: [Extra authoring nodes are scoped out only when exactly one executable SQL-first path exists.]
+    architectureGuard: pnpm --filter @dvt/web test -- transformationGraphValidation.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
+    unitTests:
+      - apps/web/src/app/views/canvas/transformationGraphValidation.test.ts
   - name: CODE_GRAPH_FILE_SCOPE_VIEW_ID
     path: apps/web/src/app/views/CodeView.tsx
     dddOwner: CodeGraphFileScope
