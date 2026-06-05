@@ -283,6 +283,15 @@ test('parseArgs accepts common --filter for task id planning queries', () => {
   });
 });
 
+test('parseArgs rejects common --filter for queries without matching predicates', () => {
+  for (const queryName of ['feature-work', 'task-references', 'pr-readiness']) {
+    assert.throws(
+      () => parseArgs([queryName, '--filter', 'E-PROP-DISP-1']),
+      new RegExp(`--filter is not supported for planning DB query "${queryName}"`)
+    );
+  }
+});
+
 test('parseArgs parses governance query filters for DB-first governance inspection', () => {
   const command = parseArgs([
     'files',

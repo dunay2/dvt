@@ -135,9 +135,6 @@ const taskIdCommonFilterQueryNames = new Set([
   'task-gaps',
   'focus',
   'real-work',
-  'feature-work',
-  'task-references',
-  'pr-readiness',
 ]);
 const pathCommonFilterQueryNames = new Set([
   'files',
