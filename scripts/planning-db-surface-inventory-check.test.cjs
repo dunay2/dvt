@@ -81,6 +81,19 @@ const fixtureRows = [
     db_first_eligible: true,
   },
   {
+    surface_name: 'Governance component definition',
+    canonical_source: 'DB-authored component local definitions',
+    write_rail: 'pnpm planning:db:operate component create',
+    write_rail_kind: 'db_command',
+    read_query_rail: 'pnpm planning:db:query component-tree',
+    projection: 'Effective scalar component definition rows',
+    validation: 'pnpm test:planning:db',
+    migration_state: 'DB-first',
+    source_ref: 'tools/planning-db/migrations/060_component_definition_surface_db_first.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: true,
+  },
+  {
     surface_name: 'Governance remediation queue',
     canonical_source: 'Governance DB coverage',
     write_rail: 'pnpm governance:refresh',
@@ -240,6 +253,30 @@ test('DB surface inventory validator rejects DB-first labels on imported or read
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /AI project context/);
   assert.match(result.errors.join('\n'), /write rail kind/);
+});
+
+test('DB surface inventory validator keeps component definition command rail DB-first', () => {
+  const { validateDbSurfaceInventoryRows } = loadInventoryCheck();
+  const result = validateDbSurfaceInventoryRows([
+    ...fixtureRows,
+    {
+      surface_name: 'Governance component definition',
+      canonical_source: 'DB-authored component local definitions',
+      write_rail: 'pnpm planning:db:operate component create',
+      write_rail_kind: 'db_command',
+      read_query_rail: 'pnpm planning:db:query component-tree',
+      projection: 'Effective scalar component definition rows',
+      validation: 'pnpm test:planning:db',
+      migration_state: 'Hybrid indexed',
+      source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+      source_content_sha256: surfaceHash,
+      db_first_eligible: false,
+    },
+  ]);
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /Governance component definition/);
+  assert.match(result.errors.join('\n'), /migration state "DB-first"/);
 });
 
 test('package scripts expose and gate the DB surface inventory check', () => {

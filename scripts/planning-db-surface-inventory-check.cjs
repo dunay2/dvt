@@ -29,6 +29,11 @@ const requiredSurfaces = [
     migrationState: 'DB-first',
     writeRailKind: 'db_command',
   },
+  {
+    surfaceName: 'Governance component definition',
+    migrationState: 'DB-first',
+    writeRailKind: 'db_command',
+  },
   { surfaceName: 'Governance remediation queue', migrationState: 'Generated-only' },
   { surfaceName: 'ADR and contract decisions', migrationState: 'Git-first indexed' },
   { surfaceName: 'Risk and evidence records', migrationState: 'Git-first indexed' },

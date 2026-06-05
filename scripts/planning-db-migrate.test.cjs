@@ -219,6 +219,18 @@ test('tracked migrations include DB-first surface inventory command rail tables'
   assert.match(surfaceInventoryMigration.sql, /Architecture design authority/);
 });
 
+test('tracked migrations repair component definition surface inventory to DB-first', () => {
+  const migrations = readMigrationFiles();
+  const componentSurfaceRepairMigration = migrations.find(
+    (migration) => migration.fileName === '060_component_definition_surface_db_first.sql'
+  );
+
+  assert.ok(componentSurfaceRepairMigration);
+  assert.match(componentSurfaceRepairMigration.sql, /Governance component definition/);
+  assert.match(componentSurfaceRepairMigration.sql, /migration_state = 'DB-first'/);
+  assert.match(componentSurfaceRepairMigration.sql, /raw_surface = jsonb_set/);
+});
+
 test('tracked migrations include governance component definition command rail tables', () => {
   const migrations = readMigrationFiles();
   const componentDefinitionMigration = migrations.find(
