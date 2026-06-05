@@ -3,7 +3,22 @@ import { describe, expect, it, vi } from 'vitest';
 import { buildCanvasShellPanels } from './canvasShellPanelsBuilder';
 import type { CanvasShellPanelsBuilderArgs } from './canvasShellBuilder.types';
 import { buildTestCanvasKind, buildTestNodeKind } from './canvasKindRegistration.testSupport';
-import type { CanonicalNode } from '../../types/canonical';
+import { CANONICAL_NODE_STATUSES, type CanonicalNode } from '../../types/canonical';
+
+const INSPECTOR_TEST_NODE_KIND = buildTestNodeKind('dvt:source', 'Source');
+
+function buildInspectorNode(overrides?: Partial<CanonicalNode>): CanonicalNode {
+  return {
+    id: 'node.orders',
+    name: 'Orders',
+    pluginId: INSPECTOR_TEST_NODE_KIND.pluginId,
+    kind: INSPECTOR_TEST_NODE_KIND.kind,
+    role: INSPECTOR_TEST_NODE_KIND.role,
+    status: CANONICAL_NODE_STATUSES[0],
+    tags: [],
+    ...overrides,
+  };
+}
 
 function buildArgs(
   overrides?: Partial<CanvasShellPanelsBuilderArgs>
@@ -12,10 +27,14 @@ function buildArgs(
     panelState: {
       explorerNodes: [],
       inspectorNode: null,
+      inspectorNodeSelectedForExecution: false,
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
       canEditInspectorNode: true,
       applyInspectorNodeDraft: vi.fn(),
+      handleDuplicateNode: vi.fn(),
+      handleToggleNodeSelection: vi.fn(),
+      handleRemoveNode: vi.fn(),
       activeRunId: null,
       registeredPlugins: new Set(['dvt']),
       runtimeCapabilities: undefined,
@@ -135,5 +154,60 @@ describe('buildCanvasShellPanels', () => {
     expect(panels.authoringNodeKinds.map((registration) => registration.kind)).toEqual([
       'dvt:source',
     ]);
+  });
+
+  it('projects inspector modeler actions from route-owned graph handlers', () => {
+    const inspectorNode = buildInspectorNode();
+    const handleDuplicateNode = vi.fn();
+    const handleToggleNodeSelection = vi.fn();
+    const handleRemoveNode = vi.fn();
+    const panels = buildCanvasShellPanels(
+      buildArgs({
+        panelState: {
+          ...buildArgs().panelState,
+          inspectorNode,
+          inspectorNodeSelectedForExecution: true,
+          handleDuplicateNode,
+          handleToggleNodeSelection,
+          handleRemoveNode,
+        },
+      })
+    );
+
+    expect(panels.inspectorAuthoring.modelerActions).toMatchObject({
+      selectedForExecution: true,
+      onDuplicateNode: handleDuplicateNode,
+      onToggleNodeSelection: handleToggleNodeSelection,
+      onRemoveNode: handleRemoveNode,
+    });
+  });
+
+  it('keeps destructive inspector modeler actions unavailable when graph mutation is blocked', () => {
+    const inspectorNode = buildInspectorNode();
+    const handleToggleNodeSelection = vi.fn();
+    const panels = buildCanvasShellPanels(
+      buildArgs({
+        panelState: {
+          ...buildArgs().panelState,
+          inspectorNode,
+          handleToggleNodeSelection,
+        },
+        userPermissions: {
+          canPlan: true,
+          canRun: true,
+          canEditEdges: false,
+          canPersistGraphDraft: false,
+          canManagePlugins: false,
+          canManageRBAC: false,
+        },
+      })
+    );
+
+    expect(panels.inspectorAuthoring.modelerActions).toMatchObject({
+      selectedForExecution: false,
+      onToggleNodeSelection: handleToggleNodeSelection,
+    });
+    expect(panels.inspectorAuthoring.modelerActions?.onDuplicateNode).toBeUndefined();
+    expect(panels.inspectorAuthoring.modelerActions?.onRemoveNode).toBeUndefined();
   });
 });

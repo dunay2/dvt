@@ -97,6 +97,16 @@ function buildDbtModelNode(): CanonicalNode {
   };
 }
 
+function modelerActionButton(container: HTMLElement, actionId: string): HTMLButtonElement {
+  const button = container.querySelector<HTMLButtonElement>(`[data-action-id="${actionId}"]`);
+
+  if (!button) {
+    throw new Error(`Modeler action button not found: ${actionId}`);
+  }
+
+  return button;
+}
+
 describe('CanvasInspectorPanel', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -188,6 +198,47 @@ describe('CanvasInspectorPanel', () => {
         alias: 'orders_source',
       },
     });
+  });
+
+  it('runs modeler actions from the properties panel through route-owned node handlers', async () => {
+    const node = buildDbtModelNode();
+    const onDuplicateNode = vi.fn();
+    const onToggleNodeSelection = vi.fn();
+    const onRemoveNode = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={node}
+          nodes={[node]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft: vi.fn(),
+            modelerActions: {
+              selectedForExecution: false,
+              onDuplicateNode,
+              onToggleNodeSelection,
+              onRemoveNode,
+            },
+          }}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="node-inspector-modeler-actions"]')).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.click(modelerActionButton(container, 'select-node-for-execution'));
+      fireEvent.click(modelerActionButton(container, 'duplicate-node'));
+      fireEvent.click(modelerActionButton(container, 'remove-node'));
+    });
+
+    expect(onToggleNodeSelection).toHaveBeenCalledWith(node.id, true);
+    expect(onDuplicateNode).toHaveBeenCalledWith(node.id);
+    expect(onRemoveNode).toHaveBeenCalledWith(node.id);
   });
 
   it('keeps the form read-only when the route cannot mutate node properties', async () => {

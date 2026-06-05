@@ -75,11 +75,15 @@ function buildCanvasShellPanelsArgs({
     panelState: {
       explorerNodes: controller.explorerNodes,
       inspectorNode: controller.inspectorNode,
+      inspectorNodeSelectedForExecution: controller.inspectorNodeSelectedForExecution,
       inspectorGraphNodes: controller.inspectorGraphNodes,
       inspectorGraphEdges: controller.inspectorGraphEdges,
       canEditInspectorNode:
         controller.canEditInspectorNode && routeViewState.effectiveUserPermissions.canEditEdges,
       applyInspectorNodeDraft: controller.applyInspectorNodeDraft,
+      handleDuplicateNode: controller.handleDuplicateNode,
+      handleToggleNodeSelection: controller.handleToggleNodeSelection,
+      handleRemoveNode: controller.handleRemoveNode,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
       runtimeCapabilities: controller.runtimeCapabilities,
