@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { builtinModules } from 'node:module';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -17,8 +18,117 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/planning-truth-sync.test.mjs',
 ]);
 
+const NODE_BUILTIN_SPECIFIERS = new Set([
+  ...builtinModules,
+  ...builtinModules.map((moduleName) => `node:${moduleName}`),
+]);
+
+const MODULE_SPECIFIER_PATTERNS = [
+  /\bimport\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/gu,
+  /\bexport\s+[^'"]*?\s+from\s+['"]([^'"]+)['"]/gu,
+  /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/gu,
+  /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/gu,
+];
+
 function normalizePath(filePath) {
   return filePath.replaceAll('\\', '/');
+}
+
+function isRelativeOrAbsoluteSpecifier(specifier) {
+  return specifier.startsWith('.') || specifier.startsWith('/');
+}
+
+function isPackageSpecifier(specifier) {
+  return (
+    !specifier.startsWith('node:') &&
+    !NODE_BUILTIN_SPECIFIERS.has(specifier) &&
+    !isRelativeOrAbsoluteSpecifier(specifier)
+  );
+}
+
+function extractModuleSpecifiers(source) {
+  const specifiers = [];
+  for (const pattern of MODULE_SPECIFIER_PATTERNS) {
+    pattern.lastIndex = 0;
+    for (const match of source.matchAll(pattern)) {
+      specifiers.push(match[1]);
+    }
+  }
+
+  return specifiers;
+}
+
+function resolveRelativeModulePath(fromFilePath, specifier, root) {
+  if (!isRelativeOrAbsoluteSpecifier(specifier)) {
+    return null;
+  }
+
+  const fromDir = path.dirname(path.resolve(root, fromFilePath));
+  const basePath = specifier.startsWith('/')
+    ? path.resolve(root, `.${specifier}`)
+    : path.resolve(fromDir, specifier);
+  const candidates = path.extname(basePath)
+    ? [basePath]
+    : [
+        `${basePath}.mjs`,
+        `${basePath}.cjs`,
+        `${basePath}.js`,
+        path.join(basePath, 'index.mjs'),
+        path.join(basePath, 'index.cjs'),
+        path.join(basePath, 'index.js'),
+      ];
+
+  for (const candidate of candidates) {
+    if (!existsSync(candidate)) {
+      continue;
+    }
+
+    const relativePath = normalizePath(path.relative(root, candidate));
+    if (!relativePath.startsWith('..')) {
+      return relativePath;
+    }
+  }
+
+  return null;
+}
+
+function collectPackageSpecifiers(filePath, options = {}) {
+  const root = options.repoRootPath ?? repoRoot;
+  const visited = options.visited ?? new Set();
+  const normalizedFilePath = normalizePath(filePath);
+
+  if (visited.has(normalizedFilePath)) {
+    return [];
+  }
+  visited.add(normalizedFilePath);
+
+  const absolutePath = path.resolve(root, normalizedFilePath);
+  if (!existsSync(absolutePath)) {
+    return [];
+  }
+
+  const source = readFileSync(absolutePath, 'utf8');
+  const packageSpecifiers = [];
+  for (const specifier of extractModuleSpecifiers(source)) {
+    if (isPackageSpecifier(specifier)) {
+      packageSpecifiers.push(specifier);
+      continue;
+    }
+
+    const relativeModulePath = resolveRelativeModulePath(normalizedFilePath, specifier, root);
+    if (!relativeModulePath) {
+      continue;
+    }
+
+    packageSpecifiers.push(
+      ...collectPackageSpecifiers(relativeModulePath, {
+        repoRootPath: root,
+        visited,
+      })
+    );
+  }
+
+  return [...new Set(packageSpecifiers)].sort((left, right) => left.localeCompare(right));
 }
 
 function* walkFiles(rootDir) {
@@ -43,15 +153,38 @@ export function discoverCiToolTests(options = {}) {
     .sort((left, right) => left.localeCompare(right));
 }
 
-export function assertCiToolTestPartition(tests = discoverCiToolTests()) {
+export function findPackageBackedCiToolTests(options = {}) {
+  const tests = options.tests ?? discoverCiToolTests(options);
+  return tests
+    .filter(
+      (filePath) =>
+        collectPackageSpecifiers(filePath, { repoRootPath: options.repoRootPath }).length > 0
+    )
+    .sort((left, right) => left.localeCompare(right));
+}
+
+export function assertCiToolTestPartition(tests = discoverCiToolTests(), options = {}) {
+  const executableTests = options.executableTests ?? EXECUTABLE_CI_TOOL_TESTS;
   const allTests = new Set(tests);
-  const missingExecutableTests = EXECUTABLE_CI_TOOL_TESTS.filter(
-    (filePath) => !allTests.has(filePath)
-  );
+  const missingExecutableTests = executableTests.filter((filePath) => !allTests.has(filePath));
 
   if (missingExecutableTests.length > 0) {
     throw new Error(
       `Executable CI tool test partition references missing files: ${missingExecutableTests.join(
+        ', '
+      )}`
+    );
+  }
+
+  const executableTestSet = new Set(executableTests);
+  const packageBackedStaticTests = findPackageBackedCiToolTests({
+    repoRootPath: options.repoRootPath,
+    tests,
+  }).filter((filePath) => !executableTestSet.has(filePath));
+
+  if (packageBackedStaticTests.length > 0) {
+    throw new Error(
+      `Package-backed CI tool tests must run in the executable partition: ${packageBackedStaticTests.join(
         ', '
       )}`
     );
