@@ -179,7 +179,7 @@ const requiredSurfaces = [
       'Canonical source': [
         'knowledge_intake_retirement_query',
         'knowledge_documents',
-        'knowledge_document_links',
+        'knowledge_intake_repository_references',
         'component_engineering_file_ownership_query',
         'buzon/',
         'import input',
@@ -192,6 +192,7 @@ const requiredSurfaces = [
       'Read/query rail': [
         'planning:db:query knowledge-intake',
         'planning:db:query knowledge-intake --references',
+        'knowledge_intake_repository_reference_query',
         'generated-knowledge-intake-literature.md',
       ],
       Projection: [
@@ -202,6 +203,9 @@ const requiredSurfaces = [
         'docs:knowledge-intake:check',
         'docs:gov:generated-policy',
         'planning-db-knowledge-intake-retirement-guard.test.cjs',
+        'planning-db-query.test.cjs',
+        'planning-db-import.test.cjs',
+        'planning-db-migrate.test.cjs',
         'generate-knowledge-intake-literature.test.cjs',
       ],
       'Migration state': ['DB-first'],

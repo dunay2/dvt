@@ -6,6 +6,7 @@ const {
   buildGovernanceAuxiliarySourceExpectedState,
   buildGovernanceFileSnapshot,
   buildGovernanceGeneratedInputs,
+  buildKnowledgeIntakeRepositoryReferenceSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
@@ -21,6 +22,7 @@ const {
   insertFrontendMechanicalTruthSnapshot,
   insertGovernanceSnapshot,
   insertKnowledgeSnapshot,
+  insertKnowledgeIntakeRepositoryReferences,
   insertRepositoryCommandSnapshot,
   listChangedFiles,
   mergePlanningTaskIds,
@@ -671,6 +673,108 @@ test('governance auxiliary source state hashes only knowledge-surface documents 
       sourcePath: 'docs/planning/proposals/example.md',
       sourceContentSha256: sha256(proposalRaw),
     },
+  ]);
+});
+
+test('knowledge intake repository reference snapshot includes non-knowledge repository backrefs', () => {
+  const snapshot = buildKnowledgeIntakeRepositoryReferenceSnapshot({
+    intakeDocumentPaths: ['buzon/example.md'],
+    documents: [
+      {
+        sourcePath: 'apps/web/src/app/services/composition/example.architecture.test.ts',
+        raw: [
+          "const fixture = repoPath('buzon/example.md');",
+          "const duplicate = repoPath('buzon/example.md');",
+          '',
+        ].join('\n'),
+      },
+      {
+        sourcePath: 'docs/planning/example.md',
+        raw: 'Retain `buzon/example.md` until tests stop reading it.\n',
+      },
+      {
+        sourcePath: 'buzon/example.md',
+        raw: 'Self reference to buzon/example.md must not keep this file alive.\n',
+      },
+      {
+        sourcePath: 'packages/example/test/no-match.test.ts',
+        raw: "const unrelated = 'buzon/missing.md';\n",
+      },
+    ],
+  });
+
+  assert.deepEqual(
+    snapshot.references.map((reference) => ({
+      sourcePath: reference.sourcePath,
+      targetDocumentPath: reference.targetDocumentPath,
+      lineNumber: reference.lineNumber,
+      relationType: reference.relationType,
+    })),
+    [
+      {
+        sourcePath: 'apps/web/src/app/services/composition/example.architecture.test.ts',
+        targetDocumentPath: 'buzon/example.md',
+        lineNumber: 1,
+        relationType: 'repository_path_reference',
+      },
+      {
+        sourcePath: 'apps/web/src/app/services/composition/example.architecture.test.ts',
+        targetDocumentPath: 'buzon/example.md',
+        lineNumber: 2,
+        relationType: 'repository_path_reference',
+      },
+      {
+        sourcePath: 'docs/planning/example.md',
+        targetDocumentPath: 'buzon/example.md',
+        lineNumber: 1,
+        relationType: 'repository_path_reference',
+      },
+    ]
+  );
+  assert.ok(snapshot.references.every((reference) => /^[a-f0-9]{64}$/.test(reference.referenceId)));
+  assert.ok(
+    snapshot.references.every((reference) => /^[a-f0-9]{64}$/.test(reference.sourceContentSha256))
+  );
+});
+
+test('knowledge intake repository reference import batches DB-owned backrefs', async () => {
+  const queries = [];
+
+  await insertKnowledgeIntakeRepositoryReferences(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql, params });
+      },
+    },
+    {
+      references: [
+        {
+          referenceId: 'reference-a',
+          targetDocumentPath: 'buzon/example.md',
+          sourcePath: 'apps/web/src/example.test.ts',
+          relationType: 'repository_path_reference',
+          lineNumber: 7,
+          sampleText: "readFileSync('buzon/example.md')",
+          sourceContentSha256: 'source-a',
+          rawReference: { matchText: 'buzon/example.md' },
+        },
+      ],
+    }
+  );
+
+  assert.equal(queries[0].sql, `delete from ${schemaName}.knowledge_intake_repository_references`);
+  const insertQuery = queries.find((query) =>
+    query.sql.includes(`insert into ${schemaName}.knowledge_intake_repository_references`)
+  );
+  assert.ok(insertQuery);
+  assert.deepEqual(insertQuery.params.slice(0, 7), [
+    'reference-a',
+    'buzon/example.md',
+    'apps/web/src/example.test.ts',
+    'repository_path_reference',
+    7,
+    "readFileSync('buzon/example.md')",
+    'source-a',
   ]);
 });
 
