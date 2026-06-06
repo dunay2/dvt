@@ -68,14 +68,21 @@ export type ShellNavigationPlacement = Readonly<{
   level: 'core' | 'extended' | 'admin';
 }>;
 
-export type CanvasWorkbenchTabId = 'graph' | 'code' | 'lineage' | 'diff' | 'artifacts' | 'runs';
+export type CanvasWorkbenchTabId =
+  | 'graph'
+  | 'logs'
+  | 'code'
+  | 'lineage'
+  | 'diff'
+  | 'artifacts'
+  | 'runs';
 
 export type CanvasWorkbenchTabScope = 'workspace' | 'canvas' | 'selection' | 'run';
 
 export type CanvasWorkbenchTabPlacement = Readonly<{
   kind: 'workbench-tab';
   workbench: 'canvas';
-  tabId: Exclude<CanvasWorkbenchTabId, 'graph'>;
+  tabId: Exclude<CanvasWorkbenchTabId, 'graph' | 'logs'>;
   label: LocalizableString;
   icon: LucideIcon;
   order: number;

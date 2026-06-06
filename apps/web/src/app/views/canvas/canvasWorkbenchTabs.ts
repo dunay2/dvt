@@ -20,6 +20,7 @@ export type CanvasWorkbenchContext =
 
 export type CanvasWorkbenchTabIconName =
   | 'graph'
+  | 'logs'
   | 'code'
   | 'lineage'
   | 'diff'
@@ -56,6 +57,7 @@ export type CanvasWorkbenchTabsReadModel = Readonly<{
 type CanvasWorkbenchTabsCopy = Pick<
   CanvasViewCopy,
   | 'workbenchGraphTabLabel'
+  | 'workbenchLogsTabLabel'
   | 'workbenchCodeTabLabel'
   | 'workbenchLineageTabLabel'
   | 'workbenchDiffTabLabel'
@@ -65,6 +67,7 @@ type CanvasWorkbenchTabsCopy = Pick<
 
 const CANVAS_WORKBENCH_TAB_LABEL_KEYS = {
   graph: 'workbenchGraphTabLabel',
+  logs: 'workbenchLogsTabLabel',
   code: 'workbenchCodeTabLabel',
   lineage: 'workbenchLineageTabLabel',
   diff: 'workbenchDiffTabLabel',
@@ -74,6 +77,7 @@ const CANVAS_WORKBENCH_TAB_LABEL_KEYS = {
 
 const CANVAS_WORKBENCH_TAB_ICON_NAMES = {
   graph: 'graph',
+  logs: 'logs',
   code: 'code',
   lineage: 'lineage',
   diff: 'diff',
@@ -105,6 +109,20 @@ export function createCanvasGraphWorkbenchTab(
     scope: 'canvas',
     isEnabled: true,
     to: buildCanvasWorkbenchTabPath('graph'),
+  };
+}
+
+export function createCanvasLogsWorkbenchTab(
+  copy: CanvasWorkbenchTabsCopy = canvasViewCopy
+): CanvasWorkbenchTabReadModel {
+  return {
+    id: 'logs',
+    label: resolveCanvasWorkbenchTabLabel('logs', copy),
+    iconName: resolveCanvasWorkbenchTabIconName('logs'),
+    order: 15,
+    scope: 'workspace',
+    isEnabled: true,
+    to: buildCanvasWorkbenchTabPath('logs'),
   };
 }
 
@@ -150,11 +168,12 @@ export function buildCanvasWorkbenchTabsReadModel(args: {
   const routeState = args.routeState;
   const copy = args.copy ?? canvasViewCopy;
   const graphTab = createCanvasGraphWorkbenchTab(copy);
+  const logsTab = createCanvasLogsWorkbenchTab(copy);
   const pluginTabs = args.placements
     .filter((placement) => isCanvasWorkbenchTabAvailableForContext(placement, args.context))
     .map((placement) => projectPlacementToTab(placement, copy))
     .sort((left, right) => left.order - right.order);
-  const tabs = [graphTab, ...pluginTabs];
+  const tabs = [graphTab, logsTab, ...pluginTabs];
   assertUniqueCanvasWorkbenchTabs(tabs);
 
   if (

@@ -163,7 +163,7 @@ function CanvasShellWorkbenchChrome({
         </div>
       ) : null}
       {layout.workbenchTabStrip ? (
-        <div data-slot="canvas-workbench-chrome-tabs" className="min-w-0 flex-1 overflow-x-auto">
+        <div data-slot="canvas-workbench-chrome-tabs" className="min-w-[34rem] flex-none">
           {layout.workbenchTabStrip}
         </div>
       ) : null}

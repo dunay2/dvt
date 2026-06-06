@@ -117,6 +117,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.workbench.tabs.graphLabel',
     fallback: 'Graph',
   },
+  workbenchLogsTabLabel: {
+    key: 'canvas.workbench.tabs.logsLabel',
+    fallback: 'Log',
+  },
   workbenchCodeTabLabel: {
     key: 'canvas.workbench.tabs.codeLabel',
     fallback: 'Code',

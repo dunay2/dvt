@@ -1,5 +1,13 @@
 /** Owned concern: render Canvas workbench tab navigation from the tab read model. */
-import { Activity, FileCode2, FileText, GitCompare, GitGraph, GitMerge } from 'lucide-react';
+import {
+  Activity,
+  FileCode2,
+  FileText,
+  GitCompare,
+  GitGraph,
+  GitMerge,
+  ScrollText,
+} from 'lucide-react';
 
 import type { CanvasWorkbenchTabId } from '../../plugins/contracts/PluginManifest';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
@@ -19,6 +27,8 @@ function renderCanvasWorkbenchTabIcon(iconName: CanvasWorkbenchTabIconName): JSX
   const className = 'size-4 shrink-0';
 
   switch (iconName) {
+    case 'logs':
+      return <ScrollText aria-hidden="true" className={className} />;
     case 'code':
       return <FileCode2 aria-hidden="true" className={className} />;
     case 'lineage':

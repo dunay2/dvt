@@ -91,6 +91,7 @@ export type CanvasViewCopy = {
   readonly projectSnapshotImportFailedMessage: string;
   readonly newCanvasLabel: string;
   readonly workbenchGraphTabLabel: string;
+  readonly workbenchLogsTabLabel: string;
   readonly workbenchCodeTabLabel: string;
   readonly workbenchLineageTabLabel: string;
   readonly workbenchDiffTabLabel: string;
