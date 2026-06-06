@@ -882,6 +882,29 @@ test('tracked migrations prefer DB-authored local rails over matching imported r
   assert.match(localPrecedenceMigration.sql, /where source_rank = 1/);
 });
 
+test('tracked migrations separate rail manifests from canonical creation queries after W62', () => {
+  const migrations = readMigrationFiles();
+  const canonicalRailProjectionMigration = migrations.find(
+    (migration) => migration.fileName === '062_command_query_rail_canonical_projection.sql'
+  );
+
+  assert.ok(canonicalRailProjectionMigration);
+  assert.match(
+    canonicalRailProjectionMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_manifest_query/
+  );
+  assert.match(
+    canonicalRailProjectionMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(canonicalRailProjectionMigration.sql, /canonical_rank = 1/);
+  assert.match(
+    canonicalRailProjectionMigration.sql,
+    /partition by rail_type, normalized_rail_name/
+  );
+  assert.match(canonicalRailProjectionMigration.sql, /reference_count/);
+});
+
 test('tracked migrations expose composite component hierarchy records after W32', () => {
   const migrations = readMigrationFiles();
   const compositeHierarchyMigration = migrations.find(
