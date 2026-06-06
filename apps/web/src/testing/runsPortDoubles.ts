@@ -134,19 +134,16 @@ function buildRunStartReceipt(runId: string): RunStartReceipt {
 }
 
 export function createMockSessionContextPort(): SessionContextPort {
+  const workspaceScope = {
+    tenantId: 'tenant-1',
+    projectId: 'project-1',
+    environmentId: 'env-1',
+    targetAdapter: 'temporal',
+  } as const;
+
   return {
-    getWorkspaceScope: () => ({
-      tenantId: 'tenant-1',
-      projectId: 'project-1',
-      environmentId: 'env-1',
-      targetAdapter: 'temporal',
-    }),
-    getWorkspaceScopeSnapshot: () => ({
-      tenantId: 'tenant-1',
-      projectId: 'project-1',
-      environmentId: 'env-1',
-      targetAdapter: 'temporal',
-    }),
+    getWorkspaceScope: () => workspaceScope,
+    getWorkspaceScopeSnapshot: () => workspaceScope,
     subscribeWorkspaceScope: () => () => undefined,
     buildRunContext: (runId) => ({
       tenantId: asNonBlankString('tenant-1'),
