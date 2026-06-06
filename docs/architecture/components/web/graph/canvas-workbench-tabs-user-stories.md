@@ -178,6 +178,24 @@ Acceptance:
 - the guard requires owned-concern headers on the local tab proof modules;
 - the guard verifies the semantic-icon read model and browser proof vocabulary.
 
+### US-CANVAS-WORKBENCH-014 - Canvas Workbench Log
+
+As a Canvas user, I want a route-local Log tab so operational messages,
+readiness, draft posture, permissions, and plan/run blockers are reviewable in
+one place without treating them as durable backend audit history.
+
+Acceptance:
+
+- Log appears as a Canvas workbench tab, not as shell navigation;
+- selecting Log executes `SelectCanvasWorkbenchTab(logs)`;
+- the route becomes `/canvas/logs`;
+- `ListCanvasWorkbenchLogEntries` returns deduplicated route-local entries
+  derived from current Canvas controller and route state;
+- the tab remains available before first-canvas creation because it is
+  workspace-scoped;
+- critical blocking states still surface in their existing banners/toasts while
+  also appearing as warning or error log entries.
+
 ## Scenario Matrix
 
 | Story                   | Rail                                 | DDD owner                               | Primary proof                              | Negative proof                                     |
@@ -195,6 +213,7 @@ Acceptance:
 | US-CANVAS-WORKBENCH-011 | `ListCanvasWorkbenchTabs`            | `CanvasWorkbenchTabsReadModel`          | `canvasWorkbenchTabs.architecture.test.ts` | plugin icon metadata cannot leak into tab strip    |
 | US-CANVAS-WORKBENCH-012 | `none - docs contract`               | `CanvasWorkbenchTabStrip`               | `canvasWorkbenchTabs.architecture.test.ts` | missing API/invariant/transition docs fail guard   |
 | US-CANVAS-WORKBENCH-013 | `VerifyCanvasWorkbenchVisualPosture` | `CanvasWorkbenchVisualPostureReadModel` | `canvasWorkbenchTabs.architecture.test.ts` | missing semantic proof vocabulary fails guard      |
+| US-CANVAS-WORKBENCH-014 | `ListCanvasWorkbenchLogEntries`      | `CanvasWorkbenchLogEntriesReadModel`    | `canvasWorkbenchLogEntries.test.ts`        | empty/duplicate messages omitted                   |
 
 ## TDD Traceability
 
@@ -207,3 +226,6 @@ Acceptance:
 - The semantic guard requires the tab-strip component guide, controlled-icon
   stories, mailbox analysis, owned-concern docblocks, and browser controlled-icon
   proof to stay aligned.
+- The Log tab red cycle starts with `canvasWorkbenchLogEntries.test.ts`: before
+  the read model exists, route posture and draft/plan blockers cannot be
+  projected into one reviewable log surface.

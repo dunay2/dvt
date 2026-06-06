@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildCanvasWorkbenchTabsReadModel,
   createCanvasGraphWorkbenchTab,
+  createCanvasLogsWorkbenchTab,
 } from './canvasWorkbenchTabs';
 import { resolveCanvasViewCopy } from './copy';
 
@@ -38,6 +39,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
     expect(model.activeTabId).toBe('code');
     expect(model.tabs.map((tab) => [tab.id, tab.label, tab.to])).toEqual([
       ['graph', 'Graph', '/canvas'],
+      ['logs', 'Log', '/canvas/logs'],
       ['code', 'Code', '/canvas/code'],
       ['lineage', 'Lineage', '/canvas/lineage'],
     ]);
@@ -63,6 +65,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
 
     expect(model.tabs.map((tab) => [tab.id, tab.label, tab.iconName, tab.to])).toEqual([
       ['graph', 'Graph', 'graph', '/canvas'],
+      ['logs', 'Log', 'logs', '/canvas/logs'],
       ['code', 'Code', 'code', '/canvas/code'],
     ]);
     expect(model.tabs.every((tab) => !('icon' in tab))).toBe(true);
@@ -124,6 +127,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
 
     expect(model.tabs.map((tab) => tab.label)).toEqual([
       'Grafo',
+      'Log',
       'Codigo',
       'Linaje',
       'Diferencias',
@@ -203,12 +207,13 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
     });
 
     expect(model.activeTabId).toBe('code');
-    expect(model.tabs.map((tab) => tab.id)).toEqual(['graph', 'code']);
+    expect(model.tabs.map((tab) => tab.id)).toEqual(['graph', 'logs', 'code']);
     expect(model.unavailableState).toBeNull();
   });
 
   it('does not enable non-workspace scoped tabs before Canvas context is ready', () => {
     const graphTab = createCanvasGraphWorkbenchTab();
+    const logsTab = createCanvasLogsWorkbenchTab();
     const model = buildCanvasWorkbenchTabsReadModel({
       placements: [
         {
@@ -225,7 +230,7 @@ describe('buildCanvasWorkbenchTabsReadModel', () => {
       context: { kind: 'unavailable', reason: 'missing_canvas_context' },
     });
 
-    expect(model.tabs).toEqual([graphTab]);
+    expect(model.tabs).toEqual([graphTab, logsTab]);
     expect(model.unavailableState).toEqual({
       kind: 'missing_canvas_context',
       recoveryTabId: 'graph',

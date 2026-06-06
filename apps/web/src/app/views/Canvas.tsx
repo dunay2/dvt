@@ -15,6 +15,7 @@ import { buildCanvasShellProps } from './canvas/canvasShellPropsBuilder';
 import { parseCanvasWorkbenchRouteState } from './canvas/canvasWorkbenchRouteState';
 import { resolveCanvasWorkbenchTabSelectionCommand } from './canvas/canvasWorkbenchRouteState';
 import { buildCanvasWorkbenchTabsReadModel } from './canvas/canvasWorkbenchTabs';
+import { buildCanvasWorkbenchLogEntries } from './canvas/canvasWorkbenchLogEntries';
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
 import { getCanvasWorkbenchTabViews } from '../plugins/registry';
@@ -55,6 +56,25 @@ function CanvasContent(): JSX.Element {
     controller,
     routeViewState,
   });
+  const canvasWorkbenchLogState = buildCanvasWorkbenchLogEntries({
+    presentation: routeViewState.presentationState,
+    draft: controller.draftAccessPosture,
+    toolbar: {
+      planRunReadiness: shellProps.toolbar.planRunReadiness,
+      canPlanGraph: shellProps.toolbar.canPlanGraph,
+      canStartRun: shellProps.toolbar.canStartRun,
+      planStatusSummary: shellProps.toolbar.planStatusSummary,
+    },
+    permissions: shellProps.panels.userPermissions,
+    graph: {
+      nodeCount: shellProps.graph.nodesWithImpact.length,
+      edgeCount: shellProps.graph.edges.length,
+    },
+    selection: {
+      inspectorNodeName: shellProps.panels.inspectorNode?.name ?? null,
+      activeRunId: shellProps.panels.activeRunId,
+    },
+  });
   const activeWorkbenchTab = canvasWorkbenchTabsState.tabs.find(
     (tab) => tab.id === canvasWorkbenchTabsState.activeTabId
   );
@@ -80,6 +100,7 @@ function CanvasContent(): JSX.Element {
         <CanvasWorkbenchTabPanel
           tabsState={canvasWorkbenchTabsState}
           tabViews={canvasWorkbenchTabViews}
+          logState={canvasWorkbenchLogState}
           onSelectTab={handleSelectWorkbenchTab}
         />
       ),

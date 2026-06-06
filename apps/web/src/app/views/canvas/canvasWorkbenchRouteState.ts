@@ -24,6 +24,7 @@ export type CanvasWorkbenchTabSelectionCommandResult =
 
 const CANVAS_WORKBENCH_TAB_IDS = new Set<CanvasWorkbenchTabId>([
   'graph',
+  'logs',
   'code',
   'lineage',
   'diff',

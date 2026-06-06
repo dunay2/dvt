@@ -7,6 +7,8 @@ import type {
   CanvasWorkbenchTabUnavailableState,
   CanvasWorkbenchTabsReadModel,
 } from './canvasWorkbenchTabs';
+import { CanvasWorkbenchLogPanel } from './CanvasWorkbenchLogPanel';
+import type { CanvasWorkbenchLogEntriesReadModel } from './canvasWorkbenchLogEntries';
 
 type CanvasWorkbenchUnavailablePanelProps = Readonly<{
   unavailableState: CanvasWorkbenchTabUnavailableState;
@@ -43,12 +45,14 @@ function CanvasWorkbenchUnavailablePanel({
 export type CanvasWorkbenchTabPanelProps = Readonly<{
   tabsState: CanvasWorkbenchTabsReadModel;
   tabViews: readonly CanvasWorkbenchTabViewContribution[];
+  logState: CanvasWorkbenchLogEntriesReadModel;
   onSelectTab: (tabId: CanvasWorkbenchTabId) => void;
 }>;
 
 export function CanvasWorkbenchTabPanel({
   tabsState,
   tabViews,
+  logState,
   onSelectTab,
 }: CanvasWorkbenchTabPanelProps): JSX.Element | null {
   if (tabsState.unavailableState != null) {
@@ -62,6 +66,10 @@ export function CanvasWorkbenchTabPanel({
 
   if (tabsState.activeTabId === 'graph') {
     return null;
+  }
+
+  if (tabsState.activeTabId === 'logs') {
+    return <CanvasWorkbenchLogPanel logState={logState} />;
   }
 
   const activeView = tabViews.find((view) => view.placement.tabId === tabsState.activeTabId);

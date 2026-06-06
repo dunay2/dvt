@@ -15,6 +15,10 @@ describe('canvas workbench route state', () => {
   });
 
   it('accepts only cataloged Canvas workbench tabs', () => {
+    expect(parseCanvasWorkbenchRouteState('logs')).toEqual({
+      kind: 'selected',
+      tabId: 'logs',
+    });
     expect(parseCanvasWorkbenchRouteState('code')).toEqual({
       kind: 'selected',
       tabId: 'code',
@@ -37,6 +41,7 @@ describe('canvas workbench route state', () => {
       to: '/canvas/lineage',
     });
     expect(buildCanvasWorkbenchTabPath('graph')).toBe('/canvas');
+    expect(buildCanvasWorkbenchTabPath('logs')).toBe('/canvas/logs');
   });
 
   it('rejects disabled or unknown tab selections', () => {

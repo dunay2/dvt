@@ -48,12 +48,13 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');
     expect([
       spanishCopy.workbenchGraphTabLabel,
+      spanishCopy.workbenchLogsTabLabel,
       spanishCopy.workbenchCodeTabLabel,
       spanishCopy.workbenchLineageTabLabel,
       spanishCopy.workbenchDiffTabLabel,
       spanishCopy.workbenchArtifactsTabLabel,
       spanishCopy.workbenchRunsTabLabel,
-    ]).toEqual(['Grafo', 'Codigo', 'Linaje', 'Diferencias', 'Artefactos', 'Ejecuciones']);
+    ]).toEqual(['Grafo', 'Log', 'Codigo', 'Linaje', 'Diferencias', 'Artefactos', 'Ejecuciones']);
   });
 
   it('resolves Canvas Inspector authoring copy in English and Spanish', () => {

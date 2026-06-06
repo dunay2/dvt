@@ -11,7 +11,7 @@ planning_type: architecture
 ## Purpose
 
 Canvas Workbench Tabs own the route-local placement of Canvas-scoped views:
-Graph, Code, Lineage, Diff, Artifacts, and Runs.
+Graph, Log, Code, Lineage, Diff, Artifacts, and Runs.
 
 The component exists because shell navigation, route registration, and Canvas
 workbench placement are different concerns. A plugin may register a route, but
@@ -43,6 +43,7 @@ The component does not own:
 - global shell navigation layout;
 - Canvas document tabs and canvas replacement actions;
 - internals of Code, Lineage, Diff, Artifacts, or Runs views;
+- durable event storage or backend audit-log persistence;
 - backend routes, contracts, adapters, or storage;
 - Project Assets persistence or source import provider expansion.
 
@@ -76,8 +77,11 @@ The component does not own:
 | `CanvasWorkbenchTabsReadModel`                    | `canvasWorkbenchTabs.ts`       | Semantic icon+label render-ready tab model for the Canvas route.           |
 | `buildCanvasWorkbenchTabsReadModel(args)`         | `canvasWorkbenchTabs.ts`       | Projects Graph plus enabled plugin tabs with active/unavailable state.     |
 | `isCanvasWorkbenchTabAvailableForContext(args)`   | `canvasWorkbenchTabs.ts`       | Decides whether a tab scope is available for the current Canvas context.   |
+| `CanvasWorkbenchLogEntriesReadModel`              | `canvasWorkbenchLogEntries.ts` | Route-local operational log entries for current Canvas posture.            |
+| `buildCanvasWorkbenchLogEntries(args)`            | `canvasWorkbenchLogEntries.ts` | Projects route, draft, plan/run, permission, and selection messages.       |
 | `CanvasWorkbenchTabStrip`                         | `CanvasWorkbenchTabStrip.tsx`  | Passive semantic icon+label tab-list renderer; see local component guide.  |
 | `CanvasWorkbenchTabPanel`                         | `CanvasWorkbenchTabPanel.tsx`  | Renders the selected Canvas tab view or unavailable recovery surface.      |
+| `CanvasWorkbenchLogPanel`                         | `CanvasWorkbenchLogPanel.tsx`  | Passive dense renderer for the Canvas workbench log read model.            |
 
 ## Command And Query Rails
 
@@ -88,6 +92,7 @@ Canonical local catalog:
 | ------------------------------- | ------- | ------------------------------------ | ----------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------- |
 | `ListShellNavigationItems`      | query   | `ShellNavigationReadModel`           | Shell runtime query port                  | Plugin registry projection                | Canvas workbench placements cannot enter shell nav.                       |
 | `ListCanvasWorkbenchTabs`       | query   | `CanvasWorkbenchTabsReadModel`       | Canvas workbench tab query port           | Plugin registry projection                | Shell placements cannot enter Canvas tabs; duplicate tab IDs fail closed. |
+| `ListCanvasWorkbenchLogEntries` | query   | `CanvasWorkbenchLogEntriesReadModel` | Canvas workbench log query port           | Canvas route presentation projection      | Empty/duplicate messages are omitted; no fake event history is created.   |
 | `ResolveCanvasWorkbenchContext` | query   | `CanvasWorkbenchContext`             | Canvas route state query port             | React Router and controller runtime state | Missing Canvas context returns unavailable state.                         |
 | `SelectCanvasWorkbenchTab`      | command | `CanvasWorkbenchTabSelectionCommand` | Canvas route state command port           | React Router navigation adapter           | Unknown or disabled tabs are rejected.                                    |
 | `RegisterPluginViewPlacement`   | command | `PluginViewPlacementRegistration`    | Plugin registry composition port          | Static plugin contribution adapter        | Missing placement, duplicate tab ID, and invalid scope fail closed.       |
@@ -103,6 +108,7 @@ Canonical local catalog:
 | `CanvasWorkbenchTabScope`            | value object         | `workspace` tabs need only workspace scope; `canvas`, `selection`, and `run` tabs need ready Canvas context. |
 | `ShellNavigationReadModel`           | read model           | Contains only shell placements sorted by placement order.                                                    |
 | `CanvasWorkbenchTabsReadModel`       | read model           | Contains Graph plus enabled Canvas tab labels, active state, and routes only.                                |
+| `CanvasWorkbenchLogEntriesReadModel` | read model           | Contains current operational messages only; it is not durable history or backend authority.                  |
 | `CanvasWorkbenchContext`             | value object         | Canvas context is either ready or explicitly unavailable.                                                    |
 | `CanvasWorkbenchTabSelectionCommand` | command value object | Selected tab ID must exist in the read model.                                                                |
 
@@ -116,8 +122,13 @@ Canonical local catalog:
 - Global Runs and Canvas-scoped Runs are separate placements and separate
   product intents.
 - `CanvasPlaygroundTabStrip` owns Canvas document tabs only.
-- `CanvasWorkbenchTabStrip` owns Graph/Code/Lineage/Diff/Artifacts/Runs view
+- `CanvasWorkbenchTabStrip` owns Graph/Log/Code/Lineage/Diff/Artifacts/Runs view
   tabs only.
+- Log is a workspace-scoped Canvas tab. It stays reachable before a first
+  Canvas document exists and never appears in global shell navigation.
+- `CanvasWorkbenchLogEntriesReadModel` projects the current route posture only.
+  It must not invent historical events, persist audit data, or mask blocking
+  banners/toasts that require immediate user attention.
 - `CanvasWorkbenchTabStrip` must render those tabs as a horizontal,
   header-scoped semantic icon+label strip with readable labels; it must not use
   plugin icon components, compress labels into truncated shell-rail captions, or
@@ -148,12 +159,14 @@ Canonical local catalog:
 ```mermaid
 stateDiagram-v2
     [*] --> graph: /canvas
+    graph --> logs: SelectCanvasWorkbenchTab(logs)
     graph --> code: SelectCanvasWorkbenchTab(code) before document exists
     graph --> code: SelectCanvasWorkbenchTab(code)
     graph --> lineage: SelectCanvasWorkbenchTab(lineage)
     graph --> diff: SelectCanvasWorkbenchTab(diff)
     graph --> artifacts: SelectCanvasWorkbenchTab(artifacts)
     graph --> runs: SelectCanvasWorkbenchTab(runs)
+    logs --> graph: SelectCanvasWorkbenchTab(graph)
     code --> graph: SelectCanvasWorkbenchTab(graph)
     lineage --> graph: SelectCanvasWorkbenchTab(graph)
     diff --> graph: SelectCanvasWorkbenchTab(graph)
@@ -180,7 +193,7 @@ sequenceDiagram
     Model-->>Strip: tabs and active tab
     Strip->>Router: SelectCanvasWorkbenchTab
     Router-->>Canvas: /canvas/:workbenchTab
-    Canvas->>Panel: active tab view
+  Canvas->>Panel: active tab view or Canvas log read model
 ```
 
 ## Consumers
@@ -190,6 +203,8 @@ sequenceDiagram
 - `CanvasShellMainPanel.tsx` renders the workbench tab strip above the Canvas
   viewport or active tab panel.
 - `routes.ts` registers `/canvas/:workbenchTab?` under the Canvas route owner.
+- `Canvas.tsx` also projects `ListCanvasWorkbenchLogEntries` from controller
+  and route presentation state for the built-in Log tab.
 - `dbtContributions.ts` contributes Code, Lineage, Diff, and Artifacts as
   Canvas workbench tabs. Code is `workspace` scoped; Lineage and Diff are
   Canvas-scoped; Artifacts is run-scoped.
@@ -229,6 +244,10 @@ sequenceDiagram
   tab. The registry accepts one Canvas placement, projects it through
   `ListCanvasWorkbenchTabs`, and rejects duplicate tab IDs or shell placements
   in Canvas tab queries.
+- `US-CANVAS-WORKBENCH-014`: as a Canvas user, I open Log from the Canvas
+  workbench. The route becomes `/canvas/logs`, route-local operational messages
+  are visible in a dense list, and the log does not claim durable event-storage
+  authority.
 - `US-CANVAS-WORKBENCH-010`: as a Canvas user, I see mature workbench tabs with
   Canvas-owned semantic icons and readable labels. Plugin icon components must
   not render directly in the Canvas workbench tab strip.
@@ -260,6 +279,9 @@ sequenceDiagram
 - User-visible scoped tabs:
   `SelectCanvasWorkbenchTab`, `CanvasWorkbenchTabStrip`,
   `CanvasWorkbenchTabPanel`, `canvas-workbench-tabs.cy.ts`.
+- Route-local operational log:
+  `ListCanvasWorkbenchLogEntries`, `buildCanvasWorkbenchLogEntries()`,
+  `CanvasWorkbenchLogPanel`, `canvasWorkbenchLogEntries.test.ts`.
 - Semantic icon tab-strip component contract:
   `CanvasWorkbenchTabStrip`, `CanvasWorkbenchTabsReadModel`,
   `canvas-workbench-tab-strip-component.md`,
@@ -287,6 +309,9 @@ projection, tab rendering, and Canvas-scoped Runs.
   disabled tab command results.
 - `canvasWorkbenchTabs.test.ts` proves sorted semantic icon tabs, duplicate
   rejection, missing context, and unknown route unavailable state.
+- `canvasWorkbenchLogEntries.test.ts` proves route posture, draft posture,
+  plan/run readiness, permission, and selection messages project as a
+  deduplicated log read model.
 - `canvasWorkbenchTabs.architecture.test.ts` guards semantic separation from
   shell nav, plugin icon isolation in the Canvas strip, and
   `CanvasPlaygroundTabStrip`.
@@ -303,6 +328,8 @@ projection, tab rendering, and Canvas-scoped Runs.
   query.
 - Duplicate Canvas tab IDs fail with a deterministic error.
 - Unknown `/canvas/:workbenchTab` fails closed.
+- Empty or duplicate log entry messages are omitted from the route-local log.
+- Log entries do not synthesize past backend events or protected draft history.
 - Unavailable Canvas context renders Graph recovery rather than fake tab data.
 - Cypress verifies the shell does not expose retired global Code, Lineage,
   Diff, or Artifacts links or captions.
@@ -355,6 +382,8 @@ flowchart TD
 - Do not put tab selection parsing inline in JSX.
 - Do not add external plugin views with `nav`.
 - Do not collapse global Runs and Canvas Runs into one ambiguous contribution.
+- Do not turn route-local Log into shell navigation, backend audit storage, or
+  a replacement for blocking banners that need immediate attention.
 - Do not seed Code/Lineage/Diff/Artifacts panels with stale or fake Canvas
   context to make unavailable states look ready.
 - Do not fix Canvas tab bootstrap by restoring old global routes or aliasing old

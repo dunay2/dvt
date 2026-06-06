@@ -521,15 +521,23 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
   - apps/web/src/app/views/canvas/CanvasWorkbenchTabPanel.tsx
   - apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
+  - apps/web/src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx
+  - apps/web/src/app/views/canvas/CanvasWorkbenchLogPanel.tsx
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
+  - apps/web/src/app/views/canvas/canvasCopy.types.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts
+  - apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts
   - apps/web/src/app/views/canvas/canvasDraftPresentationStore.ts
   - apps/web/src/app/views/canvas/canvasShell.types.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchRouteState.test.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchRouteState.ts
+  - apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.test.ts
+  - apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
   - apps/web/src/app/views/canvas/canvasLayoutPersistence.architecture.test.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts
   - apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+  - apps/web/src/app/views/canvas/copy.test.ts
   - apps/web/src/app/views/canvas/useCanvasRoutePresentationSync.ts
   - apps/web/src/app/views/code/codeRouteBootstrap.ts
   - apps/web/src/app/views/diff/diffRouteBootstrap.ts
@@ -571,6 +579,9 @@ commandQueryRails:
   - name: ListCanvasWorkbenchTabs
     type: query
     dddOwner: CanvasWorkbenchTabsReadModel
+  - name: ListCanvasWorkbenchLogEntries
+    type: query
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
   - name: ResolveCanvasWorkbenchContext
     type: query
     dddOwner: CanvasWorkbenchContext
@@ -593,6 +604,9 @@ domainObjects:
   - name: CanvasWorkbenchTabsReadModel
     type: read-model
     owner: Canvas workbench presentation
+  - name: CanvasWorkbenchLogEntriesReadModel
+    type: read-model
+    owner: Canvas workbench presentation
   - name: CanvasWorkbenchContext
     type: value-object
     owner: Canvas workbench presentation
@@ -604,11 +618,15 @@ fowlerSignals:
   - Primitive obsession
   - Duplicate semantics
   - Hidden authority
+  - Responsibility overload
+  - Test-only confidence
 architectureGuards:
   - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+  - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx
 cypressFlows:
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
 completionGate:
+  - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx src/app/views/canvas/canvasWorkbenchRouteState.test.ts src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
   - pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts src/app/bootstrap/usePublishedRouteBootstrap.test.tsx src/app/plugins/pluginRuntimeProjection.architecture.test.ts src/app/shell/shellNavigationModel.test.ts src/app/views/canvas/canvasWorkbenchRouteState.test.ts src/app/views/canvas/canvasWorkbenchTabs.test.ts src/app/routes.test.tsx src/app/views/Canvas.architecture.test.tsx src/app/views/canvas/CanvasShell.architecture.test.tsx src/app/views/Canvas.routeStates.test.tsx src/app/views/Canvas.readOnlyStates.test.tsx src/app/views/Canvas.draftRecovery.test.tsx src/app/Root.shellChrome.test.tsx
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
@@ -635,6 +653,21 @@ redGreenCycles:
       - apps/web/src/app/views/RunsView.tsx
       - apps/web/src/app/views/runs/CanvasRunsTabView.tsx
     greenTest: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+  - id: workbench-log-read-model
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx
+    expectedFailure: Canvas workbench log query and panel do not exist, so route posture messages cannot be projected into a reviewable tab.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+      - apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.test.ts
+      - apps/web/src/app/views/canvas/CanvasWorkbenchLogPanel.tsx
+      - apps/web/src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx
+      - apps/web/src/app/views/canvas/Canvas.tsx
+      - apps/web/src/app/views/canvas/CanvasWorkbenchTabPanel.tsx
+      - apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx
+      - apps/web/src/app/views/canvas/canvasWorkbenchRouteState.ts
+      - apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+      - apps/web/src/app/plugins/contracts/PluginManifest.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx
 symbols:
   - name: ShellNavigationPlacement
     path: apps/web/src/app/plugins/contracts/PluginManifest.ts
@@ -724,6 +757,118 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/pluginRuntimeProjection.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts]
+  - name: CanvasWorkbenchLogSeverity
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: CanvasWorkbenchLogSource
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: CanvasWorkbenchLogEntry
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Data clump]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: CanvasWorkbenchLogEntriesReadModel
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Responsibility overload, Presentation Model]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: BuildCanvasWorkbenchLogEntriesArgs
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Introduce Parameter Object]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: buildCanvasWorkbenchLogEntries
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Responsibility overload, Presentation Model]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: normalizeLogMessage
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model helper
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: slugLogMessage
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model helper
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: resolveRouteSeverity
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model helper
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: resolveDraftSeverity
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model helper
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: formatGraphMessage
+    path: apps/web/src/app/views/canvas/canvasWorkbenchLogEntries.ts
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Presentation Model]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - route-local log read model helper
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasWorkbenchLogEntries.test.ts]
+  - name: CanvasWorkbenchLogPanelProps
+    path: apps/web/src/app/views/canvas/CanvasWorkbenchLogPanel.tsx
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Passive View]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - component covered by unit render test
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx]
+  - name: resolveCanvasWorkbenchLogSeverityClassName
+    path: apps/web/src/app/views/canvas/CanvasWorkbenchLogPanel.tsx
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Presentation Model]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - component covered by unit render test
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx]
+  - name: CanvasWorkbenchLogPanel
+    path: apps/web/src/app/views/canvas/CanvasWorkbenchLogPanel.tsx
+    dddOwner: CanvasWorkbenchLogEntriesReadModel
+    cqRails: [ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Passive View]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-WORKBENCH-TABS-PLACEMENT
+    cypressCoverage: N/A - component covered by unit render test
+    unitTests: [pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/CanvasWorkbenchLogPanel.test.tsx]
   - name: CANVAS_WORKBENCH_ROUTE_ID
     path: apps/web/src/app/views/canvas/canvasDraftPresentationStore.ts
     dddOwner: CanvasWorkbenchTabSelectionCommand
@@ -889,6 +1034,14 @@ symbols:
     dddOwner: CanvasWorkbenchTabsReadModel
     cqRails: [ListCanvasWorkbenchTabs]
     fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
+    cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts]
+  - name: createCanvasLogsWorkbenchTab
+    path: apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts
+    dddOwner: CanvasWorkbenchTabsReadModel
+    cqRails: [ListCanvasWorkbenchTabs, ListCanvasWorkbenchLogEntries]
+    fowlerSignals: [Responsibility overload, Duplicate semantics]
     architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts
     cypressCoverage: pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-tabs.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkbenchTabs.test.ts]

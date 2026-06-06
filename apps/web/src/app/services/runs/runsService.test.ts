@@ -1,5 +1,5 @@
 import { parseExecutionSelection } from '@dvt/contracts';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { StartRunInput } from '../../ports/runs';
 import { useSessionStore } from '../../stores/sessionStore';
@@ -54,10 +54,23 @@ function createApiError(
 }
 
 describe('runsService runtime contract', () => {
-  useSessionStore.setState({
-    tenantId: 'tenant-1',
-    projectId: 'project-1',
-    environmentId: 'env-1',
+  beforeEach(() => {
+    useSessionStore.setState({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+      targetAdapter: 'temporal',
+      availableWorkspaces: [
+        {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'env-1',
+        },
+      ],
+      workspaceScopeSelectionStatus: 'selected',
+      workspaceScopeSelectionRejectionReason: undefined,
+      rejectedWorkspaceScope: undefined,
+    });
   });
 
   it('uses POST /runs/start for startRun', async () => {
