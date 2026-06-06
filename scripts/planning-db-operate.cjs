@@ -19,6 +19,19 @@ const {
 
 const allowedStatuses = new Set(['queued', 'in_progress', 'blocked', 'review', 'done']);
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
+const allowedFeatureMechanizationStatuses = new Set(['closed', 'implemented']);
+const allowedFeatureMechanizationRailTypes = new Set(['command', 'query']);
+const allowedFeatureMechanizationRailStatuses = new Set([
+  'accepted',
+  'declared',
+  'documented',
+  'implemented',
+  'missing',
+  'planned',
+  'proposed',
+  'unimplemented',
+  'not-implemented',
+]);
 const allowedArchitectureDesignStatuses = new Set([
   'proposed',
   'review',
@@ -126,6 +139,21 @@ const componentListOptionKeys = new Set([
   'fowler-signal',
   'scope',
 ]);
+const featureMechanizationListOptionKeys = new Set([
+  'component-guide',
+  'implementation-ref',
+  'documentation-ref',
+  'governing-source',
+  'allowed-surface',
+  'forbidden-surface',
+  'domain-object',
+  'fowler-signal',
+  'architecture-guard',
+  'cypress-flow',
+  'completion-gate',
+  'unit-test',
+  'patch-surface',
+]);
 const operationHelp = Object.freeze({
   task: {
     operations: ['claim', 'release', 'update', 'create', 'delete', 'show'],
@@ -199,6 +227,15 @@ const operationHelp = Object.freeze({
       'Provide --path or both --lane and --task to select the source finding.',
     ],
   },
+  'feature-mechanization': {
+    operations: ['record'],
+    usage:
+      'pnpm planning:db:operate feature-mechanization record --feature <FEATURE-ID> --rail <RailName> --type <command|query> --actor <actor>',
+    details: [
+      'RecordFeatureMechanizationRail stores a DB-first command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
+      'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
+    ],
+  },
   audit: {
     operations: [],
     usage: 'pnpm planning:db:operate audit [--lane <lane>] [--task <task>] [--limit <n>]',
@@ -215,7 +252,7 @@ function isHelpFlag(value) {
 }
 
 function unknownOperationMessage() {
-  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "docs-disposition", "task-gap", or "audit".';
+  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "docs-disposition", "task-gap", "feature-mechanization", or "audit".';
 }
 
 function buildPlanningDbOperateHelpText(resource, action) {
@@ -372,6 +409,57 @@ function validateDbSurfaceWriteRailKind(value) {
   }
 
   return value;
+}
+
+function validateFeatureMechanizationStatus(value) {
+  if (!allowedFeatureMechanizationStatuses.has(value)) {
+    throw new Error(
+      `Invalid feature mechanization status "${value}". Expected: ${[
+        ...allowedFeatureMechanizationStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateFeatureMechanizationRailType(value) {
+  if (!allowedFeatureMechanizationRailTypes.has(value)) {
+    throw new Error(
+      `Invalid feature mechanization rail type "${value}". Expected: ${[
+        ...allowedFeatureMechanizationRailTypes,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateFeatureMechanizationRailStatus(value) {
+  if (!allowedFeatureMechanizationRailStatuses.has(value)) {
+    throw new Error(
+      `Invalid feature mechanization rail status "${value}". Expected: ${[
+        ...allowedFeatureMechanizationRailStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateFeatureMechanizationFeatureId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$/.test(normalized)) {
+    throw new Error(`Invalid --feature "${value}". Expected a stable feature mechanization id.`);
+  }
+
+  return normalized;
+}
+
+function normalizeFeatureMechanizationRailName(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function validateArchitectureDesignStatus(value) {
@@ -655,7 +743,11 @@ function parseFlagOptions(args) {
     index += 1;
 
     const camelKey = key.replace(/-([a-z])/g, (_, char) => char.toUpperCase());
-    if (key === 'evidence' || componentListOptionKeys.has(key)) {
+    if (
+      key === 'evidence' ||
+      componentListOptionKeys.has(key) ||
+      featureMechanizationListOptionKeys.has(key)
+    ) {
       options[camelKey] = options[camelKey] || [];
       options[camelKey].push(value);
       continue;
@@ -820,6 +912,38 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'feature_mechanization_rail_record') {
+    return {
+      featureId: command.featureId,
+      railName: command.railName,
+      normalizedRailName: command.normalizedRailName,
+      railType: command.railType,
+      dddOwner: command.dddOwner,
+      mechanizationStatus: command.mechanizationStatus,
+      railStatus: command.railStatus,
+      implementationRefs: command.implementationRefs || [],
+      documentationRefs: command.documentationRefs || [],
+      implementationPlan: command.implementationPlan,
+      componentGuides: command.componentGuides || [],
+      userStories: command.userStories || [],
+      governingSources: command.governingSources || [],
+      allowedImplementationSurfaces: command.allowedImplementationSurfaces || [],
+      forbiddenImplementationSurfaces: command.forbiddenImplementationSurfaces || [],
+      domainObjects: command.domainObjects || [],
+      fowlerSignals: command.fowlerSignals || [],
+      architectureGuards: command.architectureGuards || [],
+      cypressFlows: command.cypressFlows || [],
+      completionGate: command.completionGate || [],
+      unitTests: command.unitTests || [],
+      redTest: command.redTest,
+      expectedFailure: command.expectedFailure,
+      patchSurfaces: command.patchSurfaces || [],
+      greenTest: command.greenTest,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   return {};
 }
 
@@ -863,19 +987,6 @@ function defaultIdempotencyKey(command) {
     ].join(':');
   }
 
-  if (command.kind === 'db_surface_upsert') {
-    return [
-      command.kind,
-      command.actor || 'anonymous',
-      command.surfaceName || 'all',
-      crypto
-        .createHash('sha256')
-        .update(canonicalJson(operationPayload(command)))
-        .digest('hex')
-        .slice(0, 16),
-    ].join(':');
-  }
-
   if (command.kind === 'architecture_design_create') {
     return [
       command.kind,
@@ -898,6 +1009,35 @@ function defaultIdempotencyKey(command) {
       command.actor || 'anonymous',
       command.designId || 'no-design',
       command.componentId || command.relationId || 'no-subject',
+      crypto
+        .createHash('sha256')
+        .update(canonicalJson(operationPayload(command)))
+        .digest('hex')
+        .slice(0, 16),
+    ].join(':');
+  }
+
+  if (command.kind === 'db_surface_upsert') {
+    return [
+      command.kind,
+      command.actor || 'anonymous',
+      command.surfaceName || 'all',
+      crypto
+        .createHash('sha256')
+        .update(canonicalJson(operationPayload(command)))
+        .digest('hex')
+        .slice(0, 16),
+    ].join(':');
+  }
+
+  if (command.kind === 'feature_mechanization_rail_record') {
+    return [
+      command.kind,
+      command.actor || 'anonymous',
+      command.featureId || 'no-feature',
+      command.railType || 'no-type',
+      command.normalizedRailName || 'no-rail',
+      command.expectedRevision ?? 'latest',
       crypto
         .createHash('sha256')
         .update(canonicalJson(operationPayload(command)))
@@ -1040,26 +1180,6 @@ function assertComponentIdempotentReplayMatches(existingOperation, command) {
   }
 }
 
-function assertDbSurfaceIdempotentReplayMatches(existingOperation, command) {
-  const expectedPayload = operationPayload(command);
-  const existingPayload = normalizeExistingPayload(existingOperation.payload);
-  const existingSourceContentSha256 = normalizeOptionalText(
-    existingOperation.source_content_sha256 ?? existingOperation.sourceContentSha256
-  );
-  const sameOperation =
-    existingOperation.operation_type === command.kind &&
-    existingOperation.actor === command.actor &&
-    existingOperation.surface_name === command.surfaceName &&
-    existingOperation.source_ref === command.sourceRef &&
-    canonicalJson(existingPayload) === canonicalJson(expectedPayload);
-
-  if (existingSourceContentSha256 !== command.sourceContentSha256 || !sameOperation) {
-    throw new Error(
-      `DB-SURFACE-IDEMPOTENCY-MISMATCH: idempotency key "${command.idempotencyKey}" already belongs to a different DB surface operation.`
-    );
-  }
-}
-
 function assertArchitectureDesignIdempotentReplayMatches(existingOperation, command) {
   const expectedPayload = operationPayload(command);
   const existingPayload = normalizeExistingPayload(existingOperation.payload);
@@ -1104,6 +1224,46 @@ function assertArchitectureScopedOperationIdempotentReplayMatches(existingOperat
   if (existingSourceContentSha256 !== command.sourceContentSha256 || !sameOperation) {
     throw new Error(
       `ARCH-OPERATION-IDEMPOTENCY-MISMATCH: idempotency key "${command.idempotencyKey}" already belongs to a different architecture scoped operation.`
+    );
+  }
+}
+
+function assertDbSurfaceIdempotentReplayMatches(existingOperation, command) {
+  const expectedPayload = operationPayload(command);
+  const existingPayload = normalizeExistingPayload(existingOperation.payload);
+  const existingSourceContentSha256 = normalizeOptionalText(
+    existingOperation.source_content_sha256 ?? existingOperation.sourceContentSha256
+  );
+  const sameOperation =
+    existingOperation.operation_type === command.kind &&
+    existingOperation.actor === command.actor &&
+    existingOperation.surface_name === command.surfaceName &&
+    canonicalJson(existingPayload) === canonicalJson(expectedPayload);
+
+  if (existingSourceContentSha256 !== command.sourceContentSha256 || !sameOperation) {
+    throw new Error(
+      `DB-SURFACE-IDEMPOTENCY-MISMATCH: idempotency key "${command.idempotencyKey}" already belongs to a different DB surface operation.`
+    );
+  }
+}
+
+function assertFeatureMechanizationRailIdempotentReplayMatches(existingOperation, command) {
+  const expectedPayload = operationPayload(command);
+  const existingPayload = normalizeExistingPayload(existingOperation.payload);
+  const existingSourceContentSha256 = normalizeOptionalText(
+    existingOperation.source_content_sha256 ?? existingOperation.sourceContentSha256
+  );
+  const sameOperation =
+    existingOperation.operation_type === command.kind &&
+    existingOperation.actor === command.actor &&
+    existingOperation.rail_id === command.railId &&
+    normalizeRevision(existingOperation.expected_revision) ===
+      normalizeRevision(command.expectedRevision) &&
+    canonicalJson(existingPayload) === canonicalJson(expectedPayload);
+
+  if (existingSourceContentSha256 !== command.sourceContentSha256 || !sameOperation) {
+    throw new Error(
+      `FEATURE-MECHANIZATION-IDEMPOTENCY-MISMATCH: idempotency key "${command.idempotencyKey}" already belongs to a different feature mechanization operation.`
     );
   }
 }
@@ -1419,62 +1579,6 @@ function validateComponentCreateCommand(command) {
   return command;
 }
 
-function validateDbSurfaceUpsertCommand(command) {
-  const requiredTextFields = [
-    ['surface', command.surfaceName],
-    ['canonical-source', command.canonicalSource],
-    ['write-rail', command.writeRail],
-    ['read-query-rail', command.readQueryRail],
-    ['projection', command.projection],
-    ['validation', command.validation],
-    ['source-ref', command.sourceRef],
-    ['actor', command.actor],
-  ];
-
-  for (const [field, value] of requiredTextFields) {
-    if (!normalizeOptionalText(value)) {
-      throw new Error(`Missing required --${field}`);
-    }
-  }
-
-  if (command.migrationState === 'DB-first' && command.writeRailKind !== 'db_command') {
-    throw new Error(
-      'DB-FIRST-WRITE-RAIL-MISMATCH: DB-first surfaces require --write-rail-kind db_command.'
-    );
-  }
-
-  return command;
-}
-
-function parseDbSurfaceCommand(action, args) {
-  if (action !== 'upsert') {
-    throw new Error(`Unknown db-surface operation "${action}". Expected upsert.`);
-  }
-
-  const options = parseFlagOptions(args);
-  const command = {
-    kind: 'db_surface_upsert',
-    surfaceName: requireOption(options, 'surface'),
-    canonicalSource: requireOption(options, 'canonicalSource'),
-    writeRail: requireOption(options, 'writeRail'),
-    writeRailKind: validateDbSurfaceWriteRailKind(requireOption(options, 'writeRailKind')),
-    readQueryRail: requireOption(options, 'readQueryRail'),
-    projection: requireOption(options, 'projection'),
-    validation: requireOption(options, 'validation'),
-    migrationState: validateDbSurfaceMigrationState(requireOption(options, 'migrationState')),
-    sourceRef: requireOption(options, 'sourceRef'),
-    sourceContentSha256: validateSha256(
-      requireOption(options, 'sourceContentSha256'),
-      'source-content-sha256'
-    ),
-    actor: requireOption(options, 'actor'),
-    idempotencyKey: options.idempotencyKey,
-  };
-
-  validateDbSurfaceUpsertCommand(command);
-  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
-}
-
 function parseComponentCommand(action, args) {
   if (action !== 'create') {
     throw new Error(`Unknown component operation "${action}". Expected create.`);
@@ -1652,6 +1756,176 @@ function parseArchitectureRelationCommand(action, args) {
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
 
+function validateDbSurfaceUpsertCommand(command) {
+  const requiredTextFields = [
+    ['surface', command.surfaceName],
+    ['canonical-source', command.canonicalSource],
+    ['write-rail', command.writeRail],
+    ['write-rail-kind', command.writeRailKind],
+    ['read-query-rail', command.readQueryRail],
+    ['projection', command.projection],
+    ['validation', command.validation],
+    ['migration-state', command.migrationState],
+    ['source-ref', command.sourceRef],
+    ['source-content-sha256', command.sourceContentSha256],
+    ['actor', command.actor],
+  ];
+
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`DB-SURFACE-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  if (command.migrationState === 'DB-first' && command.writeRailKind !== 'db_command') {
+    throw new Error(
+      `DB-FIRST-WRITE-RAIL-MISMATCH: DB-first surface "${command.surfaceName}" requires write rail kind db_command.`
+    );
+  }
+
+  return command;
+}
+
+function parseDbSurfaceCommand(action, args) {
+  if (action !== 'upsert') {
+    throw new Error(`Unknown db-surface operation "${action}". Expected upsert.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const command = {
+    kind: 'db_surface_upsert',
+    surfaceName: requireOption(options, 'surface'),
+    canonicalSource: requireOption(options, 'canonicalSource'),
+    writeRail: requireOption(options, 'writeRail'),
+    writeRailKind: validateDbSurfaceWriteRailKind(requireOption(options, 'writeRailKind')),
+    readQueryRail: requireOption(options, 'readQueryRail'),
+    projection: requireOption(options, 'projection'),
+    validation: requireOption(options, 'validation'),
+    migrationState: validateDbSurfaceMigrationState(requireOption(options, 'migrationState')),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateDbSurfaceUpsertCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
+function featureMechanizationRailId({ featureId, railType, normalizedRailName }) {
+  return ['local', featureId, railType, normalizedRailName].join('#');
+}
+
+function validateFeatureMechanizationRecordCommand(command) {
+  const requiredTextFields = [
+    ['feature', command.featureId],
+    ['rail', command.railName],
+    ['ddd-owner', command.dddOwner],
+    ['implementation-plan', command.implementationPlan],
+    ['red-test', command.redTest],
+    ['expected-failure', command.expectedFailure],
+    ['green-test', command.greenTest],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`Missing required --${field}`);
+    }
+  }
+
+  const requiredListFields = [
+    ['component-guide', command.componentGuides],
+    ['user-story', command.userStories],
+    ['implementation-ref', command.implementationRefs],
+    ['documentation-ref', command.documentationRefs],
+    ['governing-source', command.governingSources],
+    ['allowed-surface', command.allowedImplementationSurfaces],
+    ['forbidden-surface', command.forbiddenImplementationSurfaces],
+    ['domain-object', command.domainObjects],
+    ['fowler-signal', command.fowlerSignals],
+    ['architecture-guard', command.architectureGuards],
+    ['cypress-flow', command.cypressFlows],
+    ['completion-gate', command.completionGate],
+    ['unit-test', command.unitTests],
+  ];
+  for (const [field, value] of requiredListFields) {
+    if (!Array.isArray(value) || value.length === 0) {
+      throw new Error(`Missing required --${field}`);
+    }
+  }
+
+  if (!command.completionGate.includes('pnpm verify:prepush')) {
+    throw new Error(
+      'RecordFeatureMechanizationRail completion gate must include pnpm verify:prepush.'
+    );
+  }
+
+  if (!command.implementationRefs.some((implementationRef) => implementationRef.includes('#'))) {
+    throw new Error(
+      'RecordFeatureMechanizationRail requires at least one --implementation-ref in path#symbol form.'
+    );
+  }
+
+  return command;
+}
+
+function parseFeatureMechanizationCommand(action, args) {
+  if (action !== 'record') {
+    throw new Error(`Unknown feature-mechanization operation "${action}". Expected record.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const featureId = validateFeatureMechanizationFeatureId(requireOption(options, 'feature'));
+  const railName = requireOption(options, 'rail');
+  const railType = validateFeatureMechanizationRailType(requireOption(options, 'type'));
+  const normalizedRailName = normalizeFeatureMechanizationRailName(railName);
+  const command = {
+    kind: 'feature_mechanization_rail_record',
+    featureId,
+    railName,
+    normalizedRailName,
+    railId: featureMechanizationRailId({ featureId, railType, normalizedRailName }),
+    railType,
+    dddOwner: requireOption(options, 'dddOwner'),
+    mechanizationStatus: validateFeatureMechanizationStatus(
+      options.mechanizationStatus || 'implemented'
+    ),
+    railStatus: validateFeatureMechanizationRailStatus(options.railStatus || 'implemented'),
+    implementationRefs: normalizeListOption(options.implementationRef),
+    documentationRefs: normalizeListOption(options.documentationRef),
+    implementationPlan: requireOption(options, 'implementationPlan'),
+    componentGuides: normalizeListOption(options.componentGuide),
+    userStories: normalizeListOption(options.userStory),
+    governingSources: normalizeListOption(options.governingSource),
+    allowedImplementationSurfaces: normalizeListOption(options.allowedSurface),
+    forbiddenImplementationSurfaces: normalizeListOption(options.forbiddenSurface),
+    domainObjects: normalizeListOption(options.domainObject),
+    fowlerSignals: normalizeListOption(options.fowlerSignal),
+    architectureGuards: normalizeListOption(options.architectureGuard),
+    cypressFlows: normalizeListOption(options.cypressFlow),
+    completionGate: normalizeListOption(options.completionGate),
+    unitTests: normalizeListOption(options.unitTest),
+    redTest: requireOption(options, 'redTest'),
+    expectedFailure: requireOption(options, 'expectedFailure'),
+    patchSurfaces: normalizeListOption(options.patchSurface),
+    greenTest: requireOption(options, 'greenTest'),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    expectedRevision: parseIntegerOption(options.expectedRevision, 'expected-revision'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateFeatureMechanizationRecordCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
 function parseArgs(args = process.argv.slice(2)) {
   const helpText = resolveOperateHelpRequest(args);
   if (helpText) {
@@ -1718,6 +1992,14 @@ function parseArgs(args = process.argv.slice(2)) {
       taskId: options.task || null,
       limit: parseIntegerOption(options.limit, 'limit') ?? 20,
     };
+  }
+
+  if (resource === 'feature-mechanization') {
+    if (!action) {
+      throw new Error('Missing feature-mechanization operation. Expected record.');
+    }
+
+    return parseFeatureMechanizationCommand(action, rest);
   }
 
   if (resource === 'docs-disposition' || resource === 'task-gap') {
@@ -2371,6 +2653,135 @@ function planDbSurfaceUpsertOperation({ command, existingSurface, operationId, n
   return { surface, audit };
 }
 
+function normalizeFeatureMechanizationRail(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    railId: row.rail_id ?? row.railId,
+    revision: Number(row.revision ?? 0),
+  };
+}
+
+function buildFeatureMechanizationSymbols(command) {
+  return command.implementationRefs
+    .map((implementationRef) => {
+      const separatorIndex = implementationRef.lastIndexOf('#');
+      if (separatorIndex < 1 || separatorIndex === implementationRef.length - 1) {
+        return null;
+      }
+
+      return {
+        name: implementationRef.slice(separatorIndex + 1),
+        path: implementationRef.slice(0, separatorIndex),
+        dddOwner: command.dddOwner,
+        cqRails: [command.railName],
+        fowlerSignals: command.fowlerSignals,
+        architectureGuard: command.architectureGuards[0],
+        cypressCoverage: command.cypressFlows[0],
+        unitTests: command.unitTests,
+      };
+    })
+    .filter(Boolean);
+}
+
+function planFeatureMechanizationRailRecordOperation({ command, existingRail, operationId, now }) {
+  const previous = normalizeFeatureMechanizationRail(existingRail);
+  const previousRevision = previous ? previous.revision : null;
+  if (
+    command.expectedRevision !== null &&
+    command.expectedRevision !== undefined &&
+    previousRevision !== command.expectedRevision
+  ) {
+    throw new Error(
+      `Feature mechanization rail ${command.railId} expected revision ${command.expectedRevision}, but current revision is ${previousRevision ?? 'none'}.`
+    );
+  }
+
+  const resultingRevision = previousRevision === null ? 0 : previousRevision + 1;
+  const createdAt = toIso(now);
+  const rawRail = {
+    name: command.railName,
+    type: command.railType,
+    dddOwner: command.dddOwner,
+    status: command.railStatus,
+  };
+  const patchSurfaces =
+    command.patchSurfaces.length > 0
+      ? command.patchSurfaces
+      : command.allowedImplementationSurfaces;
+  const rawManifest = {
+    version: 1,
+    featureId: command.featureId,
+    mechanizationStatus: command.mechanizationStatus,
+    noHumanDecisionsRemaining: true,
+    implementationPlan: command.implementationPlan,
+    componentGuides: command.componentGuides,
+    userStories: command.userStories,
+    governingSources: command.governingSources,
+    allowedImplementationSurfaces: command.allowedImplementationSurfaces,
+    forbiddenImplementationSurfaces: command.forbiddenImplementationSurfaces,
+    domainObjects: command.domainObjects,
+    fowlerSignals: command.fowlerSignals,
+    architectureGuards: command.architectureGuards,
+    cypressFlows: command.cypressFlows,
+    completionGate: command.completionGate,
+    commandQueryRails: [rawRail],
+    redGreenCycles: [
+      {
+        id: `${command.normalizedRailName}-record`,
+        redTest: command.redTest,
+        expectedFailure: command.expectedFailure,
+        patchSurfaces,
+        greenTest: command.greenTest,
+      },
+    ],
+    symbols: buildFeatureMechanizationSymbols(command),
+  };
+  const rail = {
+    railId: command.railId,
+    featureId: command.featureId,
+    mechanizationStatus: command.mechanizationStatus,
+    railName: command.railName,
+    normalizedRailName: command.normalizedRailName,
+    railType: command.railType,
+    dddOwner: command.dddOwner,
+    railStatus: command.railStatus,
+    symbolRefs: command.implementationRefs,
+    implementationRefs: command.implementationRefs,
+    documentationRefs: command.documentationRefs,
+    governingSources: command.governingSources,
+    allowedImplementationSurfaces: command.allowedImplementationSurfaces,
+    architectureGuards: command.architectureGuards,
+    completionGate: command.completionGate,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    rawRail,
+    rawManifest,
+    revision: resultingRevision,
+    createdBy: command.actor,
+    createdAt,
+    updatedAt: createdAt,
+  };
+  const audit = {
+    operationId,
+    idempotencyKey: command.idempotencyKey,
+    operationType: command.kind,
+    actor: command.actor,
+    railId: command.railId,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    expectedRevision: command.expectedRevision,
+    previousRevision,
+    resultingRevision,
+    payload: operationPayload(command),
+    createdAt,
+  };
+
+  return { rail, audit };
+}
+
 function normalizeTaskDefinition(row) {
   if (!row) {
     return null;
@@ -2767,6 +3178,29 @@ async function readDbSurface(client, surfaceName, lock = false) {
      where surface_name = $1
      ${lock ? 'for update' : ''}`,
     [surfaceName]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readExistingFeatureMechanizationOperation(client, idempotencyKey) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.feature_mechanization_local_operations
+     where idempotency_key = $1`,
+    [idempotencyKey]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readLocalFeatureMechanizationRail(client, railId, lock = false) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.feature_mechanization_local_rails
+     where rail_id = $1
+     ${lock ? 'for update' : ''}`,
+    [railId]
   );
 
   return result.rows[0] || null;
@@ -3407,6 +3841,88 @@ async function writePlannedDbSurfaceUpsertOperation(client, planned) {
   );
 }
 
+async function writePlannedFeatureMechanizationRailRecordOperation(client, planned) {
+  await client.query(
+    `insert into ${schemaName}.feature_mechanization_local_rails
+      (rail_id, feature_id, mechanization_status, rail_name, normalized_rail_name,
+       rail_type, ddd_owner, rail_status, symbol_refs, implementation_refs,
+       documentation_refs, governing_sources, allowed_implementation_surfaces,
+       architecture_guards, completion_gate, source_path, source_content_sha256,
+       raw_rail, raw_manifest, revision, created_by, created_at, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, $10::jsonb, $11::jsonb,
+             $12::jsonb, $13::jsonb, $14::jsonb, $15::jsonb, $16, $17,
+             $18::jsonb, $19::jsonb, $20, $21, $22, $23)
+     on conflict (rail_id) do update set
+       feature_id = excluded.feature_id,
+       mechanization_status = excluded.mechanization_status,
+       rail_name = excluded.rail_name,
+       normalized_rail_name = excluded.normalized_rail_name,
+       rail_type = excluded.rail_type,
+       ddd_owner = excluded.ddd_owner,
+       rail_status = excluded.rail_status,
+       symbol_refs = excluded.symbol_refs,
+       implementation_refs = excluded.implementation_refs,
+       documentation_refs = excluded.documentation_refs,
+       governing_sources = excluded.governing_sources,
+       allowed_implementation_surfaces = excluded.allowed_implementation_surfaces,
+       architecture_guards = excluded.architecture_guards,
+       completion_gate = excluded.completion_gate,
+       source_path = excluded.source_path,
+       source_content_sha256 = excluded.source_content_sha256,
+       raw_rail = excluded.raw_rail,
+       raw_manifest = excluded.raw_manifest,
+       revision = excluded.revision,
+       updated_at = excluded.updated_at`,
+    [
+      planned.rail.railId,
+      planned.rail.featureId,
+      planned.rail.mechanizationStatus,
+      planned.rail.railName,
+      planned.rail.normalizedRailName,
+      planned.rail.railType,
+      planned.rail.dddOwner,
+      planned.rail.railStatus,
+      toJson(planned.rail.symbolRefs),
+      toJson(planned.rail.implementationRefs),
+      toJson(planned.rail.documentationRefs),
+      toJson(planned.rail.governingSources),
+      toJson(planned.rail.allowedImplementationSurfaces),
+      toJson(planned.rail.architectureGuards),
+      toJson(planned.rail.completionGate),
+      planned.rail.sourcePath,
+      planned.rail.sourceContentSha256,
+      toJson(planned.rail.rawRail),
+      toJson(planned.rail.rawManifest),
+      planned.rail.revision,
+      planned.rail.createdBy,
+      planned.rail.createdAt,
+      planned.rail.updatedAt,
+    ]
+  );
+
+  await client.query(
+    `insert into ${schemaName}.feature_mechanization_local_operations
+      (operation_id, idempotency_key, operation_type, actor, rail_id, source_path,
+       source_content_sha256, expected_revision, previous_revision, resulting_revision,
+       payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.railId,
+      planned.audit.sourcePath,
+      planned.audit.sourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
 async function writePlannedDocsResolutionOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.doc_resolution_overlays
@@ -3740,6 +4256,50 @@ async function applyDbSurfaceUpsertOperation(command, options = {}) {
   }
 }
 
+async function applyFeatureMechanizationRailRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingFeatureMechanizationOperation(
+      client,
+      command.idempotencyKey
+    );
+    if (existing) {
+      assertFeatureMechanizationRailIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const existingRail = await readLocalFeatureMechanizationRail(client, command.railId, true);
+    const planned = planFeatureMechanizationRailRecordOperation({
+      command,
+      existingRail,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedFeatureMechanizationRailRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyTaskLocalOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -3891,13 +4451,6 @@ async function readAudit(command, options = {}) {
 
 function printOperationResult(result) {
   if (result.idempotent) {
-    if (result.audit.surface_name) {
-      console.log(
-        `[planning:db:operate] idempotent operation=${result.audit.operation_id} surface=${result.audit.surface_name}`
-      );
-      return;
-    }
-
     if (result.audit.component_id) {
       console.log(
         `[planning:db:operate] idempotent operation=${result.audit.operation_id} component=${result.audit.component_id}`
@@ -3915,6 +4468,20 @@ function printOperationResult(result) {
     if (result.audit.design_id) {
       console.log(
         `[planning:db:operate] idempotent operation=${result.audit.operation_id} design=${result.audit.design_id}`
+      );
+      return;
+    }
+
+    if (result.audit.rail_id) {
+      console.log(
+        `[planning:db:operate] idempotent operation=${result.audit.operation_id} rail=${result.audit.rail_id}`
+      );
+      return;
+    }
+
+    if (result.audit.surface_name) {
+      console.log(
+        `[planning:db:operate] idempotent operation=${result.audit.operation_id} surface=${result.audit.surface_name}`
       );
       return;
     }
@@ -3946,13 +4513,6 @@ function printOperationResult(result) {
     return;
   }
 
-  if (result.surface) {
-    console.log(
-      `[planning:db:operate] ${result.audit.operationType} ${result.surface.surfaceName} state=${result.surface.migrationState} revision=${result.audit.resultingRevision}`
-    );
-    return;
-  }
-
   if (result.relation) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.relation.relationId} ${result.relation.sourceComponentId}->${result.relation.targetComponentId}`
@@ -3963,6 +4523,20 @@ function printOperationResult(result) {
   if (result.definition) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.definition.componentId} revision=${result.audit.resultingRevision}`
+    );
+    return;
+  }
+
+  if (result.rail) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.rail.railId} revision=${result.audit.resultingRevision}`
+    );
+    return;
+  }
+
+  if (result.surface) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.surface.surfaceName} revision=${result.audit.resultingRevision}`
     );
     return;
   }
@@ -4006,7 +4580,9 @@ async function main() {
               ? await applyComponentCreateOperation(command)
               : command.kind === 'db_surface_upsert'
                 ? await applyDbSurfaceUpsertOperation(command)
-                : await applyTaskLocalOperation(command);
+                : command.kind === 'feature_mechanization_rail_record'
+                  ? await applyFeatureMechanizationRailRecordOperation(command)
+                  : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -4024,12 +4600,14 @@ module.exports = {
   applyComponentCreateOperation,
   applyDbSurfaceUpsertOperation,
   applyDocsResolutionOperation,
+  applyFeatureMechanizationRailRecordOperation,
   applyTaskLocalOperation,
   assertArchitectureDesignIdempotentReplayMatches,
   assertArchitectureScopedOperationIdempotentReplayMatches,
   assertComponentIdempotentReplayMatches,
   assertDbSurfaceIdempotentReplayMatches,
   assertDocsResolutionIdempotentReplayMatches,
+  assertFeatureMechanizationRailIdempotentReplayMatches,
   assertIdempotentReplayMatches,
   buildAuditRows,
   buildDocsResolutionAuditRows,
@@ -4042,6 +4620,7 @@ module.exports = {
   planArchitectureRelationRecordOperation,
   planComponentCreateOperation,
   planDbSurfaceUpsertOperation,
+  planFeatureMechanizationRailRecordOperation,
   planDocsResolutionOperation,
   planTaskDefinitionOperation,
   planTaskLocalOperation,
@@ -4055,4 +4634,5 @@ module.exports = {
   resolveOperateHelpRequest,
   writePlannedComponentCreateOperation,
   writePlannedDbSurfaceUpsertOperation,
+  writePlannedFeatureMechanizationRailRecordOperation,
 };

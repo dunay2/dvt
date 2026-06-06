@@ -1,4 +1,4 @@
-/** Owned concern: expose active workspace scope as read-only shell context. */
+/** Owned concern: expose active workspace scope context and selection affordance. */
 import { ChevronsUpDown } from 'lucide-react';
 
 import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
+import { ShellWorkspaceScopeSelector } from './ShellWorkspaceScopeSelector';
 
 export type ShellWorkspaceContextMenuProps = {
   readonly badge: ProjectIdentityBadge;
@@ -29,21 +30,22 @@ export function ShellWorkspaceContextMenu({ badge, copy }: ShellWorkspaceContext
         </Button>
       </PopoverTrigger>
       <PopoverContent data-slot="shell-workspace-context-menu" align="start" className="w-80 p-3">
-        <div className="mb-3 grid gap-1 border-b border-[color:var(--border-default)] pb-3">
+        <div className="mb-3 grid gap-1 border-b border-(--border-default) pb-3">
           <div
             data-slot="shell-workspace-context-title"
-            className="truncate text-sm font-medium text-[var(--text-strong)]"
+            className="truncate text-sm font-medium text-(--text-strong)"
           >
             {badge.projectLabel}
           </div>
           <div
             data-slot="shell-workspace-context-summary"
-            className="truncate text-xs text-[var(--text-subtle)]"
+            className="truncate text-xs text-(--text-subtle)"
           >
             {badge.tenantLabel} / {badge.environmentLabel} / {badge.draftPostureLabel}
           </div>
         </div>
         <ShellWorkspaceContextDetails badge={badge} copy={copy} />
+        <ShellWorkspaceScopeSelector />
       </PopoverContent>
     </Popover>
   );

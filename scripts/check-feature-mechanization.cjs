@@ -11,6 +11,7 @@ const { execFileSync } = require('node:child_process');
 const {
   extractFeatureMechanizationManifests,
 } = require('./lib/feature-mechanization-manifest.cjs');
+const { defaultPgUrl } = require('./planning-db-run.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultScanRoot = path.join(repoRoot, 'docs', 'planning', 'proposals', 'mandatory');
@@ -254,7 +255,7 @@ class FeatureImplementationGuard {
   }
 
   extractAddedCodeSymbols(filePath, addedLines) {
-    if (!this.isCodeFile(filePath)) {
+    if (!this.isCodeFile(filePath) || this.isTestFile(filePath)) {
       return [];
     }
 
@@ -298,6 +299,13 @@ class FeatureImplementationGuard {
 
   isCodeFile(filePath) {
     return /\.(?:cjs|mjs|js|jsx|ts|tsx)$/.test(filePath);
+  }
+
+  isTestFile(filePath) {
+    return (
+      /\.(?:test|spec)\.(?:cjs|mjs|js|jsx|ts|tsx)$/.test(filePath) ||
+      /(^|\/)(?:__tests__|test|tests)\//.test(filePath)
+    );
   }
 
   isCypressFile(filePath) {
@@ -345,7 +353,6 @@ class FeatureMechanizationGitDiffReader {
     const changedFiles = new Set();
     const nameOnlyCommands = [
       ['diff', '--name-only', '--diff-filter=ACMR', `${this.baseRef}...HEAD`],
-      ['diff', '--name-only', '--diff-filter=ACMR', this.baseRef],
       ['diff', '--cached', '--name-only', '--diff-filter=ACMR'],
       ['diff', '--name-only', '--diff-filter=ACMR'],
     ];
@@ -371,7 +378,6 @@ class FeatureMechanizationGitDiffReader {
     const addedLinesByPath = {};
     const diffCommands = [
       ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR', `${this.baseRef}...HEAD`],
-      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR', this.baseRef],
       ['diff', '--cached', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR'],
       ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR'],
     ];
@@ -492,6 +498,10 @@ function readFeatureMechanizationDocs(scanRoot = defaultScanRoot) {
     path: toPosix(path.relative(repoRoot, filePath)),
     content: fs.readFileSync(filePath, 'utf8'),
   }));
+}
+
+function sha256(value) {
+  return require('node:crypto').createHash('sha256').update(value).digest('hex');
 }
 
 function pushMissingObjectField(errors, owner, field, value) {
@@ -731,8 +741,205 @@ function validateFeatureMechanizationDocs(docs, options = {}) {
   };
 }
 
+function validateFeatureMechanizationManifestEntries(manifestEntries, options = {}) {
+  const errors = [];
+  const manifests = [];
+  const requiredFeatureIds = new Set(options.requiredFeatureIds || []);
+
+  for (const entry of manifestEntries || []) {
+    manifests.push(entry);
+    errors.push(...validateFeatureMechanizationManifest(entry.manifest, entry.sourcePath).errors);
+  }
+
+  for (const featureId of requiredFeatureIds) {
+    if (!manifests.some((entry) => entry.manifest?.featureId === featureId)) {
+      errors.push(`Required feature ${featureId} has no feature mechanization manifest.`);
+    }
+  }
+
+  return {
+    errors,
+    manifestEntries: manifests,
+    manifestCount: manifests.length,
+    features: manifests
+      .map((entry) => entry.manifest?.featureId)
+      .filter((featureId) => typeof featureId === 'string'),
+  };
+}
+
 function validateFeatureImplementationManifests(manifestEntries, options = {}) {
   return new FeatureImplementationGuard(manifestEntries, options).validate();
+}
+
+function normalizeDbFeatureMechanizationManifestRows(rows) {
+  const bySourceAndFeature = new Map();
+
+  for (const row of rows || []) {
+    const sourcePath = toPosix(row.source_path || row.sourcePath || '');
+    const manifest = row.raw_manifest || row.rawManifest;
+    const featureId = manifest?.featureId;
+    if (!sourcePath || !featureId || !manifest || typeof manifest !== 'object') {
+      continue;
+    }
+
+    const key = `${sourcePath}#${featureId}`;
+    if (bySourceAndFeature.has(key)) {
+      continue;
+    }
+
+    bySourceAndFeature.set(key, {
+      sourcePath,
+      manifest,
+    });
+  }
+
+  return Array.from(bySourceAndFeature.values()).sort((left, right) =>
+    `${left.sourcePath}#${left.manifest.featureId}`.localeCompare(
+      `${right.sourcePath}#${right.manifest.featureId}`
+    )
+  );
+}
+
+async function readFeatureMechanizationManifestsFromDb(options = {}) {
+  const deps = {
+    Client: require('pg').Client,
+    runPlanningImport: require('./planning-db-import.cjs').runPlanningImport,
+    ...options.deps,
+  };
+  const connectionString =
+    options.databaseUrl ||
+    process.env.DVT_PLANNING_DB_URL ||
+    process.env.PLANNING_DATABASE_URL ||
+    process.env.DATABASE_URL ||
+    defaultPgUrl;
+
+  const client = options.client || new deps.Client({ connectionString });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    if (options.refresh !== false) {
+      const changedFeatureDocs =
+        options.changedFeatureMechanizationSourcePaths ||
+        readChangedFeatureMechanizationSourcePaths({
+          baseRef: options.baseRef,
+          changedFiles: options.changedFiles,
+        });
+      const currentSourceHashes =
+        options.currentSourceHashes || readCurrentSourceHashes(changedFeatureDocs);
+
+      if (await shouldRefreshFeatureMechanizationManifestDb(client, currentSourceHashes)) {
+        await deps.runPlanningImport(
+          {
+            databaseUrl: connectionString,
+            ifStale: false,
+            includePlanning: false,
+            includeGovernance: true,
+            silent: true,
+          },
+          {
+            logger: {
+              log() {},
+            },
+          }
+        );
+      }
+    }
+
+    const result = await client.query(`
+      select distinct on (source_path, raw_manifest->>'featureId')
+        source_path,
+        raw_manifest
+      from planning_query_store.command_query_rail_manifest_query
+      where raw_manifest ? 'featureId'
+      order by source_path, raw_manifest->>'featureId'
+    `);
+    return normalizeDbFeatureMechanizationManifestRows(result.rows);
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+function isFeatureMechanizationSourcePath(sourcePath) {
+  const normalizedPath = toPosix(sourcePath);
+  return (
+    normalizedPath.startsWith('docs/planning/proposals/mandatory/') &&
+    normalizedPath.endsWith('.md')
+  );
+}
+
+function hasFeatureMechanizationManifestFence(sourcePath) {
+  const absolutePath = path.join(repoRoot, sourcePath);
+  return (
+    fs.existsSync(absolutePath) &&
+    /```feature-mechanization\b/.test(fs.readFileSync(absolutePath, 'utf8'))
+  );
+}
+
+function readChangedFeatureMechanizationSourcePaths(options = {}) {
+  const changedFiles =
+    options.changedFiles ||
+    new FeatureMechanizationGitDiffReader({ baseRef: options.baseRef }).readChangedFiles();
+
+  return changedFiles
+    .map(toPosix)
+    .filter(isFeatureMechanizationSourcePath)
+    .filter(hasFeatureMechanizationManifestFence)
+    .sort();
+}
+
+function readCurrentSourceHashes(sourcePaths) {
+  const sourceHashes = new Map();
+
+  for (const sourcePath of sourcePaths) {
+    const absolutePath = path.join(repoRoot, sourcePath);
+    if (!fs.existsSync(absolutePath)) {
+      continue;
+    }
+
+    sourceHashes.set(sourcePath, sha256(fs.readFileSync(absolutePath, 'utf8')));
+  }
+
+  return sourceHashes;
+}
+
+async function shouldRefreshFeatureMechanizationManifestDb(client, currentSourceHashes) {
+  if (currentSourceHashes.size === 0) {
+    const result = await client.query(`
+      select count(*)::int as manifest_count
+      from planning_query_store.command_query_rails
+      where raw_manifest ? 'featureId'
+    `);
+    return Number(result.rows[0]?.manifest_count || 0) === 0;
+  }
+
+  const sourcePaths = [...currentSourceHashes.keys()];
+  const result = await client.query(
+    `
+      select distinct
+        source_path,
+        source_content_sha256
+      from planning_query_store.command_query_rails
+      where raw_manifest ? 'featureId'
+        and source_path = any($1::text[])
+    `,
+    [sourcePaths]
+  );
+  const dbHashes = new Map(
+    result.rows.map((row) => [
+      toPosix(row.source_path || row.sourcePath),
+      row.source_content_sha256 || row.sourceContentSha256,
+    ])
+  );
+
+  return sourcePaths.some(
+    (sourcePath) => dbHashes.get(sourcePath) !== currentSourceHashes.get(sourcePath)
+  );
 }
 
 function parseArgs(argv) {
@@ -789,7 +996,7 @@ function parseArgs(argv) {
   };
 }
 
-function main() {
+async function main() {
   let args;
   try {
     args = parseArgs(process.argv.slice(2));
@@ -799,19 +1006,38 @@ function main() {
     return;
   }
 
-  const result = validateFeatureMechanizationDocs(readFeatureMechanizationDocs(args.scanRoot), {
-    requiredFeatureIds: args.requiredFeatureIds,
-  });
-  const allErrors = [...result.errors];
-
   if (args.implementation) {
     const requiredFeatureIds = new Set(args.requiredFeatureIds);
+    let manifestEntries;
+    let result;
+    try {
+      manifestEntries = await readFeatureMechanizationManifestsFromDb({ baseRef: args.baseRef });
+      result = validateFeatureMechanizationManifestEntries(manifestEntries, {
+        requiredFeatureIds: args.requiredFeatureIds,
+      });
+    } catch (error) {
+      const nestedMessages = Array.isArray(error?.errors)
+        ? error.errors
+            .map((nestedError) => nestedError?.message || nestedError?.code || nestedError?.name)
+            .filter(Boolean)
+        : [];
+      const message =
+        [error?.message, error?.code, ...nestedMessages].filter(Boolean).join('; ') ||
+        String(error);
+      result = {
+        errors: [`[db-first] Could not read feature mechanization manifests from DB: ${message}`],
+        manifestEntries: [],
+        manifestCount: 0,
+        features: [],
+      };
+      manifestEntries = [];
+    }
+
+    const allErrors = [...result.errors];
     const selectedManifestEntries =
       requiredFeatureIds.size === 0
-        ? result.manifestEntries
-        : result.manifestEntries.filter((entry) =>
-            requiredFeatureIds.has(entry.manifest.featureId)
-          );
+        ? manifestEntries
+        : manifestEntries.filter((entry) => requiredFeatureIds.has(entry.manifest.featureId));
     const diff = new FeatureMechanizationGitDiffReader({ baseRef: args.baseRef }).read();
     const implementationResult = validateFeatureImplementationManifests(
       selectedManifestEntries,
@@ -819,7 +1045,24 @@ function main() {
     );
 
     allErrors.push(...implementationResult.errors);
+
+    if (allErrors.length > 0) {
+      console.error('[docs:feature-mechanization] FAILED');
+      for (const error of allErrors) {
+        console.error(`- ${error}`);
+      }
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log(`[docs:feature-mechanization] OK (${result.manifestCount} DB manifest(s))`);
+    return;
   }
+
+  const result = validateFeatureMechanizationDocs(readFeatureMechanizationDocs(args.scanRoot), {
+    requiredFeatureIds: args.requiredFeatureIds,
+  });
+  const allErrors = [...result.errors];
 
   if (allErrors.length > 0) {
     console.error('[docs:feature-mechanization] FAILED');
@@ -836,15 +1079,23 @@ function main() {
 }
 
 if (require.main === module) {
-  main();
+  main().catch((error) => {
+    console.error(`[docs:feature-mechanization] ${error instanceof Error ? error.message : error}`);
+    process.exitCode = 1;
+  });
 }
 
 module.exports = {
   FeatureImplementationGuard,
   FeatureMechanizationGitDiffReader,
   extractFeatureMechanizationManifests,
+  normalizeDbFeatureMechanizationManifestRows,
+  readChangedFeatureMechanizationSourcePaths,
   readFeatureMechanizationDocs,
+  readFeatureMechanizationManifestsFromDb,
+  shouldRefreshFeatureMechanizationManifestDb,
   validateFeatureImplementationManifests,
   validateFeatureMechanizationDocs,
+  validateFeatureMechanizationManifestEntries,
   validateFeatureMechanizationManifest,
 };

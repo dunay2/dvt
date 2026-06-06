@@ -7,6 +7,7 @@ import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
 import type { ShellFeedbackPort } from '../ports/shellFeedback';
+import type { WorkspaceScopeSelectionPort } from '../ports/workspaceScopeSelection';
 import type {
   IWarehouseSourceImportPort,
   IWorkspaceAdminReadPort,
@@ -57,6 +58,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.workspaceGraphDraftAuthoringPort,
       overrides?.capabilitiesPort,
       overrides?.sessionContext,
+      overrides?.workspaceScopeSelection,
       overrides?.shellFeedback,
     ]
   );
@@ -130,6 +132,10 @@ export function useCapabilitiesPort(): CapabilitiesPort {
 
 export function useSessionContext(): SessionContextPort {
   return useRequiredAppServicesContext().sessionContext;
+}
+
+export function useWorkspaceScopeSelection(): WorkspaceScopeSelectionPort {
+  return useRequiredAppServicesContext().workspaceScopeSelection;
 }
 
 export function useShellFeedback(): ShellFeedbackPort {

@@ -302,9 +302,9 @@ describe('web Vitest suite partition', () => {
     ).toMatchObject({
       commands: [
         'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx',
-        WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture,
+        'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
       ],
-      requiresDependencies: true,
+      requiresDependencies: false,
       suites: ['canvas-presentation', 'architecture'],
     });
 
@@ -418,6 +418,41 @@ describe('web Vitest suite partition', () => {
       suites: ['monaco'],
     });
 
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx',
+      ])
+    ).toMatchObject({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['shell-session']],
+      requiresDependencies: true,
+      suites: ['shell-session'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/services/session/workspaceScopeSelectionPort.ts',
+      ])
+    ).toMatchObject({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['shell-session']],
+      requiresDependencies: true,
+      suites: ['shell-session'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan([
+        'apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx',
+        'apps/web/src/app/services/session/workspaceScopeSelectionPort.ts',
+        'apps/web/src/app/services/workspace/workspaceDiffChangesHttp.ts',
+      ])
+    ).toMatchObject({
+      commands: [
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['shell-session'],
+        WEB_VITEST_CHANGED_SUITE_COMMANDS['workspace-services'],
+      ],
+      requiresDependencies: true,
+      suites: ['shell-session', 'workspace-services'],
+    });
+
     expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/CodeView.tsx'])).toMatchObject(
       {
         commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.monaco],
@@ -441,36 +476,53 @@ describe('web Vitest suite partition', () => {
     });
 
     expect(resolveWebVitestChangedSuitePlan(['apps/web/vitest.suites.ts'])).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
-      requiresDependencies: true,
+      commands: [
+        'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
+      ],
+      commandPlan: [
+        {
+          config: 'vitest.architecture.config.ts',
+          filePaths: ['src/testing/vitestSuites.architecture.test.ts'],
+          kind: 'vitest-files',
+        },
+      ],
+      requiresDependencies: false,
       suites: ['architecture'],
     });
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/scripts/run-vitest-changed-suites.ts'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
-      requiresDependencies: true,
+      commands: [
+        'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
+      ],
+      requiresDependencies: false,
       suites: ['architecture'],
     });
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-unit.config.ts'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
-      requiresDependencies: true,
+      commands: [
+        'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
+      ],
+      requiresDependencies: false,
       suites: ['architecture'],
     });
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-presentation.config.ts'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
-      requiresDependencies: true,
+      commands: [
+        'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
+      ],
+      requiresDependencies: false,
       suites: ['architecture'],
     });
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/vitest.canvas-architecture.config.ts'])
     ).toMatchObject({
-      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS.architecture],
-      requiresDependencies: true,
+      commands: [
+        'pnpm exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts',
+      ],
+      requiresDependencies: false,
       suites: ['architecture'],
     });
     expect(WEB_VITEST_CHANGED_SUITE_COMMANDS).not.toHaveProperty('canvas');

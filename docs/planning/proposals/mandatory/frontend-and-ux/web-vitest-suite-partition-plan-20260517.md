@@ -18,7 +18,8 @@ lanes without reducing coverage or changing product behavior. The historical
 ## Scope
 
 - [Task: E-PROP-DISP-1] Add one suite catalog for `@dvt/web` Vitest ownership.
-- [Task: E-PROP-DISP-1] Add unit, presentation, architecture, Canvas focus, and CI package commands.
+- [Task: E-PROP-DISP-1] Add unit, presentation, architecture, Canvas focus,
+  shell-session focus, and CI package commands.
 - Preserve the historical web `pretest` dependency build for every public split
   suite command through an explicit `test:deps` rail before raw Vitest delegates.
 - Split Canvas route-state and startup/draft-recovery architecture god tests by
@@ -112,6 +113,7 @@ completionGate:
   - pnpm --filter @dvt/web test:presentation
   - pnpm --filter @dvt/web test:architecture
   - pnpm --filter @dvt/web test:canvas
+  - pnpm --filter @dvt/web test:shell-session
   - pnpm --filter @dvt/web test:workspace-services
   - pnpm --filter @dvt/web test
   - pnpm --filter @dvt/web typecheck
@@ -155,6 +157,17 @@ redGreenCycles:
       - docs/architecture/components/web/web-vitest-changed-suite-router-component.md
       - buzon/20260531-web-test-lane-division-proposal.md
     greenTest: pnpm --filter @dvt/web test:workspace-services
+  - id: shell-session-focus-lane
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts
+    expectedFailure: Shell and session changes still route to broad unit or presentation lanes.
+    patchSurfaces:
+      - apps/web/package.json
+      - apps/web/vitest*.ts
+      - apps/web/src/testing/vitestSuites.architecture.test.ts
+      - docs/architecture/components/web/frontend-test-governance-component.md
+      - docs/architecture/components/web/web-vitest-changed-suite-router-component.md
+      - docs/architecture/components/web/web-vitest-changed-suite-router-user-stories.md
+    greenTest: pnpm --filter @dvt/web test:shell-session
 symbols:
   - name: WEB_VITEST_PRIMARY_SUITE_NAMES
     path: apps/web/vitest.suites.ts
@@ -278,6 +291,15 @@ symbols:
     cypressCoverage: N/A - Vitest-only test tooling.
     unitTests:
       - pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/testing/workspaceServicesVitestLane.architecture.test.ts
+  - name: isShellSessionFocusPath
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestSuiteCatalog
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts
+    cypressCoverage: N/A - Vitest-only test tooling.
+    unitTests:
+      - pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/testing/vitestSuites.architecture.test.ts
   - name: webRoot
     path: apps/web/src/testing/vitestSuites.architecture.test.ts
     dddOwner: WebVitestSuitePartition

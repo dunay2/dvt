@@ -8,8 +8,10 @@ import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildShellNavigationModel } from '../shell/shellNavigationModel';
+import { AppServicesProvider } from '../services/AppServicesContext';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { resolveShellTopBarCopy } from './shell/copy';
 import ShellTopBar from './TopAppBar';
 
@@ -18,6 +20,16 @@ const TEST_NAVIGATION_MODEL = buildShellNavigationModel([]);
 describe('ShellTopBar workspace context', () => {
   let container: HTMLDivElement;
   let root: Root;
+
+  function renderShellTopBar(pathname: string): JSX.Element {
+    return (
+      <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+        <MemoryRouter initialEntries={[pathname]}>
+          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
+        </MemoryRouter>
+      </AppServicesProvider>
+    );
+  }
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -43,11 +55,7 @@ describe('ShellTopBar workspace context', () => {
 
   it('keeps workspace scope as read-only context in uncataloged global top-bar chrome', async () => {
     await act(async () => {
-      root.render(
-        <MemoryRouter initialEntries={['/legacy']}>
-          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
-        </MemoryRouter>
-      );
+      root.render(renderShellTopBar('/legacy'));
     });
 
     const topBar = container.querySelector('[data-slot="shell-top-bar"]');
@@ -67,11 +75,7 @@ describe('ShellTopBar workspace context', () => {
     'keeps product workbench top bar low-noise on %s while separating workspace navigation from View controls',
     async (pathname) => {
       await act(async () => {
-        root.render(
-          <MemoryRouter initialEntries={[pathname]}>
-            <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
-          </MemoryRouter>
-        );
+        root.render(renderShellTopBar(pathname));
       });
 
       const topBar = container.querySelector('[data-slot="shell-top-bar"]');
@@ -122,11 +126,7 @@ describe('ShellTopBar workspace context', () => {
     useUiLayoutStore.setState({ focusMode: true });
 
     await act(async () => {
-      root.render(
-        <MemoryRouter initialEntries={['/legacy']}>
-          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
-        </MemoryRouter>
-      );
+      root.render(renderShellTopBar('/legacy'));
     });
 
     const workspaceMenuTrigger = container.querySelector(
@@ -163,11 +163,7 @@ describe('ShellTopBar workspace context', () => {
 
   it('opens an About dialog from the Raven application menu with compiled version metadata', async () => {
     await act(async () => {
-      root.render(
-        <MemoryRouter initialEntries={['/canvas']}>
-          <ShellTopBar navigationModel={TEST_NAVIGATION_MODEL} />
-        </MemoryRouter>
-      );
+      root.render(renderShellTopBar('/canvas'));
     });
 
     await act(async () => {

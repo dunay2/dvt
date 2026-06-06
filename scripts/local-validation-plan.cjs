@@ -75,6 +75,8 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-operate-tests/db-surface.test.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/docs-resolution.test.cjs':
     'scripts/planning-db-operate.test.cjs',
+  'scripts/planning-db-operate-tests/feature-mechanization.test.cjs':
+    'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/helpers.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/task-idempotency.test.cjs':
     'scripts/planning-db-operate.test.cjs',

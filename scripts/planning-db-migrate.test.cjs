@@ -824,6 +824,64 @@ test('tracked migrations keep feature mechanization links distinct from planning
   assert.match(featureMechanizationMigration.sql, /registered_planning_task = true/);
 });
 
+test('tracked migrations expose local feature mechanization rails after W59', () => {
+  const migrations = readMigrationFiles();
+  const localFeatureMechanizationMigration = migrations.find(
+    (migration) => migration.fileName === '059_feature_mechanization_local_writer.sql'
+  );
+
+  assert.ok(localFeatureMechanizationMigration);
+  assert.match(
+    localFeatureMechanizationMigration.sql,
+    /create table if not exists planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    localFeatureMechanizationMigration.sql,
+    /create table if not exists planning_query_store\.feature_mechanization_local_operations/
+  );
+  assert.match(
+    localFeatureMechanizationMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(localFeatureMechanizationMigration.sql, /from imported_rails/);
+  assert.match(localFeatureMechanizationMigration.sql, /union all/);
+  assert.match(localFeatureMechanizationMigration.sql, /from local_rails/);
+});
+
+test('tracked migrations expose raw manifests through the effective rail projection after W60', () => {
+  const migrations = readMigrationFiles();
+  const effectiveRailManifestMigration = migrations.find(
+    (migration) => migration.fileName === '060_command_query_rail_effective_manifest_projection.sql'
+  );
+
+  assert.ok(effectiveRailManifestMigration);
+  assert.match(
+    effectiveRailManifestMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(effectiveRailManifestMigration.sql, /raw_rail/);
+  assert.match(
+    effectiveRailManifestMigration.sql,
+    /select\s+rail_id,[\s\S]*raw_manifest,[\s\S]*imported_at\s+from effective_rails/
+  );
+});
+
+test('tracked migrations prefer DB-authored local rails over matching imported rails after W61', () => {
+  const migrations = readMigrationFiles();
+  const localPrecedenceMigration = migrations.find(
+    (migration) => migration.fileName === '061_command_query_rail_local_precedence.sql'
+  );
+
+  assert.ok(localPrecedenceMigration);
+  assert.match(localPrecedenceMigration.sql, /0 as source_priority/);
+  assert.match(localPrecedenceMigration.sql, /1 as source_priority/);
+  assert.match(
+    localPrecedenceMigration.sql,
+    /partition by feature_id, rail_type, normalized_rail_name/
+  );
+  assert.match(localPrecedenceMigration.sql, /where source_rank = 1/);
+});
+
 test('tracked migrations expose composite component hierarchy records after W32', () => {
   const migrations = readMigrationFiles();
   const compositeHierarchyMigration = migrations.find(

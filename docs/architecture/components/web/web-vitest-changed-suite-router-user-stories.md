@@ -26,13 +26,15 @@ Acceptance:
 
 ## US-2 Presentation Change
 
-As a frontend developer changing non-Canvas TSX presentation code, I want the
-changed-suite router to run the presentation suite so that route or component
-work gets feedback from the relevant presentation lane.
+As a frontend developer changing non-Canvas and non-shell-session TSX
+presentation code, I want the changed-suite router to run the presentation suite
+so that route or component work gets feedback from the relevant presentation
+lane.
 
 Acceptance:
 
-- Given a changed non-Canvas `.tsx` file under `apps/web/src/**`
+- Given a changed non-Canvas and non-shell-session `.tsx` file under
+  `apps/web/src/**`
 - When the changed-suite plan is resolved
 - Then the selected command is `test:presentation:run`.
 
@@ -53,13 +55,14 @@ Acceptance:
 
 ## US-3 Unit Change
 
-As a frontend developer changing non-Canvas TypeScript model code, I want the
-changed-suite router to run the unit suite so that pure model and service
-changes do not require presentation tests by default.
+As a frontend developer changing non-Canvas and non-shell-session TypeScript
+model code, I want the changed-suite router to run the unit suite so that pure
+model and service changes do not require presentation tests by default.
 
 Acceptance:
 
-- Given a changed non-Canvas `.ts` file under `apps/web/src/**`
+- Given a changed non-Canvas and non-shell-session `.ts` file under
+  `apps/web/src/**`
 - When the changed-suite plan is resolved
 - Then the selected command is `test:unit:run`.
 
@@ -80,14 +83,15 @@ Acceptance:
 ## US-4 Governance Change
 
 As a reviewer changing suite catalog, config, or component documentation, I want
-the router to run the architecture suite so that command drift is caught without
-guessing which guard owns the change.
+the router to run the owning router architecture guard so that command drift is
+caught without executing unrelated architecture tests.
 
 Acceptance:
 
 - Given a changed suite governance file
 - When the changed-suite plan is resolved
-- Then the selected command is `test:architecture:run`.
+- Then the selected command is a direct Vitest run for
+  `src/testing/vitestSuites.architecture.test.ts`.
 
 ## US-4A Canvas Architecture Change
 
@@ -115,6 +119,22 @@ Acceptance:
 - Or a changed Code route file under `apps/web/src/app/views/CodeView.tsx`
 - When the changed-suite plan is resolved
 - Then the selected command is `test:monaco:run`.
+
+## US-4C Shell Session Surface Change
+
+As a frontend developer changing app shell, session context, workspace-scope
+selection, session store, API-client context propagation, service composition,
+or their shared test doubles, I want the changed-suite router to run the shell
+session focus suite so a one-scope context change does not execute the full unit
+or presentation lanes.
+
+Acceptance:
+
+- Given a changed file under `apps/web/src/app/components/shell/**`,
+  `apps/web/src/app/services/session/**`, `apps/web/src/app/services/composition/**`,
+  or a changed workspace-scope/session shell support surface
+- When the changed-suite plan is resolved
+- Then the selected command is `test:shell-session:run`.
 
 ## US-5 No Relevant Web Change
 

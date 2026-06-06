@@ -1925,6 +1925,7 @@ test('readCommandQueryRailRows queries the DB command/query rail catalog view', 
   };
 
   await readCommandQueryRailRows(client, {
+    rail: 'RecordFeatureMechanizationRail',
     type: 'query',
     status: 'missing-backend-rail',
     owner: 'WidgetReadModel',
@@ -1937,13 +1938,15 @@ test('readCommandQueryRailRows queries the DB command/query rail catalog view', 
   assert.match(captured.sql, /rail_type = \$1/);
   assert.match(captured.sql, /rail_status = \$2/);
   assert.match(captured.sql, /ddd_owner = \$3/);
-  assert.match(captured.sql, /is_duplicate = \$4/);
-  assert.match(captured.sql, /is_gap = \$5/);
-  assert.match(captured.sql, /limit \$6/);
+  assert.match(captured.sql, /rail_name = \$4/);
+  assert.match(captured.sql, /is_duplicate = \$5/);
+  assert.match(captured.sql, /is_gap = \$6/);
+  assert.match(captured.sql, /limit \$7/);
   assert.deepEqual(captured.params, [
     'query',
     'missing-backend-rail',
     'WidgetReadModel',
+    'RecordFeatureMechanizationRail',
     true,
     true,
     5,

@@ -149,6 +149,9 @@ for development and CI:
 - `test:canvas-architecture`: Canvas architecture focus lane
 - `test:monaco`: Monaco focus lane for Code editing, Artifacts read-only
   viewing, and Diff review architecture tests
+- `test:shell-session`: app shell, session context, workspace-scope selection,
+  API-client context propagation, service composition, and session store focus
+  lane
 - `test:changed`: changed-file router that selects the smallest safe suite
   command from the suite catalog for local use and ordinary web pull requests
 - `test:ci`: unit, presentation, then architecture
@@ -186,17 +189,20 @@ Changed-file routing is feedback infrastructure for local loops and ordinary
 web pull requests. The router follows these semantic rules:
 
 - suite catalog, config, and frontend test-governance documentation changes run
-  the architecture suite;
+  the owning router architecture guard directly;
 - Canvas-scoped source or test changes run the narrow Canvas focus suite that
   matches the file type;
 - Monaco-scoped source or test changes run the Monaco focus suite so local
   editor/viewer work does not execute the full presentation lane;
+- shell/session/scope/composition source or test changes run the shell-session
+  focus suite so local context changes do not execute the full unit or
+  presentation lane;
 - source files changed together with a same-stem `*.test.*` or `*.spec.*` file
   may run that exact test file directly;
 - source files without a changed same-stem test still fall back to the governed
   suite for their route or file type;
-- non-Canvas `.tsx` changes run the presentation suite;
-- non-Canvas `.ts` changes run the unit suite;
+- non-Canvas and non-shell-session `.tsx` changes run the presentation suite;
+- non-Canvas and non-shell-session `.ts` changes run the unit suite;
 - non-web changes skip cleanly.
 
 The changed-file router must not replace `test:ci` for pushes to `main`,

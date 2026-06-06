@@ -185,6 +185,7 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
     appendFilter(predicates, params, 'rail_type', filters.type);
     appendFilter(predicates, params, 'rail_status', filters.status);
     appendFilter(predicates, params, 'ddd_owner', filters.owner);
+    appendFilter(predicates, params, 'rail_name', filters.rail);
     appendBooleanFilter(predicates, params, 'is_duplicate', filters.duplicates);
     appendBooleanFilter(predicates, params, 'is_gap', filters.gaps);
 

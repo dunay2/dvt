@@ -18,6 +18,11 @@ const bootstrapState = {
   projectId: useSessionStore.getState().projectId,
   environmentId: useSessionStore.getState().environmentId,
   targetAdapter: useSessionStore.getState().targetAdapter,
+  availableWorkspaces: useSessionStore.getState().availableWorkspaces,
+  workspaceScopeSelectionStatus: useSessionStore.getState().workspaceScopeSelectionStatus,
+  workspaceScopeSelectionRejectionReason:
+    useSessionStore.getState().workspaceScopeSelectionRejectionReason,
+  rejectedWorkspaceScope: useSessionStore.getState().rejectedWorkspaceScope,
 };
 
 const workspaceBootstrap = resolveWorkspaceBootstrapConfig(getRuntimeDataSourceMode());
