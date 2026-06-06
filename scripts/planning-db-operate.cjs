@@ -332,6 +332,10 @@ function resolveOperateHelpRequest(args) {
   }
 
   if (rest.some(isHelpFlag)) {
+    const resourceHelp = operationHelp[resource];
+    if (resourceHelp?.operations.length === 0) {
+      return buildPlanningDbOperateHelpText(resource);
+    }
     return buildPlanningDbOperateHelpText(resource, action);
   }
 

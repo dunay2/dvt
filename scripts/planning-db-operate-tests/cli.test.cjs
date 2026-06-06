@@ -20,3 +20,12 @@ test('planning DB operate CLI prints action help before parsing flag values', ()
   assert.match(result.stdout, /CreateGovernanceComponent/);
   assert.doesNotMatch(result.stderr, /Missing value for --help/);
 });
+
+test('planning DB operate CLI prints audit help after filtered resource flags', () => {
+  const result = runPlanningDbOperateCli(['audit', '--limit', '1', '--help']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Planning DB operate resource: audit/);
+  assert.match(result.stdout, /pnpm planning:db:operate audit \[--lane <lane>\]/);
+  assert.doesNotMatch(result.stderr, /Unknown audit operation|Missing value/);
+});
