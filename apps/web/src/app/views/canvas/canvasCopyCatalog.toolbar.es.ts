@@ -31,6 +31,7 @@ export const canvasViewToolbarCopyEs = {
   projectSnapshotImportFailedMessage: 'La importacion del snapshot fallo.',
   newCanvasLabel: 'Nuevo canvas',
   workbenchGraphTabLabel: 'Grafo',
+  workbenchLogsTabLabel: 'Log',
   workbenchCodeTabLabel: 'Codigo',
   workbenchLineageTabLabel: 'Linaje',
   workbenchDiffTabLabel: 'Diferencias',
