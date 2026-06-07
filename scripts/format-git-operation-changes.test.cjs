@@ -109,8 +109,6 @@ test('post-Git formatter executes Prettier on the scoped file set', () => {
   assert.deepEqual(calls[0].args, [
     '/repo/node_modules/prettier/bin/prettier.cjs',
     '--write',
-    '--end-of-line',
-    'auto',
     '--ignore-unknown',
     'a.ts',
     'b.md',

@@ -143,11 +143,10 @@ function runPrettierOnFiles(files, options = {}) {
   for (const [index, batch] of chunk(files, options.batchSize).entries()) {
     const prefix = files.length > DEFAULT_BATCH_SIZE ? ` (${index + 1})` : '';
     console.log(`[${options.label || 'post-git'}] Running Prettier${prefix}...`);
-    const result = spawn(
-      process.execPath,
-      [prettierCli, '--write', '--end-of-line', 'auto', '--ignore-unknown', ...batch],
-      { cwd: options.repoRootPath || repoRoot, stdio: 'inherit' }
-    );
+    const result = spawn(process.execPath, [prettierCli, '--write', '--ignore-unknown', ...batch], {
+      cwd: options.repoRootPath || repoRoot,
+      stdio: 'inherit',
+    });
 
     if (result.error) {
       return { error: result.error, status: 1 };
