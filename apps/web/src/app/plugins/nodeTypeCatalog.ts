@@ -5,7 +5,7 @@ import { DVT_AUTHORING_NODE_KINDS, FALLBACK_DVT_NODE_KIND } from './dvt/dvtNodeT
 import type { EdgeTypeStrategy, NodeKindRegistration } from './nodeTypeContracts';
 
 export const CONNECTION_RULES: Record<CoreNodeRole, readonly CoreNodeRole[]> = {
-  input: ['transform'],
+  input: ['transform', 'check'],
   transform: ['transform', 'check', 'output'],
   check: [],
   output: [],

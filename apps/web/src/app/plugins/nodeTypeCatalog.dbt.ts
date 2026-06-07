@@ -136,14 +136,14 @@ export const EDGE_TYPE_STRATEGIES: readonly EdgeTypeStrategy[] = [
     edgeType: 'metric',
   },
   {
-    id: 'source-role',
-    matches: (context) => context.sourceRole === 'input',
-    edgeType: 'source',
-  },
-  {
     id: 'check-role',
     matches: (context) => context.targetRole === 'check',
     edgeType: 'test',
+  },
+  {
+    id: 'source-role',
+    matches: (context) => context.sourceRole === 'input',
+    edgeType: 'source',
   },
   {
     id: 'output-role',
