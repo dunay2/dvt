@@ -137,12 +137,30 @@ function resolveTemporalCliExecutable(env = process.env, fsModule = fs, tmpDir =
 
   let preferredVersion;
   try {
-    const packageJsonPath = require.resolve('@temporalio/testing/package.json', {
-      paths: [TEMPORAL_PACKAGE_ROOT],
-    });
-    preferredVersion = JSON.parse(fsModule.readFileSync(packageJsonPath, 'utf8')).version;
+    const adapterPackageJson = JSON.parse(
+      fsModule.readFileSync(path.join(TEMPORAL_PACKAGE_ROOT, 'package.json'), 'utf8')
+    );
+    const declaredVersion =
+      adapterPackageJson.dependencies?.['@temporalio/testing'] ??
+      adapterPackageJson.devDependencies?.['@temporalio/testing'];
+    preferredVersion =
+      typeof declaredVersion === 'string' &&
+      /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/u.test(declaredVersion)
+        ? declaredVersion
+        : undefined;
   } catch {
     preferredVersion = undefined;
+  }
+
+  if (preferredVersion === undefined) {
+    try {
+      const packageJsonPath = require.resolve('@temporalio/testing/package.json', {
+        paths: [TEMPORAL_PACKAGE_ROOT],
+      });
+      preferredVersion = JSON.parse(fsModule.readFileSync(packageJsonPath, 'utf8')).version;
+    } catch {
+      preferredVersion = undefined;
+    }
   }
 
   const candidates = (() => {

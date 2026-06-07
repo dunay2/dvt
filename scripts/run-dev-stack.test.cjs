@@ -363,6 +363,44 @@ test('resolveTemporalCliExecutable leaves a clean SDK cache to SDK cached-downlo
   assert.equal(executable, undefined);
 });
 
+test('resolveTemporalCliExecutable uses adapter-declared testing version over stale install', () => {
+  const executableSuffix = process.platform === 'win32' ? '.exe' : '';
+  const tmpDir = process.platform === 'win32' ? 'C:\\Temp' : '/tmp';
+  const executable = resolveTemporalCliExecutable(
+    {},
+    {
+      readFileSync: (filePath) => {
+        const normalizedPath = filePath.replace(/\\/g, '/');
+        if (normalizedPath.endsWith('packages/@dvt/adapter-temporal/package.json')) {
+          return JSON.stringify({
+            devDependencies: {
+              '@temporalio/testing': '1.17.2',
+            },
+          });
+        }
+        if (normalizedPath.includes('@temporalio/testing/package.json')) {
+          return JSON.stringify({ version: '1.16.1' });
+        }
+        throw new Error(`Unexpected package manifest read: ${filePath}`);
+      },
+      readdirSync: () => [
+        `temporal-sdk-typescript-1.16.1${executableSuffix}`,
+        `temporal-sdk-typescript-1.17.2${executableSuffix}`,
+      ],
+      statSync: (filePath) => ({
+        isFile: () => true,
+        mtimeMs: filePath.includes('1.16.1') ? 20 : 10,
+      }),
+    },
+    tmpDir
+  );
+
+  assert.equal(
+    executable.replace(/\\/g, '/'),
+    `${tmpDir.replace(/\\/g, '/')}/temporal-sdk-typescript-1.17.2${executableSuffix}`
+  );
+});
+
 test('startLocalTemporalService delegates clean-cache bootstrap to SDK cached-download', async () => {
   let sdkStartCall;
   let closed = false;
