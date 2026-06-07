@@ -4,7 +4,10 @@ import path from 'node:path';
 import test from 'node:test';
 
 import { TEST_PACKAGE_ENTRIES, WORKSPACE_ENTRIES } from './scope-config.mjs';
-import { buildTestMatrixOutputs } from './emit-test-matrix.mjs';
+import {
+  buildNonPullRequestTestMatrixOutputs,
+  buildTestMatrixOutputs,
+} from './emit-test-matrix.mjs';
 
 const DEDICATED_TEST_PACKAGES = new Set([
   '@dvt/adapter-postgres',
@@ -103,11 +106,21 @@ test('test matrix routes API package tests through the CI lifecycle bypass', () 
   ]);
 });
 
-test('test matrix keeps workflow policy changes out of package tests', () => {
+test('test matrix keeps pull-request workflow policy changes out of package tests', () => {
   const matrix = buildTestMatrixOutputs(['.github/workflows/test.yml']);
 
   assert.equal(matrix.anyTests, false);
   assert.deepEqual(matrix.include, []);
+});
+
+test('test matrix preserves non-pull-request full package test fan-out', () => {
+  const matrix = buildNonPullRequestTestMatrixOutputs();
+
+  assert.equal(matrix.anyTests, true);
+  assert.deepEqual(
+    matrix.include.map(({ pkg }) => pkg).sort(),
+    TEST_PACKAGE_ENTRIES.map(({ pkg }) => pkg).sort()
+  );
 });
 
 test('test matrix fans out to package tests for root build sensitive changes', () => {

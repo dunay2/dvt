@@ -1,6 +1,7 @@
 import { pathToFileURL } from 'node:url';
 
 import {
+  TEST_PACKAGE_ENTRIES,
   buildChangedScopeContext,
   computeTestPackageMatrix,
   getChangedFiles,
@@ -12,11 +13,18 @@ export function buildTestMatrixOutputs(changedFiles, scopeContext = {}) {
   return computeTestPackageMatrix(changedFiles, scopeContext);
 }
 
+export function buildNonPullRequestTestMatrixOutputs() {
+  return {
+    anyTests: true,
+    include: TEST_PACKAGE_ENTRIES,
+  };
+}
+
 export async function main() {
   const eventName = process.env.GITHUB_EVENT_NAME ?? '';
 
   if (!isPullRequestEvent(eventName)) {
-    const { anyTests, include } = buildTestMatrixOutputs(['.github/workflows/test.yml']);
+    const { anyTests, include } = buildNonPullRequestTestMatrixOutputs();
     setGitHubOutput('any_tests', anyTests);
     setGitHubOutput('matrix', JSON.stringify({ include }));
     return;

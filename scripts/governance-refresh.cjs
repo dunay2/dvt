@@ -67,6 +67,10 @@ function buildRefreshStages() {
         script: 'planning:db:inventory:check',
       },
       {
+        id: 'db-surface-inventory',
+        script: 'docs:db-surface-inventory:generate',
+      },
+      {
         id: 'planning-db-export-check',
         script: 'planning:db:export:check',
       },

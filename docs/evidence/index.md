@@ -120,6 +120,7 @@ Evidence documents that justify or validate relevant changes.
 - [Run Execution Context Admission Test SRP Hardening](ed-20260429-run-execution-context-admission-test-srp.md)
 - [Runtime Root Subdivision Evidence](ed-20260513-runtime-root-subdivision.md)
 - [StartRunApplicationService QA Closeout](ED-20260405-start-run-application-service-qa.md)
+- [State-store Archive Redaction Baseline Hardening](ED-20260607-state-store-archive-redaction-baseline.md)
 - [Summary](ED-20260403-s08-4-ci-regression-fix.md)
 - [Summary](ED-20260403-s08-4-postgres-three-part-model-arc2.md)
 - [Summary](ED-20260403-s08-5-b-run-execution-context-boundary.md)

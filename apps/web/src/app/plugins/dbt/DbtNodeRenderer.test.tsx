@@ -190,6 +190,39 @@ describe('DbtNodeRenderer history panel', () => {
     expect(runsService.listRunEvents).toHaveBeenCalledWith('run-live');
   });
 
+  it('matches runtime history events by canonical step id when payload node id is absent', async () => {
+    const runsService = buildRunsService({
+      listRunEvents: vi.fn(async () => ({
+        events: [
+          buildRunEvent({
+            eventId: 'event-contract-step-started',
+            eventType: 'StepStarted',
+            runSeq: 1,
+            stepId: asStepId('model_orders'),
+            payload: {
+              message: 'Contract step started model_orders',
+            },
+          }),
+          buildRunEvent({
+            eventId: 'event-contract-other-step',
+            eventType: 'StepCompleted',
+            runSeq: 2,
+            stepId: asStepId('model_payments'),
+            payload: {
+              message: 'Other contract step finished',
+            },
+          }),
+        ],
+      })),
+    });
+
+    await renderHistoryPanel({ runsService, activeRunId: 'run-live' });
+
+    await waitForText('Contract step started model_orders');
+    expect(document.body.textContent).toContain('Step started');
+    expect(document.body.textContent).not.toContain('Other contract step finished');
+  });
+
   it('uses the latest scoped run when no active run is selected', async () => {
     const runsService = buildRunsService({
       listRunSummaries: vi.fn(async () => [buildRunSummary('run-latest')]),

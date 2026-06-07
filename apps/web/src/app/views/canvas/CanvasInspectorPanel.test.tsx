@@ -1,12 +1,16 @@
 // @vitest-environment jsdom
 
 import { fireEvent } from '@testing-library/dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { act } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
 import { CanvasInspectorPanel } from './CanvasInspectorPanel';
+import { AppServicesProvider } from '../../services/AppServicesContext';
+import type { IRunsPort } from '../../ports/runs';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 function buildNode(): CanonicalNode {
@@ -105,6 +109,18 @@ function modelerActionButton(container: HTMLElement, actionId: string): HTMLButt
   }
 
   return button;
+}
+
+function tabByText(container: HTMLElement, label: string): HTMLButtonElement {
+  const tab = Array.from(container.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
+    (candidate) => candidate.textContent?.trim() === label
+  );
+
+  if (!tab) {
+    throw new Error(`Inspector tab not found: ${label}`);
+  }
+
+  return tab;
 }
 
 describe('CanvasInspectorPanel', () => {
@@ -239,6 +255,66 @@ describe('CanvasInspectorPanel', () => {
     expect(onToggleNodeSelection).toHaveBeenCalledWith(node.id, true);
     expect(onDuplicateNode).toHaveBeenCalledWith(node.id);
     expect(onRemoveNode).toHaveBeenCalledWith(node.id);
+  });
+
+  it('falls back to general details when the selected node does not expose the active plugin tab', async () => {
+    const dbtNode = buildDbtModelNode();
+    const dvtNode = buildNode();
+    const runsService: IRunsPort = {
+      listRunSummaries: vi.fn(async () => []),
+      getRunSnapshot: vi.fn(async () => null),
+      startRun: vi.fn(async () => ({
+        runId: 'run-created',
+        accepted: true,
+      })),
+      listRunEvents: vi.fn(async () => ({ events: [] })),
+    };
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    const renderInspector = (node: CanonicalNode): JSX.Element => (
+      <QueryClientProvider client={queryClient}>
+        <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), runsService }}>
+          <CanvasInspectorPanel
+            node={node}
+            nodes={[dbtNode, dvtNode]}
+            edges={[]}
+            activeRunId={null}
+            onHide={vi.fn()}
+            authoring={{
+              canEditNode: false,
+              onApplyNodeDraft: vi.fn(),
+            }}
+          />
+        </AppServicesProvider>
+      </QueryClientProvider>
+    );
+
+    await act(async () => {
+      root.render(renderInspector(dbtNode));
+    });
+
+    await act(async () => {
+      fireEvent.mouseDown(tabByText(container, 'History'), { button: 0 });
+    });
+
+    expect(tabByText(container, 'History').getAttribute('aria-selected')).toBe('true');
+
+    await act(async () => {
+      root.render(renderInspector(dvtNode));
+    });
+
+    const tabLabels = Array.from(container.querySelectorAll<HTMLElement>('[role="tab"]')).map(
+      (tab) => tab.textContent?.trim()
+    );
+
+    expect(tabLabels).not.toContain('History');
+    expect(tabByText(container, 'General').getAttribute('aria-selected')).toBe('true');
   });
 
   it('keeps the form read-only when the route cannot mutate node properties', async () => {

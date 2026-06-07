@@ -1612,11 +1612,14 @@ allowedImplementationSurfaces:
   - tools/planning-db/**
   - tools/governance-db/**
   - scripts/planning-db-*.cjs
+  - scripts/planning-db-operate-tests/*.cjs
   - scripts/governance-db-*.cjs
   - scripts/governance-refresh*.cjs
   - scripts/generate-code-status*.cjs
+  - scripts/generate-db-surface-inventory*.cjs
   - scripts/generate-workboard*.cjs
   - scripts/generate-planning-lanes*.cjs
+  - scripts/planning-db/*.cjs
   - scripts/docs-planning-generated-check.cjs
   - scripts/governance-generated-paths*.cjs
   - scripts/generate-governance-*.cjs
@@ -1664,6 +1667,15 @@ commandQueryRails:
     dddOwner: PlanningStateDriftReport
   - name: InventoryDbGovernanceSurface
     type: query
+    dddOwner: DbGovernanceSurfaceInventory
+  - name: UpsertDbGovernanceSurface
+    type: command
+    dddOwner: DbGovernanceSurfaceInventory
+  - name: ReadDbGovernanceSurface
+    type: query
+    dddOwner: DbGovernanceSurfaceInventory
+  - name: GenerateDbSurfaceInventory
+    type: command
     dddOwner: DbGovernanceSurfaceInventory
   - name: ApplyPlanningLocalOperation
     type: command
@@ -3395,11 +3407,53 @@ symbols:
     name: test
     path: scripts/planning-db-operate.test.cjs
   - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/architecture-parse.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/architecture-plan.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/cli.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/component-create.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/db-surface.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/docs-resolution.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/task-idempotency.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/task-parse.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: test
+    path: scripts/planning-db-operate-tests/task-plan.test.cjs
+  - <<: *planningDbLocalOperationSymbol
     name: assert
     path: scripts/planning-db-operate.test.cjs
   - <<: *planningDbLocalOperationSymbol
+    name: assert
+    path: scripts/planning-db-operate-tests/helpers.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: path
+    path: scripts/planning-db-operate-tests/helpers.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: operate
+    path: scripts/planning-db-operate-tests/helpers.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: runPlanningDbOperateCli
+    path: scripts/planning-db-operate-tests/helpers.cjs
+  - <<: *planningDbLocalOperationSymbol
     name: importedTask
     path: scripts/planning-db-operate.test.cjs
+  - <<: *planningDbLocalOperationSymbol
+    name: importedTask
+    path: scripts/planning-db-operate-tests/helpers.cjs
   - <<: *planningDbLocalOperationSymbol
     name: assertIdempotentReplayMatches
     path: scripts/planning-db-operate.test.cjs
@@ -3930,57 +3984,189 @@ symbols:
     dddOwner: DbGovernanceSurfaceInventory
     cqRails:
       - InventoryDbGovernanceSurface
+      - ReadDbGovernanceSurface
+      - GenerateDbSurfaceInventory
     fowlerSignals:
-      - Hidden query model inside YAML
+      - Manual Markdown inventory table
       - Hidden query model inside governance shards
       - Manual docs disposition inventory
     architectureGuard: pnpm planning:db:inventory:check
     cypressCoverage: N/A - DB surface inventory has no browser workflow.
     unitTests:
       - node --test scripts/planning-db-surface-inventory-check.test.cjs
+      - node --test scripts/generate-db-surface-inventory.test.cjs
+      - node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs
       - pnpm planning:db:inventory:check
+      - pnpm docs:db-surface-inventory:check
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: fs
-    path: scripts/planning-db-surface-inventory-check.cjs
+    name: DbGovernanceSurfaceInventoryMigration
+    path: tools/planning-db/migrations/059_db_surface_inventory.sql
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: path
-    path: scripts/planning-db-surface-inventory-check.cjs
+    name: allowedDbSurfaceMigrationStates
+    path: scripts/planning-db/db-surface-inventory.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: repoRoot
-    path: scripts/planning-db-surface-inventory-check.cjs
+    name: allowedDbSurfaceWriteRailKinds
+    path: scripts/planning-db/db-surface-inventory.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: defaultInventoryPath
-    path: scripts/planning-db-surface-inventory-check.cjs
+    name: sourceView
+    path: scripts/planning-db/db-surface-inventory.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: requiredColumns
-    path: scripts/planning-db-surface-inventory-check.cjs
+    name: parseLimit
+    path: scripts/planning-db/db-surface-inventory.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: allowedMigrationStates
+    name: appendFilter
+    path: scripts/planning-db/db-surface-inventory.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: textValue
+    path: scripts/planning-db/db-surface-inventory.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: buildDbSurfaceRows
+    path: scripts/planning-db/db-surface-inventory.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: readDbSurfaceRows
+    path: scripts/planning-db/db-surface-inventory.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: buildDbSurfaceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: readDbSurfaceRows
+    path: scripts/planning-db-query.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: databaseUrl
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
     name: requiredSurfaces
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: splitMarkdownRow
+    name: textValue
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: isSeparatorLine
+    name: booleanValue
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: parseMarkdownTables
+    name: normalizeRow
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: normalizeText
+    name: validateRequiredText
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: includesTerm
+    name: validateDbSurfaceInventoryRows
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: findSurfaceTable
+    name: runInventoryCheck
     path: scripts/planning-db-surface-inventory-check.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
-    name: validateInventory
+    name: printHelp
     path: scripts/planning-db-surface-inventory-check.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: validateDbSurfaceMigrationState
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: validateDbSurfaceWriteRailKind
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: validateDbSurfaceUpsertCommand
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: parseDbSurfaceCommand
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: assertDbSurfaceIdempotentReplayMatches
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: readExistingDbSurfaceOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: readDbSurface
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: normalizeDbSurface
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: planDbSurfaceUpsertOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: writePlannedDbSurfaceUpsertOperation
+    path: scripts/planning-db-operate.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: applyDbSurfaceUpsertOperation
+    path: scripts/planning-db-operate.cjs
+  - &dbSurfaceInventoryRenderSymbol
+    <<: *dbGovernanceSurfaceInventorySymbol
+    name: defaultOutputPath
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: migrationStateOrder
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: databaseUrl
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: toPosix
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: relFromRepo
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: textValue
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: numericValue
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: booleanValue
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: markdownCell
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: markdownTable
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: migrationStateRank
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: buildDbSurfaceInventorySelect
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: normalizeDbSurfaceRow
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: sortDbSurfaceRows
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: buildSummaryRows
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: renderDbSurfaceInventory
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: readDbSurfaceInventoryRows
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: writeIfChanged
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: runDbSurfaceInventoryGenerator
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: parseArgs
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: printHelp
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: main
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: fs
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: path
+    path: scripts/generate-db-surface-inventory.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: repoRoot
+    path: scripts/generate-db-surface-inventory.cjs
   - <<: *dbGovernanceSurfaceInventorySymbol
     name: runCli
     path: scripts/planning-db-surface-inventory-check.cjs
@@ -4014,6 +4200,33 @@ symbols:
   - <<: *dbGovernanceSurfaceInventorySymbol
     name: loadInventoryCheck
     path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: fixtureRows
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbGovernanceSurfaceInventorySymbol
+    name: surfaceHash
+    path: scripts/planning-db-surface-inventory-check.test.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: test
+    path: scripts/generate-db-surface-inventory.test.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: assert
+    path: scripts/generate-db-surface-inventory.test.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: fs
+    path: scripts/generate-db-surface-inventory.test.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: os
+    path: scripts/generate-db-surface-inventory.test.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: path
+    path: scripts/generate-db-surface-inventory.test.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: packageJson
+    path: scripts/generate-db-surface-inventory.test.cjs
+  - <<: *dbSurfaceInventoryRenderSymbol
+    name: fixtureRows
+    path: scripts/generate-db-surface-inventory.test.cjs
   - &governanceDbDriftSymbol
     name: GovernanceDbDriftCheckRunner
     path: scripts/governance-db-check.cjs

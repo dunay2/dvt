@@ -20,7 +20,6 @@ export interface ObjectStorageRunArchiveExporterOptions {
 }
 
 export interface ArchiveRedactionPolicy {
-  readonly enabled?: boolean;
   /** Additional key names to redact; the built-in sensitive keys always remain active. */
   readonly sensitiveKeys?: readonly string[];
   readonly replacement?: string;
@@ -44,7 +43,7 @@ export class ObjectStorageRunArchiveExporter implements IRunArchiveExporter {
 
   private readonly objectStore: IArchiveObjectStore;
   private readonly prefix: string;
-  private readonly redactionPolicy: ResolvedArchiveRedactionPolicy | null;
+  private readonly redactionPolicy: ResolvedArchiveRedactionPolicy;
 
   constructor(options: ObjectStorageRunArchiveExporterOptions) {
     this.objectStore = options.objectStore;
@@ -242,11 +241,7 @@ const DEFAULT_ARCHIVE_REDACTION_KEYS: readonly string[] = [
 
 function resolveArchiveRedactionPolicy(
   policy: ArchiveRedactionPolicy | undefined
-): ResolvedArchiveRedactionPolicy | null {
-  if (policy?.enabled === false) {
-    return null;
-  }
-
+): ResolvedArchiveRedactionPolicy {
   return {
     sensitiveKeys: new Set(
       [...DEFAULT_ARCHIVE_REDACTION_KEYS, ...(policy?.sensitiveKeys ?? [])].map(normalizeKey)
@@ -257,12 +252,8 @@ function resolveArchiveRedactionPolicy(
 
 function redactArchiveEvents(
   events: readonly EventEnvelope[],
-  policy: ResolvedArchiveRedactionPolicy | null
+  policy: ResolvedArchiveRedactionPolicy
 ): readonly EventEnvelope[] {
-  if (policy === null) {
-    return events;
-  }
-
   return events.map((event) => redactValue(event, policy) as EventEnvelope);
 }
 

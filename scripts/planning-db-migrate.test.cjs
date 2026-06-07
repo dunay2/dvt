@@ -219,6 +219,44 @@ test('tracked migrations include repository backrefs before knowledge intake ret
   );
 });
 
+test('tracked migrations include DB-first surface inventory command rail tables', () => {
+  const migrations = readMigrationFiles();
+  const surfaceInventoryMigration = migrations.find(
+    (migration) => migration.fileName === '059_db_surface_inventory.sql'
+  );
+
+  assert.ok(surfaceInventoryMigration);
+  assert.match(
+    surfaceInventoryMigration.sql,
+    /create table if not exists planning_query_store\.db_governance_surfaces/
+  );
+  assert.match(
+    surfaceInventoryMigration.sql,
+    /create table if not exists planning_query_store\.db_governance_surface_operations/
+  );
+  assert.match(
+    surfaceInventoryMigration.sql,
+    /create or replace view planning_query_store\.db_governance_surface_query/
+  );
+  assert.match(
+    surfaceInventoryMigration.sql,
+    /migration_state <> 'DB-first'\s+or write_rail_kind = 'db_command'/s
+  );
+  assert.match(surfaceInventoryMigration.sql, /Architecture design authority/);
+});
+
+test('tracked migrations repair component definition surface inventory to DB-first', () => {
+  const migrations = readMigrationFiles();
+  const componentSurfaceRepairMigration = migrations.find(
+    (migration) => migration.fileName === '060_component_definition_surface_db_first.sql'
+  );
+
+  assert.ok(componentSurfaceRepairMigration);
+  assert.match(componentSurfaceRepairMigration.sql, /Governance component definition/);
+  assert.match(componentSurfaceRepairMigration.sql, /migration_state = 'DB-first'/);
+  assert.match(componentSurfaceRepairMigration.sql, /raw_surface = jsonb_set/);
+});
+
 test('tracked migrations include governance component definition command rail tables', () => {
   const migrations = readMigrationFiles();
   const componentDefinitionMigration = migrations.find(

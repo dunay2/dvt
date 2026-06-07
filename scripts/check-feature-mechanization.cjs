@@ -255,7 +255,7 @@ class FeatureImplementationGuard {
   }
 
   extractAddedCodeSymbols(filePath, addedLines) {
-    if (!this.isCodeFile(filePath)) {
+    if (!this.isCodeFile(filePath) || this.isTestFile(filePath)) {
       return [];
     }
 
@@ -299,6 +299,13 @@ class FeatureImplementationGuard {
 
   isCodeFile(filePath) {
     return /\.(?:cjs|mjs|js|jsx|ts|tsx)$/.test(filePath);
+  }
+
+  isTestFile(filePath) {
+    return (
+      /\.(?:test|spec)\.(?:cjs|mjs|js|jsx|ts|tsx)$/.test(filePath) ||
+      /(^|\/)(?:__tests__|test|tests)\//.test(filePath)
+    );
   }
 
   isCypressFile(filePath) {

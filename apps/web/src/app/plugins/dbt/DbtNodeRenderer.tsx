@@ -107,12 +107,11 @@ export function buildDbtNodeRunHistoryEntries(
     return typeof payloadNodeId === 'string' && payloadNodeId.length > 0 ? payloadNodeId : null;
   };
 
+  const isNodeHistoryEvent = (event: EngineRunEvent): boolean =>
+    event.stepId === nodeId || readEventPayloadNodeId(event) === nodeId;
+
   return events
-    .filter(
-      (event) =>
-        event.runId === runId &&
-        (event.stepId === nodeId || readEventPayloadNodeId(event) === nodeId)
-    )
+    .filter((event) => event.runId === runId && isNodeHistoryEvent(event))
     .map((event) => {
       const presentation = buildRunEventPresentationModel(event);
 

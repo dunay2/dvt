@@ -106,11 +106,11 @@ test('knowledge-intake literature escapes markdown table cells from DB content',
   const rendered = renderKnowledgeIntakeLiterature([
     {
       ...fixtureRows[0],
-      title: 'Open | Analysis \\ Draft',
+      title: 'Open | Analysis \\ Draft | C:\\buzon\\raw.md',
     },
   ]);
 
-  assert.ok(rendered.includes('Open \\| Analysis \\\\ Draft'));
+  assert.ok(rendered.includes('Open \\| Analysis \\\\ Draft \\| C:\\\\buzon\\\\raw.md'));
 });
 
 test('knowledge-intake literature generator writes and checks the local render', async () => {

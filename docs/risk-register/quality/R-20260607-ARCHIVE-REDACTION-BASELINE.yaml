@@ -1,0 +1,25 @@
+---
+id: R-20260607-ARCHIVE-REDACTION-BASELINE
+title: Archive redaction baseline can drift from runtime composition config
+status: Open
+date: 2026-06-07
+owners:
+  - packages/@dvt/state-store
+severity: High
+probability: Low
+context: >
+  State-store archive export writes run event payloads to cold object storage. The O6 archive
+  redaction baseline requires built-in sensitive keys to remain active while local configuration may
+  only extend the sensitive key set or change the replacement token.
+risk: >
+  Future runtime composition or config mapping could reintroduce a disable switch or otherwise
+  weaken the baseline redaction policy, causing secret-bearing event payload fields to be written to
+  cold archive objects.
+mitigations:
+  - Keep ArchiveRedactionPolicy free of disable switches.
+  - Keep ObjectStorageRunArchiveExporter tests covering legacy enabled:false input as a fail-closed
+    regression.
+  - Keep feature mechanization implementation checks tied to the O6 archive redaction plan.
+  - Keep ARC-2 evidence and PR quality gates active for state-store archive lifecycle changes.
+review_after: 2026-07-07
+---

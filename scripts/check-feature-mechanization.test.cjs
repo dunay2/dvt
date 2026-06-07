@@ -543,6 +543,37 @@ test('validateFeatureImplementationManifests accepts added exported code symbols
   assert.deepEqual(result.errors, []);
 });
 
+test('validateFeatureImplementationManifests does not require symbol declarations for test shards', () => {
+  const result = validateFeatureImplementationManifests(
+    [
+      {
+        sourcePath: 'plan.md',
+        manifest: {
+          ...validManifest,
+          allowedImplementationSurfaces: [
+            ...validManifest.allowedImplementationSurfaces,
+            'scripts/planning-db-operate-tests/feature-mechanization.test.cjs',
+          ],
+        },
+      },
+    ],
+    {
+      changedFiles: ['scripts/planning-db-operate-tests/feature-mechanization.test.cjs'],
+      addedLinesByPath: {
+        'scripts/planning-db-operate-tests/feature-mechanization.test.cjs': [
+          "const test = require('node:test');",
+          "const assert = require('node:assert/strict');",
+          'function featureMechanizationRecordArgs() {',
+          '  return [];',
+          '}',
+        ],
+      },
+    }
+  );
+
+  assert.deepEqual(result.errors, []);
+});
+
 test('validateFeatureImplementationManifests rejects Cypress intercepts for workspace graph drafts', () => {
   const result = validateFeatureImplementationManifests(
     [

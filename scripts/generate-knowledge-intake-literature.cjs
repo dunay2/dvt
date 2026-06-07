@@ -46,7 +46,7 @@ function textValue(value, fallback = '-') {
 }
 
 function markdownCell(value) {
-  return textValue(value).replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
+  return textValue(value).replace(/[\\|]/g, '\\$&');
 }
 
 function markdownTable(headers, rows) {

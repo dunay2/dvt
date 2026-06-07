@@ -6,6 +6,7 @@ import {
   assertCiToolTestPartition,
   buildCiToolTestList,
   discoverCiToolTests,
+  findPackageBackedCiToolTests,
   parseCiToolTestMode,
 } from './ci-tool-test-suite.mjs';
 
@@ -27,13 +28,11 @@ test('CI tool test partitions cover every discovered contract test exactly once'
 });
 
 test('CI tool static partition excludes tests that import package dependencies', () => {
+  const allTests = discoverCiToolTests();
   const staticTests = buildCiToolTestList('static');
-  const packageBackedTests = [
-    'tools/ci/adapter-postgres-import-alias-regression.test.mjs',
-    'tools/ci/arc-policy-state-store.test.mjs',
-    'tools/ci/planning-truth-sync.test.mjs',
-  ];
+  const packageBackedTests = findPackageBackedCiToolTests({ tests: allTests });
 
+  assert.notEqual(packageBackedTests.length, 0);
   assert.deepEqual(
     packageBackedTests.filter((filePath) => staticTests.includes(filePath)),
     []
@@ -48,6 +47,18 @@ test('CI tool test partition fails closed when an executable test path is missin
   assert.throws(
     () => assertCiToolTestPartition(['tools/ci/workflow-pattern-parity.test.mjs']),
     /Executable CI tool test partition references missing files/
+  );
+});
+
+test('CI tool test partition fails closed when package-backed tests are left static', () => {
+  const allTests = discoverCiToolTests();
+  const executableTests = EXECUTABLE_CI_TOOL_TESTS.filter(
+    (filePath) => filePath !== 'tools/ci/arc-policy-state-store.test.mjs'
+  );
+
+  assert.throws(
+    () => assertCiToolTestPartition(allTests, { executableTests }),
+    /Package-backed CI tool tests must run in the executable partition: .*arc-policy-state-store\.test\.mjs/
   );
 });
 

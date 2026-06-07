@@ -565,6 +565,28 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: NODE_BUILTIN_SPECIFIERS
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Keep the static CI lane dependency-free without misclassifying Node builtins as package imports
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: MODULE_SPECIFIER_PATTERNS
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Detect direct import and require edges before static CI tests reach a no-install runner
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: normalizePath
     path: tools/ci/ci-tool-test-suite.mjs
     dddOwner: ValidateCiScopeOptimizationContract
@@ -576,6 +598,61 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: isRelativeOrAbsoluteSpecifier
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Separate package dependency edges from repository-local module edges in CI test partitioning
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: isPackageSpecifier
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Treat package-backed CI tool tests as install-backed executable contracts
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: extractModuleSpecifiers
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Replace hand-maintained dependency-backed test guesses with mechanical import extraction
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: resolveRelativeModulePath
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Follow local helper imports so transitive package dependencies stay out of the static lane
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: collectPackageSpecifiers
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Collapse direct and transitive package dependency detection into one CI partition read model
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
   - name: discoverCiToolTests
     path: tools/ci/ci-tool-test-suite.mjs
     dddOwner: ValidateCiScopeOptimizationContract
@@ -583,6 +660,17 @@ symbols:
       - ValidateCiScopeOptimizationContract
     fowlerSignals:
       - Avoid duplicating the full tools/ci test file list across package scripts and workflow jobs
+    architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/ci-tool-test-suite.test.mjs
+  - name: findPackageBackedCiToolTests
+    path: tools/ci/ci-tool-test-suite.mjs
+    dddOwner: ValidateCiScopeOptimizationContract
+    cqRails:
+      - ValidateCiScopeOptimizationContract
+    fowlerSignals:
+      - Make dependency-backed CI tool tests visible as a governed read model before suite execution
     architectureGuard: node --test tools/ci/ci-tool-test-suite.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
@@ -989,6 +1077,17 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/workflow-scope-classification.test.mjs
+  - name: buildNonPullRequestWorkspaceMatrixOutputs
+    path: tools/ci/emit-workspace-matrix.mjs
+    dddOwner: WorkspaceMatrix
+    cqRails:
+      - EmitAffectedWorkspaceMatrix
+    fowlerSignals:
+      - Preserve non-PR full workspace fan-out without widening PR workflow diffs
+    architectureGuard: node --test tools/ci/emit-workspace-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-workspace-matrix.test.mjs
   - name: computeBooleanScope
     path: tools/ci/scope-config.mjs
     dddOwner: ChangedFileSet
@@ -1128,6 +1227,17 @@ symbols:
       - EmitWorkflowCapabilityScopes
     fowlerSignals:
       - Keep workflow matrix emission behind a testable function
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: buildNonPullRequestTestMatrixOutputs
+    path: tools/ci/emit-test-matrix.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Preserve non-PR full package test fan-out without widening PR workflow diffs
     architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:

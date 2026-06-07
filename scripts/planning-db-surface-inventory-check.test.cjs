@@ -12,8 +12,205 @@ const {
 const { buildPrepushPlan, commandLabel: prepushCommandLabel } = require('./verify-prepush.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
-const inventoryPath = path.join(repoRoot, 'docs', 'planning', 'status', 'db-surface-inventory.md');
 const scriptPath = path.join(__dirname, 'planning-db-surface-inventory-check.cjs');
+const surfaceHash = 'a'.repeat(64);
+const fixtureRows = [
+  {
+    surface_name: 'Planning task lifecycle',
+    canonical_source: 'planning_query_store task rows',
+    write_rail: 'pnpm planning:db:operate task update',
+    write_rail_kind: 'db_command',
+    read_query_rail: 'pnpm planning:db:query tasks',
+    projection: 'execution-workboard.md',
+    validation: 'pnpm planning:db:check',
+    migration_state: 'DB-first',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: true,
+  },
+  {
+    surface_name: 'Planning lane registry',
+    canonical_source: 'planning_query_store lane rows',
+    write_rail: 'pnpm planning:db:import -- --if-stale --planning-only',
+    write_rail_kind: 'bootstrap_export',
+    read_query_rail: 'pnpm planning:db:query summary',
+    projection: 'agent-lane-*.yaml',
+    validation: 'pnpm planning:db:export:check',
+    migration_state: 'Bootstrap/export',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Workboard and open task route',
+    canonical_source: 'DB effective planning views',
+    write_rail: 'No direct write rail',
+    write_rail_kind: 'generated',
+    read_query_rail: 'pnpm planning:db:query next',
+    projection: 'execution-workboard.md',
+    validation: 'pnpm docs:workboard:check',
+    migration_state: 'Generated-only',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Governance file inventory',
+    canonical_source: 'governance DB',
+    write_rail: 'pnpm governance:refresh',
+    write_rail_kind: 'import',
+    read_query_rail: 'pnpm governance:db:query files',
+    projection: 'docs/.manifest.json',
+    validation: 'pnpm governance:db:check',
+    migration_state: 'Hybrid indexed',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Architecture design authority',
+    canonical_source: 'architecture.design rows',
+    write_rail: 'pnpm planning:db:operate architecture-design create',
+    write_rail_kind: 'db_command',
+    read_query_rail: 'pnpm planning:db:query architecture-designs',
+    projection: 'DB authority rows',
+    validation: 'pnpm test:planning:db',
+    migration_state: 'DB-first',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: true,
+  },
+  {
+    surface_name: 'Governance component definition',
+    canonical_source: 'DB-authored component local definitions',
+    write_rail: 'pnpm planning:db:operate component create',
+    write_rail_kind: 'db_command',
+    read_query_rail: 'pnpm planning:db:query component-tree',
+    projection: 'Effective scalar component definition rows',
+    validation: 'pnpm test:planning:db',
+    migration_state: 'DB-first',
+    source_ref: 'tools/planning-db/migrations/060_component_definition_surface_db_first.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: true,
+  },
+  {
+    surface_name: 'Governance remediation queue',
+    canonical_source: 'Governance DB coverage',
+    write_rail: 'pnpm governance:refresh',
+    write_rail_kind: 'generated',
+    read_query_rail: 'pnpm governance:db:query remediation',
+    projection: 'remediation queue',
+    validation: 'pnpm docs:governance:remediation-queue:check',
+    migration_state: 'Generated-only',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'ADR and contract decisions',
+    canonical_source: 'docs/adr and specs/contracts',
+    write_rail: 'Git edit',
+    write_rail_kind: 'git_edit',
+    read_query_rail: 'pnpm governance:db:query files',
+    projection: 'docs indexes',
+    validation: 'pnpm docs:sync:check',
+    migration_state: 'Git-first indexed',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Risk and evidence records',
+    canonical_source: 'docs/evidence and docs/risk-register',
+    write_rail: 'Git edit',
+    write_rail_kind: 'git_edit',
+    read_query_rail: 'pnpm governance:db:query files',
+    projection: 'risk and evidence indexes',
+    validation: 'pnpm docs:arc:evidence:check',
+    migration_state: 'Git-first indexed',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Repository command catalog',
+    canonical_source: 'repository-command-catalog.mjs',
+    write_rail: 'Git edit',
+    write_rail_kind: 'git_edit',
+    read_query_rail: 'pnpm planning:db:query commands',
+    projection: 'command rows',
+    validation: 'pnpm docs:feature-mechanization:implementation',
+    migration_state: 'Hybrid indexed',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Command/query rail catalog',
+    canonical_source: 'commandQueryRails',
+    write_rail: 'pnpm planning:db:import -- --governance-only',
+    write_rail_kind: 'import',
+    read_query_rail: 'pnpm planning:db:query command-query-rails',
+    projection: 'command_query_rail_query',
+    validation: 'pnpm test:planning:db',
+    migration_state: 'Hybrid indexed',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Knowledge intake literature',
+    canonical_source: 'knowledge_intake_retirement_query',
+    write_rail: 'pnpm governance:refresh',
+    write_rail_kind: 'import',
+    read_query_rail: 'pnpm planning:db:query knowledge-intake',
+    projection: '.generated-docs/planning/status/generated-knowledge-intake-literature.md',
+    validation: 'pnpm docs:knowledge-intake:check',
+    migration_state: 'Hybrid indexed',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'AI project context',
+    canonical_source: 'Aggregate planning DB read models',
+    write_rail: 'No write rail',
+    write_rail_kind: 'none',
+    read_query_rail: 'pnpm planning:db:query ai-project-context',
+    projection: 'in-memory aggregate',
+    validation: 'pnpm planning:db:inventory:check',
+    migration_state: 'Hybrid indexed',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Docs task disposition inventory',
+    canonical_source: 'docs task disposition docs',
+    write_rail: 'Git edit',
+    write_rail_kind: 'git_edit',
+    read_query_rail: 'pnpm planning:db:query docs-disposition',
+    projection: 'disposition rows',
+    validation: 'pnpm docs:governance:changed-files:check',
+    migration_state: 'Git-first indexed',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: false,
+  },
+  {
+    surface_name: 'Docs resolution overlays',
+    canonical_source: 'doc_resolution_overlays',
+    write_rail: 'pnpm planning:db:operate docs-disposition resolve',
+    write_rail_kind: 'db_command',
+    read_query_rail: 'pnpm planning:db:query docs-disposition --resolution all',
+    projection: 'doc_disposition_action_query',
+    validation: 'pnpm test:planning:db',
+    migration_state: 'DB-first',
+    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    source_content_sha256: surfaceHash,
+    db_first_eligible: true,
+  },
+];
 
 function loadInventoryCheck() {
   assert.equal(
@@ -25,36 +222,61 @@ function loadInventoryCheck() {
   return require(scriptPath);
 }
 
-test('DB surface inventory exists and validates canonical planning and governance surfaces', () => {
-  assert.equal(
-    fs.existsSync(inventoryPath),
-    true,
-    'docs/planning/status/db-surface-inventory.md must exist'
-  );
-
-  const { validateInventory } = loadInventoryCheck();
-  const result = validateInventory(fs.readFileSync(inventoryPath, 'utf8'), {
-    inventoryPath,
-  });
+test('DB surface inventory validates canonical planning and governance DB rows', () => {
+  const { validateDbSurfaceInventoryRows } = loadInventoryCheck();
+  const result = validateDbSurfaceInventoryRows(fixtureRows);
 
   assert.deepEqual(result.errors, []);
   assert.equal(result.ok, true);
 });
 
 test('DB surface inventory validator rejects missing required surfaces', () => {
-  const { validateInventory } = loadInventoryCheck();
-  const inventory = fs.readFileSync(inventoryPath, 'utf8');
-  const withoutTaskLifecycle = inventory.replace(
-    /^\|\s*Planning task lifecycle\s*\|.*(?:\r?\n|$)/m,
-    ''
+  const { validateDbSurfaceInventoryRows } = loadInventoryCheck();
+  const result = validateDbSurfaceInventoryRows(
+    fixtureRows.filter((row) => row.surface_name !== 'Planning task lifecycle')
   );
-
-  assert.notEqual(withoutTaskLifecycle, inventory);
-
-  const result = validateInventory(withoutTaskLifecycle, { inventoryPath });
 
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /Planning task lifecycle/);
+});
+
+test('DB surface inventory validator rejects DB-first labels on imported or read-only surfaces', () => {
+  const { validateDbSurfaceInventoryRows } = loadInventoryCheck();
+  const result = validateDbSurfaceInventoryRows(
+    fixtureRows.map((row) =>
+      row.surface_name === 'AI project context'
+        ? { ...row, migration_state: 'DB-first', db_first_eligible: false }
+        : row
+    )
+  );
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /AI project context/);
+  assert.match(result.errors.join('\n'), /write rail kind/);
+});
+
+test('DB surface inventory validator keeps component definition command rail DB-first', () => {
+  const { validateDbSurfaceInventoryRows } = loadInventoryCheck();
+  const result = validateDbSurfaceInventoryRows([
+    ...fixtureRows,
+    {
+      surface_name: 'Governance component definition',
+      canonical_source: 'DB-authored component local definitions',
+      write_rail: 'pnpm planning:db:operate component create',
+      write_rail_kind: 'db_command',
+      read_query_rail: 'pnpm planning:db:query component-tree',
+      projection: 'Effective scalar component definition rows',
+      validation: 'pnpm test:planning:db',
+      migration_state: 'Hybrid indexed',
+      source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+      source_content_sha256: surfaceHash,
+      db_first_eligible: false,
+    },
+  ]);
+
+  assert.equal(result.ok, false);
+  assert.match(result.errors.join('\n'), /Governance component definition/);
+  assert.match(result.errors.join('\n'), /migration state "DB-first"/);
 });
 
 test('package scripts expose and gate the DB surface inventory check', () => {
@@ -89,17 +311,19 @@ test('package scripts expose and gate the DB surface inventory check', () => {
   );
 });
 
-test('DB surface inventory check command exits successfully', () => {
+test('DB surface inventory check command exposes help without opening a DB connection', () => {
   assert.equal(
     fs.existsSync(scriptPath),
     true,
     'scripts/planning-db-surface-inventory-check.cjs must exist'
   );
 
-  const result = childProcess.spawnSync(process.execPath, [scriptPath], {
+  const result = childProcess.spawnSync(process.execPath, [scriptPath, '--help'], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
 
   assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /planning:db:inventory:check/);
+  assert.match(result.stdout, /does not parse Markdown inventory tables/);
 });

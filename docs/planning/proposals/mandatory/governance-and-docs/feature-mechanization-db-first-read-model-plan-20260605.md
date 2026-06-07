@@ -66,9 +66,13 @@ The first slice implemented the DB-backed read path for
 `ValidateFeatureMechanizationImplementation`. The current writer slice adds
 `RecordFeatureMechanizationRail` so new command/query rail declarations can be
 written through `planning:db:operate` into local Planning DB rows, then read
-through the effective `command_query_rail_query` projection. Compatibility
-Markdown manifests remain an import surface until generated feature literature
-is fully DB-sourced.
+through the effective `command_query_rail_query` projection. The implementation
+gate reads `command_query_rail_manifest_query` so every DB-backed raw manifest
+contributes implementation symbol declarations, while rail listing still uses
+canonical rail precedence. Test shards are validated as allowed surfaces but do
+not require symbol declarations for harness imports or local fixtures.
+Compatibility Markdown manifests remain an import surface until generated
+feature literature is fully DB-sourced.
 
 ```feature-mechanization
 version: 1
@@ -271,6 +275,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/db-surface-inventory.md
   - scripts/planning-db-operate.cjs
   - scripts/planning-db-operate.test.cjs
+  - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
   - scripts/planning-db-migrate.test.cjs
@@ -322,11 +327,12 @@ redGreenCycles:
     patchSurfaces:
       - scripts/planning-db-operate.cjs
       - scripts/planning-db-operate.test.cjs
+      - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
       - tools/planning-db/migrations/059_feature_mechanization_local_writer.sql
     greenTest: node --test scripts/planning-db-operate.test.cjs
   - id: implementation-gate-reads-effective-rail-projection
     redTest: node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs
-    expectedFailure: implementation manifests are read from command_query_rails instead of command_query_rail_query.
+    expectedFailure: implementation manifests are read from command_query_rails instead of the DB manifest projection.
     patchSurfaces:
       - scripts/check-feature-mechanization.cjs
       - scripts/check-feature-mechanization.test.cjs
