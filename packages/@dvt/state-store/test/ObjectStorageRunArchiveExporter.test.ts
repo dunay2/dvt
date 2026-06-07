@@ -5,7 +5,10 @@ import type {
   ArchiveObjectWriteResult,
   IArchiveObjectStore,
 } from '../src/lifecycle/archiveRuntime.js';
-import { ObjectStorageRunArchiveExporter } from '../src/lifecycle/ObjectStorageRunArchiveExporter.js';
+import {
+  ObjectStorageRunArchiveExporter,
+  type ArchiveRedactionPolicy,
+} from '../src/lifecycle/ObjectStorageRunArchiveExporter.js';
 
 // ---------------------------------------------------------------------------
 // In-memory object store for unit tests
@@ -266,6 +269,44 @@ describe('ObjectStorageRunArchiveExporter', () => {
       expect(eventObject.payload).toEqual({
         password: '[REDACTED]',
         warehouseRegion: '[REDACTED]',
+        host: 'warehouse.internal',
+      });
+    });
+
+    it('keeps baseline redaction active when legacy config passes enabled false', async () => {
+      const legacyStore = new InMemoryArchiveObjectStore();
+      const legacyPolicy = JSON.parse('{"enabled":false}') as ArchiveRedactionPolicy;
+      const legacyExporter = new ObjectStorageRunArchiveExporter({
+        objectStore: legacyStore,
+        prefix: 'archive',
+        redactionPolicy: legacyPolicy,
+      });
+      const events = [
+        makeEvent({
+          payload: {
+            password: 'database-password',
+            token: 'runtime-token',
+            host: 'warehouse.internal',
+          },
+        }),
+      ];
+
+      await legacyExporter.exportArchiveUnit({
+        archiveUnitKey: ARCHIVE_UNIT_KEY,
+        tenantBucket: TENANT_BUCKET,
+        exportedAtIso: EXPORTED_AT,
+        events,
+      });
+
+      const eventObject = JSON.parse(
+        legacyStore.objects.get(`archive/${ARCHIVE_UNIT_KEY}/events.jsonl`)!.toString('utf8').trim()
+      ) as EventEnvelope;
+
+      expect(JSON.stringify(eventObject)).not.toContain('database-password');
+      expect(JSON.stringify(eventObject)).not.toContain('runtime-token');
+      expect(eventObject.payload).toEqual({
+        password: '[REDACTED]',
+        token: '[REDACTED]',
         host: 'warehouse.internal',
       });
     });
