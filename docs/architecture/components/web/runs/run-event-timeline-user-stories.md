@@ -164,6 +164,11 @@ Acceptance:
 - When I navigate back to the Canvas route or the Runs list
 - Then the shell console still observes `run_123`
 - And event polling remains governed by that run status
+- Given a run detail route has focused `run_123`
+- When I navigate to `/runs/run_456`
+- And `run_456` is still loading, errors, or is missing
+- Then the shell console clears `run_123`
+- And it does not poll stale events while the detail route points at `run_456`
 
 ## Coverage Matrix
 

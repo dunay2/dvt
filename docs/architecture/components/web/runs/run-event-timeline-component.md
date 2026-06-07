@@ -37,11 +37,14 @@ or artifact authority. Those remain snapshot and workspace concerns.
 5. Active event streams poll only while the run status is `pending` or
    `running`.
 6. The shell console keeps the last focused run as an observation cursor across
-   Canvas and Runs route navigation.
+   Canvas and Runs list route navigation.
 7. Console lines and Runs timeline rows share event severity and headline
    semantics.
 8. Timeline events must not infer snapshot status, materialization evidence,
    failed step diagnostics, or authoring provenance.
+9. A detail route for a different `runId` clears the previous observed run
+   while its workspace is loading, missing, or errored, so the shell console does
+   not poll stale run evidence for the active route.
 
 ## Transitions
 
