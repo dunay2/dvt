@@ -771,6 +771,62 @@ function validateFeatureImplementationManifests(manifestEntries, options = {}) {
   return new FeatureImplementationGuard(manifestEntries, options).validate();
 }
 
+function stableJsonStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableJsonStringify).join(',')}]`;
+  }
+
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableJsonStringify(value[key])}`)
+      .join(',')}}`;
+  }
+
+  return JSON.stringify(value);
+}
+
+function mergeManifestArrayValues(leftValue, rightValue) {
+  const mergedValues = [];
+  const seenValues = new Set();
+
+  for (const value of [
+    ...(Array.isArray(leftValue) ? leftValue : []),
+    ...(Array.isArray(rightValue) ? rightValue : []),
+  ]) {
+    const key = stableJsonStringify(value);
+    if (seenValues.has(key)) {
+      continue;
+    }
+
+    seenValues.add(key);
+    mergedValues.push(value);
+  }
+
+  return mergedValues;
+}
+
+function mergeFeatureMechanizationManifest(leftManifest, rightManifest) {
+  const mergedManifest = { ...leftManifest };
+
+  for (const [fieldName, fieldValue] of Object.entries(rightManifest)) {
+    if (Array.isArray(fieldValue)) {
+      mergedManifest[fieldName] = mergeManifestArrayValues(mergedManifest[fieldName], fieldValue);
+      continue;
+    }
+
+    if (
+      mergedManifest[fieldName] === undefined ||
+      mergedManifest[fieldName] === null ||
+      mergedManifest[fieldName] === ''
+    ) {
+      mergedManifest[fieldName] = fieldValue;
+    }
+  }
+
+  return mergedManifest;
+}
+
 function normalizeDbFeatureMechanizationManifestRows(rows) {
   const bySourceAndFeature = new Map();
 
@@ -784,6 +840,8 @@ function normalizeDbFeatureMechanizationManifestRows(rows) {
 
     const key = `${sourcePath}#${featureId}`;
     if (bySourceAndFeature.has(key)) {
+      const existingEntry = bySourceAndFeature.get(key);
+      existingEntry.manifest = mergeFeatureMechanizationManifest(existingEntry.manifest, manifest);
       continue;
     }
 
@@ -850,12 +908,12 @@ async function readFeatureMechanizationManifestsFromDb(options = {}) {
     }
 
     const result = await client.query(`
-      select distinct on (source_path, raw_manifest->>'featureId')
+      select
         source_path,
         raw_manifest
       from planning_query_store.command_query_rail_manifest_query
       where raw_manifest ? 'featureId'
-      order by source_path, raw_manifest->>'featureId'
+      order by source_path, raw_manifest->>'featureId', rail_source, imported_at, rail_id
     `);
     return normalizeDbFeatureMechanizationManifestRows(result.rows);
   } finally {

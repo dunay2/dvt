@@ -233,6 +233,64 @@ test('normalizeDbFeatureMechanizationManifestRows returns distinct manifest entr
   ]);
 });
 
+test('normalizeDbFeatureMechanizationManifestRows aggregates DB-authored local rail manifests by feature', () => {
+  const firstLocalManifest = {
+    ...validManifest,
+    commandQueryRails: [
+      {
+        name: 'SelectWorkspaceScope',
+        type: 'command',
+        dddOwner: 'Workspace shell session',
+      },
+    ],
+    symbols: [
+      {
+        ...validManifest.symbols[0],
+        name: 'selectWorkspaceScope',
+        cqRails: ['SelectWorkspaceScope'],
+      },
+    ],
+  };
+  const secondLocalManifest = {
+    ...validManifest,
+    commandQueryRails: [
+      {
+        name: 'GetWorkspaceScopeSelection',
+        type: 'query',
+        dddOwner: 'Workspace shell session',
+      },
+    ],
+    symbols: [
+      {
+        ...validManifest.symbols[0],
+        name: 'readWorkspaceScopeSelection',
+        cqRails: ['GetWorkspaceScopeSelection'],
+      },
+    ],
+  };
+
+  const result = normalizeDbFeatureMechanizationManifestRows([
+    {
+      source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/workspace-scope.md',
+      raw_manifest: firstLocalManifest,
+    },
+    {
+      source_path: 'docs/planning/proposals/mandatory/frontend-and-ux/workspace-scope.md',
+      raw_manifest: secondLocalManifest,
+    },
+  ]);
+
+  assert.equal(result.length, 1);
+  assert.deepEqual(
+    result[0].manifest.commandQueryRails.map((rail) => rail.name),
+    ['SelectWorkspaceScope', 'GetWorkspaceScopeSelection']
+  );
+  assert.deepEqual(
+    result[0].manifest.symbols.map((symbol) => symbol.name),
+    ['selectWorkspaceScope', 'readWorkspaceScopeSelection']
+  );
+});
+
 test('validateFeatureMechanizationManifestEntries validates DB-backed manifests', () => {
   const result = validateFeatureMechanizationManifestEntries(
     [
@@ -314,6 +372,7 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
   ]);
   assert.equal(queryCalls.length, 2);
   assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
+  assert.doesNotMatch(queryCalls[1].sql, /distinct on/i);
   assert.deepEqual(result, [
     {
       sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',

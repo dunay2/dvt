@@ -63,6 +63,34 @@ describe('workspace scope selection command', () => {
     });
   });
 
+  it('returns a stable selection snapshot until the workspace selection changes', () => {
+    const port = createWorkspaceScopeSelectionPort();
+
+    const firstSelection = port.getSelection();
+
+    expect(port.getSelection()).toBe(firstSelection);
+
+    useSessionStore.setState({
+      availableWorkspaces: [selectedScope, alternateScope],
+    });
+
+    expect(port.getSelection()).toBe(firstSelection);
+
+    expect(port.selectWorkspaceScope(alternateScope)).toEqual({
+      status: 'selected',
+      selectedScope: alternateScope,
+    });
+
+    const changedSelection = port.getSelection();
+
+    expect(changedSelection).not.toBe(firstSelection);
+    expect(changedSelection).toMatchObject({
+      selectedScope: alternateScope,
+      status: 'selected',
+    });
+    expect(port.getSelection()).toBe(changedSelection);
+  });
+
   it('rejects an unavailable workspace without mutating the selected scope', () => {
     const port = createWorkspaceScopeSelectionPort();
     const unavailableScope = {
