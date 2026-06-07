@@ -152,6 +152,9 @@ domainObjects:
   - name: CreationIntentAssessment
     type: pre-create read model
     owner: Architecture / Docs / Delivery
+  - name: DbGovernanceSurfaceInventory
+    type: governance surface inventory read model
+    owner: Architecture / Docs / Delivery
 fowlerSignals:
   - Duplicate Semantics from rail names declared in multiple manifests without one queryable catalog.
   - Hidden Authority when implementation refs remain embedded in docs instead of DB rows.
@@ -185,6 +188,24 @@ redGreenCycles:
       - scripts/planning-db-query.test.cjs
     greenTest: node --test scripts/planning-db-query.test.cjs
 symbols:
+  - name: requiredSurfaces
+    path: scripts/planning-db-surface-inventory-check.cjs
+    dddOwner: DbGovernanceSurfaceInventory
+    cqRails: [InventoryDbGovernanceSurface]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-surface-inventory-check.test.cjs
+    cypressCoverage: N/A - DB governance inventory check
+    unitTests:
+      - scripts/planning-db-surface-inventory-check.test.cjs
+  - name: validateInventory
+    path: scripts/planning-db-surface-inventory-check.cjs
+    dddOwner: DbGovernanceSurfaceInventory
+    cqRails: [InventoryDbGovernanceSurface]
+    fowlerSignals: [Hidden Authority]
+    architectureGuard: node --test scripts/planning-db-surface-inventory-check.test.cjs
+    cypressCoverage: N/A - DB governance inventory check
+    unitTests:
+      - scripts/planning-db-surface-inventory-check.test.cjs
   - name: generatedSourceFixture
     path: scripts/planning-db-import.test.cjs
     dddOwner: CommandQueryRailCatalog
