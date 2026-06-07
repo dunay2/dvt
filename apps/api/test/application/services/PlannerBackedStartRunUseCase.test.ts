@@ -341,7 +341,7 @@ describe('PlannerBackedStartRunUseCase', () => {
     expect(delegate.execute).not.toHaveBeenCalled();
   });
 
-  it('delegates directly when the command already carries a planRef', async () => {
+  it('validates and delegates when the command already carries a planRef', async () => {
     const compileTelemetry = { recordPlanCompileLatency: vi.fn() };
     const delegate = {
       execute: vi.fn(async () => ({
@@ -352,6 +352,13 @@ describe('PlannerBackedStartRunUseCase', () => {
     const planner = {
       buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
     };
+    const validator = {
+      validatePlan: vi.fn(async () => ({
+        status: 'OK' as const,
+        planId: 'plan-1',
+        adapterId: 'temporal',
+      })),
+    };
 
     const useCase = new PlannerBackedStartRunUseCase({
       planner: planner as never,
@@ -360,13 +367,7 @@ describe('PlannerBackedStartRunUseCase', () => {
         markStoredPlanArtifactValid: vi.fn(async () => {}),
         markStoredPlanArtifactInvalid: vi.fn(async () => {}),
       } as never,
-      validator: {
-        validatePlan: vi.fn(async () => ({
-          status: 'OK' as const,
-          planId: 'plan-1',
-          adapterId: 'temporal',
-        })),
-      } as never,
+      validator: validator as never,
       delegate: delegate as never,
       compileTelemetry: compileTelemetry as never,
       executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
@@ -387,8 +388,69 @@ describe('PlannerBackedStartRunUseCase', () => {
       },
     });
     expect(planner.buildPlan).not.toHaveBeenCalled();
+    expect(validator.validatePlan).toHaveBeenCalledWith({
+      ...SCOPED_STORED_PLAN_REF,
+      adapterId: 'temporal',
+    });
     expect(delegate.execute).toHaveBeenCalledWith(command, AUTHORIZED_CONTEXT);
     expect(compileTelemetry.recordPlanCompileLatency).not.toHaveBeenCalled();
+  });
+
+  it('rejects an existing planRef before delegation when stored plan validation fails', async () => {
+    const rejection = {
+      status: 'ERROR' as const,
+      planId: 'plan-1',
+      adapterId: 'temporal',
+      code: 'MISSING_CAPABILITY' as const,
+      degradable: false,
+      reason: 'Missing adapter capability: executor.dbt',
+      cause: 'executor.dbt',
+    };
+    const planStore = {
+      storePlanArtifact: vi.fn(async () => STORED_PLAN_REF),
+      markStoredPlanArtifactValid: vi.fn(async () => {}),
+      markStoredPlanArtifactInvalid: vi.fn(async () => {}),
+    };
+    const delegate = {
+      execute: vi.fn(async () => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-1', accepted: true },
+      })),
+    };
+
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: {
+        buildPlan: vi.fn(async () => makeBuildResult('plan-1')),
+      } as never,
+      planStore: planStore as never,
+      validator: {
+        validatePlan: vi.fn(async () => rejection),
+      } as never,
+      delegate: delegate as never,
+      executableSubgraphResolver: EXECUTABLE_SUBGRAPH_RESOLVER as never,
+    });
+
+    const result = await useCase.execute(
+      {
+        ...PLANNER_COMMAND,
+        planRef: STORED_PLAN_REF,
+      },
+      AUTHORIZED_CONTEXT
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'MISSING_CAPABILITY',
+        reason: 'Missing adapter capability: executor.dbt',
+        cause: 'executor.dbt',
+      },
+    });
+    expect(delegate.execute).not.toHaveBeenCalled();
+    expect(planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
+    expect(planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
   });
 
   it('rethrows unexpected planner errors', async () => {

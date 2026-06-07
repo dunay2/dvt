@@ -11,6 +11,7 @@ import {
   type PlanRef,
   type ScopedPlanRef,
   type StartRunCommand,
+  type StartRunResult,
   type StartRunPlanRef,
 } from '@dvt/contracts';
 import type { IPlanExecutabilityValidator } from '@dvt/planner';
@@ -75,6 +76,19 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunUseCaseResult> {
     if (command.planRef != null) {
+      const scopedPlanRef = this.toCommandScopedPlanRef(
+        { ...command, planRef: command.planRef },
+        context
+      );
+      const validation = await this.deps.validator.validatePlan({
+        ...scopedPlanRef,
+        adapterId: command.targetAdapter,
+      });
+
+      if (isValidationError(validation)) {
+        return this.toPlanValidationRejectedResult(validation);
+      }
+
       return this.deps.delegate.execute(command, context);
     }
 
@@ -156,13 +170,40 @@ export class PlannerBackedStartRunUseCase implements IStartRunUseCase {
     });
     return {
       ok: true,
-      value: {
-        kind: START_RUN_RESULT_KIND.planRejected,
-        accepted: false,
-        code: validation.code,
-        reason: validation.reason,
-        ...(validation.cause === undefined ? {} : { cause: validation.cause }),
-      },
+      value: this.toPlanRejectedValue(validation),
+    };
+  }
+
+  private toPlanValidationRejectedResult(
+    validation: Extract<PlanValidationResult, { readonly status: 'ERROR' }>
+  ): StartRunUseCaseResult {
+    return {
+      ok: true,
+      value: this.toPlanRejectedValue(validation),
+    };
+  }
+
+  private toPlanRejectedValue(
+    validation: Extract<PlanValidationResult, { readonly status: 'ERROR' }>
+  ): StartRunResult {
+    return {
+      kind: START_RUN_RESULT_KIND.planRejected,
+      accepted: false,
+      code: validation.code,
+      reason: validation.reason,
+      ...(validation.cause === undefined ? {} : { cause: validation.cause }),
+    };
+  }
+
+  private toCommandScopedPlanRef(
+    command: StartRunCommand & { readonly planRef: NonNullable<StartRunCommand['planRef']> },
+    context: AuthorizedCommandExecutionContext
+  ): ScopedPlanRef {
+    return {
+      tenantId: context.scope.tenantId.value,
+      projectId: context.scope.projectId?.value ?? '',
+      environmentId: context.scope.environmentId?.value ?? '',
+      planRef: command.planRef,
     };
   }
 }
