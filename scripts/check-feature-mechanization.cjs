@@ -352,9 +352,9 @@ class FeatureMechanizationGitDiffReader {
   readChangedFiles() {
     const changedFiles = new Set();
     const nameOnlyCommands = [
-      ['diff', '--name-only', '--diff-filter=ACMR', `${this.baseRef}...HEAD`],
-      ['diff', '--cached', '--name-only', '--diff-filter=ACMR'],
-      ['diff', '--name-only', '--diff-filter=ACMR'],
+      ['diff', '--name-only', '--diff-filter=ACMRD', `${this.baseRef}...HEAD`],
+      ['diff', '--cached', '--name-only', '--diff-filter=ACMRD'],
+      ['diff', '--name-only', '--diff-filter=ACMRD'],
     ];
 
     for (const command of nameOnlyCommands) {
@@ -377,9 +377,9 @@ class FeatureMechanizationGitDiffReader {
   readAddedLinesByPath(changedFiles) {
     const addedLinesByPath = {};
     const diffCommands = [
-      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR', `${this.baseRef}...HEAD`],
-      ['diff', '--cached', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR'],
-      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMR'],
+      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD', `${this.baseRef}...HEAD`],
+      ['diff', '--cached', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD'],
+      ['diff', '--unified=0', '--no-ext-diff', '--diff-filter=ACMRD'],
     ];
 
     for (const command of diffCommands) {

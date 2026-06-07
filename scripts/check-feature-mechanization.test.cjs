@@ -701,16 +701,18 @@ test('FeatureMechanizationGitDiffReader avoids two-dot base diffs that include u
 
   reader.read();
 
-  assert.ok(runGitCalls.includes('diff --name-only --diff-filter=ACMR origin/main...HEAD'));
-  assert.ok(runGitCalls.includes('diff --cached --name-only --diff-filter=ACMR'));
-  assert.ok(runGitCalls.includes('diff --name-only --diff-filter=ACMR'));
+  assert.ok(runGitCalls.includes('diff --name-only --diff-filter=ACMRD origin/main...HEAD'));
+  assert.ok(runGitCalls.includes('diff --cached --name-only --diff-filter=ACMRD'));
+  assert.ok(runGitCalls.includes('diff --name-only --diff-filter=ACMRD'));
   assert.ok(
-    runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMR origin/main...HEAD')
+    runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMRD origin/main...HEAD')
   );
-  assert.ok(runGitCalls.includes('diff --cached --unified=0 --no-ext-diff --diff-filter=ACMR'));
-  assert.ok(runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMR'));
-  assert.ok(!runGitCalls.includes('diff --name-only --diff-filter=ACMR origin/main'));
-  assert.ok(!runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMR origin/main'));
+  assert.ok(runGitCalls.includes('diff --cached --unified=0 --no-ext-diff --diff-filter=ACMRD'));
+  assert.ok(runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMRD'));
+  assert.ok(!runGitCalls.includes('diff --name-only --diff-filter=ACMRD origin/main'));
+  assert.ok(
+    !runGitCalls.includes('diff --unified=0 --no-ext-diff --diff-filter=ACMRD origin/main')
+  );
 });
 
 test('FeatureMechanizationGitDiffReader treats untracked file contents as added lines', () => {
