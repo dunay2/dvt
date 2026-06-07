@@ -83,9 +83,11 @@ governingSources:
 allowedImplementationSurfaces:
   - apps/api/docs/start-run-application-component.md
   - apps/api/docs/start-run-runtime-composition-component.md
+  - apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
   - apps/api/src/application/services/startRunEngineBridge.ts
   - apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts
   - apps/api/src/plugins/env.ts
+  - apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts
   - apps/api/test/application/services/engineStartRunUseCase.errorMapping.test.ts
   - apps/api/test/application/services/storedPlanExecutabilityValidator/capabilities.cases.ts
   - apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts
@@ -178,6 +180,13 @@ redGreenCycles:
       - apps/api/src/application/services/startRunEngineBridge.ts
       - apps/api/test/application/services/engineStartRunUseCase.errorMapping.test.ts
     greenTest: pnpm --filter dvt-api test -- test/application/services/engineStartRunUseCase.errorMapping.test.ts
+  - id: planref-stored-plan-capability-validation
+    redTest: pnpm --filter dvt-api test -- test/application/services/PlannerBackedStartRunUseCase.test.ts
+    expectedFailure: Existing planRef start-run delegates without StoredPlanExecutabilityValidator, so legacy DBT artifacts can dispatch to an adapter missing executor.dbt.
+    patchSurfaces:
+      - apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
+      - apps/api/test/application/services/PlannerBackedStartRunUseCase.test.ts
+    greenTest: pnpm --filter dvt-api test -- test/application/services/PlannerBackedStartRunUseCase.test.ts
   - id: temporal-dev-stack-clean-cache-bootstrap
     redTest: node --test scripts/run-dev-stack.test.cjs
     expectedFailure: Clean local Temporal CLI cache falls back to PATH instead of SDK cached-download.
