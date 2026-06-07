@@ -71,21 +71,15 @@ function createKnowledgeIntakeRetirementReadModelComponent(deps = {}) {
   function knowledgeIntakeReferenceSelect(activeSchemaName = defaultSchemaName) {
     return `
       select
-        to_document.document_path,
-        link.relation_type,
-        from_document.document_path as reference_path,
-        ownership.leaf_component_id as reference_component_id,
-        ownership.file_role as reference_file_role,
-        from_document.title as reference_title,
-        from_document.document_type as reference_document_type,
-        from_document.source_content_sha256 as reference_source_content_sha256
-      from ${activeSchemaName}.knowledge_document_links link
-      join ${activeSchemaName}.knowledge_documents from_document
-        on from_document.document_id = link.from_document_id
-      join ${activeSchemaName}.knowledge_documents to_document
-        on to_document.document_id = link.to_document_id
-      left join ${activeSchemaName}.component_engineering_file_ownership_query ownership
-        on ownership.file_path = from_document.document_path`;
+        document_path,
+        relation_type,
+        reference_path,
+        reference_component_id,
+        reference_file_role,
+        reference_title,
+        reference_document_type,
+        reference_source_content_sha256
+      from ${activeSchemaName}.knowledge_intake_repository_reference_query`;
   }
 
   async function readKnowledgeIntakeRetirementRows(client, filters = {}) {
@@ -121,10 +115,10 @@ function createKnowledgeIntakeRetirementReadModelComponent(deps = {}) {
 
   async function readKnowledgeIntakeReferenceRows(client, filters = {}) {
     const params = [];
-    const predicates = ["to_document.document_path like 'buzon/%'"];
-    appendFilter(predicates, params, 'to_document.document_path', filters.path);
-    appendFilter(predicates, params, 'link.relation_type', filters.relation);
-    appendFilter(predicates, params, 'ownership.leaf_component_id', filters.component);
+    const predicates = ["document_path like 'buzon/%'"];
+    appendFilter(predicates, params, 'document_path', filters.path);
+    appendFilter(predicates, params, 'relation_type', filters.relation);
+    appendFilter(predicates, params, 'reference_component_id', filters.component);
     const limit = parseLimit(filters.limit, 50);
     params.push(limit);
 
@@ -132,9 +126,9 @@ function createKnowledgeIntakeRetirementReadModelComponent(deps = {}) {
       `${knowledgeIntakeReferenceSelect()}
        where ${predicates.join(' and ')}
        order by
-         to_document.document_path,
-         link.relation_type,
-         from_document.document_path
+         document_path,
+         relation_type,
+         reference_path
        limit $${params.length}`,
       params
     );

@@ -52,6 +52,7 @@ const governanceRemediationQueuePath = governanceGeneratedPath(
   'system-governance-remediation-queue.queue.yaml'
 );
 const governanceImportDeleteTables = [
+  'knowledge_intake_repository_references',
   'knowledge_action_links',
   'knowledge_document_links',
   'knowledge_action_items',
@@ -1101,6 +1102,85 @@ function listTrackedKnowledgeDocuments(options = {}) {
   return [...markdownDocuments, ...listTrackedBuzonDocuments()].sort((left, right) =>
     left.sourcePath.localeCompare(right.sourcePath)
   );
+}
+
+const repositoryReferenceTextFilePattern =
+  /\.(?:cjs|css|cts|html|js|json|jsonc|jsx|md|mdx|mjs|mts|ps1|scss|sh|sql|ts|tsx|txt|ya?ml)$/i;
+const buzonReferencePattern = /(?:^|[^\w./-])(buzon\/[^\s'"`<>()\x5b\x5d{}]+?\.md)\b/giu;
+
+function readTrackedRepositoryTextDocuments() {
+  return readTrackedDocumentPaths(['*', '.*', '**/*', '.github/**/*'])
+    .filter((sourcePath) => repositoryReferenceTextFilePattern.test(sourcePath))
+    .map((sourcePath) => {
+      const raw = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+      return { sourcePath, raw, contentSha256: sha256(raw) };
+    });
+}
+
+function buildKnowledgeIntakeRepositoryReferenceSnapshot(options = {}) {
+  const documents = normalizeArray(options.documents).length
+    ? normalizeArray(options.documents)
+    : readTrackedRepositoryTextDocuments();
+  const intakeDocumentPaths = new Set(
+    normalizeArray(options.intakeDocumentPaths).length
+      ? normalizeArray(options.intakeDocumentPaths).map((sourcePath) =>
+          toPosix(normalizeText(sourcePath))
+        )
+      : readTrackedDocumentPaths(['buzon/*.md'])
+  );
+  const references = [];
+
+  for (const document of documents) {
+    const sourcePath = toPosix(normalizeText(document.sourcePath));
+    if (!sourcePath || /^buzon\/.*\.md$/i.test(sourcePath)) {
+      continue;
+    }
+
+    const raw = normalizeText(document.raw);
+    const sourceContentSha256 = normalizeText(document.contentSha256) || sha256(raw);
+    for (const [lineIndex, line] of raw.split(/\r?\n/).entries()) {
+      buzonReferencePattern.lastIndex = 0;
+      const matches = [...line.matchAll(buzonReferencePattern)];
+      for (const [matchIndex, match] of matches.entries()) {
+        const targetDocumentPath = toPosix(normalizeText(match[1]));
+        if (!intakeDocumentPaths.has(targetDocumentPath)) {
+          continue;
+        }
+
+        const lineNumber = lineIndex + 1;
+        const sampleText = line.trim().slice(0, 240);
+        const referenceIdentity = [
+          sourcePath,
+          lineNumber,
+          match.index ?? matchIndex,
+          targetDocumentPath,
+        ].join('\0');
+        references.push({
+          referenceId: sha256(referenceIdentity),
+          targetDocumentPath,
+          sourcePath,
+          relationType: 'repository_path_reference',
+          lineNumber,
+          sampleText,
+          sourceContentSha256,
+          rawReference: {
+            matchText: targetDocumentPath,
+            matchIndex: match.index ?? null,
+          },
+        });
+      }
+    }
+  }
+
+  references.sort(
+    (left, right) =>
+      left.targetDocumentPath.localeCompare(right.targetDocumentPath) ||
+      left.sourcePath.localeCompare(right.sourcePath) ||
+      left.lineNumber - right.lineNumber ||
+      left.referenceId.localeCompare(right.referenceId)
+  );
+
+  return { references };
 }
 
 function isRiskRegisterItemPath(sourcePath) {
@@ -2972,6 +3052,35 @@ async function insertKnowledgeSnapshot(client, snapshot) {
   );
 }
 
+async function insertKnowledgeIntakeRepositoryReferences(client, snapshot) {
+  await client.query(`delete from ${schemaName}.knowledge_intake_repository_references`);
+  await insertRows(
+    client,
+    'knowledge_intake_repository_references',
+    [
+      'reference_id',
+      'target_document_path',
+      'source_path',
+      'relation_type',
+      'line_number',
+      'sample_text',
+      'source_content_sha256',
+      { name: 'raw_reference', cast: 'jsonb' },
+    ],
+    snapshot.references,
+    (reference) => [
+      reference.referenceId,
+      reference.targetDocumentPath,
+      reference.sourcePath,
+      reference.relationType,
+      reference.lineNumber,
+      reference.sampleText,
+      reference.sourceContentSha256,
+      toJson(reference.rawReference),
+    ]
+  );
+}
+
 async function beginImportTransaction(client) {
   await client.query('begin');
   await client.query('select pg_advisory_xact_lock(hashtext($1), hashtext($2))', [
@@ -3031,6 +3140,13 @@ async function importContent(options = {}) {
   const knowledgeDocuments = includeGovernance
     ? listTrackedKnowledgeDocuments({ markdownDocuments })
     : [];
+  const knowledgeIntakeRepositoryReferenceSnapshot = includeGovernance
+    ? buildKnowledgeIntakeRepositoryReferenceSnapshot({
+        intakeDocumentPaths: knowledgeDocuments
+          .map((document) => document.sourcePath)
+          .filter((sourcePath) => /^buzon\/.*\.md$/i.test(toPosix(sourcePath))),
+      })
+    : null;
   const docsDispositionPlanningSnapshot =
     includeGovernance && !planningSnapshot ? buildPlanningContentSnapshot() : planningSnapshot;
   let docsDispositionSnapshot;
@@ -3069,6 +3185,10 @@ async function importContent(options = {}) {
       await insertPrReadinessSnapshot(client, prReadinessSnapshot);
       await insertDocsDispositionSnapshot(client, docsDispositionSnapshot);
       await insertKnowledgeSnapshot(client, knowledgeSnapshot);
+      await insertKnowledgeIntakeRepositoryReferences(
+        client,
+        knowledgeIntakeRepositoryReferenceSnapshot
+      );
     }
     await client.query('commit');
   } catch (error) {
@@ -3100,6 +3220,8 @@ async function importContent(options = {}) {
     docsTaskLikeReferences: docsDispositionSnapshot?.references.length ?? 0,
     knowledgeDocuments: knowledgeSnapshot?.documents.length ?? 0,
     knowledgeActions: knowledgeSnapshot?.actions.length ?? 0,
+    knowledgeIntakeRepositoryReferences:
+      knowledgeIntakeRepositoryReferenceSnapshot?.references.length ?? 0,
   };
 
   if (!silent) {
@@ -3117,6 +3239,7 @@ async function importContent(options = {}) {
       `prReadinessChecks=${result.prReadinessChecks}`,
       `docsDispositionActions=${result.docsDispositionActions}`,
       `knowledgeDocuments=${result.knowledgeDocuments}`,
+      `knowledgeIntakeRepositoryReferences=${result.knowledgeIntakeRepositoryReferences}`,
     ].join(' ');
     console.log(message);
   }
@@ -3246,6 +3369,20 @@ function compareGovernanceAuxiliaryState(expected, actual) {
         ],
       }
     ),
+    knowledgeIntakeRepositoryReferences: compareImportRows(
+      expected.knowledgeIntakeRepositoryReferences,
+      actual.knowledgeIntakeRepositoryReferences,
+      {
+        keyOf: (row) => row.referenceId,
+        compareFields: [
+          'targetDocumentPath',
+          'sourcePath',
+          'relationType',
+          'lineNumber',
+          'sourceContentSha256',
+        ],
+      }
+    ),
     docDispositionActions: compareImportRows(
       expected.docDispositionActions,
       actual.docDispositionActions,
@@ -3301,6 +3438,9 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       planningTaskIds: planningSnapshot.tasks.map((task) => task.taskId),
     });
   const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
+  const knowledgeIntakeRepositoryReferenceSnapshot =
+    options.knowledgeIntakeRepositoryReferenceSnapshot ||
+    buildKnowledgeIntakeRepositoryReferenceSnapshot();
 
   return {
     repositoryCommands: repositoryCommandSnapshot.commands.map((command) => ({
@@ -3371,6 +3511,16 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       occurrenceCount: reference.occurrenceCount,
       sourceContentSha256: reference.sourceContentSha256,
     })),
+    knowledgeIntakeRepositoryReferences: knowledgeIntakeRepositoryReferenceSnapshot.references.map(
+      (reference) => ({
+        referenceId: reference.referenceId,
+        targetDocumentPath: reference.targetDocumentPath,
+        sourcePath: reference.sourcePath,
+        relationType: reference.relationType,
+        lineNumber: reference.lineNumber,
+        sourceContentSha256: reference.sourceContentSha256,
+      })
+    ),
     docDispositionActions: docsDispositionSnapshot.actions.map((action) => ({
       actionId: action.actionId,
       priority: action.priority,
@@ -3403,6 +3553,7 @@ async function readGovernanceAuxiliaryState(client) {
     docDispositionDocuments,
     docDispositionMarkers,
     docTaskLikeReferences,
+    knowledgeIntakeRepositoryReferences,
     docDispositionActions,
     riskDebtItems,
     frontendMechanicalTruthSurfaces,
@@ -3475,6 +3626,17 @@ async function readGovernanceAuxiliaryState(client) {
     `),
     client.query(`
       select
+        reference_id as "referenceId",
+        target_document_path as "targetDocumentPath",
+        source_path as "sourcePath",
+        relation_type as "relationType",
+        line_number::int as "lineNumber",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.knowledge_intake_repository_references
+      order by reference_id
+    `),
+    client.query(`
+      select
         action_id as "actionId",
         priority,
         action_kind as "actionKind",
@@ -3534,6 +3696,7 @@ async function readGovernanceAuxiliaryState(client) {
     docDispositionDocuments: docDispositionDocuments.rows,
     docDispositionMarkers: docDispositionMarkers.rows,
     docTaskLikeReferences: docTaskLikeReferences.rows,
+    knowledgeIntakeRepositoryReferences: knowledgeIntakeRepositoryReferences.rows,
     docDispositionActions: docDispositionActions.rows,
     riskDebtItems: riskDebtItems.rows,
     frontendMechanicalTruthSurfaces: frontendMechanicalTruthSurfaces.rows,
@@ -3645,6 +3808,11 @@ function compareGovernanceAuxiliarySourceState(expected, actual) {
     knowledgeDocuments: compareImportRows(
       expected.knowledgeDocuments,
       actual.knowledgeDocuments,
+      sourceHashComparison
+    ),
+    knowledgeIntakeRepositoryReferenceSources: compareImportRows(
+      expected.knowledgeIntakeRepositoryReferenceSources,
+      actual.knowledgeIntakeRepositoryReferenceSources,
       sourceHashComparison
     ),
     riskDebtItems: compareImportRows(
@@ -3759,6 +3927,9 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
   const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
   const knowledgeDocuments =
     options.knowledgeDocuments || listTrackedKnowledgeDocuments({ markdownDocuments });
+  const knowledgeIntakeRepositoryReferenceSnapshot =
+    options.knowledgeIntakeRepositoryReferenceSnapshot ||
+    buildKnowledgeIntakeRepositoryReferenceSnapshot();
 
   return {
     planningSources: uniqueSourceHashRows(planningSnapshot.sources, {
@@ -3772,6 +3943,12 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
           pathField: 'documentPath',
         })
       : knowledgeDocumentSourceHashRows(knowledgeDocuments),
+    knowledgeIntakeRepositoryReferenceSources: uniqueSourceHashRows(
+      knowledgeIntakeRepositoryReferenceSnapshot.references,
+      {
+        pathField: 'sourcePath',
+      }
+    ),
     riskDebtItems: documentSourceHashRows(options.riskDocuments || listTrackedRiskDocuments()),
     prReadinessChecks: [
       {
@@ -3855,6 +4032,7 @@ async function readGovernanceAuxiliarySourceState(client) {
     prReadinessChecks,
     docDispositionDocuments,
     knowledgeDocuments,
+    knowledgeIntakeRepositoryReferenceSources,
     riskDebtItems,
   ] = await Promise.all([
     client.query(`
@@ -3903,6 +4081,13 @@ async function readGovernanceAuxiliarySourceState(client) {
       order by document_path
     `),
     client.query(`
+      select distinct
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.knowledge_intake_repository_references
+      order by source_path
+    `),
+    client.query(`
       select
         source_path as "sourcePath",
         source_content_sha256 as "sourceContentSha256"
@@ -3918,6 +4103,7 @@ async function readGovernanceAuxiliarySourceState(client) {
     prReadinessChecks: prReadinessChecks.rows,
     docDispositionDocuments: docDispositionDocuments.rows,
     knowledgeDocuments: knowledgeDocuments.rows,
+    knowledgeIntakeRepositoryReferenceSources: knowledgeIntakeRepositoryReferenceSources.rows,
     riskDebtItems: riskDebtItems.rows,
   };
 }
@@ -4055,6 +4241,7 @@ async function runPlanningImport(options = {}, deps = {}) {
       docsDispositionDocuments: 0,
       docsDispositionActions: 0,
       docsTaskLikeReferences: 0,
+      knowledgeIntakeRepositoryReferences: 0,
       importedScopes,
       skippedScopes,
     };
@@ -4100,6 +4287,7 @@ module.exports = {
   buildFrontendComponentReflectionSnapshot,
   buildFrontendMechanicalTruthSnapshot,
   buildKnowledgeDocumentSnapshot,
+  buildKnowledgeIntakeRepositoryReferenceSnapshot,
   buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
@@ -4123,6 +4311,7 @@ module.exports = {
   insertFrontendComponentReflectionSnapshot,
   insertFrontendMechanicalTruthSnapshot,
   insertKnowledgeSnapshot,
+  insertKnowledgeIntakeRepositoryReferences,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
   listChangedFiles,

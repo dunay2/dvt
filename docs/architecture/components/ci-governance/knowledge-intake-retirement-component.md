@@ -19,11 +19,11 @@ before moving or removing files.
 
 ## Command And Query Rails
 
-| Rail                                | Type    | DDD owner                             | Read model or projection                         | Negative guard                                                            |
-| ----------------------------------- | ------- | ------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
-| `ListKnowledgeIntakeRetirement`     | query   | `KnowledgeIntakeRetirementReadModel`  | `knowledge_intake_retirement_query`              | Query must read DB rows and must not parse `buzon/*.md` directly.         |
-| `GenerateKnowledgeIntakeLiterature` | command | `KnowledgeIntakeLiteratureProjection` | generated local knowledge-intake literature view | Generator must read the DB retirement query and must not walk `buzon`.    |
-| `CheckBuzonIntakeRetirement`        | command | `KnowledgeIntakeRetirementGuard`      | changed-file diff against the repository base    | Changed-slice validation must reject added or renamed `buzon/*.md` files. |
+| Rail                                | Type    | DDD owner                             | Read model or projection                                                              | Negative guard                                                            |
+| ----------------------------------- | ------- | ------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `ListKnowledgeIntakeRetirement`     | query   | `KnowledgeIntakeRetirementReadModel`  | `knowledge_intake_retirement_query` and `knowledge_intake_repository_reference_query` | Query must read DB rows and must not parse `buzon/*.md` directly.         |
+| `GenerateKnowledgeIntakeLiterature` | command | `KnowledgeIntakeLiteratureProjection` | generated local knowledge-intake literature view                                      | Generator must read the DB retirement query and must not walk `buzon`.    |
+| `CheckBuzonIntakeRetirement`        | command | `KnowledgeIntakeRetirementGuard`      | changed-file diff against the repository base                                         | Changed-slice validation must reject added or renamed `buzon/*.md` files. |
 
 ## Retirement States
 
@@ -45,9 +45,11 @@ pnpm planning:db:query knowledge-intake --references --path buzon/example.md --l
 ```
 
 The `--references` variant lists DB-backed inbound references from
-`knowledge_document_links` plus the current component ownership projection for
-the referencing document. It is the operator surface for retiring live
-`buzon/` backrefs without running ad-hoc repository searches.
+`knowledge_intake_repository_reference_query`, including non-knowledge source
+files such as architecture tests that still name raw `buzon/*.md` paths. It
+also projects the current component ownership for the referencing file. This is
+the operator surface for retiring live `buzon/` backrefs without running
+ad-hoc repository searches.
 
 ## Generated Literature Surface
 
@@ -84,9 +86,11 @@ Planning DB command/query rails and then rendered from DB-backed projections.
 - `buzon/` is an intake import source, not a canonical planning queue.
 - No added or renamed `buzon/*.md` file may enter a changed slice after the
   DB-first retirement guard is active.
-- Retirement state is derived from Planning DB knowledge tables and links.
-- Active reference cleanup is derived from Planning DB document links and file
-  ownership projections, not from raw `rg` output.
+- Retirement state is derived from Planning DB knowledge tables, action rows,
+  and imported repository backrefs.
+- Active reference cleanup is derived from the
+  `knowledge_intake_repository_reference_query` and file ownership projections,
+  not from raw `rg` output.
 - Generated literature must use this DB read model or a later DB projection,
   not raw directory traversal as authority.
 - Generated literature must remain outside Git unless a later accepted plan
@@ -102,9 +106,12 @@ Planning DB command/query rails and then rendered from DB-backed projections.
 ```mermaid
 flowchart LR
   Buzon["Tracked intake files"] --> Importer["Planning DB knowledge import"]
+  Repository["Tracked repository text files"] --> BackrefImport["Repository backref import"]
   Importer --> Knowledge["knowledge_documents / links / actions"]
+  BackrefImport --> Backrefs["knowledge_intake_repository_references"]
   Knowledge --> Retirement["knowledge_intake_retirement_query"]
-  Knowledge --> References["knowledge_document_links"]
+  Backrefs --> Retirement
+  Backrefs --> References["knowledge_intake_repository_reference_query"]
   Retirement --> Agents["planning:db:query knowledge-intake"]
   References --> Agents
   Retirement --> Literature["docs:knowledge-intake:generate"]
