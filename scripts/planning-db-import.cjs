@@ -1024,11 +1024,39 @@ function resolveRepoPath(filePath) {
   return path.isAbsolute(filePath) ? filePath : path.join(repoRoot, filePath);
 }
 
-function listChangedFiles(baseRef, headRef) {
-  const output = execFileSync('git', ['diff', '--name-only', `${baseRef}...${headRef}`], {
+function gitErrorText(error) {
+  const parts = [error?.message, error?.stderr?.toString?.(), error?.stdout?.toString?.()];
+  return parts.filter(Boolean).join('\n');
+}
+
+function isNoMergeBaseError(error) {
+  return /\bno merge base\b/u.test(gitErrorText(error));
+}
+
+function defaultRunGitDiff(args) {
+  return execFileSync('git', args, {
     cwd: repoRoot,
     encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
+}
+
+function listChangedFiles(baseRef, headRef, runGitDiff = defaultRunGitDiff) {
+  const commonArgs = ['diff', '--name-only'];
+  let output;
+
+  try {
+    output = runGitDiff([...commonArgs, `${baseRef}...${headRef}`]);
+  } catch (error) {
+    if (!isNoMergeBaseError(error)) {
+      throw error;
+    }
+
+    console.error(
+      `[planning:db:import] No merge base for ${baseRef}...${headRef}; using direct tree diff.`
+    );
+    output = runGitDiff([...commonArgs, baseRef, headRef]);
+  }
 
   return output
     .split('\n')
@@ -4097,6 +4125,7 @@ module.exports = {
   insertKnowledgeSnapshot,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
+  listChangedFiles,
   normalizeText,
   parseArgs,
   readLocalPlanningTaskIds,

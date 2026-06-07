@@ -22,6 +22,7 @@ const {
   insertGovernanceSnapshot,
   insertKnowledgeSnapshot,
   insertRepositoryCommandSnapshot,
+  listChangedFiles,
   mergePlanningTaskIds,
   normalizeText,
   parseArgs,
@@ -184,6 +185,32 @@ test('planning DB import parses stale-aware scoped import flags', () => {
   );
 
   assert.throws(() => parseArgs(['--planning-only', '--governance-only']), /mutually exclusive/);
+});
+
+test('planning DB import falls back to direct tree diff for shallow merge refs', () => {
+  const calls = [];
+  const changedFiles = listChangedFiles('origin/main', 'merge-sha', (args) => {
+    calls.push(args);
+    if (calls.length === 1) {
+      const error = new Error('Command failed: git diff --name-only origin/main...merge-sha');
+      error.stderr = Buffer.from('fatal: origin/main...merge-sha: no merge base\n');
+      throw error;
+    }
+
+    return [
+      'docs/planning/proposals/mandatory/runtime-and-contracts/example.md',
+      'scripts/planning-db-import.cjs',
+    ].join('\n');
+  });
+
+  assert.deepEqual(changedFiles, [
+    'docs/planning/proposals/mandatory/runtime-and-contracts/example.md',
+    'scripts/planning-db-import.cjs',
+  ]);
+  assert.deepEqual(calls, [
+    ['diff', '--name-only', 'origin/main...merge-sha'],
+    ['diff', '--name-only', 'origin/main', 'merge-sha'],
+  ]);
 });
 
 test('command/query rail snapshot indexes feature manifests for DB-first gap and duplicate queries', () => {
