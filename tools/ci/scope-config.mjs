@@ -854,7 +854,7 @@ export async function getChangedFiles(baseRef, headRef) {
 
   const { stdout } = await execFileAsync(
     'git',
-    ['diff', '--name-only', '--diff-filter=ACMR', baseRef, headRef],
+    ['diff', '--name-only', '--diff-filter=ACMRD', baseRef, headRef],
     { encoding: 'utf8' }
   );
 

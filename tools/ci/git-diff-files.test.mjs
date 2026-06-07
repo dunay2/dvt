@@ -20,7 +20,9 @@ test('changed-file diff prefers merge-base semantics when available', () => {
     },
   });
 
-  assert.deepEqual(calls, [['diff', '--name-only', '--diff-filter=ACMR', 'origin/release...HEAD']]);
+  assert.deepEqual(calls, [
+    ['diff', '--name-only', '--diff-filter=ACMRD', 'origin/release...HEAD'],
+  ]);
   assert.deepEqual(changedFiles, ['docs/a.md', 'packages/@dvt/engine/src/index.ts']);
 });
 
@@ -39,8 +41,8 @@ test('changed-file diff falls back to direct tree diff for shallow merge refs', 
   });
 
   assert.deepEqual(calls, [
-    ['diff', '--name-only', '--diff-filter=ACMR', 'origin/main...merge-sha'],
-    ['diff', '--name-only', '--diff-filter=ACMR', 'origin/main', 'merge-sha'],
+    ['diff', '--name-only', '--diff-filter=ACMRD', 'origin/main...merge-sha'],
+    ['diff', '--name-only', '--diff-filter=ACMRD', 'origin/main', 'merge-sha'],
   ]);
   assert.deepEqual(changedFiles, [
     '.github/workflows/pr-quality-gate.yml',

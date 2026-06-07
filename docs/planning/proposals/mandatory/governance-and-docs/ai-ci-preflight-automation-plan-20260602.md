@@ -130,6 +130,7 @@ allowedImplementationSurfaces:
   - tools/ci/doc-check.mjs
   - tools/ci/git-diff-files.mjs
   - tools/ci/git-diff-files.test.mjs
+  - tools/ci/scope-config-git.test.mjs
   - tools/ci/scope-config.mjs
   - tools/ci/workflow-pattern-parity.test.mjs
 forbiddenImplementationSurfaces:
