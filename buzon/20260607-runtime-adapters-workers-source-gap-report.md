@@ -133,17 +133,9 @@ The worker apps are composition roots:
 
 The public surface exports many Temporal concerns and `RunPlanWorkflow` is split
 into lifecycle/signals/layers/cancellation/state modules. But there is no one
-matrix that maps:
-
-- workflow function;
-- signal/query names;
-- activities;
-- step kinds;
-- plugin activity registries;
-- retry/timeout/heartbeat policy;
-- emitted run events;
-- failure classification;
-- tests.
+matrix that maps workflow, signals, activities, step kinds, plugin registries,
+retry/timeout/heartbeat policy, emitted run events, failure classification, and
+tests.
 
 **Risk**
 
@@ -192,23 +184,14 @@ delivery buffer purge, and relational execution capability.
 
 **Risk**
 
-Consumers can couple directly to storage internals. Postgres can accidentally
-own domain semantics.
+Consumers can couple directly to storage internals. Postgres can accidentally own
+domain semantics.
 
 **Action**
 
-Generate `postgres-adapter-public-surface.md` with categories:
-
-- state-store core;
-- event store;
-- outbox;
-- plan/artifact references;
-- intent store;
-- backpressure;
-- archive lifecycle;
-- lineage;
-- relational execution;
-- schema/migration.
+Generate `postgres-adapter-public-surface.md` with categories: state-store core,
+event store, outbox, plan/artifact references, intent store, backpressure,
+archive lifecycle, lineage, relational execution, schema/migration.
 
 ### PG-02 — Startup migration policy is inconsistent across workers
 
@@ -222,13 +205,9 @@ privilege levels.
 
 **Action**
 
-Define migration authority:
-
-- which process may migrate;
-- which environments allow startup migration;
-- how advisory locks/permissions work;
-- rollback plan;
-- read-only worker behavior.
+Define migration authority: which process may migrate, which environments allow
+startup migration, how advisory locks/permissions work, rollback plan, and
+read-only worker behavior.
 
 ### PG-03 — Tenant isolation needs generated negative test index
 
@@ -238,16 +217,8 @@ negative tests per store/repository.
 
 **Action**
 
-Create tenant-isolation test matrix:
-
-- run events;
-- snapshots;
-- outbox;
-- lineage outbox;
-- archives;
-- plan store;
-- start-run intents;
-- backpressure snapshots.
+Create tenant-isolation test matrix for run events, snapshots, outbox, lineage
+outbox, archives, plan store, start-run intents, and backpressure snapshots.
 
 ## 3. Delivery / outbox
 
@@ -259,7 +230,7 @@ code.
 
 **Action**
 
-Create outbox lifecycle contract with states:
+Create outbox lifecycle contract:
 
 ```text
 pending -> claimed -> delivered
@@ -281,12 +252,8 @@ contracted at-least-once delivery model, not an implicit behavior.
 
 **Action**
 
-Document delivery guarantee:
-
-- at-most-once vs at-least-once;
-- idempotency key;
-- downstream dedupe requirement;
-- retry behavior when markDelivered fails.
+Document delivery guarantee: at-most-once vs at-least-once, idempotency key,
+downstream dedupe requirement, and retry behavior when markDelivered fails.
 
 ### DLV-03 — Observer failures are swallowed by design
 
@@ -312,15 +279,9 @@ missed rebuilds, and fallback scanning.
 
 **Action**
 
-Create projector work acquisition contract covering:
-
-- claimSnapshotWork;
-- listStaleSnapshotRuns;
-- fallback enablement;
-- claim tokens;
-- complete/fail behavior;
-- ownership-lost handling;
-- lag semantics.
+Create projector work acquisition contract covering claimSnapshotWork,
+listStaleSnapshotRuns, fallback enablement, claim tokens, complete/fail behavior,
+ownership-lost handling, and lag semantics.
 
 ### PRJ-02 — Admin endpoint is too thin
 
@@ -376,13 +337,8 @@ actual hot persistence is in `adapter-postgres`.
 
 **Action**
 
-Rename or document boundary:
-
-- hot state store port ownership;
-- Postgres hot adapter;
-- archive lifecycle package;
-- object storage adapters;
-- delivery buffer purge.
+Document boundary: hot state store port ownership, Postgres hot adapter, archive
+lifecycle package, object storage adapters, delivery buffer purge.
 
 ### SS-02 — Archive lifecycle tests need corruption/restore/delete fixtures
 
@@ -391,15 +347,9 @@ The public surface implies serious lifecycle operations. The test script uses
 
 **Action**
 
-Create archive fixture suite:
-
-- valid archive manifest;
-- checksum mismatch;
-- missing terminal snapshot;
-- restore already exists;
-- delete not eligible;
-- tenant override retention;
-- delivery buffer purge.
+Create archive fixture suite: valid archive manifest, checksum mismatch, missing
+terminal snapshot, restore already exists, delete not eligible, tenant override
+retention, and delivery buffer purge.
 
 ## Cross-runtime gaps
 
@@ -410,10 +360,8 @@ SLO/SLA/SLO-like catalogue.
 
 **Action**
 
-Create `runtime-slo-catalog.md`:
-
-| Runtime | Signal | Endpoint/metric | Healthy | Degraded | Failed | UI consequence |
-| --- | --- | --- | --- | --- | --- | --- |
+Create `runtime-slo-catalog.md` with runtime, signal, endpoint/metric, healthy,
+degraded, failed, and UI consequence.
 
 ### X-02 — Idempotency model is fragmented
 
@@ -422,14 +370,8 @@ and API start-run intent all need a single idempotency map.
 
 **Action**
 
-Create cross-runtime idempotency matrix:
-
-- operation;
-- key;
-- owner;
-- storage;
-- duplicate behavior;
-- tests.
+Create cross-runtime idempotency matrix: operation, key, owner, storage,
+duplicate behavior, and tests.
 
 ### X-03 — Worker admin APIs are inconsistent
 
