@@ -38,11 +38,11 @@ Rejected alternatives:
 
 ## Fowler Matrix
 
-| Scenario                                         | Opportunity           | Fowler pattern                    | DDD owner                         | Command/query rail              | Implementation surfaces                   | Unit or package test                    | Architecture test                                 | Out of scope        |
-| ------------------------------------------------ | --------------------- | --------------------------------- | --------------------------------- | ------------------------------- | ----------------------------------------- | --------------------------------------- | ------------------------------------------------- | ------------------- |
-| Authoring graph allows source-model-model-check. | Hidden authority      | Replace Conditional with Strategy | Canvas connection aggregate       | AuthorCanvasGraphEdge           | `canvasConnectionAggregate.ts`            | `canvasConnectionAggregate.test.ts`     | `useCanvasEdgeAuthoringHandlers.architecture.ts`  | Backend graph store |
-| UI handlers reuse aggregate rules.               | Duplicate semantics   | Extract Function / Pure Function  | Canvas graph handler test fixture | AuthorCanvasGraphEdge           | `useCanvasGraphHandlers.test.support.tsx` | `useCanvasGraphHandlers.edge*.test.tsx` | `canvasHandlerContracts.architecture.test.ts`     | Cypress expansion   |
-| Transformation validation remains separate.      | Conflated abstraction | Separate Domain from Presentation | Transformation graph validation   | ValidateCanvasTransformationRun | `transformationConnectionGuard.ts`        | `transformationConnectionGuard.test.ts` | `transformationGraphValidation.architecture.test` | Runtime execution   |
+| Scenario                                         | Opportunity           | Fowler pattern                    | DDD owner                         | Command/query rail              | Implementation surfaces                              | Unit or package test                    | Architecture test                                 | Out of scope        |
+| ------------------------------------------------ | --------------------- | --------------------------------- | --------------------------------- | ------------------------------- | ---------------------------------------------------- | --------------------------------------- | ------------------------------------------------- | ------------------- |
+| Authoring graph allows source-model-model-check. | Hidden authority      | Replace Conditional with Strategy | Canvas connection aggregate       | AuthorCanvasGraphEdge           | `canvasConnectionAggregate.ts`, `nodeTypeCatalog.ts` | `canvasConnectionAggregate.test.ts`     | `useCanvasEdgeAuthoringHandlers.architecture.ts`  | Backend graph store |
+| UI handlers reuse aggregate rules.               | Duplicate semantics   | Extract Function / Pure Function  | Canvas graph handler test fixture | AuthorCanvasGraphEdge           | `useCanvasGraphHandlers.test.support.tsx`            | `useCanvasGraphHandlers.edge*.test.tsx` | `canvasHandlerContracts.architecture.test.ts`     | Cypress expansion   |
+| Transformation validation remains separate.      | Conflated abstraction | Separate Domain from Presentation | Transformation graph validation   | ValidateCanvasTransformationRun | `transformationConnectionGuard.ts`                   | `transformationConnectionGuard.test.ts` | `transformationGraphValidation.architecture.test` | Runtime execution   |
 
 ```feature-mechanization
 version: 1
@@ -62,6 +62,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
 allowedImplementationSurfaces:
+  - apps/web/src/app/plugins/nodeTypeCatalog.ts
   - apps/web/src/app/views/canvas/canvasConnectionAggregate.ts
   - apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts
   - apps/web/src/app/views/canvas/canvasCopyFormatting.ts
@@ -118,6 +119,7 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/src/app/views/canvas/canvasConnectionAggregate.ts
       - apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts
+      - apps/web/src/app/plugins/nodeTypeCatalog.ts
       - apps/web/src/app/views/canvas/canvasCopyFormatting.ts
       - apps/web/src/app/views/canvas/transformationConnectionGuard.ts
       - apps/web/src/app/views/canvas/transformationConnectionGuard.test.ts
@@ -132,6 +134,14 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasEdgeAdmissionTransaction.test.ts
     greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/useCanvasGraphHandlers.edgeAuthoring.test.tsx src/app/views/canvas/useCanvasGraphHandlers.edgeReconnect.test.tsx src/app/views/canvas/canvasEdgeAdmissionTransaction.test.ts
 symbols:
+  - name: CONNECTION_RULES
+    path: apps/web/src/app/plugins/nodeTypeCatalog.ts
+    dddOwner: CanvasConnectionAggregate
+    cqRails: [AuthorCanvasGraphEdge]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: N/A - role compatibility policy
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - name: AUTHORING_ROLE_TARGETS
     path: apps/web/src/app/views/canvas/canvasConnectionAggregate.ts
     dddOwner: CanvasConnectionAggregate

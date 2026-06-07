@@ -12,7 +12,7 @@ import type { CanonicalNode, CoreNodeRole } from '../../types/canonical';
 import { createCanvasEdgeFromConnection } from './canvasNodeMapper';
 
 const AUTHORING_ROLE_TARGETS: Readonly<Record<CoreNodeRole, readonly CoreNodeRole[]>> = {
-  input: ['transform'],
+  input: ['transform', 'check'],
   transform: ['transform', 'check', 'output'],
   check: [],
   output: [],

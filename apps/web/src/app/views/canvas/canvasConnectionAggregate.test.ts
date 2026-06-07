@@ -1,6 +1,8 @@
 import type { Connection, Edge } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
+import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
+import { dbtContributions } from '../../plugins/dbt/dbtContributions';
 import type { CanonicalNode } from '../../types/canonical';
 import { confirmConnection, proposeConnection } from './canvasConnectionAggregate';
 
@@ -21,12 +23,41 @@ function node(
   };
 }
 
+function dbtNode(
+  id: string,
+  role: CanonicalNode['role'],
+  kind: CanonicalNode['kind']
+): CanonicalNode {
+  return {
+    id,
+    name: id,
+    pluginId: 'dbt',
+    kind,
+    role,
+    status: 'idle',
+    tags: [],
+  };
+}
+
 function link(source: string, target: string): Connection {
   return { source, sourceHandle: null, target, targetHandle: null };
 }
 
 function byId(nodes: readonly CanonicalNode[]): Map<string, CanonicalNode> {
   return new Map(nodes.map((candidate) => [candidate.id, candidate]));
+}
+
+function dbtPluginPorts(): PluginPortMap {
+  return new Map([
+    [
+      'dbt',
+      {
+        connectionRules: dbtContributions.connectionRules ?? [],
+        produces: dbtContributions.produces ?? [],
+        consumes: dbtContributions.consumes ?? [],
+      },
+    ],
+  ]);
 }
 
 describe('canvasConnectionAggregate', () => {
@@ -95,6 +126,33 @@ describe('canvasConnectionAggregate', () => {
         pluginPortMap: new Map(),
       })
     ).toMatchObject({ outcome: 'allowed', edgeType: 'exposure' });
+  });
+
+  it('allows dbt input resources to connect to dbt tests through plugin rules', () => {
+    const source = dbtNode('source-node', 'input', 'dbt:source');
+    const seed = dbtNode('seed-node', 'input', 'dbt:seed');
+    const sourceTest = dbtNode('source-test', 'check', 'dbt:test');
+    const seedTest = dbtNode('seed-test', 'check', 'dbt:test');
+    const canonicalNodesById = byId([source, seed, sourceTest, seedTest]);
+    const pluginPortMap = dbtPluginPorts();
+
+    expect(
+      proposeConnection({
+        connection: link(source.id, sourceTest.id),
+        canonicalNodesById,
+        edges: [],
+        pluginPortMap,
+      })
+    ).toMatchObject({ outcome: 'allowed', edgeType: 'test' });
+
+    expect(
+      proposeConnection({
+        connection: link(seed.id, seedTest.id),
+        canonicalNodesById,
+        edges: [],
+        pluginPortMap,
+      })
+    ).toMatchObject({ outcome: 'allowed', edgeType: 'test' });
   });
 
   it('rejects role-incompatible, duplicate, self, and cyclic edges', () => {
