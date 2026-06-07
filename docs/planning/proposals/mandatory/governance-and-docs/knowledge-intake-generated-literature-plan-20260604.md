@@ -54,22 +54,28 @@ flowchart LR
 ```mermaid
 flowchart LR
   Raw["buzon/*.md import input"] --> Import["Governance import"]
+  Repository["Tracked repository text files"] --> BackrefImport["Repository backref import"]
+  BackrefImport --> Backrefs["knowledge_intake_repository_references"]
   Import --> Query["knowledge_intake_retirement_query"]
+  Backrefs --> Query
+  Backrefs --> References["knowledge_intake_repository_reference_query"]
   Query --> Generator["docs:knowledge-intake:generate"]
   Generator --> LocalDoc[".generated-docs knowledge intake literature"]
   Pointer["tracked status pointer"] --> LocalDoc
   Query --> Cli["planning:db:query knowledge-intake"]
+  References --> Cli
 ```
 
 ## Fowler Opportunity Matrix
 
 <!-- markdownlint-disable MD060 -->
 
-| Scenario                                         | Opportunity         | Fowler pattern                  | DDD owner                             | Command/query rail                  | Implementation surfaces                                                 | Tests                                                                                          | Out of scope                                   |
-| ------------------------------------------------ | ------------------- | ------------------------------- | ------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Agents need one regenerated reading surface      | Duplicate semantics | Published Language / Read Model | `KnowledgeIntakeLiteratureProjection` | `GenerateKnowledgeIntakeLiterature` | Generator script, package scripts, generated-doc policy, status pointer | `node --test scripts/generate-knowledge-intake-literature.test.cjs`                            | Deleting raw intake files                      |
-| Raw analysis files behave like active canon      | Hidden authority    | Repository + Projection         | `KnowledgeIntakeRetirementReadModel`  | `ListKnowledgeIntakeRetirement`     | DB surface inventory, component guide                                   | `node --test scripts/planning-db-surface-inventory-check.test.cjs`                             | Rewriting every existing docs reference        |
-| Governance refresh must reproduce the literature | Documentation drift | Single Writer                   | CI governance refresh orchestration   | `GenerateKnowledgeIntakeLiterature` | `scripts/governance-refresh.cjs`, generated-doc policy                  | `node --test scripts/governance-refresh.test.cjs scripts/check-generated-docs-policy.test.cjs` | Adding the generator to every lightweight gate |
+| Scenario                                         | Opportunity         | Fowler pattern                  | DDD owner                             | Command/query rail                  | Implementation surfaces                                                 | Tests                                                                                                                     | Out of scope                                   |
+| ------------------------------------------------ | ------------------- | ------------------------------- | ------------------------------------- | ----------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Agents need one regenerated reading surface      | Duplicate semantics | Published Language / Read Model | `KnowledgeIntakeLiteratureProjection` | `GenerateKnowledgeIntakeLiterature` | Generator script, package scripts, generated-doc policy, status pointer | `node --test scripts/generate-knowledge-intake-literature.test.cjs`                                                       | Deleting raw intake files                      |
+| Raw analysis files behave like active canon      | Hidden authority    | Repository + Projection         | `KnowledgeIntakeRetirementReadModel`  | `ListKnowledgeIntakeRetirement`     | DB surface inventory, component guide                                   | `node --test scripts/planning-db-surface-inventory-check.test.cjs`                                                        | Rewriting every existing docs reference        |
+| Non-knowledge files still reference raw intake   | Hidden authority    | Repository + Projection         | `KnowledgeIntakeRetirementReadModel`  | `ListKnowledgeIntakeRetirement`     | Planning DB import, migration, repository-reference query               | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-import.test.cjs scripts/planning-db-migrate.test.cjs` | Query-time grep as authority                   |
+| Governance refresh must reproduce the literature | Documentation drift | Single Writer                   | CI governance refresh orchestration   | `GenerateKnowledgeIntakeLiterature` | `scripts/governance-refresh.cjs`, generated-doc policy                  | `node --test scripts/governance-refresh.test.cjs scripts/check-generated-docs-policy.test.cjs`                            | Adding the generator to every lightweight gate |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -111,8 +117,14 @@ allowedImplementationSurfaces:
   - scripts/generate-knowledge-intake-literature.test.cjs
   - scripts/governance-refresh.cjs
   - scripts/governance-refresh.test.cjs
+  - scripts/planning-db-import.cjs
+  - scripts/planning-db-import.test.cjs
+  - scripts/planning-db-migrate.test.cjs
+  - scripts/planning-db-query.test.cjs
   - scripts/planning-db-surface-inventory-check.cjs
   - scripts/planning-db-surface-inventory-check.test.cjs
+  - scripts/planning-db/knowledge-intake-retirement-query.cjs
+  - tools/planning-db/migrations/063_knowledge_intake_repository_backrefs.sql
 forbiddenImplementationSurfaces:
   - buzon/**
   - apps/**
@@ -186,6 +198,46 @@ redGreenCycles:
       - scripts/planning-db-surface-inventory-check.test.cjs
     greenTest: node --test scripts/planning-db-surface-inventory-check.test.cjs
 symbols:
+  - name: repositoryReferenceTextFilePattern
+    path: scripts/planning-db-import.cjs
+    dddOwner: KnowledgeIntakeRetirementReadModel
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Repository]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - Planning DB governance import.
+    unitTests: [node --test scripts/planning-db-import.test.cjs]
+  - name: buzonReferencePattern
+    path: scripts/planning-db-import.cjs
+    dddOwner: KnowledgeIntakeRetirementReadModel
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - Planning DB governance import.
+    unitTests: [node --test scripts/planning-db-import.test.cjs]
+  - name: readTrackedRepositoryTextDocuments
+    path: scripts/planning-db-import.cjs
+    dddOwner: KnowledgeIntakeRetirementReadModel
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Repository]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs
+    cypressCoverage: N/A - Planning DB governance import.
+    unitTests: [node --test scripts/planning-db-import.test.cjs]
+  - name: buildKnowledgeIntakeRepositoryReferenceSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: KnowledgeIntakeRetirementReadModel
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Hidden authority, Repository]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - Planning DB governance import.
+    unitTests: [node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs]
+  - name: insertKnowledgeIntakeRepositoryReferences
+    path: scripts/planning-db-import.cjs
+    dddOwner: KnowledgeIntakeRetirementReadModel
+    cqRails: [ListKnowledgeIntakeRetirement]
+    fowlerSignals: [Single Writer]
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - Planning DB governance import.
+    unitTests: [node --test scripts/planning-db-import.test.cjs scripts/planning-db-migrate.test.cjs]
   - name: renderKnowledgeIntakeLiterature
     path: scripts/generate-knowledge-intake-literature.cjs
     dddOwner: KnowledgeIntakeLiteratureProjection

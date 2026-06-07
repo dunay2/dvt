@@ -175,7 +175,7 @@ test('tracked migrations expose DB-first knowledge intake retirement state', () 
   assert.match(retirementMigration.sql, /open_action_count/);
 });
 
-test('tracked migrations count only canonical docs as knowledge intake retirement references', () => {
+test('tracked migrations count repository backrefs without buzon self references', () => {
   const migrations = readMigrationFiles();
   const retirementMigration = migrations
     .filter((migration) =>
@@ -188,9 +188,35 @@ test('tracked migrations count only canonical docs as knowledge intake retiremen
   assert.ok(retirementMigration);
   assert.match(
     retirementMigration.sql,
-    /join planning_query_store\.knowledge_documents from_document\s+on from_document\.document_id = link\.from_document_id/
+    /join planning_query_store\.knowledge_intake_repository_references reference\s+on reference\.target_document_path = document\.document_path/
   );
-  assert.match(retirementMigration.sql, /from_document\.document_path not like 'buzon\/%'/);
+  assert.match(retirementMigration.sql, /reference\.source_path not like 'buzon\/%'/);
+});
+
+test('tracked migrations include repository backrefs before knowledge intake retirement decisions', () => {
+  const migrations = readMigrationFiles();
+  const repositoryBackrefMigration = migrations.find(
+    (migration) => migration.fileName === '063_knowledge_intake_repository_backrefs.sql'
+  );
+
+  assert.ok(repositoryBackrefMigration);
+  assert.match(
+    repositoryBackrefMigration.sql,
+    /create table if not exists planning_query_store\.knowledge_intake_repository_references/
+  );
+  assert.match(
+    repositoryBackrefMigration.sql,
+    /create or replace view planning_query_store\.knowledge_intake_repository_reference_query/
+  );
+  assert.match(
+    repositoryBackrefMigration.sql,
+    /from planning_query_store\.knowledge_intake_repository_references reference/
+  );
+  assert.match(repositoryBackrefMigration.sql, /reference\.source_path not like 'buzon\/%'/);
+  assert.match(
+    repositoryBackrefMigration.sql,
+    /create or replace view planning_query_store\.knowledge_intake_retirement_query/
+  );
 });
 
 test('tracked migrations include DB-first surface inventory command rail tables', () => {

@@ -2072,7 +2072,7 @@ test('buildKnowledgeIntakeReferenceRows exposes DB-first intake backrefs', () =>
   );
 });
 
-test('readKnowledgeIntakeReferenceRows queries DB document links and ownership projections', async () => {
+test('readKnowledgeIntakeReferenceRows queries DB repository backrefs and ownership projections', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2088,13 +2088,14 @@ test('readKnowledgeIntakeReferenceRows queries DB document links and ownership p
     limit: 5,
   });
 
-  assert.match(captured.sql, /from planning_query_store\.knowledge_document_links/);
-  assert.match(captured.sql, /join planning_query_store\.knowledge_documents from_document/);
-  assert.match(captured.sql, /join planning_query_store\.knowledge_documents to_document/);
-  assert.match(captured.sql, /component_engineering_file_ownership_query/);
-  assert.match(captured.sql, /to_document\.document_path like 'buzon\/%'/);
-  assert.match(captured.sql, /to_document\.document_path = \$1/);
-  assert.match(captured.sql, /ownership\.leaf_component_id = \$2/);
+  assert.match(
+    captured.sql,
+    /from planning_query_store\.knowledge_intake_repository_reference_query/
+  );
+  assert.doesNotMatch(captured.sql, /from planning_query_store\.knowledge_document_links/);
+  assert.match(captured.sql, /document_path like 'buzon\/%'/);
+  assert.match(captured.sql, /document_path = \$1/);
+  assert.match(captured.sql, /reference_component_id = \$2/);
   assert.match(captured.sql, /limit \$3/);
   assert.deepEqual(captured.params, ['buzon/example.md', 'ci-governance', 5]);
 });
