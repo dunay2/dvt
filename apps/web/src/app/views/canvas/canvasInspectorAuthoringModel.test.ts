@@ -244,4 +244,36 @@ describe('canvasInspectorAuthoringModel', () => {
       },
     });
   });
+
+  it('clears stale compiled SQL when applying DVT SQL transform edits', () => {
+    const node = buildDvtNode('dvt:sql_transform', {
+      sql: 'select stale_column from old_orders',
+      compiledSql: 'select stale_column from old_orders',
+      config: {
+        dialect: 'postgres',
+        sql: 'select stale_column from old_orders',
+      },
+    });
+    const draft = {
+      name: 'Clean orders',
+      description: '',
+      tags: ['authoring'],
+      dvt: {
+        kind: 'sql_transform' as const,
+        sql: 'select order_id from raw.orders',
+      },
+    };
+
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual({
+      ...node,
+      description: undefined,
+      metadata: {
+        config: {
+          dialect: 'postgres',
+          sql: 'select order_id from raw.orders',
+        },
+        sql: 'select order_id from raw.orders',
+      },
+    });
+  });
 });

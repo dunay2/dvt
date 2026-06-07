@@ -184,9 +184,7 @@ async function resolvePreviewSqlArtifact(args: {
   const { transformArtifactSource } = args;
 
   if (transformArtifactSource.kind === 'workspace-file') {
-    const draftSqlText = readNodeSqlText(transformArtifactSource.node, {
-      includeCompiledSql: false,
-    });
+    const draftSqlText = readDraftNodeSqlText(transformArtifactSource.node);
     if (draftSqlText) {
       const sqlText = draftSqlText.endsWith('\n') ? draftSqlText : `${draftSqlText}\n`;
       const savedSqlArtifact = await args.workspaceFileContentCommand.saveFileContent(
@@ -252,7 +250,7 @@ function buildAuthoringPreviewSql({
   canonicalNodes: readonly CanonicalNode[];
   scopedNodeIds: readonly string[];
 }): string {
-  const explicitSql = readNodeSqlText(transformNode);
+  const explicitSql = readExecutableNodeSqlText(transformNode);
   if (explicitSql) {
     return explicitSql.endsWith('\n') ? explicitSql : `${explicitSql}\n`;
   }
@@ -263,10 +261,7 @@ function buildAuthoringPreviewSql({
   return `select *\nfrom ${source.payload.schema}.${source.payload.table};\n`;
 }
 
-function readNodeSqlText(
-  node: CanonicalNode,
-  options: { includeCompiledSql?: boolean } = {}
-): string | null {
+function readDraftNodeSqlText(node: CanonicalNode): string | null {
   const sql = node.metadata?.sql;
   if (typeof sql === 'string' && sql.trim().length > 0) {
     return sql.trim();
@@ -280,14 +275,28 @@ function readNodeSqlText(
     }
   }
 
-  if (options.includeCompiledSql !== false) {
-    const compiledSql = node.metadata?.compiledSql;
-    if (typeof compiledSql === 'string' && compiledSql.trim().length > 0) {
-      return compiledSql.trim();
-    }
+  return null;
+}
+
+function readCompiledNodeSqlText(node: CanonicalNode): string | null {
+  const compiledSql = node.metadata?.compiledSql;
+
+  return typeof compiledSql === 'string' && compiledSql.trim().length > 0
+    ? compiledSql.trim()
+    : null;
+}
+
+function readExecutableNodeSqlText(node: CanonicalNode): string | null {
+  const draftSql = readDraftNodeSqlText(node);
+  const compiledSql = readCompiledNodeSqlText(node);
+
+  if (draftSql && compiledSql) {
+    throw new Error(
+      `Preview graph artifact cannot choose between draft SQL and compiled SQL for transform node ${node.id}. Re-apply the SQL edit or regenerate compiled SQL before preview.`
+    );
   }
 
-  return null;
+  return compiledSql ?? draftSql;
 }
 
 export async function resolvePreviewProvenance({

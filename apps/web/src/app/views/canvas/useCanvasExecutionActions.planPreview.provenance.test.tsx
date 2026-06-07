@@ -339,6 +339,99 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     expect(workspaceFilesQuery.getFileContent).not.toHaveBeenCalled();
   });
 
+  it('fails closed when generated authoring transforms carry draft and compiled SQL together', async () => {
+    const rawDraftSql = "{{ source('raw', 'orders') }}";
+    const rawConfigSql = 'select * from {{ ref("raw_orders") }}';
+    const compiledSql = 'select order_id from raw.orders';
+    const canonicalNodes: CanonicalNode[] = [
+      {
+        id: 'source',
+        name: 'Source',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input',
+        status: 'idle',
+        tags: ['authoring'],
+        metadata: { config: { schema: 'raw', table: 'orders', alias: 'raw_orders' } },
+      },
+      {
+        id: 'transform',
+        name: 'Transform',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        role: 'transform',
+        status: 'idle',
+        tags: ['authoring'],
+        metadata: {
+          sql: rawDraftSql,
+          compiledSql,
+          config: { dialect: 'postgres', sql: rawConfigSql },
+        },
+      },
+      {
+        id: 'sink',
+        name: 'Sink',
+        pluginId: 'dvt',
+        kind: 'dvt:sink',
+        role: 'output',
+        status: 'idle',
+        tags: ['authoring'],
+        metadata: {
+          config: {
+            schema: 'analytics',
+            table: 'orders',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
+        },
+      },
+    ];
+    const canonicalEdges: CanonicalEdge[] = [
+      { id: 'source-transform', sourceId: 'source', targetId: 'transform', relation: 'lineage' },
+      { id: 'transform-sink', sourceId: 'transform', targetId: 'sink', relation: 'lineage' },
+    ];
+    const workspaceFilesQuery = {
+      listFiles: vi.fn(async () => []),
+      getFileContent: vi.fn(),
+    };
+    const workspaceFileContentCommand = {
+      saveFileContent: vi.fn(async (path: string, content: string) => ({
+        path,
+        name: path.split('/').at(-1) ?? path,
+        language: path.endsWith('.sql') ? 'sql' : 'yaml',
+        content,
+        lastModified: '2026-04-08T00:00:00Z',
+      })),
+    };
+
+    const resolution = await resolvePreviewProvenance({
+      canonicalNodes,
+      canonicalEdges,
+      scopedNodeIds: canonicalNodes.map((node) => node.id),
+      workspaceFilesQuery,
+      workspaceFileContentCommand,
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'env',
+        targetAdapter: 'temporal',
+      },
+      previewProvenanceConfig: {
+        gitBranch: 'detached',
+        gitSha: 'unknown',
+      },
+      required: true,
+    });
+
+    expect(resolution).toEqual(
+      expect.objectContaining({
+        ok: false,
+        message: expect.stringContaining('cannot choose between draft SQL and compiled SQL'),
+      })
+    );
+    expect(workspaceFileContentCommand.saveFileContent).not.toHaveBeenCalled();
+  });
+
   it('fails closed when the graph artifact cannot be persisted before preview', async () => {
     const canonicalNodes = buildCanonicalNodes();
     const canonicalEdges = buildCanonicalEdges();
