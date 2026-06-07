@@ -875,6 +875,60 @@ describe('CanvasInspectorPanel', () => {
     expect(generalTab?.getAttribute('class')).toContain('text-xs');
   });
 
+  it('falls back to general details when the selected plugin tab is unavailable for the next node', async () => {
+    const dbtModel = buildDbtModelNode();
+    const dvtNode = buildNode();
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={dbtModel}
+          nodes={[dbtModel, dvtNode]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft: vi.fn(),
+          }}
+        />
+      );
+    });
+
+    const configTab = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Config')
+    );
+    expect(configTab).not.toBeUndefined();
+
+    await act(async () => {
+      fireEvent.mouseDown(configTab!, { button: 0, ctrlKey: false });
+      fireEvent.click(configTab!);
+    });
+
+    expect(container.querySelector('[data-slot="node-inspector-general-section"]')).toBeNull();
+    expect(container.textContent).toContain('"materialized": "table"');
+
+    await act(async () => {
+      root.render(
+        <CanvasInspectorPanel
+          node={dvtNode}
+          nodes={[dbtModel, dvtNode]}
+          edges={[]}
+          activeRunId={null}
+          onHide={vi.fn()}
+          authoring={{
+            canEditNode: true,
+            onApplyNodeDraft: vi.fn(),
+          }}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="node-inspector-general-section"]')).not.toBeNull();
+    expect(container.textContent).toContain('orders_source');
+    expect(container.textContent).toContain('Node ID');
+  });
+
   it('lets dbt overview tags be edited through the route-owned node draft', async () => {
     const onApplyNodeDraft = vi.fn();
     const model = {
