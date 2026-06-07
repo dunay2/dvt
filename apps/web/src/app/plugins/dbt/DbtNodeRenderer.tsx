@@ -97,7 +97,7 @@ export function buildDbtNodeRunHistoryEntries(
     return [];
   }
 
-  const readEventNodeId = (event: EngineRunEvent): string | null => {
+  const readEventPayloadNodeId = (event: EngineRunEvent): string | null => {
     const payload = event.payload;
     if (!payload || typeof payload !== 'object') {
       return null;
@@ -108,7 +108,11 @@ export function buildDbtNodeRunHistoryEntries(
   };
 
   return events
-    .filter((event) => event.runId === runId && readEventNodeId(event) === nodeId)
+    .filter(
+      (event) =>
+        event.runId === runId &&
+        (event.stepId === nodeId || readEventPayloadNodeId(event) === nodeId)
+    )
     .map((event) => {
       const presentation = buildRunEventPresentationModel(event);
 
