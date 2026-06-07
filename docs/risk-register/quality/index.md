@@ -29,6 +29,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [AR-C2 can be overstated as complete without dashboard and alert evidence](R-20260404-AR-C2-OPERABILITY-EVIDENCE-GAP.yaml)
 - [AR-C2 Prometheus metric hardcut may require dashboard and alert query updates](R-20260514-AR-C2-PROM-SLA-HARDCUT.yaml)
 - [AR-D continuation safety residual capacity tuning](r-20260430-ar-d-continuation-safety.yaml)
+- [Archive redaction baseline can drift from runtime composition config](R-20260607-ARCHIVE-REDACTION-BASELINE.yaml)
 - [Automatic lineage DLQ replay may requeue persistent poison events repeatedly](R-20260330-LINEAGE-DLQ-AUTO-REPLAY.md)
 - [Caller-visible freshness may be misinterpreted as read-your-writes guarantee](R-20260330-snapshot-staleness-caller-view.yaml)
 - [Cancel lifecycle ownership can regress to mixed engine/runtime emission](R-20260401-CANCEL-LIFECYCLE-OWNERSHIP-DRIFT.yaml)
