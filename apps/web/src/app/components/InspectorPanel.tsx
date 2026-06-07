@@ -45,7 +45,6 @@ export default function InspectorPanel({
 
   const ctx: InspectorContext = { activeRunId, registeredPlugins };
   const panels = node ? getInspectorPanels(node, ctx) : [];
-  const defaultTab = 'general';
 
   if (!node) {
     return (
@@ -80,7 +79,7 @@ export default function InspectorPanel({
             beforePanels={beforePanels}
             tagsEditor={tagsEditor}
             panels={panels}
-            activeTab={activeTab ?? defaultTab}
+            activeTab={activeTab}
             onActiveTabChange={setActiveTab}
           />
         </div>
@@ -146,10 +145,16 @@ function CoreNodeDetails({
   beforePanels?: ReactNode;
   tagsEditor?: ReactNode;
   panels: readonly InspectorPanelContribution[];
-  activeTab: string;
+  activeTab?: string;
   onActiveTabChange: (tab: string) => void;
 }>) {
   const model = buildNodePropertiesReadModel({ node, nodes, edges });
+  const availableTabIds = new Set([
+    ...model.sections.map((section) => section.id),
+    ...panels.map((panel) => panel.id),
+  ]);
+  const effectiveActiveTab =
+    activeTab != null && availableTabIds.has(activeTab) ? activeTab : 'general';
 
   return (
     <NodePropertiesTabs
@@ -157,7 +162,7 @@ function CoreNodeDetails({
       model={model}
       activeRunId={activeRunId}
       panels={panels}
-      activeTab={activeTab}
+      activeTab={effectiveActiveTab}
       beforePanels={beforePanels}
       tagsEditor={tagsEditor}
       onActiveTabChange={onActiveTabChange}
