@@ -176,6 +176,7 @@ describe('app routes', () => {
     consoleErrorSpy.mockRestore();
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
 
     const globalObject = globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean };
     if (previousActEnvironment === undefined) {
