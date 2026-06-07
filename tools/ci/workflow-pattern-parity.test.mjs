@@ -342,23 +342,26 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
   assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
 });
 
-test('PR quality gate prepares planning DB before DB-first feature mechanization implementation', () => {
+test('PR quality gate prepares planning DB before DB-first feature implementation checks', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
-  const prepareStep = 'name: Prepare planning DB for feature mechanization validation';
-  const implementationStep = 'run: pnpm docs:feature-mechanization:implementation';
+  const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
+  const governanceImportIndex = prQualityGate.indexOf(
+    'pnpm planning:db:import -- --if-stale --governance-only'
+  );
+  const implementationGateIndex = prQualityGate.indexOf(
+    'pnpm docs:feature-mechanization:implementation'
+  );
 
-  assertWorkflowContains(prQualityGate, prepareStep);
+  assert.notEqual(prepareDbIndex, -1);
+  assert.notEqual(governanceImportIndex, -1);
+  assert.notEqual(implementationGateIndex, -1);
+  assert.ok(prepareDbIndex < governanceImportIndex);
+  assert.ok(governanceImportIndex < implementationGateIndex);
   assertWorkflowContains(
     prQualityGate,
     "steps.scope.outputs.feature_mechanization_relevant == 'true'"
   );
-  assertWorkflowContains(prQualityGate, 'pnpm planning:db:up');
-  assertWorkflowContains(prQualityGate, 'pnpm planning:db:migrate');
-  assertWorkflowContains(prQualityGate, 'pnpm planning:db:import -- --if-stale --governance-only');
-  assert.ok(
-    prQualityGate.indexOf(prepareStep) < prQualityGate.indexOf(implementationStep),
-    'planning DB preparation must happen before feature implementation mechanization'
-  );
+  assertWorkflowContains(prQualityGate, 'FEATURE_MECHANIZATION_RELEVANT');
 });
 
 test('scope diff consumers use shallow checkout instead of full PR history', () => {

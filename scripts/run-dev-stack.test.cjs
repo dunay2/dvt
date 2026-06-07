@@ -350,7 +350,60 @@ test('resolveTemporalCliExecutable prefers an explicit operator-provided CLI pat
   assert.equal(executable, 'C:\\Temporal\\temporal.exe');
 });
 
-test('startLocalTemporalService starts an owned Temporal CLI dev server instead of SDK dev-server spawn', async () => {
+test('resolveTemporalCliExecutable leaves a clean SDK cache to SDK cached-download bootstrap', () => {
+  const executable = resolveTemporalCliExecutable(
+    {},
+    {
+      readFileSync: () => JSON.stringify({ version: '1.16.1' }),
+      readdirSync: () => [],
+    },
+    'C:\\Temp'
+  );
+
+  assert.equal(executable, undefined);
+});
+
+test('startLocalTemporalService delegates clean-cache bootstrap to SDK cached-download', async () => {
+  let sdkStartCall;
+  let closed = false;
+  const service = await startLocalTemporalService({
+    env: {},
+    fsModule: {
+      readFileSync: () => JSON.stringify({ version: '1.16.1' }),
+      readdirSync: () => [],
+    },
+    host: '127.0.0.1',
+    namespace: 'default',
+    port: 7292,
+    spawnProcess: () => {
+      throw new Error('clean-cache bootstrap must not spawn PATH temporal');
+    },
+    startTemporalSdkDevServer: async (options) => {
+      sdkStartCall = options;
+      return {
+        address: `${options.host}:${options.port}`,
+        namespace: options.namespace,
+        close: async () => {
+          closed = true;
+        },
+      };
+    },
+  });
+
+  assert.deepEqual(sdkStartCall, {
+    host: '127.0.0.1',
+    namespace: 'default',
+    port: 7292,
+  });
+  assert.equal(service.address, '127.0.0.1:7292');
+  assert.equal(service.namespace, 'default');
+
+  await service.close();
+
+  assert.equal(closed, true);
+});
+
+test('startLocalTemporalService starts an explicit owned Temporal CLI dev server', async () => {
   const child = new EventEmitter();
   child.stdout = new EventEmitter();
   child.stderr = new EventEmitter();

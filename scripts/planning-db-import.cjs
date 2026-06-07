@@ -1024,33 +1024,38 @@ function resolveRepoPath(filePath) {
   return path.isAbsolute(filePath) ? filePath : path.join(repoRoot, filePath);
 }
 
-function isNoMergeBaseError(error) {
-  const stderr = Buffer.isBuffer(error?.stderr)
-    ? error.stderr.toString('utf8')
-    : String(error?.stderr ?? '');
-  return /no merge base/i.test(`${stderr}\n${error?.message ?? ''}`);
+function gitErrorText(error) {
+  const parts = [error?.message, error?.stderr?.toString?.(), error?.stdout?.toString?.()];
+  return parts.filter(Boolean).join('\n');
 }
 
-function runGitText(args) {
+function isNoMergeBaseError(error) {
+  return /\bno merge base\b/u.test(gitErrorText(error));
+}
+
+function defaultRunGitDiff(args) {
   return execFileSync('git', args, {
     cwd: repoRoot,
     encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
 }
 
-function listChangedFiles(baseRef, headRef, options = {}) {
-  const gitText = options.runGitText || runGitText;
+function listChangedFiles(baseRef, headRef, runGitDiff = defaultRunGitDiff) {
+  const commonArgs = ['diff', '--name-only'];
   let output;
+
   try {
-    output = gitText(['diff', '--name-only', `${baseRef}...${headRef}`]);
+    output = runGitDiff([...commonArgs, `${baseRef}...${headRef}`]);
   } catch (error) {
     if (!isNoMergeBaseError(error)) {
       throw error;
     }
-    console.warn(
+
+    console.error(
       `[planning:db:import] No merge base for ${baseRef}...${headRef}; using direct tree diff.`
     );
-    output = gitText(['diff', '--name-only', baseRef, headRef]);
+    output = runGitDiff([...commonArgs, baseRef, headRef]);
   }
 
   return output
