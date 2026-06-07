@@ -2650,6 +2650,12 @@ symbols:
     name: resolveRepoPath
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol
+    name: isNoMergeBaseError
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
+    name: runGitText
+    path: scripts/planning-db-import.cjs
+  - <<: *planningDbContentSymbol
     name: listChangedFiles
     path: scripts/planning-db-import.cjs
   - <<: *planningDbContentSymbol

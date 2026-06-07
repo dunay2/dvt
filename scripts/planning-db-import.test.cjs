@@ -22,6 +22,7 @@ const {
   insertGovernanceSnapshot,
   insertKnowledgeSnapshot,
   insertRepositoryCommandSnapshot,
+  listChangedFiles,
   mergePlanningTaskIds,
   normalizeText,
   parseArgs,
@@ -1455,6 +1456,32 @@ test('PR readiness snapshot clears ARC evidence and risk blockers from changed d
     'docs/risk-register/quality/R-20260510-PR-READINESS.yaml',
   ]);
   assert.deepEqual(snapshot.readiness.missingRequirements, []);
+});
+
+test('changed file listing falls back to direct diff when shallow PR refs have no merge base', () => {
+  const calls = [];
+  const result = listChangedFiles('origin/main', 'HEAD', {
+    runGitText(args) {
+      calls.push(args.join(' '));
+      if (args.join(' ') === 'diff --name-only origin/main...HEAD') {
+        const error = new Error('Command failed: git diff --name-only origin/main...HEAD');
+        error.stderr = Buffer.from('fatal: origin/main...HEAD: no merge base\n');
+        throw error;
+      }
+      if (args.join(' ') === 'diff --name-only origin/main HEAD') {
+        return 'packages/@dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts\n';
+      }
+      throw new Error(`unexpected git command ${args.join(' ')}`);
+    },
+  });
+
+  assert.deepEqual(calls, [
+    'diff --name-only origin/main...HEAD',
+    'diff --name-only origin/main HEAD',
+  ]);
+  assert.deepEqual(result, [
+    'packages/@dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts',
+  ]);
 });
 
 test('docs disposition snapshot classifies active-doc cleanup actions and task-like references', () => {

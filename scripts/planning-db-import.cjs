@@ -1024,11 +1024,34 @@ function resolveRepoPath(filePath) {
   return path.isAbsolute(filePath) ? filePath : path.join(repoRoot, filePath);
 }
 
-function listChangedFiles(baseRef, headRef) {
-  const output = execFileSync('git', ['diff', '--name-only', `${baseRef}...${headRef}`], {
+function isNoMergeBaseError(error) {
+  const stderr = Buffer.isBuffer(error?.stderr)
+    ? error.stderr.toString('utf8')
+    : String(error?.stderr ?? '');
+  return /no merge base/i.test(`${stderr}\n${error?.message ?? ''}`);
+}
+
+function runGitText(args) {
+  return execFileSync('git', args, {
     cwd: repoRoot,
     encoding: 'utf8',
   });
+}
+
+function listChangedFiles(baseRef, headRef, options = {}) {
+  const gitText = options.runGitText || runGitText;
+  let output;
+  try {
+    output = gitText(['diff', '--name-only', `${baseRef}...${headRef}`]);
+  } catch (error) {
+    if (!isNoMergeBaseError(error)) {
+      throw error;
+    }
+    console.warn(
+      `[planning:db:import] No merge base for ${baseRef}...${headRef}; using direct tree diff.`
+    );
+    output = gitText(['diff', '--name-only', baseRef, headRef]);
+  }
 
   return output
     .split('\n')
@@ -4097,6 +4120,7 @@ module.exports = {
   insertKnowledgeSnapshot,
   insertPrReadinessSnapshot,
   insertRepositoryCommandSnapshot,
+  listChangedFiles,
   normalizeText,
   parseArgs,
   readLocalPlanningTaskIds,
