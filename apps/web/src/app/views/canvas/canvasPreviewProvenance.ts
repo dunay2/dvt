@@ -23,6 +23,10 @@ import {
   resolveAuthoringSqlArtifactPath,
   resolveScopedTransformationNodes,
 } from './previewGraphNodePayloads';
+import {
+  readTransformationSqlMirrorState,
+  resolveExecutableSqlText,
+} from './canvasTransformationSqlMirror';
 
 export type PreviewProvenanceResolution =
   | {
@@ -184,7 +188,7 @@ async function resolvePreviewSqlArtifact(args: {
   const { transformArtifactSource } = args;
 
   if (transformArtifactSource.kind === 'workspace-file') {
-    const draftSqlText = readDraftNodeSqlText(transformArtifactSource.node);
+    const draftSqlText = readTransformationSqlMirrorState(transformArtifactSource.node).draftSql;
     if (draftSqlText) {
       const sqlText = draftSqlText.endsWith('\n') ? draftSqlText : `${draftSqlText}\n`;
       const savedSqlArtifact = await args.workspaceFileContentCommand.saveFileContent(
@@ -250,53 +254,19 @@ function buildAuthoringPreviewSql({
   canonicalNodes: readonly CanonicalNode[];
   scopedNodeIds: readonly string[];
 }): string {
-  const explicitSql = readExecutableNodeSqlText(transformNode);
-  if (explicitSql) {
-    return explicitSql.endsWith('\n') ? explicitSql : `${explicitSql}\n`;
+  const explicitSql = resolveExecutableSqlText(transformNode);
+  if (!explicitSql.ok) {
+    throw new Error(explicitSql.message);
+  }
+
+  if (explicitSql.sql) {
+    return explicitSql.sql.endsWith('\n') ? explicitSql.sql : `${explicitSql.sql}\n`;
   }
 
   const scopedNodes = resolveScopedTransformationNodes(canonicalNodes, scopedNodeIds);
   const source = requireSourcePayload(scopedNodes.source);
 
   return `select *\nfrom ${source.payload.schema}.${source.payload.table};\n`;
-}
-
-function readDraftNodeSqlText(node: CanonicalNode): string | null {
-  const sql = node.metadata?.sql;
-  if (typeof sql === 'string' && sql.trim().length > 0) {
-    return sql.trim();
-  }
-
-  const config = node.metadata?.config;
-  if (config !== null && typeof config === 'object' && !Array.isArray(config)) {
-    const configSql = (config as Record<string, unknown>).sql;
-    if (typeof configSql === 'string' && configSql.trim().length > 0) {
-      return configSql.trim();
-    }
-  }
-
-  return null;
-}
-
-function readCompiledNodeSqlText(node: CanonicalNode): string | null {
-  const compiledSql = node.metadata?.compiledSql;
-
-  return typeof compiledSql === 'string' && compiledSql.trim().length > 0
-    ? compiledSql.trim()
-    : null;
-}
-
-function readExecutableNodeSqlText(node: CanonicalNode): string | null {
-  const draftSql = readDraftNodeSqlText(node);
-  const compiledSql = readCompiledNodeSqlText(node);
-
-  if (draftSql && compiledSql) {
-    throw new Error(
-      `Preview graph artifact cannot choose between draft SQL and compiled SQL for transform node ${node.id}. Re-apply the SQL edit or regenerate compiled SQL before preview.`
-    );
-  }
-
-  return compiledSql ?? draftSql;
 }
 
 export async function resolvePreviewProvenance({

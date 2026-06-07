@@ -1,5 +1,9 @@
 /** Owned concern: derive and apply route-owned DVT transformation authoring metadata. */
 import type { CanonicalNode } from '../../types/canonical';
+import {
+  buildDvtSqlTransformMetadata,
+  readTransformationSqlMirrorState,
+} from './canvasTransformationSqlMirror';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
 export type DvtSourceAuthoringMetadata = Readonly<{
@@ -97,15 +101,11 @@ function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
 }
 
 function createSqlTransformMetadata(node: CanonicalNode): DvtSqlTransformAuthoringMetadata {
-  const config = readNodeMetadataRecord(node, 'config');
+  const mirrorState = readTransformationSqlMirrorState(node);
 
   return {
     kind: 'sql_transform',
-    sql:
-      readString(node.metadata?.sql) ??
-      readString(config?.sql) ??
-      readString(node.metadata?.compiledSql) ??
-      '',
+    sql: mirrorState.draftSql ?? mirrorState.compiledSql ?? '',
   };
 }
 
@@ -220,24 +220,9 @@ export function applyDvtNodeAuthoringMetadata(
   }
 
   if (metadata.kind === 'sql_transform') {
-    const sql = metadata.sql.trim();
-    const { sql: _existingConfigSql, ...configWithoutSql } = existingConfig;
-    const {
-      sql: _existingSql,
-      compiledSql: _existingCompiledSql,
-      ...metadataWithoutSql
-    } = node.metadata ?? {};
-
     return {
       ...node,
-      metadata: {
-        ...metadataWithoutSql,
-        ...(sql.length > 0 ? { sql } : {}),
-        config: {
-          ...configWithoutSql,
-          ...(sql.length > 0 ? { sql } : {}),
-        },
-      },
+      metadata: buildDvtSqlTransformMetadata(node, metadata.sql),
     };
   }
 
