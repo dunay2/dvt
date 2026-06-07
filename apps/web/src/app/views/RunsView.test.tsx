@@ -3,7 +3,7 @@
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { IRunsPort } from '../ports/runs';
@@ -69,6 +69,26 @@ function buildRunEvent(overrides: Partial<RunEvent>): RunEvent {
     persistedAt: iso('2026-05-18T10:00:00.000Z'),
     ...overrides,
   } as RunEvent;
+}
+
+function RunsDetailWithNavigation({
+  targetRunId,
+}: Readonly<{ targetRunId: string }>): React.ReactElement {
+  const navigate = useNavigate();
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          void navigate(`/runs/${targetRunId}`);
+        }}
+      >
+        Open target run
+      </button>
+      <RunsView />
+    </>
+  );
 }
 
 describe('RunsView', () => {
@@ -283,6 +303,62 @@ describe('RunsView', () => {
     );
 
     expect(useExecutionStore.getState().currentRun?.runId).toBe('run_console_observed');
+  });
+
+  it('clears the shell console observed run when another run detail has no workspace', async () => {
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          runsService: buildRunsService({
+            getRunSnapshot: async (requestedRunId) => {
+              if (requestedRunId === 'run_previous') {
+                return {
+                  runId: 'run_previous',
+                  status: 'running',
+                  executor: 'postgres',
+                  startedAt: '2026-04-07T00:00:00.000Z',
+                };
+              }
+
+              return null;
+            },
+            listRunEvents: async () => ({ events: [] }),
+          }),
+          sessionContext: buildSessionContext(),
+        }}
+      >
+        <MemoryRouter initialEntries={['/runs/run_previous']}>
+          <Routes>
+            <Route
+              path="/runs/:runId"
+              element={<RunsDetailWithNavigation targetRunId="run_missing" />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => useExecutionStore.getState().currentRun?.runId === 'run_previous',
+      { description: 'previous run published to shell console evidence' }
+    );
+
+    const openTargetRunButton = Array.from(mounted.container.querySelectorAll('button')).find(
+      (button) => button.textContent?.includes('Open target run')
+    );
+
+    expect(openTargetRunButton).toBeTruthy();
+    await act(async () => {
+      fireEvent.click(openTargetRunButton!);
+    });
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('[data-slot="run-missing-state"]') != null,
+      { description: 'new detail route missing state' }
+    );
+
+    expect(useExecutionStore.getState().currentRun).toBeNull();
   });
 
   it('renders available run timeline events as a dense semantic table', async () => {
