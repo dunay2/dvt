@@ -1,3 +1,5 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
+
 import type {
   Attributes,
   ICounter,
@@ -126,21 +128,15 @@ export class OtelObservability implements IObservability {
   readonly traces: ITraces;
   readonly logs: ILogs;
 
-  private currentContext: ObservabilityContext | undefined;
+  private readonly contextStorage = new AsyncLocalStorage<ObservabilityContext>();
 
   constructor(_options: OtelObservabilityOptions) {
     this.metrics = new NoopMetrics();
     this.traces = new NoopTraces();
-    this.logs = new JsonConsoleLogs(() => this.currentContext);
+    this.logs = new JsonConsoleLogs(() => this.contextStorage.getStore());
   }
 
   withContext<T>(ctx: ObservabilityContext, fn: () => T): T {
-    const prev = this.currentContext;
-    this.currentContext = ctx;
-    try {
-      return fn();
-    } finally {
-      this.currentContext = prev;
-    }
+    return this.contextStorage.run(ctx, fn);
   }
 }

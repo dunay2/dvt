@@ -74,6 +74,49 @@ describe('OtelObservability', () => {
     });
   });
 
+  it('preserves ambient run context for structured logs emitted after an async boundary', async () => {
+    const obs = new OtelObservability({ serviceName: 'test-service' });
+    const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+    await obs.withContext(
+      {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        adapter: 'temporal',
+        runId: 'run-async',
+        planId: 'plan-async',
+      },
+      async () => {
+        await Promise.resolve();
+
+        obs.logs.info({
+          msg: 'run.async.diagnostics',
+          attributes: {
+            durationMs: 25,
+          },
+        });
+      }
+    );
+
+    expect(consoleLog).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(consoleLog.mock.calls[0]?.[0] as string)).toMatchObject({
+      level: 'info',
+      msg: 'run.async.diagnostics',
+      context: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+        adapter: 'temporal',
+        runId: 'run-async',
+        planId: 'plan-async',
+      },
+      attributes: {
+        durationMs: 25,
+      },
+    });
+  });
+
   it('keeps explicit log context when it differs from the ambient context', () => {
     const obs = new OtelObservability({ serviceName: 'test-service' });
     const consoleLog = vi.spyOn(console, 'log').mockImplementation(() => {});
