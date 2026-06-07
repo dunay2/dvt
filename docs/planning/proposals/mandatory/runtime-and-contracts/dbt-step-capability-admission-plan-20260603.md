@@ -178,6 +178,13 @@ redGreenCycles:
       - apps/api/src/application/services/startRunEngineBridge.ts
       - apps/api/test/application/services/engineStartRunUseCase.errorMapping.test.ts
     greenTest: pnpm --filter dvt-api test -- test/application/services/engineStartRunUseCase.errorMapping.test.ts
+  - id: temporal-dev-stack-clean-cache-bootstrap
+    redTest: node --test scripts/run-dev-stack.test.cjs
+    expectedFailure: Clean local Temporal CLI cache falls back to PATH instead of SDK cached-download.
+    patchSurfaces:
+      - scripts/run-dev-stack.temporal.cjs
+      - scripts/run-dev-stack.test.cjs
+    greenTest: node --test scripts/run-dev-stack.test.cjs
 symbols:
   - name: DBT_STEP_REQUIRED_CAPABILITY
     path: packages/@dvt/contracts/src/step-registry/BuiltInStepTypeEntries.ts
@@ -219,4 +226,20 @@ symbols:
     architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature DBT-STEP-CAPABILITY-ADMISSION-20260603
     cypressCoverage: not-applicable
     unitTests: [pnpm --filter dvt-api test -- test/application/services/engineStartRunUseCase.errorMapping.test.ts]
+  - name: requireTemporalPackage
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: Local protected-runtime Temporal bootstrap
+    cqRails: [StartRun]
+    fowlerSignals: [Hidden runtime dependency]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature DBT-STEP-CAPABILITY-ADMISSION-20260603
+    cypressCoverage: not-applicable
+    unitTests: [node --test scripts/run-dev-stack.test.cjs]
+  - name: startTemporalSdkDevServer
+    path: scripts/run-dev-stack.temporal.cjs
+    dddOwner: Local protected-runtime Temporal bootstrap
+    cqRails: [StartRun]
+    fowlerSignals: [Hidden runtime dependency]
+    architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature DBT-STEP-CAPABILITY-ADMISSION-20260603
+    cypressCoverage: not-applicable
+    unitTests: [node --test scripts/run-dev-stack.test.cjs]
 ```

@@ -180,7 +180,33 @@ function resolveTemporalCliExecutable(env = process.env, fsModule = fs, tmpDir =
     }
   })();
 
-  return candidates[0]?.fullPath ?? (process.platform === 'win32' ? 'temporal.exe' : 'temporal');
+  return candidates[0]?.fullPath;
+}
+
+function requireTemporalPackage(moduleId) {
+  return require(require.resolve(moduleId, { paths: [TEMPORAL_PACKAGE_ROOT] }));
+}
+
+async function startTemporalSdkDevServer({ host, port, namespace }) {
+  const { TestWorkflowEnvironment } = requireTemporalPackage('@temporalio/testing');
+  const temporalEnv = await TestWorkflowEnvironment.createLocal({
+    server: {
+      ip: host,
+      port,
+      namespace,
+      ui: false,
+      log: { format: 'pretty', level: 'warn' },
+      extraArgs: ['--disable-config-file', '--disable-config-env'],
+    },
+  });
+
+  return {
+    address: temporalEnv.address,
+    namespace: temporalEnv.namespace ?? namespace,
+    async close() {
+      await temporalEnv.teardown();
+    },
+  };
 }
 
 async function allocateFreePort(host = '127.0.0.1') {
@@ -314,7 +340,16 @@ async function startTemporalCliDevServer(options = {}) {
   const port = options.port ?? (await allocateFreePort(host));
   const executablePath =
     readNonEmptyEnv(options.executablePath) ??
-    resolveTemporalCliExecutable(options.env ?? process.env, options.fsModule ?? fs);
+    resolveTemporalCliExecutable(
+      options.env ?? process.env,
+      options.fsModule ?? fs,
+      options.tmpDir ?? os.tmpdir()
+    );
+  if (executablePath === undefined) {
+    const startSdkDevServer = options.startTemporalSdkDevServer ?? startTemporalSdkDevServer;
+    return startSdkDevServer({ host, namespace, port });
+  }
+
   const spawnProcess = options.spawnProcess ?? spawn;
   const waitForPort = options.waitForTcpPort ?? waitForTcpPort;
   const terminateProcessTree = options.terminateProcessTree ?? terminateTemporalCliProcess;
@@ -380,6 +415,7 @@ module.exports = {
   shouldBootstrapLocalTemporal,
   shouldStartTemporalWorker,
   startTemporalCliDevServer,
+  startTemporalSdkDevServer,
   startLocalTemporalService,
   terminateTemporalCliProcess,
   waitForTcpPort,
