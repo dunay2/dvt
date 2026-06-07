@@ -31,7 +31,7 @@ function defaultRunGitDiff(args) {
 export function listChangedFilesBetween(options = {}) {
   const baseRef = options.baseRef || process.env.GIT_BASE || 'origin/main';
   const headRef = options.headRef || process.env.GIT_HEAD || 'HEAD';
-  const diffFilter = options.diffFilter || 'ACMR';
+  const diffFilter = options.diffFilter || 'ACMRD';
   const runGitDiff = options.runGitDiff || defaultRunGitDiff;
   const commonArgs = ['diff', '--name-only', `--diff-filter=${diffFilter}`];
 
