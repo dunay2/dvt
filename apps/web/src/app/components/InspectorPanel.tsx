@@ -1,5 +1,5 @@
 /** Owned concern: render the passive Inspector shell over core node details and plugin-owned read-only panels. */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { PanelRightClose } from 'lucide-react';
 
@@ -149,12 +149,17 @@ function CoreNodeDetails({
   onActiveTabChange: (tab: string) => void;
 }>) {
   const model = buildNodePropertiesReadModel({ node, nodes, edges });
-  const availableTabIds = new Set([
-    ...model.sections.map((section) => section.id),
-    ...panels.map((panel) => panel.id),
-  ]);
-  const effectiveActiveTab =
-    activeTab != null && availableTabIds.has(activeTab) ? activeTab : 'general';
+  const resolvedActiveTab = resolveActiveInspectorTab({
+    activeTab,
+    sectionIds: model.sections.map((section) => section.id),
+    panels,
+  });
+
+  useEffect(() => {
+    if (activeTab !== resolvedActiveTab) {
+      onActiveTabChange(resolvedActiveTab);
+    }
+  }, [activeTab, onActiveTabChange, resolvedActiveTab]);
 
   return (
     <NodePropertiesTabs
@@ -162,11 +167,30 @@ function CoreNodeDetails({
       model={model}
       activeRunId={activeRunId}
       panels={panels}
-      activeTab={effectiveActiveTab}
+      activeTab={resolvedActiveTab}
       beforePanels={beforePanels}
       tagsEditor={tagsEditor}
       onActiveTabChange={onActiveTabChange}
       onHide={onHide}
     />
   );
+}
+
+function resolveActiveInspectorTab({
+  activeTab,
+  sectionIds,
+  panels,
+}: Readonly<{
+  activeTab?: string;
+  sectionIds: readonly string[];
+  panels: readonly InspectorPanelContribution[];
+}>): string {
+  if (
+    activeTab != null &&
+    (sectionIds.includes(activeTab) || panels.some((panel) => panel.id === activeTab))
+  ) {
+    return activeTab;
+  }
+
+  return sectionIds[0] ?? 'general';
 }

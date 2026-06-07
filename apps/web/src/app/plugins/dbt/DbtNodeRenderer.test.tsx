@@ -160,8 +160,8 @@ describe('DbtNodeRenderer history panel', () => {
           buildRunEvent({
             eventId: 'event-step-started',
             eventType: 'StepStarted',
-            runSeq: 1,
             stepId: asStepId('model_orders'),
+            runSeq: 1,
             payload: {
               message: 'Started model_orders',
             },
@@ -169,8 +169,8 @@ describe('DbtNodeRenderer history panel', () => {
           buildRunEvent({
             eventId: 'event-other-node',
             eventType: 'StepCompleted',
-            runSeq: 2,
             stepId: asStepId('model_payments'),
+            runSeq: 2,
             payload: {
               message: 'Other node finished',
             },
@@ -232,9 +232,9 @@ describe('DbtNodeRenderer history panel', () => {
             eventId: 'event-latest-node',
             eventType: 'StepCompleted',
             runId,
+            stepId: asStepId('model_orders'),
             runSeq: 1,
             payload: {
-              nodeId: 'model_orders',
               message: 'Latest run completed model_orders',
             },
           }),

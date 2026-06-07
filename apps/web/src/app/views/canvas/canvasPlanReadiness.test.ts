@@ -9,6 +9,7 @@ import {
   hasPersistedPreviewIdentityMismatch,
   resolvePlanRefForStartRun,
 } from './canvasPlanReadiness';
+import { deriveCanvasExecutionState } from './canvasExecutionState';
 
 describe('canvasPlanReadiness', () => {
   it('returns planRef from the execution plan when available', () => {
@@ -134,4 +135,54 @@ describe('canvasPlanReadiness', () => {
       ).toContain(expectedBlocker);
     }
   );
+
+  it('blocks readiness when a persisted plan exists but the current graph is not executable', () => {
+    const plan = {
+      ...mockExecutionPlan,
+      planId: 'plan_live_1',
+      planRef: makePlanRef({
+        ...mockExecutionPlan.planRef!,
+        planId: 'plan_live_1',
+        sha256: 'a'.repeat(64),
+      }),
+      preview: {
+        ...mockExecutionPlan.preview!,
+        persisted: {
+          planRecordId: 'plan_live_1',
+          canonicalPlanSha256: 'b'.repeat(64),
+        },
+      },
+    };
+
+    const executionState = deriveCanvasExecutionState({
+      canRun: true,
+      executionStrategy: {
+        kind: 'transformation_preview',
+        previewProfile: 'transformation-sql-first-v1',
+      },
+      currentPlan: plan,
+      lastPlannedDraftSignature: null,
+      canonicalNodes: [
+        {
+          id: 'transform_1',
+          name: 'Transform',
+          pluginId: 'dvt',
+          kind: 'dvt:sql_transform',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      canonicalEdges: [],
+      selectedNodeIds: [],
+      workspaceNodeIds: ['transform_1'],
+    });
+
+    expect(executionState.canStartRun).toBe(false);
+    expect(executionState.planRunReadiness.status).toBe('blocked');
+    expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');
+    expect(executionState.planRunReadiness.summary).toBe(
+      executionState.executableGraphFailureMessage
+    );
+  });
 });
