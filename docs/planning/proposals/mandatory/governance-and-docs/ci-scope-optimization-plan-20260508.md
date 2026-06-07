@@ -1077,6 +1077,17 @@ symbols:
     cypressCoverage: N/A - CI scope tooling only
     unitTests:
       - node --test tools/ci/workflow-scope-classification.test.mjs
+  - name: buildNonPullRequestWorkspaceMatrixOutputs
+    path: tools/ci/emit-workspace-matrix.mjs
+    dddOwner: WorkspaceMatrix
+    cqRails:
+      - EmitAffectedWorkspaceMatrix
+    fowlerSignals:
+      - Preserve non-PR full workspace fan-out without widening PR workflow diffs
+    architectureGuard: node --test tools/ci/emit-workspace-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-workspace-matrix.test.mjs
   - name: computeBooleanScope
     path: tools/ci/scope-config.mjs
     dddOwner: ChangedFileSet
@@ -1216,6 +1227,17 @@ symbols:
       - EmitWorkflowCapabilityScopes
     fowlerSignals:
       - Keep workflow matrix emission behind a testable function
+    architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
+    cypressCoverage: N/A - CI scope tooling only
+    unitTests:
+      - node --test tools/ci/emit-test-matrix.test.mjs
+  - name: buildNonPullRequestTestMatrixOutputs
+    path: tools/ci/emit-test-matrix.mjs
+    dddOwner: TestPackageMatrix
+    cqRails:
+      - EmitWorkflowCapabilityScopes
+    fowlerSignals:
+      - Preserve non-PR full package test fan-out without widening PR workflow diffs
     architectureGuard: node --test tools/ci/emit-test-matrix.test.mjs
     cypressCoverage: N/A - CI scope tooling only
     unitTests:

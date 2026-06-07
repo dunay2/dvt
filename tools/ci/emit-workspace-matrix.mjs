@@ -1,6 +1,7 @@
 import { pathToFileURL } from 'node:url';
 
 import {
+  WORKSPACE_ENTRIES,
   buildChangedScopeContext,
   computeWorkspaceMatrix,
   getChangedFiles,
@@ -12,11 +13,18 @@ export function buildWorkspaceMatrixOutputs(changedFiles, scopeContext = {}) {
   return computeWorkspaceMatrix(changedFiles, scopeContext);
 }
 
+export function buildNonPullRequestWorkspaceMatrixOutputs() {
+  return {
+    anyChanged: true,
+    include: WORKSPACE_ENTRIES.map(({ name, pkg }) => ({ name, pkg })),
+  };
+}
+
 export async function main() {
   const eventName = process.env.GITHUB_EVENT_NAME ?? '';
 
   if (!isPullRequestEvent(eventName)) {
-    const { anyChanged, include } = buildWorkspaceMatrixOutputs(['.github/workflows/ci.yml']);
+    const { anyChanged, include } = buildNonPullRequestWorkspaceMatrixOutputs();
     setGitHubOutput('any_changed', anyChanged);
     setGitHubOutput('matrix', JSON.stringify({ include }));
     return;
