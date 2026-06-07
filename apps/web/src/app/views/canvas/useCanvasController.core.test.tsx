@@ -370,7 +370,7 @@ describe('useCanvasController core', () => {
     expect(harness.state.store.showInspectorPanel).toHaveBeenCalledTimes(1);
   });
 
-  it('stops exposing node removal handlers when graph edits are gated', async () => {
+  it('stops exposing node mutation handlers when graph edits are gated', async () => {
     const userPermissions = harness.state.store.userPermissions as {
       canPlan: boolean;
       canRun: boolean;
@@ -385,11 +385,18 @@ describe('useCanvasController core', () => {
     await harness.renderProbe();
 
     const latestBuildNodesCall = harness.mocks.buildNodesWithImpact.mock.calls.at(-1)?.[0] as
-      | { handlers?: { onDuplicateNode?: unknown; onRemoveNode?: unknown } }
+      | {
+          handlers?: {
+            onDuplicateNode?: unknown;
+            onRemoveNode?: unknown;
+            onToggleNodeSelection?: unknown;
+          };
+        }
       | undefined;
 
     expect(latestBuildNodesCall?.handlers?.onDuplicateNode).toBeUndefined();
     expect(latestBuildNodesCall?.handlers?.onRemoveNode).toBeUndefined();
+    expect(latestBuildNodesCall?.handlers?.onToggleNodeSelection).toBeUndefined();
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenCalledWith(
       expect.objectContaining({
         canEditEdges: false,

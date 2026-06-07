@@ -4,7 +4,7 @@ type NodeActionHandlers = {
   onInspectNode: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
-  onToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
+  onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
 };
 
