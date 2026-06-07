@@ -342,6 +342,25 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
   assertWorkflowContains(prQualityGate, 'steps.scope.outputs.code_validation_relevant');
 });
 
+test('PR quality gate prepares planning DB before DB-first feature mechanization implementation', () => {
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const prepareStep = 'name: Prepare planning DB for feature mechanization validation';
+  const implementationStep = 'run: pnpm docs:feature-mechanization:implementation';
+
+  assertWorkflowContains(prQualityGate, prepareStep);
+  assertWorkflowContains(
+    prQualityGate,
+    "steps.scope.outputs.feature_mechanization_relevant == 'true'"
+  );
+  assertWorkflowContains(prQualityGate, 'pnpm planning:db:up');
+  assertWorkflowContains(prQualityGate, 'pnpm planning:db:migrate');
+  assertWorkflowContains(prQualityGate, 'pnpm planning:db:import -- --if-stale --governance-only');
+  assert.ok(
+    prQualityGate.indexOf(prepareStep) < prQualityGate.indexOf(implementationStep),
+    'planning DB preparation must happen before feature implementation mechanization'
+  );
+});
+
 test('scope diff consumers use shallow checkout instead of full PR history', () => {
   const fetchScopeBaseAction = readFileSync('.github/actions/fetch-scope-base/action.yml', 'utf8');
   const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');

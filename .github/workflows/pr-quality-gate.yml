@@ -266,6 +266,27 @@ jobs:
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:feature-mechanization
 
+      - name: Prepare planning DB for feature mechanization validation
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: |
+          export DVT_PLANNING_DB_DATA_DIR="${RUNNER_TEMP}/dvt-planning-db/postgres-data"
+          pnpm planning:db:up
+          for attempt in {1..30}; do
+            if pnpm planning:db:health; then
+              break
+            fi
+            if [[ "$attempt" == "30" ]]; then
+              echo "planning DB did not become healthy in time" >&2
+              exit 1
+            fi
+            sleep 2
+          done
+          pnpm planning:db:migrate
+          pnpm planning:db:import -- --if-stale --governance-only
+
       - name: Validate feature implementation mechanization
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
