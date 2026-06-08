@@ -226,6 +226,45 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Selected: 1');
   });
 
+  it('does not carry explorer preselection into a different warehouse connection', async () => {
+    const listWarehouseTables = vi.fn(async () => [buildWarehouseTable({ table: 'CUSTOMERS' })]);
+
+    await renderWizard({
+      initialSelection: {
+        connectionId: 'conn-1',
+        tables: [buildWarehouseTable({ table: 'CUSTOMERS' })],
+      },
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [
+          {
+            id: 'conn-1',
+            name: 'Snowflake PROD',
+            type: 'snowflake',
+            database: 'RAW',
+          },
+          {
+            id: 'conn-2',
+            name: 'Snowflake QA',
+            type: 'snowflake',
+            database: 'RAW',
+          },
+        ],
+        listWarehouseTables,
+      }),
+    });
+    await flushPendingWork();
+
+    expect(document.body.textContent).toContain('Selected: 1');
+
+    await clickButtonContaining('Back');
+    await clickClickableDivByText('Snowflake QA');
+    await clickNext();
+    await flushPendingWork();
+
+    expect(listWarehouseTables).toHaveBeenLastCalledWith('conn-2');
+    expect(document.body.textContent).toContain('Selected: 0');
+  });
+
   it('explores governed database connections with search before table discovery', async () => {
     await renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({

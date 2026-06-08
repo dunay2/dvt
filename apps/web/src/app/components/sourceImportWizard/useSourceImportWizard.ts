@@ -100,12 +100,16 @@ export function useSourceImportWizard({
     () => state.connections.find((connection) => connection.id === state.selectedConnection),
     [state.connections, state.selectedConnection]
   );
+  const initiallySelectedTablesForConnection =
+    state.selectedConnection === initialSelection?.connectionId
+      ? initialSelection.tables
+      : undefined;
 
   useConnectionsLoader({ open, warehouseSourceImport, setState });
   useTablesLoader({
     open,
     selectedConnection: state.selectedConnection,
-    initiallySelectedTables: initialSelection?.tables,
+    initiallySelectedTables: initiallySelectedTablesForConnection,
     warehouseSourceImport,
     setState,
   });
