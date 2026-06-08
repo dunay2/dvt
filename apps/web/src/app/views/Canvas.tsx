@@ -20,6 +20,13 @@ import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentat
 import { useCanvasController } from './canvas/useCanvasController';
 import { getCanvasWorkbenchTabViews } from '../plugins/registry';
 import type { CanvasWorkbenchTabId } from '../plugins/contracts/PluginManifest';
+import type { CanvasDraftPresentationState } from './canvas/canvasDraftPresentationModel';
+
+function hasPrimaryCanvasBlocker(routeState: CanvasDraftPresentationState['routeState']): boolean {
+  return ['loading_backend', 'blocked_backend', 'loading_graph', 'error_graph'].includes(
+    routeState
+  );
+}
 
 function CanvasContent(): JSX.Element {
   const navigate = useNavigate();
@@ -81,7 +88,8 @@ function CanvasContent(): JSX.Element {
   const shouldReplaceCenterSurfaceWithWorkbenchTab =
     canvasWorkbenchTabsState.unavailableState == null &&
     activeWorkbenchTab?.scope === 'workspace' &&
-    activeWorkbenchTab.id !== 'graph';
+    activeWorkbenchTab.id !== 'graph' &&
+    !hasPrimaryCanvasBlocker(presentationState.routeState);
   const layout = {
     ...shellProps.layout,
     centerSurface: shouldReplaceCenterSurfaceWithWorkbenchTab

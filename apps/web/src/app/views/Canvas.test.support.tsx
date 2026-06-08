@@ -80,12 +80,12 @@ export function currentCanvasRouteState() {
   return canvasRouteState;
 }
 
-async function renderCanvasRoute(root: Root): Promise<void> {
+async function renderCanvasRoute(root: Root, initialEntry = '/canvas'): Promise<void> {
   const router = createMemoryRouter(
     [
       {
         id: 'dbt.canvas',
-        path: '/canvas',
+        path: '/canvas/:workbenchTab?',
         handle: {
           routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
         },
@@ -93,7 +93,7 @@ async function renderCanvasRoute(root: Root): Promise<void> {
       },
     ],
     {
-      initialEntries: ['/canvas'],
+      initialEntries: [initialEntry],
     }
   );
 
@@ -118,8 +118,8 @@ export function createCanvasRouteHarness() {
 
   return {
     container,
-    async render() {
-      await renderCanvasRoute(root);
+    async render(initialEntry?: string) {
+      await renderCanvasRoute(root, initialEntry);
     },
     cleanup() {
       act(() => {
@@ -136,10 +136,11 @@ export type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
 
 export async function renderCanvasRouteWithController(
   harness: CanvasRouteHarness,
-  overrides?: Partial<CanvasController>
+  overrides?: Partial<CanvasController>,
+  options?: Readonly<{ initialEntry?: string }>
 ) {
   mockedUseCanvasController.mockReturnValue(buildController(overrides));
-  await harness.render();
+  await harness.render(options?.initialEntry);
 }
 
 export function findCanvasButton(container: ParentNode, label: string) {
