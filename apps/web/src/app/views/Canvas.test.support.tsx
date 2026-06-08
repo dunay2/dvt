@@ -32,6 +32,7 @@ export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration
 const canvasRouteState = vi.hoisted(() => ({
   explorerProps: null as null | Record<string, unknown>,
   inspectorProps: null as null | Record<string, unknown>,
+  initialEntry: '/canvas',
 }));
 
 vi.mock('@xyflow/react', () => ({
@@ -85,7 +86,7 @@ async function renderCanvasRoute(root: Root): Promise<void> {
     [
       {
         id: 'dbt.canvas',
-        path: '/canvas',
+        path: '/canvas/:workbenchTab?',
         handle: {
           routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
         },
@@ -93,7 +94,7 @@ async function renderCanvasRoute(root: Root): Promise<void> {
       },
     ],
     {
-      initialEntries: ['/canvas'],
+      initialEntries: [canvasRouteState.initialEntry],
     }
   );
 
@@ -113,12 +114,14 @@ export function createCanvasRouteHarness() {
   mockedUseCanvasController.mockReset();
   canvasRouteState.explorerProps = null;
   canvasRouteState.inspectorProps = null;
+  canvasRouteState.initialEntry = '/canvas';
   resetCanvasDraftPresentationState();
   resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
 
   return {
     container,
-    async render() {
+    async render(initialEntry?: string) {
+      canvasRouteState.initialEntry = initialEntry ?? '/canvas';
       await renderCanvasRoute(root);
     },
     cleanup() {
@@ -136,10 +139,11 @@ export type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
 
 export async function renderCanvasRouteWithController(
   harness: CanvasRouteHarness,
-  overrides?: Partial<CanvasController>
+  overrides?: Partial<CanvasController>,
+  options?: Readonly<{ initialEntry?: string }>
 ) {
   mockedUseCanvasController.mockReturnValue(buildController(overrides));
-  await harness.render();
+  await harness.render(options?.initialEntry);
 }
 
 export function findCanvasButton(container: ParentNode, label: string) {
