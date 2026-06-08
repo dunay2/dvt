@@ -56,6 +56,8 @@ contract validation, or engine determinism tests.
 - Ordinary web pull requests route through `pnpm test:web:changed`.
 - Pushes to `main`, manual workflow runs, and root-build-sensitive PRs route
   through `pnpm test:web:ci`.
+- CI Vitest configs bound worker count and worker old-space capacity in the
+  suite catalog so hosted runners keep full web coverage without worker OOMs.
 - Test support under `apps/web/src/testing/**` remains test-only and must not
   become a production adapter surface.
 - `vitest*.config.ts` files are adapters over the suite catalog. They do not own

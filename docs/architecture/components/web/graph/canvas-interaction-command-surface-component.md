@@ -115,8 +115,7 @@ Related command seams:
   route-local read/selection action.
 - Read-only execution posture produces no execution-selection action.
 - Blocked graph mutation posture hides graph-edit actions such as duplicate,
-  remove, and schema attachment, but does not hide execution selection when
-  preview or run is otherwise allowed.
+  remove, schema attachment, and execution selection.
 - Context-menu node creation uses the clicked flow position, not a hidden
   default slot.
 - Toolbar and context-menu node creation share `CreateCanvasAuthoringNode`.

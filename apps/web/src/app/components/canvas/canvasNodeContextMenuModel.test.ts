@@ -74,7 +74,7 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'remove-node')?.label).toMatch(/\S/);
   });
 
-  it('keeps execution selection available when graph mutation is blocked', () => {
+  it('keeps only inspection available when graph mutation is blocked', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
@@ -85,15 +85,12 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: true,
     });
 
-    expect(actionIds(model)).toEqual(['inspect-node', 'select-node-for-execution']);
+    expect(actionIds(model)).toEqual(['inspect-node']);
     expect(actionById(model, 'inspect-node')).toMatchObject({
       intent: 'read',
       disabled: false,
     });
-    expect(actionById(model, 'select-node-for-execution')).toMatchObject({
-      intent: 'command',
-      disabled: false,
-    });
+    expect(actionById(model, 'select-node-for-execution')).toBeUndefined();
     expect(actionById(model, 'duplicate-node')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toBeUndefined();
   });

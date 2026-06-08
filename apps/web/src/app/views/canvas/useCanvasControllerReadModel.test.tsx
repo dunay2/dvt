@@ -131,7 +131,26 @@ afterEach(() => {
 });
 
 describe('useCanvasControllerReadModel', () => {
-  it('keeps execution selection handlers when graph mutation is blocked', async () => {
+  it('keeps execution selection handlers when graph mutation and execution selection are allowed', async () => {
+    const args = buildReadModelArgs({
+      canMutateGraph: true,
+      canSelectExecution: true,
+    });
+    const mounted = await renderReadModel(args);
+
+    try {
+      const nodeData = readProjectedNodeData(mounted.readState());
+
+      expect(nodeData?.onDuplicateNode).toBe(args.graphHandlers.handleDuplicateNode);
+      expect(nodeData?.onRemoveNode).toBe(args.graphHandlers.handleRemoveNode);
+      expect(nodeData?.onAttachSchemaToNode).toBe(args.graphHandlers.handleAttachSchemaToNode);
+      expect(nodeData?.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('removes execution selection handlers when graph mutation is blocked', async () => {
     const args = buildReadModelArgs({
       canMutateGraph: false,
       canSelectExecution: true,
@@ -141,10 +160,7 @@ describe('useCanvasControllerReadModel', () => {
     try {
       const nodeData = readProjectedNodeData(mounted.readState());
 
-      expect(nodeData?.onDuplicateNode).toBeUndefined();
-      expect(nodeData?.onRemoveNode).toBeUndefined();
-      expect(nodeData?.onAttachSchemaToNode).toBeUndefined();
-      expect(nodeData?.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
+      expect(nodeData?.onToggleNodeSelection).toBeUndefined();
     } finally {
       await mounted.cleanup();
     }
@@ -152,7 +168,7 @@ describe('useCanvasControllerReadModel', () => {
 
   it('removes execution selection handlers when planning and running are blocked', async () => {
     const args = buildReadModelArgs({
-      canMutateGraph: false,
+      canMutateGraph: true,
       canSelectExecution: false,
     });
     const mounted = await renderReadModel(args);

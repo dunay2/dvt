@@ -182,7 +182,7 @@ describe('buildCanvasShellPanels', () => {
     });
   });
 
-  it('keeps inspector execution selection available when graph mutation is blocked', () => {
+  it('keeps inspector execution selection unavailable when graph mutation is blocked', () => {
     const inspectorNode = buildInspectorNode();
     const handleToggleNodeSelection = vi.fn();
     const panels = buildCanvasShellPanels(
@@ -205,8 +205,8 @@ describe('buildCanvasShellPanels', () => {
 
     expect(panels.inspectorAuthoring.modelerActions).toMatchObject({
       selectedForExecution: false,
-      onToggleNodeSelection: handleToggleNodeSelection,
     });
+    expect(panels.inspectorAuthoring.modelerActions?.onToggleNodeSelection).toBeUndefined();
     expect(panels.inspectorAuthoring.modelerActions?.onDuplicateNode).toBeUndefined();
     expect(panels.inspectorAuthoring.modelerActions?.onRemoveNode).toBeUndefined();
   });

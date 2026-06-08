@@ -84,7 +84,7 @@ export function buildCanvasNodeModelerActionModel({
     });
   }
 
-  if (canToggleNodeSelection) {
+  if (canMutateGraph && canToggleNodeSelection) {
     editActions.push({
       id: selectedForExecution ? 'deselect-node-from-execution' : 'select-node-for-execution',
       label: selectedForExecution ? 'Deselect for execution' : 'Select for execution',

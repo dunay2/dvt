@@ -33,6 +33,8 @@ type WebVitestSuiteDefinition = Readonly<{
 }>;
 
 const WEB_VITEST_DEFAULT_EXCLUDE = ['node_modules/**', 'dist/**'] as const;
+export const WEB_VITEST_CI_WORKER_COUNT = 2;
+export const WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB = 4096;
 
 export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinition> = {
   all: {
@@ -176,6 +178,26 @@ export function createWebVitestConfig(suiteName: WebVitestSuiteName): UserConfig
       environment: 'jsdom',
       include: [...suite.include],
       exclude: [...suite.exclude],
+      ...(isWebVitestCi() ? createWebVitestCiWorkerConfig() : {}),
+    },
+  };
+}
+
+function isWebVitestCi(): boolean {
+  return process.env.DVT_CI === '1' || process.env.CI === 'true';
+}
+
+function createWebVitestCiWorkerConfig(): NonNullable<UserConfig['test']> {
+  return {
+    pool: 'forks',
+    minWorkers: 1,
+    maxWorkers: WEB_VITEST_CI_WORKER_COUNT,
+    poolOptions: {
+      forks: {
+        minForks: 1,
+        maxForks: WEB_VITEST_CI_WORKER_COUNT,
+        execArgv: [`--max-old-space-size=${WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB}`],
+      },
     },
   };
 }

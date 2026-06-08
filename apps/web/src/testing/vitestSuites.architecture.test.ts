@@ -4,13 +4,16 @@
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { readChangedFiles } from '../../scripts/run-vitest-changed-suites';
 import {
   classifyWebVitestFile,
+  createWebVitestConfig,
   resolveWebVitestChangedSuitePlan,
   type WebVitestChangedSuiteName,
+  WEB_VITEST_CI_WORKER_COUNT,
+  WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB,
   WEB_VITEST_CHANGED_SUITE_COMMANDS,
   WEB_VITEST_FOCUS_SUITE_NAMES,
   WEB_VITEST_PRIMARY_SUITE_NAMES,
@@ -116,6 +119,10 @@ function rawIntakePathReferencePatterns(): RegExp[] {
     new RegExp(String.raw`['"\`]${rawIntakeDirectoryName}['"\`]`),
   ];
 }
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('web Vitest suite partition', () => {
   it('assigns every web Vitest file to exactly one primary suite', () => {
@@ -239,6 +246,29 @@ describe('web Vitest suite partition', () => {
     expect(readFileSync(resolve(webRoot, 'vitest.config.ts'), 'utf8')).toContain(
       "createWebVitestConfig('all')"
     );
+  });
+
+  it('bounds CI Vitest workers without removing primary suite coverage', () => {
+    vi.stubEnv('DVT_CI', '1');
+    vi.stubEnv('CI', '');
+
+    const config = createWebVitestConfig('presentation');
+
+    expect(config.test).toMatchObject({
+      environment: 'jsdom',
+      include: WEB_VITEST_SUITES.presentation.include,
+      exclude: WEB_VITEST_SUITES.presentation.exclude,
+      pool: 'forks',
+      minWorkers: 1,
+      maxWorkers: WEB_VITEST_CI_WORKER_COUNT,
+      poolOptions: {
+        forks: {
+          minForks: 1,
+          maxForks: WEB_VITEST_CI_WORKER_COUNT,
+          execArgv: [`--max-old-space-size=${WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB}`],
+        },
+      },
+    });
   });
 
   it('uses the CI-provided base and head refs without requiring a merge base', () => {
