@@ -32,6 +32,7 @@ export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration
 const canvasRouteState = vi.hoisted(() => ({
   explorerProps: null as null | Record<string, unknown>,
   inspectorProps: null as null | Record<string, unknown>,
+  initialEntry: '/canvas',
 }));
 
 vi.mock('@xyflow/react', () => ({
@@ -80,7 +81,7 @@ export function currentCanvasRouteState() {
   return canvasRouteState;
 }
 
-async function renderCanvasRoute(root: Root, initialEntry = '/canvas'): Promise<void> {
+async function renderCanvasRoute(root: Root): Promise<void> {
   const router = createMemoryRouter(
     [
       {
@@ -93,7 +94,7 @@ async function renderCanvasRoute(root: Root, initialEntry = '/canvas'): Promise<
       },
     ],
     {
-      initialEntries: [initialEntry],
+      initialEntries: [canvasRouteState.initialEntry],
     }
   );
 
@@ -113,13 +114,15 @@ export function createCanvasRouteHarness() {
   mockedUseCanvasController.mockReset();
   canvasRouteState.explorerProps = null;
   canvasRouteState.inspectorProps = null;
+  canvasRouteState.initialEntry = '/canvas';
   resetCanvasDraftPresentationState();
   resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
 
   return {
     container,
     async render(initialEntry?: string) {
-      await renderCanvasRoute(root, initialEntry);
+      canvasRouteState.initialEntry = initialEntry ?? '/canvas';
+      await renderCanvasRoute(root);
     },
     cleanup() {
       act(() => {
