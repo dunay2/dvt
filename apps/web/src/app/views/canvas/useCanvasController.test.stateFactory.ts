@@ -65,6 +65,7 @@ function buildDefaultCanvasHarnessStore(currentPlan: PlanViewModel): CanvasHarne
     projectId: 'project-a',
     environmentId: 'dev',
     targetAdapter: 'temporal',
+    availableTargetAdapters: ['temporal'],
     availableWorkspaces: [
       {
         tenantId: 'tenant-a',

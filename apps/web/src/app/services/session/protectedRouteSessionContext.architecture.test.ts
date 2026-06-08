@@ -59,6 +59,8 @@ describe('protected route session context architecture', () => {
     expect(resolver.indexOf("'/session'")).toBeLessThan(resolver.indexOf("'/workspace/context'"));
     expect(resolver).toContain('resolveSelectedWorkspaceScope');
     expect(resolver).toContain('setWorkspaceScopeSelectionContext');
+    expect(resolver).toContain('workspaceContext.deploymentScope.targetAdapter');
+    expect(resolver).toContain('workspaceContext.deploymentScope.availableTargetAdapters');
     expect(resolver).not.toContain('setSessionContext');
   });
 
@@ -113,6 +115,7 @@ describe('protected route session context architecture', () => {
     }
     expect(componentGuide).toContain('```mermaid');
     expect(componentGuide).toContain('GET /workspace/context');
+    expect(componentGuide).toContain('deployment adapter');
     expect(userStories).toContain('EWC-1');
     expect(userStories).toContain('EWC-5');
   });

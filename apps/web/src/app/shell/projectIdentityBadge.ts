@@ -1,5 +1,6 @@
 /** Owned concern: project workspace session scope into read-only shell identity labels. */
 import type { WorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
+import type { RunContext } from '../types/engine';
 
 type WorkspaceOption = WorkspaceBootstrapConfig['tenantOptions'][number];
 
@@ -8,6 +9,7 @@ export type ProjectIdentityBadgeInput = Readonly<{
   selectedTenant: string;
   selectedProject: string;
   selectedEnvironment: string;
+  targetAdapter: RunContext['targetAdapter'];
 }>;
 
 export type ProjectIdentityBadge = Readonly<{
@@ -19,6 +21,7 @@ export type ProjectIdentityBadge = Readonly<{
   environmentLabel: string;
   compactProjectId: string;
   slug: string;
+  targetAdapter: RunContext['targetAdapter'];
   draftPostureLabel: string;
 }>;
 
@@ -35,6 +38,7 @@ export function buildProjectIdentityBadge({
   selectedTenant,
   selectedProject,
   selectedEnvironment,
+  targetAdapter,
 }: ProjectIdentityBadgeInput): ProjectIdentityBadge {
   const tenantLabel = resolveWorkspaceOptionLabel(
     workspaceBootstrap.tenantOptions,
@@ -61,6 +65,7 @@ export function buildProjectIdentityBadge({
     environmentLabel,
     compactProjectId: selectedProject,
     slug: `${tenantLabel} / ${projectLabel}`,
+    targetAdapter,
     draftPostureLabel: 'Draft scope',
   };
 }

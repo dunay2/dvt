@@ -70,6 +70,33 @@ function toResponseBody(body: unknown): { payload: BodyInit | null; contentType:
   };
 }
 
+function completeWorkspaceContextStubBody(
+  method: string,
+  pathname: string | RegExp,
+  body: unknown
+): unknown {
+  if (method !== 'GET' || pathname !== '/workspace/context') {
+    return body;
+  }
+
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return body;
+  }
+
+  const record = body as Record<string, unknown>;
+  if (record.deploymentScope !== undefined) {
+    return body;
+  }
+
+  return {
+    ...record,
+    deploymentScope: {
+      targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
+    },
+  };
+}
+
 export function resetE2eApiStubs(): void {
   e2eApiStubs.length = 0;
   e2eApiCalls.length = 0;
@@ -93,10 +120,12 @@ export function stubE2eJsonApi(
   body: unknown,
   options: Omit<E2eApiStubResponse, 'body'> = {}
 ): void {
+  const normalizedMethod = normalizeMethod(method);
+  const resolvedBody = completeWorkspaceContextStubBody(normalizedMethod, pathname, body);
   stubE2eApi(method, pathname, () => ({
     statusCode: options.statusCode,
     headers: options.headers,
-    body,
+    body: resolvedBody,
   }));
 }
 
@@ -108,8 +137,7 @@ export function installE2eApiFetchStub(window: Window): void {
     const requestUrl = new URL(request.url);
     const requestMethod = normalizeMethod(request.method);
     const matchedStub = e2eApiStubs.find(
-      (stub) =>
-        stub.method === requestMethod && pathnameMatches(requestUrl.pathname, stub.pathname)
+      (stub) => stub.method === requestMethod && pathnameMatches(requestUrl.pathname, stub.pathname)
     );
 
     if (!matchedStub) {
@@ -156,7 +184,7 @@ export function getLastE2eApiCall(
   method?: string
 ): E2eApiCallRecord | null {
   const calls = getE2eApiCalls(pathname, method);
-  return calls.length > 0 ? calls[calls.length - 1] ?? null : null;
+  return calls.length > 0 ? (calls[calls.length - 1] ?? null) : null;
 }
 
 export function waitForE2eApiCall(pathname: string | RegExp, method?: string): Cypress.Chainable {

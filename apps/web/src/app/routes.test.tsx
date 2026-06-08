@@ -90,6 +90,10 @@ function buildWorkspaceContextResponse(): Response {
           environmentId: 'dev',
         },
       ],
+      deploymentScope: {
+        targetAdapter: 'temporal',
+        availableTargetAdapters: ['temporal'],
+      },
     }),
     {
       status: 200,

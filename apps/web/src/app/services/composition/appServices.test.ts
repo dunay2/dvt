@@ -330,6 +330,8 @@ describe('buildAppServices', () => {
           environmentId: 'env-1',
         },
         availableScopes: [],
+        targetAdapter: 'temporal',
+        availableTargetAdapters: ['temporal'],
         status: 'selected',
       }),
       selectWorkspaceScope: (selectedScope) => ({

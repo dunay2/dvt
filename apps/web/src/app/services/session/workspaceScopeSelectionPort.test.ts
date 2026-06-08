@@ -28,6 +28,7 @@ describe('workspace scope selection command', () => {
       projectId: selectedScope.projectId,
       environmentId: selectedScope.environmentId,
       targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
       availableWorkspaces: [selectedScope, alternateScope],
       workspaceScopeSelectionStatus: 'selected',
       workspaceScopeSelectionRejectionReason: undefined,
@@ -41,6 +42,7 @@ describe('workspace scope selection command', () => {
       projectId: originalSessionState.projectId,
       environmentId: originalSessionState.environmentId,
       targetAdapter: originalSessionState.targetAdapter,
+      availableTargetAdapters: originalSessionState.availableTargetAdapters,
       availableWorkspaces: originalSessionState.availableWorkspaces,
       workspaceScopeSelectionStatus: originalSessionState.workspaceScopeSelectionStatus,
       workspaceScopeSelectionRejectionReason:
@@ -63,7 +65,7 @@ describe('workspace scope selection command', () => {
     });
   });
 
-  it('returns a stable selection snapshot until the workspace selection changes', () => {
+  it('returns a stable selection snapshot until the workspace or deployment selection changes', () => {
     const port = createWorkspaceScopeSelectionPort();
 
     const firstSelection = port.getSelection();
@@ -86,9 +88,20 @@ describe('workspace scope selection command', () => {
     expect(changedSelection).not.toBe(firstSelection);
     expect(changedSelection).toMatchObject({
       selectedScope: alternateScope,
+      targetAdapter: 'temporal',
       status: 'selected',
     });
     expect(port.getSelection()).toBe(changedSelection);
+
+    useSessionStore.setState({
+      targetAdapter: 'temporal',
+      availableTargetAdapters: [],
+    });
+
+    const deploymentChangedSelection = port.getSelection();
+
+    expect(deploymentChangedSelection).not.toBe(changedSelection);
+    expect(deploymentChangedSelection.availableTargetAdapters).toEqual([]);
   });
 
   it('notifies every subscriber when the workspace selection changes', () => {
@@ -148,6 +161,17 @@ describe('workspace scope selection command', () => {
     expect(() => readGrantedWorkspaceScope()).toThrow(WorkspaceScopeSelectionError);
     expect(() => readGrantedWorkspaceScope()).toThrow(
       WORKSPACE_SCOPE_SELECTION_REJECTION_REASON.unresolved
+    );
+  });
+
+  it('fails closed when the selected deployment adapter is not server-granted', () => {
+    useSessionStore.setState({
+      availableTargetAdapters: [],
+    });
+
+    expect(() => readGrantedWorkspaceScope()).toThrow(WorkspaceScopeSelectionError);
+    expect(() => readGrantedWorkspaceScope()).toThrow(
+      WORKSPACE_SCOPE_SELECTION_REJECTION_REASON.unavailable
     );
   });
 

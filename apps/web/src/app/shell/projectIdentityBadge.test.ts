@@ -22,6 +22,7 @@ describe('project identity badge', () => {
       selectedTenant: 'tenant-a',
       selectedProject: 'project-a',
       selectedEnvironment: 'dev',
+      targetAdapter: 'temporal',
     });
 
     expect(badge).toEqual({
@@ -33,6 +34,7 @@ describe('project identity badge', () => {
       environmentLabel: 'Development',
       compactProjectId: 'project-a',
       slug: 'Tenant A / Project A',
+      targetAdapter: 'temporal',
       draftPostureLabel: 'Draft scope',
     });
   });
@@ -43,6 +45,7 @@ describe('project identity badge', () => {
       selectedTenant: 'tenant-b',
       selectedProject: 'project-b',
       selectedEnvironment: 'prod',
+      targetAdapter: 'temporal',
     });
 
     expect(badge.tenantLabel).toBe('tenant-b');

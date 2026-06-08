@@ -21,6 +21,7 @@ export function registerProtectedWorkspaceContextRouteGroup(
 
   app.get(RUNTIME_ROUTE_PATH.workspaceContext, { config: { rateLimit } }, async (request, reply) =>
     workspaceContextRoute(request as never, reply as never, {
+      adapterRegistry: protectedModule.startRunTargetAdapterRegistry,
       authenticator: protectedModule.authenticator,
       workspaceContextQuery: protectedModule.workspaceContextQuery,
     })

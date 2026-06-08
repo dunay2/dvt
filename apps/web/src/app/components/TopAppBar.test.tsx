@@ -42,6 +42,8 @@ describe('ShellTopBar workspace context', () => {
       tenantId: 'acme-corp',
       projectId: 'dbt-analytics',
       environmentId: 'dev',
+      targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
     });
     useUiLayoutStore.setState({ focusMode: false });
   });
@@ -51,6 +53,7 @@ describe('ShellTopBar workspace context', () => {
       root.unmount();
     });
     container.remove();
+    document.body.replaceChildren();
   });
 
   it('keeps workspace scope as read-only context in uncataloged global top-bar chrome', async () => {
@@ -118,6 +121,8 @@ describe('ShellTopBar workspace context', () => {
         expect(document.body.textContent).toContain('Workspace context');
         expect(document.body.textContent).toContain('dbt-analytics');
         expect(document.body.textContent).toContain('dev');
+        expect(document.body.textContent).toContain('Deployment adapter');
+        expect(document.body.textContent).toContain('temporal');
       });
     }
   );
@@ -158,6 +163,7 @@ describe('ShellTopBar workspace context', () => {
       workspaceContext: 'Contexto del workspace',
       projectScope: 'Proyecto',
       environmentScope: 'Entorno',
+      deploymentScope: 'Adapter de despliegue',
     });
   });
 
@@ -170,18 +176,33 @@ describe('ShellTopBar workspace context', () => {
       fireEvent.pointerDown(container.querySelector('[data-slot="shell-app-menu-trigger"]')!);
     });
 
-    await waitFor(() => {
-      expect(document.body.textContent).toContain('About Raven');
+    const aboutCommand = await waitFor(() => {
+      const command = document.body.querySelector<HTMLElement>('[data-slot="shell-about-command"]');
+
+      expect(command).not.toBeNull();
+      return command;
     });
 
     await act(async () => {
-      fireEvent.click(document.body.querySelector('[data-slot="shell-about-command"]')!);
+      fireEvent.click(aboutCommand!);
+    });
+
+    const aboutDialog = await waitFor(() => {
+      const dialog = document.body.querySelector<HTMLElement>('[data-slot="shell-about-dialog"]');
+
+      expect(dialog).not.toBeNull();
+      return dialog;
+    });
+
+    expect(aboutDialog!.textContent).toContain('Compiled version');
+    expect(aboutDialog!.textContent).toMatch(/0\.0\.0|[0-9]+\.[0-9]+\.[0-9]+/);
+
+    await act(async () => {
+      fireEvent.keyDown(document, { key: 'Escape' });
     });
 
     await waitFor(() => {
-      expect(document.body.querySelector('[data-slot="shell-about-dialog"]')).not.toBeNull();
-      expect(document.body.textContent).toContain('Compiled version');
-      expect(document.body.textContent).toMatch(/0\.0\.0|[0-9]+\.[0-9]+\.[0-9]+/);
+      expect(document.body.querySelector('[data-slot="shell-about-dialog"]')).toBeNull();
     });
   });
 });

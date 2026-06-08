@@ -223,7 +223,7 @@ The shell workspace context is the bounded replacement for tenant, project, and
 environment dropdowns that previously consumed the main top bar.
 
 Workspace context is breadcrumb-style read-only content on the main screen.
-Tenant, project, and environment scope are read-only inside an active project
+Tenant, project, environment, and deployment adapter scope are read-only inside an active project
 context. Project changes belong to a separate governed project-selection
 screen, not to the App Shell top bar or Canvas workbench.
 
@@ -239,25 +239,25 @@ It uses a Fowler Presentation Model split:
 - `ShellProjectIdentityBadge` renders those labels without mutation affordance;
 - `ShellWorkspaceContextMenu` owns the on-demand read-only shell context
   surface;
-- `ShellWorkspaceContextDetails` renders tenant, project, and environment as
-  read-only context fields.
+- `ShellWorkspaceContextDetails` renders tenant, project, environment, and
+  deployment adapter as read-only context fields.
 
 ### Public API
 
-| API                            | Kind          | Owner                   | Contract                                                                      |
-| ------------------------------ | ------------- | ----------------------- | ----------------------------------------------------------------------------- |
-| `ProjectIdentityBadge`         | read model    | Web shell presentation  | Carries tenant, project, environment, compact id, slug, and draft-scope label |
-| `buildProjectIdentityBadge`    | query adapter | Web shell presentation  | Resolves granted option labels and falls back to raw ids without fabricating  |
-| `ShellProjectIdentityBadge`    | passive view  | Shell top-bar rendering | Displays read-only project identity in the persistent shell bar               |
-| `ShellWorkspaceContextMenu`    | details UI    | Shell context display   | Makes read-only workspace context reachable from an on-demand surface         |
-| `ShellWorkspaceContextDetails` | passive view  | Shell context display   | Displays tenant, project, and environment without mutation controls           |
+| API                            | Kind          | Owner                   | Contract                                                                                          |
+| ------------------------------ | ------------- | ----------------------- | ------------------------------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`         | read model    | Web shell presentation  | Carries tenant, project, environment, deployment adapter, compact id, slug, and draft-scope label |
+| `buildProjectIdentityBadge`    | query adapter | Web shell presentation  | Resolves granted option labels and falls back to raw ids without fabricating                      |
+| `ShellProjectIdentityBadge`    | passive view  | Shell top-bar rendering | Displays read-only project identity in the persistent shell bar                                   |
+| `ShellWorkspaceContextMenu`    | details UI    | Shell context display   | Makes read-only workspace context reachable from an on-demand surface                             |
+| `ShellWorkspaceContextDetails` | passive view  | Shell context display   | Displays tenant, project, environment, and deployment adapter without mutation controls           |
 
 ### Invariants
 
 - the main top bar renders no `role="combobox"` workspace controls;
 - `ProjectIdentityBadge` is read-only and cannot dispatch session commands;
-- Tenant, project, and environment scope are read-only inside an active project
-  context;
+- Tenant, project, environment, and deployment adapter scope are read-only
+  inside an active project context;
 - the menu must not expose tenant, project, or environment comboboxes;
 - the menu must not create a parallel auth, RBAC, tenant-admin,
   project-selection, or environment-selection rail;

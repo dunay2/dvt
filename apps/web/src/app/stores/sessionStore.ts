@@ -21,6 +21,7 @@ export interface SessionState {
   projectId: string;
   environmentId: string;
   targetAdapter: RunContext['targetAdapter'];
+  availableTargetAdapters: readonly RunContext['targetAdapter'][];
   availableWorkspaces: readonly WorkspaceScopeIdentity[];
   workspaceScopeSelectionStatus: WorkspaceScopeSelectionStatus;
   workspaceScopeSelectionRejectionReason?: WorkspaceScopeSelectionRejectionReason;
@@ -35,6 +36,8 @@ export interface SessionState {
   setWorkspaceScopeSelectionContext: (context: {
     selectedScope: WorkspaceScopeIdentity;
     availableWorkspaces: readonly WorkspaceScopeIdentity[];
+    targetAdapter?: RunContext['targetAdapter'];
+    availableTargetAdapters?: readonly RunContext['targetAdapter'][];
   }) => void;
   recordRejectedWorkspaceScopeSelection: (
     requestedScope: WorkspaceScopeIdentity,
@@ -77,6 +80,7 @@ export const useSessionStore = create<SessionState>()(
       projectId: workspaceBootstrap.projectId,
       environmentId: workspaceBootstrap.environmentId,
       targetAdapter: DEFAULT_TARGET_ADAPTER,
+      availableTargetAdapters: [DEFAULT_TARGET_ADAPTER],
       availableWorkspaces: [],
       workspaceScopeSelectionStatus: WORKSPACE_SCOPE_SELECTION_STATUS.unresolved,
       setTenantId: (tenantId) => set({ tenantId }),
@@ -90,11 +94,20 @@ export const useSessionStore = create<SessionState>()(
           environmentId: context.environmentId ?? state.environmentId,
           targetAdapter: context.targetAdapter ?? state.targetAdapter,
         })),
-      setWorkspaceScopeSelectionContext: ({ selectedScope, availableWorkspaces }) =>
+      setWorkspaceScopeSelectionContext: ({
+        selectedScope,
+        availableWorkspaces,
+        targetAdapter,
+        availableTargetAdapters,
+      }) =>
         set({
           tenantId: selectedScope.tenantId,
           projectId: selectedScope.projectId,
           environmentId: selectedScope.environmentId,
+          targetAdapter: targetAdapter ?? get().targetAdapter,
+          availableTargetAdapters: availableTargetAdapters
+            ? [...availableTargetAdapters]
+            : get().availableTargetAdapters,
           availableWorkspaces: [...availableWorkspaces],
           workspaceScopeSelectionStatus: WORKSPACE_SCOPE_SELECTION_STATUS.selected,
           workspaceScopeSelectionRejectionReason: undefined,
@@ -151,6 +164,7 @@ export const useSessionStore = create<SessionState>()(
           rejectedWorkspaceScope: currentState.rejectedWorkspaceScope,
           // targetAdapter remains owned by current runtime mode and is not rehydrated from storage.
           targetAdapter: currentState.targetAdapter,
+          availableTargetAdapters: currentState.availableTargetAdapters,
         };
       },
       partialize: (state) => ({

@@ -2,12 +2,15 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
+import type { IStartRunTargetAdapterRegistry } from '../../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { IWorkspaceContextQuery } from '../../application/ports/workspaceContext.js';
+import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
 import { extractBearerToken } from './authHeaders.js';
 
 type WorkspaceContextRouteDeps = Readonly<{
   authenticator: IAuthenticator;
+  adapterRegistry?: IStartRunTargetAdapterRegistry;
   workspaceContextQuery: IWorkspaceContextQuery;
 }>;
 
@@ -42,5 +45,24 @@ export async function workspaceContextRoute(
     return;
   }
 
-  reply.code(200).send(context);
+  const adapterRegistry = deps.adapterRegistry ?? DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY;
+  const availableTargetAdapters = adapterRegistry.listSupported();
+  const targetAdapter = availableTargetAdapters[0];
+  if (!targetAdapter) {
+    reply.code(503).send({
+      error: {
+        type: 'unavailable',
+        reason: 'deployment_scope_not_available',
+      },
+    });
+    return;
+  }
+
+  reply.code(200).send({
+    ...context,
+    deploymentScope: {
+      targetAdapter,
+      availableTargetAdapters,
+    },
+  });
 }

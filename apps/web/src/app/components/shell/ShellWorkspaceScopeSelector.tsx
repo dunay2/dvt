@@ -31,6 +31,9 @@ export function ShellWorkspaceScopeSelector() {
       className="mt-3 grid gap-2 border-t border-(--border-default) pt-3"
     >
       <div className={topAppBarClasses.contextLabel}>Available workspaces</div>
+      <div className="text-xs text-(--text-subtle)">
+        Deployment adapter: {selection.targetAdapter}
+      </div>
       <div className="grid max-h-48 gap-1 overflow-auto">
         {selection.availableScopes.map((scope) => {
           const isSelected =

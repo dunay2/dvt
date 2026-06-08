@@ -30,6 +30,7 @@ export function ShellTopBar({
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
+  const targetAdapter = useSessionStore((state) => state.targetAdapter);
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
@@ -53,6 +54,7 @@ export function ShellTopBar({
     selectedTenant,
     selectedProject,
     selectedEnvironment,
+    targetAdapter,
   });
 
   return (

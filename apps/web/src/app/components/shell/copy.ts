@@ -25,9 +25,11 @@ export type ShellTopBarCopy = {
   readonly tenantScope: string;
   readonly projectScope: string;
   readonly environmentScope: string;
+  readonly deploymentScope: string;
   readonly tenantScopeAria: string;
   readonly projectScopeAria: string;
   readonly environmentScopeAria: string;
+  readonly deploymentScopeAria: string;
   readonly gitTooltip: string;
   readonly checking: string;
   readonly checkingTooltip: string;
@@ -64,11 +66,16 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   tenantScope: { key: 'shell.tenantScope', fallback: 'Tenant' },
   projectScope: { key: 'shell.projectScope', fallback: 'Project' },
   environmentScope: { key: 'shell.environmentScope', fallback: 'Environment' },
+  deploymentScope: { key: 'shell.deploymentScope', fallback: 'Deployment adapter' },
   tenantScopeAria: { key: 'shell.tenantScopeAria', fallback: 'Tenant scope (read only)' },
   projectScopeAria: { key: 'shell.projectScopeAria', fallback: 'Project scope (read only)' },
   environmentScopeAria: {
     key: 'shell.environmentScopeAria',
     fallback: 'Environment scope (read only)',
+  },
+  deploymentScopeAria: {
+    key: 'shell.deploymentScopeAria',
+    fallback: 'Deployment adapter (read only)',
   },
   gitTooltip: { key: 'shell.gitTooltip', fallback: 'Current Git branch and commit SHA' },
   checking: { key: 'shell.checking', fallback: 'Checking' },
@@ -112,9 +119,11 @@ const COPY_ES: ShellTopBarCopy = {
   tenantScope: 'Tenant',
   projectScope: 'Proyecto',
   environmentScope: 'Entorno',
+  deploymentScope: 'Adapter de despliegue',
   tenantScopeAria: 'Scope de tenant (solo lectura)',
   projectScopeAria: 'Scope de proyecto (solo lectura)',
   environmentScopeAria: 'Scope de entorno (solo lectura)',
+  deploymentScopeAria: 'Adapter de despliegue (solo lectura)',
   gitTooltip: 'Rama Git y SHA actuales',
   checking: 'Comprobando',
   checkingTooltip: 'Comprobando endpoints de salud de la plataforma',
@@ -174,9 +183,11 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     tenantScope: resolveString(COPY_BY_KEY.tenantScope, locale),
     projectScope: resolveString(COPY_BY_KEY.projectScope, locale),
     environmentScope: resolveString(COPY_BY_KEY.environmentScope, locale),
+    deploymentScope: resolveString(COPY_BY_KEY.deploymentScope, locale),
     tenantScopeAria: resolveString(COPY_BY_KEY.tenantScopeAria, locale),
     projectScopeAria: resolveString(COPY_BY_KEY.projectScopeAria, locale),
     environmentScopeAria: resolveString(COPY_BY_KEY.environmentScopeAria, locale),
+    deploymentScopeAria: resolveString(COPY_BY_KEY.deploymentScopeAria, locale),
     gitTooltip: resolveString(COPY_BY_KEY.gitTooltip, locale),
     checking: resolveString(COPY_BY_KEY.checking, locale),
     checkingTooltip: resolveString(COPY_BY_KEY.checkingTooltip, locale),
