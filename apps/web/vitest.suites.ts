@@ -55,6 +55,7 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
     include: [
       'src/app/views/Canvas*.{test,spec}.tsx',
       'src/app/views/canvas/**/*.{test,spec}.{ts,tsx}',
+      'src/app/components/InspectorPanel.{test,spec}.tsx',
       'src/app/components/canvas/**/*.{test,spec}.{ts,tsx}',
       'src/app/components/inspector/**/*.{test,spec}.{ts,tsx}',
     ],
@@ -77,6 +78,7 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
     include: [
       'src/app/views/Canvas*.{test,spec}.tsx',
       'src/app/views/canvas/**/*.{test,spec}.tsx',
+      'src/app/components/InspectorPanel.{test,spec}.tsx',
       'src/app/components/canvas/**/*.{test,spec}.tsx',
       'src/app/components/inspector/**/*.{test,spec}.tsx',
     ],

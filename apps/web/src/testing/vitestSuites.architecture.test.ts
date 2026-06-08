@@ -10,6 +10,7 @@ import { readChangedFiles } from '../../scripts/run-vitest-changed-suites';
 import {
   classifyWebVitestFile,
   resolveWebVitestChangedSuitePlan,
+  type WebVitestChangedSuiteName,
   WEB_VITEST_CHANGED_SUITE_COMMANDS,
   WEB_VITEST_FOCUS_SUITE_NAMES,
   WEB_VITEST_PRIMARY_SUITE_NAMES,
@@ -46,6 +47,58 @@ function countTestCases(relativePath: string): number {
 function countLines(relativePath: string): number {
   const content = readFileSync(resolve(webRoot, relativePath), 'utf8');
   return content.split(/\r?\n/).length;
+}
+
+function escapeRegexChar(value: string): string {
+  return /[\\^$+?.()|[\]{}]/.test(value) ? `\\${value}` : value;
+}
+
+function expandBraceAlternatives(pattern: string): string[] {
+  const match = /\{([^{}]+)\}/.exec(pattern);
+  if (!match) {
+    return [pattern];
+  }
+
+  const token = match[0];
+  const alternatives = match[1] ?? '';
+  return alternatives
+    .split(',')
+    .flatMap((alternative) => expandBraceAlternatives(pattern.replace(token, alternative)));
+}
+
+function catalogGlobMatchesPath(glob: string, filePath: string): boolean {
+  return expandBraceAlternatives(glob).some((expandedGlob) => {
+    let pattern = '';
+    for (let index = 0; index < expandedGlob.length; index += 1) {
+      const character = expandedGlob.charAt(index);
+      const nextCharacter = expandedGlob.charAt(index + 1);
+      const afterNextCharacter = expandedGlob.charAt(index + 2);
+
+      if (character === '*' && nextCharacter === '*' && afterNextCharacter === '/') {
+        pattern += '(?:.*/)?';
+        index += 2;
+        continue;
+      }
+
+      if (character === '*' && nextCharacter === '*') {
+        pattern += '.*';
+        index += 1;
+        continue;
+      }
+
+      pattern += character === '*' ? '[^/]*' : escapeRegexChar(character);
+    }
+
+    return new RegExp(`^${pattern}$`).test(filePath);
+  });
+}
+
+function suiteMatchesFile(suiteName: WebVitestChangedSuiteName, filePath: string): boolean {
+  const suite = WEB_VITEST_SUITES[suiteName];
+  return (
+    suite.include.some((glob) => catalogGlobMatchesPath(glob, filePath)) &&
+    suite.exclude.every((glob) => !catalogGlobMatchesPath(glob, filePath))
+  );
 }
 
 function readRepoFile(relativePath: string): string {
@@ -558,6 +611,37 @@ describe('web Vitest suite partition', () => {
       requiresDependencies: false,
       suites: [],
     });
+  });
+
+  it('keeps exact changed-test routing aligned with runnable suite include globs', () => {
+    const plan = resolveWebVitestChangedSuitePlan([
+      'apps/web/src/app/components/InspectorPanel.test.tsx',
+    ]);
+
+    expect(plan.commandPlan).toEqual([
+      {
+        config: 'vitest.canvas-presentation.config.ts',
+        filePaths: ['src/app/components/InspectorPanel.test.tsx'],
+        kind: 'vitest-files',
+      },
+    ]);
+
+    for (const entry of plan.commandPlan) {
+      expect(entry.kind).toBe('vitest-files');
+      if (entry.kind !== 'vitest-files') {
+        continue;
+      }
+
+      const suiteName = entry.config
+        .replace(/^vitest\./, '')
+        .replace(/\.config\.ts$/, '') as WebVitestChangedSuiteName;
+
+      for (const filePath of entry.filePaths) {
+        expect(suiteMatchesFile(suiteName, filePath), `${suiteName} must include ${filePath}`).toBe(
+          true
+        );
+      }
+    }
   });
 
   it('keeps Monaco focus coverage aligned with Code workbench local models', () => {
