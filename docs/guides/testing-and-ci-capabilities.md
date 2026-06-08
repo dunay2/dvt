@@ -620,8 +620,11 @@ Current workflow consumers:
   same primary-suite delegate sequence through the package `pretest` lifecycle,
   so root `turbo run test` and the dedicated web lane mirror the same coverage.
   CI uses the suite catalog's single-fork worker topology to keep hosted-runner
-  memory and process-exit behavior deterministic. Public web suite commands
-  also run `test:deps` before their raw `*:run` delegates so split-suite
+  memory and process-exit behavior deterministic. The hosted `Web Frontend
+Tests` lane and the main/manual `Full CI` baseline both set the same web
+  Vitest old-space value through `NODE_OPTIONS`, so the Vitest parent process
+  and forked workers inherit the limit in GitHub Actions. Public web suite
+  commands also run `test:deps` before their raw `*:run` delegates so split-suite
   execution preserves the package dependency-build contract. The web
   architecture suite checks that these package scripts, Vitest config delegates,
   and workflow commands stay aligned with `apps/web/vitest.suites.ts`.

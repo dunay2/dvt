@@ -63,6 +63,10 @@ contract validation, or engine determinism tests.
 - CI Vitest configs bound worker count, worker old-space capacity, and hosted
   runner fork topology in the suite catalog so full web coverage avoids worker
   OOMs and retained fork queues.
+- Hosted CI web Vitest routes must also export the same Node old-space value as
+  `NODE_OPTIONS` at the workflow step boundary. That keeps the actual Vitest
+  parent and forked worker processes aligned when GitHub runners execute
+  `pnpm test:web:ci` or root `turbo run test` through `pnpm ci:full`.
 - The `Web Frontend Tests` job reserves a 25-minute budget for full coverage
   routes because the CI worker cap deliberately trades parallelism for hosted
   runner memory and process-exit stability; ordinary PRs remain on changed-suite

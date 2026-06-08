@@ -173,6 +173,12 @@ That guard also verifies that package scripts, suite config files, and the Test
 Suite workflow stay wired to the catalog instead of carrying parallel suite
 definitions.
 
+CI web Vitest routes run with a governed Node old-space value both inside the
+suite catalog and at the GitHub Actions step boundary. The workflow-level
+`NODE_OPTIONS` setting is required for hosted runners because the actual Vitest
+parent process and forked workers must inherit the same memory posture when
+`pnpm test:web:ci` or root `turbo run test` executes the web package.
+
 Canvas route-level presentation tests must stay partitioned by responsibility.
 Route-level `Canvas.*.test.tsx` presentation files have a target maximum of
 eight cases and 350 lines. Shared route helpers belong in

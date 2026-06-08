@@ -45,6 +45,7 @@ governingSources:
   - docs/guides/test-architecture.md
   - docs/guides/testing-and-ci-capabilities.md
 allowedImplementationSurfaces:
+  - .github/workflows/ci.yml
   - .github/workflows/test.yml
   - package.json
   - apps/web/package.json
@@ -234,6 +235,14 @@ symbols:
     cypressCoverage: N/A - Vitest-only test tooling.
     unitTests: [pnpm --filter @dvt/web test:architecture]
   - name: WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestSuiteCatalog
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: N/A - Vitest-only test tooling.
+    unitTests: [pnpm --filter @dvt/web test:architecture]
+  - name: WEB_VITEST_CI_NODE_OPTIONS
     path: apps/web/vitest.suites.ts
     dddOwner: WebVitestSuiteCatalog
     cqRails: [WebVitestSuitePartition]
