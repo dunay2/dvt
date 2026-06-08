@@ -33,7 +33,7 @@ type WebVitestSuiteDefinition = Readonly<{
 }>;
 
 const WEB_VITEST_DEFAULT_EXCLUDE = ['node_modules/**', 'dist/**'] as const;
-export const WEB_VITEST_CI_WORKER_COUNT = 2;
+export const WEB_VITEST_CI_WORKER_COUNT = 1;
 export const WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB = 4096;
 
 export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinition> = {
@@ -194,6 +194,7 @@ function createWebVitestCiWorkerConfig(): NonNullable<UserConfig['test']> {
     maxWorkers: WEB_VITEST_CI_WORKER_COUNT,
     poolOptions: {
       forks: {
+        singleFork: true,
         minForks: 1,
         maxForks: WEB_VITEST_CI_WORKER_COUNT,
         execArgv: [`--max-old-space-size=${WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB}`],

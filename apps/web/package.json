@@ -18,7 +18,7 @@
     "test:e2e:open": "node ../../tools/ci/run-web-cypress-native.mjs open",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "node --max-old-space-size=4096 ../../node_modules/eslint/bin/eslint.js \"src/**/*.{ts,tsx}\" \"cypress/**/*.{ts,tsx}\" \"*.config.ts\" \"*.config.mjs\" \"scripts/**/*.{ts,mjs,js,cjs}\" --max-warnings 0",
-    "test": "vitest run --config vitest.config.ts",
+    "test": "pnpm run test:unit:run && pnpm run test:presentation:run && pnpm run test:architecture:run",
     "test:unit": "pnpm run test:deps && pnpm run test:unit:run",
     "test:unit:run": "vitest run --config vitest.unit.config.ts",
     "test:presentation": "pnpm run test:deps && pnpm run test:presentation:run",

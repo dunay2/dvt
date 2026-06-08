@@ -103,7 +103,7 @@ Warm-build note:
 
 | Capability                         | Command                                                                    | Scope                                                | Source                                                                                                 |
 | ---------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web` full Vitest suite                         | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
+| Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web` primary-suite composition                 | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
 | Web app CI partition               | `pnpm test:web:ci` or `pnpm --filter @dvt/web test:ci`                     | `apps/web` primary Vitest suites                     | [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                         |
 | Web app changed-file test routing  | `pnpm test:web:changed` or `pnpm --filter @dvt/web test:changed`           | Routed web Vitest suite for local and ordinary PRs   | [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                         |
 | Web app lint                       | `pnpm --filter @dvt/web lint`                                              | Web `src`, Cypress, local configs, and local scripts | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
@@ -616,11 +616,15 @@ Current workflow consumers:
   The same lane runs `pnpm test:web:ci` for pushes to `main`, manual workflow
   runs, and root-build-sensitive pull requests. `test:web:ci` expands to
   `@dvt/web` `test:deps` followed by the unit, presentation, and architecture
-  Vitest delegates while `pnpm test:web` remains the full web suite. Public web
-  suite commands also run `test:deps` before their raw `*:run` delegates so
-  split-suite execution preserves the package dependency-build contract. The
-  web architecture suite checks that these package scripts, Vitest config
-  delegates, and workflow commands stay aligned with `apps/web/vitest.suites.ts`.
+  Vitest delegates. `pnpm test:web` and `pnpm --filter @dvt/web test` use the
+  same primary-suite delegate sequence through the package `pretest` lifecycle,
+  so root `turbo run test` and the dedicated web lane mirror the same coverage.
+  CI uses the suite catalog's single-fork worker topology to keep hosted-runner
+  memory and process-exit behavior deterministic. Public web suite commands
+  also run `test:deps` before their raw `*:run` delegates so split-suite
+  execution preserves the package dependency-build contract. The web
+  architecture suite checks that these package scripts, Vitest config delegates,
+  and workflow commands stay aligned with `apps/web/vitest.suites.ts`.
 - [`.github/workflows/contracts.yml`](../../.github/workflows/contracts.yml) uses
   `emit-scope --mode contracts` for contract, determinism, and golden routing.
   The workflow no longer owns parallel inline `package.json` filters for those

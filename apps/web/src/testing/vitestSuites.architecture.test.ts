@@ -196,7 +196,11 @@ describe('web Vitest suite partition', () => {
     expect(packageJson.scripts['test:deps']).toBe(
       'node ../../scripts/skip-pretest-if-ci.cjs || pnpm --filter "@dvt/web^..." build'
     );
-    expect(packageJson.scripts.test).toBe('vitest run --config vitest.config.ts');
+    expect(packageJson.scripts.test).toBe(
+      WEB_VITEST_PRIMARY_SUITE_NAMES.map((suiteName) => `pnpm run test:${suiteName}:run`).join(
+        ' && '
+      )
+    );
     expect(packageJson.scripts['test:ci']).toBe(
       [
         'pnpm run test:deps',
@@ -263,6 +267,7 @@ describe('web Vitest suite partition', () => {
       maxWorkers: WEB_VITEST_CI_WORKER_COUNT,
       poolOptions: {
         forks: {
+          singleFork: true,
           minForks: 1,
           maxForks: WEB_VITEST_CI_WORKER_COUNT,
           execArgv: [`--max-old-space-size=${WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB}`],

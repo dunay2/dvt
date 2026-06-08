@@ -38,6 +38,7 @@ contract validation, or engine determinism tests.
 | `WEB_VITEST_SUITES`              | catalog  | Defines include and exclude rules for each suite.    |
 | `createWebVitestConfig`          | function | Builds Vitest config from the suite catalog.         |
 | `classifyWebVitestFile`          | function | Classifies a test file into primary and focus lanes. |
+| `pnpm --filter @dvt/web test`    | command  | Runs the governed web primary-suite composition.     |
 | `pnpm test:web:ci`               | command  | Runs governed web primary suites.                    |
 | `pnpm test:web:changed`          | command  | Runs the changed-file web suite route.               |
 | `Web Frontend Tests`             | CI job   | Runs changed PR routing or full primary suites.      |
@@ -56,11 +57,16 @@ contract validation, or engine determinism tests.
 - Ordinary web pull requests route through `pnpm test:web:changed`.
 - Pushes to `main`, manual workflow runs, and root-build-sensitive PRs route
   through `pnpm test:web:ci`.
-- CI Vitest configs bound worker count and worker old-space capacity in the
-  suite catalog so hosted runners keep full web coverage without worker OOMs.
+- The package default `test` command delegates to the same primary-suite
+  composition as `test:web:ci`, so root `turbo run test` and the dedicated web
+  CI lane exercise the same governed coverage instead of parallel web routes.
+- CI Vitest configs bound worker count, worker old-space capacity, and hosted
+  runner fork topology in the suite catalog so full web coverage avoids worker
+  OOMs and retained fork queues.
 - The `Web Frontend Tests` job reserves a 25-minute budget for full coverage
   routes because the CI worker cap deliberately trades parallelism for hosted
-  runner memory stability; ordinary PRs remain on changed-suite routing.
+  runner memory and process-exit stability; ordinary PRs remain on changed-suite
+  routing.
 - Test support under `apps/web/src/testing/**` remains test-only and must not
   become a production adapter surface.
 - `vitest*.config.ts` files are adapters over the suite catalog. They do not own
