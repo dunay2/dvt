@@ -43,7 +43,8 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
       rail.source_content_sha256,
       rail.raw_manifest
     from ${activeSchemaName}.command_query_rail_manifest_query rail
-    where rail.raw_manifest is not null`;
+    where rail.raw_manifest is not null
+      and rail.raw_manifest ? 'featureId'`;
   }
 
   function buildFeatureMechanizationFeatureRows(rows) {
@@ -253,7 +254,9 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
        rail.rail_source,
        rail.source_path
      from ${defaultSchemaName}.command_query_rail_manifest_query rail
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     where rail.raw_manifest is not null
+       and rail.raw_manifest ? 'featureId'
+       ${predicates.length > 0 ? `and ${predicates.join(' and ')}` : ''}
      order by rail.feature_id, rail.rail_type, rail.rail_name, rail.source_path
      limit $${params.length}`,
       params
