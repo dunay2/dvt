@@ -52,6 +52,18 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(resolve(webRoot, '..', '..', relativePath), 'utf8');
 }
 
+function hasRawIntakePathReference(source: string): boolean {
+  return rawIntakePathReferencePatterns().some((pattern) => pattern.test(source));
+}
+
+function rawIntakePathReferencePatterns(): RegExp[] {
+  const rawIntakeDirectoryName = ['buz', 'on'].join('');
+  return [
+    new RegExp(String.raw`${rawIntakeDirectoryName}[/\\]`),
+    new RegExp(String.raw`['"\`]${rawIntakeDirectoryName}['"\`]`),
+  ];
+}
+
 describe('web Vitest suite partition', () => {
   it('assigns every web Vitest file to exactly one primary suite', () => {
     for (const filePath of listWebVitestFiles()) {
@@ -618,11 +630,6 @@ describe('web Vitest suite partition', () => {
   });
 
   it('keeps web architecture tests from using raw intake files as semantic proof', () => {
-    const rawIntakeDirectoryName = ['buz', 'on'].join('');
-    const rawIntakePathPrefix = [rawIntakeDirectoryName, '/'].join('');
-    const rawIntakePathSegmentPattern = new RegExp(
-      String.raw`['"\`]${rawIntakeDirectoryName}['"\`]`
-    );
     const architectureFiles = listWebVitestFiles().filter((filePath) =>
       filePath.includes('.architecture.test.')
     );
@@ -632,8 +639,20 @@ describe('web Vitest suite partition', () => {
     for (const filePath of architectureFiles) {
       const source = readFileSync(resolve(webRoot, filePath), 'utf8');
 
-      expect(source, filePath).not.toContain(rawIntakePathPrefix);
-      expect(source, filePath).not.toMatch(rawIntakePathSegmentPattern);
+      expect(hasRawIntakePathReference(source), filePath).toBe(false);
     }
+  });
+
+  it('matches raw intake references when path segments are passed separately', () => {
+    const rawIntakeDirectoryName = ['buz', 'on'].join('');
+
+    expect(
+      hasRawIntakePathReference(
+        `readRepoFile('..', '..', '${rawIntakeDirectoryName}', 'example.md')`
+      )
+    ).toBe(true);
+    expect(hasRawIntakePathReference(`readRepoFile('${rawIntakeDirectoryName}/example.md')`)).toBe(
+      true
+    );
   });
 });
