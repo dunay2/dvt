@@ -114,7 +114,8 @@ export function useCanvasController() {
     workspacePortCapabilities.sourceImportAvailable,
   ]);
   const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
-  const canSelectExecution = runtimePolicy.commands.canPlan || runtimePolicy.commands.canRun;
+  const canSelectExecution =
+    canMutateActiveCanvas && (runtimePolicy.commands.canPlan || runtimePolicy.commands.canRun);
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',

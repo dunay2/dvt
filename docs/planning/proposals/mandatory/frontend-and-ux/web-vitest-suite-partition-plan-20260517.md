@@ -225,6 +225,22 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture
     cypressCoverage: N/A - Vitest-only test tooling.
     unitTests: [pnpm --filter @dvt/web test:architecture]
+  - name: WEB_VITEST_CI_WORKER_COUNT
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestSuiteCatalog
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: N/A - Vitest-only test tooling.
+    unitTests: [pnpm --filter @dvt/web test:architecture]
+  - name: WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestSuiteCatalog
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: N/A - Vitest-only test tooling.
+    unitTests: [pnpm --filter @dvt/web test:architecture]
   - name: WEB_VITEST_SUITES
     path: apps/web/vitest.suites.ts
     dddOwner: WebVitestSuiteCatalog
@@ -234,6 +250,22 @@ symbols:
     cypressCoverage: N/A - Vitest-only test tooling.
     unitTests: [pnpm --filter @dvt/web test:architecture]
   - name: createWebVitestConfig
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestSuiteCatalog
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: N/A - Vitest-only test tooling.
+    unitTests: [pnpm --filter @dvt/web test:architecture]
+  - name: createWebVitestCiWorkerConfig
+    path: apps/web/vitest.suites.ts
+    dddOwner: WebVitestSuiteCatalog
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: N/A - Vitest-only test tooling.
+    unitTests: [pnpm --filter @dvt/web test:architecture]
+  - name: isWebVitestCi
     path: apps/web/vitest.suites.ts
     dddOwner: WebVitestSuiteCatalog
     cqRails: [WebVitestSuitePartition]
