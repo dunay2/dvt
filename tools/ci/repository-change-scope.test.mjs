@@ -15,14 +15,24 @@ test('classifies root CI policy config as code validation without workspace fan-
   assert.equal(fileScope.governanceGlobalRelevant, false);
 });
 
-test('classifies CI composite actions as workflow policy inputs without workspace fan-out', () => {
-  const fileScope = classifyRepositoryFileScope('.github/actions/fetch-scope-base/action.yml');
+test('classifies feature-mechanized CI composite actions without workspace fan-out', () => {
+  const fetchScopeBase = classifyRepositoryFileScope('.github/actions/fetch-scope-base/action.yml');
+  const preparePlanningDb = classifyRepositoryFileScope(
+    '.github/actions/prepare-planning-db/action.yml'
+  );
+  const sharedSetup = classifyRepositoryFileScope('.github/actions/setup-node-pnpm/action.yml');
 
-  assert.equal(fileScope.workflowPolicyInput, true);
-  assert.equal(fileScope.changedFileValidationRelevant, true);
-  assert.equal(fileScope.codeValidationRelevant, false);
-  assert.equal(fileScope.runtimeWorkspaceFanout, false);
-  assert.equal(fileScope.governanceGlobalRelevant, false);
+  for (const fileScope of [fetchScopeBase, preparePlanningDb, sharedSetup]) {
+    assert.equal(fileScope.workflowPolicyInput, true);
+    assert.equal(fileScope.changedFileValidationRelevant, true);
+    assert.equal(fileScope.codeValidationRelevant, false);
+    assert.equal(fileScope.runtimeWorkspaceFanout, false);
+    assert.equal(fileScope.governanceGlobalRelevant, false);
+  }
+
+  assert.equal(fetchScopeBase.featureMechanizationRelevant, true);
+  assert.equal(preparePlanningDb.featureMechanizationRelevant, true);
+  assert.equal(sharedSetup.featureMechanizationRelevant, false);
 });
 
 test('classifies repository command files through the command catalog', () => {
@@ -83,6 +93,21 @@ test('aggregates changed-file scope booleans for local and remote consumers', ()
     needsFeatureMechanization: true,
     needsTraceabilityAdr0: true,
     needsCodeValidation: true,
+    runtimeWorkspaceFanout: false,
+    changedFileValidationRelevant: true,
+  });
+});
+
+test('routes feature-mechanized action-only changes through DB-backed mechanization checks', () => {
+  const scope = classifyRepositoryChangedScope(['.github/actions/prepare-planning-db/action.yml']);
+
+  assert.deepEqual(scope, {
+    hasChangedFiles: true,
+    needsPlanningDbInventory: false,
+    needsGovernanceGlobal: false,
+    needsFeatureMechanization: true,
+    needsTraceabilityAdr0: false,
+    needsCodeValidation: false,
     runtimeWorkspaceFanout: false,
     changedFileValidationRelevant: true,
   });
