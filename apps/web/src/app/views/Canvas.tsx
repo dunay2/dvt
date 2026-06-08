@@ -78,10 +78,17 @@ function CanvasContent(): JSX.Element {
   const activeWorkbenchTab = canvasWorkbenchTabsState.tabs.find(
     (tab) => tab.id === canvasWorkbenchTabsState.activeTabId
   );
+  const hasPrimaryCanvasBlocker = [
+    'loading_backend',
+    'blocked_backend',
+    'loading_graph',
+    'error_graph',
+  ].includes(presentationState.routeState);
   const shouldReplaceCenterSurfaceWithWorkbenchTab =
     canvasWorkbenchTabsState.unavailableState == null &&
     activeWorkbenchTab?.scope === 'workspace' &&
-    activeWorkbenchTab.id !== 'graph';
+    activeWorkbenchTab.id !== 'graph' &&
+    !hasPrimaryCanvasBlocker;
   const layout = {
     ...shellProps.layout,
     centerSurface: shouldReplaceCenterSurfaceWithWorkbenchTab

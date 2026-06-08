@@ -931,6 +931,25 @@ test('tracked migrations separate rail manifests from canonical creation queries
   assert.match(canonicalRailProjectionMigration.sql, /reference_count/);
 });
 
+test('latest command/query rail projection counts canonical component docs as duplicate candidates', () => {
+  const migrations = readMigrationFiles();
+  const latestRailProjectionMigration = migrations
+    .filter((migration) =>
+      /create or replace view planning_query_store\.command_query_rail_query/.test(migration.sql)
+    )
+    .at(-1);
+
+  assert.ok(latestRailProjectionMigration);
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /when rail\.source_path like 'docs\/architecture\/components\/%' then 2/
+  );
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /count\(\*\) filter \(where authority_priority <= 2\)::int as canonical_candidate_count/
+  );
+});
+
 test('tracked migrations expose composite component hierarchy records after W32', () => {
   const migrations = readMigrationFiles();
   const compositeHierarchyMigration = migrations.find(

@@ -151,6 +151,30 @@ describe('Canvas route backend and recovery priority', () => {
     });
   });
 
+  it('keeps the backend blocker as the primary surface when the Log tab is active', async () => {
+    await renderCanvasRouteWithController(
+      harness,
+      {
+        dataSourceMode: 'api',
+        backendReady: false,
+        backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
+      },
+      {
+        initialEntry: '/canvas/logs',
+      }
+    );
+
+    expectBlockedCanvasRouteState({
+      harness,
+      text: 'Backend not ready',
+      detail: 'Readiness not satisfied: database_not_configured.',
+      routeState: 'blocked_backend',
+      bootstrapStatus: 'complete',
+      canCompleteBootstrap: true,
+    });
+    expect(harness.container.querySelector('[data-slot="canvas-workbench-log-panel"]')).toBeNull();
+  });
+
   it('prioritizes backend blocked route state over draft recovery banners', async () => {
     await renderCanvasRouteWithController(harness, {
       dataSourceMode: 'api',

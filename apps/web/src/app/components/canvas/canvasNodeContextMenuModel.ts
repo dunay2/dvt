@@ -52,6 +52,7 @@ export type CanvasNodeModelerActionModel = Readonly<{
 type BuildCanvasNodeContextMenuModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
+  canMutateGraph: boolean;
   canInspectNode: boolean;
   canDuplicateNode: boolean;
   canToggleNodeSelection: boolean;
@@ -66,12 +67,20 @@ type BuildCanvasNodeModelerActionModelArgs = Omit<
 export function buildCanvasNodeModelerActionModel({
   target,
   selectedForExecution,
+  canMutateGraph,
   canDuplicateNode,
   canToggleNodeSelection,
   canRemoveNode,
 }: BuildCanvasNodeModelerActionModelArgs): CanvasNodeModelerActionModel {
   const groups: CanvasNodeModelerActionGroup[] = [];
   const editActions: CanvasNodeModelerAction[] = [];
+
+  if (!canMutateGraph) {
+    return {
+      target,
+      actionGroups: groups,
+    };
+  }
 
   if (canDuplicateNode) {
     editActions.push({
@@ -124,6 +133,7 @@ export function buildCanvasNodeModelerActionModel({
 export function buildCanvasNodeContextMenuModel({
   target,
   selectedForExecution,
+  canMutateGraph,
   canInspectNode,
   canDuplicateNode,
   canToggleNodeSelection,
@@ -148,6 +158,7 @@ export function buildCanvasNodeContextMenuModel({
     ...buildCanvasNodeModelerActionModel({
       target,
       selectedForExecution,
+      canMutateGraph,
       canDuplicateNode,
       canToggleNodeSelection,
       canRemoveNode,

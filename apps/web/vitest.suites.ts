@@ -473,6 +473,8 @@ function isArchitectureTestPath(filePath: string): boolean {
 
 function isCanvasFocusPath(filePath: string): boolean {
   return (
+    filePath === 'src/app/views/Canvas.tsx' ||
+    filePath === 'src/app/views/Canvas.test.support.tsx' ||
     /^src\/app\/views\/Canvas.*\.(?:test|spec)\.tsx$/.test(filePath) ||
     filePath.startsWith('src/app/views/canvas/') ||
     filePath.startsWith('src/app/components/canvas/') ||

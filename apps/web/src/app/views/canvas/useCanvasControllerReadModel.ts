@@ -78,6 +78,7 @@ export function useCanvasControllerReadModel({
         nodes: graphModel.nodes,
         edges: graphModel.edges,
         selectedNodeIds: uiScope.selectedNodeIds,
+        canMutateGraph,
         impactOverlayEnabled,
         columnLevelLineageEnabled,
         handlers: {

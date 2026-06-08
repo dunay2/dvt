@@ -67,9 +67,9 @@ export function buildCanvasShellPanels({
         : {
             modelerActions: {
               selectedForExecution: panelState.inspectorNodeSelectedForExecution,
-              onToggleNodeSelection: panelState.handleToggleNodeSelection,
               ...(userPermissions.canEditEdges
                 ? {
+                    onToggleNodeSelection: panelState.handleToggleNodeSelection,
                     onDuplicateNode: panelState.handleDuplicateNode,
                     onRemoveNode: panelState.handleRemoveNode,
                   }

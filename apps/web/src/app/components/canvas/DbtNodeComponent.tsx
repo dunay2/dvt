@@ -62,6 +62,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
   runtimeCapabilities?: RuntimeCapabilities;
+  canMutateGraph?: boolean;
   selectedForExecution?: boolean;
   onInspectNode?: (nodeId: string) => void;
   onDuplicateNode?: (nodeId: string) => void;
@@ -200,10 +201,12 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;
-  const canAttachSchema = typeof data.onAttachSchemaToNode === 'function';
+  const canMutateNodeCommands = data.canMutateGraph === true;
+  const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
   const contextMenuModel = buildCanvasNodeContextMenuModel({
     target: { kind: 'node', nodeId: id, nodeName: data.name },
     selectedForExecution,
+    canMutateGraph: canMutateNodeCommands,
     canInspectNode: typeof data.onInspectNode === 'function',
     canDuplicateNode: typeof data.onDuplicateNode === 'function',
     canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',

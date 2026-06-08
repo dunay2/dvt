@@ -238,6 +238,20 @@ describe('web Vitest suite partition', () => {
       suites: ['canvas-presentation'],
     });
 
+    expect(resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/Canvas.tsx'])).toMatchObject({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']],
+      requiresDependencies: true,
+      suites: ['canvas-presentation'],
+    });
+
+    expect(
+      resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/Canvas.test.support.tsx'])
+    ).toMatchObject({
+      commands: [WEB_VITEST_CHANGED_SUITE_COMMANDS['canvas-presentation']],
+      requiresDependencies: true,
+      suites: ['canvas-presentation'],
+    });
+
     expect(
       resolveWebVitestChangedSuitePlan(['apps/web/src/app/views/canvas/canvasDraftScope.test.ts'])
     ).toMatchObject({

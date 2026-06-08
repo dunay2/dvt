@@ -23,6 +23,7 @@ describe('canvasNodeContextMenuModel', () => {
     const model = buildCanvasNodeModelerActionModel({
       target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },
       selectedForExecution: false,
+      canMutateGraph: true,
       canDuplicateNode: true,
       canToggleNodeSelection: true,
       canRemoveNode: true,
@@ -44,6 +45,7 @@ describe('canvasNodeContextMenuModel', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },
       selectedForExecution: false,
+      canMutateGraph: true,
       canInspectNode: true,
       canDuplicateNode: true,
       canToggleNodeSelection: true,
@@ -76,10 +78,11 @@ describe('canvasNodeContextMenuModel', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
+      canMutateGraph: false,
       canInspectNode: true,
-      canDuplicateNode: false,
-      canToggleNodeSelection: false,
-      canRemoveNode: false,
+      canDuplicateNode: true,
+      canToggleNodeSelection: true,
+      canRemoveNode: true,
     });
 
     expect(actionIds(model)).toEqual(['inspect-node']);
@@ -96,6 +99,7 @@ describe('canvasNodeContextMenuModel', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'transform-orders', nodeName: 'Clean Orders' },
       selectedForExecution: true,
+      canMutateGraph: true,
       canInspectNode: true,
       canDuplicateNode: false,
       canToggleNodeSelection: true,
@@ -115,6 +119,7 @@ describe('canvasNodeContextMenuModel', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'sink-orders', nodeName: 'Orders Sink' },
       selectedForExecution: false,
+      canMutateGraph: false,
       canInspectNode: false,
       canDuplicateNode: false,
       canToggleNodeSelection: false,

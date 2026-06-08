@@ -364,6 +364,14 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture
     cypressCoverage: N/A - covered by Vitest route-state tests.
     unitTests: [pnpm --filter @dvt/web test:canvas]
+  - name: renderCanvasRoute
+    path: apps/web/src/app/views/Canvas.test.support.tsx
+    dddOwner: CanvasRouteStateTestPartition
+    cqRails: [WebVitestSuitePartition]
+    fowlerSignals: [Semantic encapsulation]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: N/A - private harness utility covered by route-state tests.
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - name: expectCanvasRegistryClosed
     path: apps/web/src/app/views/Canvas.test.support.tsx
     dddOwner: CanvasRouteStateTestPartition
