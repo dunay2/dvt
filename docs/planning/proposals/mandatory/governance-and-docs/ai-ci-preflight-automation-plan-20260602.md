@@ -155,6 +155,9 @@ commandQueryRails:
   - name: PreparePlanningDbForCiGate
     type: command
     dddOwner: Repository CI governance baseline
+  - name: RunFullCiCodeBaseline
+    type: command
+    dddOwner: RepositoryCiBaseline
 domainObjects:
   - name: AgentPreflightPlan
     type: developer workflow command plan
@@ -176,6 +179,9 @@ domainObjects:
     owner: Engineering / CI
   - name: PlanningDbCiBootstrap
     type: CI DB-first bootstrap command
+    owner: Engineering / CI
+  - name: RepositoryCiBaseline
+    type: CI code baseline command
     owner: Engineering / CI
 fowlerSignals:
   - Automation Gap when agents must manually discover and run formatting before validation.
@@ -318,7 +324,24 @@ redGreenCycles:
       - .github/workflows/pr-quality-gate.yml
       - tools/ci/workflow-pattern-parity.test.mjs
     greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+  - id: main-ci-turbo-test-baseline
+    redTest: node --test tools/ci/turbo-workspace-task-contract.test.mjs
+    expectedFailure: main full CI runs package tests through pnpm recursive execution while DVT_CI disables package pretest dependency builds, so clean Linux runners miss upstream workspace dist exports.
+    patchSurfaces:
+      - package.json
+      - docs/guides/testing-and-ci-capabilities.md
+      - tools/ci/turbo-workspace-task-contract.test.mjs
+    greenTest: node --test tools/ci/turbo-workspace-task-contract.test.mjs
 symbols:
+  - name: ci:code
+    path: package.json
+    dddOwner: RepositoryCiBaseline
+    cqRails: [RunFullCiCodeBaseline]
+    fowlerSignals: [Duplicate Work, Hidden Coverage Gap]
+    architectureGuard: node --test tools/ci/turbo-workspace-task-contract.test.mjs
+    cypressCoverage: N/A - root CI package test baseline
+    unitTests:
+      - tools/ci/turbo-workspace-task-contract.test.mjs
   - name: prepare-planning-db
     path: .github/actions/prepare-planning-db/action.yml
     dddOwner: PlanningDbCiBootstrap
