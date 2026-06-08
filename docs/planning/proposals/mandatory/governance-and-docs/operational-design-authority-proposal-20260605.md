@@ -1,3 +1,14 @@
+---
+title: Operational Design Authority Proposal
+status: Proposed
+date: 2026-06-05
+last_reviewed: 2026-06-08
+owners:
+  - docs
+planning_type: proposal
+lane: G
+---
+
 # Operational Design Authority Proposal
 
 Estado: propuesta

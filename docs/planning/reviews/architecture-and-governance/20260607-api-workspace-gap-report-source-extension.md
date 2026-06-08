@@ -6,7 +6,7 @@ workspace: dvt-api
 date: 2026-06-07
 last_reviewed: 2026-06-07
 planning_type: review
-extends: buzon/20260607-api-workspace-gap-report.md
+extends: docs/planning/reviews/architecture-and-governance/20260607-api-workspace-gap-report.md
 ---
 
 # API Workspace Gap Report Source Extension

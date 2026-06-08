@@ -13,21 +13,21 @@ planning_type: review
 
 This document turns the source-grounded reports in this branch into an actionable
 engineering queue. It is not another audit. It is the decision layer over the
-reports created in `buzon/`.
+reports governed under `docs/planning/reviews/architecture-and-governance/`.
 
 ## Report set
 
-| Area                        | Base report                                                    | Source extension                                                                |
-| --------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Initial workspace inventory | `buzon/20260607-workspace-gap-reports-batch-01.md`             | `buzon/20260607-workspace-gap-reports-batch-01-source-extension.md`             |
-| Contracts                   | `buzon/20260607-contracts-workspace-gap-report.md`             | `buzon/20260607-contracts-workspace-gap-report-source-extension.md`             |
-| Web                         | `buzon/20260607-web-workspace-gap-report.md`                   | `buzon/20260607-web-workspace-gap-report-source-extension.md`                   |
-| API                         | `buzon/20260607-api-workspace-gap-report.md`                   | `buzon/20260607-api-workspace-gap-report-source-extension.md`                   |
-| All workspaces              | `buzon/20260607-source-grounded-24-workspace-gap-reports.md`   | `buzon/20260607-source-grounded-24-workspace-gap-reports-source-extension.md`   |
-| Core planning/execution     | `buzon/20260607-core-execution-planning-source-gap-report.md`  | `buzon/20260607-core-execution-planning-source-gap-report-source-extension.md`  |
-| Runtime/adapters/workers    | `buzon/20260607-runtime-adapters-workers-source-gap-report.md` | `buzon/20260607-runtime-adapters-workers-source-gap-report-source-extension.md` |
-| Product flow closure        | `buzon/20260607-product-flow-closure-source-gap-report.md`     | `buzon/20260607-product-flow-closure-source-gap-report-source-extension.md`     |
-| Cross-cutting workspaces    | `buzon/20260607-cross-cutting-workspaces-source-gap-report.md` | `buzon/20260607-cross-cutting-workspaces-source-gap-report-source-extension.md` |
+| Area                        | Base report                                                                                                | Source extension                                                                                                            |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Initial workspace inventory | `docs/planning/reviews/architecture-and-governance/20260607-workspace-gap-reports-batch-01.md`             | `docs/planning/reviews/architecture-and-governance/20260607-workspace-gap-reports-batch-01-source-extension.md`             |
+| Contracts                   | `docs/planning/reviews/architecture-and-governance/20260607-contracts-workspace-gap-report.md`             | `docs/planning/reviews/architecture-and-governance/20260607-contracts-workspace-gap-report-source-extension.md`             |
+| Web                         | `docs/planning/reviews/architecture-and-governance/20260607-web-workspace-gap-report.md`                   | `docs/planning/reviews/architecture-and-governance/20260607-web-workspace-gap-report-source-extension.md`                   |
+| API                         | `docs/planning/reviews/architecture-and-governance/20260607-api-workspace-gap-report.md`                   | `docs/planning/reviews/architecture-and-governance/20260607-api-workspace-gap-report-source-extension.md`                   |
+| All workspaces              | `docs/planning/reviews/architecture-and-governance/20260607-source-grounded-24-workspace-gap-reports.md`   | `docs/planning/reviews/architecture-and-governance/20260607-source-grounded-24-workspace-gap-reports-source-extension.md`   |
+| Core planning/execution     | `docs/planning/reviews/architecture-and-governance/20260607-core-execution-planning-source-gap-report.md`  | `docs/planning/reviews/architecture-and-governance/20260607-core-execution-planning-source-gap-report-source-extension.md`  |
+| Runtime/adapters/workers    | `docs/planning/reviews/architecture-and-governance/20260607-runtime-adapters-workers-source-gap-report.md` | `docs/planning/reviews/architecture-and-governance/20260607-runtime-adapters-workers-source-gap-report-source-extension.md` |
+| Product flow closure        | `docs/planning/reviews/architecture-and-governance/20260607-product-flow-closure-source-gap-report.md`     | `docs/planning/reviews/architecture-and-governance/20260607-product-flow-closure-source-gap-report-source-extension.md`     |
+| Cross-cutting workspaces    | `docs/planning/reviews/architecture-and-governance/20260607-cross-cutting-workspaces-source-gap-report.md` | `docs/planning/reviews/architecture-and-governance/20260607-cross-cutting-workspaces-source-gap-report-source-extension.md` |
 
 ## Executive findings
 

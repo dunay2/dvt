@@ -5,7 +5,7 @@ owner: Architecture / Workspace governance
 date: 2026-06-07
 last_reviewed: 2026-06-07
 planning_type: review
-extends: buzon/20260607-workspace-gap-reports-batch-01.md
+extends: docs/planning/reviews/architecture-and-governance/20260607-workspace-gap-reports-batch-01.md
 ---
 
 # Workspace Gap Reports Batch 01 Source Extension

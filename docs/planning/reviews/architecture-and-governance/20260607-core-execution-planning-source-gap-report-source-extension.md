@@ -11,7 +11,7 @@ workspace_group:
 date: 2026-06-07
 last_reviewed: 2026-06-07
 planning_type: review
-extends: buzon/20260607-core-execution-planning-source-gap-report.md
+extends: docs/planning/reviews/architecture-and-governance/20260607-core-execution-planning-source-gap-report.md
 ---
 
 # Core Execution And Planning Source Gap Report Extension

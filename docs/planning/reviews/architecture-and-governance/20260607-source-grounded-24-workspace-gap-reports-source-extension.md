@@ -5,7 +5,7 @@ owner: Architecture / Workspace governance
 date: 2026-06-07
 last_reviewed: 2026-06-07
 planning_type: review
-extends: buzon/20260607-source-grounded-24-workspace-gap-reports.md
+extends: docs/planning/reviews/architecture-and-governance/20260607-source-grounded-24-workspace-gap-reports.md
 ---
 
 # Source-Grounded 24 Workspace Gap Reports Extension

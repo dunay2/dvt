@@ -6,7 +6,7 @@ workspace: '@dvt/web'
 date: 2026-06-07
 last_reviewed: 2026-06-07
 planning_type: review
-extends: buzon/20260607-web-workspace-gap-report.md
+extends: docs/planning/reviews/architecture-and-governance/20260607-web-workspace-gap-report.md
 ---
 
 # Web Workspace Gap Report Source Extension

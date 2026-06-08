@@ -6,7 +6,7 @@ date: 2026-06-07
 last_reviewed: 2026-06-07
 planning_type: review
 supersedes:
-  - buzon/20260607-workspace-gap-reports-batch-01.md
+  - docs/planning/reviews/architecture-and-governance/20260607-workspace-gap-reports-batch-01.md
 ---
 
 # Source-Grounded Gap Reports For 24 Workspaces

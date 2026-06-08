@@ -91,7 +91,7 @@ sequence.
 
 **Next report slice**
 
-- Build `buzon/20260607-api-gap-report.md` with route inventory, command/query
+- Build `docs/planning/reviews/architecture-and-governance/20260607-api-gap-report.md` with route inventory, command/query
   rail mapping, adapter calls, tests, and missing negative cases.
 
 ### apps/web — `@dvt/web`
@@ -122,7 +122,7 @@ sequence.
 
 **Next report slice**
 
-- Build `buzon/20260607-web-gap-report.md` with route/surface matrix, visible
+- Build `docs/planning/reviews/architecture-and-governance/20260607-web-gap-report.md` with route/surface matrix, visible
   commands, backend dependencies, tests, and blockers to complete a real flow.
 
 ### apps/lineage-worker — `dvt-lineage-worker`

@@ -6,7 +6,7 @@ workspace: '@dvt/contracts'
 date: 2026-06-07
 last_reviewed: 2026-06-07
 planning_type: review
-extends: buzon/20260607-contracts-workspace-gap-report.md
+extends: docs/planning/reviews/architecture-and-governance/20260607-contracts-workspace-gap-report.md
 ---
 
 # Contracts Workspace Gap Report Source Extension
