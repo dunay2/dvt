@@ -58,6 +58,9 @@ contract validation, or engine determinism tests.
   through `pnpm test:web:ci`.
 - CI Vitest configs bound worker count and worker old-space capacity in the
   suite catalog so hosted runners keep full web coverage without worker OOMs.
+- The `Web Frontend Tests` job reserves a 25-minute budget for full coverage
+  routes because the CI worker cap deliberately trades parallelism for hosted
+  runner memory stability; ordinary PRs remain on changed-suite routing.
 - Test support under `apps/web/src/testing/**` remains test-only and must not
   become a production adapter surface.
 - `vitest*.config.ts` files are adapters over the suite catalog. They do not own

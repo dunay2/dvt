@@ -125,7 +125,7 @@ jobs:
   web-frontend-tests:
     name: Web Frontend Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     needs: [detect_test_matrix]
     if: >-
       !(github.event_name == 'pull_request' && github.event.pull_request.draft) &&
