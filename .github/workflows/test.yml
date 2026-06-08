@@ -160,6 +160,7 @@ jobs:
         run: pnpm test:web:changed
         env:
           DVT_CI: '1'
+          NODE_OPTIONS: --max-old-space-size=4096
           GIT_BASE: origin/${{ github.base_ref }}
           GIT_HEAD: ${{ github.sha }}
 
@@ -170,6 +171,7 @@ jobs:
         run: pnpm test:web:ci
         env:
           DVT_CI: '1'
+          NODE_OPTIONS: --max-old-space-size=4096
 
   adapter-postgres:
     name: Adapter Postgres Tests

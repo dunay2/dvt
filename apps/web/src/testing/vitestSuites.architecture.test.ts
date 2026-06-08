@@ -12,8 +12,8 @@ import {
   createWebVitestConfig,
   resolveWebVitestChangedSuitePlan,
   type WebVitestChangedSuiteName,
+  WEB_VITEST_CI_NODE_OPTIONS,
   WEB_VITEST_CI_WORKER_COUNT,
-  WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB,
   WEB_VITEST_CHANGED_SUITE_COMMANDS,
   WEB_VITEST_FOCUS_SUITE_NAMES,
   WEB_VITEST_PRIMARY_SUITE_NAMES,
@@ -191,6 +191,11 @@ describe('web Vitest suite partition', () => {
       resolve(webRoot, '..', '..', '.github/workflows/test.yml'),
       'utf8'
     );
+    const ciWorkflow = readFileSync(
+      resolve(webRoot, '..', '..', '.github/workflows/ci.yml'),
+      'utf8'
+    );
+    const ciNodeOptionsLine = `NODE_OPTIONS: ${WEB_VITEST_CI_NODE_OPTIONS}`;
 
     expect(packageJson.scripts.pretest).toBe('pnpm run test:deps');
     expect(packageJson.scripts['test:deps']).toBe(
@@ -222,6 +227,8 @@ describe('web Vitest suite partition', () => {
     expect(workflow).toContain('pnpm test:web:ci');
     expect(workflow).toContain('web-frontend-tests:');
     expect(workflow).toContain('name: Web Frontend Tests');
+    expect(workflow.split(ciNodeOptionsLine)).toHaveLength(3);
+    expect(ciWorkflow).toContain(ciNodeOptionsLine);
 
     for (const suiteName of WEB_VITEST_PRIMARY_SUITE_NAMES) {
       expect(packageJson.scripts[`test:${suiteName}`]).toBe(
@@ -270,7 +277,7 @@ describe('web Vitest suite partition', () => {
           singleFork: true,
           minForks: 1,
           maxForks: WEB_VITEST_CI_WORKER_COUNT,
-          execArgv: [`--max-old-space-size=${WEB_VITEST_CI_WORKER_MAX_OLD_SPACE_MB}`],
+          execArgv: [WEB_VITEST_CI_NODE_OPTIONS],
         },
       },
     });
