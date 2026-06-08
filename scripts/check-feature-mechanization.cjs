@@ -771,63 +771,63 @@ function validateFeatureImplementationManifests(manifestEntries, options = {}) {
   return new FeatureImplementationGuard(manifestEntries, options).validate();
 }
 
-function stableJsonStringify(value) {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableJsonStringify).join(',')}]`;
-  }
-
-  if (value && typeof value === 'object') {
-    return `{${Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${stableJsonStringify(value[key])}`)
-      .join(',')}}`;
-  }
-
-  return JSON.stringify(value);
-}
-
-function mergeManifestArrayValues(leftValue, rightValue) {
-  const mergedValues = [];
-  const seenValues = new Set();
-
-  for (const value of [
-    ...(Array.isArray(leftValue) ? leftValue : []),
-    ...(Array.isArray(rightValue) ? rightValue : []),
-  ]) {
-    const key = stableJsonStringify(value);
-    if (seenValues.has(key)) {
-      continue;
-    }
-
-    seenValues.add(key);
-    mergedValues.push(value);
-  }
-
-  return mergedValues;
-}
-
-function mergeFeatureMechanizationManifest(leftManifest, rightManifest) {
-  const mergedManifest = { ...leftManifest };
-
-  for (const [fieldName, fieldValue] of Object.entries(rightManifest)) {
-    if (Array.isArray(fieldValue)) {
-      mergedManifest[fieldName] = mergeManifestArrayValues(mergedManifest[fieldName], fieldValue);
-      continue;
-    }
-
-    if (
-      mergedManifest[fieldName] === undefined ||
-      mergedManifest[fieldName] === null ||
-      mergedManifest[fieldName] === ''
-    ) {
-      mergedManifest[fieldName] = fieldValue;
-    }
-  }
-
-  return mergedManifest;
-}
-
 function normalizeDbFeatureMechanizationManifestRows(rows) {
+  function stableJsonStringify(value) {
+    if (Array.isArray(value)) {
+      return `[${value.map(stableJsonStringify).join(',')}]`;
+    }
+
+    if (value && typeof value === 'object') {
+      return `{${Object.keys(value)
+        .sort()
+        .map((key) => `${JSON.stringify(key)}:${stableJsonStringify(value[key])}`)
+        .join(',')}}`;
+    }
+
+    return JSON.stringify(value);
+  }
+
+  function mergeManifestArrayValues(leftValue, rightValue) {
+    const mergedValues = [];
+    const seenValues = new Set();
+
+    for (const value of [
+      ...(Array.isArray(leftValue) ? leftValue : []),
+      ...(Array.isArray(rightValue) ? rightValue : []),
+    ]) {
+      const key = stableJsonStringify(value);
+      if (seenValues.has(key)) {
+        continue;
+      }
+
+      seenValues.add(key);
+      mergedValues.push(value);
+    }
+
+    return mergedValues;
+  }
+
+  function mergeFeatureMechanizationManifest(leftManifest, rightManifest) {
+    const mergedManifest = { ...leftManifest };
+
+    for (const [fieldName, fieldValue] of Object.entries(rightManifest)) {
+      if (Array.isArray(fieldValue)) {
+        mergedManifest[fieldName] = mergeManifestArrayValues(mergedManifest[fieldName], fieldValue);
+        continue;
+      }
+
+      if (
+        mergedManifest[fieldName] === undefined ||
+        mergedManifest[fieldName] === null ||
+        mergedManifest[fieldName] === ''
+      ) {
+        mergedManifest[fieldName] = fieldValue;
+      }
+    }
+
+    return mergedManifest;
+  }
+
   const bySourceAndFeature = new Map();
 
   for (const row of rows || []) {

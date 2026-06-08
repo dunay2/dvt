@@ -34,43 +34,6 @@ export function sameWorkspaceScopeIdentity(
   );
 }
 
-function sameOptionalWorkspaceScopeIdentity(
-  left: WorkspaceScopeIdentity | undefined,
-  right: WorkspaceScopeIdentity | undefined
-): boolean {
-  if (!left || !right) {
-    return left === right;
-  }
-
-  return sameWorkspaceScopeIdentity(left, right);
-}
-
-function sameWorkspaceScopeIdentityList(
-  left: readonly WorkspaceScopeIdentity[],
-  right: readonly WorkspaceScopeIdentity[]
-): boolean {
-  return (
-    left.length === right.length &&
-    left.every((leftScope, index) => {
-      const rightScope = right[index];
-      return rightScope ? sameWorkspaceScopeIdentity(leftScope, rightScope) : false;
-    })
-  );
-}
-
-function sameWorkspaceScopeSelectionState(
-  left: WorkspaceScopeSelectionState,
-  right: WorkspaceScopeSelectionState
-): boolean {
-  return (
-    sameWorkspaceScopeIdentity(left.selectedScope, right.selectedScope) &&
-    sameWorkspaceScopeIdentityList(left.availableScopes, right.availableScopes) &&
-    left.status === right.status &&
-    left.rejectionReason === right.rejectionReason &&
-    sameOptionalWorkspaceScopeIdentity(left.rejectedScope, right.rejectedScope)
-  );
-}
-
 function readSelectedScope(state: Pick<SessionState, 'tenantId' | 'projectId' | 'environmentId'>) {
   return {
     tenantId: state.tenantId,
@@ -204,6 +167,43 @@ function selectWorkspaceScope(requestedScope: WorkspaceScopeIdentity): SelectWor
 }
 
 export function createWorkspaceScopeSelectionPort(): WorkspaceScopeSelectionPort {
+  function sameOptionalWorkspaceScopeIdentity(
+    left: WorkspaceScopeIdentity | undefined,
+    right: WorkspaceScopeIdentity | undefined
+  ): boolean {
+    if (!left || !right) {
+      return left === right;
+    }
+
+    return sameWorkspaceScopeIdentity(left, right);
+  }
+
+  function sameWorkspaceScopeIdentityList(
+    left: readonly WorkspaceScopeIdentity[],
+    right: readonly WorkspaceScopeIdentity[]
+  ): boolean {
+    return (
+      left.length === right.length &&
+      left.every((leftScope, index) => {
+        const rightScope = right[index];
+        return rightScope ? sameWorkspaceScopeIdentity(leftScope, rightScope) : false;
+      })
+    );
+  }
+
+  function sameWorkspaceScopeSelectionState(
+    left: WorkspaceScopeSelectionState,
+    right: WorkspaceScopeSelectionState
+  ): boolean {
+    return (
+      sameWorkspaceScopeIdentity(left.selectedScope, right.selectedScope) &&
+      sameWorkspaceScopeIdentityList(left.availableScopes, right.availableScopes) &&
+      left.status === right.status &&
+      left.rejectionReason === right.rejectionReason &&
+      sameOptionalWorkspaceScopeIdentity(left.rejectedScope, right.rejectedScope)
+    );
+  }
+
   let cachedSelection = readWorkspaceScopeSelection();
 
   function readCachedSelection(state: SessionState = useSessionStore.getState()) {
