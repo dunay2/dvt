@@ -15,6 +15,7 @@ import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import { canvasChromeClasses } from './canvasChromeTokens';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import type { CanvasAuthoringNodeSeed } from './canvasAuthoringNodeCommand';
 
 export type CanvasToolbarProps = {
   readonly onAutoLayout: () => void;
@@ -30,7 +31,11 @@ export type CanvasToolbarProps = {
   readonly onReloadLatestDraft: () => void;
   readonly onPlan: () => void;
   readonly onRun: () => void;
-  readonly onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
+  readonly onCreateAuthoringNode?: (
+    registration: NodeKindRegistration,
+    position?: { x: number; y: number },
+    seed?: CanvasAuthoringNodeSeed
+  ) => void;
   readonly routeState: CanvasRouteState;
   readonly draftToolbarState: CanvasDraftToolbarState;
   readonly canPlan: boolean;
@@ -104,6 +109,7 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           workflowStatusClass={viewModel.workflowStatusClass}
           workflowStatusTitle={viewModel.workflowStatusTitle}
           canPlanGraph={viewModel.canPlanGraph}
+          canvasAuthoringMode={props.canvasAuthoringMode}
           authoringNodeKinds={props.authoringNodeKinds ?? []}
         />
         <PlanRunReadinessPanel density="compact" readiness={props.planRunReadiness} />

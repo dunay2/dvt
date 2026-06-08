@@ -6,6 +6,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import type { CanvasAuthoringNodeSeed } from './canvasAuthoringNodeCommand';
 
 /** Owned concern: semantic contracts for Canvas graph interaction handler seams. */
 type CanvasNodeSetter = Dispatch<SetStateAction<Node[]>>;
@@ -158,7 +159,8 @@ export type CanvasAuthoringNodeCreationContracts = {
 
 export type CreateCanvasAuthoringNode = (
   registration: NodeKindRegistration,
-  position?: { x: number; y: number }
+  position?: { x: number; y: number },
+  seed?: CanvasAuthoringNodeSeed
 ) => void;
 
 export type CanvasNodeRemovalState = {

@@ -27,6 +27,7 @@ import {
   buildCanvasEdgeContextRemovalChange,
   type CanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';
+import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 
 function resolveCanvasViewportStyle(
   canvasPalette: CanvasPaletteId,
@@ -93,10 +94,7 @@ type CanvasViewportProps = {
   readonly onDrop: React.DragEventHandler<HTMLDivElement>;
   readonly onDragOver: React.DragEventHandler<HTMLDivElement>;
   readonly authoringNodeKinds: readonly NodeKindRegistration[];
-  readonly onCreateAuthoringNode: (
-    registration: NodeKindRegistration,
-    position?: { x: number; y: number }
-  ) => void;
+  readonly onCreateAuthoringNode: CreateCanvasAuthoringNode;
   readonly importedNodeFocusIds: string[];
   readonly onImportedNodeFocusComplete: () => void;
   readonly onShowExplorer: () => void;

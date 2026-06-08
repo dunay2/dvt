@@ -9,6 +9,12 @@ type CanvasAuthoringNodeCommand = Readonly<{
   position: { x: number; y: number };
 }>;
 
+export type CanvasAuthoringNodeSeed = Readonly<{
+  namePrefix?: string;
+  tags?: readonly string[];
+  metadata?: Record<string, unknown>;
+}>;
+
 type CanvasAuthoringNodePosition = Readonly<{
   x: number;
   y: number;
@@ -119,27 +125,60 @@ function resolveCatalogAuthoringNodePosition(args: {
   };
 }
 
+function mergeSeedMetadata(
+  baseMetadata: CanonicalNode['metadata'],
+  seedMetadata: Record<string, unknown> | undefined
+): CanonicalNode['metadata'] {
+  if (seedMetadata == null) {
+    return baseMetadata;
+  }
+
+  const baseConfig =
+    baseMetadata?.config !== null &&
+    typeof baseMetadata?.config === 'object' &&
+    !Array.isArray(baseMetadata.config)
+      ? (baseMetadata.config as Record<string, unknown>)
+      : {};
+  const seedConfig =
+    seedMetadata.config !== null &&
+    typeof seedMetadata.config === 'object' &&
+    !Array.isArray(seedMetadata.config)
+      ? (seedMetadata.config as Record<string, unknown>)
+      : {};
+
+  return {
+    ...baseMetadata,
+    ...seedMetadata,
+    config: {
+      ...baseConfig,
+      ...seedConfig,
+    },
+  };
+}
+
 export function buildAuthoringNodeCommand(
   registration: NodeKindRegistration,
   existingNodes: readonly Node[],
-  requestedPosition?: CanvasAuthoringNodePosition
+  requestedPosition?: CanvasAuthoringNodePosition,
+  seed?: CanvasAuthoringNodeSeed
 ): CanvasAuthoringNodeCommand {
   const baseId = `${registration.pluginId}-${slugifyNodeKind(registration.kind)}`;
   const nextIndex = resolveNextAuthoringNodeIndex(baseId, existingNodes);
   const id = `${baseId}-${nextIndex}`;
+  const baseMetadata = {
+    typeLabel: registration.label,
+  };
 
   return {
     canonicalNode: {
       id,
-      name: `${registration.label} ${nextIndex}`,
+      name: `${seed?.namePrefix ?? registration.label} ${nextIndex}`,
       pluginId: registration.pluginId,
       kind: registration.kind,
       role: registration.role,
       status: 'idle',
-      tags: ['authoring'],
-      metadata: {
-        typeLabel: registration.label,
-      },
+      tags: ['authoring', ...(seed?.tags ?? [])],
+      metadata: mergeSeedMetadata(baseMetadata, seed?.metadata),
     },
     position:
       requestedPosition ?? resolveCatalogAuthoringNodePosition({ registration, existingNodes }),

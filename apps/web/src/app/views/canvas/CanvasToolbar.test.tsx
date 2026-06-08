@@ -350,6 +350,71 @@ describe('CanvasToolbar', () => {
     expect(onCreateAuthoringNode).toHaveBeenCalledWith(nodeKinds[1]);
   });
 
+  it('offers governed SQL transformation templates from the Insert palette', async () => {
+    const onCreateAuthoringNode = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasToolbar
+          {...buildToolbarProps({
+            draftToolbarState: defaultDraftToolbarState,
+            authoringNodeKinds: nodeKinds,
+            onCreateAuthoringNode,
+          })}
+        />
+      );
+    });
+
+    const insertButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-toolbar-insert-command"]'
+    );
+
+    await act(async () => {
+      insertButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(document.body.textContent).toContain('Filter rows');
+    expect(document.body.textContent).toContain('Join sources');
+
+    const search = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-add-node-palette-search"]'
+    );
+    await act(async () => {
+      if (search) {
+        search.value = 'aggregate';
+      }
+      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'aggregate' }));
+    });
+
+    expect(document.body.textContent).toContain('Aggregate metrics');
+    expect(document.body.textContent).not.toContain('Filter rows');
+
+    const aggregateTemplate = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-add-node-palette-option"][data-option-kind="transformation-template"]'
+      )
+    ).find((button) => button.textContent?.includes('Aggregate metrics'));
+
+    await act(async () => {
+      aggregateTemplate?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onCreateAuthoringNode).toHaveBeenCalledWith(
+      nodeKinds[1],
+      undefined,
+      expect.objectContaining({
+        namePrefix: 'Aggregate metrics',
+        metadata: expect.objectContaining({
+          transformationTemplateId: 'aggregate-metrics',
+          sql: expect.stringContaining('group by'),
+          config: expect.objectContaining({
+            sql: expect.stringContaining('group by'),
+          }),
+        }),
+      })
+    );
+  });
+
   it('keeps plan button disabled when transformation validation is invalid', async () => {
     await act(async () => {
       root.render(

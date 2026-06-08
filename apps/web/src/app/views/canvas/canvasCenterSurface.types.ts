@@ -9,6 +9,7 @@ import type {
 import type { CanvasDraftTransportErrorState } from './canvasDraftTransportErrorState';
 import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState';
 import type { CanvasAuthoringCanvasDocument } from './canvasDraftReadModel';
+import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 
 export type RenderCanvasCenterSurfaceArgs = {
   presentationState: CanvasDraftPresentationState;
@@ -24,7 +25,7 @@ export type RenderCanvasCenterSurfaceArgs = {
   canOpenSourceImport: boolean;
   emptyStateGuideVisible: boolean;
   onCreateCanvasDocument: (command: CanvasCreateCanvasDocumentCommand) => void;
-  onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
+  onCreateAuthoringNode: CreateCanvasAuthoringNode;
   onEmptyStateGuideVisibilityChange: (visible: boolean) => void;
 };
 

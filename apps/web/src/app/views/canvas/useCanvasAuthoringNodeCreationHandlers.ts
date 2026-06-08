@@ -42,7 +42,7 @@ export function useCanvasAuthoringNodeCreationHandlers({
   });
 
   const handleCreateAuthoringNode = useCallback<CreateCanvasAuthoringNode>(
-    (registration, positionOverride) => {
+    (registration, positionOverride, seed) => {
       if (!canEditEdges) {
         toast.error(canvasViewCopy.mutationUnavailableMessage);
         return;
@@ -51,7 +51,8 @@ export function useCanvasAuthoringNodeCreationHandlers({
       const { canonicalNode, position } = buildAuthoringNodeCommand(
         registration,
         latestNodesRef.current,
-        positionOverride
+        positionOverride,
+        seed
       );
       const transaction = runAdmissionCommand({
         canonicalNode,

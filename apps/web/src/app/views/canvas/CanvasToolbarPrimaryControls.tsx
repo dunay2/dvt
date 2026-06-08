@@ -1,6 +1,6 @@
 /** Owned concern: render primary Canvas toolbar controls without owning route command semantics. */
 import { Download, FileCheck, Folder, Play, Upload } from 'lucide-react';
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
@@ -13,9 +13,14 @@ import {
 } from '../../components/ui/dropdown-menu';
 import { Separator } from '../../components/ui/separator';
 import { cn } from '../../components/ui/utils';
-import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type {
+  CanvasGraphAuthoringMode,
+  NodeKindRegistration,
+} from '../../plugins/nodeTypeContracts';
+import type { CanvasAuthoringNodeSeed } from './canvasAuthoringNodeCommand';
 import { CanvasAddNodePalette } from './CanvasAddNodePalette';
 import { canvasChromeClasses } from './canvasChromeTokens';
+import { buildCanvasTransformationTemplateCatalog } from './canvasTransformationTemplateCatalog';
 import { canvasViewCopy } from './copy';
 
 type CanvasToolbarPrimaryControlsProps = {
@@ -23,7 +28,11 @@ type CanvasToolbarPrimaryControlsProps = {
   onImportProjectSnapshotFile: (file: File) => void;
   onPlan: () => void;
   onRun: () => void;
-  onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
+  onCreateAuthoringNode?: (
+    registration: NodeKindRegistration,
+    position?: { x: number; y: number },
+    seed?: CanvasAuthoringNodeSeed
+  ) => void;
   canPlan: boolean;
   canRun: boolean;
   canEditEdges: boolean;
@@ -34,6 +43,7 @@ type CanvasToolbarPrimaryControlsProps = {
   workflowStatusClass: string;
   workflowStatusTitle: string;
   canPlanGraph: boolean;
+  canvasAuthoringMode: CanvasGraphAuthoringMode;
   authoringNodeKinds: readonly NodeKindRegistration[];
 };
 
@@ -53,9 +63,17 @@ export function CanvasToolbarPrimaryControls({
   workflowStatusClass,
   workflowStatusTitle,
   canPlanGraph,
+  canvasAuthoringMode,
   authoringNodeKinds,
 }: CanvasToolbarPrimaryControlsProps): JSX.Element {
   const importInputRef = useRef<HTMLInputElement>(null);
+  const transformationTemplates = useMemo(
+    () =>
+      canvasAuthoringMode === 'transformation'
+        ? buildCanvasTransformationTemplateCatalog(authoringNodeKinds)
+        : [],
+    [authoringNodeKinds, canvasAuthoringMode]
+  );
 
   return (
     <>
@@ -74,6 +92,7 @@ export function CanvasToolbarPrimaryControls({
           <CanvasAddNodePalette
             nodeKinds={authoringNodeKinds}
             onCreateAuthoringNode={onCreateAuthoringNode}
+            transformationTemplates={transformationTemplates}
             triggerLabel={canvasViewCopy.toolbarInsertLabel}
             triggerDataSlot="canvas-toolbar-insert-command"
             disabled={!canEditEdges}

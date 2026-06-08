@@ -11,6 +11,8 @@ import {
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasReadOnlyState } from './canvasWorkbenchStateModel';
 import { CanvasAddNodePalette } from './CanvasAddNodePalette';
+import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import { buildCanvasTransformationTemplateCatalog } from './canvasTransformationTemplateCatalog';
 import { canvasViewCopy } from './copy';
 
 function CanvasSurfaceStateCard({
@@ -65,10 +67,12 @@ function CanvasEmptyAuthoringCatalog({
   firstNodeHelper,
 }: Readonly<{
   nodeKinds: readonly NodeKindRegistration[];
-  onCreateAuthoringNode: (registration: NodeKindRegistration) => void;
+  onCreateAuthoringNode: CreateCanvasAuthoringNode;
   firstNodeLabel: string;
   firstNodeHelper: string;
 }>) {
+  const transformationTemplates = buildCanvasTransformationTemplateCatalog(nodeKinds);
+
   return (
     <div data-slot="canvas-empty-authoring-catalog" className="mt-5 space-y-3">
       <div>
@@ -78,6 +82,7 @@ function CanvasEmptyAuthoringCatalog({
       <CanvasAddNodePalette
         nodeKinds={nodeKinds}
         onCreateAuthoringNode={onCreateAuthoringNode}
+        transformationTemplates={transformationTemplates}
         triggerLabel={firstNodeLabel}
       />
     </div>
@@ -109,7 +114,7 @@ export function CanvasEmptyStateView({
   firstNodeLabel?: string;
   firstNodeHelper?: string;
   nodeKinds?: readonly NodeKindRegistration[];
-  onCreateAuthoringNode?: (registration: NodeKindRegistration) => void;
+  onCreateAuthoringNode?: CreateCanvasAuthoringNode;
   emptyStateGuideVisible?: boolean;
   onEmptyStateGuideVisibilityChange?: (visible: boolean) => void;
 }>) {

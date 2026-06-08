@@ -110,7 +110,8 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).toContain(
       'triggerDataSlot="canvas-toolbar-insert-command"'
     );
-    expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('onCreateAuthoringNode(registration)');
+    expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('function selectOption(');
+    expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('onCreateAuthoringNode(option.registration');
     expect(CANVAS_SHELL_SOURCE).not.toContain('nodeKinds={authoringNodeKinds}');
     expect(CANVAS_SHELL_SOURCE).not.toContain(
       'onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}'

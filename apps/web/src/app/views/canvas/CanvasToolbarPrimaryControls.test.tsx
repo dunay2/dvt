@@ -16,6 +16,7 @@ const DEFAULT_PROPS: React.ComponentProps<typeof CanvasToolbarPrimaryControls> =
   canPlanGraph: true,
   canRun: true,
   canStartRun: true,
+  canvasAuthoringMode: 'transformation',
   onExportProjectSnapshot: vi.fn(),
   onImportProjectSnapshotFile: vi.fn(),
   onPlan: vi.fn(),

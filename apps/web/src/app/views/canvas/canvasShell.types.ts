@@ -22,6 +22,7 @@ import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectC
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -111,10 +112,7 @@ export type CanvasShellGraphCommands = {
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
-  onCreateAuthoringNode: (
-    registration: NodeKindRegistration,
-    position?: { x: number; y: number }
-  ) => void;
+  onCreateAuthoringNode: CreateCanvasAuthoringNode;
   onSourceImportComplete: (result: ImportSourcesResult) => void;
   onImportedNodeFocusComplete: () => void;
 };

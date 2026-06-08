@@ -8,13 +8,17 @@ import { cn } from '../../components/ui/utils';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasChromeClasses } from './canvasChromeTokens';
 import { canvasViewCopy } from './copy';
+import type { CanvasAuthoringNodeSeed } from './canvasAuthoringNodeCommand';
+import type { CanvasTransformationTemplateOption } from './canvasTransformationTemplateCatalog';
 
 type CanvasAddNodePaletteProps = Readonly<{
   nodeKinds: readonly NodeKindRegistration[];
   onCreateAuthoringNode: (
     registration: NodeKindRegistration,
-    position?: { x: number; y: number }
+    position?: { x: number; y: number },
+    seed?: CanvasAuthoringNodeSeed
   ) => void;
+  transformationTemplates?: readonly CanvasTransformationTemplateOption[];
   triggerLabel: string;
   triggerDataSlot?: string;
   disabled?: boolean;
@@ -22,18 +26,29 @@ type CanvasAddNodePaletteProps = Readonly<{
   align?: 'left' | 'right';
 }>;
 
+type CanvasAddNodePaletteOption = Readonly<
+  | {
+      id: string;
+      kind: 'node-kind';
+      label: string;
+      detail: string;
+      registration: NodeKindRegistration;
+      seed?: undefined;
+    }
+  | {
+      id: string;
+      kind: 'transformation-template';
+      label: string;
+      detail: string;
+      registration: NodeKindRegistration;
+      seed: CanvasAuthoringNodeSeed;
+    }
+>;
+
 const PALETTE_WIDTH = 288;
 const PALETTE_GUTTER = 8;
 
-function filterNodeKinds(
-  nodeKinds: readonly NodeKindRegistration[],
-  searchValue: string
-): readonly NodeKindRegistration[] {
-  const normalizedSearch = searchValue.trim().toLowerCase();
-  if (!normalizedSearch) {
-    return nodeKinds;
-  }
-
+function buildNodeKindSearchText(registration: NodeKindRegistration): string {
   const roleSearchText: Record<NodeKindRegistration['role'], string> = {
     check: 'check data test validation quality',
     control: 'control macro orchestration command',
@@ -42,21 +57,73 @@ function filterNodeKinds(
     transform: 'transform model sql select materialize',
   };
 
-  return nodeKinds.filter((registration) => {
-    const searchText = [
-      registration.label,
-      registration.kind,
-      registration.pluginId,
-      registration.role,
-      registration.previewStepKind ?? '',
-      roleSearchText[registration.role],
-      'authoring canvas insert node',
-      registration.allowsIncoming ? 'incoming upstream dependency' : 'root first source',
-      registration.allowsOutgoing ? 'outgoing downstream dependency' : 'terminal final sink',
-      registration.supportsColumns ? 'columns schema fields table' : '',
-    ]
-      .join(' ')
-      .toLowerCase();
+  return [
+    registration.label,
+    registration.kind,
+    registration.pluginId,
+    registration.role,
+    registration.previewStepKind ?? '',
+    roleSearchText[registration.role],
+    'authoring canvas insert node',
+    registration.allowsIncoming ? 'incoming upstream dependency' : 'root first source',
+    registration.allowsOutgoing ? 'outgoing downstream dependency' : 'terminal final sink',
+    registration.supportsColumns ? 'columns schema fields table' : '',
+  ]
+    .join(' ')
+    .toLowerCase();
+}
+
+function buildPaletteOptions(
+  nodeKinds: readonly NodeKindRegistration[],
+  transformationTemplates: readonly CanvasTransformationTemplateOption[]
+): readonly CanvasAddNodePaletteOption[] {
+  return [
+    ...nodeKinds.map((registration) => ({
+      id: `node-kind:${registration.kind}`,
+      kind: 'node-kind' as const,
+      label: registration.label,
+      detail: registration.role,
+      registration,
+    })),
+    ...transformationTemplates.map((option) => ({
+      id: `transformation-template:${option.id}`,
+      kind: 'transformation-template' as const,
+      label: option.template.label,
+      detail: option.template.description,
+      registration: option.registration,
+      seed: option.seed,
+    })),
+  ];
+}
+
+function filterPaletteOptions(
+  options: readonly CanvasAddNodePaletteOption[],
+  searchValue: string,
+  transformationTemplates: readonly CanvasTransformationTemplateOption[]
+): readonly CanvasAddNodePaletteOption[] {
+  const normalizedSearch = searchValue.trim().toLowerCase();
+  if (!normalizedSearch) {
+    return options;
+  }
+
+  const templateSearchById = new Map(
+    transformationTemplates.map((option) => [option.id, option.template.searchText.toLowerCase()])
+  );
+
+  return options.filter((option) => {
+    const searchText =
+      option.kind === 'node-kind'
+        ? buildNodeKindSearchText(option.registration)
+        : [
+            option.label,
+            option.detail,
+            option.registration.label,
+            option.registration.kind,
+            templateSearchById.get(option.id.replace('transformation-template:', '')) ?? '',
+            'governed transformation template sql catalog',
+          ]
+            .join(' ')
+            .toLowerCase();
 
     return searchText.includes(normalizedSearch);
   });
@@ -65,6 +132,7 @@ function filterNodeKinds(
 export function CanvasAddNodePalette({
   nodeKinds,
   onCreateAuthoringNode,
+  transformationTemplates = [],
   triggerLabel,
   triggerDataSlot = 'canvas-add-node-palette-trigger',
   disabled = false,
@@ -78,11 +146,15 @@ export function CanvasAddNodePalette({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [paletteStyle, setPaletteStyle] = useState<CSSProperties>({});
-  const visibleNodeKinds = useMemo(
-    () => filterNodeKinds(nodeKinds, searchValue),
-    [nodeKinds, searchValue]
+  const paletteOptions = useMemo(
+    () => buildPaletteOptions(nodeKinds, transformationTemplates),
+    [nodeKinds, transformationTemplates]
   );
-  const canOpen = !disabled && nodeKinds.length > 0;
+  const visibleOptions = useMemo(
+    () => filterPaletteOptions(paletteOptions, searchValue, transformationTemplates),
+    [paletteOptions, searchValue, transformationTemplates]
+  );
+  const canOpen = !disabled && paletteOptions.length > 0;
 
   useEffect(() => {
     if (!open) {
@@ -141,8 +213,12 @@ export function CanvasAddNodePalette({
     updateActiveIndex(0);
   }
 
-  function selectNodeKind(registration: NodeKindRegistration): void {
-    onCreateAuthoringNode(registration);
+  function selectOption(option: CanvasAddNodePaletteOption): void {
+    if (option.seed == null) {
+      onCreateAuthoringNode(option.registration);
+    } else {
+      onCreateAuthoringNode(option.registration, undefined, option.seed);
+    }
     closePalette();
   }
 
@@ -173,7 +249,7 @@ export function CanvasAddNodePalette({
             if (event.key === 'ArrowDown') {
               event.preventDefault();
               updateActiveIndex(
-                Math.min(activeIndexRef.current + 1, Math.max(visibleNodeKinds.length - 1, 0))
+                Math.min(activeIndexRef.current + 1, Math.max(visibleOptions.length - 1, 0))
               );
               return;
             }
@@ -186,16 +262,16 @@ export function CanvasAddNodePalette({
 
             if (event.key === 'Enter') {
               event.preventDefault();
-              const activeNodeKind = visibleNodeKinds[activeIndexRef.current];
-              if (activeNodeKind) {
-                selectNodeKind(activeNodeKind);
+              const activeOption = visibleOptions[activeIndexRef.current];
+              if (activeOption) {
+                selectOption(activeOption);
               }
             }
           }}
         />
       </div>
       <div role="listbox" aria-label={triggerLabel} className="mt-2 max-h-64 overflow-y-auto">
-        {visibleNodeKinds.length === 0 ? (
+        {visibleOptions.length === 0 ? (
           <p
             data-slot="canvas-add-node-palette-empty"
             className="px-2 py-3 text-sm text-(--text-muted)"
@@ -203,25 +279,33 @@ export function CanvasAddNodePalette({
             {canvasViewCopy.addNodePaletteEmptyLabel}
           </p>
         ) : (
-          visibleNodeKinds.map((registration, index) => {
-            const Icon = registration.icon;
+          visibleOptions.map((option, index) => {
+            const Icon = option.registration.icon;
             const selected = index === activeIndex;
             return (
               <button
-                key={registration.kind}
+                key={option.id}
                 type="button"
                 role="option"
                 aria-selected={selected}
                 data-slot="canvas-add-node-palette-option"
+                data-option-kind={option.kind}
                 className={cn(
-                  'flex w-full items-center gap-2 rounded px-2 py-2 text-left text-sm text-(--text-default)',
+                  'flex w-full items-start gap-2 rounded px-2 py-2 text-left text-sm text-(--text-default)',
                   selected && 'bg-(--surface-elevated)'
                 )}
                 onMouseEnter={() => updateActiveIndex(index)}
-                onClick={() => selectNodeKind(registration)}
+                onClick={() => selectOption(option)}
               >
-                <Icon className="size-4 shrink-0" />
-                <span className="min-w-0 truncate">{registration.label}</span>
+                <Icon className="mt-0.5 size-4 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block truncate">{option.label}</span>
+                  {option.kind === 'transformation-template' ? (
+                    <span className="mt-0.5 block line-clamp-2 text-xs text-(--text-muted)">
+                      {option.detail}
+                    </span>
+                  ) : null}
+                </span>
               </button>
             );
           })

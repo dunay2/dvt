@@ -49,4 +49,44 @@ describe('buildAuthoringNodeCommand', () => {
 
     expect(command.position).toEqual({ x: 960, y: 420 });
   });
+
+  it('applies governed template seed metadata while preserving the node kind identity', () => {
+    const command = buildAuthoringNodeCommand(
+      {
+        ...buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+        role: 'transform',
+        allowsIncoming: true,
+      },
+      [],
+      undefined,
+      {
+        namePrefix: 'Filter rows',
+        tags: ['template:filter-rows'],
+        metadata: {
+          transformationTemplateId: 'filter-rows',
+          sql: 'select * from {{ source }} where {{ condition }}',
+          config: {
+            sql: 'select * from {{ source }} where {{ condition }}',
+          },
+        },
+      }
+    );
+
+    expect(command.canonicalNode).toMatchObject({
+      id: 'dvt-sql-transform-1',
+      name: 'Filter rows 1',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      tags: ['authoring', 'template:filter-rows'],
+      metadata: {
+        typeLabel: 'SQL transform',
+        transformationTemplateId: 'filter-rows',
+        sql: 'select * from {{ source }} where {{ condition }}',
+        config: {
+          sql: 'select * from {{ source }} where {{ condition }}',
+        },
+      },
+    });
+  });
 });

@@ -118,6 +118,57 @@ describe('Canvas empty state Insert/Add palette', () => {
     });
   });
 
+  it('offers governed SQL transformation templates before the first node exists', async () => {
+    const { container, onCreateAuthoringNode, root } = renderEmptyState();
+    const trigger = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Add first transformation node')
+    );
+
+    await act(async () => {
+      trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const search = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-add-node-palette-search"]'
+    );
+
+    await act(async () => {
+      search?.focus();
+      if (search) {
+        search.value = 'join';
+      }
+      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'join' }));
+    });
+
+    const joinTemplate = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-add-node-palette-option"][data-option-kind="transformation-template"]'
+      )
+    ).find((button) => button.textContent?.includes('Join sources'));
+
+    expect(joinTemplate).toBeDefined();
+
+    await act(async () => {
+      joinTemplate?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onCreateAuthoringNode).toHaveBeenCalledWith(
+      nodeKinds[1],
+      undefined,
+      expect.objectContaining({
+        namePrefix: 'Join sources',
+        metadata: expect.objectContaining({
+          transformationTemplateId: 'join-sources',
+          sql: expect.stringContaining('join'),
+        }),
+      })
+    );
+
+    act(() => {
+      root.unmount();
+    });
+  });
+
   it('keeps terse authoring node kinds discoverable through semantic palette search', async () => {
     const semanticNodeKinds: readonly NodeKindRegistration[] = [
       {

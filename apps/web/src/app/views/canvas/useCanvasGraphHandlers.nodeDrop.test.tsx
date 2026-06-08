@@ -424,6 +424,61 @@ describe('useCanvasGraphHandlers node drop', () => {
     harness.cleanup();
   });
 
+  it('persists governed transformation template metadata through the draft lifecycle', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      draftSession,
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness
+        .latest()
+        ?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:sql_transform'), undefined, {
+          namePrefix: 'Filter rows',
+          tags: ['template:filter-rows'],
+          metadata: {
+            transformationTemplateId: 'filter-rows',
+            sql: 'select * from {{ source }} where {{ condition }}',
+            config: {
+              sql: 'select * from {{ source }} where {{ condition }}',
+            },
+          },
+        });
+    });
+
+    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(nextDraftSession.localNodeCatalog?.['dvt-sql-transform-1']).toEqual(
+      expect.objectContaining({
+        id: 'dvt-sql-transform-1',
+        name: 'Filter rows 1',
+        tags: ['authoring', 'template:filter-rows'],
+        metadata: expect.objectContaining({
+          transformationTemplateId: 'filter-rows',
+          sql: 'select * from {{ source }} where {{ condition }}',
+          config: expect.objectContaining({
+            sql: 'select * from {{ source }} where {{ condition }}',
+          }),
+        }),
+      })
+    );
+
+    harness.cleanup();
+  });
+
   it('serializes consecutive catalog-created nodes into one draft session before rerender', async () => {
     let currentNodes: Node[] = [];
     const setNodes = vi.fn((nextNodes) => {
