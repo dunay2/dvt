@@ -19,11 +19,13 @@ import { buildCanvasWorkbenchLogEntries } from './canvas/canvasWorkbenchLogEntri
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
 import { getCanvasWorkbenchTabViews } from '../plugins/registry';
+import { useWarehouseSourceImportPort } from '../services/AppServicesContext';
 import type { CanvasWorkbenchTabId } from '../plugins/contracts/PluginManifest';
 
 function CanvasContent(): JSX.Element {
   const navigate = useNavigate();
   const params = useParams();
+  const warehouseSourceImport = useWarehouseSourceImportPort();
   const controller = useCanvasController();
   const routeViewState = deriveCanvasRouteViewState(controller);
   const { presentationState } = routeViewState;
@@ -116,7 +118,7 @@ function CanvasContent(): JSX.Element {
 
   return (
     <>
-      <CanvasShell {...shellProps} layout={layout} />
+      <CanvasShell {...shellProps} layout={layout} warehouseSourceImport={warehouseSourceImport} />
       <CanvasModalHost {...modalHostProps} />
     </>
   );

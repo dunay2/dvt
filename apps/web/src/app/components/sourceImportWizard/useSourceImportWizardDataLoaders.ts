@@ -1,7 +1,7 @@
 /** Owned concern: load warehouse source import choices through the source import port. */
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import type { IWarehouseSourceImportPort } from '../../ports/workspace';
+import type { IWarehouseSourceImportPort, WarehouseTable } from '../../ports/workspace';
 import { sourceImportWizardCopy as copy } from './copy';
 import type { SourceImportWizardState } from './types';
 
@@ -48,11 +48,19 @@ export function useConnectionsLoader({ open, warehouseSourceImport, setState }: 
 
 interface TablesLoaderParams extends LoaderParams {
   selectedConnection: string | null;
+  initiallySelectedTables?: readonly WarehouseTable[];
+}
+
+const emptyInitiallySelectedTables: readonly WarehouseTable[] = [];
+
+function buildWarehouseTableKey(table: Pick<WarehouseTable, 'database' | 'schema' | 'table'>) {
+  return [table.database, table.schema, table.table].join('.');
 }
 
 export function useTablesLoader({
   open,
   selectedConnection,
+  initiallySelectedTables = emptyInitiallySelectedTables,
   warehouseSourceImport,
   setState,
 }: TablesLoaderParams) {
@@ -66,9 +74,13 @@ export function useTablesLoader({
       try {
         const tables = await warehouseSourceImport.listWarehouseTables(selectedConnection);
         if (!cancelled) {
+          const selectedTableKeys = new Set(initiallySelectedTables.map(buildWarehouseTableKey));
           setState((prev) => ({
             ...prev,
-            tables: tables.map((table) => ({ ...table, selected: false })),
+            tables: tables.map((table) => ({
+              ...table,
+              selected: selectedTableKeys.has(buildWarehouseTableKey(table)),
+            })),
           }));
         }
       } catch (error) {
@@ -86,5 +98,5 @@ export function useTablesLoader({
     return () => {
       cancelled = true;
     };
-  }, [open, selectedConnection, setState, warehouseSourceImport]);
+  }, [initiallySelectedTables, open, selectedConnection, setState, warehouseSourceImport]);
 }

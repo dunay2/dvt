@@ -4,7 +4,8 @@
 import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
 
-import type { ImportSourcesResult } from '../../ports/workspace';
+import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../../ports/workspace';
+import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
 import type {
   CanvasGraphAuthoringMode,
   NodeKindRegistration,
@@ -152,4 +153,9 @@ export type CanvasShellProps = Readonly<{
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   canvasCommands: CanvasShellCanvasCommands;
+  warehouseSourceImport?: IWarehouseSourceImportPort;
 }>;
+
+export type CanvasShellOpenDataRegistryCommand = (
+  initialSelection?: SourceImportInitialSelection
+) => void;

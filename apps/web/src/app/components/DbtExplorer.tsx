@@ -2,6 +2,7 @@
 import { PanelLeftClose, Upload } from 'lucide-react';
 
 import { graphStatusDotClasses, graphVisualClasses } from '../plugins/graph/graphVisualTokens';
+import type { IWarehouseSourceImportPort } from '../ports/workspace';
 import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../types/canonical';
 
 import {
@@ -10,11 +11,13 @@ import {
   type CanvasWorkspaceResource,
   type CanvasWorkspaceResourceGroup,
 } from './canvasWorkspaceExplorerModel';
+import type { SourceImportInitialSelection } from './sourceImportWizard/types';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from './ui/utils';
+import WarehouseSourceExplorer from './WarehouseSourceExplorer';
 
 interface DbtExplorerProps {
   resourceGroups: readonly CanvasWorkspaceResourceGroup[];
@@ -23,7 +26,8 @@ interface DbtExplorerProps {
   onResourceSelect?: (resource: CanvasWorkspaceResource) => void;
   onResourceDragStart?: (resource: CanvasWorkspaceResource) => void;
   onHide?: () => void;
-  onOpenDataRegistry?: () => void;
+  onOpenDataRegistry?: (selection?: SourceImportInitialSelection) => void;
+  warehouseSourceImport?: IWarehouseSourceImportPort;
 }
 
 export default function DbtExplorer({
@@ -34,6 +38,7 @@ export default function DbtExplorer({
   onResourceDragStart,
   onHide,
   onOpenDataRegistry,
+  warehouseSourceImport,
 }: Readonly<DbtExplorerProps>) {
   const handleDragStart = (e: React.DragEvent, resource: CanvasWorkspaceResource) => {
     const hasCanonicalNodePayload = resource.dragPayload != null;
@@ -93,7 +98,7 @@ export default function DbtExplorer({
               type="button"
               variant="outline"
               size="sm"
-              onClick={onOpenDataRegistry}
+              onClick={() => onOpenDataRegistry()}
               disabled={!canEditGraph}
               className={cn('w-full gap-1.5', graphVisualClasses.contextPanelActionButton)}
             >
@@ -103,6 +108,14 @@ export default function DbtExplorer({
           </div>
         )}
       </div>
+
+      {warehouseSourceImport != null ? (
+        <WarehouseSourceExplorer
+          canEditGraph={canEditGraph}
+          warehouseSourceImport={warehouseSourceImport}
+          onOpenDataRegistry={onOpenDataRegistry}
+        />
+      ) : null}
 
       <ScrollArea className="flex-1">
         <Accordion

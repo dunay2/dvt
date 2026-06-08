@@ -18,7 +18,12 @@ import {
   getSelectedCount,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
-import type { DataObjectSourceType, SourceImportWizardState, WizardStep } from './types';
+import type {
+  DataObjectSourceType,
+  SourceImportInitialSelection,
+  SourceImportWizardState,
+  WizardStep,
+} from './types';
 
 interface UseSourceImportWizardParams {
   open: boolean;
@@ -26,6 +31,7 @@ interface UseSourceImportWizardParams {
   sourceImportOptions: readonly SourceImportOptionContribution[];
   onComplete?: (result: ImportSourcesResult) => void;
   onClose: () => void;
+  initialSelection?: SourceImportInitialSelection | null;
 }
 
 const initialState: SourceImportWizardState = {
@@ -55,6 +61,7 @@ export function useSourceImportWizard({
   sourceImportOptions,
   onComplete,
   onClose,
+  initialSelection,
 }: UseSourceImportWizardParams) {
   const initialWizardState = useMemo(
     () => applySourceImportOptionDefaults(initialState, sourceImportOptions),
@@ -69,6 +76,21 @@ export function useSourceImportWizard({
       addFreshness: initialWizardState.addFreshness,
     }));
   }, [initialWizardState]);
+  useEffect(() => {
+    if (!open || initialSelection == null) {
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      currentStep: 'selection',
+      selectedSourceType: 'database',
+      selectedConnection: initialSelection.connectionId,
+      tables: [],
+      loadError: null,
+      importResult: null,
+    }));
+  }, [initialSelection, open]);
   const selectedCount = useMemo(() => getSelectedCount(state.tables), [state.tables]);
   const sourceImportOptionValues = useMemo(
     () => buildSourceImportOptionValues(state),
@@ -83,6 +105,7 @@ export function useSourceImportWizard({
   useTablesLoader({
     open,
     selectedConnection: state.selectedConnection,
+    initiallySelectedTables: initialSelection?.tables,
     warehouseSourceImport,
     setState,
   });

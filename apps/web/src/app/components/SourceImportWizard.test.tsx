@@ -5,10 +5,15 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../ports/workspace';
+import type {
+  ImportSourcesResult,
+  IWarehouseSourceImportPort,
+  WarehouseTable,
+} from '../ports/workspace';
 import type { SourceImportOptionContribution } from '../plugins/registry';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import SourceImportWizard from './SourceImportWizard';
+import type { SourceImportInitialSelection } from './sourceImportWizard/types';
 
 class TestResizeObserver implements ResizeObserver {
   observe(): void {
@@ -69,6 +74,17 @@ function buildWarehouseSourceImportPort(
   };
 }
 
+function buildWarehouseTable(overrides: Partial<WarehouseTable>): WarehouseTable {
+  return {
+    database: 'RAW',
+    schema: 'ERP',
+    table: 'ORDERS',
+    rowCount: 100,
+    columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+    ...overrides,
+  };
+}
+
 describe('SourceImportWizard', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -106,6 +122,7 @@ describe('SourceImportWizard', () => {
     onClose?: () => void;
     onComplete?: (result: ImportSourcesResult) => void;
     sourceImportOptions?: readonly SourceImportOptionContribution[];
+    initialSelection?: SourceImportInitialSelection | null;
   }): Promise<void> {
     await act(async () => {
       root.render(
@@ -120,9 +137,17 @@ describe('SourceImportWizard', () => {
             onClose={args?.onClose ?? vi.fn()}
             onComplete={args?.onComplete}
             sourceImportOptions={args?.sourceImportOptions}
+            initialSelection={args?.initialSelection}
           />
         </AppServicesProvider>
       );
+    });
+  }
+
+  async function flushPendingWork(): Promise<void> {
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
     });
   }
 
@@ -179,6 +204,26 @@ describe('SourceImportWizard', () => {
 
     expect(document.body.textContent).toContain('Select Tables');
     expect(document.body.textContent).toContain('ORDERS');
+  });
+
+  it('opens at the selected warehouse tables when launched from the source explorer', async () => {
+    await renderWizard({
+      initialSelection: {
+        connectionId: 'conn-1',
+        tables: [buildWarehouseTable({ table: 'CUSTOMERS' })],
+      },
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseTables: async () => [
+          buildWarehouseTable({ table: 'ORDERS' }),
+          buildWarehouseTable({ table: 'CUSTOMERS' }),
+        ],
+      }),
+    });
+    await flushPendingWork();
+
+    expect(document.body.textContent).toContain('Select Tables');
+    expect(document.body.textContent).toContain('CUSTOMERS');
+    expect(document.body.textContent).toContain('Selected: 1');
   });
 
   it('explores governed database connections with search before table discovery', async () => {

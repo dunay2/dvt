@@ -10,6 +10,7 @@ import {
   serializeCanvasWorkspaceResourceDragPayload,
 } from './canvasWorkspaceExplorerModel';
 import DbtExplorer from './DbtExplorer';
+import type { IWarehouseSourceImportPort, WarehouseTable } from '../ports/workspace';
 import type { CanonicalNode } from '../types/canonical';
 import { buildTestNodeKind } from '../views/canvas/canvasKindRegistration.testSupport';
 
@@ -37,6 +38,54 @@ function dispatchDragStart(target: Element, dataTransfer: DataTransfer): void {
     value: dataTransfer,
   });
   target.dispatchEvent(event);
+}
+
+function flushPendingWork(): Promise<void> {
+  return act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
+
+function findButton(container: HTMLElement, label: string): HTMLButtonElement | undefined {
+  return Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+    button.textContent?.includes(label)
+  );
+}
+
+function buildWarehouseTable(overrides: Partial<WarehouseTable>): WarehouseTable {
+  return {
+    database: 'RAW',
+    schema: 'ERP',
+    table: 'ORDERS',
+    rowCount: 100,
+    columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+    ...overrides,
+  };
+}
+
+function buildWarehouseSourceImportPort(
+  tables: readonly WarehouseTable[] = [
+    buildWarehouseTable({ table: 'ORDERS', rowCount: 125000 }),
+    buildWarehouseTable({
+      table: 'CUSTOMERS',
+      rowCount: 45000,
+      columns: [{ name: 'customer_id', type: 'INTEGER', nullable: false }],
+    }),
+  ]
+): IWarehouseSourceImportPort {
+  return {
+    listWarehouseConnections: vi.fn(async () => [
+      {
+        id: 'conn-1',
+        name: 'Production Warehouse',
+        type: 'snowflake' as const,
+        database: 'RAW',
+      },
+    ]),
+    listWarehouseTables: vi.fn(async () => tables.map((table) => ({ ...table }))),
+    importSources: vi.fn(),
+  };
 }
 
 describe('DbtExplorer', () => {
@@ -133,6 +182,92 @@ describe('DbtExplorer', () => {
 
     expect(addDataButton).not.toBeNull();
     expect(addDataButton?.getAttribute('disabled')).toBeNull();
+  });
+
+  it('lets authors inspect, search, select, and hand off warehouse source objects', async () => {
+    const warehouseSourceImport = buildWarehouseSourceImportPort();
+    const onOpenDataRegistry = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <DbtExplorer
+          resourceGroups={buildResourceGroups([buildNode()])}
+          canEditGraph={true}
+          warehouseSourceImport={warehouseSourceImport}
+          onOpenDataRegistry={onOpenDataRegistry}
+        />
+      );
+    });
+    await flushPendingWork();
+
+    expect(container.textContent).toContain('Warehouse sources');
+    expect(container.textContent).toContain('Production Warehouse');
+    expect(container.textContent).toContain('ORDERS');
+    expect(container.textContent).toContain('CUSTOMERS');
+
+    const search = container.querySelector<HTMLInputElement>(
+      '[aria-label="Search warehouse source objects"]'
+    );
+    expect(search).not.toBeNull();
+
+    await act(async () => {
+      if (search) {
+        search.value = 'customer';
+      }
+      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'customer' }));
+    });
+
+    expect(container.textContent).not.toContain('ORDERS');
+    expect(container.textContent).toContain('CUSTOMERS');
+
+    const customerRow = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-source-table]')
+    ).find((row) => row.textContent?.includes('CUSTOMERS'));
+    expect(customerRow).toBeDefined();
+
+    await act(async () => {
+      customerRow?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const registerSelected = findButton(container, 'Register selected');
+    expect(registerSelected).toBeDefined();
+
+    await act(async () => {
+      registerSelected?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onOpenDataRegistry).toHaveBeenCalledWith({
+      connectionId: 'conn-1',
+      tables: [
+        expect.objectContaining({
+          database: 'RAW',
+          schema: 'ERP',
+          table: 'CUSTOMERS',
+        }),
+      ],
+    });
+  });
+
+  it('keeps warehouse discovery readable but blocks registration in read-only canvases', async () => {
+    const warehouseSourceImport = buildWarehouseSourceImportPort();
+    const onOpenDataRegistry = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <DbtExplorer
+          resourceGroups={buildResourceGroups([buildNode()])}
+          canEditGraph={false}
+          warehouseSourceImport={warehouseSourceImport}
+          onOpenDataRegistry={onOpenDataRegistry}
+        />
+      );
+    });
+    await flushPendingWork();
+
+    expect(container.textContent).toContain('Warehouse sources');
+    expect(container.textContent).toContain('ORDERS');
+    expect(findButton(container, 'Register selected')?.getAttribute('disabled')).not.toBeNull();
+    expect(onOpenDataRegistry).not.toHaveBeenCalled();
   });
 
   it('keeps node-kind creation out of the project-resource explorer', async () => {

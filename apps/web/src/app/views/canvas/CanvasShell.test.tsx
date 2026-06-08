@@ -22,6 +22,7 @@ import type {
   CanvasShellToolbar,
 } from './canvasShell.types';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import type { IWarehouseSourceImportPort } from '../../ports/workspace';
 
 const shellState = vi.hoisted(() => ({
   dbtExplorerProps: null as null | Record<string, unknown>,
@@ -68,6 +69,7 @@ type CanvasShellPropsOverrides = {
   graphCommands?: Partial<CanvasShellGraphCommands>;
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
+  warehouseSourceImport?: IWarehouseSourceImportPort;
 };
 
 function buildPlanRunReadiness(
@@ -223,6 +225,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       onDeleteActiveCanvas: vi.fn(),
       ...overrides?.canvasCommands,
     },
+    warehouseSourceImport: overrides?.warehouseSourceImport,
   };
 }
 
@@ -476,6 +479,45 @@ describe('CanvasShell', () => {
     });
     expect(shellState.sourceImportWizardProps).toMatchObject({
       onComplete: props.graphCommands.onSourceImportComplete,
+    });
+  });
+
+  it('hands explorer-selected warehouse tables into the source import wizard', async () => {
+    const warehouseSourceImport = {
+      listWarehouseConnections: vi.fn(),
+      listWarehouseTables: vi.fn(),
+      importSources: vi.fn(),
+    } satisfies IWarehouseSourceImportPort;
+    const initialSelection = {
+      connectionId: 'conn-1',
+      tables: [
+        {
+          database: 'RAW',
+          schema: 'ERP',
+          table: 'CUSTOMERS',
+          rowCount: 45000,
+        },
+      ],
+    };
+
+    await act(async () => {
+      root.render(<CanvasShell {...buildProps({ warehouseSourceImport })} />);
+    });
+
+    expect(shellState.dbtExplorerProps).toMatchObject({
+      warehouseSourceImport,
+    });
+
+    await act(async () => {
+      const openDataRegistry = shellState.dbtExplorerProps?.onOpenDataRegistry as
+        | ((selection?: typeof initialSelection) => void)
+        | undefined;
+      openDataRegistry?.(initialSelection);
+    });
+
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      open: true,
+      initialSelection,
     });
   });
 

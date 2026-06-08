@@ -10,7 +10,13 @@ export interface SourceImportWizardProps {
   onClose: () => void;
   onComplete?: (result: ImportSourcesResult) => void;
   sourceImportOptions?: readonly SourceImportOptionContribution[];
+  initialSelection?: SourceImportInitialSelection | null;
 }
+
+export type SourceImportInitialSelection = Readonly<{
+  connectionId: string;
+  tables: readonly WarehouseTable[];
+}>;
 
 export type WizardStep =
   | 'sourceType'

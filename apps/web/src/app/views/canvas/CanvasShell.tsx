@@ -14,6 +14,7 @@ import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasInspectorPanel } from './CanvasInspectorPanel';
 import type {
   CanvasShellChromeCommands,
+  CanvasShellOpenDataRegistryCommand,
   CanvasShellPanels,
   CanvasShellProps,
 } from './canvasShell.types';
@@ -26,8 +27,9 @@ type CanvasShellExplorerRailProps = Readonly<{
   canEditGraph: boolean;
   canOpenSourceImport: boolean;
   onHideExplorer: CanvasShellChromeCommands['onHideExplorer'];
-  onOpenDataRegistry?: () => void;
+  onOpenDataRegistry?: CanvasShellOpenDataRegistryCommand;
   onSelectCanvas: (canvasId: string) => void;
+  warehouseSourceImport: CanvasShellProps['warehouseSourceImport'];
 }>;
 
 function CanvasShellExplorerRail({
@@ -40,6 +42,7 @@ function CanvasShellExplorerRail({
   onHideExplorer,
   onOpenDataRegistry,
   onSelectCanvas,
+  warehouseSourceImport,
 }: CanvasShellExplorerRailProps): JSX.Element | null {
   if (focusMode || !explorerPanelVisible) {
     return null;
@@ -62,6 +65,7 @@ function CanvasShellExplorerRail({
           }}
           onHide={onHideExplorer}
           onOpenDataRegistry={canOpenSourceImport ? onOpenDataRegistry : undefined}
+          warehouseSourceImport={canOpenSourceImport ? warehouseSourceImport : undefined}
         />
       </ResizablePanel>
       <ResizableHandle />
@@ -146,8 +150,11 @@ export default function CanvasShell({
   graphCommands,
   chromeCommands,
   canvasCommands,
+  warehouseSourceImport,
 }: CanvasShellProps): JSX.Element {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
+  const [dataRegistryInitialSelection, setDataRegistryInitialSelection] =
+    useState<Parameters<CanvasShellOpenDataRegistryCommand>[0]>(undefined);
   const canEditGraph = panels.userPermissions.canEditEdges;
   const sourceImportContributions = useMemo(
     () => getSourceImportContributions(panels.runtimeCapabilities),
@@ -157,13 +164,19 @@ export default function CanvasShell({
     () => getSourceImportOptions(panels.runtimeCapabilities),
     [panels.runtimeCapabilities]
   );
-  const canOpenDataRegistry =
-    canEditGraph && layout.canOpenSourceImport && sourceImportContributions.length > 0;
-  const handleOpenDataRegistry = canOpenDataRegistry ? () => setDataRegistryOpen(true) : undefined;
+  const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
+  const canOpenDataRegistry = canEditGraph && canBrowseDataRegistry;
+  const handleOpenDataRegistry: CanvasShellOpenDataRegistryCommand | undefined = canOpenDataRegistry
+    ? (initialSelection) => {
+        setDataRegistryInitialSelection(initialSelection);
+        setDataRegistryOpen(true);
+      }
+    : undefined;
 
   useEffect(() => {
     if (!canOpenDataRegistry && dataRegistryOpen) {
       setDataRegistryOpen(false);
+      setDataRegistryInitialSelection(undefined);
     }
   }, [canOpenDataRegistry, dataRegistryOpen]);
 
@@ -179,10 +192,11 @@ export default function CanvasShell({
         explorerResourceGroups={panels.explorerResourceGroups}
         activeCanvasId={panels.activeCanvasId}
         canEditGraph={canEditGraph}
-        canOpenSourceImport={layout.canOpenSourceImport}
+        canOpenSourceImport={canBrowseDataRegistry}
         onHideExplorer={chromeCommands.onHideExplorer}
         onOpenDataRegistry={handleOpenDataRegistry}
         onSelectCanvas={canvasCommands.onSelectCanvas}
+        warehouseSourceImport={warehouseSourceImport}
       />
 
       <CanvasShellMainPanel
@@ -214,9 +228,13 @@ export default function CanvasShell({
 
       <SourceImportWizard
         open={dataRegistryOpen}
-        onClose={() => setDataRegistryOpen(false)}
+        onClose={() => {
+          setDataRegistryOpen(false);
+          setDataRegistryInitialSelection(undefined);
+        }}
         onComplete={graphCommands.onSourceImportComplete}
         sourceImportOptions={sourceImportOptions}
+        initialSelection={dataRegistryInitialSelection}
       />
     </ResizablePanelGroup>
   );

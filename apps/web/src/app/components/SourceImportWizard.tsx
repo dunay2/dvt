@@ -25,6 +25,7 @@ export default function SourceImportWizard({
   onClose,
   onComplete,
   sourceImportOptions: declaredSourceImportOptions,
+  initialSelection,
 }: SourceImportWizardProps) {
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const sourceImportOptions = useMemo(
@@ -37,6 +38,7 @@ export default function SourceImportWizard({
     sourceImportOptions,
     onComplete,
     onClose,
+    initialSelection,
   });
   const { state } = controller;
 
