@@ -91,6 +91,32 @@ describe('workspace scope selection command', () => {
     expect(port.getSelection()).toBe(changedSelection);
   });
 
+  it('notifies every subscriber when the workspace selection changes', () => {
+    const port = createWorkspaceScopeSelectionPort();
+    const firstSubscriberChanges: string[] = [];
+    const secondSubscriberChanges: string[] = [];
+
+    const unsubscribeFirst = port.subscribeSelection(() => {
+      firstSubscriberChanges.push(port.getSelection().selectedScope.projectId);
+    });
+    const unsubscribeSecond = port.subscribeSelection(() => {
+      secondSubscriberChanges.push(port.getSelection().selectedScope.projectId);
+    });
+
+    try {
+      expect(port.selectWorkspaceScope(alternateScope)).toEqual({
+        status: 'selected',
+        selectedScope: alternateScope,
+      });
+
+      expect(firstSubscriberChanges).toEqual(['project-b']);
+      expect(secondSubscriberChanges).toEqual(['project-b']);
+    } finally {
+      unsubscribeFirst();
+      unsubscribeSecond();
+    }
+  });
+
   it('rejects an unavailable workspace without mutating the selected scope', () => {
     const port = createWorkspaceScopeSelectionPort();
     const unavailableScope = {

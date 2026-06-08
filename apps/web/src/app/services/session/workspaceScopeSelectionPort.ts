@@ -218,13 +218,15 @@ export function createWorkspaceScopeSelectionPort(): WorkspaceScopeSelectionPort
     getSelection: () => readCachedSelection(),
     selectWorkspaceScope,
     subscribeSelection: (onStoreChange) => {
+      let subscriberSelection = readCachedSelection();
       return useSessionStore.subscribe((state) => {
-        const previousSelection = cachedSelection;
+        const previousSelection = subscriberSelection;
         const nextSelection = readCachedSelection(state);
         if (previousSelection === nextSelection) {
           return;
         }
 
+        subscriberSelection = nextSelection;
         onStoreChange();
       });
     },
