@@ -75,14 +75,7 @@ export function buildCanvasNodeModelerActionModel({
   const groups: CanvasNodeModelerActionGroup[] = [];
   const editActions: CanvasNodeModelerAction[] = [];
 
-  if (!canMutateGraph) {
-    return {
-      target,
-      actionGroups: groups,
-    };
-  }
-
-  if (canDuplicateNode) {
+  if (canMutateGraph && canDuplicateNode) {
     editActions.push({
       id: 'duplicate-node',
       label: 'Duplicate node',
@@ -108,7 +101,7 @@ export function buildCanvasNodeModelerActionModel({
     });
   }
 
-  if (canRemoveNode) {
+  if (canMutateGraph && canRemoveNode) {
     groups.push({
       id: 'danger',
       label: 'Danger',

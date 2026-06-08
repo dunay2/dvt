@@ -182,7 +182,7 @@ describe('buildCanvasShellPanels', () => {
     });
   });
 
-  it('keeps inspector modeler command actions unavailable when graph mutation is blocked', () => {
+  it('keeps inspector execution selection available when graph mutation is blocked', () => {
     const inspectorNode = buildInspectorNode();
     const handleToggleNodeSelection = vi.fn();
     const panels = buildCanvasShellPanels(
@@ -195,6 +195,34 @@ describe('buildCanvasShellPanels', () => {
         userPermissions: {
           canPlan: true,
           canRun: true,
+          canEditEdges: false,
+          canPersistGraphDraft: false,
+          canManagePlugins: false,
+          canManageRBAC: false,
+        },
+      })
+    );
+
+    expect(panels.inspectorAuthoring.modelerActions).toMatchObject({
+      selectedForExecution: false,
+      onToggleNodeSelection: handleToggleNodeSelection,
+    });
+    expect(panels.inspectorAuthoring.modelerActions?.onDuplicateNode).toBeUndefined();
+    expect(panels.inspectorAuthoring.modelerActions?.onRemoveNode).toBeUndefined();
+  });
+
+  it('keeps inspector execution selection unavailable when planning and running are blocked', () => {
+    const inspectorNode = buildInspectorNode();
+    const panels = buildCanvasShellPanels(
+      buildArgs({
+        panelState: {
+          ...buildArgs().panelState,
+          inspectorNode,
+          handleToggleNodeSelection: vi.fn(),
+        },
+        userPermissions: {
+          canPlan: false,
+          canRun: false,
           canEditEdges: false,
           canPersistGraphDraft: false,
           canManagePlugins: false,

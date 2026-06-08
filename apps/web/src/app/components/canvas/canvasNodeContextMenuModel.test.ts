@@ -74,7 +74,7 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'remove-node')?.label).toMatch(/\S/);
   });
 
-  it('keeps inspection available but fails closed for read-only node mutation', () => {
+  it('keeps execution selection available when graph mutation is blocked', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
@@ -85,11 +85,31 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: true,
     });
 
-    expect(actionIds(model)).toEqual(['inspect-node']);
+    expect(actionIds(model)).toEqual(['inspect-node', 'select-node-for-execution']);
     expect(actionById(model, 'inspect-node')).toMatchObject({
       intent: 'read',
       disabled: false,
     });
+    expect(actionById(model, 'select-node-for-execution')).toMatchObject({
+      intent: 'command',
+      disabled: false,
+    });
+    expect(actionById(model, 'duplicate-node')).toBeUndefined();
+    expect(actionById(model, 'remove-node')).toBeUndefined();
+  });
+
+  it('keeps inspection available but fails closed for read-only execution posture', () => {
+    const model = buildCanvasNodeContextMenuModel({
+      target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
+      selectedForExecution: false,
+      canMutateGraph: false,
+      canInspectNode: true,
+      canDuplicateNode: true,
+      canToggleNodeSelection: false,
+      canRemoveNode: true,
+    });
+
+    expect(actionIds(model)).toEqual(['inspect-node']);
     expect(actionById(model, 'duplicate-node')).toBeUndefined();
     expect(actionById(model, 'select-node-for-execution')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toBeUndefined();

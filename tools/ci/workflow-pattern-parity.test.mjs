@@ -456,11 +456,11 @@ test('security and nightly workflows stay wired to pinned actions and failure no
 
   assertWorkflowContains(
     codeql,
-    'github/codeql-action/init@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0'
+    'github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2'
   );
   assertWorkflowContains(
     codeql,
-    'github/codeql-action/analyze@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v4.36.0'
+    'github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2'
   );
   assertWorkflowContains(codeql, 'security-events: write');
   assertWorkflowContains(codeql, 'javascript-typescript');
