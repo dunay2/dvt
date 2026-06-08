@@ -61,7 +61,11 @@ export function CanvasInspectorPanel({
     ) : undefined;
   const modelerActions =
     node != null && authoring.modelerActions != null ? (
-      <CanvasInspectorModelerActions node={node} actions={authoring.modelerActions} />
+      <CanvasInspectorModelerActions
+        node={node}
+        actions={authoring.modelerActions}
+        canMutateGraph={authoring.canEditNode}
+      />
     ) : null;
 
   return (
@@ -103,13 +107,16 @@ const MODELER_ACTION_ICONS: Record<CanvasNodeModelerActionId, typeof Copy> = {
 function CanvasInspectorModelerActions({
   node,
   actions,
+  canMutateGraph,
 }: Readonly<{
   node: CanonicalNode;
   actions: CanvasInspectorNodeModelerActions;
+  canMutateGraph: boolean;
 }>): JSX.Element | null {
   const model = buildCanvasNodeModelerActionModel({
     target: { kind: 'node', nodeId: node.id, nodeName: node.name },
     selectedForExecution: actions.selectedForExecution,
+    canMutateGraph,
     canDuplicateNode: typeof actions.onDuplicateNode === 'function',
     canToggleNodeSelection: typeof actions.onToggleNodeSelection === 'function',
     canRemoveNode: typeof actions.onRemoveNode === 'function',
