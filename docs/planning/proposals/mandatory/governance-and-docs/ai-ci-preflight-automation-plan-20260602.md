@@ -650,6 +650,15 @@ symbols:
     unitTests:
       - tools/ci/emit-scope.test.mjs
       - tools/ci/workflow-pattern-parity.test.mjs
+  - name: FEATURE_MECHANIZATION_WORKFLOW_POLICY_INPUTS
+    path: tools/ci/repository-change-scope.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Over-eager Resource Use, Hidden Coverage Gap]
+    architectureGuard: node --test tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: N/A - CI scope policy constant
+    unitTests:
+      - tools/ci/repository-change-scope.test.mjs
   - name: scope diff consumers use shallow checkout instead of full PR history
     path: tools/ci/workflow-pattern-parity.test.mjs
     dddOwner: Repository CI scope policy
@@ -659,11 +668,20 @@ symbols:
     cypressCoverage: N/A - CI workflow architecture test
     unitTests:
       - tools/ci/workflow-pattern-parity.test.mjs
-  - name: classifies CI composite actions as workflow policy inputs without workspace fan-out
+  - name: classifies feature-mechanized CI composite actions without workspace fan-out
     path: tools/ci/repository-change-scope.test.mjs
     dddOwner: Repository CI scope policy
     cqRails: [EmitWorkflowCapabilityScopes]
     fowlerSignals: [Over-eager Resource Use]
+    architectureGuard: node --test tools/ci/repository-change-scope.test.mjs
+    cypressCoverage: N/A - CI scope classification test
+    unitTests:
+      - tools/ci/repository-change-scope.test.mjs
+  - name: routes feature-mechanized action-only changes through DB-backed mechanization checks
+    path: tools/ci/repository-change-scope.test.mjs
+    dddOwner: Repository CI scope policy
+    cqRails: [EmitWorkflowCapabilityScopes]
+    fowlerSignals: [Over-eager Resource Use, Hidden Coverage Gap]
     architectureGuard: node --test tools/ci/repository-change-scope.test.mjs
     cypressCoverage: N/A - CI scope classification test
     unitTests:

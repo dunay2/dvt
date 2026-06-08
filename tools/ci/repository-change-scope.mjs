@@ -42,6 +42,11 @@ const CODE_VALIDATION_COMMAND_DOMAINS = new Set([
   'unknown',
 ]);
 
+const FEATURE_MECHANIZATION_WORKFLOW_POLICY_INPUTS = new Set([
+  '.github/actions/fetch-scope-base/action.yml',
+  '.github/actions/prepare-planning-db/action.yml',
+]);
+
 export function normalizeRepositoryPath(filePath) {
   return String(filePath || '')
     .replaceAll('\\', '/')
@@ -178,6 +183,7 @@ export function classifyRepositoryFileScope(filePath, options = {}) {
     repositoryCommandFile ||
     normalizedPath.startsWith('tools/ci/') ||
     normalizedPath.startsWith('tools/docs/') ||
+    FEATURE_MECHANIZATION_WORKFLOW_POLICY_INPUTS.has(normalizedPath) ||
     normalizedPath.startsWith('docs/planning/proposals/mandatory/');
   const traceabilityRelevant =
     TRACEABILITY_CONFIG_FILES.has(normalizedPath) ||
