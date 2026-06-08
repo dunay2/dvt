@@ -13,6 +13,7 @@ import {
   getPublishedRouteBootstrapPresentation,
   resetRouteBootstrapPresentation,
 } from '../bootstrap/routeBootstrapRegistry';
+import { AppServicesProvider } from '../services/AppServicesContext';
 import { getRouteBootstrapRegistration } from '../bootstrap/routeBootstrapRegistration';
 import Canvas from './Canvas';
 import {
@@ -23,6 +24,7 @@ import {
 import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
+import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 export { buildController } from './Canvas.test.controller';
 
 export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.canvas', {
@@ -99,7 +101,11 @@ async function renderCanvasRoute(root: Root): Promise<void> {
   );
 
   await act(async () => {
-    root.render(<RouterProvider router={router} />);
+    root.render(
+      <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+        <RouterProvider router={router} />
+      </AppServicesProvider>
+    );
   });
 }
 
