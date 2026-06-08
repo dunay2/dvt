@@ -33,6 +33,18 @@ const {
   readFrontendComponentRows,
 } = require('./planning-db/frontend-component-inventory.cjs');
 const {
+  buildFeatureMechanizationComponentRows,
+  buildFeatureMechanizationFeatureRows,
+  buildFeatureMechanizationRailRows,
+  buildFeatureMechanizationSymbolRows,
+  buildFeatureMechanizationValidationRows,
+  readFeatureMechanizationComponentRows,
+  readFeatureMechanizationFeatureRows,
+  readFeatureMechanizationRailRows,
+  readFeatureMechanizationSymbolRows,
+  readFeatureMechanizationValidationRows,
+} = require('./planning-db/feature-mechanization-query.cjs');
+const {
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
   readKnowledgeIntakeReferenceRows,
@@ -68,6 +80,11 @@ const knownQueries = new Set([
   'frontend-components',
   'frontend-component-files',
   'frontend-component-rails',
+  'feature-mechanization',
+  'feature-mechanization-components',
+  'feature-mechanization-symbols',
+  'feature-mechanization-rails',
+  'feature-mechanization-validations',
   'pr-readiness',
   'docs-disposition',
   'feature-work',
@@ -117,6 +134,11 @@ const governanceProjectionQueryNames = new Set([
   'frontend-components',
   'frontend-component-files',
   'frontend-component-rails',
+  'feature-mechanization',
+  'feature-mechanization-components',
+  'feature-mechanization-symbols',
+  'feature-mechanization-rails',
+  'feature-mechanization-validations',
   'cer',
   'component-tree',
   'component-metadata',
@@ -198,6 +220,25 @@ function buildPlanningDbQueryHelpText(queryName) {
   ];
 
   if (queryName) {
+    const examples = [`  pnpm planning:db:query ${queryName} --limit 20`];
+    if (
+      taskIdCommonFilterQueryNames.has(queryName) ||
+      pathCommonFilterQueryNames.has(queryName) ||
+      componentCommonFilterQueryNames.has(queryName)
+    ) {
+      examples.push(`  pnpm planning:db:query ${queryName} --filter E-PROP-DISP-1 --limit 20`);
+    } else if (queryName === 'feature-mechanization-components') {
+      examples.push(`  pnpm planning:db:query ${queryName} --state implemented --limit 20`);
+    } else if (queryName === 'feature-mechanization-symbols') {
+      examples.push(`  pnpm planning:db:query ${queryName} --path apps/web/example.tsx --limit 20`);
+    } else if (queryName === 'feature-mechanization-rails') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --rail ListFeatureMechanizationRails --limit 20`
+      );
+    } else if (queryName === 'feature-mechanization-validations') {
+      examples.push(`  pnpm planning:db:query ${queryName} --kind completion --limit 20`);
+    }
+
     return [
       `Planning DB query: ${queryName}`,
       '',
@@ -209,8 +250,7 @@ function buildPlanningDbQueryHelpText(queryName) {
       `  ${commonOptions.join(', ')}`,
       '',
       'Examples:',
-      `  pnpm planning:db:query ${queryName} --limit 20`,
-      `  pnpm planning:db:query ${queryName} --filter E-PROP-DISP-1 --limit 20`,
+      ...examples,
     ].join('\n');
   }
 
@@ -540,6 +580,11 @@ function parseArgs(args = process.argv.slice(2)) {
       if (
         queryName === 'frontend-surfaces' ||
         queryName === 'frontend-components' ||
+        queryName === 'feature-mechanization' ||
+        queryName === 'feature-mechanization-components' ||
+        queryName === 'feature-mechanization-symbols' ||
+        queryName === 'feature-mechanization-rails' ||
+        queryName === 'feature-mechanization-validations' ||
         queryName === 'knowledge-intake' ||
         queryName === 'db-surfaces'
       ) {
@@ -3638,6 +3683,51 @@ async function runQuery(options = {}) {
       return railRows;
     }
 
+    if (queryName === 'feature-mechanization') {
+      const rows = await readFeatureMechanizationFeatureRows(client, options.filters || {});
+      const featureRows = buildFeatureMechanizationFeatureRows(rows);
+      if (options.print !== false) {
+        printTaskRows(featureRows);
+      }
+      return featureRows;
+    }
+
+    if (queryName === 'feature-mechanization-components') {
+      const rows = await readFeatureMechanizationComponentRows(client, options.filters || {});
+      const componentRows = buildFeatureMechanizationComponentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(componentRows);
+      }
+      return componentRows;
+    }
+
+    if (queryName === 'feature-mechanization-symbols') {
+      const rows = await readFeatureMechanizationSymbolRows(client, options.filters || {});
+      const symbolRows = buildFeatureMechanizationSymbolRows(rows);
+      if (options.print !== false) {
+        printTaskRows(symbolRows);
+      }
+      return symbolRows;
+    }
+
+    if (queryName === 'feature-mechanization-rails') {
+      const rows = await readFeatureMechanizationRailRows(client, options.filters || {});
+      const railRows = buildFeatureMechanizationRailRows(rows);
+      if (options.print !== false) {
+        printTaskRows(railRows);
+      }
+      return railRows;
+    }
+
+    if (queryName === 'feature-mechanization-validations') {
+      const rows = await readFeatureMechanizationValidationRows(client, options.filters || {});
+      const validationRows = buildFeatureMechanizationValidationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(validationRows);
+      }
+      return validationRows;
+    }
+
     if (queryName === 'db-surfaces') {
       const rows = await readDbSurfaceRows(client, options.filters || {});
       const surfaceRows = buildDbSurfaceRows(rows);
@@ -4122,6 +4212,11 @@ module.exports = {
   buildPrReadinessRows,
   buildCommandQueryRailRows,
   buildCreationIntentRows,
+  buildFeatureMechanizationComponentRows,
+  buildFeatureMechanizationFeatureRows,
+  buildFeatureMechanizationRailRows,
+  buildFeatureMechanizationSymbolRows,
+  buildFeatureMechanizationValidationRows,
   buildFrontendComponentFileRows,
   buildFrontendComponentRailRows,
   buildFrontendComponentRows,
@@ -4184,6 +4279,11 @@ module.exports = {
   readPrReadinessRows,
   readCommandQueryRailRows,
   readCreationIntentRows,
+  readFeatureMechanizationComponentRows,
+  readFeatureMechanizationFeatureRows,
+  readFeatureMechanizationRailRows,
+  readFeatureMechanizationSymbolRows,
+  readFeatureMechanizationValidationRows,
   readFrontendComponentFileRows,
   readFrontendComponentRailRows,
   readFrontendComponentRows,
