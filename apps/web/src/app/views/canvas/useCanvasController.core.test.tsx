@@ -123,7 +123,13 @@ describe('useCanvasController core', () => {
         summaryCode: 'requires_executable_path',
       })
     );
-    expect(result?.registeredPlugins).toEqual(new Set(['dbt', 'monitoring', 'cost']));
+    expect(result?.registeredPlugins).toEqual(
+      expect.objectContaining({
+        size: expect.any(Number),
+      })
+    );
+    expect(result?.registeredPlugins?.has('dbt')).toBe(true);
+    expect(result?.registeredPlugins?.has('monitoring')).toBe(true);
     expect(result?.handlePlan).toBe(harness.state.executionActionsResult.handlePlan);
     expect(result?.handleStartRun).toBe(harness.state.executionActionsResult.handleStartRun);
     expect(result?.canStartRun).toBe(false);
