@@ -77,7 +77,8 @@ Related command seams:
   `canvasGraphLifecycle.edge`.
 - Node-level actions use the same `ResolveCanvasContextMenu` rail, then dispatch
   to existing selection, duplicate, inspect, and remove-node callbacks supplied
-  by the Canvas route.
+  by the Canvas route. Selection availability follows preview/run posture;
+  duplicate and remove availability follows graph mutation posture.
 - The Inspector modeler action strip reuses the node action model minus the
   current Properties action. It is not a new command/query rail and does not
   own role, status, or catalog vocabularies.
@@ -112,7 +113,10 @@ Related command seams:
   creation or edge-removal actions.
 - Node Properties/Open Inspector always remains available because it is a
   route-local read/selection action.
-- Read-only or blocked mutation posture produces no mutating contextual action.
+- Read-only execution posture produces no execution-selection action.
+- Blocked graph mutation posture hides graph-edit actions such as duplicate,
+  remove, and schema attachment, but does not hide execution selection when
+  preview or run is otherwise allowed.
 - Context-menu node creation uses the clicked flow position, not a hidden
   default slot.
 - Toolbar and context-menu node creation share `CreateCanvasAuthoringNode`.

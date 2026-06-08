@@ -40,6 +40,7 @@ type UseCanvasControllerReadModelArgs = {
   >;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph: boolean;
+  canSelectExecution: boolean;
   columnLevelLineageEnabled: boolean;
   impactOverlayEnabled: boolean;
 };
@@ -53,6 +54,7 @@ export function useCanvasControllerReadModel({
   graphHandlers,
   runtimeCapabilities,
   canMutateGraph,
+  canSelectExecution,
   columnLevelLineageEnabled,
   impactOverlayEnabled,
 }: UseCanvasControllerReadModelArgs) {
@@ -85,7 +87,7 @@ export function useCanvasControllerReadModel({
           onInspectNode: graphHandlers.handleInspectNode,
           onDuplicateNode: canMutateGraph ? graphHandlers.handleDuplicateNode : undefined,
           onRemoveNode: canMutateGraph ? graphHandlers.handleRemoveNode : undefined,
-          onToggleNodeSelection: canMutateGraph
+          onToggleNodeSelection: canSelectExecution
             ? graphHandlers.handleToggleNodeSelection
             : undefined,
           onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
@@ -102,6 +104,7 @@ export function useCanvasControllerReadModel({
       })),
     [
       canMutateGraph,
+      canSelectExecution,
       columnLevelLineageEnabled,
       graphHandlers.handleInspectNode,
       graphHandlers.handleDuplicateNode,

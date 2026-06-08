@@ -37,6 +37,7 @@ export function buildCanvasShellPanels({
     routePresentation.canvasDocuments.find(
       (canvas) => canvas.id === routePresentation.activeCanvasId
     ) ?? null;
+  const canSelectExecution = userPermissions.canPlan || userPermissions.canRun;
 
   return {
     explorerResourceGroups: buildCanvasWorkspaceResourceGroups({
@@ -67,9 +68,13 @@ export function buildCanvasShellPanels({
         : {
             modelerActions: {
               selectedForExecution: panelState.inspectorNodeSelectedForExecution,
-              ...(userPermissions.canEditEdges
+              ...(canSelectExecution
                 ? {
                     onToggleNodeSelection: panelState.handleToggleNodeSelection,
+                  }
+                : {}),
+              ...(userPermissions.canEditEdges
+                ? {
                     onDuplicateNode: panelState.handleDuplicateNode,
                     onRemoveNode: panelState.handleRemoveNode,
                   }
