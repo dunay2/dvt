@@ -67,6 +67,11 @@ test('turbo.json declares governed build, lint, typecheck, and test task contrac
 
 test('root affected commands and CI matrix lint/build/typecheck steps use the Turbo workspace wrapper', () => {
   assert.equal(
+    rootPackage.scripts['ci:code'],
+    'pnpm arch:deps && pnpm type-check && turbo run test && pnpm lint:determinism'
+  );
+  assert.equal(rootPackage.scripts['ci:code'].includes('pnpm test'), false);
+  assert.equal(
     rootPackage.scripts['ci:affected:build'],
     'node scripts/run-turbo-workspace-task.cjs build'
   );

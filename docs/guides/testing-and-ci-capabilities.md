@@ -61,7 +61,9 @@ Warm-build note:
   `pnpm ci:affected:typecheck`, `pnpm ci:affected:test`) now route through
   governed Turbo task contracts.
   Full-root `pnpm test`, root `pnpm type-check`, and docs commands still keep
-  their existing repo-local orchestration.
+  their existing repo-local orchestration. The `ci:code` baseline uses
+  `turbo run test` because CI sets `DVT_CI=1`, so package lifecycle hooks skip
+  redundant dependency builds and Turbo must own the upstream build graph.
 - The shared GitHub Actions setup now restores `.turbo` in addition to the
   pnpm store and `node_modules`, so the existing root Turbo `build` path can
   reuse prior task outputs across CI runs.
@@ -698,11 +700,15 @@ Current workflow consumers:
 - `pnpm build` routes through `turbo run build` in the current repo state.
   Direct package `build` commands still keep their package-local dependency
   fallback when they are not running under `turbo`.
+- `pnpm ci:code` routes workspace tests through `turbo run test`. This is the
+  canonical fresh CI baseline for package tests because `DVT_CI=1` disables
+  package-local pretest build fallbacks and Turbo's `test -> ^build` contract
+  must create upstream `dist/**` surfaces before tests import workspace exports.
 - `pnpm ci:affected:build`, `pnpm ci:affected:lint`,
   `pnpm ci:affected:typecheck`, and `pnpm ci:affected:test` route through
   `node scripts/run-turbo-workspace-task.cjs` so affected local preflight and
   lightweight CI lanes can reuse the same governed Turbo graph without changing
-  the full-root `test` or `type-check` contract yet.
+  the full-root `test` or `type-check` contract.
 - `pnpm preflight:affected` is the ordinary PR workspace route. It runs
   affected build, lint, type-check, and test in that order so local and
   explicit operator preflight keeps package test coverage in one command.
