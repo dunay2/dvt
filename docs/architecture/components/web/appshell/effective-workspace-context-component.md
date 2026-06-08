@@ -11,8 +11,8 @@ planning_type: architecture
 ## Purpose
 
 The effective workspace context component gives API-mode web routes a
-server-owned tenant, project, and environment scope before they render protected
-product surfaces.
+server-owned tenant, project, environment, and deployment adapter scope before
+they render protected product surfaces.
 
 It complements the shell workspace context component. The shell component
 renders read-only context. This component resolves the authoritative context
@@ -29,13 +29,13 @@ workspace-file content.
 
 ## Public API
 
-| API                                   | Kind                    | Rail                                                    | Responsibility                                                     |
-| ------------------------------------- | ----------------------- | ------------------------------------------------------- | ------------------------------------------------------------------ |
-| `GET /workspace/context`              | HTTP query              | `GetEffectiveWorkspaceContext`                          | Return effective workspace context for authenticated principal.    |
-| `IWorkspaceContextQuery`              | API port                | `GetEffectiveWorkspaceContext`                          | Resolve granted workspaces from backend grant storage.             |
-| `EmbeddedWorkspaceContextQuery`       | API adapter             | `GetEffectiveWorkspaceContext`                          | Read `principal_grants` and project effective workspace options.   |
-| `resolveProtectedRouteSessionContext` | web application service | `GetRuntimeSession` then `GetEffectiveWorkspaceContext` | Resolve session and context before protected route render.         |
-| `sessionStore.setSessionContext`      | projection update       | `GetEffectiveWorkspaceContext`                          | Store the server-owned scope for downstream API headers and views. |
+| API                                              | Kind                    | Rail                                                    | Responsibility                                                                            |
+| ------------------------------------------------ | ----------------------- | ------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `GET /workspace/context`                         | HTTP query              | `GetEffectiveWorkspaceContext`                          | Return effective workspace context and deployment scope for authenticated principal.      |
+| `IWorkspaceContextQuery`                         | API port                | `GetEffectiveWorkspaceContext`                          | Resolve granted workspaces from backend grant storage.                                    |
+| `EmbeddedWorkspaceContextQuery`                  | API adapter             | `GetEffectiveWorkspaceContext`                          | Read `principal_grants` and project effective workspace options.                          |
+| `resolveProtectedRouteSessionContext`            | web application service | `GetRuntimeSession` then `GetEffectiveWorkspaceContext` | Resolve session and context before protected route render.                                |
+| `sessionStore.setWorkspaceScopeSelectionContext` | projection update       | `GetEffectiveWorkspaceContext`                          | Store the server-owned scope and deployment adapter for downstream API headers and views. |
 
 ## Invariants
 
@@ -45,13 +45,17 @@ workspace-file content.
 - API mode protected route rendering waits for both session and workspace
   context.
 - `sessionStore` is a projection of backend-granted context in API mode.
+- The deployment adapter used by plan/run comes from the protected runtime
+  adapter registry through `/workspace/context`; the web client must not infer
+  it from local storage.
 - When `availableWorkspaces` contains the route-preselected local session
   scope, the resolver preserves that scope instead of blindly replacing it with
   the first backend effective workspace.
 - When the preselected scope is absent from `availableWorkspaces`, the resolver
   falls back to `effectiveWorkspace` and still fails closed on context denial.
 - `createApiClient` may send session headers only after the protected route
-  gate has applied server-owned context.
+  gate has applied server-owned context, and those headers include tenant,
+  project, environment, and target adapter.
 - Mock mode may keep local demo scope, but must not be documented as product
   authority.
 
@@ -83,21 +87,21 @@ sequenceDiagram
   Session-->>Api: principal profile
   Gate->>Api: getJson('/workspace/context', no session headers)
   Api->>Context: resolve grants to workspace context
-  Context-->>Api: effective workspace context plus available workspaces
-  Gate->>Store: setSessionContext(preselected available workspace or effectiveWorkspace)
+  Context-->>Api: effective workspace context plus available workspaces and deployment scope
+  Gate->>Store: setWorkspaceScopeSelectionContext(preselected available workspace or effectiveWorkspace, deployment adapter)
   Gate->>Route: render protected route
 ```
 
 ## Consumers
 
-| Consumer                | Rule                                                                                 |
-| ----------------------- | ------------------------------------------------------------------------------------ |
-| `AuthRouteGate`         | Resolves session and effective workspace context before rendering protected routes.  |
-| `sessionStore`          | Stores backend-granted scope as a projection, not as independent authority.          |
-| `createApiClient`       | Reads projected scope for `X-Tenant-Id` and `X-Project-Id` headers.                  |
-| Canvas                  | Reads session context through existing route/controller seams after gate resolution. |
-| Runs                    | Reads session context through existing route/controller seams after gate resolution. |
-| Shell workspace context | Displays current scope read-only.                                                    |
+| Consumer                | Rule                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `AuthRouteGate`         | Resolves session and effective workspace context before rendering protected routes.                          |
+| `sessionStore`          | Stores backend-granted scope and deployment adapter as a projection, not as independent authority.           |
+| `createApiClient`       | Reads projected scope for `X-Tenant-Id`, `X-Project-Id`, `X-Environment-Id`, and `X-Target-Adapter` headers. |
+| Canvas                  | Reads session context through existing route/controller seams after gate resolution.                         |
+| Runs                    | Reads session context through existing route/controller seams after gate resolution.                         |
+| Shell workspace context | Displays current scope read-only.                                                                            |
 
 ## Semantic Fitness Function
 
@@ -121,6 +125,7 @@ Update this guide and the user stories when a change alters:
 - the session/workspace responsibility split;
 - when protected routes are allowed to render;
 - how granted workspace options are represented;
+- how deployment adapter scope is represented;
 - whether local storage may influence API-mode scope.
 - whether multiple available workspaces are collapsed or selectable during
   protected route startup.

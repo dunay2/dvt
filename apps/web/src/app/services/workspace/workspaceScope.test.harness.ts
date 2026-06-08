@@ -35,6 +35,8 @@ export function setWorkspaceScope(scope: WorkspaceScope): void {
   };
   useSessionStore.getState().setWorkspaceScopeSelectionContext({
     selectedScope,
+    targetAdapter: 'temporal',
+    availableTargetAdapters: ['temporal'],
     availableWorkspaces: [selectedScope],
   });
 }
@@ -51,6 +53,8 @@ export function clearGrantedWorkspaceScope(): void {
 export function installWorkspaceScopeHarness(): void {
   let initialWorkspaceScope = readWorkspaceScopeSnapshot();
   let initialAvailableWorkspaces = useSessionStore.getState().availableWorkspaces;
+  let initialTargetAdapter = useSessionStore.getState().targetAdapter;
+  let initialAvailableTargetAdapters = useSessionStore.getState().availableTargetAdapters;
   let initialSelectionStatus = useSessionStore.getState().workspaceScopeSelectionStatus;
   let initialRejectionReason = useSessionStore.getState().workspaceScopeSelectionRejectionReason;
   let initialRejectedWorkspaceScope = useSessionStore.getState().rejectedWorkspaceScope;
@@ -58,6 +62,8 @@ export function installWorkspaceScopeHarness(): void {
   beforeEach(() => {
     initialWorkspaceScope = readWorkspaceScopeSnapshot();
     initialAvailableWorkspaces = useSessionStore.getState().availableWorkspaces;
+    initialTargetAdapter = useSessionStore.getState().targetAdapter;
+    initialAvailableTargetAdapters = useSessionStore.getState().availableTargetAdapters;
     initialSelectionStatus = useSessionStore.getState().workspaceScopeSelectionStatus;
     initialRejectionReason = useSessionStore.getState().workspaceScopeSelectionRejectionReason;
     initialRejectedWorkspaceScope = useSessionStore.getState().rejectedWorkspaceScope;
@@ -68,6 +74,8 @@ export function installWorkspaceScopeHarness(): void {
       tenantId: nb(initialWorkspaceScope.tenantId),
       projectId: nb(initialWorkspaceScope.projectId),
       environmentId: nb(initialWorkspaceScope.environmentId),
+      targetAdapter: initialTargetAdapter,
+      availableTargetAdapters: initialAvailableTargetAdapters,
       availableWorkspaces: initialAvailableWorkspaces,
       workspaceScopeSelectionStatus: initialSelectionStatus,
       workspaceScopeSelectionRejectionReason: initialRejectionReason,

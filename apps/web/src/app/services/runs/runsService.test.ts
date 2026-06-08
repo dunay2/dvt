@@ -60,6 +60,7 @@ describe('runsService runtime contract', () => {
       projectId: 'project-1',
       environmentId: 'env-1',
       targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
       availableWorkspaces: [
         {
           tenantId: 'tenant-1',

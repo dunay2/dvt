@@ -19,12 +19,13 @@ type ShellAppMenuProps = Readonly<{
 }>;
 
 export function ShellAppMenu({ copy }: ShellAppMenuProps): JSX.Element {
+  const [menuOpen, setMenuOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const metadata = resolveCompiledApplicationMetadata();
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
@@ -38,7 +39,9 @@ export function ShellAppMenu({ copy }: ShellAppMenuProps): JSX.Element {
         <DropdownMenuContent align="start" className="w-56">
           <DropdownMenuItem
             data-slot="shell-about-command"
-            onSelect={() => {
+            onSelect={(event) => {
+              event.preventDefault();
+              setMenuOpen(false);
               setAboutOpen(true);
             }}
           >

@@ -36,6 +36,7 @@ describe('createApiClient', () => {
       projectId: 'project-test',
       environmentId: 'env-test',
       targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
       availableWorkspaces: [
         {
           tenantId: 'tenant-test',
@@ -55,6 +56,7 @@ describe('createApiClient', () => {
       projectId: originalSessionState.projectId,
       environmentId: originalSessionState.environmentId,
       targetAdapter: originalSessionState.targetAdapter,
+      availableTargetAdapters: originalSessionState.availableTargetAdapters,
       availableWorkspaces: originalSessionState.availableWorkspaces,
       workspaceScopeSelectionStatus: originalSessionState.workspaceScopeSelectionStatus,
       workspaceScopeSelectionRejectionReason:
@@ -78,7 +80,9 @@ describe('createApiClient', () => {
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer dev-bearer-token',
+        'X-Environment-Id': 'env-test',
         'X-Project-Id': 'project-test',
+        'X-Target-Adapter': 'temporal',
         'X-Tenant-Id': 'tenant-test',
       },
       body: undefined,
@@ -96,7 +100,9 @@ describe('createApiClient', () => {
       method: 'GET',
       headers: {
         Accept: 'application/json',
+        'X-Environment-Id': 'env-test',
         'X-Project-Id': 'project-test',
+        'X-Target-Adapter': 'temporal',
         'X-Tenant-Id': 'tenant-test',
       },
       body: undefined,
@@ -115,7 +121,9 @@ describe('createApiClient', () => {
       method: 'GET',
       headers: {
         Accept: 'application/json',
+        'X-Environment-Id': 'env-test',
         'X-Project-Id': 'project-test',
+        'X-Target-Adapter': 'temporal',
         'X-Tenant-Id': 'tenant-test',
       },
       body: undefined,
@@ -150,7 +158,9 @@ describe('createApiClient', () => {
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer fresh-dev-bearer-token',
+        'X-Environment-Id': 'env-test',
         'X-Project-Id': 'project-test',
+        'X-Target-Adapter': 'temporal',
         'X-Tenant-Id': 'tenant-test',
       },
       body: undefined,
@@ -184,7 +194,9 @@ describe('createApiClient', () => {
       headers: {
         Accept: 'application/json',
         Authorization: `Bearer ${configuredToken}`,
+        'X-Environment-Id': 'env-test',
         'X-Project-Id': 'project-test',
+        'X-Target-Adapter': 'temporal',
         'X-Tenant-Id': 'tenant-test',
       },
       body: undefined,
@@ -198,7 +210,9 @@ describe('createApiClient', () => {
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer fresh-dev-bearer-token',
+        'X-Environment-Id': 'env-test',
         'X-Project-Id': 'project-test',
+        'X-Target-Adapter': 'temporal',
         'X-Tenant-Id': 'tenant-test',
       },
       body: undefined,
@@ -238,7 +252,9 @@ describe('createApiClient', () => {
       headers: {
         Accept: 'application/json',
         Authorization: 'Bearer fresh-dev-bearer-token',
+        'X-Environment-Id': 'env-test',
         'X-Project-Id': 'project-test',
+        'X-Target-Adapter': 'temporal',
         'X-Tenant-Id': 'tenant-test',
       },
       body: undefined,

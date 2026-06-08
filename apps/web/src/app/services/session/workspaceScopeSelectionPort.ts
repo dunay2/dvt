@@ -94,6 +94,8 @@ export function readWorkspaceScopeSelection(
   return {
     selectedScope: readSelectedScope(state),
     availableScopes: state.availableWorkspaces,
+    targetAdapter: state.targetAdapter,
+    availableTargetAdapters: state.availableTargetAdapters,
     status: state.workspaceScopeSelectionStatus,
     rejectionReason: state.workspaceScopeSelectionRejectionReason,
     rejectedScope: state.rejectedWorkspaceScope,
@@ -113,6 +115,14 @@ export function readGrantedWorkspaceScope(): WorkspaceScope {
 
   const grantedScope = findGrantedWorkspaceScope(selectedScope, state.availableWorkspaces);
   if (!grantedScope) {
+    throw new WorkspaceScopeSelectionError(
+      WORKSPACE_SCOPE_SELECTION_REJECTION_REASON.unavailable,
+      selectedScope,
+      selectedScope
+    );
+  }
+
+  if (!state.availableTargetAdapters.includes(state.targetAdapter)) {
     throw new WorkspaceScopeSelectionError(
       WORKSPACE_SCOPE_SELECTION_REJECTION_REASON.unavailable,
       selectedScope,
@@ -191,6 +201,13 @@ export function createWorkspaceScopeSelectionPort(): WorkspaceScopeSelectionPort
     );
   }
 
+  function sameTargetAdapterList(
+    left: readonly SessionState['targetAdapter'][],
+    right: readonly SessionState['targetAdapter'][]
+  ): boolean {
+    return left.length === right.length && left.every((adapter, index) => adapter === right[index]);
+  }
+
   function sameWorkspaceScopeSelectionState(
     left: WorkspaceScopeSelectionState,
     right: WorkspaceScopeSelectionState
@@ -198,6 +215,8 @@ export function createWorkspaceScopeSelectionPort(): WorkspaceScopeSelectionPort
     return (
       sameWorkspaceScopeIdentity(left.selectedScope, right.selectedScope) &&
       sameWorkspaceScopeIdentityList(left.availableScopes, right.availableScopes) &&
+      left.targetAdapter === right.targetAdapter &&
+      sameTargetAdapterList(left.availableTargetAdapters, right.availableTargetAdapters) &&
       left.status === right.status &&
       left.rejectionReason === right.rejectionReason &&
       sameOptionalWorkspaceScopeIdentity(left.rejectedScope, right.rejectedScope)

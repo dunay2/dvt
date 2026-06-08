@@ -10,9 +10,11 @@ export type ShellWorkspaceContextDetailsProps = {
     | 'tenantScope'
     | 'projectScope'
     | 'environmentScope'
+    | 'deploymentScope'
     | 'tenantScopeAria'
     | 'projectScopeAria'
     | 'environmentScopeAria'
+    | 'deploymentScopeAria'
   >;
 };
 
@@ -44,6 +46,15 @@ export function ShellWorkspaceContextDetails({ badge, copy }: ShellWorkspaceCont
           className={`flex items-center truncate ${topAppBarClasses.readOnlyScopeField}`}
         >
           {badge.environmentLabel}
+        </div>
+      </div>
+      <div data-slot="shell-workspace-deployment-context" className="grid gap-1">
+        <span className={topAppBarClasses.contextLabel}>{copy.deploymentScope}</span>
+        <div
+          aria-label={copy.deploymentScopeAria}
+          className={`flex items-center truncate ${topAppBarClasses.readOnlyScopeField}`}
+        >
+          {badge.targetAdapter}
         </div>
       </div>
     </div>

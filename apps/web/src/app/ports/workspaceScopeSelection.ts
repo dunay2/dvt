@@ -1,4 +1,5 @@
 /** Owned concern: define workspace-scope selection command and read-model ports. */
+import type { RunContext } from '../types/engine';
 
 export type WorkspaceScopeIdentity = {
   readonly tenantId: string;
@@ -26,6 +27,8 @@ export type WorkspaceScopeSelectionRejectionReason =
 export type WorkspaceScopeSelectionState = {
   readonly selectedScope: WorkspaceScopeIdentity;
   readonly availableScopes: readonly WorkspaceScopeIdentity[];
+  readonly targetAdapter: RunContext['targetAdapter'];
+  readonly availableTargetAdapters: readonly RunContext['targetAdapter'][];
   readonly status: WorkspaceScopeSelectionStatus;
   readonly rejectionReason?: WorkspaceScopeSelectionRejectionReason;
   readonly rejectedScope?: WorkspaceScopeIdentity;

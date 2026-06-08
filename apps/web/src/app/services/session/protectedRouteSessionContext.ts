@@ -12,6 +12,7 @@ import {
   resolveSelectedWorkspaceScope,
   sameWorkspaceScopeIdentity,
 } from './workspaceScopeSelectionPort';
+import type { RunContext } from '../../types/engine';
 
 type SessionResponse = {
   readonly permissions?: Partial<UserPermissions>;
@@ -29,6 +30,10 @@ type EffectiveWorkspaceContext = {
 type EffectiveWorkspaceContextResponse = {
   readonly effectiveWorkspace: EffectiveWorkspaceContext;
   readonly availableWorkspaces: readonly EffectiveWorkspaceContext[];
+  readonly deploymentScope: {
+    readonly targetAdapter: RunContext['targetAdapter'];
+    readonly availableTargetAdapters: readonly RunContext['targetAdapter'][];
+  };
 };
 
 function resolveRouteWorkspaceContext(
@@ -109,6 +114,8 @@ export async function resolveProtectedRouteSessionContext(apiClient: Pick<ApiCli
       projectId: asNonBlankString(resolvedWorkspaceContext.selectedScope.projectId),
       environmentId: asNonBlankString(resolvedWorkspaceContext.selectedScope.environmentId),
     },
+    targetAdapter: workspaceContext.deploymentScope.targetAdapter,
+    availableTargetAdapters: workspaceContext.deploymentScope.availableTargetAdapters,
     availableWorkspaces: resolvedWorkspaceContext.availableWorkspaces.map((workspace) => ({
       tenantId: asNonBlankString(workspace.tenantId),
       projectId: asNonBlankString(workspace.projectId),

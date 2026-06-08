@@ -48,6 +48,8 @@ export function createMockWorkspaceScopeSelectionPort(): WorkspaceScopeSelection
         environmentId: 'env-1',
       },
       availableScopes: [],
+      targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
       status: 'selected',
     }),
     selectWorkspaceScope: (selectedScope) => ({

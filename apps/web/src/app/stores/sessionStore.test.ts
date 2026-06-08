@@ -10,6 +10,7 @@ type PersistEnvelope = {
     projectId: string;
     environmentId: string;
     targetAdapter: string;
+    availableTargetAdapters: readonly string[];
   }>;
 };
 
@@ -18,6 +19,7 @@ const bootstrapState = {
   projectId: useSessionStore.getState().projectId,
   environmentId: useSessionStore.getState().environmentId,
   targetAdapter: useSessionStore.getState().targetAdapter,
+  availableTargetAdapters: useSessionStore.getState().availableTargetAdapters,
   availableWorkspaces: useSessionStore.getState().availableWorkspaces,
   workspaceScopeSelectionStatus: useSessionStore.getState().workspaceScopeSelectionStatus,
   workspaceScopeSelectionRejectionReason:
@@ -87,13 +89,14 @@ describe('sessionStore persistence', () => {
     });
   });
 
-  it('keeps the runtime-owned target adapter during rehydrate', async () => {
+  it('keeps the runtime-owned target adapter catalog during rehydrate', async () => {
     localStorage.setItem(
       'dvt-web-session',
       JSON.stringify({
         state: {
           ...validPersistedScope,
           targetAdapter: stalePersistedTargetAdapter,
+          availableTargetAdapters: [stalePersistedTargetAdapter],
         },
       } satisfies PersistEnvelope)
     );
@@ -101,6 +104,9 @@ describe('sessionStore persistence', () => {
     await useSessionStore.persist.rehydrate();
 
     expect(useSessionStore.getState().targetAdapter).toBe(bootstrapState.targetAdapter);
+    expect(useSessionStore.getState().availableTargetAdapters).toEqual(
+      bootstrapState.availableTargetAdapters
+    );
   });
 
   it('falls back to bootstrap scope when persisted selectors are no longer valid', async () => {

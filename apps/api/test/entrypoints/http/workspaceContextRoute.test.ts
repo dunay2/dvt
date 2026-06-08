@@ -1,5 +1,7 @@
+import type { StartRunTargetAdapter } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { IStartRunTargetAdapterRegistry } from '../../../src/application/ports/IStartRunTargetAdapterRegistry.js';
 import type { AuthenticatedPrincipal } from '../../../src/domain/auth/types.js';
 import { workspaceContextRoute } from '../../../src/entrypoints/http/workspaceContextRoute.js';
 
@@ -140,6 +142,60 @@ describe('workspaceContextRoute', () => {
     expect(reply.send).toHaveBeenCalledWith({
       effectiveWorkspace,
       availableWorkspaces,
+      deploymentScope: {
+        targetAdapter: 'temporal',
+        availableTargetAdapters: ['temporal'],
+      },
+    });
+  });
+
+  it('returns 503 when no deployment adapter can admit protected workspace actions', async () => {
+    const reply = createReply();
+    const authenticatedPrincipal = principal();
+    const effectiveWorkspace = {
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'env-a',
+    };
+    const authenticator = {
+      authenticateBearerToken: vi.fn(async () => ({
+        ok: true as const,
+        principal: authenticatedPrincipal,
+      })),
+    };
+    const workspaceContextQuery = {
+      getEffectiveWorkspaceContext: vi.fn(async () => ({
+        effectiveWorkspace,
+        availableWorkspaces: [effectiveWorkspace],
+      })),
+    };
+    const adapterRegistry: IStartRunTargetAdapterRegistry = {
+      isSupported(_value: string): _value is StartRunTargetAdapter {
+        return false;
+      },
+      listSupported: () => [],
+    };
+
+    await workspaceContextRoute(
+      {
+        headers: {
+          authorization: 'Bearer token-123',
+        },
+      } as never,
+      reply as never,
+      {
+        adapterRegistry,
+        authenticator,
+        workspaceContextQuery,
+      }
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(503);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: {
+        type: 'unavailable',
+        reason: 'deployment_scope_not_available',
+      },
     });
   });
 });

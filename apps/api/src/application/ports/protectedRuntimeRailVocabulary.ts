@@ -129,7 +129,8 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     dddObject: 'EffectiveWorkspaceContext',
     applicationPort: 'IWorkspaceContextQuery',
     adapterSurface: 'GET /workspace/context',
-    scopeAndAuthorization: 'authenticated principal plus backend grant store',
+    scopeAndAuthorization:
+      'authenticated principal plus backend grant store and runtime target-adapter registry',
   },
   listProjects: {
     name: 'ListProjects',

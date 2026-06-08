@@ -11,8 +11,8 @@ planning_type: architecture
 ## Purpose
 
 Shell workspace context is the App Shell component that presents the active
-tenant, project, environment, and draft-scope posture without allowing the main
-screen to change workspace ownership.
+tenant, project, environment, deployment adapter, and draft-scope posture
+without allowing the main screen to change workspace ownership.
 
 It is a shell-owned Presentation Model boundary. It projects existing session
 scope into read-only identity labels and read-only context details. Project
@@ -29,15 +29,15 @@ graph state, Git operations, or route-local workbench commands.
 
 ## Public API
 
-| API                              | Kind                | Rail                            | Contract                                                                 |
-| -------------------------------- | ------------------- | ------------------------------- | ------------------------------------------------------------------------ |
-| `ProjectIdentityBadge`           | read model          | `ResolveCanvasWorkbenchContext` | Carries active tenant, project, environment, compact id, slug, and draft |
-| `ProjectIdentityBadgeInput`      | query input         | `ResolveCanvasWorkbenchContext` | Supplies session ids and bootstrap option labels                         |
-| `buildProjectIdentityBadge`      | projection function | `ResolveCanvasWorkbenchContext` | Resolves labels and preserves raw ids when labels are unavailable        |
-| `ShellProjectIdentityBadge`      | passive view        | `ResolveCanvasWorkbenchContext` | Renders breadcrumb-style identity labels with no mutation affordance     |
-| `ShellWorkspaceContextMenu`      | details UI          | shell context display           | Opens read-only workspace context details                                |
-| `ShellWorkspaceContextDetails`   | passive view        | shell context display           | Displays tenant, project, and environment without mutation controls      |
-| `TopAppBar.architecture.test.ts` | semantic fitness    | semantic posture proof          | Guards ownership, docs, invariants, and read-only posture                |
+| API                              | Kind                | Rail                            | Contract                                                                                     |
+| -------------------------------- | ------------------- | ------------------------------- | -------------------------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`           | read model          | `ResolveCanvasWorkbenchContext` | Carries active tenant, project, environment, deployment adapter, compact id, slug, and draft |
+| `ProjectIdentityBadgeInput`      | query input         | `ResolveCanvasWorkbenchContext` | Supplies session ids and bootstrap option labels                                             |
+| `buildProjectIdentityBadge`      | projection function | `ResolveCanvasWorkbenchContext` | Resolves labels and preserves raw ids when labels are unavailable                            |
+| `ShellProjectIdentityBadge`      | passive view        | `ResolveCanvasWorkbenchContext` | Renders breadcrumb-style identity labels with no mutation affordance                         |
+| `ShellWorkspaceContextMenu`      | details UI          | shell context display           | Opens read-only workspace context details                                                    |
+| `ShellWorkspaceContextDetails`   | passive view        | shell context display           | Displays tenant, project, environment, and deployment adapter without mutation controls      |
+| `TopAppBar.architecture.test.ts` | semantic fitness    | semantic posture proof          | Guards ownership, docs, invariants, and read-only posture                                    |
 
 The browser posture proof is `VerifyCanvasWorkbenchVisualPosture`.
 
@@ -49,8 +49,8 @@ The browser posture proof is `VerifyCanvasWorkbenchVisualPosture`.
   comboboxes;
 - `ShellWorkspaceContextMenu` does not render tenant, project, or environment
   comboboxes;
-- tenant, project, and environment scope are read-only inside an active project
-  context;
+- tenant, project, environment, and deployment adapter scope are read-only
+  inside an active project context;
 - project changes belong to a separate governed project-selection screen;
 - `ProjectIdentityBadge` may display fallback ids, but must not fabricate
   unavailable labels or grants;
@@ -92,7 +92,7 @@ flowchart LR
   Projection --> Badge["ShellProjectIdentityBadge"]
   Projection --> Menu["ShellWorkspaceContextMenu"]
   Menu --> Details["ShellWorkspaceContextDetails"]
-  Details --> Fields["tenant / project / environment read-only fields"]
+  Details --> Fields["tenant / project / environment / deployment adapter read-only fields"]
 ```
 
 ## Boundary Map

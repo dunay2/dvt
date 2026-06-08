@@ -45,6 +45,7 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(topAppBarSource).not.toContain('ShellWorkspaceSelectors');
     expect(topAppBarSource).not.toContain("from './ui/select'");
     expect(identityModelSource).toContain('type ProjectIdentityBadge');
+    expect(identityModelSource).toContain('targetAdapter');
     expect(identityModelSource).toContain('draftPostureLabel');
     expect(identityRendererSource).toContain('data-slot="shell-project-identity-badge"');
     expect(contextMenuSource).toContain('data-slot="shell-workspace-context-trigger"');
@@ -76,9 +77,11 @@ describe('ShellTopBar workspace context architecture', () => {
     expect(contextDetailsSource).toContain('data-slot="shell-workspace-tenant-context"');
     expect(contextDetailsSource).toContain('data-slot="shell-workspace-project-context"');
     expect(contextDetailsSource).toContain('data-slot="shell-workspace-environment-context"');
+    expect(contextDetailsSource).toContain('data-slot="shell-workspace-deployment-context"');
     expect(contextDetailsSource).toContain('copy.tenantScopeAria');
     expect(contextDetailsSource).toContain('copy.projectScopeAria');
     expect(contextDetailsSource).toContain('copy.environmentScopeAria');
+    expect(contextDetailsSource).toContain('copy.deploymentScopeAria');
   });
 
   it('documents API, invariants, transitions, consumers, and recorded risks', () => {
@@ -106,7 +109,7 @@ describe('ShellTopBar workspace context architecture', () => {
       'ShellWorkspaceContextMenu',
       'ShellWorkspaceContextDetails',
       'Workspace context is breadcrumb-style read-only content on the main screen',
-      'Tenant, project, and environment scope are read-only inside an active project',
+      'Tenant, project, environment, and deployment adapter scope are read-only inside an active project',
       'Project changes belong to a separate governed project-selection',
       '```mermaid',
     ]) {

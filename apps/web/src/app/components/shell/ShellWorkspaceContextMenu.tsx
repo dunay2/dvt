@@ -41,7 +41,7 @@ export function ShellWorkspaceContextMenu({ badge, copy }: ShellWorkspaceContext
             data-slot="shell-workspace-context-summary"
             className="truncate text-xs text-(--text-subtle)"
           >
-            {badge.tenantLabel} / {badge.environmentLabel} / {badge.draftPostureLabel}
+            {badge.tenantLabel} / {badge.environmentLabel} / {badge.targetAdapter}
           </div>
         </div>
         <ShellWorkspaceContextDetails badge={badge} copy={copy} />

@@ -166,9 +166,11 @@ async function buildHeaders(
   }
 
   if (includeSessionHeaders) {
-    const { tenantId, projectId } = readGrantedWorkspaceScope();
+    const { tenantId, projectId, environmentId, targetAdapter } = readGrantedWorkspaceScope();
     headers['X-Tenant-Id'] = tenantId;
     headers['X-Project-Id'] = projectId;
+    headers['X-Environment-Id'] = environmentId;
+    headers['X-Target-Adapter'] = targetAdapter;
   }
 
   if (!customHeaders) {

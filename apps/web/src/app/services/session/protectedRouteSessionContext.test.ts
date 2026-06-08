@@ -5,6 +5,11 @@ import { DEFAULT_USER_PERMISSIONS, useAuthorizationStore } from '../../stores/au
 import { useSessionStore } from '../../stores/sessionStore';
 import { resolveProtectedRouteSessionContext } from './protectedRouteSessionContext';
 
+const TEST_DEPLOYMENT_SCOPE = {
+  targetAdapter: 'temporal' as const,
+  availableTargetAdapters: ['temporal' as const],
+};
+
 describe('resolveProtectedRouteSessionContext', () => {
   const originalSessionState = useSessionStore.getState();
   const originalAuthorizationState = useAuthorizationStore.getState();
@@ -15,6 +20,7 @@ describe('resolveProtectedRouteSessionContext', () => {
       projectId: 'local-project',
       environmentId: 'local-env',
       targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
       availableWorkspaces: [],
       workspaceScopeSelectionStatus: 'unresolved',
       workspaceScopeSelectionRejectionReason: undefined,
@@ -32,6 +38,7 @@ describe('resolveProtectedRouteSessionContext', () => {
       projectId: originalSessionState.projectId,
       environmentId: originalSessionState.environmentId,
       targetAdapter: originalSessionState.targetAdapter,
+      availableTargetAdapters: originalSessionState.availableTargetAdapters,
       availableWorkspaces: originalSessionState.availableWorkspaces,
       workspaceScopeSelectionStatus: originalSessionState.workspaceScopeSelectionStatus,
       workspaceScopeSelectionRejectionReason:
@@ -75,6 +82,7 @@ describe('resolveProtectedRouteSessionContext', () => {
               environmentId: 'prod',
             },
           ],
+          deploymentScope: TEST_DEPLOYMENT_SCOPE,
         };
       }
 
@@ -93,6 +101,8 @@ describe('resolveProtectedRouteSessionContext', () => {
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'prod',
+      targetAdapter: 'temporal',
+      availableTargetAdapters: ['temporal'],
       availableWorkspaces: [
         {
           tenantId: 'tenant-a',
@@ -139,6 +149,7 @@ describe('resolveProtectedRouteSessionContext', () => {
               environmentId: 'prod',
             },
           ],
+          deploymentScope: TEST_DEPLOYMENT_SCOPE,
         };
       }
 
@@ -187,6 +198,7 @@ describe('resolveProtectedRouteSessionContext', () => {
               environmentId: 'prod',
             },
           ],
+          deploymentScope: TEST_DEPLOYMENT_SCOPE,
         };
       }
 
@@ -241,6 +253,7 @@ describe('resolveProtectedRouteSessionContext', () => {
               environmentId: 'prod',
             },
           ],
+          deploymentScope: TEST_DEPLOYMENT_SCOPE,
         };
       }
 
