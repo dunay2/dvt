@@ -89,4 +89,49 @@ describe('buildAuthoringNodeCommand', () => {
       },
     });
   });
+
+  it('applies explicit output target seed metadata while preserving sink identity', () => {
+    const command = buildAuthoringNodeCommand(
+      {
+        ...buildTestNodeKind('dvt:sink', 'Sink'),
+        role: 'output',
+        allowsIncoming: true,
+        allowsOutgoing: false,
+      },
+      [],
+      undefined,
+      {
+        namePrefix: 'Reporting view',
+        tags: ['target:reporting-view-replace'],
+        metadata: {
+          outputTargetTemplateId: 'reporting-view-replace',
+          config: {
+            schema: 'reporting',
+            table: 'transformed_view',
+            materialization: 'view',
+            writeMode: 'replace',
+          },
+        },
+      }
+    );
+
+    expect(command.canonicalNode).toMatchObject({
+      id: 'dvt-sink-1',
+      name: 'Reporting view 1',
+      pluginId: 'dvt',
+      kind: 'dvt:sink',
+      role: 'output',
+      tags: ['authoring', 'target:reporting-view-replace'],
+      metadata: {
+        typeLabel: 'Sink',
+        outputTargetTemplateId: 'reporting-view-replace',
+        config: {
+          schema: 'reporting',
+          table: 'transformed_view',
+          materialization: 'view',
+          writeMode: 'replace',
+        },
+      },
+    });
+  });
 });

@@ -479,6 +479,65 @@ describe('useCanvasGraphHandlers node drop', () => {
     harness.cleanup();
   });
 
+  it('persists explicit output target metadata through the draft lifecycle', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      draftSession,
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dvt:sink'), undefined, {
+        namePrefix: 'Analytics table',
+        tags: ['target:analytics-table-replace'],
+        metadata: {
+          outputTargetTemplateId: 'analytics-table-replace',
+          config: {
+            schema: 'analytics',
+            table: 'transformed_output',
+            materialization: 'table',
+            writeMode: 'replace',
+          },
+        },
+      });
+    });
+
+    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(nextDraftSession.localNodeCatalog?.['dvt-sink-1']).toEqual(
+      expect.objectContaining({
+        id: 'dvt-sink-1',
+        name: 'Analytics table 1',
+        kind: 'dvt:sink',
+        role: 'output',
+        tags: ['authoring', 'target:analytics-table-replace'],
+        metadata: expect.objectContaining({
+          outputTargetTemplateId: 'analytics-table-replace',
+          config: expect.objectContaining({
+            schema: 'analytics',
+            table: 'transformed_output',
+            materialization: 'table',
+            writeMode: 'replace',
+          }),
+        }),
+      })
+    );
+
+    harness.cleanup();
+  });
+
   it('serializes consecutive catalog-created nodes into one draft session before rerender', async () => {
     let currentNodes: Node[] = [];
     const setNodes = vi.fn((nextNodes) => {

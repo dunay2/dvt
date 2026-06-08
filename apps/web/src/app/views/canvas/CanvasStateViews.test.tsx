@@ -33,6 +33,18 @@ const nodeKinds: readonly NodeKindRegistration[] = [
     allowsOutgoing: true,
     supportsColumns: true,
   },
+  {
+    kind: 'dvt:sink',
+    pluginId: 'dvt',
+    label: 'Sink',
+    role: 'output',
+    icon: Square,
+    borderClass: 'border-emerald-500',
+    minimapColor: '#10b981',
+    allowsIncoming: true,
+    allowsOutgoing: false,
+    supportsColumns: false,
+  },
 ];
 
 function renderEmptyState(): {
@@ -160,6 +172,62 @@ describe('Canvas empty state Insert/Add palette', () => {
         metadata: expect.objectContaining({
           transformationTemplateId: 'join-sources',
           sql: expect.stringContaining('join'),
+        }),
+      })
+    );
+
+    act(() => {
+      root.unmount();
+    });
+  });
+
+  it('offers explicit output target templates before the first node exists', async () => {
+    const { container, onCreateAuthoringNode, root } = renderEmptyState();
+    const trigger = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Add first transformation node')
+    );
+
+    await act(async () => {
+      trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    const search = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-add-node-palette-search"]'
+    );
+
+    await act(async () => {
+      search?.focus();
+      if (search) {
+        search.value = 'append';
+      }
+      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'append' }));
+    });
+
+    const appendTarget = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-add-node-palette-option"][data-option-kind="output-target-template"]'
+      )
+    ).find((button) => button.textContent?.includes('Append fact table'));
+
+    expect(appendTarget).toBeDefined();
+
+    await act(async () => {
+      appendTarget?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onCreateAuthoringNode).toHaveBeenCalledWith(
+      nodeKinds[2],
+      undefined,
+      expect.objectContaining({
+        namePrefix: 'Append fact table',
+        metadata: expect.objectContaining({
+          outputTargetTemplateId: 'analytics-table-append',
+          config: expect.objectContaining({
+            schema: 'analytics',
+            table: 'fact_transformed_events',
+            materialization: 'table',
+            writeMode: 'append',
+          }),
         }),
       })
     );

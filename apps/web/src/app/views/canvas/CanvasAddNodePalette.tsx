@@ -9,6 +9,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { canvasChromeClasses } from './canvasChromeTokens';
 import { canvasViewCopy } from './copy';
 import type { CanvasAuthoringNodeSeed } from './canvasAuthoringNodeCommand';
+import type { CanvasOutputTargetTemplateOption } from './canvasOutputTargetTemplateCatalog';
 import type { CanvasTransformationTemplateOption } from './canvasTransformationTemplateCatalog';
 
 type CanvasAddNodePaletteProps = Readonly<{
@@ -19,6 +20,7 @@ type CanvasAddNodePaletteProps = Readonly<{
     seed?: CanvasAuthoringNodeSeed
   ) => void;
   transformationTemplates?: readonly CanvasTransformationTemplateOption[];
+  outputTargetTemplates?: readonly CanvasOutputTargetTemplateOption[];
   triggerLabel: string;
   triggerDataSlot?: string;
   disabled?: boolean;
@@ -37,9 +39,10 @@ type CanvasAddNodePaletteOption = Readonly<
     }
   | {
       id: string;
-      kind: 'transformation-template';
+      kind: 'transformation-template' | 'output-target-template';
       label: string;
       detail: string;
+      searchText: string;
       registration: NodeKindRegistration;
       seed: CanvasAuthoringNodeSeed;
     }
@@ -75,7 +78,8 @@ function buildNodeKindSearchText(registration: NodeKindRegistration): string {
 
 function buildPaletteOptions(
   nodeKinds: readonly NodeKindRegistration[],
-  transformationTemplates: readonly CanvasTransformationTemplateOption[]
+  transformationTemplates: readonly CanvasTransformationTemplateOption[],
+  outputTargetTemplates: readonly CanvasOutputTargetTemplateOption[]
 ): readonly CanvasAddNodePaletteOption[] {
   return [
     ...nodeKinds.map((registration) => ({
@@ -90,6 +94,16 @@ function buildPaletteOptions(
       kind: 'transformation-template' as const,
       label: option.template.label,
       detail: option.template.description,
+      searchText: option.template.searchText,
+      registration: option.registration,
+      seed: option.seed,
+    })),
+    ...outputTargetTemplates.map((option) => ({
+      id: `output-target-template:${option.id}`,
+      kind: 'output-target-template' as const,
+      label: option.template.label,
+      detail: option.template.description,
+      searchText: option.template.searchText,
       registration: option.registration,
       seed: option.seed,
     })),
@@ -98,17 +112,12 @@ function buildPaletteOptions(
 
 function filterPaletteOptions(
   options: readonly CanvasAddNodePaletteOption[],
-  searchValue: string,
-  transformationTemplates: readonly CanvasTransformationTemplateOption[]
+  searchValue: string
 ): readonly CanvasAddNodePaletteOption[] {
   const normalizedSearch = searchValue.trim().toLowerCase();
   if (!normalizedSearch) {
     return options;
   }
-
-  const templateSearchById = new Map(
-    transformationTemplates.map((option) => [option.id, option.template.searchText.toLowerCase()])
-  );
 
   return options.filter((option) => {
     const searchText =
@@ -119,8 +128,10 @@ function filterPaletteOptions(
             option.detail,
             option.registration.label,
             option.registration.kind,
-            templateSearchById.get(option.id.replace('transformation-template:', '')) ?? '',
-            'governed transformation template sql catalog',
+            option.searchText,
+            option.kind === 'transformation-template'
+              ? 'governed transformation template sql catalog'
+              : 'governed output target sink destination catalog',
           ]
             .join(' ')
             .toLowerCase();
@@ -133,6 +144,7 @@ export function CanvasAddNodePalette({
   nodeKinds,
   onCreateAuthoringNode,
   transformationTemplates = [],
+  outputTargetTemplates = [],
   triggerLabel,
   triggerDataSlot = 'canvas-add-node-palette-trigger',
   disabled = false,
@@ -147,12 +159,12 @@ export function CanvasAddNodePalette({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [paletteStyle, setPaletteStyle] = useState<CSSProperties>({});
   const paletteOptions = useMemo(
-    () => buildPaletteOptions(nodeKinds, transformationTemplates),
-    [nodeKinds, transformationTemplates]
+    () => buildPaletteOptions(nodeKinds, transformationTemplates, outputTargetTemplates),
+    [nodeKinds, outputTargetTemplates, transformationTemplates]
   );
   const visibleOptions = useMemo(
-    () => filterPaletteOptions(paletteOptions, searchValue, transformationTemplates),
-    [paletteOptions, searchValue, transformationTemplates]
+    () => filterPaletteOptions(paletteOptions, searchValue),
+    [paletteOptions, searchValue]
   );
   const canOpen = !disabled && paletteOptions.length > 0;
 
@@ -300,7 +312,8 @@ export function CanvasAddNodePalette({
                 <Icon className="mt-0.5 size-4 shrink-0" />
                 <span className="min-w-0">
                   <span className="block truncate">{option.label}</span>
-                  {option.kind === 'transformation-template' ? (
+                  {option.kind === 'transformation-template' ||
+                  option.kind === 'output-target-template' ? (
                     <span className="mt-0.5 block line-clamp-2 text-xs text-(--text-muted)">
                       {option.detail}
                     </span>

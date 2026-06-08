@@ -12,6 +12,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanvasReadOnlyState } from './canvasWorkbenchStateModel';
 import { CanvasAddNodePalette } from './CanvasAddNodePalette';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import { buildCanvasOutputTargetTemplateCatalog } from './canvasOutputTargetTemplateCatalog';
 import { buildCanvasTransformationTemplateCatalog } from './canvasTransformationTemplateCatalog';
 import { canvasViewCopy } from './copy';
 
@@ -72,6 +73,7 @@ function CanvasEmptyAuthoringCatalog({
   firstNodeHelper: string;
 }>) {
   const transformationTemplates = buildCanvasTransformationTemplateCatalog(nodeKinds);
+  const outputTargetTemplates = buildCanvasOutputTargetTemplateCatalog(nodeKinds);
 
   return (
     <div data-slot="canvas-empty-authoring-catalog" className="mt-5 space-y-3">
@@ -83,6 +85,7 @@ function CanvasEmptyAuthoringCatalog({
         nodeKinds={nodeKinds}
         onCreateAuthoringNode={onCreateAuthoringNode}
         transformationTemplates={transformationTemplates}
+        outputTargetTemplates={outputTargetTemplates}
         triggerLabel={firstNodeLabel}
       />
     </div>

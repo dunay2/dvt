@@ -41,6 +41,18 @@ const nodeKinds: readonly NodeKindRegistration[] = [
     allowsOutgoing: true,
     supportsColumns: true,
   },
+  {
+    kind: 'dvt:sink',
+    pluginId: 'dvt',
+    label: 'Sink',
+    role: 'output',
+    icon: Square,
+    borderClass: 'border-emerald-500',
+    minimapColor: '#10b981',
+    allowsIncoming: true,
+    allowsOutgoing: false,
+    supportsColumns: false,
+  },
 ];
 
 function buildToolbarProps(
@@ -409,6 +421,73 @@ describe('CanvasToolbar', () => {
           sql: expect.stringContaining('group by'),
           config: expect.objectContaining({
             sql: expect.stringContaining('group by'),
+          }),
+        }),
+      })
+    );
+  });
+
+  it('offers explicit SQL output target templates from the Insert palette', async () => {
+    const onCreateAuthoringNode = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasToolbar
+          {...buildToolbarProps({
+            draftToolbarState: defaultDraftToolbarState,
+            authoringNodeKinds: nodeKinds,
+            onCreateAuthoringNode,
+          })}
+        />
+      );
+    });
+
+    const insertButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-toolbar-insert-command"]'
+    );
+
+    await act(async () => {
+      insertButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(document.body.textContent).toContain('Analytics table');
+    expect(document.body.textContent).toContain('Reporting view');
+
+    const search = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="canvas-add-node-palette-search"]'
+    );
+    await act(async () => {
+      if (search) {
+        search.value = 'reporting';
+      }
+      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'reporting' }));
+    });
+
+    expect(document.body.textContent).toContain('Reporting view');
+    expect(document.body.textContent).not.toContain('Analytics table');
+
+    const reportingTarget = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-add-node-palette-option"][data-option-kind="output-target-template"]'
+      )
+    ).find((button) => button.textContent?.includes('Reporting view'));
+
+    await act(async () => {
+      reportingTarget?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onCreateAuthoringNode).toHaveBeenCalledWith(
+      nodeKinds[2],
+      undefined,
+      expect.objectContaining({
+        namePrefix: 'Reporting view',
+        metadata: expect.objectContaining({
+          outputTargetTemplateId: 'reporting-view-replace',
+          config: expect.objectContaining({
+            schema: 'reporting',
+            table: 'transformed_view',
+            materialization: 'view',
+            writeMode: 'replace',
           }),
         }),
       })

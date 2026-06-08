@@ -20,6 +20,7 @@ import type {
 import type { CanvasAuthoringNodeSeed } from './canvasAuthoringNodeCommand';
 import { CanvasAddNodePalette } from './CanvasAddNodePalette';
 import { canvasChromeClasses } from './canvasChromeTokens';
+import { buildCanvasOutputTargetTemplateCatalog } from './canvasOutputTargetTemplateCatalog';
 import { buildCanvasTransformationTemplateCatalog } from './canvasTransformationTemplateCatalog';
 import { canvasViewCopy } from './copy';
 
@@ -74,6 +75,13 @@ export function CanvasToolbarPrimaryControls({
         : [],
     [authoringNodeKinds, canvasAuthoringMode]
   );
+  const outputTargetTemplates = useMemo(
+    () =>
+      canvasAuthoringMode === 'transformation'
+        ? buildCanvasOutputTargetTemplateCatalog(authoringNodeKinds)
+        : [],
+    [authoringNodeKinds, canvasAuthoringMode]
+  );
 
   return (
     <>
@@ -93,6 +101,7 @@ export function CanvasToolbarPrimaryControls({
             nodeKinds={authoringNodeKinds}
             onCreateAuthoringNode={onCreateAuthoringNode}
             transformationTemplates={transformationTemplates}
+            outputTargetTemplates={outputTargetTemplates}
             triggerLabel={canvasViewCopy.toolbarInsertLabel}
             triggerDataSlot="canvas-toolbar-insert-command"
             disabled={!canEditEdges}
