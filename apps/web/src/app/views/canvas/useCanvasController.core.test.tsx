@@ -74,7 +74,18 @@ describe('useCanvasController core', () => {
       ])
     );
     expect(result?.impactOverlayEnabled).toBe(true);
-    expect(harness.mocks.buildNodeDecorations).toHaveBeenCalledWith(
+    const hasDecoratedNode = (
+      nodes: readonly { id?: string; kind?: string }[],
+      id: string,
+      kind: string
+    ): boolean => nodes.some((node) => node.id === id && node.kind === kind);
+    const protectedDraftDecorationCall = harness.mocks.buildNodeDecorations.mock.calls.find(
+      ([nodes]) =>
+        hasDecoratedNode(nodes, 'node_1', 'dvt:source') &&
+        hasDecoratedNode(nodes, 'node_2', 'dvt:sql_transform')
+    );
+    expect(protectedDraftDecorationCall).toBeDefined();
+    expect(protectedDraftDecorationCall?.[0]).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           id: 'node_1',
@@ -84,11 +95,13 @@ describe('useCanvasController core', () => {
           id: 'node_2',
           kind: 'dvt:sql_transform',
         }),
-      ]),
-      [{ id: 'impact' }],
-      null,
-      { overlay: 'ctx' }
+      ])
     );
+    expect(protectedDraftDecorationCall?.[1]).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'impact' })])
+    );
+    expect(protectedDraftDecorationCall?.[2]).toBeNull();
+    expect(protectedDraftDecorationCall?.[3]).toEqual({ overlay: 'ctx' });
   });
 
   it('derives inspector node from protected draft semantics and forwards graph and execution hook results', () => {
