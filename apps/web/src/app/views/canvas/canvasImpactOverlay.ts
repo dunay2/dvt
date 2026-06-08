@@ -12,6 +12,7 @@ type BuildNodesWithImpactParams = {
   nodes: Node[];
   edges: Edge[];
   selectedNodeIds: string[];
+  canMutateGraph: boolean;
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
   handlers: NodeActionHandlers;
@@ -67,6 +68,7 @@ export function buildNodesWithImpact({
   nodes,
   edges,
   selectedNodeIds,
+  canMutateGraph,
   impactOverlayEnabled,
   columnLevelLineageEnabled,
   handlers,
@@ -79,6 +81,7 @@ export function buildNodesWithImpact({
       data: {
         ...node.data,
         selectedForExecution: selectedNodeIdSet.has(node.id),
+        canMutateGraph,
         showColumns: columnLevelLineageEnabled,
         onInspectNode: handlers.onInspectNode,
         onDuplicateNode: handlers.onDuplicateNode,
@@ -100,6 +103,7 @@ export function buildNodesWithImpact({
     data: {
       ...node.data,
       selectedForExecution: selectedNodeIdSet.has(node.id),
+      canMutateGraph,
       isHighlighted: selectedNodeIds.includes(node.id),
       impactLevel: upstream.has(node.id)
         ? 'upstream'
