@@ -5,6 +5,32 @@ import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type { CanvasHarnessMocks, CanvasHarnessState } from './useCanvasController.test.types';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
+function configureZustandLikeStoreMock(
+  storeMock: CanvasHarnessMocks['useSessionStore'],
+  state: CanvasHarnessState
+): void {
+  storeMock.mockImplementation((selector?: (value: typeof state.store) => unknown) =>
+    typeof selector === 'function' ? selector(state.store) : state.store
+  );
+
+  Object.assign(storeMock, {
+    getState: vi.fn(() => state.store),
+    setState: vi.fn((partialState: unknown) => {
+      const nextState =
+        typeof partialState === 'function'
+          ? (partialState as (currentState: typeof state.store) => Partial<typeof state.store>)(
+              state.store
+            )
+          : partialState;
+
+      if (nextState && typeof nextState === 'object') {
+        Object.assign(state.store, nextState);
+      }
+    }),
+    subscribe: vi.fn(() => () => undefined),
+  });
+}
+
 export function configureCanvasHarnessHookAndProjectionMocks(
   state: CanvasHarnessState,
   mocks: CanvasHarnessMocks
@@ -35,7 +61,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
   mocks.useAuthorizationStore.mockImplementation(selectFromStore);
   mocks.useCanvasInteractionStore.mockImplementation(selectFromStore);
   mocks.useExecutionStore.mockImplementation(selectFromStore);
-  mocks.useSessionStore.mockImplementation(selectFromStore);
+  configureZustandLikeStoreMock(mocks.useSessionStore, state);
   mocks.useUiLayoutStore.mockImplementation(selectFromStore);
   mocks.useCapabilitiesQuery.mockReturnValue({ data: undefined });
   mocks.resolveCanvasGraphStrategy.mockImplementation((strategyId?: unknown) =>

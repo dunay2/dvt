@@ -64,6 +64,17 @@ function buildDefaultCanvasHarnessStore(currentPlan: PlanViewModel): CanvasHarne
     tenantId: 'tenant-a',
     projectId: 'project-a',
     environmentId: 'dev',
+    targetAdapter: 'temporal',
+    availableWorkspaces: [
+      {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+      },
+    ],
+    workspaceScopeSelectionStatus: 'selected',
+    workspaceScopeSelectionRejectionReason: undefined,
+    rejectedWorkspaceScope: undefined,
     selectedTenant: 'tenant-a',
     selectedProject: 'project-a',
     selectedEnvironment: 'dev',
@@ -100,6 +111,8 @@ function buildDefaultCanvasHarnessStore(currentPlan: PlanViewModel): CanvasHarne
     canvasLayouts: {},
     setCanvasViewport: vi.fn(),
     setCanvasNodePositions: vi.fn(),
+    setWorkspaceScopeSelectionContext: vi.fn(),
+    recordRejectedWorkspaceScopeSelection: vi.fn(),
     currentRun: null,
   };
 }

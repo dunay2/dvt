@@ -345,23 +345,49 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
 test('PR quality gate prepares planning DB before DB-first feature implementation checks', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
   const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
-  const governanceImportIndex = prQualityGate.indexOf(
-    'pnpm planning:db:import -- --if-stale --governance-only'
-  );
+  const prepareDbActionIndex = prQualityGate.indexOf('uses: ./.github/actions/prepare-planning-db');
   const implementationGateIndex = prQualityGate.indexOf(
     'pnpm docs:feature-mechanization:implementation'
   );
 
   assert.notEqual(prepareDbIndex, -1);
-  assert.notEqual(governanceImportIndex, -1);
+  assert.notEqual(prepareDbActionIndex, -1);
   assert.notEqual(implementationGateIndex, -1);
-  assert.ok(prepareDbIndex < governanceImportIndex);
-  assert.ok(governanceImportIndex < implementationGateIndex);
+  assert.ok(prepareDbIndex < prepareDbActionIndex);
+  assert.ok(prepareDbActionIndex < implementationGateIndex);
+  assertWorkflowContains(prQualityGate, "github.event_name == 'push'");
   assertWorkflowContains(
     prQualityGate,
     "steps.scope.outputs.feature_mechanization_relevant == 'true'"
   );
-  assertWorkflowContains(prQualityGate, 'FEATURE_MECHANIZATION_RELEVANT');
+  assertWorkflowContains(prQualityGate, 'import-governance:');
+});
+
+test('main full CI prepares DB-first planning projections before the full baseline', () => {
+  const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const prepareDbIndex = ciWorkflow.indexOf('Prepare planning DB for full CI baseline');
+  const prepareDbActionIndex = ciWorkflow.indexOf('uses: ./.github/actions/prepare-planning-db');
+  const fullBaselineIndex = ciWorkflow.indexOf('run: pnpm ci:full');
+
+  assert.notEqual(prepareDbIndex, -1);
+  assert.notEqual(prepareDbActionIndex, -1);
+  assert.notEqual(fullBaselineIndex, -1);
+  assert.ok(prepareDbIndex < prepareDbActionIndex);
+  assert.ok(prepareDbActionIndex < fullBaselineIndex);
+  assertWorkflowContains(ciWorkflow, "import-planning: 'true'");
+  assertWorkflowContains(ciWorkflow, "import-governance: 'true'");
+});
+
+test('PR quality traceability runs after implementation mechanization to avoid dirty generated diffs', () => {
+  const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const implementationGateIndex = prQualityGate.indexOf(
+    'pnpm docs:feature-mechanization:implementation'
+  );
+  const traceabilityIndex = prQualityGate.indexOf('pnpm traceability:adr0');
+
+  assert.notEqual(implementationGateIndex, -1);
+  assert.notEqual(traceabilityIndex, -1);
+  assert.ok(implementationGateIndex < traceabilityIndex);
 });
 
 test('scope diff consumers use shallow checkout instead of full PR history', () => {
