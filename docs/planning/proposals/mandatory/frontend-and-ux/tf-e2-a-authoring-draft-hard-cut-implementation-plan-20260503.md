@@ -819,6 +819,14 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/**
     greenTest: pnpm --filter @dvt/web typecheck
 symbols:
+  - name: configureZustandLikeStoreMock
+    path: apps/web/src/app/views/canvas/useCanvasController.test.projectionMocks.ts
+    dddOwner: Canvas controller test composition boundary
+    cqRails: [CheckCanvasAuthoringDraftBoundary]
+    fowlerSignals: [Test-only confidence, Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test -- useCanvasController.reloadHydrationGuards.test.tsx useCanvasController.reloadConflictRecovery.test.tsx
+    cypressCoverage: N/A - unit harness boundary for the Canvas controller
+    unitTests: [pnpm --filter @dvt/web test -- useCanvasController.reloadHydrationGuards.test.tsx useCanvasController.reloadConflictRecovery.test.tsx]
   - name: CanvasAuthoringSemanticGraph
     path: apps/web/src/app/services/workspace/workspaceGraphDraftProjection.ts
     dddOwner: CanvasAuthoringSemanticGraph projection

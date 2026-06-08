@@ -163,6 +163,12 @@ jobs:
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
 
+      - name: Prepare planning DB for full CI baseline
+        uses: ./.github/actions/prepare-planning-db
+        with:
+          import-planning: 'true'
+          import-governance: 'true'
+
       - name: Run full CI baseline
         run: pnpm ci:full
         env:

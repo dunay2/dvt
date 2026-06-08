@@ -82,6 +82,7 @@ userStories:
   - As an engineer, draft-aware quality, contracts, and security gates reopen on ready-for-review without spending draft runners.
   - As an engineer, converting a ready PR back to draft cancels stale ready-PR gate work and records skipped draft posture.
   - As an engineer, files introduced by pull, merge, or branch checkout are Prettier-normalized even when editor save hooks did not run.
+  - As an engineer, DB-first CI gates prepare the planning query store before running generated-doc and feature mechanization checks.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
@@ -92,6 +93,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
   - .github/actions/fetch-scope-base/action.yml
+  - .github/actions/prepare-planning-db/action.yml
   - .github/workflows/adapter-postgres-integration-nightly.yml
   - .github/workflows/codeql.yml
   - .github/workflows/ci.yml
@@ -150,6 +152,9 @@ commandQueryRails:
   - name: EmitWorkflowCapabilityScopes
     type: query
     dddOwner: Repository CI scope policy
+  - name: PreparePlanningDbForCiGate
+    type: command
+    dddOwner: Repository CI governance baseline
 domainObjects:
   - name: AgentPreflightPlan
     type: developer workflow command plan
@@ -169,6 +174,9 @@ domainObjects:
   - name: ScopeDiffCheckoutPolicy
     type: CI scope checkout policy
     owner: Engineering / CI
+  - name: PlanningDbCiBootstrap
+    type: CI DB-first bootstrap command
+    owner: Engineering / CI
 fowlerSignals:
   - Automation Gap when agents must manually discover and run formatting before validation.
   - Hidden Failure Mode when GitHub Actions reports a failure without assigning a runner or producing logs.
@@ -183,6 +191,7 @@ fowlerSignals:
   - Cancellation Gap when ready-to-draft transitions do not retrigger draft-aware workflows.
   - Shallow Checkout Fragility when PR merge refs cannot provide a local merge base for raw triple-dot diffs.
   - Automation Gap when files arrive through Git operations without editor save hooks firing.
+  - Hidden Authority when CI-generated documentation or mechanization gates expect DB-first projections but the workflow does not prepare the planning query store.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test scripts/format-git-operation-changes.test.cjs
@@ -300,7 +309,25 @@ redGreenCycles:
       - scripts/format-git-operation-changes.test.cjs
       - docs/guides/testing-and-ci-capabilities.md
     greenTest: node --test scripts/format-git-operation-changes.test.cjs
+  - id: db-first-main-ci-planning-db-prep
+    redTest: node --test tools/ci/workflow-pattern-parity.test.mjs
+    expectedFailure: main full CI and PR quality feature mechanization gates run DB-first checks without preparing the planning query store.
+    patchSurfaces:
+      - .github/actions/prepare-planning-db/action.yml
+      - .github/workflows/ci.yml
+      - .github/workflows/pr-quality-gate.yml
+      - tools/ci/workflow-pattern-parity.test.mjs
+    greenTest: node --test tools/ci/workflow-pattern-parity.test.mjs
 symbols:
+  - name: prepare-planning-db
+    path: .github/actions/prepare-planning-db/action.yml
+    dddOwner: PlanningDbCiBootstrap
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Hidden Authority, Automation Gap]
+    architectureGuard: node --test tools/ci/workflow-pattern-parity.test.mjs
+    cypressCoverage: N/A - CI governance action
+    unitTests:
+      - tools/ci/workflow-pattern-parity.test.mjs
   - name: assert
     path: scripts/ai-preflight.test.cjs
     dddOwner: DeveloperWorkflow
