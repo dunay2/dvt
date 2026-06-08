@@ -92,6 +92,9 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md
+  - scripts/planning-db/feature-mechanization-query.cjs
+  - scripts/planning-db-query.cjs
+  - scripts/planning-db-query.test.cjs
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
 forbiddenImplementationSurfaces:
@@ -106,6 +109,21 @@ commandQueryRails:
   - name: ListFeatureMechanizationManifests
     type: query
     dddOwner: Planning DB governance read model
+  - name: ListFeatureMechanizationFeatures
+    type: query
+    dddOwner: Planning DB governance read model
+  - name: ListFeatureMechanizationComponents
+    type: query
+    dddOwner: Planning DB governance read model
+  - name: ListFeatureMechanizationSymbols
+    type: query
+    dddOwner: Planning DB governance read model
+  - name: ListFeatureMechanizationRails
+    type: query
+    dddOwner: Planning DB governance read model
+  - name: ListFeatureMechanizationValidations
+    type: query
+    dddOwner: Planning DB governance read model
   - name: ValidateFeatureMechanizationImplementation
     type: command
     dddOwner: CI governance implementation gate
@@ -113,6 +131,9 @@ domainObjects:
   - name: FeatureMechanizationSnapshot
     type: read model
     owner: Planning DB governance import
+  - name: FeatureMechanizationOperatorReadModel
+    type: read model
+    owner: Planning DB governance read model
   - name: FeatureMechanizationImplementationDiff
     type: command input
     owner: CI governance implementation gate
@@ -122,9 +143,11 @@ fowlerSignals:
   - DB connection string drift between gate and planning query CLI
 architectureGuards:
   - node --test scripts/check-feature-mechanization.test.cjs
+  - node --test scripts/planning-db-query.test.cjs
 cypressFlows:
   - N/A - repository governance CLI gate
 completionGate:
+  - node --test scripts/planning-db-query.test.cjs
   - node --test scripts/check-feature-mechanization.test.cjs
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
@@ -136,7 +159,185 @@ redGreenCycles:
       - scripts/check-feature-mechanization.cjs
       - scripts/check-feature-mechanization.test.cjs
     greenTest: node --test scripts/check-feature-mechanization.test.cjs
+  - id: operator-query-rails-exercise-db-read-model
+    redTest: node --test scripts/planning-db-query.test.cjs
+    expectedFailure: planning DB query CLI rejects feature-mechanization query names.
+    patchSurfaces:
+      - scripts/planning-db/feature-mechanization-query.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs
 symbols:
+  - name: createFeatureMechanizationReadModelComponent
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationFeatures
+      - ListFeatureMechanizationComponents
+      - ListFeatureMechanizationSymbols
+      - ListFeatureMechanizationRails
+      - ListFeatureMechanizationValidations
+    fowlerSignals:
+      - feature-mechanization operator queries stay in a focused read-model component
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: buildFeatureMechanizationFeatureRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationFeatures
+    fowlerSignals:
+      - feature summary rows expose imported DB state for operators
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: buildFeatureMechanizationComponentRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationComponents
+    fowlerSignals:
+      - component refs become queryable DB rows
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: buildFeatureMechanizationSymbolRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationSymbols
+    fowlerSignals:
+      - symbol ownership can be inspected by file path
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: buildFeatureMechanizationRailRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationRails
+    fowlerSignals:
+      - declared rails can be inspected by rail name
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: buildFeatureMechanizationValidationRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationValidations
+    fowlerSignals:
+      - completion and test gates become queryable DB rows
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: readFeatureMechanizationFeatureRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationFeatures
+    fowlerSignals:
+      - feature summaries read command_query_rail_manifest_query
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: readFeatureMechanizationComponentRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationComponents
+    fowlerSignals:
+      - component refs are derived from imported manifest JSON in DB
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: readFeatureMechanizationSymbolRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationSymbols
+    fowlerSignals:
+      - symbol path filters execute against DB rows
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: readFeatureMechanizationRailRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationRails
+    fowlerSignals:
+      - local and imported effective rails share the manifest projection
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: readFeatureMechanizationValidationRows
+    path: scripts/planning-db/feature-mechanization-query.cjs
+    dddOwner: Planning DB governance read model
+    cqRails:
+      - ListFeatureMechanizationValidations
+    fowlerSignals:
+      - validation gate commands are queryable without rescanning Markdown
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: buildPlanningDbQueryHelpText
+    path: scripts/planning-db-query.cjs
+    dddOwner: Planning DB governance query CLI
+    cqRails:
+      - ListFeatureMechanizationFeatures
+      - ListFeatureMechanizationComponents
+      - ListFeatureMechanizationSymbols
+      - ListFeatureMechanizationRails
+      - ListFeatureMechanizationValidations
+    fowlerSignals:
+      - operator help exposes DB-first feature-mechanization query rails
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: parseArgs
+    path: scripts/planning-db-query.cjs
+    dddOwner: Planning DB governance query CLI
+    cqRails:
+      - ListFeatureMechanizationFeatures
+      - ListFeatureMechanizationComponents
+      - ListFeatureMechanizationSymbols
+      - ListFeatureMechanizationRails
+      - ListFeatureMechanizationValidations
+    fowlerSignals:
+      - CLI accepts the feature-mechanization filters listed in the plan
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: runQuery
+    path: scripts/planning-db-query.cjs
+    dddOwner: Planning DB governance query CLI
+    cqRails:
+      - ListFeatureMechanizationFeatures
+      - ListFeatureMechanizationComponents
+      - ListFeatureMechanizationSymbols
+      - ListFeatureMechanizationRails
+      - ListFeatureMechanizationValidations
+    fowlerSignals:
+      - CLI dispatch routes feature-mechanization queries to DB readers
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
   - name: validateFeatureMechanizationManifestEntries
     path: scripts/check-feature-mechanization.cjs
     dddOwner: CI governance implementation gate
@@ -607,6 +808,8 @@ Included:
 
 - Reuse the existing command/query rail DB import projection for implementation
   gate reads.
+- Add operator query rails for feature, component, symbol, rail, and validation
+  lists from the DB-first manifest projection.
 - Add `RecordFeatureMechanizationRail` as the Planning DB command writer for
   DB-authored local command/query rails.
 - Project local rails and imported compatibility rails through one effective
@@ -620,8 +823,6 @@ Included:
 Excluded:
 
 - Replacing feature-mechanization fences with generated docs.
-- Adding the broader operator query rails for feature, component, symbol, rail,
-  and validation lists.
 - Physically moving frontend proposal files.
 - Writing implementation-result history; this slice imports declared state and
   validation commands, not CI run outcomes.
@@ -662,14 +863,7 @@ Excluded:
 
 ## Validation
 
-Current plan-posture validation:
-
-```bash
-pnpm docs:feature-mechanization
-pnpm verify:prepush
-```
-
-Future implementation validation, once the read model and query rails exist:
+Implementation validation:
 
 ```bash
 node --test scripts/feature-mechanization-manifest.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-feature-mechanization.test.cjs
