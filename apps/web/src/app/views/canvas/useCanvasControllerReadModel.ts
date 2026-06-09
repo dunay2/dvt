@@ -87,10 +87,9 @@ export function useCanvasControllerReadModel({
           onInspectNode: graphHandlers.handleInspectNode,
           onDuplicateNode: canMutateGraph ? graphHandlers.handleDuplicateNode : undefined,
           onRemoveNode: canMutateGraph ? graphHandlers.handleRemoveNode : undefined,
-          onToggleNodeSelection:
-            canMutateGraph && canSelectExecution
-              ? graphHandlers.handleToggleNodeSelection
-              : undefined,
+          onToggleNodeSelection: canSelectExecution
+            ? graphHandlers.handleToggleNodeSelection
+            : undefined,
           onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
         },
       }).map((node) => ({

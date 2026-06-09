@@ -1,5 +1,6 @@
 /** Owned concern: compose Canvas toolbar, viewport, and center-surface overlay inside the main shell panel. */
 import { ResizablePanel } from '../../components/ui/resizable';
+import { CanvasDvtFlowGuide } from './CanvasDvtFlowGuide';
 import CanvasToolbar from './CanvasToolbar';
 import CanvasViewport from './CanvasViewport';
 import type {
@@ -48,6 +49,18 @@ function shouldRenderCanvasToolbar(routeState: CanvasShellToolbar['routeState'])
     'error_graph',
     'needs_canvas',
   ].includes(routeState);
+}
+
+function shouldRenderDvtFlowGuide(
+  layout: Pick<CanvasShellLayout, 'centerSurface' | 'centerSurfaceMode' | 'workbenchTabPanel'>,
+  toolbar: CanvasShellToolbar
+): boolean {
+  return (
+    toolbar.canvasAuthoringMode === 'transformation' &&
+    shouldRenderCanvasToolbar(toolbar.routeState) &&
+    layout.workbenchTabPanel == null &&
+    !(layout.centerSurface != null && layout.centerSurfaceMode === 'replace')
+  );
 }
 
 function CanvasShellViewport({
@@ -236,6 +249,12 @@ export function CanvasShellMainPanel({
           chromeCommands={chromeCommands}
         />
         {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
+        {shouldRenderDvtFlowGuide(layout, toolbar) ? (
+          <CanvasDvtFlowGuide
+            nodes={graph.nodesWithImpact}
+            validation={toolbar.transformationValidation}
+          />
+        ) : null}
         <CanvasShellMainSurface
           layout={layout}
           panels={panels}

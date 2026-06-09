@@ -37,8 +37,7 @@ export function buildCanvasShellPanels({
     routePresentation.canvasDocuments.find(
       (canvas) => canvas.id === routePresentation.activeCanvasId
     ) ?? null;
-  const canSelectExecution =
-    userPermissions.canEditEdges && (userPermissions.canPlan || userPermissions.canRun);
+  const canSelectExecution = userPermissions.canPlan || userPermissions.canRun;
 
   return {
     explorerResourceGroups: buildCanvasWorkspaceResourceGroups({

@@ -523,6 +523,170 @@ describe('CanvasShell', () => {
     });
   });
 
+  it('renders a DVT flow guide with source columns, SQL, and destination before planning', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            graph: {
+              nodesWithImpact: [
+                {
+                  id: 'src-orders',
+                  type: 'dbtNode',
+                  position: { x: 0, y: 0 },
+                  data: {
+                    name: 'ERP Orders',
+                    pluginKind: 'dvt:source',
+                    role: 'input',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      schema: 'raw',
+                      tableName: 'orders',
+                      rowCount: 125000,
+                      columns: [
+                        { name: 'order_id', type: 'INTEGER', nullable: false },
+                        { name: 'customer_id', type: 'INTEGER', nullable: false },
+                        { name: 'amount', type: 'NUMERIC', nullable: true },
+                      ],
+                    },
+                  },
+                },
+                {
+                  id: 'tx-orders',
+                  type: 'dbtNode',
+                  position: { x: 250, y: 0 },
+                  data: {
+                    name: 'Clean Orders',
+                    pluginKind: 'dvt:sql_transform',
+                    role: 'transform',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      sql: 'select order_id, customer_id, amount from raw.orders',
+                    },
+                  },
+                },
+                {
+                  id: 'sink-orders',
+                  type: 'dbtNode',
+                  position: { x: 500, y: 0 },
+                  data: {
+                    name: 'Order Summary',
+                    pluginKind: 'dvt:sink',
+                    role: 'output',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      config: {
+                        schema: 'mart',
+                        table: 'order_summary',
+                        materialization: 'view',
+                        writeMode: 'replace',
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+            panels: {
+              inspectorGraphNodes: [
+                {
+                  id: 'stale-src-orders',
+                  name: 'Stale Orders',
+                  pluginId: 'dvt',
+                  kind: 'dvt:source',
+                  role: 'input',
+                  status: 'idle',
+                  tags: [],
+                  metadata: {
+                    schema: 'stale',
+                    tableName: 'orders',
+                  },
+                },
+              ],
+              inspectorGraphEdges: [
+                {
+                  id: 'e1',
+                  sourceId: 'src-orders',
+                  targetId: 'tx-orders',
+                  relation: 'lineage',
+                },
+                {
+                  id: 'e2',
+                  sourceId: 'tx-orders',
+                  targetId: 'sink-orders',
+                  relation: 'lineage',
+                },
+              ],
+            },
+            toolbar: {
+              canPlanGraph: true,
+              transformationValidation: {
+                valid: true,
+                summaryCode: 'valid',
+                draftSignature: 'dvt-flow-ready',
+                scopedNodeIds: ['src-orders', 'tx-orders', 'sink-orders'],
+                scopedEdgeIds: ['e1', 'e2'],
+                nodeRolesById: {
+                  'src-orders': 'source',
+                  'tx-orders': 'sql_transform',
+                  'sink-orders': 'sink',
+                },
+              },
+            },
+          })}
+        />
+      );
+    });
+
+    const guide = container.querySelector('[data-slot="canvas-dvt-flow-guide"]');
+
+    expect(guide).not.toBeNull();
+    expect(guide?.textContent).toContain('Professional DVT flow');
+    expect(guide?.textContent).toContain('Ready to preview');
+    expect(guide?.textContent).toContain('raw.orders');
+    expect(guide?.textContent).toContain('125,000 rows');
+    expect(guide?.textContent).toContain('3 columns');
+    expect(guide?.textContent).toContain('order_id INTEGER required');
+    expect(guide?.textContent).toContain('select order_id, customer_id, amount from raw.orders');
+    expect(guide?.textContent).toContain('mart.order_summary');
+    expect(guide?.textContent).toContain('view');
+    expect(guide?.textContent).toContain('replace');
+    expect(guide?.textContent).not.toContain('stale.orders');
+  });
+
+  it('hides the DVT flow guide when a workbench tab panel replaces the graph viewport', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            layout: {
+              workbenchTabPanel: <div data-testid="code-workbench-panel" />,
+            },
+            toolbar: {
+              transformationValidation: {
+                valid: true,
+                summaryCode: 'valid',
+                draftSignature: 'dvt-flow-ready',
+                scopedNodeIds: ['src-orders', 'tx-orders', 'sink-orders'],
+                scopedEdgeIds: ['e1', 'e2'],
+                nodeRolesById: {
+                  'src-orders': 'source',
+                  'tx-orders': 'sql_transform',
+                  'sink-orders': 'sink',
+                },
+              },
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-dvt-flow-guide"]')).toBeNull();
+  });
+
   it('closes the import wizard if edit permissions are revoked while it is open', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);
