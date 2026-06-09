@@ -1,5 +1,6 @@
 /** Owned concern: compose Canvas toolbar, viewport, and center-surface overlay inside the main shell panel. */
 import { ResizablePanel } from '../../components/ui/resizable';
+import { CanvasDbtFlowGuide } from './CanvasDbtFlowGuide';
 import { CanvasDvtFlowGuide } from './CanvasDvtFlowGuide';
 import CanvasToolbar from './CanvasToolbar';
 import CanvasViewport from './CanvasViewport';
@@ -57,6 +58,18 @@ function shouldRenderDvtFlowGuide(
 ): boolean {
   return (
     toolbar.canvasAuthoringMode === 'transformation' &&
+    shouldRenderCanvasToolbar(toolbar.routeState) &&
+    layout.workbenchTabPanel == null &&
+    !(layout.centerSurface != null && layout.centerSurfaceMode === 'replace')
+  );
+}
+
+function shouldRenderDbtFlowGuide(
+  layout: Pick<CanvasShellLayout, 'centerSurface' | 'centerSurfaceMode' | 'workbenchTabPanel'>,
+  toolbar: CanvasShellToolbar
+): boolean {
+  return (
+    toolbar.canvasAuthoringMode === 'dbt' &&
     shouldRenderCanvasToolbar(toolbar.routeState) &&
     layout.workbenchTabPanel == null &&
     !(layout.centerSurface != null && layout.centerSurfaceMode === 'replace')
@@ -253,6 +266,12 @@ export function CanvasShellMainPanel({
           <CanvasDvtFlowGuide
             nodes={graph.nodesWithImpact}
             validation={toolbar.transformationValidation}
+          />
+        ) : null}
+        {shouldRenderDbtFlowGuide(layout, toolbar) ? (
+          <CanvasDbtFlowGuide
+            nodes={graph.nodesWithImpact}
+            ready={toolbar.canPlanGraph || toolbar.canStartRun}
           />
         ) : null}
         <CanvasShellMainSurface

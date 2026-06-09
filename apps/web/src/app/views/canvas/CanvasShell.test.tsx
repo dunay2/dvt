@@ -687,6 +687,149 @@ describe('CanvasShell', () => {
     expect(container.querySelector('[data-slot="canvas-dvt-flow-guide"]')).toBeNull();
   });
 
+  it('renders a DBT flow guide with active source metadata, model SQL, and test posture', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            graph: {
+              nodesWithImpact: [
+                {
+                  id: 'src-raw-orders',
+                  type: 'dbtNode',
+                  position: { x: 0, y: 0 },
+                  data: {
+                    name: 'Raw Orders',
+                    pluginKind: 'dbt:source',
+                    role: 'input',
+                    status: 'idle',
+                    tags: ['freshness'],
+                    path: 'models/sources.yml',
+                    metadata: {
+                      package: 'analytics',
+                      rowCount: 125000,
+                      dbt: {
+                        sourceName: 'raw',
+                        schemaName: 'erp',
+                        tableName: 'orders',
+                      },
+                      columns: [
+                        { name: 'order_id', type: 'integer', nullable: false },
+                        { name: 'customer_id', type: 'integer', nullable: false },
+                        { name: 'amount', type: 'numeric', nullable: true },
+                      ],
+                    },
+                  },
+                },
+                {
+                  id: 'model-fct-orders',
+                  type: 'dbtNode',
+                  position: { x: 260, y: 0 },
+                  data: {
+                    name: 'fct_orders',
+                    pluginKind: 'dbt:model',
+                    role: 'transform',
+                    status: 'idle',
+                    tags: ['mart'],
+                    path: 'models/marts/fct_orders.sql',
+                    metadata: {
+                      package: 'analytics',
+                      compiledSql:
+                        'select order_id, customer_id, amount from {{ source("raw", "orders") }}',
+                      config: {
+                        materialized: 'incremental',
+                        schema: 'marts',
+                      },
+                      dbt: {
+                        materialized: 'incremental',
+                        selectedSourceId: 'src-raw-orders',
+                      },
+                      columns: [
+                        { name: 'order_id', type: 'integer', nullable: false },
+                        { name: 'gross_amount', type: 'numeric', nullable: true },
+                      ],
+                    },
+                  },
+                },
+                {
+                  id: 'test-fct-orders-not-null',
+                  type: 'dbtNode',
+                  position: { x: 520, y: 0 },
+                  data: {
+                    name: 'not_null_fct_orders_order_id',
+                    pluginKind: 'dbt:test',
+                    role: 'check',
+                    status: 'idle',
+                    tags: ['quality'],
+                    metadata: {
+                      package: 'analytics',
+                      config: {
+                        severity: 'error',
+                      },
+                    },
+                  },
+                },
+              ],
+              edges: [
+                { id: 'source-model', source: 'src-raw-orders', target: 'model-fct-orders' },
+                {
+                  id: 'model-test',
+                  source: 'model-fct-orders',
+                  target: 'test-fct-orders-not-null',
+                },
+              ],
+            },
+            panels: {
+              inspectorGraphNodes: [
+                {
+                  id: 'stale-src-orders',
+                  name: 'Stale Orders',
+                  pluginId: 'dbt',
+                  kind: 'dbt:source',
+                  role: 'input',
+                  status: 'idle',
+                  tags: [],
+                  metadata: {
+                    dbt: {
+                      sourceName: 'stale',
+                      schemaName: 'legacy',
+                      tableName: 'orders',
+                    },
+                  },
+                },
+              ],
+            },
+            toolbar: {
+              canvasAuthoringMode: 'dbt',
+              planStatusSummary: canvasViewCopy.planStatusPreviewReadyMessage,
+              canPlanGraph: true,
+              canStartRun: true,
+            },
+          })}
+        />
+      );
+    });
+
+    const guide = container.querySelector('[data-slot="canvas-dbt-flow-guide"]');
+
+    expect(guide).not.toBeNull();
+    expect(guide?.textContent).toContain('Professional dbt flow');
+    expect(guide?.textContent).toContain('Ready to preview');
+    expect(guide?.textContent).toContain('raw.erp.orders');
+    expect(guide?.textContent).toContain('125,000 rows');
+    expect(guide?.textContent).toContain('3 columns');
+    expect(guide?.textContent).toContain('order_id integer required');
+    expect(guide?.textContent).toContain('fct_orders');
+    expect(guide?.textContent).toContain('incremental');
+    expect(guide?.textContent).toContain('models/marts/fct_orders.sql');
+    expect(guide?.textContent).toContain(
+      'select order_id, customer_id, amount from {{ source("raw", "orders") }}'
+    );
+    expect(guide?.textContent).toContain('not_null_fct_orders_order_id');
+    expect(guide?.textContent).toContain('error');
+    expect(guide?.textContent).not.toContain('stale.legacy.orders');
+  });
+
   it('closes the import wizard if edit permissions are revoked while it is open', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);
