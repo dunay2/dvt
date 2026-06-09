@@ -1613,6 +1613,7 @@ allowedImplementationSurfaces:
   - tools/governance-db/**
   - scripts/planning-db-*.cjs
   - scripts/planning-db-operate-tests/*.cjs
+  - scripts/planning-db/**/*.cjs
   - scripts/governance-db-*.cjs
   - scripts/governance-refresh*.cjs
   - scripts/generate-code-status*.cjs
@@ -1713,6 +1714,9 @@ commandQueryRails:
   - name: ReadComponentEngineeringRecord
     type: query
     dddOwner: ComponentEngineeringRecordReadModel
+  - name: ListSystemComponentRoadmap
+    type: query
+    dddOwner: SystemComponentRoadmapReadModel
   - name: QueryDocsDispositionQueue
     type: query
     dddOwner: DocsDispositionQueue
@@ -1798,6 +1802,9 @@ domainObjects:
   - name: ComponentEngineeringRecordReadModel
     type: read model
     owner: Docs governance
+  - name: SystemComponentRoadmapReadModel
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: DocsDispositionQueue
     type: read model
     owner: Docs governance
@@ -2173,6 +2180,18 @@ redGreenCycles:
       - scripts/planning-db-*.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: planning-db-component-roadmap-query
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Agents still reconstruct component implementation, architecture authority, and planned feature gaps manually across component_engineering, architecture, feature-mechanization, and documentation lifecycle projections.
+    patchSurfaces:
+      - tools/planning-db/migrations/068_component_roadmap_query.sql
+      - tools/planning-db/migrations/069_component_roadmap_component_ref_filter.sql
+      - scripts/planning-db/queries/component-roadmap-query.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - scripts/planning-db-query.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -2200,6 +2219,7 @@ symbols:
       - QuerySystemGovernanceGenerationWorkflow
       - ValidateSystemGovernanceGenerationWorkflow
       - ReadGovernanceUnitTree
+      - ListSystemComponentRoadmap
     fowlerSignals:
       - Large planning file operating cost
       - Generated artifact churn
@@ -2217,6 +2237,61 @@ symbols:
       - pnpm test:planning:db
       - pnpm docs:feature-mechanization --feature GOV-S3-PLANNING-STATE-QUERY-STORE
       - pnpm docs:feature-mechanization:implementation
+  - &componentRoadmapQuerySymbol
+    name: ComponentRoadmapQueryMigration
+    path: tools/planning-db/migrations/068_component_roadmap_query.sql
+    dddOwner: SystemComponentRoadmapReadModel
+    cqRails:
+      - ListSystemComponentRoadmap
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Hidden query model inside governance shards
+      - Manual governance hierarchy reconstruction
+      - Manual work intake reconstruction
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - planning DB component roadmap query has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: ComponentRoadmapComponentRefFilterMigration
+    path: tools/planning-db/migrations/069_component_roadmap_component_ref_filter.sql
+  - <<: *componentRoadmapQuerySymbol
+    name: createComponentRoadmapReadModelComponent
+    path: scripts/planning-db/queries/component-roadmap-query.cjs
+    cqRails:
+      - ListSystemComponentRoadmap
+  - <<: *componentRoadmapQuerySymbol
+    name: parseLimit
+    path: scripts/planning-db/queries/component-roadmap-query.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: appendFilter
+    path: scripts/planning-db/queries/component-roadmap-query.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: appendBooleanFilter
+    path: scripts/planning-db/queries/component-roadmap-query.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: textValue
+    path: scripts/planning-db/queries/component-roadmap-query.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: buildComponentRoadmapRows
+    path: scripts/planning-db/queries/component-roadmap-query.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: componentRoadmapSelect
+    path: scripts/planning-db/queries/component-roadmap-query.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: readComponentRoadmapRows
+    path: scripts/planning-db/queries/component-roadmap-query.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: PlanningDbQueryComponentRoadmapAdapter
+    path: scripts/planning-db-query.cjs
+    cqRails:
+      - ListSystemComponentRoadmap
+  - <<: *componentRoadmapQuerySymbol
+    name: ComponentRoadmapQueryTests
+    path: scripts/planning-db-query.test.cjs
+  - <<: *componentRoadmapQuerySymbol
+    name: ComponentRoadmapMigrationTests
+    path: scripts/planning-db-migrate.test.cjs
   - &planningDbRuntimeSymbol
     name: PlanningDbDockerCompose
     path: infra/planning-db/docker-compose.yml

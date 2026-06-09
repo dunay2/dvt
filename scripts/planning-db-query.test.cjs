@@ -11,6 +11,7 @@ const {
   buildRealWorkRows,
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentMetadataRows,
+  buildComponentRoadmapRows,
   buildArchitectureComponentRows,
   buildArchitectureDesignRows,
   buildArchitectureRelationRows,
@@ -83,6 +84,7 @@ const {
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentMetadataRows,
+  readComponentRoadmapRows,
   readArchitectureComponentRows,
   readArchitectureDesignRows,
   readArchitectureRelationRows,
@@ -335,6 +337,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('architecture-drift'), 'architecture-drift');
   assert.equal(resolveQueryName('architecture-enforcement'), 'architecture-enforcement');
   assert.equal(resolveQueryName('architecture-evidence'), 'architecture-evidence');
+  assert.equal(resolveQueryName('component-roadmap'), 'component-roadmap');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -1107,6 +1110,37 @@ test('parseArgs parses documentation lifecycle logic filters', () => {
         state: 'proposed',
         kind: 'proposal_missing_canonical',
         subject: 'canvas-modeler',
+        limit: 9,
+      },
+    }
+  );
+});
+
+test('parseArgs parses component roadmap query filters', () => {
+  assert.deepEqual(
+    parseArgs([
+      'component-roadmap',
+      '--component',
+      'docs/architecture/components/web/index.md',
+      '--state',
+      'planned',
+      '--kind',
+      'planned_component_missing_db_component',
+      '--path',
+      'docs/planning/proposals/mandatory/governance-and-docs/example.md',
+      '--gaps',
+      'true',
+      '--limit',
+      '9',
+    ]),
+    {
+      queryName: 'component-roadmap',
+      filters: {
+        component: 'docs/architecture/components/web/index.md',
+        state: 'planned',
+        kind: 'planned_component_missing_db_component',
+        path: 'docs/planning/proposals/mandatory/governance-and-docs/example.md',
+        gaps: true,
         limit: 9,
       },
     }
@@ -2692,6 +2726,119 @@ test('runQuery dispatches documentation-lifecycle through the DB-first lifecycle
       'docs/architecture/components/example.md',
       'example',
       'Example Component',
+    ],
+  ]);
+});
+
+test('buildComponentRoadmapRows exposes implementation, planning, and gap state', () => {
+  const rows = buildComponentRoadmapRows([
+    {
+      component_id: 'SYS-WEB-ROOT',
+      component_name: 'Web Root',
+      implementation_state: 'implemented',
+      planning_state: 'programmed',
+      gap_kind: 'none',
+      architecture_status: 'accepted',
+      engineering_quality_state: 'pass',
+      planned_feature_count: 2,
+      implemented_feature_count: 1,
+      source_path: 'docs/architecture/components/web/index.md',
+    },
+  ]);
+
+  assert.deepEqual(rows, [
+    [
+      'SYS-WEB-ROOT',
+      'Web Root',
+      'implemented',
+      'programmed',
+      'none',
+      'accepted',
+      'pass',
+      2,
+      1,
+      'docs/architecture/components/web/index.md',
+    ],
+  ]);
+});
+
+test('readComponentRoadmapRows queries the DB-first component roadmap with gap filters', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readComponentRoadmapRows(client, {
+    component: 'docs/architecture/components/web/index.md',
+    state: 'planned',
+    kind: 'planned_component_missing_db_component',
+    path: 'docs/planning/proposals/mandatory/governance-and-docs/example.md',
+    gaps: true,
+    limit: 7,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.component_roadmap_query/);
+  assert.match(captured.sql, /\(component_id = \$1 or component_ref = \$1\)/);
+  assert.match(captured.sql, /implementation_state = \$2/);
+  assert.match(captured.sql, /gap_kind = \$3/);
+  assert.match(captured.sql, /source_path = \$4/);
+  assert.match(captured.sql, /gap_kind <> 'none'/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'docs/architecture/components/web/index.md',
+    'planned',
+    'planned_component_missing_db_component',
+    'docs/planning/proposals/mandatory/governance-and-docs/example.md',
+    7,
+  ]);
+});
+
+test('runQuery dispatches component-roadmap through the DB-first component map', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /component_roadmap_query/);
+      return {
+        rows: [
+          {
+            component_id: 'docs/architecture/components/web/index.md',
+            component_name: 'docs/architecture/components/web/index.md',
+            implementation_state: 'planned',
+            planning_state: 'open',
+            gap_kind: 'planned_component_missing_db_component',
+            architecture_status: 'missing',
+            engineering_quality_state: 'missing',
+            planned_feature_count: 1,
+            implemented_feature_count: 0,
+            source_path: 'docs/planning/proposals/mandatory/governance-and-docs/example.md',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'component-roadmap',
+    filters: { state: 'planned', gaps: true, limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'docs/architecture/components/web/index.md',
+      'docs/architecture/components/web/index.md',
+      'planned',
+      'open',
+      'planned_component_missing_db_component',
+      'missing',
+      'missing',
+      1,
+      0,
+      'docs/planning/proposals/mandatory/governance-and-docs/example.md',
     ],
   ]);
 });

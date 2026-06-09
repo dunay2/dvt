@@ -54,6 +54,10 @@ const {
   buildDocumentationLifecycleRows,
   readDocumentationLifecycleRows,
 } = require('./planning-db/queries/documentation-lifecycle-query.cjs');
+const {
+  buildComponentRoadmapRows,
+  readComponentRoadmapRows,
+} = require('./planning-db/queries/component-roadmap-query.cjs');
 const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
@@ -102,6 +106,7 @@ const knownQueries = new Set([
   'knowledge-actions',
   'knowledge-intake',
   'documentation-lifecycle',
+  'component-roadmap',
   'mandatory-proposal-gaps',
   'db-surfaces',
   'component-tree',
@@ -174,6 +179,7 @@ const pathCommonFilterQueryNames = new Set([
   'knowledge-actions',
   'knowledge-intake',
   'documentation-lifecycle',
+  'component-roadmap',
   'mandatory-proposal-gaps',
 ]);
 const componentCommonFilterQueryNames = new Set([
@@ -186,6 +192,7 @@ const componentCommonFilterQueryNames = new Set([
   'frontend-components',
   'frontend-component-rails',
   'component-tree',
+  'component-roadmap',
   'component-metadata',
   'component-drift',
   'component-rules',
@@ -248,6 +255,11 @@ function buildPlanningDbQueryHelpText(queryName) {
       examples.push(
         `  pnpm planning:db:query ${queryName} --gaps true --limit 20`,
         `  pnpm planning:db:query ${queryName} --duplicates true --canonicality canonical --limit 20`
+      );
+    } else if (queryName === 'component-roadmap') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --gaps true --limit 20`,
+        `  pnpm planning:db:query ${queryName} --component docs/architecture/components/web/index.md --limit 20`
       );
     }
 
@@ -603,6 +615,7 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'feature-mechanization-validations' ||
         queryName === 'knowledge-intake' ||
         queryName === 'documentation-lifecycle' ||
+        queryName === 'component-roadmap' ||
         queryName === 'db-surfaces'
       ) {
         filters.state = value;
@@ -3871,6 +3884,15 @@ async function runQuery(options = {}) {
       return lifecycleRows;
     }
 
+    if (queryName === 'component-roadmap') {
+      const rows = await readComponentRoadmapRows(client, options.filters || {});
+      const roadmapRows = buildComponentRoadmapRows(rows);
+      if (options.print !== false) {
+        printTaskRows(roadmapRows);
+      }
+      return roadmapRows;
+    }
+
     if (queryName === 'mandatory-proposal-gaps') {
       const rows = await readMandatoryProposalGapRows(client, options.filters || {});
       const gapRows = buildMandatoryProposalGapRows(rows);
@@ -4231,6 +4253,7 @@ module.exports = {
   buildKnowledgeActionRows,
   buildKnowledgeDocumentRows,
   buildDocumentationLifecycleRows,
+  buildComponentRoadmapRows,
   buildMandatoryProposalGapRows,
   buildPlanningArtifactRows,
   buildPlanningDependencyRows,
@@ -4297,6 +4320,7 @@ module.exports = {
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,
   readDocumentationLifecycleRows,
+  readComponentRoadmapRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readMandatoryProposalGapRows,
