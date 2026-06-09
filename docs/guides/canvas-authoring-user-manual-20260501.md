@@ -1,12 +1,30 @@
 ---
 title: Manual de usuario de autoria en Canvas
-status: Active
+status: Review
 date: 2026-06-02
 owner: Web
 planning_type: guide
 ---
 
 # Manual de usuario de autoria en Canvas
+
+## Estado de evidencia
+
+Este documento no debe leerse como prueba de un flujo SQL profesional completo.
+Las capturas existentes muestran capacidades parciales del Canvas, pero no
+demuestran todavia el flujo exigente de producto desde un canvas vacio hasta:
+
+- exploracion real de origenes con conexion, tablas, columnas y metadata;
+- seleccion visible de tablas origen antes de crear el grafo;
+- autoria de transformacion SQL con contexto de columnas de entrada;
+- seleccion explicita de destino con adaptador, base de datos, esquema, tabla,
+  materializacion y modo de escritura;
+- preview, ejecucion y evidencia que nombren el mismo origen y destino elegidos.
+
+El gap operativo esta registrado en la BBDD como
+`SQL-CANVAS-UX-P0-PRO-FLOW-1`. Hasta que ese trabajo cierre con pruebas E2E y
+capturas nuevas, este manual es una guia limitada de superficies existentes, no
+un visto bueno de producto maduro.
 
 ## Audiencia
 
@@ -133,21 +151,53 @@ Resultado esperado: codigo y artefactos son vistas de inspeccion del workspace;
 no sustituyen el grafo ni deben mostrar contenido que no corresponda al recurso
 seleccionado.
 
-## Casos de uso contemplados
+## Casos de uso con evidencia parcial
 
-| Caso                        | Como se usa                              | Evidencia                                               |
-| --------------------------- | ---------------------------------------- | ------------------------------------------------------- |
-| Abrir canvas con borrador   | `/canvas` con proyecto y entorno validos | `08-current-dbt-canvas.png`                             |
-| Crear nodo del catalogo     | `Insertar` y elegir tipo compatible      | `09-insert-node-search.png`                             |
-| Buscar tipos de nodo        | Escribir en la paleta de insercion       | `09-insert-node-search.png`                             |
-| Inspeccionar recursos       | Abrir panel izquierdo de proyecto        | `13-dataobject-registry-connections.png`                |
-| Abrir DataObject Registry   | `Project Resources > Add data`           | `11-dataobject-registry-connection.png`                 |
-| Importar/exportar snapshot  | `Proyecto > Exportar` o `Importar`       | `10-project-snapshot-menu.png`                          |
-| Bloquear ejecucion sin plan | `Ejecutar` queda deshabilitado           | `08-current-dbt-canvas.png`                             |
-| Canvas de solo lectura      | Grafo visible sin acciones de escritura  | `05-read-only-canvas.png`                               |
-| Primer nodo en canvas vacio | Catalogo tipado del canvas activo        | `06-empty-canvas.png`, `07-empty-canvas-first-node.png` |
+- Abrir canvas con borrador:
+  `/canvas` con proyecto y entorno validos. Evidencia:
+  `08-current-dbt-canvas.png`. Limite: no prueba flujo desde canvas vacio hasta
+  ejecucion.
+- Crear nodo del catalogo:
+  `Insertar` y elegir tipo compatible. Evidencia:
+  `09-insert-node-search.png`. Limite: no prueba seleccion de origen real ni
+  metadata de tabla.
+- Buscar tipos de nodo:
+  escribir en la paleta de insercion. Evidencia:
+  `09-insert-node-search.png`. Limite: busca tipos, no origenes warehouse.
+- Inspeccionar recursos:
+  abrir panel izquierdo de proyecto. Evidencia:
+  `13-dataobject-registry-connections.png`. Limite: no demuestra columnas ni
+  metadata completas.
+- Abrir DataObject Registry:
+  `Project Resources > Add data`. Evidencia:
+  `11-dataobject-registry-connection.png`. Limite: no demuestra seleccion
+  profesional de origen con destino final.
+- Importar/exportar snapshot:
+  `Proyecto > Exportar` o `Importar`. Evidencia:
+  `10-project-snapshot-menu.png`. Limite: es snapshot, no flujo de conexion,
+  origen y destino.
+- Bloquear ejecucion sin plan:
+  `Ejecutar` queda deshabilitado. Evidencia:
+  `08-current-dbt-canvas.png`. Limite: no prueba readiness profesional de
+  origen, transformacion y destino.
+- Canvas de solo lectura:
+  grafo visible sin acciones de escritura. Evidencia:
+  `05-read-only-canvas.png`. Limite: solo postura de permisos.
+- Primer nodo en canvas vacio:
+  catalogo tipado del canvas activo. Evidencia:
+  `06-empty-canvas.png`, `07-empty-canvas-first-node.png`. Limite: no prueba
+  flujo SQL completo.
 
 ## Casos no contemplados o condicionados
+
+### Flujo SQL profesional completo no esta probado
+
+No existe todavia evidencia aceptable de que un usuario pueda empezar desde un
+canvas vacio, explorar origenes reales con columnas y metadata, seleccionar las
+tablas origen, crear la transformacion SQL, escoger destino exacto, planificar,
+ejecutar y revisar evidencia sin depender de campos manuales o supuestos de
+fixture. Ese trabajo queda fuera de este manual hasta que cierre
+`SQL-CANVAS-UX-P0-PRO-FLOW-1`.
 
 ### API, File y Stream no estan disponibles aun
 

@@ -61,6 +61,23 @@ The result is a product gap, not a missing local helper: a demanding user cannot
 reliably perform the basic SQL workflow without knowing internal defaults,
 manual metadata conventions, or test-fixture assumptions.
 
+## Evidence Rejection
+
+The existing Canvas user-manual screenshots are not accepted as proof for this
+review. They show partial UI surfaces, not the demanded product flow. In
+particular, they do not prove:
+
+1. origin exploration from the beginning of an empty SQL Canvas;
+1. visible selection of real source tables;
+1. column, row-count, freshness, or connection metadata in the source decision;
+1. transform authoring with input-column context;
+1. exact destination selection before planning;
+1. plan/run evidence naming the same selected source and destination.
+
+Until a new E2E-backed manual captures those states, the product posture remains
+`not professionally proven`. The active DB task for this remediation is
+`SQL-CANVAS-UX-P0-PRO-FLOW-1`.
+
 ## Professional Flow Standard
 
 A professional SQL graph flow must satisfy these expectations:
