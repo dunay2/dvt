@@ -146,6 +146,49 @@ function sleep(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
+function normalizePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function runPlanningDbUp(extraArgs = [], options = {}) {
+  const attempts = normalizePositiveInteger(
+    options.attempts ?? process.env.DVT_PLANNING_DB_UP_ATTEMPTS,
+    3
+  );
+  const intervalMs = normalizePositiveInteger(
+    options.intervalMs ?? process.env.DVT_PLANNING_DB_UP_RETRY_INTERVAL_MS,
+    5000
+  );
+  const runComposeFn = options.runCompose || runCompose;
+  const sleepFn = options.sleep || sleep;
+  const logger = options.logger || console;
+  const actionArgs = ['up', '-d', ...extraArgs];
+  let lastError;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      runComposeFn(actionArgs);
+      return;
+    } catch (error) {
+      lastError = error;
+      const message = error.message || error.code || error.name;
+      if (attempt === attempts) {
+        throw new Error(`Planning DB compose up failed after ${attempts} attempt(s): ${message}`, {
+          cause: error,
+        });
+      }
+
+      logger.warn(
+        `[planning:db:up] compose up failed on attempt ${attempt}/${attempts}; retrying in ${intervalMs}ms: ${message}`
+      );
+      sleepFn(intervalMs);
+    }
+  }
+
+  throw lastError;
+}
+
 function waitForPlanningDbReady(options = {}) {
   const attempts = options.attempts ?? 20;
   const intervalMs = options.intervalMs ?? 500;
@@ -287,7 +330,7 @@ async function main() {
   const [action = 'up', ...rest] = process.argv.slice(2);
 
   if (action === 'up') {
-    runCompose(['up', '-d', ...rest]);
+    runPlanningDbUp(rest);
     return;
   }
 
@@ -357,6 +400,7 @@ module.exports = {
   planResetDataDir,
   readLocalOperationBackup,
   resolveComposeCommand,
+  runPlanningDbUp,
   resetPlanningDb,
   resetComposeCommandCache,
   runComposeQuiet,

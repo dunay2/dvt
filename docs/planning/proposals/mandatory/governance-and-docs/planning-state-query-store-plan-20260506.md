@@ -2324,6 +2324,12 @@ symbols:
     name: sleep
     path: scripts/planning-db-run.cjs
   - <<: *planningDbRuntimeSymbol
+    name: normalizePositiveInteger
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
+    name: runPlanningDbUp
+    path: scripts/planning-db-run.cjs
+  - <<: *planningDbRuntimeSymbol
     name: waitForPlanningDbReady
     path: scripts/planning-db-run.cjs
   - <<: *planningDbRuntimeSymbol

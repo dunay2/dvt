@@ -13,6 +13,7 @@ const {
   planResetDataDir,
   resetPlanningDb,
   resolveComposeCommand,
+  runPlanningDbUp,
   resetComposeCommandCache,
 } = require('./planning-db-run.cjs');
 
@@ -199,6 +200,56 @@ test('resetPlanningDb starts Compose before backing up and only then removes dat
     ['mkdir', plan.dataDir, { recursive: true }],
     ['compose', ['up', '-d']],
     ['wait-ready'],
+  ]);
+});
+
+test('runPlanningDbUp retries transient compose startup failures', () => {
+  const calls = [];
+  const warnings = [];
+
+  runPlanningDbUp([], {
+    attempts: 3,
+    intervalMs: 1,
+    runCompose: (args) => {
+      calls.push(['compose', args]);
+      if (calls.length === 1) {
+        throw new Error('docker registry context deadline exceeded');
+      }
+    },
+    sleep: (intervalMs) => calls.push(['sleep', intervalMs]),
+    logger: { warn: (message) => warnings.push(message) },
+  });
+
+  assert.deepEqual(calls, [
+    ['compose', ['up', '-d']],
+    ['sleep', 1],
+    ['compose', ['up', '-d']],
+  ]);
+  assert.match(warnings[0], /attempt 1\/3/);
+  assert.match(warnings[0], /context deadline exceeded/);
+});
+
+test('runPlanningDbUp fails after bounded compose startup attempts', () => {
+  const calls = [];
+
+  assert.throws(
+    () =>
+      runPlanningDbUp(['--pull', 'always'], {
+        attempts: 2,
+        intervalMs: 1,
+        runCompose: (args) => {
+          calls.push(args);
+          throw new Error('docker compose up failed with exit code 1');
+        },
+        sleep: () => {},
+        logger: { warn: () => {} },
+      }),
+    /Planning DB compose up failed after 2 attempt\(s\): docker compose up failed/
+  );
+
+  assert.deepEqual(calls, [
+    ['up', '-d', '--pull', 'always'],
+    ['up', '-d', '--pull', 'always'],
   ]);
 });
 
