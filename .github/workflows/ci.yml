@@ -147,6 +147,7 @@ jobs:
         run: pnpm preflight:affected:ci
         env:
           DVT_CI: '1'
+          GIT_BASE: origin/${{ github.base_ref }}
 
   full-ci:
     name: Full CI (main/manual)

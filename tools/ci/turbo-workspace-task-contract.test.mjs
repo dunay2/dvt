@@ -5,10 +5,12 @@ import test from 'node:test';
 
 const require = createRequire(import.meta.url);
 const {
+  DEFAULT_BASE_REF,
   DEFAULT_FILTER,
   SUPPORTED_TASKS,
   buildTurboArgs,
   parseArgs,
+  resolveDefaultFilter,
 } = require('../../scripts/run-turbo-workspace-task.cjs');
 
 const turbo = JSON.parse(readFileSync('turbo.json', 'utf8'));
@@ -18,9 +20,23 @@ const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
 
 test('Turbo workspace wrapper accepts governed task names and defaults to the affected filter', () => {
   assert.throws(() => parseArgs([]), /Unsupported Turbo workspace task/);
+  assert.equal(DEFAULT_BASE_REF, 'origin/main');
+  assert.equal(resolveDefaultFilter(), DEFAULT_FILTER);
+  assert.equal(
+    resolveDefaultFilter({ GIT_BASE: 'origin/release/2026-06' }),
+    '...[origin/release/2026-06]'
+  );
+  assert.throws(
+    () => resolveDefaultFilter({ GIT_BASE: 'origin/main; echo unsafe' }),
+    /Unsafe GIT_BASE/
+  );
   assert.deepEqual(parseArgs(['typecheck']), {
     task: 'typecheck',
     filter: DEFAULT_FILTER,
+  });
+  assert.deepEqual(parseArgs(['typecheck'], { GIT_BASE: 'origin/release/2026-06' }), {
+    task: 'typecheck',
+    filter: '...[origin/release/2026-06]',
   });
   assert.deepEqual(parseArgs(['test', '--filter', '@dvt/engine']), {
     task: 'test',
@@ -99,6 +115,10 @@ test('root affected commands and CI matrix lint/build/typecheck steps use the Tu
   assert.ok(ciWorkflow.includes('run: pnpm verify:changed'));
   assert.ok(ciWorkflow.includes('GIT_BASE: origin/${{ github.base_ref }}'));
   assert.ok(ciWorkflow.includes('run: pnpm preflight:affected:ci'));
+  assert.match(
+    ciWorkflow,
+    /Run affected workspace build, lint and type-check preflight[\s\S]*GIT_BASE: origin\/\$\{\{ github\.base_ref \}\}/u
+  );
   assert.equal(ciWorkflow.includes('run: pnpm preflight:affected\n'), false);
   assert.ok(ciWorkflow.includes('run: pnpm ci:full'));
   assert.equal(

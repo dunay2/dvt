@@ -2,10 +2,21 @@
 
 const { spawnSync } = require('node:child_process');
 
-const DEFAULT_FILTER = '...[origin/main]';
+const DEFAULT_BASE_REF = 'origin/main';
+const DEFAULT_FILTER = `...[${DEFAULT_BASE_REF}]`;
 const SUPPORTED_TASKS = new Set(['build', 'lint', 'test', 'typecheck']);
+const SAFE_GIT_REF_PATTERN = /^[A-Za-z0-9._/@:+,{}~^-]+$/u;
 
-function parseArgs(argv) {
+function resolveDefaultFilter(env = {}) {
+  const baseRef = String(env.GIT_BASE || '').trim() || DEFAULT_BASE_REF;
+  if (!SAFE_GIT_REF_PATTERN.test(baseRef)) {
+    throw new Error(`Unsafe GIT_BASE value for Turbo affected filter: ${baseRef}`);
+  }
+
+  return `...[${baseRef}]`;
+}
+
+function parseArgs(argv, env = {}) {
   const [task, ...rest] = argv;
 
   if (!task || !SUPPORTED_TASKS.has(task)) {
@@ -16,7 +27,7 @@ function parseArgs(argv) {
     );
   }
 
-  let filter = DEFAULT_FILTER;
+  let filter = resolveDefaultFilter(env);
 
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
@@ -54,7 +65,7 @@ function main(argv = process.argv.slice(2), env = process.env) {
   let parsed;
 
   try {
-    parsed = parseArgs(argv);
+    parsed = parseArgs(argv, env);
   } catch (error) {
     console.error(`[run-turbo-workspace-task] ${error.message}`);
     return 1;
@@ -79,9 +90,11 @@ if (require.main === module) {
 }
 
 module.exports = {
+  DEFAULT_BASE_REF,
   DEFAULT_FILTER,
   SUPPORTED_TASKS,
   buildTurboArgs,
   main,
   parseArgs,
+  resolveDefaultFilter,
 };
