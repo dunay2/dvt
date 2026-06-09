@@ -29,7 +29,10 @@ import { ListWarehouseConnectionsUseCase } from '../../../src/application/servic
 import { ListWarehouseConnectionTablesUseCase } from '../../../src/application/services/listWarehouseConnectionTablesUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../../src/application/services/testWarehouseConnectionUseCase.js';
 import { registerWarehouseSourceImportRoutes } from '../../../src/entrypoints/http/warehouseSourceImportRoutes.js';
-import { WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
+import {
+  WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+  toWarehouseConnectionId,
+} from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
 
 const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
 
@@ -62,11 +65,7 @@ class TestWarehouseConnectionCatalog implements IWarehouseConnectionCatalog {
   public async createConnection(
     input: CreateWarehouseConnectionCatalogInput
   ): Promise<WarehouseConnection> {
-    const id = input.name
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    const id = toWarehouseConnectionId(input.name);
     const duplicate = this.entries.some(
       (entry) =>
         entry.id.toLowerCase() === id ||

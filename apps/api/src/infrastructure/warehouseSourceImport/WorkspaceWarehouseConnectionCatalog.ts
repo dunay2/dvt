@@ -167,13 +167,29 @@ export function normalizeCatalogEntry(
 }
 
 export function toWarehouseConnectionId(name: string): string {
-  return (
-    name
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') || 'warehouse-connection'
-  );
+  const normalizedName = name.trim().toLowerCase();
+  let connectionId = '';
+  let previousWasSeparator = false;
+
+  for (const char of normalizedName) {
+    const isAllowed = (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9');
+    if (isAllowed) {
+      connectionId += char;
+      previousWasSeparator = false;
+      continue;
+    }
+
+    if (connectionId.length > 0 && !previousWasSeparator) {
+      connectionId += '-';
+      previousWasSeparator = true;
+    }
+  }
+
+  if (connectionId.endsWith('-')) {
+    connectionId = connectionId.slice(0, -1);
+  }
+
+  return connectionId || 'warehouse-connection';
 }
 
 function serializeWorkspaceWarehouseCatalog(

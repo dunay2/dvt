@@ -648,11 +648,7 @@ export function createMockWarehouseSourceImportPort(
         columns: table.columns?.map((column) => ({ ...column })),
       })),
     createWarehouseConnection: async (input) => ({
-      id: input.name
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, ''),
+      id: toMockWarehouseConnectionId(input.name),
       name: input.name,
       type: input.type,
       database: input.database,
@@ -665,6 +661,31 @@ export function createMockWarehouseSourceImportPort(
     }),
     importSources: async (input) => importMockSources(state, input),
   };
+}
+
+function toMockWarehouseConnectionId(name: string): string {
+  let connectionId = '';
+  let previousWasSeparator = false;
+
+  for (const char of name.trim().toLowerCase()) {
+    const isAllowed = (char >= 'a' && char <= 'z') || (char >= '0' && char <= '9');
+    if (isAllowed) {
+      connectionId += char;
+      previousWasSeparator = false;
+      continue;
+    }
+
+    if (connectionId.length > 0 && !previousWasSeparator) {
+      connectionId += '-';
+      previousWasSeparator = true;
+    }
+  }
+
+  if (connectionId.endsWith('-')) {
+    connectionId = connectionId.slice(0, -1);
+  }
+
+  return connectionId || 'warehouse-connection';
 }
 
 export function createMockWorkspaceFilesQueryPort(
