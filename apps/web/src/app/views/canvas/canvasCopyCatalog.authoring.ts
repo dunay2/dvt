@@ -261,6 +261,26 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtWriteModeLabel',
     fallback: 'Write mode',
   },
+  inspectorDvtSourceTargetLabel: {
+    key: 'canvas.inspector.authoring.dvtSourceTargetLabel',
+    fallback: 'Source target',
+  },
+  inspectorDvtSqlBodyLabel: {
+    key: 'canvas.inspector.authoring.dvtSqlBodyLabel',
+    fallback: 'SQL body',
+  },
+  inspectorDvtSqlLineSingularLabel: {
+    key: 'canvas.inspector.authoring.dvtSqlLineSingularLabel',
+    fallback: 'line',
+  },
+  inspectorDvtSqlLinePluralLabel: {
+    key: 'canvas.inspector.authoring.dvtSqlLinePluralLabel',
+    fallback: 'lines',
+  },
+  inspectorDvtDestinationTargetLabel: {
+    key: 'canvas.inspector.authoring.dvtDestinationTargetLabel',
+    fallback: 'Destination target',
+  },
   inspectorDvtMaterializationTableLabel: {
     key: 'canvas.inspector.authoring.dvtMaterializationTableLabel',
     fallback: 'table',

@@ -199,6 +199,11 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSqlLabel: string;
   readonly inspectorDvtMaterializationLabel: string;
   readonly inspectorDvtWriteModeLabel: string;
+  readonly inspectorDvtSourceTargetLabel: string;
+  readonly inspectorDvtSqlBodyLabel: string;
+  readonly inspectorDvtSqlLineSingularLabel: string;
+  readonly inspectorDvtSqlLinePluralLabel: string;
+  readonly inspectorDvtDestinationTargetLabel: string;
   readonly inspectorDvtMaterializationTableLabel: string;
   readonly inspectorDvtMaterializationViewLabel: string;
   readonly inspectorDvtWriteModeReplaceLabel: string;
