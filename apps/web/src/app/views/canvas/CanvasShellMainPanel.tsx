@@ -51,10 +51,15 @@ function shouldRenderCanvasToolbar(routeState: CanvasShellToolbar['routeState'])
   ].includes(routeState);
 }
 
-function shouldRenderDvtFlowGuide(toolbar: CanvasShellToolbar): boolean {
+function shouldRenderDvtFlowGuide(
+  layout: Pick<CanvasShellLayout, 'centerSurface' | 'centerSurfaceMode' | 'workbenchTabPanel'>,
+  toolbar: CanvasShellToolbar
+): boolean {
   return (
     toolbar.canvasAuthoringMode === 'transformation' &&
-    shouldRenderCanvasToolbar(toolbar.routeState)
+    shouldRenderCanvasToolbar(toolbar.routeState) &&
+    layout.workbenchTabPanel == null &&
+    !(layout.centerSurface != null && layout.centerSurfaceMode === 'replace')
   );
 }
 
@@ -244,9 +249,9 @@ export function CanvasShellMainPanel({
           chromeCommands={chromeCommands}
         />
         {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
-        {shouldRenderDvtFlowGuide(toolbar) ? (
+        {shouldRenderDvtFlowGuide(layout, toolbar) ? (
           <CanvasDvtFlowGuide
-            nodes={panels.inspectorGraphNodes}
+            nodes={graph.nodesWithImpact}
             validation={toolbar.transformationValidation}
           />
         ) : null}

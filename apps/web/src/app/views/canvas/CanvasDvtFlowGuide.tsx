@@ -1,4 +1,5 @@
 /** Owned concern: render the DVT source -> SQL -> sink flow proof above the Canvas viewport. */
+import type { Node } from '@xyflow/react';
 import { Code2, Database, SendHorizontal } from 'lucide-react';
 
 import { cn } from '../../components/ui/utils';
@@ -8,7 +9,7 @@ import type { TransformationGraphValidationResult } from './transformationGraphV
 import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
 
 type CanvasDvtFlowGuideProps = Readonly<{
-  nodes: readonly CanonicalNode[];
+  nodes: readonly Node[];
   validation: TransformationGraphValidationResult;
 }>;
 
@@ -133,9 +134,34 @@ function readDestinationChips(node: CanonicalNode | null): readonly string[] {
 }
 
 export function CanvasDvtFlowGuide({ nodes, validation }: CanvasDvtFlowGuideProps): JSX.Element {
-  const sourceNode = findFlowNode('source', nodes, validation);
-  const transformNode = findFlowNode('sql_transform', nodes, validation);
-  const sinkNode = findFlowNode('sink', nodes, validation);
+  const visibleCanonicalNodes: CanonicalNode[] = nodes.map((node) => {
+    const data = node.data;
+    const pluginKind =
+      typeof data.pluginKind === 'string' ? data.pluginKind : ('dvt:unknown' as const);
+    const [pluginId] = pluginKind.split(':');
+    const metadata = readMetadataRecord(data.metadata);
+    const tags = Array.isArray(data.tags)
+      ? data.tags.filter((tag): tag is string => typeof tag === 'string')
+      : [];
+
+    return {
+      id: node.id,
+      name: typeof data.name === 'string' ? data.name : node.id,
+      pluginId: pluginId || 'dvt',
+      kind: pluginKind as CanonicalNode['kind'],
+      role: (typeof data.role === 'string' ? data.role : 'transform') as CanonicalNode['role'],
+      status: (typeof data.status === 'string' ? data.status : 'idle') as CanonicalNode['status'],
+      tags,
+      path: typeof data.path === 'string' ? data.path : undefined,
+      description: typeof data.description === 'string' ? data.description : undefined,
+      lastDuration: typeof data.lastDuration === 'number' ? data.lastDuration : undefined,
+      lastCost: typeof data.lastCost === 'number' ? data.lastCost : undefined,
+      metadata: metadata == null ? undefined : metadata,
+    };
+  });
+  const sourceNode = findFlowNode('source', visibleCanonicalNodes, validation);
+  const transformNode = findFlowNode('sql_transform', visibleCanonicalNodes, validation);
+  const sinkNode = findFlowNode('sink', visibleCanonicalNodes, validation);
   const sourceColumns = readColumns(sourceNode);
   const destinationChips = readDestinationChips(sinkNode);
 
