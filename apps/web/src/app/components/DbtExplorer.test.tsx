@@ -70,7 +70,10 @@ function buildWarehouseSourceImportPort(
     buildWarehouseTable({
       table: 'CUSTOMERS',
       rowCount: 45000,
-      columns: [{ name: 'customer_id', type: 'INTEGER', nullable: false }],
+      columns: [
+        { name: 'customer_id', type: 'INTEGER', nullable: false },
+        { name: 'email', type: 'VARCHAR', nullable: true },
+      ],
     }),
   ]
 ): IWarehouseSourceImportPort {
@@ -216,6 +219,11 @@ describe('DbtExplorer', () => {
     expect(container.textContent).toContain('Production Warehouse');
     expect(container.textContent).toContain('ORDERS');
     expect(container.textContent).toContain('CUSTOMERS');
+    expect(container.textContent).toContain('RAW.ERP.ORDERS');
+    expect(container.textContent).toContain('125,000 rows');
+    expect(container.textContent).toContain('Origin metadata');
+    expect(container.textContent).toContain('Destination target');
+    expect(container.textContent).toContain('Choose a DVT Sink output target');
 
     const search = container.querySelector<HTMLInputElement>(
       '[aria-label="Search warehouse source objects"]'
@@ -231,6 +239,12 @@ describe('DbtExplorer', () => {
 
     expect(container.textContent).not.toContain('ORDERS');
     expect(container.textContent).toContain('CUSTOMERS');
+    expect(container.textContent).toContain('RAW.ERP.CUSTOMERS');
+    expect(container.textContent).toContain('customer_id');
+    expect(container.textContent).toContain('INTEGER');
+    expect(container.textContent).toContain('Required');
+    expect(container.textContent).toContain('email');
+    expect(container.textContent).toContain('Nullable');
 
     const customerRow = Array.from(
       container.querySelectorAll<HTMLElement>('[data-source-table]')
@@ -240,6 +254,9 @@ describe('DbtExplorer', () => {
     await act(async () => {
       customerRow?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
+
+    expect(container.textContent).toContain('Selected origins');
+    expect(container.textContent).toContain('1 source object selected');
 
     const registerSelected = findButton(container, 'Register selected');
     expect(registerSelected).toBeDefined();

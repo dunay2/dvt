@@ -222,12 +222,28 @@ describe('SourceImportWizard', () => {
     await renderWizard({
       initialSelection: {
         connectionId: 'conn-1',
-        tables: [buildWarehouseTable({ table: 'CUSTOMERS' })],
+        tables: [
+          buildWarehouseTable({
+            table: 'CUSTOMERS',
+            rowCount: 45000,
+            columns: [
+              { name: 'customer_id', type: 'NUMBER', nullable: false },
+              { name: 'email', type: 'VARCHAR', nullable: true },
+            ],
+          }),
+        ],
       },
       warehouseSourceImport: buildWarehouseSourceImportPort({
         listWarehouseTables: async () => [
           buildWarehouseTable({ table: 'ORDERS' }),
-          buildWarehouseTable({ table: 'CUSTOMERS' }),
+          buildWarehouseTable({
+            table: 'CUSTOMERS',
+            rowCount: 45000,
+            columns: [
+              { name: 'customer_id', type: 'NUMBER', nullable: false },
+              { name: 'email', type: 'VARCHAR', nullable: true },
+            ],
+          }),
         ],
       }),
     });
@@ -236,6 +252,14 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Select Tables');
     expect(document.body.textContent).toContain('CUSTOMERS');
     expect(document.body.textContent).toContain('Selected: 1');
+    expect(document.body.textContent).toContain('RAW.ERP.CUSTOMERS');
+    expect(document.body.textContent).toContain('45,000 rows');
+    expect(document.body.textContent).toContain('customer_id');
+    expect(document.body.textContent).toContain('NUMBER');
+    expect(document.body.textContent).toContain('Required');
+    expect(document.body.textContent).toContain('email');
+    expect(document.body.textContent).toContain('Nullable');
+    expect(document.body.textContent).toContain('Destination is configured on a DVT Sink node');
   });
 
   it('does not carry explorer preselection into a different warehouse connection', async () => {
