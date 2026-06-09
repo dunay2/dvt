@@ -300,6 +300,68 @@ test('tracked migrations keep component roadmap refs scoped to components or ids
   assert.match(componentRoadmapFilterMigration.sql, /componentRefFilter/);
 });
 
+test('tracked migrations expose documentation panels as relational DB facts', () => {
+  const migrations = readMigrationFiles();
+  const documentationPanelMigration = migrations.find(
+    (migration) => migration.fileName === '070_documentation_panel_query.sql'
+  );
+
+  assert.ok(documentationPanelMigration);
+  assert.match(
+    documentationPanelMigration.sql,
+    /create or replace view planning_query_store\.documentation_panel_query/
+  );
+  assert.match(documentationPanelMigration.sql, /documentation_lifecycle_query/);
+  assert.match(documentationPanelMigration.sql, /component_roadmap_query/);
+  assert.match(documentationPanelMigration.sql, /knowledge_document_sections/);
+  assert.match(documentationPanelMigration.sql, /missing_required_section/);
+  assert.match(documentationPanelMigration.sql, /Documentation panel catalog/);
+});
+
+test('tracked migrations harden documentation panel reads against unbounded roadmap joins', () => {
+  const migrations = readMigrationFiles();
+  const documentationPanelHardeningMigration = migrations.find(
+    (migration) => migration.fileName === '071_documentation_panel_query_runtime_hardening.sql'
+  );
+
+  assert.ok(documentationPanelHardeningMigration);
+  assert.match(
+    documentationPanelHardeningMigration.sql,
+    /create or replace view planning_query_store\.documentation_panel_query/
+  );
+  assert.match(documentationPanelHardeningMigration.sql, /''::text as component_id/);
+  assert.match(documentationPanelHardeningMigration.sql, /panelRuntimeScope/);
+  assert.doesNotMatch(
+    documentationPanelHardeningMigration.sql,
+    /left join planning_query_store\.component_roadmap_query roadmap\s+on roadmap\.source_path = lifecycle\.document_path/
+  );
+});
+
+test('tracked migrations scope required documentation panel sections to component and proposal docs', () => {
+  const migrations = readMigrationFiles();
+  const documentationPanelScopeMigration = migrations.find(
+    (migration) => migration.fileName === '072_documentation_panel_gap_scope.sql'
+  );
+
+  assert.ok(documentationPanelScopeMigration);
+  assert.match(
+    documentationPanelScopeMigration.sql,
+    /create or replace view planning_query_store\.documentation_panel_query/
+  );
+  assert.match(
+    documentationPanelScopeMigration.sql,
+    /lifecycle\.document_path like 'docs\/architecture\/components\/%'/
+  );
+  assert.match(
+    documentationPanelScopeMigration.sql,
+    /lifecycle\.document_path like 'docs\/planning\/proposals\/%'/
+  );
+  assert.doesNotMatch(
+    documentationPanelScopeMigration.sql,
+    /lifecycle\.canonicality = 'canonical'/
+  );
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

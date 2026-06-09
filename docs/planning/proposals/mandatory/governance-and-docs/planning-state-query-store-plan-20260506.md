@@ -1717,6 +1717,9 @@ commandQueryRails:
   - name: ListSystemComponentRoadmap
     type: query
     dddOwner: SystemComponentRoadmapReadModel
+  - name: ListDocumentationPanels
+    type: query
+    dddOwner: DocumentationPanelReadModel
   - name: QueryDocsDispositionQueue
     type: query
     dddOwner: DocsDispositionQueue
@@ -1805,6 +1808,9 @@ domainObjects:
   - name: SystemComponentRoadmapReadModel
     type: read model
     owner: Product / Architecture / Delivery / Docs
+  - name: DocumentationPanelReadModel
+    type: read model
+    owner: Product / Architecture / Delivery / Docs
   - name: DocsDispositionQueue
     type: read model
     owner: Docs governance
@@ -1849,6 +1855,7 @@ fowlerSignals:
   - Manual docs disposition inventory
   - Manual task provenance reconstruction
   - Manual component contract reconstruction
+  - Manual documentation panel reconstruction from prose
   - Manual docs disposition resolution
   - Manual work intake reconstruction
   - Split active-task and intake queues hide real backlog
@@ -1880,6 +1887,7 @@ completionGate:
   - pnpm planning:db:query debt --limit 10
   - pnpm planning:db:query cer --component SYS-API-HTTP-ENTRYPOINTS --limit 1
   - pnpm planning:db:query units --unit SYS-API-ROOT --limit 5
+  - pnpm planning:db:query documentation-panels --limit 10
   - pnpm planning:db:query hash-drift
   - pnpm planning:db:export
   - pnpm planning:db:export:check
@@ -2192,6 +2200,19 @@ redGreenCycles:
       - scripts/planning-db-query.test.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
     greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - id: planning-db-documentation-panel-query
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    expectedFailure: Agents and future UI panels still reconstruct documentation/component properties from prose files because the query store has no relational documentation panel projection or planning:db:query documentation-panels adapter.
+    patchSurfaces:
+      - tools/planning-db/migrations/070_documentation_panel_query.sql
+      - tools/planning-db/migrations/071_documentation_panel_query_runtime_hardening.sql
+      - tools/planning-db/migrations/072_documentation_panel_gap_scope.sql
+      - scripts/planning-db/queries/documentation-panel-query.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - scripts/planning-db-query.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
 symbols:
   - name: PlanningAndGovernanceQueryStorePlan
     path: docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
@@ -2220,6 +2241,7 @@ symbols:
       - ValidateSystemGovernanceGenerationWorkflow
       - ReadGovernanceUnitTree
       - ListSystemComponentRoadmap
+      - ListDocumentationPanels
     fowlerSignals:
       - Large planning file operating cost
       - Generated artifact churn
@@ -2230,6 +2252,7 @@ symbols:
       - Manual docs disposition resolution
       - Manual work intake reconstruction
       - Manual governance hierarchy reconstruction
+      - Manual documentation panel reconstruction from prose
       - Mutable external tracker authority risk
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning query-store proposal has no browser workflow.
@@ -2291,6 +2314,64 @@ symbols:
     path: scripts/planning-db-query.test.cjs
   - <<: *componentRoadmapQuerySymbol
     name: ComponentRoadmapMigrationTests
+    path: scripts/planning-db-migrate.test.cjs
+  - &documentationPanelQuerySymbol
+    name: DocumentationPanelQueryMigration
+    path: tools/planning-db/migrations/070_documentation_panel_query.sql
+    dddOwner: DocumentationPanelReadModel
+    cqRails:
+      - ListDocumentationPanels
+      - MigratePlanningQueryStoreSchema
+    fowlerSignals:
+      - Hidden query model inside governance shards
+      - Manual documentation panel reconstruction from prose
+      - Manual component contract reconstruction
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - planning DB documentation panel query has no browser workflow.
+    unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: DocumentationPanelRuntimeHardeningMigration
+    path: tools/planning-db/migrations/071_documentation_panel_query_runtime_hardening.sql
+  - <<: *documentationPanelQuerySymbol
+    name: DocumentationPanelGapScopeMigration
+    path: tools/planning-db/migrations/072_documentation_panel_gap_scope.sql
+  - <<: *documentationPanelQuerySymbol
+    name: createDocumentationPanelReadModelComponent
+    path: scripts/planning-db/queries/documentation-panel-query.cjs
+    cqRails:
+      - ListDocumentationPanels
+  - <<: *documentationPanelQuerySymbol
+    name: parseLimit
+    path: scripts/planning-db/queries/documentation-panel-query.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: appendFilter
+    path: scripts/planning-db/queries/documentation-panel-query.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: appendBooleanFilter
+    path: scripts/planning-db/queries/documentation-panel-query.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: textValue
+    path: scripts/planning-db/queries/documentation-panel-query.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: buildDocumentationPanelRows
+    path: scripts/planning-db/queries/documentation-panel-query.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: documentationPanelSelect
+    path: scripts/planning-db/queries/documentation-panel-query.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: readDocumentationPanelRows
+    path: scripts/planning-db/queries/documentation-panel-query.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: PlanningDbQueryDocumentationPanelAdapter
+    path: scripts/planning-db-query.cjs
+    cqRails:
+      - ListDocumentationPanels
+  - <<: *documentationPanelQuerySymbol
+    name: DocumentationPanelQueryTests
+    path: scripts/planning-db-query.test.cjs
+  - <<: *documentationPanelQuerySymbol
+    name: DocumentationPanelMigrationTests
     path: scripts/planning-db-migrate.test.cjs
   - &planningDbRuntimeSymbol
     name: PlanningDbDockerCompose
