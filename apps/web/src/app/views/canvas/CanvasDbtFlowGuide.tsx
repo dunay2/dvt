@@ -1,5 +1,5 @@
 /** Owned concern: render the dbt source -> model -> validation proof above the Canvas viewport. */
-import type { Node } from '@xyflow/react';
+import type { Edge, Node } from '@xyflow/react';
 import { CheckCircle2, Code2, Database } from 'lucide-react';
 
 import { cn } from '../../components/ui/utils';
@@ -9,6 +9,7 @@ import { canvasViewCopy } from './copy';
 
 type CanvasDbtFlowGuideProps = Readonly<{
   nodes: readonly Node[];
+  edges: readonly Edge[];
   ready: boolean;
 }>;
 
@@ -18,6 +19,12 @@ type DbtColumn = Readonly<{
   name: string;
   type: string;
   nullable?: boolean;
+}>;
+
+type DbtFlow = Readonly<{
+  sourceNode: CanonicalNode | null;
+  modelNode: CanonicalNode | null;
+  testNode: CanonicalNode | null;
 }>;
 
 function readMetadataRecord(value: unknown): Record<string, unknown> | null {
@@ -70,8 +77,58 @@ function roleMatchesNode(role: DbtFlowRole, node: CanonicalNode): boolean {
   }
 }
 
-function findFlowNode(role: DbtFlowRole, nodes: readonly CanonicalNode[]): CanonicalNode | null {
-  return nodes.find((node) => roleMatchesNode(role, node)) ?? null;
+function edgeConnects(edge: Edge, sourceId: string, targetId: string): boolean {
+  return edge.source === sourceId && edge.target === targetId;
+}
+
+function findIncomingSource(
+  modelNode: CanonicalNode,
+  sourceNodes: readonly CanonicalNode[],
+  edges: readonly Edge[]
+): CanonicalNode | null {
+  return (
+    sourceNodes.find((sourceNode) =>
+      edges.some((edge) => edgeConnects(edge, sourceNode.id, modelNode.id))
+    ) ?? null
+  );
+}
+
+function findOutgoingTest(
+  modelNode: CanonicalNode,
+  testNodes: readonly CanonicalNode[],
+  edges: readonly Edge[]
+): CanonicalNode | null {
+  return (
+    testNodes.find((testNode) =>
+      edges.some((edge) => edgeConnects(edge, modelNode.id, testNode.id))
+    ) ?? null
+  );
+}
+
+function resolveConnectedDbtFlow(nodes: readonly CanonicalNode[], edges: readonly Edge[]): DbtFlow {
+  const sourceNodes = nodes.filter((node) => roleMatchesNode('source', node));
+  const modelNodes = nodes.filter((node) => roleMatchesNode('model', node));
+  const testNodes = nodes.filter((node) => roleMatchesNode('test', node));
+
+  for (const modelNode of modelNodes) {
+    const sourceNode = findIncomingSource(modelNode, sourceNodes, edges);
+    const testNode = findOutgoingTest(modelNode, testNodes, edges);
+
+    if (sourceNode != null || testNode != null) {
+      return {
+        sourceNode,
+        modelNode,
+        testNode,
+      };
+    }
+  }
+
+  const modelNode = modelNodes[0] ?? null;
+  return {
+    sourceNode: modelNode == null ? (sourceNodes[0] ?? null) : null,
+    modelNode,
+    testNode: null,
+  };
 }
 
 function readColumns(node: CanonicalNode | null): DbtColumn[] {
@@ -122,10 +179,7 @@ function summarizeSource(node: CanonicalNode | null): string {
   return `${metadata.sourceName}.${metadata.schemaName}.${metadata.tableName}`;
 }
 
-function summarizeModelSql(
-  modelNode: CanonicalNode | null,
-  sourceNode: CanonicalNode | null
-): string {
+function summarizeModelSql(modelNode: CanonicalNode | null): string {
   const compiledSql = readString(modelNode?.metadata?.compiledSql);
   if (compiledSql != null) {
     return (
@@ -134,11 +188,6 @@ function summarizeModelSql(
         .map((line) => line.trim())
         .find((line) => line.length > 0) ?? canvasViewCopy.dbtFlowGuideSqlMissingMessage
     );
-  }
-
-  if (sourceNode != null) {
-    const sourceMetadata = createDbtNodeAuthoringMetadata(sourceNode);
-    return `select * from {{ source("${sourceMetadata.sourceName}", "${sourceMetadata.tableName}") }}`;
   }
 
   return canvasViewCopy.dbtFlowGuideSqlMissingMessage;
@@ -160,11 +209,9 @@ function summarizeTestSeverity(node: CanonicalNode | null): string {
   return readString(config?.severity) ?? canvasViewCopy.dbtFlowGuideTestSeverityUnknownLabel;
 }
 
-export function CanvasDbtFlowGuide({ nodes, ready }: CanvasDbtFlowGuideProps): JSX.Element {
+export function CanvasDbtFlowGuide({ nodes, edges, ready }: CanvasDbtFlowGuideProps): JSX.Element {
   const visibleCanonicalNodes = nodes.map(mapViewportNodeToCanonical);
-  const sourceNode = findFlowNode('source', visibleCanonicalNodes);
-  const modelNode = findFlowNode('model', visibleCanonicalNodes);
-  const testNode = findFlowNode('test', visibleCanonicalNodes);
+  const { sourceNode, modelNode, testNode } = resolveConnectedDbtFlow(visibleCanonicalNodes, edges);
   const sourceColumns = readColumns(sourceNode);
   const modelColumns = readColumns(modelNode);
   const modelChips = summarizeModelChips(modelNode);
@@ -238,7 +285,7 @@ export function CanvasDbtFlowGuide({ nodes, ready }: CanvasDbtFlowGuideProps): J
               {modelNode?.name ?? canvasViewCopy.dbtFlowGuideModelMissingMessage}
             </code>
             <code className="mt-2 block truncate text-xs text-[var(--text-muted)]">
-              {summarizeModelSql(modelNode, sourceNode)}
+              {summarizeModelSql(modelNode)}
             </code>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {modelChips.map((chip) => (

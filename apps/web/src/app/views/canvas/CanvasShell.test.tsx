@@ -830,6 +830,177 @@ describe('CanvasShell', () => {
     expect(guide?.textContent).not.toContain('stale.legacy.orders');
   });
 
+  it('scopes the DBT flow guide to a connected dbt path instead of first visible nodes', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            graph: {
+              nodesWithImpact: [
+                {
+                  id: 'src-crm-customers',
+                  type: 'dbtNode',
+                  position: { x: 0, y: 160 },
+                  data: {
+                    name: 'CRM Customers',
+                    pluginKind: 'dbt:source',
+                    role: 'input',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      dbt: {
+                        sourceName: 'raw',
+                        schemaName: 'crm',
+                        tableName: 'customers',
+                      },
+                      columns: [{ name: 'customer_id', type: 'integer', nullable: false }],
+                    },
+                  },
+                },
+                {
+                  id: 'model-fct-orders',
+                  type: 'dbtNode',
+                  position: { x: 260, y: 0 },
+                  data: {
+                    name: 'fct_orders',
+                    pluginKind: 'dbt:model',
+                    role: 'transform',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      compiledSql: 'select order_id from {{ source("raw", "orders") }}',
+                      config: {
+                        materialized: 'table',
+                      },
+                    },
+                  },
+                },
+                {
+                  id: 'src-raw-orders',
+                  type: 'dbtNode',
+                  position: { x: 0, y: 0 },
+                  data: {
+                    name: 'Raw Orders',
+                    pluginKind: 'dbt:source',
+                    role: 'input',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      dbt: {
+                        sourceName: 'raw',
+                        schemaName: 'erp',
+                        tableName: 'orders',
+                      },
+                      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+                    },
+                  },
+                },
+                {
+                  id: 'test-fct-orders-not-null',
+                  type: 'dbtNode',
+                  position: { x: 520, y: 0 },
+                  data: {
+                    name: 'not_null_fct_orders_order_id',
+                    pluginKind: 'dbt:test',
+                    role: 'check',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      config: {
+                        severity: 'error',
+                      },
+                    },
+                  },
+                },
+              ],
+              edges: [
+                { id: 'source-model', source: 'src-raw-orders', target: 'model-fct-orders' },
+                {
+                  id: 'model-test',
+                  source: 'model-fct-orders',
+                  target: 'test-fct-orders-not-null',
+                },
+              ],
+            },
+            toolbar: {
+              canvasAuthoringMode: 'dbt',
+              canPlanGraph: true,
+            },
+          })}
+        />
+      );
+    });
+
+    const guide = container.querySelector('[data-slot="canvas-dbt-flow-guide"]');
+
+    expect(guide?.textContent).toContain('raw.erp.orders');
+    expect(guide?.textContent).toContain('fct_orders');
+    expect(guide?.textContent).toContain('not_null_fct_orders_order_id');
+    expect(guide?.textContent).not.toContain('raw.crm.customers');
+  });
+
+  it('does not synthesize DBT model SQL when the model has no compiled SQL', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            graph: {
+              nodesWithImpact: [
+                {
+                  id: 'src-raw-orders',
+                  type: 'dbtNode',
+                  position: { x: 0, y: 0 },
+                  data: {
+                    name: 'Raw Orders',
+                    pluginKind: 'dbt:source',
+                    role: 'input',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      dbt: {
+                        sourceName: 'raw',
+                        schemaName: 'erp',
+                        tableName: 'orders',
+                      },
+                    },
+                  },
+                },
+                {
+                  id: 'model-fct-orders',
+                  type: 'dbtNode',
+                  position: { x: 260, y: 0 },
+                  data: {
+                    name: 'fct_orders',
+                    pluginKind: 'dbt:model',
+                    role: 'transform',
+                    status: 'idle',
+                    tags: [],
+                    metadata: {
+                      config: {
+                        materialized: 'view',
+                      },
+                    },
+                  },
+                },
+              ],
+              edges: [{ id: 'source-model', source: 'src-raw-orders', target: 'model-fct-orders' }],
+            },
+            toolbar: {
+              canvasAuthoringMode: 'dbt',
+              canPlanGraph: false,
+              canStartRun: false,
+            },
+          })}
+        />
+      );
+    });
+
+    const guide = container.querySelector('[data-slot="canvas-dbt-flow-guide"]');
+
+    expect(guide?.textContent).toContain('SQL missing');
+    expect(guide?.textContent).not.toContain('select * from {{ source("raw", "orders") }}');
+  });
+
   it('closes the import wizard if edit permissions are revoked while it is open', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);

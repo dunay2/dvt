@@ -271,6 +271,7 @@ export function CanvasShellMainPanel({
         {shouldRenderDbtFlowGuide(layout, toolbar) ? (
           <CanvasDbtFlowGuide
             nodes={graph.nodesWithImpact}
+            edges={graph.edges}
             ready={toolbar.canPlanGraph || toolbar.canStartRun}
           />
         ) : null}
