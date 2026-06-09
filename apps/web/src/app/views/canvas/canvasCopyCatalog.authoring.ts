@@ -357,6 +357,86 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.dvtFlowGuide.columnsMissingMessage',
     fallback: 'Column metadata unavailable',
   },
+  dbtFlowGuideTitle: {
+    key: 'canvas.dbtFlowGuide.title',
+    fallback: 'Professional dbt flow',
+  },
+  dbtFlowGuideReadyLabel: {
+    key: 'canvas.dbtFlowGuide.readyLabel',
+    fallback: 'Ready to preview',
+  },
+  dbtFlowGuideNeedsWorkLabel: {
+    key: 'canvas.dbtFlowGuide.needsWorkLabel',
+    fallback: 'Needs work',
+  },
+  dbtFlowGuideSummary: {
+    key: 'canvas.dbtFlowGuide.summary',
+    fallback: 'Review source metadata, model SQL, and dbt validation before planning.',
+  },
+  dbtFlowGuideSourceTitle: {
+    key: 'canvas.dbtFlowGuide.sourceTitle',
+    fallback: 'dbt source',
+  },
+  dbtFlowGuideModelTitle: {
+    key: 'canvas.dbtFlowGuide.modelTitle',
+    fallback: 'dbt model',
+  },
+  dbtFlowGuideTestTitle: {
+    key: 'canvas.dbtFlowGuide.testTitle',
+    fallback: 'dbt validation',
+  },
+  dbtFlowGuideRowsUnknownLabel: {
+    key: 'canvas.dbtFlowGuide.rowsUnknownLabel',
+    fallback: 'Rows unknown',
+  },
+  dbtFlowGuideRowLabel: {
+    key: 'canvas.dbtFlowGuide.rowLabel',
+    fallback: 'row',
+  },
+  dbtFlowGuideRowsLabel: {
+    key: 'canvas.dbtFlowGuide.rowsLabel',
+    fallback: 'rows',
+  },
+  dbtFlowGuideColumnLabel: {
+    key: 'canvas.dbtFlowGuide.columnLabel',
+    fallback: 'column',
+  },
+  dbtFlowGuideColumnsLabel: {
+    key: 'canvas.dbtFlowGuide.columnsLabel',
+    fallback: 'columns',
+  },
+  dbtFlowGuideNullableLabel: {
+    key: 'canvas.dbtFlowGuide.nullableLabel',
+    fallback: 'nullable',
+  },
+  dbtFlowGuideRequiredLabel: {
+    key: 'canvas.dbtFlowGuide.requiredLabel',
+    fallback: 'required',
+  },
+  dbtFlowGuideSourceMissingMessage: {
+    key: 'canvas.dbtFlowGuide.sourceMissingMessage',
+    fallback: 'Source missing',
+  },
+  dbtFlowGuideModelMissingMessage: {
+    key: 'canvas.dbtFlowGuide.modelMissingMessage',
+    fallback: 'Model missing',
+  },
+  dbtFlowGuideSqlMissingMessage: {
+    key: 'canvas.dbtFlowGuide.sqlMissingMessage',
+    fallback: 'SQL missing',
+  },
+  dbtFlowGuideTestMissingMessage: {
+    key: 'canvas.dbtFlowGuide.testMissingMessage',
+    fallback: 'Validation missing',
+  },
+  dbtFlowGuideTestSeverityUnknownLabel: {
+    key: 'canvas.dbtFlowGuide.testSeverityUnknownLabel',
+    fallback: 'severity unknown',
+  },
+  dbtFlowGuideColumnsMissingMessage: {
+    key: 'canvas.dbtFlowGuide.columnsMissingMessage',
+    fallback: 'Column metadata unavailable',
+  },
   inspectorErrorNodeNameRequired: {
     key: 'canvas.inspector.authoring.errorNodeNameRequired',
     fallback: 'Node name is required.',
