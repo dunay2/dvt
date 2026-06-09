@@ -42,6 +42,7 @@ const {
   buildFeatureMechanizationValidationRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
+  buildDocumentationPanelRows,
   buildDocumentationLifecycleRows,
   buildDbSurfaceRows,
   buildSummaryRows,
@@ -78,6 +79,7 @@ const {
   readFeatureMechanizationValidationRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
+  readDocumentationPanelRows,
   readDocumentationLifecycleRows,
   readDbSurfaceRows,
   readDocsDispositionRows,
@@ -274,6 +276,16 @@ test('DB surface inventory query behavior lives in a focused read-model componen
   assert.equal(dbSurfaceInventoryComponent.readDbSurfaceRows, readDbSurfaceRows);
 });
 
+test('documentation panel query behavior lives in a focused read-model component', () => {
+  const documentationPanelComponent = require('./planning-db/queries/documentation-panel-query.cjs');
+
+  assert.equal(
+    documentationPanelComponent.buildDocumentationPanelRows,
+    buildDocumentationPanelRows
+  );
+  assert.equal(documentationPanelComponent.readDocumentationPanelRows, readDocumentationPanelRows);
+});
+
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');
   assert.equal(resolveQueryName('summary'), 'summary');
@@ -338,6 +350,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('architecture-enforcement'), 'architecture-enforcement');
   assert.equal(resolveQueryName('architecture-evidence'), 'architecture-evidence');
   assert.equal(resolveQueryName('component-roadmap'), 'component-roadmap');
+  assert.equal(resolveQueryName('documentation-panels'), 'documentation-panels');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -1110,6 +1123,46 @@ test('parseArgs parses documentation lifecycle logic filters', () => {
         state: 'proposed',
         kind: 'proposal_missing_canonical',
         subject: 'canvas-modeler',
+        limit: 9,
+      },
+    }
+  );
+});
+
+test('parseArgs parses documentation panel query filters', () => {
+  assert.deepEqual(
+    parseArgs([
+      'documentation-panels',
+      '--component',
+      'SYS-WEB-ROOT',
+      '--path',
+      'docs/architecture/components/web/index.md',
+      '--state',
+      'ready',
+      '--kind',
+      'missing_required_section',
+      '--type',
+      'component',
+      '--surface',
+      'properties',
+      '--subject',
+      'overview',
+      '--gaps',
+      'false',
+      '--limit',
+      '9',
+    ]),
+    {
+      queryName: 'documentation-panels',
+      filters: {
+        component: 'SYS-WEB-ROOT',
+        path: 'docs/architecture/components/web/index.md',
+        state: 'ready',
+        kind: 'missing_required_section',
+        type: 'component',
+        surface: 'properties',
+        subject: 'overview',
+        gaps: false,
         limit: 9,
       },
     }
@@ -2726,6 +2779,149 @@ test('runQuery dispatches documentation-lifecycle through the DB-first lifecycle
       'docs/architecture/components/example.md',
       'example',
       'Example Component',
+    ],
+  ]);
+});
+
+test('buildDocumentationPanelRows exposes relational panel fields without prose parsing', () => {
+  const rows = buildDocumentationPanelRows([
+    {
+      panel_id: 'component:SYS-WEB-ROOT:properties',
+      panel_surface: 'properties',
+      entity_kind: 'component',
+      entity_id: 'SYS-WEB-ROOT',
+      section_kind: 'overview',
+      field_key: 'title',
+      field_value: 'Web Root',
+      source_path: 'docs/architecture/components/web/index.md',
+      component_id: 'SYS-WEB-ROOT',
+      panel_state: 'ready',
+      gap_kind: 'none',
+    },
+  ]);
+
+  assert.deepEqual(rows, [
+    [
+      'component:SYS-WEB-ROOT:properties',
+      'properties',
+      'component',
+      'SYS-WEB-ROOT',
+      'overview',
+      'title',
+      'Web Root',
+      'ready',
+      'none',
+      'SYS-WEB-ROOT',
+      'docs/architecture/components/web/index.md',
+    ],
+  ]);
+});
+
+test('readDocumentationPanelRows queries DB-first panel facts with entity and gap filters', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readDocumentationPanelRows(client, {
+    component: 'SYS-WEB-ROOT',
+    path: 'docs/architecture/components/web/index.md',
+    state: 'ready',
+    kind: 'missing_required_section',
+    type: 'component',
+    surface: 'properties',
+    subject: 'overview',
+    gaps: true,
+    limit: 7,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.documentation_panel_query/);
+  assert.match(captured.sql, /\(component_id = \$1 or entity_id = \$1\)/);
+  assert.match(captured.sql, /source_path = \$2/);
+  assert.match(captured.sql, /panel_state = \$3/);
+  assert.match(captured.sql, /gap_kind = \$4/);
+  assert.match(captured.sql, /entity_kind = \$5/);
+  assert.match(captured.sql, /panel_surface = \$6/);
+  assert.match(captured.sql, /section_kind = \$7/);
+  assert.match(captured.sql, /gap_kind <> 'none'/);
+  assert.match(captured.sql, /limit \$8/);
+  assert.deepEqual(captured.params, [
+    'SYS-WEB-ROOT',
+    'docs/architecture/components/web/index.md',
+    'ready',
+    'missing_required_section',
+    'component',
+    'properties',
+    'overview',
+    7,
+  ]);
+});
+
+test('readDocumentationPanelRows defaults unscoped reads to actionable panel gaps', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readDocumentationPanelRows(client, { limit: 7 });
+
+  assert.match(captured.sql, /where is_gap is true/);
+  assert.match(captured.sql, /limit \$1/);
+  assert.deepEqual(captured.params, [7]);
+});
+
+test('runQuery dispatches documentation-panels through the DB-first panel map', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /documentation_panel_query/);
+      return {
+        rows: [
+          {
+            panel_id: 'document:docs/architecture/components/web/index.md:metadata',
+            panel_surface: 'metadata',
+            entity_kind: 'document',
+            entity_id: 'docs/architecture/components/web/index.md',
+            section_kind: 'frontmatter',
+            field_key: 'status',
+            field_value: 'Active',
+            source_path: 'docs/architecture/components/web/index.md',
+            component_id: 'SYS-WEB-ROOT',
+            panel_state: 'ready',
+            gap_kind: 'none',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'documentation-panels',
+    filters: { type: 'document', state: 'ready', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'document:docs/architecture/components/web/index.md:metadata',
+      'metadata',
+      'document',
+      'docs/architecture/components/web/index.md',
+      'frontmatter',
+      'status',
+      'Active',
+      'ready',
+      'none',
+      'SYS-WEB-ROOT',
+      'docs/architecture/components/web/index.md',
     ],
   ]);
 });
