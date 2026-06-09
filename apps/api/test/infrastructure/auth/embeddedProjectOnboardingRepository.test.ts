@@ -81,6 +81,8 @@ describe('EmbeddedProjectOnboardingRepository', () => {
           expect.objectContaining({
             allowedActions: expect.arrayContaining([
               'workspace:source-import:view',
+              'workspace:source-connection:create',
+              'workspace:source-connection:test',
               'workspace:source-import:import',
               'workspace:plugins:view',
             ]),
@@ -89,6 +91,8 @@ describe('EmbeddedProjectOnboardingRepository', () => {
                 environmentId: PROJECT_ONBOARDING_DEFAULT_ENVIRONMENT_ID,
                 allowedActions: expect.arrayContaining([
                   'workspace:source-import:view',
+                  'workspace:source-connection:create',
+                  'workspace:source-connection:test',
                   'workspace:source-import:import',
                   'workspace:plugins:view',
                 ]),

@@ -647,6 +647,22 @@ export function createMockWarehouseSourceImportPort(
         ...table,
         columns: table.columns?.map((column) => ({ ...column })),
       })),
+    createWarehouseConnection: async (input) => ({
+      id: input.name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, ''),
+      name: input.name,
+      type: input.type,
+      database: input.database,
+    }),
+    testWarehouseConnection: async (connectionId) => ({
+      connectionId,
+      status: 'passed',
+      checkedAt: '2026-06-08T00:00:00.000Z',
+      tableCount: mockWarehouseTablesByConnectionId[connectionId]?.length ?? 0,
+    }),
     importSources: async (input) => importMockSources(state, input),
   };
 }

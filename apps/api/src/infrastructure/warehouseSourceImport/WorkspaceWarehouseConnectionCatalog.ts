@@ -2,12 +2,16 @@
 import { z } from 'zod';
 
 import type {
+  CreateWarehouseConnectionCatalogInput,
   IWarehouseConnectionCatalog,
   WarehouseConnection,
   WarehouseConnectionCatalogEntry,
   WarehouseTable,
 } from '../../application/ports/warehouseSourceImport.js';
-import { WarehouseConnectionNotFoundError } from '../../application/ports/warehouseSourceImport.js';
+import {
+  DuplicateWarehouseConnectionError,
+  WarehouseConnectionNotFoundError,
+} from '../../application/ports/warehouseSourceImport.js';
 import type { IWorkspaceFileRepository } from '../../application/ports/workspaceFiles.js';
 import { WorkspaceFileNotFoundError } from '../../application/ports/workspaceFiles.js';
 
@@ -32,6 +36,7 @@ export const WarehouseConnectionCatalogSchema = z.object({
   name: z.string().min(1),
   type: z.enum(['snowflake', 'bigquery', 'redshift', 'postgres']),
   database: z.string().min(1),
+  credentialRef: z.string().min(1).optional(),
   tables: z.array(WarehouseTableCatalogSchema),
 });
 
@@ -48,13 +53,53 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
   }
 
   public async listTables(connectionId: string): Promise<readonly WarehouseTable[]> {
+    return (await this.getConnection(connectionId)).tables;
+  }
+
+  public async getConnection(connectionId: string): Promise<WarehouseConnectionCatalogEntry> {
     const entries = await resolveWorkspaceWarehouseCatalog(this.options.repository);
     const connection = entries.find((entry) => entry.id === connectionId);
     if (!connection) {
       throw new WarehouseConnectionNotFoundError(connectionId);
     }
 
-    return connection.tables;
+    return connection;
+  }
+
+  public async createConnection(
+    input: CreateWarehouseConnectionCatalogInput
+  ): Promise<WarehouseConnection> {
+    const entries = [...(await resolveWorkspaceWarehouseCatalog(this.options.repository))];
+    const id = toWarehouseConnectionId(input.name);
+    const normalizedName = input.name.trim().toLowerCase();
+
+    if (
+      entries.some(
+        (entry) =>
+          entry.id.toLowerCase() === id || entry.name.trim().toLowerCase() === normalizedName
+      )
+    ) {
+      throw new DuplicateWarehouseConnectionError(input.name);
+    }
+
+    const nextEntry = normalizeCatalogEntry({
+      id,
+      name: input.name.trim(),
+      type: input.type,
+      database: input.database.trim(),
+      credentialRef: input.credentialRef.trim(),
+      tables: input.tables,
+    });
+    const nextEntries = [...entries, nextEntry].sort((left, right) =>
+      left.name.localeCompare(right.name)
+    );
+    await this.options.repository.saveFileContent(
+      WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+      serializeWorkspaceWarehouseCatalog(nextEntries)
+    );
+
+    const { tables: _tables, credentialRef: _credentialRef, ...connection } = nextEntry;
+    return connection;
   }
 }
 
@@ -84,6 +129,7 @@ export async function resolveWorkspaceWarehouseCatalog(
         name: entry.name,
         type: entry.type,
         database: entry.database,
+        ...(entry.credentialRef !== undefined ? { credentialRef: entry.credentialRef } : {}),
         tables: entry.tables.map(
           (table): WarehouseTable => ({
             database: table.database,
@@ -118,4 +164,20 @@ export function normalizeCatalogEntry(
     .sort((left, right) => buildCatalogTableKey(left).localeCompare(buildCatalogTableKey(right)));
 
   return { ...entry, tables };
+}
+
+export function toWarehouseConnectionId(name: string): string {
+  return (
+    name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'warehouse-connection'
+  );
+}
+
+function serializeWorkspaceWarehouseCatalog(
+  connections: readonly WarehouseConnectionCatalogEntry[]
+): string {
+  return `${JSON.stringify({ connections }, null, 2)}\n`;
 }

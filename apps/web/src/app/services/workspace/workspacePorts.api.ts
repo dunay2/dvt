@@ -137,6 +137,15 @@ function buildWarehouseConnectionTablesEndpoint(connectionId: string): string {
   )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
 }
 
+function buildWarehouseConnectionTestEndpoint(connectionId: string): string {
+  const scope = readWorkspaceGraphDraftScope();
+  return `/workspace/warehouse/connections/${encodeURIComponent(
+    connectionId
+  )}/test?tenantId=${encodeURIComponent(scope.tenantId)}&projectId=${encodeURIComponent(
+    scope.projectId
+  )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
+}
+
 function buildWarehouseSourcesImportEndpoint(): string {
   const scope = readWorkspaceGraphDraftScope();
   return `/workspace/sources/import?tenantId=${encodeURIComponent(
@@ -153,6 +162,10 @@ export function createApiWarehouseSourceImportPort(
     listWarehouseConnections: () => apiClient.getJson(buildWarehouseConnectionsEndpoint()),
     listWarehouseTables: (connectionId) =>
       apiClient.getJson(buildWarehouseConnectionTablesEndpoint(connectionId)),
+    createWarehouseConnection: (input) =>
+      apiClient.postJson(buildWarehouseConnectionsEndpoint(), input),
+    testWarehouseConnection: (connectionId) =>
+      apiClient.postJson(buildWarehouseConnectionTestEndpoint(connectionId), {}),
     importSources: (input) => apiClient.postJson(buildWarehouseSourcesImportEndpoint(), input),
   };
 }

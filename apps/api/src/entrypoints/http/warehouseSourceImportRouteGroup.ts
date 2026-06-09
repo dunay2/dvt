@@ -1,10 +1,16 @@
 /** Owned concern: compose protected warehouse source import routes with adapters. */
 import type { FastifyInstance } from 'fastify';
 
+import { CreateWarehouseConnectionUseCase } from '../../application/services/createWarehouseConnectionUseCase.js';
 import { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
 import { ListWarehouseConnectionTablesUseCase } from '../../application/services/listWarehouseConnectionTablesUseCase.js';
+import { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { WorkspaceWarehouseConnectionCatalog } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
+import {
+  EnvironmentWarehouseCredentialResolver,
+  WorkspaceWarehouseConnectionProbe,
+} from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
 import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
@@ -27,10 +33,16 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
     root: resolveWorkspaceFilesRoot(options.env),
   });
   const catalog = new WorkspaceWarehouseConnectionCatalog({ repository: workspaceFiles });
+  const probe = new WorkspaceWarehouseConnectionProbe({
+    credentialResolver: new EnvironmentWarehouseCredentialResolver(),
+    now: () => new Date(),
+  });
   registerWarehouseSourceImportRoutes(app, {
     ...options.runtimeAuth,
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
     listTablesUseCase: new ListWarehouseConnectionTablesUseCase(catalog),
+    createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
+    testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
     importSourcesUseCase: new ImportWarehouseSourcesUseCase(
       catalog,
       options.protectedModule.workspaceGraphDraftStore,

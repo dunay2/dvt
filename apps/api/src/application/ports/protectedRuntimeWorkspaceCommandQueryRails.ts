@@ -269,6 +269,58 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.createConnectionName,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.connectionRegistryAggregate,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.createConnectionPort,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.createConnectionSurface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.connectionCreateScopeAndAuthorization,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.duplicateConnection,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidCredential,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.unsupportedAdapter,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.testConnectionName,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.boundedContext,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.connectionVerificationService,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.testConnectionPort,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.testConnectionSurface,
+    scopeAndAuthorization:
+      PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.connectionTestScopeAndAuthorization,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidCredential,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.unsupportedAdapter,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.importSourcesName,
     kind: PROTECTED_RUNTIME_RAIL_KIND.command,
     boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.boundedContext,

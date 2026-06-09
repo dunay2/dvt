@@ -8,18 +8,24 @@ import {
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import {
   InvalidWarehouseSourceImportRequestError,
+  DuplicateWarehouseConnectionError,
+  WarehouseConnectionTestFailedError,
   WarehouseConnectionNotFoundError,
   WarehouseSourceImportDraftConflictError,
   WarehouseTableNotFoundError,
+  type CreateWarehouseConnectionInput,
   type ImportWarehouseSourcesInput,
   type SourceImportGrouping,
   type WarehouseColumn,
+  type WarehouseConnectionType,
   type WarehouseTable,
 } from '../../application/ports/warehouseSourceImport.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
+import type { CreateWarehouseConnectionUseCase } from '../../application/services/createWarehouseConnectionUseCase.js';
 import type { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import type { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
 import type { ListWarehouseConnectionTablesUseCase } from '../../application/services/listWarehouseConnectionTablesUseCase.js';
+import type { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
@@ -39,6 +45,13 @@ type WarehouseConnectionParams = {
   readonly connectionId: string;
 };
 
+type CreateWarehouseConnectionBody = {
+  readonly name?: unknown;
+  readonly type?: unknown;
+  readonly database?: unknown;
+  readonly credentialRef?: unknown;
+};
+
 type ImportWarehouseSourcesBody = {
   readonly connectionId?: unknown;
   readonly tables?: unknown;
@@ -53,6 +66,8 @@ type WarehouseSourceImportRouteDeps = {
   readonly authorizer: AuthorizeCommandScopeService;
   readonly listConnectionsUseCase: ListWarehouseConnectionsUseCase;
   readonly listTablesUseCase: ListWarehouseConnectionTablesUseCase;
+  readonly createConnectionUseCase: CreateWarehouseConnectionUseCase;
+  readonly testConnectionUseCase: TestWarehouseConnectionUseCase;
   readonly importSourcesUseCase: ImportWarehouseSourcesUseCase;
   readonly rateLimit: { readonly max: number; readonly timeWindow: number };
 };
@@ -81,6 +96,71 @@ export function registerWarehouseSourceImportRoutes(
 
       try {
         reply.code(200).send(await deps.listTablesUseCase.execute(request.params.connectionId));
+      } catch (error) {
+        if (error instanceof WarehouseConnectionNotFoundError) {
+          reply.code(404).send({
+            error: { type: 'not_found', reason: 'warehouse_connection_not_found' },
+          });
+          return;
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.post<{ Querystring: WarehouseSourceImportQuery; Body: CreateWarehouseConnectionBody }>(
+    RUNTIME_ROUTE_PATH.warehouseConnections,
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const authorized = await authorizeWarehouseSourceImportRequest(request, reply, deps, {
+        action: AUTHORIZATION_ACTION.workspaceSourceConnectionCreate,
+      });
+      if (!authorized) return;
+
+      const parsed = parseCreateWarehouseConnectionBody(request.body, authorized.scope);
+      if (!parsed.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
+        return;
+      }
+
+      try {
+        reply.code(201).send(await deps.createConnectionUseCase.execute(parsed.value));
+      } catch (error) {
+        if (error instanceof DuplicateWarehouseConnectionError) {
+          reply.code(409).send({
+            error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
+          });
+          return;
+        }
+        if (error instanceof WarehouseConnectionTestFailedError) {
+          reply.code(422).send({
+            error: { type: 'unprocessable_entity', reason: 'warehouse_connection_test_failed' },
+          });
+          return;
+        }
+
+        throw error;
+      }
+    }
+  );
+
+  app.post<{ Params: WarehouseConnectionParams; Querystring: WarehouseSourceImportQuery }>(
+    RUNTIME_ROUTE_PATH.warehouseConnectionTest,
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const authorized = await authorizeWarehouseSourceImportRequest(request, reply, deps, {
+        action: AUTHORIZATION_ACTION.workspaceSourceConnectionTest,
+      });
+      if (!authorized) return;
+
+      try {
+        reply.code(200).send(
+          await deps.testConnectionUseCase.execute({
+            scope: toDraftScope(authorized.scope),
+            connectionId: request.params.connectionId,
+          })
+        );
       } catch (error) {
         if (error instanceof WarehouseConnectionNotFoundError) {
           reply.code(404).send({
@@ -159,6 +239,8 @@ async function authorizeWarehouseSourceImportRequest(
   options: {
     readonly action?:
       | typeof AUTHORIZATION_ACTION.workspaceSourceImportView
+      | typeof AUTHORIZATION_ACTION.workspaceSourceConnectionCreate
+      | typeof AUTHORIZATION_ACTION.workspaceSourceConnectionTest
       | typeof AUTHORIZATION_ACTION.workspaceSourceImportImport;
   } = {}
 ): Promise<{ readonly scope: ReturnType<typeof buildEnvironmentAccessScope> } | false> {
@@ -186,6 +268,74 @@ async function authorizeWarehouseSourceImportRequest(
   return { scope: parsed.value };
 }
 
+function parseCreateWarehouseConnectionBody(
+  body: CreateWarehouseConnectionBody | undefined,
+  scope: ReturnType<typeof buildEnvironmentAccessScope>
+): RouteParseResult<CreateWarehouseConnectionInput> {
+  if (
+    hasForbiddenSecretField(body) ||
+    typeof body?.name !== 'string' ||
+    typeof body?.database !== 'string' ||
+    typeof body?.credentialRef !== 'string'
+  ) {
+    return invalidBody();
+  }
+
+  const type = parseWarehouseConnectionType(body.type);
+  if (!type.ok) {
+    return type;
+  }
+
+  return {
+    ok: true,
+    value: {
+      scope: toDraftScope(scope),
+      name: body.name,
+      type: type.value,
+      database: body.database,
+      credentialRef: body.credentialRef,
+    },
+  };
+}
+
+function hasForbiddenSecretField(body: CreateWarehouseConnectionBody | undefined): boolean {
+  if (!isRecord(body)) {
+    return false;
+  }
+
+  return ['password', 'token', 'secret', 'connectionString'].some((field) => field in body);
+}
+
+function parseWarehouseConnectionType(input: unknown): RouteParseResult<WarehouseConnectionType> {
+  if (
+    input === 'snowflake' ||
+    input === 'bigquery' ||
+    input === 'redshift' ||
+    input === 'postgres'
+  ) {
+    if (input !== 'postgres') {
+      return {
+        ok: false,
+        issue: badRequestIssue(HTTP_ERROR_REASON.unsupportedWarehouseAdapter, { target: 'type' }),
+      };
+    }
+    return { ok: true, value: input };
+  }
+
+  return {
+    ok: false,
+    issue: badRequestIssue(HTTP_ERROR_REASON.unsupportedWarehouseAdapter, { target: 'type' }),
+  };
+}
+
+function toDraftScope(scope: ReturnType<typeof buildEnvironmentAccessScope>) {
+  return {
+    tenantId: scope.tenantId.value,
+    projectId: scope.projectId.value,
+    environmentId: scope.environmentId.value,
+  };
+}
+
 function parseImportWarehouseSourcesBody(
   body: ImportWarehouseSourcesBody | undefined,
   scope: ReturnType<typeof buildEnvironmentAccessScope>
@@ -210,9 +360,7 @@ function parseImportWarehouseSourcesBody(
     ok: true,
     value: {
       scope: {
-        tenantId: scope.tenantId.value,
-        projectId: scope.projectId.value,
-        environmentId: scope.environmentId.value,
+        ...toDraftScope(scope),
       },
       connectionId: body.connectionId,
       tables: tables.value,

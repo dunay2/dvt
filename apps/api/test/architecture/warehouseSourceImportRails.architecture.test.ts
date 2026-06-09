@@ -18,9 +18,13 @@ describe('warehouse source import command/query rails architecture', () => {
 
     expect(vocabulary).toContain('ListWarehouseConnections');
     expect(vocabulary).toContain('ListWarehouseConnectionTables');
+    expect(vocabulary).toContain('CreateWarehouseConnection');
+    expect(vocabulary).toContain('TestWarehouseConnection');
     expect(vocabulary).toContain('ImportWarehouseSources');
     expect(rails).toContain('warehouseSourceImport');
     expect(vocabulary).toContain('workspace:source-import:view');
+    expect(vocabulary).toContain('workspace:source-connection:create');
+    expect(vocabulary).toContain('workspace:source-connection:test');
     expect(vocabulary).toContain('workspace:source-import:import');
   });
 
@@ -39,8 +43,11 @@ describe('warehouse source import command/query rails architecture', () => {
     expect(routeGroup).not.toContain('InMemoryWarehouseConnectionCatalog');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnections');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnectionTables');
+    expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnectionTest');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseSourcesImport');
     expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceSourceImportView');
+    expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceSourceConnectionCreate');
+    expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceSourceConnectionTest');
     expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceSourceImportImport');
     expect(webAdapter).not.toContain('warehouseImportApiModeUnavailable');
     expect(webAdapter).not.toContain('sourceImportAvailable: false');

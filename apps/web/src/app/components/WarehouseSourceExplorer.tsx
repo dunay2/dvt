@@ -1,9 +1,10 @@
 /** Owned concern: render warehouse source discovery inside the Canvas explorer rail. */
-import { CheckCircle2, Database, Loader2, Search, Table } from 'lucide-react';
+import { CheckCircle2, Database, Loader2, Plus, Search, Table, Zap } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { graphVisualClasses } from '../plugins/graph/graphVisualTokens';
 import type {
+  CreateWarehouseConnectionInput,
   IWarehouseSourceImportPort,
   WarehouseConnection,
   WarehouseTable,
@@ -15,6 +16,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { cn } from './ui/utils';
 
 type LoadState = 'idle' | 'loading' | 'ready' | 'error';
+type ConnectionActionState = 'idle' | 'creating' | 'testing';
 
 type WarehouseSourceExplorerProps = Readonly<{
   canEditGraph: boolean;
@@ -67,6 +69,13 @@ function resolveSelectedTables(
   return tables.filter((table) => selectedTableKeys.has(buildTableKey(table)));
 }
 
+const initialConnectionDraft: CreateWarehouseConnectionInput = {
+  name: '',
+  type: 'postgres',
+  database: '',
+  credentialRef: '',
+};
+
 export default function WarehouseSourceExplorer({
   canEditGraph,
   warehouseSourceImport,
@@ -80,6 +89,11 @@ export default function WarehouseSourceExplorer({
   const [selectedTableKeys, setSelectedTableKeys] = useState<ReadonlySet<string>>(() => new Set());
   const [searchValue, setSearchValue] = useState('');
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [connectionDraft, setConnectionDraft] =
+    useState<CreateWarehouseConnectionInput>(initialConnectionDraft);
+  const [connectionFormVisible, setConnectionFormVisible] = useState(false);
+  const [connectionActionState, setConnectionActionState] = useState<ConnectionActionState>('idle');
+  const [connectionFeedback, setConnectionFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -157,6 +171,18 @@ export default function WarehouseSourceExplorer({
   );
   const canRegisterSelection =
     canEditGraph && activeConnectionId != null && selectedTables.length > 0 && onOpenDataRegistry;
+  const canCreateConnection =
+    canEditGraph &&
+    connectionActionState === 'idle' &&
+    connectionDraft.name.trim().length > 0 &&
+    connectionDraft.database.trim().length > 0 &&
+    connectionDraft.credentialRef.trim().length > 0;
+  const canTestConnection =
+    canEditGraph && connectionActionState === 'idle' && activeConnectionId != null;
+
+  const setConnectionDraftValue = (field: keyof CreateWarehouseConnectionInput, value: string) => {
+    setConnectionDraft((current) => ({ ...current, [field]: value }));
+  };
 
   const toggleTableSelection = (table: WarehouseTable) => {
     const tableKey = buildTableKey(table);
@@ -181,6 +207,57 @@ export default function WarehouseSourceExplorer({
     });
   };
 
+  const createConnection = async () => {
+    if (!canCreateConnection) {
+      return;
+    }
+    setConnectionActionState('creating');
+    setLoadError(null);
+    setConnectionFeedback(null);
+    try {
+      const createdConnection = await warehouseSourceImport.createWarehouseConnection({
+        name: connectionDraft.name.trim(),
+        type: connectionDraft.type,
+        database: connectionDraft.database.trim(),
+        credentialRef: connectionDraft.credentialRef.trim(),
+      });
+      setConnections((current) => [
+        ...current.filter((connection) => connection.id !== createdConnection.id),
+        createdConnection,
+      ]);
+      setActiveConnectionId(createdConnection.id);
+      setConnectionDraft(initialConnectionDraft);
+      setConnectionFormVisible(false);
+      setConnectionState('ready');
+      setConnectionFeedback('Connection created');
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Failed to create connection.');
+    } finally {
+      setConnectionActionState('idle');
+    }
+  };
+
+  const testConnection = async () => {
+    if (!canTestConnection || activeConnectionId == null) {
+      return;
+    }
+    setConnectionActionState('testing');
+    setLoadError(null);
+    setConnectionFeedback(null);
+    try {
+      const result = await warehouseSourceImport.testWarehouseConnection(activeConnectionId);
+      if (result.status === 'passed') {
+        setConnectionFeedback(`Connection test passed - ${result.tableCount} tables visible`);
+      } else {
+        setLoadError(result.message);
+      }
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Failed to test connection.');
+    } finally {
+      setConnectionActionState('idle');
+    }
+  };
+
   return (
     <section className={graphVisualClasses.contextPanelSection}>
       <div className="mb-3 flex items-start justify-between gap-2">
@@ -200,6 +277,11 @@ export default function WarehouseSourceExplorer({
           {loadError}
         </div>
       ) : null}
+      {connectionFeedback != null ? (
+        <div className="mb-3 rounded border border-emerald-700 bg-emerald-950/30 p-2 text-xs text-emerald-200">
+          {connectionFeedback}
+        </div>
+      ) : null}
 
       <div className="space-y-3">
         <div className="space-y-2">
@@ -207,6 +289,107 @@ export default function WarehouseSourceExplorer({
             <span>Connection</span>
             <span>{connections.length} available</span>
           </div>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn('h-8 flex-1 gap-1.5', graphVisualClasses.contextPanelActionButton)}
+              disabled={!canEditGraph}
+              onClick={() => setConnectionFormVisible((current) => !current)}
+            >
+              <Plus className="size-3.5" />
+              New connection
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn('h-8 flex-1 gap-1.5', graphVisualClasses.contextPanelActionButton)}
+              disabled={!canTestConnection}
+              onClick={() => void testConnection()}
+            >
+              {connectionActionState === 'testing' ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Zap className="size-3.5" />
+              )}
+              Test connection
+            </Button>
+          </div>
+          {connectionFormVisible ? (
+            <div className="space-y-2 rounded border border-slate-700 bg-slate-950/40 p-2">
+              <label className="block space-y-1 text-[11px] text-slate-400">
+                <span>Connection name</span>
+                <input
+                  aria-label="Connection name"
+                  value={connectionDraft.name}
+                  className="h-8 w-full min-w-0 rounded border border-slate-700 bg-slate-950 px-2 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
+                  placeholder="Analytics Postgres"
+                  onInput={(event) => setConnectionDraftValue('name', event.currentTarget.value)}
+                  onChange={(event) => setConnectionDraftValue('name', event.currentTarget.value)}
+                />
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block space-y-1 text-[11px] text-slate-400">
+                  <span>Adapter</span>
+                  <select
+                    aria-label="Connection adapter"
+                    value={connectionDraft.type}
+                    className="h-8 w-full rounded border border-slate-700 bg-slate-950 px-2 text-xs text-slate-100 outline-none focus:border-blue-500"
+                    onChange={(event) => setConnectionDraftValue('type', event.currentTarget.value)}
+                  >
+                    <option value="postgres">PostgreSQL</option>
+                  </select>
+                </label>
+                <label className="block space-y-1 text-[11px] text-slate-400">
+                  <span>Database</span>
+                  <input
+                    aria-label="Database name"
+                    value={connectionDraft.database}
+                    className="h-8 w-full min-w-0 rounded border border-slate-700 bg-slate-950 px-2 text-xs text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
+                    placeholder="analytics"
+                    onInput={(event) =>
+                      setConnectionDraftValue('database', event.currentTarget.value)
+                    }
+                    onChange={(event) =>
+                      setConnectionDraftValue('database', event.currentTarget.value)
+                    }
+                  />
+                </label>
+              </div>
+              <label className="block space-y-1 text-[11px] text-slate-400">
+                <span>Credential reference</span>
+                <input
+                  aria-label="Credential reference"
+                  value={connectionDraft.credentialRef}
+                  className="h-8 w-full min-w-0 rounded border border-slate-700 bg-slate-950 px-2 font-mono text-xs text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
+                  placeholder="env:ANALYTICS_DATABASE_URL"
+                  onInput={(event) =>
+                    setConnectionDraftValue('credentialRef', event.currentTarget.value)
+                  }
+                  onChange={(event) =>
+                    setConnectionDraftValue('credentialRef', event.currentTarget.value)
+                  }
+                />
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn('h-8 w-full gap-1.5', graphVisualClasses.contextPanelActionButton)}
+                disabled={!canCreateConnection}
+                onClick={() => void createConnection()}
+              >
+                {connectionActionState === 'creating' ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <CheckCircle2 className="size-3.5" />
+                )}
+                Create connection
+              </Button>
+            </div>
+          ) : null}
           {connectionState === 'loading' ? (
             <div className="flex items-center gap-2 rounded border border-slate-700 bg-slate-950/40 px-3 py-2 text-xs text-slate-300">
               <Loader2 className="size-3.5 animate-spin" />
