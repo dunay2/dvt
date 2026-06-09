@@ -38,6 +38,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   sourceRunNotTerminal: 'source_run_not_terminal',
   tenantAccessDenied: 'tenant_access_denied',
   unsupportedCursor: 'unsupported_cursor',
+  unsupportedWarehouseAdapter: 'unsupported_warehouse_adapter',
   unsupportedPlanVersion: 'unsupported_plan_version',
   workspaceGraphDraftIdempotencyKeyReused: 'workspace_graph_draft_idempotency_key_reused',
   workspaceGraphDraftNotFound: 'workspace_graph_draft_not_found',

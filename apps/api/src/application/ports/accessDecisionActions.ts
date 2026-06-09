@@ -10,6 +10,8 @@ export const AUTHORIZATION_ACTION_NAME = {
   runSignal: 'run:signal',
   workspaceGraphDraftSave: 'workspace:graph-draft:save',
   workspaceFilesSave: 'workspace:files:save',
+  workspaceSourceConnectionCreate: 'workspace:source-connection:create',
+  workspaceSourceConnectionTest: 'workspace:source-connection:test',
   workspaceSourceImportImport: 'workspace:source-import:import',
   adminRebuildSnapshot: 'admin:rebuild-snapshot',
   runView: 'run:view',
@@ -29,6 +31,8 @@ export type CommandAuthorizationActionName =
   | typeof AUTHORIZATION_ACTION_NAME.runSignal
   | typeof AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave
   | typeof AUTHORIZATION_ACTION_NAME.workspaceFilesSave
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionCreate
+  | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest
   | typeof AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport
   | typeof AUTHORIZATION_ACTION_NAME.adminRebuildSnapshot;
 
@@ -80,6 +84,14 @@ export const AUTHORIZATION_ACTION = {
   workspaceFilesSave: {
     kind: 'command',
     name: AUTHORIZATION_ACTION_NAME.workspaceFilesSave,
+  },
+  workspaceSourceConnectionCreate: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionCreate,
+  },
+  workspaceSourceConnectionTest: {
+    kind: 'command',
+    name: AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest,
   },
   workspaceSourceImportImport: {
     kind: 'command',

@@ -57,6 +57,18 @@ function buildWarehouseSourceImportPort(
         rowCount: 100,
       },
     ],
+    createWarehouseConnection: async (input) => ({
+      id: 'conn-created',
+      name: input.name,
+      type: input.type,
+      database: input.database,
+    }),
+    testWarehouseConnection: async (connectionId) => ({
+      connectionId,
+      status: 'passed',
+      checkedAt: '2026-06-08T00:00:00.000Z',
+      tableCount: 1,
+    }),
     importSources: async () => ({
       success: true,
       sourcesCreated: 1,

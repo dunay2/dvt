@@ -300,6 +300,8 @@ async function saveProjectGrant(
     AUTHORIZATION_ACTION_NAME.workspaceGraphDraftSave,
     AUTHORIZATION_ACTION_NAME.workspaceFilesView,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportView,
+    AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionCreate,
+    AUTHORIZATION_ACTION_NAME.workspaceSourceConnectionTest,
     AUTHORIZATION_ACTION_NAME.workspaceSourceImportImport,
     AUTHORIZATION_ACTION_NAME.workspacePluginsView,
   ];

@@ -127,6 +127,18 @@ function buildWorkspacePortStubs(): {
     warehouseSourceImport: {
       listWarehouseConnections: vi.fn(async () => []),
       listWarehouseTables: vi.fn(async () => []),
+      createWarehouseConnection: vi.fn(async (input) => ({
+        id: 'conn-created',
+        name: input.name,
+        type: input.type,
+        database: input.database,
+      })),
+      testWarehouseConnection: vi.fn(async (connectionId) => ({
+        connectionId,
+        status: 'passed' as const,
+        checkedAt: '2026-06-08T00:00:00.000Z',
+        tableCount: 0,
+      })),
       importSources: vi.fn(async () => ({
         success: true as const,
         sourcesCreated: 0,

@@ -353,6 +353,83 @@ describe('workspace ports api warehouse source import', () => {
       }
     );
   });
+
+  it('creates a warehouse connection through the scoped protected runtime command endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { postJson, warehouseSourceImport } = createApiWorkspacePortHarness({
+      postJson: async <_TRequest, TResponse>() =>
+        ({
+          id: 'finance-warehouse',
+          name: 'Finance warehouse',
+          type: 'postgres',
+          database: 'finance',
+        }) as TResponse,
+    });
+
+    await expect(
+      (
+        warehouseSourceImport as unknown as {
+          createWarehouseConnection(input: {
+            name: string;
+            type: 'postgres';
+            database: string;
+            credentialRef: string;
+          }): Promise<unknown>;
+        }
+      ).createWarehouseConnection({
+        name: 'Finance warehouse',
+        type: 'postgres',
+        database: 'finance',
+        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+      })
+    ).resolves.toEqual({
+      id: 'finance-warehouse',
+      name: 'Finance warehouse',
+      type: 'postgres',
+      database: 'finance',
+    });
+    expect(postJson).toHaveBeenCalledWith(
+      `/workspace/warehouse/connections?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
+      {
+        name: 'Finance warehouse',
+        type: 'postgres',
+        database: 'finance',
+        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+      }
+    );
+  });
+
+  it('tests a warehouse connection through the scoped protected runtime command endpoint', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { postJson, warehouseSourceImport } = createApiWorkspacePortHarness({
+      postJson: async <_TRequest, TResponse>() =>
+        ({
+          connectionId: 'finance-warehouse',
+          status: 'passed',
+          checkedAt: '2026-06-08T00:00:00.000Z',
+          tableCount: 3,
+        }) as TResponse,
+    });
+
+    await expect(
+      (
+        warehouseSourceImport as unknown as {
+          testWarehouseConnection(connectionId: string): Promise<unknown>;
+        }
+      ).testWarehouseConnection('finance-warehouse')
+    ).resolves.toEqual({
+      connectionId: 'finance-warehouse',
+      status: 'passed',
+      checkedAt: '2026-06-08T00:00:00.000Z',
+      tableCount: 3,
+    });
+    expect(postJson).toHaveBeenCalledWith(
+      `/workspace/warehouse/connections/finance-warehouse/test?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
+      {}
+    );
+  });
 });
 
 describe('workspace ports api route parity posture', () => {

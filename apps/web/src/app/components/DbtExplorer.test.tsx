@@ -84,6 +84,18 @@ function buildWarehouseSourceImportPort(
       },
     ]),
     listWarehouseTables: vi.fn(async () => tables.map((table) => ({ ...table }))),
+    createWarehouseConnection: vi.fn(async (input) => ({
+      id: 'conn-created',
+      name: input.name,
+      type: input.type,
+      database: input.database,
+    })),
+    testWarehouseConnection: vi.fn(async (connectionId) => ({
+      connectionId,
+      status: 'passed' as const,
+      checkedAt: '2026-06-08T00:00:00.000Z',
+      tableCount: tables.length,
+    })),
     importSources: vi.fn(),
   };
 }
@@ -246,6 +258,93 @@ describe('DbtExplorer', () => {
         }),
       ],
     });
+  });
+
+  it('creates a governed warehouse connection from the source explorer', async () => {
+    const warehouseSourceImport = buildWarehouseSourceImportPort();
+
+    await act(async () => {
+      root.render(
+        <DbtExplorer
+          resourceGroups={buildResourceGroups([buildNode()])}
+          canEditGraph={true}
+          warehouseSourceImport={warehouseSourceImport}
+          onOpenDataRegistry={vi.fn()}
+        />
+      );
+    });
+    await flushPendingWork();
+
+    await act(async () => {
+      findButton(container, 'New connection')?.dispatchEvent(
+        new MouseEvent('click', { bubbles: true })
+      );
+    });
+
+    const nameInput = container.querySelector<HTMLInputElement>('[aria-label="Connection name"]');
+    const databaseInput = container.querySelector<HTMLInputElement>('[aria-label="Database name"]');
+    const credentialRefInput = container.querySelector<HTMLInputElement>(
+      '[aria-label="Credential reference"]'
+    );
+
+    await act(async () => {
+      if (nameInput) {
+        nameInput.value = 'Analytics Postgres';
+      }
+      nameInput?.dispatchEvent(new InputEvent('input', { bubbles: true }));
+
+      if (databaseInput) {
+        databaseInput.value = 'analytics';
+      }
+      databaseInput?.dispatchEvent(new InputEvent('input', { bubbles: true }));
+
+      if (credentialRefInput) {
+        credentialRefInput.value = 'env:ANALYTICS_DATABASE_URL';
+      }
+      credentialRefInput?.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    });
+
+    await act(async () => {
+      findButton(container, 'Create connection')?.dispatchEvent(
+        new MouseEvent('click', { bubbles: true })
+      );
+    });
+    await flushPendingWork();
+
+    expect(warehouseSourceImport.createWarehouseConnection).toHaveBeenCalledWith({
+      name: 'Analytics Postgres',
+      type: 'postgres',
+      database: 'analytics',
+      credentialRef: 'env:ANALYTICS_DATABASE_URL',
+    });
+    expect(container.textContent).toContain('Analytics Postgres');
+    expect(container.textContent).toContain('Connection created');
+  });
+
+  it('tests the active warehouse connection through the governed command rail', async () => {
+    const warehouseSourceImport = buildWarehouseSourceImportPort();
+
+    await act(async () => {
+      root.render(
+        <DbtExplorer
+          resourceGroups={buildResourceGroups([buildNode()])}
+          canEditGraph={true}
+          warehouseSourceImport={warehouseSourceImport}
+          onOpenDataRegistry={vi.fn()}
+        />
+      );
+    });
+    await flushPendingWork();
+
+    await act(async () => {
+      findButton(container, 'Test connection')?.dispatchEvent(
+        new MouseEvent('click', { bubbles: true })
+      );
+    });
+    await flushPendingWork();
+
+    expect(warehouseSourceImport.testWarehouseConnection).toHaveBeenCalledWith('conn-1');
+    expect(container.textContent).toContain('Connection test passed');
   });
 
   it('keeps warehouse discovery readable but blocks registration in read-only canvases', async () => {

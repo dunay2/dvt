@@ -486,6 +486,8 @@ describe('CanvasShell', () => {
     const warehouseSourceImport = {
       listWarehouseConnections: vi.fn(),
       listWarehouseTables: vi.fn(),
+      createWarehouseConnection: vi.fn(),
+      testWarehouseConnection: vi.fn(),
       importSources: vi.fn(),
     } satisfies IWarehouseSourceImportPort;
     const initialSelection = {

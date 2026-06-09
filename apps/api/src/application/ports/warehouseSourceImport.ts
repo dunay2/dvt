@@ -36,8 +36,62 @@ export type WarehouseConnection = {
 };
 
 export type WarehouseConnectionCatalogEntry = WarehouseConnection & {
+  readonly credentialRef?: string;
   readonly tables: readonly WarehouseTable[];
 };
+
+export type CreateWarehouseConnectionInput = {
+  readonly scope: WorkspaceGraphDraftScope;
+  readonly name: string;
+  readonly type: WarehouseConnectionType;
+  readonly database: string;
+  readonly credentialRef: string;
+};
+
+export type CreateWarehouseConnectionCatalogInput = Omit<
+  CreateWarehouseConnectionInput,
+  'scope'
+> & {
+  readonly tables: readonly WarehouseTable[];
+};
+
+export type TestWarehouseConnectionInput = {
+  readonly scope: WorkspaceGraphDraftScope;
+  readonly connectionId: string;
+};
+
+export type WarehouseConnectionTestFailureReason =
+  | 'invalid_credentials'
+  | 'unsupported_adapter'
+  | 'connection_failed';
+
+export type TestWarehouseConnectionResult =
+  | {
+      readonly connectionId: string;
+      readonly status: 'passed';
+      readonly checkedAt: string;
+      readonly tableCount: number;
+    }
+  | {
+      readonly connectionId: string;
+      readonly status: 'failed';
+      readonly reason: WarehouseConnectionTestFailureReason;
+      readonly message: string;
+      readonly checkedAt: string;
+    };
+
+export type InspectWarehouseConnectionResult =
+  | {
+      readonly status: 'passed';
+      readonly checkedAt: string;
+      readonly tables: readonly WarehouseTable[];
+    }
+  | {
+      readonly status: 'failed';
+      readonly reason: WarehouseConnectionTestFailureReason;
+      readonly message: string;
+      readonly checkedAt: string;
+    };
 
 export type SourceImportGrouping = 'schema' | 'database' | 'custom';
 
@@ -68,6 +122,15 @@ export type ImportWarehouseSourcesResult = {
 export interface IWarehouseConnectionCatalog {
   listConnections(): Promise<readonly WarehouseConnection[]>;
   listTables(connectionId: string): Promise<readonly WarehouseTable[]>;
+  getConnection(connectionId: string): Promise<WarehouseConnectionCatalogEntry>;
+  createConnection(input: CreateWarehouseConnectionCatalogInput): Promise<WarehouseConnection>;
+}
+
+export interface IWarehouseConnectionProbe {
+  inspectConnection(
+    input: CreateWarehouseConnectionInput
+  ): Promise<InspectWarehouseConnectionResult>;
+  testConnection(input: WarehouseConnectionCatalogEntry): Promise<TestWarehouseConnectionResult>;
 }
 
 export class WarehouseConnectionNotFoundError extends Error {
@@ -81,6 +144,29 @@ export class WarehouseTableNotFoundError extends Error {
   public constructor(table: WarehouseTable) {
     super(`Warehouse table not found: ${table.database}.${table.schema}.${table.table}`);
     this.name = 'WarehouseTableNotFoundError';
+  }
+}
+
+export class DuplicateWarehouseConnectionError extends Error {
+  public constructor(readonly connectionName: string) {
+    super(`Warehouse connection already exists: ${connectionName}`);
+    this.name = 'DuplicateWarehouseConnectionError';
+  }
+}
+
+export class UnsupportedWarehouseAdapterError extends Error {
+  public constructor(readonly adapterType: string) {
+    super(`Unsupported warehouse adapter: ${adapterType}`);
+    this.name = 'UnsupportedWarehouseAdapterError';
+  }
+}
+
+export class WarehouseConnectionTestFailedError extends Error {
+  public constructor(
+    readonly result: Extract<InspectWarehouseConnectionResult, { status: 'failed' }>
+  ) {
+    super(result.message);
+    this.name = 'WarehouseConnectionTestFailedError';
   }
 }
 

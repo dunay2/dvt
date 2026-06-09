@@ -41,6 +41,28 @@ export type WarehouseConnection = {
   database: string;
 };
 
+export type CreateWarehouseConnectionInput = {
+  name: string;
+  type: WarehouseConnection['type'];
+  database: string;
+  credentialRef: string;
+};
+
+export type TestWarehouseConnectionResult =
+  | {
+      connectionId: string;
+      status: 'passed';
+      checkedAt: string;
+      tableCount: number;
+    }
+  | {
+      connectionId: string;
+      status: 'failed';
+      reason: 'invalid_credentials' | 'unsupported_adapter' | 'connection_failed';
+      message: string;
+      checkedAt: string;
+    };
+
 export type WarehouseColumn = {
   name: string;
   type: string;
@@ -125,6 +147,10 @@ export interface IWorkspaceAdminReadPort {
 export interface IWarehouseSourceImportPort {
   listWarehouseConnections: () => Promise<WarehouseConnection[]>;
   listWarehouseTables: (connectionId: string) => Promise<WarehouseTable[]>;
+  createWarehouseConnection: (
+    input: CreateWarehouseConnectionInput
+  ) => Promise<WarehouseConnection>;
+  testWarehouseConnection: (connectionId: string) => Promise<TestWarehouseConnectionResult>;
   importSources: (input: ImportSourcesInput) => Promise<ImportSourcesResult>;
 }
 

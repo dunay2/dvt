@@ -13,7 +13,9 @@ import {
 } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
 
 class MemoryWorkspaceFileRepository implements IWorkspaceFileRepository {
-  public constructor(private readonly files: Readonly<Record<string, string>>) {}
+  public readonly savedFiles: Record<string, string> = {};
+
+  public constructor(private readonly files: Record<string, string>) {}
 
   public async listFiles(): Promise<readonly WorkspaceFileEntry[]> {
     return [];
@@ -34,8 +36,16 @@ class MemoryWorkspaceFileRepository implements IWorkspaceFileRepository {
     };
   }
 
-  public async saveFileContent(): Promise<WorkspaceFileContent> {
-    throw new Error('NOT_USED');
+  public async saveFileContent(path: string, content: string): Promise<WorkspaceFileContent> {
+    this.savedFiles[path] = content;
+    this.files[path] = content;
+    return {
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'json',
+      content,
+      lastModified: '2026-05-31T00:00:01.000Z',
+    };
   }
 }
 
@@ -46,6 +56,49 @@ function repositoryWithCatalog(catalog: unknown): IWorkspaceFileRepository {
 }
 
 describe('WorkspaceWarehouseConnectionCatalog', () => {
+  it('creates a governed warehouse connection catalog entry without persisting raw secrets', async () => {
+    const repository = new MemoryWorkspaceFileRepository({});
+    const catalog = new WorkspaceWarehouseConnectionCatalog({ repository });
+
+    const created = await catalog.createConnection({
+      name: 'Finance warehouse',
+      type: 'postgres',
+      database: 'finance',
+      credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+      tables: [
+        {
+          database: 'finance',
+          schema: 'erp',
+          table: 'orders',
+          rowCount: 128,
+          columns: [{ name: 'id', type: 'integer', nullable: false }],
+        },
+      ],
+    });
+
+    expect(created).toEqual({
+      id: 'finance-warehouse',
+      name: 'Finance warehouse',
+      type: 'postgres',
+      database: 'finance',
+    });
+    expect(repository.savedFiles[WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH]).toContain(
+      '"credentialRef": "env:DVT_FINANCE_WAREHOUSE_URL"'
+    );
+    expect(repository.savedFiles[WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH]).not.toContain(
+      'password'
+    );
+    await expect(catalog.listTables('finance-warehouse')).resolves.toEqual([
+      {
+        database: 'finance',
+        schema: 'erp',
+        table: 'orders',
+        rowCount: 128,
+        columns: [{ name: 'id', type: 'integer', nullable: false }],
+      },
+    ]);
+  });
+
   it('reads connection and table metadata from the workspace governed catalog file', async () => {
     const catalog = new WorkspaceWarehouseConnectionCatalog({
       repository: repositoryWithCatalog({

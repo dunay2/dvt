@@ -2,9 +2,17 @@ import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
-import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
+import {
+  DuplicateWarehouseConnectionError,
+  WarehouseConnectionNotFoundError,
+} from '../../../src/application/ports/warehouseSourceImport.js';
 import type {
+  CreateWarehouseConnectionCatalogInput,
+  CreateWarehouseConnectionInput,
   IWarehouseConnectionCatalog,
+  IWarehouseConnectionProbe,
+  InspectWarehouseConnectionResult,
+  TestWarehouseConnectionResult,
   WarehouseConnection,
   WarehouseConnectionCatalogEntry,
   WarehouseTable,
@@ -15,27 +23,114 @@ import type {
   WorkspaceFileContent,
   WorkspaceFileEntry,
 } from '../../../src/application/ports/workspaceFiles.js';
+import { CreateWarehouseConnectionUseCase } from '../../../src/application/services/createWarehouseConnectionUseCase.js';
 import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../../src/application/services/listWarehouseConnectionsUseCase.js';
 import { ListWarehouseConnectionTablesUseCase } from '../../../src/application/services/listWarehouseConnectionTablesUseCase.js';
+import { TestWarehouseConnectionUseCase } from '../../../src/application/services/testWarehouseConnectionUseCase.js';
 import { registerWarehouseSourceImportRoutes } from '../../../src/entrypoints/http/warehouseSourceImportRoutes.js';
+import {
+  WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+  toWarehouseConnectionId,
+} from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
 
 const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
 
 class TestWarehouseConnectionCatalog implements IWarehouseConnectionCatalog {
-  public constructor(private readonly entries: readonly WarehouseConnectionCatalogEntry[]) {}
+  public constructor(
+    private entries: readonly WarehouseConnectionCatalogEntry[],
+    private readonly saveConnection?: (
+      input: CreateWarehouseConnectionCatalogInput,
+      entries: readonly WarehouseConnectionCatalogEntry[]
+    ) => Promise<void>
+  ) {}
 
   public async listConnections(): Promise<readonly WarehouseConnection[]> {
     return this.entries.map(({ tables: _tables, ...connection }) => connection);
   }
 
   public async listTables(connectionId: string): Promise<readonly WarehouseTable[]> {
+    return (await this.getConnection(connectionId)).tables;
+  }
+
+  public async getConnection(connectionId: string): Promise<WarehouseConnectionCatalogEntry> {
     const connection = this.entries.find((entry) => entry.id === connectionId);
     if (!connection) {
       throw new WarehouseConnectionNotFoundError(connectionId);
     }
 
-    return connection.tables;
+    return connection;
+  }
+
+  public async createConnection(
+    input: CreateWarehouseConnectionCatalogInput
+  ): Promise<WarehouseConnection> {
+    const id = toWarehouseConnectionId(input.name);
+    const duplicate = this.entries.some(
+      (entry) =>
+        entry.id.toLowerCase() === id ||
+        entry.name.trim().toLowerCase() === input.name.trim().toLowerCase()
+    );
+    if (duplicate) {
+      throw new DuplicateWarehouseConnectionError(input.name);
+    }
+
+    const entry: WarehouseConnectionCatalogEntry = {
+      id,
+      name: input.name,
+      type: input.type,
+      database: input.database,
+      credentialRef: input.credentialRef,
+      tables: input.tables,
+    };
+    this.entries = [...this.entries, entry];
+    await this.saveConnection?.(input, this.entries);
+    const { tables: _tables, credentialRef: _credentialRef, ...connection } = entry;
+    return connection;
+  }
+}
+
+type TestWarehouseConnectionProbeFailure = Omit<
+  Extract<InspectWarehouseConnectionResult, { readonly status: 'failed' }>,
+  'checkedAt'
+> & {
+  readonly checkedAt?: string;
+};
+
+class TestWarehouseConnectionProbe implements IWarehouseConnectionProbe {
+  public constructor(private readonly result: TestWarehouseConnectionProbeFailure | null) {}
+
+  public async inspectConnection(
+    input: CreateWarehouseConnectionInput
+  ): Promise<InspectWarehouseConnectionResult> {
+    if (this.result) {
+      return { ...this.result, checkedAt: this.result.checkedAt ?? '2026-05-30T00:00:01.000Z' };
+    }
+
+    return {
+      status: 'passed',
+      checkedAt: '2026-05-30T00:00:01.000Z',
+      tables: [{ database: input.database, schema: 'public', table: 'orders' }],
+    };
+  }
+
+  public async testConnection(
+    input: WarehouseConnectionCatalogEntry
+  ): Promise<TestWarehouseConnectionResult> {
+    if (this.result) {
+      return {
+        connectionId: input.id,
+        ...this.result,
+        checkedAt: this.result.checkedAt ?? '2026-05-30T00:00:01.000Z',
+      };
+    }
+
+    return {
+      connectionId: input.id,
+      status: 'passed',
+      checkedAt: '2026-05-30T00:00:01.000Z',
+      tableCount: input.tables.length,
+    };
   }
 }
 
@@ -73,6 +168,7 @@ function buildApp(
           readonly updatedAt: string | null;
         };
     readonly existingSourceFileContent?: string;
+    readonly connectionTestResult?: TestWarehouseConnectionProbeFailure;
   } = {}
 ): {
   readonly app: FastifyInstance;
@@ -87,25 +183,23 @@ function buildApp(
   };
 } {
   const app = Fastify({ logger: false });
-  const catalog = new TestWarehouseConnectionCatalog(
-    options.catalogEntries ?? [
-      {
-        id: 'warehouse-prod',
-        name: 'Production warehouse',
-        type: 'snowflake',
-        database: 'analytics',
-        tables: [
-          {
-            database: 'analytics',
-            schema: 'erp',
-            table: 'orders',
-            rowCount: 42,
-            columns: [{ name: 'id', type: 'number', nullable: false }],
-          },
-        ],
-      },
-    ]
-  );
+  const catalogEntries = options.catalogEntries ?? [
+    {
+      id: 'warehouse-prod',
+      name: 'Production warehouse',
+      type: 'snowflake',
+      database: 'analytics',
+      tables: [
+        {
+          database: 'analytics',
+          schema: 'erp',
+          table: 'orders',
+          rowCount: 42,
+          columns: [{ name: 'id', type: 'number', nullable: false }],
+        },
+      ],
+    },
+  ];
   const draftStore = {
     read: vi.fn().mockResolvedValue({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
@@ -166,6 +260,13 @@ function buildApp(
       })
     ),
   };
+  const catalog = new TestWarehouseConnectionCatalog(catalogEntries, async (_input, entries) => {
+    await workspaceFiles.saveFileContent(
+      WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+      JSON.stringify({ connections: entries }, null, 2)
+    );
+  });
+  const probe = new TestWarehouseConnectionProbe(options.connectionTestResult ?? null);
   const authorize = vi.fn().mockResolvedValue(
     options.authorized === false
       ? { ok: false, reason: 'ACTION_NOT_GRANTED' }
@@ -195,6 +296,8 @@ function buildApp(
     authorizer: { authorize } as never,
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
     listTablesUseCase: new ListWarehouseConnectionTablesUseCase(catalog),
+    createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
+    testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
     importSourcesUseCase: new ImportWarehouseSourcesUseCase(
       catalog,
       draftStore as never,
@@ -208,6 +311,159 @@ function buildApp(
 }
 
 describe('warehouseSourceImportRoutes', () => {
+  it('creates a warehouse connection through the protected command rail before listing it', async () => {
+    const { app, authorize, workspaceFiles } = buildApp({ catalogEntries: [] });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
+      payload: {
+        name: 'Finance warehouse',
+        type: 'postgres',
+        database: 'finance',
+        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+    expect(response.json()).toEqual({
+      id: 'finance-warehouse',
+      name: 'Finance warehouse',
+      type: 'postgres',
+      database: 'finance',
+    });
+    expect(authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: 'workspace:source-connection:create' },
+      }),
+      expect.any(String)
+    );
+    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
+      '.dvt/warehouse-connections.json',
+      expect.not.stringContaining('DVT_FINANCE_WAREHOUSE_URL=')
+    );
+  });
+
+  it('rejects duplicate warehouse connection names before mutating the catalog', async () => {
+    const { app, workspaceFiles } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
+      payload: {
+        name: 'Production warehouse',
+        type: 'postgres',
+        database: 'analytics',
+        credentialRef: 'env:DVT_DUPLICATE_WAREHOUSE_URL',
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({
+      error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
+    });
+    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
+  });
+
+  it('rejects unsupported warehouse adapters without probing credentials', async () => {
+    const { app, workspaceFiles } = buildApp({ catalogEntries: [] });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
+      payload: {
+        name: 'MySQL legacy',
+        type: 'mysql',
+        database: 'legacy',
+        credentialRef: 'env:DVT_MYSQL_URL',
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: { type: 'bad_request', reason: 'unsupported_warehouse_adapter', target: 'type' },
+    });
+    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
+  });
+
+  it('tests an existing warehouse connection through the protected command rail', async () => {
+    const { app, authorize } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/warehouse/connections/warehouse-prod/test?${SCOPE_QUERY}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toMatchObject({
+      connectionId: 'warehouse-prod',
+      status: 'passed',
+      checkedAt: '2026-05-30T00:00:01.000Z',
+      tableCount: 1,
+    });
+    expect(authorize).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        action: { kind: 'command', name: 'workspace:source-connection:test' },
+      }),
+      expect.any(String)
+    );
+  });
+
+  it('returns a failed connection-test result for invalid credentials without exposing secrets', async () => {
+    const { app } = buildApp({
+      connectionTestResult: {
+        status: 'failed',
+        reason: 'invalid_credentials',
+        message: 'The credential reference could not authenticate.',
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/warehouse/connections/warehouse-prod/test?${SCOPE_QUERY}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({
+      connectionId: 'warehouse-prod',
+      status: 'failed',
+      reason: 'invalid_credentials',
+      message: 'The credential reference could not authenticate.',
+      checkedAt: '2026-05-30T00:00:01.000Z',
+    });
+    expect(response.body).not.toContain('env:');
+  });
+
+  it('rejects connection creation when credential testing fails', async () => {
+    const { app, workspaceFiles } = buildApp({
+      catalogEntries: [],
+      connectionTestResult: {
+        status: 'failed',
+        reason: 'invalid_credentials',
+        message: 'The credential reference could not authenticate.',
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/warehouse/connections?${SCOPE_QUERY}`,
+      payload: {
+        name: 'Finance warehouse',
+        type: 'postgres',
+        database: 'finance',
+        credentialRef: 'env:DVT_FINANCE_WAREHOUSE_URL',
+      },
+    });
+
+    expect(response.statusCode).toBe(422);
+    expect(response.json()).toEqual({
+      error: { type: 'unprocessable_entity', reason: 'warehouse_connection_test_failed' },
+    });
+    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
+  });
+
   it('lists warehouse connections through the protected query rail', async () => {
     const { app, authorize } = buildApp();
 
