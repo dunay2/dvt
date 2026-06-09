@@ -41,6 +41,7 @@ const {
   buildFeatureMechanizationValidationRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
+  buildDocumentationLifecycleRows,
   buildDbSurfaceRows,
   buildSummaryRows,
   buildTaskRows,
@@ -76,6 +77,7 @@ const {
   readFeatureMechanizationValidationRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
+  readDocumentationLifecycleRows,
   readDbSurfaceRows,
   readDocsDispositionRows,
   readFeatureWorkRows,
@@ -962,6 +964,41 @@ test('buildDbSurfaceRows shows DB authority and migration state for operators', 
   );
 });
 
+test('buildDocumentationLifecycleRows shows lifecycle facts without prose parsing', () => {
+  assert.deepEqual(
+    buildDocumentationLifecycleRows([
+      {
+        lifecycle_gap_kind: 'proposal_missing_canonical',
+        lifecycle_state: 'proposed',
+        canonicality: 'proposal',
+        duplicate_count: 1,
+        canonical_counterpart_count: 0,
+        proposal_counterpart_count: 2,
+        closeout_counterpart_count: 0,
+        open_action_count: 3,
+        document_path: 'docs/planning/proposals/mandatory/example.md',
+        subject_key: 'example',
+        title: 'Example Plan',
+      },
+    ]),
+    [
+      [
+        'proposal_missing_canonical',
+        'proposed',
+        'proposal',
+        1,
+        0,
+        2,
+        0,
+        3,
+        'docs/planning/proposals/mandatory/example.md',
+        'example',
+        'Example Plan',
+      ],
+    ]
+  );
+});
+
 test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
   const command = parseArgs([
     'docs-disposition',
@@ -1037,6 +1074,40 @@ test('parseArgs parses planning knowledge filters', () => {
         type: 'fowler_analysis',
         path: 'buzon/example.md',
         limit: 7,
+      },
+    }
+  );
+});
+
+test('parseArgs parses documentation lifecycle logic filters', () => {
+  assert.deepEqual(
+    parseArgs([
+      'documentation-lifecycle',
+      '--gaps',
+      'true',
+      '--duplicates',
+      'false',
+      '--canonicality',
+      'proposal',
+      '--state',
+      'proposed',
+      '--kind',
+      'proposal_missing_canonical',
+      '--subject',
+      'canvas-modeler',
+      '--limit',
+      '9',
+    ]),
+    {
+      queryName: 'documentation-lifecycle',
+      filters: {
+        gaps: true,
+        duplicates: false,
+        canonicality: 'proposal',
+        state: 'proposed',
+        kind: 'proposal_missing_canonical',
+        subject: 'canvas-modeler',
+        limit: 9,
       },
     }
   );
@@ -2421,6 +2492,46 @@ test('readDbSurfaceRows queries the DB-first surface inventory view with real pr
   assert.deepEqual(captured.params, ['Architecture design authority', 'DB-first', 'db_command', 5]);
 });
 
+test('readDocumentationLifecycleRows queries DB lifecycle facts with logical predicates', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readDocumentationLifecycleRows(client, {
+    type: 'proposal',
+    canonicality: 'proposal',
+    state: 'proposed',
+    kind: 'proposal_missing_canonical',
+    subject: 'canvas-modeler',
+    duplicates: true,
+    gaps: true,
+    limit: 11,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.documentation_lifecycle_query/);
+  assert.match(captured.sql, /document_type = \$1/);
+  assert.match(captured.sql, /canonicality = \$2/);
+  assert.match(captured.sql, /lifecycle_state = \$3/);
+  assert.match(captured.sql, /lifecycle_gap_kind = \$4/);
+  assert.match(captured.sql, /subject_key = \$5/);
+  assert.match(captured.sql, /is_duplicate is true/);
+  assert.match(captured.sql, /lifecycle_gap_kind <> 'none'/);
+  assert.match(captured.sql, /limit \$6/);
+  assert.deepEqual(captured.params, [
+    'proposal',
+    'proposal',
+    'proposed',
+    'proposal_missing_canonical',
+    'canvas-modeler',
+    11,
+  ]);
+});
+
 test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
   const client = {
     async query() {
@@ -2533,6 +2644,54 @@ test('runQuery dispatches knowledge-intake references through the DB-first link 
       'ci-governance',
       'doc',
       'Planning Example',
+    ],
+  ]);
+});
+
+test('runQuery dispatches documentation-lifecycle through the DB-first lifecycle query', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /documentation_lifecycle_query/);
+      return {
+        rows: [
+          {
+            lifecycle_gap_kind: 'canonical_duplicate',
+            lifecycle_state: 'active',
+            canonicality: 'canonical',
+            duplicate_count: 2,
+            canonical_counterpart_count: 2,
+            proposal_counterpart_count: 1,
+            closeout_counterpart_count: 1,
+            open_action_count: 0,
+            document_path: 'docs/architecture/components/example.md',
+            subject_key: 'example',
+            title: 'Example Component',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'documentation-lifecycle',
+    filters: { duplicates: true, limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'canonical_duplicate',
+      'active',
+      'canonical',
+      2,
+      2,
+      1,
+      1,
+      0,
+      'docs/architecture/components/example.md',
+      'example',
+      'Example Component',
     ],
   ]);
 });

@@ -40,6 +40,7 @@ const requiredSurfaces = [
   { surfaceName: 'Repository command catalog', migrationState: 'Hybrid indexed' },
   { surfaceName: 'Command/query rail catalog', migrationState: 'Hybrid indexed' },
   { surfaceName: 'Knowledge intake literature', migrationState: 'Hybrid indexed' },
+  { surfaceName: 'Documentation lifecycle catalog', migrationState: 'Hybrid indexed' },
   { surfaceName: 'AI project context', migrationState: 'Hybrid indexed' },
   { surfaceName: 'Docs task disposition inventory', migrationState: 'Git-first indexed' },
   {

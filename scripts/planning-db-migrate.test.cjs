@@ -219,6 +219,51 @@ test('tracked migrations include repository backrefs before knowledge intake ret
   );
 });
 
+test('tracked migrations expose documentation lifecycle as logical DB facts', () => {
+  const migrations = readMigrationFiles();
+  const lifecycleMigration = migrations.find(
+    (migration) => migration.fileName === '065_documentation_lifecycle_query.sql'
+  );
+
+  assert.ok(lifecycleMigration);
+  assert.match(
+    lifecycleMigration.sql,
+    /create or replace view planning_query_store\.documentation_lifecycle_query/
+  );
+  assert.match(lifecycleMigration.sql, /canonicality/);
+  assert.match(lifecycleMigration.sql, /lifecycle_state/);
+  assert.match(lifecycleMigration.sql, /lifecycle_gap_kind/);
+  assert.match(lifecycleMigration.sql, /proposal_missing_canonical/);
+  assert.match(lifecycleMigration.sql, /Documentation lifecycle catalog/);
+});
+
+test('tracked migrations keep user stories as lifecycle support documents', () => {
+  const migrations = readMigrationFiles();
+  const supportingDocsMigration = migrations.find(
+    (migration) => migration.fileName === '066_documentation_lifecycle_supporting_docs.sql'
+  );
+
+  assert.ok(supportingDocsMigration);
+  assert.match(supportingDocsMigration.sql, /architecture_user_stories/);
+  assert.match(supportingDocsMigration.sql, /then 'supporting'/);
+  assert.match(supportingDocsMigration.sql, /canonicality in \('canonical', 'supporting'\)/);
+});
+
+test('tracked migrations normalize documentation subject keys without corrupting words', () => {
+  const migrations = readMigrationFiles();
+  const subjectKeyMigration = migrations.find(
+    (migration) => migration.fileName === '067_documentation_lifecycle_subject_key.sql'
+  );
+
+  assert.ok(subjectKeyMigration);
+  assert.match(
+    subjectKeyMigration.sql,
+    /create or replace function planning_query_store\.documentation_subject_key/
+  );
+  assert.match(subjectKeyMigration.sql, /\(\^|\[\^a-z0-9\]\)/);
+  assert.match(subjectKeyMigration.sql, /documentation_subject_key\(document\.title\)/);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

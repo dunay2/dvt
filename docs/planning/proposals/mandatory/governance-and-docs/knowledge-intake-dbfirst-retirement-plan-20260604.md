@@ -110,19 +110,25 @@ allowedImplementationSurfaces:
   - scripts/local-validation-plan.cjs
   - scripts/planning-db/knowledge-intake-retirement-guard.cjs
   - scripts/planning-db/knowledge-intake-retirement-query.cjs
+  - scripts/planning-db/queries/documentation-lifecycle-query.cjs
   - scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db-migrate.test.cjs
   - scripts/planning-db-surface-inventory-check.cjs
+  - scripts/planning-db-surface-inventory-check.test.cjs
   - scripts/verify-changed.test.cjs
   - tools/ci/*canon.test.mjs
   - tools/ci/canonization-guard.mjs
   - tools/ci/canonization-guard.test.mjs
   - tools/planning-db/knowledge/documentLinks.cjs
+  - tools/planning-db/knowledge/documentSnapshot.cjs
   - tools/planning-db/knowledge/documentSnapshot.test.cjs
   - tools/planning-db/migrations/057_knowledge_intake_retirement_query.sql
   - tools/planning-db/migrations/058_knowledge_intake_canonical_reference_counts.sql
+  - tools/planning-db/migrations/065_documentation_lifecycle_query.sql
+  - tools/planning-db/migrations/066_documentation_lifecycle_supporting_docs.sql
+  - tools/planning-db/migrations/067_documentation_lifecycle_subject_key.sql
 forbiddenImplementationSurfaces:
   - buzon/**
   - apps/**
@@ -132,12 +138,19 @@ commandQueryRails:
     type: query
     dddOwner: KnowledgeIntakeRetirementReadModel
     status: implemented
+  - name: ListDocumentationLifecycleFacts
+    type: query
+    dddOwner: DocumentationLifecycleReadModel
+    status: implemented
   - name: CheckBuzonIntakeRetirement
     type: command
     dddOwner: KnowledgeIntakeRetirementGuard
     status: implemented
 domainObjects:
   - name: KnowledgeIntakeRetirementReadModel
+    type: query-store read model
+    owner: scripts/planning-db
+  - name: DocumentationLifecycleReadModel
     type: query-store read model
     owner: scripts/planning-db
   - name: KnowledgeIntakeRetirementGuard
@@ -156,10 +169,12 @@ cypressFlows:
 completionGate:
   - node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs scripts/verify-changed.test.cjs
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - pnpm planning:db:query documentation-lifecycle --gaps true --limit 10
   - node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs
   - pnpm planning:db:import -- --governance-only
   - pnpm planning:db:query knowledge-intake --limit 10
   - pnpm planning:db:query knowledge-intake --references --limit 10
+  - pnpm planning:db:query documentation-lifecycle --gaps true --limit 10
   - pnpm planning:db:knowledge-intake:retirement:check
   - pnpm docs:sync
   - pnpm docs:feature-mechanization:implementation
@@ -210,6 +225,20 @@ redGreenCycles:
       - scripts/planning-db-query.test.cjs
       - scripts/planning-db-surface-inventory-check.cjs
     greenTest: node --test scripts/planning-db-query.test.cjs
+  - id: documentation-lifecycle-facts-query
+    redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: planning DB cannot list proposal, architecture, closeout, duplicate, and gap facts through one lifecycle projection.
+    patchSurfaces:
+      - scripts/planning-db/queries/documentation-lifecycle-query.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - tools/planning-db/knowledge/documentSnapshot.cjs
+      - tools/planning-db/knowledge/documentSnapshot.test.cjs
+      - tools/planning-db/migrations/065_documentation_lifecycle_query.sql
+      - tools/planning-db/migrations/066_documentation_lifecycle_supporting_docs.sql
+      - tools/planning-db/migrations/067_documentation_lifecycle_subject_key.sql
+    greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
   - id: knowledge-intake-canon-test-decoupling
     redTest: node --test tools/ci/canonization-guard.test.mjs
     expectedFailure: canonization tests have no shared guard for canonical plans and still depend on raw buzon analysis files.
@@ -231,6 +260,14 @@ symbols:
     architectureGuard: node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
     cypressCoverage: N/A - local changed-slice guard.
     unitTests: [node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs]
+  - name: createDocumentationLifecycleReadModelComponent
+    path: scripts/planning-db/queries/documentation-lifecycle-query.cjs
+    dddOwner: DocumentationLifecycleReadModel
+    cqRails: [ListDocumentationLifecycleFacts]
+    fowlerSignals: [Duplicate semantics, Hidden authority]
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A - Planning DB governance query.
+    unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: createKnowledgeIntakeRetirementReadModelComponent
     path: scripts/planning-db/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
