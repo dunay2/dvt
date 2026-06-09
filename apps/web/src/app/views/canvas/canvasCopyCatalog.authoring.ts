@@ -297,6 +297,66 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtWriteModeAppendLabel',
     fallback: 'append',
   },
+  dvtFlowGuideTitle: {
+    key: 'canvas.dvtFlowGuide.title',
+    fallback: 'Professional DVT flow',
+  },
+  dvtFlowGuideReadyLabel: {
+    key: 'canvas.dvtFlowGuide.readyLabel',
+    fallback: 'Ready to preview',
+  },
+  dvtFlowGuideNeedsWorkLabel: {
+    key: 'canvas.dvtFlowGuide.needsWorkLabel',
+    fallback: 'Needs work',
+  },
+  dvtFlowGuideRowsUnknownLabel: {
+    key: 'canvas.dvtFlowGuide.rowsUnknownLabel',
+    fallback: 'Rows unknown',
+  },
+  dvtFlowGuideRowLabel: {
+    key: 'canvas.dvtFlowGuide.rowLabel',
+    fallback: 'row',
+  },
+  dvtFlowGuideRowsLabel: {
+    key: 'canvas.dvtFlowGuide.rowsLabel',
+    fallback: 'rows',
+  },
+  dvtFlowGuideColumnLabel: {
+    key: 'canvas.dvtFlowGuide.columnLabel',
+    fallback: 'column',
+  },
+  dvtFlowGuideColumnsLabel: {
+    key: 'canvas.dvtFlowGuide.columnsLabel',
+    fallback: 'columns',
+  },
+  dvtFlowGuideNullableLabel: {
+    key: 'canvas.dvtFlowGuide.nullableLabel',
+    fallback: 'nullable',
+  },
+  dvtFlowGuideRequiredLabel: {
+    key: 'canvas.dvtFlowGuide.requiredLabel',
+    fallback: 'required',
+  },
+  dvtFlowGuideSourceMissingMessage: {
+    key: 'canvas.dvtFlowGuide.sourceMissingMessage',
+    fallback: 'Source missing',
+  },
+  dvtFlowGuideTransformMissingMessage: {
+    key: 'canvas.dvtFlowGuide.transformMissingMessage',
+    fallback: 'Transform missing',
+  },
+  dvtFlowGuideSqlMissingMessage: {
+    key: 'canvas.dvtFlowGuide.sqlMissingMessage',
+    fallback: 'SQL missing',
+  },
+  dvtFlowGuideDestinationMissingMessage: {
+    key: 'canvas.dvtFlowGuide.destinationMissingMessage',
+    fallback: 'Destination missing',
+  },
+  dvtFlowGuideColumnsMissingMessage: {
+    key: 'canvas.dvtFlowGuide.columnsMissingMessage',
+    fallback: 'Column metadata unavailable',
+  },
   inspectorErrorNodeNameRequired: {
     key: 'canvas.inspector.authoring.errorNodeNameRequired',
     fallback: 'Node name is required.',

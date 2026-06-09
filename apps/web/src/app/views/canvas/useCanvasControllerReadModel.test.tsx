@@ -150,7 +150,7 @@ describe('useCanvasControllerReadModel', () => {
     }
   });
 
-  it('removes execution selection handlers when graph mutation is blocked', async () => {
+  it('keeps execution selection handlers when graph mutation is blocked but planning is allowed', async () => {
     const args = buildReadModelArgs({
       canMutateGraph: false,
       canSelectExecution: true,
@@ -160,7 +160,10 @@ describe('useCanvasControllerReadModel', () => {
     try {
       const nodeData = readProjectedNodeData(mounted.readState());
 
-      expect(nodeData?.onToggleNodeSelection).toBeUndefined();
+      expect(nodeData?.onDuplicateNode).toBeUndefined();
+      expect(nodeData?.onRemoveNode).toBeUndefined();
+      expect(nodeData?.onAttachSchemaToNode).toBeUndefined();
+      expect(nodeData?.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
     } finally {
       await mounted.cleanup();
     }
