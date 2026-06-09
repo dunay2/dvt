@@ -264,6 +264,42 @@ test('tracked migrations normalize documentation subject keys without corrupting
   assert.match(subjectKeyMigration.sql, /documentation_subject_key\(document\.title\)/);
 });
 
+test('tracked migrations expose the system component roadmap as DB-first facts', () => {
+  const migrations = readMigrationFiles();
+  const componentRoadmapMigration = migrations.find(
+    (migration) => migration.fileName === '068_component_roadmap_query.sql'
+  );
+
+  assert.ok(componentRoadmapMigration);
+  assert.match(
+    componentRoadmapMigration.sql,
+    /create or replace view planning_query_store\.component_roadmap_query/
+  );
+  assert.match(componentRoadmapMigration.sql, /component_engineering\.component_metadata_query/);
+  assert.match(componentRoadmapMigration.sql, /architecture\.component_query/);
+  assert.match(componentRoadmapMigration.sql, /command_query_rail_manifest_query/);
+  assert.match(componentRoadmapMigration.sql, /planned_component_missing_db_component/);
+  assert.match(componentRoadmapMigration.sql, /System component roadmap/);
+});
+
+test('tracked migrations keep component roadmap refs scoped to components or ids', () => {
+  const migrations = readMigrationFiles();
+  const componentRoadmapFilterMigration = migrations.find(
+    (migration) => migration.fileName === '069_component_roadmap_component_ref_filter.sql'
+  );
+
+  assert.ok(componentRoadmapFilterMigration);
+  assert.match(
+    componentRoadmapFilterMigration.sql,
+    /component_ref\.value like 'docs\/architecture\/components\/%'/
+  );
+  assert.match(
+    componentRoadmapFilterMigration.sql,
+    /component_ref\.value !~ '\^\(docs\/\|buzon\/\)'/
+  );
+  assert.match(componentRoadmapFilterMigration.sql, /componentRefFilter/);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(
