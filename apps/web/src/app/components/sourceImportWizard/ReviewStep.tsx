@@ -26,6 +26,13 @@ export function ReviewStep({
   sourceImportOptionValues,
 }: ReviewStepProps) {
   const previewGroups = buildPreviewGroups(tables, groupingStrategy);
+  const formatTableName = (table: Pick<TableInfo, 'database' | 'schema' | 'table'>): string =>
+    `${table.database}.${table.schema}.${table.table}`;
+  const formatColumnCount = (table: Pick<TableInfo, 'columns'>): string => {
+    const columnCount = table.columns?.length ?? 0;
+    return `${columnCount} ${columnCount === 1 ? 'column' : 'columns'}`;
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -67,6 +74,10 @@ export function ReviewStep({
 
       <Card className="border-slate-600 p-4">
         <h4 className="mb-3 text-sm font-medium">{copy.review.previewTitle}</h4>
+        <div className="mb-3 rounded border border-amber-800/70 bg-amber-950/20 px-3 py-2 text-xs text-amber-100/80">
+          Destination is configured on a DVT Sink node after origin registration; verify the output
+          target before previewing or running the graph.
+        </div>
         <ScrollArea className="h-48">
           <div className="space-y-2">
             {Array.from(previewGroups.entries()).map(([key, groupTables]) => (
@@ -81,8 +92,12 @@ export function ReviewStep({
                 </div>
                 <div className="space-y-1 text-xs text-slate-400">
                   {groupTables.slice(0, 3).map((table) => (
-                    <div key={`${table.database}.${table.schema}.${table.table}`}>
-                      -&gt; {table.table}
+                    <div
+                      key={`${table.database}.${table.schema}.${table.table}`}
+                      className="flex min-w-0 items-center justify-between gap-2"
+                    >
+                      <span className="truncate font-mono">{formatTableName(table)}</span>
+                      <span className="shrink-0">{formatColumnCount(table)}</span>
                     </div>
                   ))}
                   {groupTables.length > 3 ? <div>... and {groupTables.length - 3} more</div> : null}

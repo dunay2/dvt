@@ -43,11 +43,28 @@ export function DvtAuthoringFields({
   ] as const;
 
   if (draft.dvt.kind === 'source') {
+    const sourceTarget = `${draft.dvt.schema || '-'}.${draft.dvt.table || '-'}`;
     return (
       <div className={graphVisualClasses.inspectorDbtSection}>
         <h3 className={graphVisualClasses.contextPanelSectionTitle}>
           {canvasViewCopy.inspectorDvtSourceTitle}
         </h3>
+        <div className="mb-3 grid grid-cols-1 gap-2 rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
+          <div>
+            <span className="block text-(--text-muted)">
+              {canvasViewCopy.inspectorDvtSourceTargetLabel}
+            </span>
+            <code className="mt-1 block truncate text-(--text-default)">{sourceTarget}</code>
+          </div>
+          <div>
+            <span className="block text-(--text-muted)">
+              {canvasViewCopy.inspectorDvtAliasLabel}
+            </span>
+            <code className="mt-1 block truncate text-(--text-default)">
+              {draft.dvt.alias || '-'}
+            </code>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-3">
           <div className="space-y-2">
             <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>
@@ -136,11 +153,31 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'sql_transform') {
+    const normalizedSqlLines = draft.dvt.sql
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+    const sqlLineCount = normalizedSqlLines.length;
+    const sqlLineLabel =
+      sqlLineCount === 1
+        ? canvasViewCopy.inspectorDvtSqlLineSingularLabel
+        : canvasViewCopy.inspectorDvtSqlLinePluralLabel;
     return (
       <div className={graphVisualClasses.inspectorDbtSection}>
         <h3 className={graphVisualClasses.contextPanelSectionTitle}>
           {canvasViewCopy.inspectorDvtSqlTransformTitle}
         </h3>
+        <div className="mb-3 rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-(--text-muted)">{canvasViewCopy.inspectorDvtSqlBodyLabel}</span>
+            <span className="text-(--text-muted)">
+              {sqlLineCount} {sqlLineLabel}
+            </span>
+          </div>
+          <code className="mt-2 block max-h-24 overflow-hidden whitespace-pre-wrap text-(--text-default)">
+            {draft.dvt.sql || '-'}
+          </code>
+        </div>
         <div className="space-y-2">
           <Label htmlFor={`inspector-dvt-transform-sql-${node.id}`}>
             {canvasViewCopy.inspectorDvtSqlLabel}
@@ -172,11 +209,28 @@ export function DvtAuthoringFields({
     );
   }
 
+  const destinationTarget = `${draft.dvt.schema || '-'}.${draft.dvt.table || '-'}`;
   return (
     <div className={graphVisualClasses.inspectorDbtSection}>
       <h3 className={graphVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtSinkTitle}
       </h3>
+      <div className="mb-3 grid grid-cols-1 gap-2 rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
+        <div>
+          <span className="block text-(--text-muted)">
+            {canvasViewCopy.inspectorDvtDestinationTargetLabel}
+          </span>
+          <code className="mt-1 block truncate text-(--text-default)">{destinationTarget}</code>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">
+            {draft.dvt.materialization}
+          </span>
+          <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">
+            {draft.dvt.writeMode}
+          </span>
+        </div>
+      </div>
       <div className="grid grid-cols-1 gap-3">
         <div className="space-y-2">
           <Label htmlFor={`inspector-dvt-sink-schema-${node.id}`}>

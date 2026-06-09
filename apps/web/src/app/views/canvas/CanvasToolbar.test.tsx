@@ -452,6 +452,9 @@ describe('CanvasToolbar', () => {
 
     expect(document.body.textContent).toContain('Analytics table');
     expect(document.body.textContent).toContain('Reporting view');
+    expect(document.body.textContent).toContain('analytics.transformed_output');
+    expect(document.body.textContent).toContain('table');
+    expect(document.body.textContent).toContain('replace');
 
     const search = document.body.querySelector<HTMLInputElement>(
       '[data-slot="canvas-add-node-palette-search"]'
@@ -464,6 +467,9 @@ describe('CanvasToolbar', () => {
     });
 
     expect(document.body.textContent).toContain('Reporting view');
+    expect(document.body.textContent).toContain('reporting.transformed_view');
+    expect(document.body.textContent).toContain('view');
+    expect(document.body.textContent).toContain('replace');
     expect(document.body.textContent).not.toContain('Analytics table');
 
     const reportingTarget = Array.from(

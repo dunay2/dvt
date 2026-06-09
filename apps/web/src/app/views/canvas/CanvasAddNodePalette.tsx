@@ -39,12 +39,27 @@ type CanvasAddNodePaletteOption = Readonly<
     }
   | {
       id: string;
-      kind: 'transformation-template' | 'output-target-template';
+      kind: 'transformation-template';
       label: string;
       detail: string;
       searchText: string;
       registration: NodeKindRegistration;
       seed: CanvasAuthoringNodeSeed;
+    }
+  | {
+      id: string;
+      kind: 'output-target-template';
+      label: string;
+      detail: string;
+      searchText: string;
+      registration: NodeKindRegistration;
+      seed: CanvasAuthoringNodeSeed;
+      target: {
+        schema: string;
+        table: string;
+        materialization: string;
+        writeMode: string;
+      };
     }
 >;
 
@@ -106,6 +121,12 @@ function buildPaletteOptions(
       searchText: option.template.searchText,
       registration: option.registration,
       seed: option.seed,
+      target: {
+        schema: option.template.schema,
+        table: option.template.table,
+        materialization: option.template.materialization,
+        writeMode: option.template.writeMode,
+      },
     })),
   ];
 }
@@ -316,6 +337,19 @@ export function CanvasAddNodePalette({
                   option.kind === 'output-target-template' ? (
                     <span className="mt-0.5 block line-clamp-2 text-xs text-(--text-muted)">
                       {option.detail}
+                    </span>
+                  ) : null}
+                  {option.kind === 'output-target-template' ? (
+                    <span className="mt-1 flex flex-wrap items-center gap-1">
+                      <span className="rounded border border-[color:var(--border-default)] px-1.5 py-0.5 font-mono text-[11px] text-(--text-default)">
+                        {option.target.schema}.{option.target.table}
+                      </span>
+                      <span className="rounded border border-[color:var(--border-default)] px-1.5 py-0.5 text-[11px] text-(--text-muted)">
+                        {option.target.materialization}
+                      </span>
+                      <span className="rounded border border-[color:var(--border-default)] px-1.5 py-0.5 text-[11px] text-(--text-muted)">
+                        {option.target.writeMode}
+                      </span>
                     </span>
                   ) : null}
                 </span>

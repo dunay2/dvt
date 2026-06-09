@@ -779,6 +779,9 @@ describe('CanvasInspectorPanel', () => {
     ) as HTMLInputElement | null;
 
     expect(container.textContent).toContain('DVT source');
+    expect(container.textContent).toContain('Source target');
+    expect(container.textContent).toContain('public.orders');
+    expect(container.textContent).toContain('orders_raw');
     expect(schemaInput?.value).toBe('public');
     expect(tableInput?.value).toBe('orders');
     expect(aliasInput?.value).toBe('orders_raw');
@@ -1178,6 +1181,9 @@ describe('CanvasInspectorPanel', () => {
     ) as HTMLTextAreaElement | null;
 
     expect(container.textContent).toContain('DVT SQL transform');
+    expect(container.textContent).toContain('SQL body');
+    expect(container.textContent).toContain('1 line');
+    expect(container.textContent).toContain('select * from public.orders');
     expect(sqlTextarea?.value).toBe('select * from public.orders');
 
     await act(async () => {
@@ -1244,6 +1250,10 @@ describe('CanvasInspectorPanel', () => {
     ) as HTMLSelectElement | null;
 
     expect(container.textContent).toContain('DVT sink');
+    expect(container.textContent).toContain('Destination target');
+    expect(container.textContent).toContain('marts.orders_daily');
+    expect(container.textContent).toContain('view');
+    expect(container.textContent).toContain('append');
     expect(materializationSelect?.value).toBe('view');
     expect(writeModeSelect?.value).toBe('append');
 
