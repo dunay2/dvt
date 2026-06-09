@@ -130,6 +130,42 @@ redGreenCycles:
       - turbo.json
     greenTest: node --test tools/ci/turbo-workspace-task-contract.test.mjs
 symbols:
+  - name: DEFAULT_BASE_REF
+    path: scripts/run-turbo-workspace-task.cjs
+    dddOwner: CI workspace quality gate
+    cqRails:
+      - CheckAffectedWorkspaceLint
+    fowlerSignals:
+      - Explicit Gate
+      - CI routing boundary
+    architectureGuard: node --test tools/ci/turbo-workspace-task-contract.test.mjs
+    cypressCoverage: N/A - CI validation rail, no browser flow
+    unitTests:
+      - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - name: DEFAULT_FILTER
+    path: scripts/run-turbo-workspace-task.cjs
+    dddOwner: CI workspace quality gate
+    cqRails:
+      - CheckAffectedWorkspaceLint
+    fowlerSignals:
+      - Explicit Gate
+      - CI routing boundary
+    architectureGuard: node --test tools/ci/turbo-workspace-task-contract.test.mjs
+    cypressCoverage: N/A - CI validation rail, no browser flow
+    unitTests:
+      - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - name: SAFE_GIT_REF_PATTERN
+    path: scripts/run-turbo-workspace-task.cjs
+    dddOwner: CI workspace quality gate
+    cqRails:
+      - CheckAffectedWorkspaceLint
+    fowlerSignals:
+      - Explicit Gate
+      - CI routing boundary
+    architectureGuard: node --test tools/ci/turbo-workspace-task-contract.test.mjs
+    cypressCoverage: N/A - CI validation rail, no browser flow
+    unitTests:
+      - node --test tools/ci/turbo-workspace-task-contract.test.mjs
   - name: SUPPORTED_TASKS
     path: scripts/run-turbo-workspace-task.cjs
     dddOwner: CI workspace quality gate
@@ -142,6 +178,30 @@ symbols:
     cypressCoverage: N/A - CI validation rail, no browser flow
     unitTests:
       - node --test tools/ci/turbo-workspace-task-contract.test.mjs # D-API-LINT-CI-20260526
+  - name: parseArgs
+    path: scripts/run-turbo-workspace-task.cjs
+    dddOwner: CI workspace quality gate
+    cqRails:
+      - CheckAffectedWorkspaceLint
+    fowlerSignals:
+      - Explicit Gate
+      - CI routing boundary
+    architectureGuard: node --test tools/ci/turbo-workspace-task-contract.test.mjs
+    cypressCoverage: N/A - CI validation rail, no browser flow
+    unitTests:
+      - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - name: resolveDefaultFilter
+    path: scripts/run-turbo-workspace-task.cjs
+    dddOwner: CI workspace quality gate
+    cqRails:
+      - CheckAffectedWorkspaceLint
+    fowlerSignals:
+      - Explicit Gate
+      - CI routing boundary
+    architectureGuard: node --test tools/ci/turbo-workspace-task-contract.test.mjs
+    cypressCoverage: N/A - CI validation rail, no browser flow
+    unitTests:
+      - node --test tools/ci/turbo-workspace-task-contract.test.mjs
   - name: DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT
     path: scripts/run-dev-stack.cjs
     dddOwner: Local protected-runtime dev stack
