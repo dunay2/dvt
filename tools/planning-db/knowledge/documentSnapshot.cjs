@@ -10,10 +10,6 @@ function slugify(value) {
 }
 
 function documentTypeForPath(sourcePath, frontmatter) {
-  const planningType = normalizeText(frontmatter.planning_type).toLowerCase();
-  if (planningType) {
-    return planningType;
-  }
   if (/^buzon\/.*fowler.*\.md$/i.test(sourcePath)) {
     return 'fowler_analysis';
   }
@@ -23,8 +19,39 @@ function documentTypeForPath(sourcePath, frontmatter) {
   if (/^docs\/planning\/reviews\//.test(sourcePath)) {
     return 'review';
   }
+  if (/^docs\/planning\/closeouts\//.test(sourcePath)) {
+    return 'closeout';
+  }
+  if (/^docs\/planning\/status\//.test(sourcePath)) {
+    return 'status';
+  }
+  if (/^docs\/architecture\/components\/.*-user-stories\.md$/i.test(sourcePath)) {
+    return 'architecture_user_stories';
+  }
+  if (/^docs\/architecture\/components\//.test(sourcePath)) {
+    return 'architecture_component';
+  }
+  if (/^docs\/architecture\//.test(sourcePath)) {
+    return 'architecture';
+  }
+  const planningType = normalizeText(frontmatter.planning_type).toLowerCase();
+  if (planningType) {
+    return planningType;
+  }
   if (/^docs\/adr\//.test(sourcePath)) {
     return 'adr';
+  }
+  if (/^docs\/contracts\//.test(sourcePath)) {
+    return 'contract';
+  }
+  if (/^docs\/guides\//.test(sourcePath)) {
+    return 'guide';
+  }
+  if (/^docs\/runbooks\//.test(sourcePath)) {
+    return 'runbook';
+  }
+  if (/^docs\/concepts\//.test(sourcePath)) {
+    return 'concept';
   }
   if (/^docs\/evidence\//.test(sourcePath)) {
     return 'evidence';
@@ -36,14 +63,7 @@ function documentTypeForPath(sourcePath, frontmatter) {
 }
 
 function isKnowledgePath(sourcePath) {
-  return (
-    /^buzon\/.*\.md$/i.test(sourcePath) ||
-    /^docs\/planning\/proposals\/.*\.md$/i.test(sourcePath) ||
-    /^docs\/planning\/reviews\/.*\.md$/i.test(sourcePath) ||
-    /^docs\/adr\/.*\.md$/i.test(sourcePath) ||
-    /^docs\/evidence\/.*\.md$/i.test(sourcePath) ||
-    /^docs\/risk-register\/.*\.md$/i.test(sourcePath)
-  );
+  return /^buzon\/.*\.md$/i.test(sourcePath) || /^docs\/.*\.md$/i.test(sourcePath);
 }
 
 function sectionRows(documentId, body) {

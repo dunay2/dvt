@@ -50,6 +50,10 @@ const {
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
 } = require('./planning-db/knowledge-intake-retirement-query.cjs');
+const {
+  buildDocumentationLifecycleRows,
+  readDocumentationLifecycleRows,
+} = require('./planning-db/queries/documentation-lifecycle-query.cjs');
 const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
@@ -97,6 +101,7 @@ const knownQueries = new Set([
   'knowledge-documents',
   'knowledge-actions',
   'knowledge-intake',
+  'documentation-lifecycle',
   'mandatory-proposal-gaps',
   'db-surfaces',
   'component-tree',
@@ -149,6 +154,7 @@ const governanceProjectionQueryNames = new Set([
   'knowledge-documents',
   'knowledge-actions',
   'knowledge-intake',
+  'documentation-lifecycle',
   'mandatory-proposal-gaps',
 ]);
 const taskIdCommonFilterQueryNames = new Set([
@@ -167,6 +173,7 @@ const pathCommonFilterQueryNames = new Set([
   'knowledge-documents',
   'knowledge-actions',
   'knowledge-intake',
+  'documentation-lifecycle',
   'mandatory-proposal-gaps',
 ]);
 const componentCommonFilterQueryNames = new Set([
@@ -237,6 +244,11 @@ function buildPlanningDbQueryHelpText(queryName) {
       );
     } else if (queryName === 'feature-mechanization-validations') {
       examples.push(`  pnpm planning:db:query ${queryName} --kind completion --limit 20`);
+    } else if (queryName === 'documentation-lifecycle') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --gaps true --limit 20`,
+        `  pnpm planning:db:query ${queryName} --duplicates true --canonicality canonical --limit 20`
+      );
     }
 
     return [
@@ -520,6 +532,10 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.subject = value;
       continue;
     }
+    if (arg === '--canonicality') {
+      filters.canonicality = value;
+      continue;
+    }
     if (arg === '--subject-kind') {
       filters.subjectKind = value;
       continue;
@@ -586,6 +602,7 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'feature-mechanization-rails' ||
         queryName === 'feature-mechanization-validations' ||
         queryName === 'knowledge-intake' ||
+        queryName === 'documentation-lifecycle' ||
         queryName === 'db-surfaces'
       ) {
         filters.state = value;
@@ -3845,6 +3862,15 @@ async function runQuery(options = {}) {
       return intakeRows;
     }
 
+    if (queryName === 'documentation-lifecycle') {
+      const rows = await readDocumentationLifecycleRows(client, options.filters || {});
+      const lifecycleRows = buildDocumentationLifecycleRows(rows);
+      if (options.print !== false) {
+        printTaskRows(lifecycleRows);
+      }
+      return lifecycleRows;
+    }
+
     if (queryName === 'mandatory-proposal-gaps') {
       const rows = await readMandatoryProposalGapRows(client, options.filters || {});
       const gapRows = buildMandatoryProposalGapRows(rows);
@@ -4204,6 +4230,7 @@ module.exports = {
   buildComponentEngineeringComponentMetadataRows,
   buildKnowledgeActionRows,
   buildKnowledgeDocumentRows,
+  buildDocumentationLifecycleRows,
   buildMandatoryProposalGapRows,
   buildPlanningArtifactRows,
   buildPlanningDependencyRows,
@@ -4269,6 +4296,7 @@ module.exports = {
   readRiskDebtRows,
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,
+  readDocumentationLifecycleRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readMandatoryProposalGapRows,

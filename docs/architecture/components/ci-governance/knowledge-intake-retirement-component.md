@@ -22,6 +22,7 @@ before moving or removing files.
 | Rail                                | Type    | DDD owner                             | Read model or projection                                                              | Negative guard                                                            |
 | ----------------------------------- | ------- | ------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | `ListKnowledgeIntakeRetirement`     | query   | `KnowledgeIntakeRetirementReadModel`  | `knowledge_intake_retirement_query` and `knowledge_intake_repository_reference_query` | Query must read DB rows and must not parse `buzon/*.md` directly.         |
+| `ListDocumentationLifecycleFacts`   | query   | `DocumentationLifecycleReadModel`     | `documentation_lifecycle_query`                                                       | Query must expose lifecycle facts and must not infer state from prose.    |
 | `GenerateKnowledgeIntakeLiterature` | command | `KnowledgeIntakeLiteratureProjection` | generated local knowledge-intake literature view                                      | Generator must read the DB retirement query and must not walk `buzon`.    |
 | `CheckBuzonIntakeRetirement`        | command | `KnowledgeIntakeRetirementGuard`      | changed-file diff against the repository base                                         | Changed-slice validation must reject added or renamed `buzon/*.md` files. |
 
@@ -42,6 +43,9 @@ pnpm planning:db:query knowledge-intake --state open-actions --limit 30
 pnpm planning:db:query knowledge-intake --path buzon/example.md --limit 5
 pnpm planning:db:query knowledge-intake --references --limit 30
 pnpm planning:db:query knowledge-intake --references --path buzon/example.md --limit 5
+pnpm planning:db:query documentation-lifecycle --gaps true --limit 30
+pnpm planning:db:query documentation-lifecycle --duplicates true --limit 30
+pnpm planning:db:query documentation-lifecycle --canonicality proposal --state proposed --limit 30
 ```
 
 The `--references` variant lists DB-backed inbound references from
@@ -50,6 +54,14 @@ files such as architecture tests that still name raw `buzon/*.md` paths. It
 also projects the current component ownership for the referencing file. This is
 the operator surface for retiring live `buzon/` backrefs without running
 ad-hoc repository searches.
+
+The `documentation-lifecycle` variant exposes imperative lifecycle facts for
+all imported docs: `canonicality`, `lifecycle_state`, `subject_key`,
+counterpart counts, duplicate count, open action count, and `lifecycle_gap_kind`.
+It is the operator surface for deciding whether a proposal is still proposed,
+has been canonized into architecture, lacks a closeout, duplicates another
+canonical document, or is safe intake/discard work. Human prose is a generated
+view over those facts, not the authority.
 
 ## Generated Literature Surface
 
@@ -112,8 +124,10 @@ flowchart LR
   Knowledge --> Retirement["knowledge_intake_retirement_query"]
   Backrefs --> Retirement
   Backrefs --> References["knowledge_intake_repository_reference_query"]
+  Knowledge --> Lifecycle["documentation_lifecycle_query"]
   Retirement --> Agents["planning:db:query knowledge-intake"]
   References --> Agents
+  Lifecycle --> Agents
   Retirement --> Literature["docs:knowledge-intake:generate"]
   ChangedFiles["Changed files"] --> Guard["CheckBuzonIntakeRetirement"]
   Guard --> VerifyChanged["verify:changed"]

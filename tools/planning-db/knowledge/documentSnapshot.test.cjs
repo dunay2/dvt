@@ -213,6 +213,38 @@ test('classifies Fowler analysis and review documents without making them tasks'
   );
 });
 
+test('imports architecture and closeout documents as queryable knowledge facts', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments([
+    {
+      sourcePath: 'docs/architecture/components/ci-governance/example-component.md',
+      raw: '---\ntitle: Example Component\nstatus: Active\n---\n# Example Component\n',
+      contentSha256: '5'.repeat(64),
+    },
+    {
+      sourcePath: 'docs/architecture/components/ci-governance/example-user-stories.md',
+      raw: '---\ntitle: Example User Stories\nstatus: Active\nplanning_type: architecture\n---\n# Example User Stories\n',
+      contentSha256: '7'.repeat(64),
+    },
+    {
+      sourcePath: 'docs/planning/closeouts/20260609-example-closeout.md',
+      raw: '---\ntitle: Example Closeout\nstatus: Accepted\n---\n# Example Closeout\n',
+      contentSha256: '6'.repeat(64),
+    },
+  ]);
+
+  assert.deepEqual(
+    snapshot.documents.map((document) => [document.documentPath, document.documentType]),
+    [
+      ['docs/architecture/components/ci-governance/example-component.md', 'architecture_component'],
+      [
+        'docs/architecture/components/ci-governance/example-user-stories.md',
+        'architecture_user_stories',
+      ],
+      ['docs/planning/closeouts/20260609-example-closeout.md', 'closeout'],
+    ]
+  );
+});
+
 test('extracts governed document references as document links', () => {
   const snapshot = buildKnowledgeSnapshotFromDocuments([
     {
