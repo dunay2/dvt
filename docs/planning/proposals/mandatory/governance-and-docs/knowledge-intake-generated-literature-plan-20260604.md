@@ -123,7 +123,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db-surface-inventory-check.cjs
   - scripts/planning-db-surface-inventory-check.test.cjs
-  - scripts/planning-db/knowledge-intake-retirement-query.cjs
+  - scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
   - tools/planning-db/migrations/063_knowledge_intake_repository_backrefs.sql
 forbiddenImplementationSurfaces:
   - buzon/**

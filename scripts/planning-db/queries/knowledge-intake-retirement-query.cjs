@@ -1,6 +1,6 @@
 /** Owned concern: expose DB-owned knowledge intake retirement read models for planning DB queries. */
 function createKnowledgeIntakeRetirementReadModelComponent(deps = {}) {
-  const { schemaName } = deps.migration || require('../planning-db-migrate.cjs');
+  const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
 
   function parseLimit(value, defaultLimit) {

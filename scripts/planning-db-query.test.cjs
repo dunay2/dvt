@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
@@ -150,8 +151,19 @@ test('planning DB query CLI prints feature mechanization help without unsupporte
   assert.doesNotMatch(result.stderr, /Unknown planning DB query|Missing value/);
 });
 
+test('planning DB read-model query components live under the queries directory', () => {
+  const planningDbDir = path.join(__dirname, 'planning-db');
+  const misplacedQueryComponents = fs
+    .readdirSync(planningDbDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => entry.name)
+    .filter((name) => name.endsWith('-query.cjs'));
+
+  assert.deepEqual(misplacedQueryComponents, []);
+});
+
 test('command/query rail query behavior lives in a focused read-model component', () => {
-  const commandQueryRailQueryComponent = require('./planning-db/command-query-rail-query.cjs');
+  const commandQueryRailQueryComponent = require('./planning-db/queries/command-query-rail-query.cjs');
 
   assert.equal(commandQueryRailQueryComponent.buildCommandQueryRailRows, buildCommandQueryRailRows);
   assert.equal(commandQueryRailQueryComponent.buildCreationIntentRows, buildCreationIntentRows);
@@ -202,7 +214,7 @@ test('frontend component reflection query behavior lives in a focused read-model
 });
 
 test('feature mechanization query behavior lives in a focused read-model component', () => {
-  const featureMechanizationQueryComponent = require('./planning-db/feature-mechanization-query.cjs');
+  const featureMechanizationQueryComponent = require('./planning-db/queries/feature-mechanization-query.cjs');
 
   assert.equal(
     featureMechanizationQueryComponent.buildFeatureMechanizationFeatureRows,
@@ -247,7 +259,7 @@ test('feature mechanization query behavior lives in a focused read-model compone
 });
 
 test('knowledge intake retirement query behavior lives in a focused read-model component', () => {
-  const knowledgeIntakeRetirementComponent = require('./planning-db/knowledge-intake-retirement-query.cjs');
+  const knowledgeIntakeRetirementComponent = require('./planning-db/queries/knowledge-intake-retirement-query.cjs');
 
   assert.equal(
     knowledgeIntakeRetirementComponent.buildKnowledgeIntakeRetirementRows,
@@ -889,7 +901,7 @@ test('feature mechanization row builders expose DB-first operator views', () => 
       {
         feature_id: 'FEATURE-ONE',
         symbol_name: 'readFeatureMechanizationFeatureRows',
-        symbol_path: 'scripts/planning-db/feature-mechanization-query.cjs',
+        symbol_path: 'scripts/planning-db/queries/feature-mechanization-query.cjs',
         ddd_owner: 'Planning DB governance read model',
         cq_rails: ['ListFeatureMechanizationFeatures'],
         source_path: 'docs/planning/example.md',
@@ -899,7 +911,7 @@ test('feature mechanization row builders expose DB-first operator views', () => 
       [
         'FEATURE-ONE',
         'readFeatureMechanizationFeatureRows',
-        'scripts/planning-db/feature-mechanization-query.cjs',
+        'scripts/planning-db/queries/feature-mechanization-query.cjs',
         'Planning DB governance read model',
         '["ListFeatureMechanizationFeatures"]',
         'docs/planning/example.md',
@@ -2373,7 +2385,7 @@ test('feature mechanization readers query DB-first manifest projections', async 
   });
   await readFeatureMechanizationComponentRows(client, { state: 'implemented', limit: 6 });
   await readFeatureMechanizationSymbolRows(client, {
-    path: 'scripts/planning-db/feature-mechanization-query.cjs',
+    path: 'scripts/planning-db/queries/feature-mechanization-query.cjs',
     limit: 7,
   });
   await readFeatureMechanizationRailRows(client, {
@@ -2397,7 +2409,10 @@ test('feature mechanization readers query DB-first manifest projections', async 
   assert.match(captured[2].sql, /jsonb_array_elements/);
   assert.match(captured[2].sql, /symbols/);
   assert.match(captured[2].sql, /symbol_ref\.value->>'path' = \$1/);
-  assert.deepEqual(captured[2].params, ['scripts/planning-db/feature-mechanization-query.cjs', 7]);
+  assert.deepEqual(captured[2].params, [
+    'scripts/planning-db/queries/feature-mechanization-query.cjs',
+    7,
+  ]);
   assert.match(captured[3].sql, /rail\.rail_type = \$1/);
   assert.match(captured[3].sql, /rail\.rail_name = \$2/);
   assert.match(captured[3].sql, /rail\.raw_manifest \? 'featureId'/);

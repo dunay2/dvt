@@ -92,7 +92,7 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md
-  - scripts/planning-db/feature-mechanization-query.cjs
+  - scripts/planning-db/queries/feature-mechanization-query.cjs
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/check-feature-mechanization.cjs
@@ -163,13 +163,13 @@ redGreenCycles:
     redTest: node --test scripts/planning-db-query.test.cjs
     expectedFailure: planning DB query CLI rejects feature-mechanization query names.
     patchSurfaces:
-      - scripts/planning-db/feature-mechanization-query.cjs
+      - scripts/planning-db/queries/feature-mechanization-query.cjs
       - scripts/planning-db-query.cjs
       - scripts/planning-db-query.test.cjs
     greenTest: node --test scripts/planning-db-query.test.cjs
 symbols:
   - name: createFeatureMechanizationReadModelComponent
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationFeatures
@@ -184,7 +184,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: buildFeatureMechanizationFeatureRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationFeatures
@@ -195,7 +195,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: buildFeatureMechanizationComponentRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationComponents
@@ -206,7 +206,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: buildFeatureMechanizationSymbolRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationSymbols
@@ -217,7 +217,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: buildFeatureMechanizationRailRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationRails
@@ -228,7 +228,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: buildFeatureMechanizationValidationRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationValidations
@@ -239,7 +239,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: readFeatureMechanizationFeatureRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationFeatures
@@ -250,7 +250,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: readFeatureMechanizationComponentRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationComponents
@@ -261,7 +261,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: readFeatureMechanizationSymbolRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationSymbols
@@ -272,7 +272,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: readFeatureMechanizationRailRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationRails
@@ -283,7 +283,7 @@ symbols:
     unitTests:
       - scripts/planning-db-query.test.cjs
   - name: readFeatureMechanizationValidationRows
-    path: scripts/planning-db/feature-mechanization-query.cjs
+    path: scripts/planning-db/queries/feature-mechanization-query.cjs
     dddOwner: Planning DB governance read model
     cqRails:
       - ListFeatureMechanizationValidations
