@@ -90,7 +90,6 @@ inspect when executing the canonization tasks.
 | Frontend     | `buzon/20260518-f10-fowler-run-event-convergence-analysis.md`                                |
 | Runtime      | `buzon/20260422-codex-fowler-apps-api-runtime-composition-analysis-and-remediation.md`       |
 | Runtime      | `buzon/20260422-codex-fowler-start-run-application-component-analysis-and-remediation.md`    |
-| Runtime      | `buzon/20260422-codex-fowler-start-run-boundary-and-admission-analysis.md`                   |
 | Runtime      | `buzon/20260513-codex-fowler-runtime-root-subdivision-analysis-and-remediation.md`           |
 | Runtime      | `buzon/20260514-codex-fowler-ar-c2-t2-dashboard-evidence-analysis.md`                        |
 | Runtime      | `buzon/20260514-codex-fowler-ar-c2-t3-alert-evidence-analysis.md`                            |
