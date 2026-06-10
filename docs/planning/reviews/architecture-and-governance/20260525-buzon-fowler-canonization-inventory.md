@@ -88,7 +88,6 @@ inspect when executing the canonization tasks.
 | Frontend     | `buzon/20260516-codex-fowler-element-readonly-first-canvas-policy.md`                        |
 | Frontend     | `buzon/20260518-codex-fowler-f27-alpha-route-gate-branch-analysis.md`                        |
 | Frontend     | `buzon/20260518-f10-fowler-run-event-convergence-analysis.md`                                |
-| Runtime      | `buzon/20260421-codex-fowler-http-runtime-error-translation-analysis.md`                     |
 | Runtime      | `buzon/20260422-codex-fowler-apps-api-runtime-composition-analysis-and-remediation.md`       |
 | Runtime      | `buzon/20260422-codex-fowler-start-run-application-component-analysis-and-remediation.md`    |
 | Runtime      | `buzon/20260422-codex-fowler-start-run-boundary-and-admission-analysis.md`                   |

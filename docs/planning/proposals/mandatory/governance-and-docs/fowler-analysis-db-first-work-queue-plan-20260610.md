@@ -69,12 +69,14 @@ governingSources:
   - docs/guides/ai-work-protocol.md
 allowedImplementationSurfaces:
   - buzon/20260421-codex-fowler-branch-analysis-http-error-translation-stack.md
+  - buzon/20260421-codex-fowler-http-runtime-error-translation-analysis.md
   - buzon/20260421-codex-fowler-http-entrypoint-component-analysis-and-remediation.md
   - docs/evidence/ED-20260421-api-plan-route-response-and-adapter-build-baseline.md
   - docs/planning/proposals/mandatory/governance-and-docs/fowler-analysis-db-first-work-queue-plan-20260610.md
   - docs/planning/closeouts/20260421-api-http-error-translation-response-writer-unification-closeout.md
   - docs/planning/closeouts/20260421-api-http-entrypoint-response-componentization-closeout.md
   - docs/planning/reviews/architecture-and-governance/20260605-buzon-fowler-db-activation-review.md
+  - docs/planning/reviews/architecture-and-governance/20260525-buzon-fowler-canonization-inventory.md
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db-operate.cjs
