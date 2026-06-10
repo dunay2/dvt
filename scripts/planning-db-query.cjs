@@ -51,7 +51,17 @@ const {
   readKnowledgeIntakeRetirementRows,
 } = require('./planning-db/queries/knowledge-intake-retirement-query.cjs');
 const {
+  buildFowlerAnalysisCanonicalCoverageRows,
+  buildFowlerAnalysisDuplicateRows,
+  buildFowlerAnalysisIntentRows,
+  buildFowlerAnalysisReferenceRows,
+  buildFowlerAnalysisRetirementRows,
   buildFowlerAnalysisRows,
+  readFowlerAnalysisCanonicalCoverageRows,
+  readFowlerAnalysisDuplicateRows,
+  readFowlerAnalysisIntentRows,
+  readFowlerAnalysisReferenceRows,
+  readFowlerAnalysisRetirementRows,
   readFowlerAnalysisRows,
 } = require('./planning-db/queries/fowler-analysis-query.cjs');
 const {
@@ -114,6 +124,11 @@ const knownQueries = new Set([
   'knowledge-actions',
   'knowledge-intake',
   'fowler-analysis',
+  'fowler-analysis-references',
+  'fowler-analysis-retirement',
+  'fowler-analysis-coverage',
+  'fowler-analysis-intent',
+  'fowler-analysis-duplicates',
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
@@ -170,6 +185,11 @@ const governanceProjectionQueryNames = new Set([
   'knowledge-actions',
   'knowledge-intake',
   'fowler-analysis',
+  'fowler-analysis-references',
+  'fowler-analysis-retirement',
+  'fowler-analysis-coverage',
+  'fowler-analysis-intent',
+  'fowler-analysis-duplicates',
   'documentation-lifecycle',
   'documentation-panels',
   'mandatory-proposal-gaps',
@@ -191,6 +211,10 @@ const pathCommonFilterQueryNames = new Set([
   'knowledge-actions',
   'knowledge-intake',
   'fowler-analysis',
+  'fowler-analysis-references',
+  'fowler-analysis-retirement',
+  'fowler-analysis-coverage',
+  'fowler-analysis-intent',
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
@@ -275,6 +299,31 @@ function buildPlanningDbQueryHelpText(queryName) {
       examples.push(
         `  pnpm planning:db:query ${queryName} --state ready_to_retire --limit 20`,
         `  pnpm planning:db:query ${queryName} --gaps true --limit 20`
+      );
+    } else if (queryName === 'fowler-analysis-references') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state live --path buzon/example.md --limit 20`,
+        `  pnpm planning:db:query ${queryName} --target docs/architecture/components/example.md --limit 20`
+      );
+    } else if (queryName === 'fowler-analysis-retirement') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --retirement-allowed true --limit 20`,
+        `  pnpm planning:db:query ${queryName} --state blocked_by_references --limit 20`
+      );
+    } else if (queryName === 'fowler-analysis-coverage') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state target_missing --limit 20`,
+        `  pnpm planning:db:query ${queryName} --target docs/architecture/components/example.md --limit 20`
+      );
+    } else if (queryName === 'fowler-analysis-intent') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --duplicates true --limit 20`,
+        `  pnpm planning:db:query ${queryName} --state duplicate_open_intent --limit 20`
+      );
+    } else if (queryName === 'fowler-analysis-duplicates') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state open_duplicate --limit 20`,
+        `  pnpm planning:db:query ${queryName} --target docs/architecture/components/example.md --limit 20`
       );
     } else if (queryName === 'documentation-panels') {
       examples.push(
@@ -557,6 +606,10 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.surface = value;
       continue;
     }
+    if (arg === '--target') {
+      filters.target = value;
+      continue;
+    }
     if (arg === '--flow') {
       filters.flow = value;
       continue;
@@ -640,6 +693,11 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'feature-mechanization-validations' ||
         queryName === 'knowledge-intake' ||
         queryName === 'fowler-analysis' ||
+        queryName === 'fowler-analysis-references' ||
+        queryName === 'fowler-analysis-retirement' ||
+        queryName === 'fowler-analysis-coverage' ||
+        queryName === 'fowler-analysis-intent' ||
+        queryName === 'fowler-analysis-duplicates' ||
         queryName === 'documentation-lifecycle' ||
         queryName === 'documentation-panels' ||
         queryName === 'component-roadmap' ||
@@ -653,6 +711,10 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--resolution') {
       filters.resolution = normalizeResolutionFilter(value);
+      continue;
+    }
+    if (arg === '--retirement-allowed') {
+      filters.retirementAllowed = parseBooleanFilter(value, '--retirement-allowed');
       continue;
     }
     if (arg === '--kind') {
@@ -3920,6 +3982,51 @@ async function runQuery(options = {}) {
       return fowlerRows;
     }
 
+    if (queryName === 'fowler-analysis-references') {
+      const rows = await readFowlerAnalysisReferenceRows(client, options.filters || {});
+      const referenceRows = buildFowlerAnalysisReferenceRows(rows);
+      if (options.print !== false) {
+        printTaskRows(referenceRows);
+      }
+      return referenceRows;
+    }
+
+    if (queryName === 'fowler-analysis-retirement') {
+      const rows = await readFowlerAnalysisRetirementRows(client, options.filters || {});
+      const retirementRows = buildFowlerAnalysisRetirementRows(rows);
+      if (options.print !== false) {
+        printTaskRows(retirementRows);
+      }
+      return retirementRows;
+    }
+
+    if (queryName === 'fowler-analysis-coverage') {
+      const rows = await readFowlerAnalysisCanonicalCoverageRows(client, options.filters || {});
+      const coverageRows = buildFowlerAnalysisCanonicalCoverageRows(rows);
+      if (options.print !== false) {
+        printTaskRows(coverageRows);
+      }
+      return coverageRows;
+    }
+
+    if (queryName === 'fowler-analysis-intent') {
+      const rows = await readFowlerAnalysisIntentRows(client, options.filters || {});
+      const intentRows = buildFowlerAnalysisIntentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(intentRows);
+      }
+      return intentRows;
+    }
+
+    if (queryName === 'fowler-analysis-duplicates') {
+      const rows = await readFowlerAnalysisDuplicateRows(client, options.filters || {});
+      const duplicateRows = buildFowlerAnalysisDuplicateRows(rows);
+      if (options.print !== false) {
+        printTaskRows(duplicateRows);
+      }
+      return duplicateRows;
+    }
+
     if (queryName === 'documentation-panels') {
       const rows = await readDocumentationPanelRows(client, options.filters || {});
       const panelRows = buildDocumentationPanelRows(rows);
@@ -4320,6 +4427,11 @@ module.exports = {
   buildDbSurfaceRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
+  buildFowlerAnalysisCanonicalCoverageRows,
+  buildFowlerAnalysisDuplicateRows,
+  buildFowlerAnalysisIntentRows,
+  buildFowlerAnalysisReferenceRows,
+  buildFowlerAnalysisRetirementRows,
   buildFowlerAnalysisRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
@@ -4366,6 +4478,11 @@ module.exports = {
   readRiskDebtRows,
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,
+  readFowlerAnalysisCanonicalCoverageRows,
+  readFowlerAnalysisDuplicateRows,
+  readFowlerAnalysisIntentRows,
+  readFowlerAnalysisReferenceRows,
+  readFowlerAnalysisRetirementRows,
   readFowlerAnalysisRows,
   readDocumentationLifecycleRows,
   readDocumentationPanelRows,

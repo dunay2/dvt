@@ -18,6 +18,7 @@ questions:
 - which intake files are blocked by repository references;
 - which intake files are canonized and can be retired from the repo;
 - which active docs already carry the canonical Fowler governance rule.
+- which intended work appears repeatedly across Fowler analyses.
 
 ## Target State
 
@@ -32,16 +33,25 @@ flowchart LR
   Knowledge --> Lifecycle["documentation_lifecycle_query"]
   Lifecycle --> Queue["fowler_analysis_work_query"]
   Queue --> Query["planning:db:query fowler-analysis"]
+  Queue --> Intent["fowler_analysis_intended_work_query"]
+  Intent --> Duplicates["fowler_analysis_duplicate_intent_query"]
+  Queue --> Retirement["fowler_analysis_retirement_query"]
+  Retirement --> Decision["planning:db:operate fowler-analysis approve-retirement"]
 ```
 
 ## Fowler / DDD Classification
 
 <!-- markdownlint-disable MD060 -->
 
-| scenario                                    | opportunity              | Fowler pattern                  | DDD owner                        | command/query rail           | validation                                         |
-| ------------------------------------------- | ------------------------ | ------------------------------- | -------------------------------- | ---------------------------- | -------------------------------------------------- |
-| Fowler files duplicate repo planning truth. | Hidden authority         | Repository / Query Service      | FowlerAnalysisWorkQueueReadModel | QueryFowlerAnalysisWorkQueue | `node --test scripts/planning-db-query.test.cjs`   |
-| Intake files are removed without backrefs.  | Incomplete encapsulation | Policy Object / Retire Obsolete | FowlerAnalysisRetirementPolicy   | QueryFowlerAnalysisWorkQueue | `node --test scripts/planning-db-migrate.test.cjs` |
+| scenario                                       | opportunity              | Fowler pattern                     | DDD owner                         | command/query rail                      | validation                                         |
+| ---------------------------------------------- | ------------------------ | ---------------------------------- | --------------------------------- | --------------------------------------- | -------------------------------------------------- |
+| Fowler files duplicate repo planning truth.    | Hidden authority         | Repository / Query Service         | FowlerAnalysisWorkQueueReadModel  | QueryFowlerAnalysisWorkQueue            | `node --test scripts/planning-db-query.test.cjs`   |
+| Intake files are removed without backrefs.     | Incomplete encapsulation | Policy Object / Retire Obsolete    | FowlerAnalysisRetirementPolicy    | QueryFowlerAnalysisRetirementCandidates | `node --test scripts/planning-db-migrate.test.cjs` |
+| Reference decisions are made from grep output. | Hidden authority         | Repository / Query Service         | FowlerAnalysisReferenceReadModel  | QueryFowlerAnalysisReferences           | `node --test scripts/planning-db-query.test.cjs`   |
+| Canonical targets are chosen outside the rail. | Divergent change         | Published Language                 | FowlerAnalysisCanonicalTargetLink | LinkFowlerAnalysisCanonicalTarget       | `node --test scripts/planning-db-operate.test.cjs` |
+| Retirement approvals are not auditable.        | Shotgun surgery          | Retire Obsolete / Policy Object    | FowlerAnalysisRetirementDecision  | ApproveFowlerAnalysisRetirement         | `node --test scripts/planning-db-operate.test.cjs` |
+| Coverage gaps are hidden in prose.             | Primitive obsession      | Query Service                      | FowlerAnalysisCoverageReadModel   | QueryFowlerAnalysisCanonicalCoverage    | `node --test scripts/planning-db-query.test.cjs`   |
+| Intended work repeats across Fowler documents. | Duplicate semantics      | Query Service / Published Language | FowlerAnalysisWorkQueueReadModel  | QueryFowlerAnalysisWorkQueue            | `node --test scripts/planning-db-query.test.cjs`   |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -61,9 +71,15 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/fowler-analysis-db-first-work-queue-plan-20260610.md
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
+  - scripts/planning-db-operate.cjs
+  - scripts/planning-db-operate.test.cjs
+  - scripts/planning-db-operate-tests/fowler-analysis.test.cjs
   - scripts/planning-db-migrate.test.cjs
   - scripts/planning-db/queries/fowler-analysis-query.cjs
   - tools/planning-db/migrations/073_fowler_analysis_work_query.sql
+  - tools/planning-db/migrations/074_fowler_analysis_retirement_rails.sql
+  - tools/planning-db/migrations/075_fowler_analysis_intent_duplicates.sql
+  - tools/planning-db/migrations/076_fowler_analysis_intent_duplicate_state_hardening.sql
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -76,12 +92,42 @@ commandQueryRails:
   - name: QueryFowlerAnalysisWorkQueue
     type: query
     dddOwner: FowlerAnalysisWorkQueueReadModel
+  - name: QueryFowlerAnalysisReferences
+    type: query
+    dddOwner: FowlerAnalysisReferenceReadModel
+  - name: QueryFowlerAnalysisRetirementCandidates
+    type: query
+    dddOwner: FowlerAnalysisRetirementPolicy
+  - name: QueryFowlerAnalysisCanonicalCoverage
+    type: query
+    dddOwner: FowlerAnalysisCoverageReadModel
+  - name: RecordFowlerAnalysisDisposition
+    type: command
+    dddOwner: FowlerAnalysisDisposition
+  - name: LinkFowlerAnalysisCanonicalTarget
+    type: command
+    dddOwner: FowlerAnalysisCanonicalTargetLink
+  - name: ResolveFowlerAnalysisReference
+    type: command
+    dddOwner: FowlerAnalysisReferenceResolution
+  - name: ApproveFowlerAnalysisRetirement
+    type: command
+    dddOwner: FowlerAnalysisRetirementDecision
 domainObjects:
   - FowlerAnalysisWorkQueueReadModel
   - FowlerAnalysisRetirementPolicy
+  - FowlerAnalysisDocument
+  - FowlerAnalysisReference
+  - FowlerAnalysisCanonicalTarget
+  - FowlerAnalysisDisposition
+  - FowlerAnalysisImprovement
+  - FowlerAnalysisRetirementDecision
+  - FowlerAnalysisIntendedWork
+  - FowlerAnalysisDuplicateIntent
 fowlerSignals:
   - Hidden authority
   - Incomplete encapsulation
+  - Duplicate semantics
 redGreenCycles:
   - id: fowler-analysis-work-query
     redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
@@ -91,13 +137,35 @@ redGreenCycles:
       - scripts/planning-db/queries/fowler-analysis-query.cjs
       - tools/planning-db/migrations/073_fowler_analysis_work_query.sql
     greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: fowler-analysis-retirement-rails
+    redTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: fowler-analysis command/query rails are missing retirement decisions, references, coverage, and DB-operated disposition commands.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate-tests/fowler-analysis.test.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db/queries/fowler-analysis-query.cjs
+      - tools/planning-db/migrations/074_fowler_analysis_retirement_rails.sql
+    greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: fowler-analysis-intent-duplicates
+    redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: Fowler intended-work and duplicate-intent DB projections are missing from the work queue rail.
+    patchSurfaces:
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db/queries/fowler-analysis-query.cjs
+      - tools/planning-db/migrations/075_fowler_analysis_intent_duplicates.sql
+      - tools/planning-db/migrations/076_fowler_analysis_intent_duplicate_state_hardening.sql
+    greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - planning DB operator query
 completionGate:
+  - node --test scripts/planning-db-operate.test.cjs
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
   - pnpm governance:db:import
+  - pnpm planning:db:query fowler-analysis-intent --limit 20
+  - pnpm planning:db:query fowler-analysis-duplicates --limit 20
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:changed
   - pnpm verify:prepush
@@ -120,4 +188,212 @@ symbols:
     cypressCoverage: N/A - planning DB operator query
     unitTests:
       - node --test scripts/planning-db-query.test.cjs
+  - name: readFowlerAnalysisReferenceRows
+    path: scripts/planning-db/queries/fowler-analysis-query.cjs
+    dddOwner: FowlerAnalysisReferenceReadModel
+    cqRails: [QueryFowlerAnalysisReferences]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator query
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readFowlerAnalysisRetirementRows
+    path: scripts/planning-db/queries/fowler-analysis-query.cjs
+    dddOwner: FowlerAnalysisRetirementPolicy
+    cqRails: [QueryFowlerAnalysisRetirementCandidates]
+    fowlerSignals: [Incomplete encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator query
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readFowlerAnalysisCanonicalCoverageRows
+    path: scripts/planning-db/queries/fowler-analysis-query.cjs
+    dddOwner: FowlerAnalysisCoverageReadModel
+    cqRails: [QueryFowlerAnalysisCanonicalCoverage]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator query
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readFowlerAnalysisIntentRows
+    path: scripts/planning-db/queries/fowler-analysis-query.cjs
+    dddOwner: FowlerAnalysisWorkQueueReadModel
+    cqRails: [QueryFowlerAnalysisWorkQueue]
+    fowlerSignals: [Duplicate semantics, Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator query
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readFowlerAnalysisDuplicateRows
+    path: scripts/planning-db/queries/fowler-analysis-query.cjs
+    dddOwner: FowlerAnalysisWorkQueueReadModel
+    cqRails: [QueryFowlerAnalysisWorkQueue]
+    fowlerSignals: [Duplicate semantics, Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator query
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: parseFowlerAnalysisCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisDisposition
+    cqRails:
+      - RecordFowlerAnalysisDisposition
+      - LinkFowlerAnalysisCanonicalTarget
+      - ResolveFowlerAnalysisReference
+      - ApproveFowlerAnalysisRetirement
+    fowlerSignals: [Hidden authority, Shotgun surgery]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: planFowlerAnalysisOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisRetirementDecision
+    cqRails:
+      - RecordFowlerAnalysisDisposition
+      - LinkFowlerAnalysisCanonicalTarget
+      - ResolveFowlerAnalysisReference
+      - ApproveFowlerAnalysisRetirement
+    fowlerSignals: [Hidden authority, Incomplete encapsulation]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: writePlannedFowlerAnalysisOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisRetirementDecision
+    cqRails:
+      - RecordFowlerAnalysisDisposition
+      - LinkFowlerAnalysisCanonicalTarget
+      - ResolveFowlerAnalysisReference
+      - ApproveFowlerAnalysisRetirement
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: applyFowlerAnalysisOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisRetirementDecision
+    cqRails:
+      - RecordFowlerAnalysisDisposition
+      - LinkFowlerAnalysisCanonicalTarget
+      - ResolveFowlerAnalysisReference
+      - ApproveFowlerAnalysisRetirement
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: assertFowlerAnalysisIdempotentReplayMatches
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisRetirementDecision
+    cqRails:
+      - RecordFowlerAnalysisDisposition
+      - LinkFowlerAnalysisCanonicalTarget
+      - ResolveFowlerAnalysisReference
+      - ApproveFowlerAnalysisRetirement
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: readExistingFowlerAnalysisOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisRetirementDecision
+    cqRails:
+      - RecordFowlerAnalysisDisposition
+      - LinkFowlerAnalysisCanonicalTarget
+      - ResolveFowlerAnalysisReference
+      - ApproveFowlerAnalysisRetirement
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: fowlerAnalysisAudit
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisRetirementDecision
+    cqRails:
+      - RecordFowlerAnalysisDisposition
+      - LinkFowlerAnalysisCanonicalTarget
+      - ResolveFowlerAnalysisReference
+      - ApproveFowlerAnalysisRetirement
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: allowedFowlerAnalysisDispositionStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisDisposition
+    cqRails: [RecordFowlerAnalysisDisposition]
+    fowlerSignals: [Published Language]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: allowedFowlerAnalysisCanonicalTargetStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisCanonicalTargetLink
+    cqRails: [LinkFowlerAnalysisCanonicalTarget]
+    fowlerSignals: [Published Language]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: allowedFowlerAnalysisReferenceResolutionStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisReferenceResolution
+    cqRails: [ResolveFowlerAnalysisReference]
+    fowlerSignals: [Published Language]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: allowedFowlerAnalysisRetirementDecisionStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisRetirementDecision
+    cqRails: [ApproveFowlerAnalysisRetirement]
+    fowlerSignals: [Published Language]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: validateFowlerAnalysisDispositionStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisDisposition
+    cqRails: [RecordFowlerAnalysisDisposition]
+    fowlerSignals: [Published Language]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: validateFowlerAnalysisCanonicalTargetStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisCanonicalTargetLink
+    cqRails: [LinkFowlerAnalysisCanonicalTarget]
+    fowlerSignals: [Published Language]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: validateFowlerAnalysisReferenceResolutionStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisReferenceResolution
+    cqRails: [ResolveFowlerAnalysisReference]
+    fowlerSignals: [Published Language]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
+  - name: validateFowlerAnalysisRetirementDecisionStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: FowlerAnalysisRetirementDecision
+    cqRails: [ApproveFowlerAnalysisRetirement]
+    fowlerSignals: [Published Language]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator command
+    unitTests:
+      - node --test scripts/planning-db-operate.test.cjs
 ```

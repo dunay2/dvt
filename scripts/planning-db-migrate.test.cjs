@@ -379,6 +379,135 @@ test('tracked migrations expose Fowler analysis work as DB-first retirement fact
   assert.match(fowlerAnalysisMigration.sql, /Fowler analysis work queue/);
 });
 
+test('tracked migrations expose Fowler analysis retirement rails as DB-owned decisions', () => {
+  const migrations = readMigrationFiles();
+  const fowlerRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '074_fowler_analysis_retirement_rails.sql'
+  );
+
+  assert.ok(fowlerRetirementMigration);
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_dispositions/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_canonical_targets/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_reference_resolutions/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_retirement_decisions/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_operations/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_reference_query/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_retirement_query/
+  );
+  assert.match(fowlerRetirementMigration.sql, /policy\.lifecycle_gap_kind/);
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_canonical_coverage_query/
+  );
+});
+
+test('tracked migrations require DB-resolved references before Fowler intake retirement', () => {
+  const migrations = readMigrationFiles();
+  const fowlerRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '074_fowler_analysis_retirement_rails.sql'
+  );
+
+  assert.ok(fowlerRetirementMigration);
+  assert.match(fowlerRetirementMigration.sql, /unresolved_reference_count = 0/);
+  assert.match(fowlerRetirementMigration.sql, /reference_state = 'live'/);
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /resolution_status in \('resolved', 'obsolete', 'replaced'\)/
+  );
+  assert.match(fowlerRetirementMigration.sql, /source_path not like 'buzon\/%'/);
+});
+
+test('tracked migrations require accepted targets and dispositions before Fowler retirement', () => {
+  const migrations = readMigrationFiles();
+  const fowlerRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '074_fowler_analysis_retirement_rails.sql'
+  );
+
+  assert.ok(fowlerRetirementMigration);
+  assert.match(fowlerRetirementMigration.sql, /open_improvement_count = 0/);
+  assert.match(fowlerRetirementMigration.sql, /canonical_target_status = 'accepted'/);
+  assert.match(fowlerRetirementMigration.sql, /disposition_status = 'accepted'/);
+  assert.match(fowlerRetirementMigration.sql, /retirement_decision_status = 'approved'/);
+  assert.match(fowlerRetirementMigration.sql, /retirement_allowed/);
+});
+
+test('tracked migrations do not allow Fowler retirement from missing grep results alone', () => {
+  const migrations = readMigrationFiles();
+  const fowlerRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '074_fowler_analysis_retirement_rails.sql'
+  );
+
+  assert.ok(fowlerRetirementMigration);
+  assert.match(fowlerRetirementMigration.sql, /fowler_analysis_retirement_query/);
+  assert.match(fowlerRetirementMigration.sql, /fowler_analysis_reference_query/);
+  assert.match(fowlerRetirementMigration.sql, /fowler_analysis_canonical_coverage_query/);
+  assert.doesNotMatch(fowlerRetirementMigration.sql, /grep|ripgrep|rg --files/i);
+});
+
+test('tracked migrations expose Fowler analysis intended work and duplicate intents', () => {
+  const migrations = readMigrationFiles();
+  const fowlerIntentMigration = migrations.find(
+    (migration) => migration.fileName === '075_fowler_analysis_intent_duplicates.sql'
+  );
+
+  assert.ok(fowlerIntentMigration);
+  assert.match(
+    fowlerIntentMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_intended_work_query/
+  );
+  assert.match(
+    fowlerIntentMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_duplicate_intent_query/
+  );
+  assert.match(fowlerIntentMigration.sql, /knowledge_action_items/);
+  assert.match(fowlerIntentMigration.sql, /intent_key/);
+  assert.match(fowlerIntentMigration.sql, /duplicate_document_count/);
+  assert.match(fowlerIntentMigration.sql, /Duplicate semantics/);
+  assert.doesNotMatch(fowlerIntentMigration.sql, /grep|ripgrep|rg --files/i);
+});
+
+test('tracked migrations classify same-document repeated open Fowler intentions as duplicates', () => {
+  const migrations = readMigrationFiles();
+  const fowlerIntentHardeningMigration = migrations.find(
+    (migration) => migration.fileName === '076_fowler_analysis_intent_duplicate_state_hardening.sql'
+  );
+
+  assert.ok(fowlerIntentHardeningMigration);
+  assert.match(
+    fowlerIntentHardeningMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_intended_work_query/
+  );
+  assert.match(fowlerIntentHardeningMigration.sql, /duplicate_open_action_count, 0\) > 1/);
+  assert.doesNotMatch(
+    fowlerIntentHardeningMigration.sql,
+    /duplicate_open_action_count, 0\) > 1\s+and\s+coalesce\(intent_rollup\.duplicate_document_count/
+  );
+  assert.match(
+    fowlerIntentHardeningMigration.sql,
+    /lower\(coalesce\(intent\.action_status, ''\)\) not in/
+  );
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(
