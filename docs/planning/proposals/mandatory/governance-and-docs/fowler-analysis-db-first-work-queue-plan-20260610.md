@@ -68,7 +68,10 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/guides/ai-work-protocol.md
 allowedImplementationSurfaces:
+  - buzon/20260421-codex-fowler-branch-analysis-http-error-translation-stack.md
   - docs/planning/proposals/mandatory/governance-and-docs/fowler-analysis-db-first-work-queue-plan-20260610.md
+  - docs/planning/closeouts/20260421-api-http-error-translation-response-writer-unification-closeout.md
+  - docs/planning/reviews/architecture-and-governance/20260605-buzon-fowler-db-activation-review.md
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db-operate.cjs
