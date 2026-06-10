@@ -61,8 +61,8 @@ planning_type: closeout
   - `apps/api/docs/http-runtime-error-translation-component.md`
   - `docs/architecture/components/api/index.md`
   - `docs/architecture/components/api/api-current-to-target-architecture.md`
-- Saved the Fowler analysis and remediation brief in:
-  `buzon/20260421-codex-fowler-http-entrypoint-component-analysis-and-remediation.md`
+- Retired the Fowler analysis and remediation brief into this closeout through
+  the Planning DB Fowler retirement rail.
 
 ## Governing Sources Used
 
@@ -81,7 +81,7 @@ planning_type: closeout
 - Passed:
   `pnpm exec eslint --max-warnings 0 apps/api/src/entrypoints/http/planRouteResponseTranslation.ts apps/api/src/entrypoints/http/compilePlanRoute.ts apps/api/src/entrypoints/http/importPlanRoute.ts apps/api/src/entrypoints/http/previewPlanRoute.ts apps/api/src/entrypoints/http/previewPlanRouteRequestResolver.ts apps/api/src/entrypoints/http/executePlanRouteFacade.ts apps/api/src/entrypoints/http/compilePlanRouteResponseMapper.ts apps/api/src/entrypoints/http/importPlanRouteResponseMapper.ts apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts apps/api/src/entrypoints/http/planPreviewContractErrorMapper.ts apps/api/test/entrypoints/http/httpArchitectureAst.support.ts apps/api/test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts apps/api/test/entrypoints/http/planRouteResponseTranslation.architecture.test.ts apps/api/test/entrypoints/http/planRouteResponseTranslation.test.ts`
 - Passed:
-  `pnpm exec markdownlint-cli2 apps/api/docs/http-runtime-error-translation-component.md apps/api/docs/plan-route-response-translation-component.md buzon/20260421-codex-fowler-http-entrypoint-component-analysis-and-remediation.md docs/architecture/components/api/api-current-to-target-architecture.md docs/architecture/components/api/index.md docs/planning/closeouts/20260421-api-http-entrypoint-response-componentization-closeout.md --config .markdownlint-cli2.jsonc --ignore-path .markdownlintignore`
+  `pnpm exec markdownlint-cli2 apps/api/docs/http-runtime-error-translation-component.md apps/api/docs/plan-route-response-translation-component.md docs/architecture/components/api/api-current-to-target-architecture.md docs/architecture/components/api/index.md docs/planning/closeouts/20260421-api-http-entrypoint-response-componentization-closeout.md --config .markdownlint-cli2.jsonc --ignore-path .markdownlintignore`
 - Passed:
   `pnpm docs:sync`
 - Passed:
