@@ -362,6 +362,23 @@ test('tracked migrations scope required documentation panel sections to componen
   );
 });
 
+test('tracked migrations expose Fowler analysis work as DB-first retirement facts', () => {
+  const migrations = readMigrationFiles();
+  const fowlerAnalysisMigration = migrations.find(
+    (migration) => migration.fileName === '073_fowler_analysis_work_query.sql'
+  );
+
+  assert.ok(fowlerAnalysisMigration);
+  assert.match(
+    fowlerAnalysisMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_work_query/
+  );
+  assert.match(fowlerAnalysisMigration.sql, /documentation_lifecycle_query/);
+  assert.match(fowlerAnalysisMigration.sql, /ready_to_retire/);
+  assert.match(fowlerAnalysisMigration.sql, /pending_improvements/);
+  assert.match(fowlerAnalysisMigration.sql, /Fowler analysis work queue/);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(
