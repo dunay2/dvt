@@ -71,6 +71,7 @@ allowedImplementationSurfaces:
   - buzon/20260421-codex-fowler-branch-analysis-http-error-translation-stack.md
   - buzon/20260421-codex-fowler-http-runtime-error-translation-analysis.md
   - buzon/20260421-codex-fowler-http-entrypoint-component-analysis-and-remediation.md
+  - buzon/20260422-codex-fowler-apps-api-runtime-composition-analysis-and-remediation.md
   - buzon/20260422-codex-fowler-start-run-boundary-and-admission-analysis.md
   - buzon/20260422-codex-fowler-start-run-application-component-analysis-and-remediation.md
   - docs/evidence/ED-20260421-api-plan-route-response-and-adapter-build-baseline.md
