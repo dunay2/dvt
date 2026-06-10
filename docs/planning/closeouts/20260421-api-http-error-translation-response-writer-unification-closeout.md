@@ -87,8 +87,8 @@ planning_type: closeout
 
 ## Real Work Performed
 
-- Added branch-level Fowler analysis to
-  `buzon/20260421-codex-fowler-branch-analysis-http-error-translation-stack.md`.
+- Retired the branch-level Fowler intake into this closeout through the
+  Planning DB Fowler retirement rail.
 - Unified translated `HttpResponseModel` writing through `sendHttpResponse` in:
   - `apps/api/src/entrypoints/http/listRunsRoute.ts`
   - `apps/api/src/entrypoints/http/startRunRoute.ts`
@@ -115,7 +115,7 @@ planning_type: closeout
 - `pnpm exec eslint --max-warnings 0 apps/api/src/entrypoints/http/listRunsRoute.ts apps/api/src/entrypoints/http/startRunRoute.ts apps/api/test/entrypoints/http/httpRuntimeErrorTranslation.architecture.test.ts`
 - `pnpm docs:sync`
 - `pnpm docs:status:generate`
-- `pnpm exec markdownlint-cli2 apps/api/docs/http-runtime-error-translation-component.md docs/architecture/components/api/api-current-to-target-architecture.md docs/planning/closeouts/20260421-api-http-error-translation-response-writer-unification-closeout.md buzon/20260421-codex-fowler-branch-analysis-http-error-translation-stack.md --config .markdownlint-cli2.jsonc --ignore-path .markdownlintignore`
+- `pnpm exec markdownlint-cli2 apps/api/docs/http-runtime-error-translation-component.md docs/architecture/components/api/api-current-to-target-architecture.md docs/planning/closeouts/20260421-api-http-error-translation-response-writer-unification-closeout.md --config .markdownlint-cli2.jsonc --ignore-path .markdownlintignore`
 - `pnpm verify:prepush`
 
 ## No-debt evidence
