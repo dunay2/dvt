@@ -25,7 +25,7 @@ planning_type: closeout
 - Added `knowledge_intake_retirement_query` to classify `buzon/` intake as
   `canonized`, `open-actions`, `referenced`, or `unclassified`.
 - Moved query behavior into
-  `scripts/planning-db/knowledge-intake-retirement-query.cjs` instead of adding
+  `scripts/planning-db/queries/knowledge-intake-retirement-query.cjs` instead of adding
   more logic to the central query script.
 - Extended knowledge document link extraction to count direct governed path
   references such as `buzon/example.md` in addition to Markdown links.

@@ -1,6 +1,6 @@
 /** Owned concern: expose command/query rail catalog read models for planning DB queries. */
 function createCommandQueryRailReadModelComponent(deps = {}) {
-  const { schemaName } = deps.migration || require('../planning-db-migrate.cjs');
+  const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
 
   function flagLabel(value, label) {

@@ -709,7 +709,7 @@ flowchart LR
 | scenario                                                    | opportunity             | Fowler pattern                     | DDD owner                                                      | command/query rail                                          | implementation surfaces                                                                                                                                                                                                                                               | unit or package test                              | architecture test                                | user-flow test              | out of scope                                  |
 | ----------------------------------------------------------- | ----------------------- | ---------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------ | --------------------------- | --------------------------------------------- |
 | Planning DB import indexes command/query rail catalog rows. | Responsibility overload | Extract Service / Policy Object    | `CommandQueryRailCatalog`                                      | `ImportCommandQueryRailCatalog`                             | `scripts/planning-db/command-query-rail-catalog.cjs`, `scripts/planning-db/command-query-rail-shared.cjs`, `scripts/planning-db/command-query-rail-documentation.cjs`, `scripts/planning-db/command-query-rail-reference-index.cjs`, `scripts/planning-db-import.cjs` | `node --test scripts/planning-db-import.test.cjs` | `pnpm docs:feature-mechanization:implementation` | N/A - DB governance command | Splitting unrelated planning DB import areas. |
-| Planning DB query exposes rail and creation-intent rows.    | Responsibility overload | Presentation Model / Query Service | `CommandQueryRailCatalogReadModel`, `CreationIntentAssessment` | `QueryCommandQueryRailCatalog`, `AssessCreationIntentQuery` | `scripts/planning-db/command-query-rail-query.cjs`, `scripts/planning-db-query.cjs`                                                                                                                                                                                   | `node --test scripts/planning-db-query.test.cjs`  | `pnpm docs:feature-mechanization:implementation` | N/A - DB governance query   | Changing SQL schema or query names.           |
+| Planning DB query exposes rail and creation-intent rows.    | Responsibility overload | Presentation Model / Query Service | `CommandQueryRailCatalogReadModel`, `CreationIntentAssessment` | `QueryCommandQueryRailCatalog`, `AssessCreationIntentQuery` | `scripts/planning-db/queries/command-query-rail-query.cjs`, `scripts/planning-db-query.cjs`                                                                                                                                                                           | `node --test scripts/planning-db-query.test.cjs`  | `pnpm docs:feature-mechanization:implementation` | N/A - DB governance query   | Changing SQL schema or query names.           |
 
 ```feature-mechanization
 version: 1
@@ -735,7 +735,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db/command-query-rail-shared.cjs
   - scripts/planning-db/command-query-rail-documentation.cjs
   - scripts/planning-db/command-query-rail-reference-index.cjs
-  - scripts/planning-db/command-query-rail-query.cjs
+  - scripts/planning-db/queries/command-query-rail-query.cjs
   - scripts/planning-db-import.cjs
   - scripts/planning-db-import.test.cjs
   - scripts/planning-db-query.cjs
@@ -796,7 +796,7 @@ redGreenCycles:
       - scripts/planning-db/command-query-rail-shared.cjs
       - scripts/planning-db/command-query-rail-documentation.cjs
       - scripts/planning-db/command-query-rail-reference-index.cjs
-      - scripts/planning-db/command-query-rail-query.cjs
+      - scripts/planning-db/queries/command-query-rail-query.cjs
       - scripts/planning-db-import.cjs
       - scripts/planning-db-query.cjs
     greenTest: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
@@ -838,7 +838,7 @@ symbols:
     unitTests:
       - scripts/planning-db-import.test.cjs
   - name: createCommandQueryRailReadModelComponent
-    path: scripts/planning-db/command-query-rail-query.cjs
+    path: scripts/planning-db/queries/command-query-rail-query.cjs
     dddOwner: CommandQueryRailCatalogReadModel
     cqRails: [QueryCommandQueryRailCatalog, AssessCreationIntentQuery]
     fowlerSignals: [Responsibility Overload]

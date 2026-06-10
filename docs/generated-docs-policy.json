@@ -128,7 +128,7 @@
       ],
       "sourcePaths": [
         "scripts/generate-knowledge-intake-literature.cjs",
-        "scripts/planning-db/knowledge-intake-retirement-query.cjs",
+        "scripts/planning-db/queries/knowledge-intake-retirement-query.cjs",
         "tools/planning-db/migrations/057_knowledge_intake_retirement_query.sql"
       ],
       "generatorCommand": "pnpm docs:knowledge-intake:generate",

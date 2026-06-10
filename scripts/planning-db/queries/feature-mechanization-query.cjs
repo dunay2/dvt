@@ -1,6 +1,6 @@
 /** Owned concern: expose DB-first feature-mechanization read models for planning DB queries. */
 function createFeatureMechanizationReadModelComponent(deps = {}) {
-  const { schemaName } = deps.migration || require('../planning-db-migrate.cjs');
+  const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
 
   function parseLimit(value, defaultLimit) {

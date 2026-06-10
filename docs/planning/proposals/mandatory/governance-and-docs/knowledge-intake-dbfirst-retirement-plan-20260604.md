@@ -109,7 +109,7 @@ allowedImplementationSurfaces:
   - package.json
   - scripts/local-validation-plan.cjs
   - scripts/planning-db/knowledge-intake-retirement-guard.cjs
-  - scripts/planning-db/knowledge-intake-retirement-query.cjs
+  - scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
   - scripts/planning-db/queries/documentation-lifecycle-query.cjs
   - scripts/planning-db-knowledge-intake-retirement-guard.test.cjs
   - scripts/planning-db-query.cjs
@@ -185,7 +185,7 @@ redGreenCycles:
     redTest: node --test scripts/planning-db-query.test.cjs
     expectedFailure: knowledge-intake is an unknown planning DB query and has no focused read-model module.
     patchSurfaces:
-      - scripts/planning-db/knowledge-intake-retirement-query.cjs
+      - scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
       - scripts/planning-db-query.cjs
       - scripts/planning-db-query.test.cjs
     greenTest: node --test scripts/planning-db-query.test.cjs
@@ -220,7 +220,7 @@ redGreenCycles:
     patchSurfaces:
       - docs/architecture/components/ci-governance/knowledge-intake-retirement-component.md
       - docs/planning/status/db-surface-inventory.md
-      - scripts/planning-db/knowledge-intake-retirement-query.cjs
+      - scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
       - scripts/planning-db-query.cjs
       - scripts/planning-db-query.test.cjs
       - scripts/planning-db-surface-inventory-check.cjs
@@ -269,7 +269,7 @@ symbols:
     cypressCoverage: N/A - Planning DB governance query.
     unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: createKnowledgeIntakeRetirementReadModelComponent
-    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    path: scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
     cqRails: [ListKnowledgeIntakeRetirement]
     fowlerSignals: [Hidden authority]
@@ -277,7 +277,7 @@ symbols:
     cypressCoverage: N/A - DB query only.
     unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: buildKnowledgeIntakeRetirementRows
-    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    path: scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
     cqRails: [ListKnowledgeIntakeRetirement]
     fowlerSignals: [Explicit Read Model]
@@ -285,7 +285,7 @@ symbols:
     cypressCoverage: N/A - DB query only.
     unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: knowledgeIntakeRetirementSelect
-    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    path: scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
     cqRails: [ListKnowledgeIntakeRetirement]
     fowlerSignals: [Explicit Read Model]
@@ -293,7 +293,7 @@ symbols:
     cypressCoverage: N/A - DB query only.
     unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: readKnowledgeIntakeRetirementRows
-    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    path: scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
     cqRails: [ListKnowledgeIntakeRetirement]
     fowlerSignals: [Explicit Read Model]
@@ -301,7 +301,7 @@ symbols:
     cypressCoverage: N/A - DB query only.
     unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: buildKnowledgeIntakeReferenceRows
-    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    path: scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
     cqRails: [ListKnowledgeIntakeRetirement]
     fowlerSignals: [Explicit Read Model]
@@ -309,7 +309,7 @@ symbols:
     cypressCoverage: N/A - DB query only.
     unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: knowledgeIntakeReferenceSelect
-    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    path: scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
     cqRails: [ListKnowledgeIntakeRetirement]
     fowlerSignals: [Explicit Read Model]
@@ -317,7 +317,7 @@ symbols:
     cypressCoverage: N/A - DB query only.
     unitTests: [node --test scripts/planning-db-query.test.cjs]
   - name: readKnowledgeIntakeReferenceRows
-    path: scripts/planning-db/knowledge-intake-retirement-query.cjs
+    path: scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
     dddOwner: KnowledgeIntakeRetirementReadModel
     cqRails: [ListKnowledgeIntakeRetirement]
     fowlerSignals: [Explicit Read Model]

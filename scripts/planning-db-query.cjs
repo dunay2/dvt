@@ -19,7 +19,7 @@ const {
   parseBooleanFilter,
   readCommandQueryRailRows,
   readCreationIntentRows,
-} = require('./planning-db/command-query-rail-query.cjs');
+} = require('./planning-db/queries/command-query-rail-query.cjs');
 const {
   buildFrontendMechanicalTruthRows,
   readFrontendMechanicalTruthRows,
@@ -43,13 +43,13 @@ const {
   readFeatureMechanizationRailRows,
   readFeatureMechanizationSymbolRows,
   readFeatureMechanizationValidationRows,
-} = require('./planning-db/feature-mechanization-query.cjs');
+} = require('./planning-db/queries/feature-mechanization-query.cjs');
 const {
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
-} = require('./planning-db/knowledge-intake-retirement-query.cjs');
+} = require('./planning-db/queries/knowledge-intake-retirement-query.cjs');
 const {
   buildDocumentationLifecycleRows,
   readDocumentationLifecycleRows,
