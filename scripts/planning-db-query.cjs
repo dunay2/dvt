@@ -51,6 +51,10 @@ const {
   readKnowledgeIntakeRetirementRows,
 } = require('./planning-db/queries/knowledge-intake-retirement-query.cjs');
 const {
+  buildFowlerAnalysisRows,
+  readFowlerAnalysisRows,
+} = require('./planning-db/queries/fowler-analysis-query.cjs');
+const {
   buildDocumentationLifecycleRows,
   readDocumentationLifecycleRows,
 } = require('./planning-db/queries/documentation-lifecycle-query.cjs');
@@ -109,6 +113,7 @@ const knownQueries = new Set([
   'knowledge-documents',
   'knowledge-actions',
   'knowledge-intake',
+  'fowler-analysis',
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
@@ -164,6 +169,7 @@ const governanceProjectionQueryNames = new Set([
   'knowledge-documents',
   'knowledge-actions',
   'knowledge-intake',
+  'fowler-analysis',
   'documentation-lifecycle',
   'documentation-panels',
   'mandatory-proposal-gaps',
@@ -184,6 +190,7 @@ const pathCommonFilterQueryNames = new Set([
   'knowledge-documents',
   'knowledge-actions',
   'knowledge-intake',
+  'fowler-analysis',
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
@@ -263,6 +270,11 @@ function buildPlanningDbQueryHelpText(queryName) {
       examples.push(
         `  pnpm planning:db:query ${queryName} --gaps true --limit 20`,
         `  pnpm planning:db:query ${queryName} --duplicates true --canonicality canonical --limit 20`
+      );
+    } else if (queryName === 'fowler-analysis') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state ready_to_retire --limit 20`,
+        `  pnpm planning:db:query ${queryName} --gaps true --limit 20`
       );
     } else if (queryName === 'documentation-panels') {
       examples.push(
@@ -627,6 +639,7 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'feature-mechanization-rails' ||
         queryName === 'feature-mechanization-validations' ||
         queryName === 'knowledge-intake' ||
+        queryName === 'fowler-analysis' ||
         queryName === 'documentation-lifecycle' ||
         queryName === 'documentation-panels' ||
         queryName === 'component-roadmap' ||
@@ -3898,6 +3911,15 @@ async function runQuery(options = {}) {
       return lifecycleRows;
     }
 
+    if (queryName === 'fowler-analysis') {
+      const rows = await readFowlerAnalysisRows(client, options.filters || {});
+      const fowlerRows = buildFowlerAnalysisRows(rows);
+      if (options.print !== false) {
+        printTaskRows(fowlerRows);
+      }
+      return fowlerRows;
+    }
+
     if (queryName === 'documentation-panels') {
       const rows = await readDocumentationPanelRows(client, options.filters || {});
       const panelRows = buildDocumentationPanelRows(rows);
@@ -4298,6 +4320,7 @@ module.exports = {
   buildDbSurfaceRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
+  buildFowlerAnalysisRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
   buildSummaryRows,
@@ -4343,6 +4366,7 @@ module.exports = {
   readRiskDebtRows,
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,
+  readFowlerAnalysisRows,
   readDocumentationLifecycleRows,
   readDocumentationPanelRows,
   readComponentRoadmapRows,

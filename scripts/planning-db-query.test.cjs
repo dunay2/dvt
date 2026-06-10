@@ -43,6 +43,7 @@ const {
   buildFeatureMechanizationValidationRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
+  buildFowlerAnalysisRows,
   buildDocumentationPanelRows,
   buildDocumentationLifecycleRows,
   buildDbSurfaceRows,
@@ -80,6 +81,7 @@ const {
   readFeatureMechanizationValidationRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
+  readFowlerAnalysisRows,
   readDocumentationPanelRows,
   readDocumentationLifecycleRows,
   readDbSurfaceRows,
@@ -281,6 +283,13 @@ test('knowledge intake retirement query behavior lives in a focused read-model c
   );
 });
 
+test('Fowler analysis query behavior lives in a focused read-model component', () => {
+  const fowlerAnalysisComponent = require('./planning-db/queries/fowler-analysis-query.cjs');
+
+  assert.equal(fowlerAnalysisComponent.buildFowlerAnalysisRows, buildFowlerAnalysisRows);
+  assert.equal(fowlerAnalysisComponent.readFowlerAnalysisRows, readFowlerAnalysisRows);
+});
+
 test('DB surface inventory query behavior lives in a focused read-model component', () => {
   const dbSurfaceInventoryComponent = require('./planning-db/db-surface-inventory.cjs');
 
@@ -346,6 +355,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('cer'), 'cer');
   assert.equal(resolveQueryName('knowledge-documents'), 'knowledge-documents');
   assert.equal(resolveQueryName('knowledge-actions'), 'knowledge-actions');
+  assert.equal(resolveQueryName('fowler-analysis'), 'fowler-analysis');
   assert.equal(resolveQueryName('mandatory-proposal-gaps'), 'mandatory-proposal-gaps');
   assert.equal(resolveQueryName('db-surfaces'), 'db-surfaces');
   assert.equal(resolveQueryName('component-tree'), 'component-tree');
@@ -1022,6 +1032,37 @@ test('buildDocumentationLifecycleRows shows lifecycle facts without prose parsin
         'docs/planning/proposals/mandatory/example.md',
         'example',
         'Example Plan',
+      ],
+    ]
+  );
+});
+
+test('buildFowlerAnalysisRows shows DB-owned retirement and improvement facts', () => {
+  assert.deepEqual(
+    buildFowlerAnalysisRows([
+      {
+        work_state: 'pending_improvements',
+        document_class: 'intake',
+        retirement_allowed: false,
+        pending_improvement_count: 3,
+        open_action_count: 2,
+        inbound_reference_count: 1,
+        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+        subject_key: 'example',
+        title: 'Fowler Example',
+      },
+    ]),
+    [
+      [
+        'pending_improvements',
+        'intake',
+        'false',
+        3,
+        2,
+        1,
+        'buzon/20260514-codex-fowler-example-analysis.md',
+        'example',
+        'Fowler Example',
       ],
     ]
   );
@@ -2634,6 +2675,41 @@ test('readDocumentationLifecycleRows queries DB lifecycle facts with logical pre
   ]);
 });
 
+test('readFowlerAnalysisRows queries DB-first Fowler work facts with logical predicates', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFowlerAnalysisRows(client, {
+    state: 'ready_to_retire',
+    type: 'fowler_analysis',
+    path: 'buzon/example.md',
+    subject: 'example',
+    gaps: false,
+    limit: 13,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_work_query/);
+  assert.match(captured.sql, /work_state = \$1/);
+  assert.match(captured.sql, /document_type = \$2/);
+  assert.match(captured.sql, /document_path = \$3/);
+  assert.match(captured.sql, /subject_key = \$4/);
+  assert.match(captured.sql, /is_pending_improvement is false/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'ready_to_retire',
+    'fowler_analysis',
+    'buzon/example.md',
+    'example',
+    13,
+  ]);
+});
+
 test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
   const client = {
     async query() {
@@ -2794,6 +2870,50 @@ test('runQuery dispatches documentation-lifecycle through the DB-first lifecycle
       'docs/architecture/components/example.md',
       'example',
       'Example Component',
+    ],
+  ]);
+});
+
+test('runQuery dispatches fowler-analysis through the DB-first work queue', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /fowler_analysis_work_query/);
+      return {
+        rows: [
+          {
+            work_state: 'ready_to_retire',
+            document_class: 'intake',
+            retirement_allowed: true,
+            pending_improvement_count: 0,
+            open_action_count: 0,
+            inbound_reference_count: 0,
+            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+            subject_key: 'example',
+            title: 'Fowler Example',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'fowler-analysis',
+    filters: { state: 'ready_to_retire', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'ready_to_retire',
+      'intake',
+      'true',
+      0,
+      0,
+      0,
+      'buzon/20260514-codex-fowler-example-analysis.md',
+      'example',
+      'Fowler Example',
     ],
   ]);
 });
