@@ -379,6 +379,91 @@ test('tracked migrations expose Fowler analysis work as DB-first retirement fact
   assert.match(fowlerAnalysisMigration.sql, /Fowler analysis work queue/);
 });
 
+test('tracked migrations expose Fowler analysis retirement rails as DB-owned decisions', () => {
+  const migrations = readMigrationFiles();
+  const fowlerRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '074_fowler_analysis_retirement_rails.sql'
+  );
+
+  assert.ok(fowlerRetirementMigration);
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_dispositions/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_canonical_targets/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_reference_resolutions/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_retirement_decisions/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create table if not exists planning_query_store\.fowler_analysis_operations/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_reference_query/
+  );
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_retirement_query/
+  );
+  assert.match(fowlerRetirementMigration.sql, /policy\.lifecycle_gap_kind/);
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_canonical_coverage_query/
+  );
+});
+
+test('tracked migrations require DB-resolved references before Fowler intake retirement', () => {
+  const migrations = readMigrationFiles();
+  const fowlerRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '074_fowler_analysis_retirement_rails.sql'
+  );
+
+  assert.ok(fowlerRetirementMigration);
+  assert.match(fowlerRetirementMigration.sql, /unresolved_reference_count = 0/);
+  assert.match(fowlerRetirementMigration.sql, /reference_state = 'live'/);
+  assert.match(
+    fowlerRetirementMigration.sql,
+    /resolution_status in \('resolved', 'obsolete', 'replaced'\)/
+  );
+  assert.match(fowlerRetirementMigration.sql, /source_path not like 'buzon\/%'/);
+});
+
+test('tracked migrations require accepted targets and dispositions before Fowler retirement', () => {
+  const migrations = readMigrationFiles();
+  const fowlerRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '074_fowler_analysis_retirement_rails.sql'
+  );
+
+  assert.ok(fowlerRetirementMigration);
+  assert.match(fowlerRetirementMigration.sql, /open_improvement_count = 0/);
+  assert.match(fowlerRetirementMigration.sql, /canonical_target_status = 'accepted'/);
+  assert.match(fowlerRetirementMigration.sql, /disposition_status = 'accepted'/);
+  assert.match(fowlerRetirementMigration.sql, /retirement_decision_status = 'approved'/);
+  assert.match(fowlerRetirementMigration.sql, /retirement_allowed/);
+});
+
+test('tracked migrations do not allow Fowler retirement from missing grep results alone', () => {
+  const migrations = readMigrationFiles();
+  const fowlerRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '074_fowler_analysis_retirement_rails.sql'
+  );
+
+  assert.ok(fowlerRetirementMigration);
+  assert.match(fowlerRetirementMigration.sql, /fowler_analysis_retirement_query/);
+  assert.match(fowlerRetirementMigration.sql, /fowler_analysis_reference_query/);
+  assert.match(fowlerRetirementMigration.sql, /fowler_analysis_canonical_coverage_query/);
+  assert.doesNotMatch(fowlerRetirementMigration.sql, /grep|ripgrep|rg --files/i);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

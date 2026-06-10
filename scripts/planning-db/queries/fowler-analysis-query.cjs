@@ -52,6 +52,45 @@ function createFowlerAnalysisReadModelComponent(deps = {}) {
     ]);
   }
 
+  function buildFowlerAnalysisReferenceRows(rows) {
+    return rows.map((row) => [
+      textValue(row.document_path ?? row.documentPath),
+      textValue(row.reference_state ?? row.referenceState),
+      textValue(row.relation_type ?? row.relationType),
+      textValue(row.reference_path ?? row.referencePath),
+      textValue(row.canonical_target_path ?? row.canonicalTargetPath),
+      textValue(row.resolution_status ?? row.resolutionStatus),
+      textValue(row.reference_component_id ?? row.referenceComponentId),
+      textValue(row.reference_file_role ?? row.referenceFileRole),
+      textValue(row.sample_text ?? row.sampleText),
+    ]);
+  }
+
+  function buildFowlerAnalysisRetirementRows(rows) {
+    return rows.map((row) => [
+      textValue(row.retirement_state ?? row.retirementState),
+      String(row.retirement_allowed ?? row.retirementAllowed ?? false),
+      row.unresolved_reference_count ?? row.unresolvedReferenceCount ?? 0,
+      row.open_improvement_count ?? row.openImprovementCount ?? 0,
+      textValue(row.canonical_target_path ?? row.canonicalTargetPath),
+      textValue(row.disposition_status ?? row.dispositionStatus),
+      textValue(row.retirement_decision_status ?? row.retirementDecisionStatus),
+      textValue(row.document_path ?? row.documentPath),
+      textValue(row.title),
+    ]);
+  }
+
+  function buildFowlerAnalysisCanonicalCoverageRows(rows) {
+    return rows.map((row) => [
+      textValue(row.coverage_state ?? row.coverageState),
+      textValue(row.target_path ?? row.targetPath),
+      textValue(row.target_status ?? row.targetStatus),
+      textValue(row.document_path ?? row.documentPath),
+      textValue(row.subject_key ?? row.subjectKey),
+      textValue(row.title),
+    ]);
+  }
+
   function fowlerAnalysisSelect(activeSchemaName = defaultSchemaName) {
     return `
       select
@@ -80,6 +119,51 @@ function createFowlerAnalysisReadModelComponent(deps = {}) {
         suggested_query,
         source_content_sha256
       from ${activeSchemaName}.fowler_analysis_work_query`;
+  }
+
+  function fowlerAnalysisReferenceSelect(activeSchemaName = defaultSchemaName) {
+    return `
+      select
+        document_path,
+        reference_state,
+        relation_type,
+        reference_path,
+        canonical_target_path,
+        resolution_status,
+        reference_component_id,
+        reference_file_role,
+        sample_text,
+        source_content_sha256
+      from ${activeSchemaName}.fowler_analysis_reference_query`;
+  }
+
+  function fowlerAnalysisRetirementSelect(activeSchemaName = defaultSchemaName) {
+    return `
+      select
+        retirement_state,
+        retirement_allowed,
+        unresolved_reference_count,
+        open_improvement_count,
+        canonical_target_path,
+        disposition_status,
+        retirement_decision_status,
+        document_path,
+        title,
+        source_content_sha256
+      from ${activeSchemaName}.fowler_analysis_retirement_query`;
+  }
+
+  function fowlerAnalysisCanonicalCoverageSelect(activeSchemaName = defaultSchemaName) {
+    return `
+      select
+        coverage_state,
+        target_path,
+        target_status,
+        document_path,
+        subject_key,
+        title,
+        source_content_sha256
+      from ${activeSchemaName}.fowler_analysis_canonical_coverage_query`;
   }
 
   async function readFowlerAnalysisRows(client, filters = {}) {
@@ -119,9 +203,111 @@ function createFowlerAnalysisReadModelComponent(deps = {}) {
     return result.rows;
   }
 
+  async function readFowlerAnalysisReferenceRows(client, filters = {}) {
+    const params = [];
+    const predicates = [];
+    appendFilter(predicates, params, 'reference_state', filters.state);
+    appendFilter(predicates, params, 'document_path', filters.path);
+    appendFilter(predicates, params, 'canonical_target_path', filters.target);
+    appendFilter(predicates, params, 'relation_type', filters.relation);
+    appendFilter(predicates, params, 'reference_component_id', filters.component);
+
+    const limit = parseLimit(filters.limit, 50);
+    params.push(limit);
+
+    const result = await client.query(
+      `${fowlerAnalysisReferenceSelect()}
+       ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+       order by
+         case reference_state
+           when 'live' then 1
+           when 'resolved' then 2
+           else 3
+         end,
+         document_path,
+         relation_type,
+         reference_path
+       limit $${params.length}`,
+      params
+    );
+
+    return result.rows;
+  }
+
+  async function readFowlerAnalysisRetirementRows(client, filters = {}) {
+    const params = [];
+    const predicates = [];
+    appendFilter(predicates, params, 'retirement_state', filters.state);
+    appendFilter(predicates, params, 'document_path', filters.path);
+    appendFilter(predicates, params, 'canonical_target_path', filters.target);
+    appendBooleanFilter(predicates, 'retirement_allowed', filters.retirementAllowed);
+
+    const limit = parseLimit(filters.limit, 50);
+    params.push(limit);
+
+    const result = await client.query(
+      `${fowlerAnalysisRetirementSelect()}
+       ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+       order by
+         case retirement_state
+           when 'pending_improvements' then 1
+           when 'blocked_by_references' then 2
+           when 'needs_canonical_decision' then 3
+           when 'needs_disposition_decision' then 4
+           when 'needs_retirement_approval' then 5
+           when 'ready_to_retire' then 6
+           else 9
+         end,
+         unresolved_reference_count desc,
+         open_improvement_count desc,
+         document_path
+       limit $${params.length}`,
+      params
+    );
+
+    return result.rows;
+  }
+
+  async function readFowlerAnalysisCanonicalCoverageRows(client, filters = {}) {
+    const params = [];
+    const predicates = [];
+    appendFilter(predicates, params, 'coverage_state', filters.state);
+    appendFilter(predicates, params, 'document_path', filters.path);
+    appendFilter(predicates, params, 'target_path', filters.target);
+
+    const limit = parseLimit(filters.limit, 50);
+    params.push(limit);
+
+    const result = await client.query(
+      `${fowlerAnalysisCanonicalCoverageSelect()}
+       ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+       order by
+         case coverage_state
+           when 'target_missing' then 1
+           when 'target_missing_from_import' then 2
+           when 'covered' then 3
+           else 9
+         end,
+         document_path
+       limit $${params.length}`,
+      params
+    );
+
+    return result.rows;
+  }
+
   return {
+    buildFowlerAnalysisCanonicalCoverageRows,
+    buildFowlerAnalysisReferenceRows,
+    buildFowlerAnalysisRetirementRows,
     buildFowlerAnalysisRows,
+    fowlerAnalysisCanonicalCoverageSelect,
+    fowlerAnalysisReferenceSelect,
+    fowlerAnalysisRetirementSelect,
     fowlerAnalysisSelect,
+    readFowlerAnalysisCanonicalCoverageRows,
+    readFowlerAnalysisReferenceRows,
+    readFowlerAnalysisRetirementRows,
     readFowlerAnalysisRows,
   };
 }

@@ -44,6 +44,9 @@ const {
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
   buildFowlerAnalysisRows,
+  buildFowlerAnalysisCanonicalCoverageRows,
+  buildFowlerAnalysisReferenceRows,
+  buildFowlerAnalysisRetirementRows,
   buildDocumentationPanelRows,
   buildDocumentationLifecycleRows,
   buildDbSurfaceRows,
@@ -82,6 +85,9 @@ const {
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readFowlerAnalysisRows,
+  readFowlerAnalysisCanonicalCoverageRows,
+  readFowlerAnalysisReferenceRows,
+  readFowlerAnalysisRetirementRows,
   readDocumentationPanelRows,
   readDocumentationLifecycleRows,
   readDbSurfaceRows,
@@ -287,7 +293,31 @@ test('Fowler analysis query behavior lives in a focused read-model component', (
   const fowlerAnalysisComponent = require('./planning-db/queries/fowler-analysis-query.cjs');
 
   assert.equal(fowlerAnalysisComponent.buildFowlerAnalysisRows, buildFowlerAnalysisRows);
+  assert.equal(
+    fowlerAnalysisComponent.buildFowlerAnalysisReferenceRows,
+    buildFowlerAnalysisReferenceRows
+  );
+  assert.equal(
+    fowlerAnalysisComponent.buildFowlerAnalysisRetirementRows,
+    buildFowlerAnalysisRetirementRows
+  );
+  assert.equal(
+    fowlerAnalysisComponent.buildFowlerAnalysisCanonicalCoverageRows,
+    buildFowlerAnalysisCanonicalCoverageRows
+  );
   assert.equal(fowlerAnalysisComponent.readFowlerAnalysisRows, readFowlerAnalysisRows);
+  assert.equal(
+    fowlerAnalysisComponent.readFowlerAnalysisReferenceRows,
+    readFowlerAnalysisReferenceRows
+  );
+  assert.equal(
+    fowlerAnalysisComponent.readFowlerAnalysisRetirementRows,
+    readFowlerAnalysisRetirementRows
+  );
+  assert.equal(
+    fowlerAnalysisComponent.readFowlerAnalysisCanonicalCoverageRows,
+    readFowlerAnalysisCanonicalCoverageRows
+  );
 });
 
 test('DB surface inventory query behavior lives in a focused read-model component', () => {
@@ -356,6 +386,9 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('knowledge-documents'), 'knowledge-documents');
   assert.equal(resolveQueryName('knowledge-actions'), 'knowledge-actions');
   assert.equal(resolveQueryName('fowler-analysis'), 'fowler-analysis');
+  assert.equal(resolveQueryName('fowler-analysis-references'), 'fowler-analysis-references');
+  assert.equal(resolveQueryName('fowler-analysis-retirement'), 'fowler-analysis-retirement');
+  assert.equal(resolveQueryName('fowler-analysis-coverage'), 'fowler-analysis-coverage');
   assert.equal(resolveQueryName('mandatory-proposal-gaps'), 'mandatory-proposal-gaps');
   assert.equal(resolveQueryName('db-surfaces'), 'db-surfaces');
   assert.equal(resolveQueryName('component-tree'), 'component-tree');
@@ -1060,6 +1093,93 @@ test('buildFowlerAnalysisRows shows DB-owned retirement and improvement facts', 
         3,
         2,
         1,
+        'buzon/20260514-codex-fowler-example-analysis.md',
+        'example',
+        'Fowler Example',
+      ],
+    ]
+  );
+});
+
+test('buildFowlerAnalysisReferenceRows shows DB-owned live reference facts', () => {
+  assert.deepEqual(
+    buildFowlerAnalysisReferenceRows([
+      {
+        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+        reference_state: 'live',
+        relation_type: 'repository_path_reference',
+        reference_path: 'docs/planning/proposals/mandatory/example.md',
+        canonical_target_path: 'docs/architecture/components/example.md',
+        resolution_status: 'pending',
+        reference_component_id: 'SYS-DOCS-GOVERNANCE',
+        reference_file_role: 'proposal',
+        sample_text: 'buzon/20260514-codex-fowler-example-analysis.md',
+      },
+    ]),
+    [
+      [
+        'buzon/20260514-codex-fowler-example-analysis.md',
+        'live',
+        'repository_path_reference',
+        'docs/planning/proposals/mandatory/example.md',
+        'docs/architecture/components/example.md',
+        'pending',
+        'SYS-DOCS-GOVERNANCE',
+        'proposal',
+        'buzon/20260514-codex-fowler-example-analysis.md',
+      ],
+    ]
+  );
+});
+
+test('buildFowlerAnalysisRetirementRows shows DB-owned retirement decisions', () => {
+  assert.deepEqual(
+    buildFowlerAnalysisRetirementRows([
+      {
+        retirement_state: 'blocked_by_references',
+        retirement_allowed: false,
+        unresolved_reference_count: 2,
+        open_improvement_count: 0,
+        canonical_target_path: 'docs/architecture/components/example.md',
+        disposition_status: 'accepted',
+        retirement_decision_status: 'not_approved',
+        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+        title: 'Fowler Example',
+      },
+    ]),
+    [
+      [
+        'blocked_by_references',
+        'false',
+        2,
+        0,
+        'docs/architecture/components/example.md',
+        'accepted',
+        'not_approved',
+        'buzon/20260514-codex-fowler-example-analysis.md',
+        'Fowler Example',
+      ],
+    ]
+  );
+});
+
+test('buildFowlerAnalysisCanonicalCoverageRows shows target coverage gaps', () => {
+  assert.deepEqual(
+    buildFowlerAnalysisCanonicalCoverageRows([
+      {
+        coverage_state: 'target_missing',
+        target_path: null,
+        target_status: null,
+        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+        subject_key: 'example',
+        title: 'Fowler Example',
+      },
+    ]),
+    [
+      [
+        'target_missing',
+        '-',
+        '-',
         'buzon/20260514-codex-fowler-example-analysis.md',
         'example',
         'Fowler Example',
@@ -2710,6 +2830,163 @@ test('readFowlerAnalysisRows queries DB-first Fowler work facts with logical pre
   ]);
 });
 
+test('parseArgs parses Fowler analysis DB-first subquery filters', () => {
+  assert.deepEqual(
+    parseArgs([
+      'fowler-analysis-references',
+      '--state',
+      'live',
+      '--path',
+      'buzon/example.md',
+      '--target',
+      'docs/architecture/components/example.md',
+      '--limit',
+      '7',
+    ]),
+    {
+      queryName: 'fowler-analysis-references',
+      filters: {
+        state: 'live',
+        path: 'buzon/example.md',
+        target: 'docs/architecture/components/example.md',
+        limit: 7,
+      },
+    }
+  );
+
+  assert.deepEqual(
+    parseArgs([
+      'fowler-analysis-retirement',
+      '--retirement-allowed',
+      'true',
+      '--target',
+      'docs/architecture/components/example.md',
+      '--limit',
+      '5',
+    ]),
+    {
+      queryName: 'fowler-analysis-retirement',
+      filters: {
+        retirementAllowed: true,
+        target: 'docs/architecture/components/example.md',
+        limit: 5,
+      },
+    }
+  );
+
+  assert.deepEqual(
+    parseArgs([
+      'fowler-analysis-coverage',
+      '--state',
+      'target_missing',
+      '--path',
+      'buzon/example.md',
+      '--limit',
+      '3',
+    ]),
+    {
+      queryName: 'fowler-analysis-coverage',
+      filters: {
+        state: 'target_missing',
+        path: 'buzon/example.md',
+        limit: 3,
+      },
+    }
+  );
+});
+
+test('readFowlerAnalysisReferenceRows queries DB-owned live references with filters', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFowlerAnalysisReferenceRows(client, {
+    state: 'live',
+    path: 'buzon/example.md',
+    target: 'docs/architecture/components/example.md',
+    limit: 9,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_reference_query/);
+  assert.match(captured.sql, /reference_state = \$1/);
+  assert.match(captured.sql, /document_path = \$2/);
+  assert.match(captured.sql, /canonical_target_path = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'live',
+    'buzon/example.md',
+    'docs/architecture/components/example.md',
+    9,
+  ]);
+});
+
+test('readFowlerAnalysisRetirementRows queries DB-owned retirement policy facts', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFowlerAnalysisRetirementRows(client, {
+    state: 'ready_to_retire',
+    path: 'buzon/example.md',
+    target: 'docs/architecture/components/example.md',
+    retirementAllowed: false,
+    limit: 9,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_retirement_query/);
+  assert.match(captured.sql, /retirement_state = \$1/);
+  assert.match(captured.sql, /document_path = \$2/);
+  assert.match(captured.sql, /canonical_target_path = \$3/);
+  assert.match(captured.sql, /retirement_allowed is false/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'ready_to_retire',
+    'buzon/example.md',
+    'docs/architecture/components/example.md',
+    9,
+  ]);
+});
+
+test('readFowlerAnalysisCanonicalCoverageRows queries DB-owned canonical coverage', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFowlerAnalysisCanonicalCoverageRows(client, {
+    state: 'target_missing',
+    path: 'buzon/example.md',
+    target: 'docs/architecture/components/example.md',
+    limit: 9,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_canonical_coverage_query/);
+  assert.match(captured.sql, /coverage_state = \$1/);
+  assert.match(captured.sql, /document_path = \$2/);
+  assert.match(captured.sql, /target_path = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'target_missing',
+    'buzon/example.md',
+    'docs/architecture/components/example.md',
+    9,
+  ]);
+});
+
 test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
   const client = {
     async query() {
@@ -2911,6 +3188,132 @@ test('runQuery dispatches fowler-analysis through the DB-first work queue', asyn
       0,
       0,
       0,
+      'buzon/20260514-codex-fowler-example-analysis.md',
+      'example',
+      'Fowler Example',
+    ],
+  ]);
+});
+
+test('runQuery dispatches Fowler analysis references through the DB-first reference query', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /fowler_analysis_reference_query/);
+      return {
+        rows: [
+          {
+            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+            reference_state: 'live',
+            relation_type: 'repository_path_reference',
+            reference_path: 'docs/planning/proposals/mandatory/example.md',
+            canonical_target_path: 'docs/architecture/components/example.md',
+            resolution_status: 'pending',
+            reference_component_id: 'SYS-DOCS-GOVERNANCE',
+            reference_file_role: 'proposal',
+            sample_text: 'buzon/20260514-codex-fowler-example-analysis.md',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'fowler-analysis-references',
+    filters: { state: 'live', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'buzon/20260514-codex-fowler-example-analysis.md',
+      'live',
+      'repository_path_reference',
+      'docs/planning/proposals/mandatory/example.md',
+      'docs/architecture/components/example.md',
+      'pending',
+      'SYS-DOCS-GOVERNANCE',
+      'proposal',
+      'buzon/20260514-codex-fowler-example-analysis.md',
+    ],
+  ]);
+});
+
+test('runQuery dispatches Fowler analysis retirement through the DB-first policy query', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /fowler_analysis_retirement_query/);
+      return {
+        rows: [
+          {
+            retirement_state: 'ready_to_retire',
+            retirement_allowed: true,
+            unresolved_reference_count: 0,
+            open_improvement_count: 0,
+            canonical_target_path: 'docs/architecture/components/example.md',
+            disposition_status: 'accepted',
+            retirement_decision_status: 'approved',
+            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+            title: 'Fowler Example',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'fowler-analysis-retirement',
+    filters: { retirementAllowed: true, limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'ready_to_retire',
+      'true',
+      0,
+      0,
+      'docs/architecture/components/example.md',
+      'accepted',
+      'approved',
+      'buzon/20260514-codex-fowler-example-analysis.md',
+      'Fowler Example',
+    ],
+  ]);
+});
+
+test('runQuery dispatches Fowler analysis coverage through the DB-first coverage query', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /fowler_analysis_canonical_coverage_query/);
+      return {
+        rows: [
+          {
+            coverage_state: 'covered',
+            target_path: 'docs/architecture/components/example.md',
+            target_status: 'accepted',
+            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+            subject_key: 'example',
+            title: 'Fowler Example',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'fowler-analysis-coverage',
+    filters: { state: 'covered', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'covered',
+      'docs/architecture/components/example.md',
+      'accepted',
       'buzon/20260514-codex-fowler-example-analysis.md',
       'example',
       'Fowler Example',
