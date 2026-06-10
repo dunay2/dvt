@@ -464,6 +464,50 @@ test('tracked migrations do not allow Fowler retirement from missing grep result
   assert.doesNotMatch(fowlerRetirementMigration.sql, /grep|ripgrep|rg --files/i);
 });
 
+test('tracked migrations expose Fowler analysis intended work and duplicate intents', () => {
+  const migrations = readMigrationFiles();
+  const fowlerIntentMigration = migrations.find(
+    (migration) => migration.fileName === '075_fowler_analysis_intent_duplicates.sql'
+  );
+
+  assert.ok(fowlerIntentMigration);
+  assert.match(
+    fowlerIntentMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_intended_work_query/
+  );
+  assert.match(
+    fowlerIntentMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_duplicate_intent_query/
+  );
+  assert.match(fowlerIntentMigration.sql, /knowledge_action_items/);
+  assert.match(fowlerIntentMigration.sql, /intent_key/);
+  assert.match(fowlerIntentMigration.sql, /duplicate_document_count/);
+  assert.match(fowlerIntentMigration.sql, /Duplicate semantics/);
+  assert.doesNotMatch(fowlerIntentMigration.sql, /grep|ripgrep|rg --files/i);
+});
+
+test('tracked migrations classify same-document repeated open Fowler intentions as duplicates', () => {
+  const migrations = readMigrationFiles();
+  const fowlerIntentHardeningMigration = migrations.find(
+    (migration) => migration.fileName === '076_fowler_analysis_intent_duplicate_state_hardening.sql'
+  );
+
+  assert.ok(fowlerIntentHardeningMigration);
+  assert.match(
+    fowlerIntentHardeningMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_intended_work_query/
+  );
+  assert.match(fowlerIntentHardeningMigration.sql, /duplicate_open_action_count, 0\) > 1/);
+  assert.doesNotMatch(
+    fowlerIntentHardeningMigration.sql,
+    /duplicate_open_action_count, 0\) > 1\s+and\s+coalesce\(intent_rollup\.duplicate_document_count/
+  );
+  assert.match(
+    fowlerIntentHardeningMigration.sql,
+    /lower\(coalesce\(intent\.action_status, ''\)\) not in/
+  );
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

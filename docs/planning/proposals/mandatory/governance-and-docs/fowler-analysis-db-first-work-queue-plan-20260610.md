@@ -18,6 +18,7 @@ questions:
 - which intake files are blocked by repository references;
 - which intake files are canonized and can be retired from the repo;
 - which active docs already carry the canonical Fowler governance rule.
+- which intended work appears repeatedly across Fowler analyses.
 
 ## Target State
 
@@ -32,6 +33,8 @@ flowchart LR
   Knowledge --> Lifecycle["documentation_lifecycle_query"]
   Lifecycle --> Queue["fowler_analysis_work_query"]
   Queue --> Query["planning:db:query fowler-analysis"]
+  Queue --> Intent["fowler_analysis_intended_work_query"]
+  Intent --> Duplicates["fowler_analysis_duplicate_intent_query"]
   Queue --> Retirement["fowler_analysis_retirement_query"]
   Retirement --> Decision["planning:db:operate fowler-analysis approve-retirement"]
 ```
@@ -40,14 +43,15 @@ flowchart LR
 
 <!-- markdownlint-disable MD060 -->
 
-| scenario                                       | opportunity              | Fowler pattern                  | DDD owner                         | command/query rail                      | validation                                         |
-| ---------------------------------------------- | ------------------------ | ------------------------------- | --------------------------------- | --------------------------------------- | -------------------------------------------------- |
-| Fowler files duplicate repo planning truth.    | Hidden authority         | Repository / Query Service      | FowlerAnalysisWorkQueueReadModel  | QueryFowlerAnalysisWorkQueue            | `node --test scripts/planning-db-query.test.cjs`   |
-| Intake files are removed without backrefs.     | Incomplete encapsulation | Policy Object / Retire Obsolete | FowlerAnalysisRetirementPolicy    | QueryFowlerAnalysisRetirementCandidates | `node --test scripts/planning-db-migrate.test.cjs` |
-| Reference decisions are made from grep output. | Hidden authority         | Repository / Query Service      | FowlerAnalysisReferenceReadModel  | QueryFowlerAnalysisReferences           | `node --test scripts/planning-db-query.test.cjs`   |
-| Canonical targets are chosen outside the rail. | Divergent change         | Published Language              | FowlerAnalysisCanonicalTargetLink | LinkFowlerAnalysisCanonicalTarget       | `node --test scripts/planning-db-operate.test.cjs` |
-| Retirement approvals are not auditable.        | Shotgun surgery          | Retire Obsolete / Policy Object | FowlerAnalysisRetirementDecision  | ApproveFowlerAnalysisRetirement         | `node --test scripts/planning-db-operate.test.cjs` |
-| Coverage gaps are hidden in prose.             | Primitive obsession      | Query Service                   | FowlerAnalysisCoverageReadModel   | QueryFowlerAnalysisCanonicalCoverage    | `node --test scripts/planning-db-query.test.cjs`   |
+| scenario                                       | opportunity              | Fowler pattern                     | DDD owner                         | command/query rail                      | validation                                         |
+| ---------------------------------------------- | ------------------------ | ---------------------------------- | --------------------------------- | --------------------------------------- | -------------------------------------------------- |
+| Fowler files duplicate repo planning truth.    | Hidden authority         | Repository / Query Service         | FowlerAnalysisWorkQueueReadModel  | QueryFowlerAnalysisWorkQueue            | `node --test scripts/planning-db-query.test.cjs`   |
+| Intake files are removed without backrefs.     | Incomplete encapsulation | Policy Object / Retire Obsolete    | FowlerAnalysisRetirementPolicy    | QueryFowlerAnalysisRetirementCandidates | `node --test scripts/planning-db-migrate.test.cjs` |
+| Reference decisions are made from grep output. | Hidden authority         | Repository / Query Service         | FowlerAnalysisReferenceReadModel  | QueryFowlerAnalysisReferences           | `node --test scripts/planning-db-query.test.cjs`   |
+| Canonical targets are chosen outside the rail. | Divergent change         | Published Language                 | FowlerAnalysisCanonicalTargetLink | LinkFowlerAnalysisCanonicalTarget       | `node --test scripts/planning-db-operate.test.cjs` |
+| Retirement approvals are not auditable.        | Shotgun surgery          | Retire Obsolete / Policy Object    | FowlerAnalysisRetirementDecision  | ApproveFowlerAnalysisRetirement         | `node --test scripts/planning-db-operate.test.cjs` |
+| Coverage gaps are hidden in prose.             | Primitive obsession      | Query Service                      | FowlerAnalysisCoverageReadModel   | QueryFowlerAnalysisCanonicalCoverage    | `node --test scripts/planning-db-query.test.cjs`   |
+| Intended work repeats across Fowler documents. | Duplicate semantics      | Query Service / Published Language | FowlerAnalysisWorkQueueReadModel  | QueryFowlerAnalysisWorkQueue            | `node --test scripts/planning-db-query.test.cjs`   |
 
 <!-- markdownlint-enable MD060 -->
 
@@ -74,6 +78,8 @@ allowedImplementationSurfaces:
   - scripts/planning-db/queries/fowler-analysis-query.cjs
   - tools/planning-db/migrations/073_fowler_analysis_work_query.sql
   - tools/planning-db/migrations/074_fowler_analysis_retirement_rails.sql
+  - tools/planning-db/migrations/075_fowler_analysis_intent_duplicates.sql
+  - tools/planning-db/migrations/076_fowler_analysis_intent_duplicate_state_hardening.sql
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -116,9 +122,12 @@ domainObjects:
   - FowlerAnalysisDisposition
   - FowlerAnalysisImprovement
   - FowlerAnalysisRetirementDecision
+  - FowlerAnalysisIntendedWork
+  - FowlerAnalysisDuplicateIntent
 fowlerSignals:
   - Hidden authority
   - Incomplete encapsulation
+  - Duplicate semantics
 redGreenCycles:
   - id: fowler-analysis-work-query
     redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
@@ -138,6 +147,15 @@ redGreenCycles:
       - scripts/planning-db/queries/fowler-analysis-query.cjs
       - tools/planning-db/migrations/074_fowler_analysis_retirement_rails.sql
     greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: fowler-analysis-intent-duplicates
+    redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: Fowler intended-work and duplicate-intent DB projections are missing from the work queue rail.
+    patchSurfaces:
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db/queries/fowler-analysis-query.cjs
+      - tools/planning-db/migrations/075_fowler_analysis_intent_duplicates.sql
+      - tools/planning-db/migrations/076_fowler_analysis_intent_duplicate_state_hardening.sql
+    greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
@@ -146,6 +164,8 @@ completionGate:
   - node --test scripts/planning-db-operate.test.cjs
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
   - pnpm governance:db:import
+  - pnpm planning:db:query fowler-analysis-intent --limit 20
+  - pnpm planning:db:query fowler-analysis-duplicates --limit 20
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:changed
   - pnpm verify:prepush
@@ -191,6 +211,24 @@ symbols:
     dddOwner: FowlerAnalysisCoverageReadModel
     cqRails: [QueryFowlerAnalysisCanonicalCoverage]
     fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator query
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readFowlerAnalysisIntentRows
+    path: scripts/planning-db/queries/fowler-analysis-query.cjs
+    dddOwner: FowlerAnalysisWorkQueueReadModel
+    cqRails: [QueryFowlerAnalysisWorkQueue]
+    fowlerSignals: [Duplicate semantics, Hidden authority]
+    architectureGuard: pnpm docs:feature-mechanization:implementation
+    cypressCoverage: N/A - planning DB operator query
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readFowlerAnalysisDuplicateRows
+    path: scripts/planning-db/queries/fowler-analysis-query.cjs
+    dddOwner: FowlerAnalysisWorkQueueReadModel
+    cqRails: [QueryFowlerAnalysisWorkQueue]
+    fowlerSignals: [Duplicate semantics, Hidden authority]
     architectureGuard: pnpm docs:feature-mechanization:implementation
     cypressCoverage: N/A - planning DB operator query
     unitTests:

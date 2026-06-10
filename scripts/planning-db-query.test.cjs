@@ -45,6 +45,8 @@ const {
   buildKnowledgeIntakeRetirementRows,
   buildFowlerAnalysisRows,
   buildFowlerAnalysisCanonicalCoverageRows,
+  buildFowlerAnalysisDuplicateRows,
+  buildFowlerAnalysisIntentRows,
   buildFowlerAnalysisReferenceRows,
   buildFowlerAnalysisRetirementRows,
   buildDocumentationPanelRows,
@@ -86,6 +88,8 @@ const {
   readKnowledgeIntakeRetirementRows,
   readFowlerAnalysisRows,
   readFowlerAnalysisCanonicalCoverageRows,
+  readFowlerAnalysisDuplicateRows,
+  readFowlerAnalysisIntentRows,
   readFowlerAnalysisReferenceRows,
   readFowlerAnalysisRetirementRows,
   readDocumentationPanelRows,
@@ -305,6 +309,14 @@ test('Fowler analysis query behavior lives in a focused read-model component', (
     fowlerAnalysisComponent.buildFowlerAnalysisCanonicalCoverageRows,
     buildFowlerAnalysisCanonicalCoverageRows
   );
+  assert.equal(
+    fowlerAnalysisComponent.buildFowlerAnalysisIntentRows,
+    buildFowlerAnalysisIntentRows
+  );
+  assert.equal(
+    fowlerAnalysisComponent.buildFowlerAnalysisDuplicateRows,
+    buildFowlerAnalysisDuplicateRows
+  );
   assert.equal(fowlerAnalysisComponent.readFowlerAnalysisRows, readFowlerAnalysisRows);
   assert.equal(
     fowlerAnalysisComponent.readFowlerAnalysisReferenceRows,
@@ -317,6 +329,11 @@ test('Fowler analysis query behavior lives in a focused read-model component', (
   assert.equal(
     fowlerAnalysisComponent.readFowlerAnalysisCanonicalCoverageRows,
     readFowlerAnalysisCanonicalCoverageRows
+  );
+  assert.equal(fowlerAnalysisComponent.readFowlerAnalysisIntentRows, readFowlerAnalysisIntentRows);
+  assert.equal(
+    fowlerAnalysisComponent.readFowlerAnalysisDuplicateRows,
+    readFowlerAnalysisDuplicateRows
   );
 });
 
@@ -389,6 +406,8 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('fowler-analysis-references'), 'fowler-analysis-references');
   assert.equal(resolveQueryName('fowler-analysis-retirement'), 'fowler-analysis-retirement');
   assert.equal(resolveQueryName('fowler-analysis-coverage'), 'fowler-analysis-coverage');
+  assert.equal(resolveQueryName('fowler-analysis-intent'), 'fowler-analysis-intent');
+  assert.equal(resolveQueryName('fowler-analysis-duplicates'), 'fowler-analysis-duplicates');
   assert.equal(resolveQueryName('mandatory-proposal-gaps'), 'mandatory-proposal-gaps');
   assert.equal(resolveQueryName('db-surfaces'), 'db-surfaces');
   assert.equal(resolveQueryName('component-tree'), 'component-tree');
@@ -1183,6 +1202,62 @@ test('buildFowlerAnalysisCanonicalCoverageRows shows target coverage gaps', () =
         'buzon/20260514-codex-fowler-example-analysis.md',
         'example',
         'Fowler Example',
+      ],
+    ]
+  );
+});
+
+test('buildFowlerAnalysisIntentRows shows DB-owned intended work facts', () => {
+  assert.deepEqual(
+    buildFowlerAnalysisIntentRows([
+      {
+        intent_state: 'duplicate_open_intent',
+        is_duplicate_intent: true,
+        duplicate_document_count: 2,
+        duplicate_open_action_count: 3,
+        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+        intent_key: 'normalize-component-catalog',
+        action_status: 'open',
+        summary: 'Normalize component catalog in Planning DB',
+      },
+    ]),
+    [
+      [
+        'duplicate_open_intent',
+        'true',
+        2,
+        3,
+        'buzon/20260514-codex-fowler-example-analysis.md',
+        'normalize-component-catalog',
+        'open',
+        'Normalize component catalog in Planning DB',
+      ],
+    ]
+  );
+});
+
+test('buildFowlerAnalysisDuplicateRows shows repeated work intentions', () => {
+  assert.deepEqual(
+    buildFowlerAnalysisDuplicateRows([
+      {
+        duplicate_state: 'open_duplicate',
+        duplicate_document_count: 2,
+        duplicate_open_action_count: 3,
+        canonical_target_path: 'docs/architecture/components/example.md',
+        intent_key: 'normalize-component-catalog',
+        sample_document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+        sample_summary: 'Normalize component catalog in Planning DB',
+      },
+    ]),
+    [
+      [
+        'open_duplicate',
+        2,
+        3,
+        'docs/architecture/components/example.md',
+        'normalize-component-catalog',
+        'buzon/20260514-codex-fowler-example-analysis.md',
+        'Normalize component catalog in Planning DB',
       ],
     ]
   );
@@ -2893,6 +2968,52 @@ test('parseArgs parses Fowler analysis DB-first subquery filters', () => {
       },
     }
   );
+
+  assert.deepEqual(
+    parseArgs([
+      'fowler-analysis-intent',
+      '--duplicates',
+      'true',
+      '--state',
+      'duplicate_open_intent',
+      '--path',
+      'buzon/example.md',
+      '--target',
+      'docs/architecture/components/example.md',
+      '--limit',
+      '4',
+    ]),
+    {
+      queryName: 'fowler-analysis-intent',
+      filters: {
+        duplicates: true,
+        state: 'duplicate_open_intent',
+        path: 'buzon/example.md',
+        target: 'docs/architecture/components/example.md',
+        limit: 4,
+      },
+    }
+  );
+
+  assert.deepEqual(
+    parseArgs([
+      'fowler-analysis-duplicates',
+      '--state',
+      'open_duplicate',
+      '--target',
+      'docs/architecture/components/example.md',
+      '--limit',
+      '6',
+    ]),
+    {
+      queryName: 'fowler-analysis-duplicates',
+      filters: {
+        state: 'open_duplicate',
+        target: 'docs/architecture/components/example.md',
+        limit: 6,
+      },
+    }
+  );
 });
 
 test('readFowlerAnalysisReferenceRows queries DB-owned live references with filters', async () => {
@@ -2984,6 +3105,65 @@ test('readFowlerAnalysisCanonicalCoverageRows queries DB-owned canonical coverag
     'buzon/example.md',
     'docs/architecture/components/example.md',
     9,
+  ]);
+});
+
+test('readFowlerAnalysisIntentRows queries DB-owned intended work with duplicate filters', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFowlerAnalysisIntentRows(client, {
+    state: 'duplicate_open_intent',
+    path: 'buzon/example.md',
+    target: 'docs/architecture/components/example.md',
+    duplicates: true,
+    limit: 9,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_intended_work_query/);
+  assert.match(captured.sql, /intent_state = \$1/);
+  assert.match(captured.sql, /document_path = \$2/);
+  assert.match(captured.sql, /canonical_target_path = \$3/);
+  assert.match(captured.sql, /is_duplicate_intent is true/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'duplicate_open_intent',
+    'buzon/example.md',
+    'docs/architecture/components/example.md',
+    9,
+  ]);
+});
+
+test('readFowlerAnalysisDuplicateRows queries repeated intentions with logical predicates', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readFowlerAnalysisDuplicateRows(client, {
+    state: 'open_duplicate',
+    target: 'docs/architecture/components/example.md',
+    limit: 7,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_duplicate_intent_query/);
+  assert.match(captured.sql, /duplicate_state = \$1/);
+  assert.match(captured.sql, /canonical_target_path = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, [
+    'open_duplicate',
+    'docs/architecture/components/example.md',
+    7,
   ]);
 });
 
@@ -3317,6 +3497,88 @@ test('runQuery dispatches Fowler analysis coverage through the DB-first coverage
       'buzon/20260514-codex-fowler-example-analysis.md',
       'example',
       'Fowler Example',
+    ],
+  ]);
+});
+
+test('runQuery dispatches Fowler analysis intent through the DB-first work queue rail', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /fowler_analysis_intended_work_query/);
+      return {
+        rows: [
+          {
+            intent_state: 'duplicate_open_intent',
+            is_duplicate_intent: true,
+            duplicate_document_count: 2,
+            duplicate_open_action_count: 3,
+            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+            intent_key: 'normalize-component-catalog',
+            action_status: 'open',
+            summary: 'Normalize component catalog in Planning DB',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'fowler-analysis-intent',
+    filters: { duplicates: true, limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'duplicate_open_intent',
+      'true',
+      2,
+      3,
+      'buzon/20260514-codex-fowler-example-analysis.md',
+      'normalize-component-catalog',
+      'open',
+      'Normalize component catalog in Planning DB',
+    ],
+  ]);
+});
+
+test('runQuery dispatches Fowler analysis duplicate intent through the DB-first work queue rail', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /fowler_analysis_duplicate_intent_query/);
+      return {
+        rows: [
+          {
+            duplicate_state: 'open_duplicate',
+            duplicate_document_count: 2,
+            duplicate_open_action_count: 3,
+            canonical_target_path: 'docs/architecture/components/example.md',
+            intent_key: 'normalize-component-catalog',
+            sample_document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
+            sample_summary: 'Normalize component catalog in Planning DB',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'fowler-analysis-duplicates',
+    filters: { state: 'open_duplicate', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'open_duplicate',
+      2,
+      3,
+      'docs/architecture/components/example.md',
+      'normalize-component-catalog',
+      'buzon/20260514-codex-fowler-example-analysis.md',
+      'Normalize component catalog in Planning DB',
     ],
   ]);
 });

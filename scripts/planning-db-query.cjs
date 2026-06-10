@@ -52,10 +52,14 @@ const {
 } = require('./planning-db/queries/knowledge-intake-retirement-query.cjs');
 const {
   buildFowlerAnalysisCanonicalCoverageRows,
+  buildFowlerAnalysisDuplicateRows,
+  buildFowlerAnalysisIntentRows,
   buildFowlerAnalysisReferenceRows,
   buildFowlerAnalysisRetirementRows,
   buildFowlerAnalysisRows,
   readFowlerAnalysisCanonicalCoverageRows,
+  readFowlerAnalysisDuplicateRows,
+  readFowlerAnalysisIntentRows,
   readFowlerAnalysisReferenceRows,
   readFowlerAnalysisRetirementRows,
   readFowlerAnalysisRows,
@@ -123,6 +127,8 @@ const knownQueries = new Set([
   'fowler-analysis-references',
   'fowler-analysis-retirement',
   'fowler-analysis-coverage',
+  'fowler-analysis-intent',
+  'fowler-analysis-duplicates',
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
@@ -182,6 +188,8 @@ const governanceProjectionQueryNames = new Set([
   'fowler-analysis-references',
   'fowler-analysis-retirement',
   'fowler-analysis-coverage',
+  'fowler-analysis-intent',
+  'fowler-analysis-duplicates',
   'documentation-lifecycle',
   'documentation-panels',
   'mandatory-proposal-gaps',
@@ -206,6 +214,7 @@ const pathCommonFilterQueryNames = new Set([
   'fowler-analysis-references',
   'fowler-analysis-retirement',
   'fowler-analysis-coverage',
+  'fowler-analysis-intent',
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
@@ -304,6 +313,16 @@ function buildPlanningDbQueryHelpText(queryName) {
     } else if (queryName === 'fowler-analysis-coverage') {
       examples.push(
         `  pnpm planning:db:query ${queryName} --state target_missing --limit 20`,
+        `  pnpm planning:db:query ${queryName} --target docs/architecture/components/example.md --limit 20`
+      );
+    } else if (queryName === 'fowler-analysis-intent') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --duplicates true --limit 20`,
+        `  pnpm planning:db:query ${queryName} --state duplicate_open_intent --limit 20`
+      );
+    } else if (queryName === 'fowler-analysis-duplicates') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state open_duplicate --limit 20`,
         `  pnpm planning:db:query ${queryName} --target docs/architecture/components/example.md --limit 20`
       );
     } else if (queryName === 'documentation-panels') {
@@ -677,6 +696,8 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'fowler-analysis-references' ||
         queryName === 'fowler-analysis-retirement' ||
         queryName === 'fowler-analysis-coverage' ||
+        queryName === 'fowler-analysis-intent' ||
+        queryName === 'fowler-analysis-duplicates' ||
         queryName === 'documentation-lifecycle' ||
         queryName === 'documentation-panels' ||
         queryName === 'component-roadmap' ||
@@ -3988,6 +4009,24 @@ async function runQuery(options = {}) {
       return coverageRows;
     }
 
+    if (queryName === 'fowler-analysis-intent') {
+      const rows = await readFowlerAnalysisIntentRows(client, options.filters || {});
+      const intentRows = buildFowlerAnalysisIntentRows(rows);
+      if (options.print !== false) {
+        printTaskRows(intentRows);
+      }
+      return intentRows;
+    }
+
+    if (queryName === 'fowler-analysis-duplicates') {
+      const rows = await readFowlerAnalysisDuplicateRows(client, options.filters || {});
+      const duplicateRows = buildFowlerAnalysisDuplicateRows(rows);
+      if (options.print !== false) {
+        printTaskRows(duplicateRows);
+      }
+      return duplicateRows;
+    }
+
     if (queryName === 'documentation-panels') {
       const rows = await readDocumentationPanelRows(client, options.filters || {});
       const panelRows = buildDocumentationPanelRows(rows);
@@ -4389,6 +4428,8 @@ module.exports = {
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
   buildFowlerAnalysisCanonicalCoverageRows,
+  buildFowlerAnalysisDuplicateRows,
+  buildFowlerAnalysisIntentRows,
   buildFowlerAnalysisReferenceRows,
   buildFowlerAnalysisRetirementRows,
   buildFowlerAnalysisRows,
@@ -4438,6 +4479,8 @@ module.exports = {
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,
   readFowlerAnalysisCanonicalCoverageRows,
+  readFowlerAnalysisDuplicateRows,
+  readFowlerAnalysisIntentRows,
   readFowlerAnalysisReferenceRows,
   readFowlerAnalysisRetirementRows,
   readFowlerAnalysisRows,

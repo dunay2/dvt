@@ -91,6 +91,31 @@ function createFowlerAnalysisReadModelComponent(deps = {}) {
     ]);
   }
 
+  function buildFowlerAnalysisIntentRows(rows) {
+    return rows.map((row) => [
+      textValue(row.intent_state ?? row.intentState),
+      String(row.is_duplicate_intent ?? row.isDuplicateIntent ?? false),
+      row.duplicate_document_count ?? row.duplicateDocumentCount ?? 0,
+      row.duplicate_open_action_count ?? row.duplicateOpenActionCount ?? 0,
+      textValue(row.document_path ?? row.documentPath),
+      textValue(row.intent_key ?? row.intentKey),
+      textValue(row.action_status ?? row.actionStatus),
+      textValue(row.summary),
+    ]);
+  }
+
+  function buildFowlerAnalysisDuplicateRows(rows) {
+    return rows.map((row) => [
+      textValue(row.duplicate_state ?? row.duplicateState),
+      row.duplicate_document_count ?? row.duplicateDocumentCount ?? 0,
+      row.duplicate_open_action_count ?? row.duplicateOpenActionCount ?? 0,
+      textValue(row.canonical_target_path ?? row.canonicalTargetPath),
+      textValue(row.intent_key ?? row.intentKey),
+      textValue(row.sample_document_path ?? row.sampleDocumentPath),
+      textValue(row.sample_summary ?? row.sampleSummary),
+    ]);
+  }
+
   function fowlerAnalysisSelect(activeSchemaName = defaultSchemaName) {
     return `
       select
@@ -164,6 +189,37 @@ function createFowlerAnalysisReadModelComponent(deps = {}) {
         title,
         source_content_sha256
       from ${activeSchemaName}.fowler_analysis_canonical_coverage_query`;
+  }
+
+  function fowlerAnalysisIntentSelect(activeSchemaName = defaultSchemaName) {
+    return `
+      select
+        intent_state,
+        is_duplicate_intent,
+        duplicate_document_count,
+        duplicate_open_action_count,
+        document_path,
+        canonical_target_path,
+        subject_key,
+        intent_key,
+        action_status,
+        summary,
+        source_content_sha256
+      from ${activeSchemaName}.fowler_analysis_intended_work_query`;
+  }
+
+  function fowlerAnalysisDuplicateSelect(activeSchemaName = defaultSchemaName) {
+    return `
+      select
+        duplicate_state,
+        duplicate_document_count,
+        duplicate_open_action_count,
+        canonical_target_path,
+        intent_key,
+        sample_document_path,
+        sample_summary,
+        source_content_sha256
+      from ${activeSchemaName}.fowler_analysis_duplicate_intent_query`;
   }
 
   async function readFowlerAnalysisRows(client, filters = {}) {
@@ -296,16 +352,86 @@ function createFowlerAnalysisReadModelComponent(deps = {}) {
     return result.rows;
   }
 
+  async function readFowlerAnalysisIntentRows(client, filters = {}) {
+    const params = [];
+    const predicates = [];
+    appendFilter(predicates, params, 'intent_state', filters.state);
+    appendFilter(predicates, params, 'document_path', filters.path);
+    appendFilter(predicates, params, 'canonical_target_path', filters.target);
+    appendFilter(predicates, params, 'subject_key', filters.subject);
+    appendFilter(predicates, params, 'intent_key', filters.intent);
+    appendBooleanFilter(predicates, 'is_duplicate_intent', filters.duplicates);
+
+    const limit = parseLimit(filters.limit, 50);
+    params.push(limit);
+
+    const result = await client.query(
+      `${fowlerAnalysisIntentSelect()}
+       ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+       order by
+         case intent_state
+           when 'duplicate_open_intent' then 1
+           when 'open_intent' then 2
+           when 'duplicate_resolved_intent' then 3
+           when 'unclassified_intent' then 4
+           else 9
+         end,
+         duplicate_open_action_count desc,
+         duplicate_document_count desc,
+         document_path,
+         intent_key
+       limit $${params.length}`,
+      params
+    );
+
+    return result.rows;
+  }
+
+  async function readFowlerAnalysisDuplicateRows(client, filters = {}) {
+    const params = [];
+    const predicates = [];
+    appendFilter(predicates, params, 'duplicate_state', filters.state);
+    appendFilter(predicates, params, 'canonical_target_path', filters.target);
+    appendFilter(predicates, params, 'intent_key', filters.intent);
+
+    const limit = parseLimit(filters.limit, 50);
+    params.push(limit);
+
+    const result = await client.query(
+      `${fowlerAnalysisDuplicateSelect()}
+       ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+       order by
+         case duplicate_state
+           when 'open_duplicate' then 1
+           when 'resolved_duplicate' then 2
+           else 9
+         end,
+         duplicate_open_action_count desc,
+         duplicate_document_count desc,
+         intent_key
+       limit $${params.length}`,
+      params
+    );
+
+    return result.rows;
+  }
+
   return {
     buildFowlerAnalysisCanonicalCoverageRows,
+    buildFowlerAnalysisDuplicateRows,
+    buildFowlerAnalysisIntentRows,
     buildFowlerAnalysisReferenceRows,
     buildFowlerAnalysisRetirementRows,
     buildFowlerAnalysisRows,
     fowlerAnalysisCanonicalCoverageSelect,
+    fowlerAnalysisDuplicateSelect,
+    fowlerAnalysisIntentSelect,
     fowlerAnalysisReferenceSelect,
     fowlerAnalysisRetirementSelect,
     fowlerAnalysisSelect,
     readFowlerAnalysisCanonicalCoverageRows,
+    readFowlerAnalysisDuplicateRows,
+    readFowlerAnalysisIntentRows,
     readFowlerAnalysisReferenceRows,
     readFowlerAnalysisRetirementRows,
     readFowlerAnalysisRows,
