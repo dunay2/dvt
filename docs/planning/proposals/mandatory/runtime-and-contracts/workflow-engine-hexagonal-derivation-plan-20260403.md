@@ -93,7 +93,6 @@ allowedImplementationSurfaces:
   - apps/api/src/runtime/intentReconcilerRuntimeComposition.ts
   - apps/api/test/architecture/intentReconcilerRuntimeComposition.architecture.test.ts
   - apps/api/test/server.test.ts
-  - buzon/20260518-dhm-ws2-fowler-runtime-composition-hardening-analysis.md
   - docs/.manifest.json
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-component.md
   - docs/architecture/components/engine/architecture/intent-reconciler-runtime-composition-user-stories.md
