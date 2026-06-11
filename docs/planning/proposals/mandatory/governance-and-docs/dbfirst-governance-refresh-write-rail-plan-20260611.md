@@ -86,6 +86,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db-operate.cjs
   - scripts/planning-db-operate.test.cjs
   - scripts/planning-db-operate-tests/governance-refresh.test.cjs
+  - scripts/planning-db/commands/governance-refresh-command.cjs
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db/queries/governance-refresh-run-query.cjs
@@ -144,6 +145,7 @@ redGreenCycles:
       - scripts/planning-db-operate.test.cjs
       - scripts/planning-db-operate-tests/governance-refresh.test.cjs
       - scripts/planning-db-operate.cjs
+      - scripts/planning-db/commands/governance-refresh-command.cjs
       - scripts/planning-db/governance-refresh-write-rail.cjs
     greenTest: node --test scripts/planning-db-operate.test.cjs
   - id: refresh-run-query
@@ -238,18 +240,40 @@ symbols:
     cqRails:
       - GovernanceRefresh
     fowlerSignals:
+      - Bind the focused command parser into the operate router
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate-tests/governance-refresh.test.cjs
+  - name: parseGovernanceRefreshCommand
+    path: scripts/planning-db/commands/governance-refresh-command.cjs
+    dddOwner: GovernanceRefreshWorkflow
+    cqRails:
+      - GovernanceRefresh
+    fowlerSignals:
       - Keep operator writes behind a named command rail
     architectureGuard: node --test scripts/planning-db-operate.test.cjs
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-operate-tests/governance-refresh.test.cjs
   - name: validateGovernanceRefreshRunState
-    path: scripts/planning-db-operate.cjs
+    path: scripts/planning-db/commands/governance-refresh-command.cjs
     dddOwner: GovernanceRefreshWorkflow
     cqRails:
       - GovernanceRefresh
     fowlerSignals:
       - Reject invalid run-state writes before DB mutation
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate-tests/governance-refresh.test.cjs
+  - name: createGovernanceRefreshCommandParser
+    path: scripts/planning-db/commands/governance-refresh-command.cjs
+    dddOwner: GovernanceRefreshWorkflow
+    cqRails:
+      - GovernanceRefresh
+    fowlerSignals:
+      - Keep CLI parsing for the rail outside the monolithic operate entrypoint
     architectureGuard: node --test scripts/planning-db-operate.test.cjs
     cypressCoverage: N/A
     unitTests:

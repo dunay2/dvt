@@ -18,12 +18,14 @@ const {
   allowedDbSurfaceWriteRailKinds,
 } = require('./planning-db/db-surface-inventory.cjs');
 const {
-  allowedRunStates: allowedGovernanceRefreshRunStates,
   applyGovernanceRefreshRunRecordOperation,
-  defaultGovernanceRefreshRunIdempotencyKey,
   planGovernanceRefreshRunRecordOperation,
   writePlannedGovernanceRefreshRunRecordOperation,
 } = require('./planning-db/governance-refresh-write-rail.cjs');
+const {
+  createGovernanceRefreshCommandParser,
+  validateGovernanceRefreshRunState,
+} = require('./planning-db/commands/governance-refresh-command.cjs');
 
 const allowedStatuses = new Set(['queued', 'in_progress', 'blocked', 'review', 'done']);
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
@@ -2259,47 +2261,13 @@ function parseFowlerAnalysisCommand(action, args) {
   );
 }
 
-function validateGovernanceRefreshRunState(value) {
-  if (!allowedGovernanceRefreshRunStates.has(value)) {
-    throw new Error(
-      `Invalid governance refresh run state "${value}". Expected: ${[
-        ...allowedGovernanceRefreshRunStates,
-      ].join(', ')}.`
-    );
-  }
-
-  return value;
-}
-
-function parseGovernanceRefreshCommand(action, args) {
-  if (action !== 'record-run') {
-    throw new Error(`Unknown governance-refresh operation "${action}". Expected record-run.`);
-  }
-
-  const options = parseFlagOptions(args);
-  const command = {
-    kind: 'governance_refresh_run_record',
-    runId: requireOption(options, 'run'),
-    runState: validateGovernanceRefreshRunState(requireOption(options, 'state')),
-    actor: requireOption(options, 'actor'),
-    commandName: options.command || 'pnpm governance:refresh',
-    sourceRef: requireOption(options, 'sourceRef'),
-    sourceContentSha256: requireOption(options, 'sourceContentSha256'),
-    maxPasses: parseIntegerOption(requireOption(options, 'maxPasses'), 'max-passes'),
-    generationPasses: parseIntegerOption(options.generationPasses || '0', 'generation-passes'),
-    stabilized: parseBooleanOption(options.stabilized, 'stabilized'),
-    errorSummary: normalizeOptionalText(options.error),
-    startedAt: normalizeOptionalText(options.startedAt),
-    completedAt: normalizeOptionalText(options.completedAt),
-    idempotencyKey: normalizeOptionalText(options.idempotencyKey),
-    expectedRevision: parseIntegerOption(options.expectedRevision, 'expected-revision'),
-  };
-
-  return {
-    ...command,
-    idempotencyKey: command.idempotencyKey || defaultGovernanceRefreshRunIdempotencyKey(command),
-  };
-}
+const parseGovernanceRefreshCommand = createGovernanceRefreshCommandParser({
+  normalizeOptionalText,
+  parseBooleanOption,
+  parseFlagOptions,
+  parseIntegerOption,
+  requireOption,
+});
 
 function parseArgs(args = process.argv.slice(2)) {
   const helpText = resolveOperateHelpRequest(args);
