@@ -12,6 +12,7 @@ const ignoredDirectoryNames = new Set([
   'node_modules',
   'playwright-report',
 ]);
+const ignoredRepoPathPrefixes = ['.generated-docs', 'buzon', 'docs', 'infra/prototypes'];
 
 function sha256(text) {
   return crypto.createHash('sha256').update(text).digest('hex');
@@ -27,6 +28,13 @@ function normalizeRepoPath(value) {
     .replace(/^\.?\//, '');
 }
 
+function isIgnoredRepoPath(repoPath) {
+  const normalized = normalizeRepoPath(repoPath);
+  return ignoredRepoPathPrefixes.some(
+    (prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`)
+  );
+}
+
 function isSourceFile(filePath) {
   return sourceExtensions.includes(path.extname(filePath));
 }
@@ -40,15 +48,20 @@ function isTestPath(repoPath) {
 
 function listSourceFiles(rootDir, currentDir = rootDir, files = []) {
   for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+    const entryPath = path.join(currentDir, entry.name);
+    if (isIgnoredRepoPath(toRepoPath(entryPath, rootDir))) {
+      continue;
+    }
+
     if (entry.isDirectory()) {
       if (!ignoredDirectoryNames.has(entry.name)) {
-        listSourceFiles(rootDir, path.join(currentDir, entry.name), files);
+        listSourceFiles(rootDir, entryPath, files);
       }
       continue;
     }
 
     if (entry.isFile() && isSourceFile(entry.name)) {
-      files.push(path.join(currentDir, entry.name));
+      files.push(entryPath);
     }
   }
 
@@ -80,15 +93,20 @@ function readPackageMap(rootDir) {
 
 function findPackageJsonFiles(rootDir, currentDir = rootDir, files = []) {
   for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
+    const entryPath = path.join(currentDir, entry.name);
+    if (isIgnoredRepoPath(toRepoPath(entryPath, rootDir))) {
+      continue;
+    }
+
     if (entry.isDirectory()) {
       if (!ignoredDirectoryNames.has(entry.name)) {
-        findPackageJsonFiles(rootDir, path.join(currentDir, entry.name), files);
+        findPackageJsonFiles(rootDir, entryPath, files);
       }
       continue;
     }
 
     if (entry.isFile() && entry.name === 'package.json') {
-      files.push(path.join(currentDir, entry.name));
+      files.push(entryPath);
     }
   }
 

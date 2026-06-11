@@ -151,6 +151,55 @@ test('runArchitectureFitnessScan keeps repeated imports as distinct observations
   assert.equal(new Set(observationIds).size, observationIds.length);
 });
 
+test('runArchitectureFitnessScan ignores non-operational literature and prototype source copies', () => {
+  const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-architecture-fitness-'));
+  fs.mkdirSync(path.join(rootDir, 'apps/web/src/app'), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, 'docs/archive/planning/snapshot'), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, 'buzon'), { recursive: true });
+  fs.mkdirSync(path.join(rootDir, 'infra/prototypes/api/src'), { recursive: true });
+  fs.writeFileSync(
+    path.join(rootDir, 'apps/web/src/app/App.ts'),
+    ["import { liveValue } from './liveValue';", 'export const app = liveValue;'].join('\n')
+  );
+  fs.writeFileSync(
+    path.join(rootDir, 'apps/web/src/app/liveValue.ts'),
+    'export const liveValue = 1;'
+  );
+  fs.writeFileSync(
+    path.join(rootDir, 'docs/archive/planning/snapshot/Archived.ts'),
+    "import { archived } from './ArchivedDependency';\nexport const value = archived;"
+  );
+  fs.writeFileSync(
+    path.join(
+      rootDir,
+      'buzon/20260421-codex-fowler-branch-analysis-http-error-translation-stack.ts'
+    ),
+    "import { intake } from './IntakeDependency';\nexport const value = intake;"
+  );
+  fs.writeFileSync(
+    path.join(rootDir, 'infra/prototypes/api/src/catchup.ts'),
+    "import { prototype } from './prototypeDependency';\nexport const value = prototype;"
+  );
+
+  const scan = runArchitectureFitnessScan({
+    rootDir,
+    scanId: 'scan-feature-21',
+    designId: 'design-21-component-architecture-fitness-dbfirst',
+    components: [
+      {
+        component_id: 'SYS-WEB',
+        repo_path: 'apps/web/src',
+      },
+    ],
+    relations: [],
+  });
+
+  assert.deepEqual(
+    scan.observations.map((observation) => observation.sourcePath),
+    ['apps/web/src/app/App.ts']
+  );
+});
+
 test('architecture fitness planner and writer persist scan facts with audit', async () => {
   const now = new Date('2026-06-10T12:00:00.000Z');
   const command = parseArgs([
