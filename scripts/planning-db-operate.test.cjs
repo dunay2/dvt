@@ -9,3 +9,4 @@ require('./planning-db-operate-tests/fowler-analysis.test.cjs');
 require('./planning-db-operate-tests/component-create.test.cjs');
 require('./planning-db-operate-tests/architecture-parse.test.cjs');
 require('./planning-db-operate-tests/architecture-plan.test.cjs');
+require('./planning-db-operate-tests/architecture-fitness.test.cjs');

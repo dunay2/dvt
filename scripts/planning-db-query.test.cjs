@@ -14,7 +14,11 @@ const {
   buildComponentEngineeringComponentMetadataRows,
   buildComponentRoadmapRows,
   buildArchitectureComponentRows,
+  buildArchitectureDependencyClassificationRows,
+  buildArchitectureDependencyObservationRows,
   buildArchitectureDesignRows,
+  buildArchitectureFitnessRows,
+  buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
   readArchitectureFlowRows,
   buildComponentEngineeringComponentTreeRows,
@@ -101,7 +105,11 @@ const {
   readComponentEngineeringComponentMetadataRows,
   readComponentRoadmapRows,
   readArchitectureComponentRows,
+  readArchitectureDependencyClassificationRows,
+  readArchitectureDependencyObservationRows,
   readArchitectureDesignRows,
+  readArchitectureFitnessRows,
+  readArchitecturePathMappingRows,
   readArchitectureRelationRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
@@ -354,6 +362,43 @@ test('documentation panel query behavior lives in a focused read-model component
   assert.equal(documentationPanelComponent.readDocumentationPanelRows, readDocumentationPanelRows);
 });
 
+test('component architecture fitness query behavior lives in a focused read-model component', () => {
+  const architectureFitnessComponent = require('./planning-db/queries/component-architecture-fitness-query.cjs');
+
+  assert.equal(
+    architectureFitnessComponent.buildArchitectureDependencyObservationRows,
+    buildArchitectureDependencyObservationRows
+  );
+  assert.equal(
+    architectureFitnessComponent.buildArchitecturePathMappingRows,
+    buildArchitecturePathMappingRows
+  );
+  assert.equal(
+    architectureFitnessComponent.buildArchitectureDependencyClassificationRows,
+    buildArchitectureDependencyClassificationRows
+  );
+  assert.equal(
+    architectureFitnessComponent.buildArchitectureFitnessRows,
+    buildArchitectureFitnessRows
+  );
+  assert.equal(
+    architectureFitnessComponent.readArchitectureDependencyObservationRows,
+    readArchitectureDependencyObservationRows
+  );
+  assert.equal(
+    architectureFitnessComponent.readArchitecturePathMappingRows,
+    readArchitecturePathMappingRows
+  );
+  assert.equal(
+    architectureFitnessComponent.readArchitectureDependencyClassificationRows,
+    readArchitectureDependencyClassificationRows
+  );
+  assert.equal(
+    architectureFitnessComponent.readArchitectureFitnessRows,
+    readArchitectureFitnessRows
+  );
+});
+
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');
   assert.equal(resolveQueryName('summary'), 'summary');
@@ -423,6 +468,16 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('architecture-drift'), 'architecture-drift');
   assert.equal(resolveQueryName('architecture-enforcement'), 'architecture-enforcement');
   assert.equal(resolveQueryName('architecture-evidence'), 'architecture-evidence');
+  assert.equal(
+    resolveQueryName('architecture-dependency-observations'),
+    'architecture-dependency-observations'
+  );
+  assert.equal(resolveQueryName('architecture-path-mapping'), 'architecture-path-mapping');
+  assert.equal(
+    resolveQueryName('architecture-dependency-classification'),
+    'architecture-dependency-classification'
+  );
+  assert.equal(resolveQueryName('architecture-fitness'), 'architecture-fitness');
   assert.equal(resolveQueryName('component-roadmap'), 'component-roadmap');
   assert.equal(resolveQueryName('documentation-panels'), 'documentation-panels');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
@@ -3754,6 +3809,109 @@ test('buildComponentRoadmapRows exposes implementation, planning, and gap state'
       2,
       1,
       'docs/architecture/components/web/index.md',
+    ],
+  ]);
+});
+
+test('buildArchitectureFitnessRows exposes rule, state, and evidence subject', () => {
+  const rows = buildArchitectureFitnessRows([
+    {
+      scan_id: 'scan-1',
+      design_id: 'design-21-component-architecture-fitness-dbfirst',
+      fitness_rule_id: 'DVT-ARCH-003',
+      subject_kind: 'observation',
+      subject_id: 'obs-1',
+      result_state: 'fail',
+      severity: 'error',
+      reason: 'Observed internal dependency is not declared.',
+    },
+  ]);
+
+  assert.deepEqual(rows, [
+    [
+      'scan-1',
+      'design-21-component-architecture-fitness-dbfirst',
+      'DVT-ARCH-003',
+      'observation',
+      'obs-1',
+      'fail',
+      'error',
+      'Observed internal dependency is not declared.',
+    ],
+  ]);
+});
+
+test('readArchitectureDependencyClassificationRows queries observed-vs-declared DB facts', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureDependencyClassificationRows(client, {
+    design: 'design-21-component-architecture-fitness-dbfirst',
+    scan: 'scan-1',
+    classification: 'undeclared_dependency',
+    component: 'SYS-WEB-ROOT',
+    limit: 9,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_dependency_classification_query/);
+  assert.match(captured.sql, /design_id = \$1/);
+  assert.match(captured.sql, /scan_id = \$2/);
+  assert.match(captured.sql, /dependency_classification = \$3/);
+  assert.match(captured.sql, /\(source_component_id = \$4 or target_component_id = \$4\)/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'design-21-component-architecture-fitness-dbfirst',
+    'scan-1',
+    'undeclared_dependency',
+    'SYS-WEB-ROOT',
+    9,
+  ]);
+});
+
+test('runQuery dispatches architecture-fitness through the DB-first fitness read model', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /component_fitness_query/);
+      return {
+        rows: [
+          {
+            scan_id: 'scan-1',
+            design_id: 'design-21-component-architecture-fitness-dbfirst',
+            fitness_rule_id: 'DVT-ARCH-003',
+            subject_kind: 'observation',
+            subject_id: 'obs-1',
+            result_state: 'fail',
+            severity: 'error',
+            reason: 'Observed internal dependency is not declared.',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'architecture-fitness',
+    filters: { rule: 'DVT-ARCH-003', state: 'fail', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'scan-1',
+      'design-21-component-architecture-fitness-dbfirst',
+      'DVT-ARCH-003',
+      'observation',
+      'obs-1',
+      'fail',
+      'error',
+      'Observed internal dependency is not declared.',
     ],
   ]);
 });

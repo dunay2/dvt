@@ -76,6 +76,16 @@ const {
   buildComponentRoadmapRows,
   readComponentRoadmapRows,
 } = require('./planning-db/queries/component-roadmap-query.cjs');
+const {
+  buildArchitectureDependencyClassificationRows,
+  buildArchitectureDependencyObservationRows,
+  buildArchitectureFitnessRows,
+  buildArchitecturePathMappingRows,
+  readArchitectureDependencyClassificationRows,
+  readArchitectureDependencyObservationRows,
+  readArchitectureFitnessRows,
+  readArchitecturePathMappingRows,
+} = require('./planning-db/queries/component-architecture-fitness-query.cjs');
 const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
@@ -153,6 +163,10 @@ const knownQueries = new Set([
   'architecture-drift',
   'architecture-enforcement',
   'architecture-evidence',
+  'architecture-dependency-observations',
+  'architecture-path-mapping',
+  'architecture-dependency-classification',
+  'architecture-fitness',
 ]);
 const governanceProjectionQueryNames = new Set([
   'files',
@@ -248,6 +262,10 @@ const componentCommonFilterQueryNames = new Set([
   'architecture-drift',
   'architecture-enforcement',
   'architecture-evidence',
+  'architecture-dependency-observations',
+  'architecture-path-mapping',
+  'architecture-dependency-classification',
+  'architecture-fitness',
 ]);
 
 function isHelpCommand(value) {
@@ -334,6 +352,26 @@ function buildPlanningDbQueryHelpText(queryName) {
       examples.push(
         `  pnpm planning:db:query ${queryName} --gaps true --limit 20`,
         `  pnpm planning:db:query ${queryName} --component docs/architecture/components/web/index.md --limit 20`
+      );
+    } else if (queryName === 'architecture-dependency-observations') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --design design-21-component-architecture-fitness-dbfirst --limit 20`,
+        `  pnpm planning:db:query ${queryName} --component SYS-WEB-ROOT --limit 20`
+      );
+    } else if (queryName === 'architecture-path-mapping') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state unmapped --limit 20`,
+        `  pnpm planning:db:query ${queryName} --path apps/web/src/app/App.tsx --limit 20`
+      );
+    } else if (queryName === 'architecture-dependency-classification') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --classification undeclared_dependency --limit 20`,
+        `  pnpm planning:db:query ${queryName} --state fail --limit 20`
+      );
+    } else if (queryName === 'architecture-fitness') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --rule DVT-ARCH-003 --state fail --limit 20`,
+        `  pnpm planning:db:query ${queryName} --design design-21-component-architecture-fitness-dbfirst --limit 20`
       );
     }
 
@@ -4255,6 +4293,45 @@ async function runQuery(options = {}) {
       return evidenceRows;
     }
 
+    if (queryName === 'architecture-dependency-observations') {
+      const rows = await readArchitectureDependencyObservationRows(client, options.filters || {});
+      const observationRows = buildArchitectureDependencyObservationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(observationRows);
+      }
+      return observationRows;
+    }
+
+    if (queryName === 'architecture-path-mapping') {
+      const rows = await readArchitecturePathMappingRows(client, options.filters || {});
+      const mappingRows = buildArchitecturePathMappingRows(rows);
+      if (options.print !== false) {
+        printTaskRows(mappingRows);
+      }
+      return mappingRows;
+    }
+
+    if (queryName === 'architecture-dependency-classification') {
+      const rows = await readArchitectureDependencyClassificationRows(
+        client,
+        options.filters || {}
+      );
+      const classificationRows = buildArchitectureDependencyClassificationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(classificationRows);
+      }
+      return classificationRows;
+    }
+
+    if (queryName === 'architecture-fitness') {
+      const rows = await readArchitectureFitnessRows(client, options.filters || {});
+      const fitnessRows = buildArchitectureFitnessRows(rows);
+      if (options.print !== false) {
+        printTaskRows(fitnessRows);
+      }
+      return fitnessRows;
+    }
+
     if (queryName === 'coverage') {
       const rows = await readGovernanceCoverageRows(client, options.filters || {});
       const coverageRows = buildGovernanceCoverageRows(rows);
@@ -4388,15 +4465,19 @@ module.exports = {
   buildRiskDebtRows,
   buildArchitectureComponentRows,
   buildArchitectureContractRows,
+  buildArchitectureDependencyClassificationRows,
+  buildArchitectureDependencyObservationRows,
   buildArchitectureDesignRows,
   buildArchitectureDesignScopeRows,
   buildArchitectureDriftRows,
   buildArchitectureEnforcementRows,
   buildArchitectureEvidenceRows,
+  buildArchitectureFitnessRows,
   buildArchitectureFlowRows,
   buildArchitectureFlowStepRows,
   buildArchitectureIoRows,
   buildArchitectureMaturityRows,
+  buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
   buildArchitectureResponsibilityRows,
   buildHashDriftRows,
@@ -4456,15 +4537,19 @@ module.exports = {
   readComponentEngineeringQualityRows,
   readArchitectureComponentRows,
   readArchitectureContractRows,
+  readArchitectureDependencyClassificationRows,
+  readArchitectureDependencyObservationRows,
   readArchitectureDesignRows,
   readArchitectureDesignScopeRows,
   readArchitectureDriftRows,
   readArchitectureEnforcementRows,
   readArchitectureEvidenceRows,
+  readArchitectureFitnessRows,
   readArchitectureFlowRows,
   readArchitectureFlowStepRows,
   readArchitectureIoRows,
   readArchitectureMaturityRows,
+  readArchitecturePathMappingRows,
   readArchitectureRelationRows,
   readArchitectureResponsibilityRows,
   readFocusRows,
