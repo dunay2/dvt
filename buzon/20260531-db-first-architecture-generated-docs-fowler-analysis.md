@@ -29,7 +29,6 @@ Relevant evidence:
 
 - `docs/evidence/ed-20260514-dhm-db-first-engine-components.md`
 - `docs/evidence/ed-20260514-dhm-effective-component-ownership.md`
-- `buzon/20260514-codex-fowler-dhm-db-first-engine-component-analysis.md`
 - `buzon/20260514-codex-fowler-dhm-effective-component-ownership-analysis.md`
 
 The effective ownership follow-up corrected the split between DB-authored component semantics and generated file ownership. DB component claims now participate in `component_engineering.file_ownership_query`.
