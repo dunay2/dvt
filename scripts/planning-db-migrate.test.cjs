@@ -562,6 +562,22 @@ test('tracked migrations widen architecture design operations for fitness scans'
   assert.match(architectureFitnessOperationMigration.sql, /architecture_fitness_scan/);
 });
 
+test('tracked migrations expose component architecture fitness gap summaries', () => {
+  const migrations = readMigrationFiles();
+  const architectureFitnessGapMigration = migrations.find(
+    (migration) => migration.fileName === '079_component_architecture_fitness_gap_summary.sql'
+  );
+
+  assert.ok(architectureFitnessGapMigration);
+  assert.match(
+    architectureFitnessGapMigration.sql,
+    /create or replace view architecture\.component_fitness_gap_summary_query/
+  );
+  assert.match(architectureFitnessGapMigration.sql, /dependency_classification/);
+  assert.match(architectureFitnessGapMigration.sql, /observation_count/);
+  assert.match(architectureFitnessGapMigration.sql, /action_hint/);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

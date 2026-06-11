@@ -93,6 +93,26 @@ function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
     ]);
   }
 
+  function buildArchitectureFitnessGapRows(rows) {
+    return rows.map((row) => [
+      textValue(row.scan_id ?? row.scanId),
+      textValue(row.design_id ?? row.designId),
+      textValue(row.gap_kind ?? row.gapKind),
+      textValue(row.fitness_state ?? row.fitnessState),
+      textValue(row.severity),
+      textValue(row.source_prefix ?? row.sourcePrefix),
+      textValue(row.target_prefix ?? row.targetPrefix),
+      textValue(row.source_component_id ?? row.sourceComponentId),
+      textValue(row.target_component_id ?? row.targetComponentId),
+      textValue(row.relation_type ?? row.relationType),
+      row.observation_count ?? row.observationCount ?? 0,
+      row.test_observation_count ?? row.testObservationCount ?? 0,
+      textValue(row.sample_source_path ?? row.sampleSourcePath),
+      textValue(row.sample_import_literal ?? row.sampleImportLiteral),
+      textValue(row.action_hint ?? row.actionHint),
+    ]);
+  }
+
   function observationSelect(activeSchemaName = defaultSchemaName) {
     return `
       select *
@@ -115,6 +135,12 @@ function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
     return `
       select *
       from ${activeSchemaName}.component_fitness_query`;
+  }
+
+  function architectureFitnessGapSelect(activeSchemaName = defaultSchemaName) {
+    return `
+      select *
+      from ${activeSchemaName}.component_fitness_gap_summary_query`;
   }
 
   async function readArchitectureDependencyObservationRows(client, filters = {}) {
@@ -222,9 +248,40 @@ function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
     return result.rows;
   }
 
+  async function readArchitectureFitnessGapRows(client, filters = {}) {
+    const params = [];
+    const predicates = [];
+    appendFilter(predicates, params, 'design_id', filters.design);
+    appendFilter(predicates, params, 'scan_id', filters.scan);
+    appendFilter(predicates, params, 'gap_kind', filters.kind || filters.classification);
+    appendFilter(predicates, params, 'fitness_state', filters.state);
+    appendFilter(predicates, params, 'severity', filters.severity);
+    appendComponentFilter(predicates, params, filters.component);
+
+    const limit = parseLimit(filters.limit, 50);
+    params.push(limit);
+
+    const result = await client.query(
+      `${architectureFitnessGapSelect()}
+       ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+       order by
+         case fitness_state when 'fail' then 1 when 'warning' then 2 else 3 end,
+         observation_count desc,
+         gap_kind,
+         source_prefix,
+         target_prefix
+       limit $${params.length}`,
+      params
+    );
+
+    return result.rows;
+  }
+
   return {
+    architectureFitnessGapSelect,
     buildArchitectureDependencyClassificationRows,
     buildArchitectureDependencyObservationRows,
+    buildArchitectureFitnessGapRows,
     buildArchitectureFitnessRows,
     buildArchitecturePathMappingRows,
     dependencyClassificationSelect,
@@ -233,6 +290,7 @@ function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
     pathMappingSelect,
     readArchitectureDependencyClassificationRows,
     readArchitectureDependencyObservationRows,
+    readArchitectureFitnessGapRows,
     readArchitectureFitnessRows,
     readArchitecturePathMappingRows,
   };

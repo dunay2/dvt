@@ -17,6 +17,7 @@ const {
   buildArchitectureDependencyClassificationRows,
   buildArchitectureDependencyObservationRows,
   buildArchitectureDesignRows,
+  buildArchitectureFitnessGapRows,
   buildArchitectureFitnessRows,
   buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
@@ -108,6 +109,7 @@ const {
   readArchitectureDependencyClassificationRows,
   readArchitectureDependencyObservationRows,
   readArchitectureDesignRows,
+  readArchitectureFitnessGapRows,
   readArchitectureFitnessRows,
   readArchitecturePathMappingRows,
   readArchitectureRelationRows,
@@ -382,6 +384,10 @@ test('component architecture fitness query behavior lives in a focused read-mode
     buildArchitectureFitnessRows
   );
   assert.equal(
+    architectureFitnessComponent.buildArchitectureFitnessGapRows,
+    buildArchitectureFitnessGapRows
+  );
+  assert.equal(
     architectureFitnessComponent.readArchitectureDependencyObservationRows,
     readArchitectureDependencyObservationRows
   );
@@ -396,6 +402,10 @@ test('component architecture fitness query behavior lives in a focused read-mode
   assert.equal(
     architectureFitnessComponent.readArchitectureFitnessRows,
     readArchitectureFitnessRows
+  );
+  assert.equal(
+    architectureFitnessComponent.readArchitectureFitnessGapRows,
+    readArchitectureFitnessGapRows
   );
 });
 
@@ -478,6 +488,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
     'architecture-dependency-classification'
   );
   assert.equal(resolveQueryName('architecture-fitness'), 'architecture-fitness');
+  assert.equal(resolveQueryName('architecture-fitness-gaps'), 'architecture-fitness-gaps');
   assert.equal(resolveQueryName('component-roadmap'), 'component-roadmap');
   assert.equal(resolveQueryName('documentation-panels'), 'documentation-panels');
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
@@ -3841,6 +3852,48 @@ test('buildArchitectureFitnessRows exposes rule, state, and evidence subject', (
   ]);
 });
 
+test('buildArchitectureFitnessGapRows exposes prioritized architecture gap groups', () => {
+  const rows = buildArchitectureFitnessGapRows([
+    {
+      scan_id: 'scan-1',
+      design_id: 'design-21-component-architecture-fitness-dbfirst',
+      gap_kind: 'unmapped_source',
+      fitness_state: 'fail',
+      severity: 'error',
+      source_prefix: 'apps/api/src',
+      target_prefix: '-',
+      source_component_id: null,
+      target_component_id: null,
+      relation_type: 'depends_on',
+      observation_count: 42,
+      test_observation_count: 3,
+      sample_source_path: 'apps/api/src/application/ports/auth.ts',
+      sample_import_literal: '@dvt/contracts',
+      action_hint: 'Record or refine architecture.component ownership for the source prefix.',
+    },
+  ]);
+
+  assert.deepEqual(rows, [
+    [
+      'scan-1',
+      'design-21-component-architecture-fitness-dbfirst',
+      'unmapped_source',
+      'fail',
+      'error',
+      'apps/api/src',
+      '-',
+      '-',
+      '-',
+      'depends_on',
+      42,
+      3,
+      'apps/api/src/application/ports/auth.ts',
+      '@dvt/contracts',
+      'Record or refine architecture.component ownership for the source prefix.',
+    ],
+  ]);
+});
+
 test('readArchitectureDependencyClassificationRows queries observed-vs-declared DB facts', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -3871,6 +3924,45 @@ test('readArchitectureDependencyClassificationRows queries observed-vs-declared 
     'undeclared_dependency',
     'SYS-WEB-ROOT',
     9,
+  ]);
+});
+
+test('readArchitectureFitnessGapRows queries DB-owned prioritized architecture gaps', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureFitnessGapRows(client, {
+    design: 'design-21-component-architecture-fitness-dbfirst',
+    scan: 'scan-1',
+    kind: 'unmapped_source',
+    state: 'fail',
+    severity: 'error',
+    component: 'SYS-WEB-ROOT',
+    limit: 8,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_fitness_gap_summary_query/);
+  assert.match(captured.sql, /design_id = \$1/);
+  assert.match(captured.sql, /scan_id = \$2/);
+  assert.match(captured.sql, /gap_kind = \$3/);
+  assert.match(captured.sql, /fitness_state = \$4/);
+  assert.match(captured.sql, /severity = \$5/);
+  assert.match(captured.sql, /\(source_component_id = \$6 or target_component_id = \$6\)/);
+  assert.match(captured.sql, /limit \$7/);
+  assert.deepEqual(captured.params, [
+    'design-21-component-architecture-fitness-dbfirst',
+    'scan-1',
+    'unmapped_source',
+    'fail',
+    'error',
+    'SYS-WEB-ROOT',
+    8,
   ]);
 });
 
@@ -3912,6 +4004,62 @@ test('runQuery dispatches architecture-fitness through the DB-first fitness read
       'fail',
       'error',
       'Observed internal dependency is not declared.',
+    ],
+  ]);
+});
+
+test('runQuery dispatches architecture-fitness-gaps through the DB-first summary read model', async () => {
+  const client = {
+    async query(sql) {
+      assert.match(sql, /component_fitness_gap_summary_query/);
+      return {
+        rows: [
+          {
+            scan_id: 'scan-1',
+            design_id: 'design-21-component-architecture-fitness-dbfirst',
+            gap_kind: 'undeclared_dependency',
+            fitness_state: 'fail',
+            severity: 'error',
+            source_prefix: 'apps/web/src',
+            target_prefix: 'packages/@dvt/contracts/src',
+            source_component_id: 'SYS-WEB',
+            target_component_id: 'SYS-CONTRACTS',
+            relation_type: 'depends_on',
+            observation_count: 2,
+            test_observation_count: 0,
+            sample_source_path: 'apps/web/src/app/App.tsx',
+            sample_import_literal: '@dvt/contracts',
+            action_hint: 'Record architecture.component_relation or refactor the dependency.',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await runQuery({
+    queryName: 'architecture-fitness-gaps',
+    filters: { kind: 'undeclared_dependency', state: 'fail', limit: 5 },
+    client,
+    print: false,
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'scan-1',
+      'design-21-component-architecture-fitness-dbfirst',
+      'undeclared_dependency',
+      'fail',
+      'error',
+      'apps/web/src',
+      'packages/@dvt/contracts/src',
+      'SYS-WEB',
+      'SYS-CONTRACTS',
+      'depends_on',
+      2,
+      0,
+      'apps/web/src/app/App.tsx',
+      '@dvt/contracts',
+      'Record architecture.component_relation or refactor the dependency.',
     ],
   ]);
 });

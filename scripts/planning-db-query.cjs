@@ -79,10 +79,12 @@ const {
 const {
   buildArchitectureDependencyClassificationRows,
   buildArchitectureDependencyObservationRows,
+  buildArchitectureFitnessGapRows,
   buildArchitectureFitnessRows,
   buildArchitecturePathMappingRows,
   readArchitectureDependencyClassificationRows,
   readArchitectureDependencyObservationRows,
+  readArchitectureFitnessGapRows,
   readArchitectureFitnessRows,
   readArchitecturePathMappingRows,
 } = require('./planning-db/queries/component-architecture-fitness-query.cjs');
@@ -167,6 +169,7 @@ const knownQueries = new Set([
   'architecture-path-mapping',
   'architecture-dependency-classification',
   'architecture-fitness',
+  'architecture-fitness-gaps',
 ]);
 const governanceProjectionQueryNames = new Set([
   'files',
@@ -266,6 +269,7 @@ const componentCommonFilterQueryNames = new Set([
   'architecture-path-mapping',
   'architecture-dependency-classification',
   'architecture-fitness',
+  'architecture-fitness-gaps',
 ]);
 
 function isHelpCommand(value) {
@@ -372,6 +376,11 @@ function buildPlanningDbQueryHelpText(queryName) {
       examples.push(
         `  pnpm planning:db:query ${queryName} --rule DVT-ARCH-003 --state fail --limit 20`,
         `  pnpm planning:db:query ${queryName} --design design-21-component-architecture-fitness-dbfirst --limit 20`
+      );
+    } else if (queryName === 'architecture-fitness-gaps') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --kind unmapped_source --limit 20`,
+        `  pnpm planning:db:query ${queryName} --state fail --component SYS-WEB-ROOT --limit 20`
       );
     }
 
@@ -4332,6 +4341,15 @@ async function runQuery(options = {}) {
       return fitnessRows;
     }
 
+    if (queryName === 'architecture-fitness-gaps') {
+      const rows = await readArchitectureFitnessGapRows(client, options.filters || {});
+      const gapRows = buildArchitectureFitnessGapRows(rows);
+      if (options.print !== false) {
+        printTaskRows(gapRows);
+      }
+      return gapRows;
+    }
+
     if (queryName === 'coverage') {
       const rows = await readGovernanceCoverageRows(client, options.filters || {});
       const coverageRows = buildGovernanceCoverageRows(rows);
@@ -4514,6 +4532,7 @@ module.exports = {
   buildFowlerAnalysisReferenceRows,
   buildFowlerAnalysisRetirementRows,
   buildFowlerAnalysisRows,
+  buildArchitectureFitnessGapRows,
   buildRepositoryCommandRows,
   buildNextTaskRows,
   buildSummaryRows,
@@ -4544,6 +4563,7 @@ module.exports = {
   readArchitectureDriftRows,
   readArchitectureEnforcementRows,
   readArchitectureEvidenceRows,
+  readArchitectureFitnessGapRows,
   readArchitectureFitnessRows,
   readArchitectureFlowRows,
   readArchitectureFlowStepRows,
