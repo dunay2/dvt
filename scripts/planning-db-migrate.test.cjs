@@ -508,6 +508,76 @@ test('tracked migrations classify same-document repeated open Fowler intentions 
   );
 });
 
+test('tracked migrations expose DB-first component architecture fitness facts', () => {
+  const migrations = readMigrationFiles();
+  const architectureFitnessMigration = migrations.find(
+    (migration) => migration.fileName === '077_component_architecture_fitness_dbfirst.sql'
+  );
+
+  assert.ok(architectureFitnessMigration);
+  assert.match(
+    architectureFitnessMigration.sql,
+    /create table if not exists architecture\.component_dependency_scan/
+  );
+  assert.match(
+    architectureFitnessMigration.sql,
+    /create table if not exists architecture\.component_dependency_observation/
+  );
+  assert.match(
+    architectureFitnessMigration.sql,
+    /create table if not exists architecture\.component_fitness_evaluation/
+  );
+  assert.match(
+    architectureFitnessMigration.sql,
+    /create or replace view architecture\.component_dependency_observation_query/
+  );
+  assert.match(
+    architectureFitnessMigration.sql,
+    /create or replace view architecture\.component_path_mapping_query/
+  );
+  assert.match(
+    architectureFitnessMigration.sql,
+    /create or replace view architecture\.component_dependency_classification_query/
+  );
+  assert.match(
+    architectureFitnessMigration.sql,
+    /create or replace view architecture\.component_fitness_query/
+  );
+  assert.match(architectureFitnessMigration.sql, /DVT-ARCH-001/);
+  assert.match(architectureFitnessMigration.sql, /unmapped_source/);
+  assert.match(architectureFitnessMigration.sql, /undeclared_dependency/);
+});
+
+test('tracked migrations widen architecture design operations for fitness scans', () => {
+  const migrations = readMigrationFiles();
+  const architectureFitnessOperationMigration = migrations.find(
+    (migration) => migration.fileName === '078_component_architecture_fitness_operation_rail.sql'
+  );
+
+  assert.ok(architectureFitnessOperationMigration);
+  assert.match(
+    architectureFitnessOperationMigration.sql,
+    /architecture_design_operations_type_check/
+  );
+  assert.match(architectureFitnessOperationMigration.sql, /architecture_fitness_scan/);
+});
+
+test('tracked migrations expose component architecture fitness gap summaries', () => {
+  const migrations = readMigrationFiles();
+  const architectureFitnessGapMigration = migrations.find(
+    (migration) => migration.fileName === '079_component_architecture_fitness_gap_summary.sql'
+  );
+
+  assert.ok(architectureFitnessGapMigration);
+  assert.match(
+    architectureFitnessGapMigration.sql,
+    /create or replace view architecture\.component_fitness_gap_summary_query/
+  );
+  assert.match(architectureFitnessGapMigration.sql, /dependency_classification/);
+  assert.match(architectureFitnessGapMigration.sql, /observation_count/);
+  assert.match(architectureFitnessGapMigration.sql, /action_hint/);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

@@ -185,3 +185,63 @@ test('validateArchitectureDesignStatus accepts design lifecycle statuses only', 
     /Invalid architecture design status "queued"/
   );
 });
+
+test('parseArgs accepts DB-first feature design ids', () => {
+  const command = parseArgs([
+    'architecture-design',
+    'create',
+    '--design',
+    'design-21-component-architecture-fitness-dbfirst',
+    '--work-item',
+    '21-component-architecture-fitness-dbfirst',
+    '--title',
+    'Component architecture fitness DB-first',
+    '--owner',
+    'Architecture / Governance',
+    '--rationale',
+    'Persist architecture fitness design authority before implementation.',
+    '--fowler-signal',
+    'evolutionary_architecture',
+    '--rail-ref',
+    'CreateArchitectureDesign',
+    '--scope',
+    'query:architecture.component_fitness_query:may_create:required',
+    '--source-ref',
+    'agent-prompt:21-component-architecture-fitness-dbfirst',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.designId, 'design-21-component-architecture-fitness-dbfirst');
+
+  assert.throws(
+    () =>
+      parseArgs([
+        'architecture-design',
+        'create',
+        '--design',
+        'design 21 component architecture fitness dbfirst',
+        '--work-item',
+        '21-component-architecture-fitness-dbfirst',
+        '--title',
+        'Component architecture fitness DB-first',
+        '--owner',
+        'Architecture / Governance',
+        '--rationale',
+        'Persist architecture fitness design authority before implementation.',
+        '--rail-ref',
+        'CreateArchitectureDesign',
+        '--scope',
+        'query:architecture.component_fitness_query:may_create:required',
+        '--source-ref',
+        'agent-prompt:21-component-architecture-fitness-dbfirst',
+        '--source-content-sha256',
+        'e'.repeat(64),
+        '--actor',
+        'codex',
+      ]),
+    /Invalid --design/
+  );
+});
