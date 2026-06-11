@@ -710,6 +710,65 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - node --test scripts/planning-db-query.test.cjs
+  - name: normalizeListValue
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentProfile
+    fowlerSignals:
+      - Hidden Authority from component rails stored as DB array values without operator output
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: railProfileKind
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentProfile
+    fowlerSignals:
+      - Hidden Authority from command and query rails being indistinguishable in component profile output
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: buildComponentProfileRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentProfile
+    fowlerSignals:
+      - Hidden Authority from component files, rails, ports, adapters, architecture, and Fowler references split across query surfaces
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readComponentProfileFileRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentProfile
+      - ReadComponentHierarchy
+    fowlerSignals:
+      - Boundary Drift from parent component profile reads omitting descendant-owned files
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
+  - name: readComponentProfileRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: Governance local operations
+    cqRails:
+      - ReadComponentProfile
+      - ReadComponentHierarchy
+      - ReadComponentEngineeringMetadata
+    fowlerSignals:
+      - Hidden Authority from operators needing separate manual queries for a component profile
+      - Boundary Drift from component ownership maps without file and relation context
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - node --test scripts/planning-db-query.test.cjs
 requiredTests:
   - pnpm docs:sync
   - pnpm governance:refresh
@@ -841,6 +900,16 @@ This plan extends the existing governance local-operations rails.
   - Scope and auth: repo-local, read-only maintainer and CI inspection query
   - Negative tests: unresolved parent, unowned file, duplicate leaf owner,
     root-bag threshold, and missing semantic metadata
+
+- Rail name: `ReadComponentProfile`
+  - Type: Query
+  - Owning context: Governance local operations
+  - DDD object/read model: component profile composition read model
+  - Application port: `pnpm planning:db:query component-profile`
+  - Adapter surface: `scripts/planning-db-query.cjs`
+  - Scope and auth: repo-local, read-only maintainer and CI inspection query
+  - Negative tests: unknown query rejection, required component filter, recursive
+    descendant file inclusion, and DB-safe parameterized component scope
 
 ## File Structure
 

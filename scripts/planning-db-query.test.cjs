@@ -6,6 +6,7 @@ const { spawnSync } = require('node:child_process');
 
 const {
   buildDocsDispositionRows,
+  buildComponentProfileRows,
   buildComponentEngineeringRecordRows,
   buildFeatureWorkRows,
   buildFocusRows,
@@ -102,6 +103,7 @@ const {
   readDocumentationLifecycleRows,
   readDbSurfaceRows,
   readDocsDispositionRows,
+  readComponentProfileRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentMetadataRows,
@@ -410,6 +412,185 @@ test('component architecture fitness query behavior lives in a focused read-mode
   );
 });
 
+test('buildComponentProfileRows groups component facts into operator sections', () => {
+  const rows = buildComponentProfileRows({
+    component: {
+      component_id: 'SYS-RUNTIME-ENGINE-CORE',
+      name: 'Runtime engine core',
+      component_level: 'component',
+      parent_component_id: 'SYS-RUNTIME-ROOT',
+      governance_state: 'coverage-required',
+      ddd_owner: 'Runtime / Engine',
+      cq_rails: ['StartRun', 'GetRunStatus'],
+    },
+    children: [
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-APPLICATION',
+        name: 'Runtime engine application services',
+        component_level: 'component',
+        governance_state: 'coverage-required',
+        direct_file_count: 6,
+        descendant_file_count: 6,
+      },
+    ],
+    files: [
+      {
+        path: 'packages/@dvt/engine/src/index.ts',
+        component_unit: 'SYS-RUNTIME-ENGINE-CORE',
+        owning_unit: 'SYS-RUNTIME-ENGINE-CORE',
+        governance_state: 'coverage-required',
+      },
+    ],
+    architectureComponents: [
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        kind: 'package',
+        layer: 'application',
+        owner: 'Runtime / Engine',
+        repo_path: 'packages/@dvt/engine',
+        public_contract: 'Execution engine package boundary.',
+        status: 'review',
+      },
+    ],
+    responsibilities: [
+      {
+        responsibility_id: 'RESP-ENGINE',
+        responsibility: 'Own engine lifecycle.',
+        reason_to_change: 'Runtime lifecycle changes.',
+        ddd_owner: 'Runtime / Engine',
+      },
+    ],
+    io: [
+      {
+        io_id: 'IO-ENGINE-PORT',
+        io_kind: 'port',
+        io_name: 'IWorkflowEngine',
+        direction: 'inbound',
+        runtime: 'node',
+      },
+      {
+        io_id: 'IO-ENGINE-ADAPTER',
+        io_kind: 'adapter',
+        io_name: 'TemporalProviderAdapter',
+        direction: 'outbound',
+        runtime: 'node',
+      },
+    ],
+    relations: [
+      {
+        relation_id: 'REL-ENGINE-CONTRACTS-DEPENDENCY',
+        source_component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        target_component_id: 'SYS-CONTRACTS-ROOT',
+        relation_type: 'depends_on',
+        status: 'proposed',
+      },
+    ],
+    contracts: [
+      {
+        contract_id: 'CONTRACT-ENGINE',
+        contract_kind: 'public-api',
+        contract_ref: 'docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md',
+        status: 'review',
+      },
+    ],
+    architectureDesigns: [
+      {
+        design_id: 'design-22-system-component-ownership-map',
+        work_item_id: 'COMPONENT-OWNERSHIP-MAP-20260611',
+        design_title: 'System component ownership map',
+        scope_kind: 'may_create',
+      },
+    ],
+    fowlerReferences: [
+      {
+        document_path: 'buzon/fowler.md',
+        reference_state: 'linked',
+        relation_type: 'analyzes',
+        canonical_target_path: 'docs/architecture/components/engine/index.md',
+        resolution_status: 'resolved',
+      },
+    ],
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'component',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'Runtime engine core',
+      'component',
+      'SYS-RUNTIME-ROOT',
+      'coverage-required',
+      'Runtime / Engine',
+    ],
+    [
+      'child',
+      'SYS-RUNTIME-ENGINE-APPLICATION',
+      'Runtime engine application services',
+      'component',
+      'coverage-required',
+      6,
+      6,
+    ],
+    [
+      'file',
+      'packages/@dvt/engine/src/index.ts',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'coverage-required',
+    ],
+    ['command', 'StartRun', 'SYS-RUNTIME-ENGINE-CORE', 'cq_rails'],
+    ['query', 'GetRunStatus', 'SYS-RUNTIME-ENGINE-CORE', 'cq_rails'],
+    ['port', 'IO-ENGINE-PORT', 'IWorkflowEngine', 'inbound', 'node'],
+    ['adapter', 'IO-ENGINE-ADAPTER', 'TemporalProviderAdapter', 'outbound', 'node'],
+    [
+      'architecture',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'package',
+      'application',
+      'Runtime / Engine',
+      'packages/@dvt/engine',
+      'review',
+    ],
+    [
+      'responsibility',
+      'RESP-ENGINE',
+      'Own engine lifecycle.',
+      'Runtime lifecycle changes.',
+      'Runtime / Engine',
+    ],
+    [
+      'relation',
+      'REL-ENGINE-CONTRACTS-DEPENDENCY',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'SYS-CONTRACTS-ROOT',
+      'depends_on',
+      'proposed',
+    ],
+    [
+      'contract',
+      'CONTRACT-ENGINE',
+      'public-api',
+      'docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md',
+      'review',
+    ],
+    [
+      'architecture-basis',
+      'design-22-system-component-ownership-map',
+      'COMPONENT-OWNERSHIP-MAP-20260611',
+      'System component ownership map',
+      'may_create',
+    ],
+    [
+      'fowler',
+      'buzon/fowler.md',
+      'linked',
+      'analyzes',
+      'docs/architecture/components/engine/index.md',
+      'resolved',
+    ],
+  ]);
+});
+
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
   assert.equal(resolveQueryName(undefined), 'summary');
   assert.equal(resolveQueryName('summary'), 'summary');
@@ -472,6 +653,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('component-rules'), 'component-rules');
   assert.equal(resolveQueryName('component-rule-evaluations'), 'component-rule-evaluations');
   assert.equal(resolveQueryName('component-quality'), 'component-quality');
+  assert.equal(resolveQueryName('component-profile'), 'component-profile');
   assert.equal(resolveQueryName('architecture-designs'), 'architecture-designs');
   assert.equal(resolveQueryName('architecture-components'), 'architecture-components');
   assert.equal(resolveQueryName('architecture-relations'), 'architecture-relations');
@@ -5194,6 +5376,28 @@ test('readArchitectureComponentRows queries the DB architecture component view',
   assert.match(captured.sql, /layer = \$3/);
   assert.match(captured.sql, /limit \$4/);
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 'module', 'application', 5]);
+});
+
+test('readComponentProfileRows reads files through the component descendant tree', async () => {
+  const capturedSql = [];
+  const client = {
+    async query(sql) {
+      capturedSql.push(sql);
+      return { rows: [] };
+    },
+  };
+
+  await readComponentProfileRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-CORE',
+    limit: 5,
+  });
+
+  assert.match(capturedSql.join('\n'), /with recursive component_scope\(component_id\) as/i);
+  assert.match(capturedSql.join('\n'), /parent_component_id = component_scope\.component_id/);
+  assert.match(
+    capturedSql.join('\n'),
+    /leaf_component_id in \(select component_id from component_scope\)/
+  );
 });
 
 test('readArchitectureRelationRows queries the DB architecture relation graph view', async () => {

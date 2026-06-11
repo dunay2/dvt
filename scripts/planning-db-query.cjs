@@ -148,6 +148,7 @@ const knownQueries = new Set([
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
+  'component-profile',
   'governance-refresh-runs',
   'mandatory-proposal-gaps',
   'db-surfaces',
@@ -254,6 +255,7 @@ const componentCommonFilterQueryNames = new Set([
   'documentation-panels',
   'component-tree',
   'component-roadmap',
+  'component-profile',
   'component-metadata',
   'component-drift',
   'component-rules',
@@ -301,7 +303,9 @@ function buildPlanningDbQueryHelpText(queryName) {
 
   if (queryName) {
     const examples = [`  pnpm planning:db:query ${queryName} --limit 20`];
-    if (
+    if (queryName === 'component-profile') {
+      examples.push(`  pnpm planning:db:query ${queryName} --component SYS-WEB-ROOT --limit 50`);
+    } else if (
       taskIdCommonFilterQueryNames.has(queryName) ||
       pathCommonFilterQueryNames.has(queryName) ||
       componentCommonFilterQueryNames.has(queryName)
@@ -1448,6 +1452,154 @@ function buildComponentEngineeringQualityRows(rows) {
     row.failing_rule_count ?? row.failingRuleCount ?? 0,
     joinJsonArray(row.drift_codes ?? row.driftCodes),
   ]);
+}
+
+function normalizeListValue(value) {
+  if (value === undefined || value === null) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  return String(value)
+    .replace(/[{}]/g, '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function railProfileKind(railName) {
+  return /^(get|list|query|read|resolve|observe|check|browse|validate)/i.test(railName)
+    ? 'query'
+    : 'command';
+}
+
+function buildComponentProfileRows(profile) {
+  const componentId =
+    profile.component?.component_id ??
+    profile.component?.componentId ??
+    profile.filters?.component ??
+    '-';
+  const rows = [];
+
+  if (profile.component) {
+    rows.push([
+      'component',
+      componentId,
+      compactText(profile.component.name),
+      profile.component.component_level ?? profile.component.componentLevel ?? '-',
+      profile.component.parent_component_id ?? profile.component.parentComponentId ?? '-',
+      profile.component.governance_state ?? profile.component.governanceState ?? '-',
+      profile.component.ddd_owner ?? profile.component.dddOwner ?? '-',
+    ]);
+  }
+
+  for (const child of profile.children || []) {
+    rows.push([
+      'child',
+      child.component_id ?? child.componentId,
+      compactText(child.name),
+      child.component_level ?? child.componentLevel ?? '-',
+      child.governance_state ?? child.governanceState ?? '-',
+      child.direct_file_count ?? child.directFileCount ?? 0,
+      child.descendant_file_count ?? child.descendantFileCount ?? 0,
+    ]);
+  }
+
+  for (const file of profile.files || []) {
+    rows.push([
+      'file',
+      file.path,
+      file.component_unit ?? file.componentUnit ?? '-',
+      file.owning_unit ?? file.owningUnit ?? '-',
+      file.governance_state ?? file.governanceState ?? '-',
+    ]);
+  }
+
+  for (const railName of normalizeListValue(
+    profile.component?.cq_rails ?? profile.component?.cqRails
+  )) {
+    rows.push([railProfileKind(railName), railName, componentId, 'cq_rails']);
+  }
+
+  for (const io of profile.io || []) {
+    const section = io.io_kind === 'adapter' ? 'adapter' : io.io_kind === 'port' ? 'port' : 'io';
+    rows.push([
+      section,
+      io.io_id ?? io.ioId,
+      compactText(io.io_name ?? io.ioName),
+      io.direction ?? '-',
+      io.runtime ?? '-',
+    ]);
+  }
+
+  for (const architectureComponent of profile.architectureComponents || []) {
+    rows.push([
+      'architecture',
+      architectureComponent.component_id ?? architectureComponent.componentId,
+      architectureComponent.kind,
+      architectureComponent.layer,
+      architectureComponent.owner,
+      architectureComponent.repo_path ?? architectureComponent.repoPath ?? '-',
+      architectureComponent.status,
+    ]);
+  }
+
+  for (const responsibility of profile.responsibilities || []) {
+    rows.push([
+      'responsibility',
+      responsibility.responsibility_id ?? responsibility.responsibilityId,
+      compactText(responsibility.responsibility),
+      compactText(responsibility.reason_to_change ?? responsibility.reasonToChange),
+      responsibility.ddd_owner ?? responsibility.dddOwner ?? '-',
+    ]);
+  }
+
+  for (const relation of profile.relations || []) {
+    rows.push([
+      'relation',
+      relation.relation_id ?? relation.relationId,
+      relation.source_component_id ?? relation.sourceComponentId,
+      relation.target_component_id ?? relation.targetComponentId,
+      relation.relation_type ?? relation.relationType,
+      relation.status,
+    ]);
+  }
+
+  for (const contract of profile.contracts || []) {
+    rows.push([
+      'contract',
+      contract.contract_id ?? contract.contractId,
+      contract.contract_kind ?? contract.contractKind,
+      contract.contract_ref ?? contract.contractRef,
+      contract.status,
+    ]);
+  }
+
+  for (const design of profile.architectureDesigns || []) {
+    rows.push([
+      'architecture-basis',
+      design.design_id ?? design.designId,
+      design.work_item_id ?? design.workItemId,
+      compactText(design.design_title ?? design.designTitle ?? design.title),
+      design.scope_kind ?? design.scopeKind ?? '-',
+    ]);
+  }
+
+  for (const fowlerReference of profile.fowlerReferences || []) {
+    rows.push([
+      'fowler',
+      fowlerReference.document_path ?? fowlerReference.documentPath,
+      fowlerReference.reference_state ?? fowlerReference.referenceState ?? '-',
+      fowlerReference.relation_type ?? fowlerReference.relationType ?? '-',
+      fowlerReference.canonical_target_path ?? fowlerReference.canonicalTargetPath ?? '-',
+      fowlerReference.resolution_status ?? fowlerReference.resolutionStatus ?? '-',
+    ]);
+  }
+
+  return rows;
 }
 
 function buildArchitectureDesignRows(rows) {
@@ -2997,6 +3149,32 @@ async function readGovernanceFileRows(client, filters = {}) {
   return result.rows;
 }
 
+async function readComponentProfileFileRows(client, filters = {}) {
+  const component = String(filters.component || '').trim();
+  if (!component) {
+    return [];
+  }
+
+  const limit = parseLimit(filters.limit, 50);
+  const result = await client.query(
+    `with recursive component_scope(component_id) as (
+       select $1::text
+       union
+       select tree.component_id
+       from ${componentEngineeringSchemaName}.component_tree_query tree
+       join component_scope on tree.parent_component_id = component_scope.component_id
+     )
+     ${governanceFileSelect()}
+     where leaf_component_id in (select component_id from component_scope)
+        or owning_unit in (select component_id from component_scope)
+     order by is_drift desc, leaf_component_id, file_path
+     limit $2`,
+    [component, limit]
+  );
+
+  return result.rows;
+}
+
 async function readGovernanceComponentRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -3105,6 +3283,44 @@ async function readComponentEngineeringComponentMetadataRows(client, filters = {
   );
 
   return result.rows;
+}
+
+async function readComponentProfileRows(client, filters = {}) {
+  const component = String(filters.component || filters.filter || '').trim();
+  if (!component) {
+    throw new Error('component-profile requires --component <id>.');
+  }
+
+  const limit = parseLimit(filters.limit, 50);
+  const scopedFilters = { ...filters, component, limit };
+  const componentRows = await readComponentEngineeringComponentMetadataRows(client, {
+    ...scopedFilters,
+    limit: 1,
+  });
+
+  return {
+    filters: { component },
+    component: componentRows[0] || null,
+    children: await readComponentEngineeringComponentTreeRows(client, {
+      parentUnit: component,
+      limit,
+    }),
+    files: await readComponentProfileFileRows(client, scopedFilters),
+    architectureComponents: await readArchitectureComponentRows(client, scopedFilters),
+    responsibilities: await readArchitectureResponsibilityRows(client, scopedFilters),
+    io: await readArchitectureIoRows(client, scopedFilters),
+    relations: await readArchitectureRelationRows(client, scopedFilters),
+    contracts: await readArchitectureContractRows(client, scopedFilters),
+    architectureDesigns: await readArchitectureDesignScopeRows(client, {
+      component,
+      subjectKind: 'component',
+      limit,
+    }),
+    fowlerReferences: await readFowlerAnalysisReferenceRows(client, {
+      component,
+      limit,
+    }),
+  };
 }
 
 async function readComponentEngineeringRuleCatalogRows(client, filters = {}) {
@@ -4204,6 +4420,15 @@ async function runQuery(options = {}) {
       return qualityRows;
     }
 
+    if (queryName === 'component-profile') {
+      const profile = await readComponentProfileRows(client, options.filters || {});
+      const profileRows = buildComponentProfileRows(profile);
+      if (options.print !== false) {
+        printTaskRows(profileRows);
+      }
+      return profileRows;
+    }
+
     if (queryName === 'architecture-designs') {
       const rows = await readArchitectureDesignRows(client, options.filters || {});
       const designRows = buildArchitectureDesignRows(rows);
@@ -4486,6 +4711,7 @@ module.exports = {
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringQualityRows,
+  buildComponentProfileRows,
   buildComponentEngineeringRecordRows,
   buildComponentEngineeringRuleCatalogRows,
   buildComponentEngineeringRuleEvaluationRows,
@@ -4574,6 +4800,7 @@ module.exports = {
   readComponentEngineeringComponentMetadataRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
+  readComponentProfileRows,
   readArchitectureComponentRows,
   readArchitectureContractRows,
   readArchitectureDependencyClassificationRows,
