@@ -4,6 +4,10 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const {
+  applyGovernanceRefreshRunRecordOperation,
+} = require('./planning-db/governance-refresh-write-rail.cjs');
+
 const repoRoot = path.resolve(__dirname, '..');
 const defaultMaxPasses = 3;
 
@@ -299,6 +303,118 @@ function runGovernanceRefresh(options = {}) {
   };
 }
 
+function defaultRefreshActor() {
+  return process.env.GITHUB_ACTOR || process.env.USERNAME || process.env.USER || 'local';
+}
+
+function defaultRefreshRunId(now = new Date()) {
+  return `governance-refresh-${now
+    .toISOString()
+    .replace(/[^0-9]/g, '')
+    .slice(0, 14)}`;
+}
+
+function readGovernanceRefreshSourceContentSha256() {
+  return sha256(fs.readFileSync(__filename));
+}
+
+function buildGovernanceRefreshRunRecordCommand(record) {
+  return {
+    kind: 'governance_refresh_run_record',
+    runId: record.runId,
+    runState: record.runState,
+    actor: record.actor,
+    commandName: 'pnpm governance:refresh',
+    sourceRef: record.sourceRef,
+    sourceContentSha256: record.sourceContentSha256,
+    maxPasses: record.maxPasses,
+    generationPasses: record.generationPasses,
+    stabilized: record.stabilized,
+    errorSummary: record.errorSummary || '',
+    startedAt: record.startedAt,
+    completedAt: record.completedAt,
+    stages: record.stages,
+    result: record.result,
+    idempotencyKey: [
+      'governance_refresh_run_record',
+      record.runId,
+      record.runState,
+      record.sourceContentSha256,
+    ].join(':'),
+  };
+}
+
+async function recordGovernanceRefreshRun(record) {
+  return applyGovernanceRefreshRunRecordOperation(buildGovernanceRefreshRunRecordCommand(record));
+}
+
+async function runGovernanceRefreshCommand(options = {}, deps = {}) {
+  const now = deps.now || (() => new Date());
+  const startedAt = now();
+  const stages = options.stages ?? buildRefreshStages();
+  const runId = options.runId || defaultRefreshRunId(startedAt);
+  const actor = options.actor || defaultRefreshActor();
+  const maxPasses = options.maxPasses ?? defaultMaxPasses;
+  const sourceRef = options.sourceRef || 'scripts/governance-refresh.cjs';
+  const sourceContentSha256 =
+    options.sourceContentSha256 || readGovernanceRefreshSourceContentSha256();
+  const runRefresh = deps.runRefresh || runGovernanceRefresh;
+  const recordAcceptedRun = deps.recordAcceptedRun || recordGovernanceRefreshRun;
+  const recordCompletedRun = deps.recordCompletedRun || recordGovernanceRefreshRun;
+  const recordFailedRun = deps.recordFailedRun || recordGovernanceRefreshRun;
+  const baseRecord = {
+    runId,
+    actor,
+    maxPasses,
+    sourceRef,
+    sourceContentSha256,
+    startedAt: toIsoLike(startedAt),
+  };
+
+  await recordAcceptedRun({
+    ...baseRecord,
+    runState: 'accepted',
+    generationPasses: 0,
+    stabilized: null,
+  });
+
+  try {
+    const result = runRefresh({ ...options, stages, maxPasses });
+    const completedAt = now();
+    await recordCompletedRun({
+      ...baseRecord,
+      runState: 'passed',
+      generationPasses: result.generationPasses,
+      stabilized: result.stabilized,
+      completedAt: toIsoLike(completedAt),
+      stages,
+      result,
+    });
+    return result;
+  } catch (error) {
+    const completedAt = now();
+    await recordFailedRun({
+      ...baseRecord,
+      runState: 'failed',
+      generationPasses: 0,
+      stabilized: false,
+      completedAt: toIsoLike(completedAt),
+      errorSummary: error.message,
+      stages,
+      result: {
+        generationPasses: 0,
+        generationStagesRun: [],
+        databaseStagesRun: [],
+      },
+    });
+    throw error;
+  }
+}
+
+function toIsoLike(value) {
+  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+}
+
 function parseArgs(args) {
   const options = {};
 
@@ -330,7 +446,7 @@ function printHelp() {
   console.log('Usage: pnpm governance:refresh [--max-passes <count>]');
 }
 
-function main() {
+async function main() {
   const options = parseArgs(process.argv.slice(2));
 
   if (options.help) {
@@ -338,11 +454,14 @@ function main() {
     return;
   }
 
-  runGovernanceRefresh(options);
+  await runGovernanceRefreshCommand(options);
 }
 
 if (require.main === module) {
-  main();
+  main().catch((error) => {
+    console.error(`[governance:refresh] ${error.message}`);
+    process.exit(1);
+  });
 }
 
 module.exports = {
@@ -357,5 +476,6 @@ module.exports = {
   readUntrackedFileHashes,
   readWorktreeFingerprint,
   runGovernanceRefresh,
+  runGovernanceRefreshCommand,
   parseArgs,
 };

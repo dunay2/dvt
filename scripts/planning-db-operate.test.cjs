@@ -10,3 +10,4 @@ require('./planning-db-operate-tests/component-create.test.cjs');
 require('./planning-db-operate-tests/architecture-parse.test.cjs');
 require('./planning-db-operate-tests/architecture-plan.test.cjs');
 require('./planning-db-operate-tests/architecture-fitness.test.cjs');
+require('./planning-db-operate-tests/governance-refresh.test.cjs');

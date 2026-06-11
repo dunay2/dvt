@@ -17,6 +17,13 @@ const {
   allowedDbSurfaceMigrationStates,
   allowedDbSurfaceWriteRailKinds,
 } = require('./planning-db/db-surface-inventory.cjs');
+const {
+  allowedRunStates: allowedGovernanceRefreshRunStates,
+  applyGovernanceRefreshRunRecordOperation,
+  defaultGovernanceRefreshRunIdempotencyKey,
+  planGovernanceRefreshRunRecordOperation,
+  writePlannedGovernanceRefreshRunRecordOperation,
+} = require('./planning-db/governance-refresh-write-rail.cjs');
 
 const allowedStatuses = new Set(['queued', 'in_progress', 'blocked', 'review', 'done']);
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
@@ -292,6 +299,15 @@ const operationHelp = Object.freeze({
       'Retirement approval is only effective when the DB retirement query also proves no live references, accepted canonical target, accepted disposition, and no open improvements.',
     ],
   },
+  'governance-refresh': {
+    operations: ['record-run'],
+    usage:
+      'pnpm planning:db:operate governance-refresh record-run --run <RUN-ID> --state <accepted|passed|failed> --actor <actor>',
+    details: [
+      'GovernanceRefresh records the refresh run state in Planning DB before generated/exported surfaces are treated as evidence.',
+      'Requires --source-ref, --source-content-sha256, --max-passes, and --generation-passes.',
+    ],
+  },
   audit: {
     operations: [],
     usage: 'pnpm planning:db:operate audit [--lane <lane>] [--task <task>] [--limit <n>]',
@@ -308,7 +324,7 @@ function isHelpFlag(value) {
 }
 
 function unknownOperationMessage() {
-  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-fitness", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", or "audit".';
+  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-fitness", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", "governance-refresh", or "audit".';
 }
 
 function buildPlanningDbOperateHelpText(resource, action) {
@@ -2243,6 +2259,48 @@ function parseFowlerAnalysisCommand(action, args) {
   );
 }
 
+function validateGovernanceRefreshRunState(value) {
+  if (!allowedGovernanceRefreshRunStates.has(value)) {
+    throw new Error(
+      `Invalid governance refresh run state "${value}". Expected: ${[
+        ...allowedGovernanceRefreshRunStates,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function parseGovernanceRefreshCommand(action, args) {
+  if (action !== 'record-run') {
+    throw new Error(`Unknown governance-refresh operation "${action}". Expected record-run.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const command = {
+    kind: 'governance_refresh_run_record',
+    runId: requireOption(options, 'run'),
+    runState: validateGovernanceRefreshRunState(requireOption(options, 'state')),
+    actor: requireOption(options, 'actor'),
+    commandName: options.command || 'pnpm governance:refresh',
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: requireOption(options, 'sourceContentSha256'),
+    maxPasses: parseIntegerOption(requireOption(options, 'maxPasses'), 'max-passes'),
+    generationPasses: parseIntegerOption(options.generationPasses || '0', 'generation-passes'),
+    stabilized: parseBooleanOption(options.stabilized, 'stabilized'),
+    errorSummary: normalizeOptionalText(options.error),
+    startedAt: normalizeOptionalText(options.startedAt),
+    completedAt: normalizeOptionalText(options.completedAt),
+    idempotencyKey: normalizeOptionalText(options.idempotencyKey),
+    expectedRevision: parseIntegerOption(options.expectedRevision, 'expected-revision'),
+  };
+
+  return {
+    ...command,
+    idempotencyKey: command.idempotencyKey || defaultGovernanceRefreshRunIdempotencyKey(command),
+  };
+}
+
 function parseArgs(args = process.argv.slice(2)) {
   const helpText = resolveOperateHelpRequest(args);
   if (helpText) {
@@ -2335,6 +2393,14 @@ function parseArgs(args = process.argv.slice(2)) {
     }
 
     return parseFowlerAnalysisCommand(action, rest);
+  }
+
+  if (resource === 'governance-refresh') {
+    if (!action) {
+      throw new Error('Missing governance-refresh operation. Expected record-run.');
+    }
+
+    return parseGovernanceRefreshCommand(action, rest);
   }
 
   if (resource === 'docs-disposition' || resource === 'task-gap') {
@@ -5411,6 +5477,13 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.run) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.run.runId} state=${result.run.runState} revision=${result.audit.resultingRevision}`
+    );
+    return;
+  }
+
   console.log(
     `[planning:db:operate] ${result.audit.operationType} ${result.audit.laneId}/${result.audit.taskId} revision=${result.audit.resultingRevision}`
   );
@@ -5454,9 +5527,11 @@ async function main() {
                   ? await applyDbSurfaceUpsertOperation(command)
                   : command.kind === 'feature_mechanization_rail_record'
                     ? await applyFeatureMechanizationRailRecordOperation(command)
-                    : command.kind.startsWith('fowler_analysis_')
-                      ? await applyFowlerAnalysisOperation(command)
-                      : await applyTaskLocalOperation(command);
+                    : command.kind === 'governance_refresh_run_record'
+                      ? await applyGovernanceRefreshRunRecordOperation(command)
+                      : command.kind.startsWith('fowler_analysis_')
+                        ? await applyFowlerAnalysisOperation(command)
+                        : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -5477,6 +5552,7 @@ module.exports = {
   applyDocsResolutionOperation,
   applyFowlerAnalysisOperation,
   applyFeatureMechanizationRailRecordOperation,
+  applyGovernanceRefreshRunRecordOperation,
   applyTaskLocalOperation,
   assertArchitectureDesignIdempotentReplayMatches,
   assertArchitectureScopedOperationIdempotentReplayMatches,
@@ -5500,6 +5576,7 @@ module.exports = {
   planDbSurfaceUpsertOperation,
   planFeatureMechanizationRailRecordOperation,
   planFowlerAnalysisOperation,
+  planGovernanceRefreshRunRecordOperation,
   planDocsResolutionOperation,
   planTaskDefinitionOperation,
   planTaskLocalOperation,
@@ -5509,6 +5586,7 @@ module.exports = {
   validateComponentStatus,
   validateDbSurfaceMigrationState,
   validateDbSurfaceWriteRailKind,
+  validateGovernanceRefreshRunState,
   validateTaskStatus,
   resolveOperateHelpRequest,
   writePlannedComponentCreateOperation,
@@ -5516,4 +5594,5 @@ module.exports = {
   writePlannedArchitectureFitnessScanOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
   writePlannedFowlerAnalysisOperation,
+  writePlannedGovernanceRefreshRunRecordOperation,
 };

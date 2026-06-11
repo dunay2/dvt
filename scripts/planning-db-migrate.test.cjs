@@ -578,6 +578,32 @@ test('tracked migrations expose component architecture fitness gap summaries', (
   assert.match(architectureFitnessGapMigration.sql, /action_hint/);
 });
 
+test('tracked migrations include governance refresh run ledger rails', () => {
+  const migrations = readMigrationFiles();
+  const refreshRunLedgerMigration = migrations.find(
+    (migration) => migration.fileName === '080_governance_refresh_run_ledger.sql'
+  );
+
+  assert.ok(refreshRunLedgerMigration);
+  assert.match(
+    refreshRunLedgerMigration.sql,
+    /create table if not exists planning_query_store\.governance_refresh_runs/
+  );
+  assert.match(
+    refreshRunLedgerMigration.sql,
+    /create table if not exists planning_query_store\.governance_refresh_run_operations/
+  );
+  assert.match(
+    refreshRunLedgerMigration.sql,
+    /create table if not exists planning_query_store\.governance_refresh_stage_runs/
+  );
+  assert.match(
+    refreshRunLedgerMigration.sql,
+    /create or replace view planning_query_store\.governance_refresh_run_query/
+  );
+  assert.doesNotMatch(refreshRunLedgerMigration.sql, /grep|ripgrep|rg --files/i);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(
