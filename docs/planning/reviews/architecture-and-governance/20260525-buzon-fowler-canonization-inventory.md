@@ -90,7 +90,6 @@ inspect when executing the canonization tasks.
 | Frontend     | `buzon/20260518-f10-fowler-run-event-convergence-analysis.md`                                |
 | Runtime      | `buzon/20260514-codex-fowler-ar-c2-t2-dashboard-evidence-analysis.md`                        |
 | Runtime      | `buzon/20260514-codex-fowler-ar-c2-t3-alert-evidence-analysis.md`                            |
-| Runtime      | `buzon/20260514-codex-fowler-dhm-effective-component-ownership-analysis.md`                  |
 | Runtime      | `buzon/20260518-dhm-ws4-fowler-runtime-path-boundary-hardening-analysis.md`                  |
 | Runtime      | `buzon/20260523-codex-fowler-postgres-tenant-isolation-canon.md`                             |
 | Architecture | `buzon/20260429-codex-fowler-branch-architecture-post-codescene-analysis-and-remediation.md` |

@@ -76,6 +76,7 @@ allowedImplementationSurfaces:
   - buzon/20260422-codex-fowler-start-run-application-component-analysis-and-remediation.md
   - buzon/20260513-codex-fowler-runtime-root-subdivision-analysis-and-remediation.md
   - buzon/20260514-codex-fowler-dhm-db-first-engine-component-analysis.md
+  - buzon/20260514-codex-fowler-dhm-effective-component-ownership-analysis.md
   - buzon/20260531-db-first-architecture-generated-docs-fowler-analysis.md
   - docs/evidence/ED-20260421-api-plan-route-response-and-adapter-build-baseline.md
   - docs/planning/proposals/mandatory/governance-and-docs/fowler-analysis-db-first-work-queue-plan-20260610.md
