@@ -77,6 +77,10 @@ const {
   readComponentRoadmapRows,
 } = require('./planning-db/queries/component-roadmap-query.cjs');
 const {
+  buildGovernanceRefreshRunRows,
+  readGovernanceRefreshRunRows,
+} = require('./planning-db/queries/governance-refresh-run-query.cjs');
+const {
   buildArchitectureDependencyClassificationRows,
   buildArchitectureDependencyObservationRows,
   buildArchitectureFitnessGapRows,
@@ -144,6 +148,7 @@ const knownQueries = new Set([
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
+  'governance-refresh-runs',
   'mandatory-proposal-gaps',
   'db-surfaces',
   'component-tree',
@@ -649,6 +654,10 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.rail = value;
       continue;
     }
+    if (arg === '--run') {
+      filters.runId = value;
+      continue;
+    }
     if (arg === '--surface') {
       filters.surface = value;
       continue;
@@ -748,6 +757,7 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'documentation-lifecycle' ||
         queryName === 'documentation-panels' ||
         queryName === 'component-roadmap' ||
+        queryName === 'governance-refresh-runs' ||
         queryName === 'db-surfaces'
       ) {
         filters.state = value;
@@ -4092,6 +4102,15 @@ async function runQuery(options = {}) {
       return roadmapRows;
     }
 
+    if (queryName === 'governance-refresh-runs') {
+      const rows = await readGovernanceRefreshRunRows(client, options.filters || {});
+      const refreshRows = buildGovernanceRefreshRunRows(rows);
+      if (options.print !== false) {
+        printTaskRows(refreshRows);
+      }
+      return refreshRows;
+    }
+
     if (queryName === 'mandatory-proposal-gaps') {
       const rows = await readMandatoryProposalGapRows(client, options.filters || {});
       const gapRows = buildMandatoryProposalGapRows(rows);
@@ -4480,6 +4499,7 @@ module.exports = {
   buildGovernanceFileRows,
   buildGovernanceUnitRows,
   buildGovernanceRemediationRows,
+  buildGovernanceRefreshRunRows,
   buildRiskDebtRows,
   buildArchitectureComponentRows,
   buildArchitectureContractRows,
@@ -4580,6 +4600,7 @@ module.exports = {
   readGovernanceFileRows,
   readGovernanceUnitRows,
   readGovernanceRemediationRows,
+  readGovernanceRefreshRunRows,
   readRiskDebtRows,
   readKnowledgeActionRows,
   readKnowledgeDocumentRows,

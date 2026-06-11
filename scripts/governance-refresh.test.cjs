@@ -9,6 +9,7 @@ const {
   buildRefreshStages,
   readGeneratedGovernanceArtifactHashes,
   runGovernanceRefresh,
+  runGovernanceRefreshCommand,
 } = require('./governance-refresh.cjs');
 
 test('governance refresh defers governance reports to DB-backed final generation', () => {
@@ -104,6 +105,42 @@ test('governance refresh repeats generation until the worktree fingerprint stabi
     ...stages.generationStages.map((stage) => stage.script),
     ...stages.generationStages.map((stage) => stage.script),
     ...stages.databaseStages.map((stage) => stage.script),
+  ]);
+});
+
+test('governance refresh writes an accepted DB run before executing generation stages', async () => {
+  const events = [];
+  const refreshResult = {
+    stabilized: true,
+    generationPasses: 1,
+    generationStagesRun: ['docs:sync'],
+    databaseStagesRun: ['planning:db:check'],
+  };
+
+  await runGovernanceRefreshCommand(
+    { maxPasses: 1, actor: 'codex', runId: 'refresh-run-1' },
+    {
+      runRefresh: () => {
+        events.push('run-refresh');
+        return refreshResult;
+      },
+      recordAcceptedRun: async (accepted) => {
+        events.push(`accepted:${accepted.runId}:${accepted.runState}`);
+      },
+      recordCompletedRun: async (completed) => {
+        events.push(`completed:${completed.runId}:${completed.runState}`);
+      },
+      recordFailedRun: async () => {
+        events.push('failed');
+      },
+      now: () => new Date('2026-06-11T12:00:00.000Z'),
+    }
+  );
+
+  assert.deepEqual(events, [
+    'accepted:refresh-run-1:accepted',
+    'run-refresh',
+    'completed:refresh-run-1:passed',
   ]);
 });
 
