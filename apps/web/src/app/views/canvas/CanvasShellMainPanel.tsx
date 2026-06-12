@@ -74,16 +74,18 @@ function CanvasShellViewport({
   panels,
   graph,
   graphCommands,
-  chromeCommands,
   onOpenSourceImport,
   canPreviewExecutionPlan,
+  onPreviewExecutionPlan,
 }: Pick<
   CanvasShellMainPanelProps,
-  'layout' | 'panels' | 'graph' | 'graphCommands' | 'chromeCommands' | 'onOpenSourceImport'
+  'layout' | 'panels' | 'graph' | 'graphCommands' | 'onOpenSourceImport'
 > &
-  Readonly<{ canPreviewExecutionPlan: boolean }>): JSX.Element {
+  Readonly<{
+    canPreviewExecutionPlan: boolean;
+    onPreviewExecutionPlan: CanvasShellChromeCommands['onPlan'];
+  }>): JSX.Element {
   const handleNodeClick: CanvasShellGraphCommands['onNodeClick'] = (event, node) => {
-    chromeCommands.onShowInspector();
     graphCommands.onNodeClick(event, node);
   };
 
@@ -119,7 +121,7 @@ function CanvasShellViewport({
         onOpenSourceImport == null ? undefined : () => onOpenSourceImport(undefined)
       }
       canPreviewExecutionPlan={canPreviewExecutionPlan}
-      onPreviewExecutionPlan={chromeCommands.onPlan}
+      onPreviewExecutionPlan={onPreviewExecutionPlan}
     />
   );
 }
@@ -143,9 +145,9 @@ function CanvasShellMainSurface({
       panels={panels}
       graph={graph}
       graphCommands={graphCommands}
-      chromeCommands={chromeCommands}
       onOpenSourceImport={onOpenSourceImport}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
+      onPreviewExecutionPlan={chromeCommands.onPlan}
     />
   );
 

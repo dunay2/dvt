@@ -283,7 +283,7 @@ describe('CanvasShell', () => {
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 
-  it('opens the contextual node workbench before forwarding viewport node clicks', async () => {
+  it('keeps node selection separate from contextual node workbench opening', async () => {
     const onShowInspector = vi.fn();
     const onNodeClick = vi.fn();
     const clickedNode = { id: 'node.orders' } as Parameters<
@@ -309,7 +309,7 @@ describe('CanvasShell', () => {
 
     viewportNodeClick(clickEvent, clickedNode);
 
-    expect(onShowInspector).toHaveBeenCalledTimes(1);
+    expect(onShowInspector).not.toHaveBeenCalled();
     expect(onNodeClick).toHaveBeenCalledWith(clickEvent, clickedNode);
   });
 
