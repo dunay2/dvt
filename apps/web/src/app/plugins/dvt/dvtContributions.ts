@@ -5,6 +5,7 @@ import { createPublishedRouteBootstrapHandle } from '../../bootstrap/routeBootst
 import type { PluginContributions } from '../registry';
 import { GraphNodeRenderer } from '../graph/GraphNodeRenderer';
 import { DVT_AUTHORING_NODE_KINDS } from './dvtNodeTypeCatalog';
+import { dvtGraphNodeCardStrategy } from './dvtGraphNodeCardStrategy';
 import { transformationCanvasGraphStrategy } from './transformationGraphStrategy';
 
 const DVT_PLUGIN_ID = 'dvt';
@@ -30,6 +31,7 @@ export const dvtContributions: PluginContributions = {
   version: '1.0.0',
   capabilities: ['canvas.render', 'canvas.edit', 'plan.preview'],
   nodeKinds: DVT_AUTHORING_NODE_KINDS,
+  graphNodeCardStrategies: [dvtGraphNodeCardStrategy],
   views: [
     {
       pluginId: DVT_PLUGIN_ID,

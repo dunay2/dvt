@@ -19,6 +19,7 @@ import type {
   NodeRendererProps,
   NodeRendererRegistration,
 } from './contracts/NodeRendering';
+import type { GraphNodeCardStrategy } from './graph/graphNodeCardStrategyContracts';
 import type {
   BottomDiagnosticsContribution,
   CanvasWorkbenchTabPlacement,
@@ -64,6 +65,7 @@ export type PluginContributions = {
   inspectorPanels?: InspectorPanelContribution[];
   nodeBadges?: NodeBadgeContribution[];
   nodeRenderers?: Map<PluginNodeKind, NodeRendererRegistration>;
+  graphNodeCardStrategies?: readonly GraphNodeCardStrategy[];
   nodeKinds?: NodeKindRegistration[];
   canvasKinds?: CanvasRuntimeRegistration[];
   connectionRules?: PluginConnectionRule[];
@@ -310,6 +312,12 @@ export function getAllCanvasKinds(capabilities?: RuntimeCapabilities): CanvasKin
 
 export function getAllOverlays(capabilities?: RuntimeCapabilities): CanvasOverlayContribution[] {
   return getRuntimePlugins(capabilities).flatMap((p) => p.overlays ?? []);
+}
+
+export function getGraphNodeCardStrategies(
+  capabilities?: RuntimeCapabilities
+): GraphNodeCardStrategy[] {
+  return getRuntimePlugins(capabilities).flatMap((plugin) => plugin.graphNodeCardStrategies ?? []);
 }
 
 export function mapRunToCanonical(

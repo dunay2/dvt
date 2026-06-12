@@ -136,6 +136,7 @@ export function DbtNodeRenderer({
   selected,
   hovered,
   overlayDecoration,
+  graphNodeCardStrategies,
   data,
 }: Readonly<NodeRendererProps>): ReactElement {
   const kindMeta = resolveKindMeta(node.kind);
@@ -154,7 +155,7 @@ export function DbtNodeRenderer({
       : typeof data.type === 'string'
         ? data.type
         : (kindMeta?.label ?? node.kind);
-  const cardModel = buildGraphNodeCardReadModel(node, data);
+  const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&

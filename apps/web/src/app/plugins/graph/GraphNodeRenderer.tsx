@@ -42,6 +42,7 @@ export function GraphNodeRenderer({
   selected,
   hovered,
   overlayDecoration,
+  graphNodeCardStrategies,
   data,
 }: Readonly<NodeRendererProps>): ReactElement {
   const kindMeta = resolveNodeKindRegistration(node.kind);
@@ -59,7 +60,7 @@ export function GraphNodeRenderer({
       : typeof data.type === 'string'
         ? data.type
         : kindMeta.label;
-  const cardModel = buildGraphNodeCardReadModel(node, data);
+  const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
