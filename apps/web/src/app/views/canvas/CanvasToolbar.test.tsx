@@ -29,7 +29,6 @@ function buildToolbarProps(
     onReloadLatestDraft: vi.fn(),
     onExportProjectSnapshot: vi.fn(),
     onImportProjectSnapshotFile: vi.fn(),
-    onPlan: vi.fn(),
     onRun: vi.fn(),
     routeState: 'ready',
     draftToolbarState: {
@@ -166,7 +165,7 @@ describe('CanvasToolbar', () => {
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarCostLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarGridLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarSnapToGridLabel);
-    expect(container.textContent).toContain(canvasViewCopy.toolbarPlanLabel);
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarPlanLabel);
     expect(container.textContent).toContain(canvasViewCopy.toolbarRunLabel);
     expect(container.textContent).toContain(canvasViewCopy.draftSyncedLabel);
   });
@@ -261,7 +260,7 @@ describe('CanvasToolbar', () => {
     });
   });
 
-  it('keeps plan button disabled when transformation validation is invalid', async () => {
+  it('keeps preview out of the fixed toolbar when transformation validation is invalid', async () => {
     await act(async () => {
       root.render(
         <CanvasToolbar
@@ -280,10 +279,8 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const planButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes(canvasViewCopy.toolbarPlanLabel)
-    );
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-toolbar-plan-command"]')).toBeNull();
+    expect(container.textContent).not.toContain(canvasViewCopy.toolbarPlanLabel);
     expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
   });
 
@@ -321,15 +318,12 @@ describe('CanvasToolbar', () => {
     });
 
     const buttons = Array.from(container.querySelectorAll('button'));
-    const planButton = buttons.find((button) =>
-      button.textContent?.includes(canvasViewCopy.toolbarPlanLabel)
-    );
     const runButton = buttons.find((button) =>
       button.textContent?.includes(canvasViewCopy.toolbarRunLabel)
     );
 
     expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowReadOnlyLabel);
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-toolbar-plan-command"]')).toBeNull();
     expect(runButton?.getAttribute('disabled')).not.toBeNull();
   });
 

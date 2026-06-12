@@ -3,7 +3,10 @@
  * against the live protected runtime without API stubs.
  */
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
-import { clickButtonNatively } from '../../support/canvasExecutionSelection';
+import {
+  clickButtonNatively,
+  clickPreviewExecutionPlanFromCanvasContextMenu,
+} from '../../support/canvasExecutionSelection';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
@@ -123,7 +126,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     waitForDraftSaveSettled();
     waitForPersistedDbtModelConfig();
 
-    clickCommandSlotNatively('canvas-toolbar-plan-command');
+    clickPreviewExecutionPlanFromCanvasContextMenu();
     cy.contains('Execution Plan Preview', { timeout: 30_000 }).should('be.visible');
     cy.contains('Plan Metadata').should('be.visible');
     cy.contains('Persistence Evidence').should('be.visible');

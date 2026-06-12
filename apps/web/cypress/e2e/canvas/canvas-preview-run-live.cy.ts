@@ -2,7 +2,11 @@
  * Owned concern: prove the selected-closure browser route against the live
  * protected runtime seams.
  */
-import { clickButtonNatively, selectCanvasClosure } from '../../support/canvasExecutionSelection';
+import {
+  clickButtonNatively,
+  clickPreviewExecutionPlanFromCanvasContextMenu,
+  selectCanvasClosure,
+} from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
 import {
   hasLiveProtectedRuntimeEnv,
@@ -109,7 +113,7 @@ describe('Canvas preview-run live protected runtime', () => {
 
     selectCanvasClosure(['Source 1', 'SQL transform 1', 'Sink 1']);
 
-    clickButtonNatively('Preview execution plan');
+    clickPreviewExecutionPlanFromCanvasContextMenu();
 
     cy.contains('Execution Plan Preview', { timeout: 20_000 }).should('be.visible');
     cy.contains('Plan identity').should('be.visible');
