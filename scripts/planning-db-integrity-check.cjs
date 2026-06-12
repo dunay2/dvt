@@ -16,19 +16,20 @@ const severityOrder = Object.freeze(['blocker', 'error', 'warning', 'info']);
 const progressiveBaseline = Object.freeze({
   componentIntegrity: Object.freeze({
     architecture_drift: Object.freeze({ total: 0 }),
+    component_evidence_gap: Object.freeze({ warning: 71, total: 71 }),
     component_missing_architecture_authority: Object.freeze({ total: 0 }),
     component_path_without_files: Object.freeze({ total: 0 }),
-    duplicate_repo_path: Object.freeze({ warning: 107, total: 107 }),
+    duplicate_repo_path: Object.freeze({ total: 0 }),
     filesystem_coverage: Object.freeze({ total: 0 }),
-    fitness_gap: Object.freeze({ blocker: 0, error: 0, warning: 197, total: 197 }),
-    missing_maturity_evidence: Object.freeze({ error: 226, total: 226 }),
+    fitness_gap: Object.freeze({ total: 0 }),
+    missing_maturity_evidence: Object.freeze({ total: 0 }),
   }),
   railVocabulary: Object.freeze({
     exact_duplicate: Object.freeze({ total: 0 }),
     gap_rail: Object.freeze({ warning: 121, total: 121 }),
     missing_ddd_owner: Object.freeze({ total: 0 }),
     semantic_duplicate: Object.freeze({ total: 0 }),
-    surface_named_rail: Object.freeze({ warning: 1, total: 1 }),
+    surface_named_rail: Object.freeze({ total: 0 }),
   }),
 });
 

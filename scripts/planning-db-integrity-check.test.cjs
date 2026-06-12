@@ -11,12 +11,7 @@ test('Planning DB integrity check reports historical debt without failing report
   const result = buildIntegrityCheckResult({
     componentRows: [
       {
-        finding_kind: 'missing_maturity_evidence',
-        severity: 'error',
-        component_id: 'SYS-WEB-ROOT',
-      },
-      {
-        finding_kind: 'missing_maturity_evidence',
+        finding_kind: 'component_evidence_gap',
         severity: 'warning',
         component_id: 'SYS-WEB-ROOT',
       },
@@ -35,9 +30,9 @@ test('Planning DB integrity check reports historical debt without failing report
   assert.equal(shouldFailIntegrityCheck(result), false);
   assert.deepEqual(result.counts, {
     componentIntegrity: {
-      total: 2,
+      total: 1,
       blocker: 0,
-      error: 1,
+      error: 0,
       warning: 1,
       info: 0,
     },

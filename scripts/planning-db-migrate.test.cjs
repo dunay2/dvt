@@ -661,6 +661,40 @@ test('tracked migrations include architecture observability evidence operations 
   assert.match(architectureEvidenceMigration.sql, /'architecture_observability_record'/);
 });
 
+test('tracked migrations exclude deprecated architecture components from maturity gaps after W85', () => {
+  const migrations = readMigrationFiles();
+  const maturityMigration = migrations.find(
+    (migration) => migration.fileName === '085_architecture_maturity_deprecated_components.sql'
+  );
+
+  assert.ok(maturityMigration);
+  assert.match(
+    maturityMigration.sql,
+    /create or replace view architecture\.component_maturity_query/
+  );
+  assert.match(maturityMigration.sql, /component\.status = 'deprecated' then array\[\]::text\[\]/);
+});
+
+test('tracked migrations count architecture tests in component evidence gaps after W86', () => {
+  const migrations = readMigrationFiles();
+  const integrityMigration = migrations.find(
+    (migration) => migration.fileName === '086_component_integrity_architecture_test_evidence.sql'
+  );
+
+  assert.ok(integrityMigration);
+  assert.match(
+    integrityMigration.sql,
+    /create or replace view planning_query_store\.component_integrity_query/
+  );
+  assert.match(integrityMigration.sql, /from architecture\.component_test component_test/);
+  assert.match(integrityMigration.sql, /component_test\.required/);
+  assert.match(integrityMigration.sql, /architectureTestCount/);
+  assert.match(
+    integrityMigration.sql,
+    /coalesce\(engineering\.test_file_count, 0\)[\s\S]*\+[\s\S]*coalesce\(architecture_test_evidence\.architecture_test_count, 0\)/
+  );
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

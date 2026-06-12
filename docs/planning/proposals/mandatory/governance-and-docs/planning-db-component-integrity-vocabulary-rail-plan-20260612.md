@@ -196,13 +196,22 @@ governingSources:
   - docs/adr/adr-0055-planning-db-canonical-operational-source.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+  - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
   - docs/planning/status/db-surface-inventory.md
   - docs/.manifest.json
   - docs/**/index.md
+  - .github/PR_INSTRUCTIONS.md
   - tools/planning-db/migrations/081_component_integrity_rail_vocabulary.sql
   - tools/planning-db/migrations/082_rail_vocabulary_deprecation_hardening.sql
   - tools/planning-db/migrations/083_architecture_test_evidence_operation_rail.sql
   - tools/planning-db/migrations/084_architecture_observability_evidence_operation_rail.sql
+  - tools/planning-db/migrations/085_architecture_maturity_deprecated_components.sql
+  - tools/planning-db/migrations/086_component_integrity_architecture_test_evidence.sql
+  - tools/ci/contracts-compat-schema-parity.test.mjs
+  - tools/ci/contracts-package-governance.test.mjs
+  - tools/ci/github-collaboration-governance.test.mjs
+  - tools/ci/planner-package-governance.test.mjs
+  - tools/ci/root-test-runner-config.test.mjs
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db/queries/component-integrity-query.cjs

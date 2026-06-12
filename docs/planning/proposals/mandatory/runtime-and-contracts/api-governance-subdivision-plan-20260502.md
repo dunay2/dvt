@@ -171,7 +171,7 @@ parents to decompose into source units, not into nested components.
 | `ApiGetRunStatusQuery`              | Query   | Run status read model               | get run route                            | `GetRunStatusUseCase`                                               | Drift where plan enrichment is unscoped                        |
 | `ApiGetRunEventsQuery`              | Query   | Run event read model                | events route                             | `GetRunEventsUseCase`                                               | Cursor and tenant guard required                               |
 | `ApiListRunsQuery`                  | Query   | Runs read model                     | list route                               | `ListRunsUseCase`                                                   | Tenant guard required                                          |
-| `ApiOperationalReadinessQuery`      | Query   | Operational readiness read model    | health/ready/version/capabilities routes | readiness ports and runtime health                                  | Operational only, no product semantics                         |
+| `OperationalReadinessQuery`         | Query   | Operational readiness read model    | health/ready/version/capabilities routes | readiness ports and runtime health                                  | Operational only, no product semantics                         |
 
 ## Drift Disposition
 
