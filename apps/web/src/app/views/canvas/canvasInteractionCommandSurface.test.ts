@@ -31,6 +31,7 @@ describe('canvasInteractionCommandSurface', () => {
   });
 
   it('offers source import as a canvas action only when the editable source rail is available', () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -39,10 +40,11 @@ describe('canvasInteractionCommandSurface', () => {
       },
       canMutateGraph: true,
       canOpenSourceImport: true,
-      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+      authoringNodeKinds: [sourceKind],
     });
 
     expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
+    expect(model.createNodeActions).toEqual([]);
   });
 
   it('offers execution preview from the canvas menu independently from graph mutation', () => {

@@ -54,6 +54,13 @@ type BuildCanvasContextMenuModelArgs = Readonly<{
   authoringNodeKinds: readonly NodeKindRegistration[];
 }>;
 
+function isSourceImportCoveredNodeKind(registration: NodeKindRegistration): boolean {
+  return (
+    registration.role === 'input' &&
+    (registration.kind.endsWith(':source') || registration.label.toLowerCase() === 'source')
+  );
+}
+
 export function buildCanvasContextMenuModel({
   target,
   canMutateGraph,
@@ -90,11 +97,15 @@ export function buildCanvasContextMenuModel({
     return {
       ...baseModel,
       flowPosition: target.flowPosition,
-      createNodeActions: authoringNodeKinds.map((registration) => ({
-        action: 'create-node',
-        label: registration.label,
-        registration,
-      })),
+      createNodeActions: authoringNodeKinds
+        .filter(
+          (registration) => !(canOpenSourceImport && isSourceImportCoveredNodeKind(registration))
+        )
+        .map((registration) => ({
+          action: 'create-node',
+          label: registration.label,
+          registration,
+        })),
     };
   }
 

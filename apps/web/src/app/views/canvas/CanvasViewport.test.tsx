@@ -496,6 +496,15 @@ describe('CanvasViewport', () => {
       (button) => button.textContent === 'Add source'
     );
     expect(sourceImportButton).toBeDefined();
+    expect(container.querySelector('[data-slot="canvas-context-menu-add-group"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).not.toContain(
+      'Crear nodo'
+    );
+    expect(
+      Array.from(container.querySelectorAll('button')).some(
+        (button) => button.textContent === 'Source'
+      )
+    ).toBe(false);
 
     await act(async () => {
       sourceImportButton?.click();
