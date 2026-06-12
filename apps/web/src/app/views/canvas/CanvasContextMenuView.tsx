@@ -31,6 +31,13 @@ export function CanvasContextMenuView({
     left: model.screenPosition.x,
     top: model.screenPosition.y,
   };
+  const addCanvasActions = model.canvasActions.filter(
+    (action) => action.action === 'open-source-import'
+  );
+  const canvasCommandActions = model.canvasActions.filter(
+    (action) => action.action !== 'open-source-import'
+  );
+  const shouldShowAddGroup = addCanvasActions.length > 0 || model.createNodeActions.length > 0;
 
   return (
     <div
@@ -41,12 +48,12 @@ export function CanvasContextMenuView({
       style={menuStyle}
       onContextMenu={(event) => event.preventDefault()}
     >
-      {model.canvasActions.length > 0 ? (
-        <div>
+      {shouldShowAddGroup ? (
+        <div data-slot="canvas-context-menu-add-group">
           <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
-            Canvas
+            Add
           </div>
-          {model.canvasActions.map((action) => (
+          {addCanvasActions.map((action) => (
             <button
               key={action.action}
               type="button"
@@ -57,14 +64,6 @@ export function CanvasContextMenuView({
               {action.label}
             </button>
           ))}
-        </div>
-      ) : null}
-
-      {model.createNodeActions.length > 0 ? (
-        <div>
-          <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
-            Crear nodo
-          </div>
           {model.createNodeActions.map((action) => (
             <button
               key={action.registration.kind}
@@ -72,6 +71,25 @@ export function CanvasContextMenuView({
               role="menuitem"
               className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
               onClick={() => onCreateNodeAction(action)}
+            >
+              {action.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {canvasCommandActions.length > 0 ? (
+        <div data-slot="canvas-context-menu-canvas-group">
+          <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
+            Canvas
+          </div>
+          {canvasCommandActions.map((action) => (
+            <button
+              key={action.action}
+              type="button"
+              role="menuitem"
+              className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+              onClick={() => onCanvasAction(action)}
             >
               {action.label}
             </button>

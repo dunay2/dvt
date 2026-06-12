@@ -468,7 +468,7 @@ describe('CanvasViewport', () => {
   });
 
   it('opens source import from the editable background context gesture when the rail is available', async () => {
-    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const sourceKind = buildTestNodeKind('dbt:source', 'Source');
     const props = buildProps({
       authoringNodeKinds: [sourceKind],
       canOpenSourceImport: true,
@@ -496,6 +496,15 @@ describe('CanvasViewport', () => {
       (button) => button.textContent === 'Add source'
     );
     expect(sourceImportButton).toBeDefined();
+    expect(container.querySelector('[data-slot="canvas-context-menu-add-group"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).not.toContain(
+      'Crear nodo'
+    );
+    expect(
+      Array.from(container.querySelectorAll('button')).some(
+        (button) => button.textContent === 'Source'
+      )
+    ).toBe(false);
 
     await act(async () => {
       sourceImportButton?.click();
