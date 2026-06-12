@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { readArchitectureSiblingSource } from '../architecture.test.support';
@@ -39,6 +42,10 @@ const CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE = readArchitectureSiblingSource(
 const SHELL_MENU_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/shell/ShellMenu.tsx'
+);
+const LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH = resolve(
+  import.meta.dirname,
+  '../../components/WarehouseSourceExplorer.tsx'
 );
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
@@ -145,5 +152,9 @@ describe('CanvasShell architecture', () => {
     expect(SHELL_MENU_SOURCE).not.toContain('toggleExplorerPanel');
     expect(SHELL_MENU_SOURCE).not.toContain('copy.explorerPanel');
     expect(SHELL_MENU_SOURCE).not.toContain('PanelLeftClose');
+  });
+
+  it('retires the legacy fixed warehouse source explorer component', () => {
+    expect(existsSync(LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH)).toBe(false);
   });
 });

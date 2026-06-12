@@ -108,6 +108,62 @@ test('runArchitectureFitnessScan extracts imports and maps paths to existing com
   );
 });
 
+test('runArchitectureFitnessScan keeps repo-relative paths when scanning a subdirectory', () => {
+  const repoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-architecture-fitness-'));
+  fs.mkdirSync(path.join(repoRoot, 'apps/web/src/app/components/sourceImportWizard'), {
+    recursive: true,
+  });
+  fs.writeFileSync(
+    path.join(repoRoot, 'apps/web/src/app/components/SourceImportWizard.tsx'),
+    [
+      "import { buildPreviewGroups } from './sourceImportWizard/sourceImportWizardModel';",
+      'export const wizard = buildPreviewGroups;',
+    ].join('\n')
+  );
+  fs.writeFileSync(
+    path.join(
+      repoRoot,
+      'apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.ts'
+    ),
+    'export const buildPreviewGroups = [];\n'
+  );
+
+  const scan = runArchitectureFitnessScan({
+    repoRoot,
+    rootDir: path.join(repoRoot, 'apps/web/src/app/components'),
+    scanId: 'scan-feature-21',
+    designId: 'design-21-component-architecture-fitness-dbfirst',
+    components: [
+      {
+        component_id: 'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD',
+        repo_path: 'apps/web/src/app/components/sourceImportWizard',
+      },
+      {
+        component_id: 'SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG',
+        repo_path: 'apps/web/src/app/components/SourceImportWizard.tsx',
+      },
+    ],
+    relations: [],
+  });
+
+  assert.deepEqual(
+    scan.observations.map((observation) => [
+      observation.sourcePath,
+      observation.targetPath,
+      observation.sourceComponentId,
+      observation.targetComponentId,
+    ]),
+    [
+      [
+        'apps/web/src/app/components/SourceImportWizard.tsx',
+        'apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.ts',
+        'SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG',
+        'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD',
+      ],
+    ]
+  );
+});
+
 test('runArchitectureFitnessScan keeps repeated imports as distinct observations', () => {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-architecture-fitness-'));
   fs.mkdirSync(path.join(rootDir, 'apps/web/src/app'), { recursive: true });
