@@ -232,7 +232,7 @@ Semantic rule:
 
 That means:
 
-- the explorer may only expose `Add data` when the active route posture and
+- the explorer may only expose `Add source` when the active route posture and
   runtime capability contract both allow source import;
 - `Register data objects` is the semantic commit point for the import flow;
 - when the result includes `importedNodeIds`, Canvas applies the handoff
@@ -254,7 +254,7 @@ sequenceDiagram
   participant Canvas as Canvas controller
   participant Authority as Protected draft authority query
 
-  Explorer->>Wizard: Open Add data when capability is exposed
+  Explorer->>Wizard: Open Add source when capability is exposed
   Wizard->>Wizard: Discover tables and register sources
   Wizard->>Canvas: onComplete(result with importedNodeIds)
   Canvas->>Canvas: clear current plan and queue imported node focus
@@ -265,7 +265,7 @@ sequenceDiagram
 
 Current truth for the hard-cut branch:
 
-- the active `api` authoring path hides `Add data` because backend source
+- the active `api` authoring path hides `Add source` because backend source
   import is not implemented yet
 - `mock` mode is not a substitute active-authoring path for Canvas
 - this section documents ownership and handoff semantics, not guaranteed

@@ -121,7 +121,7 @@ Current governed capability example:
 
 - `workspaceService.importSources()` is explicitly unavailable in `api` mode
   until the backend endpoint exists
-- the Canvas route therefore must hide `Add data` in the active `api` path
+- the Canvas route therefore must hide `Add source` in the active `api` path
   instead of implying a missing button or failed wizard is a transient issue
 
 ```mermaid
