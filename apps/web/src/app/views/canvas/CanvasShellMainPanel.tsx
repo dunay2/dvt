@@ -3,6 +3,8 @@ import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
 import { CanvasInspectorPanel } from './CanvasInspectorPanel';
 import CanvasViewport from './CanvasViewport';
+import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
+import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
 import type {
   CanvasShellChromeCommands,
   CanvasShellGraph,
@@ -26,6 +28,46 @@ type CanvasShellMainPanelProps = Readonly<{
   chromeCommands: CanvasShellChromeCommands;
   onOpenSourceImport?: CanvasShellOpenDataRegistryCommand;
 }>;
+
+function CanvasShellMenuContributionRegistrars({
+  panels,
+  graph,
+  toolbar,
+  chromeCommands,
+}: Pick<
+  CanvasShellMainPanelProps,
+  'panels' | 'graph' | 'toolbar' | 'chromeCommands'
+>): JSX.Element {
+  return (
+    <>
+      <CanvasViewMenuContributionRegistrar
+        canEditEdges={panels.userPermissions.canEditEdges}
+        canUseCostOverlay={toolbar.canUseCostOverlay}
+        exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
+        impactOverlayEnabled={toolbar.impactOverlayEnabled}
+        columnLevelLineageEnabled={toolbar.columnLevelLineageEnabled}
+        canvasGridVisible={graph.canvasGridVisible}
+        canvasGridColor={graph.canvasGridColor}
+        canvasSnapToGrid={graph.canvasSnapToGrid}
+        canvasEmptyStateGuideVisible={graph.canvasEmptyStateGuideVisible}
+        onAutoLayout={chromeCommands.onAutoLayout}
+        onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
+        onToggleImpact={chromeCommands.onToggleImpact}
+        onToggleColumns={chromeCommands.onToggleColumns}
+        onToggleGridVisible={chromeCommands.onToggleGridVisible}
+        onGridColorChange={chromeCommands.onGridColorChange}
+        onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
+        onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
+      />
+      <CanvasWorkspaceMenuContributionRegistrar
+        canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
+        canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
+        onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
+        onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
+      />
+    </>
+  );
+}
 
 function CanvasShellViewport({
   layout,
@@ -173,6 +215,12 @@ export function CanvasShellMainPanel({
   return (
     <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
       <div className="relative h-full flex flex-col bg-(--surface-panel)">
+        <CanvasShellMenuContributionRegistrars
+          panels={panels}
+          graph={graph}
+          toolbar={toolbar}
+          chromeCommands={chromeCommands}
+        />
         {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
         <CanvasShellMainSurface
           layout={layout}

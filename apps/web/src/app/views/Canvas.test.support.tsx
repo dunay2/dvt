@@ -69,7 +69,26 @@ vi.mock('../components/SourceImportWizard', () => ({
 }));
 
 vi.mock('./canvas/CanvasViewport', () => ({
-  default: () => <div data-slot="canvas-viewport">Viewport</div>,
+  default: ({
+    canPreviewExecutionPlan,
+    onPreviewExecutionPlan,
+  }: {
+    canPreviewExecutionPlan?: boolean;
+    onPreviewExecutionPlan?: () => void;
+  }) => (
+    <div data-slot="canvas-viewport">
+      Viewport
+      {canPreviewExecutionPlan ? (
+        <button
+          type="button"
+          data-slot="canvas-context-preview-execution-plan-command"
+          onClick={onPreviewExecutionPlan}
+        >
+          Preview execution plan
+        </button>
+      ) : null}
+    </div>
+  ),
 }));
 
 vi.mock('../components/Modals', () => ({
@@ -143,12 +162,64 @@ export function createCanvasRouteHarness() {
 
 export type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
 
+function toCanvasDocumentId(canvasDocument: NonNullable<CanvasController['canvasDocument']>) {
+  const existingId = 'id' in canvasDocument ? canvasDocument.id : undefined;
+
+  if (typeof existingId === 'string' && existingId.length > 0) {
+    return existingId;
+  }
+
+  const titleId = canvasDocument.title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return titleId || `${canvasDocument.kind}-canvas`;
+}
+
+function normalizeCanvasDocumentState(
+  controller: CanvasController,
+  overrides?: Partial<CanvasController>
+): Pick<CanvasController, 'canvasDocument' | 'canvasDocuments' | 'activeCanvasId'> {
+  if (overrides?.canvasDocument === undefined) {
+    return {
+      canvasDocument: controller.canvasDocument,
+      canvasDocuments: controller.canvasDocuments,
+      activeCanvasId: controller.activeCanvasId,
+    };
+  }
+
+  if (overrides.canvasDocument == null) {
+    return {
+      canvasDocument: null,
+      canvasDocuments: overrides.canvasDocuments ?? [],
+      activeCanvasId: overrides.activeCanvasId ?? null,
+    };
+  }
+
+  const activeCanvas = {
+    ...overrides.canvasDocument,
+    id: toCanvasDocumentId(overrides.canvasDocument),
+  };
+
+  return {
+    canvasDocument: activeCanvas,
+    canvasDocuments: overrides.canvasDocuments ?? [activeCanvas],
+    activeCanvasId: overrides.activeCanvasId ?? activeCanvas.id,
+  };
+}
+
 export async function renderCanvasRouteWithController(
   harness: CanvasRouteHarness,
   overrides?: Partial<CanvasController>,
   options?: Readonly<{ initialEntry?: string }>
 ) {
-  mockedUseCanvasController.mockReturnValue(buildController(overrides));
+  const controller = buildController(overrides);
+  mockedUseCanvasController.mockReturnValue({
+    ...controller,
+    ...normalizeCanvasDocumentState(controller, overrides),
+  });
   await harness.render(options?.initialEntry);
 }
 
@@ -245,11 +316,15 @@ export function expectActiveCanvasTab(args: {
   kindLabel: string;
 }): void {
   const { container, title, kindLabel } = args;
+  const activeCanvasIdentity = container.querySelector(
+    '[data-slot="canvas-active-canvas-identity"]'
+  );
   const tabStrip = container.querySelector('[data-slot="canvas-playground-tab-strip"]');
 
-  expect(tabStrip).not.toBeNull();
-  expect(tabStrip?.textContent).toContain(title);
-  expect(tabStrip?.textContent).toContain(kindLabel);
+  expect(tabStrip).toBeNull();
+  expect(activeCanvasIdentity).not.toBeNull();
+  expect(activeCanvasIdentity?.textContent).toContain(title);
+  expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe(kindLabel.toLowerCase());
 }
 
 export function requireAuthoringNodeKind(kind: string): NodeKindRegistration {

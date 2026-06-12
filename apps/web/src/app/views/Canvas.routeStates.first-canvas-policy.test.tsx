@@ -215,7 +215,7 @@ describe('Canvas route first-canvas policy', () => {
     expect(findPaletteOption('Source')?.getAttribute('disabled')).toBeNull();
 
     const { planButton, runButton } = getPrimaryCanvasButtons(harness.container);
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton).toBeUndefined();
+    expect(runButton).toBeUndefined();
   });
 });

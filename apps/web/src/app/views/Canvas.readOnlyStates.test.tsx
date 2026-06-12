@@ -38,10 +38,14 @@ describe('Canvas route access states', () => {
     expect(harness.container.textContent).toContain('Read-only canvas');
     expect(currentCanvasRouteState().explorerProps).toBeNull();
     expect(layoutButton).toBeUndefined();
-    expect(planButton).toBeDefined();
-    expect(runButton).toBeDefined();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton).toBeUndefined();
+    expect(runButton).toBeUndefined();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-active-canvas-identity"]')
+    ).not.toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-draft-save-status"]')
+    ).not.toBeNull();
     expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
       canEditEdges: false,
     });
@@ -85,10 +89,14 @@ describe('Canvas route access states', () => {
     expect(harness.container.textContent).toContain('Use an executable workspace scope');
     expect(harness.container.textContent).toContain('Choose execution scope');
     expect(layoutButton).toBeUndefined();
-    expect(planButton).toBeDefined();
-    expect(runButton).toBeDefined();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton).toBeUndefined();
+    expect(runButton).toBeUndefined();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-active-canvas-identity"]')
+    ).not.toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-draft-save-status"]')
+    ).not.toBeNull();
     expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
       canEditEdges: false,
     });
