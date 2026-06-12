@@ -25,6 +25,7 @@ const {
   buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
   buildArchitectureTestRows,
+  buildArchitectureObservabilityRows,
   buildRailVocabularyRows,
   readArchitectureFlowRows,
   buildComponentEngineeringComponentTreeRows,
@@ -121,6 +122,7 @@ const {
   readArchitecturePathMappingRows,
   readArchitectureRelationRows,
   readArchitectureTestRows,
+  readArchitectureObservabilityRows,
   readRailVocabularyRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
@@ -5594,6 +5596,7 @@ test('readComponentProfileRows reads files through the component descendant tree
     /leaf_component_id in \(select component_id from component_scope\)/
   );
   assert.match(capturedSql.join('\n'), /from architecture\.component_test/);
+  assert.match(capturedSql.join('\n'), /from architecture\.component_observability/);
 });
 
 test('readArchitectureRelationRows queries the DB architecture relation graph view', async () => {
@@ -5666,6 +5669,56 @@ test('buildArchitectureTestRows formats component test evidence', () => {
         'behavior',
         'true',
         'pnpm --filter @dvt/engine test',
+      ],
+    ]
+  );
+});
+
+test('readArchitectureObservabilityRows queries DB-owned component observability evidence', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureObservabilityRows(client, {
+    component: 'SYS-API-OPS-ROUTES',
+    kind: 'log',
+    state: 'implemented',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_observability/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /signal_kind = \$2/);
+  assert.match(captured.sql, /status = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['SYS-API-OPS-ROUTES', 'log', 'implemented', 5]);
+});
+
+test('buildArchitectureObservabilityRows formats component observability evidence', () => {
+  assert.deepEqual(
+    buildArchitectureObservabilityRows([
+      {
+        observability_id: 'OBS-API-OPS-ROUTES-READINESS-DB-PROBE-FAILED',
+        component_id: 'SYS-API-OPS-ROUTES',
+        signal_name: 'api.health.readiness.database_probe_failed',
+        signal_kind: 'log',
+        required: true,
+        status: 'implemented',
+      },
+    ]),
+    [
+      [
+        'OBS-API-OPS-ROUTES-READINESS-DB-PROBE-FAILED',
+        'SYS-API-OPS-ROUTES',
+        'api.health.readiness.database_probe_failed',
+        'log',
+        'true',
+        'implemented',
       ],
     ]
   );

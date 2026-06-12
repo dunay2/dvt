@@ -7,6 +7,7 @@ const {
   planArchitectureDesignCreateOperation,
   planArchitectureComponentRecordOperation,
   planArchitectureTestRecordOperation,
+  planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
 } = require('./helpers.cjs');
 
@@ -328,6 +329,61 @@ test('architecture test evidence planner emits component_test and audit rows', (
   assert.equal(planned.testEvidence.testId, 'TEST-WEB-CANVAS-DRAFT-SAVE-STATUS');
   assert.equal(planned.testEvidence.required, true);
   assert.equal(planned.audit.operationType, 'architecture_test_record');
+  assert.equal(planned.audit.designId, command.designId);
+});
+
+test('architecture observability evidence planner emits component_observability and audit rows', () => {
+  const now = new Date('2026-06-12T14:00:00.000Z');
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-observability',
+    '--design',
+    'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+    '--observability',
+    'OBS-API-OPS-ROUTES-HEALTH-LOG',
+    '--component',
+    'SYS-API-OPS-ROUTES',
+    '--signal-name',
+    'GET /health request log',
+    '--signal-kind',
+    'log',
+    '--status',
+    'implemented',
+    '--required',
+    'true',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureObservabilityRecordOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'evidence',
+        subject_id: 'OBS-API-OPS-ROUTES-HEALTH-LOG',
+        scope_kind: 'may_create',
+      },
+      {
+        subject_kind: 'component',
+        subject_id: 'SYS-API-OPS-ROUTES',
+        scope_kind: 'may_reference',
+      },
+    ],
+    component: { component_id: 'SYS-API-OPS-ROUTES' },
+    existingObservability: null,
+    operationId: 'op-architecture-observability-record',
+    now,
+  });
+
+  assert.equal(planned.observability.observabilityId, 'OBS-API-OPS-ROUTES-HEALTH-LOG');
+  assert.equal(planned.observability.signalKind, 'log');
+  assert.equal(planned.observability.status, 'implemented');
+  assert.equal(planned.audit.operationType, 'architecture_observability_record');
   assert.equal(planned.audit.designId, command.designId);
 });
 

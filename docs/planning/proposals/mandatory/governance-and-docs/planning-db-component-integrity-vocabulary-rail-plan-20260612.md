@@ -159,13 +159,15 @@ is clean.
 
 ## Fowler Analysis
 
-| scenario                                                                                                     | opportunity         | Fowler pattern                                       | DDD owner                       | command/query rail                  | implementation surfaces                                                                                 | test                                                                                  | out of scope                                     |
-| ------------------------------------------------------------------------------------------------------------ | ------------------- | ---------------------------------------------------- | ------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Component facts are scattered across profiles, architecture authority, file ownership, and dependency scans. | Hidden authority    | Consolidate read model                               | ComponentIntegrityReadModel     | `ValidateComponentIntegrity`        | `planning_query_store.component_integrity_query`, `planning:db:query component-integrity`               | `node --test scripts/planning-db-query.test.cjs`                                      | New non-DB inventory format                      |
-| Rail catalog catches exact duplicates but misses semantic drift and surface names.                           | Duplicate semantics | Replace implicit convention with explicit vocabulary | RailVocabularyReadModel         | `ValidateRailVocabulary`            | `planning_query_store.command_query_rail_vocabulary_query`, `planning:db:query rail-vocabulary`         | `node --test scripts/planning-db-query.test.cjs`                                      | Renaming all historical rails in one unsafe edit |
-| CI has inventory checks but no single progressive component-integrity gate.                                  | Quality gate gap    | Guard clause                                         | PlanningDbIntegrityCheck        | `CheckPlanningDbComponentIntegrity` | `scripts/planning-db-integrity-check.cjs`, `package.json`, `scripts/local-validation-plan.cjs`          | `node --test scripts/planning-db-integrity-check.test.cjs`                            | Blocking historical debt before baseline cleanup |
-| Relations can be recorded only as proposed through the command rail.                                         | Workflow mismatch   | Align command lifecycle with domain state            | ArchitectureRelationCommand     | `RecordArchitectureRelation`        | `scripts/planning-db-operate.cjs`                                                                       | `node --test scripts/planning-db-operate.test.cjs`                                    | Direct SQL relation updates                      |
-| New architecture components can receive authority without query-visible test evidence.                       | Evidence gap        | Complete read model                                  | ArchitectureTestEvidenceCommand | `RecordArchitectureTestEvidence`    | `architecture.component_test`, `planning:db:query component-profile`, `scripts/planning-db-operate.cjs` | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs` | File-only test inference outside the BBDD        |
+| scenario                                                                                                     | opportunity         | Fowler pattern                                       | DDD owner                                | command/query rail                        | implementation surfaces                                                                                  | test                                                                                    | out of scope                                     |
+| ------------------------------------------------------------------------------------------------------------ | ------------------- | ---------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Component facts are scattered across profiles, architecture authority, file ownership, and dependency scans. | Hidden authority    | Consolidate read model                               | ComponentIntegrityReadModel              | `ValidateComponentIntegrity`              | `planning_query_store.component_integrity_query`, `planning:db:query component-integrity`                | `node --test scripts/planning-db-query.test.cjs`                                        | New non-DB inventory format                      |
+| Rail catalog catches exact duplicates but misses semantic drift and surface names.                           | Duplicate semantics | Replace implicit convention with explicit vocabulary | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_vocabulary_query`, `planning:db:query rail-vocabulary`          | `node --test scripts/planning-db-query.test.cjs`                                        | Renaming all historical rails in one unsafe edit |
+| CI has inventory checks but no single progressive component-integrity gate.                                  | Quality gate gap    | Guard clause                                         | PlanningDbIntegrityCheck                 | `CheckPlanningDbComponentIntegrity`       | `scripts/planning-db-integrity-check.cjs`, `package.json`, `scripts/local-validation-plan.cjs`           | `node --test scripts/planning-db-integrity-check.test.cjs`                              | Blocking historical debt before baseline cleanup |
+| Relations can be recorded only as proposed through the command rail.                                         | Workflow mismatch   | Align command lifecycle with domain state            | ArchitectureRelationCommand              | `RecordArchitectureRelation`              | `scripts/planning-db-operate.cjs`                                                                        | `node --test scripts/planning-db-operate.test.cjs`                                      | Direct SQL relation updates                      |
+| New architecture components can receive authority without query-visible test evidence.                       | Evidence gap        | Complete read model                                  | ArchitectureTestEvidenceCommand          | `RecordArchitectureTestEvidence`          | `architecture.component_test`, `planning:db:query component-profile`, `scripts/planning-db-operate.cjs`  | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs`   | File-only test inference outside the BBDD        |
+| Architecture components can have observability maturity gaps without a governed write rail.                  | Evidence gap        | Complete read model                                  | ArchitectureObservabilityEvidenceCommand | `RecordArchitectureObservabilityEvidence` | `architecture.component_observability`, `planning:db:operate architecture-evidence record-observability` | `node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs` | Direct SQL observability evidence writes         |
+| Component profiles can miss DB-owned observability evidence even after maturity consumes it.                 | Hidden authority    | Complete read model                                  | ComponentProfileReadModel                | `ReadComponentProfile`                    | `architecture.component_observability`, `planning:db:query component-profile`                            | `node --test scripts/planning-db-query.test.cjs`                                        | Inferring observability from source grep         |
 
 ## Feature Mechanization
 
@@ -200,6 +202,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/081_component_integrity_rail_vocabulary.sql
   - tools/planning-db/migrations/082_rail_vocabulary_deprecation_hardening.sql
   - tools/planning-db/migrations/083_architecture_test_evidence_operation_rail.sql
+  - tools/planning-db/migrations/084_architecture_observability_evidence_operation_rail.sql
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
   - scripts/planning-db/queries/component-integrity-query.cjs
@@ -228,6 +231,9 @@ commandQueryRails:
   - name: ValidateComponentArchitectureDrift
     type: query
     dddOwner: ComponentIntegrityReadModel
+  - name: ReadComponentProfile
+    type: query
+    dddOwner: ComponentProfileReadModel
   - name: ValidateRailVocabulary
     type: query
     dddOwner: RailVocabularyReadModel
@@ -243,8 +249,14 @@ commandQueryRails:
   - name: RecordArchitectureTestEvidence
     type: command
     dddOwner: ArchitectureTestEvidenceCommand
+  - name: RecordArchitectureObservabilityEvidence
+    type: command
+    dddOwner: ArchitectureObservabilityEvidenceCommand
 domainObjects:
   - name: ComponentIntegrityReadModel
+    type: read model
+    owner: Architecture / Planning DB / CI
+  - name: ComponentProfileReadModel
     type: read model
     owner: Architecture / Planning DB / CI
   - name: RailVocabularyReadModel
@@ -259,11 +271,16 @@ domainObjects:
   - name: ArchitectureTestEvidenceCommand
     type: command rail
     owner: Architecture / Planning DB / CI
+  - name: ArchitectureObservabilityEvidenceCommand
+    type: command rail
+    owner: Architecture / Planning DB / CI
 fowlerSignals:
   - Hidden Authority from component health being visible only through several separate queries.
   - Duplicate Semantics from command/query rails sharing intent without one vocabulary check.
   - Parallel Model risk if filesystem coverage is checked outside the Planning DB.
   - Incomplete Evidence risk if tests are written to architecture.component_test but not visible in component-profile.
+  - Incomplete Evidence risk if observability facts are written outside architecture.component_observability.
+  - Hidden Authority risk if component-profile cannot display observability rows that maturity already consumes.
 architectureGuards:
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-integrity-check.test.cjs scripts/planning-db-operate.test.cjs
   - pnpm planning:db:migrate
@@ -333,6 +350,23 @@ redGreenCycles:
       - scripts/planning-db-operate-tests/architecture-plan.test.cjs
       - scripts/planning-db-migrate.test.cjs
     greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-operate.test.cjs
+  - id: architecture-observability-evidence-rail
+    redTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: Planning DB has architecture.component_observability but no governed planning:db:operate rail to record observability evidence.
+    patchSurfaces:
+      - tools/planning-db/migrations/084_architecture_observability_evidence_operation_rail.sql
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate-tests/architecture-parse.test.cjs
+      - scripts/planning-db-operate-tests/architecture-plan.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: component-profile-observability-evidence
+    redTest: node --test scripts/planning-db-query.test.cjs
+    expectedFailure: component-profile reads DB-owned tests but cannot answer which observability signals validate a component.
+    patchSurfaces:
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs
   - id: verify-changed-planning-db-integrity-routing
     redTest: node --test scripts/verify-changed.test.cjs
     expectedFailure: verify:changed routes Planning DB migrations through the wrong planningDb group index after adding the integrity gate.
@@ -619,6 +653,28 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-operate.test.cjs
+  - name: allowedArchitectureObservabilitySignalKinds
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureObservabilityEvidenceCommand
+    cqRails:
+      - RecordArchitectureObservabilityEvidence
+    fowlerSignals:
+      - observability evidence uses canonical architecture signal vocabulary
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedArchitectureObservabilityStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureObservabilityEvidenceCommand
+    cqRails:
+      - RecordArchitectureObservabilityEvidence
+    fowlerSignals:
+      - observability evidence uses canonical lifecycle vocabulary
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
   - name: applyArchitectureTestRecordOperation
     path: scripts/planning-db-operate.cjs
     dddOwner: ArchitectureTestEvidenceCommand
@@ -626,6 +682,17 @@ symbols:
       - RecordArchitectureTestEvidence
     fowlerSignals:
       - component test evidence writes pass through planning:db:operate
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: applyArchitectureObservabilityRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureObservabilityEvidenceCommand
+    cqRails:
+      - RecordArchitectureObservabilityEvidence
+    fowlerSignals:
+      - component observability evidence writes pass through planning:db:operate
     architectureGuard: node --test scripts/planning-db-operate.test.cjs
     cypressCoverage: N/A
     unitTests:
@@ -652,6 +719,17 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-operate.test.cjs
+  - name: readArchitectureObservability
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureObservabilityEvidenceCommand
+    cqRails:
+      - RecordArchitectureObservabilityEvidence
+    fowlerSignals:
+      - idempotent observability evidence updates compare existing DB state
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
   - name: readArchitectureTest
     path: scripts/planning-db-operate.cjs
     dddOwner: ArchitectureTestEvidenceCommand
@@ -659,6 +737,50 @@ symbols:
       - RecordArchitectureTestEvidence
     fowlerSignals:
       - idempotent evidence updates compare existing DB state
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureObservabilityId
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureObservabilityEvidenceCommand
+    cqRails:
+      - RecordArchitectureObservabilityEvidence
+    fowlerSignals:
+      - observability identity is validated before evidence writes
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureObservabilityRecordCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureObservabilityEvidenceCommand
+    cqRails:
+      - RecordArchitectureObservabilityEvidence
+    fowlerSignals:
+      - required observability evidence command fields are validated before write
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureObservabilitySignalKind
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureObservabilityEvidenceCommand
+    cqRails:
+      - RecordArchitectureObservabilityEvidence
+    fowlerSignals:
+      - invalid observability signal vocabulary is rejected before write
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureObservabilityStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureObservabilityEvidenceCommand
+    cqRails:
+      - RecordArchitectureObservabilityEvidence
+    fowlerSignals:
+      - invalid observability lifecycle vocabulary is rejected before write
     architectureGuard: node --test scripts/planning-db-operate.test.cjs
     cypressCoverage: N/A
     unitTests:
@@ -729,6 +851,17 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-query.test.cjs
+  - name: architectureObservabilitySelect
+    path: scripts/planning-db-query.cjs
+    dddOwner: ComponentProfileReadModel
+    cqRails:
+      - ReadComponentProfile
+    fowlerSignals:
+      - component-profile reads observability evidence from the DB authority table
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
   - name: buildArchitectureTestRows
     path: scripts/planning-db-query.cjs
     dddOwner: ComponentIntegrityReadModel
@@ -740,6 +873,17 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-query.test.cjs
+  - name: buildArchitectureObservabilityRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: ComponentProfileReadModel
+    cqRails:
+      - ReadComponentProfile
+    fowlerSignals:
+      - operator output exposes component observability evidence
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
   - name: readArchitectureTestRows
     path: scripts/planning-db-query.cjs
     dddOwner: ComponentIntegrityReadModel
@@ -747,6 +891,17 @@ symbols:
       - ValidateComponentIntegrity
     fowlerSignals:
       - component-profile can answer which tests validate a component
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: readArchitectureObservabilityRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: ComponentProfileReadModel
+    cqRails:
+      - ReadComponentProfile
+    fowlerSignals:
+      - component-profile can answer which observability signals validate a component
     architectureGuard: node --test scripts/planning-db-query.test.cjs
     cypressCoverage: N/A
     unitTests:

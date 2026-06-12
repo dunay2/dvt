@@ -181,6 +181,19 @@ const allowedArchitectureTestCoverageLevels = new Set([
   'boundary',
   'flow',
 ]);
+const allowedArchitectureObservabilitySignalKinds = new Set([
+  'metric',
+  'log',
+  'trace',
+  'alert',
+  'dashboard',
+]);
+const allowedArchitectureObservabilityStatuses = new Set([
+  'proposed',
+  'implemented',
+  'missing',
+  'not_applicable',
+]);
 const allowedComponentStatuses = new Set([
   'canonical',
   'review',
@@ -290,12 +303,14 @@ const operationHelp = Object.freeze({
     ],
   },
   'architecture-evidence': {
-    operations: ['record-test'],
+    operations: ['record-test', 'record-observability'],
     usage:
-      'pnpm planning:db:operate architecture-evidence record-test --design <DESIGN-ID> --component <SYS-ID> --test <TEST-ID> --actor <actor>',
+      'pnpm planning:db:operate architecture-evidence <record-test|record-observability> --design <DESIGN-ID> --component <SYS-ID> --actor <actor>',
     details: [
       'RecordArchitectureTestEvidence attaches required test evidence to a scoped architecture component.',
       'Requires --test-path, --test-kind, --coverage-level, --validation-command, --source-ref, and --source-content-sha256.',
+      'RecordArchitectureObservabilityEvidence attaches observability evidence to a scoped architecture component.',
+      'Requires --observability, --signal-name, --signal-kind, --status, --source-ref, and --source-content-sha256.',
     ],
   },
   'docs-disposition': {
@@ -819,6 +834,30 @@ function validateArchitectureTestCoverageLevel(value) {
   return value;
 }
 
+function validateArchitectureObservabilitySignalKind(value) {
+  if (!allowedArchitectureObservabilitySignalKinds.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureObservabilityEvidence stores signal kinds accepted by architecture.component_observability: ${[
+        ...allowedArchitectureObservabilitySignalKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureObservabilityStatus(value) {
+  if (!allowedArchitectureObservabilityStatuses.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureObservabilityEvidence stores statuses accepted by architecture.component_observability: ${[
+        ...allowedArchitectureObservabilityStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
 function validateArchitectureRelationType(value) {
   if (!allowedArchitectureRelationTypes.has(value)) {
     throw new Error(
@@ -1139,6 +1178,20 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_observability_record') {
+    return {
+      designId: command.designId,
+      observabilityId: command.observabilityId,
+      componentId: command.componentId,
+      signalName: command.signalName,
+      signalKind: command.signalKind,
+      required: command.required,
+      status: command.status,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'component_create') {
     return {
       componentId: command.componentId,
@@ -1286,13 +1339,19 @@ function defaultIdempotencyKey(command) {
     command.kind === 'architecture_component_record' ||
     command.kind === 'architecture_relation_record' ||
     command.kind === 'architecture_fitness_scan' ||
-    command.kind === 'architecture_test_record'
+    command.kind === 'architecture_test_record' ||
+    command.kind === 'architecture_observability_record'
   ) {
     return [
       command.kind,
       command.actor || 'anonymous',
       command.designId || 'no-design',
-      command.componentId || command.relationId || command.scanId || command.testId || 'no-subject',
+      command.componentId ||
+        command.relationId ||
+        command.scanId ||
+        command.testId ||
+        command.observabilityId ||
+        'no-subject',
       crypto
         .createHash('sha256')
         .update(canonicalJson(operationPayload(command)))
@@ -2105,6 +2164,26 @@ function validateArchitectureTestRecordCommand(command) {
   return command;
 }
 
+function validateArchitectureObservabilityRecordCommand(command) {
+  const requiredTextFields = [
+    ['observability', command.observabilityId],
+    ['component', command.componentId],
+    ['signal-name', command.signalName],
+    ['signal-kind', command.signalKind],
+    ['status', command.status],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(
+        `ARCH-OBSERVABILITY-EVIDENCE-SEMANTICS-MISSING: missing required --${field}.`
+      );
+    }
+  }
+
+  return command;
+}
+
 function validateArchitectureTestId(value) {
   const normalized = String(value || '').trim();
   if (!/^TEST-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
@@ -2116,12 +2195,52 @@ function validateArchitectureTestId(value) {
   return normalized;
 }
 
-function parseArchitectureEvidenceCommand(action, args) {
-  if (action !== 'record-test') {
-    throw new Error(`Unknown architecture-evidence operation "${action}". Expected record-test.`);
+function validateArchitectureObservabilityId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^OBS-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --observability "${value}". Expected an uppercase OBS-* architecture observability evidence id.`
+    );
   }
 
+  return normalized;
+}
+
+function parseArchitectureEvidenceCommand(action, args) {
   const options = parseFlagOptions(args);
+
+  if (action === 'record-observability') {
+    const command = {
+      kind: 'architecture_observability_record',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      observabilityId: validateArchitectureObservabilityId(requireOption(options, 'observability')),
+      componentId: validateArchitectureComponentId(
+        requireOption(options, 'component'),
+        'component'
+      ),
+      signalName: requireOption(options, 'signalName'),
+      signalKind: validateArchitectureObservabilitySignalKind(requireOption(options, 'signalKind')),
+      required: parseBooleanOption(options.required, 'required') ?? true,
+      status: validateArchitectureObservabilityStatus(requireOption(options, 'status')),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+
+    validateArchitectureObservabilityRecordCommand(command);
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action !== 'record-test') {
+    throw new Error(
+      `Unknown architecture-evidence operation "${action}". Expected record-test or record-observability.`
+    );
+  }
+
   const command = {
     kind: 'architecture_test_record',
     designId: validateArchitectureDesignId(requireOption(options, 'design')),
@@ -2472,7 +2591,9 @@ function parseArgs(args = process.argv.slice(2)) {
 
   if (resource === 'architecture-evidence') {
     if (!action) {
-      throw new Error('Missing architecture-evidence operation. Expected record-test.');
+      throw new Error(
+        'Missing architecture-evidence operation. Expected record-test or record-observability.'
+      );
     }
 
     return parseArchitectureEvidenceCommand(action, rest);
@@ -3149,6 +3270,55 @@ function planArchitectureTestRecordOperation({
   const audit = architectureScopedAudit({ command, operationId, now });
 
   return { testEvidence, audit };
+}
+
+function planArchitectureObservabilityRecordOperation({
+  command,
+  design,
+  designScopes,
+  component,
+  existingObservability,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  const requiredScope = existingObservability ? 'may_update' : 'may_create';
+  assertArchitectureDesignScope(
+    designScopes,
+    'evidence',
+    command.observabilityId,
+    [requiredScope],
+    'ARCH-OBSERVABILITY-EVIDENCE-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference'],
+    'ARCH-OBSERVABILITY-EVIDENCE-COMPONENT-SCOPE-MISSING'
+  );
+
+  if (!normalizeArchitectureComponent(component)) {
+    throw new Error(
+      `ARCH-OBSERVABILITY-EVIDENCE-COMPONENT-MISSING: component ${command.componentId}`
+    );
+  }
+
+  validateArchitectureObservabilityRecordCommand(command);
+
+  const createdAt = toIso(now);
+  const observability = {
+    observabilityId: command.observabilityId,
+    componentId: command.componentId,
+    signalName: command.signalName,
+    signalKind: command.signalKind,
+    required: command.required,
+    status: command.status,
+    createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { observability, audit };
 }
 
 function planComponentCreateOperation({
@@ -3989,6 +4159,17 @@ async function readArchitectureTest(client, testId) {
   return result.rows[0] || null;
 }
 
+async function readArchitectureObservability(client, observabilityId) {
+  const result = await client.query(
+    `select *
+     from architecture.component_observability
+     where observability_id = $1`,
+    [observabilityId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readArchitectureComponents(client) {
   const result = await client.query(
     `select component_id, repo_path
@@ -4569,6 +4750,31 @@ async function writePlannedArchitectureTestRecordOperation(client, planned) {
       planned.testEvidence.required,
       planned.testEvidence.validationCommand,
       planned.testEvidence.createdAt,
+    ]
+  );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureObservabilityRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.component_observability
+      (observability_id, component_id, signal_name, signal_kind, required, status, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7)
+     on conflict (observability_id) do update set
+       component_id = excluded.component_id,
+       signal_name = excluded.signal_name,
+       signal_kind = excluded.signal_kind,
+       required = excluded.required,
+       status = excluded.status`,
+    [
+      planned.observability.observabilityId,
+      planned.observability.componentId,
+      planned.observability.signalName,
+      planned.observability.signalKind,
+      planned.observability.required,
+      planned.observability.status,
+      planned.observability.createdAt,
     ]
   );
 
@@ -5272,6 +5478,56 @@ async function applyArchitectureTestRecordOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureObservabilityRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const component = await readArchitectureComponent(client, command.componentId);
+    const existingObservability = await readArchitectureObservability(
+      client,
+      command.observabilityId
+    );
+    const planned = planArchitectureObservabilityRecordOperation({
+      command,
+      design,
+      designScopes,
+      component,
+      existingObservability,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureObservabilityRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyComponentCreateOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -5680,6 +5936,13 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.observability) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.observability.observabilityId} component=${result.observability.componentId}`
+    );
+    return;
+  }
+
   if (result.definition) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.definition.componentId} revision=${result.audit.resultingRevision}`
@@ -5775,17 +6038,19 @@ async function main() {
               ? await applyArchitectureFitnessScanOperation(command)
               : command.kind === 'architecture_test_record'
                 ? await applyArchitectureTestRecordOperation(command)
-                : command.kind === 'component_create'
-                  ? await applyComponentCreateOperation(command)
-                  : command.kind === 'db_surface_upsert'
-                    ? await applyDbSurfaceUpsertOperation(command)
-                    : command.kind === 'feature_mechanization_rail_record'
-                      ? await applyFeatureMechanizationRailRecordOperation(command)
-                      : command.kind === 'governance_refresh_run_record'
-                        ? await applyGovernanceRefreshRunRecordOperation(command)
-                        : command.kind.startsWith('fowler_analysis_')
-                          ? await applyFowlerAnalysisOperation(command)
-                          : await applyTaskLocalOperation(command);
+                : command.kind === 'architecture_observability_record'
+                  ? await applyArchitectureObservabilityRecordOperation(command)
+                  : command.kind === 'component_create'
+                    ? await applyComponentCreateOperation(command)
+                    : command.kind === 'db_surface_upsert'
+                      ? await applyDbSurfaceUpsertOperation(command)
+                      : command.kind === 'feature_mechanization_rail_record'
+                        ? await applyFeatureMechanizationRailRecordOperation(command)
+                        : command.kind === 'governance_refresh_run_record'
+                          ? await applyGovernanceRefreshRunRecordOperation(command)
+                          : command.kind.startsWith('fowler_analysis_')
+                            ? await applyFowlerAnalysisOperation(command)
+                            : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -5801,6 +6066,7 @@ module.exports = {
   applyArchitectureDesignCreateOperation,
   applyArchitectureFitnessScanOperation,
   applyArchitectureTestRecordOperation,
+  applyArchitectureObservabilityRecordOperation,
   applyArchitectureRelationRecordOperation,
   applyComponentCreateOperation,
   applyDbSurfaceUpsertOperation,
@@ -5827,6 +6093,7 @@ module.exports = {
   planArchitectureDesignCreateOperation,
   planArchitectureFitnessScanOperation,
   planArchitectureTestRecordOperation,
+  planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   planComponentCreateOperation,
   planDbSurfaceUpsertOperation,
@@ -5849,6 +6116,7 @@ module.exports = {
   writePlannedDbSurfaceUpsertOperation,
   writePlannedArchitectureFitnessScanOperation,
   writePlannedArchitectureTestRecordOperation,
+  writePlannedArchitectureObservabilityRecordOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
   writePlannedFowlerAnalysisOperation,
   writePlannedGovernanceRefreshRunRecordOperation,

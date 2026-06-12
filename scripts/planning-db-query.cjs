@@ -1619,6 +1619,17 @@ function buildComponentProfileRows(profile) {
     ]);
   }
 
+  for (const observability of profile.observability || []) {
+    rows.push([
+      'observability',
+      observability.observability_id ?? observability.observabilityId,
+      observability.signal_name ?? observability.signalName,
+      observability.signal_kind ?? observability.signalKind,
+      String(observability.required ?? true),
+      observability.status ?? '-',
+    ]);
+  }
+
   for (const design of profile.architectureDesigns || []) {
     rows.push([
       'architecture-basis',
@@ -1757,6 +1768,17 @@ function buildArchitectureTestRows(rows) {
     row.coverage_level ?? row.coverageLevel,
     String(row.required ?? true),
     row.validation_command ?? row.validationCommand ?? '-',
+  ]);
+}
+
+function buildArchitectureObservabilityRows(rows) {
+  return rows.map((row) => [
+    row.observability_id ?? row.observabilityId,
+    row.component_id ?? row.componentId,
+    row.signal_name ?? row.signalName,
+    row.signal_kind ?? row.signalKind,
+    String(row.required ?? true),
+    row.status ?? '-',
   ]);
 }
 
@@ -2537,6 +2559,19 @@ function architectureTestSelect() {
       validation_command,
       created_at
     from ${architectureSchemaName}.component_test`;
+}
+
+function architectureObservabilitySelect() {
+  return `
+    select
+      observability_id,
+      component_id,
+      signal_name,
+      signal_kind,
+      required,
+      status,
+      created_at
+    from ${architectureSchemaName}.component_observability`;
 }
 
 function architectureMaturitySelect() {
@@ -3379,6 +3414,7 @@ async function readComponentProfileRows(client, filters = {}) {
     relations: await readArchitectureRelationRows(client, scopedFilters),
     contracts: await readArchitectureContractRows(client, scopedFilters),
     tests: await readArchitectureTestRows(client, scopedFilters),
+    observability: await readArchitectureObservabilityRows(client, scopedFilters),
     architectureDesigns: await readArchitectureDesignScopeRows(client, {
       component,
       subjectKind: 'component',
@@ -3696,6 +3732,28 @@ async function readArchitectureTestRows(client, filters = {}) {
     `${architectureTestSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by component_id, test_kind, test_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureObservabilityRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'observability_id', filters.observability);
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'signal_kind', filters.kind);
+  appendFilter(predicates, params, 'status', filters.state);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureObservabilitySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, signal_kind, observability_id
      limit $${params.length}`,
     params
   );
@@ -4860,6 +4918,7 @@ module.exports = {
   buildArchitectureFlowStepRows,
   buildArchitectureIoRows,
   buildArchitectureMaturityRows,
+  buildArchitectureObservabilityRows,
   buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
   buildArchitectureResponsibilityRows,
@@ -4938,6 +4997,7 @@ module.exports = {
   readArchitectureFlowStepRows,
   readArchitectureIoRows,
   readArchitectureMaturityRows,
+  readArchitectureObservabilityRows,
   readArchitecturePathMappingRows,
   readArchitectureRelationRows,
   readArchitectureResponsibilityRows,

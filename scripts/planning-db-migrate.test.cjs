@@ -649,6 +649,18 @@ test('tracked migrations include architecture test evidence operations after W83
   assert.match(architectureEvidenceMigration.sql, /'architecture_test_record'/);
 });
 
+test('tracked migrations include architecture observability evidence operations after W84', () => {
+  const migrations = readMigrationFiles();
+  const architectureEvidenceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '084_architecture_observability_evidence_operation_rail.sql'
+  );
+
+  assert.ok(architectureEvidenceMigration);
+  assert.match(architectureEvidenceMigration.sql, /architecture_design_operations_type_check/);
+  assert.match(architectureEvidenceMigration.sql, /'architecture_observability_record'/);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

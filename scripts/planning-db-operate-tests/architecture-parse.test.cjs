@@ -246,6 +246,40 @@ test('parseArgs builds an architecture test evidence record command', () => {
   assert.equal(command.required, true);
 });
 
+test('parseArgs builds an architecture observability evidence record command', () => {
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-observability',
+    '--design',
+    'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+    '--observability',
+    'OBS-API-OPS-ROUTES-HEALTH-LOG',
+    '--component',
+    'SYS-API-OPS-ROUTES',
+    '--signal-name',
+    'GET /health request log',
+    '--signal-kind',
+    'log',
+    '--status',
+    'implemented',
+    '--required',
+    'true',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'architecture_observability_record');
+  assert.equal(command.observabilityId, 'OBS-API-OPS-ROUTES-HEALTH-LOG');
+  assert.equal(command.componentId, 'SYS-API-OPS-ROUTES');
+  assert.equal(command.signalKind, 'log');
+  assert.equal(command.status, 'implemented');
+  assert.equal(command.required, true);
+});
+
 test('parseArgs rejects relation record statuses that the relation table cannot store', () => {
   assert.throws(
     () =>
