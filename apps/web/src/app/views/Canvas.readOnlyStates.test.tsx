@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  buildCanvasRouteReadyNodes,
   createCanvasRouteHarness,
-  currentCanvasRouteState,
   getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
 } from './Canvas.test.support';
@@ -22,6 +22,7 @@ describe('Canvas route access states', () => {
 
   it('keeps the viewport visible and shows a read-only banner when mutations are gated', async () => {
     await renderCanvasRouteWithController(harness, {
+      nodesWithImpact: buildCanvasRouteReadyNodes(),
       userPermissions: {
         canPlan: false,
         canRun: false,
@@ -36,7 +37,6 @@ describe('Canvas route access states', () => {
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-readonly-state"]')).not.toBeNull();
     expect(harness.container.textContent).toContain('Read-only canvas');
-    expect(currentCanvasRouteState().explorerProps).toBeNull();
     expect(layoutButton).toBeUndefined();
     expect(planButton).toBeUndefined();
     expect(runButton).toBeUndefined();
@@ -57,6 +57,7 @@ describe('Canvas route access states', () => {
     document.body.append(scopeTrigger);
 
     await renderCanvasRouteWithController(harness, {
+      nodesWithImpact: buildCanvasRouteReadyNodes(),
       canPlanGraph: true,
       canStartRun: true,
       draftAccessMode: 'read_only',

@@ -16,7 +16,6 @@ import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
-import type { CanvasWorkspaceResourceGroup } from '../../components/canvasWorkspaceExplorerModel';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
@@ -38,7 +37,6 @@ type CanvasViewport = {
 
 export type CanvasShellLayout = {
   focusMode: boolean;
-  explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
   canOpenSourceImport: boolean;
   hostTabState: CanvasPlaygroundTabState;
@@ -51,7 +49,6 @@ export type CanvasShellLayout = {
 };
 
 export type CanvasShellPanels = {
-  explorerResourceGroups: readonly CanvasWorkspaceResourceGroup[];
   authoringNodeKinds: readonly NodeKindRegistration[];
   activeCanvasId: string | null;
   activeCanvas: ProjectCanvasDocument | null;
@@ -118,8 +115,6 @@ export type CanvasShellGraphCommands = {
 };
 
 export type CanvasShellChromeCommands = {
-  onHideExplorer: () => void;
-  onShowExplorer: () => void;
   onHideInspector: () => void;
   onShowInspector: () => void;
   onAutoLayout: () => void;

@@ -44,7 +44,6 @@ describe('Canvas route first-canvas policy', () => {
   it('creates the first transformation canvas through the controller command', async () => {
     const handleCreateCanvasDocument = vi.fn();
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: null,
       canCreateCanvasDocument: true,
       handleCreateCanvasDocument,
@@ -68,7 +67,6 @@ describe('Canvas route first-canvas policy', () => {
 
   it('renders read-only empty guidance without suggesting Add data when edits are gated', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'transformation',
         title: 'Main canvas',
@@ -94,7 +92,6 @@ describe('Canvas route first-canvas policy', () => {
   it('routes empty authoring first-node creation through the controller command', async () => {
     const handleCreateAuthoringNode = vi.fn();
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'transformation',
         title: 'Main canvas',
@@ -121,7 +118,6 @@ describe('Canvas route first-canvas policy', () => {
 
   it('renders empty guidance without suggesting Add data when source import is unavailable', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'transformation',
         title: 'Main canvas',
@@ -137,7 +133,6 @@ describe('Canvas route first-canvas policy', () => {
 
   it('shows a typed transformation empty canvas catalog instead of the dbt catalog', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'transformation',
         title: 'Main canvas',
@@ -155,7 +150,6 @@ describe('Canvas route first-canvas policy', () => {
 
   it('shows a typed dbt empty canvas catalog instead of the transformation catalog', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'dbt',
         title: 'dbt canvas',
@@ -174,7 +168,6 @@ describe('Canvas route first-canvas policy', () => {
 
   it('hides typed empty guidance by preference without reintroducing fixed Insert chrome', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'dbt',
         title: 'dbt canvas',

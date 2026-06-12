@@ -79,9 +79,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     isLoadingGraph: graphModel.graphAuthorityQuery.isPending,
     graphErrorMessage: resolveCanvasGraphErrorMessage(args.authoringRuntime),
     focusMode: store.focusMode,
-    explorerPanelVisible: store.explorerPanelVisible,
     inspectorPanelVisible: store.inspectorPanelVisible,
-    explorerNodes: graphModel.canonicalNodes,
     inspectorNode,
     inspectorNodeSelectedForExecution: inspectorNode
       ? store.selectedNodeIds.includes(inspectorNode.id)
@@ -155,8 +153,6 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleSourceImportComplete: mutationHandlers.handleSourceImportComplete,
     importedNodeFocusIds: mutationHandlers.importedNodeFocusIds,
     handleImportedNodeFocusComplete: mutationHandlers.handleImportedNodeFocusComplete,
-    hideExplorerPanel: store.hideExplorerPanel,
-    showExplorerPanel: store.showExplorerPanel,
     hideInspectorPanel: store.hideInspectorPanel,
     showInspectorPanel: store.showInspectorPanel,
     handleAutoLayout: graphHandlers.handleAutoLayout,

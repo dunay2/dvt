@@ -40,7 +40,7 @@ function resolveEffectiveWorkbenchState(
   canvasDocumentRuntimeErrorMessage: string | null
 ): CanvasRouteInteractionState['effectiveWorkbenchState'] {
   const workbenchState = getCanvasWorkbenchState({
-    canonicalNodeCount: controller.explorerNodes.length,
+    canonicalNodeCount: controller.nodesWithImpact.length,
     hasCanvasDocument: controller.canvasDocument != null,
     isLoadingGraph: controller.isLoadingGraph,
     graphErrorMessage: controller.graphErrorMessage,

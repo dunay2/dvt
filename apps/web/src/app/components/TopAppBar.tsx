@@ -34,10 +34,8 @@ export function ShellTopBar({
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
-  const explorerPanelVisible = useUiLayoutStore((state) => state.explorerPanelVisible);
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
-  const toggleExplorerPanel = useUiLayoutStore((state) => state.toggleExplorerPanel);
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
   const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
@@ -84,7 +82,6 @@ export function ShellTopBar({
         {exposeWorkspaceNavigationMenu && (
           <ShellMenu
             kind="workspace"
-            explorerPanelVisible={explorerPanelVisible}
             inspectorPanelVisible={inspectorPanelVisible}
             consolePanelVisible={consolePanelVisible}
             focusMode={focusMode}
@@ -94,7 +91,6 @@ export function ShellTopBar({
             projectIdentityBadge={projectIdentityBadge}
             gitBranch={workspaceBootstrap.gitBranch}
             gitSha={workspaceBootstrap.gitSha}
-            toggleExplorerPanel={toggleExplorerPanel}
             toggleInspectorPanel={toggleInspectorPanel}
             toggleConsolePanel={toggleConsolePanel}
             toggleFocusMode={toggleFocusMode}
@@ -105,7 +101,6 @@ export function ShellTopBar({
         )}
         <ShellMenu
           kind="view"
-          explorerPanelVisible={explorerPanelVisible}
           inspectorPanelVisible={inspectorPanelVisible}
           consolePanelVisible={consolePanelVisible}
           focusMode={focusMode}
@@ -115,7 +110,6 @@ export function ShellTopBar({
           projectIdentityBadge={projectIdentityBadge}
           gitBranch={workspaceBootstrap.gitBranch}
           gitSha={workspaceBootstrap.gitSha}
-          toggleExplorerPanel={toggleExplorerPanel}
           toggleInspectorPanel={toggleInspectorPanel}
           toggleConsolePanel={toggleConsolePanel}
           toggleFocusMode={toggleFocusMode}

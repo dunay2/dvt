@@ -19,10 +19,8 @@ type CanvasWorkbenchDefaultsDto = {
   isLoadingGraph: CanvasController['isLoadingGraph'];
   graphErrorMessage: CanvasController['graphErrorMessage'];
   focusMode: CanvasController['focusMode'];
-  explorerPanelVisible: CanvasController['explorerPanelVisible'];
   inspectorPanelVisible: CanvasController['inspectorPanelVisible'];
   canOpenSourceImport: CanvasController['canOpenSourceImport'];
-  explorerNodes: CanvasController['explorerNodes'];
   inspectorNode: CanvasController['inspectorNode'];
   inspectorNodeSelectedForExecution: CanvasController['inspectorNodeSelectedForExecution'];
   inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
@@ -96,20 +94,6 @@ export function buildDefaultCanvasToolbarState(): CanvasDraftToolbarState {
   };
 }
 
-function buildDefaultCanvasExplorerNodes(): CanvasControllerStateDefaults['explorerNodes'] {
-  return [
-    {
-      id: 'node.orders',
-      name: 'orders',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
-      role: 'transform',
-      status: 'idle',
-      tags: [],
-    },
-  ];
-}
-
 function buildDefaultCanvasUserPermissions(): CanvasControllerStateDefaults['userPermissions'] {
   return {
     canPlan: true,
@@ -147,10 +131,8 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     isLoadingGraph: false,
     graphErrorMessage: null,
     focusMode: false,
-    explorerPanelVisible: true,
     inspectorPanelVisible: true,
     canOpenSourceImport: true,
-    explorerNodes: buildDefaultCanvasExplorerNodes(),
     inspectorNode: null,
     inspectorNodeSelectedForExecution: false,
     inspectorGraphNodes: [],
@@ -308,8 +290,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'handleRemoveNode'
   | 'handleSourceImportComplete'
   | 'handleImportedNodeFocusComplete'
-  | 'hideExplorerPanel'
-  | 'showExplorerPanel'
   | 'hideInspectorPanel'
   | 'showInspectorPanel'
   | 'handleAutoLayout'
@@ -354,8 +334,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     handleSourceImportComplete: vi.fn(),
     importedNodeFocusIds: [],
     handleImportedNodeFocusComplete: vi.fn(),
-    hideExplorerPanel: vi.fn(),
-    showExplorerPanel: vi.fn(),
     hideInspectorPanel: vi.fn(),
     showInspectorPanel: vi.fn(),
     handleAutoLayout: vi.fn(),

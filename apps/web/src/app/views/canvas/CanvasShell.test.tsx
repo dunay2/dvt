@@ -6,7 +6,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasShell from './CanvasShell';
-import { buildCanvasWorkspaceResourceGroups } from '../../components/canvasWorkspaceExplorerModel';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
@@ -25,16 +24,8 @@ import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { IWarehouseSourceImportPort } from '../../ports/workspace';
 
 const shellState = vi.hoisted(() => ({
-  dbtExplorerProps: null as null | Record<string, unknown>,
   canvasViewportProps: null as null | Record<string, unknown>,
   sourceImportWizardProps: null as null | Record<string, unknown>,
-}));
-
-vi.mock('../../components/DbtExplorer', () => ({
-  default: (props: Record<string, unknown>) => {
-    shellState.dbtExplorerProps = props;
-    return <div data-testid="dbt-explorer" />;
-  },
 }));
 
 vi.mock('../../components/InspectorPanel', () => ({
@@ -91,22 +82,9 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
     showReloadAction: false,
   };
 
-  const explorerNodes = [
-    {
-      id: 'node.orders',
-      name: 'orders',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
-      role: 'transform',
-      status: 'idle',
-      tags: [],
-    },
-  ] satisfies CanvasShellPanels['inspectorGraphNodes'];
-
   return {
     layout: {
       focusMode: false,
-      explorerPanelVisible: true,
       inspectorPanelVisible: false,
       canOpenSourceImport: true,
       hostTabState: {
@@ -119,7 +97,6 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       ...overrides?.layout,
     },
     panels: {
-      explorerResourceGroups: buildCanvasWorkspaceResourceGroups({ nodes: explorerNodes }),
       authoringNodeKinds: [buildTestNodeKind()],
       activeCanvasId: null,
       activeCanvas: null,
@@ -200,8 +177,6 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       ...overrides?.graphCommands,
     },
     chromeCommands: {
-      onHideExplorer: vi.fn(),
-      onShowExplorer: vi.fn(),
       onHideInspector: vi.fn(),
       onShowInspector: vi.fn(),
       onAutoLayout: vi.fn(),
@@ -240,7 +215,6 @@ describe('CanvasShell', () => {
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
-    shellState.dbtExplorerProps = null;
     shellState.canvasViewportProps = null;
     shellState.sourceImportWizardProps = null;
   });
@@ -270,8 +244,6 @@ describe('CanvasShell', () => {
       );
     });
 
-    expect(container.querySelector('[data-testid="dbt-explorer"]')).toBeNull();
-    expect(shellState.dbtExplorerProps).toBeNull();
     expect(shellState.canvasViewportProps).toMatchObject({
       canOpenSourceImport: false,
     });
@@ -306,7 +278,7 @@ describe('CanvasShell', () => {
 
     expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="inspector-panel"]')).not.toBeNull();
-    expect(shellState.dbtExplorerProps).toBeNull();
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 
   it('opens the contextual node workbench before forwarding viewport node clicks', async () => {
@@ -483,7 +455,6 @@ describe('CanvasShell', () => {
       root.render(<CanvasShell {...buildProps()} />);
     });
 
-    expect(shellState.dbtExplorerProps).toBeNull();
     expect(shellState.canvasViewportProps).toMatchObject({
       canOpenSourceImport: true,
     });
@@ -504,7 +475,6 @@ describe('CanvasShell', () => {
       root.render(<CanvasShell {...props} />);
     });
 
-    expect(shellState.dbtExplorerProps).toBeNull();
     expect(shellState.canvasViewportProps).toMatchObject({
       authoringNodeKinds: props.panels.authoringNodeKinds,
       onCreateAuthoringNode: props.graphCommands.onCreateAuthoringNode,
@@ -522,7 +492,6 @@ describe('CanvasShell', () => {
       root.render(<CanvasShell {...props} />);
     });
 
-    expect(shellState.dbtExplorerProps).toBeNull();
     expect(shellState.canvasViewportProps).toMatchObject({
       canOpenSourceImport: false,
     });
@@ -547,7 +516,6 @@ describe('CanvasShell', () => {
       root.render(<CanvasShell {...props} />);
     });
 
-    expect(shellState.dbtExplorerProps).toBeNull();
     expect(shellState.canvasViewportProps).toMatchObject({
       canOpenSourceImport: false,
     });

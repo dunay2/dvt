@@ -124,7 +124,6 @@ describe('Canvas route draft recovery', () => {
 
   it('yields to the graph error route state when recovery and graph failure coexist', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       graphErrorMessage: 'workspace graph unavailable',
       draftRecoveryReason: 'stale_conflict',
       draftToolbarState: {
