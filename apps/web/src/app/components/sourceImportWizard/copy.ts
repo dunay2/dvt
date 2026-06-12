@@ -1,20 +1,21 @@
 export const sourceImportWizardCopy = {
-  title: 'DataObject Registry',
+  title: 'Add source',
   description:
-    'Choose a source type, discover candidate data objects, and register them into the current workspace graph',
+    'Explore governed connections, choose source tables, inspect metadata, and attach selected origins to the canvas.',
   databaseOnlyError: 'Only Database is available in the current product slice',
   selectConnectionError: 'Please select a connection',
   selectAtLeastOneTableError: 'Please select at least one table',
   loadConnectionsError: 'Failed to load warehouse connections.',
   loadTablesError: 'Failed to load warehouse tables.',
-  importSuccess: 'Data objects registered successfully',
+  importSuccess: 'Sources attached successfully',
   importNoop: 'Selected data objects are already present in the workspace graph',
   importError: 'Failed to register data objects.',
   sourceType: {
-    title: 'Choose data source type',
-    description: 'Select which kind of DataObject you want to discover and register into the graph',
+    title: 'Choose source connection',
+    description:
+      'Start from a real governed source provider before browsing tables for the canvas.',
     availabilityNote:
-      'This slice supports real registration only for Database. File, API, and Stream remain visible to establish the DataObject Registry boundary.',
+      'This slice supports real attachment only for Database sources. File, API, and Stream remain visible as governed source categories until their real rails are implemented.',
   },
   connection: {
     title: 'Choose database connection',
@@ -28,8 +29,8 @@ export const sourceImportWizardCopy = {
     noMatches: 'No governed connections match the current search.',
   },
   selection: {
-    title: 'Select Tables',
-    descriptionPrefix: 'Choose tables to register as data objects. Selected:',
+    title: 'Browse source tables',
+    descriptionPrefix: 'Choose tables to attach as source nodes. Selected:',
     loading: 'Loading tables...',
     empty: 'No tables available for this connection.',
     rowsSuffix: 'rows',
@@ -43,13 +44,13 @@ export const sourceImportWizardCopy = {
     description: 'Configure what metadata to include when registering data objects',
   },
   review: {
-    title: 'Review & Confirm',
-    description: 'Review your DataObject Registry configuration before proceeding',
-    previewTitle: 'Registry preview',
+    title: 'Selected sources',
+    description: 'Review the selected source objects before attaching them to the canvas.',
+    previewTitle: 'Canvas attachment preview',
   },
   result: {
-    title: 'Registry update complete',
-    description: 'Your selected tables have been registered into the workspace graph',
+    title: 'Sources attached',
+    description: 'Your selected tables have been attached to the workspace graph.',
     noopTitle: 'No new data objects were added',
     noopDescription:
       'The selected tables are already registered, so Canvas did not need to materialize new source nodes.',
