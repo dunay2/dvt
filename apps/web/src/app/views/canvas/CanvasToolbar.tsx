@@ -29,7 +29,6 @@ export type CanvasToolbarProps = {
   readonly onExportProjectSnapshot: () => void;
   readonly onImportProjectSnapshotFile: (file: File) => void;
   readonly onReloadLatestDraft: () => void;
-  readonly onPlan: () => void;
   readonly onRun: () => void;
   readonly onCreateAuthoringNode?: (
     registration: NodeKindRegistration,
@@ -100,15 +99,12 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           onImportProjectSnapshotFile={props.onImportProjectSnapshotFile}
         />
         <CanvasToolbarPrimaryControls
-          onPlan={props.onPlan}
           onRun={props.onRun}
-          canPlan={props.canPlan}
           canRun={props.canRun}
           canStartRun={props.canStartRun}
           workflowStatusLabel={viewModel.workflowStatusLabel}
           workflowStatusClass={viewModel.workflowStatusClass}
           workflowStatusTitle={viewModel.workflowStatusTitle}
-          canPlanGraph={viewModel.canPlanGraph}
         />
         <Separator orientation="vertical" className={canvasChromeClasses.separator} />
         <CanvasToolbarDraftStatus
