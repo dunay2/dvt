@@ -204,7 +204,13 @@ describe('SourceImportWizard', () => {
 
     await renderWizard({ onClose });
 
-    expect(document.body.textContent).toContain('Choose data source type');
+    expect(document.body.textContent).toContain('Add source');
+    expect(document.body.textContent).toContain('Connections');
+    expect(document.body.textContent).toContain('Browse');
+    expect(document.body.textContent).toContain('Metadata');
+    expect(document.body.textContent).toContain('Selected');
+    expect(document.body.textContent).not.toContain('DataObject Registry');
+    expect(document.body.textContent).toContain('Choose source connection');
 
     await clickNext();
 
@@ -214,7 +220,7 @@ describe('SourceImportWizard', () => {
     await clickClickableDivByText('Snowflake PROD');
     await clickNext();
 
-    expect(document.body.textContent).toContain('Select Tables');
+    expect(document.body.textContent).toContain('Browse source tables');
     expect(document.body.textContent).toContain('ORDERS');
   });
 
@@ -249,7 +255,7 @@ describe('SourceImportWizard', () => {
     });
     await flushPendingWork();
 
-    expect(document.body.textContent).toContain('Select Tables');
+    expect(document.body.textContent).toContain('Browse source tables');
     expect(document.body.textContent).toContain('CUSTOMERS');
     expect(document.body.textContent).toContain('Selected: 1');
     expect(document.body.textContent).toContain('RAW.ERP.CUSTOMERS');
@@ -362,7 +368,7 @@ describe('SourceImportWizard', () => {
     await clickNext(); // grouping -> options
     await clickNext(); // options -> review
 
-    await clickButtonContaining('Register data objects');
+    await clickButtonContaining('Attach sources to canvas');
 
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith(
@@ -370,7 +376,7 @@ describe('SourceImportWizard', () => {
         importedNodeIds: ['src_erp_orders'],
       })
     );
-    expect(document.body.textContent).toContain('Registry update complete');
+    expect(document.body.textContent).toContain('Sources attached');
     expect(document.body.textContent).toContain('Groups created:');
     expect(document.body.textContent).toContain('models/sources/erp.yml');
     expect(document.body.textContent).toContain(
@@ -438,7 +444,7 @@ describe('SourceImportWizard', () => {
     await clickNext();
     await clickNext();
 
-    await clickButtonContaining('Register data objects');
+    await clickButtonContaining('Attach sources to canvas');
 
     expect(importSources).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -483,7 +489,7 @@ describe('SourceImportWizard', () => {
     await clickNext();
     await clickNext();
 
-    await clickButtonContaining('Register data objects');
+    await clickButtonContaining('Attach sources to canvas');
 
     expect(onComplete).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('No new data objects were added');
