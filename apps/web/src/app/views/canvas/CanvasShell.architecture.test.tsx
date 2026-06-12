@@ -31,15 +31,6 @@ const DBT_EXPLORER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/DbtExplorer.tsx'
 );
-const CANVAS_PLAYGROUND_TAB_STRIP_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasPlaygroundTabStrip.tsx'
-);
-const CANVAS_PLAYGROUND_TAB_STRIP_TEMPLATE_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasPlaygroundTabStrip.templates.tsx'
-);
-
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
     expect(CANVAS_SHELL_SOURCE).toContain(
@@ -60,26 +51,34 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_SOURCE).not.toContain('useQuery(');
   });
 
-  it('delegates sizing and rail composition to named shell-local seams', () => {
+  it('keeps shell composition canvas-first without fixed side rails', () => {
     expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasShellMainPanel'");
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('layout.hostTabStrip');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasToolbar');
-    expect(CANVAS_PLAYGROUND_TAB_STRIP_SOURCE).toContain('CanvasPlaygroundTabStripTemplate');
-    expect(CANVAS_PLAYGROUND_TAB_STRIP_TEMPLATE_SOURCE).toContain('canvas-playground-tab-strip');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.hostTabStrip');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.workbenchTabStrip');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasToolbar');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('canvas-workbench-chrome');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
       'function resolveCanvasShellMainPanelDefaultSize('
     );
-    expect(CANVAS_SHELL_SOURCE).toContain('function CanvasShellExplorerRail(');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('function CanvasShellExplorerRail(');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('function CanvasShellInspectorRail(');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('DbtExplorer');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('CanvasInspectorPanel');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasShellNodeWorkbenchOverlay');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('canvas-node-workbench-overlay');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasInspectorPanel');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainSurface(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellViewport(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainPanel(');
-    expect(CANVAS_SHELL_SOURCE).toContain('function CanvasShellInspectorRail(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
-      'defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}'
+      'defaultSize={resolveCanvasShellMainPanelDefaultSize()}'
     );
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('onOpenSourceImport');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDvtFlowGuide');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDbtFlowGuide');
   });
 
-  it('keeps ready-canvas node creation in Insert and out of the workspace explorer', () => {
+  it('keeps ready-canvas node creation in the viewport context and out of the workspace explorer', () => {
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
       'authoringNodeKinds: readonly NodeKindRegistration[];'
     );
@@ -106,8 +105,8 @@ describe('CanvasShell architecture', () => {
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('userPermissions.canEditEdges');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('getAllNodeKinds');
-    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).toContain('CanvasAddNodePalette');
-    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).toContain(
+    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).not.toContain('CanvasAddNodePalette');
+    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).not.toContain(
       'triggerDataSlot="canvas-toolbar-insert-command"'
     );
     expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('function selectOption(');

@@ -253,7 +253,7 @@ describe('CanvasShell', () => {
     vi.clearAllMocks();
   });
 
-  it('passes read-only explorer props when graph edits are gated', async () => {
+  it('does not mount a fixed explorer rail when graph edits are gated', async () => {
     await act(async () => {
       root.render(
         <CanvasShell
@@ -270,13 +270,76 @@ describe('CanvasShell', () => {
       );
     });
 
-    expect(shellState.dbtExplorerProps).toMatchObject({
-      canEditGraph: false,
+    expect(container.querySelector('[data-testid="dbt-explorer"]')).toBeNull();
+    expect(shellState.dbtExplorerProps).toBeNull();
+    expect(shellState.canvasViewportProps).toMatchObject({
+      canOpenSourceImport: false,
     });
-    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
   });
 
-  it('renders host-owned tab chrome when the layout exposes an authoritative canvas tab', async () => {
+  it('renders node details as a contextual overlay only when a node is selected', async () => {
+    const selectedNode = {
+      id: 'node.orders',
+      name: 'orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    } satisfies CanvasShellPanels['inspectorNode'];
+
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            layout: {
+              inspectorPanelVisible: true,
+            },
+            panels: {
+              inspectorNode: selectedNode,
+              inspectorGraphNodes: [selectedNode],
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="inspector-panel"]')).not.toBeNull();
+    expect(shellState.dbtExplorerProps).toBeNull();
+  });
+
+  it('opens the contextual node workbench before forwarding viewport node clicks', async () => {
+    const onShowInspector = vi.fn();
+    const onNodeClick = vi.fn();
+    const clickedNode = { id: 'node.orders' } as Parameters<
+      CanvasShellGraphCommands['onNodeClick']
+    >[1];
+    const clickEvent = new MouseEvent('click') as unknown as Parameters<
+      CanvasShellGraphCommands['onNodeClick']
+    >[0];
+
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            chromeCommands: { onShowInspector },
+            graphCommands: { onNodeClick },
+          })}
+        />
+      );
+    });
+
+    const viewportNodeClick = shellState.canvasViewportProps
+      ?.onNodeClick as CanvasShellGraphCommands['onNodeClick'];
+
+    viewportNodeClick(clickEvent, clickedNode);
+
+    expect(onShowInspector).toHaveBeenCalledTimes(1);
+    expect(onNodeClick).toHaveBeenCalledWith(clickEvent, clickedNode);
+  });
+
+  it('keeps host-owned tab chrome out of the graph base panel', async () => {
     await act(async () => {
       root.render(
         <CanvasShell
@@ -301,10 +364,11 @@ describe('CanvasShell', () => {
       );
     });
 
-    expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).toBeNull();
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 
-  it('collapses canvas identity, workbench tabs, and route commands into one workbench chrome row', async () => {
+  it('does not mount a permanent workbench chrome row over the graph base surface', async () => {
     await act(async () => {
       root.render(
         <CanvasShell
@@ -323,16 +387,46 @@ describe('CanvasShell', () => {
     const workbenchTabStrip = container.querySelector('[data-testid="canvas-workbench-tab-strip"]');
     const canvasToolbar = container.querySelector('[data-testid="canvas-toolbar"]');
 
-    expect(chrome).not.toBeNull();
-    expect(hostTabStrip).not.toBeNull();
-    expect(workbenchTabStrip).not.toBeNull();
-    expect(canvasToolbar).not.toBeNull();
-    expect(chrome?.contains(hostTabStrip)).toBe(true);
-    expect(chrome?.contains(workbenchTabStrip)).toBe(true);
-    expect(chrome?.contains(canvasToolbar)).toBe(true);
-    expect(chrome?.getAttribute('class')).toContain('overflow-x-auto');
-    expect(chrome?.getAttribute('class')).not.toContain('flex-wrap');
-    expect(canvasToolbar?.getAttribute('data-variant')).toBe('inline');
+    expect(chrome).toBeNull();
+    expect(hostTabStrip).toBeNull();
+    expect(workbenchTabStrip).toBeNull();
+    expect(canvasToolbar).toBeNull();
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+  });
+
+  it('renders active canvas identity and draft status as graph overlays instead of fixed chrome', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            panels: {
+              activeCanvas: {
+                id: 'sales-canvas',
+                title: 'Sales canvas',
+                kind: 'dbt',
+                environmentId: 'dev',
+              },
+            },
+            toolbar: {
+              draftToolbarState: {
+                label: canvasViewCopy.draftSaveFailedLabel,
+                tone: 'danger',
+                showReloadAction: true,
+              },
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="canvas-workbench-chrome"]')).toBeNull();
+    const identity = container.querySelector('[data-slot="canvas-active-canvas-identity"]');
+    const draftStatus = container.querySelector('[data-slot="canvas-draft-save-status"]');
+
+    expect(identity).not.toBeNull();
+    expect(identity?.textContent).toContain('Sales canvas');
+    expect(draftStatus).not.toBeNull();
+    expect(draftStatus?.textContent).toContain(canvasViewCopy.draftSaveFailedLabel);
   });
 
   it('keeps the graph workbench at a stable minimum width instead of crushing panels on narrow viewports', async () => {
@@ -384,15 +478,16 @@ describe('CanvasShell', () => {
     expect(container.querySelector('[data-testid="code-workbench-panel"]')).toBeNull();
   });
 
-  it('keeps explorer import affordances wired when graph edits are allowed', async () => {
+  it('wires source import as a contextual viewport command when graph edits are allowed', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);
     });
 
-    expect(shellState.dbtExplorerProps).toMatchObject({
-      canEditGraph: true,
+    expect(shellState.dbtExplorerProps).toBeNull();
+    expect(shellState.canvasViewportProps).toMatchObject({
+      canOpenSourceImport: true,
     });
-    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeTypeOf('function');
+    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeTypeOf('function');
     expect(shellState.sourceImportWizardProps).toMatchObject({
       sourceImportOptions: [
         expect.objectContaining({ id: 'includeColumns' }),
@@ -402,23 +497,21 @@ describe('CanvasShell', () => {
     });
   });
 
-  it('keeps ready-canvas node creation out of the explorer contract', async () => {
+  it('keeps ready-canvas node creation in the viewport context contract instead of a rail', async () => {
     const props = buildProps();
 
     await act(async () => {
       root.render(<CanvasShell {...props} />);
     });
 
-    expect(shellState.dbtExplorerProps).toMatchObject({
-      resourceGroups: props.panels.explorerResourceGroups,
-      canEditGraph: true,
+    expect(shellState.dbtExplorerProps).toBeNull();
+    expect(shellState.canvasViewportProps).toMatchObject({
+      authoringNodeKinds: props.panels.authoringNodeKinds,
+      onCreateAuthoringNode: props.graphCommands.onCreateAuthoringNode,
     });
-    expect(shellState.dbtExplorerProps).not.toHaveProperty('nodeKinds');
-    expect(shellState.dbtExplorerProps).not.toHaveProperty('authoringNodeKinds');
-    expect(shellState.dbtExplorerProps).not.toHaveProperty('onCreateAuthoringNode');
   });
 
-  it('hides explorer import affordances when source import is unavailable', async () => {
+  it('hides viewport source import affordances when source import is unavailable', async () => {
     const props = buildProps({
       layout: {
         canOpenSourceImport: false,
@@ -429,13 +522,14 @@ describe('CanvasShell', () => {
       root.render(<CanvasShell {...props} />);
     });
 
-    expect(shellState.dbtExplorerProps).toMatchObject({
-      canEditGraph: true,
+    expect(shellState.dbtExplorerProps).toBeNull();
+    expect(shellState.canvasViewportProps).toMatchObject({
+      canOpenSourceImport: false,
     });
-    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
   });
 
-  it('hides explorer import affordances when the dbt source import plugin is unavailable', async () => {
+  it('hides viewport source import affordances when the dbt source import plugin is unavailable', async () => {
     const props = buildProps({
       panels: {
         runtimeCapabilities: {
@@ -453,10 +547,11 @@ describe('CanvasShell', () => {
       root.render(<CanvasShell {...props} />);
     });
 
-    expect(shellState.dbtExplorerProps).toMatchObject({
-      canEditGraph: true,
+    expect(shellState.dbtExplorerProps).toBeNull();
+    expect(shellState.canvasViewportProps).toMatchObject({
+      canOpenSourceImport: false,
     });
-    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
     expect(shellState.sourceImportWizardProps).toMatchObject({
       sourceImportOptions: [],
     });
@@ -482,7 +577,7 @@ describe('CanvasShell', () => {
     });
   });
 
-  it('hands explorer-selected warehouse tables into the source import wizard', async () => {
+  it('opens the source import wizard from the viewport contextual source command', async () => {
     const warehouseSourceImport = {
       listWarehouseConnections: vi.fn(),
       listWarehouseTables: vi.fn(),
@@ -490,170 +585,33 @@ describe('CanvasShell', () => {
       testWarehouseConnection: vi.fn(),
       importSources: vi.fn(),
     } satisfies IWarehouseSourceImportPort;
-    const initialSelection = {
-      connectionId: 'conn-1',
-      tables: [
-        {
-          database: 'RAW',
-          schema: 'ERP',
-          table: 'CUSTOMERS',
-          rowCount: 45000,
-        },
-      ],
-    };
 
     await act(async () => {
       root.render(<CanvasShell {...buildProps({ warehouseSourceImport })} />);
     });
 
-    expect(shellState.dbtExplorerProps).toMatchObject({
-      warehouseSourceImport,
-    });
+    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeTypeOf('function');
 
     await act(async () => {
-      const openDataRegistry = shellState.dbtExplorerProps?.onOpenDataRegistry as
-        | ((selection?: typeof initialSelection) => void)
+      const openDataRegistry = shellState.canvasViewportProps?.onOpenSourceImport as
+        | (() => void)
         | undefined;
-      openDataRegistry?.(initialSelection);
+      openDataRegistry?.();
     });
 
     expect(shellState.sourceImportWizardProps).toMatchObject({
       open: true,
-      initialSelection,
+      initialSelection: undefined,
     });
   });
 
-  it('renders a DVT flow guide with source columns, SQL, and destination before planning', async () => {
+  it('does not render the legacy DVT flow guide over the graph base surface', async () => {
     await act(async () => {
-      root.render(
-        <CanvasShell
-          {...buildProps({
-            graph: {
-              nodesWithImpact: [
-                {
-                  id: 'src-orders',
-                  type: 'dbtNode',
-                  position: { x: 0, y: 0 },
-                  data: {
-                    name: 'ERP Orders',
-                    pluginKind: 'dvt:source',
-                    role: 'input',
-                    status: 'idle',
-                    tags: [],
-                    metadata: {
-                      schema: 'raw',
-                      tableName: 'orders',
-                      rowCount: 125000,
-                      columns: [
-                        { name: 'order_id', type: 'INTEGER', nullable: false },
-                        { name: 'customer_id', type: 'INTEGER', nullable: false },
-                        { name: 'amount', type: 'NUMERIC', nullable: true },
-                      ],
-                    },
-                  },
-                },
-                {
-                  id: 'tx-orders',
-                  type: 'dbtNode',
-                  position: { x: 250, y: 0 },
-                  data: {
-                    name: 'Clean Orders',
-                    pluginKind: 'dvt:sql_transform',
-                    role: 'transform',
-                    status: 'idle',
-                    tags: [],
-                    metadata: {
-                      sql: 'select order_id, customer_id, amount from raw.orders',
-                    },
-                  },
-                },
-                {
-                  id: 'sink-orders',
-                  type: 'dbtNode',
-                  position: { x: 500, y: 0 },
-                  data: {
-                    name: 'Order Summary',
-                    pluginKind: 'dvt:sink',
-                    role: 'output',
-                    status: 'idle',
-                    tags: [],
-                    metadata: {
-                      config: {
-                        schema: 'mart',
-                        table: 'order_summary',
-                        materialization: 'view',
-                        writeMode: 'replace',
-                      },
-                    },
-                  },
-                },
-              ],
-            },
-            panels: {
-              inspectorGraphNodes: [
-                {
-                  id: 'stale-src-orders',
-                  name: 'Stale Orders',
-                  pluginId: 'dvt',
-                  kind: 'dvt:source',
-                  role: 'input',
-                  status: 'idle',
-                  tags: [],
-                  metadata: {
-                    schema: 'stale',
-                    tableName: 'orders',
-                  },
-                },
-              ],
-              inspectorGraphEdges: [
-                {
-                  id: 'e1',
-                  sourceId: 'src-orders',
-                  targetId: 'tx-orders',
-                  relation: 'lineage',
-                },
-                {
-                  id: 'e2',
-                  sourceId: 'tx-orders',
-                  targetId: 'sink-orders',
-                  relation: 'lineage',
-                },
-              ],
-            },
-            toolbar: {
-              canPlanGraph: true,
-              transformationValidation: {
-                valid: true,
-                summaryCode: 'valid',
-                draftSignature: 'dvt-flow-ready',
-                scopedNodeIds: ['src-orders', 'tx-orders', 'sink-orders'],
-                scopedEdgeIds: ['e1', 'e2'],
-                nodeRolesById: {
-                  'src-orders': 'source',
-                  'tx-orders': 'sql_transform',
-                  'sink-orders': 'sink',
-                },
-              },
-            },
-          })}
-        />
-      );
+      root.render(<CanvasShell {...buildProps()} />);
     });
 
-    const guide = container.querySelector('[data-slot="canvas-dvt-flow-guide"]');
-
-    expect(guide).not.toBeNull();
-    expect(guide?.textContent).toContain('Professional DVT flow');
-    expect(guide?.textContent).toContain('Ready to preview');
-    expect(guide?.textContent).toContain('raw.orders');
-    expect(guide?.textContent).toContain('125,000 rows');
-    expect(guide?.textContent).toContain('3 columns');
-    expect(guide?.textContent).toContain('order_id INTEGER required');
-    expect(guide?.textContent).toContain('select order_id, customer_id, amount from raw.orders');
-    expect(guide?.textContent).toContain('mart.order_summary');
-    expect(guide?.textContent).toContain('view');
-    expect(guide?.textContent).toContain('replace');
-    expect(guide?.textContent).not.toContain('stale.orders');
+    expect(container.querySelector('[data-slot="canvas-dvt-flow-guide"]')).toBeNull();
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 
   it('hides the DVT flow guide when a workbench tab panel replaces the graph viewport', async () => {
@@ -687,259 +645,24 @@ describe('CanvasShell', () => {
     expect(container.querySelector('[data-slot="canvas-dvt-flow-guide"]')).toBeNull();
   });
 
-  it('renders a DBT flow guide with active source metadata, model SQL, and test posture', async () => {
+  it('does not render the legacy DBT flow guide over the graph base surface', async () => {
     await act(async () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            graph: {
-              nodesWithImpact: [
-                {
-                  id: 'src-raw-orders',
-                  type: 'dbtNode',
-                  position: { x: 0, y: 0 },
-                  data: {
-                    name: 'Raw Orders',
-                    pluginKind: 'dbt:source',
-                    role: 'input',
-                    status: 'idle',
-                    tags: ['freshness'],
-                    path: 'models/sources.yml',
-                    metadata: {
-                      package: 'analytics',
-                      rowCount: 125000,
-                      dbt: {
-                        sourceName: 'raw',
-                        schemaName: 'erp',
-                        tableName: 'orders',
-                      },
-                      columns: [
-                        { name: 'order_id', type: 'integer', nullable: false },
-                        { name: 'customer_id', type: 'integer', nullable: false },
-                        { name: 'amount', type: 'numeric', nullable: true },
-                      ],
-                    },
-                  },
-                },
-                {
-                  id: 'model-fct-orders',
-                  type: 'dbtNode',
-                  position: { x: 260, y: 0 },
-                  data: {
-                    name: 'fct_orders',
-                    pluginKind: 'dbt:model',
-                    role: 'transform',
-                    status: 'idle',
-                    tags: ['mart'],
-                    path: 'models/marts/fct_orders.sql',
-                    metadata: {
-                      package: 'analytics',
-                      compiledSql:
-                        'select order_id, customer_id, amount from {{ source("raw", "orders") }}',
-                      config: {
-                        materialized: 'incremental',
-                        schema: 'marts',
-                      },
-                      dbt: {
-                        materialized: 'incremental',
-                        selectedSourceId: 'src-raw-orders',
-                      },
-                      columns: [
-                        { name: 'order_id', type: 'integer', nullable: false },
-                        { name: 'gross_amount', type: 'numeric', nullable: true },
-                      ],
-                    },
-                  },
-                },
-                {
-                  id: 'test-fct-orders-not-null',
-                  type: 'dbtNode',
-                  position: { x: 520, y: 0 },
-                  data: {
-                    name: 'not_null_fct_orders_order_id',
-                    pluginKind: 'dbt:test',
-                    role: 'check',
-                    status: 'idle',
-                    tags: ['quality'],
-                    metadata: {
-                      package: 'analytics',
-                      config: {
-                        severity: 'error',
-                      },
-                    },
-                  },
-                },
-              ],
-              edges: [
-                { id: 'source-model', source: 'src-raw-orders', target: 'model-fct-orders' },
-                {
-                  id: 'model-test',
-                  source: 'model-fct-orders',
-                  target: 'test-fct-orders-not-null',
-                },
-              ],
-            },
-            panels: {
-              inspectorGraphNodes: [
-                {
-                  id: 'stale-src-orders',
-                  name: 'Stale Orders',
-                  pluginId: 'dbt',
-                  kind: 'dbt:source',
-                  role: 'input',
-                  status: 'idle',
-                  tags: [],
-                  metadata: {
-                    dbt: {
-                      sourceName: 'stale',
-                      schemaName: 'legacy',
-                      tableName: 'orders',
-                    },
-                  },
-                },
-              ],
-            },
             toolbar: {
               canvasAuthoringMode: 'dbt',
-              planStatusSummary: canvasViewCopy.planStatusPreviewReadyMessage,
-              canPlanGraph: true,
-              canStartRun: true,
             },
           })}
         />
       );
     });
 
-    const guide = container.querySelector('[data-slot="canvas-dbt-flow-guide"]');
-
-    expect(guide).not.toBeNull();
-    expect(guide?.textContent).toContain('Professional dbt flow');
-    expect(guide?.textContent).toContain('Ready to preview');
-    expect(guide?.textContent).toContain('raw.erp.orders');
-    expect(guide?.textContent).toContain('125,000 rows');
-    expect(guide?.textContent).toContain('3 columns');
-    expect(guide?.textContent).toContain('order_id integer required');
-    expect(guide?.textContent).toContain('fct_orders');
-    expect(guide?.textContent).toContain('incremental');
-    expect(guide?.textContent).toContain('models/marts/fct_orders.sql');
-    expect(guide?.textContent).toContain(
-      'select order_id, customer_id, amount from {{ source("raw", "orders") }}'
-    );
-    expect(guide?.textContent).toContain('not_null_fct_orders_order_id');
-    expect(guide?.textContent).toContain('error');
-    expect(guide?.textContent).not.toContain('stale.legacy.orders');
+    expect(container.querySelector('[data-slot="canvas-dbt-flow-guide"]')).toBeNull();
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 
-  it('scopes the DBT flow guide to a connected dbt path instead of first visible nodes', async () => {
-    await act(async () => {
-      root.render(
-        <CanvasShell
-          {...buildProps({
-            graph: {
-              nodesWithImpact: [
-                {
-                  id: 'src-crm-customers',
-                  type: 'dbtNode',
-                  position: { x: 0, y: 160 },
-                  data: {
-                    name: 'CRM Customers',
-                    pluginKind: 'dbt:source',
-                    role: 'input',
-                    status: 'idle',
-                    tags: [],
-                    metadata: {
-                      dbt: {
-                        sourceName: 'raw',
-                        schemaName: 'crm',
-                        tableName: 'customers',
-                      },
-                      columns: [{ name: 'customer_id', type: 'integer', nullable: false }],
-                    },
-                  },
-                },
-                {
-                  id: 'model-fct-orders',
-                  type: 'dbtNode',
-                  position: { x: 260, y: 0 },
-                  data: {
-                    name: 'fct_orders',
-                    pluginKind: 'dbt:model',
-                    role: 'transform',
-                    status: 'idle',
-                    tags: [],
-                    metadata: {
-                      compiledSql: 'select order_id from {{ source("raw", "orders") }}',
-                      config: {
-                        materialized: 'table',
-                      },
-                    },
-                  },
-                },
-                {
-                  id: 'src-raw-orders',
-                  type: 'dbtNode',
-                  position: { x: 0, y: 0 },
-                  data: {
-                    name: 'Raw Orders',
-                    pluginKind: 'dbt:source',
-                    role: 'input',
-                    status: 'idle',
-                    tags: [],
-                    metadata: {
-                      dbt: {
-                        sourceName: 'raw',
-                        schemaName: 'erp',
-                        tableName: 'orders',
-                      },
-                      columns: [{ name: 'order_id', type: 'integer', nullable: false }],
-                    },
-                  },
-                },
-                {
-                  id: 'test-fct-orders-not-null',
-                  type: 'dbtNode',
-                  position: { x: 520, y: 0 },
-                  data: {
-                    name: 'not_null_fct_orders_order_id',
-                    pluginKind: 'dbt:test',
-                    role: 'check',
-                    status: 'idle',
-                    tags: [],
-                    metadata: {
-                      config: {
-                        severity: 'error',
-                      },
-                    },
-                  },
-                },
-              ],
-              edges: [
-                { id: 'source-model', source: 'src-raw-orders', target: 'model-fct-orders' },
-                {
-                  id: 'model-test',
-                  source: 'model-fct-orders',
-                  target: 'test-fct-orders-not-null',
-                },
-              ],
-            },
-            toolbar: {
-              canvasAuthoringMode: 'dbt',
-              canPlanGraph: true,
-            },
-          })}
-        />
-      );
-    });
-
-    const guide = container.querySelector('[data-slot="canvas-dbt-flow-guide"]');
-
-    expect(guide?.textContent).toContain('raw.erp.orders');
-    expect(guide?.textContent).toContain('fct_orders');
-    expect(guide?.textContent).toContain('not_null_fct_orders_order_id');
-    expect(guide?.textContent).not.toContain('raw.crm.customers');
-  });
-
-  it('does not synthesize DBT model SQL when the model has no compiled SQL', async () => {
+  it('keeps DBT graph details out of a synthetic guide when model SQL is unavailable', async () => {
     await act(async () => {
       root.render(
         <CanvasShell
@@ -995,10 +718,9 @@ describe('CanvasShell', () => {
       );
     });
 
-    const guide = container.querySelector('[data-slot="canvas-dbt-flow-guide"]');
-
-    expect(guide?.textContent).toContain('SQL missing');
-    expect(guide?.textContent).not.toContain('select * from {{ source("raw", "orders") }}');
+    expect(container.querySelector('[data-slot="canvas-dbt-flow-guide"]')).toBeNull();
+    expect(container.textContent).not.toContain('SQL missing');
+    expect(container.textContent).not.toContain('select * from {{ source("raw", "orders") }}');
   });
 
   it('closes the import wizard if edit permissions are revoked while it is open', async () => {
@@ -1007,7 +729,7 @@ describe('CanvasShell', () => {
     });
 
     await act(async () => {
-      const openDataRegistry = shellState.dbtExplorerProps?.onOpenDataRegistry as
+      const openDataRegistry = shellState.canvasViewportProps?.onOpenSourceImport as
         | (() => void)
         | undefined;
       openDataRegistry?.();
@@ -1033,7 +755,7 @@ describe('CanvasShell', () => {
       );
     });
 
-    expect(shellState.dbtExplorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
     expect(shellState.sourceImportWizardProps).toMatchObject({
       open: false,
     });

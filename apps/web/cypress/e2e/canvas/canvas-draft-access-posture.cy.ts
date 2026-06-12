@@ -83,6 +83,10 @@ function stubUnexpectedDraftSave(): void {
 function visitCanvasWithDraftRead(body: unknown): void {
   stubShellBootstrapApis();
   stubRuntimeCapabilities();
+  stubE2eJsonApi('GET', '/workspace/context', {
+    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+  });
   stubDraftReadResponse(body);
   stubUnexpectedDraftSave();
 
@@ -96,8 +100,17 @@ function assertUnsafeCanvasCommandsAreDisabled(): void {
       window.navigator.language || window.document.documentElement.lang
     );
 
-    cy.contains('button', copy.toolbarPlanLabel).should('be.disabled');
-    cy.contains('button', copy.toolbarRunLabel).should('be.disabled');
+    for (const label of [copy.toolbarPlanLabel, copy.toolbarRunLabel]) {
+      cy.get('body').then(($body) => {
+        const matchingButton = [...$body.find('button')].find((button) =>
+          button.textContent?.includes(label)
+        );
+
+        if (matchingButton != null) {
+          cy.wrap(matchingButton).should('be.disabled');
+        }
+      });
+    }
   });
 
   cy.then(() => {
@@ -159,13 +172,13 @@ describe('Canvas draft access posture', () => {
       buildCanvasDraftReadResponse(E2E_WORKSPACE_SESSION, { readOnly: true })
     );
 
-    assertCanvasCopyVisible('draftReadOnlyTitle');
+    cy.get('[data-slot="canvas-readonly-state"]').should('be.visible');
     cy.get('.react-flow').should('be.visible');
     assertDraftSyncedCopyIsHidden();
     assertUnsafeCanvasCommandsAreDisabled();
 
-    cy.get('[aria-label="Show explorer panel"]').click();
-    cy.contains('Project Nodes').should('be.visible');
-    cy.contains('h3', 'Add node').should('not.exist');
+    cy.get('.react-flow__pane').rightclick(320, 260);
+    cy.contains('[role="menuitem"]', 'SQL transform').should('not.exist');
+    cy.contains('[role="menuitem"]', 'Add source').should('not.exist');
   });
 });

@@ -13,6 +13,7 @@ import {
   graphStatusRingClasses,
   graphVisualClasses,
 } from './graphVisualTokens';
+import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 
 type ColumnMeta = {
   name: string;
@@ -68,6 +69,7 @@ export function GraphNodeRenderer({
       : typeof data.type === 'string'
         ? data.type
         : kindMeta.label;
+  const cardModel = buildGraphNodeCardReadModel(node, data);
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -93,25 +95,30 @@ export function GraphNodeRenderer({
             className="shrink-0 opacity-70"
             style={{ color: kindMeta.minimapColor } as CSSProperties}
           />
-          <span className="truncate font-semibold leading-tight">{node.name}</span>
+          <span className="truncate font-semibold leading-tight">{cardModel.title}</span>
         </div>
         <div className={cn('size-2 shrink-0 rounded-full', statusDot)} />
       </div>
 
       <div className="mt-2">
         <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px]">
-          {typeLabel}
+          {cardModel.kindLabel || typeLabel}
         </Badge>
       </div>
 
-      {(node.lastDuration != null || node.lastCost != null) && (
+      {cardModel.metrics.length > 0 && (
         <div className={graphVisualClasses.metricText}>
-          {node.lastDuration != null && <span>{node.lastDuration}s</span>}
-          {node.lastCost != null && <span>${node.lastCost.toFixed(2)}</span>}
+          {cardModel.metrics.map((metric) => (
+            <span key={metric.id} title={metric.label}>
+              {metric.value}
+            </span>
+          ))}
         </div>
       )}
 
-      {node.path && <div className="mt-1 truncate text-[10px] opacity-50">{node.path}</div>}
+      {cardModel.subtitle && (
+        <div className="mt-1 truncate text-[10px] opacity-50">{cardModel.subtitle}</div>
+      )}
 
       {node.tags.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-0.5">

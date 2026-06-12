@@ -24,9 +24,44 @@ describe('canvasInteractionCommandSurface', () => {
       kind: 'pane',
       screenPosition: { x: 480, y: 320 },
       flowPosition: { x: 720, y: 180 },
+      canvasActions: [],
       createNodeActions: [{ action: 'create-node', label: 'Source', registration: sourceKind }],
       edgeActions: [],
     });
+  });
+
+  it('offers source import as a canvas action only when the editable source rail is available', () => {
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 720, y: 180 },
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+    });
+
+    expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
+  });
+
+  it('offers execution preview from the canvas menu independently from graph mutation', () => {
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 720, y: 180 },
+      },
+      canMutateGraph: false,
+      canPreviewExecutionPlan: true,
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+    });
+
+    expect(model.canvasActions).toEqual([
+      { action: 'preview-execution-plan', label: 'Preview execution plan' },
+    ]);
+    expect(model.createNodeActions).toEqual([]);
+    expect(model.edgeActions).toEqual([]);
   });
 
   it('offers only edge deletion for an editable edge context menu', () => {
@@ -44,6 +79,7 @@ describe('canvasInteractionCommandSurface', () => {
       kind: 'edge',
       edgeId: 'edge-source-model',
       screenPosition: { x: 600, y: 360 },
+      canvasActions: [],
       createNodeActions: [],
       edgeActions: [{ action: 'remove-edge', label: 'Eliminar conexión' }],
     });
@@ -57,9 +93,11 @@ describe('canvasInteractionCommandSurface', () => {
         flowPosition: { x: 720, y: 180 },
       },
       canMutateGraph: false,
+      canOpenSourceImport: true,
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     });
 
+    expect(model.canvasActions).toEqual([]);
     expect(model.createNodeActions).toEqual([]);
     expect(model.edgeActions).toEqual([]);
   });

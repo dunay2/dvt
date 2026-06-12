@@ -3,7 +3,7 @@ import { Separator } from '../../components/ui/separator';
 import { CanvasToolbarDraftStatus } from './CanvasToolbarDraftStatus';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
-import { PlanRunReadinessPanel } from './PlanRunReadinessPanel';
+import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
 import type {
   CanvasGraphAuthoringMode,
   NodeKindRegistration,
@@ -93,26 +93,23 @@ export default function CanvasToolbar(props: CanvasToolbarProps) {
           onToggleSnapToGrid={props.onToggleSnapToGrid}
           onSetCanvasEmptyStateGuideVisible={props.onSetCanvasEmptyStateGuideVisible}
         />
-        <CanvasToolbarPrimaryControls
-          onExportProjectSnapshot={props.onExportProjectSnapshot}
-          onImportProjectSnapshotFile={props.onImportProjectSnapshotFile}
-          onPlan={props.onPlan}
-          onRun={props.onRun}
-          onCreateAuthoringNode={props.onCreateAuthoringNode}
-          canPlan={props.canPlan}
-          canRun={props.canRun}
-          canEditEdges={props.canEditEdges}
+        <CanvasWorkspaceMenuContributionRegistrar
           canExportProjectSnapshot={props.canExportProjectSnapshot}
           canImportProjectSnapshot={props.canImportProjectSnapshot}
+          onExportProjectSnapshot={props.onExportProjectSnapshot}
+          onImportProjectSnapshotFile={props.onImportProjectSnapshotFile}
+        />
+        <CanvasToolbarPrimaryControls
+          onPlan={props.onPlan}
+          onRun={props.onRun}
+          canPlan={props.canPlan}
+          canRun={props.canRun}
           canStartRun={props.canStartRun}
           workflowStatusLabel={viewModel.workflowStatusLabel}
           workflowStatusClass={viewModel.workflowStatusClass}
           workflowStatusTitle={viewModel.workflowStatusTitle}
           canPlanGraph={viewModel.canPlanGraph}
-          canvasAuthoringMode={props.canvasAuthoringMode}
-          authoringNodeKinds={props.authoringNodeKinds ?? []}
         />
-        <PlanRunReadinessPanel density="compact" readiness={props.planRunReadiness} />
         <Separator orientation="vertical" className={canvasChromeClasses.separator} />
         <CanvasToolbarDraftStatus
           draftToolbarState={props.draftToolbarState}

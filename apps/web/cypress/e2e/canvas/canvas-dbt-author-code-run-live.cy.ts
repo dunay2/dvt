@@ -31,19 +31,9 @@ function waitForDraftSaveSettled(): void {
   });
 }
 
-function showInspectorPanel(): void {
-  cy.get('body').then(($body) => {
-    const showInspectorButton = $body.find('button[aria-label="Show inspector panel"]');
-
-    if (showInspectorButton.length > 0) {
-      cy.wrap(showInspectorButton.first()).click({ force: true });
-    }
-  });
-}
-
 function selectNodeForInspector(nodeName: string): void {
-  showInspectorPanel();
   cy.contains('.react-flow__node', nodeName, { timeout: 20_000 }).should('be.visible').click();
+  cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
   cy.contains('Node details', { timeout: 20_000 }).should('be.visible');
   cy.contains('dbt card').should('be.visible');
 }

@@ -1,10 +1,8 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove Canvas toolbar command wiring and passive control behavior. */
-import { fireEvent, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { Circle, Square } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import CanvasToolbar from './CanvasToolbar';
@@ -12,48 +10,9 @@ import { canvasViewCopy } from './copy';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import { useCanvasViewMenuContributionStore } from './canvasViewMenuContributionStore';
 import type { CanvasViewMenuContribution } from './canvasViewMenuContributionStore';
+import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
-import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
-
-const nodeKinds: readonly NodeKindRegistration[] = [
-  {
-    kind: 'dvt:source',
-    pluginId: 'dvt',
-    label: 'Source',
-    role: 'input',
-    icon: Circle,
-    borderClass: 'border-sky-500',
-    minimapColor: '#0ea5e9',
-    allowsIncoming: false,
-    allowsOutgoing: true,
-    supportsColumns: true,
-  },
-  {
-    kind: 'dvt:sql_transform',
-    pluginId: 'dvt',
-    label: 'SQL transform',
-    role: 'transform',
-    icon: Square,
-    borderClass: 'border-violet-500',
-    minimapColor: '#8b5cf6',
-    allowsIncoming: true,
-    allowsOutgoing: true,
-    supportsColumns: true,
-  },
-  {
-    kind: 'dvt:sink',
-    pluginId: 'dvt',
-    label: 'Sink',
-    role: 'output',
-    icon: Square,
-    borderClass: 'border-emerald-500',
-    minimapColor: '#10b981',
-    allowsIncoming: true,
-    allowsOutgoing: false,
-    supportsColumns: false,
-  },
-];
 
 function buildToolbarProps(
   overrides?: Partial<React.ComponentProps<typeof CanvasToolbar>>
@@ -181,6 +140,7 @@ describe('CanvasToolbar', () => {
       root.unmount();
     });
     useCanvasViewMenuContributionStore.setState({ contribution: null });
+    useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
     container.remove();
   });
 
@@ -196,7 +156,9 @@ describe('CanvasToolbar', () => {
     });
 
     expect(container.querySelectorAll('[data-slot="canvas-workflow-status"]')).toHaveLength(1);
-    expect(container.querySelectorAll('[data-slot="plan-run-readiness-panel"]')).toHaveLength(1);
+    expect(container.querySelectorAll('[data-slot="plan-run-readiness-panel"]')).toHaveLength(0);
+    expect(container.querySelector('[data-slot="canvas-toolbar-project-menu-trigger"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-toolbar-insert-command"]')).toBeNull();
     expect(container.textContent).toContain(canvasViewCopy.toolbarWorkflowPlanRequiredLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarLayoutLabel);
     expect(container.textContent).not.toContain(canvasViewCopy.toolbarImpactLabel);
@@ -274,7 +236,7 @@ describe('CanvasToolbar', () => {
     expect(useCanvasViewMenuContributionStore.getState().contribution).toBeNull();
   });
 
-  it('exposes project snapshot export and import commands without adding manual Save', async () => {
+  it('registers project snapshot commands for the Workspace menu instead of rendering a toolbar project button', async () => {
     const onExportProjectSnapshot = vi.fn();
     const onImportProjectSnapshotFile = vi.fn();
 
@@ -290,214 +252,13 @@ describe('CanvasToolbar', () => {
       );
     });
 
-    const projectMenuTrigger = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-toolbar-project-menu-trigger"]'
-    );
-    expect(projectMenuTrigger).not.toBeNull();
-    expect(container.textContent).not.toContain('Save');
-
-    await act(async () => {
-      fireEvent.pointerDown(projectMenuTrigger!);
+    expect(container.querySelector('[data-slot="canvas-toolbar-project-menu-trigger"]')).toBeNull();
+    expect(useCanvasWorkspaceMenuContributionStore.getState().contribution).toMatchObject({
+      canExportProjectSnapshot: true,
+      canImportProjectSnapshot: true,
+      onExportProjectSnapshot,
+      onImportProjectSnapshotFile,
     });
-
-    await waitFor(() => {
-      expect(
-        document.body.querySelector('[data-slot="canvas-toolbar-export-command"]')
-      ).not.toBeNull();
-      expect(
-        document.body.querySelector('[data-slot="canvas-toolbar-import-command"]')
-      ).not.toBeNull();
-    });
-
-    await act(async () => {
-      fireEvent.click(document.body.querySelector('[data-slot="canvas-toolbar-export-command"]')!);
-    });
-
-    expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);
-    expect(onImportProjectSnapshotFile).not.toHaveBeenCalled();
-    expect(container.querySelector('input[type="file"]')).not.toBeNull();
-  });
-
-  it('opens the active-canvas Insert/Add palette without adding a permanent rail', async () => {
-    const onCreateAuthoringNode = vi.fn();
-
-    await act(async () => {
-      root.render(
-        <CanvasToolbar
-          {...buildToolbarProps({
-            draftToolbarState: defaultDraftToolbarState,
-            authoringNodeKinds: nodeKinds,
-            onCreateAuthoringNode,
-          })}
-        />
-      );
-    });
-
-    const insertButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-toolbar-insert-command"]'
-    );
-
-    expect(insertButton).not.toBeNull();
-    expect(insertButton?.textContent).toContain('Insert');
-    expect(container.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
-
-    await act(async () => {
-      insertButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    const search = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="canvas-add-node-palette-search"]'
-    );
-    const palette = document.body.querySelector('[data-slot="canvas-add-node-palette"]');
-    expect(palette).not.toBeNull();
-    expect(palette?.parentElement).toBe(document.body);
-
-    await act(async () => {
-      search?.focus();
-      search?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-      search?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    });
-
-    expect(onCreateAuthoringNode).toHaveBeenCalledTimes(1);
-    expect(onCreateAuthoringNode).toHaveBeenCalledWith(nodeKinds[1]);
-  });
-
-  it('offers governed SQL transformation templates from the Insert palette', async () => {
-    const onCreateAuthoringNode = vi.fn();
-
-    await act(async () => {
-      root.render(
-        <CanvasToolbar
-          {...buildToolbarProps({
-            draftToolbarState: defaultDraftToolbarState,
-            authoringNodeKinds: nodeKinds,
-            onCreateAuthoringNode,
-          })}
-        />
-      );
-    });
-
-    const insertButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-toolbar-insert-command"]'
-    );
-
-    await act(async () => {
-      insertButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(document.body.textContent).toContain('Filter rows');
-    expect(document.body.textContent).toContain('Join sources');
-
-    const search = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="canvas-add-node-palette-search"]'
-    );
-    await act(async () => {
-      if (search) {
-        search.value = 'aggregate';
-      }
-      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'aggregate' }));
-    });
-
-    expect(document.body.textContent).toContain('Aggregate metrics');
-    expect(document.body.textContent).not.toContain('Filter rows');
-
-    const aggregateTemplate = Array.from(
-      document.body.querySelectorAll<HTMLButtonElement>(
-        '[data-slot="canvas-add-node-palette-option"][data-option-kind="transformation-template"]'
-      )
-    ).find((button) => button.textContent?.includes('Aggregate metrics'));
-
-    await act(async () => {
-      aggregateTemplate?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(onCreateAuthoringNode).toHaveBeenCalledWith(
-      nodeKinds[1],
-      undefined,
-      expect.objectContaining({
-        namePrefix: 'Aggregate metrics',
-        metadata: expect.objectContaining({
-          transformationTemplateId: 'aggregate-metrics',
-          sql: expect.stringContaining('group by'),
-          config: expect.objectContaining({
-            sql: expect.stringContaining('group by'),
-          }),
-        }),
-      })
-    );
-  });
-
-  it('offers explicit SQL output target templates from the Insert palette', async () => {
-    const onCreateAuthoringNode = vi.fn();
-
-    await act(async () => {
-      root.render(
-        <CanvasToolbar
-          {...buildToolbarProps({
-            draftToolbarState: defaultDraftToolbarState,
-            authoringNodeKinds: nodeKinds,
-            onCreateAuthoringNode,
-          })}
-        />
-      );
-    });
-
-    const insertButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-toolbar-insert-command"]'
-    );
-
-    await act(async () => {
-      insertButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(document.body.textContent).toContain('Analytics table');
-    expect(document.body.textContent).toContain('Reporting view');
-    expect(document.body.textContent).toContain('analytics.transformed_output');
-    expect(document.body.textContent).toContain('table');
-    expect(document.body.textContent).toContain('replace');
-
-    const search = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="canvas-add-node-palette-search"]'
-    );
-    await act(async () => {
-      if (search) {
-        search.value = 'reporting';
-      }
-      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'reporting' }));
-    });
-
-    expect(document.body.textContent).toContain('Reporting view');
-    expect(document.body.textContent).toContain('reporting.transformed_view');
-    expect(document.body.textContent).toContain('view');
-    expect(document.body.textContent).toContain('replace');
-    expect(document.body.textContent).not.toContain('Analytics table');
-
-    const reportingTarget = Array.from(
-      document.body.querySelectorAll<HTMLButtonElement>(
-        '[data-slot="canvas-add-node-palette-option"][data-option-kind="output-target-template"]'
-      )
-    ).find((button) => button.textContent?.includes('Reporting view'));
-
-    await act(async () => {
-      reportingTarget?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(onCreateAuthoringNode).toHaveBeenCalledWith(
-      nodeKinds[2],
-      undefined,
-      expect.objectContaining({
-        namePrefix: 'Reporting view',
-        metadata: expect.objectContaining({
-          outputTargetTemplateId: 'reporting-view-replace',
-          config: expect.objectContaining({
-            schema: 'reporting',
-            table: 'transformed_view',
-            materialization: 'view',
-            writeMode: 'replace',
-          }),
-        }),
-      })
-    );
   });
 
   it('keeps plan button disabled when transformation validation is invalid', async () => {

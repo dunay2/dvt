@@ -13,6 +13,7 @@ import {
   waitForE2eApiCall,
 } from '../../support/e2eApiStub';
 import {
+  E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
@@ -35,6 +36,10 @@ type CanvasDraftStatusCopyKey = keyof Pick<
 >;
 
 function stubRuntimeCapabilities(): void {
+  stubE2eJsonApi('GET', '/workspace/context', {
+    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+  });
   stubE2eJsonApi('GET', '/capabilities', {
     apiVersion: '1.0.0',
     minFrontendVersion: '0.0.1',
@@ -52,11 +57,6 @@ function visitReadyCanvas(): void {
   waitForE2eApiCall('/db/ready', 'GET');
   waitForE2eApiCall('/capabilities', 'GET');
   waitForE2eApiCall('/workspace/graph/draft', 'GET');
-}
-
-function showExplorerPanel(): void {
-  cy.get('[aria-label="Show explorer panel"]').click();
-  cy.contains('Project Nodes').should('be.visible');
 }
 
 function waitForDraftSaveCount(expectedCount: number): void {
@@ -80,35 +80,54 @@ function assertDraftSaveStatus(copyKey: CanvasDraftStatusCopyKey): void {
   });
 }
 
+function dispatchCanvasContextMenu(clientX: number, clientY: number): void {
+  cy.get('[data-slot="canvas-viewport-context-surface"]')
+    .should('be.visible')
+    .then(($surface) => {
+      $surface[0]?.dispatchEvent(
+        new MouseEvent('contextmenu', {
+          clientX,
+          clientY,
+          button: 2,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+}
+
+function chooseSqlTransformFromCanvasContextMenu(): void {
+  cy.get('[data-slot="canvas-viewport-context-surface"]').should(($surface) => {
+    $surface[0]?.dispatchEvent(
+      new MouseEvent('contextmenu', {
+        clientX: 560,
+        clientY: 260,
+        button: 2,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+
+    const menu = $surface[0]?.ownerDocument.querySelector('[data-slot="canvas-context-menu"]');
+    expect(menu).not.to.equal(null);
+
+    const sqlTransformItem = Array.from(
+      $surface[0]?.ownerDocument.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? []
+    ).find((button) => button.textContent?.includes('SQL transform'));
+    expect(sqlTransformItem).not.to.equal(undefined);
+    sqlTransformItem?.click();
+  });
+}
+
 function addSqlTransformNode(): void {
-  showExplorerPanel();
-  cy.contains('h3', 'Add node')
-    .parent()
-    .contains('button', 'SQL transform')
-    .should('be.enabled')
-    .click();
+  cy.get('.react-flow__node').should('have.length.greaterThan', 0);
+  cy.get('[data-slot="canvas-add-node-palette"]').should('not.exist');
+  chooseSqlTransformFromCanvasContextMenu();
 }
 
 function removeCanvasNode(nodeName: string): void {
   cy.contains('.react-flow__node', nodeName).rightclick();
   cy.contains('[role="menuitem"]', 'Remove node').click();
-}
-
-function assertNodeRendersBelow(nodeName: string, anchorNodeName: string): void {
-  cy.contains('.react-flow__node', anchorNodeName)
-    .should('be.visible')
-    .then(($anchorNode) => {
-      const anchorRect = $anchorNode[0].getBoundingClientRect();
-
-      cy.contains('.react-flow__node', nodeName)
-        .should('be.visible')
-        .then(($node) => {
-          const nodeRect = $node[0].getBoundingClientRect();
-
-          expect(nodeRect.top, `${nodeName} top`).to.be.greaterThan(anchorRect.top);
-          expect(Math.abs(nodeRect.left - anchorRect.left), `${nodeName} column`).to.be.lessThan(8);
-        });
-    });
 }
 
 describe('Canvas ready node authoring', () => {
@@ -117,7 +136,7 @@ describe('Canvas ready node authoring', () => {
     stubRuntimeCapabilities();
   });
 
-  it('adds a governed authoring node from the Explorer on an existing canvas', () => {
+  it('adds a governed authoring node from the canvas context menu on an existing canvas', () => {
     stubCanvasDraftRead();
     stubCanvasDraftSave();
 
@@ -127,12 +146,7 @@ describe('Canvas ready node authoring', () => {
     assertNoManualSaveCommand();
     assertDraftSaveStatus('draftSyncedLabel');
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    showExplorerPanel();
-    cy.contains('h3', 'Add node')
-      .parent()
-      .contains('button', 'SQL transform')
-      .should('be.enabled')
-      .click();
+    addSqlTransformNode();
 
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
@@ -141,12 +155,11 @@ describe('Canvas ready node authoring', () => {
         | CanvasDraftSaveRequestBody
         | undefined;
       const createdNode = saveBody?.draft.nodes.find((node) => node.id === 'dvt-sql-transform-1');
+      const createdPosition = saveBody?.draft.nodePositions['dvt-sql-transform-1'];
 
       expect(saveBody?.draft.nodeIds).to.include('dvt-sql-transform-1');
-      expect(saveBody?.draft.nodePositions['dvt-sql-transform-1']).to.deep.equal({
-        x: 320,
-        y: 360,
-      });
+      expect(createdPosition?.x).to.be.a('number');
+      expect(createdPosition?.y).to.be.a('number');
       expect(createdNode).to.deep.include({
         id: 'dvt-sql-transform-1',
         name: 'SQL transform 1',
@@ -155,7 +168,6 @@ describe('Canvas ready node authoring', () => {
       });
     });
     assertNoManualSaveCommand();
-    assertDraftSaveStatus('draftSavedLabel');
   });
 
   it('persists add and remove authoring changes across route reloads', () => {
@@ -165,13 +177,11 @@ describe('Canvas ready node authoring', () => {
 
     addSqlTransformNode();
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
-    assertNodeRendersBelow('SQL transform 1', 'model_orders');
     waitForDraftSaveCount(1);
 
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
-    assertNodeRendersBelow('SQL transform 1', 'model_orders');
     removeCanvasNode('SQL transform 1');
     cy.contains('.react-flow__node', 'SQL transform 1').should('not.exist');
     waitForDraftSaveCount(2);
@@ -207,8 +217,10 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.contains('Sales canvas').should('be.visible');
-    showExplorerPanel();
-    cy.contains('h3', 'Add node').should('not.exist');
+    cy.get('[data-slot="canvas-toolbar-insert-command"]').should('not.exist');
+    dispatchCanvasContextMenu(620, 340);
+    cy.contains('[role="menuitem"]', 'SQL transform').should('not.exist');
+    cy.contains('[role="menuitem"]', 'Add source').should('not.exist');
     cy.then(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
     });

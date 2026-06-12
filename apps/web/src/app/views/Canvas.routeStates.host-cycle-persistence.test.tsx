@@ -9,7 +9,6 @@ import {
   createCanvasRouteHarness,
   expectActiveCanvasTab,
   expectCanvasBootstrapState,
-  getPrimaryCanvasButtons,
   mockedUseCanvasController,
   renderCanvasRouteWithController,
   requireAuthoringNodeKind,
@@ -174,7 +173,7 @@ describe('Canvas route host-cycle persistence', () => {
     }
   );
 
-  it('continues the typed transformation host cycle into preview and run without losing host context', async () => {
+  it('continues the typed transformation host cycle into contextual preview without losing host context', async () => {
     let currentController = buildController(
       buildCanvasHostCycleControllerState({ kind: 'needs_canvas' })
     );
@@ -190,7 +189,6 @@ describe('Canvas route host-cycle persistence', () => {
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
         handlePlan,
-        handleStartRun,
         canStartRun: true,
         planStatusSummary: canvasViewCopy.planStatusPreviewReadyMessage,
         transformationValidation: {
@@ -203,7 +201,6 @@ describe('Canvas route host-cycle persistence', () => {
         },
       });
     });
-    const handleStartRun = vi.fn();
     const handleCreateCanvasDocument = vi.fn(async (command: { kind: string; title: string }) => {
       currentController = buildController({
         ...buildCanvasHostCycleControllerState({
@@ -214,7 +211,6 @@ describe('Canvas route host-cycle persistence', () => {
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
         handlePlan,
-        handleStartRun,
       });
     });
     const handleCreateAuthoringNode = vi.fn((registration: NodeKindRegistration) => {
@@ -228,7 +224,6 @@ describe('Canvas route host-cycle persistence', () => {
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
         handlePlan,
-        handleStartRun,
         planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
         transformationValidation: {
           valid: true,
@@ -246,7 +241,6 @@ describe('Canvas route host-cycle persistence', () => {
       handleCreateCanvasDocument,
       handleCreateAuthoringNode,
       handlePlan,
-      handleStartRun,
     });
     mockedUseCanvasController.mockImplementation(() => currentController);
 
@@ -269,17 +263,14 @@ describe('Canvas route host-cycle persistence', () => {
       kindLabel: 'Transformation',
     });
 
-    getPrimaryCanvasButtons(harness.container).planButton?.click();
+    const previewCommand = harness.container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-context-preview-execution-plan-command"]'
+    );
+    expect(previewCommand).not.toBeNull();
+    previewCommand?.click();
     await harness.render();
 
     expect(handlePlan).toHaveBeenCalledTimes(1);
-    expect(
-      getPrimaryCanvasButtons(harness.container).runButton?.getAttribute('disabled')
-    ).toBeNull();
-
-    getPrimaryCanvasButtons(harness.container).runButton?.click();
-
-    expect(handleStartRun).toHaveBeenCalledTimes(1);
     expectActiveCanvasTab({
       container: harness.container,
       title: 'Transformation canvas',

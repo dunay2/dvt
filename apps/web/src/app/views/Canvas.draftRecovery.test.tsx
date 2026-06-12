@@ -13,8 +13,9 @@ function expectCanvasActionsPaused(container: ParentNode): void {
   const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
 
   expect(layoutButton).toBeUndefined();
-  expect(planButton?.getAttribute('disabled')).not.toBeNull();
-  expect(runButton?.getAttribute('disabled')).not.toBeNull();
+  expect(planButton).toBeUndefined();
+  expect(runButton).toBeUndefined();
+  expect(container.querySelector('[data-slot="canvas-draft-save-status"]')).not.toBeNull();
   expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
     canEditEdges: false,
   });
