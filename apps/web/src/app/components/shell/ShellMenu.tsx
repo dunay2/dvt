@@ -25,6 +25,7 @@ import {
 } from '../ui/dropdown-menu';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
+import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
@@ -138,6 +139,7 @@ export function ShellMenu({
               <span className="px-1">@</span>
               <code className="text-[var(--text-default)]">{gitSha}</code>
             </div>
+            <CanvasWorkspaceMenuControls />
           </>
         ) : (
           <>

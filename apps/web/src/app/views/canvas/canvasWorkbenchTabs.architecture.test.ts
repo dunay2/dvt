@@ -201,10 +201,9 @@ describe('Canvas workbench tabs architecture', () => {
 
     for (const requiredCypressProof of [
       'assertCanvasWorkbenchTabsAreHeaderScoped',
-      'assertCanvasWorkbenchTabsUseControlledIcons',
+      'assertCanvasWorkbenchTabsAreTextOnly',
       'left-navigation-rail',
       'app-shell-outlet',
-      "querySelectorAll('svg')",
       'scrollWidth',
       'clientWidth',
     ]) {
@@ -249,13 +248,13 @@ describe('Canvas workbench tabs architecture', () => {
     expect(tabStripSource).toContain('CanvasWorkbenchTabsReadModel');
     expect(tabStripSource).not.toContain('buildShellNavigationModel');
     expect(tabStripSource).not.toMatch(/tab\.icon(?!Name)/);
-    expect(tabStripSource).toContain('renderCanvasWorkbenchTabIcon');
+    expect(tabStripSource).not.toContain('renderCanvasWorkbenchTabIcon');
     expect(tabStripSource).not.toContain('truncate');
     expect(tabStripSource).not.toContain('min-w-0');
     expect(playgroundTabStripSource).not.toContain('CanvasWorkbenchTabsReadModel');
   });
 
-  it('keeps tab icons Canvas-owned instead of leaking plugin icon placement', () => {
+  it('keeps workbench tab chrome textual instead of rendering icons in tabs', () => {
     const tabsSource = readAppSource('views/canvas/canvasWorkbenchTabs.ts');
     const tabStripSource = readAppSource('views/canvas/CanvasWorkbenchTabStrip.tsx');
     const cypressSpec = readFileSync(
@@ -269,11 +268,10 @@ describe('Canvas workbench tabs architecture', () => {
     expect(tabsSource).toContain('function resolveCanvasWorkbenchTabIconName(');
     expect(tabStripSource).toContain('tabsState: CanvasWorkbenchTabsReadModel');
     expect(tabStripSource).toContain('tab.label');
-    expect(tabStripSource).toContain("from 'lucide-react'");
+    expect(tabStripSource).not.toContain("from 'lucide-react'");
     expect(tabStripSource).not.toMatch(/tab\.icon(?!Name)/);
-    expect(tabStripSource).toContain('renderCanvasWorkbenchTabIcon');
-    expect(cypressSpec).toContain('assertCanvasWorkbenchTabsUseControlledIcons');
-    expect(cypressSpec).toContain("querySelectorAll('svg')");
+    expect(tabStripSource).not.toContain('renderCanvasWorkbenchTabIcon');
+    expect(cypressSpec).not.toContain('assertCanvasWorkbenchTabsUseControlledIcons');
   });
 
   it('keeps Canvas workbench tabs as flat graph-workspace chrome instead of route-frame pills', () => {

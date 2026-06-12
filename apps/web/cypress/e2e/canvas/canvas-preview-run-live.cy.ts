@@ -72,15 +72,9 @@ function waitForCompletedLiveRun(
   });
 }
 
-function showExplorerPanel(): void {
-  cy.get('body').then(($body) => {
-    if (!$body.text().includes('Project Resources')) {
-      cy.get('button[aria-label="Show explorer panel"]', { timeout: 20_000 })
-        .first()
-        .click({ force: true });
-    }
-  });
-  cy.contains('Project Resources', { timeout: 20_000 }).should('be.visible');
+function openSourceImportFromCanvas(): void {
+  cy.get('.react-flow__pane', { timeout: 20_000 }).rightclick(320, 260);
+  cy.contains('[role="menuitem"]', 'Add source', { timeout: 20_000 }).click();
 }
 
 function closeRunConsoleIfOpen(): void {
@@ -115,7 +109,7 @@ describe('Canvas preview-run live protected runtime', () => {
 
     selectCanvasClosure(['Source 1', 'SQL transform 1', 'Sink 1']);
 
-    clickButtonNatively('Plan');
+    clickButtonNatively('Preview execution plan');
 
     cy.contains('Execution Plan Preview', { timeout: 20_000 }).should('be.visible');
     cy.contains('Plan identity').should('be.visible');
@@ -211,8 +205,7 @@ describe('Canvas preview-run live protected runtime', () => {
     seedLiveSelectedClosureDraft({ authoringGenerated: true });
     visitWithLiveWorkspaceSession('/canvas');
 
-    showExplorerPanel();
-    cy.contains('button', 'Add data', { timeout: 20_000 }).should('be.enabled').click();
+    openSourceImportFromCanvas();
 
     cy.contains('DataObject Registry', { timeout: 20_000 }).should('be.visible');
     cy.contains('Choose data source type').should('be.visible');

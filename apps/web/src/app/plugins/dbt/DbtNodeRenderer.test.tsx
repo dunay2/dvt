@@ -10,7 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { IRunsPort, RunSnapshot, RunSummaryItem } from '../../ports/runs';
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import type { CanonicalNode } from '../../types/canonical';
-import { dbtInspectorPanels } from './DbtNodeRenderer';
+import { DbtNodeRenderer, dbtInspectorPanels } from './DbtNodeRenderer';
 
 describe('DbtNodeRenderer history panel', () => {
   let container: HTMLDivElement | null = null;
@@ -152,6 +152,46 @@ describe('DbtNodeRenderer history panel', () => {
       );
     });
   }
+
+  it('renders dbt card metrics through the shared graph node card read model', async () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT?: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <DbtNodeRenderer
+          node={buildNode({
+            name: 'fct_orders',
+            metadata: {
+              package: 'analytics',
+              dependencies: ['source.raw.orders', 'ref.stg_customers'],
+              config: {
+                materialized: 'incremental',
+              },
+              columns: [{ name: 'order_id', type: 'integer' }],
+            },
+          })}
+          selected={false}
+          hovered={false}
+          overlayDecoration={null}
+          badges={[]}
+          data={{}}
+        />
+      );
+    });
+
+    expect(document.body.textContent).toContain('fct_orders');
+    expect(document.body.textContent).toContain('analytics');
+    expect(document.querySelector('[title="Mat."]')?.textContent).toBe('incremental');
+    expect(document.querySelector('[title="Deps"]')?.textContent).toBe('2');
+    expect(document.querySelector('[title="Columns"]')?.textContent).toBe('1');
+  });
 
   it('renders node-scoped runtime events for the active run', async () => {
     const runsService = buildRunsService({

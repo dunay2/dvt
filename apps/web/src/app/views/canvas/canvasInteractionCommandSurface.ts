@@ -26,6 +26,11 @@ export type CanvasContextMenuCreateNodeAction = Readonly<{
   registration: NodeKindRegistration;
 }>;
 
+export type CanvasContextMenuCanvasAction = Readonly<{
+  action: 'open-source-import' | 'preview-execution-plan';
+  label: 'Add source' | 'Preview execution plan';
+}>;
+
 export type CanvasContextMenuEdgeAction = Readonly<{
   action: 'remove-edge';
   label: 'Eliminar conexión';
@@ -36,6 +41,7 @@ export type CanvasContextMenuModel = Readonly<{
   screenPosition: CanvasContextMenuPosition;
   flowPosition?: CanvasContextMenuPosition;
   edgeId?: string;
+  canvasActions: readonly CanvasContextMenuCanvasAction[];
   createNodeActions: readonly CanvasContextMenuCreateNodeAction[];
   edgeActions: readonly CanvasContextMenuEdgeAction[];
 }>;
@@ -43,17 +49,35 @@ export type CanvasContextMenuModel = Readonly<{
 type BuildCanvasContextMenuModelArgs = Readonly<{
   target: CanvasContextMenuTarget;
   canMutateGraph: boolean;
+  canOpenSourceImport?: boolean;
+  canPreviewExecutionPlan?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
 }>;
 
 export function buildCanvasContextMenuModel({
   target,
   canMutateGraph,
+  canOpenSourceImport = false,
+  canPreviewExecutionPlan = false,
   authoringNodeKinds,
 }: BuildCanvasContextMenuModelArgs): CanvasContextMenuModel {
+  const canvasActions: CanvasContextMenuCanvasAction[] = [];
+  if (target.kind === 'pane') {
+    if (canMutateGraph && canOpenSourceImport) {
+      canvasActions.push({ action: 'open-source-import', label: 'Add source' });
+    }
+    if (canPreviewExecutionPlan) {
+      canvasActions.push({
+        action: 'preview-execution-plan',
+        label: 'Preview execution plan',
+      });
+    }
+  }
+
   const baseModel = {
     kind: target.kind,
     screenPosition: target.screenPosition,
+    canvasActions,
     createNodeActions: [],
     edgeActions: [],
   } satisfies CanvasContextMenuModel;

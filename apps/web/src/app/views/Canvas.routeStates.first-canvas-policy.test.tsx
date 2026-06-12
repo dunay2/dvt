@@ -172,7 +172,7 @@ describe('Canvas route first-canvas policy', () => {
     expect(document.body.textContent).not.toContain('SQL transform');
   });
 
-  it('hides typed empty guidance by preference while keeping node creation available', async () => {
+  it('hides typed empty guidance by preference without reintroducing fixed Insert chrome', async () => {
     await renderCanvasRouteWithController(harness, {
       explorerNodes: [],
       canvasDocument: {
@@ -189,12 +189,9 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).not.toContain('Start dbt canvas');
     expect(harness.container.textContent).not.toContain('Add first dbt node');
 
-    const insertButton = harness.container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-toolbar-insert-command"]'
-    );
-
-    expect(insertButton).not.toBeNull();
-    expect(insertButton?.disabled).toBe(false);
+    expect(
+      harness.container.querySelector('[data-slot="canvas-toolbar-insert-command"]')
+    ).toBeNull();
   });
 
   it('keeps dbt first-node authoring available while execution actions stay unavailable', async () => {

@@ -494,7 +494,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.get('[data-slot="canvas-add-node-palette"]').within(() => {
       cy.contains('button', 'Source').should('be.enabled');
     });
-    cy.contains('button', 'Plan').should('be.disabled');
+    cy.contains('button', 'Preview execution plan').should('be.disabled');
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('be.disabled');
     cy.then(() => {
       expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(0);
@@ -531,7 +531,9 @@ describe('Canvas preview-run persisted path', () => {
 
     cy.contains('Warehouse dbt').should('be.visible');
     cy.contains('Start dbt canvas').should('not.exist');
-    cy.get('[data-slot="canvas-toolbar-insert-command"]').should('be.enabled');
+    cy.get('.react-flow__pane').rightclick(320, 260);
+    cy.contains('[role="menuitem"]', 'Source').should('be.visible');
+    cy.get('body').type('{esc}', { force: true });
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.contains('[role="menuitem"]', /Canvas settings|Configuracion de canvas/).click();
@@ -556,7 +558,7 @@ describe('Canvas preview-run persisted path', () => {
 
       selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
-      cy.contains('button', 'Plan').should('be.enabled').click();
+      cy.contains('button', 'Preview execution plan').should('be.enabled').click();
       waitForSelectedClosurePreviewArtifacts();
       waitForE2eApiCall('/plans/preview', 'POST');
       assertPreviewPlanRequest();
@@ -592,7 +594,7 @@ describe('Canvas preview-run persisted path', () => {
 
     selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
-    cy.contains('button', 'Plan').should('be.enabled').click();
+    cy.contains('button', 'Preview execution plan').should('be.enabled').click();
     waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
@@ -637,7 +639,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
-    cy.contains('button', 'Plan').should('be.enabled').click();
+    cy.contains('button', 'Preview execution plan').should('be.enabled').click();
     waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
@@ -665,7 +667,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.get('[data-slot="shell-menu-navigation-link"][href="/canvas"]').should('be.visible').click();
     cy.location('pathname').should('eq', '/canvas');
 
-    cy.contains('button', 'Plan').should('be.enabled').click();
+    cy.contains('button', 'Preview execution plan').should('be.enabled').click();
     waitForSelectedClosurePreviewArtifacts();
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(2);
@@ -708,7 +710,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
-    cy.contains('button', 'Plan').should('be.enabled').click();
+    cy.contains('button', 'Preview execution plan').should('be.enabled').click();
     waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
@@ -735,7 +737,7 @@ describe('Canvas preview-run persisted path', () => {
 
     selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
-    cy.contains('button', 'Plan').should('be.enabled').click();
+    cy.contains('button', 'Preview execution plan').should('be.enabled').click();
     waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();

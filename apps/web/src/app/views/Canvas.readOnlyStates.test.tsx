@@ -36,10 +36,7 @@ describe('Canvas route access states', () => {
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-readonly-state"]')).not.toBeNull();
     expect(harness.container.textContent).toContain('Read-only canvas');
-    expect(currentCanvasRouteState().explorerProps).toMatchObject({
-      canEditGraph: false,
-    });
-    expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
+    expect(currentCanvasRouteState().explorerProps).toBeNull();
     expect(layoutButton).toBeUndefined();
     expect(planButton).toBeDefined();
     expect(runButton).toBeDefined();
