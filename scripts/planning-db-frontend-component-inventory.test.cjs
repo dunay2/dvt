@@ -47,7 +47,7 @@ function sampleInventory() {
     '| Component ID | Rail name | Rail kind | Rail status |',
     '| --- | --- | --- | --- |',
     '| `web.component.shell.AppShellFrame` | `GetRuntimeSession` | query | implemented-api |',
-    '| `web.component.canvas.CanvasToolbar` | `PreviewExecutablePlan` | command | implemented-api |',
+    '| `web.component.canvas.CanvasToolbar` | `StartRun` | command | implemented-api |',
     '',
     '## Frontend Component Evidence',
     '',
@@ -141,12 +141,12 @@ test('frontend component reflection file and rail rows format focused DB query r
     buildFrontendComponentRailRows([
       {
         component_id: 'web.component.canvas.CanvasToolbar',
-        rail_name: 'PreviewExecutablePlan',
+        rail_name: 'StartRun',
         rail_kind: 'command',
         rail_status: 'implemented-api',
       },
     ]),
-    [['web.component.canvas.CanvasToolbar', 'PreviewExecutablePlan', 'command', 'implemented-api']]
+    [['web.component.canvas.CanvasToolbar', 'StartRun', 'command', 'implemented-api']]
   );
 });
 
@@ -202,7 +202,7 @@ test('frontend component reflection file and rail queries apply focused filters'
   });
   await readFrontendComponentRailRows(client, {
     component: 'web.component.canvas.CanvasToolbar',
-    rail: 'PreviewExecutablePlan',
+    rail: 'StartRun',
     kind: 'command',
     status: 'implemented-api',
     limit: 4,
@@ -218,7 +218,7 @@ test('frontend component reflection file and rail queries apply focused filters'
   assert.match(calls[1].sql, /from planning_query_store\.frontend_component_rail_query/);
   assert.deepEqual(calls[1].params, [
     'web.component.canvas.CanvasToolbar',
-    'PreviewExecutablePlan',
+    'StartRun',
     'command',
     'implemented-api',
     4,
@@ -295,5 +295,24 @@ test('real frontend component inventory maps Canvas contextual UX components and
   );
   assert.ok(
     railsByComponent.get('web.component.canvas.NodeWorkbench')?.has('InspectCanvasNodeProperties')
+  );
+});
+
+test('real frontend component inventory keeps execution preview out of fixed canvas toolbar', () => {
+  const snapshot = buildFrontendComponentReflectionSnapshot();
+  const toolbarRails = snapshot.rails
+    .filter((rail) => rail.componentId === 'web.component.canvas.CanvasToolbar')
+    .map((rail) => rail.railName);
+  const contextMenuRails = snapshot.rails
+    .filter((rail) => rail.componentId === 'web.component.canvas.CanvasContextMenu')
+    .map((rail) => rail.railName);
+
+  assert.ok(
+    !toolbarRails.includes('PreviewExecutablePlan'),
+    'CanvasToolbar must not own PreviewExecutablePlan after preview moved to the canvas context menu'
+  );
+  assert.ok(
+    contextMenuRails.includes('PreviewExecutablePlan'),
+    'CanvasContextMenu must own PreviewExecutablePlan as the spatial canvas action'
   );
 });
