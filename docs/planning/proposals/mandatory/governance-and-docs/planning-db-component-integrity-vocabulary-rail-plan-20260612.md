@@ -1,0 +1,779 @@
+---
+title: Planning DB Component Integrity And Rail Vocabulary Plan
+status: Review
+owner: Architecture / Planning DB / CI
+last_reviewed: 2026-06-12
+planning_type: mandatory
+lane: D
+---
+
+# Planning DB Component Integrity And Rail Vocabulary Plan
+
+## Objective
+
+Convert the Planning DB into the coherent, governed, and queryable source of
+truth for the DVT system component map.
+
+This slice must not create parallel systems, side inventories, alternate
+formats, or shortcuts outside the database. Writes must pass through governed
+`planning:db:operate` rails. Inspections must be exposed through
+`planning:db:query`. Stable permanent invariants must be covered by CI.
+
+## Saved Execution Prompt
+
+Objective obligatorio: convertir la Planning DB en la fuente coherente,
+gobernada y consultable del mapa de componentes del sistema DVT.
+
+No crear sistemas paralelos, inventarios laterales, formatos alternativos ni
+atajos fuera de la BBDD. Toda escritura debe pasar por rails gobernados de
+`planning:db:operate`. Toda inspeccion debe exponerse por `planning:db:query`.
+Toda regla permanente debe acabar cubierta por CI cuando sea estable.
+
+Rol del agente: actuar como arquitecto, product owner tecnico y reviewer de
+integridad. No limitarse a ejecutar literalmente ordenes: debe detectar
+contradicciones, deuda oculta, duplicados, drift, falta de sentido de producto,
+componentes falsos y relaciones incompletas, y proponer o aplicar la
+correccion gobernada.
+
+Reglas de arquitectura:
+
+1. Un componente debe poder responder:
+   - que responsabilidad tiene;
+   - que ficheros lo forman;
+   - que subcomponentes contiene;
+   - que comandos implementa;
+   - que queries implementa;
+   - que puertos expone o consume;
+   - que adaptadores usa;
+   - que contratos toca;
+   - que tests lo validan;
+   - que docs/fuentes lo gobiernan;
+   - que relaciones tiene con otros componentes;
+   - que base Fowler/DDD justifica su existencia;
+   - que nivel de madurez tiene.
+
+2. No puede haber rails semanticamente duplicados. Si dos commands/queries
+   expresan la misma intencion, debe existir un unico nombre canonico. Los
+   nombres antiguos deben pasar por alias, deprecacion o retirada explicita.
+
+3. El vocabulario canonico de commands/queries debe distinguir command vs
+   query, bounded context, DDD owner o read model, puerto de aplicacion,
+   superficie adaptadora, autorizacion/scope, politica de idempotencia,
+   concurrencia o frescura, tests negativos, y estado: proposed, accepted,
+   implemented, deprecated, retired.
+
+4. API, UI, CLI, workflow, worker o adapter no son nombres canonicos de rail.
+   Son superficies que implementan un rail de dominio o sistema.
+
+Orden de ejecucion obligatorio:
+
+1. Auditar el estado actual de la BBDD: componentes, paths, filesystem real,
+   ownership, relaciones, commands, queries, puertos, adaptadores, contratos,
+   tests, docs, Fowler/DDD y madurez.
+2. Crear o extender el rail de vocabulario unico en BBDD.
+3. Crear queries de validacion global y por componente: `component-profile`,
+   `component-integrity`, `component-validation`, `rail-vocabulary`,
+   `rail-duplicates`, `filesystem-coverage`, `architecture-drift`.
+4. Implementar checks de CI progresivos: report/warning para deuda historica,
+   hard fail para nuevos duplicados, componentes fantasma o ficheros nuevos sin
+   ownership, y hard fail completo cuando el baseline quede saneado.
+5. Corregir la BBDD: crear componentes que falten, remapear paths falsos,
+   retirar componentes fantasma, dividir componentes demasiado gruesos,
+   fusionar duplicados semanticos, aprobar/corregir/retirar relaciones
+   propuestas, conectar tests, contratos, adaptadores y docs, y establecer
+   alias/deprecaciones para rails antiguos.
+6. Establecer criterios de salida medibles: cero ficheros tracked sin
+   componente propietario, cero componentes con path inexistente sin
+   justificacion explicita, cero commands/queries sin bounded context, cero
+   commands/queries sin DDD owner o read model, cero duplicados semanticos
+   activos, cero relaciones observadas sin declaracion, cero componentes
+   implementados sin evidencia minima de tests/docs, cero rails obsoletos
+   activos sin deprecacion o retirada, y cero checks nuevos fuera de CI si son
+   invariantes permanentes.
+7. Ejecutar ciclo desatendido:
+   AUDITAR -> CORREGIR -> VALIDAR -> QA AGRESIVO -> FIX -> REVALIDAR.
+
+QA agresivo: crear o simular un reviewer independiente que falle si encuentra
+relaciones incompletas, componentes sin sentido, nombres duplicados, rails
+paralelos, filesystem no mapeado, tests no conectados, contratos no trazados,
+adaptadores no declarados, Fowler/DDD ausente, o CI sin cobertura del nuevo
+invariante.
+
+## Governing Sources
+
+- `AGENTS.md`
+- `docs/planning/status/governance-document-rule-inventory.md`
+- `docs/guides/ai-work-protocol.md`
+- `docs/architecture/command-query-rail-governance.md`
+- `docs/architecture/fowler-opportunity-planning-governance.md`
+- `docs/concepts/domain-language.md`
+- `docs/planning/state/planning-control-tower.md`
+- `docs/planning/status/db-surface-inventory.md`
+- `docs/adr/adr-0055-planning-db-canonical-operational-source.md`
+
+## Current State
+
+```mermaid
+flowchart LR
+  FS[Tracked filesystem] --> Own[component_engineering ownership]
+  Own --> Profile[pnpm planning:db:query component-profile]
+  Arch[architecture.component] --> Profile
+  Arch --> Rel[architecture.component_relation]
+  Scan[architecture dependency scans] --> Fit[architecture fitness]
+  Rel --> Fit
+  CQ[command/query rail catalog] --> Exact[exact duplicate checks]
+  Exact --> CI[partial CI checks]
+```
+
+Observed gaps:
+
+- Component profiles exist, but the global integrity posture is not one query.
+- Rail duplicate checks are exact-name only and do not classify surface-named or
+  semantically duplicated rails.
+- Architecture dependency fitness only treats `approved` or `implemented`
+  relations as declared, while the operation rail currently starts relations in
+  `proposed`.
+- Historical debt must be reported without blocking the first baseline, but new
+  hard failures must be wired into CI as stable rails.
+
+## Target State
+
+```mermaid
+flowchart LR
+  FS[Tracked filesystem] --> Own[component ownership]
+  Own --> Integrity[component-integrity]
+  Arch[architecture authority] --> Integrity
+  Scan[dependency observations] --> Integrity
+  CQ[rail catalog] --> Vocab[rail-vocabulary]
+  Vocab --> Dup[rail-duplicates]
+  Integrity --> Check[planning:db:integrity:check]
+  Dup --> Check
+  Check --> CI[ci:docs progressive gate]
+  Ops[planning:db:operate] --> Arch
+```
+
+The Planning DB exposes component integrity and rail vocabulary as query-store
+read models. CI runs a progressive checker in report mode while historical debt
+is still being retired; strict mode becomes the hard baseline once the database
+is clean.
+
+## Fowler Analysis
+
+| scenario                                                                                                     | opportunity         | Fowler pattern                                       | DDD owner                       | command/query rail                  | implementation surfaces                                                                                 | test                                                                                  | out of scope                                     |
+| ------------------------------------------------------------------------------------------------------------ | ------------------- | ---------------------------------------------------- | ------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Component facts are scattered across profiles, architecture authority, file ownership, and dependency scans. | Hidden authority    | Consolidate read model                               | ComponentIntegrityReadModel     | `ValidateComponentIntegrity`        | `planning_query_store.component_integrity_query`, `planning:db:query component-integrity`               | `node --test scripts/planning-db-query.test.cjs`                                      | New non-DB inventory format                      |
+| Rail catalog catches exact duplicates but misses semantic drift and surface names.                           | Duplicate semantics | Replace implicit convention with explicit vocabulary | RailVocabularyReadModel         | `ValidateRailVocabulary`            | `planning_query_store.command_query_rail_vocabulary_query`, `planning:db:query rail-vocabulary`         | `node --test scripts/planning-db-query.test.cjs`                                      | Renaming all historical rails in one unsafe edit |
+| CI has inventory checks but no single progressive component-integrity gate.                                  | Quality gate gap    | Guard clause                                         | PlanningDbIntegrityCheck        | `CheckPlanningDbComponentIntegrity` | `scripts/planning-db-integrity-check.cjs`, `package.json`, `scripts/local-validation-plan.cjs`          | `node --test scripts/planning-db-integrity-check.test.cjs`                            | Blocking historical debt before baseline cleanup |
+| Relations can be recorded only as proposed through the command rail.                                         | Workflow mismatch   | Align command lifecycle with domain state            | ArchitectureRelationCommand     | `RecordArchitectureRelation`        | `scripts/planning-db-operate.cjs`                                                                       | `node --test scripts/planning-db-operate.test.cjs`                                    | Direct SQL relation updates                      |
+| New architecture components can receive authority without query-visible test evidence.                       | Evidence gap        | Complete read model                                  | ArchitectureTestEvidenceCommand | `RecordArchitectureTestEvidence`    | `architecture.component_test`, `planning:db:query component-profile`, `scripts/planning-db-operate.cjs` | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs` | File-only test inference outside the BBDD        |
+
+## Feature Mechanization
+
+```feature-mechanization
+version: 1
+featureId: PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+componentGuides:
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+userStories:
+  - As an architect, I can ask the Planning DB for global component integrity findings.
+  - As a product owner, I can see whether commands and queries use one canonical vocabulary.
+  - As a reviewer, I can run a CI-backed aggressive QA check against component and rail invariants.
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/concepts/domain-language.md
+  - docs/planning/state/planning-control-tower.md
+  - docs/planning/status/db-surface-inventory.md
+  - docs/adr/adr-0055-planning-db-canonical-operational-source.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+  - docs/planning/status/db-surface-inventory.md
+  - docs/.manifest.json
+  - docs/**/index.md
+  - tools/planning-db/migrations/081_component_integrity_rail_vocabulary.sql
+  - tools/planning-db/migrations/082_rail_vocabulary_deprecation_hardening.sql
+  - tools/planning-db/migrations/083_architecture_test_evidence_operation_rail.sql
+  - scripts/planning-db-query.cjs
+  - scripts/planning-db-query.test.cjs
+  - scripts/planning-db/queries/component-integrity-query.cjs
+  - scripts/planning-db/queries/rail-vocabulary-query.cjs
+  - scripts/planning-db-integrity-check.cjs
+  - scripts/planning-db-integrity-check.test.cjs
+  - scripts/planning-db-migrate.test.cjs
+  - scripts/planning-db-operate.cjs
+  - scripts/planning-db-operate.test.cjs
+  - scripts/planning-db-operate-tests/architecture-parse.test.cjs
+  - scripts/planning-db-operate-tests/architecture-plan.test.cjs
+  - scripts/local-validation-plan.cjs
+  - scripts/verify-changed.test.cjs
+  - package.json
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - specs/contracts/**
+commandQueryRails:
+  - name: ValidateComponentIntegrity
+    type: query
+    dddOwner: ComponentIntegrityReadModel
+  - name: ValidateComponentFilesystemCoverage
+    type: query
+    dddOwner: ComponentIntegrityReadModel
+  - name: ValidateComponentArchitectureDrift
+    type: query
+    dddOwner: ComponentIntegrityReadModel
+  - name: ValidateRailVocabulary
+    type: query
+    dddOwner: RailVocabularyReadModel
+  - name: DetectRailDuplicates
+    type: query
+    dddOwner: RailVocabularyReadModel
+  - name: CheckPlanningDbComponentIntegrity
+    type: query
+    dddOwner: PlanningDbIntegrityCheck
+  - name: RecordArchitectureRelation
+    type: command
+    dddOwner: ArchitectureRelationCommand
+  - name: RecordArchitectureTestEvidence
+    type: command
+    dddOwner: ArchitectureTestEvidenceCommand
+domainObjects:
+  - name: ComponentIntegrityReadModel
+    type: read model
+    owner: Architecture / Planning DB / CI
+  - name: RailVocabularyReadModel
+    type: read model
+    owner: Architecture / Planning DB / CI
+  - name: PlanningDbIntegrityCheck
+    type: CI guard
+    owner: Architecture / Planning DB / CI
+  - name: ArchitectureRelationCommand
+    type: command rail
+    owner: Architecture / Planning DB / CI
+  - name: ArchitectureTestEvidenceCommand
+    type: command rail
+    owner: Architecture / Planning DB / CI
+fowlerSignals:
+  - Hidden Authority from component health being visible only through several separate queries.
+  - Duplicate Semantics from command/query rails sharing intent without one vocabulary check.
+  - Parallel Model risk if filesystem coverage is checked outside the Planning DB.
+  - Incomplete Evidence risk if tests are written to architecture.component_test but not visible in component-profile.
+architectureGuards:
+  - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-integrity-check.test.cjs scripts/planning-db-operate.test.cjs
+  - pnpm planning:db:migrate
+  - pnpm planning:db:integrity:check
+  - pnpm planning:db:query component-integrity --limit 20
+  - pnpm planning:db:query rail-vocabulary --limit 20
+  - pnpm planning:db:query component-profile --component SYS-WEB-CANVAS-DRAFT-SAVE-STATUS --limit 80
+  - pnpm docs:feature-mechanization:implementation
+cypressFlows:
+  - N/A - repository governance CLI surface
+completionGate:
+  - pnpm governance:refresh
+  - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-integrity-check.test.cjs scripts/planning-db-operate.test.cjs
+  - pnpm planning:db:migrate
+  - pnpm planning:db:query component-integrity --limit 20
+  - pnpm planning:db:query rail-vocabulary --limit 20
+  - pnpm planning:db:query component-profile --component SYS-WEB-CANVAS-DRAFT-SAVE-STATUS --limit 80
+  - pnpm planning:db:integrity:check
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: rail-vocabulary-query-store
+    redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: rail-vocabulary, rail-duplicates, component-integrity, component-validation, filesystem-coverage, and architecture-drift validation queries are missing.
+    patchSurfaces:
+      - tools/planning-db/migrations/081_component_integrity_rail_vocabulary.sql
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db/queries/component-integrity-query.cjs
+      - scripts/planning-db/queries/rail-vocabulary-query.cjs
+      - scripts/planning-db-query.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: rail-vocabulary-deprecation-hardening
+    redTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-operate.test.cjs
+    expectedFailure: Retired and deprecated rails still participate in active duplicate checks, and feature mechanization cannot record deprecated or retired rail status.
+    patchSurfaces:
+      - tools/planning-db/migrations/082_rail_vocabulary_deprecation_hardening.sql
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate-tests/feature-mechanization.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-operate.test.cjs
+  - id: planning-db-integrity-ci-check
+    redTest: node --test scripts/planning-db-integrity-check.test.cjs
+    expectedFailure: Planning DB integrity checker does not exist.
+    patchSurfaces:
+      - scripts/planning-db-integrity-check.cjs
+      - scripts/planning-db-integrity-check.test.cjs
+      - package.json
+      - scripts/local-validation-plan.cjs
+    greenTest: node --test scripts/planning-db-integrity-check.test.cjs
+  - id: relation-lifecycle-promotion
+    redTest: node --test scripts/planning-db-operate.test.cjs
+    expectedFailure: RecordArchitectureRelation rejects approved and implemented relation statuses.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate-tests/architecture-parse.test.cjs
+      - scripts/planning-db-operate-tests/architecture-plan.test.cjs
+    greenTest: node --test scripts/planning-db-operate.test.cjs
+  - id: architecture-test-evidence-rail
+    redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-operate.test.cjs
+    expectedFailure: Component profile cannot answer which DB-recorded tests validate a component, and planning:db:operate cannot record component test evidence.
+    patchSurfaces:
+      - tools/planning-db/migrations/083_architecture_test_evidence_operation_rail.sql
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-query.test.cjs
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate-tests/architecture-parse.test.cjs
+      - scripts/planning-db-operate-tests/architecture-plan.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-operate.test.cjs
+  - id: verify-changed-planning-db-integrity-routing
+    redTest: node --test scripts/verify-changed.test.cjs
+    expectedFailure: verify:changed routes Planning DB migrations through the wrong planningDb group index after adding the integrity gate.
+    patchSurfaces:
+      - scripts/local-validation-plan.cjs
+      - scripts/verify-changed.test.cjs
+    greenTest: node --test scripts/verify-changed.test.cjs
+symbols:
+  - name: createComponentIntegrityReadModelComponent
+    path: scripts/planning-db/queries/component-integrity-query.cjs
+    dddOwner: ComponentIntegrityReadModel
+    cqRails:
+      - ValidateComponentIntegrity
+      - ValidateComponentFilesystemCoverage
+      - ValidateComponentArchitectureDrift
+    fowlerSignals:
+      - component integrity facts are one DB query rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: createRailVocabularyReadModelComponent
+    path: scripts/planning-db/queries/rail-vocabulary-query.cjs
+    dddOwner: RailVocabularyReadModel
+    cqRails:
+      - ValidateRailVocabulary
+      - DetectRailDuplicates
+    fowlerSignals:
+      - semantic rail vocabulary facts are one DB query rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: evaluatePlanningDbIntegrity
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - CI consumes the DB integrity read model
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: validateArchitectureRelationRecordStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureRelationCommand
+    cqRails:
+      - RecordArchitectureRelation
+    fowlerSignals:
+      - command rail lifecycle matches architecture relation lifecycle
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: recordArchitectureTestEvidence
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - component test evidence is written through a governed Planning DB command rail
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: exposeArchitectureTestEvidenceInComponentProfile
+    path: scripts/planning-db-query.cjs
+    dddOwner: ComponentIntegrityReadModel
+    cqRails:
+      - ValidateComponentIntegrity
+    fowlerSignals:
+      - component-profile answers tests from architecture.component_test instead of filesystem inference
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: baselineBudgetFor
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - progressive baseline separates accepted historical debt from new regressions
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: blankSeverityCounts
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - integrity findings use one severity vocabulary
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: buildIntegrityCheckResult
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - CI consumes DB read models as one integrity result
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: buildProgressiveBaselineViolations
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - new violations fail while historical debt remains visible
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: countRowsByKindAndSeverity
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - grouped counts make QA findings measurable
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: countRowsBySeverity
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - severity counts provide stable CI summary output
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: databaseUrl
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - integrity check uses the canonical Planning DB connection source
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: formatCountLine
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - operator output exposes measurable integrity counts
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: formatIntegrityCheckSummary
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - QA output remains deterministic and reviewable
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: hasBlockingFinding
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - blocker and error findings map to hard CI failure
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: helpText
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - command rail exposes operator usage without alternate docs
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: main
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - CI adapter invokes the Planning DB integrity rail
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: parseArgs
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - strict and report modes are explicit rail options
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: progressiveBaseline
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - historical debt is visible without accepting new regressions
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: runIntegrityCheck
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - CI checks component integrity and rail vocabulary through DB reads
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: severityOrder
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - findings share one severity ordering
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: shouldFailIntegrityCheck
+    path: scripts/planning-db-integrity-check.cjs
+    dddOwner: PlanningDbIntegrityCheck
+    cqRails:
+      - CheckPlanningDbComponentIntegrity
+    fowlerSignals:
+      - progressive and strict mode failures are centralized
+    architectureGuard: node --test scripts/planning-db-integrity-check.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-integrity-check.test.cjs
+  - name: allowedArchitectureTestCoverageLevels
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - test evidence uses canonical architecture coverage vocabulary
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedArchitectureTestKinds
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - test evidence uses canonical architecture test kind vocabulary
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: applyArchitectureTestRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - component test evidence writes pass through planning:db:operate
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: parseArchitectureEvidenceCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - architecture evidence command parsing stays on the existing operate rail
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: planArchitectureTestRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - test evidence has an auditable planned operation before write
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readArchitectureTest
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - idempotent evidence updates compare existing DB state
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureTestCoverageLevel
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - invalid coverage vocabulary is rejected before write
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureTestId
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - test identity is validated before evidence writes
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureTestKind
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - invalid test kind vocabulary is rejected before write
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureTestRecordCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - required test evidence command fields are validated before write
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: writePlannedArchitectureTestRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureTestEvidenceCommand
+    cqRails:
+      - RecordArchitectureTestEvidence
+    fowlerSignals:
+      - evidence writes persist test rows and operation audit together
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: architectureTestSelect
+    path: scripts/planning-db-query.cjs
+    dddOwner: ComponentIntegrityReadModel
+    cqRails:
+      - ValidateComponentIntegrity
+    fowlerSignals:
+      - component-profile reads test evidence from the DB authority table
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: buildArchitectureTestRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: ComponentIntegrityReadModel
+    cqRails:
+      - ValidateComponentIntegrity
+    fowlerSignals:
+      - operator output exposes component test evidence
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: readArchitectureTestRows
+    path: scripts/planning-db-query.cjs
+    dddOwner: ComponentIntegrityReadModel
+    cqRails:
+      - ValidateComponentIntegrity
+    fowlerSignals:
+      - component-profile can answer which tests validate a component
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: createComponentIntegrityReadModelComponent
+    path: scripts/planning-db/queries/component-integrity-query.cjs
+    dddOwner: ComponentIntegrityReadModel
+    cqRails:
+      - ValidateComponentIntegrity
+      - ValidateComponentFilesystemCoverage
+      - ValidateComponentArchitectureDrift
+    fowlerSignals:
+      - component integrity facts are one DB query rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: createRailVocabularyReadModelComponent
+    path: scripts/planning-db/queries/rail-vocabulary-query.cjs
+    dddOwner: RailVocabularyReadModel
+    cqRails:
+      - ValidateRailVocabulary
+      - DetectRailDuplicates
+    fowlerSignals:
+      - rail vocabulary facts are one DB query rail
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+```

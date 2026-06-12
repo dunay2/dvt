@@ -6,6 +6,7 @@ const {
   parseArgs,
   planArchitectureDesignCreateOperation,
   planArchitectureComponentRecordOperation,
+  planArchitectureTestRecordOperation,
   planArchitectureRelationRecordOperation,
 } = require('./helpers.cjs');
 
@@ -210,6 +211,124 @@ test('architecture relation record planner requires design scope and existing en
   assert.equal(planned.relation.relationId, 'REL-ENGINE-USES-STATE-STORE');
   assert.equal(planned.relation.relationType, 'depends_on');
   assert.equal(planned.audit.operationType, 'architecture_relation_record');
+});
+
+test('architecture relation record planner promotes existing relations with update scope', () => {
+  const now = new Date('2026-06-12T12:00:00.000Z');
+  const command = parseArgs([
+    'architecture-relation',
+    'record',
+    '--design',
+    'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+    '--relation',
+    'REL-ENGINE-USES-STATE-STORE',
+    '--source',
+    'SYS-RUNTIME-ENGINE-CORE',
+    '--target',
+    'SYS-RUNTIME-STATE-STORE-PORT',
+    '--type',
+    'depends_on',
+    '--direction',
+    'outbound',
+    '--sync-async',
+    'sync',
+    '--failure-mode',
+    'Run start fails closed when state-store is unavailable.',
+    '--authorization-scope',
+    'repo-local architecture operation',
+    '--status',
+    'implemented',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureRelationRecordOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'relation',
+        subject_id: 'REL-ENGINE-USES-STATE-STORE',
+        scope_kind: 'may_update',
+      },
+      {
+        subject_kind: 'component',
+        subject_id: 'SYS-RUNTIME-ENGINE-CORE',
+        scope_kind: 'may_reference',
+      },
+      {
+        subject_kind: 'component',
+        subject_id: 'SYS-RUNTIME-STATE-STORE-PORT',
+        scope_kind: 'may_reference',
+      },
+    ],
+    sourceComponent: { component_id: 'SYS-RUNTIME-ENGINE-CORE' },
+    targetComponent: { component_id: 'SYS-RUNTIME-STATE-STORE-PORT' },
+    existingRelation: { relation_id: 'REL-ENGINE-USES-STATE-STORE' },
+    operationId: 'op-architecture-relation-promote',
+    now,
+  });
+
+  assert.equal(planned.relation.status, 'implemented');
+  assert.equal(planned.audit.operationType, 'architecture_relation_record');
+});
+
+test('architecture test evidence planner emits component_test and audit rows', () => {
+  const now = new Date('2026-06-12T13:00:00.000Z');
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-test',
+    '--design',
+    'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+    '--test',
+    'TEST-WEB-CANVAS-DRAFT-SAVE-STATUS',
+    '--component',
+    'SYS-WEB-CANVAS-DRAFT-SAVE-STATUS',
+    '--test-path',
+    'apps/web/src/app/views/canvas/canvasDraftToolbarState.test.ts',
+    '--test-kind',
+    'unit',
+    '--coverage-level',
+    'behavior',
+    '--validation-command',
+    'pnpm --filter @dvt/web test -- canvasDraftToolbarState.test.ts',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureTestRecordOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'test',
+        subject_id: 'TEST-WEB-CANVAS-DRAFT-SAVE-STATUS',
+        scope_kind: 'may_create',
+      },
+      {
+        subject_kind: 'component',
+        subject_id: 'SYS-WEB-CANVAS-DRAFT-SAVE-STATUS',
+        scope_kind: 'may_reference',
+      },
+    ],
+    component: { component_id: 'SYS-WEB-CANVAS-DRAFT-SAVE-STATUS' },
+    existingTest: null,
+    operationId: 'op-architecture-test-record',
+    now,
+  });
+
+  assert.equal(planned.testEvidence.testId, 'TEST-WEB-CANVAS-DRAFT-SAVE-STATUS');
+  assert.equal(planned.testEvidence.required, true);
+  assert.equal(planned.audit.operationType, 'architecture_test_record');
+  assert.equal(planned.audit.designId, command.designId);
 });
 
 test('architecture scoped operation idempotency rejects stale source-hash replays', () => {

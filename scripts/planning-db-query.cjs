@@ -92,6 +92,14 @@ const {
   readArchitectureFitnessRows,
   readArchitecturePathMappingRows,
 } = require('./planning-db/queries/component-architecture-fitness-query.cjs');
+const {
+  buildComponentIntegrityRows,
+  readComponentIntegrityRows,
+} = require('./planning-db/queries/component-integrity-query.cjs');
+const {
+  buildRailVocabularyRows,
+  readRailVocabularyRows,
+} = require('./planning-db/queries/rail-vocabulary-query.cjs');
 const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
@@ -116,6 +124,8 @@ const knownQueries = new Set([
   'drift',
   'commands',
   'command-query-rails',
+  'rail-vocabulary',
+  'rail-duplicates',
   'ai-project-context',
   'creation-intent',
   'frontend-surfaces',
@@ -159,6 +169,9 @@ const knownQueries = new Set([
   'component-rule-evaluations',
   'component-quality',
   'architecture-designs',
+  'component-integrity',
+  'component-validation',
+  'filesystem-coverage',
   'architecture-scopes',
   'architecture-components',
   'architecture-relations',
@@ -256,6 +269,9 @@ const componentCommonFilterQueryNames = new Set([
   'component-tree',
   'component-roadmap',
   'component-profile',
+  'component-integrity',
+  'component-validation',
+  'filesystem-coverage',
   'component-metadata',
   'component-drift',
   'component-rules',
@@ -762,7 +778,16 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'documentation-panels' ||
         queryName === 'component-roadmap' ||
         queryName === 'governance-refresh-runs' ||
-        queryName === 'db-surfaces'
+        queryName === 'db-surfaces' ||
+        queryName === 'component-integrity' ||
+        queryName === 'component-validation' ||
+        queryName === 'filesystem-coverage' ||
+        queryName === 'rail-vocabulary' ||
+        queryName === 'rail-duplicates' ||
+        queryName === 'architecture-path-mapping' ||
+        queryName === 'architecture-dependency-classification' ||
+        queryName === 'architecture-fitness' ||
+        queryName === 'architecture-fitness-gaps'
       ) {
         filters.state = value;
       } else {
@@ -780,6 +805,10 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--kind') {
       filters.kind = value;
+      continue;
+    }
+    if (arg === '--severity') {
+      filters.severity = value;
       continue;
     }
     if (arg === '--prefix') {
@@ -1578,6 +1607,18 @@ function buildComponentProfileRows(profile) {
     ]);
   }
 
+  for (const testEvidence of profile.tests || []) {
+    rows.push([
+      'test',
+      testEvidence.test_id ?? testEvidence.testId,
+      testEvidence.test_path ?? testEvidence.testPath,
+      testEvidence.test_kind ?? testEvidence.testKind,
+      testEvidence.coverage_level ?? testEvidence.coverageLevel,
+      String(testEvidence.required ?? true),
+      testEvidence.validation_command ?? testEvidence.validationCommand ?? '-',
+    ]);
+  }
+
   for (const design of profile.architectureDesigns || []) {
     rows.push([
       'architecture-basis',
@@ -1703,6 +1744,18 @@ function buildArchitectureContractRows(rows) {
     row.contract_ref ?? row.contractRef,
     row.compatibility ?? '-',
     row.status ?? '-',
+    row.validation_command ?? row.validationCommand ?? '-',
+  ]);
+}
+
+function buildArchitectureTestRows(rows) {
+  return rows.map((row) => [
+    row.test_id ?? row.testId,
+    row.component_id ?? row.componentId,
+    row.test_path ?? row.testPath,
+    row.test_kind ?? row.testKind,
+    row.coverage_level ?? row.coverageLevel,
+    String(row.required ?? true),
     row.validation_command ?? row.validationCommand ?? '-',
   ]);
 }
@@ -2470,6 +2523,20 @@ function architectureContractSelect() {
       created_at,
       updated_at
     from ${architectureSchemaName}.component_contract_query`;
+}
+
+function architectureTestSelect() {
+  return `
+    select
+      test_id,
+      component_id,
+      test_path,
+      test_kind,
+      coverage_level,
+      required,
+      validation_command,
+      created_at
+    from ${architectureSchemaName}.component_test`;
 }
 
 function architectureMaturitySelect() {
@@ -3311,6 +3378,7 @@ async function readComponentProfileRows(client, filters = {}) {
     io: await readArchitectureIoRows(client, scopedFilters),
     relations: await readArchitectureRelationRows(client, scopedFilters),
     contracts: await readArchitectureContractRows(client, scopedFilters),
+    tests: await readArchitectureTestRows(client, scopedFilters),
     architectureDesigns: await readArchitectureDesignScopeRows(client, {
       component,
       subjectKind: 'component',
@@ -3607,6 +3675,27 @@ async function readArchitectureContractRows(client, filters = {}) {
     `${architectureContractSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by component_id, contract_kind, contract_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureTestRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'test_id', filters.test);
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'test_kind', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureTestSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, test_kind, test_id
      limit $${params.length}`,
     params
   );
@@ -4012,6 +4101,19 @@ async function runQuery(options = {}) {
     if (queryName === 'command-query-rails') {
       const rows = await readCommandQueryRailRows(client, options.filters || {});
       const railRows = buildCommandQueryRailRows(rows);
+      if (options.print !== false) {
+        printTaskRows(railRows);
+      }
+      return railRows;
+    }
+
+    if (queryName === 'rail-vocabulary' || queryName === 'rail-duplicates') {
+      const filters =
+        queryName === 'rail-duplicates'
+          ? { ...(options.filters || {}), duplicates: true }
+          : options.filters || {};
+      const rows = await readRailVocabularyRows(client, filters);
+      const railRows = buildRailVocabularyRows(rows);
       if (options.print !== false) {
         printTaskRows(railRows);
       }
@@ -4429,6 +4531,23 @@ async function runQuery(options = {}) {
       return profileRows;
     }
 
+    if (
+      queryName === 'component-integrity' ||
+      queryName === 'component-validation' ||
+      queryName === 'filesystem-coverage'
+    ) {
+      const filters =
+        queryName === 'filesystem-coverage'
+          ? { ...(options.filters || {}), kind: 'filesystem_coverage' }
+          : options.filters || {};
+      const rows = await readComponentIntegrityRows(client, filters);
+      const integrityRows = buildComponentIntegrityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(integrityRows);
+      }
+      return integrityRows;
+    }
+
     if (queryName === 'architecture-designs') {
       const rows = await readArchitectureDesignRows(client, options.filters || {});
       const designRows = buildArchitectureDesignRows(rows);
@@ -4744,6 +4863,9 @@ module.exports = {
   buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
   buildArchitectureResponsibilityRows,
+  buildArchitectureTestRows,
+  buildComponentIntegrityRows,
+  buildRailVocabularyRows,
   buildHashDriftRows,
   buildPlanningDbQueryHelpText,
   buildComponentEngineeringComponentMetadataRows,
@@ -4819,6 +4941,9 @@ module.exports = {
   readArchitecturePathMappingRows,
   readArchitectureRelationRows,
   readArchitectureResponsibilityRows,
+  readArchitectureTestRows,
+  readComponentIntegrityRows,
+  readRailVocabularyRows,
   readFocusRows,
   readRealWorkRows,
   readGovernanceComponentRows,

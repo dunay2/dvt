@@ -1,0 +1,277 @@
+#!/usr/bin/env node
+/**
+ * @file scripts/planning-db-integrity-check.cjs
+ * @ownedConcern Check Planning DB component and rail integrity from DB read models.
+ */
+const { Client } = require('pg');
+
+const { defaultPgUrl } = require('./planning-db-run.cjs');
+const {
+  readComponentIntegrityRows,
+} = require('./planning-db/queries/component-integrity-query.cjs');
+const { readRailVocabularyRows } = require('./planning-db/queries/rail-vocabulary-query.cjs');
+
+const databaseUrl = process.env.PLANNING_DATABASE_URL || process.env.DATABASE_URL || defaultPgUrl;
+const severityOrder = Object.freeze(['blocker', 'error', 'warning', 'info']);
+const progressiveBaseline = Object.freeze({
+  componentIntegrity: Object.freeze({
+    architecture_drift: Object.freeze({ total: 0 }),
+    component_missing_architecture_authority: Object.freeze({ total: 0 }),
+    component_path_without_files: Object.freeze({ total: 0 }),
+    duplicate_repo_path: Object.freeze({ warning: 107, total: 107 }),
+    filesystem_coverage: Object.freeze({ total: 0 }),
+    fitness_gap: Object.freeze({ blocker: 0, error: 0, warning: 197, total: 197 }),
+    missing_maturity_evidence: Object.freeze({ error: 226, total: 226 }),
+  }),
+  railVocabulary: Object.freeze({
+    exact_duplicate: Object.freeze({ total: 0 }),
+    gap_rail: Object.freeze({ warning: 121, total: 121 }),
+    missing_ddd_owner: Object.freeze({ total: 0 }),
+    semantic_duplicate: Object.freeze({ total: 0 }),
+    surface_named_rail: Object.freeze({ warning: 1, total: 1 }),
+  }),
+});
+
+function parseArgs(args = process.argv.slice(2)) {
+  const options = {
+    strict: false,
+    limit: 5000,
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--strict') {
+      options.strict = true;
+      continue;
+    }
+    if (arg === '--report') {
+      options.strict = false;
+      continue;
+    }
+    if (arg === '--limit') {
+      const value = args[index + 1];
+      if (value === undefined || value.startsWith('--')) {
+        throw new Error('Missing value for --limit.');
+      }
+      index += 1;
+      const parsed = Number(value);
+      if (!Number.isInteger(parsed) || parsed <= 0) {
+        throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
+      }
+      options.limit = parsed;
+      continue;
+    }
+    if (arg === '--help' || arg === '-h') {
+      options.help = true;
+      continue;
+    }
+
+    throw new Error(`Unknown planning DB integrity check option "${arg}".`);
+  }
+
+  return options;
+}
+
+function helpText() {
+  return [
+    'Planning DB integrity check',
+    '',
+    'Usage:',
+    '  node scripts/planning-db-integrity-check.cjs [--report|--strict] [--limit <n>]',
+    '',
+    'Report mode exits 0 while historical debt is being retired.',
+    'Report mode still exits 1 when progressive regression budgets are exceeded.',
+    'Strict mode exits 1 on blocker or error findings, or on progressive regressions.',
+  ].join('\n');
+}
+
+function blankSeverityCounts() {
+  return {
+    total: 0,
+    blocker: 0,
+    error: 0,
+    warning: 0,
+    info: 0,
+  };
+}
+
+function countRowsBySeverity(rows) {
+  const counts = blankSeverityCounts();
+  for (const row of rows) {
+    counts.total += 1;
+    const severity = severityOrder.includes(row.severity) ? row.severity : 'info';
+    counts[severity] += 1;
+  }
+
+  return counts;
+}
+
+function countRowsByKindAndSeverity(rows) {
+  const counts = {};
+  for (const row of rows) {
+    const kind = row.finding_kind || 'unknown';
+    const severity = severityOrder.includes(row.severity) ? row.severity : 'info';
+    if (!counts[kind]) {
+      counts[kind] = blankSeverityCounts();
+    }
+    counts[kind].total += 1;
+    counts[kind][severity] += 1;
+  }
+
+  return counts;
+}
+
+function hasBlockingFinding(counts) {
+  return counts.blocker > 0 || counts.error > 0;
+}
+
+function baselineBudgetFor({ baseline = {}, kind, metric }) {
+  const kindBudget = baseline[kind] || {};
+  if (Object.prototype.hasOwnProperty.call(kindBudget, metric)) {
+    return kindBudget[metric];
+  }
+
+  if (metric === 'blocker' || metric === 'error') {
+    return 0;
+  }
+
+  return null;
+}
+
+function buildProgressiveBaselineViolations(kindCounts = {}, baseline = {}) {
+  const kinds = new Set([...Object.keys(kindCounts), ...Object.keys(baseline)]);
+  const violations = [];
+  for (const kind of [...kinds].sort()) {
+    const counts = kindCounts[kind] || blankSeverityCounts();
+    for (const metric of ['total', ...severityOrder]) {
+      const allowed = baselineBudgetFor({ baseline, kind, metric });
+      if (allowed === null) {
+        continue;
+      }
+      const actual = counts[metric] || 0;
+      if (actual > allowed) {
+        violations.push({
+          kind,
+          metric,
+          actual,
+          allowed,
+        });
+      }
+    }
+  }
+
+  return violations;
+}
+
+function buildIntegrityCheckResult({ componentRows = [], railRows = [], strict = false } = {}) {
+  const kindCounts = {
+    componentIntegrity: countRowsByKindAndSeverity(componentRows),
+    railVocabulary: countRowsByKindAndSeverity(railRows),
+  };
+  const baselineViolations = [
+    ...buildProgressiveBaselineViolations(
+      kindCounts.componentIntegrity,
+      progressiveBaseline.componentIntegrity
+    ).map((violation) => ({ ...violation, surface: 'component_integrity' })),
+    ...buildProgressiveBaselineViolations(
+      kindCounts.railVocabulary,
+      progressiveBaseline.railVocabulary
+    ).map((violation) => ({ ...violation, surface: 'rail_vocabulary' })),
+  ];
+  const counts = {
+    componentIntegrity: countRowsBySeverity(componentRows),
+    railVocabulary: countRowsBySeverity(railRows),
+  };
+  const blocking =
+    hasBlockingFinding(counts.componentIntegrity) || hasBlockingFinding(counts.railVocabulary);
+
+  return {
+    mode: strict ? 'strict' : 'report',
+    strict,
+    counts,
+    kindCounts,
+    baselineViolations,
+    exitCode: (strict && blocking) || baselineViolations.length > 0 ? 1 : 0,
+  };
+}
+
+function shouldFailIntegrityCheck(result) {
+  return result.exitCode !== 0;
+}
+
+function formatCountLine(label, counts) {
+  return `${label} total=${counts.total} blocker=${counts.blocker} error=${counts.error} warning=${counts.warning} info=${counts.info}`;
+}
+
+function formatIntegrityCheckSummary(result) {
+  const lines = [
+    `[planning:db:integrity] mode=${result.mode} exit=${result.exitCode}`,
+    formatCountLine('component_integrity', result.counts.componentIntegrity),
+    formatCountLine('rail_vocabulary', result.counts.railVocabulary),
+    `progressive_baseline ${result.baselineViolations.length === 0 ? 'pass' : `fail violations=${result.baselineViolations.length}`}`,
+  ];
+  for (const violation of result.baselineViolations) {
+    lines.push(
+      `baseline_violation ${violation.surface}.${violation.kind}.${violation.metric} actual=${violation.actual} allowed=${violation.allowed}`
+    );
+  }
+
+  return lines.join('\n');
+}
+
+async function runIntegrityCheck(options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl });
+  const ownsClient = !options.client;
+  try {
+    if (ownsClient) {
+      await client.connect();
+    }
+    const limit = options.limit || 5000;
+    const [componentRows, railRows] = await Promise.all([
+      readComponentIntegrityRows(client, { limit }),
+      readRailVocabularyRows(client, { limit }),
+    ]);
+
+    return buildIntegrityCheckResult({
+      componentRows,
+      railRows,
+      strict: options.strict === true,
+    });
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function main() {
+  const options = parseArgs();
+  if (options.help) {
+    console.log(helpText());
+    return;
+  }
+
+  const result = await runIntegrityCheck(options);
+  console.log(formatIntegrityCheckSummary(result));
+  process.exitCode = result.exitCode;
+}
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`[planning:db:integrity] ${error.message || error}`);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  buildIntegrityCheckResult,
+  countRowsBySeverity,
+  countRowsByKindAndSeverity,
+  formatIntegrityCheckSummary,
+  buildProgressiveBaselineViolations,
+  parseArgs,
+  progressiveBaseline,
+  runIntegrityCheck,
+  shouldFailIntegrityCheck,
+};

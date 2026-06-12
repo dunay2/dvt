@@ -604,6 +604,51 @@ test('tracked migrations include governance refresh run ledger rails', () => {
   assert.doesNotMatch(refreshRunLedgerMigration.sql, /grep|ripgrep|rg --files/i);
 });
 
+test('tracked migrations expose component integrity and rail vocabulary query rails', () => {
+  const migrations = readMigrationFiles();
+  const integrityMigration = migrations.find(
+    (migration) => migration.fileName === '081_component_integrity_rail_vocabulary.sql'
+  );
+
+  assert.ok(integrityMigration);
+  assert.match(
+    integrityMigration.sql,
+    /create or replace view planning_query_store\.component_integrity_query/
+  );
+  assert.match(
+    integrityMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_vocabulary_query/
+  );
+  assert.match(integrityMigration.sql, /semantic_duplicate/);
+  assert.match(integrityMigration.sql, /filesystem_coverage/);
+});
+
+test('tracked migrations exclude retired rails from active duplicate vocabulary checks', () => {
+  const migrations = readMigrationFiles();
+  const deprecationMigration = migrations.find(
+    (migration) => migration.fileName === '082_rail_vocabulary_deprecation_hardening.sql'
+  );
+
+  assert.ok(deprecationMigration);
+  assert.match(
+    deprecationMigration.sql,
+    /lower\(coalesce\(rail_status, ''\)\) not in \('deprecated', 'retired'\)/
+  );
+  assert.match(deprecationMigration.sql, /surfacePrefixRule', 'api\|ui\|cli\|worker\|adapter'/);
+  assert.doesNotMatch(deprecationMigration.sql, /surfacePrefixRule', '.*workflow/);
+});
+
+test('tracked migrations include architecture test evidence operations after W83', () => {
+  const migrations = readMigrationFiles();
+  const architectureEvidenceMigration = migrations.find(
+    (migration) => migration.fileName === '083_architecture_test_evidence_operation_rail.sql'
+  );
+
+  assert.ok(architectureEvidenceMigration);
+  assert.match(architectureEvidenceMigration.sql, /architecture_design_operations_type_check/);
+  assert.match(architectureEvidenceMigration.sql, /'architecture_test_record'/);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(
@@ -1329,10 +1374,13 @@ test('latest command/query rail projection counts canonical component docs as du
     latestRailProjectionMigration.sql,
     /when rail\.source_path like 'docs\/architecture\/components\/%' then 2/
   );
+  assert.match(latestRailProjectionMigration.sql, /count\(\*\) filter \(/);
+  assert.match(latestRailProjectionMigration.sql, /where authority_priority <= 2/);
   assert.match(
     latestRailProjectionMigration.sql,
-    /count\(\*\) filter \(where authority_priority <= 2\)::int as canonical_candidate_count/
+    /lower\(coalesce\(rail_status, ''\)\) not in \('deprecated', 'retired'\)/
   );
+  assert.match(latestRailProjectionMigration.sql, /as canonical_candidate_count/);
 });
 
 test('tracked migrations expose composite component hierarchy records after W32', () => {

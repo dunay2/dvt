@@ -58,11 +58,13 @@ const allowedFeatureMechanizationRailTypes = new Set(['command', 'query']);
 const allowedFeatureMechanizationRailStatuses = new Set([
   'accepted',
   'declared',
+  'deprecated',
   'documented',
   'implemented',
   'missing',
   'planned',
   'proposed',
+  'retired',
   'unimplemented',
   'not-implemented',
 ]);
@@ -135,7 +137,14 @@ const allowedArchitectureComponentLayers = new Set([
   'contracts',
 ]);
 const allowedArchitectureComponentCriticalities = new Set(['low', 'medium', 'high', 'critical']);
-const allowedArchitectureRecordStatuses = new Set(['proposed', 'review']);
+const allowedArchitectureRecordStatuses = new Set([
+  'proposed',
+  'review',
+  'approved',
+  'implemented',
+  'deprecated',
+  'drift',
+]);
 const allowedArchitectureRelationTypes = new Set([
   'contains',
   'depends_on',
@@ -151,7 +160,27 @@ const allowedArchitectureRelationTypes = new Set([
 ]);
 const allowedArchitectureRelationDirections = new Set(['outbound', 'inbound', 'bidirectional']);
 const allowedArchitectureRelationSyncModes = new Set(['sync', 'async', 'batch', 'build_time']);
-const allowedArchitectureRelationRecordStatuses = new Set(['proposed']);
+const allowedArchitectureRelationRecordStatuses = new Set([
+  'proposed',
+  'approved',
+  'implemented',
+  'drift',
+]);
+const allowedArchitectureTestKinds = new Set([
+  'unit',
+  'contract',
+  'integration',
+  'architecture',
+  'e2e',
+  'property',
+]);
+const allowedArchitectureTestCoverageLevels = new Set([
+  'smoke',
+  'behavior',
+  'negative',
+  'boundary',
+  'flow',
+]);
 const allowedComponentStatuses = new Set([
   'canonical',
   'review',
@@ -260,6 +289,15 @@ const operationHelp = Object.freeze({
       'Requires --root, --source-ref, --source-content-sha256, and an existing architecture design.',
     ],
   },
+  'architecture-evidence': {
+    operations: ['record-test'],
+    usage:
+      'pnpm planning:db:operate architecture-evidence record-test --design <DESIGN-ID> --component <SYS-ID> --test <TEST-ID> --actor <actor>',
+    details: [
+      'RecordArchitectureTestEvidence attaches required test evidence to a scoped architecture component.',
+      'Requires --test-path, --test-kind, --coverage-level, --validation-command, --source-ref, and --source-content-sha256.',
+    ],
+  },
   'docs-disposition': {
     operations: ['resolve'],
     usage:
@@ -326,7 +364,7 @@ function isHelpFlag(value) {
 }
 
 function unknownOperationMessage() {
-  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-fitness", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", "governance-refresh", or "audit".';
+  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-fitness", "architecture-evidence", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", "governance-refresh", or "audit".';
 }
 
 function buildPlanningDbOperateHelpText(resource, action) {
@@ -757,6 +795,30 @@ function validateArchitectureRelationRecordStatus(value) {
   return value;
 }
 
+function validateArchitectureTestKind(value) {
+  if (!allowedArchitectureTestKinds.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureTestEvidence stores test kinds accepted by architecture.component_test: ${[
+        ...allowedArchitectureTestKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureTestCoverageLevel(value) {
+  if (!allowedArchitectureTestCoverageLevels.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureTestEvidence stores coverage levels accepted by architecture.component_test: ${[
+        ...allowedArchitectureTestCoverageLevels,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
 function validateArchitectureRelationType(value) {
   if (!allowedArchitectureRelationTypes.has(value)) {
     throw new Error(
@@ -1062,6 +1124,21 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_test_record') {
+    return {
+      designId: command.designId,
+      testId: command.testId,
+      componentId: command.componentId,
+      testPath: command.testPath,
+      testKind: command.testKind,
+      coverageLevel: command.coverageLevel,
+      required: command.required,
+      validationCommand: command.validationCommand,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'component_create') {
     return {
       componentId: command.componentId,
@@ -1208,13 +1285,14 @@ function defaultIdempotencyKey(command) {
   if (
     command.kind === 'architecture_component_record' ||
     command.kind === 'architecture_relation_record' ||
-    command.kind === 'architecture_fitness_scan'
+    command.kind === 'architecture_fitness_scan' ||
+    command.kind === 'architecture_test_record'
   ) {
     return [
       command.kind,
       command.actor || 'anonymous',
       command.designId || 'no-design',
-      command.componentId || command.relationId || command.scanId || 'no-subject',
+      command.componentId || command.relationId || command.scanId || command.testId || 'no-subject',
       crypto
         .createHash('sha256')
         .update(canonicalJson(operationPayload(command)))
@@ -2010,6 +2088,63 @@ function parseArchitectureFitnessCommand(action, args) {
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
 
+function validateArchitectureTestRecordCommand(command) {
+  const requiredTextFields = [
+    ['test', command.testId],
+    ['component', command.componentId],
+    ['test-path', command.testPath],
+    ['validation-command', command.validationCommand],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`ARCH-TEST-EVIDENCE-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  return command;
+}
+
+function validateArchitectureTestId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^TEST-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --test "${value}". Expected an uppercase TEST-* architecture test evidence id.`
+    );
+  }
+
+  return normalized;
+}
+
+function parseArchitectureEvidenceCommand(action, args) {
+  if (action !== 'record-test') {
+    throw new Error(`Unknown architecture-evidence operation "${action}". Expected record-test.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const command = {
+    kind: 'architecture_test_record',
+    designId: validateArchitectureDesignId(requireOption(options, 'design')),
+    testId: validateArchitectureTestId(requireOption(options, 'test')),
+    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    testPath: requireOption(options, 'testPath'),
+    testKind: validateArchitectureTestKind(requireOption(options, 'testKind')),
+    coverageLevel: validateArchitectureTestCoverageLevel(requireOption(options, 'coverageLevel')),
+    required: parseBooleanOption(options.required, 'required') ?? true,
+    validationCommand: requireOption(options, 'validationCommand'),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateArchitectureTestRecordCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
 function validateDbSurfaceUpsertCommand(command) {
   const requiredTextFields = [
     ['surface', command.surfaceName],
@@ -2333,6 +2468,14 @@ function parseArgs(args = process.argv.slice(2)) {
     }
 
     return parseArchitectureFitnessCommand(action, rest);
+  }
+
+  if (resource === 'architecture-evidence') {
+    if (!action) {
+      throw new Error('Missing architecture-evidence operation. Expected record-test.');
+    }
+
+    return parseArchitectureEvidenceCommand(action, rest);
   }
 
   if (resource === 'audit') {
@@ -2958,6 +3101,54 @@ function planArchitectureFitnessScanOperation({ command, design, scanResult, ope
   const audit = architectureScopedAudit({ command, operationId, now });
 
   return { scan, observations, evaluations, audit };
+}
+
+function planArchitectureTestRecordOperation({
+  command,
+  design,
+  designScopes,
+  component,
+  existingTest,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  const requiredScope = existingTest ? 'may_update' : 'may_create';
+  assertArchitectureDesignScope(
+    designScopes,
+    'test',
+    command.testId,
+    [requiredScope],
+    'ARCH-TEST-EVIDENCE-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference'],
+    'ARCH-TEST-EVIDENCE-COMPONENT-SCOPE-MISSING'
+  );
+
+  if (!normalizeArchitectureComponent(component)) {
+    throw new Error(`ARCH-TEST-EVIDENCE-COMPONENT-MISSING: component ${command.componentId}`);
+  }
+
+  validateArchitectureTestRecordCommand(command);
+
+  const createdAt = toIso(now);
+  const testEvidence = {
+    testId: command.testId,
+    componentId: command.componentId,
+    testPath: command.testPath,
+    testKind: command.testKind,
+    coverageLevel: command.coverageLevel,
+    required: command.required,
+    validationCommand: command.validationCommand,
+    createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { testEvidence, audit };
 }
 
 function planComponentCreateOperation({
@@ -3787,6 +3978,17 @@ async function readArchitectureRelation(client, relationId) {
   return result.rows[0] || null;
 }
 
+async function readArchitectureTest(client, testId) {
+  const result = await client.query(
+    `select *
+     from architecture.component_test
+     where test_id = $1`,
+    [testId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readArchitectureComponents(client) {
   const result = await client.query(
     `select component_id, repo_path
@@ -4341,6 +4543,34 @@ async function writePlannedArchitectureFitnessScanOperation(client, planned) {
       ]
     );
   }
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureTestRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.component_test
+      (test_id, component_id, test_path, test_kind, coverage_level,
+       required, validation_command, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
+     on conflict (test_id) do update set
+       component_id = excluded.component_id,
+       test_path = excluded.test_path,
+       test_kind = excluded.test_kind,
+       coverage_level = excluded.coverage_level,
+       required = excluded.required,
+       validation_command = excluded.validation_command`,
+    [
+      planned.testEvidence.testId,
+      planned.testEvidence.componentId,
+      planned.testEvidence.testPath,
+      planned.testEvidence.testKind,
+      planned.testEvidence.coverageLevel,
+      planned.testEvidence.required,
+      planned.testEvidence.validationCommand,
+      planned.testEvidence.createdAt,
+    ]
+  );
 
   await writeArchitectureScopedAudit(client, planned.audit);
 }
@@ -4995,6 +5225,53 @@ async function applyArchitectureFitnessScanOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureTestRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const component = await readArchitectureComponent(client, command.componentId);
+    const existingTest = await readArchitectureTest(client, command.testId);
+    const planned = planArchitectureTestRecordOperation({
+      command,
+      design,
+      designScopes,
+      component,
+      existingTest,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureTestRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyComponentCreateOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -5396,6 +5673,13 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.testEvidence) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.testEvidence.testId} component=${result.testEvidence.componentId}`
+    );
+    return;
+  }
+
   if (result.definition) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.definition.componentId} revision=${result.audit.resultingRevision}`
@@ -5489,17 +5773,19 @@ async function main() {
             ? await applyArchitectureRelationRecordOperation(command)
             : command.kind === 'architecture_fitness_scan'
               ? await applyArchitectureFitnessScanOperation(command)
-              : command.kind === 'component_create'
-                ? await applyComponentCreateOperation(command)
-                : command.kind === 'db_surface_upsert'
-                  ? await applyDbSurfaceUpsertOperation(command)
-                  : command.kind === 'feature_mechanization_rail_record'
-                    ? await applyFeatureMechanizationRailRecordOperation(command)
-                    : command.kind === 'governance_refresh_run_record'
-                      ? await applyGovernanceRefreshRunRecordOperation(command)
-                      : command.kind.startsWith('fowler_analysis_')
-                        ? await applyFowlerAnalysisOperation(command)
-                        : await applyTaskLocalOperation(command);
+              : command.kind === 'architecture_test_record'
+                ? await applyArchitectureTestRecordOperation(command)
+                : command.kind === 'component_create'
+                  ? await applyComponentCreateOperation(command)
+                  : command.kind === 'db_surface_upsert'
+                    ? await applyDbSurfaceUpsertOperation(command)
+                    : command.kind === 'feature_mechanization_rail_record'
+                      ? await applyFeatureMechanizationRailRecordOperation(command)
+                      : command.kind === 'governance_refresh_run_record'
+                        ? await applyGovernanceRefreshRunRecordOperation(command)
+                        : command.kind.startsWith('fowler_analysis_')
+                          ? await applyFowlerAnalysisOperation(command)
+                          : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -5514,6 +5800,7 @@ module.exports = {
   applyArchitectureComponentRecordOperation,
   applyArchitectureDesignCreateOperation,
   applyArchitectureFitnessScanOperation,
+  applyArchitectureTestRecordOperation,
   applyArchitectureRelationRecordOperation,
   applyComponentCreateOperation,
   applyDbSurfaceUpsertOperation,
@@ -5539,6 +5826,7 @@ module.exports = {
   planArchitectureComponentRecordOperation,
   planArchitectureDesignCreateOperation,
   planArchitectureFitnessScanOperation,
+  planArchitectureTestRecordOperation,
   planArchitectureRelationRecordOperation,
   planComponentCreateOperation,
   planDbSurfaceUpsertOperation,
@@ -5560,6 +5848,7 @@ module.exports = {
   writePlannedComponentCreateOperation,
   writePlannedDbSurfaceUpsertOperation,
   writePlannedArchitectureFitnessScanOperation,
+  writePlannedArchitectureTestRecordOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
   writePlannedFowlerAnalysisOperation,
   writePlannedGovernanceRefreshRunRecordOperation,

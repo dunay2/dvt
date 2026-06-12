@@ -18,11 +18,14 @@ const {
   buildArchitectureDependencyClassificationRows,
   buildArchitectureDependencyObservationRows,
   buildArchitectureDesignRows,
+  buildComponentIntegrityRows,
   buildArchitectureFitnessGapRows,
   buildArchitectureFitnessRows,
   buildGovernanceRefreshRunRows,
   buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
+  buildArchitectureTestRows,
+  buildRailVocabularyRows,
   readArchitectureFlowRows,
   buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringQualityRows,
@@ -112,10 +115,13 @@ const {
   readArchitectureDependencyClassificationRows,
   readArchitectureDependencyObservationRows,
   readArchitectureDesignRows,
+  readComponentIntegrityRows,
   readArchitectureFitnessGapRows,
   readArchitectureFitnessRows,
   readArchitecturePathMappingRows,
   readArchitectureRelationRows,
+  readArchitectureTestRows,
+  readRailVocabularyRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
   readComponentEngineeringRecordRows,
@@ -412,6 +418,23 @@ test('component architecture fitness query behavior lives in a focused read-mode
   );
 });
 
+test('component integrity query behavior lives in a focused read-model component', () => {
+  const componentIntegrityComponent = require('./planning-db/queries/component-integrity-query.cjs');
+
+  assert.equal(
+    componentIntegrityComponent.buildComponentIntegrityRows,
+    buildComponentIntegrityRows
+  );
+  assert.equal(componentIntegrityComponent.readComponentIntegrityRows, readComponentIntegrityRows);
+});
+
+test('rail vocabulary query behavior lives in a focused read-model component', () => {
+  const railVocabularyComponent = require('./planning-db/queries/rail-vocabulary-query.cjs');
+
+  assert.equal(railVocabularyComponent.buildRailVocabularyRows, buildRailVocabularyRows);
+  assert.equal(railVocabularyComponent.readRailVocabularyRows, readRailVocabularyRows);
+});
+
 test('buildComponentProfileRows groups component facts into operator sections', () => {
   const rows = buildComponentProfileRows({
     component: {
@@ -491,6 +514,16 @@ test('buildComponentProfileRows groups component facts into operator sections', 
         contract_kind: 'public-api',
         contract_ref: 'docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md',
         status: 'review',
+      },
+    ],
+    tests: [
+      {
+        test_id: 'TEST-ENGINE-LIFECYCLE',
+        test_path: 'packages/@dvt/engine/test/lifecycle.test.ts',
+        test_kind: 'integration',
+        coverage_level: 'behavior',
+        required: true,
+        validation_command: 'pnpm --filter @dvt/engine test',
       },
     ],
     architectureDesigns: [
@@ -574,6 +607,15 @@ test('buildComponentProfileRows groups component facts into operator sections', 
       'review',
     ],
     [
+      'test',
+      'TEST-ENGINE-LIFECYCLE',
+      'packages/@dvt/engine/test/lifecycle.test.ts',
+      'integration',
+      'behavior',
+      'true',
+      'pnpm --filter @dvt/engine test',
+    ],
+    [
       'architecture-basis',
       'design-22-system-component-ownership-map',
       'COMPONENT-OWNERSHIP-MAP-20260611',
@@ -654,6 +696,11 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('component-rule-evaluations'), 'component-rule-evaluations');
   assert.equal(resolveQueryName('component-quality'), 'component-quality');
   assert.equal(resolveQueryName('component-profile'), 'component-profile');
+  assert.equal(resolveQueryName('component-integrity'), 'component-integrity');
+  assert.equal(resolveQueryName('component-validation'), 'component-validation');
+  assert.equal(resolveQueryName('filesystem-coverage'), 'filesystem-coverage');
+  assert.equal(resolveQueryName('rail-vocabulary'), 'rail-vocabulary');
+  assert.equal(resolveQueryName('rail-duplicates'), 'rail-duplicates');
   assert.equal(resolveQueryName('architecture-designs'), 'architecture-designs');
   assert.equal(resolveQueryName('architecture-components'), 'architecture-components');
   assert.equal(resolveQueryName('architecture-relations'), 'architecture-relations');
@@ -695,6 +742,27 @@ test('parseArgs parses DB surface inventory query filters', () => {
   assert.equal(command.filters.state, 'DB-first');
   assert.equal(command.filters.kind, 'db_command');
   assert.equal(command.filters.limit, 5);
+});
+
+test('parseArgs keeps architecture fitness state filters on the DB fitness state field', () => {
+  const command = parseArgs([
+    'architecture-fitness-gaps',
+    '--state',
+    'fail',
+    '--kind',
+    'undeclared_dependency',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'architecture-fitness-gaps',
+    filters: {
+      state: 'fail',
+      kind: 'undeclared_dependency',
+      limit: 5,
+    },
+  });
 });
 
 test('parseArgs parses task query filters for daily DB-first planning work', () => {
@@ -1047,6 +1115,61 @@ test('parseArgs parses creation intent preflight filters for AI reuse checks', (
   });
 });
 
+test('parseArgs parses component integrity and rail vocabulary validation filters', () => {
+  assert.deepEqual(
+    parseArgs([
+      'component-integrity',
+      '--component',
+      'SYS-WEB-ROOT',
+      '--kind',
+      'fitness_gap',
+      '--state',
+      'fail',
+      '--severity',
+      'error',
+      '--limit',
+      '5',
+    ]),
+    {
+      queryName: 'component-integrity',
+      filters: {
+        component: 'SYS-WEB-ROOT',
+        kind: 'fitness_gap',
+        state: 'fail',
+        severity: 'error',
+        limit: 5,
+      },
+    }
+  );
+
+  assert.deepEqual(
+    parseArgs([
+      'rail-vocabulary',
+      '--rail',
+      'ApiCreateWidget',
+      '--kind',
+      'surface_named_rail',
+      '--state',
+      'active',
+      '--limit',
+      '5',
+    ]),
+    {
+      queryName: 'rail-vocabulary',
+      filters: {
+        rail: 'ApiCreateWidget',
+        kind: 'surface_named_rail',
+        state: 'active',
+        limit: 5,
+      },
+    }
+  );
+
+  assert.equal(resolveQueryName('rail-duplicates'), 'rail-duplicates');
+  assert.equal(resolveQueryName('filesystem-coverage'), 'filesystem-coverage');
+  assert.equal(resolveQueryName('component-validation'), 'component-validation');
+});
+
 test('parseArgs requires an intent before querying creation preflight', () => {
   assert.throws(
     () => parseArgs(['creation-intent', '--limit', '5']),
@@ -1158,6 +1281,78 @@ test('buildCreationIntentRows explicitly reports when no existing rail matches',
       'docs/architecture/command-query-rail-governance.md',
     ],
   ]);
+});
+
+test('buildRailVocabularyRows shows canonical rail vocabulary findings', () => {
+  assert.deepEqual(
+    buildRailVocabularyRows([
+      {
+        finding_kind: 'semantic_duplicate',
+        severity: 'error',
+        rail_type: 'query',
+        rail_name: 'ApiListWidgetsQuery',
+        canonical_name: 'ListWidgets',
+        bounded_context: 'Planning DB',
+        ddd_owner: 'WidgetReadModel',
+        rail_status: 'implemented',
+        vocabulary_state: 'active',
+        duplicate_count: 2,
+        action_hint: 'Choose one canonical rail name and deprecate aliases.',
+        source_path: 'docs/planning/proposals/mandatory/example.md',
+      },
+    ]),
+    [
+      [
+        'semantic_duplicate',
+        'error',
+        'query',
+        'ApiListWidgetsQuery',
+        'ListWidgets',
+        'Planning DB',
+        'WidgetReadModel',
+        'implemented',
+        'active',
+        2,
+        'Choose one canonical rail name and deprecate aliases.',
+        'docs/planning/proposals/mandatory/example.md',
+      ],
+    ]
+  );
+});
+
+test('buildComponentIntegrityRows shows component validation findings', () => {
+  assert.deepEqual(
+    buildComponentIntegrityRows([
+      {
+        finding_kind: 'fitness_gap',
+        severity: 'error',
+        component_id: 'SYS-WEB-ROOT',
+        component_name: 'Web root',
+        finding_state: 'fail',
+        path: 'apps/web/src/App.tsx',
+        related_component_id: 'SYS-WEB-APP-BOOTSTRAP',
+        relation_id: 'REL-AUTO-WEB-ROOT-WEB-APP-BOOTSTRAP',
+        evidence_count: 31,
+        action_hint: 'Record architecture.component_relation or refactor the dependency.',
+        source_view: 'architecture.component_fitness_gap_summary_query',
+      },
+    ]),
+    [
+      [
+        'fitness_gap',
+        'error',
+        'SYS-WEB-ROOT',
+        'Web root',
+        'fail',
+        'apps/web/src/App.tsx',
+        'SYS-WEB-APP-BOOTSTRAP',
+        'REL-AUTO-WEB-ROOT-WEB-APP-BOOTSTRAP',
+        31,
+        'Record architecture.component_relation or refactor the dependency.',
+        'architecture.component_fitness_gap_summary_query',
+      ],
+    ]
+  );
 });
 
 test('feature mechanization row builders expose DB-first operator views', () => {
@@ -5398,6 +5593,7 @@ test('readComponentProfileRows reads files through the component descendant tree
     capturedSql.join('\n'),
     /leaf_component_id in \(select component_id from component_scope\)/
   );
+  assert.match(capturedSql.join('\n'), /from architecture\.component_test/);
 });
 
 test('readArchitectureRelationRows queries the DB architecture relation graph view', async () => {
@@ -5423,6 +5619,56 @@ test('readArchitectureRelationRows queries the DB architecture relation graph vi
   assert.match(captured.sql, /status = \$3/);
   assert.match(captured.sql, /limit \$4/);
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-APPLICATION', 'calls', 'declared', 5]);
+});
+
+test('readArchitectureTestRows queries DB-owned component test evidence', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureTestRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-APPLICATION',
+    kind: 'integration',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_test/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /test_kind = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-APPLICATION', 'integration', 5]);
+});
+
+test('buildArchitectureTestRows formats component test evidence', () => {
+  assert.deepEqual(
+    buildArchitectureTestRows([
+      {
+        test_id: 'TEST-ENGINE-LIFECYCLE',
+        component_id: 'SYS-RUNTIME-ENGINE-APPLICATION',
+        test_path: 'packages/@dvt/engine/test/lifecycle.test.ts',
+        test_kind: 'integration',
+        coverage_level: 'behavior',
+        required: true,
+        validation_command: 'pnpm --filter @dvt/engine test',
+      },
+    ]),
+    [
+      [
+        'TEST-ENGINE-LIFECYCLE',
+        'SYS-RUNTIME-ENGINE-APPLICATION',
+        'packages/@dvt/engine/test/lifecycle.test.ts',
+        'integration',
+        'behavior',
+        'true',
+        'pnpm --filter @dvt/engine test',
+      ],
+    ]
+  );
 });
 
 test('readArchitectureFlowRows filters component participation through entry, exit, and flow steps', async () => {
