@@ -5,7 +5,7 @@ import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import type { CanvasController } from './Canvas.test.controller';
 
 type CanvasDocumentKind = Exclude<CanvasController['canvasAuthoringMode'], undefined>;
-type CanvasExplorerNode = CanvasController['explorerNodes'][number];
+type CanvasHostCycleNode = CanvasController['inspectorGraphNodes'][number];
 
 export type CanvasHostCycleControllerStateDto =
   | { kind: 'needs_canvas' }
@@ -51,10 +51,10 @@ function resolveCanvasHostCycleTitle(kind: CanvasDocumentKind): string {
   return kind === 'dbt' ? 'dbt canvas' : 'Transformation canvas';
 }
 
-function buildCanvasHostCycleExplorerNode(
+function buildCanvasHostCycleNode(
   kind: CanvasDocumentKind,
   firstNodeKind?: NodeKindRegistration['kind']
-): CanvasExplorerNode {
+): CanvasHostCycleNode {
   if (kind === 'dbt') {
     return {
       id: 'node.orders',
@@ -123,7 +123,6 @@ export function buildCanvasHostCycleControllerState(
       canvasDocument: null,
       canCreateCanvasDocument: true,
       availableCanvasKinds: buildCanvasKinds(),
-      explorerNodes: [],
     };
   }
 
@@ -135,7 +134,6 @@ export function buildCanvasHostCycleControllerState(
       },
       availableCanvasKinds: buildCanvasKinds(),
       canCreateCanvasDocument: false,
-      explorerNodes: [],
       userPermissions: {
         ...buildDefaultCanvasUserPermissions(),
         canEditEdges: dto.canEditEdges ?? true,
@@ -147,6 +145,8 @@ export function buildCanvasHostCycleControllerState(
     };
   }
 
+  const graphNode = buildCanvasHostCycleNode(dto.canvasKind, dto.firstNodeKind);
+
   return {
     canvasDocument: {
       kind: dto.canvasKind,
@@ -154,7 +154,21 @@ export function buildCanvasHostCycleControllerState(
     },
     availableCanvasKinds: buildCanvasKinds(),
     canCreateCanvasDocument: false,
-    explorerNodes: [buildCanvasHostCycleExplorerNode(dto.canvasKind, dto.firstNodeKind)],
+    inspectorGraphNodes: [graphNode],
+    nodesWithImpact: [
+      {
+        id: graphNode.id,
+        type: 'dbtNode',
+        position: { x: 0, y: 0 },
+        data: {
+          name: graphNode.name,
+          pluginKind: graphNode.kind,
+          role: graphNode.role,
+          status: graphNode.status,
+          tags: graphNode.tags,
+        },
+      },
+    ] as unknown as CanvasController['nodesWithImpact'],
     canvasAuthoringMode: dto.canvasKind,
     canPlanGraph: true,
   };

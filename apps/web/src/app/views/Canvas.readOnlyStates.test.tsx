@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  buildCanvasRouteReadyNodes,
   createCanvasRouteHarness,
-  currentCanvasRouteState,
   getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
 } from './Canvas.test.support';
@@ -22,6 +22,7 @@ describe('Canvas route access states', () => {
 
   it('keeps the viewport visible and shows a read-only banner when mutations are gated', async () => {
     await renderCanvasRouteWithController(harness, {
+      nodesWithImpact: buildCanvasRouteReadyNodes(),
       userPermissions: {
         canPlan: false,
         canRun: false,
@@ -36,15 +37,15 @@ describe('Canvas route access states', () => {
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-readonly-state"]')).not.toBeNull();
     expect(harness.container.textContent).toContain('Read-only canvas');
-    expect(currentCanvasRouteState().explorerProps).toMatchObject({
-      canEditGraph: false,
-    });
-    expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
     expect(layoutButton).toBeUndefined();
-    expect(planButton).toBeDefined();
-    expect(runButton).toBeDefined();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton).toBeUndefined();
+    expect(runButton).toBeUndefined();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-active-canvas-identity"]')
+    ).not.toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-draft-save-status"]')
+    ).not.toBeNull();
     expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
       canEditEdges: false,
     });
@@ -56,6 +57,7 @@ describe('Canvas route access states', () => {
     document.body.append(scopeTrigger);
 
     await renderCanvasRouteWithController(harness, {
+      nodesWithImpact: buildCanvasRouteReadyNodes(),
       canPlanGraph: true,
       canStartRun: true,
       draftAccessMode: 'read_only',
@@ -88,10 +90,14 @@ describe('Canvas route access states', () => {
     expect(harness.container.textContent).toContain('Use an executable workspace scope');
     expect(harness.container.textContent).toContain('Choose execution scope');
     expect(layoutButton).toBeUndefined();
-    expect(planButton).toBeDefined();
-    expect(runButton).toBeDefined();
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton).toBeUndefined();
+    expect(runButton).toBeUndefined();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-active-canvas-identity"]')
+    ).not.toBeNull();
+    expect(
+      harness.container.querySelector('[data-slot="canvas-draft-save-status"]')
+    ).not.toBeNull();
     expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
       canEditEdges: false,
     });

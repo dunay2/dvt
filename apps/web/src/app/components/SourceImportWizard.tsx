@@ -44,7 +44,7 @@ export default function SourceImportWizard({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col">
+      <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col">
         <DialogHeader>
           <DialogTitle>{copy.title}</DialogTitle>
           <DialogDescription>{copy.description}</DialogDescription>
@@ -79,12 +79,12 @@ export default function SourceImportWizard({
                   {state.isProcessing ? (
                     <>
                       <Loader2 className="mr-2 size-4 animate-spin" />
-                      Registering...
+                      Attaching...
                     </>
                   ) : (
                     <>
                       <CheckCircle2 className="mr-2 size-4" />
-                      Register data objects
+                      Attach sources to canvas
                     </>
                   )}
                 </Button>

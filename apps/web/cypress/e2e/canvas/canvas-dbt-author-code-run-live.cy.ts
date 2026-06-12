@@ -3,7 +3,10 @@
  * against the live protected runtime without API stubs.
  */
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
-import { clickButtonNatively } from '../../support/canvasExecutionSelection';
+import {
+  clickButtonNatively,
+  clickPreviewExecutionPlanFromCanvasContextMenu,
+} from '../../support/canvasExecutionSelection';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
@@ -31,19 +34,9 @@ function waitForDraftSaveSettled(): void {
   });
 }
 
-function showInspectorPanel(): void {
-  cy.get('body').then(($body) => {
-    const showInspectorButton = $body.find('button[aria-label="Show inspector panel"]');
-
-    if (showInspectorButton.length > 0) {
-      cy.wrap(showInspectorButton.first()).click({ force: true });
-    }
-  });
-}
-
 function selectNodeForInspector(nodeName: string): void {
-  showInspectorPanel();
   cy.contains('.react-flow__node', nodeName, { timeout: 20_000 }).should('be.visible').click();
+  cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
   cy.contains('Node details', { timeout: 20_000 }).should('be.visible');
   cy.contains('dbt card').should('be.visible');
 }
@@ -133,7 +126,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     waitForDraftSaveSettled();
     waitForPersistedDbtModelConfig();
 
-    clickCommandSlotNatively('canvas-toolbar-plan-command');
+    clickPreviewExecutionPlanFromCanvasContextMenu();
     cy.contains('Execution Plan Preview', { timeout: 30_000 }).should('be.visible');
     cy.contains('Plan Metadata').should('be.visible');
     cy.contains('Persistence Evidence').should('be.visible');

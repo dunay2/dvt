@@ -30,6 +30,7 @@ describe('CanvasToolbar architecture', () => {
     expect(TOOLBAR_SOURCE).toContain("'./CanvasToolbarDraftStatus'");
     expect(TOOLBAR_SOURCE).toContain("'./canvasToolbarViewModel'");
     expect(TOOLBAR_SOURCE).toContain("'./CanvasViewMenuControls'");
+    expect(TOOLBAR_SOURCE).toContain("'./CanvasWorkspaceMenuControls'");
     expect(TOOLBAR_SOURCE).not.toContain('createPortal');
     expect(TOOLBAR_SOURCE).not.toContain('useCanvasToolbarPortalTarget');
     expect(TOOLBAR_SOURCE).not.toContain("placement?: 'inline' | 'top-bar'");
@@ -58,6 +59,13 @@ describe('CanvasToolbar architecture', () => {
       expect(VIEW_MENU_CONTROLS_SOURCE).toContain(viewOwnedLabel);
       expect(TOOLBAR_PRIMARY_SOURCE).not.toContain(viewOwnedLabel);
     }
+  });
+
+  it('keeps Canvas project snapshot commands in the Workspace menu instead of the toolbar', () => {
+    expect(SHELL_MENU_SOURCE).toContain('CanvasWorkspaceMenuControls');
+    expect(TOOLBAR_SOURCE).toContain('CanvasWorkspaceMenuContributionRegistrar');
+    expect(TOOLBAR_PRIMARY_SOURCE).not.toContain('toolbarProjectSnapshotMenuLabel');
+    expect(TOOLBAR_PRIMARY_SOURCE).not.toContain('canvas-toolbar-project-menu-trigger');
   });
 
   it('documents Canvas View menu API, invariants, transitions, consumers, and diagrams', () => {

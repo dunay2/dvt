@@ -1,6 +1,5 @@
 // @vitest-environment jsdom
 
-import { fireEvent, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -8,22 +7,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CanvasToolbarPrimaryControls } from './CanvasToolbarPrimaryControls';
 
 const DEFAULT_PROPS: React.ComponentProps<typeof CanvasToolbarPrimaryControls> = {
-  authoringNodeKinds: [],
-  canEditEdges: true,
-  canExportProjectSnapshot: true,
-  canImportProjectSnapshot: true,
-  canPlan: true,
-  canPlanGraph: true,
   canRun: true,
   canStartRun: true,
-  canvasAuthoringMode: 'transformation',
-  onExportProjectSnapshot: vi.fn(),
-  onImportProjectSnapshotFile: vi.fn(),
-  onPlan: vi.fn(),
   onRun: vi.fn(),
   workflowStatusClass: '',
-  workflowStatusLabel: 'Plan required',
-  workflowStatusTitle: 'Plan required',
+  workflowStatusLabel: 'Preview required',
+  workflowStatusTitle: 'Preview required before run',
 };
 
 describe('CanvasToolbarPrimaryControls', () => {
@@ -47,77 +36,31 @@ describe('CanvasToolbarPrimaryControls', () => {
     vi.clearAllMocks();
   });
 
-  it('groups import and export commands under one project menu', async () => {
-    const onExportProjectSnapshot = vi.fn();
-
+  it('renders only compact workflow posture and run control in the fixed toolbar', async () => {
     await act(async () => {
-      root.render(
-        <CanvasToolbarPrimaryControls
-          {...DEFAULT_PROPS}
-          onExportProjectSnapshot={onExportProjectSnapshot}
-        />
-      );
+      root.render(<CanvasToolbarPrimaryControls {...DEFAULT_PROPS} />);
     });
 
-    expect(
-      container.querySelector('[data-slot="canvas-toolbar-project-menu-trigger"]')
-    ).not.toBeNull();
-    expect(container.querySelector('[data-slot="canvas-toolbar-export-command"]')).toBeNull();
-    expect(container.querySelector('[data-slot="canvas-toolbar-import-command"]')).toBeNull();
-
-    await act(async () => {
-      fireEvent.pointerDown(
-        container.querySelector('[data-slot="canvas-toolbar-project-menu-trigger"]')!
-      );
-    });
-
-    await waitFor(() => {
-      expect(
-        document.body.querySelector('[data-slot="canvas-toolbar-export-command"]')
-      ).not.toBeNull();
-      expect(
-        document.body.querySelector('[data-slot="canvas-toolbar-import-command"]')
-      ).not.toBeNull();
-    });
-
-    await act(async () => {
-      fireEvent.click(document.body.querySelector('[data-slot="canvas-toolbar-export-command"]')!);
-    });
-
-    expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-slot="canvas-workflow-status"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-toolbar-plan-command"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-toolbar-run-command"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-toolbar-project-menu-trigger"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-toolbar-insert-command"]')).toBeNull();
   });
 
-  it('keeps project snapshot import functional through the project menu', async () => {
-    const onImportProjectSnapshotFile = vi.fn();
-    const snapshotFile = new File(['{}'], 'snapshot.json', { type: 'application/json' });
+  it('routes run button clicks through passive command props', async () => {
+    const onRun = vi.fn();
 
     await act(async () => {
-      root.render(
-        <CanvasToolbarPrimaryControls
-          {...DEFAULT_PROPS}
-          onImportProjectSnapshotFile={onImportProjectSnapshotFile}
-        />
-      );
+      root.render(<CanvasToolbarPrimaryControls {...DEFAULT_PROPS} canStartRun onRun={onRun} />);
     });
 
     await act(async () => {
-      fireEvent.pointerDown(
-        container.querySelector('[data-slot="canvas-toolbar-project-menu-trigger"]')!
-      );
+      container
+        .querySelector<HTMLButtonElement>('[data-slot="canvas-toolbar-run-command"]')
+        ?.click();
     });
 
-    await waitFor(() => {
-      expect(
-        document.body.querySelector('[data-slot="canvas-toolbar-import-command"]')
-      ).not.toBeNull();
-    });
-
-    await act(async () => {
-      fireEvent.change(container.querySelector('input[type="file"]')!, {
-        target: { files: [snapshotFile] },
-      });
-    });
-
-    expect(onImportProjectSnapshotFile).toHaveBeenCalledWith(snapshotFile);
+    expect(onRun).toHaveBeenCalledTimes(1);
   });
 });

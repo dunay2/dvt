@@ -13,8 +13,9 @@ function expectCanvasActionsPaused(container: ParentNode): void {
   const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
 
   expect(layoutButton).toBeUndefined();
-  expect(planButton?.getAttribute('disabled')).not.toBeNull();
-  expect(runButton?.getAttribute('disabled')).not.toBeNull();
+  expect(planButton).toBeUndefined();
+  expect(runButton).toBeUndefined();
+  expect(container.querySelector('[data-slot="canvas-draft-save-status"]')).not.toBeNull();
   expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
     canEditEdges: false,
   });
@@ -123,7 +124,6 @@ describe('Canvas route draft recovery', () => {
 
   it('yields to the graph error route state when recovery and graph failure coexist', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       graphErrorMessage: 'workspace graph unavailable',
       draftRecoveryReason: 'stale_conflict',
       draftToolbarState: {

@@ -1,36 +1,75 @@
-import { WIZARD_PROGRESS_STEPS } from './constants';
 import type { WizardStep } from './types';
 
 interface WizardProgressProps {
   currentStep: WizardStep;
 }
 
+type SourceImportSection = Readonly<{
+  id: 'connections' | 'browse' | 'metadata' | 'selected';
+  label: 'Connections' | 'Browse' | 'Metadata' | 'Selected';
+  steps: readonly WizardStep[];
+}>;
+
+const SOURCE_IMPORT_SECTIONS: readonly SourceImportSection[] = [
+  {
+    id: 'connections',
+    label: 'Connections',
+    steps: ['sourceType', 'connection'],
+  },
+  {
+    id: 'browse',
+    label: 'Browse',
+    steps: ['selection'],
+  },
+  {
+    id: 'metadata',
+    label: 'Metadata',
+    steps: ['grouping', 'options'],
+  },
+  {
+    id: 'selected',
+    label: 'Selected',
+    steps: ['review', 'result'],
+  },
+];
+
+function resolveActiveSectionIndex(currentStep: WizardStep): number {
+  const activeIndex = SOURCE_IMPORT_SECTIONS.findIndex((section) =>
+    section.steps.includes(currentStep)
+  );
+
+  return activeIndex === -1 ? 0 : activeIndex;
+}
+
 export function WizardProgress({ currentStep }: WizardProgressProps) {
-  const activeStep = currentStep === 'result' ? 'review' : currentStep;
+  const activeSectionIndex = resolveActiveSectionIndex(currentStep);
+
   return (
-    <div className="mb-4 flex items-center justify-between">
-      {WIZARD_PROGRESS_STEPS.map((step, index, allSteps) => (
-        <div key={step} className="flex flex-1 items-center">
+    <div
+      aria-label="Add source workflow sections"
+      className="mb-4 grid grid-cols-4 overflow-hidden rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)]"
+    >
+      {SOURCE_IMPORT_SECTIONS.map((section, index) => {
+        const isActive = index === activeSectionIndex;
+        const isComplete = index < activeSectionIndex;
+
+        return (
           <div
-            className={`flex size-8 items-center justify-center rounded-full text-xs font-medium ${
-              currentStep === step
-                ? 'bg-blue-500 text-white'
-                : allSteps.indexOf(activeStep) > allSteps.indexOf(step)
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-700 text-slate-300'
+            key={section.id}
+            data-source-import-section={section.id}
+            aria-current={isActive ? 'step' : undefined}
+            className={`border-r border-[color:var(--border-default)] px-3 py-2 text-center text-xs font-medium last:border-r-0 ${
+              isActive
+                ? 'bg-[var(--surface-selected)] text-[var(--text-strong)]'
+                : isComplete
+                  ? 'text-[var(--text-strong)]'
+                  : 'text-[var(--text-muted)]'
             }`}
           >
-            {index + 1}
+            {section.label}
           </div>
-          {index < allSteps.length - 1 ? (
-            <div
-              className={`h-0.5 flex-1 ${
-                allSteps.indexOf(activeStep) > index ? 'bg-green-500' : 'bg-gray-700'
-              }`}
-            />
-          ) : null}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

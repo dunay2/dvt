@@ -414,6 +414,35 @@ describe('app routes', () => {
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
   });
 
+  it('redirects retired Canvas workbench deep links back to the graph base route', async () => {
+    stubAuthenticatedSessionFetch();
+    const capabilitiesPort = {
+      loadCapabilities: vi.fn().mockResolvedValue({
+        apiVersion: '1.0.0',
+        minFrontendVersion: '1.0.0',
+        plugins: {},
+      }),
+    };
+    const router = createMemoryRouter(createAppRoutes(), {
+      initialEntries: ['/canvas/not-a-tab'],
+    });
+
+    await act(async () => {
+      root.render(
+        <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+          <RouterProvider router={router} />
+        </AppProviders>
+      );
+    });
+
+    await waitForReactQuery(() => router.state.location.pathname === '/canvas', {
+      description: 'retired canvas workbench deep link redirect',
+    });
+
+    expect(container.querySelector('[data-slot="app-route-error-boundary"]')).toBeNull();
+    expect(router.state.location.pathname).toBe('/canvas');
+  });
+
   it('waits for backend plugin capabilities before redirecting direct plugin routes', async () => {
     stubAuthenticatedSessionFetch();
     const capabilitiesPort = {

@@ -30,7 +30,6 @@ type CanvasStoreFacade = {
   setConsolePanelHeight: (height: number) => void;
   consolePanelVisible: boolean;
   toggleConsolePanel: () => void;
-  explorerPanelVisible: boolean;
   inspectorPanelVisible: boolean;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
@@ -54,8 +53,6 @@ export type CanvasStoreView = CanvasStoreFacade & {
   workspaceLayoutKey: string;
   persistedViewport: { x: number; y: number; zoom: number } | null;
   persistedNodePositions: Record<string, { x: number; y: number }>;
-  hideExplorerPanel: () => void;
-  showExplorerPanel: () => void;
   hideInspectorPanel: () => void;
   showInspectorPanel: () => void;
   toggleInspectorPanel: () => void;
@@ -85,13 +82,10 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const userPermissions = useAuthorizationStore((state) => state.userPermissions);
   const setConsolePanelHeight = useUiLayoutStore((state) => state.setConsolePanelHeight);
   const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
-  const showExplorerPanelStore = useUiLayoutStore((state) => state.showExplorerPanel);
-  const hideExplorerPanelStore = useUiLayoutStore((state) => state.hideExplorerPanel);
   const showInspectorPanelStore = useUiLayoutStore((state) => state.showInspectorPanel);
   const hideInspectorPanelStore = useUiLayoutStore((state) => state.hideInspectorPanel);
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
   const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
-  const explorerPanelVisible = useUiLayoutStore((state) => state.explorerPanelVisible);
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
@@ -113,18 +107,6 @@ export function useCanvasStoreFacade(): CanvasStoreView {
 
   const workspaceLayoutKey = `${selectedTenant}::${selectedProject}::${selectedEnvironment}`;
   const workspaceCanvasLayout = canvasLayouts[workspaceLayoutKey];
-
-  const hideExplorerPanel = useCallback(() => {
-    if (explorerPanelVisible) {
-      hideExplorerPanelStore();
-    }
-  }, [explorerPanelVisible, hideExplorerPanelStore]);
-
-  const showExplorerPanel = useCallback(() => {
-    if (!explorerPanelVisible) {
-      showExplorerPanelStore();
-    }
-  }, [explorerPanelVisible, showExplorerPanelStore]);
 
   const hideInspectorPanel = useCallback(() => {
     if (inspectorPanelVisible) {
@@ -159,7 +141,6 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     setConsolePanelHeight,
     consolePanelVisible,
     toggleConsolePanel,
-    explorerPanelVisible,
     inspectorPanelVisible,
     gridSize,
     canvasPalette,
@@ -178,8 +159,6 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     workspaceLayoutKey,
     persistedViewport: workspaceCanvasLayout?.viewport ?? null,
     persistedNodePositions: workspaceCanvasLayout?.nodePositions ?? EMPTY_PERSISTED_NODE_POSITIONS,
-    hideExplorerPanel,
-    showExplorerPanel,
     hideInspectorPanel,
     showInspectorPanel,
     toggleInspectorPanel,

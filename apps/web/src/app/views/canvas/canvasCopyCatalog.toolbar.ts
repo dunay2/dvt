@@ -83,7 +83,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   toolbarPlanLabel: {
     key: 'canvas.toolbar.planLabel',
-    fallback: 'Plan',
+    fallback: 'Preview execution plan',
   },
   toolbarRunLabel: {
     key: 'canvas.toolbar.runLabel',

@@ -4,7 +4,9 @@ import { FileCode2 } from 'lucide-react';
 import { createPublishedRouteBootstrapHandle } from '../../bootstrap/routeBootstrapContract';
 import type { PluginContributions } from '../registry';
 import { GraphNodeRenderer } from '../graph/GraphNodeRenderer';
+import { dvtCanvasSurfaceStrategy } from './dvtCanvasSurfaceStrategy';
 import { DVT_AUTHORING_NODE_KINDS } from './dvtNodeTypeCatalog';
+import { dvtGraphNodeCardStrategy } from './dvtGraphNodeCardStrategy';
 import { transformationCanvasGraphStrategy } from './transformationGraphStrategy';
 
 const DVT_PLUGIN_ID = 'dvt';
@@ -30,6 +32,7 @@ export const dvtContributions: PluginContributions = {
   version: '1.0.0',
   capabilities: ['canvas.render', 'canvas.edit', 'plan.preview'],
   nodeKinds: DVT_AUTHORING_NODE_KINDS,
+  graphNodeCardStrategies: [dvtGraphNodeCardStrategy],
   views: [
     {
       pluginId: DVT_PLUGIN_ID,
@@ -57,6 +60,7 @@ export const dvtContributions: PluginContributions = {
         previewProfile: 'transformation-sql-first-v1',
       },
       graphStrategy: transformationCanvasGraphStrategy,
+      surfaceStrategy: dvtCanvasSurfaceStrategy,
       label: 'Transformation',
       description: 'Flow-based transformation canvas for the protected authoring draft.',
       createTitle: 'Transformation canvas',

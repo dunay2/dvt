@@ -47,7 +47,7 @@ function sampleInventory() {
     '| Component ID | Rail name | Rail kind | Rail status |',
     '| --- | --- | --- | --- |',
     '| `web.component.shell.AppShellFrame` | `GetRuntimeSession` | query | implemented-api |',
-    '| `web.component.canvas.CanvasToolbar` | `PreviewExecutablePlan` | command | implemented-api |',
+    '| `web.component.canvas.CanvasToolbar` | `StartRun` | command | implemented-api |',
     '',
     '## Frontend Component Evidence',
     '',
@@ -141,12 +141,12 @@ test('frontend component reflection file and rail rows format focused DB query r
     buildFrontendComponentRailRows([
       {
         component_id: 'web.component.canvas.CanvasToolbar',
-        rail_name: 'PreviewExecutablePlan',
+        rail_name: 'StartRun',
         rail_kind: 'command',
         rail_status: 'implemented-api',
       },
     ]),
-    [['web.component.canvas.CanvasToolbar', 'PreviewExecutablePlan', 'command', 'implemented-api']]
+    [['web.component.canvas.CanvasToolbar', 'StartRun', 'command', 'implemented-api']]
   );
 });
 
@@ -202,7 +202,7 @@ test('frontend component reflection file and rail queries apply focused filters'
   });
   await readFrontendComponentRailRows(client, {
     component: 'web.component.canvas.CanvasToolbar',
-    rail: 'PreviewExecutablePlan',
+    rail: 'StartRun',
     kind: 'command',
     status: 'implemented-api',
     limit: 4,
@@ -218,7 +218,7 @@ test('frontend component reflection file and rail queries apply focused filters'
   assert.match(calls[1].sql, /from planning_query_store\.frontend_component_rail_query/);
   assert.deepEqual(calls[1].params, [
     'web.component.canvas.CanvasToolbar',
-    'PreviewExecutablePlan',
+    'StartRun',
     'command',
     'implemented-api',
     4,
@@ -242,4 +242,77 @@ test('real frontend component inventory links current components to files, rails
       `${componentId} must have at least one evidence row`
     );
   }
+});
+
+test('real frontend component inventory maps Canvas contextual UX components and legacy tabs', () => {
+  const snapshot = buildFrontendComponentReflectionSnapshot();
+  const componentsById = new Map(
+    snapshot.components.map((component) => [component.componentId, component])
+  );
+  const railsByComponent = new Map();
+
+  for (const rail of snapshot.rails) {
+    const componentRails = railsByComponent.get(rail.componentId) || new Set();
+    componentRails.add(rail.railName);
+    railsByComponent.set(rail.componentId, componentRails);
+  }
+
+  const expectedCanvasComponents = [
+    'web.component.canvas.CanvasViewport',
+    'web.component.canvas.CanvasContextMenu',
+    'web.component.canvas.GraphNodeCardStrategy',
+    'web.component.canvas.SourceImportDialog',
+  ];
+
+  for (const componentId of expectedCanvasComponents) {
+    assert.ok(componentsById.has(componentId), `${componentId} must be mapped in Planning DB`);
+    assert.equal(componentsById.get(componentId).componentStatus, 'current');
+  }
+
+  assert.equal(
+    componentsById.get('web.component.canvas.NodeWorkbench')?.componentStatus,
+    'partial'
+  );
+  assert.equal(
+    componentsById.get('web.component.canvas.CanvasWorkbenchTabs')?.componentStatus,
+    'retire'
+  );
+  assert.ok(
+    railsByComponent.get('web.component.canvas.CanvasContextMenu')?.has('ResolveCanvasContextMenu')
+  );
+  assert.ok(
+    railsByComponent
+      .get('web.component.canvas.GraphNodeCardStrategy')
+      ?.has('ProjectGraphNodeCardReadModel')
+  );
+  assert.ok(
+    railsByComponent.get('web.component.canvas.SourceImportDialog')?.has('ListWarehouseConnections')
+  );
+  assert.ok(
+    railsByComponent
+      .get('web.component.canvas.SourceImportDialog')
+      ?.has('ListWarehouseConnectionTables')
+  );
+  assert.ok(
+    railsByComponent.get('web.component.canvas.NodeWorkbench')?.has('InspectCanvasNodeProperties')
+  );
+});
+
+test('real frontend component inventory keeps execution preview out of fixed canvas toolbar', () => {
+  const snapshot = buildFrontendComponentReflectionSnapshot();
+  const toolbarRails = snapshot.rails
+    .filter((rail) => rail.componentId === 'web.component.canvas.CanvasToolbar')
+    .map((rail) => rail.railName);
+  const contextMenuRails = snapshot.rails
+    .filter((rail) => rail.componentId === 'web.component.canvas.CanvasContextMenu')
+    .map((rail) => rail.railName);
+
+  assert.ok(
+    !toolbarRails.includes('PreviewExecutablePlan'),
+    'CanvasToolbar must not own PreviewExecutablePlan after preview moved to the canvas context menu'
+  );
+  assert.ok(
+    contextMenuRails.includes('PreviewExecutablePlan'),
+    'CanvasContextMenu must own PreviewExecutablePlan as the spatial canvas action'
+  );
 });

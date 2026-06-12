@@ -40,12 +40,33 @@ describe('Canvas project snapshot round trip', () => {
   }
 
   function addSqlTransformNode(): void {
-    cy.get('[aria-label="Show explorer panel"]').click();
-    cy.contains('h3', 'Add node')
-      .parent()
-      .contains('button', 'SQL transform')
-      .should('be.enabled')
-      .click();
+    cy.get('.react-flow__node').should('have.length.greaterThan', 0);
+    cy.window().then((window) => {
+      const pane = window.document.querySelector('.react-flow__pane');
+
+      expect(pane, 'React Flow pane').not.to.equal(null);
+      pane!.dispatchEvent(
+        new window.MouseEvent('contextmenu', {
+          clientX: 760,
+          clientY: 520,
+          button: 2,
+          buttons: 2,
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        })
+      );
+    });
+    cy.get('[data-slot="canvas-context-menu"]').should('exist');
+    cy.contains('[role="menuitem"]', 'SQL transform').should('be.enabled').click();
+  }
+
+  function openWorkspaceMenuIfClosed(): void {
+    cy.get('body').then(($body) => {
+      if ($body.find('[data-slot="canvas-workspace-import-input"]').length === 0) {
+        cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+      }
+    });
   }
 
   function waitForDraftSaveCount(expectedCount: number): void {
@@ -64,8 +85,10 @@ describe('Canvas project snapshot round trip', () => {
     addSqlTransformNode();
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
     waitForDraftSaveCount(1);
-    cy.contains('button', /^(Export|Exportar)$/)
-      .should('be.enabled')
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-export-command"]')
+      .filter(':visible')
+      .should('not.have.attr', 'data-disabled')
       .click();
 
     cy.readFile(downloadPath).then((contents) => {
@@ -96,7 +119,8 @@ describe('Canvas project snapshot round trip', () => {
     cy.then(() => {
       saveCountBeforeRejectedImport = getE2eApiCalls('/workspace/graph/draft', 'PUT').length;
     });
-    cy.get('input[type="file"]').selectFile(
+    openWorkspaceMenuIfClosed();
+    cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(
       {
         contents: Cypress.Buffer.from('{not-json'),
         fileName: 'bad-project-snapshot.json',
@@ -110,7 +134,8 @@ describe('Canvas project snapshot round trip', () => {
       );
     });
 
-    cy.get('input[type="file"]').selectFile(downloadPath, {
+    openWorkspaceMenuIfClosed();
+    cy.get('[data-slot="canvas-workspace-import-input"]').selectFile(downloadPath, {
       force: true,
     });
     waitForDraftSaveCount(saveCountBeforeRejectedImport + 1);

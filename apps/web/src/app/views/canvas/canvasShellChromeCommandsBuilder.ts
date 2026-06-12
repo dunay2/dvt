@@ -8,8 +8,6 @@ export function buildCanvasShellChromeCommands({
   chromeCommands,
 }: CanvasShellChromeCommandsBuilderArgs): CanvasShellChromeCommands {
   return {
-    onHideExplorer: chromeCommands.hideExplorerPanel,
-    onShowExplorer: chromeCommands.showExplorerPanel,
     onHideInspector: chromeCommands.hideInspectorPanel,
     onShowInspector: chromeCommands.showInspectorPanel,
     onAutoLayout: chromeCommands.handleAutoLayout,

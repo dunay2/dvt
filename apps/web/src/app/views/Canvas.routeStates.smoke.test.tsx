@@ -24,7 +24,6 @@ describe('Canvas route state smoke', () => {
       name: 'renders a governed loading state inside the canvas workbench',
       overrides: {
         isLoadingGraph: true,
-        explorerNodes: [],
       },
       surface: {
         text: 'Loading canvas',
@@ -41,7 +40,6 @@ describe('Canvas route state smoke', () => {
     {
       name: 'renders a playground host state when the workspace has no canvas document yet',
       overrides: {
-        explorerNodes: [],
         canvasDocument: null,
       },
       surface: {

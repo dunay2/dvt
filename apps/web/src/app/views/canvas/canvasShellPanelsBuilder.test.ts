@@ -25,7 +25,6 @@ function buildArgs(
 ): CanvasShellPanelsBuilderArgs {
   return {
     panelState: {
-      explorerNodes: [],
       inspectorNode: null,
       inspectorNodeSelectedForExecution: false,
       inspectorGraphNodes: [],
@@ -73,34 +72,6 @@ function buildArgs(
 }
 
 describe('buildCanvasShellPanels', () => {
-  it('projects controller explorer nodes into workspace explorer resource groups', () => {
-    const explorerNode = {
-      id: 'node.orders',
-      name: 'orders',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
-      role: 'transform',
-      status: 'idle',
-      tags: [],
-    } satisfies CanonicalNode;
-    const panels = buildCanvasShellPanels(
-      buildArgs({
-        panelState: {
-          ...buildArgs().panelState,
-          explorerNodes: [explorerNode],
-        },
-      })
-    );
-
-    const resources = panels.explorerResourceGroups.flatMap((group) => group.resources);
-
-    expect(resources.find((resource) => resource.id === 'node.orders')).toMatchObject({
-      id: 'node.orders',
-      label: 'orders',
-      resourceType: 'canvas_node',
-    });
-  });
-
   it('derives active canvas authoring node kinds from the ready canvas kind', () => {
     const panels = buildCanvasShellPanels(buildArgs());
 

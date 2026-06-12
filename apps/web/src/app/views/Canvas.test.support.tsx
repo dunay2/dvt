@@ -32,8 +32,8 @@ export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration
 })!;
 
 const canvasRouteState = vi.hoisted(() => ({
-  explorerProps: null as null | Record<string, unknown>,
   inspectorProps: null as null | Record<string, unknown>,
+  viewportProps: null as null | Record<string, unknown>,
   initialEntry: '/canvas',
 }));
 
@@ -43,13 +43,6 @@ vi.mock('@xyflow/react', () => ({
 
 vi.mock('./canvas/useCanvasController', () => ({
   useCanvasController: vi.fn(),
-}));
-
-vi.mock('../components/DbtExplorer', () => ({
-  default: (props: Record<string, unknown>) => {
-    canvasRouteState.explorerProps = props;
-    return <div data-slot="canvas-explorer-panel">Explorer</div>;
-  },
 }));
 
 vi.mock('../components/InspectorPanel', () => ({
@@ -69,7 +62,23 @@ vi.mock('../components/SourceImportWizard', () => ({
 }));
 
 vi.mock('./canvas/CanvasViewport', () => ({
-  default: () => <div data-slot="canvas-viewport">Viewport</div>,
+  default: (props: { canPreviewExecutionPlan?: boolean; onPreviewExecutionPlan?: () => void }) => {
+    canvasRouteState.viewportProps = props;
+    return (
+      <div data-slot="canvas-viewport">
+        Viewport
+        {props.canPreviewExecutionPlan ? (
+          <button
+            type="button"
+            data-slot="canvas-context-preview-execution-plan-command"
+            onClick={props.onPreviewExecutionPlan}
+          >
+            Preview execution plan
+          </button>
+        ) : null}
+      </div>
+    );
+  },
 }));
 
 vi.mock('../components/Modals', () => ({
@@ -118,8 +127,8 @@ export function createCanvasRouteHarness() {
   ).IS_REACT_ACT_ENVIRONMENT = true;
 
   mockedUseCanvasController.mockReset();
-  canvasRouteState.explorerProps = null;
   canvasRouteState.inspectorProps = null;
+  canvasRouteState.viewportProps = null;
   canvasRouteState.initialEntry = '/canvas';
   resetCanvasDraftPresentationState();
   resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
@@ -143,12 +152,64 @@ export function createCanvasRouteHarness() {
 
 export type CanvasRouteHarness = ReturnType<typeof createCanvasRouteHarness>;
 
+function toCanvasDocumentId(canvasDocument: NonNullable<CanvasController['canvasDocument']>) {
+  const existingId = 'id' in canvasDocument ? canvasDocument.id : undefined;
+
+  if (typeof existingId === 'string' && existingId.length > 0) {
+    return existingId;
+  }
+
+  const titleId = canvasDocument.title
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return titleId || `${canvasDocument.kind}-canvas`;
+}
+
+function normalizeCanvasDocumentState(
+  controller: CanvasController,
+  overrides?: Partial<CanvasController>
+): Pick<CanvasController, 'canvasDocument' | 'canvasDocuments' | 'activeCanvasId'> {
+  if (overrides?.canvasDocument === undefined) {
+    return {
+      canvasDocument: controller.canvasDocument,
+      canvasDocuments: controller.canvasDocuments,
+      activeCanvasId: controller.activeCanvasId,
+    };
+  }
+
+  if (overrides.canvasDocument == null) {
+    return {
+      canvasDocument: null,
+      canvasDocuments: overrides.canvasDocuments ?? [],
+      activeCanvasId: overrides.activeCanvasId ?? null,
+    };
+  }
+
+  const activeCanvas = {
+    ...overrides.canvasDocument,
+    id: toCanvasDocumentId(overrides.canvasDocument),
+  };
+
+  return {
+    canvasDocument: activeCanvas,
+    canvasDocuments: overrides.canvasDocuments ?? [activeCanvas],
+    activeCanvasId: overrides.activeCanvasId ?? activeCanvas.id,
+  };
+}
+
 export async function renderCanvasRouteWithController(
   harness: CanvasRouteHarness,
   overrides?: Partial<CanvasController>,
   options?: Readonly<{ initialEntry?: string }>
 ) {
-  mockedUseCanvasController.mockReturnValue(buildController(overrides));
+  const controller = buildController(overrides);
+  mockedUseCanvasController.mockReturnValue({
+    ...controller,
+    ...normalizeCanvasDocumentState(controller, overrides),
+  });
   await harness.render(options?.initialEntry);
 }
 
@@ -227,16 +288,32 @@ export function expectCanvasBootstrapState(args: {
 }
 
 export function expectCanvasRegistryClosed(): void {
-  expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
+  expect(currentCanvasRouteState().viewportProps?.onOpenSourceImport).toBeUndefined();
+}
+
+export function buildCanvasRouteReadyNodes(): CanvasController['nodesWithImpact'] {
+  return [
+    {
+      id: 'node.ready',
+      type: 'dbtNode',
+      position: { x: 0, y: 0 },
+      data: {},
+    },
+  ] as unknown as CanvasController['nodesWithImpact'];
 }
 
 export function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
   const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
+  const viewMenuContribution = useCanvasViewMenuContributionStore.getState().contribution;
 
   expect(layoutButton).toBeUndefined();
   expect(planButton).toBeUndefined();
   expect(runButton).toBeUndefined();
-  expect(useCanvasViewMenuContributionStore.getState().contribution).toBeNull();
+  if (viewMenuContribution != null) {
+    expect(viewMenuContribution).toMatchObject({
+      canEditEdges: false,
+    });
+  }
 }
 
 export function expectActiveCanvasTab(args: {
@@ -245,11 +322,15 @@ export function expectActiveCanvasTab(args: {
   kindLabel: string;
 }): void {
   const { container, title, kindLabel } = args;
+  const activeCanvasIdentity = container.querySelector(
+    '[data-slot="canvas-active-canvas-identity"]'
+  );
   const tabStrip = container.querySelector('[data-slot="canvas-playground-tab-strip"]');
 
-  expect(tabStrip).not.toBeNull();
-  expect(tabStrip?.textContent).toContain(title);
-  expect(tabStrip?.textContent).toContain(kindLabel);
+  expect(tabStrip).toBeNull();
+  expect(activeCanvasIdentity).not.toBeNull();
+  expect(activeCanvasIdentity?.textContent).toContain(title);
+  expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe(kindLabel.toLowerCase());
 }
 
 export function requireAuthoringNodeKind(kind: string): NodeKindRegistration {

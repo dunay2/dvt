@@ -1,4 +1,5 @@
 import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
+import type { CanvasSurfaceStrategy } from './canvasSurfaceStrategyContracts';
 import type { CanvasExecutionStrategy } from './canvasExecutionStrategyContracts';
 import type { CanvasGraphStrategy } from './graphStrategyContracts';
 
@@ -36,6 +37,7 @@ export type CanvasKindRegistration = {
 export type CanvasRuntimeRegistration = CanvasKindRegistration & {
   executionStrategy: CanvasExecutionStrategy;
   graphStrategy: CanvasGraphStrategy;
+  surfaceStrategy: CanvasSurfaceStrategy;
 };
 
 export type CanvasGraphAuthoringMode = CanvasKindRegistration['kind'];

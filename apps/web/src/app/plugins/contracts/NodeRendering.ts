@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 import type { CanonicalRunStatus } from '../../types/engine';
 import type { NodeCostData } from './PluginServices';
+import type { GraphNodeCardStrategy } from '../graph/graphNodeCardStrategyContracts';
 
 // ---------------------------------------------------------------------------
 // Node decoration — produced by overlays, merged by shell
@@ -73,6 +74,8 @@ export type NodeRendererProps = {
   overlayDecoration: MergedNodeDecoration | null;
   /** Pre-calculated badges — sorted by priority, already filtered for this node */
   badges: NodeBadge[];
+  /** Plugin-projected card strategies — sorted by registry contribution order */
+  graphNodeCardStrategies: readonly GraphNodeCardStrategy[];
   data: Record<string, unknown>;
 };
 

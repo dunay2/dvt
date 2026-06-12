@@ -4,7 +4,6 @@ import {
   Grid2X2,
   Maximize2,
   Minimize2,
-  PanelLeftClose,
   PanelRightClose,
   SlidersHorizontal,
   TerminalSquare,
@@ -25,6 +24,7 @@ import {
 } from '../ui/dropdown-menu';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
+import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
@@ -46,7 +46,6 @@ const GRID_OPTIONS = [
 
 type ShellMenuProps = {
   readonly kind: 'workspace' | 'view';
-  readonly explorerPanelVisible: boolean;
   readonly inspectorPanelVisible: boolean;
   readonly consolePanelVisible: boolean;
   readonly focusMode: boolean;
@@ -56,7 +55,6 @@ type ShellMenuProps = {
   readonly projectIdentityBadge: ProjectIdentityBadge;
   readonly gitBranch: string;
   readonly gitSha: string;
-  readonly toggleExplorerPanel: () => void;
   readonly toggleInspectorPanel: () => void;
   readonly toggleConsolePanel: () => void;
   readonly toggleFocusMode: () => void;
@@ -67,7 +65,6 @@ type ShellMenuProps = {
 
 export function ShellMenu({
   kind,
-  explorerPanelVisible,
   inspectorPanelVisible,
   consolePanelVisible,
   focusMode,
@@ -77,7 +74,6 @@ export function ShellMenu({
   projectIdentityBadge,
   gitBranch,
   gitSha,
-  toggleExplorerPanel,
   toggleInspectorPanel,
   toggleConsolePanel,
   toggleFocusMode,
@@ -138,17 +134,11 @@ export function ShellMenu({
               <span className="px-1">@</span>
               <code className="text-[var(--text-default)]">{gitSha}</code>
             </div>
+            <CanvasWorkspaceMenuControls />
           </>
         ) : (
           <>
             <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem
-              checked={explorerPanelVisible}
-              onCheckedChange={toggleExplorerPanel}
-            >
-              <PanelLeftClose className="mr-2 size-4" />
-              {copy.explorerPanel}
-            </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               checked={inspectorPanelVisible}
               onCheckedChange={toggleInspectorPanel}

@@ -3,7 +3,6 @@
  */
 import type { CanvasShellPanelsBuilderArgs } from './canvasShellBuilder.types';
 import type { CanvasShellPanels } from './canvasShell.types';
-import { buildCanvasWorkspaceResourceGroups } from '../../components/canvasWorkspaceExplorerModel';
 
 function normalizeCanvasKind(kind: string): string {
   return kind.trim().toLowerCase();
@@ -40,12 +39,6 @@ export function buildCanvasShellPanels({
   const canSelectExecution = userPermissions.canPlan || userPermissions.canRun;
 
   return {
-    explorerResourceGroups: buildCanvasWorkspaceResourceGroups({
-      nodes: panelState.explorerNodes,
-      canvasDocument: routePresentation.canvasDocument,
-      canvasDocuments: routePresentation.canvasDocuments,
-      activeCanvasId: routePresentation.activeCanvasId,
-    }),
     authoringNodeKinds: resolveActiveCanvasAuthoringNodeKinds({
       routePresentation,
       userPermissions,

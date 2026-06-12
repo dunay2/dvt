@@ -21,7 +21,7 @@ export const canvasViewToolbarCopyEs = {
   toolbarExportSnapshotLabel: 'Exportar',
   toolbarImportSnapshotLabel: 'Importar',
   toolbarInsertLabel: 'Insertar',
-  toolbarPlanLabel: 'Plan',
+  toolbarPlanLabel: 'Previsualizar plan de ejecucion',
   toolbarRunLabel: 'Ejecutar',
   addNodePaletteSearchLabel: 'Buscar tipos de nodo',
   addNodePaletteEmptyLabel: 'No hay tipos de nodo para esta busqueda.',

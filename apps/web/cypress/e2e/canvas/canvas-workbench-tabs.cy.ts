@@ -99,14 +99,14 @@ function clickCanvasWorkbenchTab(labelKey: WorkbenchTabLabelKey): void {
   });
 }
 
-function assertCanvasWorkbenchTabsUseControlledIcons(): void {
+function assertCanvasWorkbenchTabsAreTextOnly(): void {
   cy.get('[data-slot="canvas-workbench-tab-strip"]').then(($strip) => {
     const tabTriggers = Array.from(
       $strip[0].querySelectorAll<HTMLElement>('[data-slot="canvas-workbench-tab-trigger"]')
     );
 
     for (const tab of tabTriggers) {
-      expect(tab.querySelectorAll('svg'), tab.textContent ?? 'tab').to.have.length(1);
+      expect(tab.querySelectorAll('svg'), tab.textContent ?? 'tab').to.have.length(0);
       expect(tab.querySelectorAll('span'), tab.textContent ?? 'tab').to.have.length(1);
     }
   });
@@ -196,7 +196,7 @@ describe('Canvas workbench tabs', () => {
       assertGlobalWorkbenchRoutesAreAbsent();
       assertShellWorkspaceContextIsRelocated();
       assertCanvasWorkbenchTabsAreVisible();
-      assertCanvasWorkbenchTabsUseControlledIcons();
+      assertCanvasWorkbenchTabsAreTextOnly();
       assertCanvasWorkbenchTabsAreHeaderScoped();
       cy.get('.react-flow').should('be.visible');
 
@@ -218,7 +218,7 @@ describe('Canvas workbench tabs', () => {
     assertGlobalWorkbenchRoutesAreAbsent();
     assertShellWorkspaceContextIsRelocated();
     assertCanvasWorkbenchTabsAreVisible();
-    assertCanvasWorkbenchTabsUseControlledIcons();
+    assertCanvasWorkbenchTabsAreTextOnly();
     assertCanvasWorkbenchTabsAreHeaderScoped();
     cy.get('.react-flow').should('be.visible');
 

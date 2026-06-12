@@ -15,10 +15,10 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
   layoutState: Pick<
     CanvasRouteController,
     | 'focusMode'
-    | 'explorerPanelVisible'
     | 'inspectorPanelVisible'
     | 'canOpenSourceImport'
     | 'canvasEmptyStateGuideVisible'
+    | 'canvasSurfaceStrategy'
   >;
   recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'> &
     Readonly<{
@@ -56,7 +56,6 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
 export type CanvasShellPanelsBuilderArgs = Readonly<{
   panelState: Pick<
     CanvasRouteController,
-    | 'explorerNodes'
     | 'inspectorNode'
     | 'inspectorNodeSelectedForExecution'
     | 'inspectorGraphNodes'
@@ -137,8 +136,6 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
 export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
   chromeCommands: Pick<
     CanvasRouteController,
-    | 'hideExplorerPanel'
-    | 'showExplorerPanel'
     | 'hideInspectorPanel'
     | 'showInspectorPanel'
     | 'handleAutoLayout'

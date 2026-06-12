@@ -1,63 +1,63 @@
+import { stubE2eJsonApi } from '../../support/e2eApiStub';
+import {
+  E2E_WORKSPACE_SESSION,
+  stubShellBootstrapApis,
+  visitWithE2eWorkspaceSession,
+} from '../../support/workspaceSession';
+
 function stubShellApis(): void {
-  cy.intercept('GET', '**/healthz', {
-    statusCode: 200,
-    body: {
-      ok: true,
-      status: 'healthy',
-      components: {
-        intentReconciler: {
-          status: 'healthy',
-        },
-      },
+  stubShellBootstrapApis({
+    scopes: [
+      'workspace:graph-draft:view',
+      'workspace:graph-draft:save',
+      'plan:preview',
+      'run:start',
+    ],
+  });
+  stubE2eJsonApi('GET', '/workspace/context', {
+    effectiveWorkspace: E2E_WORKSPACE_SESSION,
+    availableWorkspaces: [E2E_WORKSPACE_SESSION],
+  });
+  stubE2eJsonApi('GET', '/capabilities', {
+    apiVersion: '1.0.0',
+    minFrontendVersion: '0.0.1',
+    plugins: {
+      cost: { available: true },
+      dbt: { available: true },
+      dvt: { available: true },
+      monitoring: { available: true },
     },
-  }).as('healthz');
-
-  cy.intercept('GET', '**/readyz', {
-    statusCode: 200,
-    body: {
-      ok: true,
-      status: 'ready',
+  });
+  stubE2eJsonApi('GET', '/cost/attribution-summary', {
+    tenantId: E2E_WORKSPACE_SESSION.tenantId,
+    projectId: E2E_WORKSPACE_SESSION.projectId,
+    environmentId: E2E_WORKSPACE_SESSION.environmentId,
+    runCount: 0,
+    completedStepCount: 0,
+    failedStepCount: 0,
+    totalStepDurationMs: 0,
+    totalCostAmount: null,
+    currency: null,
+    costCaptureStatus: 'unavailable',
+    observedWindow: {
+      firstEventAt: null,
+      lastEventAt: null,
     },
-  }).as('readyz');
-
-  cy.intercept('GET', '**/version', {
-    statusCode: 200,
-    body: {
-      name: 'dvt-api',
-      version: '1.0.0',
-    },
-  }).as('version');
-
-  cy.intercept('GET', '**/db/ready', {
-    statusCode: 200,
-    body: {
-      ok: true,
-      reason: null,
-    },
-  }).as('dbReady');
-
-  cy.intercept('GET', '**/capabilities*', {
-    statusCode: 200,
-    body: {
-      apiVersion: '1.0.0',
-      minFrontendVersion: '0.0.1',
-      plugins: {},
-    },
-  }).as('capabilities');
+    runs: [],
+    steps: [],
+    nextCursor: null,
+  });
 }
 
-function visitPluginsWithUiLayout(partialState?: Record<string, unknown>): void {
-  cy.visit('/plugins', {
+function visitShellRouteWithUiLayout(path: string, partialState?: Record<string, unknown>): void {
+  visitWithE2eWorkspaceSession(path, {
     onBeforeLoad(window) {
-      window.localStorage.clear();
       if (partialState) {
         window.localStorage.setItem(
           'dvt-web-ui-layout',
           JSON.stringify({
             state: {
               leftNavCollapsed: false,
-              explorerPanelWidth: 280,
-              explorerPanelVisible: false,
               inspectorPanelWidth: 380,
               inspectorPanelVisible: false,
               consolePanelHeight: 0,
@@ -73,11 +73,7 @@ function visitPluginsWithUiLayout(partialState?: Record<string, unknown>): void 
     },
   });
 
-  cy.wait('@healthz');
-  cy.wait('@readyz');
-  cy.wait('@version');
-  cy.wait('@dbReady');
-  cy.wait('@capabilities');
+  cy.get('[data-slot="app-shell-outlet"]').should('exist');
 }
 
 describe('Shell layout contract', () => {
@@ -87,10 +83,10 @@ describe('Shell layout contract', () => {
   });
 
   it('keeps the footer navigation pinned to the bottom of the full-height rail', () => {
-    visitPluginsWithUiLayout();
+    visitShellRouteWithUiLayout('/cost');
 
     cy.get('[data-slot="app-shell-outlet"]')
-      .contains(/^Plugins$/)
+      .contains(/^Cost$/)
       .should('be.visible');
 
     cy.window().then((window) => {
@@ -130,7 +126,7 @@ describe('Shell layout contract', () => {
   });
 
   it('hides the left navigation rail in focus mode while keeping the main shell route visible', () => {
-    visitPluginsWithUiLayout({ focusMode: true });
+    visitShellRouteWithUiLayout('/plugins', { focusMode: true });
 
     cy.get('[data-slot="app-shell-left-navigation"]').should('not.exist');
     cy.get('[data-slot="left-navigation-rail"]').should('not.exist');

@@ -14,8 +14,6 @@ export function RootServicesProbe(): JSX.Element {
 export function resetRootShellStores(): void {
   useUiLayoutStore.setState({
     leftNavCollapsed: false,
-    explorerPanelWidth: 280,
-    explorerPanelVisible: false,
     inspectorPanelWidth: 380,
     inspectorPanelVisible: false,
     consolePanelHeight: 0,

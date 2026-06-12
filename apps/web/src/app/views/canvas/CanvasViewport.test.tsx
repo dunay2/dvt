@@ -103,9 +103,6 @@ function buildProps(
   overrides?: Partial<React.ComponentProps<typeof CanvasViewport>>
 ): React.ComponentProps<typeof CanvasViewport> {
   return {
-    focusMode: false,
-    explorerPanelVisible: true,
-    inspectorPanelVisible: true,
     canEditEdges: true,
     nodesWithImpact: [],
     edges: [],
@@ -131,18 +128,10 @@ function buildProps(
     onCreateAuthoringNode: vi.fn(),
     importedNodeFocusIds: [],
     onImportedNodeFocusComplete: vi.fn(),
-    onShowExplorer: vi.fn(),
-    onShowInspector: vi.fn(),
+    canPreviewExecutionPlan: false,
+    onPreviewExecutionPlan: vi.fn(),
     ...overrides,
   };
-}
-
-function requireButton(value: HTMLButtonElement | undefined, errorCode: string): HTMLButtonElement {
-  if (value === undefined) {
-    throw new Error(errorCode);
-  }
-
-  return value;
 }
 
 describe('CanvasViewport', () => {
@@ -183,36 +172,19 @@ describe('CanvasViewport', () => {
     vi.clearAllMocks();
   });
 
-  it('shows panel restore buttons only when the corresponding panels are hidden outside focus mode', async () => {
-    const props = buildProps({
-      explorerPanelVisible: false,
-      inspectorPanelVisible: false,
-    });
+  it('does not render fixed panel restore controls when side panels are hidden', async () => {
+    const props = buildProps();
 
     await act(async () => {
       root.render(<CanvasViewport {...props} />);
     });
 
     const buttons = Array.from(container.querySelectorAll('button'));
-    expect(buttons).toHaveLength(2);
-
-    const showExplorerButton = requireButton(
-      buttons.find((button) => button.ariaLabel === 'Show explorer panel'),
-      'EXPECTED_SHOW_EXPLORER_BUTTON'
-    );
-    const showInspectorButton = requireButton(
-      buttons.find((button) => button.ariaLabel === 'Show inspector panel'),
-      'EXPECTED_SHOW_INSPECTOR_BUTTON'
-    );
-
-    showExplorerButton.click();
-    showInspectorButton.click();
-
-    expect(props.onShowExplorer).toHaveBeenCalledTimes(1);
-    expect(props.onShowInspector).toHaveBeenCalledTimes(1);
+    expect(buttons.some((button) => button.ariaLabel === 'Show explorer panel')).toBe(false);
+    expect(buttons.some((button) => button.ariaLabel === 'Show inspector panel')).toBe(false);
   });
 
-  it('hides restore buttons in focus mode and resolves minimap color from node registry', async () => {
+  it('resolves minimap color from node registry while keeping the graph canvas chrome minimal', async () => {
     const requestedCanvasPalette = '#152033';
     const normalizedCanvasPalette = normalizeCanvasPaletteId(requestedCanvasPalette);
     const expectedPaletteTokens = deriveCanvasPaletteTokens(normalizedCanvasPalette);
@@ -221,9 +193,6 @@ describe('CanvasViewport', () => {
       root.render(
         <CanvasViewport
           {...buildProps({
-            focusMode: true,
-            explorerPanelVisible: false,
-            inspectorPanelVisible: false,
             gridSize: 32,
             canvasPalette: requestedCanvasPalette,
           })}
@@ -432,6 +401,185 @@ describe('CanvasViewport', () => {
     });
 
     expect(props.onCreateAuthoringNode).toHaveBeenCalledWith(sourceKind, { x: 580, y: 280 });
+  });
+
+  it('opens a governed create-node menu from the viewport context surface', async () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const props = buildProps({
+      authoringNodeKinds: [sourceKind],
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
+    expect(contextSurface).toBeDefined();
+
+    await act(async () => {
+      contextSurface?.dispatchEvent(
+        new MouseEvent('contextmenu', {
+          clientX: 480,
+          clientY: 320,
+          button: 2,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+
+    expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).toContain(
+      'Source'
+    );
+  });
+
+  it('opens the governed context menu even when React Flow already prevented the native menu', async () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const props = buildProps({
+      authoringNodeKinds: [sourceKind],
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
+    const event = new MouseEvent('contextmenu', {
+      clientX: 480,
+      clientY: 320,
+      button: 2,
+      bubbles: true,
+      cancelable: true,
+    });
+    event.preventDefault();
+
+    await act(async () => {
+      contextSurface?.dispatchEvent(event);
+    });
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).toContain(
+      'Source'
+    );
+  });
+
+  it('opens source import from the editable background context gesture when the rail is available', async () => {
+    const sourceKind = buildTestNodeKind('dbt:source', 'Source');
+    const props = buildProps({
+      authoringNodeKinds: [sourceKind],
+      canOpenSourceImport: true,
+      onOpenSourceImport: vi.fn(),
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault: vi.fn(),
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    const sourceImportButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Add source'
+    );
+    expect(sourceImportButton).toBeDefined();
+    expect(container.querySelector('[data-slot="canvas-context-menu-add-group"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).not.toContain(
+      'Crear nodo'
+    );
+    expect(
+      Array.from(container.querySelectorAll('button')).some(
+        (button) => button.textContent === 'Source'
+      )
+    ).toBe(false);
+
+    await act(async () => {
+      sourceImportButton?.click();
+    });
+
+    expect(props.onOpenSourceImport).toHaveBeenCalledTimes(1);
+    expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+  });
+
+  it('does not offer source import from the background when the source rail is unavailable', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasViewport
+          {...buildProps({
+            canOpenSourceImport: false,
+            onOpenSourceImport: vi.fn(),
+          })}
+        />
+      );
+    });
+
+    const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault: vi.fn(),
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    expect(
+      Array.from(container.querySelectorAll('button')).some(
+        (button) => button.textContent === 'Add source'
+      )
+    ).toBe(false);
+  });
+
+  it('opens execution preview from the background context when graph editing is unavailable', async () => {
+    const props = buildProps({
+      canEditEdges: false,
+      canPreviewExecutionPlan: true,
+      onPreviewExecutionPlan: vi.fn(),
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault: vi.fn(),
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    const previewButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Preview execution plan'
+    );
+    expect(previewButton).toBeDefined();
+
+    await act(async () => {
+      previewButton?.click();
+    });
+
+    expect(props.onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
+    expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
   });
 
   it('opens a governed remove-edge menu from the edge context gesture', async () => {

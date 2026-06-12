@@ -25,10 +25,10 @@ function buildCanvasShellLayoutArgs({
   return {
     layoutState: {
       focusMode: controller.focusMode,
-      explorerPanelVisible: controller.explorerPanelVisible,
       inspectorPanelVisible: controller.inspectorPanelVisible,
       canOpenSourceImport: controller.canOpenSourceImport,
       canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
+      canvasSurfaceStrategy: controller.canvasSurfaceStrategy,
     },
     recoveryCommands: {
       reloadLatestDraft: controller.reloadLatestDraft,
@@ -73,7 +73,6 @@ function buildCanvasShellPanelsArgs({
 }: CanvasShellRouteComposerArgs): CanvasShellPanelsBuilderArgs {
   return {
     panelState: {
-      explorerNodes: controller.explorerNodes,
       inspectorNode: controller.inspectorNode,
       inspectorNodeSelectedForExecution: controller.inspectorNodeSelectedForExecution,
       inspectorGraphNodes: controller.inspectorGraphNodes,
@@ -172,8 +171,6 @@ function buildCanvasShellChromeCommandsArgs({
 }: CanvasShellRouteComposerArgs): CanvasShellChromeCommandsBuilderArgs {
   return {
     chromeCommands: {
-      hideExplorerPanel: controller.hideExplorerPanel,
-      showExplorerPanel: controller.showExplorerPanel,
       hideInspectorPanel: controller.hideInspectorPanel,
       showInspectorPanel: controller.showInspectorPanel,
       handleAutoLayout: controller.handleAutoLayout,

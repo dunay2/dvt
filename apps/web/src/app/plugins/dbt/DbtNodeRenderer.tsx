@@ -1,11 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { CSSProperties, ReactElement } from 'react';
-import { ChevronDown, ChevronUp, Clock, Code, Info, Loader2, Settings, Table } from 'lucide-react';
+import { Clock, Code, Info, Loader2, Settings, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
-import { cn } from '../../components/ui/utils';
 import {
   useRunEventsQuery,
   useRunSnapshotQuery,
@@ -33,6 +32,8 @@ import {
   graphStatusRingClasses,
   graphVisualClasses,
 } from '../graph/graphVisualTokens';
+import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
+import { GraphNodeCardView } from '../graph/GraphNodeCardView';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
 const DBT_PLUGIN_ID = 'dbt';
@@ -135,11 +136,11 @@ export function DbtNodeRenderer({
   selected,
   hovered,
   overlayDecoration,
+  graphNodeCardStrategies,
   data,
 }: Readonly<NodeRendererProps>): ReactElement {
   const kindMeta = resolveKindMeta(node.kind);
   const Icon: LucideIcon | undefined = kindMeta?.icon;
-  const [columnsExpanded, setColumnsExpanded] = useState(false);
 
   const statusRing = graphStatusRingClasses[node.status] ?? '';
   const statusDot = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
@@ -154,6 +155,7 @@ export function DbtNodeRenderer({
       : typeof data.type === 'string'
         ? data.type
         : (kindMeta?.label ?? node.kind);
+  const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -161,89 +163,22 @@ export function DbtNodeRenderer({
     (kindMeta?.supportsColumns || node.role === 'input' || node.role === 'transform');
 
   return (
-    <div
-      className={cn(
-        graphVisualClasses.nodeCard,
-        kindMeta?.borderClass,
-        selected && 'ring-2 ring-white/40',
-        hovered && !selected && 'ring-1 ring-white/20',
-        statusRing,
-        dimmed && 'opacity-30'
-      )}
-      {...overlayProps}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          {Icon && (
-            <Icon
-              size={12}
-              className="shrink-0 opacity-70"
-              {...(kindMeta?.minimapColor
-                ? { style: { color: kindMeta.minimapColor } as CSSProperties }
-                : {})}
-            />
-          )}
-          <span className="truncate font-semibold leading-tight">{node.name}</span>
-        </div>
-        <div className={cn('size-2 shrink-0 rounded-full', statusDot)} />
-      </div>
-
-      <div className="mt-2">
-        <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px]">
-          {typeLabel}
-        </Badge>
-      </div>
-
-      {(node.lastDuration != null || node.lastCost != null) && (
-        <div className={graphVisualClasses.metricText}>
-          {node.lastDuration != null && <span>{node.lastDuration}s</span>}
-          {node.lastCost != null && <span>${node.lastCost.toFixed(2)}</span>}
-        </div>
-      )}
-
-      {node.path && <div className="mt-1 truncate text-[10px] opacity-50">{node.path}</div>}
-
-      {node.tags.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-0.5">
-          {node.tags.slice(0, 3).map((tag) => (
-            <span key={tag} className={graphVisualClasses.tag}>
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {showColumns && (
-        <div className={graphVisualClasses.columnsShell}>
-          <button
-            type="button"
-            onClick={() => setColumnsExpanded((value) => !value)}
-            className={graphVisualClasses.columnsToggle}
-          >
-            <span className="flex items-center gap-1">
-              <Table className="size-3" />
-              Columns ({columns.length})
-            </span>
-            {columnsExpanded ? (
-              <ChevronUp className="size-3" />
-            ) : (
-              <ChevronDown className="size-3" />
-            )}
-          </button>
-
-          {columnsExpanded && (
-            <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
-              {columns.map((column) => (
-                <div key={`${node.id}:${column.name}`} className={graphVisualClasses.columnRow}>
-                  <span className={graphVisualClasses.columnName}>{column.name}</span>
-                  <span className={graphVisualClasses.columnType}>{column.type}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+    <GraphNodeCardView
+      cardModel={cardModel}
+      typeLabel={typeLabel}
+      tags={node.tags}
+      columns={columns}
+      showColumns={showColumns}
+      icon={Icon}
+      iconColor={kindMeta?.minimapColor}
+      borderClass={kindMeta?.borderClass}
+      statusDotClass={statusDot}
+      statusRingClass={statusRing}
+      selected={selected}
+      hovered={hovered}
+      dimmed={dimmed}
+      overlayStyle={overlayProps.style}
+    />
   );
 }
 

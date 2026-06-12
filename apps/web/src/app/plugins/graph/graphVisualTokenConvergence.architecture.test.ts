@@ -27,10 +27,6 @@ const DBT_NODE_RENDERER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../dbt/DbtNodeRenderer.tsx'
 );
-const DBT_EXPLORER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../../components/DbtExplorer.tsx'
-);
 const INSPECTOR_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/InspectorPanel.tsx'
@@ -55,7 +51,6 @@ const GRAPH_CONSUMER_SOURCES = [
   DBT_NODE_CATALOG_SOURCE,
   DVT_NODE_CATALOG_SOURCE,
   DBT_NODE_RENDERER_SOURCE,
-  DBT_EXPLORER_SOURCE,
   INSPECTOR_PANEL_SOURCE,
   CANVAS_INSPECTOR_AUTHORING_SOURCE,
 ];

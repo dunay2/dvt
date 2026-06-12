@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { readArchitectureSiblingSource } from '../architecture.test.support';
@@ -15,6 +18,15 @@ const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
 );
+const CANVAS_ROUTE_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '../Canvas.tsx');
+const CANVAS_SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellPropsBuilder.tsx'
+);
+const CANVAS_SHELL_BUILDER_TYPES_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellBuilder.types.ts'
+);
 const CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasToolbarPrimaryControls.tsx'
@@ -27,19 +39,14 @@ const CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/canvasWorkspaceExplorerModel.ts'
 );
-const DBT_EXPLORER_SOURCE = readArchitectureSiblingSource(
+const SHELL_MENU_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../components/DbtExplorer.tsx'
+  '../../components/shell/ShellMenu.tsx'
 );
-const CANVAS_PLAYGROUND_TAB_STRIP_SOURCE = readArchitectureSiblingSource(
+const LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH = resolve(
   import.meta.dirname,
-  'CanvasPlaygroundTabStrip.tsx'
+  '../../components/WarehouseSourceExplorer.tsx'
 );
-const CANVAS_PLAYGROUND_TAB_STRIP_TEMPLATE_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasPlaygroundTabStrip.templates.tsx'
-);
-
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
     expect(CANVAS_SHELL_SOURCE).toContain(
@@ -60,39 +67,61 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_SOURCE).not.toContain('useQuery(');
   });
 
-  it('delegates sizing and rail composition to named shell-local seams', () => {
+  it('keeps shell composition canvas-first without fixed side rails', () => {
     expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasShellMainPanel'");
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('layout.hostTabStrip');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasToolbar');
-    expect(CANVAS_PLAYGROUND_TAB_STRIP_SOURCE).toContain('CanvasPlaygroundTabStripTemplate');
-    expect(CANVAS_PLAYGROUND_TAB_STRIP_TEMPLATE_SOURCE).toContain('canvas-playground-tab-strip');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.hostTabStrip');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.workbenchTabStrip');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasToolbar');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('canvas-workbench-chrome');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
       'function resolveCanvasShellMainPanelDefaultSize('
     );
-    expect(CANVAS_SHELL_SOURCE).toContain('function CanvasShellExplorerRail(');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('function CanvasShellExplorerRail(');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('function CanvasShellInspectorRail(');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('DbtExplorer');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('CanvasInspectorPanel');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasShellNodeWorkbenchOverlay');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('canvas-node-workbench-overlay');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasInspectorPanel');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainSurface(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellViewport(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainPanel(');
-    expect(CANVAS_SHELL_SOURCE).toContain('function CanvasShellInspectorRail(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
-      'defaultSize={resolveCanvasShellMainPanelDefaultSize(layout)}'
+      'defaultSize={resolveCanvasShellMainPanelDefaultSize()}'
     );
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('onOpenSourceImport');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDvtFlowGuide');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDbtFlowGuide');
   });
 
-  it('keeps ready-canvas node creation in Insert and out of the workspace explorer', () => {
+  it('keeps retired workbench tab composition out of the Canvas route', () => {
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasWorkbenchTabStrip');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasWorkbenchTabPanel');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('buildCanvasWorkbenchTabsReadModel');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('parseCanvasWorkbenchRouteState');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('resolveCanvasWorkbenchTabSelectionCommand');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('getCanvasWorkbenchTabViews');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('buildCanvasWorkbenchLogEntries');
+  });
+
+  it('keeps ready-canvas node creation in the viewport context and out of the workspace explorer', () => {
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
       'authoringNodeKinds: readonly NodeKindRegistration[];'
     );
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
-      'explorerResourceGroups: readonly CanvasWorkspaceResourceGroup[];'
-    );
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('explorerResourceGroups');
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).not.toContain('buildCanvasWorkspaceResourceGroups');
+    expect(CANVAS_SHELL_BUILDER_TYPES_SOURCE).not.toContain('explorerNodes');
     expect(CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE).toContain(
-      'Owned concern: build the Project Workspace Explorer read model from existing resources.'
+      'Owned concern: serialize contextual project-resource drag payloads for Canvas attachments.'
     );
-    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('buildCanvasWorkspaceResourceGroups({');
-    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('nodes: panelState.explorerNodes');
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('buildCanvasWorkspaceResourceGroups');
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('panelState.explorerNodes');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
-      'canvasDocument: routePresentation.canvasDocument'
+      'activeCanvasId: routePresentation.activeCanvasId'
+    );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('activeCanvas,');
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
+      'canvasDocuments: routePresentation.canvasDocuments'
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
       'function resolveActiveCanvasAuthoringNodeKinds('
@@ -106,8 +135,8 @@ describe('CanvasShell architecture', () => {
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('userPermissions.canEditEdges');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('getAllNodeKinds');
-    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).toContain('CanvasAddNodePalette');
-    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).toContain(
+    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).not.toContain('CanvasAddNodePalette');
+    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).not.toContain(
       'triggerDataSlot="canvas-toolbar-insert-command"'
     );
     expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('function selectOption(');
@@ -116,14 +145,16 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_SOURCE).not.toContain(
       'onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}'
     );
-    expect(DBT_EXPLORER_SOURCE).toContain(
-      'Owned concern: render the Canvas workspace explorer for existing project resources'
-    );
-    expect(DBT_EXPLORER_SOURCE).not.toContain('import type { NodeKindRegistration }');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('readonly NodeKindRegistration');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('nodeKinds');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('onCreateAuthoringNode');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('nodes: CanonicalNode[]');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('Add node');
+  });
+
+  it('does not expose a legacy fixed explorer panel from the global view menu', () => {
+    expect(SHELL_MENU_SOURCE).not.toContain('explorerPanelVisible');
+    expect(SHELL_MENU_SOURCE).not.toContain('toggleExplorerPanel');
+    expect(SHELL_MENU_SOURCE).not.toContain('copy.explorerPanel');
+    expect(SHELL_MENU_SOURCE).not.toContain('PanelLeftClose');
+  });
+
+  it('retires the legacy fixed warehouse source explorer component', () => {
+    expect(existsSync(LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH)).toBe(false);
   });
 });

@@ -59,7 +59,7 @@ export const canvasViewRouteCopyByKey = {
   routeEmptyEditableMessage: {
     key: 'canvas.route.emptyEditableMessage',
     fallback:
-      'This workspace does not expose graph nodes yet. Use Add data to import sources or load graph content before planning.',
+      'This workspace does not expose graph nodes yet. Use Add source to import sources or load graph content before planning.',
   },
   routeEmptyImportUnavailableMessage: {
     key: 'canvas.route.emptyImportUnavailableMessage',

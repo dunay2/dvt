@@ -2,6 +2,8 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScenario';
+import { canvasViewRouteCopyByKey } from './canvas/canvasCopyCatalog.route';
+import { canvasViewRouteCopyEs } from './canvas/canvasCopyCatalog.route.es';
 import {
   createCanvasRouteHarness,
   expectActiveCanvasTab,
@@ -14,6 +16,7 @@ import {
 
 describe('Canvas route first-canvas policy', () => {
   let harness: CanvasRouteHarness;
+  const legacyAddDataLabel = ['Add', 'data'].join(' ');
 
   beforeEach(() => {
     harness = createCanvasRouteHarness();
@@ -41,10 +44,18 @@ describe('Canvas route first-canvas policy', () => {
     ).find((button) => button.textContent?.includes(label));
   }
 
+  it('uses Add source vocabulary for empty editable route guidance', () => {
+    expect(canvasViewRouteCopyByKey.routeEmptyEditableMessage.fallback).toContain('Add source');
+    expect(canvasViewRouteCopyByKey.routeEmptyEditableMessage.fallback).not.toContain(
+      legacyAddDataLabel
+    );
+    expect(canvasViewRouteCopyEs.routeEmptyEditableMessage).toContain('Add source');
+    expect(canvasViewRouteCopyEs.routeEmptyEditableMessage).not.toContain(legacyAddDataLabel);
+  });
+
   it('creates the first transformation canvas through the controller command', async () => {
     const handleCreateCanvasDocument = vi.fn();
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: null,
       canCreateCanvasDocument: true,
       handleCreateCanvasDocument,
@@ -66,9 +77,8 @@ describe('Canvas route first-canvas policy', () => {
     });
   });
 
-  it('renders read-only empty guidance without suggesting Add data when edits are gated', async () => {
+  it('renders read-only empty guidance without suggesting legacy source actions when edits are gated', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'transformation',
         title: 'Main canvas',
@@ -87,14 +97,13 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).toContain(
       'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.'
     );
-    expect(harness.container.textContent).not.toContain('Use Add data');
+    expect(harness.container.textContent).not.toContain(`Use ${legacyAddDataLabel}`);
     expectCanvasRegistryClosed();
   });
 
   it('routes empty authoring first-node creation through the controller command', async () => {
     const handleCreateAuthoringNode = vi.fn();
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'transformation',
         title: 'Main canvas',
@@ -119,9 +128,8 @@ describe('Canvas route first-canvas policy', () => {
     expect(handleCreateAuthoringNode).toHaveBeenCalledWith(requireAuthoringNodeKind('dvt:source'));
   });
 
-  it('renders empty guidance without suggesting Add data when source import is unavailable', async () => {
+  it('renders empty guidance without suggesting legacy source actions when source import is unavailable', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'transformation',
         title: 'Main canvas',
@@ -131,13 +139,12 @@ describe('Canvas route first-canvas policy', () => {
 
     expect(harness.container.textContent).toContain('Start transformation canvas');
     expect(harness.container.textContent).toContain('Source import is unavailable in this runtime');
-    expect(harness.container.textContent).not.toContain('Use Add data');
+    expect(harness.container.textContent).not.toContain(`Use ${legacyAddDataLabel}`);
     expectCanvasRegistryClosed();
   });
 
   it('shows a typed transformation empty canvas catalog instead of the dbt catalog', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'transformation',
         title: 'Main canvas',
@@ -155,7 +162,6 @@ describe('Canvas route first-canvas policy', () => {
 
   it('shows a typed dbt empty canvas catalog instead of the transformation catalog', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'dbt',
         title: 'dbt canvas',
@@ -172,9 +178,8 @@ describe('Canvas route first-canvas policy', () => {
     expect(document.body.textContent).not.toContain('SQL transform');
   });
 
-  it('hides typed empty guidance by preference while keeping node creation available', async () => {
+  it('hides typed empty guidance by preference without reintroducing fixed Insert chrome', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       canvasDocument: {
         kind: 'dbt',
         title: 'dbt canvas',
@@ -189,12 +194,9 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).not.toContain('Start dbt canvas');
     expect(harness.container.textContent).not.toContain('Add first dbt node');
 
-    const insertButton = harness.container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-toolbar-insert-command"]'
-    );
-
-    expect(insertButton).not.toBeNull();
-    expect(insertButton?.disabled).toBe(false);
+    expect(
+      harness.container.querySelector('[data-slot="canvas-toolbar-insert-command"]')
+    ).toBeNull();
   });
 
   it('keeps dbt first-node authoring available while execution actions stay unavailable', async () => {
@@ -218,7 +220,7 @@ describe('Canvas route first-canvas policy', () => {
     expect(findPaletteOption('Source')?.getAttribute('disabled')).toBeNull();
 
     const { planButton, runButton } = getPrimaryCanvasButtons(harness.container);
-    expect(planButton?.getAttribute('disabled')).not.toBeNull();
-    expect(runButton?.getAttribute('disabled')).not.toBeNull();
+    expect(planButton).toBeUndefined();
+    expect(runButton).toBeUndefined();
   });
 });
