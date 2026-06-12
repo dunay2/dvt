@@ -22,6 +22,14 @@ const DEFAULT_STRATEGY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'defaultGraphNodeCardStrategy.ts'
 );
+const GRAPH_CARD_RENDERER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeRenderer.tsx'
+);
+const DBT_NODE_RENDERER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../dbt/DbtNodeRenderer.tsx'
+);
 
 describe('Graph node card strategy architecture', () => {
   it('keeps plugin-specific card decisions outside the generic graph read model', () => {
@@ -47,5 +55,16 @@ describe('Graph node card strategy architecture', () => {
 
     expect(DEFAULT_STRATEGY_SOURCE).toContain("id: 'default-card'");
     expect(DEFAULT_STRATEGY_SOURCE).toContain('matches: () => true');
+  });
+
+  it('keeps graph card markup in a shared presentational view', () => {
+    expect(GRAPH_CARD_RENDERER_SOURCE).toContain('GraphNodeCardView');
+    expect(DBT_NODE_RENDERER_SOURCE).toContain('GraphNodeCardView');
+
+    for (const source of [GRAPH_CARD_RENDERER_SOURCE, DBT_NODE_RENDERER_SOURCE]) {
+      expect(source).not.toContain('cardModel.metrics.map');
+      expect(source).not.toContain('columnsExpanded');
+      expect(source).not.toContain('graphVisualClasses.columnRow');
+    }
   });
 });

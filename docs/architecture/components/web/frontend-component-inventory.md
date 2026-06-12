@@ -109,6 +109,7 @@ semantics.
 | `web.component.canvas.CanvasContextMenu`      | `apps/web/src/app/views/canvas/canvasInteractionCommandSurface.test.ts`          | test              | none                          |
 | `web.component.canvas.GraphNodeCardStrategy`  | `apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts`                       | query             | buildGraphNodeCardReadModel   |
 | `web.component.canvas.GraphNodeCardStrategy`  | `apps/web/src/app/plugins/graph/graphNodeCardStrategyContracts.ts`               | model             | GraphNodeCardStrategy         |
+| `web.component.canvas.GraphNodeCardStrategy`  | `apps/web/src/app/plugins/graph/GraphNodeCardView.tsx`                           | component         | GraphNodeCardView             |
 | `web.component.canvas.GraphNodeCardStrategy`  | `apps/web/src/app/plugins/dbt/dbtGraphNodeCardStrategy.ts`                       | model             | dbtGraphNodeCardStrategy      |
 | `web.component.canvas.GraphNodeCardStrategy`  | `apps/web/src/app/plugins/dvt/dvtGraphNodeCardStrategy.ts`                       | model             | dvtGraphNodeCardStrategy      |
 | `web.component.canvas.GraphNodeCardStrategy`  | `apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts`                  | test              | none                          |
