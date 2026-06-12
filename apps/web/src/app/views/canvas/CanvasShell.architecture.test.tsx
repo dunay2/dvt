@@ -15,6 +15,7 @@ const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
 );
+const CANVAS_ROUTE_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '../Canvas.tsx');
 const CANVAS_SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasShellPropsBuilder.tsx'
@@ -84,6 +85,16 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('onOpenSourceImport');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDvtFlowGuide');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDbtFlowGuide');
+  });
+
+  it('keeps retired workbench tab composition out of the Canvas route', () => {
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasWorkbenchTabStrip');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasWorkbenchTabPanel');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('buildCanvasWorkbenchTabsReadModel');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('parseCanvasWorkbenchRouteState');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('resolveCanvasWorkbenchTabSelectionCommand');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('getCanvasWorkbenchTabViews');
+    expect(CANVAS_ROUTE_SOURCE).not.toContain('buildCanvasWorkbenchLogEntries');
   });
 
   it('keeps ready-canvas node creation in the viewport context and out of the workspace explorer', () => {
