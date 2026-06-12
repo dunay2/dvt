@@ -4969,6 +4969,7 @@ async function applyArchitectureFitnessScanOperation(command, options = {}) {
     const relations = await readArchitectureRelations(client);
     const scanResult = runArchitectureFitnessScan({
       rootDir: command.root,
+      repoRoot: process.cwd(),
       scanId: command.scanId,
       designId: command.designId,
       components,

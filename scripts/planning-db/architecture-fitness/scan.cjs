@@ -46,16 +46,16 @@ function isTestPath(repoPath) {
   );
 }
 
-function listSourceFiles(rootDir, currentDir = rootDir, files = []) {
+function listSourceFiles(rootDir, currentDir = rootDir, files = [], repoRoot = rootDir) {
   for (const entry of fs.readdirSync(currentDir, { withFileTypes: true })) {
     const entryPath = path.join(currentDir, entry.name);
-    if (isIgnoredRepoPath(toRepoPath(entryPath, rootDir))) {
+    if (isIgnoredRepoPath(toRepoPath(entryPath, repoRoot))) {
       continue;
     }
 
     if (entry.isDirectory()) {
       if (!ignoredDirectoryNames.has(entry.name)) {
-        listSourceFiles(rootDir, entryPath, files);
+        listSourceFiles(rootDir, entryPath, files, repoRoot);
       }
       continue;
     }
@@ -66,7 +66,7 @@ function listSourceFiles(rootDir, currentDir = rootDir, files = []) {
   }
 
   return files.sort((left, right) =>
-    toRepoPath(left, rootDir).localeCompare(toRepoPath(right, rootDir))
+    toRepoPath(left, repoRoot).localeCompare(toRepoPath(right, repoRoot))
   );
 }
 
@@ -430,21 +430,27 @@ function ruleEvaluation({ scanId, designId, ruleId, state, severity, reason }) {
 
 function runArchitectureFitnessScan(options) {
   const rootDir = path.resolve(options.rootDir || process.cwd());
+  const repoRoot = path.resolve(options.repoRoot || rootDir);
   const scanId = options.scanId;
   const designId = options.designId;
   const components = options.components || [];
   const relations = options.relations || [];
-  const packageMap = readPackageMap(rootDir);
+  const packageMap = readPackageMap(repoRoot);
   const observations = [];
 
-  for (const filePath of listSourceFiles(rootDir)) {
+  for (const filePath of listSourceFiles(rootDir, rootDir, [], repoRoot)) {
     const sourceText = fs.readFileSync(filePath, 'utf8');
-    const sourceRepoPath = toRepoPath(filePath, rootDir);
+    const sourceRepoPath = toRepoPath(filePath, repoRoot);
     const sourceMapping = mapPathToComponent(sourceRepoPath, components);
     for (const importInfo of parseImports(sourceText, filePath)) {
-      const resolved = resolveImportTarget(rootDir, filePath, importInfo.importLiteral, packageMap);
+      const resolved = resolveImportTarget(
+        repoRoot,
+        filePath,
+        importInfo.importLiteral,
+        packageMap
+      );
       const targetRepoPath = resolved.absolutePath
-        ? toRepoPath(resolved.absolutePath, rootDir)
+        ? toRepoPath(resolved.absolutePath, repoRoot)
         : resolved.targetPath;
       const targetMapping =
         resolved.mappingState === 'external'

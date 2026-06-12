@@ -115,7 +115,6 @@ semantics.
 | `web.component.canvas.GraphNodeCardStrategy`  | `apps/web/src/app/plugins/graph/graphNodeCardReadModel.test.ts`                  | test              | none                          |
 | `web.component.canvas.GraphNodeCardStrategy`  | `apps/web/src/app/plugins/graph/graphNodeCardReadModel.architecture.test.ts`     | architecture-test | none                          |
 | `web.component.canvas.SourceImportDialog`     | `apps/web/src/app/components/SourceImportWizard.tsx`                             | component         | SourceImportWizard            |
-| `web.component.canvas.SourceImportDialog`     | `apps/web/src/app/components/WarehouseSourceExplorer.tsx`                        | component         | WarehouseSourceExplorer       |
 | `web.component.canvas.SourceImportDialog`     | `apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.ts`      | model             | buildPreviewGroups            |
 | `web.component.canvas.SourceImportDialog`     | `apps/web/src/app/components/SourceImportWizard.test.tsx`                        | test              | none                          |
 | `web.component.canvas.SourceImportDialog`     | `apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts` | test              | none                          |
