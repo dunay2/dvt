@@ -243,3 +243,54 @@ test('real frontend component inventory links current components to files, rails
     );
   }
 });
+
+test('real frontend component inventory maps Canvas contextual UX components and legacy tabs', () => {
+  const snapshot = buildFrontendComponentReflectionSnapshot();
+  const componentsById = new Map(
+    snapshot.components.map((component) => [component.componentId, component])
+  );
+  const railsByComponent = new Map();
+
+  for (const rail of snapshot.rails) {
+    const componentRails = railsByComponent.get(rail.componentId) || new Set();
+    componentRails.add(rail.railName);
+    railsByComponent.set(rail.componentId, componentRails);
+  }
+
+  const expectedCanvasComponents = [
+    'web.component.canvas.CanvasViewport',
+    'web.component.canvas.CanvasContextMenu',
+    'web.component.canvas.GraphNodeCardStrategy',
+    'web.component.canvas.SourceImportDialog',
+  ];
+
+  for (const componentId of expectedCanvasComponents) {
+    assert.ok(componentsById.has(componentId), `${componentId} must be mapped in Planning DB`);
+    assert.equal(componentsById.get(componentId).componentStatus, 'current');
+  }
+
+  assert.equal(
+    componentsById.get('web.component.canvas.NodeWorkbench')?.componentStatus,
+    'partial'
+  );
+  assert.equal(
+    componentsById.get('web.component.canvas.CanvasWorkbenchTabs')?.componentStatus,
+    'retire'
+  );
+  assert.ok(
+    railsByComponent.get('web.component.canvas.CanvasContextMenu')?.has('ResolveCanvasContextMenu')
+  );
+  assert.ok(
+    railsByComponent
+      .get('web.component.canvas.GraphNodeCardStrategy')
+      ?.has('ProjectGraphNodeCardReadModel')
+  );
+  assert.ok(
+    railsByComponent
+      .get('web.component.canvas.SourceImportDialog')
+      ?.has('BrowseWarehouseSourceObjects')
+  );
+  assert.ok(
+    railsByComponent.get('web.component.canvas.NodeWorkbench')?.has('InspectCanvasNodeProperties')
+  );
+});
