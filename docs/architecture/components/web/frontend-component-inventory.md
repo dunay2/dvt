@@ -139,7 +139,6 @@ semantics.
 | `web.component.shell.BottomConsoleDrawer`     | `GetRunEvents`                        | query       | implemented-api        |
 | `web.component.workbench.RouteWorkbenchFrame` | `ListFrontendMechanicalTruthSurfaces` | query       | implemented-projection |
 | `web.component.workbench.WorkbenchStates`     | `ListFrontendMechanicalTruthSurfaces` | query       | implemented-projection |
-| `web.component.canvas.CanvasToolbar`          | `PreviewExecutablePlan`               | command     | implemented-api        |
 | `web.component.canvas.CanvasToolbar`          | `StartRun`                            | command     | implemented-api        |
 | `web.component.canvas.CanvasToolbar`          | `ValidateCanvasExecutionReadiness`    | query       | gap-needed             |
 | `web.component.canvas.CanvasViewport`         | `RenderCanvasContextualGraphSurface`  | query       | implemented-projection |
