@@ -133,7 +133,7 @@ As of 2026-04-25:
   not regain aggregate authority
 - Canvas source-import affordances are now capability-gated instead of being
   implied by mock-era empty states; the active `api` path hides
-  `Add data` until the backend import endpoint exists, and `mock` is not a
+  `Add source` until the backend import endpoint exists, and `mock` is not a
   substitute active-authoring runtime under the hard-cut
 - the DVT authoring catalog now explicitly includes the governed
   `dvt:source -> dvt:sql_transform -> dvt:sink` path instead of letting source

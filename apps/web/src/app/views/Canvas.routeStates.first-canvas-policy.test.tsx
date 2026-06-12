@@ -2,6 +2,8 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScenario';
+import { canvasViewRouteCopyByKey } from './canvas/canvasCopyCatalog.route';
+import { canvasViewRouteCopyEs } from './canvas/canvasCopyCatalog.route.es';
 import {
   createCanvasRouteHarness,
   expectActiveCanvasTab,
@@ -14,6 +16,7 @@ import {
 
 describe('Canvas route first-canvas policy', () => {
   let harness: CanvasRouteHarness;
+  const legacyAddDataLabel = ['Add', 'data'].join(' ');
 
   beforeEach(() => {
     harness = createCanvasRouteHarness();
@@ -41,6 +44,15 @@ describe('Canvas route first-canvas policy', () => {
     ).find((button) => button.textContent?.includes(label));
   }
 
+  it('uses Add source vocabulary for empty editable route guidance', () => {
+    expect(canvasViewRouteCopyByKey.routeEmptyEditableMessage.fallback).toContain('Add source');
+    expect(canvasViewRouteCopyByKey.routeEmptyEditableMessage.fallback).not.toContain(
+      legacyAddDataLabel
+    );
+    expect(canvasViewRouteCopyEs.routeEmptyEditableMessage).toContain('Add source');
+    expect(canvasViewRouteCopyEs.routeEmptyEditableMessage).not.toContain(legacyAddDataLabel);
+  });
+
   it('creates the first transformation canvas through the controller command', async () => {
     const handleCreateCanvasDocument = vi.fn();
     await renderCanvasRouteWithController(harness, {
@@ -65,7 +77,7 @@ describe('Canvas route first-canvas policy', () => {
     });
   });
 
-  it('renders read-only empty guidance without suggesting Add data when edits are gated', async () => {
+  it('renders read-only empty guidance without suggesting legacy source actions when edits are gated', async () => {
     await renderCanvasRouteWithController(harness, {
       canvasDocument: {
         kind: 'transformation',
@@ -85,7 +97,7 @@ describe('Canvas route first-canvas policy', () => {
     expect(harness.container.textContent).toContain(
       'This workspace does not expose graph nodes yet. Graph edits are disabled in this context.'
     );
-    expect(harness.container.textContent).not.toContain('Use Add data');
+    expect(harness.container.textContent).not.toContain(`Use ${legacyAddDataLabel}`);
     expectCanvasRegistryClosed();
   });
 
@@ -116,7 +128,7 @@ describe('Canvas route first-canvas policy', () => {
     expect(handleCreateAuthoringNode).toHaveBeenCalledWith(requireAuthoringNodeKind('dvt:source'));
   });
 
-  it('renders empty guidance without suggesting Add data when source import is unavailable', async () => {
+  it('renders empty guidance without suggesting legacy source actions when source import is unavailable', async () => {
     await renderCanvasRouteWithController(harness, {
       canvasDocument: {
         kind: 'transformation',
@@ -127,7 +139,7 @@ describe('Canvas route first-canvas policy', () => {
 
     expect(harness.container.textContent).toContain('Start transformation canvas');
     expect(harness.container.textContent).toContain('Source import is unavailable in this runtime');
-    expect(harness.container.textContent).not.toContain('Use Add data');
+    expect(harness.container.textContent).not.toContain(`Use ${legacyAddDataLabel}`);
     expectCanvasRegistryClosed();
   });
 
