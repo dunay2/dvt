@@ -2,6 +2,7 @@
 import { type NodeTypes } from '@xyflow/react';
 
 import DbtNodeComponent from '../../components/canvas/DbtNodeComponent';
+import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
 import type { CanvasGraphAuthoringMode } from '../../plugins/nodeTypeContracts';
 import { getAllCanvasKinds, getRegisteredPluginIds } from '../../plugins/registry';
 import type { CanvasRuntimePolicy } from './canvasRuntimePolicy';
@@ -35,6 +36,7 @@ type CanvasInspectorCommands = ReturnType<typeof useCanvasInspectorCommands>;
 type CanvasControllerGraphPolicy = {
   canvasAuthoringMode: CanvasGraphAuthoringMode;
   runtimePolicy: CanvasRuntimePolicy;
+  surfaceStrategy: CanvasSurfaceStrategy | null;
 };
 
 type CanvasControllerViewModelArgs = {
@@ -58,7 +60,7 @@ function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime
 function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { dataSourceMode, capabilities, store },
-    graphPolicy: { canvasAuthoringMode, runtimePolicy },
+    graphPolicy: { canvasAuthoringMode, runtimePolicy, surfaceStrategy },
     authoringRuntime: {
       backendPosture,
       graphModel,
@@ -102,6 +104,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
       canEditEdges: runtimePolicy.commands.canMutateGraph,
     },
     canvasAuthoringMode,
+    canvasSurfaceStrategy: surfaceStrategy,
     canOpenSourceImport: runtimePolicy.commands.canOpenSourceImport,
     nodesWithImpact,
     edges: graphModel.edges,

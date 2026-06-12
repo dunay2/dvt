@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   findCanvasGraphStrategy,
+  findCanvasSurfaceStrategy,
   getCanvasRuntimeRegistrations,
   resolveCanvasGraphStrategy,
+  resolveCanvasSurfaceStrategy,
 } from './graphStrategyRegistry';
 import type { RuntimeCapabilities } from './registry';
 
@@ -13,13 +15,20 @@ describe('resolveCanvasGraphStrategy', () => {
         kind: registration.kind,
         executionKind: registration.executionStrategy.kind,
         graphStrategyId: registration.graphStrategy.id,
+        surfaceStrategyId: registration.surfaceStrategy.id,
       }))
     ).toEqual([
-      { kind: 'dbt', executionKind: 'planner_generic_preview', graphStrategyId: 'dbt' },
+      {
+        kind: 'dbt',
+        executionKind: 'planner_generic_preview',
+        graphStrategyId: 'dbt',
+        surfaceStrategyId: 'dbt-contextual-canvas',
+      },
       {
         kind: 'transformation',
         executionKind: 'transformation_preview',
         graphStrategyId: 'transformation',
+        surfaceStrategyId: 'dvt-transformation-contextual-canvas',
       },
     ]);
   });
@@ -35,6 +44,7 @@ describe('resolveCanvasGraphStrategy', () => {
       getCanvasRuntimeRegistrations(capabilities).map((registration) => registration.kind)
     ).toEqual(['transformation']);
     expect(findCanvasGraphStrategy('dbt', capabilities)).toBeNull();
+    expect(findCanvasSurfaceStrategy('dbt', capabilities)).toBeNull();
   });
 
   it('defaults to transformation strategy when strategy id is missing', () => {
@@ -69,12 +79,44 @@ describe('resolveCanvasGraphStrategy', () => {
     const strategy = resolveCanvasGraphStrategy('dbt');
     expect(strategy.id).toBe('dbt');
     expect('authoringPolicy' in strategy).toBe(false);
+    expect('surfacePolicy' in strategy).toBe(false);
+  });
+
+  it('resolves dbt surface strategy as contextual authoring policy', () => {
+    const strategy = resolveCanvasSurfaceStrategy('dbt');
+
+    expect(strategy).toMatchObject({
+      id: 'dbt-contextual-canvas',
+      globalNavigation: {
+        workbenchTabs: 'retired',
+        fixedResourcePanel: 'retired',
+        fixedInspectorPanel: 'retired',
+      },
+      sourceImport: {
+        placement: 'contextual-modal',
+      },
+      nodeWorkbench: {
+        placement: 'contextual-overlay',
+      },
+      operationalDrawer: {
+        placement: 'bottom-drawer',
+      },
+    });
+    expect(strategy.nodeWorkbench.sections).toEqual([
+      'properties',
+      'columns',
+      'tests',
+      'lineage',
+      'preview',
+      'runs',
+    ]);
   });
 
   it('resolves transformation strategy when explicitly requested', () => {
     const strategy = resolveCanvasGraphStrategy('transformation');
     expect(strategy.id).toBe('transformation');
     expect('authoringPolicy' in strategy).toBe(false);
+    expect('surfacePolicy' in strategy).toBe(false);
     expect(
       strategy.mapNodeToCanonical({
         id: 'source-node',
@@ -94,6 +136,22 @@ describe('resolveCanvasGraphStrategy', () => {
       status: 'idle',
       tags: [],
     });
+  });
+
+  it('resolves DVT transformation surface strategy with sink authoring sections', () => {
+    const strategy = resolveCanvasSurfaceStrategy('transformation');
+
+    expect(strategy.id).toBe('dvt-transformation-contextual-canvas');
+    expect(strategy.sourceImport.openedFrom).toEqual(['canvas-context-menu', 'command-palette']);
+    expect(strategy.nodeWorkbench.sections).toEqual([
+      'properties',
+      'columns',
+      'sql',
+      'sink',
+      'preview',
+      'runs',
+    ]);
+    expect(strategy.globalNavigation.workbenchTabs).toBe('retired');
   });
 
   it('rejects malformed transformation graph canonical nodes and edges', () => {

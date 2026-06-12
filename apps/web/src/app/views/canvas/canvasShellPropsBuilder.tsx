@@ -28,6 +28,7 @@ function buildCanvasShellLayoutArgs({
       inspectorPanelVisible: controller.inspectorPanelVisible,
       canOpenSourceImport: controller.canOpenSourceImport,
       canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
+      canvasSurfaceStrategy: controller.canvasSurfaceStrategy,
     },
     recoveryCommands: {
       reloadLatestDraft: controller.reloadLatestDraft,

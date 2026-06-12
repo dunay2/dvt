@@ -22,6 +22,7 @@ import type {
 } from './canvasShell.types';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { IWarehouseSourceImportPort } from '../../ports/workspace';
+import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 
 const shellState = vi.hoisted(() => ({
   canvasViewportProps: null as null | Record<string, unknown>,
@@ -87,6 +88,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       focusMode: false,
       inspectorPanelVisible: false,
       canOpenSourceImport: true,
+      surfaceStrategy: dvtCanvasSurfaceStrategy,
       hostTabState: {
         activeTabId: null,
         tabs: [],

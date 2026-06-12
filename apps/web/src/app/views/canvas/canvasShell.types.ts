@@ -10,6 +10,7 @@ import type {
   CanvasGraphAuthoringMode,
   NodeKindRegistration,
 } from '../../plugins/nodeTypeContracts';
+import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
@@ -39,6 +40,7 @@ export type CanvasShellLayout = {
   focusMode: boolean;
   inspectorPanelVisible: boolean;
   canOpenSourceImport: boolean;
+  surfaceStrategy: CanvasSurfaceStrategy | null;
   hostTabState: CanvasPlaygroundTabState;
   hostTabStrip?: React.ReactNode;
   workbenchTabStrip?: React.ReactNode;

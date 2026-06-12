@@ -2,6 +2,7 @@
 import { vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
+import { dvtCanvasSurfaceStrategy } from '../plugins/dvt/dvtCanvasSurfaceStrategy';
 import { DBT_NODE_KINDS } from '../plugins/nodeTypeCatalog.dbt';
 import type { WorkspaceScope } from '../ports/sessionContext';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
@@ -37,6 +38,7 @@ type CanvasWorkbenchDefaultsDto = {
   canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   userPermissions: CanvasController['userPermissions'];
   canvasAuthoringMode: CanvasController['canvasAuthoringMode'];
+  canvasSurfaceStrategy: CanvasController['canvasSurfaceStrategy'];
   nodesWithImpact: CanvasController['nodesWithImpact'];
   edges: CanvasController['edges'];
   nodeTypes: CanvasController['nodeTypes'];
@@ -192,6 +194,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canCreateCanvasDocument: false,
     userPermissions: buildDefaultCanvasUserPermissions(),
     canvasAuthoringMode: 'transformation',
+    canvasSurfaceStrategy: dvtCanvasSurfaceStrategy,
     nodesWithImpact: [],
     edges: [],
     nodeTypes: {},
