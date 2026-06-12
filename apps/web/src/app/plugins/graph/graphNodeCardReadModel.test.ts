@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { dbtGraphNodeCardStrategy } from '../dbt/dbtGraphNodeCardStrategy';
+import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 
 function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
@@ -35,7 +37,8 @@ describe('buildGraphNodeCardReadModel', () => {
           ],
         },
       }),
-      {}
+      {},
+      [dvtGraphNodeCardStrategy]
     );
 
     expect(model.subtitle).toBe('warehouse.public.orders');
@@ -62,7 +65,8 @@ describe('buildGraphNodeCardReadModel', () => {
           columns: [{ name: 'order_id', type: 'integer' }],
         },
       }),
-      {}
+      {},
+      [dbtGraphNodeCardStrategy]
     );
 
     expect(model.subtitle).toBe('analytics');

@@ -6,13 +6,22 @@ const READ_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'graphNodeCardReadModel.ts'
 );
+const REGISTRY_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '../registry.ts');
 const CONTRACT_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'graphNodeCardStrategyContracts.ts'
 );
+const DBT_CONTRIBUTIONS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../dbt/dbtContributions.ts'
+);
 const DBT_STRATEGY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../dbt/dbtGraphNodeCardStrategy.ts'
+);
+const DVT_CONTRIBUTIONS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../dvt/dvtContributions.ts'
 );
 const DVT_STRATEGY_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -36,14 +45,24 @@ describe('Graph node card strategy architecture', () => {
     expect(CONTRACT_SOURCE).toContain('export type GraphNodeCardStrategy');
     expect(CONTRACT_SOURCE).toContain('GraphNodeCardReadModel');
 
-    expect(READ_MODEL_SOURCE).toContain('GRAPH_NODE_CARD_STRATEGIES');
-    expect(READ_MODEL_SOURCE).toContain('dbtGraphNodeCardStrategy');
-    expect(READ_MODEL_SOURCE).toContain('dvtGraphNodeCardStrategy');
+    expect(READ_MODEL_SOURCE).not.toContain('dbtGraphNodeCardStrategy');
+    expect(READ_MODEL_SOURCE).not.toContain('dvtGraphNodeCardStrategy');
+    expect(READ_MODEL_SOURCE).not.toContain('../dbt/');
+    expect(READ_MODEL_SOURCE).not.toContain('../dvt/');
     expect(READ_MODEL_SOURCE).toContain('defaultGraphNodeCardStrategy');
     expect(READ_MODEL_SOURCE).not.toContain("pluginId === 'dbt'");
     expect(READ_MODEL_SOURCE).not.toContain("pluginId === 'dvt'");
     expect(READ_MODEL_SOURCE).not.toContain("startsWith('dbt:'");
     expect(READ_MODEL_SOURCE).not.toContain("startsWith('dvt:'");
+
+    expect(REGISTRY_SOURCE).toContain('graphNodeCardStrategies?:');
+    expect(REGISTRY_SOURCE).toContain('function getGraphNodeCardStrategies(');
+    expect(DBT_CONTRIBUTIONS_SOURCE).toContain(
+      'graphNodeCardStrategies: [dbtGraphNodeCardStrategy]'
+    );
+    expect(DVT_CONTRIBUTIONS_SOURCE).toContain(
+      'graphNodeCardStrategies: [dvtGraphNodeCardStrategy]'
+    );
 
     expect(DBT_STRATEGY_SOURCE).toContain("id: 'dbt-card'");
     expect(DBT_STRATEGY_SOURCE).toContain("node.pluginId === 'dbt'");

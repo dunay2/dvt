@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { IRunsPort, RunSnapshot, RunSummaryItem } from '../../ports/runs';
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import type { CanonicalNode } from '../../types/canonical';
+import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
 import { DbtNodeRenderer, dbtInspectorPanels } from './DbtNodeRenderer';
 
 describe('DbtNodeRenderer history panel', () => {
@@ -181,6 +182,7 @@ describe('DbtNodeRenderer history panel', () => {
           hovered={false}
           overlayDecoration={null}
           badges={[]}
+          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
           data={{}}
         />
       );

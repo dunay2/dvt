@@ -6,6 +6,7 @@ import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
 import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
+import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
 
 /**
  * Static v1 contribution manifest for the built-in dbt plugin.
@@ -46,6 +47,7 @@ export const dbtContributions: PluginContributions = {
   ],
   nodeKinds: DBT_NODE_KINDS,
   nodeRenderers,
+  graphNodeCardStrategies: [dbtGraphNodeCardStrategy],
   inspectorPanels: dbtInspectorPanels,
   // View placements define shell navigation and Canvas-scoped workbench tabs.
   views: [

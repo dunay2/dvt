@@ -5,7 +5,12 @@ import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
 import { Fragment, memo, type CSSProperties, type DragEvent } from 'react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
-import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
+import {
+  getGraphNodeCardStrategies,
+  getNodeBadges,
+  getNodeRenderer,
+  type RuntimeCapabilities,
+} from '../../plugins/registry';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type {
   BadgeContext,
@@ -198,6 +203,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     data.runtimeCapabilities
   );
   const badges = getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities);
+  const graphNodeCardStrategies = getGraphNodeCardStrategies(data.runtimeCapabilities);
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;
@@ -285,6 +291,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
               hovered={false}
               overlayDecoration={data.overlayDecoration ?? null}
               badges={badges}
+              graphNodeCardStrategies={graphNodeCardStrategies}
               data={data}
             />
             {badges.map((badge, index) => (

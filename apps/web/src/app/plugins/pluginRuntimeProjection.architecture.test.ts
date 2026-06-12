@@ -17,6 +17,7 @@ import {
   getAllOverlays,
   getAllViews,
   getCanvasWorkbenchTabViews,
+  getGraphNodeCardStrategies,
   getRouteViews,
   getShellNavigationViews,
   getNodeBadges,
@@ -78,6 +79,9 @@ describe('plugin runtime projection architecture', () => {
     ).not.toContain('dbt');
     expect(getPluginPortMap(capabilities).has('dbt')).toBe(false);
     expect(getNodeRenderer('dbt:model', FallbackRenderer, capabilities)).toBe(FallbackRenderer);
+    expect(getGraphNodeCardStrategies(capabilities).map((strategy) => strategy.id)).not.toContain(
+      'dbt-card'
+    );
   });
 
   it('projects unavailable monitoring plugins out of overlays and node badges', () => {
