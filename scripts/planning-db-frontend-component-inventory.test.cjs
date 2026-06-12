@@ -286,9 +286,12 @@ test('real frontend component inventory maps Canvas contextual UX components and
       ?.has('ProjectGraphNodeCardReadModel')
   );
   assert.ok(
+    railsByComponent.get('web.component.canvas.SourceImportDialog')?.has('ListWarehouseConnections')
+  );
+  assert.ok(
     railsByComponent
       .get('web.component.canvas.SourceImportDialog')
-      ?.has('BrowseWarehouseSourceObjects')
+      ?.has('ListWarehouseConnectionTables')
   );
   assert.ok(
     railsByComponent.get('web.component.canvas.NodeWorkbench')?.has('InspectCanvasNodeProperties')

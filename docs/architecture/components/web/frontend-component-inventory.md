@@ -147,11 +147,10 @@ semantics.
 | `web.component.canvas.CanvasContextMenu`      | `ResolveCanvasContextMenu`            | query       | implemented-local      |
 | `web.component.canvas.CanvasContextMenu`      | `CreateCanvasAuthoringNode`           | command     | implemented-local      |
 | `web.component.canvas.CanvasContextMenu`      | `ImportWarehouseSources`              | command     | implemented-api        |
-| `web.component.canvas.CanvasContextMenu`      | `PreviewExecutionPlan`                | command     | implemented-api        |
+| `web.component.canvas.CanvasContextMenu`      | `PreviewExecutablePlan`               | command     | implemented-api        |
 | `web.component.canvas.CanvasContextMenu`      | `RemoveCanvasEdgeFromContext`         | command     | implemented-local      |
 | `web.component.canvas.GraphNodeCardStrategy`  | `ProjectGraphNodeCardReadModel`       | query       | implemented-projection |
 | `web.component.canvas.GraphNodeCardStrategy`  | `RenderGraphNodeCardMetrics`          | query       | implemented-projection |
-| `web.component.canvas.SourceImportDialog`     | `BrowseWarehouseSourceObjects`        | query       | implemented-api        |
 | `web.component.canvas.SourceImportDialog`     | `ListWarehouseConnections`            | query       | implemented-api        |
 | `web.component.canvas.SourceImportDialog`     | `ListWarehouseConnectionTables`       | query       | implemented-api        |
 | `web.component.canvas.SourceImportDialog`     | `ImportWarehouseSources`              | command     | implemented-api        |
