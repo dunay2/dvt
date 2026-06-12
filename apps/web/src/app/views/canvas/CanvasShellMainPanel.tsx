@@ -176,7 +176,14 @@ function CanvasShellNodeWorkbenchOverlay({
   panels,
   chromeCommands,
 }: Pick<CanvasShellMainPanelProps, 'layout' | 'panels' | 'chromeCommands'>): JSX.Element | null {
-  if (layout.focusMode || !layout.inspectorPanelVisible || panels.inspectorNode == null) {
+  const nodeWorkbenchPlacement = layout.surfaceStrategy?.nodeWorkbench.placement;
+
+  if (
+    nodeWorkbenchPlacement !== 'contextual-overlay' ||
+    layout.focusMode ||
+    !layout.inspectorPanelVisible ||
+    panels.inspectorNode == null
+  ) {
     return null;
   }
 

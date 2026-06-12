@@ -33,6 +33,10 @@ const GRAPH_STRATEGY_CONTRACTS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../plugins/graphStrategyContracts.ts'
 );
+const SURFACE_STRATEGY_CONTRACTS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../plugins/canvasSurfaceStrategyContracts.ts'
+);
 const DBT_NODE_ADAPTER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../plugins/dbt/dbtNodeAdapter.ts'
@@ -108,6 +112,7 @@ describe('canvas draft authoring component architecture', () => {
         pluginId: registration.pluginId,
         graphStrategyId: registration.graphStrategy.id,
         executionKind: registration.executionStrategy.kind,
+        surfaceStrategyId: registration.surfaceStrategy.id,
       }))
     ).toEqual([
       {
@@ -115,12 +120,14 @@ describe('canvas draft authoring component architecture', () => {
         pluginId: 'dbt',
         graphStrategyId: 'dbt',
         executionKind: 'planner_generic_preview',
+        surfaceStrategyId: 'dbt-contextual-canvas',
       },
       {
         kind: 'transformation',
         pluginId: 'dvt',
         graphStrategyId: 'transformation',
         executionKind: 'transformation_preview',
+        surfaceStrategyId: 'dvt-transformation-contextual-canvas',
       },
     ]);
     expect(
@@ -344,6 +351,9 @@ describe('canvas draft authoring component architecture', () => {
     );
 
     expect(GRAPH_STRATEGY_CONTRACTS_SOURCE).not.toContain('authoringPolicy');
+    expect(GRAPH_STRATEGY_CONTRACTS_SOURCE).not.toContain('surfacePolicy');
+    expect(SURFACE_STRATEGY_CONTRACTS_SOURCE).toContain('CanvasSurfaceStrategy');
+    expect(SURFACE_STRATEGY_CONTRACTS_SOURCE).toContain('contextual-overlay');
     expect(DBT_NODE_ADAPTER_SOURCE).not.toContain('authoringPolicy');
     expect(DVT_TRANSFORMATION_STRATEGY_SOURCE).not.toContain('authoringPolicy');
     expect(NODE_DROP_AGGREGATE_SOURCE).not.toContain('CanvasGraphStrategy');

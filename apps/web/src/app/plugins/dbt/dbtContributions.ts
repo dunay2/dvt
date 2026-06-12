@@ -5,6 +5,7 @@ import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPre
 import type { PluginContributions } from '../registry';
 import { DBT_NODE_KINDS } from '../nodeTypeCatalog.dbt';
 import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNodeRenderer';
+import { dbtCanvasSurfaceStrategy } from './dbtCanvasSurfaceStrategy';
 import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
 import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
 
@@ -134,6 +135,7 @@ export const dbtContributions: PluginContributions = {
         sourceFamily: 'dbt',
       },
       graphStrategy: dbtCanvasGraphStrategy,
+      surfaceStrategy: dbtCanvasSurfaceStrategy,
       label: 'dbt',
       description: 'Model-first canvas for dbt resources and dependencies.',
       createTitle: 'dbt canvas',

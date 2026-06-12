@@ -14,7 +14,11 @@ export type CanvasShellRouteComposerArgs = Readonly<{
 export type CanvasShellLayoutBuilderArgs = Readonly<{
   layoutState: Pick<
     CanvasRouteController,
-    'focusMode' | 'inspectorPanelVisible' | 'canOpenSourceImport' | 'canvasEmptyStateGuideVisible'
+    | 'focusMode'
+    | 'inspectorPanelVisible'
+    | 'canOpenSourceImport'
+    | 'canvasEmptyStateGuideVisible'
+    | 'canvasSurfaceStrategy'
   >;
   recoveryCommands: Pick<CanvasRouteController, 'reloadLatestDraft'> &
     Readonly<{

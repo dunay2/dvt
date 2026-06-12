@@ -6,6 +6,7 @@ import {
   resolveActiveCanvasGraphStrategy,
   selectActiveCanvasExecutionStrategy,
   selectActiveCanvasGraphStrategy,
+  selectActiveCanvasSurfaceStrategy,
 } from './canvasActiveGraphStrategy';
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
 import { applyCanvasDraftPostureToRuntimePolicyInput } from './canvasDraftAccessPostureModel';
@@ -82,6 +83,7 @@ export function useCanvasController() {
   const executionStrategy = selectActiveCanvasExecutionStrategy(
     activeCanvasGraphStrategyResolution
   );
+  const surfaceStrategy = selectActiveCanvasSurfaceStrategy(activeCanvasGraphStrategyResolution);
   const canvasAuthoringMode = useMemo(
     () => resolveActiveCanvasAuthoringMode(draftReadModel),
     [draftReadModel?.record?.draft.canvas.kind]
@@ -240,6 +242,7 @@ export function useCanvasController() {
     graphPolicy: {
       canvasAuthoringMode,
       runtimePolicy,
+      surfaceStrategy,
     },
     readModel: {
       transformationValidation,

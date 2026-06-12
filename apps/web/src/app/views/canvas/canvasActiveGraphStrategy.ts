@@ -2,6 +2,7 @@
 import { findCanvasRuntimeRegistration } from '../../plugins/graphStrategyRegistry';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
+import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyContracts';
 import type {
   CanvasGraphAuthoringMode,
   NodeKindRegistration,
@@ -17,6 +18,7 @@ export type ActiveCanvasGraphStrategyResolution =
       executionStrategy: CanvasExecutionStrategy;
       nodeKinds: readonly NodeKindRegistration[];
       strategy: CanvasGraphStrategy;
+      surfaceStrategy: CanvasSurfaceStrategy;
     }
   | {
       kind: 'ready';
@@ -24,6 +26,7 @@ export type ActiveCanvasGraphStrategyResolution =
       executionStrategy: CanvasExecutionStrategy;
       nodeKinds: readonly NodeKindRegistration[];
       strategy: CanvasGraphStrategy;
+      surfaceStrategy: CanvasSurfaceStrategy;
     }
   | {
       kind: 'unsupported_kind';
@@ -86,6 +89,7 @@ export function resolveActiveCanvasGraphStrategy(
       executionStrategy: defaultRuntimeRegistration.executionStrategy,
       nodeKinds: defaultRuntimeRegistration.nodeKinds,
       strategy: defaultRuntimeRegistration.graphStrategy,
+      surfaceStrategy: defaultRuntimeRegistration.surfaceStrategy,
     };
   }
 
@@ -115,6 +119,7 @@ export function resolveActiveCanvasGraphStrategy(
     executionStrategy: runtimeRegistration.executionStrategy,
     nodeKinds: runtimeRegistration.nodeKinds,
     strategy: runtimeRegistration.graphStrategy,
+    surfaceStrategy: runtimeRegistration.surfaceStrategy,
   };
 }
 
@@ -123,6 +128,16 @@ export function selectActiveCanvasGraphStrategy(
 ): CanvasGraphStrategy | null {
   if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
     return resolution.strategy;
+  }
+
+  return null;
+}
+
+export function selectActiveCanvasSurfaceStrategy(
+  resolution: ActiveCanvasGraphStrategyResolution
+): CanvasSurfaceStrategy | null {
+  if (resolution.kind === 'ready' || resolution.kind === 'missing_document') {
+    return resolution.surfaceStrategy;
   }
 
   return null;

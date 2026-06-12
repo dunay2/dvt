@@ -10,6 +10,7 @@ import {
   resolveActiveCanvasGraphStrategy,
   selectActiveCanvasExecutionStrategy,
   selectActiveCanvasGraphStrategy,
+  selectActiveCanvasSurfaceStrategy,
 } from './canvasActiveGraphStrategy';
 
 function buildDraftReadModelWithCanvasKind(kind: string): CanvasAuthoringDraftReadModel {
@@ -41,6 +42,9 @@ describe('resolveActiveCanvasGraphStrategy', () => {
       strategy: {
         id: 'dbt',
       },
+      surfaceStrategy: {
+        id: 'dbt-contextual-canvas',
+      },
     });
     expect(resolveActiveCanvasAuthoringMode(buildDraftReadModelWithCanvasKind('dbt'))).toBe('dbt');
   });
@@ -50,6 +54,9 @@ describe('resolveActiveCanvasGraphStrategy', () => {
       kind: 'missing_document',
       strategy: {
         id: 'transformation',
+      },
+      surfaceStrategy: {
+        id: 'dvt-transformation-contextual-canvas',
       },
     });
     expect(resolveActiveCanvasAuthoringMode(undefined)).toBe('transformation');
@@ -112,7 +119,9 @@ describe('resolveActiveCanvasGraphStrategy', () => {
 
     expect(selectActiveCanvasGraphStrategy(unsupported)).toBeNull();
     expect(selectActiveCanvasExecutionStrategy(unsupported)).toBeNull();
+    expect(selectActiveCanvasSurfaceStrategy(unsupported)).toBeNull();
     expect(selectActiveCanvasGraphStrategy(disabled)).toBeNull();
     expect(selectActiveCanvasExecutionStrategy(disabled)).toBeNull();
+    expect(selectActiveCanvasSurfaceStrategy(disabled)).toBeNull();
   });
 });

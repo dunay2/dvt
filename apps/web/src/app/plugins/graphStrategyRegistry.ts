@@ -1,8 +1,6 @@
 import type { CanvasGraphStrategy } from './graphStrategyContracts';
-import {
-  getAllCanvasRuntimeRegistrations,
-  type RuntimeCapabilities,
-} from './registry';
+import type { CanvasSurfaceStrategy } from './canvasSurfaceStrategyContracts';
+import { getAllCanvasRuntimeRegistrations, type RuntimeCapabilities } from './registry';
 import type { CanvasRuntimeRegistration } from './nodeTypeContracts';
 
 const DEFAULT_STRATEGY_ID = 'transformation';
@@ -41,6 +39,13 @@ export function findCanvasGraphStrategy(
   return findCanvasRuntimeRegistration(strategyId, capabilities)?.graphStrategy ?? null;
 }
 
+export function findCanvasSurfaceStrategy(
+  strategyId: unknown,
+  capabilities?: RuntimeCapabilities
+): CanvasSurfaceStrategy | null {
+  return findCanvasRuntimeRegistration(strategyId, capabilities)?.surfaceStrategy ?? null;
+}
+
 export function resolveCanvasGraphStrategy(
   strategyId = import.meta.env.VITE_CANVAS_GRAPH_STRATEGY,
   capabilities?: RuntimeCapabilities
@@ -57,6 +62,27 @@ export function resolveCanvasGraphStrategy(
   const strategy = findCanvasGraphStrategy(resolvedId, capabilities);
   if (!strategy) {
     throw new Error(`Unknown canvas graph strategy registration: ${resolvedId}`);
+  }
+
+  return strategy;
+}
+
+export function resolveCanvasSurfaceStrategy(
+  strategyId = import.meta.env.VITE_CANVAS_GRAPH_STRATEGY,
+  capabilities?: RuntimeCapabilities
+): CanvasSurfaceStrategy {
+  const resolvedId = normalizeStrategyId(strategyId);
+  const defaultStrategy = findCanvasSurfaceStrategy(DEFAULT_STRATEGY_ID, capabilities);
+  if (!defaultStrategy) {
+    throw new Error('Missing default canvas surface strategy registration');
+  }
+  if (resolvedId === DEFAULT_STRATEGY_ID) {
+    return defaultStrategy;
+  }
+
+  const strategy = findCanvasSurfaceStrategy(resolvedId, capabilities);
+  if (!strategy) {
+    throw new Error(`Unknown canvas surface strategy registration: ${resolvedId}`);
   }
 
   return strategy;
