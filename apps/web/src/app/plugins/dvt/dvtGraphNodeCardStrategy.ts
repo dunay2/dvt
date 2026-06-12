@@ -11,6 +11,7 @@ import {
   metadataOf,
   numericValue,
   pushMetric,
+  pushRuntimeMetrics,
   resolveColumnCount,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
@@ -36,6 +37,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   pushMetric(metrics, 'rows', 'Rows', rowCount == null ? null : formatCompactNumber(rowCount));
   pushMetric(metrics, 'bytes', 'Size', byteSize == null ? null : formatBytes(byteSize));
   pushMetric(metrics, 'columns', 'Columns', resolveColumnCount(metadata, data));
+  pushRuntimeMetrics(metrics, metadata, data);
 
   return {
     title: node.name,
