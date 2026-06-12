@@ -468,7 +468,7 @@ describe('CanvasViewport', () => {
   });
 
   it('opens source import from the editable background context gesture when the rail is available', async () => {
-    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const sourceKind = buildTestNodeKind('dbt:source', 'Source');
     const props = buildProps({
       authoringNodeKinds: [sourceKind],
       canOpenSourceImport: true,

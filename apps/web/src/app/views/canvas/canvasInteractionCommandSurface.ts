@@ -55,10 +55,7 @@ type BuildCanvasContextMenuModelArgs = Readonly<{
 }>;
 
 function isSourceImportCoveredNodeKind(registration: NodeKindRegistration): boolean {
-  return (
-    registration.role === 'input' &&
-    (registration.kind.endsWith(':source') || registration.label.toLowerCase() === 'source')
-  );
+  return registration.kind === 'dbt:source';
 }
 
 export function buildCanvasContextMenuModel({

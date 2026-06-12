@@ -31,7 +31,7 @@ describe('canvasInteractionCommandSurface', () => {
   });
 
   it('offers source import as a canvas action only when the editable source rail is available', () => {
-    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const sourceKind = buildTestNodeKind('dbt:source', 'Source');
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -45,6 +45,25 @@ describe('canvasInteractionCommandSurface', () => {
 
     expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
     expect(model.createNodeActions).toEqual([]);
+  });
+
+  it('keeps DVT source creation visible because dbt source import does not materialize DVT nodes', () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 720, y: 180 },
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      authoringNodeKinds: [sourceKind],
+    });
+
+    expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
+    expect(model.createNodeActions).toEqual([
+      { action: 'create-node', label: 'Source', registration: sourceKind },
+    ]);
   });
 
   it('offers execution preview from the canvas menu independently from graph mutation', () => {
