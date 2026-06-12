@@ -87,7 +87,7 @@ Operators should distinguish "feature unavailable" from "system offline".
 For Canvas specifically:
 
 - `feature unavailable` means the route is up but the active runtime does not
-  provide source import, so the UI must hide `Add source` and render honest empty
+  provide source import, so the UI must hide `Add data` and render honest empty
   guidance
 - `system offline` means route startup or backend access is degraded and the
   route should publish blocked or offline posture instead
