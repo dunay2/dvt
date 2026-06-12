@@ -91,7 +91,6 @@ export function buildCanvasShellLayout({
 
   return {
     focusMode: layoutState.focusMode,
-    explorerPanelVisible: layoutState.explorerPanelVisible,
     inspectorPanelVisible: layoutState.inspectorPanelVisible,
     canOpenSourceImport: layoutState.canOpenSourceImport,
     hostTabState: routePresentation.canvasTabState,

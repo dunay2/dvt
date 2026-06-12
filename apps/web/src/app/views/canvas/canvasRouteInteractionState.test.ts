@@ -1,23 +1,32 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildController } from '../Canvas.test.controller';
+import { buildController, type CanvasController } from '../Canvas.test.controller';
 import { deriveCanvasDraftAccessPosture } from './canvasDraftAccessPostureModel';
 import { deriveCanvasRouteInteractionState } from './canvasRouteInteractionState';
+
+function buildReadyNodes(): CanvasController['nodesWithImpact'] {
+  return [
+    {
+      id: 'node.ready',
+      position: { x: 0, y: 0 },
+      data: {},
+    },
+  ] as unknown as CanvasController['nodesWithImpact'];
+}
 
 describe('canvasRouteInteractionState', () => {
   it('converts draft transport failures into a route-safe disabled interaction posture', () => {
     const controller = buildController({
-      explorerNodes: [
+      nodesWithImpact: [
         {
           id: 'node.orders',
-          name: 'orders',
-          pluginId: 'dbt',
-          kind: 'dbt:model',
-          role: 'transform',
-          status: 'idle',
-          tags: [],
+          position: { x: 0, y: 0 },
+          data: {
+            name: 'orders',
+            pluginKind: 'dbt:model',
+          },
         },
-      ],
+      ] as unknown as CanvasController['nodesWithImpact'],
     });
 
     const interactionState = deriveCanvasRouteInteractionState(controller, {
@@ -109,6 +118,7 @@ describe('canvasRouteInteractionState', () => {
     const controller = buildController({
       draftAccessMode: 'read_only',
       draftAccessPosture,
+      nodesWithImpact: buildReadyNodes(),
       userPermissions: {
         canPlan: true,
         canRun: true,
@@ -138,6 +148,7 @@ describe('canvasRouteInteractionState', () => {
     const controller = buildController({
       dataSourceMode: 'api',
       backendReady: false,
+      nodesWithImpact: buildReadyNodes(),
     });
 
     const interactionState = deriveCanvasRouteInteractionState(controller, null);

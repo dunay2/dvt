@@ -36,8 +36,6 @@ describe('BottomConsoleDrawer', () => {
     consoleLogStreamState.runId = undefined;
     useUiLayoutStore.setState({
       leftNavCollapsed: false,
-      explorerPanelWidth: 280,
-      explorerPanelVisible: false,
       inspectorPanelWidth: 380,
       inspectorPanelVisible: false,
       consolePanelHeight: 160,

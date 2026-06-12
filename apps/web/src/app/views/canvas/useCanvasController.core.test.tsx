@@ -31,9 +31,28 @@ describe('useCanvasController core', () => {
     harness.cleanup();
   });
 
-  it('maps protected draft semantics into canonical explorer state and injects overlay decorations', () => {
+  it('maps protected draft semantics into graph state and injects overlay decorations', () => {
     const result = harness.getLatestResult();
-    expect(result?.explorerNodes).toEqual([
+    expect(result?.nodesWithImpact).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'node_1',
+          data: expect.objectContaining({
+            name: 'node_1',
+            pluginKind: 'dvt:source',
+            overlayDecoration: { borderColor: '#ef4444' },
+          }),
+        }),
+        expect.objectContaining({
+          id: 'node_2',
+          data: expect.objectContaining({
+            name: 'node_2',
+            pluginKind: 'dvt:sql_transform',
+          }),
+        }),
+      ])
+    );
+    expect(result?.inspectorGraphNodes).toEqual([
       expect.objectContaining({
         id: 'node_1',
         name: 'node_1',
@@ -65,14 +84,6 @@ describe('useCanvasController core', () => {
     expect(result?.edges).toEqual([
       { id: 'draft_edge_node_1_node_2', source: 'node_1', target: 'node_2' },
     ]);
-    expect(result?.nodesWithImpact).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: 'node_1',
-          data: expect.objectContaining({ overlayDecoration: { borderColor: '#ef4444' } }),
-        }),
-      ])
-    );
     expect(result?.impactOverlayEnabled).toBe(true);
     const hasDecoratedNode = (
       nodes: readonly { id?: string; kind?: string }[],
@@ -361,7 +372,7 @@ describe('useCanvasController core', () => {
         description: 'Edited through the route-owned inspector',
       })
     );
-    expect(harness.getLatestResult()?.explorerNodes[0]).toEqual(
+    expect(harness.getLatestResult()?.inspectorGraphNodes[0]).toEqual(
       expect.objectContaining({
         id: 'node_1',
         name: 'orders_source_renamed',
@@ -370,22 +381,15 @@ describe('useCanvasController core', () => {
     );
   });
 
-  it('keeps hide or show panel commands idempotent', async () => {
-    harness.state.store.explorerPanelVisible = true;
+  it('keeps inspector panel commands idempotent', async () => {
     harness.state.store.inspectorPanelVisible = false;
     await harness.renderProbe();
-
-    harness.getLatestResult()?.hideExplorerPanel();
-    harness.state.store.explorerPanelVisible = false;
-    await harness.renderProbe();
-    harness.getLatestResult()?.hideExplorerPanel();
 
     harness.getLatestResult()?.showInspectorPanel();
     harness.state.store.inspectorPanelVisible = true;
     await harness.renderProbe();
     harness.getLatestResult()?.showInspectorPanel();
 
-    expect(harness.state.store.hideExplorerPanel).toHaveBeenCalledTimes(1);
     expect(harness.state.store.showInspectorPanel).toHaveBeenCalledTimes(1);
   });
 

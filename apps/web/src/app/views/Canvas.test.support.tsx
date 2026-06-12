@@ -32,8 +32,8 @@ export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration
 })!;
 
 const canvasRouteState = vi.hoisted(() => ({
-  explorerProps: null as null | Record<string, unknown>,
   inspectorProps: null as null | Record<string, unknown>,
+  viewportProps: null as null | Record<string, unknown>,
   initialEntry: '/canvas',
 }));
 
@@ -43,13 +43,6 @@ vi.mock('@xyflow/react', () => ({
 
 vi.mock('./canvas/useCanvasController', () => ({
   useCanvasController: vi.fn(),
-}));
-
-vi.mock('../components/DbtExplorer', () => ({
-  default: (props: Record<string, unknown>) => {
-    canvasRouteState.explorerProps = props;
-    return <div data-slot="canvas-explorer-panel">Explorer</div>;
-  },
 }));
 
 vi.mock('../components/InspectorPanel', () => ({
@@ -69,26 +62,23 @@ vi.mock('../components/SourceImportWizard', () => ({
 }));
 
 vi.mock('./canvas/CanvasViewport', () => ({
-  default: ({
-    canPreviewExecutionPlan,
-    onPreviewExecutionPlan,
-  }: {
-    canPreviewExecutionPlan?: boolean;
-    onPreviewExecutionPlan?: () => void;
-  }) => (
-    <div data-slot="canvas-viewport">
-      Viewport
-      {canPreviewExecutionPlan ? (
-        <button
-          type="button"
-          data-slot="canvas-context-preview-execution-plan-command"
-          onClick={onPreviewExecutionPlan}
-        >
-          Preview execution plan
-        </button>
-      ) : null}
-    </div>
-  ),
+  default: (props: { canPreviewExecutionPlan?: boolean; onPreviewExecutionPlan?: () => void }) => {
+    canvasRouteState.viewportProps = props;
+    return (
+      <div data-slot="canvas-viewport">
+        Viewport
+        {props.canPreviewExecutionPlan ? (
+          <button
+            type="button"
+            data-slot="canvas-context-preview-execution-plan-command"
+            onClick={props.onPreviewExecutionPlan}
+          >
+            Preview execution plan
+          </button>
+        ) : null}
+      </div>
+    );
+  },
 }));
 
 vi.mock('../components/Modals', () => ({
@@ -137,8 +127,8 @@ export function createCanvasRouteHarness() {
   ).IS_REACT_ACT_ENVIRONMENT = true;
 
   mockedUseCanvasController.mockReset();
-  canvasRouteState.explorerProps = null;
   canvasRouteState.inspectorProps = null;
+  canvasRouteState.viewportProps = null;
   canvasRouteState.initialEntry = '/canvas';
   resetCanvasDraftPresentationState();
   resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
@@ -298,16 +288,32 @@ export function expectCanvasBootstrapState(args: {
 }
 
 export function expectCanvasRegistryClosed(): void {
-  expect(currentCanvasRouteState().explorerProps?.onOpenDataRegistry).toBeUndefined();
+  expect(currentCanvasRouteState().viewportProps?.onOpenSourceImport).toBeUndefined();
+}
+
+export function buildCanvasRouteReadyNodes(): CanvasController['nodesWithImpact'] {
+  return [
+    {
+      id: 'node.ready',
+      type: 'dbtNode',
+      position: { x: 0, y: 0 },
+      data: {},
+    },
+  ] as unknown as CanvasController['nodesWithImpact'];
 }
 
 export function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
   const { layoutButton, planButton, runButton } = getPrimaryCanvasButtons(container);
+  const viewMenuContribution = useCanvasViewMenuContributionStore.getState().contribution;
 
   expect(layoutButton).toBeUndefined();
   expect(planButton).toBeUndefined();
   expect(runButton).toBeUndefined();
-  expect(useCanvasViewMenuContributionStore.getState().contribution).toBeNull();
+  if (viewMenuContribution != null) {
+    expect(viewMenuContribution).toMatchObject({
+      canEditEdges: false,
+    });
+  }
 }
 
 export function expectActiveCanvasTab(args: {

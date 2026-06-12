@@ -103,9 +103,6 @@ function buildProps(
   overrides?: Partial<React.ComponentProps<typeof CanvasViewport>>
 ): React.ComponentProps<typeof CanvasViewport> {
   return {
-    focusMode: false,
-    explorerPanelVisible: true,
-    inspectorPanelVisible: true,
     canEditEdges: true,
     nodesWithImpact: [],
     edges: [],
@@ -131,8 +128,6 @@ function buildProps(
     onCreateAuthoringNode: vi.fn(),
     importedNodeFocusIds: [],
     onImportedNodeFocusComplete: vi.fn(),
-    onShowExplorer: vi.fn(),
-    onShowInspector: vi.fn(),
     canPreviewExecutionPlan: false,
     onPreviewExecutionPlan: vi.fn(),
     ...overrides,
@@ -178,10 +173,7 @@ describe('CanvasViewport', () => {
   });
 
   it('does not render fixed panel restore controls when side panels are hidden', async () => {
-    const props = buildProps({
-      explorerPanelVisible: false,
-      inspectorPanelVisible: false,
-    });
+    const props = buildProps();
 
     await act(async () => {
       root.render(<CanvasViewport {...props} />);
@@ -190,12 +182,9 @@ describe('CanvasViewport', () => {
     const buttons = Array.from(container.querySelectorAll('button'));
     expect(buttons.some((button) => button.ariaLabel === 'Show explorer panel')).toBe(false);
     expect(buttons.some((button) => button.ariaLabel === 'Show inspector panel')).toBe(false);
-
-    expect(props.onShowExplorer).not.toHaveBeenCalled();
-    expect(props.onShowInspector).not.toHaveBeenCalled();
   });
 
-  it('hides restore buttons in focus mode and resolves minimap color from node registry', async () => {
+  it('resolves minimap color from node registry while keeping the graph canvas chrome minimal', async () => {
     const requestedCanvasPalette = '#152033';
     const normalizedCanvasPalette = normalizeCanvasPaletteId(requestedCanvasPalette);
     const expectedPaletteTokens = deriveCanvasPaletteTokens(normalizedCanvasPalette);
@@ -204,9 +193,6 @@ describe('CanvasViewport', () => {
       root.render(
         <CanvasViewport
           {...buildProps({
-            focusMode: true,
-            explorerPanelVisible: false,
-            inspectorPanelVisible: false,
             gridSize: 32,
             canvasPalette: requestedCanvasPalette,
           })}

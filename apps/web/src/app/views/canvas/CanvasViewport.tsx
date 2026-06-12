@@ -60,9 +60,6 @@ function applyCanvasViewportStyle(element: HTMLDivElement, canvasStyle: CSSPrope
 }
 
 type CanvasViewportProps = {
-  readonly focusMode: boolean;
-  readonly explorerPanelVisible: boolean;
-  readonly inspectorPanelVisible: boolean;
   readonly canEditEdges: boolean;
   readonly nodesWithImpact: Node[];
   readonly edges: Edge[];
@@ -88,8 +85,6 @@ type CanvasViewportProps = {
   readonly onCreateAuthoringNode: CreateCanvasAuthoringNode;
   readonly importedNodeFocusIds: string[];
   readonly onImportedNodeFocusComplete: () => void;
-  readonly onShowExplorer: () => void;
-  readonly onShowInspector: () => void;
   readonly canOpenSourceImport?: boolean;
   readonly onOpenSourceImport?: () => void;
   readonly canPreviewExecutionPlan?: boolean;
@@ -428,9 +423,6 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
     <CanvasViewportSurface
       viewportRef={viewportRef}
       resolvedCanvasPalette={resolvedCanvasPalette}
-      focusMode={props.focusMode}
-      explorerPanelVisible={props.explorerPanelVisible}
-      inspectorPanelVisible={props.inspectorPanelVisible}
       canEditEdges={props.canEditEdges}
       nodesWithImpact={props.nodesWithImpact}
       edges={props.edges}
@@ -453,8 +445,6 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
       onDragOver={props.onDragOver}
       authoringNodeKinds={props.authoringNodeKinds}
       onCreateAuthoringNode={props.onCreateAuthoringNode}
-      onShowExplorer={props.onShowExplorer}
-      onShowInspector={props.onShowInspector}
       canOpenSourceImport={props.canOpenSourceImport}
       onOpenSourceImport={props.onOpenSourceImport}
       canPreviewExecutionPlan={props.canPreviewExecutionPlan}

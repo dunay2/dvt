@@ -15,6 +15,14 @@ const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
 );
+const CANVAS_SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellPropsBuilder.tsx'
+);
+const CANVAS_SHELL_BUILDER_TYPES_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellBuilder.types.ts'
+);
 const CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasToolbarPrimaryControls.tsx'
@@ -27,9 +35,9 @@ const CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/canvasWorkspaceExplorerModel.ts'
 );
-const DBT_EXPLORER_SOURCE = readArchitectureSiblingSource(
+const SHELL_MENU_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../components/DbtExplorer.tsx'
+  '../../components/shell/ShellMenu.tsx'
 );
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
@@ -82,16 +90,20 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
       'authoringNodeKinds: readonly NodeKindRegistration[];'
     );
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
-      'explorerResourceGroups: readonly CanvasWorkspaceResourceGroup[];'
-    );
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('explorerResourceGroups');
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).not.toContain('buildCanvasWorkspaceResourceGroups');
+    expect(CANVAS_SHELL_BUILDER_TYPES_SOURCE).not.toContain('explorerNodes');
     expect(CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE).toContain(
-      'Owned concern: build the Project Workspace Explorer read model from existing resources.'
+      'Owned concern: serialize contextual project-resource drag payloads for Canvas attachments.'
     );
-    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('buildCanvasWorkspaceResourceGroups({');
-    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('nodes: panelState.explorerNodes');
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('buildCanvasWorkspaceResourceGroups');
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('panelState.explorerNodes');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
-      'canvasDocument: routePresentation.canvasDocument'
+      'activeCanvasId: routePresentation.activeCanvasId'
+    );
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('activeCanvas,');
+    expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
+      'canvasDocuments: routePresentation.canvasDocuments'
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain(
       'function resolveActiveCanvasAuthoringNodeKinds('
@@ -115,14 +127,12 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_SOURCE).not.toContain(
       'onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}'
     );
-    expect(DBT_EXPLORER_SOURCE).toContain(
-      'Owned concern: render the Canvas workspace explorer for existing project resources'
-    );
-    expect(DBT_EXPLORER_SOURCE).not.toContain('import type { NodeKindRegistration }');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('readonly NodeKindRegistration');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('nodeKinds');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('onCreateAuthoringNode');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('nodes: CanonicalNode[]');
-    expect(DBT_EXPLORER_SOURCE).not.toContain('Add node');
+  });
+
+  it('does not expose a legacy fixed explorer panel from the global view menu', () => {
+    expect(SHELL_MENU_SOURCE).not.toContain('explorerPanelVisible');
+    expect(SHELL_MENU_SOURCE).not.toContain('toggleExplorerPanel');
+    expect(SHELL_MENU_SOURCE).not.toContain('copy.explorerPanel');
+    expect(SHELL_MENU_SOURCE).not.toContain('PanelLeftClose');
   });
 });

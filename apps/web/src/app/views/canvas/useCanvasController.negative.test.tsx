@@ -112,7 +112,7 @@ describe('useCanvasController negative invariants', () => {
 
     const result = harness.getLatestResult();
     expect(result).not.toBeNull();
-    expect(result?.explorerNodes).toEqual([]);
+    expect(result?.inspectorGraphNodes).toEqual([]);
     expect(result?.edges).toEqual([]);
     expect(result?.nodesWithImpact).toEqual([]);
     await act(async () => {

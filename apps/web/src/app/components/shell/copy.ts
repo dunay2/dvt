@@ -15,7 +15,6 @@ export type ShellTopBarCopy = {
   readonly workspaceContext: string;
   readonly gitContext: string;
   readonly viewOptions: string;
-  readonly explorerPanel: string;
   readonly inspectorPanel: string;
   readonly consolePanel: string;
   readonly focusMode: string;
@@ -56,7 +55,6 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   workspaceContext: { key: 'shell.workspaceContext', fallback: 'Workspace context' },
   gitContext: { key: 'shell.gitContext', fallback: 'Git context' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
-  explorerPanel: { key: 'shell.explorerPanel', fallback: 'Explorer Panel' },
   inspectorPanel: { key: 'shell.inspectorPanel', fallback: 'Inspector Panel' },
   consolePanel: { key: 'shell.consolePanel', fallback: 'Console' },
   focusMode: { key: 'shell.focusMode', fallback: 'Focus Mode' },
@@ -109,7 +107,6 @@ const COPY_ES: ShellTopBarCopy = {
   workspaceContext: 'Contexto del workspace',
   gitContext: 'Contexto Git',
   viewOptions: 'Opciones de vista',
-  explorerPanel: 'Panel explorador',
   inspectorPanel: 'Panel inspector',
   consolePanel: 'Consola',
   focusMode: 'Modo foco',
@@ -173,7 +170,6 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     workspaceContext: resolveString(COPY_BY_KEY.workspaceContext, locale),
     gitContext: resolveString(COPY_BY_KEY.gitContext, locale),
     viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
-    explorerPanel: resolveString(COPY_BY_KEY.explorerPanel, locale),
     inspectorPanel: resolveString(COPY_BY_KEY.inspectorPanel, locale),
     consolePanel: resolveString(COPY_BY_KEY.consolePanel, locale),
     focusMode: resolveString(COPY_BY_KEY.focusMode, locale),

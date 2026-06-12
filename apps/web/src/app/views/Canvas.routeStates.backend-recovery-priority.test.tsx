@@ -26,7 +26,6 @@ describe('Canvas route backend and recovery priority', () => {
 
   it('renders a governed error state when the graph snapshot fails before any nodes are available', async () => {
     await renderCanvasRouteWithController(harness, {
-      explorerNodes: [],
       graphErrorMessage: 'workspace graph unavailable',
     });
 
@@ -51,7 +50,6 @@ describe('Canvas route backend and recovery priority', () => {
         kind: 'retired-canvas-kind',
         title: 'Retired canvas',
       },
-      explorerNodes: [],
       inspectorNode: buildInspectorFixtureNode(),
       canEditInspectorNode: true,
       userPermissions: {
@@ -102,7 +100,6 @@ describe('Canvas route backend and recovery priority', () => {
       availableCanvasKinds: controller.availableCanvasKinds.filter(
         (registration) => registration.kind !== 'dbt'
       ),
-      explorerNodes: [],
       inspectorNode: buildInspectorFixtureNode(),
       canEditInspectorNode: true,
       userPermissions: {

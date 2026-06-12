@@ -89,9 +89,6 @@ function CanvasShellViewport({
 
   return (
     <CanvasViewport
-      focusMode={layout.focusMode}
-      explorerPanelVisible={layout.explorerPanelVisible}
-      inspectorPanelVisible={layout.inspectorPanelVisible}
       canEditEdges={panels.userPermissions.canEditEdges}
       nodesWithImpact={graph.nodesWithImpact}
       edges={graph.edges}
@@ -117,8 +114,6 @@ function CanvasShellViewport({
       onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}
       importedNodeFocusIds={panels.importedNodeFocusIds}
       onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
-      onShowExplorer={chromeCommands.onShowExplorer}
-      onShowInspector={chromeCommands.onShowInspector}
       canOpenSourceImport={typeof onOpenSourceImport === 'function'}
       onOpenSourceImport={
         onOpenSourceImport == null ? undefined : () => onOpenSourceImport(undefined)
@@ -212,6 +207,9 @@ export function CanvasShellMainPanel({
   chromeCommands,
   onOpenSourceImport,
 }: CanvasShellMainPanelProps): JSX.Element {
+  const shouldShowGraphStatusOverlay =
+    layout.centerSurface == null || layout.centerSurfaceMode === 'overlay';
+
   return (
     <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
       <div className="relative h-full flex flex-col bg-(--surface-panel)">
@@ -231,11 +229,13 @@ export function CanvasShellMainPanel({
           onOpenSourceImport={onOpenSourceImport}
           canPreviewExecutionPlan={panels.userPermissions.canPlan && toolbar.canPlanGraph}
         />
-        <CanvasGraphStatusOverlay
-          activeCanvas={panels.activeCanvas}
-          draftToolbarState={toolbar.draftToolbarState}
-          onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
-        />
+        {shouldShowGraphStatusOverlay ? (
+          <CanvasGraphStatusOverlay
+            activeCanvas={panels.activeCanvas}
+            draftToolbarState={toolbar.draftToolbarState}
+            onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
+          />
+        ) : null}
         <CanvasShellNodeWorkbenchOverlay
           layout={layout}
           panels={panels}
