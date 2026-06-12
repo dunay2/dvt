@@ -695,6 +695,27 @@ test('tracked migrations count architecture tests in component evidence gaps aft
   );
 });
 
+test('tracked migrations trust architecture maturity for component evidence gaps after W87', () => {
+  const migrations = readMigrationFiles();
+  const integrityMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '087_component_integrity_architecture_metadata_authority.sql'
+  );
+
+  assert.ok(integrityMigration);
+  assert.match(
+    integrityMigration.sql,
+    /create or replace view planning_query_store\.component_integrity_query/
+  );
+  assert.match(integrityMigration.sql, /architecture_maturity_evidence/);
+  assert.match(integrityMigration.sql, /architectureMaturityScore/);
+  assert.match(integrityMigration.sql, /architectureMissingReasons/);
+  assert.match(
+    integrityMigration.sql,
+    /coalesce\(array_length\(architecture_maturity_evidence\.missing_reasons, 1\), 0\) = 0/
+  );
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

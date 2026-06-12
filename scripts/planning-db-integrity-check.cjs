@@ -16,7 +16,7 @@ const severityOrder = Object.freeze(['blocker', 'error', 'warning', 'info']);
 const progressiveBaseline = Object.freeze({
   componentIntegrity: Object.freeze({
     architecture_drift: Object.freeze({ total: 0 }),
-    component_evidence_gap: Object.freeze({ warning: 71, total: 71 }),
+    component_evidence_gap: Object.freeze({ total: 0 }),
     component_missing_architecture_authority: Object.freeze({ total: 0 }),
     component_path_without_files: Object.freeze({ total: 0 }),
     duplicate_repo_path: Object.freeze({ total: 0 }),

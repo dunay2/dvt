@@ -9,13 +9,7 @@ const {
 
 test('Planning DB integrity check reports historical debt without failing report mode', () => {
   const result = buildIntegrityCheckResult({
-    componentRows: [
-      {
-        finding_kind: 'component_evidence_gap',
-        severity: 'warning',
-        component_id: 'SYS-WEB-ROOT',
-      },
-    ],
+    componentRows: [],
     railRows: [
       {
         finding_kind: 'gap_rail',
@@ -30,10 +24,10 @@ test('Planning DB integrity check reports historical debt without failing report
   assert.equal(shouldFailIntegrityCheck(result), false);
   assert.deepEqual(result.counts, {
     componentIntegrity: {
-      total: 1,
+      total: 0,
       blocker: 0,
       error: 0,
-      warning: 1,
+      warning: 0,
       info: 0,
     },
     railVocabulary: {

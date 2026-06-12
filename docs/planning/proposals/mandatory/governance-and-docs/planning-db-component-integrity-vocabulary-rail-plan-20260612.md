@@ -207,6 +207,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/084_architecture_observability_evidence_operation_rail.sql
   - tools/planning-db/migrations/085_architecture_maturity_deprecated_components.sql
   - tools/planning-db/migrations/086_component_integrity_architecture_test_evidence.sql
+  - tools/planning-db/migrations/087_component_integrity_architecture_metadata_authority.sql
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs
