@@ -2,6 +2,7 @@
  * Owned concern: route composition for the governed Canvas shell.
  */
 import { ReactFlowProvider } from '@xyflow/react';
+import { Navigate, useParams } from 'react-router';
 
 import CanvasModalHost from './canvas/CanvasModalHost';
 import CanvasShell from './canvas/CanvasShell';
@@ -13,6 +14,7 @@ import { useCanvasController } from './canvas/useCanvasController';
 import { useWarehouseSourceImportPort } from '../services/AppServicesContext';
 
 function CanvasContent(): JSX.Element {
+  const params = useParams();
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const controller = useCanvasController();
   const routeViewState = deriveCanvasRouteViewState(controller);
@@ -25,6 +27,10 @@ function CanvasContent(): JSX.Element {
     routeViewState,
   });
   const modalHostProps = buildCanvasModalHostProps(controller);
+
+  if (params.workbenchTab != null && params.workbenchTab.trim() !== '') {
+    return <Navigate to="/canvas" replace />;
+  }
 
   return (
     <>

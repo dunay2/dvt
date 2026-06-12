@@ -186,3 +186,4 @@ semantics.
 | `web.component.canvas.CanvasWorkbenchTabs.unit`           | `web.component.canvas.CanvasWorkbenchTabs`    | unit-test         | `apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts`                         | accepted        |
 | `web.component.canvas.CanvasWorkbenchTabs.architecture`   | `web.component.canvas.CanvasWorkbenchTabs`    | architecture-test | `apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts`            | accepted        |
 | `web.component.canvas.CanvasWorkbenchTabs.route-hardcut`  | `web.component.canvas.CanvasWorkbenchTabs`    | architecture-test | `apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx`                   | accepted        |
+| `web.component.canvas.CanvasWorkbenchTabs.route-redirect` | `web.component.canvas.CanvasWorkbenchTabs`    | route-test        | `apps/web/src/app/routes.test.tsx`                                                  | accepted        |
