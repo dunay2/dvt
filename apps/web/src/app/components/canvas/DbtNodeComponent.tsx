@@ -1,8 +1,6 @@
 /** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
-import styles from './DbtNodeComponent.module.css';
-import { Handle, Node, NodeProps, Position } from '@xyflow/react';
-import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
-import { Fragment, memo, type CSSProperties, type DragEvent } from 'react';
+import { memo, type CSSProperties, type DragEvent } from 'react';
+import type { Node, NodeProps } from '@xyflow/react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
 import {
@@ -22,18 +20,11 @@ import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/ca
 import { parsePluginNodeKind } from '../../types/canonicalGuards';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuLabel,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from '../ui/context-menu';
-import {
   CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
   parseCanvasWorkspaceResourceDragPayload,
 } from '../canvasWorkspaceExplorerModel';
 import { cn } from '../ui/utils';
+import { CanvasNodeShell } from './CanvasNodeShell';
 import {
   buildCanvasNodeContextMenuModel,
   type CanvasNodeContextMenuActionId,
@@ -174,14 +165,6 @@ function buildCanonicalNode(
   };
 }
 
-const CONTEXT_MENU_ACTION_ICONS: Record<CanvasNodeContextMenuActionId, typeof Info> = {
-  'inspect-node': Info,
-  'duplicate-node': Copy,
-  'select-node-for-execution': MousePointer,
-  'deselect-node-from-execution': MousePointer,
-  'remove-node': Trash2,
-};
-
 function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
   const { id, selected } = props;
@@ -268,82 +251,30 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
-          className={cn(styles.root, 'relative')}
-          onDragOver={handleSchemaResourceDragOver}
-          onDrop={handleSchemaResourceDrop}
-        >
-          {/* Target Handle (input) */}
-          {shouldShowTargetHandle && (
-            <Handle
-              type="target"
-              position={Position.Left}
-              className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
-            />
-          )}
-
-          <div className="relative">
-            <Renderer
-              node={canonicalNode}
-              selected={selected}
-              hovered={false}
-              overlayDecoration={data.overlayDecoration ?? null}
-              badges={badges}
-              graphNodeCardStrategies={graphNodeCardStrategies}
-              data={data}
-            />
-            {badges.map((badge, index) => (
-              <NodeBadgeOverlay
-                key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}
-                badge={badge}
-              />
-            ))}
-          </div>
-
-          {/* Source Handle (output) */}
-          {shouldShowSourceHandle && (
-            <Handle
-              type="source"
-              position={Position.Right}
-              className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
-            />
-          )}
-        </div>
-      </ContextMenuTrigger>
-
-      <ContextMenuContent className="w-56 bg-slate-900 border-slate-600 text-slate-50">
-        <ContextMenuLabel className="truncate font-mono text-xs">
-          {contextMenuModel.target.nodeName}
-        </ContextMenuLabel>
-        {contextMenuModel.actionGroups.map((group, groupIndex) => (
-          <Fragment key={group.id}>
-            <ContextMenuSeparator className="bg-slate-600" />
-            {groupIndex > 0 ? (
-              <ContextMenuLabel className="text-[10px] uppercase tracking-wide text-slate-400">
-                {group.label}
-              </ContextMenuLabel>
-            ) : null}
-            {group.actions.map((action) => {
-              const Icon = CONTEXT_MENU_ACTION_ICONS[action.id];
-              return (
-                <ContextMenuItem
-                  key={action.id}
-                  variant={action.destructive ? 'destructive' : undefined}
-                  disabled={action.disabled}
-                  title={action.disabledReason}
-                  onSelect={() => handleContextMenuAction(action.id)}
-                >
-                  <Icon className="size-4" />
-                  {action.label}
-                </ContextMenuItem>
-              );
-            })}
-          </Fragment>
-        ))}
-      </ContextMenuContent>
-    </ContextMenu>
+    <CanvasNodeShell
+      contextMenuModel={contextMenuModel}
+      shouldShowSourceHandle={shouldShowSourceHandle}
+      shouldShowTargetHandle={shouldShowTargetHandle}
+      onContextMenuAction={handleContextMenuAction}
+      onDragOver={handleSchemaResourceDragOver}
+      onDrop={handleSchemaResourceDrop}
+    >
+      <Renderer
+        node={canonicalNode}
+        selected={selected}
+        hovered={false}
+        overlayDecoration={data.overlayDecoration ?? null}
+        badges={badges}
+        graphNodeCardStrategies={graphNodeCardStrategies}
+        data={data}
+      />
+      {badges.map((badge, index) => (
+        <NodeBadgeOverlay
+          key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}
+          badge={badge}
+        />
+      ))}
+    </CanvasNodeShell>
   );
 }
 
