@@ -7,13 +7,23 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 }>;
 
 export type CanvasNodeContextMenuActionId =
+  | 'edit-sql'
   | 'inspect-node'
+  | 'inspect-inputs-outputs'
+  | 'inspect-tests'
+  | 'preview-node'
+  | 'run-from-node'
+  | 'show-lineage'
   | 'duplicate-node'
   | 'select-node-for-execution'
   | 'deselect-node-from-execution'
   | 'remove-node';
 
-export type CanvasNodeModelerActionId = Exclude<CanvasNodeContextMenuActionId, 'inspect-node'>;
+export type CanvasNodeModelerActionId =
+  | 'duplicate-node'
+  | 'select-node-for-execution'
+  | 'deselect-node-from-execution'
+  | 'remove-node';
 
 export type CanvasNodeContextMenuAction = Readonly<{
   id: CanvasNodeContextMenuActionId;
@@ -64,6 +74,51 @@ type BuildCanvasNodeModelerActionModelArgs = Omit<
   'canInspectNode'
 >;
 
+export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
+  editSql: {
+    id: 'edit-sql',
+    label: 'Edit SQL',
+    intent: 'command',
+    disabled: true,
+    disabledReason: 'SQL workbench is not available for this node.',
+  },
+  inputsOutputs: {
+    id: 'inspect-inputs-outputs',
+    label: 'Inputs / Outputs',
+    intent: 'read',
+    disabled: true,
+    disabledReason: 'Inputs / Outputs workbench is not available for this node.',
+  },
+  tests: {
+    id: 'inspect-tests',
+    label: 'Tests',
+    intent: 'read',
+    disabled: true,
+    disabledReason: 'Node test catalog is not available for this node.',
+  },
+  previewNode: {
+    id: 'preview-node',
+    label: 'Preview node',
+    intent: 'command',
+    disabled: true,
+    disabledReason: 'Node-scoped preview is not available for this node.',
+  },
+  runFromNode: {
+    id: 'run-from-node',
+    label: 'Run from here',
+    intent: 'command',
+    disabled: true,
+    disabledReason: 'Run-from-node is not available for this node.',
+  },
+  showLineage: {
+    id: 'show-lineage',
+    label: 'Show lineage',
+    intent: 'read',
+    disabled: true,
+    disabledReason: 'Node lineage is not available for this node.',
+  },
+} as const satisfies Record<string, CanvasNodeContextMenuAction>;
+
 export function buildCanvasNodeModelerActionModel({
   target,
   selectedForExecution,
@@ -78,7 +133,7 @@ export function buildCanvasNodeModelerActionModel({
   if (canMutateGraph && canDuplicateNode) {
     editActions.push({
       id: 'duplicate-node',
-      label: 'Duplicate node',
+      label: 'Duplicate',
       intent: 'command',
       disabled: false,
     });
@@ -108,7 +163,7 @@ export function buildCanvasNodeModelerActionModel({
       actions: [
         {
           id: 'remove-node',
-          label: 'Remove node',
+          label: 'Delete',
           intent: 'command',
           destructive: true,
           disabled: false,
@@ -132,11 +187,27 @@ export function buildCanvasNodeContextMenuModel({
   canToggleNodeSelection,
   canRemoveNode,
 }: BuildCanvasNodeContextMenuModelArgs): CanvasNodeContextMenuModel {
+  const executionSelectionAction: CanvasNodeContextMenuAction | null =
+    canMutateGraph && canToggleNodeSelection
+      ? {
+          id: selectedForExecution ? 'deselect-node-from-execution' : 'select-node-for-execution',
+          label: selectedForExecution ? 'Deselect for execution' : 'Select for execution',
+          intent: 'command',
+          disabled: false,
+        }
+      : null;
+  const executeActions: CanvasNodeContextMenuAction[] = [
+    { ...NODE_CONTEXT_MENU_BASE_ACTIONS.previewNode },
+    { ...NODE_CONTEXT_MENU_BASE_ACTIONS.runFromNode },
+    ...(executionSelectionAction != null ? [executionSelectionAction] : []),
+  ];
+
   const groups: CanvasNodeContextMenuActionGroup[] = [
     {
-      id: 'inspect',
-      label: 'Inspect',
+      id: 'configure',
+      label: 'Configure',
       actions: [
+        { ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql },
         {
           id: 'inspect-node',
           label: 'Properties',
@@ -144,16 +215,30 @@ export function buildCanvasNodeContextMenuModel({
           disabled: !canInspectNode,
           ...(canInspectNode ? {} : { disabledReason: 'Inspector is unavailable for this node.' }),
         },
+        { ...NODE_CONTEXT_MENU_BASE_ACTIONS.inputsOutputs },
+        { ...NODE_CONTEXT_MENU_BASE_ACTIONS.tests },
       ],
     },
+    {
+      id: 'execute',
+      label: 'Execute',
+      actions: executeActions,
+    },
   ];
+
+  groups.push({
+    id: 'lineage',
+    label: 'Lineage',
+    actions: [{ ...NODE_CONTEXT_MENU_BASE_ACTIONS.showLineage }],
+  });
+
   groups.push(
     ...buildCanvasNodeModelerActionModel({
       target,
       selectedForExecution,
       canMutateGraph,
       canDuplicateNode,
-      canToggleNodeSelection,
+      canToggleNodeSelection: false,
       canRemoveNode,
     }).actionGroups
   );
