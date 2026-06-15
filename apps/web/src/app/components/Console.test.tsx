@@ -9,6 +9,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import BottomConsoleDrawer from './Console';
+import {
+  useOperationalDrawerContributionStore,
+  type OperationalDrawerContribution,
+} from './shell/operationalDrawerContributionStore';
 
 const consoleLogStreamState = {
   lines: [] as string[],
@@ -30,10 +34,48 @@ describe('BottomConsoleDrawer', () => {
   let container: HTMLDivElement;
   let root: Root;
 
+  function buildCanvasOperationalDrawerContribution(
+    overrides?: Partial<OperationalDrawerContribution>
+  ): OperationalDrawerContribution {
+    return {
+      source: 'canvas',
+      title: 'Canvas operations',
+      tabs: [
+        { id: 'log', label: 'Log', count: null },
+        { id: 'problems', label: 'Problems', count: 1 },
+        { id: 'runs', label: 'Runs', count: 1 },
+        { id: 'preview', label: 'Preview', count: 1 },
+      ],
+      problems: {
+        items: [
+          {
+            id: 'plan_integrity',
+            severity: 'warning',
+            message: 'Preview required before running.',
+            detail: 'plan_integrity',
+          },
+        ],
+      },
+      runs: {
+        activeRunId: 'run-42',
+        canStartRun: false,
+      },
+      preview: {
+        status: 'blocked',
+        summary: 'Preview required before running.',
+        blockers: ['plan_integrity'],
+        canPreview: true,
+        onPreviewExecutionPlan: vi.fn(),
+      },
+      ...overrides,
+    };
+  }
+
   beforeEach(() => {
     consoleLogStreamState.lines = [];
     consoleLogStreamState.isLoading = false;
     consoleLogStreamState.runId = undefined;
+    useOperationalDrawerContributionStore.setState({ contribution: null });
     useUiLayoutStore.setState({
       leftNavCollapsed: false,
       inspectorPanelWidth: 380,
@@ -57,6 +99,7 @@ describe('BottomConsoleDrawer', () => {
     act(() => {
       root.unmount();
     });
+    useOperationalDrawerContributionStore.setState({ contribution: null });
     container.remove();
   });
 
@@ -119,6 +162,79 @@ describe('BottomConsoleDrawer', () => {
     expect(document.body.querySelector('[data-testid="xterm-console"]')?.textContent).toContain(
       'step: started'
     );
+  });
+
+  it('renders Canvas operational tabs and route-owned problem, run, and preview details', async () => {
+    const onPreviewExecutionPlan = vi.fn();
+    useOperationalDrawerContributionStore.setState({
+      contribution: buildCanvasOperationalDrawerContribution({
+        preview: {
+          status: 'blocked',
+          summary: 'Preview required before running.',
+          blockers: ['plan_integrity'],
+          canPreview: true,
+          onPreviewExecutionPlan,
+        },
+      }),
+    });
+
+    await act(async () => {
+      root.render(
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+          <BottomConsoleDrawer />
+        </AppServicesProvider>
+      );
+    });
+
+    expect(
+      document.body.querySelector('[data-slot="bottom-console-drawer-title"]')?.textContent
+    ).toContain('Canvas operations');
+
+    const tabButtons = Array.from(
+      document.body.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="bottom-operational-drawer-tab"]'
+      )
+    );
+
+    expect(tabButtons.map((button) => button.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+      'Log',
+      'Problems 1',
+      'Runs 1',
+      'Preview 1',
+    ]);
+
+    const problemsTab = tabButtons[1];
+    const runsTab = tabButtons[2];
+    const previewTab = tabButtons[3];
+
+    expect(problemsTab).toBeDefined();
+    expect(runsTab).toBeDefined();
+    expect(previewTab).toBeDefined();
+
+    await act(async () => {
+      fireEvent.click(problemsTab!);
+    });
+    expect(document.body.textContent).toContain('Preview required before running.');
+    expect(document.body.textContent).toContain('plan_integrity');
+
+    await act(async () => {
+      fireEvent.click(runsTab!);
+    });
+    expect(document.body.textContent).toContain('Active run');
+    expect(document.body.textContent).toContain('run-42');
+
+    await act(async () => {
+      fireEvent.click(previewTab!);
+    });
+    expect(document.body.textContent).toContain('Preview required before running.');
+    const previewButton = Array.from(document.body.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Preview execution plan')
+    );
+    expect(previewButton).not.toBeNull();
+    await act(async () => {
+      fireEvent.click(previewButton!);
+    });
+    expect(onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
   });
 
   it('closes the drawer by hiding it in the layout store', async () => {
