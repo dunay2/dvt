@@ -300,6 +300,43 @@ test('tracked migrations keep component roadmap refs scoped to components or ids
   assert.match(componentRoadmapFilterMigration.sql, /componentRefFilter/);
 });
 
+test('tracked migrations exclude documentation sources from planned component refs', () => {
+  const migrations = readMigrationFiles();
+  const componentRoadmapSourceFilterMigration = migrations.find(
+    (migration) => migration.fileName === '089_component_roadmap_source_ref_filter.sql'
+  );
+
+  assert.ok(componentRoadmapSourceFilterMigration);
+  assert.match(
+    componentRoadmapSourceFilterMigration.sql,
+    /component_ref\.value !~ '\^\(docs\/\|buzon\/\)'/
+  );
+  assert.doesNotMatch(
+    componentRoadmapSourceFilterMigration.sql,
+    /component_ref\.value like 'docs\/architecture\/components\/%'/
+  );
+  assert.match(
+    componentRoadmapSourceFilterMigration.sql,
+    /"componentRefFilter":"mechanical-component-id-or-repo-path"/
+  );
+});
+
+test('tracked migrations exclude file sources from planned component refs', () => {
+  const migrations = readMigrationFiles();
+  const componentRoadmapFileFilterMigration = migrations.find(
+    (migration) => migration.fileName === '090_component_roadmap_file_ref_filter.sql'
+  );
+
+  assert.ok(componentRoadmapFileFilterMigration);
+  assert.ok(
+    componentRoadmapFileFilterMigration.sql.includes("component_ref.value !~ '\\.[A-Za-z0-9]+$'")
+  );
+  assert.match(
+    componentRoadmapFileFilterMigration.sql,
+    /"componentRefFilter":"mechanical-component-id-or-owned-directory"/
+  );
+});
+
 test('tracked migrations expose documentation panels as relational DB facts', () => {
   const migrations = readMigrationFiles();
   const documentationPanelMigration = migrations.find(
