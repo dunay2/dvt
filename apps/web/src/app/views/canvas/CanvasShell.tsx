@@ -6,6 +6,7 @@ import SourceImportWizard from '../../components/SourceImportWizard';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
+import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import type { CanvasShellOpenDataRegistryCommand, CanvasShellProps } from './canvasShell.types';
 
 export default function CanvasShell({
@@ -50,6 +51,14 @@ export default function CanvasShell({
       direction="horizontal"
       className="h-full min-w-[960px]"
     >
+      {layout.surfaceStrategy == null ? null : (
+        <CanvasOperationalDrawerContributionRegistrar
+          policy={layout.surfaceStrategy.operationalDrawer}
+          panels={panels}
+          toolbar={toolbar}
+          onPreviewExecutionPlan={chromeCommands.onPlan}
+        />
+      )}
       <CanvasShellMainPanel
         layout={layout}
         panels={panels}
