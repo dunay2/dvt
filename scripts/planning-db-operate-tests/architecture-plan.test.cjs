@@ -6,9 +6,13 @@ const {
   parseArgs,
   planArchitectureDesignCreateOperation,
   planArchitectureComponentRecordOperation,
+  planArchitectureContractRecordOperation,
+  planArchitecturePortRecordOperation,
   planArchitectureTestRecordOperation,
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
+  writePlannedArchitectureContractRecordOperation,
+  writePlannedArchitecturePortRecordOperation,
 } = require('./helpers.cjs');
 
 test('planArchitectureDesignCreateOperation emits design scope and audit rows', () => {
@@ -276,6 +280,257 @@ test('architecture relation record planner promotes existing relations with upda
 
   assert.equal(planned.relation.status, 'implemented');
   assert.equal(planned.audit.operationType, 'architecture_relation_record');
+});
+
+test('architecture contract record planner emits contract and audit rows', () => {
+  const now = new Date('2026-06-15T09:00:00.000Z');
+  const command = parseArgs([
+    'architecture-contract',
+    'record',
+    '--design',
+    'PLANNING-DB-ARCHITECTURE-IO-RAILS-20260615',
+    '--contract',
+    'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--kind',
+    'type',
+    '--owner-component',
+    'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--contract-ref',
+    'apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts#GraphNodeCardViewModel',
+    '--compatibility',
+    'internal',
+    '--status',
+    'implemented',
+    '--validation-command',
+    'pnpm --filter @dvt/web test -- src/app/plugins/graph/graphNodeCardReadModel.test.ts',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planArchitectureContractRecordOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'contract',
+        subject_id: 'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+        scope_kind: 'may_create',
+      },
+      {
+        subject_kind: 'component',
+        subject_id: 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+        scope_kind: 'may_reference',
+      },
+    ],
+    ownerComponent: { component_id: 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL' },
+    existingContract: null,
+    operationId: 'op-architecture-contract-record',
+    now,
+  });
+
+  assert.equal(planned.contract.contractId, command.contractId);
+  assert.equal(planned.contract.ownerComponentId, command.ownerComponentId);
+  assert.equal(planned.audit.operationType, 'architecture_contract_record');
+});
+
+test('architecture contract record writer persists contract facts with audit', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [] };
+    },
+  };
+  const planned = {
+    contract: {
+      contractId: 'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+      contractKind: 'type',
+      ownerComponentId: 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+      contractRef:
+        'apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts#GraphNodeCardViewModel',
+      compatibility: 'internal',
+      status: 'implemented',
+      validationCommand:
+        'pnpm --filter @dvt/web test -- src/app/plugins/graph/graphNodeCardReadModel.test.ts',
+      createdAt: new Date('2026-06-15T09:00:00.000Z'),
+      updatedAt: new Date('2026-06-15T09:00:00.000Z'),
+    },
+    audit: {
+      operationId: 'op-architecture-contract-record',
+      idempotencyKey: 'architecture-contract:CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+      operationType: 'architecture_contract_record',
+      actor: 'codex',
+      designId: 'PLANNING-DB-ARCHITECTURE-IO-RAILS-20260615',
+      sourceRef:
+        'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+      sourceContentSha256: 'e'.repeat(64),
+      expectedRevision: null,
+      previousRevision: 0,
+      resultingRevision: 1,
+      payload: { contractId: 'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL' },
+      createdAt: new Date('2026-06-15T09:00:00.000Z'),
+    },
+  };
+
+  await writePlannedArchitectureContractRecordOperation(client, planned);
+
+  assert.ok(queries.some((query) => query.sql.includes('architecture.contract')));
+  assert.ok(queries.some((query) => query.sql.includes('architecture.design_operations')));
+  assert.equal(
+    queries.find((query) => query.sql.includes('architecture.contract')).params[0],
+    planned.contract.contractId
+  );
+});
+
+test('architecture port record planner requires component and contract authority', () => {
+  const now = new Date('2026-06-15T09:10:00.000Z');
+  const command = parseArgs([
+    'architecture-port',
+    'record',
+    '--design',
+    'PLANNING-DB-ARCHITECTURE-IO-RAILS-20260615',
+    '--port',
+    'PORT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL-QUERY',
+    '--component',
+    'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--name',
+    'RenderGraphNodeCard',
+    '--kind',
+    'query',
+    '--direction',
+    'inbound',
+    '--output-contract',
+    'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--negative-test',
+    'graphNodeCardReadModel.architecture.test.ts rejects React component imports',
+    '--status',
+    'implemented',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.throws(
+    () =>
+      planArchitecturePortRecordOperation({
+        command,
+        design: { design_id: command.designId, status: 'review' },
+        designScopes: [
+          {
+            subject_kind: 'port',
+            subject_id: 'PORT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL-QUERY',
+            scope_kind: 'may_create',
+          },
+          {
+            subject_kind: 'component',
+            subject_id: 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+            scope_kind: 'may_reference',
+          },
+          {
+            subject_kind: 'contract',
+            subject_id: 'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+            scope_kind: 'may_reference',
+          },
+        ],
+        component: { component_id: 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL' },
+        inputContract: null,
+        outputContract: null,
+        existingPort: null,
+        operationId: 'op-architecture-port-record',
+        now,
+      }),
+    /ARCH-PORT-CONTRACT-MISSING/
+  );
+
+  const planned = planArchitecturePortRecordOperation({
+    command,
+    design: { design_id: command.designId, status: 'review' },
+    designScopes: [
+      {
+        subject_kind: 'port',
+        subject_id: 'PORT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL-QUERY',
+        scope_kind: 'may_create',
+      },
+      {
+        subject_kind: 'component',
+        subject_id: 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+        scope_kind: 'may_reference',
+      },
+      {
+        subject_kind: 'contract',
+        subject_id: 'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+        scope_kind: 'may_reference',
+      },
+    ],
+    component: { component_id: 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL' },
+    inputContract: null,
+    outputContract: { contract_id: 'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL' },
+    existingPort: null,
+    operationId: 'op-architecture-port-record',
+    now,
+  });
+
+  assert.equal(planned.port.portId, command.portId);
+  assert.equal(planned.port.outputContractId, command.outputContractId);
+  assert.equal(planned.port.negativeTests.length, 1);
+  assert.equal(planned.audit.operationType, 'architecture_port_record');
+});
+
+test('architecture port record writer persists port facts with audit', async () => {
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [] };
+    },
+  };
+  const planned = {
+    port: {
+      portId: 'PORT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL-QUERY',
+      componentId: 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+      portName: 'RenderGraphNodeCard',
+      portKind: 'query',
+      direction: 'inbound',
+      inputContractId: null,
+      outputContractId: 'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+      negativeTests: [
+        'graphNodeCardReadModel.architecture.test.ts rejects React component imports',
+      ],
+      status: 'implemented',
+      createdAt: new Date('2026-06-15T09:10:00.000Z'),
+    },
+    audit: {
+      operationId: 'op-architecture-port-record',
+      idempotencyKey: 'architecture-port:PORT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL-QUERY',
+      operationType: 'architecture_port_record',
+      actor: 'codex',
+      designId: 'PLANNING-DB-ARCHITECTURE-IO-RAILS-20260615',
+      sourceRef:
+        'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+      sourceContentSha256: 'e'.repeat(64),
+      expectedRevision: null,
+      previousRevision: 0,
+      resultingRevision: 1,
+      payload: { portId: 'PORT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL-QUERY' },
+      createdAt: new Date('2026-06-15T09:10:00.000Z'),
+    },
+  };
+
+  await writePlannedArchitecturePortRecordOperation(client, planned);
+
+  assert.ok(queries.some((query) => query.sql.includes('architecture.component_port')));
+  assert.ok(queries.some((query) => query.sql.includes('architecture.design_operations')));
+  assert.equal(
+    queries.find((query) => query.sql.includes('architecture.component_port')).params[0],
+    planned.port.portId
+  );
 });
 
 test('architecture test evidence planner emits component_test and audit rows', () => {

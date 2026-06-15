@@ -101,6 +101,7 @@ const allowedArchitectureScopeSubjectKinds = new Set([
   'component',
   'relation',
   'contract',
+  'port',
   'flow',
   'check',
   'path',
@@ -166,6 +167,37 @@ const allowedArchitectureRelationRecordStatuses = new Set([
   'implemented',
   'drift',
 ]);
+const allowedArchitectureContractKinds = new Set([
+  'api',
+  'event',
+  'port',
+  'storage',
+  'type',
+  'workflow',
+  'dbt',
+]);
+const allowedArchitectureContractCompatibilities = new Set([
+  'breaking',
+  'additive',
+  'internal',
+  'none',
+]);
+const allowedArchitectureContractStatuses = new Set([
+  'proposed',
+  'approved',
+  'implemented',
+  'deprecated',
+]);
+const allowedArchitecturePortKinds = new Set([
+  'command',
+  'query',
+  'event',
+  'storage',
+  'api',
+  'ui-action',
+]);
+const allowedArchitecturePortDirections = new Set(['inbound', 'outbound']);
+const allowedArchitecturePortStatuses = new Set(['proposed', 'approved', 'implemented']);
 const allowedArchitectureTestKinds = new Set([
   'unit',
   'contract',
@@ -238,6 +270,7 @@ const featureMechanizationListOptionKeys = new Set([
   'unit-test',
   'patch-surface',
 ]);
+const architectureListOptionKeys = new Set(['negative-test']);
 const operationHelp = Object.freeze({
   task: {
     operations: ['claim', 'release', 'update', 'create', 'delete', 'show'],
@@ -291,6 +324,24 @@ const operationHelp = Object.freeze({
     details: [
       'RecordArchitectureRelation adds scoped graph edges between two architecture components.',
       'Requires --source, --target, --type, --direction, --sync-async, --failure-mode, --authorization-scope, --source-ref, and --source-content-sha256.',
+    ],
+  },
+  'architecture-contract': {
+    operations: ['record'],
+    usage:
+      'pnpm planning:db:operate architecture-contract record --design <DESIGN-ID> --contract <CONTRACT-ID> --actor <actor>',
+    details: [
+      'RecordArchitectureContract adds scoped contract authority for a component-owned API, event, port, storage, type, workflow, or dbt contract.',
+      'Requires --owner-component, --kind, --contract-ref, --compatibility, --status, --validation-command, --source-ref, and --source-content-sha256.',
+    ],
+  },
+  'architecture-port': {
+    operations: ['record'],
+    usage:
+      'pnpm planning:db:operate architecture-port record --design <DESIGN-ID> --port <PORT-ID> --component <SYS-ID> --actor <actor>',
+    details: [
+      'RecordArchitecturePort adds scoped command/query/event/storage/API/UI-action ports to an architecture component.',
+      'Requires --name, --kind, --direction, at least one --input-contract or --output-contract, at least one --negative-test, --source-ref, and --source-content-sha256.',
     ],
   },
   'architecture-fitness': {
@@ -379,7 +430,7 @@ function isHelpFlag(value) {
 }
 
 function unknownOperationMessage() {
-  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-fitness", "architecture-evidence", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", "governance-refresh", or "audit".';
+  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-contract", "architecture-port", "architecture-fitness", "architecture-evidence", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", "governance-refresh", or "audit".';
 }
 
 function buildPlanningDbOperateHelpText(resource, action) {
@@ -743,6 +794,28 @@ function validateArchitectureRelationId(value) {
   return normalized;
 }
 
+function validateArchitectureContractId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^CONTRACT-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --contract "${value}". Expected an uppercase CONTRACT-* architecture contract id.`
+    );
+  }
+
+  return normalized;
+}
+
+function validateArchitecturePortId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^PORT-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --port "${value}". Expected an uppercase PORT-* architecture port id.`
+    );
+  }
+
+  return normalized;
+}
+
 function validateArchitectureFitnessScanId(value) {
   const normalized = String(value || '').trim();
   if (!/^[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$/.test(normalized)) {
@@ -894,6 +967,78 @@ function validateArchitectureRelationSyncMode(value) {
   return value;
 }
 
+function validateArchitectureContractKind(value) {
+  if (!allowedArchitectureContractKinds.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: invalid contract kind "${value}". Expected: ${[
+        ...allowedArchitectureContractKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureContractCompatibility(value) {
+  if (!allowedArchitectureContractCompatibilities.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: invalid contract compatibility "${value}". Expected: ${[
+        ...allowedArchitectureContractCompatibilities,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureContractStatus(value) {
+  if (!allowedArchitectureContractStatuses.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureContract stores statuses accepted by architecture.contract: ${[
+        ...allowedArchitectureContractStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitecturePortKind(value) {
+  if (!allowedArchitecturePortKinds.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: invalid port kind "${value}". Expected: ${[
+        ...allowedArchitecturePortKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitecturePortDirection(value) {
+  if (!allowedArchitecturePortDirections.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: invalid port direction "${value}". Expected: ${[
+        ...allowedArchitecturePortDirections,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitecturePortStatus(value) {
+  if (!allowedArchitecturePortStatuses.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitecturePort stores statuses accepted by architecture.component_port: ${[
+        ...allowedArchitecturePortStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
 function validateComponentCqRails(value) {
   const normalized = String(value || '').trim();
   if (!normalized) {
@@ -984,7 +1129,8 @@ function parseFlagOptions(args) {
     if (
       key === 'evidence' ||
       componentListOptionKeys.has(key) ||
-      featureMechanizationListOptionKeys.has(key)
+      featureMechanizationListOptionKeys.has(key) ||
+      architectureListOptionKeys.has(key)
     ) {
       options[camelKey] = options[camelKey] || [];
       options[camelKey].push(value);
@@ -1150,6 +1296,38 @@ function operationPayload(command) {
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
       status: command.status,
+    };
+  }
+
+  if (command.kind === 'architecture_contract_record') {
+    return {
+      designId: command.designId,
+      contractId: command.contractId,
+      contractKind: command.contractKind,
+      ownerComponentId: command.ownerComponentId,
+      contractRef: command.contractRef,
+      compatibility: command.compatibility,
+      status: command.status,
+      validationCommand: command.validationCommand,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
+  if (command.kind === 'architecture_port_record') {
+    return {
+      designId: command.designId,
+      portId: command.portId,
+      componentId: command.componentId,
+      portName: command.portName,
+      portKind: command.portKind,
+      direction: command.direction,
+      inputContractId: normalizeOptionalText(command.inputContractId),
+      outputContractId: normalizeOptionalText(command.outputContractId),
+      negativeTests: command.negativeTests || [],
+      status: command.status,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
     };
   }
 
@@ -1338,6 +1516,8 @@ function defaultIdempotencyKey(command) {
   if (
     command.kind === 'architecture_component_record' ||
     command.kind === 'architecture_relation_record' ||
+    command.kind === 'architecture_contract_record' ||
+    command.kind === 'architecture_port_record' ||
     command.kind === 'architecture_fitness_scan' ||
     command.kind === 'architecture_test_record' ||
     command.kind === 'architecture_observability_record'
@@ -1346,7 +1526,9 @@ function defaultIdempotencyKey(command) {
       command.kind,
       command.actor || 'anonymous',
       command.designId || 'no-design',
-      command.componentId ||
+      command.contractId ||
+        command.portId ||
+        command.componentId ||
         command.relationId ||
         command.scanId ||
         command.testId ||
@@ -2124,6 +2306,122 @@ function parseArchitectureRelationCommand(action, args) {
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
 
+function validateArchitectureContractRecordCommand(command) {
+  const requiredTextFields = [
+    ['contract', command.contractId],
+    ['owner-component', command.ownerComponentId],
+    ['contract-ref', command.contractRef],
+    ['validation-command', command.validationCommand],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`ARCH-CONTRACT-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  return command;
+}
+
+function parseArchitectureContractCommand(action, args) {
+  if (action !== 'record') {
+    throw new Error(`Unknown architecture-contract operation "${action}". Expected record.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const command = {
+    kind: 'architecture_contract_record',
+    designId: validateArchitectureDesignId(requireOption(options, 'design')),
+    contractId: validateArchitectureContractId(requireOption(options, 'contract')),
+    contractKind: validateArchitectureContractKind(requireOption(options, 'kind')),
+    ownerComponentId: validateArchitectureComponentId(
+      requireOption(options, 'ownerComponent'),
+      'owner-component'
+    ),
+    contractRef: requireOption(options, 'contractRef'),
+    compatibility: validateArchitectureContractCompatibility(
+      requireOption(options, 'compatibility')
+    ),
+    status: validateArchitectureContractStatus(options.status || 'proposed'),
+    validationCommand: requireOption(options, 'validationCommand'),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateArchitectureContractRecordCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
+function validateArchitecturePortRecordCommand(command) {
+  const requiredTextFields = [
+    ['port', command.portId],
+    ['component', command.componentId],
+    ['name', command.portName],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`ARCH-PORT-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  if (!command.inputContractId && !command.outputContractId) {
+    throw new Error(
+      'ARCH-PORT-CONTRACT-MISSING: RecordArchitecturePort requires --input-contract or --output-contract.'
+    );
+  }
+
+  if (!command.negativeTests || command.negativeTests.length === 0) {
+    throw new Error(
+      'ARCH-PORT-NEGATIVE-TESTS-MISSING: RecordArchitecturePort requires at least one --negative-test.'
+    );
+  }
+
+  return command;
+}
+
+function parseArchitecturePortCommand(action, args) {
+  if (action !== 'record') {
+    throw new Error(`Unknown architecture-port operation "${action}". Expected record.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const inputContractId = options.inputContract
+    ? validateArchitectureContractId(options.inputContract)
+    : null;
+  const outputContractId = options.outputContract
+    ? validateArchitectureContractId(options.outputContract)
+    : null;
+  const command = {
+    kind: 'architecture_port_record',
+    designId: validateArchitectureDesignId(requireOption(options, 'design')),
+    portId: validateArchitecturePortId(requireOption(options, 'port')),
+    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    portName: requireOption(options, 'name'),
+    portKind: validateArchitecturePortKind(requireOption(options, 'kind')),
+    direction: validateArchitecturePortDirection(requireOption(options, 'direction')),
+    inputContractId,
+    outputContractId,
+    negativeTests: normalizeListOption(options.negativeTest),
+    status: validateArchitecturePortStatus(options.status || 'proposed'),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateArchitecturePortRecordCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
 function parseArchitectureFitnessCommand(action, args) {
   if (action !== 'scan') {
     throw new Error(`Unknown architecture-fitness operation "${action}". Expected scan.`);
@@ -2581,6 +2879,22 @@ function parseArgs(args = process.argv.slice(2)) {
     return parseArchitectureRelationCommand(action, rest);
   }
 
+  if (resource === 'architecture-contract') {
+    if (!action) {
+      throw new Error('Missing architecture-contract operation. Expected record.');
+    }
+
+    return parseArchitectureContractCommand(action, rest);
+  }
+
+  if (resource === 'architecture-port') {
+    if (!action) {
+      throw new Error('Missing architecture-port operation. Expected record.');
+    }
+
+    return parseArchitecturePortCommand(action, rest);
+  }
+
   if (resource === 'architecture-fitness') {
     if (!action) {
       throw new Error('Missing architecture-fitness operation. Expected scan.');
@@ -2898,6 +3212,26 @@ function normalizeArchitectureRelation(row) {
   };
 }
 
+function normalizeArchitectureContract(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    contractId: row.contract_id ?? row.contractId,
+  };
+}
+
+function normalizeArchitecturePort(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    portId: row.port_id ?? row.portId,
+  };
+}
+
 function normalizeArchitectureDesignScope(row) {
   return {
     subjectKind: row.subject_kind ?? row.subjectKind,
@@ -3181,6 +3515,134 @@ function planArchitectureRelationRecordOperation({
   const audit = architectureScopedAudit({ command, operationId, now });
 
   return { relation, audit };
+}
+
+function planArchitectureContractRecordOperation({
+  command,
+  design,
+  designScopes,
+  ownerComponent,
+  existingContract,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  const existing = normalizeArchitectureContract(existingContract);
+  const requiredScope = existing ? 'may_update' : 'may_create';
+  assertArchitectureDesignScope(
+    designScopes,
+    'contract',
+    command.contractId,
+    [requiredScope],
+    'ARCH-CONTRACT-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.ownerComponentId,
+    ['may_reference', 'may_create', 'may_update'],
+    'ARCH-CONTRACT-OWNER-SCOPE-MISSING'
+  );
+
+  if (!normalizeArchitectureComponent(ownerComponent)) {
+    throw new Error(`ARCH-CONTRACT-OWNER-MISSING: component ${command.ownerComponentId}`);
+  }
+
+  validateArchitectureContractRecordCommand(command);
+
+  const createdAt = toIso(now);
+  const contract = {
+    contractId: command.contractId,
+    contractKind: command.contractKind,
+    ownerComponentId: command.ownerComponentId,
+    contractRef: command.contractRef,
+    compatibility: command.compatibility,
+    status: command.status,
+    validationCommand: command.validationCommand,
+    createdAt,
+    updatedAt: createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { contract, audit };
+}
+
+function planArchitecturePortRecordOperation({
+  command,
+  design,
+  designScopes,
+  component,
+  inputContract,
+  outputContract,
+  existingPort,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  const existing = normalizeArchitecturePort(existingPort);
+  const requiredScope = existing ? 'may_update' : 'may_create';
+  assertArchitectureDesignScope(
+    designScopes,
+    'port',
+    command.portId,
+    [requiredScope],
+    'ARCH-PORT-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference', 'may_create', 'may_update'],
+    'ARCH-PORT-COMPONENT-SCOPE-MISSING'
+  );
+
+  if (command.inputContractId) {
+    assertArchitectureDesignScope(
+      designScopes,
+      'contract',
+      command.inputContractId,
+      ['may_reference', 'may_create', 'may_update'],
+      'ARCH-PORT-CONTRACT-SCOPE-MISSING'
+    );
+  }
+  if (command.outputContractId) {
+    assertArchitectureDesignScope(
+      designScopes,
+      'contract',
+      command.outputContractId,
+      ['may_reference', 'may_create', 'may_update'],
+      'ARCH-PORT-CONTRACT-SCOPE-MISSING'
+    );
+  }
+
+  if (!normalizeArchitectureComponent(component)) {
+    throw new Error(`ARCH-PORT-COMPONENT-MISSING: component ${command.componentId}`);
+  }
+  if (command.inputContractId && !normalizeArchitectureContract(inputContract)) {
+    throw new Error(`ARCH-PORT-CONTRACT-MISSING: input contract ${command.inputContractId}`);
+  }
+  if (command.outputContractId && !normalizeArchitectureContract(outputContract)) {
+    throw new Error(`ARCH-PORT-CONTRACT-MISSING: output contract ${command.outputContractId}`);
+  }
+
+  validateArchitecturePortRecordCommand(command);
+
+  const createdAt = toIso(now);
+  const port = {
+    portId: command.portId,
+    componentId: command.componentId,
+    portName: command.portName,
+    portKind: command.portKind,
+    direction: command.direction,
+    inputContractId: command.inputContractId,
+    outputContractId: command.outputContractId,
+    negativeTests: command.negativeTests,
+    status: command.status,
+    createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { port, audit };
 }
 
 function planArchitectureFitnessScanOperation({ command, design, scanResult, operationId, now }) {
@@ -4148,6 +4610,28 @@ async function readArchitectureRelation(client, relationId) {
   return result.rows[0] || null;
 }
 
+async function readArchitectureContract(client, contractId) {
+  const result = await client.query(
+    `select *
+     from architecture.contract
+     where contract_id = $1`,
+    [contractId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readArchitecturePort(client, portId) {
+  const result = await client.query(
+    `select *
+     from architecture.component_port
+     where port_id = $1`,
+    [portId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readArchitectureTest(client, testId) {
   const result = await client.query(
     `select *
@@ -4632,6 +5116,68 @@ async function writePlannedArchitectureRelationRecordOperation(client, planned) 
       planned.relation.status,
       planned.relation.createdAt,
       planned.relation.updatedAt,
+    ]
+  );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureContractRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.contract
+      (contract_id, contract_kind, owner_component_id, contract_ref,
+       compatibility, status, validation_command, created_at, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     on conflict (contract_id) do update set
+       contract_kind = excluded.contract_kind,
+       owner_component_id = excluded.owner_component_id,
+       contract_ref = excluded.contract_ref,
+       compatibility = excluded.compatibility,
+       status = excluded.status,
+       validation_command = excluded.validation_command,
+       updated_at = excluded.updated_at`,
+    [
+      planned.contract.contractId,
+      planned.contract.contractKind,
+      planned.contract.ownerComponentId,
+      planned.contract.contractRef,
+      planned.contract.compatibility,
+      planned.contract.status,
+      planned.contract.validationCommand,
+      planned.contract.createdAt,
+      planned.contract.updatedAt,
+    ]
+  );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitecturePortRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.component_port
+      (port_id, component_id, port_name, port_kind, direction,
+       input_contract_id, output_contract_id, negative_tests, status, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8::text[], $9, $10)
+     on conflict (port_id) do update set
+       component_id = excluded.component_id,
+       port_name = excluded.port_name,
+       port_kind = excluded.port_kind,
+       direction = excluded.direction,
+       input_contract_id = excluded.input_contract_id,
+       output_contract_id = excluded.output_contract_id,
+       negative_tests = excluded.negative_tests,
+       status = excluded.status`,
+    [
+      planned.port.portId,
+      planned.port.componentId,
+      planned.port.portName,
+      planned.port.portKind,
+      planned.port.direction,
+      planned.port.inputContractId,
+      planned.port.outputContractId,
+      planned.port.negativeTests,
+      planned.port.status,
+      planned.port.createdAt,
     ]
   );
 
@@ -5380,6 +5926,108 @@ async function applyArchitectureRelationRecordOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureContractRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const ownerComponent = await readArchitectureComponent(client, command.ownerComponentId);
+    const existingContract = await readArchitectureContract(client, command.contractId);
+    const planned = planArchitectureContractRecordOperation({
+      command,
+      design,
+      designScopes,
+      ownerComponent,
+      existingContract,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureContractRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function applyArchitecturePortRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const component = await readArchitectureComponent(client, command.componentId);
+    const inputContract = command.inputContractId
+      ? await readArchitectureContract(client, command.inputContractId)
+      : null;
+    const outputContract = command.outputContractId
+      ? await readArchitectureContract(client, command.outputContractId)
+      : null;
+    const existingPort = await readArchitecturePort(client, command.portId);
+    const planned = planArchitecturePortRecordOperation({
+      command,
+      design,
+      designScopes,
+      component,
+      inputContract,
+      outputContract,
+      existingPort,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitecturePortRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyArchitectureFitnessScanOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -5923,6 +6571,20 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.contract) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.contract.contractId} component=${result.contract.ownerComponentId}`
+    );
+    return;
+  }
+
+  if (result.port) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.port.portId} component=${result.port.componentId}`
+    );
+    return;
+  }
+
   if (result.scan) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.scan.scanId} observations=${result.observations.length} evaluations=${result.evaluations.length}`
@@ -6035,23 +6697,27 @@ async function main() {
           ? await applyArchitectureComponentRecordOperation(command)
           : command.kind === 'architecture_relation_record'
             ? await applyArchitectureRelationRecordOperation(command)
-            : command.kind === 'architecture_fitness_scan'
-              ? await applyArchitectureFitnessScanOperation(command)
-              : command.kind === 'architecture_test_record'
-                ? await applyArchitectureTestRecordOperation(command)
-                : command.kind === 'architecture_observability_record'
-                  ? await applyArchitectureObservabilityRecordOperation(command)
-                  : command.kind === 'component_create'
-                    ? await applyComponentCreateOperation(command)
-                    : command.kind === 'db_surface_upsert'
-                      ? await applyDbSurfaceUpsertOperation(command)
-                      : command.kind === 'feature_mechanization_rail_record'
-                        ? await applyFeatureMechanizationRailRecordOperation(command)
-                        : command.kind === 'governance_refresh_run_record'
-                          ? await applyGovernanceRefreshRunRecordOperation(command)
-                          : command.kind.startsWith('fowler_analysis_')
-                            ? await applyFowlerAnalysisOperation(command)
-                            : await applyTaskLocalOperation(command);
+            : command.kind === 'architecture_contract_record'
+              ? await applyArchitectureContractRecordOperation(command)
+              : command.kind === 'architecture_port_record'
+                ? await applyArchitecturePortRecordOperation(command)
+                : command.kind === 'architecture_fitness_scan'
+                  ? await applyArchitectureFitnessScanOperation(command)
+                  : command.kind === 'architecture_test_record'
+                    ? await applyArchitectureTestRecordOperation(command)
+                    : command.kind === 'architecture_observability_record'
+                      ? await applyArchitectureObservabilityRecordOperation(command)
+                      : command.kind === 'component_create'
+                        ? await applyComponentCreateOperation(command)
+                        : command.kind === 'db_surface_upsert'
+                          ? await applyDbSurfaceUpsertOperation(command)
+                          : command.kind === 'feature_mechanization_rail_record'
+                            ? await applyFeatureMechanizationRailRecordOperation(command)
+                            : command.kind === 'governance_refresh_run_record'
+                              ? await applyGovernanceRefreshRunRecordOperation(command)
+                              : command.kind.startsWith('fowler_analysis_')
+                                ? await applyFowlerAnalysisOperation(command)
+                                : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -6064,8 +6730,10 @@ if (require.main === module) {
 
 module.exports = {
   applyArchitectureComponentRecordOperation,
+  applyArchitectureContractRecordOperation,
   applyArchitectureDesignCreateOperation,
   applyArchitectureFitnessScanOperation,
+  applyArchitecturePortRecordOperation,
   applyArchitectureTestRecordOperation,
   applyArchitectureObservabilityRecordOperation,
   applyArchitectureRelationRecordOperation,
@@ -6091,8 +6759,10 @@ module.exports = {
   materializeDocsResolutionCommand,
   parseArgs,
   planArchitectureComponentRecordOperation,
+  planArchitectureContractRecordOperation,
   planArchitectureDesignCreateOperation,
   planArchitectureFitnessScanOperation,
+  planArchitecturePortRecordOperation,
   planArchitectureTestRecordOperation,
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
@@ -6115,7 +6785,9 @@ module.exports = {
   resolveOperateHelpRequest,
   writePlannedComponentCreateOperation,
   writePlannedDbSurfaceUpsertOperation,
+  writePlannedArchitectureContractRecordOperation,
   writePlannedArchitectureFitnessScanOperation,
+  writePlannedArchitecturePortRecordOperation,
   writePlannedArchitectureTestRecordOperation,
   writePlannedArchitectureObservabilityRecordOperation,
   writePlannedFeatureMechanizationRailRecordOperation,

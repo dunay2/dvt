@@ -262,6 +262,12 @@ commandQueryRails:
   - name: RecordArchitectureObservabilityEvidence
     type: command
     dddOwner: ArchitectureObservabilityEvidenceCommand
+  - name: RecordArchitectureContract
+    type: command
+    dddOwner: ArchitectureContractCommand
+  - name: RecordArchitecturePort
+    type: command
+    dddOwner: ArchitecturePortCommand
 domainObjects:
   - name: ComponentIntegrityReadModel
     type: read model
@@ -284,6 +290,12 @@ domainObjects:
   - name: ArchitectureObservabilityEvidenceCommand
     type: command rail
     owner: Architecture / Planning DB / CI
+  - name: ArchitectureContractCommand
+    type: command rail
+    owner: Architecture / Planning DB / CI
+  - name: ArchitecturePortCommand
+    type: command rail
+    owner: Architecture / Planning DB / CI
 fowlerSignals:
   - Hidden Authority from component health being visible only through several separate queries.
   - Duplicate Semantics from command/query rails sharing intent without one vocabulary check.
@@ -291,6 +303,7 @@ fowlerSignals:
   - Incomplete Evidence risk if tests are written to architecture.component_test but not visible in component-profile.
   - Incomplete Evidence risk if observability facts are written outside architecture.component_observability.
   - Hidden Authority risk if component-profile cannot display observability rows that maturity already consumes.
+  - Hidden Authority risk if contracts and command/query ports exist in schema but cannot be written through planning:db:operate.
 architectureGuards:
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-integrity-check.test.cjs scripts/planning-db-operate.test.cjs
   - pnpm planning:db:migrate
@@ -298,6 +311,8 @@ architectureGuards:
   - pnpm planning:db:query component-integrity --limit 20
   - pnpm planning:db:query rail-vocabulary --limit 20
   - pnpm planning:db:query component-profile --component SYS-WEB-CANVAS-DRAFT-SAVE-STATUS --limit 80
+  - pnpm planning:db:query architecture-contracts --limit 20
+  - pnpm planning:db:query architecture-io --kind port --limit 20
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - repository governance CLI surface
@@ -308,6 +323,8 @@ completionGate:
   - pnpm planning:db:query component-integrity --limit 20
   - pnpm planning:db:query rail-vocabulary --limit 20
   - pnpm planning:db:query component-profile --component SYS-WEB-CANVAS-DRAFT-SAVE-STATUS --limit 80
+  - pnpm planning:db:query architecture-contracts --limit 20
+  - pnpm planning:db:query architecture-io --kind port --limit 20
   - pnpm planning:db:integrity:check
   - pnpm verify:prepush
 redGreenCycles:
@@ -370,6 +387,18 @@ redGreenCycles:
       - scripts/planning-db-operate-tests/architecture-plan.test.cjs
       - scripts/planning-db-migrate.test.cjs
     greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: architecture-contract-port-rail
+    redTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-operate.test.cjs
+    expectedFailure: Planning DB has architecture.contract and architecture.component_port query surfaces, but no governed planning:db:operate rail can record component contracts or command/query ports.
+    patchSurfaces:
+      - tools/planning-db/migrations/088_architecture_contract_port_operation_rail.sql
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-query.cjs
+      - scripts/planning-db-operate-tests/architecture-parse.test.cjs
+      - scripts/planning-db-operate-tests/architecture-plan.test.cjs
+      - scripts/planning-db-query.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-operate.test.cjs
   - id: component-profile-observability-evidence
     redTest: node --test scripts/planning-db-query.test.cjs
     expectedFailure: component-profile reads DB-owned tests but cannot answer which observability signals validate a component.
@@ -454,6 +483,325 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-query.test.cjs
+  - name: allowedArchitectureContractCompatibilities
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract command vocabulary mirrors architecture.contract compatibility constraints
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedArchitectureContractKinds
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract kind vocabulary is explicit before command execution
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedArchitectureContractStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract lifecycle vocabulary matches architecture.contract
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedArchitecturePortDirections
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port direction vocabulary is explicit before command execution
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedArchitecturePortKinds
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - command/query/API port vocabulary is canonical
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: allowedArchitecturePortStatuses
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port lifecycle vocabulary matches architecture.component_port
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: applyArchitectureContractRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract writes go through the audited Planning DB operation rail
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: applyArchitecturePortRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port writes go through the audited Planning DB operation rail
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: architectureListOptionKeys
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - repeated negative-test flags are parsed as command evidence
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: normalizeArchitectureContract
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract existence checks are normalized before planning create/update scope
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: normalizeArchitecturePort
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port existence checks are normalized before planning create/update scope
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: parseArchitectureContractCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract command arguments are typed before DB writes
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: parseArchitecturePortCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port command arguments are typed before DB writes
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: planArchitectureContractRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract records require design scope and owner component authority
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: planArchitecturePortRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port records require design scope, component authority, contracts, and negative tests
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readArchitectureContract
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - command planning checks existing contract authority before writes
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readArchitecturePort
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - command planning checks existing port authority before writes
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureContractCompatibility
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract compatibility values are rejected before SQL constraints
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureContractId
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract IDs use canonical CONTRACT-* vocabulary
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureContractKind
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract kind values are rejected before SQL constraints
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureContractRecordCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract records cannot omit owner, reference, source, or validation command
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitectureContractStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract lifecycle values are rejected before SQL constraints
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitecturePortDirection
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port direction values are rejected before SQL constraints
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitecturePortId
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port IDs use canonical PORT-* vocabulary
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitecturePortKind
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port kind values distinguish command, query, event, storage, API, and UI-action
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitecturePortRecordCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port records require contracts and negative tests before DB writes
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: validateArchitecturePortStatus
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port lifecycle values are rejected before SQL constraints
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: writePlannedArchitectureContractRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitectureContractCommand
+    cqRails:
+      - RecordArchitectureContract
+    fowlerSignals:
+      - contract command plans persist through architecture.contract and architecture.design_operations
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: writePlannedArchitecturePortRecordOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: ArchitecturePortCommand
+    cqRails:
+      - RecordArchitecturePort
+    fowlerSignals:
+      - port command plans persist through architecture.component_port and architecture.design_operations
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
   - name: baselineBudgetFor
     path: scripts/planning-db-integrity-check.cjs
     dddOwner: PlanningDbIntegrityCheck

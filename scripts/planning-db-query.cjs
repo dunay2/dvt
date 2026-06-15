@@ -1555,11 +1555,14 @@ function buildComponentProfileRows(profile) {
 
   for (const io of profile.io || []) {
     const section = io.io_kind === 'adapter' ? 'adapter' : io.io_kind === 'port' ? 'port' : 'io';
+    const metadata = io.metadata && typeof io.metadata === 'object' ? io.metadata : {};
     rows.push([
       section,
       io.io_id ?? io.ioId,
       compactText(io.io_name ?? io.ioName),
+      metadata.portKind ?? io.io_kind ?? io.ioKind ?? '-',
       io.direction ?? '-',
+      io.contract_id ?? io.contractId ?? '-',
       io.runtime ?? '-',
     ]);
   }
@@ -1716,6 +1719,7 @@ function buildArchitectureIoRows(rows) {
     row.component_id ?? row.componentId,
     row.io_id ?? row.ioId,
     row.io_kind ?? row.ioKind,
+    row.metadata?.portKind ?? row.io_kind ?? row.ioKind,
     row.io_name ?? row.ioName,
     row.direction ?? '-',
     row.contract_id ?? row.contractId ?? '-',

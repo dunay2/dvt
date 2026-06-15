@@ -716,6 +716,20 @@ test('tracked migrations trust architecture maturity for component evidence gaps
   );
 });
 
+test('tracked migrations include architecture contract and port operations after W88', () => {
+  const migrations = readMigrationFiles();
+  const architecturePortMigration = migrations.find(
+    (migration) => migration.fileName === '088_architecture_contract_port_operation_rail.sql'
+  );
+
+  assert.ok(architecturePortMigration);
+  assert.match(architecturePortMigration.sql, /architecture_design_scope_subject_kind_check/);
+  assert.match(architecturePortMigration.sql, /'port'/);
+  assert.match(architecturePortMigration.sql, /architecture_design_operations_type_check/);
+  assert.match(architecturePortMigration.sql, /'architecture_contract_record'/);
+  assert.match(architecturePortMigration.sql, /'architecture_port_record'/);
+});
+
 test('tracked migrations include DB-first surface inventory command rail tables', () => {
   const migrations = readMigrationFiles();
   const surfaceInventoryMigration = migrations.find(

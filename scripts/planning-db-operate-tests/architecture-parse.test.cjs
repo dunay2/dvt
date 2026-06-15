@@ -174,6 +174,113 @@ test('parseArgs builds architecture component and relation record commands', () 
   assert.equal(approvedRelationCommand.status, 'approved');
 });
 
+test('parseArgs builds architecture contract and port record commands', () => {
+  const contractCommand = parseArgs([
+    'architecture-contract',
+    'record',
+    '--design',
+    'PLANNING-DB-ARCHITECTURE-IO-RAILS-20260615',
+    '--contract',
+    'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--kind',
+    'type',
+    '--owner-component',
+    'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--contract-ref',
+    'apps/web/src/app/plugins/graph/graphNodeCardReadModel.ts#GraphNodeCardViewModel',
+    '--compatibility',
+    'internal',
+    '--status',
+    'implemented',
+    '--validation-command',
+    'pnpm --filter @dvt/web test -- src/app/plugins/graph/graphNodeCardReadModel.test.ts',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(contractCommand.kind, 'architecture_contract_record');
+  assert.equal(contractCommand.contractKind, 'type');
+  assert.equal(contractCommand.ownerComponentId, 'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL');
+  assert.equal(contractCommand.compatibility, 'internal');
+
+  const portCommand = parseArgs([
+    'architecture-port',
+    'record',
+    '--design',
+    'PLANNING-DB-ARCHITECTURE-IO-RAILS-20260615',
+    '--port',
+    'PORT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL-QUERY',
+    '--component',
+    'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--name',
+    'RenderGraphNodeCard',
+    '--kind',
+    'query',
+    '--direction',
+    'inbound',
+    '--output-contract',
+    'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--negative-test',
+    'graphNodeCardReadModel.architecture.test.ts rejects React component imports',
+    '--negative-test',
+    'graphNodeCardReadModel.test.ts covers missing node labels',
+    '--status',
+    'implemented',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(portCommand.kind, 'architecture_port_record');
+  assert.equal(portCommand.portKind, 'query');
+  assert.equal(portCommand.direction, 'inbound');
+  assert.equal(portCommand.outputContractId, 'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL');
+  assert.equal(portCommand.negativeTests.length, 2);
+});
+
+test('parseArgs rejects architecture ports without contract or negative tests', () => {
+  const basePortArgs = [
+    'architecture-port',
+    'record',
+    '--design',
+    'PLANNING-DB-ARCHITECTURE-IO-RAILS-20260615',
+    '--port',
+    'PORT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL-QUERY',
+    '--component',
+    'SYS-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+    '--name',
+    'RenderGraphNodeCard',
+    '--kind',
+    'query',
+    '--direction',
+    'inbound',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ];
+
+  assert.throws(() => parseArgs(basePortArgs), /ARCH-PORT-CONTRACT-MISSING/);
+  assert.throws(
+    () =>
+      parseArgs([
+        ...basePortArgs,
+        '--output-contract',
+        'CONTRACT-WEB-CANVAS-GRAPH-NODE-CARD-READ-MODEL',
+      ]),
+    /ARCH-PORT-NEGATIVE-TESTS-MISSING/
+  );
+});
+
 test('parseArgs accepts architecture component lifecycle statuses supported by the table', () => {
   const command = parseArgs([
     'architecture-component',
