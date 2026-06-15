@@ -23,6 +23,7 @@ import type {
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { IWarehouseSourceImportPort } from '../../ports/workspace';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
+import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 
 const shellState = vi.hoisted(() => ({
   canvasViewportProps: null as null | Record<string, unknown>,
@@ -225,6 +226,7 @@ describe('CanvasShell', () => {
     act(() => {
       root.unmount();
     });
+    useOperationalDrawerContributionStore.setState({ contribution: null });
     container.remove();
     vi.clearAllMocks();
   });
@@ -366,6 +368,47 @@ describe('CanvasShell', () => {
     expect(workbenchTabStrip).toBeNull();
     expect(canvasToolbar).toBeNull();
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+  });
+
+  it('registers Canvas operational drawer tabs from the surface strategy', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            panels: {
+              activeRunId: 'run-42',
+            },
+          })}
+        />
+      );
+    });
+
+    const contribution = useOperationalDrawerContributionStore.getState().contribution;
+
+    expect(contribution).toMatchObject({
+      source: 'canvas',
+      title: 'Canvas operations',
+      tabs: [
+        { id: 'log', label: 'Log' },
+        { id: 'problems', label: 'Problems' },
+        { id: 'runs', label: 'Runs' },
+        { id: 'preview', label: 'Preview' },
+      ],
+      runs: {
+        activeRunId: 'run-42',
+      },
+      preview: {
+        status: 'blocked',
+        summary: canvasViewCopy.planStatusPreviewRequiredMessage,
+      },
+    });
+    expect(contribution?.problems.items).toEqual([
+      expect.objectContaining({
+        id: 'plan_integrity',
+        severity: 'warning',
+        message: canvasViewCopy.planStatusPreviewRequiredMessage,
+      }),
+    ]);
   });
 
   it('renders active canvas identity and draft status as graph overlays instead of fixed chrome', async () => {
