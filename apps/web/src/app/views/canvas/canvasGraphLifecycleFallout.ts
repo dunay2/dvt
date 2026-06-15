@@ -12,7 +12,7 @@ type ApplyCanvasGraphLifecycleFalloutArgs = {
   setEdges: Dispatch<SetStateAction<Edge[]>>;
   setDraftSession: Dispatch<SetStateAction<CanvasDraftSession>>;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 
 export function applyCanvasGraphLifecycleFallout({

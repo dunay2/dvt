@@ -4,6 +4,8 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 export type NodePropertySectionId =
   | 'general'
   | 'columns'
+  | 'inputs-outputs'
+  | 'tests'
   | 'keys'
   | 'indexes'
   | 'foreign-keys'
@@ -349,6 +351,112 @@ function buildSummaryRows(
   return rows;
 }
 
+function buildInputsOutputsRows(
+  node: CanonicalNode,
+  nodes: readonly CanonicalNode[],
+  edges: readonly CanonicalEdge[]
+): readonly NodePropertyTableRow[] {
+  const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
+  const rows: NodePropertyTableRow[] = [];
+
+  for (const edge of edges) {
+    if (edge.targetId === node.id) {
+      const upstreamNode = nodeById.get(edge.sourceId);
+      rows.push({
+        id: `input:${edge.id}`,
+        cells: {
+          direction: 'Input',
+          node: upstreamNode?.name ?? edge.sourceId,
+          nodeId: edge.sourceId,
+          relation: edge.relation,
+        },
+      });
+    }
+
+    if (edge.sourceId === node.id) {
+      const downstreamNode = nodeById.get(edge.targetId);
+      rows.push({
+        id: `output:${edge.id}`,
+        cells: {
+          direction: 'Output',
+          node: downstreamNode?.name ?? edge.targetId,
+          nodeId: edge.targetId,
+          relation: edge.relation,
+        },
+      });
+    }
+  }
+
+  return rows;
+}
+
+function buildTestRows(
+  node: CanonicalNode,
+  metadata: Record<string, unknown>
+): readonly NodePropertyTableRow[] {
+  const tests = Array.isArray(metadata.tests) ? metadata.tests : [];
+  const rows = tests.flatMap((candidate): readonly NodePropertyTableRow[] => {
+    if (!isRecord(candidate)) {
+      return [];
+    }
+
+    const name = readString(candidate.name);
+    if (name == null) {
+      return [];
+    }
+
+    return [
+      {
+        id: name,
+        cells: {
+          name,
+          type: readFirstString(candidate.type, candidate.testType) ?? '',
+          target:
+            readFirstString(candidate.target, candidate.targetModel, candidate.model) ?? node.name,
+          column: readFirstString(candidate.targetColumn, candidate.column) ?? '',
+          severity: readString(candidate.severity) ?? '',
+          expression:
+            readFirstString(candidate.expression, candidate.sql, candidate.condition) ?? '',
+        },
+      },
+    ];
+  });
+
+  if (rows.length > 0) {
+    return rows;
+  }
+
+  const testTargetModel = readFirstString(metadata.testTargetModel, metadata.targetModel);
+  const testTargetColumn = readFirstString(metadata.testTargetColumn, metadata.targetColumn);
+  const testTarget = readFirstString(metadata.testTarget);
+  const severity = readString(metadata.severity);
+  const testType = readFirstString(metadata.testType, metadata.type);
+
+  if (
+    !node.kind.endsWith(':test') &&
+    testTargetModel == null &&
+    testTargetColumn == null &&
+    testTarget == null &&
+    severity == null &&
+    testType == null
+  ) {
+    return [];
+  }
+
+  return [
+    {
+      id: `test:${node.id}`,
+      cells: {
+        name: node.name,
+        type: testType ?? '',
+        target: testTarget ?? [testTargetModel, testTargetColumn].filter(Boolean).join('.'),
+        column: testTargetColumn ?? '',
+        severity: severity ?? '',
+      },
+    },
+  ];
+}
+
 function createSection({
   id,
   label,
@@ -386,6 +494,8 @@ export function buildNodePropertiesReadModel({
   const indexRows = buildIndexRows(metadata);
   const foreignKeyRows = buildForeignKeyRows(metadata);
   const constraintRows = buildConstraintRows(metadata);
+  const inputsOutputsRows = buildInputsOutputsRows(node, nodes, edges);
+  const testRows = buildTestRows(node, metadata);
   const code =
     readString(metadata.compiledSql) ?? readString(metadata.sql) ?? readString(config.sql);
 
@@ -403,6 +513,24 @@ export function buildNodePropertiesReadModel({
         label: 'Columns',
         tableRows: buildColumnRows(columns),
         emptyState: columns.length === 0 ? 'No columns are recorded for this node.' : undefined,
+      }),
+      createSection({
+        id: 'inputs-outputs',
+        label: 'Inputs / Outputs',
+        tableRows: inputsOutputsRows,
+        emptyState:
+          inputsOutputsRows.length === 0
+            ? 'No graph inputs or outputs are recorded for this node.'
+            : undefined,
+      }),
+      createSection({
+        id: 'tests',
+        label: 'Tests',
+        tableRows: testRows,
+        emptyState:
+          testRows.length === 0
+            ? 'No dbt or data-quality tests are recorded for this node.'
+            : undefined,
       }),
       createSection({
         id: 'keys',

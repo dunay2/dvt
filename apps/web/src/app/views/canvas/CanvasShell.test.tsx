@@ -108,6 +108,8 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       canEditCanvas: true,
       canDeleteActiveCanvas: false,
       inspectorNode: null,
+      inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
       inspectorAuthoring: {

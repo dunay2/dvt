@@ -69,6 +69,7 @@ describe('canvasNodeContextMenuModel', () => {
       label: 'Properties',
       intent: 'read',
       disabled: false,
+      workbenchTabId: 'general',
     });
     expect(actionById(model, 'edit-sql')).toMatchObject({
       label: 'Edit SQL',
@@ -78,12 +79,14 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'inspect-inputs-outputs')).toMatchObject({
       label: 'Inputs / Outputs',
       intent: 'read',
-      disabled: true,
+      disabled: false,
+      workbenchTabId: 'inputs-outputs',
     });
     expect(actionById(model, 'inspect-tests')).toMatchObject({
       label: 'Tests',
       intent: 'read',
-      disabled: true,
+      disabled: false,
+      workbenchTabId: 'tests',
     });
     expect(actionById(model, 'preview-node')).toMatchObject({
       label: 'Preview node',
@@ -141,6 +144,16 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'inspect-node')).toMatchObject({
       intent: 'read',
       disabled: false,
+    });
+    expect(actionById(model, 'inspect-inputs-outputs')).toMatchObject({
+      intent: 'read',
+      disabled: false,
+      workbenchTabId: 'inputs-outputs',
+    });
+    expect(actionById(model, 'inspect-tests')).toMatchObject({
+      intent: 'read',
+      disabled: false,
+      workbenchTabId: 'tests',
     });
     expect(actionById(model, 'edit-sql')).toMatchObject({ disabled: true });
     expect(actionById(model, 'preview-node')).toMatchObject({ disabled: true });

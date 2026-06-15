@@ -29,7 +29,7 @@ export type CanvasGraphInteractionEffects = {
   setEdges: CanvasEdgeSetter;
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   toggleInspectorPanel: () => void;
   onLayoutComplete: (positions: Record<string, { x: number; y: number }>) => void;
 };
@@ -69,7 +69,7 @@ export type CanvasNodeAuthoringEffects = {
   setEdges: CanvasEdgeSetter;
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 
 export type CanvasNodeAuthoringPolicy = {
@@ -95,7 +95,7 @@ export type CanvasNodeDuplicateEffects = {
   setNodes: CanvasNodeSetter;
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 
 export type CanvasNodeDuplicatePolicy = {
@@ -142,7 +142,7 @@ export type CanvasAuthoringNodeCreationEffects = {
   setNodes: CanvasNodeSetter;
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 
 export type CanvasAuthoringNodeCreationPolicy = {
@@ -176,7 +176,7 @@ export type CanvasNodeRemovalEffects = {
   setEdges: CanvasEdgeSetter;
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 
 export type CanvasNodeRemovalPolicy = {
@@ -243,7 +243,7 @@ export type CanvasSelectionState = {
 
 export type CanvasSelectionEffects = {
   setSelectedNodes: (ids: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   toggleInspectorPanel: () => void;
 };
 

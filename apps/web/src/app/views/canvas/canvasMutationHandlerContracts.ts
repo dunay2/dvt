@@ -27,7 +27,7 @@ export type CanvasMutationState = {
 export type CanvasMutationEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
@@ -54,7 +54,7 @@ export type CanvasGraphChangeState = {
 export type CanvasGraphChangeEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
 };
 
@@ -73,7 +73,7 @@ export type CanvasNodeChangeState = {
 export type CanvasNodeChangeEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
 };
 
@@ -99,7 +99,7 @@ export type CanvasEdgeChangeContracts = {
 export type CanvasSourceImportEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
 };

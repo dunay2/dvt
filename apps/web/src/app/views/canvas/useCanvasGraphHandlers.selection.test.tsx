@@ -110,6 +110,21 @@ describe('useCanvasGraphHandlers selection', () => {
     expect(toggleInspectorPanel).toHaveBeenCalledTimes(1);
   });
 
+  it('passes node workbench tab preference through explicit inspect gestures', async () => {
+    const setInspectorNode = vi.fn();
+    const renderedHarness = renderSelectionHarness({
+      setInspectorNode,
+    });
+    harness = renderedHarness;
+    await renderedHarness.render();
+
+    act(() => {
+      renderedHarness.latest()?.handleInspectNode('source-node', 'inputs-outputs');
+    });
+
+    expect(setInspectorNode).toHaveBeenCalledWith('source-node', 'inputs-outputs');
+  });
+
   it('adds and removes ids through toggle node selection', async () => {
     const setSelectedNodes = vi.fn();
     const renderedHarness = renderSelectionHarness({

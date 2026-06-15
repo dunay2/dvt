@@ -18,7 +18,9 @@ type CanvasStoreFacade = {
   selectedNodes: string[];
   setSelectedNodes: (nodes: string[]) => void;
   inspectorNodeId: string | null;
-  setInspectorNode: (nodeId: string | null) => void;
+  inspectorPreferredTabId: string | null;
+  inspectorPreferredTabRequestId: number;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   impactOverlayEnabled: boolean;
   toggleImpactOverlay: () => void;
   columnLevelLineageEnabled: boolean;
@@ -67,6 +69,12 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const selectedNodes = useCanvasInteractionStore((state) => state.selectedNodes);
   const setSelectedNodes = useCanvasInteractionStore((state) => state.setSelectedNodes);
   const inspectorNodeId = useCanvasInteractionStore((state) => state.inspectorNodeId);
+  const inspectorPreferredTabId = useCanvasInteractionStore(
+    (state) => state.inspectorPreferredTabId
+  );
+  const inspectorPreferredTabRequestId = useCanvasInteractionStore(
+    (state) => state.inspectorPreferredTabRequestId
+  );
   const setInspectorNode = useCanvasInteractionStore((state) => state.setInspectorNode);
   const impactOverlayEnabled = useCanvasInteractionStore((state) => state.impactOverlayEnabled);
   const toggleImpactOverlay = useCanvasInteractionStore((state) => state.toggleImpactOverlay);
@@ -129,6 +137,8 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     selectedNodes,
     setSelectedNodes,
     inspectorNodeId,
+    inspectorPreferredTabId,
+    inspectorPreferredTabRequestId,
     setInspectorNode,
     impactOverlayEnabled,
     toggleImpactOverlay,

@@ -40,6 +40,8 @@ type CanvasInspectorPanelProps = Readonly<{
   edges: readonly CanonicalEdge[];
   activeRunId: string | null;
   registeredPlugins?: ReadonlySet<string>;
+  preferredTabId?: string | null;
+  preferredTabRequestId?: number;
   onHide: () => void;
   authoring: CanvasInspectorAuthoringContract;
   canvas?: CanvasInspectorCanvasContract | null;
@@ -51,6 +53,8 @@ export function CanvasInspectorPanel({
   edges,
   activeRunId,
   registeredPlugins,
+  preferredTabId = null,
+  preferredTabRequestId = 0,
   onHide,
   authoring,
   canvas,
@@ -75,6 +79,8 @@ export function CanvasInspectorPanel({
       edges={edges}
       activeRunId={activeRunId}
       registeredPlugins={registeredPlugins}
+      preferredTabId={preferredTabId}
+      preferredTabRequestId={preferredTabRequestId}
       onHide={onHide}
       tagsEditor={tagsEditor}
       beforePanels={

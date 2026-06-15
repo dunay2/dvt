@@ -74,6 +74,8 @@ function buildCanvasShellPanelsArgs({
   return {
     panelState: {
       inspectorNode: controller.inspectorNode,
+      inspectorPreferredTabId: controller.inspectorPreferredTabId,
+      inspectorPreferredTabRequestId: controller.inspectorPreferredTabRequestId,
       inspectorNodeSelectedForExecution: controller.inspectorNodeSelectedForExecution,
       inspectorGraphNodes: controller.inspectorGraphNodes,
       inspectorGraphEdges: controller.inspectorGraphEdges,

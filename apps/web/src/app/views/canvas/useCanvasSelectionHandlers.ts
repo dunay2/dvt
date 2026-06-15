@@ -8,7 +8,7 @@ import type { CanvasSelectionContracts } from './canvasGraphHandlerContracts';
 type UseCanvasSelectionHandlersArgs = CanvasSelectionContracts;
 
 type UseCanvasSelectionHandlersResult = {
-  handleInspectNode: (nodeId: string) => void;
+  handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
   handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   handleToggleNodeSelection: (nodeId: string, shouldSelect: boolean) => void;
@@ -22,8 +22,12 @@ export function useCanvasSelectionHandlers({
   const { setSelectedNodes, setInspectorNode, toggleInspectorPanel } = effects;
 
   const handleInspectNode = useCallback(
-    (nodeId: string) => {
-      setInspectorNode(nodeId);
+    (nodeId: string, preferredTabId?: string | null) => {
+      if (preferredTabId == null) {
+        setInspectorNode(nodeId);
+      } else {
+        setInspectorNode(nodeId, preferredTabId);
+      }
       if (!focusMode && !inspectorPanelVisible) {
         toggleInspectorPanel();
       }
