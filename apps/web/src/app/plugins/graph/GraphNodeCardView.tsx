@@ -84,7 +84,7 @@ export function GraphNodeCardView({
         <div className={graphVisualClasses.metricText}>
           {cardModel.metrics.map((metric) => (
             <span key={metric.id} className="inline-flex items-baseline gap-1">
-              <span className="text-slate-500">{metric.label}</span>
+              <span className="text-slate-400">{metric.label}</span>
               <span title={metric.label} className="font-medium text-slate-200">
                 {metric.value}
               </span>
