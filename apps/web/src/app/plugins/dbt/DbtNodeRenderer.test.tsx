@@ -190,6 +190,9 @@ describe('DbtNodeRenderer history panel', () => {
 
     expect(document.body.textContent).toContain('fct_orders');
     expect(document.body.textContent).toContain('analytics');
+    expect(document.body.textContent).toContain('Mat.');
+    expect(document.body.textContent).toContain('Deps');
+    expect(document.body.textContent).toContain('Columns');
     expect(document.querySelector('[title="Mat."]')?.textContent).toBe('incremental');
     expect(document.querySelector('[title="Deps"]')?.textContent).toBe('2');
     expect(document.querySelector('[title="Columns"]')?.textContent).toBe('1');
