@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CanvasWorkspaceMenuContributionRegistrar,
+  CanvasWorkspaceTopBarIdentity,
   CanvasWorkspaceMenuControls,
 } from './CanvasWorkspaceMenuControls';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
@@ -83,6 +84,38 @@ describe('CanvasWorkspaceMenuControls', () => {
     });
 
     expect(onImportProjectSnapshotFile).toHaveBeenCalledWith(snapshotFile);
+  });
+
+  it('renders the active canvas identity as minimal shell top-bar context', async () => {
+    await act(async () => {
+      root.render(
+        <>
+          <CanvasWorkspaceMenuContributionRegistrar
+            activeCanvas={{
+              id: 'warehouse-dbt',
+              kind: 'dbt',
+              title: 'Warehouse dbt',
+            }}
+            canExportProjectSnapshot
+            canImportProjectSnapshot
+            onExportProjectSnapshot={vi.fn()}
+            onImportProjectSnapshotFile={vi.fn()}
+          />
+          <CanvasWorkspaceTopBarIdentity />
+        </>
+      );
+    });
+
+    const activeCanvasIdentity = container.querySelector(
+      '[data-slot="shell-active-canvas-identity"]'
+    );
+
+    expect(activeCanvasIdentity).not.toBeNull();
+    expect(activeCanvasIdentity?.textContent).toContain('Warehouse dbt');
+    expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('warehouse-dbt');
+    expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('dbt');
+    expect(container.textContent).not.toContain('Export');
+    expect(container.textContent).not.toContain('Import');
   });
 
   it('does not let a stale Workspace menu cleanup clear an active replacement contribution', async () => {

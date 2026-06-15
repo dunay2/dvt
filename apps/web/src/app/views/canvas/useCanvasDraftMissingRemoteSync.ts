@@ -40,16 +40,25 @@ function syncLastAuthoritativeSemanticGraph(
 function shouldMarkRemoteDraftMissing(
   args: Pick<
     UseCanvasDraftMissingRemoteSyncArgs,
-    'shouldWaitForBootstrapReadiness' | 'graphDraftQuery' | 'draftSession'
+    | 'shouldWaitForBootstrapReadiness'
+    | 'graphDraftQuery'
+    | 'draftSession'
+    | 'lastAuthoritativeSemanticGraphRef'
   >
 ): boolean {
-  const { shouldWaitForBootstrapReadiness, graphDraftQuery, draftSession } = args;
+  const {
+    shouldWaitForBootstrapReadiness,
+    graphDraftQuery,
+    draftSession,
+    lastAuthoritativeSemanticGraphRef,
+  } = args;
 
   return !(
     shouldWaitForBootstrapReadiness ||
     draftSession.syncState === 'bootstrapping' ||
     graphDraftQuery.data?.record != null ||
-    draftSession.baseline.record == null
+    draftSession.baseline.record == null ||
+    lastAuthoritativeSemanticGraphRef.current == null
   );
 }
 
@@ -83,6 +92,7 @@ export function useCanvasDraftMissingRemoteSync({
         shouldWaitForBootstrapReadiness,
         graphDraftQuery,
         draftSession,
+        lastAuthoritativeSemanticGraphRef,
       })
     ) {
       return;

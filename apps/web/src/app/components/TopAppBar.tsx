@@ -7,6 +7,7 @@ import { resolveShellNavigationDisposition } from '../shell/shellNavigationDispo
 import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import { CanvasWorkspaceTopBarIdentity } from '../views/canvas/CanvasWorkspaceMenuControls';
 import { topAppBarClasses } from './shell/chrome';
 import { detectShellTopBarLocale, resolveShellTopBarCopy } from './shell/copy';
 import { ShellAppMenu } from './shell/ShellAppMenu';
@@ -59,6 +60,8 @@ export function ShellTopBar({
     <TooltipProvider>
       <div data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
         <ShellAppMenu copy={copy} />
+
+        {isWorkbenchShell ? <CanvasWorkspaceTopBarIdentity /> : null}
 
         {!isWorkbenchShell && (
           <>

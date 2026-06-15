@@ -60,6 +60,7 @@ function CanvasShellMenuContributionRegistrars({
         onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
       />
       <CanvasWorkspaceMenuContributionRegistrar
+        activeCanvas={panels.activeCanvas}
         canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
         canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
         onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}

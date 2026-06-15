@@ -7,7 +7,7 @@ import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScen
 import {
   buildController,
   createCanvasRouteHarness,
-  expectActiveCanvasTab,
+  expectActiveCanvasShellIdentity,
   expectCanvasBootstrapState,
   mockedUseCanvasController,
   renderCanvasRouteWithController,
@@ -257,7 +257,7 @@ describe('Canvas route host-cycle persistence', () => {
     });
     await harness.render();
 
-    expectActiveCanvasTab({
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Transformation canvas',
       kindLabel: 'Transformation',
@@ -271,7 +271,7 @@ describe('Canvas route host-cycle persistence', () => {
     await harness.render();
 
     expect(handlePlan).toHaveBeenCalledTimes(1);
-    expectActiveCanvasTab({
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Transformation canvas',
       kindLabel: 'Transformation',
@@ -288,7 +288,7 @@ describe('Canvas route host-cycle persistence', () => {
       canvasAuthoringMode: 'transformation',
     });
 
-    expectActiveCanvasTab({
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Warehouse dbt',
       kindLabel: 'dbt',
@@ -318,7 +318,7 @@ describe('Canvas route host-cycle persistence', () => {
       canvasAuthoringMode: 'dbt',
     });
 
-    expectActiveCanvasTab({
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Transformation canvas',
       kindLabel: 'Transformation',

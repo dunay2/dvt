@@ -11,6 +11,7 @@ import { buildShellNavigationModel } from '../shell/shellNavigationModel';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { resolveShellTopBarCopy } from './shell/copy';
 import ShellTopBar from './TopAppBar';
@@ -46,12 +47,14 @@ describe('ShellTopBar workspace context', () => {
       availableTargetAdapters: ['temporal'],
     });
     useUiLayoutStore.setState({ focusMode: false });
+    useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
   });
 
   afterEach(() => {
     act(() => {
       root.unmount();
     });
+    useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
     container.remove();
     document.body.replaceChildren();
   });
@@ -126,6 +129,38 @@ describe('ShellTopBar workspace context', () => {
       });
     }
   );
+
+  it('renders active Canvas identity as workbench context without restoring legacy top-bar canvas controls', async () => {
+    useCanvasWorkspaceMenuContributionStore.setState({
+      contribution: {
+        activeCanvas: {
+          id: 'transformation-canvas',
+          kind: 'transformation',
+          title: 'Transformation canvas',
+        },
+        canExportProjectSnapshot: true,
+        canImportProjectSnapshot: true,
+        onExportProjectSnapshot: () => undefined,
+        onImportProjectSnapshotFile: () => undefined,
+      },
+    });
+
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    const topBar = container.querySelector('[data-slot="shell-top-bar"]');
+    const activeCanvasIdentity = topBar?.querySelector(
+      '[data-slot="shell-active-canvas-identity"]'
+    );
+
+    expect(activeCanvasIdentity).not.toBeNull();
+    expect(activeCanvasIdentity?.textContent).toContain('Transformation canvas');
+    expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('transformation');
+    expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('transformation-canvas');
+    expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
+    expect(topBar?.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
+  });
 
   it('exposes workspace navigation when focus mode hides the global route rail', async () => {
     useUiLayoutStore.setState({ focusMode: true });

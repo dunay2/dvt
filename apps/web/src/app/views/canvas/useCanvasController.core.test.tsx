@@ -1,6 +1,7 @@
 import React, { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import {
   buildRemoteDraftRecord,
   createUnrenderedHarness,
@@ -222,6 +223,47 @@ describe('useCanvasController core', () => {
         canEditEdges: false,
       })
     );
+  });
+
+  it('promotes a saved first canvas from the session baseline before the draft query publishes it', async () => {
+    harness.cleanup();
+    harness = await createRenderedHarness();
+    harness.state.queryClient.setQueryData = vi.fn();
+    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(async () =>
+      buildDraftSaveSavedResponse(
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        },
+        { revision: 'rev-created-canvas' }
+      )
+    );
+
+    await act(async () => {
+      await harness.getLatestResult()?.handleCreateCanvasDocument({
+        kind: 'transformation',
+        title: 'Transformation canvas',
+      });
+    });
+    await harness.renderProbe();
+
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).toHaveBeenCalled();
+    expect(harness.getLatestResult()?.canvasDocument).toEqual({
+      kind: 'transformation',
+      title: 'Transformation canvas',
+    });
+    expect(harness.getLatestResult()?.activeCanvasId).toBe('transformation-canvas');
+    expect(harness.getLatestResult()?.canvasDocuments).toEqual([
+      {
+        id: 'transformation-canvas',
+        kind: 'transformation',
+        title: 'Transformation canvas',
+      },
+    ]);
+    expect(harness.getLatestResult()?.canCreateCanvasDocument).toBe(false);
   });
 
   it('keeps first-canvas creation available from draft persistence when graph edits are denied', async () => {

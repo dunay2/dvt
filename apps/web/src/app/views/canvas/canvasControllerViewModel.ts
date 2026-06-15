@@ -57,6 +57,21 @@ function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime
   return graphError instanceof Error ? graphError.message : null;
 }
 
+function resolveRouteDraftRecord({
+  draftReadModel,
+  draftSession,
+}: Pick<CanvasAuthoringRuntime, 'draftReadModel' | 'draftSession'>) {
+  if (draftReadModel?.record != null) {
+    return draftReadModel.record;
+  }
+
+  if (draftReadModel?.accessMode === 'forbidden' || draftReadModel?.formatError != null) {
+    return null;
+  }
+
+  return draftSession.baseline.record;
+}
+
 function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
     environment: { dataSourceMode, capabilities, store },
@@ -66,11 +81,14 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
       graphModel,
       visibleScope,
       draftReadModel,
+      draftSession,
       canCreateCanvasDocument,
     },
     overlayModel,
     readModel: { nodesWithImpact, inspectorNode },
   } = args;
+  const routeDraftRecord = resolveRouteDraftRecord({ draftReadModel, draftSession });
+  const routeDraft = routeDraftRecord?.draft ?? null;
 
   return {
     dataSourceMode,
@@ -94,11 +112,11 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     registeredPlugins: getRegisteredPluginIds(capabilities),
     runtimeCapabilities: capabilities,
     availableCanvasKinds: getAllCanvasKinds(capabilities),
-    canvasDocument: draftReadModel?.record?.draft.canvas ?? null,
-    canvasDocuments: listProjectCanvasDocuments(draftReadModel?.record?.draft ?? null),
-    activeCanvasId: resolveActiveProjectCanvasId(draftReadModel?.record?.draft ?? null),
+    canvasDocument: routeDraft?.canvas ?? null,
+    canvasDocuments: listProjectCanvasDocuments(routeDraft),
+    activeCanvasId: resolveActiveProjectCanvasId(routeDraft),
     executionEnvironmentOptions: args.environment.workspaceBootstrapConfig.environmentOptions,
-    canCreateCanvasDocument,
+    canCreateCanvasDocument: canCreateCanvasDocument && routeDraftRecord == null,
     userPermissions: {
       ...store.userPermissions,
       canPlan: runtimePolicy.commands.canPlan,

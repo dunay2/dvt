@@ -13,6 +13,10 @@ import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuCo
 
 type CanvasWorkspaceMenuContributionRegistrarProps = CanvasWorkspaceMenuContribution;
 
+function resolveCanvasKindLabel(kind: string): string {
+  return kind === 'dbt' ? 'dbt' : 'Transformation';
+}
+
 export function CanvasWorkspaceMenuContributionRegistrar(
   contribution: CanvasWorkspaceMenuContributionRegistrarProps
 ): null {
@@ -77,5 +81,32 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
         }}
       />
     </>
+  );
+}
+
+export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
+  const activeCanvas = useCanvasWorkspaceMenuContributionStore(
+    (state) => state.contribution?.activeCanvas ?? null
+  );
+
+  if (activeCanvas == null) {
+    return null;
+  }
+
+  return (
+    <div
+      data-slot="shell-active-canvas-identity"
+      data-canvas-id={activeCanvas.id}
+      data-kind={activeCanvas.kind}
+      className="flex min-w-0 max-w-[24rem] items-center gap-2 rounded-sm border border-[color:var(--border-muted)] bg-[var(--surface-panel-subtle)] px-2.5 py-1 text-xs"
+      aria-label={`Active canvas: ${activeCanvas.title}`}
+    >
+      <span className="truncate font-semibold text-[color:var(--text-primary)]">
+        {activeCanvas.title}
+      </span>
+      <span className="shrink-0 text-[color:var(--text-muted)]">
+        {resolveCanvasKindLabel(activeCanvas.kind)}
+      </span>
+    </div>
   );
 }
