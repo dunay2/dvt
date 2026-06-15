@@ -1,7 +1,12 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import DbtNodeComponentSource from './DbtNodeComponent.tsx?raw';
 import CanvasNodeMapperSource from '../../views/canvas/canvasNodeMapper.ts?raw';
+
+const CANVAS_NODE_SHELL_PATH = resolve(import.meta.dirname, 'CanvasNodeShell.tsx');
 
 describe('DbtNodeComponent architecture', () => {
   it('keeps the whole node card as the React Flow drag surface', () => {
@@ -29,5 +34,20 @@ describe('DbtNodeComponent architecture', () => {
   it('renders node context-menu actions from the governed read model', () => {
     expect(DbtNodeComponentSource).toContain('buildCanvasNodeContextMenuModel');
     expect(DbtNodeComponentSource).toContain('CanvasNodeContextMenuActionId');
+  });
+
+  it('delegates React Flow shell markup to the shared CanvasNodeShell template', () => {
+    expect(existsSync(CANVAS_NODE_SHELL_PATH)).toBe(true);
+    const canvasNodeShellSource = readFileSync(CANVAS_NODE_SHELL_PATH, 'utf8');
+
+    expect(DbtNodeComponentSource).toContain('CanvasNodeShell');
+    expect(DbtNodeComponentSource).not.toContain('Handle,');
+    expect(DbtNodeComponentSource).not.toContain('position={Position.');
+    expect(DbtNodeComponentSource).not.toContain('ContextMenuTrigger');
+    expect(DbtNodeComponentSource).not.toContain('ContextMenuContent');
+
+    expect(canvasNodeShellSource).toContain("from '@xyflow/react'");
+    expect(canvasNodeShellSource).toContain('ContextMenuTrigger');
+    expect(canvasNodeShellSource).toContain('ContextMenuContent');
   });
 });
