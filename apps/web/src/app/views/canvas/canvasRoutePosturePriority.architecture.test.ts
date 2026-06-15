@@ -61,6 +61,7 @@ describe('canvas route posture priority architecture', () => {
     const toolbarSource = readAppSource('CanvasToolbar.tsx');
     const primaryControlsSource = readAppSource('CanvasToolbarPrimaryControls.tsx');
     const draftStatusSource = readAppSource('CanvasToolbarDraftStatus.tsx');
+    const draftSaveStatusSource = readAppSource('CanvasDraftSaveStatus.tsx');
     const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md'
@@ -78,13 +79,17 @@ describe('canvas route posture priority architecture', () => {
     for (const source of [
       toolbarSource,
       primaryControlsSource,
-      draftStatusSource,
+      draftSaveStatusSource,
       tabStripTemplateSource,
     ]) {
       expect(source).toContain("from './canvasChromeTokens'");
       expect(source).not.toMatch(/\b(?:slate|gray|zinc)-\d{2,3}\b/);
       expect(source).not.toMatch(/\b(?:rose|amber|emerald)-\d{2,3}\b/);
     }
+
+    expect(draftStatusSource).toContain("from './CanvasDraftSaveStatus'");
+    expect(draftStatusSource).not.toMatch(/\b(?:slate|gray|zinc)-\d{2,3}\b/);
+    expect(draftStatusSource).not.toMatch(/\b(?:rose|amber|emerald)-\d{2,3}\b/);
 
     for (const expected of [
       '## Public API',

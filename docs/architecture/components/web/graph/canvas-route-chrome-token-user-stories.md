@@ -28,7 +28,9 @@ danger color classes in route components.
 
 Acceptance:
 
-- `CanvasToolbarDraftStatus` uses `resolveCanvasDraftStatusClassName`.
+- `CanvasDraftSaveStatus` uses `resolveCanvasDraftStatusClassName`.
+- `CanvasToolbarDraftStatus` delegates draft-status rendering to
+  `CanvasDraftSaveStatus`.
 - `canvasToolbarViewModel` uses `resolveCanvasWorkflowStatusClassName`.
 
 ## US-F24-CANVAS-CHROME-03: Keep Tab Strip Chrome Separate From Canvas Policy
@@ -45,8 +47,8 @@ Acceptance:
 
 ## Scenario Coverage Matrix
 
-| Story                     | Surface                                              | Guard                                             |
-| ------------------------- | ---------------------------------------------------- | ------------------------------------------------- |
-| `US-F24-CANVAS-CHROME-01` | `CanvasToolbar`, `CanvasToolbarPrimaryControls`      | `canvasRoutePosturePriority.architecture.test.ts` |
-| `US-F24-CANVAS-CHROME-02` | `CanvasToolbarDraftStatus`, `canvasToolbarViewModel` | `canvasRoutePosturePriority.architecture.test.ts` |
-| `US-F24-CANVAS-CHROME-03` | `CanvasPlaygroundTabStrip.templates.tsx`             | `canvasRoutePosturePriority.architecture.test.ts` |
+| Story                     | Surface                                                                       | Guard                                             |
+| ------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------- |
+| `US-F24-CANVAS-CHROME-01` | `CanvasToolbar`, `CanvasToolbarPrimaryControls`                               | `canvasRoutePosturePriority.architecture.test.ts` |
+| `US-F24-CANVAS-CHROME-02` | `CanvasToolbarDraftStatus`, `CanvasDraftSaveStatus`, `canvasToolbarViewModel` | `canvasRoutePosturePriority.architecture.test.ts` |
+| `US-F24-CANVAS-CHROME-03` | `CanvasPlaygroundTabStrip.templates.tsx`                                      | `canvasRoutePosturePriority.architecture.test.ts` |
