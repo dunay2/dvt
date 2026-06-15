@@ -46,6 +46,7 @@ Read the component in this order:
 6. `canvasToolbarViewModel.ts`
    toolbar workflow posture over canonical route truth
 7. `CanvasToolbarDraftStatus.tsx`
+8. `CanvasDraftSaveStatus.tsx`
    draft-status rendering over route-approved affordances
 
 If a change does not fit one of those concerns, it probably belongs in the
@@ -94,7 +95,8 @@ Rendering adapters consume the component, but they do not own the semantic API.
 | `canvasCenterSurfaceTransport.tsx` | draft transport failure rendering before workbench states    | consumer only           |
 | `CanvasRecoveryBanner.tsx`         | recovery-banner rendering from canonical route posture       | consumer only           |
 | `canvasToolbarViewModel.ts`        | toolbar workflow-status projection from route posture        | consumer only           |
-| `CanvasToolbarDraftStatus.tsx`     | draft-status rendering from route-approved affordance policy | consumer only           |
+| `CanvasToolbarDraftStatus.tsx`     | draft-status wrapper from route-approved affordance policy   | consumer only           |
+| `CanvasDraftSaveStatus.tsx`        | draft-status rendering from route-approved affordance policy | token consumer          |
 
 <!-- markdownlint-enable MD060 -->
 

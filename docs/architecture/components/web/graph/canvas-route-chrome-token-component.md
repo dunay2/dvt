@@ -58,7 +58,9 @@ stateDiagram-v2
 - `CanvasToolbar` uses toolbar and separator chrome.
 - `CanvasToolbarPrimaryControls` uses badge, separator, project menu, and
   command classes.
-- `CanvasToolbarDraftStatus` resolves draft status tone through token helpers.
+- `CanvasDraftSaveStatus` resolves draft status tone through token helpers.
+- `CanvasToolbarDraftStatus` delegates draft-status rendering to
+  `CanvasDraftSaveStatus`.
 - `CanvasPlaygroundTabStrip.templates.tsx` uses shared replacement and
   tab-kind token classes.
 
@@ -71,7 +73,8 @@ flowchart TB
   Toolbar["CanvasToolbar.tsx"]
   Controls["CanvasToolbarPrimaryControls.tsx"]
   ProjectMenu["Project snapshot menu"]
-  Draft["CanvasToolbarDraftStatus.tsx"]
+  DraftWrapper["CanvasToolbarDraftStatus.tsx"]
+  Draft["CanvasDraftSaveStatus.tsx"]
   Tabs["CanvasPlaygroundTabStrip.templates.tsx"]
   Guard["canvasRoutePosturePriority.architecture.test.ts"]
 
@@ -79,11 +82,13 @@ flowchart TB
   Tokens --> Toolbar
   Tokens --> Controls
   Controls --> ProjectMenu
+  DraftWrapper --> Draft
   Tokens --> Draft
   Tokens --> Tabs
   Guard --> Tokens
   Guard --> Toolbar
   Guard --> Controls
+  Guard --> DraftWrapper
   Guard --> Draft
   Guard --> Tabs
 ```

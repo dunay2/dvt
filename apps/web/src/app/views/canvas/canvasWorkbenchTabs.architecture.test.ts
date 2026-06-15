@@ -323,10 +323,11 @@ describe('Canvas workbench tabs architecture', () => {
     expect(tabsTestSource).toContain('createCanvasGraphWorkbenchTab');
     expect(tabsTestSource).not.toContain('createGraphCanvasWorkbenchTab');
     expect(routeSource).toContain('buildCanvasShellProps');
-    expect(routeSource).toContain('params.workbenchTab != null');
+    expect(routeSource).toContain('if (params.workbenchTab != null');
     expect(routeSource).toContain('<Navigate to="/canvas" replace />');
     expect(routeSource).not.toContain("activeWorkbenchTab?.scope === 'workspace'");
     expect(routeSource).not.toContain('shouldReplaceCenterSurfaceWithWorkbenchTab');
+    expect(routeSource).not.toContain('getCanvasWorkbenchTabViews');
     expect(routeSource).toMatch(
       /<CanvasShell\b[\s\S]*\{\.\.\.shellProps\}[\s\S]*warehouseSourceImport=\{warehouseSourceImport\}[\s\S]*\/>/
     );

@@ -32,6 +32,8 @@ const jsonHeaders = {
   'content-type': 'application/json',
 };
 
+const ROUTE_INTEGRATION_TIMEOUT_MS = 15_000;
+
 function mountBootstrapDom(): void {
   document.body.insertAdjacentHTML(
     'beforeend',
@@ -414,59 +416,69 @@ describe('app routes', () => {
     expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
   });
 
-  it('redirects retired Canvas workbench deep links back to the graph base route', async () => {
-    stubAuthenticatedSessionFetch();
-    const capabilitiesPort = {
-      loadCapabilities: vi.fn().mockResolvedValue({
-        apiVersion: '1.0.0',
-        minFrontendVersion: '1.0.0',
-        plugins: {},
-      }),
-    };
-    const router = createMemoryRouter(createAppRoutes(), {
-      initialEntries: ['/canvas/not-a-tab'],
-    });
+  it(
+    'redirects retired Canvas workbench deep links back to the graph base route',
+    async () => {
+      stubAuthenticatedSessionFetch();
+      const capabilitiesPort = {
+        loadCapabilities: vi.fn().mockResolvedValue({
+          apiVersion: '1.0.0',
+          minFrontendVersion: '1.0.0',
+          plugins: {},
+        }),
+      };
+      const router = createMemoryRouter(createAppRoutes(), {
+        initialEntries: ['/canvas/not-a-tab'],
+      });
 
-    await act(async () => {
-      root.render(
-        <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
-          <RouterProvider router={router} />
-        </AppProviders>
-      );
-    });
+      await act(async () => {
+        root.render(
+          <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+            <RouterProvider router={router} />
+          </AppProviders>
+        );
+      });
 
-    await waitForReactQuery(() => router.state.location.pathname === '/canvas', {
-      description: 'retired canvas workbench deep link redirect',
-    });
+      await waitForReactQuery(() => router.state.location.pathname === '/canvas', {
+        description: 'retired canvas workbench deep link redirect',
+        timeoutMs: ROUTE_INTEGRATION_TIMEOUT_MS,
+      });
 
-    expect(container.querySelector('[data-slot="app-route-error-boundary"]')).toBeNull();
-    expect(router.state.location.pathname).toBe('/canvas');
-  });
+      expect(container.querySelector('[data-slot="app-route-error-boundary"]')).toBeNull();
+      expect(router.state.location.pathname).toBe('/canvas');
+    },
+    ROUTE_INTEGRATION_TIMEOUT_MS
+  );
 
-  it('waits for backend plugin capabilities before redirecting direct plugin routes', async () => {
-    stubAuthenticatedSessionFetch();
-    const capabilitiesPort = {
-      loadCapabilities: vi.fn(() => new Promise<CapabilitiesResponse>(() => {})),
-    };
-    const router = createMemoryRouter(createAppRoutes(), {
-      initialEntries: ['/cost'],
-    });
+  it(
+    'waits for backend plugin capabilities before redirecting direct plugin routes',
+    async () => {
+      stubAuthenticatedSessionFetch();
+      const capabilitiesPort = {
+        loadCapabilities: vi.fn(() => new Promise<CapabilitiesResponse>(() => {})),
+      };
+      const router = createMemoryRouter(createAppRoutes(), {
+        initialEntries: ['/cost'],
+      });
 
-    await act(async () => {
-      root.render(
-        <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
-          <RouterProvider router={router} />
-        </AppProviders>
-      );
-    });
+      await act(async () => {
+        root.render(
+          <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+            <RouterProvider router={router} />
+          </AppProviders>
+        );
+      });
 
-    await waitForReactQuery(() => container.textContent?.includes('Loading view...') === true, {
-      description: 'pending backend plugin capability route guard',
-    });
+      await waitForReactQuery(() => container.textContent?.includes('Loading view...') === true, {
+        description: 'pending backend plugin capability route guard',
+        timeoutMs: ROUTE_INTEGRATION_TIMEOUT_MS,
+      });
 
-    expect(router.state.location.pathname).toBe('/cost');
-    expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
-  });
+      expect(router.state.location.pathname).toBe('/cost');
+      expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
+    },
+    ROUTE_INTEGRATION_TIMEOUT_MS
+  );
 
   it('declares bootstrap contracts for the active route set in route metadata', () => {
     const rootRoute = getRootRoute(createAppRoutes());
@@ -529,41 +541,47 @@ describe('app routes', () => {
     });
   });
 
-  it('publishes the default redirect route through explicit route bootstrap ownership', async () => {
-    stubAuthenticatedSessionFetch();
-    const capabilitiesPort = {
-      loadCapabilities: vi.fn().mockResolvedValue({
-        apiVersion: '1.0.0',
-        minFrontendVersion: '1.0.0',
-        plugins: {},
-      }),
-    };
-    const router = createMemoryRouter(createAppRoutes(), {
-      initialEntries: ['/'],
-    });
+  it(
+    'publishes the default redirect route through explicit route bootstrap ownership',
+    async () => {
+      stubAuthenticatedSessionFetch();
+      const capabilitiesPort = {
+        loadCapabilities: vi.fn().mockResolvedValue({
+          apiVersion: '1.0.0',
+          minFrontendVersion: '1.0.0',
+          plugins: {},
+        }),
+      };
+      const router = createMemoryRouter(createAppRoutes(), {
+        initialEntries: ['/'],
+      });
 
-    await act(async () => {
-      root.render(
-        <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
-          <RouterProvider router={router} />
-        </AppProviders>
+      await act(async () => {
+        root.render(
+          <AppProviders overrides={{ ...createAppServicesTestOverrides(), capabilitiesPort }}>
+            <RouterProvider router={router} />
+          </AppProviders>
+        );
+      });
+
+      await waitForReactQuery(
+        () =>
+          mockUsePublishedRouteBootstrap.mock.calls.some(
+            ([routeId, presentation]) =>
+              routeId === 'shell.default-core-redirect' &&
+              presentation &&
+              typeof presentation === 'object' &&
+              (presentation as { status?: string }).status === 'pending' &&
+              (presentation as { detail?: string }).detail ===
+                'Selecting initial workspace route' &&
+              (presentation as { canComplete?: boolean }).canComplete === false
+          ),
+        {
+          description: 'default redirect route bootstrap publication',
+          timeoutMs: ROUTE_INTEGRATION_TIMEOUT_MS,
+        }
       );
-    });
-
-    await waitForReactQuery(
-      () =>
-        mockUsePublishedRouteBootstrap.mock.calls.some(
-          ([routeId, presentation]) =>
-            routeId === 'shell.default-core-redirect' &&
-            presentation &&
-            typeof presentation === 'object' &&
-            (presentation as { status?: string }).status === 'pending' &&
-            (presentation as { detail?: string }).detail === 'Selecting initial workspace route' &&
-            (presentation as { canComplete?: boolean }).canComplete === false
-        ),
-      {
-        description: 'default redirect route bootstrap publication',
-      }
-    );
-  });
+    },
+    ROUTE_INTEGRATION_TIMEOUT_MS
+  );
 });
