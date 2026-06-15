@@ -2,6 +2,7 @@
 import { CanvasDraftSaveStatus } from './CanvasDraftSaveStatus';
 import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
 import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
+import { canvasViewCopy } from './copy';
 
 type CanvasGraphStatusOverlayProps = {
   activeCanvas: ProjectCanvasDocument | null;
@@ -12,6 +13,7 @@ type CanvasGraphStatusOverlayProps = {
 function shouldRenderDraftStatusOverlay(draftToolbarState: CanvasDraftToolbarState): boolean {
   return (
     draftToolbarState.showReloadAction ||
+    draftToolbarState.label === canvasViewCopy.savingDraftLabel ||
     draftToolbarState.tone === 'danger' ||
     draftToolbarState.tone === 'warning'
   );

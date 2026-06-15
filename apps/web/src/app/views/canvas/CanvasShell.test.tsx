@@ -471,6 +471,38 @@ describe('CanvasShell', () => {
     expect(draftStatus?.textContent).toContain(canvasViewCopy.draftSaveFailedLabel);
   });
 
+  it('keeps pending autosave status visible on the graph surface', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            panels: {
+              activeCanvas: {
+                id: 'sales-canvas',
+                title: 'Sales canvas',
+                kind: 'dbt',
+                environmentId: 'dev',
+              },
+            },
+            toolbar: {
+              draftToolbarState: {
+                label: canvasViewCopy.savingDraftLabel,
+                tone: 'neutral',
+                showReloadAction: false,
+              },
+            },
+          })}
+        />
+      );
+    });
+
+    const draftStatus = container.querySelector('[data-slot="canvas-draft-save-status"]');
+
+    expect(container.querySelector('[data-slot="canvas-active-canvas-identity"]')).toBeNull();
+    expect(draftStatus).not.toBeNull();
+    expect(draftStatus?.textContent).toContain(canvasViewCopy.savingDraftLabel);
+  });
+
   it('keeps the graph workbench at a stable minimum width instead of crushing panels on narrow viewports', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);
