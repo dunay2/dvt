@@ -142,5 +142,8 @@ describe('Canvas workbench screen composition', () => {
 
     cy.contains('button', 'Canvas de transformacion').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('[data-slot="canvas-active-canvas-identity"]').should('not.exist');
+    cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+    cy.contains('Borrador sincronizado').should('not.exist');
   });
 });

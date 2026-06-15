@@ -413,7 +413,32 @@ describe('CanvasShell', () => {
     ]);
   });
 
-  it('renders active canvas identity and draft status as graph overlays instead of fixed chrome', async () => {
+  it('keeps neutral canvas identity and draft status out of the graph surface', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            panels: {
+              activeCanvas: {
+                id: 'sales-canvas',
+                title: 'Sales canvas',
+                kind: 'dbt',
+                environmentId: 'dev',
+              },
+            },
+          })}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="canvas-workbench-chrome"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-active-canvas-identity"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-draft-save-status"]')).toBeNull();
+    expect(container.textContent).not.toContain('Sales canvas');
+    expect(container.textContent).not.toContain(canvasViewCopy.draftSyncedLabel);
+  });
+
+  it('renders actionable draft recovery status as a graph overlay', async () => {
     await act(async () => {
       root.render(
         <CanvasShell
@@ -439,13 +464,43 @@ describe('CanvasShell', () => {
     });
 
     expect(container.querySelector('[data-slot="canvas-workbench-chrome"]')).toBeNull();
-    const identity = container.querySelector('[data-slot="canvas-active-canvas-identity"]');
     const draftStatus = container.querySelector('[data-slot="canvas-draft-save-status"]');
 
-    expect(identity).not.toBeNull();
-    expect(identity?.textContent).toContain('Sales canvas');
+    expect(container.querySelector('[data-slot="canvas-active-canvas-identity"]')).toBeNull();
     expect(draftStatus).not.toBeNull();
     expect(draftStatus?.textContent).toContain(canvasViewCopy.draftSaveFailedLabel);
+  });
+
+  it('keeps pending autosave status visible on the graph surface', async () => {
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            panels: {
+              activeCanvas: {
+                id: 'sales-canvas',
+                title: 'Sales canvas',
+                kind: 'dbt',
+                environmentId: 'dev',
+              },
+            },
+            toolbar: {
+              draftToolbarState: {
+                label: canvasViewCopy.savingDraftLabel,
+                tone: 'neutral',
+                showReloadAction: false,
+              },
+            },
+          })}
+        />
+      );
+    });
+
+    const draftStatus = container.querySelector('[data-slot="canvas-draft-save-status"]');
+
+    expect(container.querySelector('[data-slot="canvas-active-canvas-identity"]')).toBeNull();
+    expect(draftStatus).not.toBeNull();
+    expect(draftStatus?.textContent).toContain(canvasViewCopy.savingDraftLabel);
   });
 
   it('keeps the graph workbench at a stable minimum width instead of crushing panels on narrow viewports', async () => {
