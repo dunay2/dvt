@@ -46,6 +46,7 @@ test('buildVerifyChangedPlan adds planning DB validation for planning query-stor
   ]);
 
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:integrity:check').length, 1);
   assert.equal(
     labels.filter((label) => label === 'node --test scripts/planning-db-query.test.cjs').length,
     1
@@ -70,6 +71,7 @@ test('buildVerifyChangedPlan routes migration-only changes to the migration suit
   ]);
 
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:integrity:check').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });

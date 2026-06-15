@@ -1038,7 +1038,7 @@ units:
       - apps/api/src/routes/**
     childrenRequired: false
     dddOwner: ENTRY
-    cqRails: ApiOperationalReadinessQuery
+    cqRails: OperationalReadinessQuery
     governance:
       - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md

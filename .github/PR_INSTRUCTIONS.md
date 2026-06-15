@@ -86,6 +86,9 @@ Before creating PR, verify:
 Before creating or updating a PR, validate description length locally:
 
 ```bash
+# Validate the PR title before gh pr create.
+pnpm pr:validate-title "docs(docs): Subject"
+
 # Replace BODY.md with your PR body file (must be >= 50 chars after trim)
 node -e "const fs=require('fs');const b=fs.readFileSync('.github/PR_BODY.md','utf8').trim();if(b.length<50){console.error('PR body too short:',b.length);process.exit(1)}console.log('PR body OK:',b.length)"
 ```

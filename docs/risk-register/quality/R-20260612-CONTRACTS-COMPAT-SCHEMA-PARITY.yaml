@@ -1,0 +1,27 @@
+---
+id: R-20260612-CONTRACTS-COMPAT-SCHEMA-PARITY
+title: Packaged compatibility schema can drift from canonical root compatibility matrix
+status: Open
+date: 2026-06-12
+owners:
+  - packages/@dvt/contracts
+severity: Medium
+probability: Low
+context: >
+  The repository keeps the canonical ExecutionPlan compatibility matrix under contracts/compat and
+  also ships a packaged schema copy under @dvt/contracts. The packaged copy previously allowed a
+  prefixed version literal while the canonical matrix and runtime adapter compatibility use
+  major.minor literals.
+risk: >
+  A consumer or future maintainer could treat the packaged schema as an independent contract and
+  reintroduce a second compatibility vocabulary, allowing v-prefixed versions to appear valid
+  outside the canonical matrix.
+mitigations:
+  - 'Keep `packages/@dvt/contracts/compat/plan-compat.schema.json` byte-level equivalent in shape to
+    `contracts/compat/plan-compat.schema.json`.'
+  - 'Run `node --test tools/ci/contracts-compat-schema-parity.test.mjs` when compatibility schema
+    surfaces change.'
+  - 'Keep `packages/test/matrix-alignment.test.ts` validating the canonical root matrix against the
+    root schema.'
+review_after: 2026-07-12
+---

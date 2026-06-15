@@ -139,6 +139,145 @@ test('parseArgs builds architecture component and relation record commands', () 
   assert.equal(relationCommand.relationId, 'REL-ENGINE-USES-STATE-STORE');
   assert.equal(relationCommand.sourceComponentId, 'SYS-RUNTIME-ENGINE-CORE');
   assert.equal(relationCommand.targetComponentId, 'SYS-RUNTIME-STATE-STORE-PORT');
+
+  const approvedRelationCommand = parseArgs([
+    'architecture-relation',
+    'record',
+    '--design',
+    'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+    '--relation',
+    'REL-ENGINE-USES-STATE-STORE',
+    '--source',
+    'SYS-RUNTIME-ENGINE-CORE',
+    '--target',
+    'SYS-RUNTIME-STATE-STORE-PORT',
+    '--type',
+    'depends_on',
+    '--direction',
+    'outbound',
+    '--sync-async',
+    'sync',
+    '--failure-mode',
+    'Run start fails closed when state-store is unavailable.',
+    '--authorization-scope',
+    'repo-local architecture operation',
+    '--status',
+    'approved',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(approvedRelationCommand.status, 'approved');
+});
+
+test('parseArgs accepts architecture component lifecycle statuses supported by the table', () => {
+  const command = parseArgs([
+    'architecture-component',
+    'record',
+    '--design',
+    'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+    '--component',
+    'SYS-WEB-DOCS',
+    '--name',
+    'Web local documentation',
+    '--kind',
+    'module',
+    '--layer',
+    'ui',
+    '--owner',
+    'Frontend',
+    '--repo-path',
+    'apps/web/docs',
+    '--public-contract',
+    'Deprecated local documentation path',
+    '--status',
+    'deprecated',
+    '--responsibility',
+    'RESP-WEB-DOCS|Retire stale web docs authority.|Filesystem path was removed.|WebDocumentationArchive',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'architecture_component_record');
+  assert.equal(command.status, 'deprecated');
+});
+
+test('parseArgs builds an architecture test evidence record command', () => {
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-test',
+    '--design',
+    'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+    '--test',
+    'TEST-WEB-CANVAS-DRAFT-SAVE-STATUS',
+    '--component',
+    'SYS-WEB-CANVAS-DRAFT-SAVE-STATUS',
+    '--test-path',
+    'apps/web/src/app/views/canvas/canvasDraftToolbarState.test.ts',
+    '--test-kind',
+    'unit',
+    '--coverage-level',
+    'behavior',
+    '--required',
+    'true',
+    '--validation-command',
+    'pnpm --filter @dvt/web test -- canvasDraftToolbarState.test.ts',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'architecture_test_record');
+  assert.equal(command.testId, 'TEST-WEB-CANVAS-DRAFT-SAVE-STATUS');
+  assert.equal(command.componentId, 'SYS-WEB-CANVAS-DRAFT-SAVE-STATUS');
+  assert.equal(command.testKind, 'unit');
+  assert.equal(command.coverageLevel, 'behavior');
+  assert.equal(command.required, true);
+});
+
+test('parseArgs builds an architecture observability evidence record command', () => {
+  const command = parseArgs([
+    'architecture-evidence',
+    'record-observability',
+    '--design',
+    'DB-FIRST-ARCHITECTURE-COMPONENT-GRAPH-COMMAND-20260515',
+    '--observability',
+    'OBS-API-OPS-ROUTES-HEALTH-LOG',
+    '--component',
+    'SYS-API-OPS-ROUTES',
+    '--signal-name',
+    'GET /health request log',
+    '--signal-kind',
+    'log',
+    '--status',
+    'implemented',
+    '--required',
+    'true',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
+    '--source-content-sha256',
+    'e'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.equal(command.kind, 'architecture_observability_record');
+  assert.equal(command.observabilityId, 'OBS-API-OPS-ROUTES-HEALTH-LOG');
+  assert.equal(command.componentId, 'SYS-API-OPS-ROUTES');
+  assert.equal(command.signalKind, 'log');
+  assert.equal(command.status, 'implemented');
+  assert.equal(command.required, true);
 });
 
 test('parseArgs rejects relation record statuses that the relation table cannot store', () => {
