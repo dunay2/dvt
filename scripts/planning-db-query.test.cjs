@@ -22,6 +22,7 @@ const {
   buildArchitectureFitnessGapRows,
   buildArchitectureFitnessRows,
   buildGovernanceRefreshRunRows,
+  buildArchitectureIoRows,
   buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
   buildArchitectureTestRows,
@@ -491,7 +492,9 @@ test('buildComponentProfileRows groups component facts into operator sections', 
         io_kind: 'port',
         io_name: 'IWorkflowEngine',
         direction: 'inbound',
+        contract_id: 'CONTRACT-ENGINE',
         runtime: 'node',
+        metadata: { portKind: 'command' },
       },
       {
         io_id: 'IO-ENGINE-ADAPTER',
@@ -575,8 +578,8 @@ test('buildComponentProfileRows groups component facts into operator sections', 
     ],
     ['command', 'StartRun', 'SYS-RUNTIME-ENGINE-CORE', 'cq_rails'],
     ['query', 'GetRunStatus', 'SYS-RUNTIME-ENGINE-CORE', 'cq_rails'],
-    ['port', 'IO-ENGINE-PORT', 'IWorkflowEngine', 'inbound', 'node'],
-    ['adapter', 'IO-ENGINE-ADAPTER', 'TemporalProviderAdapter', 'outbound', 'node'],
+    ['port', 'IO-ENGINE-PORT', 'IWorkflowEngine', 'command', 'inbound', 'CONTRACT-ENGINE', 'node'],
+    ['adapter', 'IO-ENGINE-ADAPTER', 'TemporalProviderAdapter', 'adapter', 'outbound', '-', 'node'],
     [
       'architecture',
       'SYS-RUNTIME-ENGINE-CORE',
@@ -5795,6 +5798,51 @@ test('buildArchitecture rows expose Fowler-relevant authority columns', () => {
         'Architecture',
         'declared',
         75,
+      ],
+    ]
+  );
+
+  assert.deepEqual(
+    buildArchitectureIoRows([
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        io_id: 'PORT-ENGINE-START-RUN',
+        io_kind: 'port',
+        metadata: { portKind: 'command' },
+        io_name: 'StartRun',
+        direction: 'inbound',
+        contract_id: 'CONTRACT-ENGINE-START-RUN',
+        runtime: 'node',
+      },
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        io_id: 'ADAPTER-ENGINE-TEMPORAL',
+        io_kind: 'adapter',
+        io_name: 'TemporalProviderAdapter',
+        direction: 'outbound',
+        runtime: 'node',
+      },
+    ]),
+    [
+      [
+        'SYS-RUNTIME-ENGINE-CORE',
+        'PORT-ENGINE-START-RUN',
+        'port',
+        'command',
+        'StartRun',
+        'inbound',
+        'CONTRACT-ENGINE-START-RUN',
+        'node',
+      ],
+      [
+        'SYS-RUNTIME-ENGINE-CORE',
+        'ADAPTER-ENGINE-TEMPORAL',
+        'adapter',
+        'adapter',
+        'TemporalProviderAdapter',
+        'outbound',
+        '-',
+        'node',
       ],
     ]
   );
