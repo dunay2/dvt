@@ -200,6 +200,7 @@ function CanvasShellNodeWorkbenchOverlay({
         edges={panels.inspectorGraphEdges}
         activeRunId={panels.activeRunId}
         registeredPlugins={panels.registeredPlugins}
+        preferredTabId={panels.inspectorPreferredTabId}
         onHide={chromeCommands.onHideInspector}
         authoring={panels.inspectorAuthoring}
       />

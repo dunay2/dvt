@@ -28,6 +28,7 @@ import { CanvasNodeShell } from './CanvasNodeShell';
 import {
   buildCanvasNodeContextMenuModel,
   type CanvasNodeContextMenuActionId,
+  type CanvasNodeWorkbenchTabId,
 } from './canvasNodeContextMenuModel';
 
 // ---------------------------------------------------------------------------
@@ -60,7 +61,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph?: boolean;
   selectedForExecution?: boolean;
-  onInspectNode?: (nodeId: string) => void;
+  onInspectNode?: (nodeId: string, preferredTabId?: CanvasNodeWorkbenchTabId | null) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
@@ -233,9 +234,15 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
+    const action = contextMenuModel.actionGroups
+      .flatMap((group) => group.actions)
+      .find((candidate) => candidate.id === actionId);
+
     switch (actionId) {
       case 'inspect-node':
-        data.onInspectNode?.(id);
+      case 'inspect-inputs-outputs':
+      case 'inspect-tests':
+        data.onInspectNode?.(id, action?.workbenchTabId ?? null);
         return;
       case 'duplicate-node':
         data.onDuplicateNode?.(id);

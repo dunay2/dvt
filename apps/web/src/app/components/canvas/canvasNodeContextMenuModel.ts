@@ -19,6 +19,8 @@ export type CanvasNodeContextMenuActionId =
   | 'deselect-node-from-execution'
   | 'remove-node';
 
+export type CanvasNodeWorkbenchTabId = 'general' | 'inputs-outputs' | 'tests';
+
 export type CanvasNodeModelerActionId =
   | 'duplicate-node'
   | 'select-node-for-execution'
@@ -30,6 +32,7 @@ export type CanvasNodeContextMenuAction = Readonly<{
   label: string;
   intent: 'read' | 'command';
   disabled: boolean;
+  workbenchTabId?: CanvasNodeWorkbenchTabId;
   destructive?: boolean;
   disabledReason?: string;
 }>;
@@ -87,6 +90,7 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
     label: 'Inputs / Outputs',
     intent: 'read',
     disabled: true,
+    workbenchTabId: 'inputs-outputs',
     disabledReason: 'Inputs / Outputs workbench is not available for this node.',
   },
   tests: {
@@ -94,6 +98,7 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
     label: 'Tests',
     intent: 'read',
     disabled: true,
+    workbenchTabId: 'tests',
     disabledReason: 'Node test catalog is not available for this node.',
   },
   previewNode: {
@@ -118,6 +123,30 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
     disabledReason: 'Node lineage is not available for this node.',
   },
 } as const satisfies Record<string, CanvasNodeContextMenuAction>;
+
+function buildWorkbenchReadAction({
+  id,
+  label,
+  workbenchTabId,
+  canInspectNode,
+}: Readonly<{
+  id: Extract<
+    CanvasNodeContextMenuActionId,
+    'inspect-node' | 'inspect-inputs-outputs' | 'inspect-tests'
+  >;
+  label: string;
+  workbenchTabId: CanvasNodeWorkbenchTabId;
+  canInspectNode: boolean;
+}>): CanvasNodeContextMenuAction {
+  return {
+    id,
+    label,
+    intent: 'read',
+    disabled: !canInspectNode,
+    workbenchTabId,
+    ...(canInspectNode ? {} : { disabledReason: 'Inspector is unavailable for this node.' }),
+  };
+}
 
 export function buildCanvasNodeModelerActionModel({
   target,
@@ -208,15 +237,24 @@ export function buildCanvasNodeContextMenuModel({
       label: 'Configure',
       actions: [
         { ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql },
-        {
+        buildWorkbenchReadAction({
           id: 'inspect-node',
           label: 'Properties',
-          intent: 'read',
-          disabled: !canInspectNode,
-          ...(canInspectNode ? {} : { disabledReason: 'Inspector is unavailable for this node.' }),
-        },
-        { ...NODE_CONTEXT_MENU_BASE_ACTIONS.inputsOutputs },
-        { ...NODE_CONTEXT_MENU_BASE_ACTIONS.tests },
+          workbenchTabId: 'general',
+          canInspectNode,
+        }),
+        buildWorkbenchReadAction({
+          id: 'inspect-inputs-outputs',
+          label: 'Inputs / Outputs',
+          workbenchTabId: 'inputs-outputs',
+          canInspectNode,
+        }),
+        buildWorkbenchReadAction({
+          id: 'inspect-tests',
+          label: 'Tests',
+          workbenchTabId: 'tests',
+          canInspectNode,
+        }),
       ],
     },
     {

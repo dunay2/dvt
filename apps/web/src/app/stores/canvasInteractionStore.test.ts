@@ -17,6 +17,7 @@ describe('useCanvasInteractionStore', () => {
       columnLevelLineageEnabled: false,
       canvasLayouts: {},
       inspectorNodeId: null,
+      inspectorPreferredTabId: null,
     });
   });
 
@@ -54,5 +55,18 @@ describe('useCanvasInteractionStore', () => {
     const { useCanvasInteractionStore: freshStore } = await import('./canvasInteractionStore');
 
     expect(freshStore.getState()._hasHydrated).toBe(true);
+  });
+
+  it('keeps node workbench tab preference transient and clears it with inspector selection', () => {
+    useCanvasInteractionStore.getState().setInspectorNode('source-node', 'inputs-outputs');
+
+    expect(useCanvasInteractionStore.getState().inspectorNodeId).toBe('source-node');
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBe('inputs-outputs');
+
+    useCanvasInteractionStore.getState().setInspectorNode('model-node');
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
+
+    useCanvasInteractionStore.getState().setInspectorNode(null);
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
   });
 });

@@ -51,6 +51,8 @@ export function buildCanvasShellPanels({
     canDeleteActiveCanvas:
       userPermissions.canEditEdges && routePresentation.canvasDocuments.length > 1,
     inspectorNode: panelState.inspectorNode,
+    inspectorPreferredTabId:
+      panelState.inspectorNode == null ? null : panelState.inspectorPreferredTabId,
     inspectorGraphNodes: panelState.inspectorGraphNodes,
     inspectorGraphEdges: panelState.inspectorGraphEdges,
     inspectorAuthoring: {

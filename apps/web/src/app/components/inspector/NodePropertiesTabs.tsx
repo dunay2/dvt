@@ -131,19 +131,15 @@ export function NodePropertiesTabs({
             ) : null}
           </TabsTrigger>
         ))}
-        {panels.map((panel) => {
-          const Icon = panel.icon;
-          return (
-            <TabsTrigger
-              key={panel.id}
-              value={panel.id}
-              className={graphVisualClasses.contextPanelFlatTabTrigger}
-            >
-              <Icon className="mr-1 size-3" />
-              {resolveString(panel.label)}
-            </TabsTrigger>
-          );
-        })}
+        {panels.map((panel) => (
+          <TabsTrigger
+            key={panel.id}
+            value={panel.id}
+            className={graphVisualClasses.contextPanelFlatTabTrigger}
+          >
+            {resolveString(panel.label)}
+          </TabsTrigger>
+        ))}
       </TabsList>
 
       {model.sections.map((section) => (

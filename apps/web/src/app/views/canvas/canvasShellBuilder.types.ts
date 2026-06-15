@@ -57,6 +57,7 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
   panelState: Pick<
     CanvasRouteController,
     | 'inspectorNode'
+    | 'inspectorPreferredTabId'
     | 'inspectorNodeSelectedForExecution'
     | 'inspectorGraphNodes'
     | 'inspectorGraphEdges'

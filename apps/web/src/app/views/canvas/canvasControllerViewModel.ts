@@ -83,6 +83,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     focusMode: store.focusMode,
     inspectorPanelVisible: store.inspectorPanelVisible,
     inspectorNode,
+    inspectorPreferredTabId: store.inspectorPreferredTabId,
     inspectorNodeSelectedForExecution: inspectorNode
       ? store.selectedNodeIds.includes(inspectorNode.id)
       : false,

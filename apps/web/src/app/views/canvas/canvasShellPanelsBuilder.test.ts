@@ -26,6 +26,7 @@ function buildArgs(
   return {
     panelState: {
       inspectorNode: null,
+      inspectorPreferredTabId: null,
       inspectorNodeSelectedForExecution: false,
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
@@ -151,6 +152,34 @@ describe('buildCanvasShellPanels', () => {
       onToggleNodeSelection: handleToggleNodeSelection,
       onRemoveNode: handleRemoveNode,
     });
+  });
+
+  it('keeps node workbench tab preference only while an inspector node is active', () => {
+    const inspectorNode = buildInspectorNode();
+
+    expect(
+      buildCanvasShellPanels(
+        buildArgs({
+          panelState: {
+            ...buildArgs().panelState,
+            inspectorNode,
+            inspectorPreferredTabId: 'inputs-outputs',
+          },
+        })
+      ).inspectorPreferredTabId
+    ).toBe('inputs-outputs');
+
+    expect(
+      buildCanvasShellPanels(
+        buildArgs({
+          panelState: {
+            ...buildArgs().panelState,
+            inspectorNode: null,
+            inspectorPreferredTabId: 'inputs-outputs',
+          },
+        })
+      ).inspectorPreferredTabId
+    ).toBeNull();
   });
 
   it('keeps inspector execution selection available when graph mutation is blocked but planning is allowed', () => {

@@ -114,6 +114,8 @@ describe('nodePropertiesReadModel', () => {
       expect.arrayContaining([
         'general',
         'columns',
+        'inputs-outputs',
+        'tests',
         'keys',
         'indexes',
         'foreign-keys',
@@ -169,6 +171,14 @@ describe('nodePropertiesReadModel', () => {
     });
 
     expect(sectionById(model, 'code').code).toBe('select * from analytics.raw.orders');
+
+    expect(
+      tableRowById(sectionById(model, 'inputs-outputs'), 'output:edge-source-transform')?.cells
+    ).toMatchObject({
+      direction: 'Output',
+      node: 'Clean Orders',
+      relation: 'lineage',
+    });
   });
 
   it('keeps the expected table-modeler section vocabulary without requiring records', () => {
@@ -182,6 +192,8 @@ describe('nodePropertiesReadModel', () => {
       expect.arrayContaining([
         'general',
         'columns',
+        'inputs-outputs',
+        'tests',
         'keys',
         'indexes',
         'foreign-keys',
@@ -209,6 +221,38 @@ describe('nodePropertiesReadModel', () => {
     }
     expect(sectionById(model, 'keys').tableRows).toEqual([]);
     expect(sectionById(model, 'foreign-keys').tableRows).toEqual([]);
+    expect(sectionById(model, 'tests').emptyState).toMatch(/\S/);
+  });
+
+  it('projects dbt test semantics without fabricating unavailable metadata', () => {
+    const node: CanonicalNode = {
+      id: 'test-orders-order-id',
+      name: 'not_null_orders_order_id',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        testTargetModel: 'orders',
+        testTargetColumn: 'order_id',
+        severity: 'error',
+        testType: 'not_null',
+      },
+    };
+
+    expect(
+      tableRowById(
+        sectionById(buildNodePropertiesReadModel({ node, nodes: [node], edges: [] }), 'tests'),
+        `test:${node.id}`
+      )?.cells
+    ).toMatchObject({
+      name: 'not_null_orders_order_id',
+      type: 'not_null',
+      target: 'orders.order_id',
+      column: 'order_id',
+      severity: 'error',
+    });
   });
 
   it('summarizes graph relationships without reading renderer state', () => {
