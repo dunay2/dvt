@@ -45,6 +45,7 @@ interface CanvasInteractionState {
   canvasLayouts: Record<string, WorkspaceCanvasLayout>;
   inspectorNodeId: string | null;
   inspectorPreferredTabId: string | null;
+  inspectorPreferredTabRequestId: number;
 
   setSelectedNodes: (nodes: string[]) => void;
   toggleImpactOverlay: () => void;
@@ -102,6 +103,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
       canvasLayouts: {},
       inspectorNodeId: null,
       inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
 
       setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
       toggleImpactOverlay: () =>
@@ -138,10 +140,14 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
           };
         }),
       setInspectorNode: (nodeId, preferredTabId = null) =>
-        set({
+        set((state) => ({
           inspectorNodeId: nodeId,
           inspectorPreferredTabId: nodeId == null ? null : preferredTabId,
-        }),
+          inspectorPreferredTabRequestId:
+            nodeId != null && preferredTabId != null
+              ? state.inspectorPreferredTabRequestId + 1
+              : state.inspectorPreferredTabRequestId,
+        })),
     }),
     {
       name: 'dvt-web-canvas-interaction',

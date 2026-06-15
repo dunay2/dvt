@@ -41,6 +41,7 @@ type CanvasInspectorPanelProps = Readonly<{
   activeRunId: string | null;
   registeredPlugins?: ReadonlySet<string>;
   preferredTabId?: string | null;
+  preferredTabRequestId?: number;
   onHide: () => void;
   authoring: CanvasInspectorAuthoringContract;
   canvas?: CanvasInspectorCanvasContract | null;
@@ -53,6 +54,7 @@ export function CanvasInspectorPanel({
   activeRunId,
   registeredPlugins,
   preferredTabId = null,
+  preferredTabRequestId = 0,
   onHide,
   authoring,
   canvas,
@@ -78,6 +80,7 @@ export function CanvasInspectorPanel({
       activeRunId={activeRunId}
       registeredPlugins={registeredPlugins}
       preferredTabId={preferredTabId}
+      preferredTabRequestId={preferredTabRequestId}
       onHide={onHide}
       tagsEditor={tagsEditor}
       beforePanels={

@@ -53,6 +53,8 @@ export function buildCanvasShellPanels({
     inspectorNode: panelState.inspectorNode,
     inspectorPreferredTabId:
       panelState.inspectorNode == null ? null : panelState.inspectorPreferredTabId,
+    inspectorPreferredTabRequestId:
+      panelState.inspectorNode == null ? 0 : panelState.inspectorPreferredTabRequestId,
     inspectorGraphNodes: panelState.inspectorGraphNodes,
     inspectorGraphEdges: panelState.inspectorGraphEdges,
     inspectorAuthoring: {

@@ -27,6 +27,7 @@ interface InspectorPanelProps {
   activeRunId: string | null;
   registeredPlugins?: ReadonlySet<string>;
   preferredTabId?: string | null;
+  preferredTabRequestId?: number;
   panels?: readonly InspectorPanelContribution[];
   onHide: () => void;
   beforePanels?: ReactNode;
@@ -40,6 +41,7 @@ export default function InspectorPanel({
   activeRunId,
   registeredPlugins = new Set(),
   preferredTabId = null,
+  preferredTabRequestId = 0,
   panels: panelOverrides,
   onHide,
   beforePanels,
@@ -51,7 +53,9 @@ export default function InspectorPanel({
   const ctx: InspectorContext = { activeRunId, registeredPlugins };
   const panels = node ? (panelOverrides ?? getInspectorPanels(node, ctx)) : [];
   const preferredTabKey =
-    node != null && preferredTabId != null ? `${node.id}:${preferredTabId}` : null;
+    node != null && preferredTabId != null
+      ? `${node.id}:${preferredTabId}:${preferredTabRequestId}`
+      : null;
 
   useEffect(() => {
     if (preferredTabKey == null || preferredTabKey === appliedPreferredTabKey) {

@@ -27,6 +27,7 @@ function buildArgs(
     panelState: {
       inspectorNode: null,
       inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
       inspectorNodeSelectedForExecution: false,
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
@@ -164,10 +165,14 @@ describe('buildCanvasShellPanels', () => {
             ...buildArgs().panelState,
             inspectorNode,
             inspectorPreferredTabId: 'inputs-outputs',
+            inspectorPreferredTabRequestId: 3,
           },
         })
-      ).inspectorPreferredTabId
-    ).toBe('inputs-outputs');
+      )
+    ).toMatchObject({
+      inspectorPreferredTabId: 'inputs-outputs',
+      inspectorPreferredTabRequestId: 3,
+    });
 
     expect(
       buildCanvasShellPanels(
@@ -176,10 +181,14 @@ describe('buildCanvasShellPanels', () => {
             ...buildArgs().panelState,
             inspectorNode: null,
             inspectorPreferredTabId: 'inputs-outputs',
+            inspectorPreferredTabRequestId: 3,
           },
         })
-      ).inspectorPreferredTabId
-    ).toBeNull();
+      )
+    ).toMatchObject({
+      inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
+    });
   });
 
   it('keeps inspector execution selection available when graph mutation is blocked but planning is allowed', () => {

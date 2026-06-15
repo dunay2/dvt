@@ -60,6 +60,7 @@ export type CanvasShellPanels = {
   canDeleteActiveCanvas: boolean;
   inspectorNode: CanonicalNode | null;
   inspectorPreferredTabId: string | null;
+  inspectorPreferredTabRequestId: number;
   inspectorGraphNodes: readonly CanonicalNode[];
   inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;

@@ -18,6 +18,7 @@ describe('useCanvasInteractionStore', () => {
       canvasLayouts: {},
       inspectorNodeId: null,
       inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
     });
   });
 
@@ -62,9 +63,14 @@ describe('useCanvasInteractionStore', () => {
 
     expect(useCanvasInteractionStore.getState().inspectorNodeId).toBe('source-node');
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBe('inputs-outputs');
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(1);
+
+    useCanvasInteractionStore.getState().setInspectorNode('source-node', 'inputs-outputs');
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(2);
 
     useCanvasInteractionStore.getState().setInspectorNode('model-node');
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(2);
 
     useCanvasInteractionStore.getState().setInspectorNode(null);
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();

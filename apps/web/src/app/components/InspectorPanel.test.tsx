@@ -97,6 +97,58 @@ describe('InspectorPanel', () => {
     expect(container.textContent).toContain('lineage');
   });
 
+  it('reapplies a repeated tab request for the same node after the user changes tabs', () => {
+    act(() => {
+      root.render(
+        <InspectorPanel
+          node={sourceNode}
+          nodes={[sourceNode, modelNode]}
+          edges={graphEdges}
+          activeRunId={null}
+          preferredTabId="inputs-outputs"
+          preferredTabRequestId={1}
+          onHide={() => undefined}
+        />
+      );
+    });
+
+    expect(container.querySelector('[role="tab"][data-state="active"]')?.textContent).toContain(
+      'Inputs / Outputs'
+    );
+
+    const generalTab = Array.from(container.querySelectorAll('[role="tab"]')).find(
+      (tab) => tab.textContent === 'General'
+    );
+    expect(generalTab).toBeDefined();
+
+    act(() => {
+      (generalTab as HTMLButtonElement | undefined)?.focus();
+      generalTab?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Enter' }));
+    });
+
+    expect(container.querySelector('[role="tab"][data-state="active"]')?.textContent).toBe(
+      'General'
+    );
+
+    act(() => {
+      root.render(
+        <InspectorPanel
+          node={sourceNode}
+          nodes={[sourceNode, modelNode]}
+          edges={graphEdges}
+          activeRunId={null}
+          preferredTabId="inputs-outputs"
+          preferredTabRequestId={2}
+          onHide={() => undefined}
+        />
+      );
+    });
+
+    expect(container.querySelector('[role="tab"][data-state="active"]')?.textContent).toContain(
+      'Inputs / Outputs'
+    );
+  });
+
   it('keeps plugin panel tabs textual instead of rendering tab icons', () => {
     const pluginPanels: readonly InspectorPanelContribution[] = [
       {
