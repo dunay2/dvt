@@ -58,7 +58,18 @@ function isSourceImportCoveredNodeKind(registration: NodeKindRegistration): bool
   return registration.kind === 'dbt:source';
 }
 
-function formatCreateNodeActionLabel(registration: NodeKindRegistration): string {
+function isSourceNodeKind(registration: NodeKindRegistration): boolean {
+  return registration.kind.endsWith(':source');
+}
+
+function formatCreateNodeActionLabel(
+  registration: NodeKindRegistration,
+  sourceImportVisible: boolean
+): string {
+  if (sourceImportVisible && isSourceNodeKind(registration)) {
+    return 'Create source node';
+  }
+
   const label = registration.label.trim();
   if (label.length === 0) {
     return 'Add node';
@@ -75,8 +86,9 @@ export function buildCanvasContextMenuModel({
   authoringNodeKinds,
 }: BuildCanvasContextMenuModelArgs): CanvasContextMenuModel {
   const canvasActions: CanvasContextMenuCanvasAction[] = [];
+  const sourceImportVisible = target.kind === 'pane' && canMutateGraph && canOpenSourceImport;
   if (target.kind === 'pane') {
-    if (canMutateGraph && canOpenSourceImport) {
+    if (sourceImportVisible) {
       canvasActions.push({ action: 'open-source-import', label: 'Add source' });
     }
     if (canPreviewExecutionPlan) {
@@ -109,7 +121,7 @@ export function buildCanvasContextMenuModel({
         )
         .map((registration) => ({
           action: 'create-node',
-          label: formatCreateNodeActionLabel(registration),
+          label: formatCreateNodeActionLabel(registration, sourceImportVisible),
           registration,
         })),
     };

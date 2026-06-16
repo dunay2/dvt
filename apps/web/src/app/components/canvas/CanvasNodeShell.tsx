@@ -1,6 +1,6 @@
 /** Owned concern: render the React Flow node shell around a precomputed Canvas node body. */
 import { Handle, Position } from '@xyflow/react';
-import { Code2, Copy, GitBranch, MousePointer, Play, SearchCode, Trash2 } from 'lucide-react';
+import { Code2, Copy, GitBranch, Info, MousePointer, Play, SearchCode, Trash2 } from 'lucide-react';
 import { Fragment, type DragEventHandler, type ReactNode } from 'react';
 
 import {
@@ -30,6 +30,7 @@ type CanvasNodeShellProps = Readonly<{
 
 const CONTEXT_MENU_ACTION_ICONS: Record<CanvasNodeContextMenuActionId, typeof Code2> = {
   'edit-sql': Code2,
+  'inspect-node': Info,
   'preview-node': SearchCode,
   'run-from-node': Play,
   'show-lineage': GitBranch,

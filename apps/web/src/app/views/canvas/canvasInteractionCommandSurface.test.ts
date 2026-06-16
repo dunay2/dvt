@@ -66,7 +66,7 @@ describe('canvasInteractionCommandSurface', () => {
 
     expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
     expect(model.createNodeActions).toEqual([
-      { action: 'create-node', label: 'Add source', registration: sourceKind },
+      { action: 'create-node', label: 'Create source node', registration: sourceKind },
     ]);
   });
 

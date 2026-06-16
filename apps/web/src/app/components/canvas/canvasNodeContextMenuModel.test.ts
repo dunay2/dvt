@@ -48,6 +48,7 @@ describe('canvasNodeContextMenuModel', () => {
       target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },
       selectedForExecution: false,
       canMutateGraph: true,
+      canInspectNode: true,
       canDuplicateNode: true,
       canToggleNodeSelection: true,
       canRemoveNode: true,
@@ -56,6 +57,7 @@ describe('canvasNodeContextMenuModel', () => {
     expect(model.target.nodeId).toBe('source-orders');
     expect(actionIds(model)).toEqual([
       'edit-sql',
+      'inspect-node',
       'preview-node',
       'run-from-node',
       'select-node-for-execution',
@@ -63,7 +65,12 @@ describe('canvasNodeContextMenuModel', () => {
       'duplicate-node',
       'remove-node',
     ]);
-    expect(actionById(model, 'inspect-node')).toBeUndefined();
+    expect(actionById(model, 'inspect-node')).toMatchObject({
+      label: 'Properties',
+      intent: 'read',
+      disabled: false,
+      workbenchTabId: 'general',
+    });
     expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
     expect(actionById(model, 'inspect-tests')).toBeUndefined();
     expect(actionById(model, 'edit-sql')).toMatchObject({
@@ -104,18 +111,25 @@ describe('canvasNodeContextMenuModel', () => {
     );
   });
 
-  it('keeps command-only node actions when graph mutation is blocked', () => {
+  it('keeps properties inspection available when graph mutation is blocked', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
       canMutateGraph: false,
+      canInspectNode: true,
       canDuplicateNode: true,
       canToggleNodeSelection: true,
       canRemoveNode: true,
     });
 
-    expect(actionIds(model)).toEqual(['edit-sql', 'preview-node', 'run-from-node', 'show-lineage']);
-    expect(actionById(model, 'inspect-node')).toBeUndefined();
+    expect(actionIds(model)).toEqual([
+      'edit-sql',
+      'inspect-node',
+      'preview-node',
+      'run-from-node',
+      'show-lineage',
+    ]);
+    expect(actionById(model, 'inspect-node')).toMatchObject({ disabled: false });
     expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
     expect(actionById(model, 'inspect-tests')).toBeUndefined();
     expect(actionById(model, 'edit-sql')).toMatchObject({ disabled: true });
@@ -132,12 +146,19 @@ describe('canvasNodeContextMenuModel', () => {
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
       canMutateGraph: false,
+      canInspectNode: true,
       canDuplicateNode: true,
       canToggleNodeSelection: false,
       canRemoveNode: true,
     });
 
-    expect(actionIds(model)).toEqual(['edit-sql', 'preview-node', 'run-from-node', 'show-lineage']);
+    expect(actionIds(model)).toEqual([
+      'edit-sql',
+      'inspect-node',
+      'preview-node',
+      'run-from-node',
+      'show-lineage',
+    ]);
     expect(actionById(model, 'duplicate-node')).toBeUndefined();
     expect(actionById(model, 'select-node-for-execution')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toBeUndefined();
@@ -148,13 +169,15 @@ describe('canvasNodeContextMenuModel', () => {
       target: { kind: 'node', nodeId: 'transform-orders', nodeName: 'Clean Orders' },
       selectedForExecution: true,
       canMutateGraph: true,
+      canInspectNode: true,
       canDuplicateNode: false,
       canToggleNodeSelection: true,
       canRemoveNode: false,
     });
 
-    expect(actionIds(model)).toEqual(expect.arrayContaining(['deselect-node-from-execution']));
-    expect(actionById(model, 'inspect-node')).toBeUndefined();
+    expect(actionIds(model)).toEqual(
+      expect.arrayContaining(['inspect-node', 'deselect-node-from-execution'])
+    );
     expect(actionById(model, 'deselect-node-from-execution')).toMatchObject({
       intent: 'command',
       disabled: false,
@@ -167,6 +190,7 @@ describe('canvasNodeContextMenuModel', () => {
       target: { kind: 'node', nodeId: 'sink-orders', nodeName: 'Orders Sink' },
       selectedForExecution: false,
       canMutateGraph: false,
+      canInspectNode: false,
       canDuplicateNode: false,
       canToggleNodeSelection: false,
       canRemoveNode: false,

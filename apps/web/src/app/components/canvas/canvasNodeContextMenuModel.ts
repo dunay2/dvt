@@ -8,6 +8,7 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 
 export type CanvasNodeContextMenuActionId =
   | 'edit-sql'
+  | 'inspect-node'
   | 'preview-node'
   | 'run-from-node'
   | 'show-lineage'
@@ -29,6 +30,7 @@ export type CanvasNodeContextMenuAction = Readonly<{
   label: string;
   intent: 'read' | 'command';
   disabled: boolean;
+  workbenchTabId?: CanvasNodeWorkbenchTabId;
   destructive?: boolean;
   disabledReason?: string;
 }>;
@@ -62,12 +64,16 @@ type BuildCanvasNodeContextMenuModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
   canMutateGraph: boolean;
+  canInspectNode: boolean;
   canDuplicateNode: boolean;
   canToggleNodeSelection: boolean;
   canRemoveNode: boolean;
 }>;
 
-type BuildCanvasNodeModelerActionModelArgs = BuildCanvasNodeContextMenuModelArgs;
+type BuildCanvasNodeModelerActionModelArgs = Omit<
+  BuildCanvasNodeContextMenuModelArgs,
+  'canInspectNode'
+>;
 
 export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
   editSql: {
@@ -99,6 +105,20 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
     disabledReason: 'Node lineage is not available for this node.',
   },
 } as const satisfies Record<string, CanvasNodeContextMenuAction>;
+
+function buildPropertiesAction(canInspectNode: boolean): CanvasNodeContextMenuAction | null {
+  if (!canInspectNode) {
+    return null;
+  }
+
+  return {
+    id: 'inspect-node',
+    label: 'Properties',
+    intent: 'read',
+    disabled: false,
+    workbenchTabId: 'general',
+  };
+}
 
 export function buildCanvasNodeModelerActionModel({
   target,
@@ -163,6 +183,7 @@ export function buildCanvasNodeContextMenuModel({
   target,
   selectedForExecution,
   canMutateGraph,
+  canInspectNode,
   canDuplicateNode,
   canToggleNodeSelection,
   canRemoveNode,
@@ -186,7 +207,10 @@ export function buildCanvasNodeContextMenuModel({
     {
       id: 'configure',
       label: 'Configure',
-      actions: [{ ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql }],
+      actions: [
+        { ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql },
+        buildPropertiesAction(canInspectNode),
+      ].filter((action): action is CanvasNodeContextMenuAction => action != null),
     },
     {
       id: 'execute',

@@ -514,6 +514,50 @@ describe('CanvasViewport', () => {
     expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
   });
 
+  it('disambiguates source import from local source node creation in the background context menu', async () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const props = buildProps({
+      authoringNodeKinds: [sourceKind],
+      canOpenSourceImport: true,
+      onOpenSourceImport: vi.fn(),
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault: vi.fn(),
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    const buttons = Array.from(container.querySelectorAll('button')).map((button) =>
+      button.textContent?.trim()
+    );
+    expect(buttons).toContain('Add source');
+    expect(buttons).toContain('Create source node');
+    expect(buttons.filter((text) => text === 'Add source')).toHaveLength(1);
+
+    const createButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Create source node'
+    );
+
+    await act(async () => {
+      createButton?.click();
+    });
+
+    expect(props.onCreateAuthoringNode).toHaveBeenCalledWith(sourceKind, { x: 580, y: 280 });
+    expect(props.onOpenSourceImport).not.toHaveBeenCalled();
+  });
+
   it('does not offer source import from the background when the source rail is unavailable', async () => {
     await act(async () => {
       root.render(
