@@ -503,7 +503,7 @@ describe('CanvasShell', () => {
     expect(draftStatus?.textContent).toContain(canvasViewCopy.savingDraftLabel);
   });
 
-  it('keeps the graph workbench at a stable minimum width instead of crushing panels on narrow viewports', async () => {
+  it('keeps the graph workbench fluid instead of forcing horizontal overflow on narrow viewports', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);
     });
@@ -511,7 +511,8 @@ describe('CanvasShell', () => {
     const shellPanelGroup = container.querySelector('[data-slot="canvas-shell-panel-group"]');
 
     expect(shellPanelGroup).not.toBeNull();
-    expect(shellPanelGroup?.getAttribute('class')).toContain('min-w-[960px]');
+    expect(shellPanelGroup?.getAttribute('class')).toContain('min-w-0');
+    expect(shellPanelGroup?.getAttribute('class')).not.toContain('min-w-[960px]');
   });
 
   it('keeps Canvas route commands hidden while the first canvas document is not created', async () => {

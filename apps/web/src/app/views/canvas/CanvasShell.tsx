@@ -49,7 +49,7 @@ export default function CanvasShell({
     <ResizablePanelGroup
       data-slot="canvas-shell-panel-group"
       direction="horizontal"
-      className="h-full min-w-[960px]"
+      className="h-full min-w-0"
     >
       {layout.surfaceStrategy == null ? null : (
         <CanvasOperationalDrawerContributionRegistrar
