@@ -347,3 +347,51 @@ test('real frontend component inventory maps Templates workbench files, rails, a
     )
   );
 });
+
+test('real frontend component inventory maps Artifacts workbench files, rails, and evidence', () => {
+  const snapshot = buildFrontendComponentReflectionSnapshot();
+  const artifactsComponentId = 'web.component.artifacts.ArtifactsWorkbench';
+  const artifactsComponent = snapshot.components.find(
+    (component) => component.componentId === artifactsComponentId
+  );
+  const artifactsSurfaceLink = snapshot.surfaceLinks.find(
+    (link) => link.componentId === artifactsComponentId
+  );
+  const artifactsFiles = snapshot.files
+    .filter((file) => file.componentId === artifactsComponentId)
+    .map((file) => file.filePath);
+  const artifactsRails = snapshot.rails
+    .filter((rail) => rail.componentId === artifactsComponentId)
+    .map((rail) => [rail.railName, rail.railKind, rail.railStatus]);
+  const artifactsEvidence = snapshot.evidence
+    .filter((evidence) => evidence.componentId === artifactsComponentId)
+    .map((evidence) => evidence.evidenceRef);
+
+  assert.equal(artifactsComponent?.componentKind, 'route-workbench');
+  assert.equal(artifactsComponent?.componentStatus, 'current');
+  assert.equal(artifactsSurfaceLink?.surfaceId, 'web.canvas.tabs');
+  assert.equal(artifactsSurfaceLink?.placementKind, 'workbench-tab');
+  assert.ok(artifactsFiles.includes('apps/web/src/app/views/ArtifactsView.tsx'));
+  assert.ok(artifactsFiles.includes('apps/web/src/app/views/artifacts/useArtifactsViewModel.ts'));
+  assert.ok(
+    artifactsFiles.includes('apps/web/src/app/views/artifacts/ArtifactMonacoPreviewPanel.tsx')
+  );
+  assert.ok(
+    artifactsFiles.includes(
+      'apps/web/src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts'
+    )
+  );
+  assert.deepEqual(artifactsRails, [
+    ['ListWorkspaceArtifacts', 'query', 'implemented-projection'],
+    ['ListWorkspaceFiles', 'query', 'implemented-api'],
+    ['GetWorkspaceFileContent', 'query', 'implemented-api'],
+  ]);
+  assert.ok(
+    artifactsEvidence.includes('apps/web/src/app/views/artifacts/useArtifactsViewModel.test.tsx')
+  );
+  assert.ok(
+    artifactsEvidence.includes(
+      'apps/web/src/app/views/artifacts/artifactsMonacoReadonlyViewer.architecture.test.ts'
+    )
+  );
+});
