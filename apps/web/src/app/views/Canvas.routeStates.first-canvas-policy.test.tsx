@@ -6,7 +6,7 @@ import { canvasViewRouteCopyByKey } from './canvas/canvasCopyCatalog.route';
 import { canvasViewRouteCopyEs } from './canvas/canvasCopyCatalog.route.es';
 import {
   createCanvasRouteHarness,
-  expectActiveCanvasTab,
+  expectActiveCanvasShellIdentity,
   expectCanvasRegistryClosed,
   getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
@@ -112,7 +112,11 @@ describe('Canvas route first-canvas policy', () => {
     });
 
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
-    expect(harness.container.textContent).toContain('Main canvas');
+    expectActiveCanvasShellIdentity({
+      container: harness.container,
+      title: 'Main canvas',
+      kindLabel: 'Transformation',
+    });
     expect(harness.container.textContent).toContain('Start transformation canvas');
     expect(harness.container.textContent).toContain('Add first transformation node');
 
@@ -155,7 +159,11 @@ describe('Canvas route first-canvas policy', () => {
 
     expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).toBeNull();
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
-    expect(harness.container.textContent).toContain('dbt canvas');
+    expectActiveCanvasShellIdentity({
+      container: harness.container,
+      title: 'dbt canvas',
+      kindLabel: 'dbt',
+    });
     expect(harness.container.textContent).not.toContain('Start dbt canvas');
     expect(harness.container.textContent).not.toContain('Add first dbt node');
 
@@ -174,7 +182,7 @@ describe('Canvas route first-canvas policy', () => {
       canStartRun: false,
     });
 
-    expectActiveCanvasTab({
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Warehouse dbt',
       kindLabel: 'dbt',

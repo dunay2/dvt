@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   buildCanvasRouteReadyNodes,
   createCanvasRouteHarness,
+  expectActiveCanvasShellIdentity,
   getPrimaryCanvasButtons,
   renderCanvasRouteWithController,
 } from './Canvas.test.support';
@@ -40,12 +41,12 @@ describe('Canvas route access states', () => {
     expect(layoutButton).toBeUndefined();
     expect(planButton).toBeUndefined();
     expect(runButton).toBeUndefined();
-    expect(
-      harness.container.querySelector('[data-slot="canvas-active-canvas-identity"]')
-    ).not.toBeNull();
-    expect(
-      harness.container.querySelector('[data-slot="canvas-draft-save-status"]')
-    ).not.toBeNull();
+    expectActiveCanvasShellIdentity({
+      container: harness.container,
+      title: 'Main canvas',
+      kindLabel: 'Transformation',
+    });
+    expect(harness.container.querySelector('[data-slot="canvas-draft-save-status"]')).toBeNull();
     expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
       canEditEdges: false,
     });
@@ -92,12 +93,15 @@ describe('Canvas route access states', () => {
     expect(layoutButton).toBeUndefined();
     expect(planButton).toBeUndefined();
     expect(runButton).toBeUndefined();
-    expect(
-      harness.container.querySelector('[data-slot="canvas-active-canvas-identity"]')
-    ).not.toBeNull();
-    expect(
-      harness.container.querySelector('[data-slot="canvas-draft-save-status"]')
-    ).not.toBeNull();
+    expectActiveCanvasShellIdentity({
+      container: harness.container,
+      title: 'Main canvas',
+      kindLabel: 'Transformation',
+    });
+    const draftStatus = harness.container.querySelector('[data-slot="canvas-draft-save-status"]');
+
+    expect(draftStatus).not.toBeNull();
+    expect(draftStatus?.textContent).toContain('Read-only draft');
     expect(useCanvasViewMenuContributionStore.getState().contribution).toMatchObject({
       canEditEdges: false,
     });
