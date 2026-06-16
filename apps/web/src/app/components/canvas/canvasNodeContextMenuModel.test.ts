@@ -111,7 +111,7 @@ describe('canvasNodeContextMenuModel', () => {
     );
   });
 
-  it('keeps properties inspection available when graph mutation is blocked', () => {
+  it('keeps execution selection available when graph mutation is blocked but planning is allowed', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
@@ -127,6 +127,7 @@ describe('canvasNodeContextMenuModel', () => {
       'inspect-node',
       'preview-node',
       'run-from-node',
+      'select-node-for-execution',
       'show-lineage',
     ]);
     expect(actionById(model, 'inspect-node')).toMatchObject({ disabled: false });
@@ -136,7 +137,31 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'preview-node')).toMatchObject({ disabled: true });
     expect(actionById(model, 'run-from-node')).toMatchObject({ disabled: true });
     expect(actionById(model, 'show-lineage')).toMatchObject({ disabled: true });
-    expect(actionById(model, 'select-node-for-execution')).toBeUndefined();
+    expect(actionById(model, 'select-node-for-execution')).toMatchObject({
+      intent: 'command',
+      disabled: false,
+      label: 'Select for execution',
+    });
+    expect(actionById(model, 'duplicate-node')).toBeUndefined();
+    expect(actionById(model, 'remove-node')).toBeUndefined();
+  });
+
+  it('keeps modeler execution selection available when graph mutation is blocked', () => {
+    const model = buildCanvasNodeModelerActionModel({
+      target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },
+      selectedForExecution: true,
+      canMutateGraph: false,
+      canDuplicateNode: true,
+      canToggleNodeSelection: true,
+      canRemoveNode: true,
+    });
+
+    expect(actionIds(model)).toEqual(['deselect-node-from-execution']);
+    expect(actionById(model, 'deselect-node-from-execution')).toMatchObject({
+      intent: 'command',
+      disabled: false,
+      label: 'Deselect for execution',
+    });
     expect(actionById(model, 'duplicate-node')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toBeUndefined();
   });

@@ -136,7 +136,7 @@ export function buildCanvasNodeModelerActionModel({
     });
   }
 
-  if (canMutateGraph && canToggleNodeSelection) {
+  if (canToggleNodeSelection) {
     editActions.push({
       id: selectedForExecution ? 'deselect-node-from-execution' : 'select-node-for-execution',
       label: selectedForExecution ? 'Deselect for execution' : 'Select for execution',
@@ -184,15 +184,14 @@ export function buildCanvasNodeContextMenuModel({
   canToggleNodeSelection,
   canRemoveNode,
 }: BuildCanvasNodeContextMenuModelArgs): CanvasNodeContextMenuModel {
-  const executionSelectionAction: CanvasNodeContextMenuAction | null =
-    canMutateGraph && canToggleNodeSelection
-      ? {
-          id: selectedForExecution ? 'deselect-node-from-execution' : 'select-node-for-execution',
-          label: selectedForExecution ? 'Deselect for execution' : 'Select for execution',
-          intent: 'command',
-          disabled: false,
-        }
-      : null;
+  const executionSelectionAction: CanvasNodeContextMenuAction | null = canToggleNodeSelection
+    ? {
+        id: selectedForExecution ? 'deselect-node-from-execution' : 'select-node-for-execution',
+        label: selectedForExecution ? 'Deselect for execution' : 'Select for execution',
+        intent: 'command',
+        disabled: false,
+      }
+    : null;
   const executeActions: CanvasNodeContextMenuAction[] = [
     { ...NODE_CONTEXT_MENU_BASE_ACTIONS.previewNode },
     { ...NODE_CONTEXT_MENU_BASE_ACTIONS.runFromNode },
