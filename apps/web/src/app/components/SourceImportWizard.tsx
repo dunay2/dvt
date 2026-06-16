@@ -1,6 +1,6 @@
 /** Owned concern: render warehouse source import workflow over the source import port. */
 import { useMemo } from 'react';
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 
 import { getSourceImportOptions } from '../plugins/registry';
 import { useWarehouseSourceImportPort } from '../services/AppServicesContext';
@@ -17,7 +17,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { sourceImportWizardCopy as copy } from './sourceImportWizard/copy';
 import type { SourceImportWizardProps } from './sourceImportWizard/types';
 import { useSourceImportWizard } from './sourceImportWizard/useSourceImportWizard';
-import { WizardProgress } from './sourceImportWizard/WizardProgress';
+import { SourceImportSectionTabs } from './sourceImportWizard/SourceImportSectionTabs';
 import { WizardStepContent } from './sourceImportWizard/WizardStepContent';
 
 export default function SourceImportWizard({
@@ -50,7 +50,13 @@ export default function SourceImportWizard({
           <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
 
-        {state.currentStep === 'result' ? null : <WizardProgress currentStep={state.currentStep} />}
+        {state.currentStep === 'result' ? null : (
+          <SourceImportSectionTabs
+            activeSection={controller.activeSection}
+            canEnterSection={controller.canEnterSection}
+            onSectionChange={controller.setCurrentSection}
+          />
+        )}
 
         <ScrollArea className="-mx-6 flex-1 px-6">
           <WizardStepContent controller={controller} />
@@ -62,38 +68,26 @@ export default function SourceImportWizard({
               Done
             </Button>
           ) : (
-            <div className="flex w-full justify-between">
-              <Button
-                variant="outline"
-                onClick={controller.handleBack}
-                disabled={state.currentStep === 'connection'}
-              >
-                <ArrowLeft className="mr-2 size-4" />
-                Back
+            <div className="flex w-full justify-end gap-2">
+              <Button variant="outline" onClick={onClose}>
+                Cancel
               </Button>
-              {state.currentStep === 'review' ? (
-                <Button
-                  onClick={() => void controller.handleImport()}
-                  disabled={state.isProcessing || !controller.canProceed}
-                >
-                  {state.isProcessing ? (
-                    <>
-                      <Loader2 className="mr-2 size-4 animate-spin" />
-                      Attaching...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="mr-2 size-4" />
-                      Attach sources to canvas
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button onClick={controller.handleNext} disabled={!controller.canProceed}>
-                  Next
-                  <ArrowRight className="ml-2 size-4" />
-                </Button>
-              )}
+              <Button
+                onClick={() => void controller.handleImport()}
+                disabled={!controller.canImport}
+              >
+                {state.isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Attaching...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 size-4" />
+                    Attach sources to canvas
+                  </>
+                )}
+              </Button>
             </div>
           )}
         </DialogFooter>

@@ -168,6 +168,11 @@ describe('SourceImportWizard', () => {
       button.textContent?.trim().startsWith('Next')
     );
 
+  const findTab = (name: string): HTMLButtonElement | undefined =>
+    Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find((button) =>
+      button.textContent?.includes(name)
+    );
+
   const findButtonContaining = (text: string): HTMLButtonElement | undefined =>
     Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
       button.textContent?.includes(text)
@@ -178,10 +183,10 @@ describe('SourceImportWizard', () => {
       node.textContent?.includes(text)
     );
 
-  const clickNext = async (): Promise<void> => {
-    const button = requireElement(findNextButton(), 'EXPECTED_NEXT_BUTTON');
+  const clickTab = async (name: string): Promise<void> => {
+    const tab = requireElement(findTab(name), `EXPECTED_TAB:${name}`);
     await act(async () => {
-      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      tab.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
   };
 
@@ -217,15 +222,51 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).not.toContain('Stream');
     expect(document.body.textContent).not.toContain('not available yet');
     expect(document.body.textContent).not.toContain('Only Database is available');
-    expect(requireElement(findButtonContaining('Back'), 'EXPECTED_BACK_BUTTON').disabled).toBe(
-      true
-    );
+    expect(findButtonContaining('Back')).toBeUndefined();
+    expect(findNextButton()).toBeUndefined();
+    expect(findTab('Browse')?.disabled).toBe(true);
+    expect(findTab('Metadata')?.disabled).toBe(true);
+    expect(findTab('Selected')?.disabled).toBe(true);
 
     await clickClickableDivByText('Snowflake PROD');
-    await clickNext();
+    await clickTab('Browse');
 
     expect(document.body.textContent).toContain('Browse source tables');
     expect(document.body.textContent).toContain('ORDERS');
+  });
+
+  it('uses contextual tabs to inspect source metadata without leaving the add-source surface', async () => {
+    await renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseTables: async () => [
+          buildWarehouseTable({
+            table: 'ORDERS',
+            rowCount: 1500,
+            columns: [
+              { name: 'order_id', type: 'INTEGER', nullable: false },
+              { name: 'customer_id', type: 'INTEGER', nullable: false },
+              { name: 'discount_code', type: 'TEXT', nullable: true },
+            ],
+          }),
+        ],
+      }),
+    });
+
+    await clickClickableDivByText('Snowflake PROD');
+    await clickTab('Browse');
+    await clickClickableDivByText('ORDERS');
+    await clickTab('Metadata');
+
+    expect(findTab('Metadata')?.getAttribute('aria-selected')).toBe('true');
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain('1,500 rows');
+    expect(document.body.textContent).toContain('3 columns');
+    expect(document.body.textContent).toContain('order_id');
+    expect(document.body.textContent).toContain('INTEGER');
+    expect(document.body.textContent).toContain('Required');
+    expect(document.body.textContent).toContain('discount_code');
+    expect(document.body.textContent).toContain('Nullable');
+    expect(document.body.textContent).toContain('Metadata Options');
   });
 
   it('opens at the selected warehouse tables when launched from the source explorer', async () => {
@@ -302,9 +343,9 @@ describe('SourceImportWizard', () => {
 
     expect(document.body.textContent).toContain('Selected: 1');
 
-    await clickButtonContaining('Back');
+    await clickTab('Connections');
     await clickClickableDivByText('Snowflake QA');
-    await clickNext();
+    await clickTab('Browse');
     await flushPendingWork();
 
     expect(listWarehouseTables).toHaveBeenLastCalledWith('conn-2');
@@ -360,13 +401,11 @@ describe('SourceImportWizard', () => {
 
     await clickClickableDivByText('Snowflake PROD');
 
-    await clickNext(); // connection -> selection
+    await clickTab('Browse');
 
     await clickClickableDivByText('ORDERS');
 
-    await clickNext(); // selection -> grouping
-    await clickNext(); // grouping -> options
-    await clickNext(); // options -> review
+    await clickTab('Selected');
 
     await clickButtonContaining('Attach sources to canvas');
 
@@ -404,10 +443,9 @@ describe('SourceImportWizard', () => {
     });
 
     await clickClickableDivByText('Snowflake PROD');
-    await clickNext();
+    await clickTab('Browse');
     await clickClickableDivByText('ORDERS');
-    await clickNext();
-    await clickNext();
+    await clickTab('Metadata');
 
     expect(document.body.textContent).toContain('Include Column Metadata');
     expect(document.body.textContent).not.toContain('Add Generic Tests');
@@ -436,11 +474,9 @@ describe('SourceImportWizard', () => {
     });
 
     await clickClickableDivByText('Snowflake PROD');
-    await clickNext();
+    await clickTab('Browse');
     await clickClickableDivByText('ORDERS');
-    await clickNext();
-    await clickNext();
-    await clickNext();
+    await clickTab('Metadata');
 
     await clickButtonContaining('Attach sources to canvas');
 
@@ -477,13 +513,11 @@ describe('SourceImportWizard', () => {
 
     await clickClickableDivByText('Snowflake PROD');
 
-    await clickNext();
+    await clickTab('Browse');
 
     await clickClickableDivByText('ORDERS');
 
-    await clickNext();
-    await clickNext();
-    await clickNext();
+    await clickTab('Selected');
 
     await clickButtonContaining('Attach sources to canvas');
 

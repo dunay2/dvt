@@ -1,6 +1,23 @@
 import { WIZARD_STEPS } from './constants';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import type { TableInfo, WizardStep } from './types';
+import type { SourceImportSection, TableInfo, WizardStep } from './types';
+
+export const SOURCE_IMPORT_SECTIONS: readonly {
+  id: SourceImportSection;
+  label: 'Connections' | 'Browse' | 'Metadata' | 'Selected';
+  step: WizardStep;
+}[] = [
+  { id: 'connections', label: 'Connections', step: 'connection' },
+  { id: 'browse', label: 'Browse', step: 'selection' },
+  { id: 'metadata', label: 'Metadata', step: 'options' },
+  { id: 'selected', label: 'Selected', step: 'review' },
+];
+
+export function buildWarehouseTableKey(
+  table: Pick<TableInfo, 'database' | 'schema' | 'table'>
+): string {
+  return [table.database, table.schema, table.table].join('.');
+}
 
 export function getSelectedCount(tables: TableInfo[]): number {
   return tables.filter((table) => table.selected).length;
@@ -30,6 +47,57 @@ export function buildPreviewGroups(
     groups.get(key)?.push(table);
   });
   return groups;
+}
+
+export function getSelectedTables(tables: readonly TableInfo[]): readonly TableInfo[] {
+  return tables.filter((table) => table.selected);
+}
+
+export function resolveActiveTable(
+  tables: readonly TableInfo[],
+  activeTableKey: string | null
+): TableInfo | null {
+  if (activeTableKey != null) {
+    const activeTable = tables.find((table) => buildWarehouseTableKey(table) === activeTableKey);
+    if (activeTable) {
+      return activeTable;
+    }
+  }
+
+  return tables.find((table) => table.selected) ?? tables[0] ?? null;
+}
+
+export function resolveSectionForStep(step: WizardStep): SourceImportSection {
+  if (step === 'selection') {
+    return 'browse';
+  }
+  if (step === 'grouping' || step === 'options') {
+    return 'metadata';
+  }
+  if (step === 'review' || step === 'result') {
+    return 'selected';
+  }
+
+  return 'connections';
+}
+
+export function resolveStepForSection(section: SourceImportSection): WizardStep {
+  return SOURCE_IMPORT_SECTIONS.find((candidate) => candidate.id === section)?.step ?? 'connection';
+}
+
+export function canEnterSourceImportSection(
+  section: SourceImportSection,
+  selectedConnection: string | null,
+  selectedCount: number
+): boolean {
+  if (section === 'connections') {
+    return true;
+  }
+  if (section === 'browse') {
+    return selectedConnection != null;
+  }
+
+  return selectedConnection != null && selectedCount > 0;
 }
 
 export function buildSourceImportOptionValues(

@@ -11,14 +11,25 @@ import type { SourceImportOptionContribution, SourceImportOptionId } from '../..
 import { sourceImportWizardCopy as copy } from './copy';
 import {
   applySourceImportOptionDefaults,
+  buildWarehouseTableKey,
   buildSourceImportOptionValues,
+  canEnterSourceImportSection,
   canProceedForStep,
   getNextStep,
   getPreviousStep,
   getSelectedCount,
+  getSelectedTables,
+  resolveActiveTable,
+  resolveSectionForStep,
+  resolveStepForSection,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
-import type { SourceImportInitialSelection, SourceImportWizardState, WizardStep } from './types';
+import type {
+  SourceImportInitialSelection,
+  SourceImportSection,
+  SourceImportWizardState,
+  WizardStep,
+} from './types';
 
 interface UseSourceImportWizardParams {
   open: boolean;
@@ -43,6 +54,7 @@ const initialState: SourceImportWizardState = {
   isLoadingTables: false,
   loadError: null,
   importResult: null,
+  activeTableKey: null,
 };
 
 function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
@@ -80,11 +92,18 @@ export function useSourceImportWizard({
       currentStep: 'selection',
       selectedConnection: initialSelection.connectionId,
       tables: [],
+      activeTableKey: null,
       loadError: null,
       importResult: null,
     }));
   }, [initialSelection, open]);
   const selectedCount = useMemo(() => getSelectedCount(state.tables), [state.tables]);
+  const selectedTables = useMemo(() => getSelectedTables(state.tables), [state.tables]);
+  const activeTable = useMemo(
+    () => resolveActiveTable(state.tables, state.activeTableKey),
+    [state.activeTableKey, state.tables]
+  );
+  const activeSection = resolveSectionForStep(state.currentStep);
   const sourceImportOptionValues = useMemo(
     () => buildSourceImportOptionValues(state),
     [state.includeColumns, state.addTests, state.addFreshness]
@@ -109,8 +128,21 @@ export function useSourceImportWizard({
 
   const setCurrentStep = (currentStep: WizardStep) =>
     setState((prev) => ({ ...prev, currentStep }));
+  const setCurrentSection = (section: SourceImportSection) => {
+    if (!canEnterSourceImportSection(section, state.selectedConnection, selectedCount)) {
+      return;
+    }
+
+    setCurrentStep(resolveStepForSection(section));
+  };
   const setSelectedConnection = (selectedConnection: string | null) =>
-    setState((prev) => ({ ...prev, selectedConnection }));
+    setState((prev) => ({
+      ...prev,
+      selectedConnection,
+      tables: selectedConnection === prev.selectedConnection ? prev.tables : [],
+      activeTableKey: selectedConnection === prev.selectedConnection ? prev.activeTableKey : null,
+      importResult: null,
+    }));
   const setGroupingStrategy = (groupingStrategy: 'schema' | 'database' | 'custom') =>
     setState((prev) => ({ ...prev, groupingStrategy }));
   const setIncludeColumns = (includeColumns: boolean) =>
@@ -189,6 +221,7 @@ export function useSourceImportWizard({
       tables: prev.tables.map((table, i) =>
         i === index ? { ...table, selected: !table.selected } : table
       ),
+      activeTableKey: prev.tables[index] ? buildWarehouseTableKey(prev.tables[index]) : null,
     }));
   };
 
@@ -196,24 +229,34 @@ export function useSourceImportWizard({
     setState((prev) => {
       const schemaTables = prev.tables.filter((table) => table.schema === schema);
       const allSelected = schemaTables.every((table) => table.selected);
+      const firstSchemaTable = schemaTables[0];
       return {
         ...prev,
         tables: prev.tables.map((table) =>
           table.schema === schema ? { ...table, selected: !allSelected } : table
         ),
+        activeTableKey: firstSchemaTable ? buildWarehouseTableKey(firstSchemaTable) : null,
       };
     });
   };
 
   const canProceed = canProceedForStep(state.currentStep, state.selectedConnection, selectedCount);
+  const canImport = state.selectedConnection != null && selectedCount > 0 && !state.isProcessing;
 
   return {
     state,
     selectedCount,
+    selectedTables,
+    activeTable,
+    activeSection,
     selectedConnectionObject,
     sourceImportOptions,
     sourceImportOptionValues,
     canProceed,
+    canImport,
+    canEnterSection: (section: SourceImportSection) =>
+      canEnterSourceImportSection(section, state.selectedConnection, selectedCount),
+    setCurrentSection,
     setSelectedConnection,
     setGroupingStrategy,
     setIncludeColumns,
