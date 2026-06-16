@@ -122,6 +122,54 @@ test('Planning DB integrity check treats surface-named gap rails as governed his
   ]);
 });
 
+test('Planning DB integrity check tightens gap rail baseline after surface rails split out', () => {
+  const baselineGapRails = Array.from({ length: 110 }, (_, index) => ({
+    finding_kind: 'gap_rail',
+    severity: 'warning',
+    rail_name: `HistoricalGapRail${index}`,
+  }));
+
+  const baselineResult = buildIntegrityCheckResult({
+    componentRows: [],
+    railRows: baselineGapRails,
+    strict: false,
+  });
+
+  assert.equal(baselineResult.exitCode, 0);
+  assert.equal(shouldFailIntegrityCheck(baselineResult), false);
+
+  const regressionResult = buildIntegrityCheckResult({
+    componentRows: [],
+    railRows: [
+      ...baselineGapRails,
+      {
+        finding_kind: 'gap_rail',
+        severity: 'warning',
+        rail_name: 'NewGapRail',
+      },
+    ],
+    strict: false,
+  });
+
+  assert.equal(regressionResult.exitCode, 1);
+  assert.deepEqual(regressionResult.baselineViolations, [
+    {
+      surface: 'rail_vocabulary',
+      kind: 'gap_rail',
+      metric: 'total',
+      actual: 111,
+      allowed: 110,
+    },
+    {
+      surface: 'rail_vocabulary',
+      kind: 'gap_rail',
+      metric: 'warning',
+      actual: 111,
+      allowed: 110,
+    },
+  ]);
+});
+
 test('Planning DB integrity check fails strict mode on blocker or error findings', () => {
   const result = buildIntegrityCheckResult({
     componentRows: [
