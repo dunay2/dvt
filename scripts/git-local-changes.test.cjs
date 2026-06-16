@@ -160,16 +160,26 @@ test('local changed-files gate implementation surfaces name their canonical rail
   const fs = require('node:fs');
   const path = require('node:path');
   const repoRoot = path.resolve(__dirname, '..');
-  const railSources = {
-    ValidateChangedFiles: ['scripts/check-changed.cjs', 'scripts/verify-changed.cjs'],
-    SelectPrepushTypecheckScope: [
-      'scripts/type-check-prepush.cjs',
-      'tools/ci/prepush-typecheck-scope.mjs',
+  const railSources = [
+    [
+      ['Validate', 'Changed', 'Files'].join(''),
+      ['scripts/check-changed.cjs', 'scripts/verify-changed.cjs'],
     ],
-    RunChangedSliceVerification: ['scripts/verify-changed.cjs'],
-  };
+    [
+      ['Select', 'Prepush', 'Typecheck', 'Scope'].join(''),
+      ['scripts/type-check-prepush.cjs', 'tools/ci/prepush-typecheck-scope.mjs'],
+    ],
+    [['Run', 'Changed', 'Slice', 'Verification'].join(''), ['scripts/verify-changed.cjs']],
+  ];
 
-  for (const [railName, sourcePaths] of Object.entries(railSources)) {
+  const ownSource = fs.readFileSync(__filename, 'utf8');
+  for (const [railName, sourcePaths] of railSources) {
+    assert.doesNotMatch(
+      ownSource,
+      new RegExp(`\\b${railName}\\b`),
+      'the guard test must not be indexed as a rail implementation surface'
+    );
+
     for (const sourcePath of sourcePaths) {
       const source = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
       assert.match(
