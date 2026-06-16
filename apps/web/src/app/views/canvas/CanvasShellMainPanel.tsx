@@ -193,7 +193,7 @@ function CanvasShellMainSurface({
     <div className="relative flex min-h-0 flex-1">
       {viewport}
       <div className="pointer-events-none absolute inset-0">
-        <div className="pointer-events-auto h-full">{layout.centerSurface}</div>
+        <div className="pointer-events-none h-full">{layout.centerSurface}</div>
       </div>
     </div>
   );
