@@ -115,8 +115,8 @@ test('Planning DB integrity check fails report mode on any new surface-named rai
   ]);
 });
 
-test('Planning DB integrity check tightens gap rail baseline after surface rails split out', () => {
-  const baselineGapRails = Array.from({ length: 98 }, (_, index) => ({
+test('Planning DB integrity check tightens gap rail baseline after implemented refs win', () => {
+  const baselineGapRails = Array.from({ length: 40 }, (_, index) => ({
     finding_kind: 'gap_rail',
     severity: 'warning',
     rail_name: `HistoricalGapRail${index}`,
@@ -150,15 +150,15 @@ test('Planning DB integrity check tightens gap rail baseline after surface rails
       surface: 'rail_vocabulary',
       kind: 'gap_rail',
       metric: 'total',
-      actual: 99,
-      allowed: 98,
+      actual: 41,
+      allowed: 40,
     },
     {
       surface: 'rail_vocabulary',
       kind: 'gap_rail',
       metric: 'warning',
-      actual: 99,
-      allowed: 98,
+      actual: 41,
+      allowed: 40,
     },
   ]);
 });

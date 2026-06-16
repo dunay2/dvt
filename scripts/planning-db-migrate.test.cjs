@@ -1724,6 +1724,22 @@ test('latest command/query rail projection counts canonical component docs as du
   assert.match(latestRailProjectionMigration.sql, /as canonical_candidate_count/);
 });
 
+test('latest command/query rail projection prefers implemented refs over imported gaps', () => {
+  const migrations = readMigrationFiles();
+  const latestRailProjectionMigration = migrations
+    .filter((migration) =>
+      /create or replace view planning_query_store\.command_query_rail_query/.test(migration.sql)
+    )
+    .at(-1);
+
+  assert.ok(latestRailProjectionMigration);
+  assert.equal(latestRailProjectionMigration.fileName, '101_prefer_implemented_rail_refs.sql');
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /case when rail\.rail_source = 'local' then 0 else 1 end,\s+rail\.is_gap,\s+rail\.authority_priority/
+  );
+});
+
 test('tracked migrations expose composite component hierarchy records after W32', () => {
   const migrations = readMigrationFiles();
   const compositeHierarchyMigration = migrations.find(
