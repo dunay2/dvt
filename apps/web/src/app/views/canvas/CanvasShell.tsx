@@ -7,6 +7,8 @@ import { getSourceImportContributions, getSourceImportOptions } from '../../plug
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
+import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
+import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import type { CanvasShellOpenDataRegistryCommand, CanvasShellProps } from './canvasShell.types';
 
 export default function CanvasShell({
@@ -16,8 +18,11 @@ export default function CanvasShell({
   chromeState,
   graphCommands,
   chromeCommands,
+  canvasCommands,
 }: CanvasShellProps): JSX.Element {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
+  const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
+  const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dataRegistryInitialSelection, setDataRegistryInitialSelection] =
     useState<Parameters<CanvasShellOpenDataRegistryCommand>[0]>(undefined);
   const canEditGraph = panels.userPermissions.canEditEdges;
@@ -67,6 +72,8 @@ export default function CanvasShell({
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
         onOpenSourceImport={handleOpenDataRegistry}
+        onOpenProjectExplorer={() => setProjectExplorerOpen(true)}
+        onOpenCanvasSettings={() => setCanvasSettingsOpen(true)}
       />
 
       <SourceImportWizard
@@ -78,6 +85,32 @@ export default function CanvasShell({
         onComplete={graphCommands.onSourceImportComplete}
         sourceImportOptions={sourceImportOptions}
         initialSelection={dataRegistryInitialSelection}
+      />
+      <CanvasProjectExplorerDialog
+        open={projectExplorerOpen}
+        activeCanvasId={panels.activeCanvasId}
+        canvasDocuments={panels.canvasDocuments}
+        onSelectCanvas={canvasCommands.onSelectCanvas}
+        onClose={() => setProjectExplorerOpen(false)}
+      />
+      <CanvasSettingsDialog
+        open={canvasSettingsOpen}
+        impactOverlayEnabled={chromeState.impactOverlayEnabled}
+        columnLevelLineageEnabled={chromeState.columnLevelLineageEnabled}
+        canUseCostOverlay={chromeState.canUseCostOverlay}
+        costOverlayEnabled={chromeState.exclusiveOverlayMode === 'cost'}
+        canvasGridVisible={graph.canvasGridVisible}
+        canvasGridColor={graph.canvasGridColor}
+        canvasSnapToGrid={graph.canvasSnapToGrid}
+        canvasEmptyStateGuideVisible={graph.canvasEmptyStateGuideVisible}
+        onToggleImpact={chromeCommands.onToggleImpact}
+        onToggleColumns={chromeCommands.onToggleColumns}
+        onToggleCostOverlay={chromeCommands.onToggleCostOverlay}
+        onToggleGridVisible={chromeCommands.onToggleGridVisible}
+        onGridColorChange={chromeCommands.onGridColorChange}
+        onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
+        onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
+        onClose={() => setCanvasSettingsOpen(false)}
       />
     </ResizablePanelGroup>
   );

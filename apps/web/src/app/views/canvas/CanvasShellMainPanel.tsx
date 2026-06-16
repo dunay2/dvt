@@ -27,6 +27,8 @@ type CanvasShellMainPanelProps = Readonly<{
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   onOpenSourceImport?: CanvasShellOpenDataRegistryCommand;
+  onOpenProjectExplorer?: () => void;
+  onOpenCanvasSettings?: () => void;
 }>;
 
 function CanvasShellMenuContributionRegistrars({
@@ -76,11 +78,19 @@ function CanvasShellViewport({
   graph,
   graphCommands,
   onOpenSourceImport,
+  onOpenProjectExplorer,
+  onOpenCanvasSettings,
   canPreviewExecutionPlan,
   onPreviewExecutionPlan,
 }: Pick<
   CanvasShellMainPanelProps,
-  'layout' | 'panels' | 'graph' | 'graphCommands' | 'onOpenSourceImport'
+  | 'layout'
+  | 'panels'
+  | 'graph'
+  | 'graphCommands'
+  | 'onOpenSourceImport'
+  | 'onOpenProjectExplorer'
+  | 'onOpenCanvasSettings'
 > &
   Readonly<{
     canPreviewExecutionPlan: boolean;
@@ -121,8 +131,12 @@ function CanvasShellViewport({
       onOpenSourceImport={
         onOpenSourceImport == null ? undefined : () => onOpenSourceImport(undefined)
       }
+      canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
+      onOpenProjectExplorer={onOpenProjectExplorer}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
       onPreviewExecutionPlan={onPreviewExecutionPlan}
+      canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
+      onOpenCanvasSettings={onOpenCanvasSettings}
     />
   );
 }
@@ -134,10 +148,19 @@ function CanvasShellMainSurface({
   graphCommands,
   chromeCommands,
   onOpenSourceImport,
+  onOpenProjectExplorer,
+  onOpenCanvasSettings,
   canPreviewExecutionPlan,
 }: Pick<
   CanvasShellMainPanelProps,
-  'layout' | 'panels' | 'graph' | 'graphCommands' | 'chromeCommands' | 'onOpenSourceImport'
+  | 'layout'
+  | 'panels'
+  | 'graph'
+  | 'graphCommands'
+  | 'chromeCommands'
+  | 'onOpenSourceImport'
+  | 'onOpenProjectExplorer'
+  | 'onOpenCanvasSettings'
 > &
   Readonly<{ canPreviewExecutionPlan: boolean }>): JSX.Element {
   const viewport = (
@@ -147,6 +170,8 @@ function CanvasShellMainSurface({
       graph={graph}
       graphCommands={graphCommands}
       onOpenSourceImport={onOpenSourceImport}
+      onOpenProjectExplorer={onOpenProjectExplorer}
+      onOpenCanvasSettings={onOpenCanvasSettings}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
       onPreviewExecutionPlan={chromeCommands.onPlan}
     />
@@ -218,6 +243,8 @@ export function CanvasShellMainPanel({
   graphCommands,
   chromeCommands,
   onOpenSourceImport,
+  onOpenProjectExplorer,
+  onOpenCanvasSettings,
 }: CanvasShellMainPanelProps): JSX.Element {
   const shouldShowGraphStatusOverlay =
     layout.centerSurface == null || layout.centerSurfaceMode === 'overlay';
@@ -239,6 +266,8 @@ export function CanvasShellMainPanel({
           graphCommands={graphCommands}
           chromeCommands={chromeCommands}
           onOpenSourceImport={onOpenSourceImport}
+          onOpenProjectExplorer={onOpenProjectExplorer}
+          onOpenCanvasSettings={onOpenCanvasSettings}
           canPreviewExecutionPlan={panels.userPermissions.canPlan && chromeState.canPlanGraph}
         />
         {shouldShowGraphStatusOverlay ? (

@@ -27,8 +27,12 @@ export type CanvasContextMenuCreateNodeAction = Readonly<{
 }>;
 
 export type CanvasContextMenuCanvasAction = Readonly<{
-  action: 'open-source-import' | 'preview-execution-plan';
-  label: 'Add source' | 'Preview execution plan';
+  action:
+    | 'open-source-import'
+    | 'open-project-explorer'
+    | 'preview-execution-plan'
+    | 'open-canvas-settings';
+  label: 'Add source' | 'Explore project' | 'Preview execution plan' | 'Canvas settings';
 }>;
 
 export type CanvasContextMenuEdgeAction = Readonly<{
@@ -50,7 +54,9 @@ type BuildCanvasContextMenuModelArgs = Readonly<{
   target: CanvasContextMenuTarget;
   canMutateGraph: boolean;
   canOpenSourceImport?: boolean;
+  canOpenProjectExplorer?: boolean;
   canPreviewExecutionPlan?: boolean;
+  canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
 }>;
 
@@ -75,6 +81,10 @@ function formatCreateNodeActionLabel(
     return 'Add node';
   }
 
+  if (/^[A-Z]{2,}\b/.test(label)) {
+    return `Add ${label}`;
+  }
+
   return `Add ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 }
 
@@ -82,7 +92,9 @@ export function buildCanvasContextMenuModel({
   target,
   canMutateGraph,
   canOpenSourceImport = false,
+  canOpenProjectExplorer = false,
   canPreviewExecutionPlan = false,
+  canOpenCanvasSettings = false,
   authoringNodeKinds,
 }: BuildCanvasContextMenuModelArgs): CanvasContextMenuModel {
   const canvasActions: CanvasContextMenuCanvasAction[] = [];
@@ -91,11 +103,17 @@ export function buildCanvasContextMenuModel({
     if (sourceImportVisible) {
       canvasActions.push({ action: 'open-source-import', label: 'Add source' });
     }
+    if (canOpenProjectExplorer) {
+      canvasActions.push({ action: 'open-project-explorer', label: 'Explore project' });
+    }
     if (canPreviewExecutionPlan) {
       canvasActions.push({
         action: 'preview-execution-plan',
         label: 'Preview execution plan',
       });
+    }
+    if (canOpenCanvasSettings) {
+      canvasActions.push({ action: 'open-canvas-settings', label: 'Canvas settings' });
     }
   }
 

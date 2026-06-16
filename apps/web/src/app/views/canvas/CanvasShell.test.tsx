@@ -670,6 +670,112 @@ describe('CanvasShell', () => {
     });
   });
 
+  it('opens a contextual project explorer from the viewport command using real canvas documents', async () => {
+    const onSelectCanvas = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            panels: {
+              activeCanvasId: 'sales-canvas',
+              activeCanvas: {
+                id: 'sales-canvas',
+                title: 'Sales canvas',
+                kind: 'dbt',
+                environmentId: 'dev',
+              },
+              canvasDocuments: [
+                {
+                  id: 'sales-canvas',
+                  title: 'Sales canvas',
+                  kind: 'dbt',
+                  environmentId: 'dev',
+                },
+                {
+                  id: 'dvt-flow',
+                  title: 'DVT flow',
+                  kind: 'transformation',
+                  environmentId: 'dev',
+                },
+              ],
+            },
+            canvasCommands: {
+              onSelectCanvas,
+            },
+          })}
+        />
+      );
+    });
+
+    await act(async () => {
+      const openProjectExplorer = shellState.canvasViewportProps?.onOpenProjectExplorer as
+        | (() => void)
+        | undefined;
+      openProjectExplorer?.();
+    });
+
+    expect(container.querySelector('[data-slot="canvas-project-explorer-dialog"]')).not.toBeNull();
+    expect(container.textContent).toContain('Sales canvas');
+    expect(container.textContent).toContain('DVT flow');
+
+    const dvtFlowButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Open DVT flow'
+    );
+    expect(dvtFlowButton).toBeDefined();
+
+    await act(async () => {
+      dvtFlowButton?.click();
+    });
+
+    expect(onSelectCanvas).toHaveBeenCalledWith('dvt-flow');
+  });
+
+  it('opens contextual canvas settings from the viewport command using view commands', async () => {
+    const onToggleGridVisible = vi.fn();
+    const onToggleSnapToGrid = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <CanvasShell
+          {...buildProps({
+            chromeCommands: {
+              onToggleGridVisible,
+              onToggleSnapToGrid,
+            },
+          })}
+        />
+      );
+    });
+
+    await act(async () => {
+      const openCanvasSettings = shellState.canvasViewportProps?.onOpenCanvasSettings as
+        | (() => void)
+        | undefined;
+      openCanvasSettings?.();
+    });
+
+    expect(container.querySelector('[data-slot="canvas-settings-dialog"]')).not.toBeNull();
+    expect(container.textContent).toContain('Canvas settings');
+
+    const gridButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Hide grid'
+    );
+    const snapButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Enable snap'
+    );
+    expect(gridButton).toBeDefined();
+    expect(snapButton).toBeDefined();
+
+    await act(async () => {
+      gridButton?.click();
+      snapButton?.click();
+    });
+
+    expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
+    expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
+  });
+
   it('does not render the legacy DVT flow guide over the graph base surface', async () => {
     await act(async () => {
       root.render(<CanvasShell {...buildProps()} />);

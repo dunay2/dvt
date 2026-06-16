@@ -19,13 +19,17 @@ import {
 type UseCanvasContextMenuPresenterArgs = Readonly<{
   canEditEdges: boolean;
   canOpenSourceImport?: boolean;
+  canOpenProjectExplorer?: boolean;
   canPreviewExecutionPlan?: boolean;
+  canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
   screenToFlowPosition: (screenPosition: CanvasContextMenuPosition) => CanvasContextMenuPosition;
   onCreateAuthoringNode: CreateCanvasAuthoringNode;
   onEdgesChange: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgesChange']>;
   onOpenSourceImport?: () => void;
+  onOpenProjectExplorer?: () => void;
   onPreviewExecutionPlan?: () => void;
+  onOpenCanvasSettings?: () => void;
 }>;
 
 type ContextMenuEvent = Pick<
@@ -67,13 +71,17 @@ function isCanvasViewportContextTarget(target: EventTarget | null): target is El
 export function useCanvasContextMenuPresenter({
   canEditEdges,
   canOpenSourceImport,
+  canOpenProjectExplorer,
   canPreviewExecutionPlan,
+  canOpenCanvasSettings,
   authoringNodeKinds,
   screenToFlowPosition,
   onCreateAuthoringNode,
   onEdgesChange,
   onOpenSourceImport,
+  onOpenProjectExplorer,
   onPreviewExecutionPlan,
+  onOpenCanvasSettings,
 }: UseCanvasContextMenuPresenterArgs): UseCanvasContextMenuPresenterResult {
   const [model, setModel] = useState<CanvasContextMenuModel | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -125,7 +133,9 @@ export function useCanvasContextMenuPresenter({
             },
             canMutateGraph: canEditEdges,
             canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+            canOpenProjectExplorer: Boolean(canOpenProjectExplorer && onOpenProjectExplorer),
             canPreviewExecutionPlan: Boolean(canPreviewExecutionPlan && onPreviewExecutionPlan),
+            canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
             authoringNodeKinds,
           })
         );
@@ -135,9 +145,13 @@ export function useCanvasContextMenuPresenter({
       authoringNodeKinds,
       canEditEdges,
       canOpenSourceImport,
+      canOpenProjectExplorer,
       canPreviewExecutionPlan,
+      canOpenCanvasSettings,
       onOpenSourceImport,
+      onOpenProjectExplorer,
       onPreviewExecutionPlan,
+      onOpenCanvasSettings,
       screenToFlowPosition,
     ]
   );
@@ -219,13 +233,23 @@ export function useCanvasContextMenuPresenter({
     (action: CanvasContextMenuCanvasAction) => {
       if (action.action === 'open-source-import') {
         onOpenSourceImport?.();
+      } else if (action.action === 'open-project-explorer') {
+        onOpenProjectExplorer?.();
       } else if (action.action === 'preview-execution-plan') {
         onPreviewExecutionPlan?.();
+      } else if (action.action === 'open-canvas-settings') {
+        onOpenCanvasSettings?.();
       }
 
       closeContextMenu();
     },
-    [closeContextMenu, onOpenSourceImport, onPreviewExecutionPlan]
+    [
+      closeContextMenu,
+      onOpenCanvasSettings,
+      onOpenProjectExplorer,
+      onOpenSourceImport,
+      onPreviewExecutionPlan,
+    ]
   );
 
   const handleCreateNodeAction = useCallback(

@@ -89,6 +89,43 @@ describe('canvasInteractionCommandSurface', () => {
     expect(model.edgeActions).toEqual([]);
   });
 
+  it('offers backed project and settings commands from the canvas menu without node actions', () => {
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 720, y: 180 },
+      },
+      canMutateGraph: true,
+      canOpenProjectExplorer: true,
+      canOpenCanvasSettings: true,
+      canPreviewExecutionPlan: true,
+      authoringNodeKinds: [
+        buildTestNodeKind('dvt:source', 'Source'),
+        buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+        buildTestNodeKind('dvt:sink', 'Sink'),
+      ],
+    });
+
+    expect(model.canvasActions).toEqual([
+      { action: 'open-project-explorer', label: 'Explore project' },
+      { action: 'preview-execution-plan', label: 'Preview execution plan' },
+      { action: 'open-canvas-settings', label: 'Canvas settings' },
+    ]);
+    expect(model.createNodeActions.map((action) => action.label)).toEqual([
+      'Add source',
+      'Add SQL transform',
+      'Add sink',
+    ]);
+    expect(JSON.stringify(model)).not.toContain('Edit SQL');
+    expect(JSON.stringify(model)).not.toContain('Properties');
+    expect(JSON.stringify(model)).not.toContain('Inputs');
+    expect(JSON.stringify(model)).not.toContain('Tests');
+    expect(JSON.stringify(model)).not.toContain('Run from here');
+    expect(JSON.stringify(model)).not.toContain('Duplicate');
+    expect(JSON.stringify(model)).not.toContain('Delete');
+  });
+
   it('offers only edge deletion for an editable edge context menu', () => {
     const model = buildCanvasContextMenuModel({
       target: {

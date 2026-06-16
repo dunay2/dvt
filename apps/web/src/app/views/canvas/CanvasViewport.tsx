@@ -87,8 +87,12 @@ type CanvasViewportProps = {
   readonly onImportedNodeFocusComplete: () => void;
   readonly canOpenSourceImport?: boolean;
   readonly onOpenSourceImport?: () => void;
+  readonly canOpenProjectExplorer?: boolean;
+  readonly onOpenProjectExplorer?: () => void;
   readonly canPreviewExecutionPlan?: boolean;
   readonly onPreviewExecutionPlan?: () => void;
+  readonly canOpenCanvasSettings?: boolean;
+  readonly onOpenCanvasSettings?: () => void;
 };
 
 type CanvasViewportLifecycleArgs = Readonly<{
@@ -181,8 +185,12 @@ type CanvasViewportReactFlowSurfaceProps = Readonly<
     | 'onCreateAuthoringNode'
     | 'canOpenSourceImport'
     | 'onOpenSourceImport'
+    | 'canOpenProjectExplorer'
+    | 'onOpenProjectExplorer'
     | 'canPreviewExecutionPlan'
     | 'onPreviewExecutionPlan'
+    | 'canOpenCanvasSettings'
+    | 'onOpenCanvasSettings'
   >
 >;
 
@@ -211,20 +219,28 @@ function CanvasViewportReactFlowSurface({
   onCreateAuthoringNode,
   canOpenSourceImport,
   onOpenSourceImport,
+  canOpenProjectExplorer,
+  onOpenProjectExplorer,
   canPreviewExecutionPlan,
   onPreviewExecutionPlan,
+  canOpenCanvasSettings,
+  onOpenCanvasSettings,
 }: CanvasViewportReactFlowSurfaceProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges,
     canOpenSourceImport,
+    canOpenProjectExplorer,
     authoringNodeKinds,
     screenToFlowPosition: (screenPosition) => reactFlow.screenToFlowPosition(screenPosition),
     onCreateAuthoringNode,
     onEdgesChange,
     onOpenSourceImport,
+    onOpenProjectExplorer,
     canPreviewExecutionPlan,
     onPreviewExecutionPlan,
+    canOpenCanvasSettings,
+    onOpenCanvasSettings,
   });
 
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = () => {
@@ -361,8 +377,12 @@ function CanvasViewportSurface({
   onCreateAuthoringNode,
   canOpenSourceImport,
   onOpenSourceImport,
+  canOpenProjectExplorer,
+  onOpenProjectExplorer,
   canPreviewExecutionPlan,
   onPreviewExecutionPlan,
+  canOpenCanvasSettings,
+  onOpenCanvasSettings,
 }: CanvasViewportSurfaceProps): JSX.Element {
   return (
     <div
@@ -396,8 +416,12 @@ function CanvasViewportSurface({
         onCreateAuthoringNode={onCreateAuthoringNode}
         canOpenSourceImport={canOpenSourceImport}
         onOpenSourceImport={onOpenSourceImport}
+        canOpenProjectExplorer={canOpenProjectExplorer}
+        onOpenProjectExplorer={onOpenProjectExplorer}
         canPreviewExecutionPlan={canPreviewExecutionPlan}
         onPreviewExecutionPlan={onPreviewExecutionPlan}
+        canOpenCanvasSettings={canOpenCanvasSettings}
+        onOpenCanvasSettings={onOpenCanvasSettings}
       />
     </div>
   );
@@ -447,8 +471,12 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
       onCreateAuthoringNode={props.onCreateAuthoringNode}
       canOpenSourceImport={props.canOpenSourceImport}
       onOpenSourceImport={props.onOpenSourceImport}
+      canOpenProjectExplorer={props.canOpenProjectExplorer}
+      onOpenProjectExplorer={props.onOpenProjectExplorer}
       canPreviewExecutionPlan={props.canPreviewExecutionPlan}
       onPreviewExecutionPlan={props.onPreviewExecutionPlan}
+      canOpenCanvasSettings={props.canOpenCanvasSettings}
+      onOpenCanvasSettings={props.onOpenCanvasSettings}
     />
   );
 }
