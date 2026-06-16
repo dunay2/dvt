@@ -64,7 +64,7 @@ export function CanvasNodeShell({
             <Handle
               type="target"
               position={Position.Left}
-              className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
+              className="bg-gray-400! w-3! h-3! border-2! border-white!"
             />
           )}
 

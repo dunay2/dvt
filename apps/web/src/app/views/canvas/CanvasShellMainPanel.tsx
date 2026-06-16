@@ -2,17 +2,17 @@
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
 import { CanvasInspectorPanel } from './CanvasInspectorPanel';
-import CanvasViewport from './CanvasViewport';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
+import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
 import type {
   CanvasShellChromeCommands,
+  CanvasShellChromeState,
   CanvasShellGraph,
   CanvasShellGraphCommands,
   CanvasShellLayout,
   CanvasShellOpenDataRegistryCommand,
   CanvasShellPanels,
-  CanvasShellChromeState,
 } from './canvasShell.types';
 
 function resolveCanvasShellMainPanelDefaultSize(): number {
@@ -218,7 +218,7 @@ function CanvasShellNodeWorkbenchOverlay({
   return (
     <div
       data-slot="canvas-node-workbench-overlay"
-      className="absolute top-16 right-4 bottom-4 z-20 w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] shadow-xl"
+      className="absolute top-16 right-4 bottom-4 z-20 w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-md border border-(--border-default) bg-(--surface-panel) shadow-xl"
     >
       <CanvasInspectorPanel
         node={panels.inspectorNode}

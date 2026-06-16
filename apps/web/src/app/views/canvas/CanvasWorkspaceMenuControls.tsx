@@ -1,15 +1,15 @@
 /** Owned concern: render Canvas project commands inside the shell Workspace menu. */
-import { useEffect, useRef } from 'react';
 import { Download, Upload } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '../../components/ui/dropdown-menu';
-import { canvasViewCopy } from './copy';
 import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionStore';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
+import { canvasViewCopy } from './copy';
 
 type CanvasWorkspaceMenuContributionRegistrarProps = CanvasWorkspaceMenuContribution;
 
@@ -98,13 +98,11 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       data-slot="shell-active-canvas-identity"
       data-canvas-id={activeCanvas.id}
       data-kind={activeCanvas.kind}
-      className="flex min-w-0 max-w-[24rem] items-center gap-2 rounded-sm border border-[color:var(--border-muted)] bg-[var(--surface-panel-subtle)] px-2.5 py-1 text-xs"
+      className="flex min-w-0 max-w-[24rem] items-center gap-2 rounded-sm border border-(--border-muted) bg-(--surface-panel-subtle) px-2.5 py-1 text-xs"
       aria-label={`Active canvas: ${activeCanvas.title}`}
     >
-      <span className="truncate font-semibold text-[color:var(--text-primary)]">
-        {activeCanvas.title}
-      </span>
-      <span className="shrink-0 text-[color:var(--text-muted)]">
+      <span className="truncate font-semibold text-(--text-primary)">{activeCanvas.title}</span>
+      <span className="shrink-0 text-(--text-muted)">
         {resolveCanvasKindLabel(activeCanvas.kind)}
       </span>
     </div>

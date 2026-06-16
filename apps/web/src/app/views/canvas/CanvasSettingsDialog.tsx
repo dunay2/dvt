@@ -33,11 +33,11 @@ function CanvasSettingsToggleRow({
   onToggle,
 }: CanvasSettingsToggleRowProps): JSX.Element {
   return (
-    <div className="flex items-center justify-between gap-4 rounded border border-[color:var(--border-muted)] bg-[var(--surface-panel-subtle)] px-3 py-2">
+    <div className="flex items-center justify-between gap-4 rounded border border-(--border-muted) bg-(--surface-panel-subtle) px-3 py-2">
       <span className="text-sm font-medium text-(--text-default)">{label}</span>
       <button
         type="button"
-        className="min-w-28 rounded border border-[color:var(--border-default)] px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+        className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
         onClick={onToggle}
       >
         {active ? 'Disable' : 'Enable'}
@@ -77,8 +77,8 @@ export function CanvasSettingsDialog({
       data-slot="canvas-settings-dialog"
       className="absolute inset-0 z-40 flex items-start justify-center bg-black/40 p-8"
     >
-      <section className="w-full max-w-2xl rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] shadow-2xl">
-        <header className="border-b border-[color:var(--border-muted)] px-5 py-4">
+      <section className="w-full max-w-2xl rounded-md border border-(--border-default) bg-(--surface-panel) shadow-2xl">
+        <header className="border-b border-(--border-muted) px-5 py-4">
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-base font-semibold text-(--text-default)">Canvas settings</h2>
@@ -88,7 +88,7 @@ export function CanvasSettingsDialog({
             </div>
             <button
               type="button"
-              className="rounded border border-[color:var(--border-default)] px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+              className="rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
               onClick={onClose}
             >
               Close
@@ -113,31 +113,31 @@ export function CanvasSettingsDialog({
               onToggle={onToggleCostOverlay}
             />
           ) : null}
-          <div className="flex items-center justify-between gap-4 rounded border border-[color:var(--border-muted)] bg-[var(--surface-panel-subtle)] px-3 py-2">
+          <div className="flex items-center justify-between gap-4 rounded border border-(--border-muted) bg-(--surface-panel-subtle) px-3 py-2">
             <span className="text-sm font-medium text-(--text-default)">Grid</span>
             <button
               type="button"
-              className="min-w-28 rounded border border-[color:var(--border-default)] px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+              className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
               onClick={onToggleGridVisible}
             >
               {canvasGridVisible ? 'Hide grid' : 'Show grid'}
             </button>
           </div>
-          <label className="flex items-center justify-between gap-4 rounded border border-[color:var(--border-muted)] bg-[var(--surface-panel-subtle)] px-3 py-2 text-sm font-medium text-(--text-default)">
+          <label className="flex items-center justify-between gap-4 rounded border border-(--border-muted) bg-(--surface-panel-subtle) px-3 py-2 text-sm font-medium text-(--text-default)">
             Grid color
             <input
               type="color"
               value={canvasGridColor}
               aria-label="Grid color"
-              className="size-8 cursor-pointer rounded border border-[color:var(--border-default)] bg-transparent p-0"
+              className="size-8 cursor-pointer rounded border border-(--border-default) bg-transparent p-0"
               onInput={(event) => onGridColorChange(event.currentTarget.value as CanvasPaletteId)}
             />
           </label>
-          <div className="flex items-center justify-between gap-4 rounded border border-[color:var(--border-muted)] bg-[var(--surface-panel-subtle)] px-3 py-2">
+          <div className="flex items-center justify-between gap-4 rounded border border-(--border-muted) bg-(--surface-panel-subtle) px-3 py-2">
             <span className="text-sm font-medium text-(--text-default)">Snap to grid</span>
             <button
               type="button"
-              className="min-w-28 rounded border border-[color:var(--border-default)] px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+              className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
               onClick={onToggleSnapToGrid}
             >
               {canvasSnapToGrid ? 'Disable snap' : 'Enable snap'}

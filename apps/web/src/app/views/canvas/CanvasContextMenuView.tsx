@@ -44,7 +44,7 @@ export function CanvasContextMenuView({
       ref={menuRef}
       role="menu"
       data-slot="canvas-context-menu"
-      className="fixed z-50 min-w-52 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] p-1 shadow-xl"
+      className="fixed z-50 min-w-52 rounded-md border border-(--border-default) bg-(--surface-panel) p-1 shadow-xl"
       style={menuStyle}
       onContextMenu={(event) => event.preventDefault()}
     >

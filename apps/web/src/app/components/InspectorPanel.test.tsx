@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { fireEvent, waitFor } from '@testing-library/dom';
 import { Database } from 'lucide-react';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -149,7 +150,7 @@ describe('InspectorPanel', () => {
     );
   });
 
-  it('keeps plugin panel tabs textual instead of rendering tab icons', () => {
+  it('keeps plugin panel tabs textual inside More instead of rendering tab icons', async () => {
     const pluginPanels: readonly InspectorPanelContribution[] = [
       {
         id: 'dbt.history',
@@ -175,11 +176,34 @@ describe('InspectorPanel', () => {
       );
     });
 
-    const historyTab = Array.from(container.querySelectorAll('[role="tab"]')).find(
-      (tab) => tab.textContent === 'History'
+    expect(
+      Array.from(container.querySelectorAll('[role="tab"]')).find(
+        (tab) => tab.textContent === 'History'
+      )
+    ).toBeUndefined();
+
+    const moreTrigger = container.querySelector<HTMLButtonElement>(
+      '[data-slot="node-inspector-more-trigger"]'
     );
 
-    expect(historyTab).toBeDefined();
-    expect(historyTab?.querySelector('svg')).toBeNull();
+    expect(moreTrigger).not.toBeNull();
+    expect(moreTrigger?.querySelector('svg')).toBeNull();
+
+    await act(async () => {
+      fireEvent.pointerDown(moreTrigger!);
+    });
+
+    await waitFor(() => {
+      expect(
+        document.body.querySelector('[data-slot="node-inspector-more-item-dbt.history"]')
+      ).not.toBeNull();
+    });
+
+    const historyItem = document.body.querySelector(
+      '[data-slot="node-inspector-more-item-dbt.history"]'
+    );
+
+    expect(historyItem?.textContent).toContain('History');
+    expect(historyItem?.querySelector('svg')).toBeNull();
   });
 });

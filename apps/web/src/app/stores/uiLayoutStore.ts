@@ -58,7 +58,6 @@ type PersistedUiLayoutState = Partial<
     UiLayoutState,
     | 'leftNavCollapsed'
     | 'inspectorPanelWidth'
-    | 'inspectorPanelVisible'
     | 'consolePanelHeight'
     | 'consolePanelVisible'
     | 'focusMode'
@@ -141,8 +140,7 @@ export const useUiLayoutStore = create<UiLayoutState>()(
           leftNavCollapsed: persistedLayoutState.leftNavCollapsed ?? currentState.leftNavCollapsed,
           inspectorPanelWidth:
             persistedLayoutState.inspectorPanelWidth ?? currentState.inspectorPanelWidth,
-          inspectorPanelVisible:
-            persistedLayoutState.inspectorPanelVisible ?? currentState.inspectorPanelVisible,
+          inspectorPanelVisible: currentState.inspectorPanelVisible,
           consolePanelHeight:
             persistedLayoutState.consolePanelHeight ?? currentState.consolePanelHeight,
           consolePanelVisible:
@@ -173,7 +171,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       partialize: (state) => ({
         leftNavCollapsed: state.leftNavCollapsed,
         inspectorPanelWidth: state.inspectorPanelWidth,
-        inspectorPanelVisible: state.inspectorPanelVisible,
         consolePanelHeight: state.consolePanelHeight,
         consolePanelVisible: state.consolePanelVisible,
         focusMode: state.focusMode,

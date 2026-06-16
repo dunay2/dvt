@@ -1,17 +1,17 @@
 /** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
-import { memo, type CSSProperties, type DragEvent } from 'react';
 import type { Node, NodeProps } from '@xyflow/react';
+import { memo, type CSSProperties, type DragEvent } from 'react';
 
-import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
-import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
-import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
-import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type {
   BadgeContext,
   MergedNodeDecoration,
   NodeBadge,
   NodeRendererProps,
 } from '../../plugins/contracts/NodeRendering';
+import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
+import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
+import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
+import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 import { parsePluginNodeKind } from '../../types/canonicalGuards';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
@@ -119,7 +119,7 @@ function FallbackNodeRenderer({ node, overlayDecoration }: Readonly<NodeRenderer
   return (
     <div
       className={cn(
-        'min-w-[140px] rounded border border-dashed border-neutral-600 bg-neutral-900 px-3 py-2 text-xs text-neutral-300',
+        'min-w-35 rounded border border-dashed border-neutral-600 bg-neutral-900 px-3 py-2 text-xs text-neutral-300',
         overlayDecoration?.dimmed && 'opacity-30'
       )}
       {...(overlayDecoration?.borderColor
