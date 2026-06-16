@@ -58,6 +58,15 @@ function isSourceImportCoveredNodeKind(registration: NodeKindRegistration): bool
   return registration.kind === 'dbt:source';
 }
 
+function formatCreateNodeActionLabel(registration: NodeKindRegistration): string {
+  const label = registration.label.trim();
+  if (label.length === 0) {
+    return 'Add node';
+  }
+
+  return `Add ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
+}
+
 export function buildCanvasContextMenuModel({
   target,
   canMutateGraph,
@@ -100,7 +109,7 @@ export function buildCanvasContextMenuModel({
         )
         .map((registration) => ({
           action: 'create-node',
-          label: registration.label,
+          label: formatCreateNodeActionLabel(registration),
           registration,
         })),
     };

@@ -8,8 +8,9 @@ import {
 } from './canvasInteractionCommandSurface';
 
 describe('canvasInteractionCommandSurface', () => {
-  it('offers node creation actions for an editable background context menu', () => {
+  it('offers spatial add commands for an editable background context menu', () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const modelKind = buildTestNodeKind('dbt:model', 'Model');
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -17,7 +18,7 @@ describe('canvasInteractionCommandSurface', () => {
         flowPosition: { x: 720, y: 180 },
       },
       canMutateGraph: true,
-      authoringNodeKinds: [sourceKind],
+      authoringNodeKinds: [sourceKind, modelKind],
     });
 
     expect(model).toMatchObject({
@@ -25,7 +26,10 @@ describe('canvasInteractionCommandSurface', () => {
       screenPosition: { x: 480, y: 320 },
       flowPosition: { x: 720, y: 180 },
       canvasActions: [],
-      createNodeActions: [{ action: 'create-node', label: 'Source', registration: sourceKind }],
+      createNodeActions: [
+        { action: 'create-node', label: 'Add source', registration: sourceKind },
+        { action: 'create-node', label: 'Add model', registration: modelKind },
+      ],
       edgeActions: [],
     });
   });
@@ -62,7 +66,7 @@ describe('canvasInteractionCommandSurface', () => {
 
     expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
     expect(model.createNodeActions).toEqual([
-      { action: 'create-node', label: 'Source', registration: sourceKind },
+      { action: 'create-node', label: 'Add source', registration: sourceKind },
     ]);
   });
 

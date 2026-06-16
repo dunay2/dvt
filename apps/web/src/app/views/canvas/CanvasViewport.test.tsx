@@ -392,7 +392,7 @@ describe('CanvasViewport', () => {
     expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
 
     const createButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Source')
+      button.textContent?.includes('Add source')
     );
     expect(createButton).toBeDefined();
 
@@ -431,7 +431,7 @@ describe('CanvasViewport', () => {
 
     expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
     expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).toContain(
-      'Source'
+      'Add source'
     );
   });
 
@@ -463,7 +463,7 @@ describe('CanvasViewport', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
     expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).toContain(
-      'Source'
+      'Add source'
     );
   });
 
@@ -501,10 +501,10 @@ describe('CanvasViewport', () => {
       'Crear nodo'
     );
     expect(
-      Array.from(container.querySelectorAll('button')).some(
-        (button) => button.textContent === 'Source'
+      Array.from(container.querySelectorAll('button')).filter(
+        (button) => button.textContent === 'Add source'
       )
-    ).toBe(false);
+    ).toHaveLength(1);
 
     await act(async () => {
       sourceImportButton?.click();

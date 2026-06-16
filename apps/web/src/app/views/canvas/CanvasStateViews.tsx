@@ -103,6 +103,7 @@ export function CanvasLoadingStateView({
 }
 
 export function CanvasEmptyStateView({
+  canvasTitle = null,
   title = canvasViewCopy.routeEmptyTitle,
   message = canvasViewCopy.routeEmptyEditableMessage,
   firstNodeLabel = canvasViewCopy.routeEmptyFirstNodeLabel,
@@ -112,6 +113,7 @@ export function CanvasEmptyStateView({
   emptyStateGuideVisible = true,
   onEmptyStateGuideVisibilityChange,
 }: Readonly<{
+  canvasTitle?: string | null;
   title?: string;
   message?: string;
   firstNodeLabel?: string;
@@ -125,6 +127,14 @@ export function CanvasEmptyStateView({
 
   return (
     <CanvasSurfaceStateCard dataSlot="canvas-empty-state" title={title} message={message}>
+      {canvasTitle != null ? (
+        <p
+          data-slot="canvas-empty-active-canvas"
+          className={cn('mt-1 text-xs font-medium', routeWorkbenchMutedTextClassName)}
+        >
+          {canvasTitle}
+        </p>
+      ) : null}
       {canCreateAuthoringNode ? (
         <CanvasEmptyAuthoringCatalog
           nodeKinds={nodeKinds}

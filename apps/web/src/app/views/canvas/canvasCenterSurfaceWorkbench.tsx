@@ -103,6 +103,7 @@ function renderCanvasHostCycleWorkbenchSurface(
 
   return (
     <CanvasEmptyStateView
+      canvasTitle={cycleState.canvasTitle}
       title={cycleState.title}
       message={cycleState.message}
       firstNodeLabel={cycleState.firstNodeLabel}

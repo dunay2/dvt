@@ -8,9 +8,6 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 
 export type CanvasNodeContextMenuActionId =
   | 'edit-sql'
-  | 'inspect-node'
-  | 'inspect-inputs-outputs'
-  | 'inspect-tests'
   | 'preview-node'
   | 'run-from-node'
   | 'show-lineage'
@@ -32,7 +29,6 @@ export type CanvasNodeContextMenuAction = Readonly<{
   label: string;
   intent: 'read' | 'command';
   disabled: boolean;
-  workbenchTabId?: CanvasNodeWorkbenchTabId;
   destructive?: boolean;
   disabledReason?: string;
 }>;
@@ -66,16 +62,12 @@ type BuildCanvasNodeContextMenuModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
   canMutateGraph: boolean;
-  canInspectNode: boolean;
   canDuplicateNode: boolean;
   canToggleNodeSelection: boolean;
   canRemoveNode: boolean;
 }>;
 
-type BuildCanvasNodeModelerActionModelArgs = Omit<
-  BuildCanvasNodeContextMenuModelArgs,
-  'canInspectNode'
->;
+type BuildCanvasNodeModelerActionModelArgs = BuildCanvasNodeContextMenuModelArgs;
 
 export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
   editSql: {
@@ -84,22 +76,6 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
     intent: 'command',
     disabled: true,
     disabledReason: 'SQL workbench is not available for this node.',
-  },
-  inputsOutputs: {
-    id: 'inspect-inputs-outputs',
-    label: 'Inputs / Outputs',
-    intent: 'read',
-    disabled: true,
-    workbenchTabId: 'inputs-outputs',
-    disabledReason: 'Inputs / Outputs workbench is not available for this node.',
-  },
-  tests: {
-    id: 'inspect-tests',
-    label: 'Tests',
-    intent: 'read',
-    disabled: true,
-    workbenchTabId: 'tests',
-    disabledReason: 'Node test catalog is not available for this node.',
   },
   previewNode: {
     id: 'preview-node',
@@ -123,30 +99,6 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
     disabledReason: 'Node lineage is not available for this node.',
   },
 } as const satisfies Record<string, CanvasNodeContextMenuAction>;
-
-function buildWorkbenchReadAction({
-  id,
-  label,
-  workbenchTabId,
-  canInspectNode,
-}: Readonly<{
-  id: Extract<
-    CanvasNodeContextMenuActionId,
-    'inspect-node' | 'inspect-inputs-outputs' | 'inspect-tests'
-  >;
-  label: string;
-  workbenchTabId: CanvasNodeWorkbenchTabId;
-  canInspectNode: boolean;
-}>): CanvasNodeContextMenuAction {
-  return {
-    id,
-    label,
-    intent: 'read',
-    disabled: !canInspectNode,
-    workbenchTabId,
-    ...(canInspectNode ? {} : { disabledReason: 'Inspector is unavailable for this node.' }),
-  };
-}
 
 export function buildCanvasNodeModelerActionModel({
   target,
@@ -211,7 +163,6 @@ export function buildCanvasNodeContextMenuModel({
   target,
   selectedForExecution,
   canMutateGraph,
-  canInspectNode,
   canDuplicateNode,
   canToggleNodeSelection,
   canRemoveNode,
@@ -235,27 +186,7 @@ export function buildCanvasNodeContextMenuModel({
     {
       id: 'configure',
       label: 'Configure',
-      actions: [
-        { ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql },
-        buildWorkbenchReadAction({
-          id: 'inspect-node',
-          label: 'Properties',
-          workbenchTabId: 'general',
-          canInspectNode,
-        }),
-        buildWorkbenchReadAction({
-          id: 'inspect-inputs-outputs',
-          label: 'Inputs / Outputs',
-          workbenchTabId: 'inputs-outputs',
-          canInspectNode,
-        }),
-        buildWorkbenchReadAction({
-          id: 'inspect-tests',
-          label: 'Tests',
-          workbenchTabId: 'tests',
-          canInspectNode,
-        }),
-      ],
+      actions: [{ ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql }],
     },
     {
       id: 'execute',

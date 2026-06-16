@@ -20,6 +20,7 @@ export type CanvasHostCycleState =
     }
   | {
       kind: 'typed_empty';
+      canvasTitle: string | null;
       title: string;
       message: string;
       firstNodeLabel: string;
@@ -135,6 +136,7 @@ export function deriveCanvasHostCycleState(
 
     return {
       kind: 'typed_empty',
+      canvasTitle: canvasDocument?.title ?? null,
       title: activeCanvasKind?.emptyState.title ?? canvasViewCopy.routeEmptyTitle,
       message: resolveTypedEmptyMessage({
         canEditEdges,

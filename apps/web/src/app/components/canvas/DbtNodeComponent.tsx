@@ -197,7 +197,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     target: { kind: 'node', nodeId: id, nodeName: data.name },
     selectedForExecution,
     canMutateGraph: canMutateNodeCommands,
-    canInspectNode: typeof data.onInspectNode === 'function',
     canDuplicateNode: typeof data.onDuplicateNode === 'function',
     canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',
     canRemoveNode: typeof data.onRemoveNode === 'function',
@@ -234,16 +233,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
-    const action = contextMenuModel.actionGroups
-      .flatMap((group) => group.actions)
-      .find((candidate) => candidate.id === actionId);
-
     switch (actionId) {
-      case 'inspect-node':
-      case 'inspect-inputs-outputs':
-      case 'inspect-tests':
-        data.onInspectNode?.(id, action?.workbenchTabId ?? null);
-        return;
       case 'duplicate-node':
         data.onDuplicateNode?.(id);
         return;
