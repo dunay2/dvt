@@ -235,6 +235,52 @@ test('component reparent planner emits imported component update and audit row',
   assert.equal(planned.audit.resultingRevision, 3);
 });
 
+test('component reparent planner rejects descendant parent cycles', () => {
+  const command = parseArgs([
+    'component',
+    'reparent',
+    '--component',
+    'SYS-WEB-APP-PLUGINS',
+    '--parent',
+    'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.throws(
+    () =>
+      planComponentReparentOperation({
+        command,
+        parentUnit: {
+          unit_id: 'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+          level: 'component',
+          root_unit: 'SYS-DVT',
+          domain_unit: 'SYS-WEB',
+        },
+        existingComponent: {
+          component_id: 'SYS-WEB-APP-PLUGINS',
+          parent_id: 'SYS-WEB-ROOT',
+          raw_component: { unitReferences: [{ id: 'SYS-WEB-APP-PLUGINS' }] },
+        },
+        parentPathRows: [
+          { unit_id: 'SYS-DVT' },
+          { unit_id: 'SYS-WEB' },
+          { unit_id: 'SYS-WEB-ROOT' },
+          { unit_id: 'SYS-WEB-APP-PLUGINS' },
+          { unit_id: 'SYS-WEB-CANVAS-SURFACE-STRATEGY' },
+        ],
+        latestOperation: { resulting_revision: 2 },
+        operationId: 'op-component-reparent-cycle',
+        now: new Date('2026-06-16T10:00:00.000Z'),
+      }),
+    /cannot be reparented under its own descendant SYS-WEB-CANVAS-SURFACE-STRATEGY/
+  );
+});
+
 test('component create writer stores component lists in relational tables', async () => {
   const now = new Date('2026-05-14T09:00:00.000Z');
   const command = parseArgs([

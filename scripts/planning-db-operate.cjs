@@ -3986,6 +3986,11 @@ function planComponentReparentOperation({
       `Parent governance unit ${command.parentComponentId} does not have a resolvable unit path.`
     );
   }
+  if (parentPath.includes(command.componentId)) {
+    throw new Error(
+      `Governance component ${command.componentId} cannot be reparented under its own descendant ${command.parentComponentId}.`
+    );
+  }
 
   const unitPath = [...parentPath, command.componentId];
   const resultingRevision = previousRevision + 1;

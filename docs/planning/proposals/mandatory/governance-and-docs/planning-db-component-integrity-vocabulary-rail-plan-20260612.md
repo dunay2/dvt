@@ -453,13 +453,13 @@ redGreenCycles:
       - scripts/planning-db-migrate.test.cjs
     greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs
   - id: web-leaf-component-evidence-tests
-    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/plugins/cost/costContributions.test.ts src/app/plugins/monitoring/monitoringContributions.test.ts src/app/components/figma/ImageWithFallback.test.tsx
+    redTest: pnpm --filter @dvt/web test:changed
     expectedFailure: Cost, monitoring, and fallback plugin leaf components do not have focused evidence tests attached to the DB component profile.
     patchSurfaces:
       - apps/web/src/app/components/figma/ImageWithFallback.test.tsx
       - apps/web/src/app/plugins/cost/costContributions.test.ts
       - apps/web/src/app/plugins/monitoring/monitoringContributions.test.ts
-    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/plugins/cost/costContributions.test.ts src/app/plugins/monitoring/monitoringContributions.test.ts src/app/components/figma/ImageWithFallback.test.tsx
+    greenTest: pnpm --filter @dvt/web test:changed
 symbols:
   - name: validateComponentReparentCommand
     path: scripts/planning-db-operate.cjs
