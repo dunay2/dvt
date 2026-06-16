@@ -121,6 +121,9 @@ describe('plugin runtime projection', () => {
       'addTests',
       'addFreshness',
     ]);
+    expect(
+      getSourceImportOptions().find((option) => option.id === 'includeColumns')?.defaultEnabled
+    ).toBe(true);
     expect(getSourceImportOptions(buildRuntimeCapabilities('dbt'))).toEqual([]);
   });
 });
