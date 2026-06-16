@@ -14,9 +14,14 @@ const node: CanonicalNode = {
   tags: [],
 };
 
+const activeRunStatus: NonNullable<OverlayContext['activeRun']> = {
+  runId: 'run-1',
+  status: 'RUNNING',
+};
+
 function buildOverlayContext(status: string | undefined): OverlayContext {
   return {
-    activeRun: 'running',
+    activeRun: activeRunStatus,
     costByNodeId: new Map(),
     downstreamOfSelected: new Set(),
     runStatusByNodeId: status ? new Map([['node-1', status]]) : new Map(),
