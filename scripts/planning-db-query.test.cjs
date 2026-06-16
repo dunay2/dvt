@@ -1538,6 +1538,31 @@ test('buildDocumentationLifecycleRows shows lifecycle facts without prose parsin
   );
 });
 
+test('knowledge intake lifecycle query modules expose canonical rails', () => {
+  const railSources = [
+    [
+      ['List', 'Knowledge', 'Intake', 'Retirement'].join(''),
+      'planning-db/queries/knowledge-intake-retirement-query.cjs',
+    ],
+    [
+      ['List', 'Documentation', 'Lifecycle', 'Facts'].join(''),
+      'planning-db/queries/documentation-lifecycle-query.cjs',
+    ],
+  ];
+  const ownSource = fs.readFileSync(__filename, 'utf8');
+
+  for (const [railName, sourcePath] of railSources) {
+    assert.doesNotMatch(
+      ownSource,
+      new RegExp(`\\b${railName}\\b`),
+      'the query test must not be indexed as a rail implementation surface'
+    );
+
+    const source = fs.readFileSync(path.join(__dirname, sourcePath), 'utf8');
+    assert.match(source, new RegExp(`\\b${railName}\\b`));
+  }
+});
+
 test('buildFowlerAnalysisRows shows DB-owned retirement and improvement facts', () => {
   assert.deepEqual(
     buildFowlerAnalysisRows([

@@ -1,4 +1,7 @@
-/** Owned concern: expose DB-owned documentation lifecycle facts for planning DB queries. */
+/**
+ * Owned concern: expose DB-owned documentation lifecycle facts for planning DB queries.
+ * Command/query rails: `ListDocumentationLifecycleFacts`.
+ */
 function createDocumentationLifecycleReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;

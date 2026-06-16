@@ -1,4 +1,7 @@
-/** Owned concern: expose DB-owned knowledge intake retirement read models for planning DB queries. */
+/**
+ * Owned concern: expose DB-owned knowledge intake retirement read models for planning DB queries.
+ * Command/query rails: `ListKnowledgeIntakeRetirement`.
+ */
 function createKnowledgeIntakeRetirementReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
