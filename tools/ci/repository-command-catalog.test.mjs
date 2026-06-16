@@ -174,6 +174,10 @@ test('classifies current command file paths without broad script-directory assum
   assert.equal(classifyScriptFilePath('scripts/ai-preflight.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.test.cjs').domain, 'test-tooling');
+  assert.equal(
+    classifyScriptFilePath('scripts/planning-db-query-tests/helpers.cjs').domain,
+    'planning-db'
+  );
 });
 
 test('detects repository command files and excludes non-command metadata', () => {
