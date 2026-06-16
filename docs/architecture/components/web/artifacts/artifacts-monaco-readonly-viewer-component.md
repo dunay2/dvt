@@ -31,10 +31,10 @@ hosting.
 
 The component consumes existing rails through `useWorkspaceArtifactsQuery`:
 
-| Rail                      | Type  | Use                                                                      |
-| ------------------------- | ----- | ------------------------------------------------------------------------ |
-| `ListWorkspaceFiles`      | query | Finds workspace-backed dbt JSON, pipeline YAML, and model SQL artifacts. |
-| `GetWorkspaceFileContent` | query | Loads the selected artifact payload for read-only inspection.            |
+| Rail                      | Type  | Owner                             | Status          | Use                                                                      |
+| ------------------------- | ----- | --------------------------------- | --------------- | ------------------------------------------------------------------------ |
+| `ListWorkspaceFiles`      | query | Workspace file tree read model    | implemented-api | Finds workspace-backed dbt JSON, pipeline YAML, and model SQL artifacts. |
+| `GetWorkspaceFileContent` | query | Workspace file content read model | implemented-api | Loads the selected artifact payload for read-only inspection.            |
 
 No command rail is introduced by this component.
 
