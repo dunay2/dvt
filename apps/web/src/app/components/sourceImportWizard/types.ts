@@ -20,6 +20,8 @@ export type SourceImportInitialSelection = Readonly<{
 
 export type WizardStep = 'connection' | 'selection' | 'grouping' | 'options' | 'review' | 'result';
 
+export type SourceImportSection = 'connections' | 'browse' | 'metadata' | 'selected';
+
 export interface TableInfo {
   database: string;
   schema: string;
@@ -43,4 +45,5 @@ export interface SourceImportWizardState {
   isLoadingTables: boolean;
   loadError: string | null;
   importResult: ImportSourcesResult | null;
+  activeTableKey: string | null;
 }

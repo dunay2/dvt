@@ -3,13 +3,19 @@ import { describe, expect, it } from 'vitest';
 import type { TableInfo } from './types';
 import {
   applySourceImportOptionDefaults,
+  buildWarehouseTableKey,
   buildPreviewGroups,
   buildSourceImportOptionValues,
+  canEnterSourceImportSection,
   canProceedForStep,
   getNextStep,
   getPreviousStep,
   getSelectedCount,
+  getSelectedTables,
   groupTablesBySchema,
+  resolveActiveTable,
+  resolveSectionForStep,
+  resolveStepForSection,
 } from './sourceImportWizardModel';
 
 function buildTable(overrides?: Partial<TableInfo>): TableInfo {
@@ -34,6 +40,16 @@ describe('sourceImportWizardModel', () => {
       buildTable({ schema: 'MART', table: 'fct_sales' }),
     ]);
     expect(Object.keys(grouped)).toEqual(['ERP', 'MART']);
+  });
+
+  it('resolves canonical table keys and active table metadata targets', () => {
+    const orders = buildTable({ selected: true, table: 'ORDERS' });
+    const customers = buildTable({ table: 'CUSTOMERS' });
+
+    expect(buildWarehouseTableKey(orders)).toBe('RAW.ERP.ORDERS');
+    expect(getSelectedTables([orders, customers])).toEqual([orders]);
+    expect(resolveActiveTable([orders, customers], 'RAW.ERP.CUSTOMERS')).toEqual(customers);
+    expect(resolveActiveTable([orders, customers], null)).toEqual(orders);
   });
 
   it('builds preview groups from selected tables', () => {
@@ -92,5 +108,18 @@ describe('sourceImportWizardModel', () => {
     expect(getNextStep('connection')).toBe('selection');
     expect(getPreviousStep('connection')).toBe('connection');
     expect(getPreviousStep('selection')).toBe('connection');
+  });
+
+  it('maps contextual source-import sections to guarded workflow steps', () => {
+    expect(resolveSectionForStep('connection')).toBe('connections');
+    expect(resolveSectionForStep('selection')).toBe('browse');
+    expect(resolveSectionForStep('options')).toBe('metadata');
+    expect(resolveSectionForStep('review')).toBe('selected');
+    expect(resolveStepForSection('metadata')).toBe('options');
+    expect(canEnterSourceImportSection('connections', null, 0)).toBe(true);
+    expect(canEnterSourceImportSection('browse', null, 0)).toBe(false);
+    expect(canEnterSourceImportSection('browse', 'conn-1', 0)).toBe(true);
+    expect(canEnterSourceImportSection('metadata', 'conn-1', 0)).toBe(false);
+    expect(canEnterSourceImportSection('selected', 'conn-1', 1)).toBe(true);
   });
 });
