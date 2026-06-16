@@ -61,6 +61,7 @@ semantics.
 | `web.component.shell.BottomConsoleDrawer`     | BottomConsoleDrawer   | console-drawer   | current          | harden         | Authenticated shell root | Render supporting execution context without replacing route navigation.                     | `@dvt/web` | `/`                                                                                                | monitoring                                       | typed live-log state remains future work                                        | `bottomConsoleDrawerModel.ts`; `workbench-ui-contract-and-component-inventory.md`     |
 | `web.component.workbench.RouteWorkbenchFrame` | RouteWorkbenchFrame   | route-workbench  | current          | reuse          | Workbench foundation     | Provide the semantic slot frame used by route workbenches.                                  | `@dvt/web` | `/canvas`; `/runs`; `/code`; `/diff`; `/lineage`; `/artifacts`; `/templates`; `/plugins`; `/admin` | dbt; dvt; monitoring; cost                       | route toolbar and context panel extraction remain separate work                 | `RouteWorkbenchFrame.test.tsx`; `routeWorkbenchFrame.architecture.test.ts`            |
 | `web.component.workbench.WorkbenchStates`     | WorkbenchStates       | state-view       | current          | standardize    | Workbench foundation     | Provide shared loading, empty, error, degraded, and read-only route states.                 | `@dvt/web` | `/runs`; `/code`; `/diff`; `/lineage`; `/artifacts`                                                | monitoring; dvt                                  | broader route adoption remains future work                                      | `WorkbenchStates.tsx`; `workbench-ui-contract-and-component-inventory.md`             |
+| `web.component.templates.TemplatesWorkbench`  | TemplatesWorkbench    | route-workbench  | current          | harden         | Templates workbench      | Own template selection, parameter capture, deterministic preview, and Monaco inspection.    | `@dvt/web` | `/templates`                                                                                       | dvt                                              | backend template persistence remains future work                                | `templatesViewModel.test.ts`; `templatesWorkbench.architecture.test.ts`               |
 | `web.component.canvas.CanvasShellChrome`      | CanvasShellChrome     | route-toolbar    | current          | harden         | Canvas workbench         | Compose Canvas shell chrome state, menu contributions, readiness controls, and run actions. | `@dvt/web` | `/canvas`                                                                                          | dbt; dvt; monitoring; cost                       | shared RouteToolbar extraction remains retired unless a product rail reopens it | `CanvasShell.architecture.test.tsx`; `canvasPlanReadiness.test.ts`                    |
 | `web.component.canvas.CanvasViewport`         | CanvasViewport        | canvas-viewport  | current          | harden         | Canvas workbench         | Render the graph as the permanent base surface with React Flow controls and context host.   | `@dvt/web` | `/canvas`                                                                                          | dbt; dvt                                         | bottom operational drawer integration                                           | `CanvasViewport.test.tsx`; `useCanvasViewportGraphModel.architecture.test.ts`         |
 | `web.component.canvas.CanvasContextMenu`      | CanvasContextMenu     | context-panel    | current          | harden         | Canvas workbench         | Resolve canvas and edge context commands without mixing node-specific operations.           | `@dvt/web` | `/canvas`                                                                                          | dbt; dvt                                         | edge and selection contextual menus remain follow-up                            | `CanvasViewport.test.tsx`; `canvasInteractionCommandSurface.test.ts`                  |
@@ -80,6 +81,7 @@ semantics.
 | `web.component.shell.BottomConsoleDrawer`     | `web.shell.root`   | `/`                     | bottom-drawer    | 90              |
 | `web.component.workbench.RouteWorkbenchFrame` | `web.canvas.graph` | `/canvas`               | primary-surface  | 40              |
 | `web.component.workbench.WorkbenchStates`     | `web.runs.list`    | `/runs`                 | primary-surface  | 50              |
+| `web.component.templates.TemplatesWorkbench`  | `web.templates`    | `/templates`            | primary-surface  | 40              |
 | `web.component.canvas.CanvasShellChrome`      | `web.canvas.graph` | `/canvas`               | route-toolbar    | 20              |
 | `web.component.canvas.CanvasViewport`         | `web.canvas.graph` | `/canvas`               | primary-surface  | 45              |
 | `web.component.canvas.CanvasContextMenu`      | `web.canvas.graph` | `/canvas`               | context-menu     | 46              |
@@ -99,6 +101,15 @@ semantics.
 | `web.component.shell.BottomConsoleDrawer`     | `apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts`                  | model             | buildBottomConsoleDrawerModel  |
 | `web.component.workbench.RouteWorkbenchFrame` | `apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx`                  | component         | RouteWorkbenchFrame            |
 | `web.component.workbench.WorkbenchStates`     | `apps/web/src/app/components/workbench/state/WorkbenchStates.tsx`                | component         | WorkbenchStates                |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/TemplatesView.tsx`                                       | view              | TemplatesView                  |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/TemplatesView.test.tsx`                                  | test              | none                           |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/templates/TemplatesRouteWorkbench.tsx`                   | component         | TemplatesRouteWorkbench        |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/templates/TemplateMonacoPreviewPanel.tsx`                | component         | TemplateMonacoPreviewPanel     |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/templates/TemplateMonacoPreviewPanel.test.tsx`           | test              | none                           |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/templates/templatesViewModel.ts`                         | view-model        | EXECUTION_TEMPLATE_CATALOG     |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/templates/templatesViewModel.test.ts`                    | test              | none                           |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/templates/templatesWorkbench.architecture.test.ts`       | architecture-test | none                           |
+| `web.component.templates.TemplatesWorkbench`  | `apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts`   | architecture-test | none                           |
 | `web.component.canvas.CanvasShellChrome`      | `apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx`                         | component         | CanvasShellMainPanel           |
 | `web.component.canvas.CanvasShellChrome`      | `apps/web/src/app/views/canvas/canvasShellChromeStateBuilder.ts`                 | view-model        | buildCanvasShellChromeState    |
 | `web.component.canvas.CanvasShellChrome`      | `apps/web/src/app/views/canvas/canvasShellChromeCommandsBuilder.ts`              | adapter           | buildCanvasShellChromeCommands |
@@ -141,37 +152,41 @@ semantics.
 
 ## Frontend Component Command Query Rails
 
-| Component ID                                  | Rail name                             | Rail kind   | Rail status            |
-| --------------------------------------------- | ------------------------------------- | ----------- | ---------------------- |
-| `web.component.shell.AppShellFrame`           | `GetRuntimeSession`                   | query       | implemented-api        |
-| `web.component.shell.AppShellFrame`           | `GetEffectiveWorkspaceContext`        | query       | implemented-api        |
-| `web.component.shell.ShellTopBar`             | `LoadRuntimeCapabilities`             | query       | implemented-api        |
-| `web.component.shell.LeftNavigationRail`      | `ListShellNavigationItems`            | local-query | implemented-local      |
-| `web.component.shell.BottomConsoleDrawer`     | `GetRunEvents`                        | query       | implemented-api        |
-| `web.component.workbench.RouteWorkbenchFrame` | `ListFrontendMechanicalTruthSurfaces` | query       | implemented-projection |
-| `web.component.workbench.WorkbenchStates`     | `ListFrontendMechanicalTruthSurfaces` | query       | implemented-projection |
-| `web.component.canvas.CanvasShellChrome`      | `StartRun`                            | command     | implemented-api        |
-| `web.component.canvas.CanvasShellChrome`      | `ObservePlanRunReadiness`             | query       | implemented-local      |
-| `web.component.canvas.CanvasViewport`         | `RenderCanvasContextualGraphSurface`  | query       | implemented-projection |
-| `web.component.canvas.CanvasViewport`         | `GetCanvasLayout`                     | query       | implemented-local      |
-| `web.component.canvas.CanvasContextMenu`      | `ResolveCanvasContextMenu`            | query       | implemented-local      |
-| `web.component.canvas.CanvasContextMenu`      | `CreateCanvasAuthoringNode`           | command     | implemented-local      |
-| `web.component.canvas.CanvasContextMenu`      | `ImportWarehouseSources`              | command     | implemented-api        |
-| `web.component.canvas.CanvasContextMenu`      | `PreviewExecutablePlan`               | command     | implemented-api        |
-| `web.component.canvas.CanvasContextMenu`      | `RemoveCanvasEdgeFromContext`         | command     | implemented-local      |
-| `web.component.canvas.GraphNodeCardStrategy`  | `ProjectGraphNodeCardReadModel`       | query       | implemented-projection |
-| `web.component.canvas.GraphNodeCardStrategy`  | `RenderGraphNodeCardMetrics`          | query       | implemented-projection |
-| `web.component.canvas.CanvasSurfaceStrategy`  | `ResolveCanvasSurfaceStrategy`        | query       | implemented-local      |
-| `web.component.canvas.SourceImportDialog`     | `ListWarehouseConnections`            | query       | implemented-api        |
-| `web.component.canvas.SourceImportDialog`     | `ListWarehouseConnectionTables`       | query       | implemented-api        |
-| `web.component.canvas.SourceImportDialog`     | `ImportWarehouseSources`              | command     | implemented-api        |
-| `web.component.canvas.SourceImportDialog`     | `CreateWarehouseConnection`           | command     | implemented-api        |
-| `web.component.canvas.SourceImportDialog`     | `TestWarehouseConnection`             | command     | implemented-api        |
-| `web.component.canvas.NodeWorkbench`          | `InspectCanvasNodeProperties`         | query       | implemented-local      |
-| `web.component.canvas.NodeWorkbench`          | `ConfigureCanvasDbtNode`              | command     | implemented-local      |
-| `web.component.canvas.NodeWorkbench`          | `ConfigureCanvasDvtNode`              | command     | implemented-local      |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `ListCanvasWorkbenchTabs`             | query       | not-front-default      |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `SelectCanvasWorkbenchTab`            | command     | not-front-default      |
+| Component ID                                  | Rail name                               | Rail kind   | Rail status            |
+| --------------------------------------------- | --------------------------------------- | ----------- | ---------------------- |
+| `web.component.shell.AppShellFrame`           | `GetRuntimeSession`                     | query       | implemented-api        |
+| `web.component.shell.AppShellFrame`           | `GetEffectiveWorkspaceContext`          | query       | implemented-api        |
+| `web.component.shell.ShellTopBar`             | `LoadRuntimeCapabilities`               | query       | implemented-api        |
+| `web.component.shell.LeftNavigationRail`      | `ListShellNavigationItems`              | local-query | implemented-local      |
+| `web.component.shell.BottomConsoleDrawer`     | `GetRunEvents`                          | query       | implemented-api        |
+| `web.component.workbench.RouteWorkbenchFrame` | `ListFrontendMechanicalTruthSurfaces`   | query       | implemented-projection |
+| `web.component.workbench.WorkbenchStates`     | `ListFrontendMechanicalTruthSurfaces`   | query       | implemented-projection |
+| `web.component.templates.TemplatesWorkbench`  | `ListExecutionTemplateProfiles`         | query       | implemented-local      |
+| `web.component.templates.TemplatesWorkbench`  | `GenerateExecutionTemplatePreview`      | query       | implemented-local      |
+| `web.component.templates.TemplatesWorkbench`  | `SelectExecutionTemplateProfile`        | command     | implemented-local      |
+| `web.component.templates.TemplatesWorkbench`  | `UpdateExecutionTemplateParameterValue` | command     | implemented-local      |
+| `web.component.canvas.CanvasShellChrome`      | `StartRun`                              | command     | implemented-api        |
+| `web.component.canvas.CanvasShellChrome`      | `ObservePlanRunReadiness`               | query       | implemented-local      |
+| `web.component.canvas.CanvasViewport`         | `RenderCanvasContextualGraphSurface`    | query       | implemented-projection |
+| `web.component.canvas.CanvasViewport`         | `GetCanvasLayout`                       | query       | implemented-local      |
+| `web.component.canvas.CanvasContextMenu`      | `ResolveCanvasContextMenu`              | query       | implemented-local      |
+| `web.component.canvas.CanvasContextMenu`      | `CreateCanvasAuthoringNode`             | command     | implemented-local      |
+| `web.component.canvas.CanvasContextMenu`      | `ImportWarehouseSources`                | command     | implemented-api        |
+| `web.component.canvas.CanvasContextMenu`      | `PreviewExecutablePlan`                 | command     | implemented-api        |
+| `web.component.canvas.CanvasContextMenu`      | `RemoveCanvasEdgeFromContext`           | command     | implemented-local      |
+| `web.component.canvas.GraphNodeCardStrategy`  | `ProjectGraphNodeCardReadModel`         | query       | implemented-projection |
+| `web.component.canvas.GraphNodeCardStrategy`  | `RenderGraphNodeCardMetrics`            | query       | implemented-projection |
+| `web.component.canvas.CanvasSurfaceStrategy`  | `ResolveCanvasSurfaceStrategy`          | query       | implemented-local      |
+| `web.component.canvas.SourceImportDialog`     | `ListWarehouseConnections`              | query       | implemented-api        |
+| `web.component.canvas.SourceImportDialog`     | `ListWarehouseConnectionTables`         | query       | implemented-api        |
+| `web.component.canvas.SourceImportDialog`     | `ImportWarehouseSources`                | command     | implemented-api        |
+| `web.component.canvas.SourceImportDialog`     | `CreateWarehouseConnection`             | command     | implemented-api        |
+| `web.component.canvas.SourceImportDialog`     | `TestWarehouseConnection`               | command     | implemented-api        |
+| `web.component.canvas.NodeWorkbench`          | `InspectCanvasNodeProperties`           | query       | implemented-local      |
+| `web.component.canvas.NodeWorkbench`          | `ConfigureCanvasDbtNode`                | command     | implemented-local      |
+| `web.component.canvas.NodeWorkbench`          | `ConfigureCanvasDvtNode`                | command     | implemented-local      |
+| `web.component.canvas.CanvasWorkbenchTabs`    | `ListCanvasWorkbenchTabs`               | query       | not-front-default      |
+| `web.component.canvas.CanvasWorkbenchTabs`    | `SelectCanvasWorkbenchTab`              | command     | not-front-default      |
 
 ## Frontend Component Evidence
 
@@ -183,6 +198,10 @@ semantics.
 | `web.component.shell.BottomConsoleDrawer.docs`            | `web.component.shell.BottomConsoleDrawer`     | documentation     | `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md` | accepted        |
 | `web.component.workbench.RouteWorkbenchFrame.unit`        | `web.component.workbench.RouteWorkbenchFrame` | unit-test         | `apps/web/src/app/components/workbench/RouteWorkbenchFrame.test.tsx`                | accepted        |
 | `web.component.workbench.WorkbenchStates.docs`            | `web.component.workbench.WorkbenchStates`     | documentation     | `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md` | accepted        |
+| `web.component.templates.TemplatesWorkbench.view`         | `web.component.templates.TemplatesWorkbench`  | presentation-test | `apps/web/src/app/views/TemplatesView.test.tsx`                                     | accepted        |
+| `web.component.templates.TemplatesWorkbench.model`        | `web.component.templates.TemplatesWorkbench`  | unit-test         | `apps/web/src/app/views/templates/templatesViewModel.test.ts`                       | accepted        |
+| `web.component.templates.TemplatesWorkbench.architecture` | `web.component.templates.TemplatesWorkbench`  | architecture-test | `apps/web/src/app/views/templates/templatesWorkbench.architecture.test.ts`          | accepted        |
+| `web.component.templates.TemplatesWorkbench.monaco`       | `web.component.templates.TemplatesWorkbench`  | architecture-test | `apps/web/src/app/views/templates/templatesMonacoPreview.architecture.test.ts`      | accepted        |
 | `web.component.canvas.CanvasShellChrome.readiness`        | `web.component.canvas.CanvasShellChrome`      | unit-test         | `apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts`                         | accepted        |
 | `web.component.canvas.CanvasShellChrome.architecture`     | `web.component.canvas.CanvasShellChrome`      | architecture-test | `apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx`                   | accepted        |
 | `web.component.canvas.CanvasViewport.presentation`        | `web.component.canvas.CanvasViewport`         | presentation-test | `apps/web/src/app/views/canvas/CanvasViewport.test.tsx`                             | accepted        |

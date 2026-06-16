@@ -1,4 +1,7 @@
-/** Owned concern: own execution-template catalog, parameter validation, and preview projection. */
+/**
+ * Owned concern: own execution-template catalog, parameter validation, and preview projection.
+ * Command/query rails: `ListExecutionTemplateProfiles`, `GenerateExecutionTemplatePreview`.
+ */
 export type ExecutionTemplateParameterDefinition = Readonly<{
   id: string;
   label: string;
