@@ -352,7 +352,7 @@ test('component create writer stores component lists in relational tables', asyn
   );
 });
 
-test('component reparent writer updates imported tree and stores audit row', async () => {
+test('component reparent writer stores imported overlay and audit row', async () => {
   const command = parseArgs([
     'component',
     'reparent',
@@ -389,11 +389,17 @@ test('component reparent writer updates imported tree and stores audit row', asy
 
   await writePlannedComponentReparentOperation(client, planned);
 
-  const update = queries.find((query) =>
-    query.sql.includes('update planning_query_store.governance_components')
+  assert.ok(
+    !queries.some((query) =>
+      query.sql.includes('update planning_query_store.governance_components')
+    )
   );
-  assert.ok(update);
-  assert.deepEqual(JSON.parse(update.params[2]), [
+  const overlayUpsert = queries.find((query) =>
+    query.sql.includes('governance_component_reparent_overrides')
+  );
+  assert.ok(overlayUpsert);
+  assert.match(overlayUpsert.sql, /on conflict \(component_id\) do update/);
+  assert.deepEqual(JSON.parse(overlayUpsert.params[4]), [
     'SYS-WEB-ROOT',
     'SYS-WEB-APP-PLUGINS',
     'SYS-WEB-CANVAS-SURFACE-STRATEGY',

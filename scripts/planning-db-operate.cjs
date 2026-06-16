@@ -4018,7 +4018,10 @@ function planComponentReparentOperation({
     expectedRevision: command.expectedRevision ?? null,
     previousRevision,
     resultingRevision,
-    payload: operationPayload(command),
+    payload: {
+      ...operationPayload(command),
+      resultingDefinition: definition,
+    },
     createdAt,
   };
 
@@ -4852,9 +4855,16 @@ async function readArchitectureRelations(client) {
 
 async function readGovernanceUnit(client, unitId) {
   const result = await client.query(
-    `select *
-     from ${schemaName}.governance_unit_query
-     where unit_id = $1`,
+    `select
+       component_id as unit_id,
+       name,
+       component_level as level,
+       parent_component_id as parent_id,
+       root_unit,
+       domain_unit,
+       status
+     from ${componentEngineeringSchemaName}.component_tree_query
+     where component_id = $1`,
     [unitId]
   );
 
@@ -4864,14 +4874,15 @@ async function readGovernanceUnit(client, unitId) {
 async function readGovernanceUnitPath(client, unitId) {
   const result = await client.query(
     `with recursive unit_chain as (
-       select unit_id, parent_id, 0 as depth
-       from ${schemaName}.governance_unit_query
-       where unit_id = $1
+       select component_id as unit_id, parent_component_id as parent_id, 0 as depth
+       from ${componentEngineeringSchemaName}.component_tree_query
+       where component_id = $1
        union all
-       select parent.unit_id, parent.parent_id, unit_chain.depth + 1
-       from ${schemaName}.governance_unit_query parent
+       select parent.component_id as unit_id, parent.parent_component_id as parent_id,
+              unit_chain.depth + 1
+       from ${componentEngineeringSchemaName}.component_tree_query parent
        join unit_chain
-         on unit_chain.parent_id = parent.unit_id
+         on unit_chain.parent_id = parent.component_id
        where unit_chain.depth < 64
      )
      select unit_id
@@ -5656,16 +5667,33 @@ async function writePlannedComponentReparentOperation(client, planned) {
     );
   } else {
     await client.query(
-      `update ${schemaName}.governance_components
-       set parent_id = $2,
-           unit_path = $3::jsonb,
-           raw_component = $4::jsonb
-       where component_id = $1`,
+      `insert into ${schemaName}.governance_component_reparent_overrides
+        (component_id, parent_id, root_unit, domain_unit, unit_path, raw_component,
+         source_path, source_content_sha256, revision, updated_by, updated_at)
+       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9, $10, $11)
+       on conflict (component_id) do update set
+         parent_id = excluded.parent_id,
+         root_unit = excluded.root_unit,
+         domain_unit = excluded.domain_unit,
+         unit_path = excluded.unit_path,
+         raw_component = excluded.raw_component,
+         source_path = excluded.source_path,
+         source_content_sha256 = excluded.source_content_sha256,
+         revision = excluded.revision,
+         updated_by = excluded.updated_by,
+         updated_at = excluded.updated_at`,
       [
         planned.definition.componentId,
         planned.definition.parentComponentId,
+        planned.definition.rootUnit,
+        planned.definition.domainUnit,
         toJson(planned.definition.unitPath),
         toJson(planned.definition.rawComponent),
+        planned.definition.sourcePath,
+        planned.definition.sourceContentSha256,
+        planned.definition.revision,
+        planned.audit.actor,
+        planned.audit.createdAt,
       ]
     );
   }

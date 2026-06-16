@@ -910,6 +910,33 @@ test('tracked migrations allow audited governance component reparent operations'
   assert.match(reparentMigration.sql, /'component_reparent'/);
 });
 
+test('tracked migrations persist governance component reparent overlays outside import snapshots', () => {
+  const migrations = readMigrationFiles();
+  const reparentOverlayMigration = migrations.find(
+    (migration) => migration.fileName === '103_governance_component_reparent_persistent_overlay.sql'
+  );
+
+  assert.ok(reparentOverlayMigration);
+  assert.match(
+    reparentOverlayMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_reparent_overrides/
+  );
+  assert.match(reparentOverlayMigration.sql, /operation_type = 'component_reparent'/);
+  assert.match(
+    reparentOverlayMigration.sql,
+    /create or replace view planning_query_store\.governance_component_reparent_override_query/
+  );
+  assert.match(
+    reparentOverlayMigration.sql,
+    /create or replace view component_engineering\.component_tree_query/
+  );
+  assert.match(reparentOverlayMigration.sql, /coalesce\(reparent\.parent_id/);
+  assert.doesNotMatch(
+    reparentOverlayMigration.sql,
+    /update\s+planning_query_store\.governance_components/i
+  );
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(
