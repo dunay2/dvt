@@ -130,10 +130,12 @@ Observed gaps:
 - Component profiles exist, but the global integrity posture is not one query.
 - Rail duplicate checks are exact-name only and do not classify surface-named or
   semantically duplicated rails.
-- Surface-named command/query rails can remain hidden as generic `gap_rail`
-  warnings when they are still historical declared work; the vocabulary rail
-  must expose them explicitly so `API`, `UI`, `CLI`, `worker`, and `adapter`
-  stay implementation surfaces instead of canonical rail names.
+- Surface-named command/query rails are exposed by `rail-vocabulary` instead of
+  hiding inside generic `gap_rail` warnings. The 2026-06-16 API subdivision
+  cleanup retired the active `Api*Command`/`Api*Query` aliases in favor of
+  domain rails such as `StartRun`, `SignalRun`, `RecoverRun`, `GetRunEvents`,
+  and `ListRuns`; the progressive baseline now allows zero active
+  `surface_named_rail` findings.
 - Architecture dependency fitness only treats `approved` or `implemented`
   relations as declared, while the operation rail currently starts relations in
   `proposed`.
@@ -230,6 +232,8 @@ allowedImplementationSurfaces:
   - scripts/planning-db-operate.test.cjs
   - scripts/planning-db-operate-tests/architecture-parse.test.cjs
   - scripts/planning-db-operate-tests/architecture-plan.test.cjs
+  - scripts/planning-db-import.test.cjs
+  - scripts/planning-db/command-query-rail-shared.cjs
   - scripts/local-validation-plan.cjs
   - scripts/verify-changed.test.cjs
   - package.json

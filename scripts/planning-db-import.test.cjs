@@ -361,6 +361,40 @@ test('command/query rail snapshot joins documented rails with source implementat
   assert.equal(archiveWidget.documentationRefs.length, 1);
 });
 
+test('command/query rail snapshot keeps canonical rail names when API aliases appear in notes', () => {
+  const referenceDocuments = [
+    {
+      path: 'docs/planning/proposals/mandatory/runtime-and-contracts/api.md',
+      content: [
+        '| Rail | Type | Owning DDD object | Notes |',
+        '| --- | --- | --- | --- |',
+        '| `SignalRun` | Command | Run command application service | Retires `ApiSignalRunCommand` |',
+        '| `RecoverRun` | Command | Run recovery application service | Retires `ApiRecoverRunCommand` |',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({
+    docs: [
+      {
+        path: 'docs/planning/proposals/mandatory/runtime-and-contracts/empty.md',
+        content: '',
+      },
+    ],
+    referenceDocuments,
+    sourceFiles: [],
+  });
+
+  assert.deepEqual(
+    snapshot.rails.map((rail) => rail.railName),
+    ['SignalRun', 'RecoverRun']
+  );
+  assert.equal(
+    snapshot.rails.some((rail) => /^Api/.test(rail.railName)),
+    false
+  );
+});
+
 test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {
   const calls = [];
   const logs = [];

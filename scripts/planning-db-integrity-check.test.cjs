@@ -74,16 +74,10 @@ test('Planning DB integrity check fails report mode on progressive regressions',
   assert.match(formatIntegrityCheckSummary(result), /progressive_baseline fail/);
 });
 
-test('Planning DB integrity check treats surface-named gap rails as governed historical debt', () => {
-  const baselineSurfaceRails = Array.from({ length: 12 }, (_, index) => ({
-    finding_kind: 'surface_named_rail',
-    severity: 'warning',
-    rail_name: `ApiHistoricalGapRail${index}`,
-  }));
-
+test('Planning DB integrity check fails report mode on any new surface-named rail', () => {
   const baselineResult = buildIntegrityCheckResult({
     componentRows: [],
-    railRows: baselineSurfaceRails,
+    railRows: [],
     strict: false,
   });
 
@@ -93,7 +87,6 @@ test('Planning DB integrity check treats surface-named gap rails as governed his
   const regressionResult = buildIntegrityCheckResult({
     componentRows: [],
     railRows: [
-      ...baselineSurfaceRails,
       {
         finding_kind: 'surface_named_rail',
         severity: 'warning',
@@ -109,15 +102,15 @@ test('Planning DB integrity check treats surface-named gap rails as governed his
       surface: 'rail_vocabulary',
       kind: 'surface_named_rail',
       metric: 'total',
-      actual: 13,
-      allowed: 12,
+      actual: 1,
+      allowed: 0,
     },
     {
       surface: 'rail_vocabulary',
       kind: 'surface_named_rail',
       metric: 'warning',
-      actual: 13,
-      allowed: 12,
+      actual: 1,
+      allowed: 0,
     },
   ]);
 });
