@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-/** Owned concern: select the pre-push type-check scope from the local changed-file set. */
+/**
+ * Owned concern: select the pre-push type-check scope from the local changed-file set.
+ * Command/query rails: `SelectPrepushTypecheckScope`.
+ */
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 const { listLocalChangedFiles } = require('./git-local-changes.cjs');
