@@ -5,7 +5,6 @@ import { OptionsStep } from './OptionsStep';
 import { ResultStep } from './ResultStep';
 import { ReviewStep } from './ReviewStep';
 import { SelectionStep } from './SelectionStep';
-import { SourceTypeStep } from './SourceTypeStep';
 import type { SourceImportWizardController } from './useSourceImportWizard';
 
 interface WizardStepContentProps {
@@ -15,13 +14,6 @@ interface WizardStepContentProps {
 export function WizardStepContent({ controller }: WizardStepContentProps) {
   const { state } = controller;
   switch (state.currentStep) {
-    case 'sourceType':
-      return (
-        <SourceTypeStep
-          selectedSourceType={state.selectedSourceType}
-          onSelectSourceType={controller.setSelectedSourceType}
-        />
-      );
     case 'connection':
       return (
         <ConnectionStep

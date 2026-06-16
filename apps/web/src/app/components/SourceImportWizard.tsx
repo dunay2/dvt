@@ -66,7 +66,7 @@ export default function SourceImportWizard({
               <Button
                 variant="outline"
                 onClick={controller.handleBack}
-                disabled={state.currentStep === 'sourceType'}
+                disabled={state.currentStep === 'connection'}
               >
                 <ArrowLeft className="mr-2 size-4" />
                 Back

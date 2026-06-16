@@ -2,7 +2,6 @@ export const sourceImportWizardCopy = {
   title: 'Add source',
   description:
     'Explore governed connections, choose source tables, inspect metadata, and attach selected origins to the canvas.',
-  databaseOnlyError: 'Only Database is available in the current product slice',
   selectConnectionError: 'Please select a connection',
   selectAtLeastOneTableError: 'Please select at least one table',
   loadConnectionsError: 'Failed to load warehouse connections.',
@@ -10,13 +9,6 @@ export const sourceImportWizardCopy = {
   importSuccess: 'Sources attached successfully',
   importNoop: 'Selected data objects are already present in the workspace graph',
   importError: 'Failed to register data objects.',
-  sourceType: {
-    title: 'Choose source connection',
-    description:
-      'Start from a real governed source provider before browsing tables for the canvas.',
-    availabilityNote:
-      'This slice supports real attachment only for Database sources. File, API, and Stream remain visible as governed source categories until their real rails are implemented.',
-  },
   connection: {
     title: 'Choose database connection',
     description:
@@ -56,7 +48,7 @@ export const sourceImportWizardCopy = {
       'The selected tables are already registered, so Canvas did not need to materialize new source nodes.',
     filesTitle: 'Registry files created',
     warning:
-      'Canvas queued the imported source ids and will focus them when protected draft authority refreshes. Persisted backend registry writes still require a dedicated API endpoint in `api` mode.',
+      'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes.',
     noopWarning:
       'Canvas stayed unchanged because the selected registry entries already existed in the workspace graph.',
   },

@@ -14,7 +14,7 @@ const SOURCE_IMPORT_SECTIONS: readonly SourceImportSection[] = [
   {
     id: 'connections',
     label: 'Connections',
-    steps: ['sourceType', 'connection'],
+    steps: ['connection'],
   },
   {
     id: 'browse',

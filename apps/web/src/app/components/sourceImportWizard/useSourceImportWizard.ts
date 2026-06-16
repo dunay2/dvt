@@ -18,12 +18,7 @@ import {
   getSelectedCount,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
-import type {
-  DataObjectSourceType,
-  SourceImportInitialSelection,
-  SourceImportWizardState,
-  WizardStep,
-} from './types';
+import type { SourceImportInitialSelection, SourceImportWizardState, WizardStep } from './types';
 
 interface UseSourceImportWizardParams {
   open: boolean;
@@ -35,8 +30,7 @@ interface UseSourceImportWizardParams {
 }
 
 const initialState: SourceImportWizardState = {
-  currentStep: 'sourceType',
-  selectedSourceType: 'database',
+  currentStep: 'connection',
   connections: [],
   selectedConnection: null,
   tables: [],
@@ -84,7 +78,6 @@ export function useSourceImportWizard({
     setState((prev) => ({
       ...prev,
       currentStep: 'selection',
-      selectedSourceType: 'database',
       selectedConnection: initialSelection.connectionId,
       tables: [],
       loadError: null,
@@ -116,8 +109,6 @@ export function useSourceImportWizard({
 
   const setCurrentStep = (currentStep: WizardStep) =>
     setState((prev) => ({ ...prev, currentStep }));
-  const setSelectedSourceType = (selectedSourceType: DataObjectSourceType) =>
-    setState((prev) => ({ ...prev, selectedSourceType }));
   const setSelectedConnection = (selectedConnection: string | null) =>
     setState((prev) => ({ ...prev, selectedConnection }));
   const setGroupingStrategy = (groupingStrategy: 'schema' | 'database' | 'custom') =>
@@ -131,10 +122,6 @@ export function useSourceImportWizard({
     setState((prev) => ({ ...prev, [optionId]: value }));
 
   const handleNext = () => {
-    if (state.currentStep === 'sourceType' && state.selectedSourceType !== 'database') {
-      toast.error(copy.databaseOnlyError);
-      return;
-    }
     if (state.currentStep === 'connection' && !state.selectedConnection) {
       toast.error(copy.selectConnectionError);
       return;
@@ -227,7 +214,6 @@ export function useSourceImportWizard({
     sourceImportOptions,
     sourceImportOptionValues,
     canProceed,
-    setSelectedSourceType,
     setSelectedConnection,
     setGroupingStrategy,
     setIncludeColumns,
