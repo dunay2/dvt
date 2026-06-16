@@ -304,7 +304,7 @@ class FeatureImplementationGuard {
   isTestFile(filePath) {
     return (
       /\.(?:test|spec)\.(?:cjs|mjs|js|jsx|ts|tsx)$/.test(filePath) ||
-      /(^|\/)(?:__tests__|test|tests)\//.test(filePath)
+      /(^|\/)(?:__tests__|test|tests|[^/]+-tests)\//.test(filePath)
     );
   }
 

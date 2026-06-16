@@ -86,6 +86,12 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-operate-tests/task-plan.test.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/feature-mechanization.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/fowler-analysis.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/governance-refresh.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/helpers.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/component-integrity-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db/queries/rail-vocabulary-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-run.cjs': 'scripts/planning-db-run.test.cjs',

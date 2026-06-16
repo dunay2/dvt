@@ -51,6 +51,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db/queries/command-query-rail-query.cjs
   - scripts/planning-db/queries/feature-mechanization-query.cjs
   - scripts/planning-db/queries/knowledge-intake-retirement-query.cjs
+  - scripts/planning-db-query-tests/helpers.cjs
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/**
@@ -140,6 +141,19 @@ symbols:
       - QueryKnowledgeIntakeRetirement
     fowlerSignals:
       - knowledge intake retirement read model lives in query component folder
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: runPlanningDbQueryCli
+    path: scripts/planning-db-query-tests/helpers.cjs
+    dddOwner: PlanningDbQueryComponentLayoutPolicy
+    cqRails:
+      - QueryCommandQueryRailCatalog
+      - ListFeatureMechanizationFeatures
+      - QueryKnowledgeIntakeRetirement
+    fowlerSignals:
+      - query CLI test helper lives under the query test folder instead of the root harness
     architectureGuard: node --test scripts/planning-db-query.test.cjs
     cypressCoverage: N/A
     unitTests:

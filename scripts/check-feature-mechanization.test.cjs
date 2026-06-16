@@ -612,18 +612,28 @@ test('validateFeatureImplementationManifests does not require symbol declaration
           allowedImplementationSurfaces: [
             ...validManifest.allowedImplementationSurfaces,
             'scripts/planning-db-operate-tests/feature-mechanization.test.cjs',
+            'scripts/planning-db-query-tests/helpers.cjs',
           ],
         },
       },
     ],
     {
-      changedFiles: ['scripts/planning-db-operate-tests/feature-mechanization.test.cjs'],
+      changedFiles: [
+        'scripts/planning-db-operate-tests/feature-mechanization.test.cjs',
+        'scripts/planning-db-query-tests/helpers.cjs',
+      ],
       addedLinesByPath: {
         'scripts/planning-db-operate-tests/feature-mechanization.test.cjs': [
           "const test = require('node:test');",
           "const assert = require('node:assert/strict');",
           'function featureMechanizationRecordArgs() {',
           '  return [];',
+          '}',
+        ],
+        'scripts/planning-db-query-tests/helpers.cjs': [
+          "const path = require('node:path');",
+          'function runPlanningDbQueryCli() {',
+          '  return null;',
           '}',
         ],
       },

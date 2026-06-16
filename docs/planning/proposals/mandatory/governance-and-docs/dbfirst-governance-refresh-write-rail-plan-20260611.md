@@ -89,6 +89,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db/commands/governance-refresh-command.cjs
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
+  - scripts/planning-db-query-tests/governance-refresh.test.cjs
   - scripts/planning-db/queries/governance-refresh-run-query.cjs
   - scripts/planning-db/governance-refresh-write-rail.cjs
   - tools/planning-db/migrations/080_governance_refresh_run_ledger.sql
