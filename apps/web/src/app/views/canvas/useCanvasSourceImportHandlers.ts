@@ -6,9 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { ImportSourcesResult } from '../../ports/workspace';
 import { queryKeys } from '../../queries/queryKeys';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
-import type {
-  CanvasSourceImportContracts,
-} from './canvasMutationHandlerContracts';
+import type { CanvasSourceImportContracts } from './canvasMutationHandlerContracts';
 
 type UseCanvasSourceImportHandlersArgs = CanvasSourceImportContracts;
 
@@ -33,8 +31,7 @@ export function useCanvasSourceImportHandlers({
   effects,
   policy,
 }: UseCanvasSourceImportHandlersArgs): UseCanvasSourceImportHandlersResult {
-  const { setDraftSession, setSelectedNodes, setInspectorNode, showInspectorPanel, setCurrentPlan } =
-    effects;
+  const { setDraftSession, setSelectedNodes, setInspectorNode, setCurrentPlan } = effects;
   const { canMutateGraph, workspaceLayoutKey } = policy;
 
   const queryClient = useQueryClient();
@@ -55,7 +52,6 @@ export function useCanvasSourceImportHandlers({
         );
         setSelectedNodes(nextImportedNodeIds);
         setInspectorNode(nextImportedNodeIds[0] ?? null);
-        showInspectorPanel();
         setImportedNodeFocusIds(nextImportedNodeIds);
       }
 
@@ -68,7 +64,6 @@ export function useCanvasSourceImportHandlers({
       setDraftSession,
       setInspectorNode,
       setSelectedNodes,
-      showInspectorPanel,
       workspaceLayoutKey,
     ]
   );

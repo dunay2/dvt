@@ -498,7 +498,7 @@ describe('useCanvasController core', () => {
       'src_erp_customers',
     ]);
     expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith('src_erp_orders');
-    expect(harness.state.store.showInspectorPanel).toHaveBeenCalledTimes(1);
+    expect(harness.state.store.showInspectorPanel).not.toHaveBeenCalled();
     expect(harness.state.queryClient.invalidateQueries).toHaveBeenCalledWith({
       queryKey: ['workspace', 'graph-draft', 'tenant-a::project-a::dev'],
     });

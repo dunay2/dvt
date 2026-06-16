@@ -71,6 +71,25 @@ describe('useUiLayoutStore', () => {
     expect(useUiLayoutStore.getState().gridSize).toBe(30);
   });
 
+  it('does not restore contextual node workbench visibility from persisted legacy layout', async () => {
+    localStorage.setItem(
+      UI_LAYOUT_STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          inspectorPanelVisible: true,
+          inspectorPanelWidth: 520,
+          gridSize: 30,
+        },
+      })
+    );
+
+    await useUiLayoutStore.persist.rehydrate();
+
+    expect(useUiLayoutStore.getState().inspectorPanelVisible).toBe(false);
+    expect(useUiLayoutStore.getState().inspectorPanelWidth).toBe(520);
+    expect(useUiLayoutStore.getState().gridSize).toBe(30);
+  });
+
   it('owns canvas grid preferences as visual layout commands', async () => {
     useUiLayoutStore.getState().setCanvasGridVisible(false);
     useUiLayoutStore.getState().setCanvasGridColor('#f97316');
