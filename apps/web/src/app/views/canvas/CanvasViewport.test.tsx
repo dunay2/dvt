@@ -130,6 +130,10 @@ function buildProps(
     onImportedNodeFocusComplete: vi.fn(),
     canPreviewExecutionPlan: false,
     onPreviewExecutionPlan: vi.fn(),
+    canOpenProjectExplorer: false,
+    onOpenProjectExplorer: vi.fn(),
+    canOpenCanvasSettings: false,
+    onOpenCanvasSettings: vi.fn(),
     ...overrides,
   };
 }
@@ -624,6 +628,59 @@ describe('CanvasViewport', () => {
 
     expect(props.onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
     expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
+  });
+
+  it('opens backed project and settings actions from the background context menu', async () => {
+    const props = buildProps({
+      canPreviewExecutionPlan: true,
+      onPreviewExecutionPlan: vi.fn(),
+      canOpenProjectExplorer: true,
+      onOpenProjectExplorer: vi.fn(),
+      canOpenCanvasSettings: true,
+      onOpenCanvasSettings: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault: vi.fn(),
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    const clickMenuItem = async (label: string): Promise<void> => {
+      const button = Array.from(container.querySelectorAll('button')).find(
+        (candidate) => candidate.textContent === label
+      );
+      expect(button, label).toBeDefined();
+      await act(async () => {
+        button?.click();
+      });
+    };
+
+    await clickMenuItem('Explore project');
+    expect(props.onOpenProjectExplorer).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault: vi.fn(),
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    await clickMenuItem('Canvas settings');
+    expect(props.onOpenCanvasSettings).toHaveBeenCalledTimes(1);
+
+    expect(props.onPreviewExecutionPlan).not.toHaveBeenCalled();
   });
 
   it('opens a governed remove-edge menu from the edge context gesture', async () => {
