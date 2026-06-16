@@ -240,8 +240,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
 
     switch (actionId) {
       case 'inspect-node':
-      case 'inspect-inputs-outputs':
-      case 'inspect-tests':
         data.onInspectNode?.(id, action?.workbenchTabId ?? null);
         return;
       case 'duplicate-node':

@@ -158,6 +158,7 @@ describe('canvasHostCycleState', () => {
 
     expect(cycle).toEqual({
       kind: 'typed_empty',
+      canvasTitle: 'Main canvas',
       title: 'Start transformation canvas',
       message: 'Start transformation authoring',
       firstNodeLabel: 'Add first transformation node',
@@ -185,6 +186,7 @@ describe('canvasHostCycleState', () => {
 
     expect(cycle).toEqual({
       kind: 'typed_empty',
+      canvasTitle: 'Main canvas',
       title: 'Start transformation canvas',
       message: 'Start transformation authoring',
       firstNodeLabel: 'Add first transformation node',
@@ -211,6 +213,7 @@ describe('canvasHostCycleState', () => {
 
     expect(cycle).toEqual({
       kind: 'typed_empty',
+      canvasTitle: 'Main canvas',
       title: 'Start transformation canvas',
       message: 'Start transformation authoring',
       firstNodeLabel: 'Add first transformation node',
@@ -237,6 +240,7 @@ describe('canvasHostCycleState', () => {
 
     expect(cycle).toEqual({
       kind: 'typed_empty',
+      canvasTitle: 'dbt canvas',
       title: 'Start dbt canvas',
       message: canvasViewCopy.routeEmptyReadOnlyMessage,
       firstNodeLabel: 'Add first dbt node',

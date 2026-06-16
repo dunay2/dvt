@@ -9,8 +9,6 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 export type CanvasNodeContextMenuActionId =
   | 'edit-sql'
   | 'inspect-node'
-  | 'inspect-inputs-outputs'
-  | 'inspect-tests'
   | 'preview-node'
   | 'run-from-node'
   | 'show-lineage'
@@ -85,22 +83,6 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
     disabled: true,
     disabledReason: 'SQL workbench is not available for this node.',
   },
-  inputsOutputs: {
-    id: 'inspect-inputs-outputs',
-    label: 'Inputs / Outputs',
-    intent: 'read',
-    disabled: true,
-    workbenchTabId: 'inputs-outputs',
-    disabledReason: 'Inputs / Outputs workbench is not available for this node.',
-  },
-  tests: {
-    id: 'inspect-tests',
-    label: 'Tests',
-    intent: 'read',
-    disabled: true,
-    workbenchTabId: 'tests',
-    disabledReason: 'Node test catalog is not available for this node.',
-  },
   previewNode: {
     id: 'preview-node',
     label: 'Preview node',
@@ -124,27 +106,17 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
   },
 } as const satisfies Record<string, CanvasNodeContextMenuAction>;
 
-function buildWorkbenchReadAction({
-  id,
-  label,
-  workbenchTabId,
-  canInspectNode,
-}: Readonly<{
-  id: Extract<
-    CanvasNodeContextMenuActionId,
-    'inspect-node' | 'inspect-inputs-outputs' | 'inspect-tests'
-  >;
-  label: string;
-  workbenchTabId: CanvasNodeWorkbenchTabId;
-  canInspectNode: boolean;
-}>): CanvasNodeContextMenuAction {
+function buildPropertiesAction(canInspectNode: boolean): CanvasNodeContextMenuAction | null {
+  if (!canInspectNode) {
+    return null;
+  }
+
   return {
-    id,
-    label,
+    id: 'inspect-node',
+    label: 'Properties',
     intent: 'read',
-    disabled: !canInspectNode,
-    workbenchTabId,
-    ...(canInspectNode ? {} : { disabledReason: 'Inspector is unavailable for this node.' }),
+    disabled: false,
+    workbenchTabId: 'general',
   };
 }
 
@@ -237,25 +209,8 @@ export function buildCanvasNodeContextMenuModel({
       label: 'Configure',
       actions: [
         { ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql },
-        buildWorkbenchReadAction({
-          id: 'inspect-node',
-          label: 'Properties',
-          workbenchTabId: 'general',
-          canInspectNode,
-        }),
-        buildWorkbenchReadAction({
-          id: 'inspect-inputs-outputs',
-          label: 'Inputs / Outputs',
-          workbenchTabId: 'inputs-outputs',
-          canInspectNode,
-        }),
-        buildWorkbenchReadAction({
-          id: 'inspect-tests',
-          label: 'Tests',
-          workbenchTabId: 'tests',
-          canInspectNode,
-        }),
-      ],
+        buildPropertiesAction(canInspectNode),
+      ].filter((action): action is CanvasNodeContextMenuAction => action != null),
     },
     {
       id: 'execute',

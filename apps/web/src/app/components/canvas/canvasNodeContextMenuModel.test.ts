@@ -34,6 +34,8 @@ describe('canvasNodeContextMenuModel', () => {
       expect.arrayContaining(['duplicate-node', 'select-node-for-execution', 'remove-node'])
     );
     expect(actionById(model, 'inspect-node')).toBeUndefined();
+    expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
+    expect(actionById(model, 'inspect-tests')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toMatchObject({
       intent: 'command',
       destructive: true,
@@ -56,8 +58,6 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionIds(model)).toEqual([
       'edit-sql',
       'inspect-node',
-      'inspect-inputs-outputs',
-      'inspect-tests',
       'preview-node',
       'run-from-node',
       'select-node-for-execution',
@@ -71,22 +71,12 @@ describe('canvasNodeContextMenuModel', () => {
       disabled: false,
       workbenchTabId: 'general',
     });
+    expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
+    expect(actionById(model, 'inspect-tests')).toBeUndefined();
     expect(actionById(model, 'edit-sql')).toMatchObject({
       label: 'Edit SQL',
       intent: 'command',
       disabled: true,
-    });
-    expect(actionById(model, 'inspect-inputs-outputs')).toMatchObject({
-      label: 'Inputs / Outputs',
-      intent: 'read',
-      disabled: false,
-      workbenchTabId: 'inputs-outputs',
-    });
-    expect(actionById(model, 'inspect-tests')).toMatchObject({
-      label: 'Tests',
-      intent: 'read',
-      disabled: false,
-      workbenchTabId: 'tests',
     });
     expect(actionById(model, 'preview-node')).toMatchObject({
       label: 'Preview node',
@@ -121,7 +111,7 @@ describe('canvasNodeContextMenuModel', () => {
     );
   });
 
-  it('keeps only inspection available when graph mutation is blocked', () => {
+  it('keeps properties inspection available when graph mutation is blocked', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
@@ -135,26 +125,13 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionIds(model)).toEqual([
       'edit-sql',
       'inspect-node',
-      'inspect-inputs-outputs',
-      'inspect-tests',
       'preview-node',
       'run-from-node',
       'show-lineage',
     ]);
-    expect(actionById(model, 'inspect-node')).toMatchObject({
-      intent: 'read',
-      disabled: false,
-    });
-    expect(actionById(model, 'inspect-inputs-outputs')).toMatchObject({
-      intent: 'read',
-      disabled: false,
-      workbenchTabId: 'inputs-outputs',
-    });
-    expect(actionById(model, 'inspect-tests')).toMatchObject({
-      intent: 'read',
-      disabled: false,
-      workbenchTabId: 'tests',
-    });
+    expect(actionById(model, 'inspect-node')).toMatchObject({ disabled: false });
+    expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
+    expect(actionById(model, 'inspect-tests')).toBeUndefined();
     expect(actionById(model, 'edit-sql')).toMatchObject({ disabled: true });
     expect(actionById(model, 'preview-node')).toMatchObject({ disabled: true });
     expect(actionById(model, 'run-from-node')).toMatchObject({ disabled: true });
@@ -178,8 +155,6 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionIds(model)).toEqual([
       'edit-sql',
       'inspect-node',
-      'inspect-inputs-outputs',
-      'inspect-tests',
       'preview-node',
       'run-from-node',
       'show-lineage',
@@ -210,7 +185,7 @@ describe('canvasNodeContextMenuModel', () => {
     });
   });
 
-  it('keeps a disabled properties action when the route has no inspector callback', () => {
+  it('does not add disabled workbench tab actions when the route has no inspector callback', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'sink-orders', nodeName: 'Orders Sink' },
       selectedForExecution: false,
@@ -221,18 +196,9 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: false,
     });
 
-    expect(actionIds(model)).toEqual([
-      'edit-sql',
-      'inspect-node',
-      'inspect-inputs-outputs',
-      'inspect-tests',
-      'preview-node',
-      'run-from-node',
-      'show-lineage',
-    ]);
-    expect(actionById(model, 'inspect-node')).toMatchObject({
-      disabled: true,
-    });
-    expect(actionById(model, 'inspect-node')?.disabledReason).toMatch(/\S/);
+    expect(actionIds(model)).toEqual(['edit-sql', 'preview-node', 'run-from-node', 'show-lineage']);
+    expect(actionById(model, 'inspect-node')).toBeUndefined();
+    expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
+    expect(actionById(model, 'inspect-tests')).toBeUndefined();
   });
 });
