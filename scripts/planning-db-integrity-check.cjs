@@ -26,7 +26,7 @@ const progressiveBaseline = Object.freeze({
   }),
   railVocabulary: Object.freeze({
     exact_duplicate: Object.freeze({ total: 0 }),
-    gap_rail: Object.freeze({ warning: 121, total: 121 }),
+    gap_rail: Object.freeze({ warning: 110, total: 110 }),
     missing_ddd_owner: Object.freeze({ total: 0 }),
     semantic_duplicate: Object.freeze({ total: 0 }),
     surface_named_rail: Object.freeze({ warning: 12, total: 12 }),
