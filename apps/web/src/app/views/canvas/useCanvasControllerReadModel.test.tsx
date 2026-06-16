@@ -11,6 +11,7 @@ import { useCanvasControllerReadModel } from './useCanvasControllerReadModel';
 type ReadModelArgs = Parameters<typeof useCanvasControllerReadModel>[0];
 type ReadModelState = ReturnType<typeof useCanvasControllerReadModel>;
 type ReadModelNodeData = {
+  canvasKind?: unknown;
   onDuplicateNode?: unknown;
   onRemoveNode?: unknown;
   onAttachSchemaToNode?: unknown;
@@ -76,6 +77,7 @@ function buildReadModelArgs(
       handleToggleNodeSelection: vi.fn(),
       handleAttachSchemaToNode: vi.fn(),
     },
+    activeCanvasKind: 'transformation',
     canMutateGraph: false,
     canSelectExecution: true,
     columnLevelLineageEnabled: false,
@@ -145,6 +147,19 @@ describe('useCanvasControllerReadModel', () => {
       expect(nodeData?.onRemoveNode).toBe(args.graphHandlers.handleRemoveNode);
       expect(nodeData?.onAttachSchemaToNode).toBe(args.graphHandlers.handleAttachSchemaToNode);
       expect(nodeData?.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('projects the active canvas kind into node data for strategy-owned card rendering', async () => {
+    const args = buildReadModelArgs();
+    const mounted = await renderReadModel(args);
+
+    try {
+      const nodeData = readProjectedNodeData(mounted.readState());
+
+      expect(nodeData?.canvasKind).toBe('transformation');
     } finally {
       await mounted.cleanup();
     }

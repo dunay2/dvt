@@ -3,12 +3,8 @@ import { memo, type CSSProperties, type DragEvent } from 'react';
 import type { Node, NodeProps } from '@xyflow/react';
 
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
-import {
-  getGraphNodeCardStrategies,
-  getNodeBadges,
-  getNodeRenderer,
-  type RuntimeCapabilities,
-} from '../../plugins/registry';
+import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
+import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type {
   BadgeContext,
@@ -58,6 +54,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   metadata?: Record<string, unknown>;
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
+  canvasKind?: string;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph?: boolean;
   selectedForExecution?: boolean;
@@ -187,7 +184,10 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     data.runtimeCapabilities
   );
   const badges = getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities);
-  const graphNodeCardStrategies = getGraphNodeCardStrategies(data.runtimeCapabilities);
+  const graphNodeCardStrategies = getCanvasGraphNodeCardStrategies(
+    data.canvasKind,
+    data.runtimeCapabilities
+  );
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;

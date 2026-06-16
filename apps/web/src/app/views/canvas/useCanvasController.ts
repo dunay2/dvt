@@ -219,6 +219,7 @@ export function useCanvasController() {
       uiScope,
       overlayModel,
       graphHandlers,
+      activeCanvasKind: canvasAuthoringMode,
       runtimeCapabilities: capabilities,
       canMutateGraph: canMutateActiveCanvas,
       canSelectExecution,
