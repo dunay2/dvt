@@ -234,7 +234,7 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
       isStaleDraftConflict,
       hasDraftProjectionGap,
       draftRecoveryReason,
-      draftToolbarState,
+      draftStatusState,
       canExportProjectSnapshot,
       canImportProjectSnapshot,
     },
@@ -249,7 +249,7 @@ function buildCanvasDraftViewModel(args: CanvasControllerViewModelArgs) {
     draftFormatError,
     draftFormatMeta,
     draftRecoveryReason,
-    draftToolbarState,
+    draftStatusState,
     canExportProjectSnapshot,
     canImportProjectSnapshot,
     draftConflictRevision:

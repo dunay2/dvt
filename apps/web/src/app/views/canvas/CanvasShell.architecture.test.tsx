@@ -66,8 +66,18 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('export type CanvasShellToolbar');
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain('chromeState: CanvasShellChromeState;');
     expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('toolbar: CanvasShell');
+    expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
+      "import type { CanvasDraftStatusState } from './canvasDraftStatusState';"
+    );
+    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('draftStatusState: CanvasDraftStatusState;');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('CanvasDraftToolbarState');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('draftToolbarState');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('chromeState: CanvasShellChromeState;');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('toolbar: CanvasShell');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
+      'draftStatusState={chromeState.draftStatusState}'
+    );
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('chromeState.draftToolbarState');
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellGraphCommands');
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellChromeCommands');
     expect(CANVAS_SHELL_BUILDER_TYPES_SOURCE).toContain('CanvasShellChromeStateBuilderArgs');

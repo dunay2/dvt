@@ -4,7 +4,7 @@ import {
   deriveCanvasDraftAccessPosture,
   isCanvasDraftPostureMutationBlocked,
   toCanvasDraftRecoveryBannerViewState,
-  toCanvasDraftToolbarState,
+  toCanvasDraftStatusState,
 } from './canvasDraftAccessPostureModel';
 
 describe('canvasDraftAccessPostureModel', () => {
@@ -23,7 +23,7 @@ describe('canvasDraftAccessPostureModel', () => {
       recoveryAction: 'refresh_session',
       mutationBlocked: true,
     });
-    expect(toCanvasDraftToolbarState(posture).label).toBe('Session required');
+    expect(toCanvasDraftStatusState(posture).label).toBe('Session required');
     expect(isCanvasDraftPostureMutationBlocked(posture)).toBe(true);
   });
 
@@ -42,7 +42,7 @@ describe('canvasDraftAccessPostureModel', () => {
       recoveryAction: 'change_scope',
       mutationBlocked: true,
     });
-    expect(toCanvasDraftToolbarState(posture).label).toBe('Draft access denied');
+    expect(toCanvasDraftStatusState(posture).label).toBe('Draft access denied');
   });
 
   it('keeps read-only as inspectable and mutation-blocked', () => {
@@ -60,7 +60,7 @@ describe('canvasDraftAccessPostureModel', () => {
       recoveryAction: 'inspect_only',
       mutationBlocked: true,
     });
-    expect(toCanvasDraftToolbarState(posture).label).toBe('Read-only draft');
+    expect(toCanvasDraftStatusState(posture).label).toBe('Read-only draft');
     expect(toCanvasDraftRecoveryBannerViewState(posture)).toBeNull();
   });
 
@@ -79,7 +79,7 @@ describe('canvasDraftAccessPostureModel', () => {
       recoveryAction: 'none',
       mutationBlocked: false,
     });
-    expect(toCanvasDraftToolbarState(posture)).toEqual({
+    expect(toCanvasDraftStatusState(posture)).toEqual({
       label: 'Draft save failed',
       tone: 'danger',
       showReloadAction: false,
@@ -104,7 +104,7 @@ describe('canvasDraftAccessPostureModel', () => {
       });
 
       expect(posture.kind).toBe(recoveryReason);
-      expect(toCanvasDraftToolbarState(posture).label).not.toBe('Draft synced');
+      expect(toCanvasDraftStatusState(posture).label).not.toBe('Draft synced');
       expect(toCanvasDraftRecoveryBannerViewState(posture)?.dataSlot).toBe(
         recoverySlots[recoveryReason]
       );

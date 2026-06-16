@@ -135,9 +135,9 @@ export const ownedConcernModules = [
     phrase: 'Owned concern: render passive Canvas draft-access recovery actions',
   },
   {
-    label: 'canvas draft toolbar state',
-    path: 'canvasDraftToolbarState.ts',
-    phrase: 'Owned concern: resolve Canvas draft recovery reasons and toolbar labels',
+    label: 'canvas draft status state',
+    path: 'canvasDraftStatusState.ts',
+    phrase: 'Owned concern: resolve Canvas draft recovery reasons and status labels',
   },
   {
     label: 'DVT node renderer',

@@ -14,7 +14,7 @@ describe('buildCanvasWorkbenchLogEntries', () => {
         kind: 'save_failed',
         title: 'Draft save failed',
         message: 'The protected draft write failed.',
-        toolbarLabel: 'Draft save failed',
+        statusLabel: 'Draft save failed',
       },
       toolbar: {
         planRunReadiness: {
@@ -63,7 +63,7 @@ describe('buildCanvasWorkbenchLogEntries', () => {
         kind: 'writable',
         title: 'Canvas is ready',
         message: 'Backend is not ready.',
-        toolbarLabel: 'Synced',
+        statusLabel: 'Synced',
       },
       toolbar: {
         planRunReadiness: {

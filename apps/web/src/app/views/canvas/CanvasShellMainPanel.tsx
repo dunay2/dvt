@@ -244,7 +244,7 @@ export function CanvasShellMainPanel({
         {shouldShowGraphStatusOverlay ? (
           <CanvasGraphStatusOverlay
             activeCanvas={panels.activeCanvas}
-            draftToolbarState={chromeState.draftToolbarState}
+            draftStatusState={chromeState.draftStatusState}
             onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
           />
         ) : null}

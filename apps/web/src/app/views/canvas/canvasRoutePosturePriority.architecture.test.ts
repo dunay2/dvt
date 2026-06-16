@@ -128,7 +128,10 @@ describe('canvas route posture priority architecture', () => {
 
     expect(postureSource).toContain('export type CanvasDraftAccessPosture');
     expect(postureSource).toContain('deriveCanvasDraftAccessPosture');
-    expect(postureSource).toContain('toCanvasDraftToolbarState');
+    expect(postureSource).toContain('toCanvasDraftStatusState');
+    expect(postureSource).not.toContain('toCanvasDraftToolbarState');
+    expect(postureSource).not.toContain('toolbarLabel');
+    expect(postureSource).not.toContain('toolbarTone');
     expect(postureSource).toContain('toCanvasDraftRecoveryBannerViewState');
     expect(postureSource).toContain('toCanvasDraftTransportSurfaceState');
     expect(postureSource).toContain('applyCanvasDraftPostureToRuntimePolicyInput');
@@ -148,7 +151,8 @@ describe('canvas route posture priority architecture', () => {
 
     expect(controllerSource).toContain('applyCanvasDraftPostureToRuntimePolicyInput');
     expect(routeStateSource).toContain('draftAccessPosture: controller.draftAccessPosture');
-    expect(routeStateSource).toContain('toCanvasDraftToolbarState(controller.draftAccessPosture)');
+    expect(routeStateSource).toContain('toCanvasDraftStatusState(controller.draftAccessPosture)');
+    expect(routeStateSource).not.toContain('toCanvasDraftToolbarState');
     expect(interactionSource).toContain('isCanvasDraftPostureMutationBlocked');
     expect(interactionSource).not.toContain("draftAccessMode === 'forbidden'");
     expect(interactionSource).not.toContain("draftAccessMode !== 'read_only'");

@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CanvasShell from './CanvasShell';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvasPalette';
 import { canvasViewCopy } from './copy';
-import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import type {
   CanvasShellChromeCommands,
@@ -72,7 +72,7 @@ function buildPlanRunReadiness(
 }
 
 function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
-  const defaultDraftToolbarState: CanvasDraftToolbarState = {
+  const defaultDraftStatusState: CanvasDraftStatusState = {
     label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
@@ -137,7 +137,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
     chromeState: {
       canvasAuthoringMode: 'transformation',
       routeState: 'ready',
-      draftToolbarState: defaultDraftToolbarState,
+      draftStatusState: defaultDraftStatusState,
       canPlanGraph: false,
       canStartRun: false,
       canExportProjectSnapshot: true,
@@ -446,7 +446,7 @@ describe('CanvasShell', () => {
               },
             },
             chromeState: {
-              draftToolbarState: {
+              draftStatusState: {
                 label: canvasViewCopy.draftSaveFailedLabel,
                 tone: 'danger',
                 showReloadAction: true,
@@ -479,7 +479,7 @@ describe('CanvasShell', () => {
               },
             },
             chromeState: {
-              draftToolbarState: {
+              draftStatusState: {
                 label: canvasViewCopy.savingDraftLabel,
                 tone: 'neutral',
                 showReloadAction: false,

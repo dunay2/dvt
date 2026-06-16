@@ -1,4 +1,4 @@
-/** Owned concern: resolve Canvas draft recovery reasons and toolbar labels from draft state. */
+/** Owned concern: resolve Canvas draft recovery reasons and status labels from draft state. */
 import { canvasViewCopy } from './copy';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
@@ -8,13 +8,13 @@ export type CanvasDraftRecoveryReason =
   | 'projection_gap'
   | null;
 
-export type CanvasDraftToolbarState = {
+export type CanvasDraftStatusState = {
   label: string;
   tone: 'neutral' | 'warning' | 'danger';
   showReloadAction: boolean;
 };
 
-type CanvasDraftToolbarStateArgs = {
+type CanvasDraftStatusStateArgs = {
   draftSaveStatus: DraftSaveStatus;
   recoveryReason: CanvasDraftRecoveryReason;
 };
@@ -55,8 +55,8 @@ export function resolveCanvasDraftRecoveryBootstrapDetail(
   }
 }
 
-function resolveNeutralDraftToolbarLabel(
-  draftSaveStatus: CanvasDraftToolbarStateArgs['draftSaveStatus']
+function resolveNeutralDraftStatusLabel(
+  draftSaveStatus: CanvasDraftStatusStateArgs['draftSaveStatus']
 ): string {
   switch (draftSaveStatus) {
     case 'saving':
@@ -70,10 +70,10 @@ function resolveNeutralDraftToolbarLabel(
   }
 }
 
-export function deriveCanvasDraftToolbarState({
+export function deriveCanvasDraftStatusState({
   draftSaveStatus,
   recoveryReason,
-}: CanvasDraftToolbarStateArgs): CanvasDraftToolbarState {
+}: CanvasDraftStatusStateArgs): CanvasDraftStatusState {
   switch (recoveryReason) {
     case 'stale_conflict':
       return {
@@ -95,7 +95,7 @@ export function deriveCanvasDraftToolbarState({
       };
     default:
       return {
-        label: resolveNeutralDraftToolbarLabel(draftSaveStatus),
+        label: resolveNeutralDraftStatusLabel(draftSaveStatus),
         tone: draftSaveStatus === 'failed' ? 'danger' : 'neutral',
         showReloadAction: false,
       };

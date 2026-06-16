@@ -41,7 +41,7 @@ function buildPresentationState(
   return {
     routeState,
     recoveryReason: null,
-    draftToolbarState: {
+    draftStatusState: {
       label: 'Draft synced',
       tone: 'neutral',
       showReloadAction: false,
