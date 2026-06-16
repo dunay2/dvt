@@ -691,6 +691,25 @@ test('tracked migrations expose surface-named gap rails in vocabulary findings',
   assert.doesNotMatch(surfaceGapMigration.sql, /surfacePrefixRule', '.*workflow/);
 });
 
+test('tracked migrations keep surface-named rails out of the generic gap bucket', () => {
+  const migrations = readMigrationFiles();
+  const exclusiveGapMigration = migrations.find(
+    (migration) => migration.fileName === '100_exclude_surface_named_gap_rails.sql'
+  );
+
+  assert.ok(exclusiveGapMigration);
+  assert.match(
+    exclusiveGapMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_vocabulary_query/
+  );
+  assert.match(
+    exclusiveGapMigration.sql,
+    /rail\.rail_name !~\* '\^\(api\|ui\|cli\|worker\|adapter\)'/
+  );
+  assert.match(exclusiveGapMigration.sql, /rail\.vocabulary_state in \('active', 'gap'\)/);
+  assert.doesNotMatch(exclusiveGapMigration.sql, /surfacePrefixRule', '.*workflow/);
+});
+
 test('tracked migrations retire the orphan canvas contextual graph surface rail duplicate', () => {
   const migrations = readMigrationFiles();
   const orphanRailMigration = migrations.find(

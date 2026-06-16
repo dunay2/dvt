@@ -213,6 +213,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/086_component_integrity_architecture_test_evidence.sql
   - tools/planning-db/migrations/087_component_integrity_architecture_metadata_authority.sql
   - tools/planning-db/migrations/099_surface_named_gap_rail_vocabulary.sql
+  - tools/planning-db/migrations/100_exclude_surface_named_gap_rails.sql
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs
