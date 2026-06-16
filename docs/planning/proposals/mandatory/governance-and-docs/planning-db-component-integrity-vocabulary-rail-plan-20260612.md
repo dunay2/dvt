@@ -136,6 +136,12 @@ Observed gaps:
   domain rails such as `StartRun`, `SignalRun`, `RecoverRun`, `GetRunEvents`,
   and `ListRuns`; the progressive baseline now allows zero active
   `surface_named_rail` findings.
+- The 2026-06-16 implemented-reference precedence cleanup made
+  `command_query_rail_query` prefer implemented non-gap rail evidence over
+  imported documentary gap rows for the same normalized rail, while preserving
+  DB-authored local rail precedence. This retired 58 false `gap_rail` findings
+  and tightened the progressive baseline from 98 to 40 remaining historical
+  gaps.
 - Architecture dependency fitness only treats `approved` or `implemented`
   relations as declared, while the operation rail currently starts relations in
   `proposed`.
@@ -169,6 +175,7 @@ is clean.
 | ------------------------------------------------------------------------------------------------------------ | ------------------- | ---------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | Component facts are scattered across profiles, architecture authority, file ownership, and dependency scans. | Hidden authority    | Consolidate read model                               | ComponentIntegrityReadModel              | `ValidateComponentIntegrity`              | `planning_query_store.component_integrity_query`, `planning:db:query component-integrity`                | `node --test scripts/planning-db-query.test.cjs`                                        | New non-DB inventory format                      |
 | Rail catalog catches exact duplicates but misses semantic drift and surface names.                           | Duplicate semantics | Replace implicit convention with explicit vocabulary | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_vocabulary_query`, `planning:db:query rail-vocabulary`          | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs`   | Renaming all historical rails in one unsafe edit |
+| Rail projection reports documentary gap rows even when the same rail has implemented manifest refs.          | False gap signal    | Prefer materialized fact over weaker source          | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_query`, `planning:db:integrity:check`                           | `node --test scripts/planning-db-migrate.test.cjs`                                      | Direct SQL repair outside migrations             |
 | CI has inventory checks but no single progressive component-integrity gate.                                  | Quality gate gap    | Guard clause                                         | PlanningDbIntegrityCheck                 | `CheckPlanningDbComponentIntegrity`       | `scripts/planning-db-integrity-check.cjs`, `package.json`, `scripts/local-validation-plan.cjs`           | `node --test scripts/planning-db-integrity-check.test.cjs`                              | Blocking historical debt before baseline cleanup |
 | Relations can be recorded only as proposed through the command rail.                                         | Workflow mismatch   | Align command lifecycle with domain state            | ArchitectureRelationCommand              | `RecordArchitectureRelation`              | `scripts/planning-db-operate.cjs`                                                                        | `node --test scripts/planning-db-operate.test.cjs`                                      | Direct SQL relation updates                      |
 | New architecture components can receive authority without query-visible test evidence.                       | Evidence gap        | Complete read model                                  | ArchitectureTestEvidenceCommand          | `RecordArchitectureTestEvidence`          | `architecture.component_test`, `planning:db:query component-profile`, `scripts/planning-db-operate.cjs`  | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs`   | File-only test inference outside the BBDD        |
@@ -216,6 +223,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/087_component_integrity_architecture_metadata_authority.sql
   - tools/planning-db/migrations/099_surface_named_gap_rail_vocabulary.sql
   - tools/planning-db/migrations/100_exclude_surface_named_gap_rails.sql
+  - tools/planning-db/migrations/101_prefer_implemented_rail_refs.sql
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs
