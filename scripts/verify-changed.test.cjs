@@ -125,6 +125,22 @@ test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
+test('buildVerifyChangedPlan routes planning DB query shards to the canonical suite', () => {
+  const labels = labelsFor([
+    'scripts/planning-db-query-tests/feature-mechanization.test.cjs',
+    'scripts/planning-db-query-tests/fowler-analysis.test.cjs',
+    'scripts/planning-db-query-tests/governance-refresh.test.cjs',
+    'scripts/planning-db-query-tests/helpers.cjs',
+  ]);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-query.test.cjs').length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
 test('buildVerifyChangedPlan runs focused frontend component inventory tests directly', () => {
   const labels = labelsFor(['scripts/planning-db/frontend-component-inventory.cjs']);
 
