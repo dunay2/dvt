@@ -74,14 +74,41 @@ function createTransformationCanvasIfEmpty(): void {
   });
 }
 
-function addSourceNodeIfMissing(): void {
+function openCanvasContextMenu(): void {
+  cy.get('.react-flow__pane', { timeout: 20_000 }).then(($pane) => {
+    const rect = $pane[0].getBoundingClientRect();
+    const position = {
+      x: rect.left + 32,
+      y: rect.top + 140,
+    };
+
+    $pane[0].dispatchEvent(
+      new MouseEvent('contextmenu', {
+        bubbles: true,
+        button: 2,
+        cancelable: true,
+        clientX: position.x,
+        clientY: position.y,
+      })
+    );
+  });
+}
+
+function addSourceNodeFromCanvasContextMenuIfMissing(): void {
   cy.get('body').then(($body) => {
     const hasSourceNode = $body.find('.react-flow__node:contains("Source 1")').length > 0;
     if (!hasSourceNode) {
-      cy.get('[data-slot="canvas-empty-state"]', { timeout: 20_000 }).within(() => {
-        cy.get('[data-slot="canvas-add-node-palette-trigger"]').click();
-        cy.contains('button', /^Source$/).click();
-      });
+      openCanvasContextMenu();
+      cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 })
+        .should('be.visible')
+        .then(($menu) => {
+          const menuItems = Array.from($menu.find('[role="menuitem"]'));
+          const sourceNodeAction =
+            menuItems.find((item) => item.textContent?.trim() === 'Create source node') ??
+            menuItems.find((item) => item.textContent?.trim() === 'Add source');
+          expect(sourceNodeAction, 'source node context action').to.not.equal(undefined);
+          (sourceNodeAction as HTMLButtonElement).click();
+        });
     }
   });
 }
@@ -130,7 +157,7 @@ describe('Canvas happy path remains writable after create/save', () => {
   it('creates canvas, keeps no projection-gap block, and allows drag', () => {
     visitCanvasWithStubbedBackend();
     createTransformationCanvasIfEmpty();
-    addSourceNodeIfMissing();
+    addSourceNodeFromCanvasContextMenuIfMissing();
 
     cy.contains('El draft persistido va por delante').should('not.exist');
     cy.contains('.react-flow__node', 'Source 1', { timeout: 20_000 }).should('be.visible');

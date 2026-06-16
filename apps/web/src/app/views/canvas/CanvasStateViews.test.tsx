@@ -130,6 +130,20 @@ describe('Canvas empty state Insert/Add palette', () => {
     });
   });
 
+  it('keeps the empty authoring guide from blocking canvas context gestures outside the card', () => {
+    const { container, root } = renderEmptyState();
+
+    const frame = container.querySelector('[data-slot="canvas-empty-state-frame"]');
+    const card = container.querySelector('[data-slot="canvas-empty-state"]');
+
+    expect(frame?.className).toContain('pointer-events-none');
+    expect(card?.className).toContain('pointer-events-auto');
+
+    act(() => {
+      root.unmount();
+    });
+  });
+
   it('offers governed SQL transformation templates before the first node exists', async () => {
     const { container, onCreateAuthoringNode, root } = renderEmptyState();
     const trigger = Array.from(container.querySelectorAll('button')).find((button) =>

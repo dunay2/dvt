@@ -22,21 +22,30 @@ function CanvasSurfaceStateCard({
   message,
   children,
   tone = 'default',
+  allowCanvasPointerPassthrough = false,
 }: Readonly<{
   dataSlot: string;
   title: string;
   message: string;
   children?: ReactNode;
   tone?: 'default' | 'danger';
+  allowCanvasPointerPassthrough?: boolean;
 }>) {
   return (
-    <div data-slot={`${dataSlot}-frame`} className="flex flex-1 items-center justify-center p-6">
+    <div
+      data-slot={`${dataSlot}-frame`}
+      className={cn(
+        'flex flex-1 items-center justify-center p-6',
+        allowCanvasPointerPassthrough && 'pointer-events-none'
+      )}
+    >
       <Card
         data-slot={dataSlot}
         className={cn(
           routeWorkbenchPanelClassName,
           'w-full max-w-xl p-6',
-          tone === 'danger' && 'border-(--status-danger) bg-(--surface-elevated)'
+          tone === 'danger' && 'border-(--status-danger) bg-(--surface-elevated)',
+          allowCanvasPointerPassthrough && 'pointer-events-auto'
         )}
       >
         <h2
@@ -126,7 +135,12 @@ export function CanvasEmptyStateView({
   const canCreateAuthoringNode = onCreateAuthoringNode != null && nodeKinds.length > 0;
 
   return (
-    <CanvasSurfaceStateCard dataSlot="canvas-empty-state" title={title} message={message}>
+    <CanvasSurfaceStateCard
+      dataSlot="canvas-empty-state"
+      title={title}
+      message={message}
+      allowCanvasPointerPassthrough
+    >
       {canvasTitle != null ? (
         <p
           data-slot="canvas-empty-active-canvas"
