@@ -8,12 +8,12 @@ import {
   type OperationalDrawerProblem,
   type OperationalDrawerTabId,
 } from '../../components/shell/operationalDrawerContributionStore';
-import type { CanvasShellPanels, CanvasShellToolbar } from './canvasShell.types';
+import type { CanvasShellPanels, CanvasShellChromeState } from './canvasShell.types';
 
 type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   policy: CanvasOperationalDrawerSurfacePolicy;
   panels: CanvasShellPanels;
-  toolbar: CanvasShellToolbar;
+  chromeState: CanvasShellChromeState;
   onPreviewExecutionPlan: () => void;
 }>;
 
@@ -24,20 +24,22 @@ const tabLabels = {
   preview: 'Preview',
 } satisfies Record<OperationalDrawerTabId, string>;
 
-function buildReadinessProblems(toolbar: CanvasShellToolbar): readonly OperationalDrawerProblem[] {
-  if (toolbar.planRunReadiness.status === 'ready') {
+function buildReadinessProblems(
+  chromeState: CanvasShellChromeState
+): readonly OperationalDrawerProblem[] {
+  if (chromeState.planRunReadiness.status === 'ready') {
     return [];
   }
 
   const blockers =
-    toolbar.planRunReadiness.blockers.length > 0
-      ? toolbar.planRunReadiness.blockers
+    chromeState.planRunReadiness.blockers.length > 0
+      ? chromeState.planRunReadiness.blockers
       : ['readiness_blocked'];
 
   return blockers.map((blocker) => ({
     id: blocker,
     severity: 'warning',
-    message: toolbar.planRunReadiness.summary || toolbar.planStatusSummary,
+    message: chromeState.planRunReadiness.summary || chromeState.planStatusSummary,
     detail: blocker,
   }));
 }
@@ -46,11 +48,11 @@ function buildCanvasOperationalDrawerContribution({
   onPreviewExecutionPlan,
   panels,
   policy,
-  toolbar,
+  chromeState,
 }: CanvasOperationalDrawerContributionRegistrarProps): OperationalDrawerContribution {
-  const problems = buildReadinessProblems(toolbar);
+  const problems = buildReadinessProblems(chromeState);
   const activeRunId = panels.activeRunId ?? null;
-  const previewStatus = toolbar.planRunReadiness.status === 'ready' ? 'ready' : 'blocked';
+  const previewStatus = chromeState.planRunReadiness.status === 'ready' ? 'ready' : 'blocked';
 
   return {
     source: 'canvas',
@@ -72,13 +74,13 @@ function buildCanvasOperationalDrawerContribution({
     },
     runs: {
       activeRunId,
-      canStartRun: toolbar.canStartRun,
+      canStartRun: chromeState.canStartRun,
     },
     preview: {
       status: previewStatus,
-      summary: toolbar.planRunReadiness.summary || toolbar.planStatusSummary,
-      blockers: toolbar.planRunReadiness.blockers,
-      canPreview: panels.userPermissions.canPlan && toolbar.canPlanGraph,
+      summary: chromeState.planRunReadiness.summary || chromeState.planStatusSummary,
+      blockers: chromeState.planRunReadiness.blockers,
+      canPreview: panels.userPermissions.canPlan && chromeState.canPlanGraph,
       onPreviewExecutionPlan,
     },
   };
@@ -88,7 +90,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
   onPreviewExecutionPlan,
   panels,
   policy,
-  toolbar,
+  chromeState,
 }: CanvasOperationalDrawerContributionRegistrarProps): null {
   const registerOperationalDrawerContribution = useOperationalDrawerContributionStore(
     (state) => state.registerOperationalDrawerContribution
@@ -101,10 +103,10 @@ export function CanvasOperationalDrawerContributionRegistrar({
       buildCanvasOperationalDrawerContribution({
         policy,
         panels,
-        toolbar,
+        chromeState,
         onPreviewExecutionPlan,
       }),
-    [onPreviewExecutionPlan, panels, policy, toolbar]
+    [onPreviewExecutionPlan, panels, policy, chromeState]
   );
 
   useEffect(() => {

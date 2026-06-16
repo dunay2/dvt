@@ -6,7 +6,7 @@ import { buildCanvasShellGraphCommands } from './canvasShellGraphCommandsBuilder
 import { buildCanvasShellGraph } from './canvasShellGraphBuilder';
 import { buildCanvasShellLayout } from './canvasShellLayoutBuilder';
 import { buildCanvasShellPanels } from './canvasShellPanelsBuilder';
-import { buildCanvasShellToolbar } from './canvasShellToolbarBuilder';
+import { buildCanvasShellChromeState } from './canvasShellChromeStateBuilder';
 import type {
   CanvasShellChromeCommandsBuilderArgs,
   CanvasShellGraphBuilderArgs,
@@ -14,7 +14,7 @@ import type {
   CanvasShellLayoutBuilderArgs,
   CanvasShellPanelsBuilderArgs,
   CanvasShellRouteComposerArgs,
-  CanvasShellToolbarBuilderArgs,
+  CanvasShellChromeStateBuilderArgs,
 } from './canvasShellBuilder.types';
 import type { CanvasShellProps } from './canvasShell.types';
 
@@ -120,12 +120,12 @@ function buildCanvasShellGraphArgs({
   };
 }
 
-function buildCanvasShellToolbarArgs({
+function buildCanvasShellChromeStateArgs({
   controller,
   routeViewState,
-}: CanvasShellRouteComposerArgs): CanvasShellToolbarBuilderArgs {
+}: CanvasShellRouteComposerArgs): CanvasShellChromeStateBuilderArgs {
   return {
-    toolbarState: {
+    chromeStateSource: {
       canvasAuthoringMode: controller.canvasAuthoringMode,
       canPlanGraph: controller.canPlanGraph,
       canStartRun: controller.canStartRun,
@@ -199,7 +199,7 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     layout: buildCanvasShellLayout(buildCanvasShellLayoutArgs(args)),
     panels: buildCanvasShellPanels(buildCanvasShellPanelsArgs(args)),
     graph: buildCanvasShellGraph(buildCanvasShellGraphArgs(args)),
-    toolbar: buildCanvasShellToolbar(buildCanvasShellToolbarArgs(args)),
+    chromeState: buildCanvasShellChromeState(buildCanvasShellChromeStateArgs(args)),
     graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
     canvasCommands: {

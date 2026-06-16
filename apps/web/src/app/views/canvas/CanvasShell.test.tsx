@@ -18,7 +18,7 @@ import type {
   CanvasShellLayout,
   CanvasShellPanels,
   CanvasShellProps,
-  CanvasShellToolbar,
+  CanvasShellChromeState,
 } from './canvasShell.types';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { IWarehouseSourceImportPort } from '../../ports/workspace';
@@ -52,7 +52,7 @@ type CanvasShellPropsOverrides = {
   layout?: Partial<CanvasShellLayout>;
   panels?: Partial<CanvasShellPanels>;
   graph?: Partial<CanvasShellGraph>;
-  toolbar?: Partial<CanvasShellToolbar>;
+  chromeState?: Partial<CanvasShellChromeState>;
   graphCommands?: Partial<CanvasShellGraphCommands>;
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
@@ -134,7 +134,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
       viewport: null,
       ...overrides?.graph,
     },
-    toolbar: {
+    chromeState: {
       canvasAuthoringMode: 'transformation',
       routeState: 'ready',
       draftToolbarState: defaultDraftToolbarState,
@@ -156,7 +156,7 @@ function buildProps(overrides?: CanvasShellPropsOverrides): CanvasShellProps {
         scopedEdgeIds: [],
         nodeRolesById: {},
       },
-      ...overrides?.toolbar,
+      ...overrides?.chromeState,
     },
     graphCommands: {
       onNodesChange: vi.fn(),
@@ -445,7 +445,7 @@ describe('CanvasShell', () => {
                 environmentId: 'dev',
               },
             },
-            toolbar: {
+            chromeState: {
               draftToolbarState: {
                 label: canvasViewCopy.draftSaveFailedLabel,
                 tone: 'danger',
@@ -478,7 +478,7 @@ describe('CanvasShell', () => {
                 environmentId: 'dev',
               },
             },
-            toolbar: {
+            chromeState: {
               draftToolbarState: {
                 label: canvasViewCopy.savingDraftLabel,
                 tone: 'neutral',
@@ -514,7 +514,7 @@ describe('CanvasShell', () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            toolbar: {
+            chromeState: {
               routeState: 'needs_canvas',
             },
           })}
@@ -535,7 +535,7 @@ describe('CanvasShell', () => {
               centerSurface: <div data-testid="first-canvas-center-surface" />,
               workbenchTabPanel: <div data-testid="code-workbench-panel" />,
             },
-            toolbar: {
+            chromeState: {
               routeState: 'needs_canvas',
             },
           })}
@@ -687,7 +687,7 @@ describe('CanvasShell', () => {
             layout: {
               workbenchTabPanel: <div data-testid="code-workbench-panel" />,
             },
-            toolbar: {
+            chromeState: {
               transformationValidation: {
                 valid: true,
                 summaryCode: 'valid',
@@ -715,7 +715,7 @@ describe('CanvasShell', () => {
       root.render(
         <CanvasShell
           {...buildProps({
-            toolbar: {
+            chromeState: {
               canvasAuthoringMode: 'dbt',
             },
           })}
@@ -773,7 +773,7 @@ describe('CanvasShell', () => {
               ],
               edges: [{ id: 'source-model', source: 'src-raw-orders', target: 'model-fct-orders' }],
             },
-            toolbar: {
+            chromeState: {
               canvasAuthoringMode: 'dbt',
               canPlanGraph: false,
               canStartRun: false,

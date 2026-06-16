@@ -1,27 +1,27 @@
 /**
- * Owned concern: build the toolbar concern of the route-owned Canvas shell contract.
+ * Owned concern: build the chrome state concern of the route-owned Canvas shell contract.
  */
-import type { CanvasShellToolbarBuilderArgs } from './canvasShellBuilder.types';
-import type { CanvasShellToolbar } from './canvasShell.types';
+import type { CanvasShellChromeStateBuilderArgs } from './canvasShellBuilder.types';
+import type { CanvasShellChromeState } from './canvasShell.types';
 
-export function buildCanvasShellToolbar({
-  toolbarState,
+export function buildCanvasShellChromeState({
+  chromeStateSource,
   routePresentation,
-}: CanvasShellToolbarBuilderArgs): CanvasShellToolbar {
+}: CanvasShellChromeStateBuilderArgs): CanvasShellChromeState {
   return {
-    canvasAuthoringMode: toolbarState.canvasAuthoringMode,
+    canvasAuthoringMode: chromeStateSource.canvasAuthoringMode,
     routeState: routePresentation.presentationState.routeState,
     draftToolbarState: routePresentation.presentationState.draftToolbarState,
-    canPlanGraph: toolbarState.canPlanGraph,
-    canStartRun: toolbarState.canStartRun,
-    canExportProjectSnapshot: toolbarState.canExportProjectSnapshot,
-    canImportProjectSnapshot: toolbarState.canImportProjectSnapshot,
-    planStatusSummary: toolbarState.planStatusSummary,
-    planRunReadiness: toolbarState.planRunReadiness,
-    exclusiveOverlayMode: toolbarState.exclusiveOverlayMode,
-    canUseCostOverlay: toolbarState.canUseCostOverlay,
-    impactOverlayEnabled: toolbarState.impactOverlayEnabled,
-    columnLevelLineageEnabled: toolbarState.columnLevelLineageEnabled,
-    transformationValidation: toolbarState.transformationValidation,
+    canPlanGraph: chromeStateSource.canPlanGraph,
+    canStartRun: chromeStateSource.canStartRun,
+    canExportProjectSnapshot: chromeStateSource.canExportProjectSnapshot,
+    canImportProjectSnapshot: chromeStateSource.canImportProjectSnapshot,
+    planStatusSummary: chromeStateSource.planStatusSummary,
+    planRunReadiness: chromeStateSource.planRunReadiness,
+    exclusiveOverlayMode: chromeStateSource.exclusiveOverlayMode,
+    canUseCostOverlay: chromeStateSource.canUseCostOverlay,
+    impactOverlayEnabled: chromeStateSource.impactOverlayEnabled,
+    columnLevelLineageEnabled: chromeStateSource.columnLevelLineageEnabled,
+    transformationValidation: chromeStateSource.transformationValidation,
   };
 }

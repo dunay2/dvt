@@ -12,13 +12,15 @@ describe('canvasShell.types architecture', () => {
     expect(SHELL_TYPES_SOURCE).toContain('export type CanvasShellLayout = {');
     expect(SHELL_TYPES_SOURCE).toContain('export type CanvasShellPanels = {');
     expect(SHELL_TYPES_SOURCE).toContain('export type CanvasShellGraph = {');
-    expect(SHELL_TYPES_SOURCE).toContain('export type CanvasShellToolbar = {');
+    expect(SHELL_TYPES_SOURCE).toContain('export type CanvasShellChromeState = {');
+    expect(SHELL_TYPES_SOURCE).not.toContain('export type CanvasShellToolbar = {');
     expect(SHELL_TYPES_SOURCE).toContain('export type CanvasShellGraphCommands = {');
     expect(SHELL_TYPES_SOURCE).toContain('export type CanvasShellChromeCommands = {');
     expect(SHELL_TYPES_SOURCE).toContain('layout: CanvasShellLayout;');
     expect(SHELL_TYPES_SOURCE).toContain('panels: CanvasShellPanels;');
     expect(SHELL_TYPES_SOURCE).toContain('graph: CanvasShellGraph;');
-    expect(SHELL_TYPES_SOURCE).toContain('toolbar: CanvasShellToolbar;');
+    expect(SHELL_TYPES_SOURCE).toContain('chromeState: CanvasShellChromeState;');
+    expect(SHELL_TYPES_SOURCE).not.toContain('toolbar: CanvasShellToolbar;');
     expect(SHELL_TYPES_SOURCE).toContain('graphCommands: CanvasShellGraphCommands;');
     expect(SHELL_TYPES_SOURCE).toContain('chromeCommands: CanvasShellChromeCommands;');
   });

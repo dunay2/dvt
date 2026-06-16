@@ -96,8 +96,8 @@ export type CanvasShellGraphBuilderArgs = Readonly<{
   >;
 }>;
 
-export type CanvasShellToolbarBuilderArgs = Readonly<{
-  toolbarState: Pick<
+export type CanvasShellChromeStateBuilderArgs = Readonly<{
+  chromeStateSource: Pick<
     CanvasRouteController,
     | 'canvasAuthoringMode'
     | 'canPlanGraph'
