@@ -24,7 +24,6 @@ import { CanvasNodeShell } from './CanvasNodeShell';
 import {
   buildCanvasNodeContextMenuModel,
   type CanvasNodeContextMenuActionId,
-  type CanvasNodeWorkbenchTabId,
 } from './canvasNodeContextMenuModel';
 
 // ---------------------------------------------------------------------------
@@ -58,7 +57,10 @@ export interface DbtNodeData extends Record<string, unknown> {
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph?: boolean;
   selectedForExecution?: boolean;
-  onInspectNode?: (nodeId: string, preferredTabId?: CanvasNodeWorkbenchTabId | null) => void;
+  onInspectNode?: (
+    nodeId: string,
+    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | null
+  ) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
@@ -234,13 +236,9 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
-    const action = contextMenuModel.actionGroups
-      .flatMap((group) => group.actions)
-      .find((candidate) => candidate.id === actionId);
-
     switch (actionId) {
       case 'inspect-node':
-        data.onInspectNode?.(id, action?.workbenchTabId ?? null);
+        data.onInspectNode?.(id, null);
         return;
       case 'duplicate-node':
         data.onDuplicateNode?.(id);
@@ -261,6 +259,9 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       shouldShowSourceHandle={shouldShowSourceHandle}
       shouldShowTargetHandle={shouldShowTargetHandle}
       onContextMenuAction={handleContextMenuAction}
+      onOpenWorkbench={
+        typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined
+      }
       onDragOver={handleSchemaResourceDragOver}
       onDrop={handleSchemaResourceDrop}
     >
