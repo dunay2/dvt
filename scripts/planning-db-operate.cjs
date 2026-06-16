@@ -282,11 +282,12 @@ const operationHelp = Object.freeze({
     ],
   },
   component: {
-    operations: ['create'],
+    operations: ['create', 'reparent'],
     usage:
-      'pnpm planning:db:operate component create --component <SYS-ID> --parent <SYS-ID> --actor <actor>',
+      'pnpm planning:db:operate component <create|reparent> --component <SYS-ID> --parent <SYS-ID> --actor <actor>',
     details: [
       'CreateGovernanceComponent records DB-authored governance component ownership.',
+      'ReparentGovernanceComponent updates the imported governance component tree through an audited DB command rail.',
       'Required semantic fields include --name, --owned-concern, --owns or --children-required true, --ddd-owner, and --cq-rails.',
     ],
   },
@@ -1395,6 +1396,15 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'component_reparent') {
+    return {
+      componentId: command.componentId,
+      parentComponentId: command.parentComponentId,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'db_surface_upsert') {
     return {
       surfaceName: command.surfaceName,
@@ -2129,13 +2139,40 @@ function validateComponentCreateCommand(command) {
   return command;
 }
 
+function validateComponentReparentCommand(command) {
+  if (command.componentId === command.parentComponentId) {
+    throw new Error(`Governance component ${command.componentId} cannot be its own parent.`);
+  }
+
+  return command;
+}
+
 function parseComponentCommand(action, args) {
-  if (action !== 'create') {
-    throw new Error(`Unknown component operation "${action}". Expected create.`);
+  if (action !== 'create' && action !== 'reparent') {
+    throw new Error(`Unknown component operation "${action}". Expected create or reparent.`);
   }
 
   const options = parseFlagOptions(args);
   const actor = requireOption(options, 'actor');
+  if (action === 'reparent') {
+    const command = {
+      kind: 'component_reparent',
+      componentId: validateComponentId(requireOption(options, 'component'), 'component'),
+      parentComponentId: validateComponentId(requireOption(options, 'parent'), 'parent'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor,
+      expectedRevision: parseIntegerOption(options.expectedRevision, 'expected-revision'),
+      idempotencyKey: options.idempotencyKey,
+    };
+
+    validateComponentReparentCommand(command);
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
   const command = {
     kind: 'component_create',
     componentId: validateComponentId(requireOption(options, 'component'), 'component'),
@@ -3850,6 +3887,139 @@ function planComponentCreateOperation({
   return { definition, ownershipPatterns, semanticItems, audit };
 }
 
+function normalizeImportedGovernanceComponent(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    sourceKind: row.source_kind ?? row.sourceKind ?? 'imported',
+    componentId: row.component_id ?? row.componentId,
+    parentId: row.parent_id ?? row.parentId,
+    revision: row.revision === undefined || row.revision === null ? null : Number(row.revision),
+    sourcePath: row.source_path ?? row.sourcePath,
+    sourceContentSha256: row.source_content_sha256 ?? row.sourceContentSha256,
+    rawComponent: row.raw_component ?? row.rawComponent ?? {},
+  };
+}
+
+function normalizeOperationRevision(row) {
+  if (!row) {
+    return 0;
+  }
+
+  return Number(row.resulting_revision ?? row.resultingRevision ?? 0);
+}
+
+function normalizeUnitPathRows(rows) {
+  return (rows || []).map((row) => row.unit_id ?? row.unitId).filter(Boolean);
+}
+
+function reparentRawComponent(rawComponent, command, unitPath) {
+  const raw =
+    rawComponent && typeof rawComponent === 'object' && !Array.isArray(rawComponent)
+      ? { ...rawComponent }
+      : {};
+  raw.parent = command.parentComponentId;
+  raw.unitPath = unitPath;
+  raw.reparentedBy = {
+    operation: command.kind,
+    sourceRef: command.sourceRef,
+  };
+
+  if (Array.isArray(raw.unitReferences)) {
+    raw.unitReferences = raw.unitReferences.map((unit) =>
+      unit && unit.id === command.componentId
+        ? { ...unit, parent: command.parentComponentId }
+        : unit
+    );
+  }
+
+  return raw;
+}
+
+function planComponentReparentOperation({
+  command,
+  parentUnit,
+  existingComponent,
+  parentPathRows,
+  latestOperation,
+  operationId,
+  now,
+}) {
+  const component = normalizeImportedGovernanceComponent(existingComponent);
+  if (!component) {
+    throw new Error(
+      `Governance component ${command.componentId} is not present in the planning DB.`
+    );
+  }
+
+  const parent = normalizeGovernanceUnit(parentUnit);
+  if (!parent) {
+    throw new Error(
+      `Parent governance unit ${command.parentComponentId} was not imported into the planning DB.`
+    );
+  }
+  if (!allowedComponentParentLevels.has(parent.level)) {
+    throw new Error(
+      `Governance component ${command.componentId} cannot use ${parent.level} parent ${parent.unitId}.`
+    );
+  }
+
+  const previousRevision =
+    component.revision === null ? normalizeOperationRevision(latestOperation) : component.revision;
+  if (
+    command.expectedRevision !== null &&
+    command.expectedRevision !== undefined &&
+    previousRevision !== command.expectedRevision
+  ) {
+    throw new Error(
+      `Governance component ${command.componentId} expected revision ${command.expectedRevision}, but current revision is ${previousRevision}.`
+    );
+  }
+
+  validateComponentReparentCommand(command);
+
+  const parentPath = normalizeUnitPathRows(parentPathRows);
+  if (parentPath[parentPath.length - 1] !== command.parentComponentId) {
+    throw new Error(
+      `Parent governance unit ${command.parentComponentId} does not have a resolvable unit path.`
+    );
+  }
+
+  const unitPath = [...parentPath, command.componentId];
+  const resultingRevision = previousRevision + 1;
+  const createdAt = toIso(now);
+  const definition = {
+    sourceKind: component.sourceKind,
+    componentId: command.componentId,
+    parentComponentId: command.parentComponentId,
+    rootUnit: parent.rootUnit || parent.unitId,
+    domainUnit: parent.domainUnit || parent.rootUnit || parent.unitId,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    revision: resultingRevision,
+    unitPath,
+    rawComponent: reparentRawComponent(component.rawComponent, command, unitPath),
+  };
+  const audit = {
+    operationId,
+    idempotencyKey: command.idempotencyKey,
+    operationType: command.kind,
+    actor: command.actor,
+    componentId: command.componentId,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    expectedRevision: command.expectedRevision ?? null,
+    previousRevision,
+    resultingRevision,
+    payload: operationPayload(command),
+    createdAt,
+  };
+
+  return { definition, audit };
+}
+
 function normalizeDbSurface(row) {
   if (!row) {
     return null;
@@ -4686,6 +4856,65 @@ async function readGovernanceUnit(client, unitId) {
   return result.rows[0] || null;
 }
 
+async function readGovernanceUnitPath(client, unitId) {
+  const result = await client.query(
+    `with recursive unit_chain as (
+       select unit_id, parent_id, 0 as depth
+       from ${schemaName}.governance_unit_query
+       where unit_id = $1
+       union all
+       select parent.unit_id, parent.parent_id, unit_chain.depth + 1
+       from ${schemaName}.governance_unit_query parent
+       join unit_chain
+         on unit_chain.parent_id = parent.unit_id
+       where unit_chain.depth < 64
+     )
+     select unit_id
+     from unit_chain
+     order by depth desc`,
+    [unitId]
+  );
+
+  return result.rows;
+}
+
+async function readImportedGovernanceComponent(client, componentId, lock = false) {
+  const result = await client.query(
+    `select 'imported'::text as source_kind, *
+     from ${schemaName}.governance_components
+     where component_id = $1
+     ${lock ? 'for update' : ''}`,
+    [componentId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readLocalGovernanceComponent(client, componentId, lock = false) {
+  const result = await client.query(
+    `select 'local'::text as source_kind, *
+     from ${schemaName}.governance_component_local_definitions
+     where component_id = $1
+     ${lock ? 'for update' : ''}`,
+    [componentId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readLatestComponentOperation(client, componentId) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.governance_component_local_operations
+     where component_id = $1
+     order by created_at desc, resulting_revision desc
+     limit 1`,
+    [componentId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readEffectiveComponentDefinition(client, componentId) {
   const result = await client.query(
     `select *
@@ -5373,6 +5602,66 @@ async function writePlannedComponentCreateOperation(client, planned) {
        on conflict (component_id, item_kind, item_value) do update set
          item_order = excluded.item_order`,
       [item.componentId, item.itemKind, item.itemValue, item.itemOrder]
+    );
+  }
+
+  await client.query(
+    `insert into ${schemaName}.governance_component_local_operations
+      (operation_id, idempotency_key, operation_type, actor, component_id, source_path,
+       source_content_sha256, expected_revision, previous_revision, resulting_revision,
+       payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.componentId,
+      planned.audit.sourcePath,
+      planned.audit.sourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
+async function writePlannedComponentReparentOperation(client, planned) {
+  if (planned.definition.sourceKind === 'local') {
+    await client.query(
+      `update ${schemaName}.governance_component_local_definitions
+       set parent_id = $2,
+           root_unit = $3,
+           domain_unit = $4,
+           source_path = $5,
+           source_content_sha256 = $6,
+           revision = $7
+       where component_id = $1`,
+      [
+        planned.definition.componentId,
+        planned.definition.parentComponentId,
+        planned.definition.rootUnit,
+        planned.definition.domainUnit,
+        planned.definition.sourcePath,
+        planned.definition.sourceContentSha256,
+        planned.definition.revision,
+      ]
+    );
+  } else {
+    await client.query(
+      `update ${schemaName}.governance_components
+       set parent_id = $2,
+           unit_path = $3::jsonb,
+           raw_component = $4::jsonb
+       where component_id = $1`,
+      [
+        planned.definition.componentId,
+        planned.definition.parentComponentId,
+        toJson(planned.definition.unitPath),
+        toJson(planned.definition.rawComponent),
+      ]
     );
   }
 
@@ -6220,6 +6509,55 @@ async function applyComponentCreateOperation(command, options = {}) {
   }
 }
 
+async function applyComponentReparentOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingComponentOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertComponentIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const parentUnit = await readGovernanceUnit(client, command.parentComponentId);
+    const parentPathRows = await readGovernanceUnitPath(client, command.parentComponentId);
+    const existingComponent =
+      (await readImportedGovernanceComponent(client, command.componentId, true)) ||
+      (await readLocalGovernanceComponent(client, command.componentId, true));
+    const latestOperation = await readLatestComponentOperation(client, command.componentId);
+    const planned = planComponentReparentOperation({
+      command,
+      parentUnit,
+      existingComponent,
+      parentPathRows,
+      latestOperation,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedComponentReparentOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyDbSurfaceUpsertOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -6709,15 +7047,17 @@ async function main() {
                       ? await applyArchitectureObservabilityRecordOperation(command)
                       : command.kind === 'component_create'
                         ? await applyComponentCreateOperation(command)
-                        : command.kind === 'db_surface_upsert'
-                          ? await applyDbSurfaceUpsertOperation(command)
-                          : command.kind === 'feature_mechanization_rail_record'
-                            ? await applyFeatureMechanizationRailRecordOperation(command)
-                            : command.kind === 'governance_refresh_run_record'
-                              ? await applyGovernanceRefreshRunRecordOperation(command)
-                              : command.kind.startsWith('fowler_analysis_')
-                                ? await applyFowlerAnalysisOperation(command)
-                                : await applyTaskLocalOperation(command);
+                        : command.kind === 'component_reparent'
+                          ? await applyComponentReparentOperation(command)
+                          : command.kind === 'db_surface_upsert'
+                            ? await applyDbSurfaceUpsertOperation(command)
+                            : command.kind === 'feature_mechanization_rail_record'
+                              ? await applyFeatureMechanizationRailRecordOperation(command)
+                              : command.kind === 'governance_refresh_run_record'
+                                ? await applyGovernanceRefreshRunRecordOperation(command)
+                                : command.kind.startsWith('fowler_analysis_')
+                                  ? await applyFowlerAnalysisOperation(command)
+                                  : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -6738,6 +7078,7 @@ module.exports = {
   applyArchitectureObservabilityRecordOperation,
   applyArchitectureRelationRecordOperation,
   applyComponentCreateOperation,
+  applyComponentReparentOperation,
   applyDbSurfaceUpsertOperation,
   applyDocsResolutionOperation,
   applyFowlerAnalysisOperation,
@@ -6767,6 +7108,7 @@ module.exports = {
   planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   planComponentCreateOperation,
+  planComponentReparentOperation,
   planDbSurfaceUpsertOperation,
   planFeatureMechanizationRailRecordOperation,
   planFowlerAnalysisOperation,
@@ -6784,6 +7126,7 @@ module.exports = {
   validateTaskStatus,
   resolveOperateHelpRequest,
   writePlannedComponentCreateOperation,
+  writePlannedComponentReparentOperation,
   writePlannedDbSurfaceUpsertOperation,
   writePlannedArchitectureContractRecordOperation,
   writePlannedArchitectureFitnessScanOperation,

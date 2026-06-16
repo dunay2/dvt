@@ -898,6 +898,18 @@ test('tracked migrations retire the source import ListWarehouseConnections dupli
   );
 });
 
+test('tracked migrations allow audited governance component reparent operations', () => {
+  const migrations = readMigrationFiles();
+  const reparentMigration = migrations.find(
+    (migration) => migration.fileName === '102_governance_component_reparent_operation.sql'
+  );
+
+  assert.ok(reparentMigration);
+  assert.match(reparentMigration.sql, /governance_component_local_operations_operation_type_check/);
+  assert.match(reparentMigration.sql, /'component_create'/);
+  assert.match(reparentMigration.sql, /'component_reparent'/);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(
