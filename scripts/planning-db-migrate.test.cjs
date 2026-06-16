@@ -675,6 +675,194 @@ test('tracked migrations exclude retired rails from active duplicate vocabulary 
   assert.doesNotMatch(deprecationMigration.sql, /surfacePrefixRule', '.*workflow/);
 });
 
+test('tracked migrations retire the orphan canvas contextual graph surface rail duplicate', () => {
+  const migrations = readMigrationFiles();
+  const orphanRailMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '091_retire_orphan_canvas_contextual_graph_surface_rail.sql'
+  );
+
+  assert.ok(orphanRailMigration);
+  assert.match(orphanRailMigration.sql, /planning_query_store\.command_query_rails/);
+  assert.match(orphanRailMigration.sql, /CANVAS-ACTIVE-CANVAS-TOPBAR-IDENTITY-20260615/);
+  assert.match(orphanRailMigration.sql, /CANVAS-CONTEXTUAL-UX-DB-FIRST-MAPPING-1/);
+  assert.match(
+    orphanRailMigration.sql,
+    /normalized_rail_name = 'rendercanvascontextualgraphsurface'/
+  );
+  assert.match(orphanRailMigration.sql, /source_path = 'buzon\/TAREA\.TXT'/);
+  assert.match(orphanRailMigration.sql, /rail_status = 'retired'/);
+  assert.doesNotMatch(
+    orphanRailMigration.sql,
+    /delete\s+from\s+planning_query_store\.command_query_rails/i
+  );
+});
+
+test('tracked migrations retire the contextual graph node card read model duplicate', () => {
+  const migrations = readMigrationFiles();
+  const duplicateRailMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '092_retire_contextual_graph_node_card_read_model_duplicate.sql'
+  );
+
+  assert.ok(duplicateRailMigration);
+  assert.match(
+    duplicateRailMigration.sql,
+    /planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(duplicateRailMigration.sql, /CANVAS-CONTEXTUAL-UX-DB-FIRST-MAPPING-1/);
+  assert.match(duplicateRailMigration.sql, /CANVAS-CARD-STRATEGY-PROJECTION-20260616/);
+  assert.match(
+    duplicateRailMigration.sql,
+    /normalized_rail_name = 'projectgraphnodecardreadmodel'/
+  );
+  assert.match(duplicateRailMigration.sql, /rail_status = 'retired'/);
+  assert.match(duplicateRailMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(duplicateRailMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.doesNotMatch(
+    duplicateRailMigration.sql,
+    /feature_id = 'CANVAS-CARD-STRATEGY-PROJECTION-20260616'/
+  );
+});
+
+test('tracked migrations repoint the retired topbar contextual graph surface rail source', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepointMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '093_repoint_retired_topbar_contextual_graph_surface_rail_source.sql'
+  );
+
+  assert.ok(sourceRepointMigration);
+  assert.match(
+    sourceRepointMigration.sql,
+    /planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(sourceRepointMigration.sql, /CANVAS-ACTIVE-CANVAS-TOPBAR-IDENTITY-20260615/);
+  assert.match(sourceRepointMigration.sql, /CANVAS-CONTEXTUAL-UX-DB-FIRST-MAPPING-1/);
+  assert.match(
+    sourceRepointMigration.sql,
+    /normalized_rail_name = 'rendercanvascontextualgraphsurface'/
+  );
+  assert.match(
+    sourceRepointMigration.sql,
+    /docs\/planning\/proposals\/mandatory\/governance-and-docs\/planning-db-component-coherence-prompt-20260615\.md/
+  );
+  assert.match(sourceRepointMigration.sql, /rail_status = 'retired'/);
+  assert.match(sourceRepointMigration.sql, /mechanization_status = 'closed'/);
+  assert.doesNotMatch(
+    sourceRepointMigration.sql,
+    /feature_id = 'CANVAS-CONTEXTUAL-UX-DB-FIRST-MAPPING-1'/
+  );
+});
+
+test('tracked migrations repoint the retired contextual graph node card rail source', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepointMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '094_repoint_retired_contextual_graph_node_card_rail_source.sql'
+  );
+
+  assert.ok(sourceRepointMigration);
+  assert.match(
+    sourceRepointMigration.sql,
+    /planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(sourceRepointMigration.sql, /CANVAS-CONTEXTUAL-UX-DB-FIRST-MAPPING-1/);
+  assert.match(
+    sourceRepointMigration.sql,
+    /normalized_rail_name = 'projectgraphnodecardreadmodel'/
+  );
+  assert.match(sourceRepointMigration.sql, /rail_status = 'retired'/);
+  assert.match(
+    sourceRepointMigration.sql,
+    /docs\/planning\/proposals\/mandatory\/governance-and-docs\/planning-db-component-coherence-prompt-20260615\.md/
+  );
+  assert.doesNotMatch(
+    sourceRepointMigration.sql,
+    /feature_id = 'CANVAS-CARD-STRATEGY-PROJECTION-20260616'/
+  );
+});
+
+test('tracked migrations repoint feature mechanization operation prompt sources', () => {
+  const migrations = readMigrationFiles();
+  const operationSourceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '095_repoint_feature_mechanization_operation_prompt_sources.sql'
+  );
+
+  assert.ok(operationSourceMigration);
+  assert.match(
+    operationSourceMigration.sql,
+    /planning_query_store\.feature_mechanization_local_operations/
+  );
+  assert.match(operationSourceMigration.sql, /payload = jsonb_set/);
+  assert.match(operationSourceMigration.sql, /\{sourceRef\}/);
+  assert.match(operationSourceMigration.sql, /\{implementationPlan\}/);
+  assert.match(
+    operationSourceMigration.sql,
+    /docs\/planning\/proposals\/mandatory\/governance-and-docs\/planning-db-component-coherence-prompt-20260615\.md/
+  );
+  assert.doesNotMatch(operationSourceMigration.sql, /delete\s+from/i);
+});
+
+test('tracked migrations canonicalize the canvas contextual graph surface owner', () => {
+  const migrations = readMigrationFiles();
+  const ownerMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '096_canonicalize_canvas_contextual_graph_surface_owner.sql'
+  );
+
+  assert.ok(ownerMigration);
+  assert.match(ownerMigration.sql, /CANVAS-CONTEXTUAL-UX-DB-FIRST-MAPPING-1/);
+  assert.match(ownerMigration.sql, /normalized_rail_name = 'rendercanvascontextualgraphsurface'/);
+  assert.match(ownerMigration.sql, /ddd_owner = 'web\.component\.canvas\.CanvasViewport'/);
+  assert.match(ownerMigration.sql, /rail_status = 'implemented'/);
+  assert.match(ownerMigration.sql, /frontend-component-inventory\.md/);
+  assert.doesNotMatch(ownerMigration.sql, /CANVAS-RESPONSIVE-SHELL-SURFACE-20260616/);
+});
+
+test('tracked migrations retire the responsive shell contextual graph surface duplicate', () => {
+  const migrations = readMigrationFiles();
+  const duplicateMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '097_retire_responsive_shell_contextual_graph_surface_duplicate.sql'
+  );
+
+  assert.ok(duplicateMigration);
+  assert.match(duplicateMigration.sql, /CANVAS-RESPONSIVE-SHELL-SURFACE-20260616/);
+  assert.match(duplicateMigration.sql, /CANVAS-CONTEXTUAL-UX-DB-FIRST-MAPPING-1/);
+  assert.match(
+    duplicateMigration.sql,
+    /normalized_rail_name = 'rendercanvascontextualgraphsurface'/
+  );
+  assert.match(duplicateMigration.sql, /rail_status = 'retired'/);
+  assert.match(duplicateMigration.sql, /mechanization_status = 'closed'/);
+  assert.doesNotMatch(
+    duplicateMigration.sql,
+    /feature_id = 'CANVAS-CONTEXTUAL-UX-DB-FIRST-MAPPING-1'/
+  );
+});
+
+test('tracked migrations retire the source import ListWarehouseConnections duplicate', () => {
+  const migrations = readMigrationFiles();
+  const duplicateMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '098_retire_source_import_list_warehouse_connections_duplicate.sql'
+  );
+
+  assert.ok(duplicateMigration);
+  assert.match(duplicateMigration.sql, /CANVAS-SOURCE-IMPORT-DATABASE-ONLY-FLOW-20260616/);
+  assert.match(duplicateMigration.sql, /ListWarehouseConnections/);
+  assert.match(duplicateMigration.sql, /normalized_rail_name = 'listwarehouseconnections'/);
+  assert.match(duplicateMigration.sql, /rail_status = 'retired'/);
+  assert.match(duplicateMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(duplicateMigration.sql, /frontend-component-inventory\.md/);
+  assert.doesNotMatch(
+    duplicateMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(
