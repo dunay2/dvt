@@ -8,7 +8,17 @@ import {
   SlidersHorizontal,
   TerminalSquare,
 } from 'lucide-react';
+import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { NavLink } from 'react-router';
+import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
+import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
+import {
+  createCanvasPreviewStyle,
+  normalizeCanvasPaletteId,
+  type CanvasPaletteId,
+} from '../../views/canvas/canvasPalette';
+import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
+import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -22,19 +32,9 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { HexColorInput, HexColorPicker } from 'react-colorful';
-import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
-import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
-import {
-  createCanvasPreviewStyle,
-  normalizeCanvasPaletteId,
-  type CanvasPaletteId,
-} from '../../views/canvas/canvasPalette';
-import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
-import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 
 const GRID_OPTIONS = [
   { value: 10, label: '10px (Dense)' },
@@ -128,11 +128,11 @@ export function ShellMenu({
             <DropdownMenuLabel>{copy.gitContext}</DropdownMenuLabel>
             <div
               data-slot="shell-menu-git-context"
-              className="px-2 pb-2 text-xs text-[var(--text-subtle)]"
+              className="px-2 pb-2 text-xs text-(--text-subtle)"
             >
               <span>{gitBranch}</span>
               <span className="px-1">@</span>
-              <code className="text-[var(--text-default)]">{gitSha}</code>
+              <code className="text-(--text-default)">{gitSha}</code>
             </div>
             <CanvasWorkspaceMenuControls />
           </>
@@ -165,7 +165,7 @@ export function ShellMenu({
               <DropdownMenuSubTrigger>
                 <span
                   aria-hidden="true"
-                  className="mr-2 h-4 w-6 shrink-0 rounded-[4px] border border-white/10"
+                  className="mr-2 h-4 w-6 shrink-0 rounded-lg border border-white/10"
                   style={createCanvasPreviewStyle(resolvedCanvasPalette)}
                 />
                 {copy.canvasPalette}
@@ -204,7 +204,7 @@ export function ShellMenu({
                       color={resolvedCanvasPalette}
                       prefixed
                       aria-label="Set canvas background hex color"
-                      className="h-9 w-full rounded-md border border-white/10 bg-[var(--input-background)] px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                      className="h-9 w-full rounded-md border border-white/10 bg-input-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
                       onChange={handleCanvasPaletteChange}
                     />
                   </div>

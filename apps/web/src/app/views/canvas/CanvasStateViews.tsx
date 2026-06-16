@@ -9,11 +9,11 @@ import {
   routeWorkbenchPanelClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
-import type { CanvasReadOnlyState } from './canvasWorkbenchStateModel';
 import { CanvasAddNodePalette } from './CanvasAddNodePalette';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import { buildCanvasOutputTargetTemplateCatalog } from './canvasOutputTargetTemplateCatalog';
 import { buildCanvasTransformationTemplateCatalog } from './canvasTransformationTemplateCatalog';
+import type { CanvasReadOnlyState } from './canvasWorkbenchStateModel';
 import { canvasViewCopy } from './copy';
 
 function CanvasSurfaceStateCard({
@@ -147,7 +147,7 @@ export function CanvasEmptyStateView({
         <label
           data-slot="canvas-empty-guide-preference-row"
           className={cn(
-            'mt-5 flex items-center gap-2 border-t border-[color:var(--border-default)] pt-4 text-xs',
+            'mt-5 flex items-center gap-2 border-t border-(--border-default) pt-4 text-xs',
             routeWorkbenchMutedTextClassName
           )}
         >
@@ -158,7 +158,7 @@ export function CanvasEmptyStateView({
             onChange={(event) => {
               onEmptyStateGuideVisibilityChange(event.currentTarget.checked);
             }}
-            className="size-4 accent-[var(--text-accent)]"
+            className="size-4 accent-(--text-accent)"
           />
           <span>{canvasViewCopy.toolbarEmptyCanvasGuideLabel}</span>
         </label>
@@ -212,11 +212,11 @@ export function CanvasReadOnlyBannerView({
   return (
     <div
       data-slot="canvas-readonly-state"
-      className="border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3 py-1.5 text-xs"
+      className="border-b border-(--border-default) bg-(--surface-panel) px-3 py-1.5 text-xs"
       aria-live="polite"
     >
       <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="font-semibold text-[var(--status-readonly)]">{state.title}</span>
+        <span className="font-semibold text-(--status-readonly)">{state.title}</span>
         <span className={cn('min-w-0', routeWorkbenchMutedTextClassName)}>{state.message}</span>
         <span className={cn('min-w-0', routeWorkbenchMutedTextClassName)}>{state.note}</span>
         {onRequestExecutableScope != null ? (
