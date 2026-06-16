@@ -130,6 +130,10 @@ Observed gaps:
 - Component profiles exist, but the global integrity posture is not one query.
 - Rail duplicate checks are exact-name only and do not classify surface-named or
   semantically duplicated rails.
+- Surface-named command/query rails can remain hidden as generic `gap_rail`
+  warnings when they are still historical declared work; the vocabulary rail
+  must expose them explicitly so `API`, `UI`, `CLI`, `worker`, and `adapter`
+  stay implementation surfaces instead of canonical rail names.
 - Architecture dependency fitness only treats `approved` or `implemented`
   relations as declared, while the operation rail currently starts relations in
   `proposed`.
@@ -162,7 +166,7 @@ is clean.
 | scenario                                                                                                     | opportunity         | Fowler pattern                                       | DDD owner                                | command/query rail                        | implementation surfaces                                                                                  | test                                                                                    | out of scope                                     |
 | ------------------------------------------------------------------------------------------------------------ | ------------------- | ---------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | Component facts are scattered across profiles, architecture authority, file ownership, and dependency scans. | Hidden authority    | Consolidate read model                               | ComponentIntegrityReadModel              | `ValidateComponentIntegrity`              | `planning_query_store.component_integrity_query`, `planning:db:query component-integrity`                | `node --test scripts/planning-db-query.test.cjs`                                        | New non-DB inventory format                      |
-| Rail catalog catches exact duplicates but misses semantic drift and surface names.                           | Duplicate semantics | Replace implicit convention with explicit vocabulary | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_vocabulary_query`, `planning:db:query rail-vocabulary`          | `node --test scripts/planning-db-query.test.cjs`                                        | Renaming all historical rails in one unsafe edit |
+| Rail catalog catches exact duplicates but misses semantic drift and surface names.                           | Duplicate semantics | Replace implicit convention with explicit vocabulary | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_vocabulary_query`, `planning:db:query rail-vocabulary`          | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs`   | Renaming all historical rails in one unsafe edit |
 | CI has inventory checks but no single progressive component-integrity gate.                                  | Quality gate gap    | Guard clause                                         | PlanningDbIntegrityCheck                 | `CheckPlanningDbComponentIntegrity`       | `scripts/planning-db-integrity-check.cjs`, `package.json`, `scripts/local-validation-plan.cjs`           | `node --test scripts/planning-db-integrity-check.test.cjs`                              | Blocking historical debt before baseline cleanup |
 | Relations can be recorded only as proposed through the command rail.                                         | Workflow mismatch   | Align command lifecycle with domain state            | ArchitectureRelationCommand              | `RecordArchitectureRelation`              | `scripts/planning-db-operate.cjs`                                                                        | `node --test scripts/planning-db-operate.test.cjs`                                      | Direct SQL relation updates                      |
 | New architecture components can receive authority without query-visible test evidence.                       | Evidence gap        | Complete read model                                  | ArchitectureTestEvidenceCommand          | `RecordArchitectureTestEvidence`          | `architecture.component_test`, `planning:db:query component-profile`, `scripts/planning-db-operate.cjs`  | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs`   | File-only test inference outside the BBDD        |
@@ -208,6 +212,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/085_architecture_maturity_deprecated_components.sql
   - tools/planning-db/migrations/086_component_integrity_architecture_test_evidence.sql
   - tools/planning-db/migrations/087_component_integrity_architecture_metadata_authority.sql
+  - tools/planning-db/migrations/099_surface_named_gap_rail_vocabulary.sql
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs

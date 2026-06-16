@@ -675,6 +675,22 @@ test('tracked migrations exclude retired rails from active duplicate vocabulary 
   assert.doesNotMatch(deprecationMigration.sql, /surfacePrefixRule', '.*workflow/);
 });
 
+test('tracked migrations expose surface-named gap rails in vocabulary findings', () => {
+  const migrations = readMigrationFiles();
+  const surfaceGapMigration = migrations.find(
+    (migration) => migration.fileName === '099_surface_named_gap_rail_vocabulary.sql'
+  );
+
+  assert.ok(surfaceGapMigration);
+  assert.match(
+    surfaceGapMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_vocabulary_query/
+  );
+  assert.match(surfaceGapMigration.sql, /rail\.vocabulary_state in \('active', 'gap'\)/);
+  assert.match(surfaceGapMigration.sql, /surfacePrefixRule', 'api\|ui\|cli\|worker\|adapter'/);
+  assert.doesNotMatch(surfaceGapMigration.sql, /surfacePrefixRule', '.*workflow/);
+});
+
 test('tracked migrations retire the orphan canvas contextual graph surface rail duplicate', () => {
   const migrations = readMigrationFiles();
   const orphanRailMigration = migrations.find(

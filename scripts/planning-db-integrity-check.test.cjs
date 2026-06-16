@@ -74,6 +74,54 @@ test('Planning DB integrity check fails report mode on progressive regressions',
   assert.match(formatIntegrityCheckSummary(result), /progressive_baseline fail/);
 });
 
+test('Planning DB integrity check treats surface-named gap rails as governed historical debt', () => {
+  const baselineSurfaceRails = Array.from({ length: 12 }, (_, index) => ({
+    finding_kind: 'surface_named_rail',
+    severity: 'warning',
+    rail_name: `ApiHistoricalGapRail${index}`,
+  }));
+
+  const baselineResult = buildIntegrityCheckResult({
+    componentRows: [],
+    railRows: baselineSurfaceRails,
+    strict: false,
+  });
+
+  assert.equal(baselineResult.exitCode, 0);
+  assert.equal(shouldFailIntegrityCheck(baselineResult), false);
+
+  const regressionResult = buildIntegrityCheckResult({
+    componentRows: [],
+    railRows: [
+      ...baselineSurfaceRails,
+      {
+        finding_kind: 'surface_named_rail',
+        severity: 'warning',
+        rail_name: 'ApiNewSurfaceNamedRail',
+      },
+    ],
+    strict: false,
+  });
+
+  assert.equal(regressionResult.exitCode, 1);
+  assert.deepEqual(regressionResult.baselineViolations, [
+    {
+      surface: 'rail_vocabulary',
+      kind: 'surface_named_rail',
+      metric: 'total',
+      actual: 13,
+      allowed: 12,
+    },
+    {
+      surface: 'rail_vocabulary',
+      kind: 'surface_named_rail',
+      metric: 'warning',
+      actual: 13,
+      allowed: 12,
+    },
+  ]);
+});
+
 test('Planning DB integrity check fails strict mode on blocker or error findings', () => {
   const result = buildIntegrityCheckResult({
     componentRows: [
