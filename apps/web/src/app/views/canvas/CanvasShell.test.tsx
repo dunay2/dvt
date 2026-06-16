@@ -41,12 +41,6 @@ vi.mock('../../components/SourceImportWizard', () => ({
   },
 }));
 
-vi.mock('./CanvasToolbar', () => ({
-  default: (props: { variant?: string }) => (
-    <div data-testid="canvas-toolbar" data-variant={props.variant ?? 'standalone'} />
-  ),
-}));
-
 vi.mock('./CanvasViewport', () => ({
   default: (props: Record<string, unknown>) => {
     shellState.canvasViewportProps = props;
