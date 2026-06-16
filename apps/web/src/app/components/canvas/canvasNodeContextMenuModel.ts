@@ -7,11 +7,7 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 }>;
 
 export type CanvasNodeContextMenuActionId =
-  | 'edit-sql'
   | 'inspect-node'
-  | 'preview-node'
-  | 'run-from-node'
-  | 'show-lineage'
   | 'duplicate-node'
   | 'select-node-for-execution'
   | 'deselect-node-from-execution'
@@ -71,37 +67,6 @@ type BuildCanvasNodeModelerActionModelArgs = Omit<
   BuildCanvasNodeContextMenuModelArgs,
   'canInspectNode'
 >;
-
-export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
-  editSql: {
-    id: 'edit-sql',
-    label: 'Edit SQL',
-    intent: 'command',
-    disabled: true,
-    disabledReason: 'SQL workbench is not available for this node.',
-  },
-  previewNode: {
-    id: 'preview-node',
-    label: 'Preview node',
-    intent: 'command',
-    disabled: true,
-    disabledReason: 'Node-scoped preview is not available for this node.',
-  },
-  runFromNode: {
-    id: 'run-from-node',
-    label: 'Run from here',
-    intent: 'command',
-    disabled: true,
-    disabledReason: 'Run-from-node is not available for this node.',
-  },
-  showLineage: {
-    id: 'show-lineage',
-    label: 'Show lineage',
-    intent: 'read',
-    disabled: true,
-    disabledReason: 'Node lineage is not available for this node.',
-  },
-} as const satisfies Record<string, CanvasNodeContextMenuAction>;
 
 function buildOpenWorkbenchAction(canInspectNode: boolean): CanvasNodeContextMenuAction | null {
   if (!canInspectNode) {
@@ -192,33 +157,24 @@ export function buildCanvasNodeContextMenuModel({
         disabled: false,
       }
     : null;
-  const executeActions: CanvasNodeContextMenuAction[] = [
-    { ...NODE_CONTEXT_MENU_BASE_ACTIONS.previewNode },
-    { ...NODE_CONTEXT_MENU_BASE_ACTIONS.runFromNode },
-    ...(executionSelectionAction != null ? [executionSelectionAction] : []),
-  ];
+  const workbenchAction = buildOpenWorkbenchAction(canInspectNode);
+  const groups: CanvasNodeContextMenuActionGroup[] = [];
 
-  const groups: CanvasNodeContextMenuActionGroup[] = [
-    {
-      id: 'configure',
-      label: 'Configure',
-      actions: [
-        { ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql },
-        buildOpenWorkbenchAction(canInspectNode),
-      ].filter((action): action is CanvasNodeContextMenuAction => action != null),
-    },
-    {
+  if (workbenchAction != null) {
+    groups.push({
+      id: 'workbench',
+      label: 'Workbench',
+      actions: [workbenchAction],
+    });
+  }
+
+  if (executionSelectionAction != null) {
+    groups.push({
       id: 'execute',
       label: 'Execute',
-      actions: executeActions,
-    },
-  ];
-
-  groups.push({
-    id: 'lineage',
-    label: 'Lineage',
-    actions: [{ ...NODE_CONTEXT_MENU_BASE_ACTIONS.showLineage }],
-  });
+      actions: [executionSelectionAction],
+    });
+  }
 
   groups.push(
     ...buildCanvasNodeModelerActionModel({

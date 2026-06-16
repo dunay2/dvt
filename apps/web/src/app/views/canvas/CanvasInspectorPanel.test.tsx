@@ -288,7 +288,7 @@ describe('CanvasInspectorPanel', () => {
     expect(onRemoveNode).toHaveBeenCalledWith(node.id);
   });
 
-  it('does not expose execution selection when the inspector is read-only', async () => {
+  it('keeps execution selection available when graph editing is read-only', async () => {
     const node = buildDbtModelNode();
     const onToggleNodeSelection = vi.fn();
 
@@ -314,11 +314,16 @@ describe('CanvasInspectorPanel', () => {
       );
     });
 
-    expect(container.querySelector('[data-slot="node-inspector-modeler-actions"]')).toBeNull();
-    expect(container.querySelector('[data-action-id="select-node-for-execution"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-modeler-actions"]')).not.toBeNull();
+    expect(container.querySelector('[data-action-id="select-node-for-execution"]')).not.toBeNull();
     expect(container.querySelector('[data-action-id="duplicate-node"]')).toBeNull();
     expect(container.querySelector('[data-action-id="remove-node"]')).toBeNull();
-    expect(onToggleNodeSelection).not.toHaveBeenCalled();
+
+    await act(async () => {
+      fireEvent.click(modelerActionButton(container, 'select-node-for-execution'));
+    });
+
+    expect(onToggleNodeSelection).toHaveBeenCalledWith(node.id, true);
   });
 
   it('does not expose modeler actions when read-only execution selection is unavailable', async () => {

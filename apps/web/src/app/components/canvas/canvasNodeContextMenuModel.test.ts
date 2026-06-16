@@ -43,7 +43,7 @@ describe('canvasNodeContextMenuModel', () => {
     });
   });
 
-  it('maps editable node posture to the professional node context vocabulary', () => {
+  it('maps editable node posture to only backed node context actions', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },
       selectedForExecution: false,
@@ -56,12 +56,8 @@ describe('canvasNodeContextMenuModel', () => {
 
     expect(model.target.nodeId).toBe('source-orders');
     expect(actionIds(model)).toEqual([
-      'edit-sql',
       'inspect-node',
-      'preview-node',
-      'run-from-node',
       'select-node-for-execution',
-      'show-lineage',
       'duplicate-node',
       'remove-node',
     ]);
@@ -73,26 +69,10 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'inspect-node')).not.toHaveProperty('workbenchTabId');
     expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
     expect(actionById(model, 'inspect-tests')).toBeUndefined();
-    expect(actionById(model, 'edit-sql')).toMatchObject({
-      label: 'Edit SQL',
-      intent: 'command',
-      disabled: true,
-    });
-    expect(actionById(model, 'preview-node')).toMatchObject({
-      label: 'Preview node',
-      intent: 'command',
-      disabled: true,
-    });
-    expect(actionById(model, 'run-from-node')).toMatchObject({
-      label: 'Run from here',
-      intent: 'command',
-      disabled: true,
-    });
-    expect(actionById(model, 'show-lineage')).toMatchObject({
-      label: 'Show lineage',
-      intent: 'read',
-      disabled: true,
-    });
+    expect(actionById(model, 'edit-sql')).toBeUndefined();
+    expect(actionById(model, 'preview-node')).toBeUndefined();
+    expect(actionById(model, 'run-from-node')).toBeUndefined();
+    expect(actionById(model, 'show-lineage')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toMatchObject({
       label: 'Delete',
       intent: 'command',
@@ -122,21 +102,14 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: true,
     });
 
-    expect(actionIds(model)).toEqual([
-      'edit-sql',
-      'inspect-node',
-      'preview-node',
-      'run-from-node',
-      'select-node-for-execution',
-      'show-lineage',
-    ]);
+    expect(actionIds(model)).toEqual(['inspect-node', 'select-node-for-execution']);
     expect(actionById(model, 'inspect-node')).toMatchObject({ disabled: false });
     expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
     expect(actionById(model, 'inspect-tests')).toBeUndefined();
-    expect(actionById(model, 'edit-sql')).toMatchObject({ disabled: true });
-    expect(actionById(model, 'preview-node')).toMatchObject({ disabled: true });
-    expect(actionById(model, 'run-from-node')).toMatchObject({ disabled: true });
-    expect(actionById(model, 'show-lineage')).toMatchObject({ disabled: true });
+    expect(actionById(model, 'edit-sql')).toBeUndefined();
+    expect(actionById(model, 'preview-node')).toBeUndefined();
+    expect(actionById(model, 'run-from-node')).toBeUndefined();
+    expect(actionById(model, 'show-lineage')).toBeUndefined();
     expect(actionById(model, 'select-node-for-execution')).toMatchObject({
       intent: 'command',
       disabled: false,
@@ -177,13 +150,7 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: true,
     });
 
-    expect(actionIds(model)).toEqual([
-      'edit-sql',
-      'inspect-node',
-      'preview-node',
-      'run-from-node',
-      'show-lineage',
-    ]);
+    expect(actionIds(model)).toEqual(['inspect-node']);
     expect(actionById(model, 'duplicate-node')).toBeUndefined();
     expect(actionById(model, 'select-node-for-execution')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toBeUndefined();
@@ -221,7 +188,7 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: false,
     });
 
-    expect(actionIds(model)).toEqual(['edit-sql', 'preview-node', 'run-from-node', 'show-lineage']);
+    expect(actionIds(model)).toEqual([]);
     expect(actionById(model, 'inspect-node')).toBeUndefined();
     expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
     expect(actionById(model, 'inspect-tests')).toBeUndefined();
