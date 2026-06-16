@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   createCanvasRouteHarness,
+  expectActiveCanvasShellIdentity,
   renderCanvasRouteWithController,
   type CanvasRouteHarness,
 } from './Canvas.test.support';
@@ -38,7 +39,11 @@ describe('Canvas route first-canvas catalog', () => {
 
     expect(harness.container.textContent).toContain('Start transformation canvas');
     expect(harness.container.textContent).toContain('Add first transformation node');
-    expect(harness.container.textContent).toContain('Main canvas');
+    expectActiveCanvasShellIdentity({
+      container: harness.container,
+      title: 'Main canvas',
+      kindLabel: 'Transformation',
+    });
     await openFirstNodePalette('Add first transformation node');
     expect(document.body.textContent).toContain('SQL transform');
     expect(document.body.textContent).not.toContain('Exposure');
@@ -56,7 +61,11 @@ describe('Canvas route first-canvas catalog', () => {
 
     expect(harness.container.textContent).toContain('Start dbt canvas');
     expect(harness.container.textContent).toContain('Add first dbt node');
-    expect(harness.container.textContent).toContain('dbt canvas');
+    expectActiveCanvasShellIdentity({
+      container: harness.container,
+      title: 'dbt canvas',
+      kindLabel: 'dbt',
+    });
     await openFirstNodePalette('Add first dbt node');
     expect(document.body.textContent).toContain('Exposure');
     expect(document.body.textContent).toContain('Metric');

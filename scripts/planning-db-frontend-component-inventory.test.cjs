@@ -234,6 +234,7 @@ test('real frontend component inventory links current components to files, rails
 
   assert.ok(componentIds.has('web.component.canvas.CanvasShellChrome'));
   assert.ok(!componentIds.has('web.component.canvas.CanvasToolbar'));
+  assert.ok(componentIds.has('web.component.templates.TemplatesWorkbench'));
   assert.ok(componentIds.has('web.component.workbench.RouteWorkbenchFrame'));
   for (const componentId of componentIds) {
     assert.ok(fileComponentIds.has(componentId), `${componentId} must have at least one file`);
@@ -316,5 +317,33 @@ test('real frontend component inventory keeps execution preview out of fixed can
   assert.ok(
     contextMenuRails.includes('PreviewExecutablePlan'),
     'CanvasContextMenu must own PreviewExecutablePlan as the spatial canvas action'
+  );
+});
+
+test('real frontend component inventory maps Templates workbench files, rails, and evidence', () => {
+  const snapshot = buildFrontendComponentReflectionSnapshot();
+  const templatesComponentId = 'web.component.templates.TemplatesWorkbench';
+  const templatesFiles = snapshot.files
+    .filter((file) => file.componentId === templatesComponentId)
+    .map((file) => file.filePath);
+  const templatesRails = snapshot.rails
+    .filter((rail) => rail.componentId === templatesComponentId)
+    .map((rail) => [rail.railName, rail.railKind, rail.railStatus]);
+  const templatesEvidence = snapshot.evidence
+    .filter((evidence) => evidence.componentId === templatesComponentId)
+    .map((evidence) => evidence.evidenceRef);
+
+  assert.ok(templatesFiles.includes('apps/web/src/app/views/TemplatesView.tsx'));
+  assert.ok(templatesFiles.includes('apps/web/src/app/views/templates/templatesViewModel.ts'));
+  assert.deepEqual(templatesRails, [
+    ['ListExecutionTemplateProfiles', 'query', 'implemented-local'],
+    ['GenerateExecutionTemplatePreview', 'query', 'implemented-local'],
+    ['SelectExecutionTemplateProfile', 'command', 'implemented-local'],
+    ['UpdateExecutionTemplateParameterValue', 'command', 'implemented-local'],
+  ]);
+  assert.ok(
+    templatesEvidence.includes(
+      'apps/web/src/app/views/templates/templatesWorkbench.architecture.test.ts'
+    )
   );
 });

@@ -28,6 +28,25 @@ describe('Templates workbench architecture', () => {
     expect(workbenchSource).not.toMatch(/\bdispatch\b|\bpersist\b|\bapply\b/i);
   });
 
+  it('maps canonical template command and query rails to implementation surfaces', () => {
+    const routeSource = readAppSource('views/TemplatesView.tsx');
+    const modelSource = readAppSource('views/templates/templatesViewModel.ts');
+    const ownSource = readFileSync(__filename, 'utf8');
+    const rails = {
+      listProfiles: ['List', 'Execution', 'Template', 'Profiles'].join(''),
+      selectProfile: ['Select', 'Execution', 'Template', 'Profile'].join(''),
+      updateParameter: ['Update', 'Execution', 'Template', 'Parameter', 'Value'].join(''),
+    };
+
+    for (const railName of Object.values(rails)) {
+      expect(ownSource).not.toMatch(new RegExp(`\\b${railName}\\b`));
+    }
+
+    expect(modelSource).toMatch(new RegExp(`\\b${rails.listProfiles}\\b`));
+    expect(routeSource).toMatch(new RegExp(`\\b${rails.selectProfile}\\b`));
+    expect(routeSource).toMatch(new RegExp(`\\b${rails.updateParameter}\\b`));
+  });
+
   it('documents public API, invariants, transitions, consumers, and user stories', () => {
     const componentDoc = readRepoDoc(
       'docs/architecture/components/web/templates/execution-template-source-generation-component.md'
