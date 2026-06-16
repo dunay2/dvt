@@ -27,10 +27,6 @@ const CANVAS_SHELL_BUILDER_TYPES_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasShellBuilder.types.ts'
 );
-const CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasToolbarPrimaryControls.tsx'
-);
 const CANVAS_ADD_NODE_PALETTE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasAddNodePalette.tsx'
@@ -47,6 +43,13 @@ const LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH = resolve(
   import.meta.dirname,
   '../../components/WarehouseSourceExplorer.tsx'
 );
+const LEGACY_CANVAS_TOOLBAR_PATHS = [
+  'CanvasToolbar.tsx',
+  'CanvasToolbarPrimaryControls.tsx',
+  'CanvasToolbarDraftStatus.tsx',
+  'canvasToolbarViewModel.ts',
+].map((fileName) => resolve(import.meta.dirname, fileName));
+
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
     expect(CANVAS_SHELL_SOURCE).toContain(
@@ -135,10 +138,6 @@ describe('CanvasShell architecture', () => {
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('userPermissions.canEditEdges');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('getAllNodeKinds');
-    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).not.toContain('CanvasAddNodePalette');
-    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).not.toContain(
-      'triggerDataSlot="canvas-toolbar-insert-command"'
-    );
     expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('function selectOption(');
     expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('onCreateAuthoringNode(option.registration');
     expect(CANVAS_SHELL_SOURCE).not.toContain('nodeKinds={authoringNodeKinds}');
@@ -156,5 +155,11 @@ describe('CanvasShell architecture', () => {
 
   it('retires the legacy fixed warehouse source explorer component', () => {
     expect(existsSync(LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH)).toBe(false);
+  });
+
+  it('retires the unmounted legacy Canvas toolbar surface', () => {
+    for (const toolbarPath of LEGACY_CANVAS_TOOLBAR_PATHS) {
+      expect(existsSync(toolbarPath), toolbarPath).toBe(false);
+    }
   });
 });

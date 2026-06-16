@@ -58,9 +58,6 @@ describe('canvas route posture priority architecture', () => {
 
   it('keeps Canvas route chrome visual classes behind the Canvas chrome token component', () => {
     const tokenSource = readAppSource('canvasChromeTokens.ts');
-    const toolbarSource = readAppSource('CanvasToolbar.tsx');
-    const primaryControlsSource = readAppSource('CanvasToolbarPrimaryControls.tsx');
-    const draftStatusSource = readAppSource('CanvasToolbarDraftStatus.tsx');
     const draftSaveStatusSource = readAppSource('CanvasDraftSaveStatus.tsx');
     const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
     const componentGuide = readRepoFile(
@@ -76,20 +73,19 @@ describe('canvas route posture priority architecture', () => {
     expect(tokenSource).toContain('resolveCanvasDraftStatusClassName');
     expect(tokenSource).toContain('resolveCanvasWorkflowStatusClassName');
 
-    for (const source of [
-      toolbarSource,
-      primaryControlsSource,
-      draftSaveStatusSource,
-      tabStripTemplateSource,
-    ]) {
+    for (const source of [draftSaveStatusSource, tabStripTemplateSource]) {
       expect(source).toContain("from './canvasChromeTokens'");
       expect(source).not.toMatch(/\b(?:slate|gray|zinc)-\d{2,3}\b/);
       expect(source).not.toMatch(/\b(?:rose|amber|emerald)-\d{2,3}\b/);
     }
 
-    expect(draftStatusSource).toContain("from './CanvasDraftSaveStatus'");
-    expect(draftStatusSource).not.toMatch(/\b(?:slate|gray|zinc)-\d{2,3}\b/);
-    expect(draftStatusSource).not.toMatch(/\b(?:rose|amber|emerald)-\d{2,3}\b/);
+    for (const retiredToolbarFile of [
+      'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
+      'apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx',
+      'apps/web/src/app/views/canvas/CanvasToolbarDraftStatus.tsx',
+    ]) {
+      expect(repoFileExists(retiredToolbarFile), retiredToolbarFile).toBe(false);
+    }
 
     for (const expected of [
       '## Public API',

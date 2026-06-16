@@ -51,16 +51,16 @@ describe('Canvas plan/run readiness architecture', () => {
   it('keeps the read model source-owned in code instead of toolbar-local copy', () => {
     const readinessModel = readRepoFile('apps/web/src/app/views/canvas/canvasPlanReadiness.ts');
     const executionState = readRepoFile('apps/web/src/app/views/canvas/canvasExecutionState.ts');
-    const toolbarControls = readRepoFile(
-      'apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx'
-    );
 
     expect(readinessModel.trimStart()).toMatch(/^\/\*\*[\s\S]*Owned concern:/);
     expect(readinessModel).toContain('PlanRunReadinessReadModel');
     expect(readinessModel).toContain('observePlanRunReadiness');
     expect(executionState).toContain('observePlanRunReadiness');
-    expect(toolbarControls).not.toContain('PlanRunReadinessReadModel');
-    expect(toolbarControls).not.toContain('plan_integrity');
+    expect(
+      existsSync(
+        path.join(REPO_ROOT, 'apps/web/src/app/views/canvas/CanvasToolbarPrimaryControls.tsx')
+      )
+    ).toBe(false);
   });
 
   it('requires every F-27 readiness blocker to stay explicit and covered by evidence', () => {
