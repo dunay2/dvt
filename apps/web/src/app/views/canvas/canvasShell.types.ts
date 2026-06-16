@@ -84,7 +84,7 @@ export type CanvasShellGraph = {
   viewport: CanvasViewport | null;
 };
 
-export type CanvasShellToolbar = {
+export type CanvasShellChromeState = {
   canvasAuthoringMode: CanvasGraphAuthoringMode;
   routeState: CanvasRouteState;
   draftToolbarState: CanvasDraftToolbarState;
@@ -146,7 +146,7 @@ export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
   graph: CanvasShellGraph;
-  toolbar: CanvasShellToolbar;
+  chromeState: CanvasShellChromeState;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   canvasCommands: CanvasShellCanvasCommands;

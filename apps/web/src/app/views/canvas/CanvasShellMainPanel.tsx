@@ -1,4 +1,4 @@
-/** Owned concern: compose Canvas toolbar, viewport, and center-surface overlay inside the main shell panel. */
+/** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
 import { CanvasInspectorPanel } from './CanvasInspectorPanel';
@@ -12,7 +12,7 @@ import type {
   CanvasShellLayout,
   CanvasShellOpenDataRegistryCommand,
   CanvasShellPanels,
-  CanvasShellToolbar,
+  CanvasShellChromeState,
 } from './canvasShell.types';
 
 function resolveCanvasShellMainPanelDefaultSize(): number {
@@ -23,7 +23,7 @@ type CanvasShellMainPanelProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
   graph: CanvasShellGraph;
-  toolbar: CanvasShellToolbar;
+  chromeState: CanvasShellChromeState;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   onOpenSourceImport?: CanvasShellOpenDataRegistryCommand;
@@ -32,20 +32,20 @@ type CanvasShellMainPanelProps = Readonly<{
 function CanvasShellMenuContributionRegistrars({
   panels,
   graph,
-  toolbar,
+  chromeState,
   chromeCommands,
 }: Pick<
   CanvasShellMainPanelProps,
-  'panels' | 'graph' | 'toolbar' | 'chromeCommands'
+  'panels' | 'graph' | 'chromeState' | 'chromeCommands'
 >): JSX.Element {
   return (
     <>
       <CanvasViewMenuContributionRegistrar
         canEditEdges={panels.userPermissions.canEditEdges}
-        canUseCostOverlay={toolbar.canUseCostOverlay}
-        exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
-        impactOverlayEnabled={toolbar.impactOverlayEnabled}
-        columnLevelLineageEnabled={toolbar.columnLevelLineageEnabled}
+        canUseCostOverlay={chromeState.canUseCostOverlay}
+        exclusiveOverlayMode={chromeState.exclusiveOverlayMode}
+        impactOverlayEnabled={chromeState.impactOverlayEnabled}
+        columnLevelLineageEnabled={chromeState.columnLevelLineageEnabled}
         canvasGridVisible={graph.canvasGridVisible}
         canvasGridColor={graph.canvasGridColor}
         canvasSnapToGrid={graph.canvasSnapToGrid}
@@ -61,8 +61,8 @@ function CanvasShellMenuContributionRegistrars({
       />
       <CanvasWorkspaceMenuContributionRegistrar
         activeCanvas={panels.activeCanvas}
-        canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
-        canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
+        canExportProjectSnapshot={chromeState.canExportProjectSnapshot}
+        canImportProjectSnapshot={chromeState.canImportProjectSnapshot}
         onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
         onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
       />
@@ -214,7 +214,7 @@ export function CanvasShellMainPanel({
   layout,
   panels,
   graph,
-  toolbar,
+  chromeState,
   graphCommands,
   chromeCommands,
   onOpenSourceImport,
@@ -228,7 +228,7 @@ export function CanvasShellMainPanel({
         <CanvasShellMenuContributionRegistrars
           panels={panels}
           graph={graph}
-          toolbar={toolbar}
+          chromeState={chromeState}
           chromeCommands={chromeCommands}
         />
         {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
@@ -239,12 +239,12 @@ export function CanvasShellMainPanel({
           graphCommands={graphCommands}
           chromeCommands={chromeCommands}
           onOpenSourceImport={onOpenSourceImport}
-          canPreviewExecutionPlan={panels.userPermissions.canPlan && toolbar.canPlanGraph}
+          canPreviewExecutionPlan={panels.userPermissions.canPlan && chromeState.canPlanGraph}
         />
         {shouldShowGraphStatusOverlay ? (
           <CanvasGraphStatusOverlay
             activeCanvas={panels.activeCanvas}
-            draftToolbarState={toolbar.draftToolbarState}
+            draftToolbarState={chromeState.draftToolbarState}
             onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
           />
         ) : null}

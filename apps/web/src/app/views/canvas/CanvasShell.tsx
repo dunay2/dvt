@@ -13,7 +13,7 @@ export default function CanvasShell({
   layout,
   panels,
   graph,
-  toolbar,
+  chromeState,
   graphCommands,
   chromeCommands,
 }: CanvasShellProps): JSX.Element {
@@ -55,7 +55,7 @@ export default function CanvasShell({
         <CanvasOperationalDrawerContributionRegistrar
           policy={layout.surfaceStrategy.operationalDrawer}
           panels={panels}
-          toolbar={toolbar}
+          chromeState={chromeState}
           onPreviewExecutionPlan={chromeCommands.onPlan}
         />
       )}
@@ -63,7 +63,7 @@ export default function CanvasShell({
         layout={layout}
         panels={panels}
         graph={graph}
-        toolbar={toolbar}
+        chromeState={chromeState}
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
         onOpenSourceImport={handleOpenDataRegistry}
