@@ -24,6 +24,7 @@ type CanvasNodeShellProps = Readonly<{
   shouldShowSourceHandle: boolean;
   shouldShowTargetHandle: boolean;
   onContextMenuAction: (actionId: CanvasNodeContextMenuActionId) => void;
+  onOpenWorkbench?: () => void;
   onDragOver?: DragEventHandler<HTMLDivElement>;
   onDrop?: DragEventHandler<HTMLDivElement>;
 }>;
@@ -46,13 +47,19 @@ export function CanvasNodeShell({
   shouldShowSourceHandle,
   shouldShowTargetHandle,
   onContextMenuAction,
+  onOpenWorkbench,
   onDragOver,
   onDrop,
 }: CanvasNodeShellProps): JSX.Element {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className={cn(styles.root, 'relative')} onDragOver={onDragOver} onDrop={onDrop}>
+        <div
+          className={cn(styles.root, 'relative')}
+          onDoubleClick={onOpenWorkbench}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+        >
           {shouldShowTargetHandle && (
             <Handle
               type="target"

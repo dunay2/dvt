@@ -17,8 +17,6 @@ export type CanvasNodeContextMenuActionId =
   | 'deselect-node-from-execution'
   | 'remove-node';
 
-export type CanvasNodeWorkbenchTabId = 'general' | 'inputs-outputs' | 'tests';
-
 export type CanvasNodeModelerActionId =
   | 'duplicate-node'
   | 'select-node-for-execution'
@@ -30,7 +28,6 @@ export type CanvasNodeContextMenuAction = Readonly<{
   label: string;
   intent: 'read' | 'command';
   disabled: boolean;
-  workbenchTabId?: CanvasNodeWorkbenchTabId;
   destructive?: boolean;
   disabledReason?: string;
 }>;
@@ -106,17 +103,16 @@ export const NODE_CONTEXT_MENU_BASE_ACTIONS = {
   },
 } as const satisfies Record<string, CanvasNodeContextMenuAction>;
 
-function buildPropertiesAction(canInspectNode: boolean): CanvasNodeContextMenuAction | null {
+function buildOpenWorkbenchAction(canInspectNode: boolean): CanvasNodeContextMenuAction | null {
   if (!canInspectNode) {
     return null;
   }
 
   return {
     id: 'inspect-node',
-    label: 'Properties',
+    label: 'Open workbench',
     intent: 'read',
     disabled: false,
-    workbenchTabId: 'general',
   };
 }
 
@@ -209,7 +205,7 @@ export function buildCanvasNodeContextMenuModel({
       label: 'Configure',
       actions: [
         { ...NODE_CONTEXT_MENU_BASE_ACTIONS.editSql },
-        buildPropertiesAction(canInspectNode),
+        buildOpenWorkbenchAction(canInspectNode),
       ].filter((action): action is CanvasNodeContextMenuAction => action != null),
     },
     {

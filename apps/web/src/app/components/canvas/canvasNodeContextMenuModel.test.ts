@@ -66,11 +66,11 @@ describe('canvasNodeContextMenuModel', () => {
       'remove-node',
     ]);
     expect(actionById(model, 'inspect-node')).toMatchObject({
-      label: 'Properties',
+      label: 'Open workbench',
       intent: 'read',
       disabled: false,
-      workbenchTabId: 'general',
     });
+    expect(actionById(model, 'inspect-node')).not.toHaveProperty('workbenchTabId');
     expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
     expect(actionById(model, 'inspect-tests')).toBeUndefined();
     expect(actionById(model, 'edit-sql')).toMatchObject({
