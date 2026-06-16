@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { canvasViewCopy } from './copy';
-import {
-  deriveCanvasDraftToolbarState,
-  deriveDraftRecoveryReason,
-} from './canvasDraftToolbarState';
+import { deriveCanvasDraftStatusState, deriveDraftRecoveryReason } from './canvasDraftStatusState';
 
-describe('canvasDraftToolbarState', () => {
+describe('canvasDraftStatusState', () => {
   it('derives stale_conflict with highest precedence', () => {
     expect(
       deriveDraftRecoveryReason({
@@ -39,13 +36,13 @@ describe('canvasDraftToolbarState', () => {
 
   it('uses neutral draft labels when no recovery is active', () => {
     expect(
-      deriveCanvasDraftToolbarState({
+      deriveCanvasDraftStatusState({
         draftSaveStatus: 'idle',
         recoveryReason: null,
       }).label
     ).toBe(canvasViewCopy.draftSyncedLabel);
     expect(
-      deriveCanvasDraftToolbarState({
+      deriveCanvasDraftStatusState({
         draftSaveStatus: 'saving',
         recoveryReason: null,
       }).label
@@ -54,7 +51,7 @@ describe('canvasDraftToolbarState', () => {
 
   it('uses failed automatic save copy when autosave fails without recovery', () => {
     expect(
-      deriveCanvasDraftToolbarState({
+      deriveCanvasDraftStatusState({
         draftSaveStatus: 'failed',
         recoveryReason: null,
       })
@@ -67,7 +64,7 @@ describe('canvasDraftToolbarState', () => {
 
   it('uses warning and danger toolbar states for recovery reasons', () => {
     expect(
-      deriveCanvasDraftToolbarState({
+      deriveCanvasDraftStatusState({
         draftSaveStatus: 'saved',
         recoveryReason: 'stale_conflict',
       })
@@ -78,7 +75,7 @@ describe('canvasDraftToolbarState', () => {
     });
 
     expect(
-      deriveCanvasDraftToolbarState({
+      deriveCanvasDraftStatusState({
         draftSaveStatus: 'saved',
         recoveryReason: 'missing_remote',
       })

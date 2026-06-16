@@ -34,9 +34,9 @@ export function useCanvasRoutePresentationSync(
     presentationState.bootstrapDetail,
     presentationState.bootstrapStatus,
     presentationState.canCompleteBootstrap,
-    presentationState.draftToolbarState.label,
-    presentationState.draftToolbarState.showReloadAction,
-    presentationState.draftToolbarState.tone,
+    presentationState.draftStatusState.label,
+    presentationState.draftStatusState.showReloadAction,
+    presentationState.draftStatusState.tone,
     presentationState.recoveryReason,
     presentationState.routeState,
   ]);

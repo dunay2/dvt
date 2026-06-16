@@ -22,7 +22,7 @@ describe('canvasAuthoringState', () => {
       inspectorNodeId: 'node_1',
     });
     expect(authoringState.draftAccessPosture.kind).toBe('unknown_pending');
-    expect(authoringState.draftToolbarState.label).not.toBe('Draft synced');
+    expect(authoringState.draftStatusState.label).not.toBe('Draft synced');
     expect(authoringState.canMutateGraph).toBe(false);
   });
 
@@ -76,7 +76,7 @@ describe('canvasAuthoringState', () => {
     });
 
     expect(authoringState.draftAccessPosture.kind).toBe('read_only');
-    expect(authoringState.draftToolbarState.label).toBe('Read-only draft');
+    expect(authoringState.draftStatusState.label).toBe('Read-only draft');
     expect(authoringState.draftAccessMode).toBe('read_only');
     expect(authoringState.draftFormatError).toBeNull();
     expect(authoringState.isDraftAccessBlocked).toBe(false);
@@ -132,7 +132,7 @@ describe('canvasAuthoringState', () => {
     });
 
     expect(authoringState.draftAccessPosture.kind).toBe('unauthenticated');
-    expect(authoringState.draftToolbarState.label).toBe('Session required');
+    expect(authoringState.draftStatusState.label).toBe('Session required');
     expect(authoringState.isDraftAccessBlocked).toBe(true);
     expect(authoringState.canMutateGraph).toBe(false);
   });

@@ -94,7 +94,7 @@ export function useCanvasController() {
       canMutateGraph,
       canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
       canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
-      canReloadLatestDraft: authoringRuntime.draftToolbarState.showReloadAction,
+      canReloadLatestDraft: authoringRuntime.draftStatusState.showReloadAction,
     });
 
     return resolveCanvasRuntimePolicy({
@@ -107,7 +107,7 @@ export function useCanvasController() {
     });
   }, [
     activeCanvasGraphStrategyResolution,
-    authoringRuntime.draftToolbarState.showReloadAction,
+    authoringRuntime.draftStatusState.showReloadAction,
     canMutateGraph,
     draftAccessPosture,
     isDraftRecoveryBlocked,

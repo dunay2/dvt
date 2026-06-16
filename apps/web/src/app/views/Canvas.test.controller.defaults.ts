@@ -8,7 +8,7 @@ import type { WorkspaceScope } from '../ports/sessionContext';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
 import type { CanvasDraftAuthTransportPosture } from './canvas/canvasDraftAuthTransportPosture';
-import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
+import type { CanvasDraftStatusState } from './canvas/canvasDraftStatusState';
 import type { CanvasController } from './Canvas.test.controller';
 
 type CanvasWorkbenchDefaultsDto = {
@@ -62,7 +62,7 @@ type CanvasDraftDefaultsDto = {
   draftFormatError: CanvasController['draftFormatError'];
   draftFormatMeta: CanvasController['draftFormatMeta'];
   draftRecoveryReason: CanvasController['draftRecoveryReason'];
-  draftToolbarState: CanvasController['draftToolbarState'];
+  draftStatusState: CanvasController['draftStatusState'];
   canExportProjectSnapshot: CanvasController['canExportProjectSnapshot'];
   canImportProjectSnapshot: CanvasController['canImportProjectSnapshot'];
   draftConflictRevision: CanvasController['draftConflictRevision'];
@@ -90,7 +90,7 @@ type CanvasControllerStateDefaults = CanvasWorkbenchDefaultsDto &
   CanvasDraftDefaultsDto &
   CanvasExecutionDefaultsDto;
 
-export function buildDefaultCanvasToolbarState(): CanvasDraftToolbarState {
+export function buildDefaultCanvasDraftStatusState(): CanvasDraftStatusState {
   return {
     label: 'Draft synced',
     tone: 'neutral',
@@ -231,7 +231,7 @@ function buildDefaultCanvasDraftState(): CanvasDraftDefaultsDto {
     draftFormatError: null,
     draftFormatMeta: null,
     draftRecoveryReason: null,
-    draftToolbarState: buildDefaultCanvasToolbarState(),
+    draftStatusState: buildDefaultCanvasDraftStatusState(),
     canExportProjectSnapshot: true,
     canImportProjectSnapshot: true,
     draftConflictRevision: null,

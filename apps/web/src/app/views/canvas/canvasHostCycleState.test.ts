@@ -63,7 +63,7 @@ function buildArgs(
     presentationState: {
       routeState: 'needs_canvas',
       recoveryReason: null,
-      draftToolbarState: {
+      draftStatusState: {
         label: 'Draft synced',
         tone: 'neutral',
         showReloadAction: false,

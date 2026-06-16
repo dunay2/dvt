@@ -378,7 +378,7 @@ describe('useCanvasController core', () => {
     await harness.renderProbe();
 
     expect(harness.getLatestResult()?.draftAccessPosture.kind).toBe('read_only');
-    expect(harness.getLatestResult()?.draftToolbarState.label).toBe('Read-only draft');
+    expect(harness.getLatestResult()?.draftStatusState.label).toBe('Read-only draft');
     expect(harness.getLatestResult()?.userPermissions).toEqual(
       expect.objectContaining({
         canEditEdges: false,

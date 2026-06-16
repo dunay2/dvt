@@ -37,6 +37,6 @@ describe('canvasRouteViewState', () => {
       canRun: false,
       canEditEdges: false,
     });
-    expect(viewState.presentationState.draftToolbarState.label).toBe('Draft access denied');
+    expect(viewState.presentationState.draftStatusState.label).toBe('Draft access denied');
   });
 });

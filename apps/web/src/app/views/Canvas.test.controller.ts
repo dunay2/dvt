@@ -1,7 +1,7 @@
 import type { useCanvasController } from './canvas/useCanvasController';
 import {
   deriveCanvasDraftAccessPosture,
-  toCanvasDraftToolbarState,
+  toCanvasDraftStatusState,
 } from './canvas/canvasDraftAccessPostureModel';
 import {
   buildDefaultCanvasControllerCallbacks,
@@ -61,7 +61,7 @@ function normalizeCanvasDocumentState(
 function normalizeCanvasDraftPosture(
   controller: CanvasController,
   overrides?: Partial<CanvasController>
-): Pick<CanvasController, 'draftAccessPosture' | 'draftToolbarState'> {
+): Pick<CanvasController, 'draftAccessPosture' | 'draftStatusState'> {
   const hasExplicitDraftPosture = overrides?.draftAccessPosture !== undefined;
   const draftAccessPosture = hasExplicitDraftPosture
     ? controller.draftAccessPosture
@@ -76,10 +76,10 @@ function normalizeCanvasDraftPosture(
 
   return {
     draftAccessPosture,
-    draftToolbarState:
-      hasExplicitDraftPosture && overrides?.draftToolbarState !== undefined
-        ? controller.draftToolbarState
-        : toCanvasDraftToolbarState(draftAccessPosture),
+    draftStatusState:
+      hasExplicitDraftPosture && overrides?.draftStatusState !== undefined
+        ? controller.draftStatusState
+        : toCanvasDraftStatusState(draftAccessPosture),
   };
 }
 

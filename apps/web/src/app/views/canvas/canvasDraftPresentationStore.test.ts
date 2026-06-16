@@ -9,7 +9,7 @@ import {
   publishCanvasDraftPresentationState,
   resetCanvasDraftPresentationState,
 } from './canvasDraftPresentationStore';
-import { deriveCanvasDraftToolbarState } from './canvasDraftToolbarState';
+import { deriveCanvasDraftStatusState } from './canvasDraftStatusState';
 
 describe('canvasDraftPresentationStore', () => {
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('canvasDraftPresentationStore', () => {
       startupBlockState: null,
       workbenchState: { kind: 'ready' },
       recoveryReason: null,
-      draftToolbarState: deriveCanvasDraftToolbarState({
+      draftStatusState: deriveCanvasDraftStatusState({
         draftSaveStatus: 'saved',
         recoveryReason: null,
       }),

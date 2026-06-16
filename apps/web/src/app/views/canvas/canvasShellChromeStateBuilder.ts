@@ -11,7 +11,7 @@ export function buildCanvasShellChromeState({
   return {
     canvasAuthoringMode: chromeStateSource.canvasAuthoringMode,
     routeState: routePresentation.presentationState.routeState,
-    draftToolbarState: routePresentation.presentationState.draftToolbarState,
+    draftStatusState: routePresentation.presentationState.draftStatusState,
     canPlanGraph: chromeStateSource.canPlanGraph,
     canStartRun: chromeStateSource.canStartRun,
     canExportProjectSnapshot: chromeStateSource.canExportProjectSnapshot,

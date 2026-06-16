@@ -15,7 +15,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
 import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
-import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
@@ -87,7 +87,7 @@ export type CanvasShellGraph = {
 export type CanvasShellChromeState = {
   canvasAuthoringMode: CanvasGraphAuthoringMode;
   routeState: CanvasRouteState;
-  draftToolbarState: CanvasDraftToolbarState;
+  draftStatusState: CanvasDraftStatusState;
   canPlanGraph: boolean;
   canStartRun: boolean;
   canExportProjectSnapshot: boolean;
