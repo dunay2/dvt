@@ -1,7 +1,7 @@
 /** Owned concern: render Canvas workbench tab navigation from the tab read model. */
-import type { CanvasWorkbenchTabId } from '../../plugins/contracts/PluginManifest';
 import { Tabs, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { cn } from '../../components/ui/utils';
+import type { CanvasWorkbenchTabId } from '../../plugins/contracts/PluginManifest';
 import type { CanvasWorkbenchTabsReadModel } from './canvasWorkbenchTabs';
 
 export type CanvasWorkbenchTabStripProps = Readonly<{
@@ -21,7 +21,7 @@ export function CanvasWorkbenchTabStrip({
       className={
         variant === 'inline'
           ? 'flex shrink items-stretch gap-4 overflow-x-auto'
-          : 'flex shrink-0 items-stretch gap-4 overflow-x-auto border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-4'
+          : 'flex shrink-0 items-stretch gap-4 overflow-x-auto border-b border-(--border-default) bg-(--surface-panel) px-4'
       }
     >
       <Tabs value={tabsState.activeTabId} className="min-w-max flex-none">
@@ -33,9 +33,9 @@ export function CanvasWorkbenchTabStrip({
                 value={tab.id}
                 data-slot="canvas-workbench-tab-trigger"
                 className={cn(
-                  'flex h-11 flex-none items-center rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 text-sm font-medium whitespace-nowrap text-[var(--text-muted)] shadow-none transition-colors',
-                  'hover:bg-transparent hover:text-[var(--text-strong)]',
-                  'data-[state=active]:border-[color:var(--focus-ring)] data-[state=active]:bg-transparent data-[state=active]:text-[var(--text-strong)] data-[state=active]:shadow-none'
+                  'flex h-11 flex-none items-center rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 text-sm font-medium whitespace-nowrap text-(--text-muted) shadow-none transition-colors',
+                  'hover:bg-transparent hover:text-(--text-strong)',
+                  'data-[state=active]:border-(--focus-ring) data-[state=active]:bg-transparent data-[state=active]:text-(--text-strong) data-[state=active]:shadow-none'
                 )}
                 onClick={() => onSelectTab(tab.id)}
               >

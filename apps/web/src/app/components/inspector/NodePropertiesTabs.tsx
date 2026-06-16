@@ -177,7 +177,7 @@ export function NodePropertiesTabs({
                 data-slot="node-inspector-more-trigger"
                 className={cn(
                   graphVisualClasses.contextPanelFlatTabTrigger,
-                  activeOverflowItem != null && 'border-[color:var(--focus-ring)] text-slate-50'
+                  activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
                 )}
               >
                 {activeOverflowItem == null ? 'More' : `More: ${activeOverflowItem.label}`}
