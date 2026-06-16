@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-/** Owned concern: run the fast changed-slice verification gate. */
+/**
+ * Owned concern: run the fast changed-slice verification gate.
+ * Command/query rails: `RunChangedSliceVerification`, `ValidateChangedFiles`.
+ */
 const path = require('node:path');
 
 const {

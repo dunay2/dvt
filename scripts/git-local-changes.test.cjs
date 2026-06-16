@@ -155,3 +155,28 @@ test('local changed-files gate has semantic component docs and shared rail consu
     );
   }
 });
+
+test('local changed-files gate implementation surfaces name their canonical rails', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const repoRoot = path.resolve(__dirname, '..');
+  const railSources = {
+    ValidateChangedFiles: ['scripts/check-changed.cjs', 'scripts/verify-changed.cjs'],
+    SelectPrepushTypecheckScope: [
+      'scripts/type-check-prepush.cjs',
+      'tools/ci/prepush-typecheck-scope.mjs',
+    ],
+    RunChangedSliceVerification: ['scripts/verify-changed.cjs'],
+  };
+
+  for (const [railName, sourcePaths] of Object.entries(railSources)) {
+    for (const sourcePath of sourcePaths) {
+      const source = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+      assert.match(
+        source,
+        new RegExp(`\\b${railName}\\b`),
+        `${sourcePath} must expose the ${railName} rail for Planning DB indexing`
+      );
+    }
+  }
+});
