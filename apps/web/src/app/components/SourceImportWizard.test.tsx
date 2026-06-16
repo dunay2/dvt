@@ -199,7 +199,7 @@ describe('SourceImportWizard', () => {
     });
   };
 
-  it('navigates from source type to connection and selection steps', async () => {
+  it('opens on governed database connections without unavailable source-type placeholders', async () => {
     const onClose = vi.fn();
 
     await renderWizard({ onClose });
@@ -210,12 +210,16 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Metadata');
     expect(document.body.textContent).toContain('Selected');
     expect(document.body.textContent).not.toContain('DataObject Registry');
-    expect(document.body.textContent).toContain('Choose source connection');
-
-    await clickNext();
-
     expect(document.body.textContent).toContain('Choose database connection');
     expect(document.body.textContent).toContain('Snowflake PROD');
+    expect(document.body.textContent).not.toContain('File');
+    expect(document.body.textContent).not.toContain('API');
+    expect(document.body.textContent).not.toContain('Stream');
+    expect(document.body.textContent).not.toContain('not available yet');
+    expect(document.body.textContent).not.toContain('Only Database is available');
+    expect(requireElement(findButtonContaining('Back'), 'EXPECTED_BACK_BUTTON').disabled).toBe(
+      true
+    );
 
     await clickClickableDivByText('Snowflake PROD');
     await clickNext();
@@ -327,8 +331,6 @@ describe('SourceImportWizard', () => {
       }),
     });
 
-    await clickNext();
-
     const search = document.querySelector<HTMLInputElement>(
       '[data-slot="source-import-connection-search"]'
     );
@@ -356,8 +358,6 @@ describe('SourceImportWizard', () => {
 
     await renderWizard({ onClose, onComplete });
 
-    await clickNext(); // sourceType -> connection
-
     await clickClickableDivByText('Snowflake PROD');
 
     await clickNext(); // connection -> selection
@@ -380,7 +380,7 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Groups created:');
     expect(document.body.textContent).toContain('models/sources/erp.yml');
     expect(document.body.textContent).toContain(
-      'Canvas queued the imported source ids and will focus them when protected draft authority refreshes'
+      'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes'
     );
     expect(document.body.textContent).not.toContain('Add imported sources to canvas');
 
@@ -403,7 +403,6 @@ describe('SourceImportWizard', () => {
       ],
     });
 
-    await clickNext();
     await clickClickableDivByText('Snowflake PROD');
     await clickNext();
     await clickClickableDivByText('ORDERS');
@@ -436,7 +435,6 @@ describe('SourceImportWizard', () => {
       ],
     });
 
-    await clickNext();
     await clickClickableDivByText('Snowflake PROD');
     await clickNext();
     await clickClickableDivByText('ORDERS');
@@ -476,8 +474,6 @@ describe('SourceImportWizard', () => {
         }),
       }),
     });
-
-    await clickNext();
 
     await clickClickableDivByText('Snowflake PROD');
 

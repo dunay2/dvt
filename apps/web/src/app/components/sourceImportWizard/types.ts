@@ -18,16 +18,7 @@ export type SourceImportInitialSelection = Readonly<{
   tables: readonly WarehouseTable[];
 }>;
 
-export type WizardStep =
-  | 'sourceType'
-  | 'connection'
-  | 'selection'
-  | 'grouping'
-  | 'options'
-  | 'review'
-  | 'result';
-
-export type DataObjectSourceType = 'database' | 'file' | 'api' | 'stream';
+export type WizardStep = 'connection' | 'selection' | 'grouping' | 'options' | 'review' | 'result';
 
 export interface TableInfo {
   database: string;
@@ -40,7 +31,6 @@ export interface TableInfo {
 
 export interface SourceImportWizardState {
   currentStep: WizardStep;
-  selectedSourceType: DataObjectSourceType;
   connections: WarehouseConnection[];
   selectedConnection: string | null;
   tables: TableInfo[];

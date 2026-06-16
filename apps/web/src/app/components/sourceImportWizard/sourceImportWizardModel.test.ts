@@ -89,7 +89,8 @@ describe('sourceImportWizardModel', () => {
   });
 
   it('navigates wizard steps in both directions', () => {
-    expect(getNextStep('sourceType')).toBe('connection');
-    expect(getPreviousStep('connection')).toBe('sourceType');
+    expect(getNextStep('connection')).toBe('selection');
+    expect(getPreviousStep('connection')).toBe('connection');
+    expect(getPreviousStep('selection')).toBe('connection');
   });
 });
