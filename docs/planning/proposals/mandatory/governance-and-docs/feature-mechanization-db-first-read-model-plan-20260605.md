@@ -95,6 +95,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db/queries/feature-mechanization-query.cjs
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
+  - scripts/planning-db-query-tests/feature-mechanization.test.cjs
   - scripts/check-feature-mechanization.cjs
   - scripts/check-feature-mechanization.test.cjs
 forbiddenImplementationSurfaces:
