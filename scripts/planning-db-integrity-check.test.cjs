@@ -123,7 +123,7 @@ test('Planning DB integrity check treats surface-named gap rails as governed his
 });
 
 test('Planning DB integrity check tightens gap rail baseline after surface rails split out', () => {
-  const baselineGapRails = Array.from({ length: 110 }, (_, index) => ({
+  const baselineGapRails = Array.from({ length: 98 }, (_, index) => ({
     finding_kind: 'gap_rail',
     severity: 'warning',
     rail_name: `HistoricalGapRail${index}`,
@@ -157,15 +157,15 @@ test('Planning DB integrity check tightens gap rail baseline after surface rails
       surface: 'rail_vocabulary',
       kind: 'gap_rail',
       metric: 'total',
-      actual: 111,
-      allowed: 110,
+      actual: 99,
+      allowed: 98,
     },
     {
       surface: 'rail_vocabulary',
       kind: 'gap_rail',
       metric: 'warning',
-      actual: 111,
-      allowed: 110,
+      actual: 99,
+      allowed: 98,
     },
   ]);
 });
