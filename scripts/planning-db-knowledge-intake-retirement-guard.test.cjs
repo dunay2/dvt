@@ -51,3 +51,19 @@ test('knowledge intake retirement message points agents to DB-first rails', () =
   assert.match(message, /pnpm planning:db:query knowledge-intake/);
   assert.match(message, /Planning DB/);
 });
+
+test('knowledge intake retirement guard exposes its canonical command rail', () => {
+  const railName = ['Check', 'Buzon', 'Intake', 'Retirement'].join('');
+  const source = require('node:fs').readFileSync(
+    require('node:path').join(__dirname, 'planning-db/knowledge-intake-retirement-guard.cjs'),
+    'utf8'
+  );
+  const ownSource = require('node:fs').readFileSync(__filename, 'utf8');
+
+  assert.doesNotMatch(
+    ownSource,
+    new RegExp(`\\b${railName}\\b`),
+    'the guard test must not be indexed as a rail implementation surface'
+  );
+  assert.match(source, new RegExp(`\\b${railName}\\b`));
+});

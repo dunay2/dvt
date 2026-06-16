@@ -1,4 +1,7 @@
-/** Owned concern: import and query frontend route capability truth as a DB-first read model. */
+/**
+ * Owned concern: import and query frontend route capability truth as a DB-first read model.
+ * Command/query rails: `ListFrontendMechanicalTruthSurfaces`.
+ */
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');

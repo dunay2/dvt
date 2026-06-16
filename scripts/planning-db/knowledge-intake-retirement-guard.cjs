@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-/** Owned concern: guard DB-first knowledge intake retirement for changed slices. */
+/**
+ * Owned concern: guard DB-first knowledge intake retirement for changed slices.
+ * Command/query rails: `CheckBuzonIntakeRetirement`.
+ */
 function createKnowledgeIntakeRetirementGuardComponent(deps = {}) {
   const path = deps.path || require('node:path');
   const git = deps.gitLocalChanges || require('../git-local-changes.cjs');
