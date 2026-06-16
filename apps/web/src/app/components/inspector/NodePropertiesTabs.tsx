@@ -6,6 +6,12 @@ import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
 import { Badge } from '../ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../ui/utils';
 import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesReadModel';
@@ -94,6 +100,26 @@ function sectionSlot(section: NodePropertySection): string {
   return `node-inspector-${section.id}-section`;
 }
 
+const PRIMARY_NODE_WORKBENCH_SECTION_IDS = new Set<NodePropertySection['id']>([
+  'general',
+  'columns',
+  'inputs-outputs',
+  'tests',
+  'code',
+]);
+
+function isPrimarySection(section: NodePropertySection): boolean {
+  return PRIMARY_NODE_WORKBENCH_SECTION_IDS.has(section.id);
+}
+
+function renderTabBadge(section: NodePropertySection): JSX.Element | null {
+  return section.tableRows.length > 0 ? (
+    <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
+      {section.tableRows.length}
+    </Badge>
+  ) : null;
+}
+
 export function NodePropertiesTabs({
   model,
   node,
@@ -105,6 +131,22 @@ export function NodePropertiesTabs({
   onActiveTabChange,
   onHide,
 }: NodePropertiesTabsProps): JSX.Element {
+  const primarySections = model.sections.filter(isPrimarySection);
+  const overflowSections = model.sections.filter((section) => !isPrimarySection(section));
+  const overflowItems = [
+    ...overflowSections.map((section) => ({
+      id: section.id,
+      label: section.label,
+      count: section.tableRows.length,
+    })),
+    ...panels.map((panel) => ({
+      id: panel.id,
+      label: resolveString(panel.label),
+      count: 0,
+    })),
+  ];
+  const activeOverflowItem = overflowItems.find((item) => item.id === activeTab);
+
   return (
     <Tabs
       data-slot="node-inspector-core-tabs"
@@ -116,7 +158,7 @@ export function NodePropertiesTabs({
         data-slot="node-inspector-core-tabs-list"
         className={graphVisualClasses.contextPanelFlatTabsList}
       >
-        {model.sections.map((section) => (
+        {primarySections.map((section) => (
           <TabsTrigger
             key={section.id}
             value={section.id}
@@ -124,22 +166,44 @@ export function NodePropertiesTabs({
             className={graphVisualClasses.contextPanelFlatTabTrigger}
           >
             {section.label}
-            {section.tableRows.length > 0 ? (
-              <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
-                {section.tableRows.length}
-              </Badge>
-            ) : null}
+            {renderTabBadge(section)}
           </TabsTrigger>
         ))}
-        {panels.map((panel) => (
-          <TabsTrigger
-            key={panel.id}
-            value={panel.id}
-            className={graphVisualClasses.contextPanelFlatTabTrigger}
-          >
-            {resolveString(panel.label)}
-          </TabsTrigger>
-        ))}
+        {overflowItems.length > 0 ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                data-slot="node-inspector-more-trigger"
+                className={cn(
+                  graphVisualClasses.contextPanelFlatTabTrigger,
+                  activeOverflowItem != null && 'border-[color:var(--focus-ring)] text-slate-50'
+                )}
+              >
+                {activeOverflowItem == null ? 'More' : `More: ${activeOverflowItem.label}`}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              className="border-slate-700 bg-slate-950 text-slate-50"
+            >
+              {overflowItems.map((item) => (
+                <DropdownMenuItem
+                  key={item.id}
+                  data-slot={`node-inspector-more-item-${item.id}`}
+                  onSelect={() => onActiveTabChange(item.id)}
+                >
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.count > 0 ? (
+                    <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
+                      {item.count}
+                    </Badge>
+                  ) : null}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
       </TabsList>
 
       {model.sections.map((section) => (

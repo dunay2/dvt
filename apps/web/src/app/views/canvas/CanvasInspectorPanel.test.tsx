@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { act } from 'react';
 import { flushSync } from 'react-dom';
@@ -121,6 +121,37 @@ function tabByText(container: HTMLElement, label: string): HTMLButtonElement {
   }
 
   return tab;
+}
+
+async function selectInspectorMoreItem(
+  container: HTMLElement,
+  itemId: string
+): Promise<HTMLElement> {
+  const trigger = container.querySelector<HTMLButtonElement>(
+    '[data-slot="node-inspector-more-trigger"]'
+  );
+
+  expect(trigger).not.toBeNull();
+
+  await act(async () => {
+    fireEvent.mouseDown(trigger!, { button: 0, ctrlKey: false });
+    fireEvent.pointerDown(trigger!);
+    fireEvent.click(trigger!);
+  });
+
+  const selector = `[data-slot="node-inspector-more-item-${itemId}"]`;
+
+  await waitFor(() => {
+    expect(document.body.querySelector(selector)).not.toBeNull();
+  });
+
+  const item = document.body.querySelector<HTMLElement>(selector);
+
+  await act(async () => {
+    fireEvent.click(item!);
+  });
+
+  return item!;
 }
 
 describe('CanvasInspectorPanel', () => {
@@ -362,11 +393,11 @@ describe('CanvasInspectorPanel', () => {
       root.render(renderInspector(dbtNode));
     });
 
-    await act(async () => {
-      fireEvent.mouseDown(tabByText(container, 'History'), { button: 0 });
-    });
+    await selectInspectorMoreItem(container, 'dbt.history');
 
-    expect(tabByText(container, 'History').getAttribute('aria-selected')).toBe('true');
+    expect(container.querySelector('[data-slot="node-inspector-more-trigger"]')?.textContent).toBe(
+      'More: History'
+    );
 
     await act(async () => {
       root.render(renderInspector(dvtNode));
@@ -935,11 +966,20 @@ describe('CanvasInspectorPanel', () => {
     expect(container.querySelector('[data-slot="node-inspector-general-section"]')).not.toBeNull();
     expect(container.textContent).toContain('General');
     expect(container.textContent).toContain('Columns');
-    expect(container.textContent).toContain('Summary');
-    expect(container.textContent).toContain('Keys');
-    expect(container.textContent).toContain('Indexes');
-    expect(container.textContent).toContain('Foreign Keys');
-    expect(container.textContent).toContain('Constraints');
+    expect(
+      container.querySelector('[data-slot="node-inspector-tab-inputs-outputs"]')
+    ).not.toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-tests"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-code"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-keys"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-indexes"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-constraints"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-summary"]')).toBeNull();
+    const moreTrigger = container.querySelector<HTMLButtonElement>(
+      '[data-slot="node-inspector-more-trigger"]'
+    );
+    expect(moreTrigger).not.toBeNull();
+    expect(moreTrigger?.textContent).toContain('More');
     expect(container.textContent).not.toContain('Node details');
     expect(container.textContent).toContain('Editable properties');
     expect(container.textContent).toContain('Imported source for analytics.erp.orders');
@@ -967,13 +1007,24 @@ describe('CanvasInspectorPanel', () => {
     expect(container.textContent).toContain('id');
     expect(container.textContent).toContain('number');
 
-    const summaryTab = container.querySelector<HTMLButtonElement>(
-      '[data-slot="node-inspector-tab-summary"]'
+    await act(async () => {
+      fireEvent.pointerDown(moreTrigger!);
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('Summary');
+      expect(document.body.textContent).toContain('Keys');
+      expect(document.body.textContent).toContain('Indexes');
+      expect(document.body.textContent).toContain('Foreign Keys');
+      expect(document.body.textContent).toContain('Constraints');
+    });
+
+    const summaryTab = document.body.querySelector<HTMLDivElement>(
+      '[data-slot="node-inspector-more-item-summary"]'
     );
     expect(summaryTab).not.toBeNull();
 
     await act(async () => {
-      fireEvent.mouseDown(summaryTab!, { button: 0, ctrlKey: false });
       fireEvent.click(summaryTab!);
     });
 
@@ -1006,10 +1057,13 @@ describe('CanvasInspectorPanel', () => {
     const generalTab = container.querySelector('[data-slot="node-inspector-tab-general"]');
 
     expect(container.textContent).toContain('General');
-    expect(container.textContent).toContain('Summary');
-    expect(container.textContent).toContain('Overview');
-    expect(container.textContent).toContain('Config');
-    expect(container.textContent).toContain('History');
+    expect(container.textContent).toContain('Columns');
+    expect(container.textContent).toContain('More');
+    expect(container.querySelector('[data-slot="node-inspector-tab-summary"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-overview"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-config"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-history"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-more-trigger"]')).not.toBeNull();
     expect(tabsList?.getAttribute('class')).toContain('flex-wrap');
     expect(tabsList?.getAttribute('class')).toContain('gap-x-3');
     expect(tabsList?.getAttribute('class')).toContain('overflow-visible');
@@ -1037,15 +1091,7 @@ describe('CanvasInspectorPanel', () => {
       );
     });
 
-    const configTab = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Config')
-    );
-    expect(configTab).not.toBeUndefined();
-
-    await act(async () => {
-      fireEvent.mouseDown(configTab!, { button: 0, ctrlKey: false });
-      fireEvent.click(configTab!);
-    });
+    await selectInspectorMoreItem(container, 'dbt.config');
 
     expect(container.querySelector('[data-slot="node-inspector-general-section"]')).toBeNull();
     expect(container.textContent).toContain('"materialized": "table"');
@@ -1094,16 +1140,7 @@ describe('CanvasInspectorPanel', () => {
       );
     });
 
-    const overviewTab = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Overview')
-    );
-
-    expect(overviewTab).not.toBeUndefined();
-
-    await act(async () => {
-      fireEvent.mouseDown(overviewTab!, { button: 0, ctrlKey: false });
-      fireEvent.click(overviewTab!);
-    });
+    await selectInspectorMoreItem(container, 'dbt.overview');
 
     const tagsEditor = container.querySelector('[data-slot="node-inspector-overview-tags-editor"]');
     const newTagInput = tagsEditor?.querySelector(
