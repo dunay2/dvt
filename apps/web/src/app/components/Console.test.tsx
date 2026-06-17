@@ -216,6 +216,12 @@ describe('BottomConsoleDrawer', () => {
     });
     expect(document.body.textContent).toContain('Preview required before running.');
     expect(document.body.textContent).toContain('plan_integrity');
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-problem-severity"]')?.textContent
+    ).toBe('warning');
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-detail-code"]')?.textContent
+    ).toBe('plan_integrity');
 
     await act(async () => {
       fireEvent.click(runsTab!);
@@ -227,6 +233,9 @@ describe('BottomConsoleDrawer', () => {
       fireEvent.click(previewTab!);
     });
     expect(document.body.textContent).toContain('Preview required before running.');
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-preview-blocker"]')?.textContent
+    ).toBe('plan_integrity');
     const previewButton = Array.from(document.body.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Preview execution plan')
     );

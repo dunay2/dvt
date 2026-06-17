@@ -24,6 +24,7 @@ import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import type { CanvasSourceImportCompletionContext } from './canvasMutationHandlerContracts';
+import type { CanvasContextMenuPosition } from './canvasInteractionCommandSurface';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -155,6 +156,9 @@ export type CanvasShellProps = Readonly<{
   chromeCommands: CanvasShellChromeCommands;
   canvasCommands: CanvasShellCanvasCommands;
   warehouseSourceImport?: IWarehouseSourceImportPort;
+  canvasContextScreenToFlowPosition?: (
+    screenPosition: CanvasContextMenuPosition
+  ) => CanvasContextMenuPosition;
 }>;
 
 export type CanvasShellOpenDataRegistryCommand = (

@@ -40,6 +40,9 @@ const canvasRouteState = vi.hoisted(() => ({
 
 vi.mock('@xyflow/react', () => ({
   ReactFlowProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useReactFlow: () => ({
+    screenToFlowPosition: (screenPosition: { x: number; y: number }) => screenPosition,
+  }),
 }));
 
 vi.mock('./canvas/useCanvasController', () => ({

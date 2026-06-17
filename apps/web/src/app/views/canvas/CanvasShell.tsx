@@ -5,10 +5,12 @@ import { useEffect, useMemo, useState } from 'react';
 import SourceImportWizard from '../../components/SourceImportWizard';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
+import { CanvasContextMenuView } from './CanvasContextMenuView';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
+import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type {
   CanvasShellOpenDataRegistryCommand,
   CanvasShellProps,
@@ -23,6 +25,7 @@ export default function CanvasShell({
   graphCommands,
   chromeCommands,
   canvasCommands,
+  canvasContextScreenToFlowPosition,
 }: CanvasShellProps): JSX.Element {
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
@@ -50,6 +53,28 @@ export default function CanvasShell({
         setDataRegistryOpen(true);
       }
     : undefined;
+  const contextMenuPresenter = useCanvasContextMenuPresenter({
+    canEditEdges: canEditGraph,
+    canOpenSourceImport: canOpenDataRegistry,
+    canOpenProjectExplorer: true,
+    canPreviewExecutionPlan: panels.userPermissions.canPlan && chromeState.canPlanGraph,
+    canOpenCanvasSettings: true,
+    authoringNodeKinds: panels.authoringNodeKinds,
+    screenToFlowPosition: canvasContextScreenToFlowPosition ?? ((screenPosition) => screenPosition),
+    onCreateAuthoringNode: graphCommands.onCreateAuthoringNode,
+    onEdgesChange: graphCommands.onEdgesChange,
+    onOpenSourceImport:
+      handleOpenDataRegistry == null
+        ? undefined
+        : (flowPosition) =>
+            handleOpenDataRegistry(
+              undefined,
+              flowPosition == null ? undefined : { canvasPosition: flowPosition }
+            ),
+    onOpenProjectExplorer: () => setProjectExplorerOpen(true),
+    onPreviewExecutionPlan: chromeCommands.onPlan,
+    onOpenCanvasSettings: () => setCanvasSettingsOpen(true),
+  });
 
   useEffect(() => {
     if (!canOpenDataRegistry && dataRegistryOpen) {
@@ -83,6 +108,14 @@ export default function CanvasShell({
         onOpenSourceImport={handleOpenDataRegistry}
         onOpenProjectExplorer={() => setProjectExplorerOpen(true)}
         onOpenCanvasSettings={() => setCanvasSettingsOpen(true)}
+        contextMenuPresenter={contextMenuPresenter}
+      />
+      <CanvasContextMenuView
+        model={contextMenuPresenter.model}
+        menuRef={contextMenuPresenter.menuRef}
+        onCanvasAction={contextMenuPresenter.handleCanvasAction}
+        onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
+        onEdgeAction={contextMenuPresenter.handleEdgeAction}
       />
 
       <SourceImportWizard

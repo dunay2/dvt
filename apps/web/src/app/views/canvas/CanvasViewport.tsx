@@ -21,7 +21,10 @@ import {
 } from './canvasPalette';
 import { CanvasContextMenuView } from './CanvasContextMenuView';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
-import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
+import {
+  useCanvasContextMenuPresenter,
+  type CanvasContextMenuPresenter,
+} from './useCanvasContextMenuPresenter';
 
 function resolveCanvasViewportStyle(
   canvasPalette: CanvasPaletteId,
@@ -93,6 +96,7 @@ type CanvasViewportProps = {
   readonly onPreviewExecutionPlan?: () => void;
   readonly canOpenCanvasSettings?: boolean;
   readonly onOpenCanvasSettings?: () => void;
+  readonly contextMenuPresenter?: CanvasContextMenuPresenter;
 };
 
 type CanvasViewportLifecycleArgs = Readonly<{
@@ -192,7 +196,10 @@ type CanvasViewportReactFlowSurfaceProps = Readonly<
     | 'canOpenCanvasSettings'
     | 'onOpenCanvasSettings'
   >
->;
+> &
+  Readonly<{
+    contextMenuPresenter: CanvasContextMenuPresenter;
+  }>;
 
 function CanvasViewportReactFlowSurface({
   canEditEdges,
@@ -225,26 +232,10 @@ function CanvasViewportReactFlowSurface({
   onPreviewExecutionPlan,
   canOpenCanvasSettings,
   onOpenCanvasSettings,
+  contextMenuPresenter,
 }: CanvasViewportReactFlowSurfaceProps): JSX.Element {
-  const reactFlow = useReactFlow<Node, Edge>();
-  const contextMenuPresenter = useCanvasContextMenuPresenter({
-    canEditEdges,
-    canOpenSourceImport,
-    canOpenProjectExplorer,
-    authoringNodeKinds,
-    screenToFlowPosition: (screenPosition) => reactFlow.screenToFlowPosition(screenPosition),
-    onCreateAuthoringNode,
-    onEdgesChange,
-    onOpenSourceImport,
-    onOpenProjectExplorer,
-    canPreviewExecutionPlan,
-    onPreviewExecutionPlan,
-    canOpenCanvasSettings,
-    onOpenCanvasSettings,
-  });
-
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
-    if (typeof event.button === 'number' && event.button !== 0) {
+    if (event.button !== 0) {
       return;
     }
 
@@ -257,7 +248,6 @@ function CanvasViewportReactFlowSurface({
   const handleSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']> = (
     selection
   ) => {
-    contextMenuPresenter.closeContextMenu();
     onSelectionChange(selection);
   };
   const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
@@ -333,13 +323,6 @@ function CanvasViewportReactFlowSurface({
           nodeBorderRadius={4}
         />
       </ReactFlow>
-      <CanvasContextMenuView
-        model={contextMenuPresenter.model}
-        menuRef={contextMenuPresenter.menuRef}
-        onCanvasAction={contextMenuPresenter.handleCanvasAction}
-        onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
-        onEdgeAction={contextMenuPresenter.handleEdgeAction}
-      />
     </div>
   );
 }
@@ -351,6 +334,8 @@ type CanvasViewportSurfaceProps = Readonly<
   > & {
     viewportRef: RefObject<HTMLDivElement>;
     resolvedCanvasPalette: CanvasPaletteId;
+    contextMenuPresenter: CanvasContextMenuPresenter;
+    renderContextMenuView: boolean;
   }
 >;
 
@@ -387,6 +372,8 @@ function CanvasViewportSurface({
   onPreviewExecutionPlan,
   canOpenCanvasSettings,
   onOpenCanvasSettings,
+  contextMenuPresenter,
+  renderContextMenuView,
 }: CanvasViewportSurfaceProps): JSX.Element {
   return (
     <div
@@ -426,12 +413,32 @@ function CanvasViewportSurface({
         onPreviewExecutionPlan={onPreviewExecutionPlan}
         canOpenCanvasSettings={canOpenCanvasSettings}
         onOpenCanvasSettings={onOpenCanvasSettings}
+        contextMenuPresenter={contextMenuPresenter}
       />
+      {renderContextMenuView ? (
+        <CanvasContextMenuView
+          model={contextMenuPresenter.model}
+          menuRef={contextMenuPresenter.menuRef}
+          onCanvasAction={contextMenuPresenter.handleCanvasAction}
+          onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
+          onEdgeAction={contextMenuPresenter.handleEdgeAction}
+        />
+      ) : null}
     </div>
   );
 }
 
-export default function CanvasViewport(props: CanvasViewportProps): JSX.Element {
+type CanvasViewportWithPresenterProps = CanvasViewportProps &
+  Readonly<{
+    contextMenuPresenter: CanvasContextMenuPresenter;
+    renderContextMenuView: boolean;
+  }>;
+
+function CanvasViewportWithPresenter({
+  contextMenuPresenter,
+  renderContextMenuView,
+  ...props
+}: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const viewportRef = useRef<HTMLDivElement>(null);
   const resolvedCanvasPalette = normalizeCanvasPaletteId(props.canvasPalette);
@@ -481,6 +488,49 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
       onPreviewExecutionPlan={props.onPreviewExecutionPlan}
       canOpenCanvasSettings={props.canOpenCanvasSettings}
       onOpenCanvasSettings={props.onOpenCanvasSettings}
+      contextMenuPresenter={contextMenuPresenter}
+      renderContextMenuView={renderContextMenuView}
     />
   );
+}
+
+function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
+  const reactFlow = useReactFlow<Node, Edge>();
+  const contextMenuPresenter = useCanvasContextMenuPresenter({
+    canEditEdges: props.canEditEdges,
+    canOpenSourceImport: props.canOpenSourceImport,
+    canOpenProjectExplorer: props.canOpenProjectExplorer,
+    canPreviewExecutionPlan: props.canPreviewExecutionPlan,
+    canOpenCanvasSettings: props.canOpenCanvasSettings,
+    authoringNodeKinds: props.authoringNodeKinds,
+    screenToFlowPosition: (screenPosition) => reactFlow.screenToFlowPosition(screenPosition),
+    onCreateAuthoringNode: props.onCreateAuthoringNode,
+    onEdgesChange: props.onEdgesChange,
+    onOpenSourceImport: props.onOpenSourceImport,
+    onOpenProjectExplorer: props.onOpenProjectExplorer,
+    onPreviewExecutionPlan: props.onPreviewExecutionPlan,
+    onOpenCanvasSettings: props.onOpenCanvasSettings,
+  });
+
+  return (
+    <CanvasViewportWithPresenter
+      {...props}
+      contextMenuPresenter={contextMenuPresenter}
+      renderContextMenuView
+    />
+  );
+}
+
+export default function CanvasViewport(props: CanvasViewportProps): JSX.Element {
+  if (props.contextMenuPresenter != null) {
+    return (
+      <CanvasViewportWithPresenter
+        {...props}
+        contextMenuPresenter={props.contextMenuPresenter}
+        renderContextMenuView={false}
+      />
+    );
+  }
+
+  return <CanvasViewportLocalPresenter {...props} />;
 }
