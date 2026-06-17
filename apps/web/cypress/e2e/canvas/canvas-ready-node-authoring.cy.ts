@@ -80,6 +80,10 @@ function assertDraftSaveStatus(copyKey: CanvasDraftStatusCopyKey): void {
   });
 }
 
+function assertNoDraftSaveStatus(): void {
+  cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
+}
+
 function dispatchCanvasContextMenu(clientX: number, clientY: number): void {
   cy.get('[data-slot="canvas-viewport-context-surface"]')
     .should('be.visible')
@@ -127,7 +131,7 @@ function addSqlTransformNode(): void {
 
 function removeCanvasNode(nodeName: string): void {
   cy.contains('.react-flow__node', nodeName).rightclick();
-  cy.contains('[role="menuitem"]', 'Remove node').click();
+  cy.contains('[role="menuitem"]', 'Delete').click();
 }
 
 describe('Canvas ready node authoring', () => {
@@ -144,7 +148,7 @@ describe('Canvas ready node authoring', () => {
 
     cy.contains('Sales canvas').should('be.visible');
     assertNoManualSaveCommand();
-    assertDraftSaveStatus('draftSyncedLabel');
+    assertNoDraftSaveStatus();
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     addSqlTransformNode();
 
@@ -168,6 +172,25 @@ describe('Canvas ready node authoring', () => {
       });
     });
     assertNoManualSaveCommand();
+  });
+
+  it('keeps the canvas context menu visible after a real browser right-click gesture', () => {
+    stubCanvasDraftRead();
+    stubCanvasDraftSave();
+
+    visitReadyCanvas();
+
+    cy.get('[data-slot="canvas-viewport-context-surface"]')
+      .should('be.visible')
+      .rightclick(96, 220, { force: true });
+
+    cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
+    cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'SQL transform').should(
+      'be.visible'
+    );
+    cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'Explore project').should(
+      'be.visible'
+    );
   });
 
   it('persists add and remove authoring changes across route reloads', () => {

@@ -50,6 +50,8 @@ type UseCanvasContextMenuPresenterResult = Readonly<{
   handleEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
 }>;
 
+export type CanvasContextMenuPresenter = UseCanvasContextMenuPresenterResult;
+
 function isCanvasViewportContextTarget(target: EventTarget | null): target is Element {
   if (!(target instanceof Element)) {
     return false;
@@ -181,23 +183,23 @@ export function useCanvasContextMenuPresenter({
   );
 
   useLayoutEffect(() => {
-    const contextSurface = contextSurfaceRef.current;
-    if (contextSurface == null) {
-      return;
-    }
-
-    const handleSurfaceContextMenu = (event: MouseEvent): void => {
-      if (!(event.target instanceof Element) || !contextSurface.contains(event.target)) {
+    const handleDocumentContextMenu = (event: MouseEvent): void => {
+      const contextSurface = contextSurfaceRef.current;
+      if (
+        contextSurface == null ||
+        !(event.target instanceof Element) ||
+        !contextSurface.contains(event.target)
+      ) {
         return;
       }
 
       handleViewportContextMenuEvent(event);
     };
 
-    contextSurface.addEventListener('contextmenu', handleSurfaceContextMenu, true);
+    document.addEventListener('contextmenu', handleDocumentContextMenu, true);
 
     return () => {
-      contextSurface.removeEventListener('contextmenu', handleSurfaceContextMenu, true);
+      document.removeEventListener('contextmenu', handleDocumentContextMenu, true);
     };
   }, [handleViewportContextMenuEvent]);
 

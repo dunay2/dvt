@@ -5,6 +5,7 @@ import { CanvasInspectorPanel } from './CanvasInspectorPanel';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
 import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
+import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type {
   CanvasShellChromeCommands,
   CanvasShellChromeState,
@@ -29,6 +30,7 @@ type CanvasShellMainPanelProps = Readonly<{
   onOpenSourceImport?: CanvasShellOpenDataRegistryCommand;
   onOpenProjectExplorer?: () => void;
   onOpenCanvasSettings?: () => void;
+  contextMenuPresenter: CanvasContextMenuPresenter;
 }>;
 
 function CanvasShellMenuContributionRegistrars({
@@ -82,6 +84,7 @@ function CanvasShellViewport({
   onOpenCanvasSettings,
   canPreviewExecutionPlan,
   onPreviewExecutionPlan,
+  contextMenuPresenter,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -91,6 +94,7 @@ function CanvasShellViewport({
   | 'onOpenSourceImport'
   | 'onOpenProjectExplorer'
   | 'onOpenCanvasSettings'
+  | 'contextMenuPresenter'
 > &
   Readonly<{
     canPreviewExecutionPlan: boolean;
@@ -143,6 +147,7 @@ function CanvasShellViewport({
       onPreviewExecutionPlan={onPreviewExecutionPlan}
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
       onOpenCanvasSettings={onOpenCanvasSettings}
+      contextMenuPresenter={contextMenuPresenter}
     />
   );
 }
@@ -157,6 +162,7 @@ function CanvasShellMainSurface({
   onOpenProjectExplorer,
   onOpenCanvasSettings,
   canPreviewExecutionPlan,
+  contextMenuPresenter,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'layout'
@@ -167,6 +173,7 @@ function CanvasShellMainSurface({
   | 'onOpenSourceImport'
   | 'onOpenProjectExplorer'
   | 'onOpenCanvasSettings'
+  | 'contextMenuPresenter'
 > &
   Readonly<{ canPreviewExecutionPlan: boolean }>): JSX.Element {
   const viewport = (
@@ -180,6 +187,7 @@ function CanvasShellMainSurface({
       onOpenCanvasSettings={onOpenCanvasSettings}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
       onPreviewExecutionPlan={chromeCommands.onPlan}
+      contextMenuPresenter={contextMenuPresenter}
     />
   );
 
@@ -251,6 +259,7 @@ export function CanvasShellMainPanel({
   onOpenSourceImport,
   onOpenProjectExplorer,
   onOpenCanvasSettings,
+  contextMenuPresenter,
 }: CanvasShellMainPanelProps): JSX.Element {
   const shouldShowGraphStatusOverlay =
     layout.centerSurface == null || layout.centerSurfaceMode === 'overlay';
@@ -275,6 +284,7 @@ export function CanvasShellMainPanel({
           onOpenProjectExplorer={onOpenProjectExplorer}
           onOpenCanvasSettings={onOpenCanvasSettings}
           canPreviewExecutionPlan={panels.userPermissions.canPlan && chromeState.canPlanGraph}
+          contextMenuPresenter={contextMenuPresenter}
         />
         {shouldShowGraphStatusOverlay ? (
           <CanvasGraphStatusOverlay

@@ -849,7 +849,7 @@ describe('CanvasViewport', () => {
       | undefined;
 
     await act(async () => {
-      paneClick?.({} as React.MouseEvent<Element>);
+      paneClick?.({ button: 0 } as React.MouseEvent<Element>);
     });
 
     expect(

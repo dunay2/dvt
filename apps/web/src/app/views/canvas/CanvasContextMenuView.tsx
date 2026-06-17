@@ -1,5 +1,5 @@
 /** Owned concern: render the Canvas context menu template without owning interaction decisions. */
-import type { CSSProperties, RefObject } from 'react';
+import type { CSSProperties, ReactNode, RefObject } from 'react';
 
 import type {
   CanvasContextMenuCanvasAction,
@@ -15,6 +15,75 @@ type CanvasContextMenuViewProps = Readonly<{
   onCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
   onEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
 }>;
+
+const CONTEXT_MENU_SURFACE_CLASS_NAME =
+  'fixed z-50 min-w-52 rounded-md border border-(--border-default) bg-(--surface-panel) p-1 shadow-xl';
+const CONTEXT_MENU_SECTION_TITLE_CLASS_NAME =
+  'px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)';
+const CONTEXT_MENU_ITEM_CLASS_NAME =
+  'flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)';
+
+type CanvasContextMenuSurfaceProps = Readonly<{
+  menuRef: RefObject<HTMLDivElement>;
+  style: CSSProperties;
+  children: ReactNode;
+}>;
+
+function CanvasContextMenuSurface({
+  menuRef,
+  style,
+  children,
+}: CanvasContextMenuSurfaceProps): JSX.Element {
+  return (
+    <div
+      ref={menuRef}
+      role="menu"
+      data-slot="canvas-context-menu"
+      className={CONTEXT_MENU_SURFACE_CLASS_NAME}
+      style={style}
+      onContextMenu={(event) => event.preventDefault()}
+    >
+      {children}
+    </div>
+  );
+}
+
+type CanvasContextMenuSectionProps = Readonly<{
+  dataSlot: string;
+  title?: string;
+  children: ReactNode;
+}>;
+
+function CanvasContextMenuSection({
+  dataSlot,
+  title,
+  children,
+}: CanvasContextMenuSectionProps): JSX.Element {
+  return (
+    <div data-slot={dataSlot}>
+      {title == null ? null : <div className={CONTEXT_MENU_SECTION_TITLE_CLASS_NAME}>{title}</div>}
+      {children}
+    </div>
+  );
+}
+
+type CanvasContextMenuItemProps = Readonly<{
+  label: string;
+  onSelect: () => void;
+}>;
+
+function CanvasContextMenuItem({ label, onSelect }: CanvasContextMenuItemProps): JSX.Element {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      className={CONTEXT_MENU_ITEM_CLASS_NAME}
+      onClick={onSelect}
+    >
+      {label}
+    </button>
+  );
+}
 
 export function CanvasContextMenuView({
   model,
@@ -40,74 +109,45 @@ export function CanvasContextMenuView({
   const shouldShowAddGroup = addCanvasActions.length > 0 || model.createNodeActions.length > 0;
 
   return (
-    <div
-      ref={menuRef}
-      role="menu"
-      data-slot="canvas-context-menu"
-      className="fixed z-50 min-w-52 rounded-md border border-(--border-default) bg-(--surface-panel) p-1 shadow-xl"
-      style={menuStyle}
-      onContextMenu={(event) => event.preventDefault()}
-    >
+    <CanvasContextMenuSurface menuRef={menuRef} style={menuStyle}>
       {shouldShowAddGroup ? (
-        <div data-slot="canvas-context-menu-add-group">
-          <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
-            Add
-          </div>
+        <CanvasContextMenuSection dataSlot="canvas-context-menu-add-group" title="Add">
           {addCanvasActions.map((action) => (
-            <button
+            <CanvasContextMenuItem
               key={action.action}
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-              onClick={() => onCanvasAction(action)}
-            >
-              {action.label}
-            </button>
+              label={action.label}
+              onSelect={() => onCanvasAction(action)}
+            />
           ))}
           {model.createNodeActions.map((action) => (
-            <button
+            <CanvasContextMenuItem
               key={action.registration.kind}
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-              onClick={() => onCreateNodeAction(action)}
-            >
-              {action.label}
-            </button>
+              label={action.label}
+              onSelect={() => onCreateNodeAction(action)}
+            />
           ))}
-        </div>
+        </CanvasContextMenuSection>
       ) : null}
 
       {canvasCommandActions.length > 0 ? (
-        <div data-slot="canvas-context-menu-canvas-group">
-          <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
-            Canvas
-          </div>
+        <CanvasContextMenuSection dataSlot="canvas-context-menu-canvas-group" title="Canvas">
           {canvasCommandActions.map((action) => (
-            <button
+            <CanvasContextMenuItem
               key={action.action}
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-              onClick={() => onCanvasAction(action)}
-            >
-              {action.label}
-            </button>
+              label={action.label}
+              onSelect={() => onCanvasAction(action)}
+            />
           ))}
-        </div>
+        </CanvasContextMenuSection>
       ) : null}
 
       {model.edgeActions.map((action) => (
-        <button
+        <CanvasContextMenuItem
           key={action.action}
-          type="button"
-          role="menuitem"
-          className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-          onClick={() => onEdgeAction(action)}
-        >
-          {action.label}
-        </button>
+          label={action.label}
+          onSelect={() => onEdgeAction(action)}
+        />
       ))}
-    </div>
+    </CanvasContextMenuSurface>
   );
 }
