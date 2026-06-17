@@ -1,0 +1,157 @@
+// @vitest-environment jsdom
+
+import React, { act } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  createCanvasViewportHarness,
+  getCanvasViewportXyflowState,
+  type CanvasViewportProps,
+} from './CanvasViewport.testHarness';
+
+const xyflowState = getCanvasViewportXyflowState();
+
+describe('CanvasViewport edge context menu', () => {
+  let container: HTMLDivElement;
+  let renderViewport: (props?: Partial<CanvasViewportProps>) => Promise<CanvasViewportProps>;
+  let unmountViewport: () => void;
+
+  beforeEach(() => {
+    const harness = createCanvasViewportHarness();
+    container = harness.container;
+    renderViewport = harness.render;
+    unmountViewport = harness.unmount;
+  });
+
+  afterEach(() => {
+    unmountViewport();
+  });
+
+  function getMenuText(): string {
+    return container.querySelector('[data-slot="canvas-context-menu"]')?.textContent ?? '';
+  }
+
+  async function openEdgeContextMenu(props: CanvasViewportProps): Promise<void> {
+    const edgeContextMenu = xyflowState.lastReactFlowProps?.onEdgeContextMenu as
+      | ((event: React.MouseEvent<Element>, edge: NonNullable<typeof props.edges>[number]) => void)
+      | undefined;
+    const edge = props.edges?.[0];
+    if (edge == null) {
+      throw new Error('EXPECTED_TEST_EDGE');
+    }
+
+    await act(async () => {
+      edgeContextMenu?.(
+        {
+          preventDefault: vi.fn(),
+          clientX: 600,
+          clientY: 360,
+        } as unknown as React.MouseEvent<Element>,
+        edge
+      );
+    });
+  }
+
+  it('opens a governed remove-edge menu from the edge context gesture', async () => {
+    const props = await renderViewport({
+      edges: [
+        {
+          id: 'edge-source-model',
+          source: 'source',
+          target: 'model',
+        },
+      ],
+      onEdgesChange: vi.fn(),
+    });
+
+    const edgeContextMenu = xyflowState.lastReactFlowProps?.onEdgeContextMenu as
+      | ((event: React.MouseEvent<Element>, edge: NonNullable<typeof props.edges>[number]) => void)
+      | undefined;
+    const preventDefault = vi.fn();
+    const edge = props.edges?.[0];
+    if (edge == null) {
+      throw new Error('EXPECTED_TEST_EDGE');
+    }
+
+    await act(async () => {
+      edgeContextMenu?.(
+        {
+          preventDefault,
+          clientX: 600,
+          clientY: 360,
+        } as unknown as React.MouseEvent<Element>,
+        edge
+      );
+    });
+
+    expect(preventDefault).toHaveBeenCalledTimes(1);
+
+    const removeButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      button.textContent?.includes('Eliminar conexión')
+    );
+    expect(removeButton).toBeDefined();
+
+    await act(async () => {
+      removeButton?.click();
+    });
+
+    expect(props.onEdgesChange).toHaveBeenCalledWith([
+      {
+        id: 'edge-source-model',
+        type: 'remove',
+      },
+    ]);
+  });
+
+  it('dismisses the edge context menu when the user clicks the graph background', async () => {
+    const props = await renderViewport({
+      edges: [
+        {
+          id: 'edge-source-model',
+          source: 'source',
+          target: 'model',
+        },
+      ],
+      onEdgesChange: vi.fn(),
+    });
+
+    await openEdgeContextMenu(props);
+
+    expect(getMenuText()).toContain('Eliminar conexión');
+
+    const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneClick?.({ button: 0 } as React.MouseEvent<Element>);
+    });
+
+    expect(getMenuText()).not.toContain('Eliminar conexión');
+    expect(props.onEdgesChange).not.toHaveBeenCalled();
+  });
+
+  it('dismisses the edge context menu when the user clicks outside the viewport', async () => {
+    const props = await renderViewport({
+      edges: [
+        {
+          id: 'edge-source-model',
+          source: 'source',
+          target: 'model',
+        },
+      ],
+      onEdgesChange: vi.fn(),
+    });
+
+    await openEdgeContextMenu(props);
+
+    expect(getMenuText()).toContain('Eliminar conexión');
+
+    await act(async () => {
+      document.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    });
+
+    expect(getMenuText()).not.toContain('Eliminar conexión');
+    expect(props.onEdgesChange).not.toHaveBeenCalled();
+  });
+});
