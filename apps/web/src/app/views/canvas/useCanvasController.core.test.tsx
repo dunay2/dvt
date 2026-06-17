@@ -2,6 +2,7 @@ import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import type { ImportSourcesResult } from '../../ports/workspace';
 import {
   buildRemoteDraftRecord,
   createUnrenderedHarness,
@@ -512,6 +513,47 @@ describe('useCanvasController core', () => {
     });
 
     expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([]);
+  });
+
+  it('persists imported source nodes near the canvas context-menu anchor', async () => {
+    await harness.renderProbe();
+    harness.state.store.setCanvasNodePositions.mockClear();
+
+    await act(async () => {
+      const complete = harness.getLatestResult()?.handleSourceImportComplete as
+        | ((
+            result: ImportSourcesResult,
+            context: { canvasPosition: { x: number; y: number } }
+          ) => void)
+        | undefined;
+
+      complete?.(
+        {
+          success: true,
+          sourcesCreated: 2,
+          tablesImported: 2,
+          yamlFiles: ['models/sources/src_erp.yml'],
+          importedNodeIds: ['src_erp_orders', 'src_erp_customers'],
+          grouping: 'schema',
+          options: {
+            includeColumns: true,
+            addTests: false,
+            addFreshness: false,
+          },
+        },
+        { canvasPosition: { x: 420, y: 260 } }
+      );
+    });
+
+    expect(harness.state.store.setCanvasNodePositions).toHaveBeenCalledWith(
+      'tenant-a::project-a::dev',
+      expect.objectContaining({
+        node_1: { x: 0, y: 0 },
+        node_2: { x: 100, y: 0 },
+        src_erp_orders: { x: 420, y: 260 },
+        src_erp_customers: { x: 660, y: 260 },
+      })
+    );
   });
 
   it('clears selection and inspector state when a node is removed through onNodesChange', async () => {

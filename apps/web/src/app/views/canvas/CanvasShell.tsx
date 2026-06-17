@@ -9,7 +9,11 @@ import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
-import type { CanvasShellOpenDataRegistryCommand, CanvasShellProps } from './canvasShell.types';
+import type {
+  CanvasShellOpenDataRegistryCommand,
+  CanvasShellProps,
+  CanvasShellSourceImportPlacement,
+} from './canvasShell.types';
 
 export default function CanvasShell({
   layout,
@@ -25,6 +29,9 @@ export default function CanvasShell({
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dataRegistryInitialSelection, setDataRegistryInitialSelection] =
     useState<Parameters<CanvasShellOpenDataRegistryCommand>[0]>(undefined);
+  const [dataRegistryPlacement, setDataRegistryPlacement] = useState<
+    CanvasShellSourceImportPlacement | undefined
+  >(undefined);
   const canEditGraph = panels.userPermissions.canEditEdges;
   const sourceImportContributions = useMemo(
     () => getSourceImportContributions(panels.runtimeCapabilities),
@@ -37,8 +44,9 @@ export default function CanvasShell({
   const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const canOpenDataRegistry = canEditGraph && canBrowseDataRegistry;
   const handleOpenDataRegistry: CanvasShellOpenDataRegistryCommand | undefined = canOpenDataRegistry
-    ? (initialSelection) => {
+    ? (initialSelection, placement) => {
         setDataRegistryInitialSelection(initialSelection);
+        setDataRegistryPlacement(placement);
         setDataRegistryOpen(true);
       }
     : undefined;
@@ -47,6 +55,7 @@ export default function CanvasShell({
     if (!canOpenDataRegistry && dataRegistryOpen) {
       setDataRegistryOpen(false);
       setDataRegistryInitialSelection(undefined);
+      setDataRegistryPlacement(undefined);
     }
   }, [canOpenDataRegistry, dataRegistryOpen]);
 
@@ -81,8 +90,9 @@ export default function CanvasShell({
         onClose={() => {
           setDataRegistryOpen(false);
           setDataRegistryInitialSelection(undefined);
+          setDataRegistryPlacement(undefined);
         }}
-        onComplete={graphCommands.onSourceImportComplete}
+        onComplete={(result) => graphCommands.onSourceImportComplete(result, dataRegistryPlacement)}
         sourceImportOptions={sourceImportOptions}
         initialSelection={dataRegistryInitialSelection}
       />

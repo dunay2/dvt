@@ -21,7 +21,7 @@ import type {
   CanvasShellChromeState,
 } from './canvasShell.types';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
-import type { IWarehouseSourceImportPort } from '../../ports/workspace';
+import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../../ports/workspace';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 
@@ -638,7 +638,7 @@ describe('CanvasShell', () => {
       onImportedNodeFocusComplete: props.graphCommands.onImportedNodeFocusComplete,
     });
     expect(shellState.sourceImportWizardProps).toMatchObject({
-      onComplete: props.graphCommands.onSourceImportComplete,
+      onComplete: expect.any(Function),
     });
   });
 
@@ -668,6 +668,50 @@ describe('CanvasShell', () => {
       open: true,
       initialSelection: undefined,
     });
+  });
+
+  it('keeps the canvas source-import anchor until the wizard completes', async () => {
+    const onSourceImportComplete = vi.fn();
+    const props = buildProps({
+      graphCommands: {
+        onSourceImportComplete,
+      },
+    });
+
+    await act(async () => {
+      root.render(<CanvasShell {...props} />);
+    });
+
+    await act(async () => {
+      const openDataRegistry = shellState.canvasViewportProps?.onOpenSourceImport as
+        | ((flowPosition?: { x: number; y: number }) => void)
+        | undefined;
+      openDataRegistry?.({ x: 420, y: 260 });
+    });
+
+    await act(async () => {
+      const complete = shellState.sourceImportWizardProps?.onComplete as
+        | ((result: ImportSourcesResult) => void)
+        | undefined;
+      complete?.({
+        success: true,
+        importedNodeIds: ['src_erp_orders'],
+        sourcesCreated: 1,
+        tablesImported: 1,
+        yamlFiles: ['models/sources/src_erp.yml'],
+        grouping: 'schema',
+        options: {
+          includeColumns: true,
+          addTests: false,
+          addFreshness: false,
+        },
+      });
+    });
+
+    expect(onSourceImportComplete).toHaveBeenCalledWith(
+      expect.objectContaining({ importedNodeIds: ['src_erp_orders'] }),
+      { canvasPosition: { x: 420, y: 260 } }
+    );
   });
 
   it('opens a contextual project explorer from the viewport command using real canvas documents', async () => {

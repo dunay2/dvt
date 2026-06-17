@@ -23,6 +23,7 @@ import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import type { CanvasSourceImportCompletionContext } from './canvasMutationHandlerContracts';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -114,7 +115,10 @@ export type CanvasShellGraphCommands = {
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onCreateAuthoringNode: CreateCanvasAuthoringNode;
-  onSourceImportComplete: (result: ImportSourcesResult) => void;
+  onSourceImportComplete: (
+    result: ImportSourcesResult,
+    context?: CanvasSourceImportCompletionContext
+  ) => void;
   onImportedNodeFocusComplete: () => void;
 };
 
@@ -154,5 +158,8 @@ export type CanvasShellProps = Readonly<{
 }>;
 
 export type CanvasShellOpenDataRegistryCommand = (
-  initialSelection?: SourceImportInitialSelection
+  initialSelection?: SourceImportInitialSelection,
+  placement?: CanvasShellSourceImportPlacement
 ) => void;
+
+export type CanvasShellSourceImportPlacement = CanvasSourceImportCompletionContext;

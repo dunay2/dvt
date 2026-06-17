@@ -26,7 +26,7 @@ type UseCanvasContextMenuPresenterArgs = Readonly<{
   screenToFlowPosition: (screenPosition: CanvasContextMenuPosition) => CanvasContextMenuPosition;
   onCreateAuthoringNode: CreateCanvasAuthoringNode;
   onEdgesChange: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgesChange']>;
-  onOpenSourceImport?: () => void;
+  onOpenSourceImport?: (flowPosition?: CanvasContextMenuPosition) => void;
   onOpenProjectExplorer?: () => void;
   onPreviewExecutionPlan?: () => void;
   onOpenCanvasSettings?: () => void;
@@ -232,7 +232,7 @@ export function useCanvasContextMenuPresenter({
   const handleCanvasAction = useCallback(
     (action: CanvasContextMenuCanvasAction) => {
       if (action.action === 'open-source-import') {
-        onOpenSourceImport?.();
+        onOpenSourceImport?.(model?.flowPosition);
       } else if (action.action === 'open-project-explorer') {
         onOpenProjectExplorer?.();
       } else if (action.action === 'preview-execution-plan') {
@@ -245,6 +245,7 @@ export function useCanvasContextMenuPresenter({
     },
     [
       closeContextMenu,
+      model?.flowPosition,
       onOpenCanvasSettings,
       onOpenProjectExplorer,
       onOpenSourceImport,

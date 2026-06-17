@@ -86,7 +86,7 @@ type CanvasViewportProps = {
   readonly importedNodeFocusIds: string[];
   readonly onImportedNodeFocusComplete: () => void;
   readonly canOpenSourceImport?: boolean;
-  readonly onOpenSourceImport?: () => void;
+  readonly onOpenSourceImport?: (flowPosition?: { x: number; y: number }) => void;
   readonly canOpenProjectExplorer?: boolean;
   readonly onOpenProjectExplorer?: () => void;
   readonly canPreviewExecutionPlan?: boolean;

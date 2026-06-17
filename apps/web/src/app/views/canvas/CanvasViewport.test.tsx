@@ -514,7 +514,7 @@ describe('CanvasViewport', () => {
       sourceImportButton?.click();
     });
 
-    expect(props.onOpenSourceImport).toHaveBeenCalledTimes(1);
+    expect(props.onOpenSourceImport).toHaveBeenCalledWith({ x: 580, y: 280 });
     expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
   });
 
