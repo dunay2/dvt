@@ -167,6 +167,38 @@ test('planning DB read-model query components live under the queries directory',
   assert.deepEqual(misplacedQueryComponents, []);
 });
 
+test('planning DB query limit parsing lives in one canonical helper', () => {
+  const queryLimitConsumers = [
+    'planning-db-query.cjs',
+    'planning-db/frontend-component-inventory.cjs',
+    'planning-db/frontend-mechanical-truth-inventory.cjs',
+    'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/command-query-rail-query.cjs',
+    'planning-db/queries/component-architecture-fitness-query.cjs',
+    'planning-db/queries/component-integrity-query.cjs',
+    'planning-db/queries/component-roadmap-query.cjs',
+    'planning-db/queries/documentation-lifecycle-query.cjs',
+    'planning-db/queries/documentation-panel-query.cjs',
+    'planning-db/queries/feature-mechanization-query.cjs',
+    'planning-db/queries/fowler-analysis-query.cjs',
+    'planning-db/queries/governance-refresh-run-query.cjs',
+    'planning-db/queries/knowledge-intake-retirement-query.cjs',
+    'planning-db/queries/rail-vocabulary-query.cjs',
+  ];
+  const duplicateParsers = queryLimitConsumers.filter((relativePath) => {
+    const content = fs.readFileSync(path.join(__dirname, relativePath), 'utf8');
+    return /function parseLimit\s*\(/.test(content);
+  });
+
+  assert.deepEqual(duplicateParsers, []);
+
+  const { parseLimit } = require('./planning-db/query-limit.cjs');
+  assert.equal(parseLimit(undefined, 50), 50);
+  assert.equal(parseLimit('', 50), 50);
+  assert.equal(parseLimit('7', 50), 7);
+  assert.throws(() => parseLimit('0', 50), /Invalid --limit "0"\. Expected a positive integer\./);
+});
+
 test('command/query rail query behavior lives in a focused read-model component', () => {
   const commandQueryRailQueryComponent = require('./planning-db/queries/command-query-rail-query.cjs');
 

@@ -7,6 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { schemaName } = require('../planning-db-migrate.cjs');
+const { parseLimit } = require('./query-limit.cjs');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const defaultInventoryPath =
@@ -201,19 +202,6 @@ function buildFrontendMechanicalTruthRows(rows) {
     countField(row, 'capability_gap_count', 'capabilityGaps'),
     row.source_path ?? row.sourcePath,
   ]);
-}
-
-function parseLimit(value, defaultLimit) {
-  if (value === undefined || value === null || value === '') {
-    return defaultLimit;
-  }
-
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-  }
-
-  return parsed;
 }
 
 function appendFilter(predicates, params, column, value) {

@@ -1118,6 +1118,29 @@ test('tracked migrations remap canvas context menu away from child palette path'
   assert.doesNotMatch(contextMenuMigration.sql, /delete\s+from/i);
 });
 
+test('tracked migrations create the Planning DB query limit helper component', () => {
+  const migrations = readMigrationFiles();
+  const helperMigration = migrations.find(
+    (migration) => migration.fileName === '112_planning_db_query_limit_helper_component.sql'
+  );
+
+  assert.ok(helperMigration);
+  assert.match(helperMigration.sql, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-LIMIT/);
+  assert.match(helperMigration.sql, /scripts\/planning-db\/query-limit\.cjs/);
+  assert.match(helperMigration.sql, /DetectCodeSymbolDuplicates/);
+  assert.match(
+    helperMigration.sql,
+    /insert into planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(helperMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_responsibility/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_relation/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_test/);
+  assert.match(helperMigration.sql, /hidden_authority/);
+  assert.doesNotMatch(helperMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(

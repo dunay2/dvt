@@ -1,19 +1,8 @@
 /** Owned concern: expose DB-owned component architecture fitness observations and checks. */
+const { parseLimit } = require('../query-limit.cjs');
+
 function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
   const defaultSchemaName = deps.schemaName || 'architecture';
-
-  function parseLimit(value, defaultLimit) {
-    if (value === undefined || value === null || value === '') {
-      return defaultLimit;
-    }
-
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-    }
-
-    return parsed;
-  }
 
   function appendFilter(predicates, params, column, value) {
     if (value === undefined || value === null || value === '') {
