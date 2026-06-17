@@ -61,6 +61,132 @@ function isDbtEdgeType(value: unknown): value is DbtEdge['type'] {
   return typeof value === 'string' && DBT_EDGE_TYPES.has(value);
 }
 
+function readConfigString(config: DbtNode['config'], key: string): string | undefined {
+  const value = config?.[key];
+  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function normalizeSqlIdentifier(value: string | undefined): string | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
+  const identifier = value
+    .trim()
+    .replace(/^["'`[]+|["'`\]]+$/g, '')
+    .split('.')
+    .pop()
+    ?.trim();
+
+  return identifier != null && identifier.length > 0 ? identifier : undefined;
+}
+
+function readDbtTestType(nodeName: string, compiledSql: string | undefined): string | undefined {
+  if (/^(test_)?not_null_/.test(nodeName)) {
+    return 'not_null';
+  }
+  if (/^(test_)?unique_/.test(nodeName)) {
+    return 'unique';
+  }
+  if (compiledSql != null && /\bis\s+null\b/i.test(compiledSql)) {
+    return 'not_null';
+  }
+  if (
+    compiledSql != null &&
+    /\bgroup\s+by\b/i.test(compiledSql) &&
+    /\bcount\s*\(/i.test(compiledSql)
+  ) {
+    return 'unique';
+  }
+
+  return undefined;
+}
+
+function readDbtTestTargetModel(node: DbtNode): string | undefined {
+  const explicitTarget =
+    readConfigString(node.config, 'targetModel') ??
+    readConfigString(node.config, 'model') ??
+    readConfigString(node.config, 'target');
+  if (explicitTarget != null) {
+    return explicitTarget;
+  }
+
+  return node.dependencies.length === 1 ? node.dependencies[0] : undefined;
+}
+
+function readColumnFromDbtTestName(
+  nodeName: string,
+  testType: string | undefined,
+  targetModel: string | undefined
+): string | undefined {
+  if (testType == null) {
+    return undefined;
+  }
+
+  const prefix = testType === 'not_null' ? /^(test_)?not_null_/ : /^(test_)?unique_/;
+  const suffix = nodeName.replace(prefix, '').trim();
+  if (suffix.length === 0) {
+    return undefined;
+  }
+
+  if (targetModel != null) {
+    const targetPrefix = `${targetModel}_`;
+    if (suffix.startsWith(targetPrefix) && suffix.length > targetPrefix.length) {
+      return suffix.slice(targetPrefix.length);
+    }
+  }
+
+  return suffix;
+}
+
+function readColumnFromDbtTestSql(
+  compiledSql: string | undefined,
+  testType: string | undefined
+): string | undefined {
+  if (compiledSql == null || testType == null) {
+    return undefined;
+  }
+
+  if (testType === 'not_null') {
+    return normalizeSqlIdentifier(
+      /\bwhere\s+([A-Za-z_][\w."`]*)\s+is\s+null\b/i.exec(compiledSql)?.[1]
+    );
+  }
+
+  if (testType === 'unique') {
+    return normalizeSqlIdentifier(/\bgroup\s+by\s+([A-Za-z_][\w."`]*)/i.exec(compiledSql)?.[1]);
+  }
+
+  return undefined;
+}
+
+function buildDbtTestMetadata(node: DbtNode): Record<string, string> {
+  if (node.type !== 'TEST') {
+    return {};
+  }
+
+  const testType = readDbtTestType(node.name, node.compiledSql);
+  const testTargetModel = readDbtTestTargetModel(node);
+  const testTargetColumn =
+    readConfigString(node.config, 'targetColumn') ??
+    readConfigString(node.config, 'column') ??
+    readColumnFromDbtTestSql(node.compiledSql, testType) ??
+    readColumnFromDbtTestName(node.name, testType, testTargetModel);
+  const testTarget =
+    testTargetModel != null && testTargetColumn != null
+      ? `${testTargetModel}.${testTargetColumn}`
+      : undefined;
+  const severity = readConfigString(node.config, 'severity');
+
+  return {
+    ...(testType != null ? { testType } : {}),
+    ...(testTargetModel != null ? { testTargetModel } : {}),
+    ...(testTargetColumn != null ? { testTargetColumn } : {}),
+    ...(testTarget != null ? { testTarget } : {}),
+    ...(severity != null ? { severity } : {}),
+  };
+}
+
 export function mapDbtTypeToPluginKind(type: DbtNodeType): PluginNodeKind {
   return DBT_KIND_BY_TYPE[type];
 }
@@ -84,6 +210,7 @@ export function mapDbtNodeToCanonical(node: DbtNode): CanonicalNode {
       compiledSql: node.compiledSql,
       config: node.config,
       columns: node.columns,
+      ...buildDbtTestMetadata(node),
     },
   };
 }
