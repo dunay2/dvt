@@ -7,7 +7,9 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { InspectorPanelContribution } from '../plugins/contracts/PluginManifest';
+import { mapDbtNodeToCanonical } from '../plugins/dbt/dbtNodeAdapter';
 import type { CanonicalEdge, CanonicalNode } from '../types/canonical';
+import type { DbtNode } from '../types/dbt';
 import InspectorPanel from './InspectorPanel';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
@@ -96,6 +98,42 @@ describe('InspectorPanel', () => {
     expect(container.textContent).toContain('Output');
     expect(container.textContent).toContain('Orders model');
     expect(container.textContent).toContain('lineage');
+  });
+
+  it('shows interpreted DBT test target metadata in the node workbench tests tab', () => {
+    const dbtTestNode: DbtNode = {
+      id: 'test_not_null_store_id',
+      name: 'test_not_null_store_id',
+      type: 'TEST',
+      package: 'tests',
+      path: 'tests/test_not_null_store_id.sql',
+      tags: ['quality'],
+      status: 'idle',
+      dependencies: ['dim_store'],
+      compiledSql: "SELECT * FROM {{ ref('dim_store') }} WHERE store_id IS NULL",
+    };
+    const node = mapDbtNodeToCanonical(dbtTestNode);
+
+    act(() => {
+      root.render(
+        <InspectorPanel
+          node={node}
+          nodes={[node]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="tests"
+          onHide={() => undefined}
+        />
+      );
+    });
+
+    const activeTab = container.querySelector('[role="tab"][data-state="active"]');
+
+    expect(activeTab?.textContent).toContain('Tests');
+    expect(container.querySelector('[data-slot="node-inspector-tests-section"]')).not.toBeNull();
+    expect(container.textContent).toContain('not_null');
+    expect(container.textContent).toContain('dim_store.store_id');
+    expect(container.textContent).toContain('store_id');
   });
 
   it('reapplies a repeated tab request for the same node after the user changes tabs', () => {
