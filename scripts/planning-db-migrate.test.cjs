@@ -1045,6 +1045,75 @@ test('tracked migrations persist governance component reparent overlays outside 
   );
 });
 
+test('tracked migrations retire superseded aliases and remap DBT node card ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '109_retire_superseded_component_alias_and_dbt_node_card_ownership.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /local_definition\.status <> 'superseded'/);
+  assert.match(ownershipMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG/);
+  assert.match(ownershipMigration.sql, /children_required = false/);
+  assert.match(ownershipMigration.sql, /SYS-WEB-CANVAS-DBT-NODE-CARD/);
+  assert.match(
+    ownershipMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/DbtNodeComponent\*/
+  );
+  assert.match(ownershipMigration.sql, /SYS-WEB-CANVAS-NODE-CONTEXT-MENU-MODEL/);
+  assert.match(ownershipMigration.sql, /SYS-WEB-CANVAS-NODE-RENDERING-COMPONENTS/);
+  assert.doesNotMatch(
+    ownershipMigration.sql,
+    /delete\s+from\s+planning_query_store\.governance_component_local_definitions/i
+  );
+});
+
+test('tracked migrations backfill local component architecture authority', () => {
+  const migrations = readMigrationFiles();
+  const authorityMigration = migrations.find(
+    (migration) => migration.fileName === '110_backfill_local_component_architecture_authority.sql'
+  );
+
+  assert.ok(authorityMigration);
+  assert.match(authorityMigration.sql, /PLANNING-DB-LOCAL-COMPONENT-AUTHORITY-BACKFILL-20260617/);
+  assert.match(
+    authorityMigration.sql,
+    /insert into planning_query_store\.governance_component_local_semantic_items/
+  );
+  assert.match(authorityMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(authorityMigration.sql, /insert into architecture\.component_responsibility/);
+  assert.match(authorityMigration.sql, /insert into architecture\.component_relation/);
+  assert.match(authorityMigration.sql, /insert into architecture\.component_test/);
+  assert.match(authorityMigration.sql, /ValidateComponentIntegrity/);
+  assert.match(authorityMigration.sql, /component_engineering_file_ownership_query/);
+  assert.match(authorityMigration.sql, /component-profile/);
+  assert.match(authorityMigration.sql, /component-integrity/);
+  assert.match(authorityMigration.sql, /on conflict \(component_id\) do update/);
+  assert.doesNotMatch(authorityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(authorityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations remap canvas context menu away from child palette path', () => {
+  const migrations = readMigrationFiles();
+  const contextMenuMigration = migrations.find(
+    (migration) => migration.fileName === '111_remap_canvas_context_menu_architecture_path.sql'
+  );
+
+  assert.ok(contextMenuMigration);
+  assert.match(contextMenuMigration.sql, /SYS-WEB-CANVAS-CANVAS-CONTEXT-MENU/);
+  assert.match(contextMenuMigration.sql, /SYS-WEB-CANVAS-ADD-NODE-PALETTE/);
+  assert.match(
+    contextMenuMigration.sql,
+    /repo_path = 'apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuView\.tsx'/
+  );
+  assert.match(
+    contextMenuMigration.sql,
+    /and repo_path = 'apps\/web\/src\/app\/views\/canvas\/CanvasAddNodePalette\.tsx'/
+  );
+  assert.doesNotMatch(contextMenuMigration.sql, /delete\s+from/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(

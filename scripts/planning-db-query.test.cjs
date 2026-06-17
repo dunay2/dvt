@@ -1125,6 +1125,19 @@ test('buildCreationIntentRows turns rail matches into AI pre-create guidance', (
         feature_id: 'WIDGET-FEATURE',
         source_path: 'docs/planning/proposals/mandatory/widget.md',
       },
+      {
+        rail_type: 'query',
+        rail_name: 'ResolveLegacyWidgets',
+        ddd_owner: 'LegacyWidgetReadModel',
+        rail_status: 'retired',
+        implementation_ref_count: 1,
+        documentation_ref_count: 1,
+        is_gap: false,
+        is_duplicate: false,
+        intent_match_score: 12,
+        feature_id: 'LEGACY-WIDGET-FEATURE',
+        source_path: 'docs/planning/proposals/mandatory/legacy-widget.md',
+      },
     ]),
     [
       [
@@ -1150,6 +1163,18 @@ test('buildCreationIntentRows turns rail matches into AI pre-create guidance', (
         18,
         'WIDGET-FEATURE',
         'docs/planning/proposals/mandatory/widget.md',
+      ],
+      [
+        'retired-rail-do-not-reuse',
+        'query',
+        'ResolveLegacyWidgets',
+        'LegacyWidgetReadModel',
+        'retired',
+        'implemented',
+        '-',
+        12,
+        'LEGACY-WIDGET-FEATURE',
+        'docs/planning/proposals/mandatory/legacy-widget.md',
       ],
     ]
   );
