@@ -86,19 +86,23 @@ describe('Canvas interaction command surface architecture', () => {
     const viewportSource = readAppSource('views/canvas/CanvasViewport.tsx');
     const presenterPath = 'views/canvas/useCanvasContextMenuPresenter.ts';
     const viewTemplatePath = 'views/canvas/CanvasContextMenuView.tsx';
+    const viewPrimitivesPath = 'views/canvas/CanvasContextMenuPrimitives.tsx';
     const authoringCommandSource = readAppSource('views/canvas/canvasAuthoringNodeCommand.ts');
 
     expect(appSourceExists(presenterPath), presenterPath).toBe(true);
     expect(appSourceExists(viewTemplatePath), viewTemplatePath).toBe(true);
+    expect(appSourceExists(viewPrimitivesPath), viewPrimitivesPath).toBe(true);
 
     const presenterSource = readAppSource(presenterPath);
     const viewTemplateSource = readAppSource(viewTemplatePath);
+    const viewPrimitivesSource = readAppSource(viewPrimitivesPath);
 
     for (const [modulePath, source] of [
       ['views/canvas/canvasInteractionCommandSurface.ts', modelSource],
       ['views/canvas/CanvasViewport.tsx', viewportSource],
       [presenterPath, presenterSource],
       [viewTemplatePath, viewTemplateSource],
+      [viewPrimitivesPath, viewPrimitivesSource],
       ['views/canvas/canvasAuthoringNodeCommand.ts', authoringCommandSource],
     ] as const) {
       expect(source.trimStart().startsWith('/** Owned concern:'), modulePath).toBe(true);
@@ -137,14 +141,21 @@ describe('Canvas interaction command surface architecture', () => {
     expect(presenterSource).not.toContain('role="menu"');
     expect(presenterSource).not.toContain('role="menuitem"');
 
-    expect(viewTemplateSource).toContain('role="menu"');
-    expect(viewTemplateSource).toContain('role="menuitem"');
-    expect(viewTemplateSource).toContain('data-slot="canvas-context-menu"');
+    expect(viewTemplateSource).toContain("from './CanvasContextMenuPrimitives'");
     expect(viewTemplateSource).not.toContain('buildCanvasContextMenuModel');
     expect(viewTemplateSource).not.toContain('buildCanvasEdgeContextRemovalChange');
     expect(viewTemplateSource).not.toContain('useState');
     expect(viewTemplateSource).not.toContain('useEffect');
     expect(viewTemplateSource).not.toContain('useReactFlow');
+
+    expect(viewPrimitivesSource).toContain('role="menu"');
+    expect(viewPrimitivesSource).toContain('role="menuitem"');
+    expect(viewPrimitivesSource).toContain('data-slot="canvas-context-menu"');
+    expect(viewPrimitivesSource).not.toContain('buildCanvasContextMenuModel');
+    expect(viewPrimitivesSource).not.toContain('buildCanvasEdgeContextRemovalChange');
+    expect(viewPrimitivesSource).not.toContain('useState');
+    expect(viewPrimitivesSource).not.toContain('useEffect');
+    expect(viewPrimitivesSource).not.toContain('useReactFlow');
 
     expect(authoringCommandSource).toContain('requestedPosition ??');
   });
