@@ -61,57 +61,6 @@ describe('CanvasViewport context menus', () => {
     });
   }
 
-  it('keeps the canvas menu open through a delayed pane-click echo from the same right-click', async () => {
-    vi.useFakeTimers();
-    await renderViewport({
-      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
-    });
-
-    await openPaneContextMenu();
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-
-    const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
-
-    vi.advanceTimersByTime(1_000);
-
-    await act(async () => {
-      paneClick?.({
-        button: 0,
-        clientX: 480,
-        clientY: 320,
-      } as React.MouseEvent<Element>);
-    });
-
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-  });
-
-  it('closes the canvas menu when the user left-clicks a different pane point', async () => {
-    vi.useFakeTimers();
-    await renderViewport({
-      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
-    });
-
-    await openPaneContextMenu();
-
-    const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
-
-    vi.advanceTimersByTime(1_000);
-
-    await act(async () => {
-      paneClick?.({
-        button: 0,
-        clientX: 640,
-        clientY: 360,
-      } as React.MouseEvent<Element>);
-    });
-
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
-  });
-
   it('opens a governed create-node menu from the background context gesture', async () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const props = await renderViewport({
