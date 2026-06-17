@@ -898,6 +898,27 @@ test('tracked migrations retire the source import ListWarehouseConnections dupli
   );
 });
 
+test('tracked migrations retire the source import ImportWarehouseSources duplicate', () => {
+  const migrations = readMigrationFiles();
+  const duplicateMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '104_retire_source_import_import_warehouse_sources_duplicate.sql'
+  );
+
+  assert.ok(duplicateMigration);
+  assert.match(duplicateMigration.sql, /CANVAS-SOURCE-IMPORT-COLUMNS-DEFAULT-20260616/);
+  assert.match(duplicateMigration.sql, /ImportWarehouseSources/);
+  assert.match(duplicateMigration.sql, /normalized_rail_name = 'importwarehousesources'/);
+  assert.match(duplicateMigration.sql, /rail_status = 'retired'/);
+  assert.match(duplicateMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(duplicateMigration.sql, /ADR-0058-warehouse-source-import-rails\.md/);
+  assert.match(duplicateMigration.sql, /frontend-component-inventory\.md/);
+  assert.doesNotMatch(
+    duplicateMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
 test('tracked migrations allow audited governance component reparent operations', () => {
   const migrations = readMigrationFiles();
   const reparentMigration = migrations.find(
