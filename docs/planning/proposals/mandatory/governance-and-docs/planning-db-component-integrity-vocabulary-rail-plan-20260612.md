@@ -276,6 +276,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/105_code_symbol_duplicate_queries.sql
   - tools/planning-db/migrations/106_lightweight_governance_problem_dashboard.sql
   - tools/planning-db/migrations/107_retire_tarea_rail_duplicates_and_repoint_sources.sql
+  - tools/planning-db/migrations/108_retire_canvas_node_workbench_overlay_orphan.sql
   - scripts/planning-db-import.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
   - scripts/planning-db/queries/code-symbol-query.cjs
