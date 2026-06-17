@@ -726,6 +726,27 @@ test('tracked migrations retire active TAREA rail duplicates and repoint missing
   assert.doesNotMatch(sourceDriftMigration.sql, /delete from planning_query_store/);
 });
 
+test('tracked migrations retire orphan canvas node workbench overlay rails', () => {
+  const migrations = readMigrationFiles();
+  const orphanOverlayMigration = migrations.find(
+    (migration) => migration.fileName === '108_retire_canvas_node_workbench_overlay_orphan.sql'
+  );
+
+  assert.ok(orphanOverlayMigration);
+  assert.match(orphanOverlayMigration.sql, /CANVAS-NODE-WORKBENCH-PRESENTATION-BOUNDARY-20260617/);
+  assert.match(orphanOverlayMigration.sql, /CanvasNodeWorkbenchOverlay\.tsx/);
+  assert.match(orphanOverlayMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-OVERLAY/);
+  assert.match(orphanOverlayMigration.sql, /CANVAS-CONTEXT-MENU-STABLE-RIGHT-CLICK-20260617/);
+  assert.match(orphanOverlayMigration.sql, /rail_status = 'retired'/);
+  assert.match(orphanOverlayMigration.sql, /status = 'deprecated'/);
+  assert.match(orphanOverlayMigration.sql, /target_component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH'/);
+  assert.match(
+    orphanOverlayMigration.sql,
+    /REL-WEB-CANVAS-SHELL-MAIN-PANEL-DEPENDS-ON-NODE-WORKBENCH/
+  );
+  assert.doesNotMatch(orphanOverlayMigration.sql, /delete\s+from/i);
+});
+
 test('tracked migrations exclude retired rails from active duplicate vocabulary checks', () => {
   const migrations = readMigrationFiles();
   const deprecationMigration = migrations.find(
