@@ -292,7 +292,7 @@ describe('internal alpha route gate architecture', () => {
       expect.arrayContaining([
         'apps/web/src/app/services/session/protectedRouteSessionContext.test.ts',
         'apps/web/src/app/services/session/protectedRouteSessionContext.architecture.test.ts',
-        'apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts',
+        'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
         'docs/architecture/components/web/appshell/effective-workspace-context-component.md',
       ])
     );

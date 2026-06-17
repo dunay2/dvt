@@ -246,7 +246,7 @@ test('real frontend component inventory links current components to files, rails
   }
 });
 
-test('real frontend component inventory maps Canvas contextual UX components and legacy tabs', () => {
+test('real frontend component inventory maps Canvas contextual UX components without legacy tabs', () => {
   const snapshot = buildFrontendComponentReflectionSnapshot();
   const componentsById = new Map(
     snapshot.components.map((component) => [component.componentId, component])
@@ -275,10 +275,7 @@ test('real frontend component inventory maps Canvas contextual UX components and
     componentsById.get('web.component.canvas.NodeWorkbench')?.componentStatus,
     'partial'
   );
-  assert.equal(
-    componentsById.get('web.component.canvas.CanvasWorkbenchTabs')?.componentStatus,
-    'retire'
-  );
+  assert.equal(componentsById.has('web.component.canvas.CanvasWorkbenchTabs'), false);
   assert.ok(
     railsByComponent.get('web.component.canvas.CanvasContextMenu')?.has('ResolveCanvasContextMenu')
   );

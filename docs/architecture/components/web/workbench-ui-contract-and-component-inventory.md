@@ -291,7 +291,7 @@ That means the operator lands in:
 - shell top bar;
 - top menu and command palette access;
 - `Canvas` workbench as the default primary route;
-- Canvas workbench view strip;
+- Canvas contextual graph surface;
 - optional bottom console drawer.
 
 Main screen composition:
@@ -300,7 +300,7 @@ Main screen composition:
 | ------------- | ------------------------------------------------ | ------------------------------------------------------------ |
 | Shell top     | `ShellTopBar`                                    | shows compact context labels, health, menus, global controls |
 | Route top     | `CanvasToolbar` or `RouteToolbar` specialization | owns graph-local actions and toggles                         |
-| Route strip   | `CanvasWorkbenchTabs`                            | switches Canvas projections without global navigation        |
+| Route surface | `CanvasViewport` and contextual surfaces         | keep Graph primary and open source/code/preview on demand    |
 | Route overlay | `CanvasExplorerPanel`                            | optional, contextual, restorable, never a fixed nav rail     |
 | Route center  | `CanvasViewport`                                 | primary graph interaction surface                            |
 | Route right   | `CanvasInspectorPanel`                           | optional, selection-driven, restorable                       |
