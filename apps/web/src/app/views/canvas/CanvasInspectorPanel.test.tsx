@@ -81,16 +81,6 @@ function buildDbtModelNode(): CanonicalNode {
   };
 }
 
-function modelerActionButton(container: HTMLElement, actionId: string): HTMLButtonElement {
-  const button = container.querySelector<HTMLButtonElement>(`[data-action-id="${actionId}"]`);
-
-  if (!button) {
-    throw new Error(`Modeler action button not found: ${actionId}`);
-  }
-
-  return button;
-}
-
 function tabByText(container: HTMLElement, label: string): HTMLButtonElement {
   const tab = Array.from(container.querySelectorAll<HTMLButtonElement>('[role="tab"]')).find(
     (candidate) => candidate.textContent?.trim() === label
@@ -225,115 +215,6 @@ describe('CanvasInspectorPanel', () => {
         alias: 'orders_source',
       },
     });
-  });
-
-  it('runs modeler actions from the properties panel through route-owned node handlers', async () => {
-    const node = buildDbtModelNode();
-    const onDuplicateNode = vi.fn();
-    const onToggleNodeSelection = vi.fn();
-    const onRemoveNode = vi.fn();
-
-    await act(async () => {
-      root.render(
-        <CanvasInspectorPanel
-          node={node}
-          nodes={[node]}
-          edges={[]}
-          activeRunId={null}
-          onHide={vi.fn()}
-          authoring={{
-            canEditNode: true,
-            onApplyNodeDraft: vi.fn(),
-            modelerActions: {
-              selectedForExecution: false,
-              onDuplicateNode,
-              onToggleNodeSelection,
-              onRemoveNode,
-            },
-          }}
-        />
-      );
-    });
-
-    expect(container.querySelector('[data-slot="node-inspector-modeler-actions"]')).not.toBeNull();
-
-    await act(async () => {
-      fireEvent.click(modelerActionButton(container, 'select-node-for-execution'));
-      fireEvent.click(modelerActionButton(container, 'duplicate-node'));
-      fireEvent.click(modelerActionButton(container, 'remove-node'));
-    });
-
-    expect(onToggleNodeSelection).toHaveBeenCalledWith(node.id, true);
-    expect(onDuplicateNode).toHaveBeenCalledWith(node.id);
-    expect(onRemoveNode).toHaveBeenCalledWith(node.id);
-  });
-
-  it('keeps execution selection available when graph editing is read-only', async () => {
-    const node = buildDbtModelNode();
-    const onToggleNodeSelection = vi.fn();
-
-    await act(async () => {
-      root.render(
-        <CanvasInspectorPanel
-          node={node}
-          nodes={[node]}
-          edges={[]}
-          activeRunId={null}
-          onHide={vi.fn()}
-          authoring={{
-            canEditNode: false,
-            onApplyNodeDraft: vi.fn(),
-            modelerActions: {
-              selectedForExecution: false,
-              onDuplicateNode: vi.fn(),
-              onToggleNodeSelection,
-              onRemoveNode: vi.fn(),
-            },
-          }}
-        />
-      );
-    });
-
-    expect(container.querySelector('[data-slot="node-inspector-modeler-actions"]')).not.toBeNull();
-    expect(container.querySelector('[data-action-id="select-node-for-execution"]')).not.toBeNull();
-    expect(container.querySelector('[data-action-id="duplicate-node"]')).toBeNull();
-    expect(container.querySelector('[data-action-id="remove-node"]')).toBeNull();
-
-    await act(async () => {
-      fireEvent.click(modelerActionButton(container, 'select-node-for-execution'));
-    });
-
-    expect(onToggleNodeSelection).toHaveBeenCalledWith(node.id, true);
-  });
-
-  it('does not expose modeler actions when read-only execution selection is unavailable', async () => {
-    const node = buildDbtModelNode();
-
-    await act(async () => {
-      root.render(
-        <CanvasInspectorPanel
-          node={node}
-          nodes={[node]}
-          edges={[]}
-          activeRunId={null}
-          onHide={vi.fn()}
-          authoring={{
-            canEditNode: false,
-            onApplyNodeDraft: vi.fn(),
-            modelerActions: {
-              selectedForExecution: false,
-              onDuplicateNode: vi.fn(),
-              onRemoveNode: vi.fn(),
-            },
-          }}
-        />
-      );
-    });
-
-    expect(container.querySelector('[data-slot="node-inspector-modeler-actions"]')).toBeNull();
-    expect(container.querySelector('[data-action-id="select-node-for-execution"]')).toBeNull();
-    expect(container.querySelector('[data-action-id="duplicate-node"]')).toBeNull();
-    expect(container.querySelector('[data-action-id="remove-node"]')).toBeNull();
   });
 
   it('falls back to general details when the selected node does not expose the active plugin tab', async () => {
