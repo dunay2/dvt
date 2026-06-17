@@ -1,7 +1,7 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
-import { CanvasInspectorPanel } from './CanvasInspectorPanel';
+import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
 import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
@@ -218,34 +218,12 @@ function CanvasShellNodeWorkbenchOverlay({
   panels,
   chromeCommands,
 }: Pick<CanvasShellMainPanelProps, 'layout' | 'panels' | 'chromeCommands'>): JSX.Element | null {
-  const nodeWorkbenchPlacement = layout.surfaceStrategy?.nodeWorkbench.placement;
-
-  if (
-    nodeWorkbenchPlacement !== 'contextual-overlay' ||
-    layout.focusMode ||
-    !layout.inspectorPanelVisible ||
-    panels.inspectorNode == null
-  ) {
-    return null;
-  }
-
   return (
-    <div
-      data-slot="canvas-node-workbench-overlay"
-      className="absolute top-16 right-4 bottom-4 z-20 w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-md border border-(--border-default) bg-(--surface-panel) shadow-xl"
-    >
-      <CanvasInspectorPanel
-        node={panels.inspectorNode}
-        nodes={panels.inspectorGraphNodes}
-        edges={panels.inspectorGraphEdges}
-        activeRunId={panels.activeRunId}
-        registeredPlugins={panels.registeredPlugins}
-        preferredTabId={panels.inspectorPreferredTabId}
-        preferredTabRequestId={panels.inspectorPreferredTabRequestId}
-        onHide={chromeCommands.onHideInspector}
-        authoring={panels.inspectorAuthoring}
-      />
-    </div>
+    <CanvasNodeWorkbenchOverlay
+      layout={layout}
+      panels={panels}
+      onHide={chromeCommands.onHideInspector}
+    />
   );
 }
 

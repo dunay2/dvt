@@ -36,6 +36,7 @@ type ContextMenuEvent = Pick<
   MouseEvent | ReactMouseEvent<HTMLDivElement>,
   'clientX' | 'clientY' | 'preventDefault' | 'stopPropagation' | 'target'
 >;
+type PaneClickEvent = Pick<MouseEvent | ReactMouseEvent<Element>, 'button' | 'clientX' | 'clientY'>;
 
 type CloseCanvasContextMenuOptions = Readonly<{
   force?: boolean;
@@ -46,6 +47,7 @@ type UseCanvasContextMenuPresenterResult = Readonly<{
   menuRef: RefObject<HTMLDivElement>;
   contextSurfaceRef: RefObject<HTMLDivElement>;
   closeContextMenu: (options?: CloseCanvasContextMenuOptions) => void;
+  handlePaneClick: (event: PaneClickEvent) => void;
   handleViewportContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void;
   handlePaneContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onPaneContextMenu']>;
   handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']>;
@@ -57,6 +59,7 @@ type UseCanvasContextMenuPresenterResult = Readonly<{
 export type CanvasContextMenuPresenter = UseCanvasContextMenuPresenterResult;
 
 const CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS = 350;
+const CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX = 2;
 type ContextMenuOpenTargetKind = CanvasContextMenuModel['kind'];
 
 function isCanvasViewportContextTarget(target: EventTarget | null): target is Element {
@@ -97,11 +100,19 @@ export function useCanvasContextMenuPresenter({
   const contextSurfaceRef = useRef<HTMLDivElement>(null);
   const lastContextMenuOpenedAtRef = useRef(0);
   const lastContextMenuOpenedTargetKindRef = useRef<ContextMenuOpenTargetKind | null>(null);
+  const lastPaneContextMenuScreenPositionRef = useRef<CanvasContextMenuPosition | null>(null);
+  const pendingPaneClickEchoRef = useRef(false);
 
-  const markContextMenuOpened = useCallback((targetKind: ContextMenuOpenTargetKind) => {
-    lastContextMenuOpenedAtRef.current = Date.now();
-    lastContextMenuOpenedTargetKindRef.current = targetKind;
-  }, []);
+  const markContextMenuOpened = useCallback(
+    (targetKind: ContextMenuOpenTargetKind, screenPosition?: CanvasContextMenuPosition) => {
+      lastContextMenuOpenedAtRef.current = Date.now();
+      lastContextMenuOpenedTargetKindRef.current = targetKind;
+      pendingPaneClickEchoRef.current = targetKind === 'pane';
+      lastPaneContextMenuScreenPositionRef.current =
+        targetKind === 'pane' ? (screenPosition ?? null) : null;
+    },
+    []
+  );
 
   const closeContextMenu = useCallback((options?: CloseCanvasContextMenuOptions) => {
     if (
@@ -112,8 +123,34 @@ export function useCanvasContextMenuPresenter({
       return;
     }
 
+    pendingPaneClickEchoRef.current = false;
+    lastPaneContextMenuScreenPositionRef.current = null;
     setModel(null);
   }, []);
+
+  const handlePaneClick = useCallback(
+    (event: PaneClickEvent) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      const lastPanePosition = lastPaneContextMenuScreenPositionRef.current;
+      const isPendingEchoAtContextPoint =
+        pendingPaneClickEchoRef.current &&
+        lastContextMenuOpenedTargetKindRef.current === 'pane' &&
+        lastPanePosition != null &&
+        Math.abs(event.clientX - lastPanePosition.x) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX &&
+        Math.abs(event.clientY - lastPanePosition.y) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX;
+
+      if (isPendingEchoAtContextPoint) {
+        pendingPaneClickEchoRef.current = false;
+        return;
+      }
+
+      closeContextMenu({ force: true });
+    },
+    [closeContextMenu]
+  );
 
   useEffect(() => {
     if (model == null) {
@@ -151,7 +188,7 @@ export function useCanvasContextMenuPresenter({
     (screenPosition: CanvasContextMenuPosition) => {
       const flowPosition = screenToFlowPosition(screenPosition);
 
-      markContextMenuOpened('pane');
+      markContextMenuOpened('pane', screenPosition);
       flushSync(() => {
         setModel(
           buildCanvasContextMenuModel({
@@ -311,6 +348,7 @@ export function useCanvasContextMenuPresenter({
     menuRef,
     contextSurfaceRef,
     closeContextMenu,
+    handlePaneClick,
     handleViewportContextMenu,
     handlePaneContextMenu,
     handleEdgeContextMenu,
