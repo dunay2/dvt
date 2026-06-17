@@ -66,6 +66,34 @@ export function OperationalDrawerWarningBadge({
   );
 }
 
+export function OperationalDrawerProblemList({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return <ol className="space-y-2">{children}</ol>;
+}
+
+export function OperationalDrawerProblemItem({
+  detail,
+  message,
+  severity,
+}: Readonly<{
+  detail: string;
+  message: string;
+  severity: string;
+}>): JSX.Element {
+  return (
+    <li className="grid grid-cols-[6rem_1fr] gap-3 border-b border-[color:var(--border-muted)] py-2 text-sm last:border-b-0">
+      <OperationalDrawerWarningBadge dataSlot="bottom-operational-problem-severity">
+        {severity}
+      </OperationalDrawerWarningBadge>
+      <span className="min-w-0">
+        <span className="block text-[var(--text-default)]">{message}</span>
+        <OperationalDrawerDetailCode>{detail}</OperationalDrawerDetailCode>
+      </span>
+    </li>
+  );
+}
+
 export function OperationalDrawerDetailCode({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
@@ -97,6 +125,55 @@ export function OperationalDrawerSectionKicker({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <div className={operationalDrawerPanelClassNames.sectionKicker}>{children}</div>;
+}
+
+export function OperationalDrawerRunActiveSummary({
+  activeRunId,
+}: Readonly<{ activeRunId: string }>): JSX.Element {
+  return (
+    <div className="grid gap-1">
+      <span className="text-[var(--text-muted)]">Active run</span>
+      <code className="font-mono text-[var(--text-strong)]">{activeRunId}</code>
+    </div>
+  );
+}
+
+export function OperationalDrawerPreviewLayout({
+  action,
+  children,
+}: Readonly<{ action: ReactNode; children: ReactNode }>): JSX.Element {
+  return (
+    <div className="flex flex-wrap items-start gap-3">
+      <div className="min-w-0 flex-1">{children}</div>
+      {action}
+    </div>
+  );
+}
+
+export function OperationalDrawerPreviewSummary({
+  blockers,
+  statusLabel,
+  summary,
+}: Readonly<{
+  blockers: readonly string[];
+  statusLabel: string;
+  summary: string;
+}>): JSX.Element {
+  return (
+    <>
+      <OperationalDrawerSectionKicker>{statusLabel}</OperationalDrawerSectionKicker>
+      <p className="mt-1 text-[var(--text-default)]">{summary}</p>
+      {blockers.length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {blockers.map((blocker) => (
+            <OperationalDrawerCodeToken key={blocker} dataSlot="bottom-operational-preview-blocker">
+              {blocker}
+            </OperationalDrawerCodeToken>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
 }
 
 export function OperationalDrawerPrimaryAction({

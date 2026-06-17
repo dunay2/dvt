@@ -37,11 +37,15 @@ type ContextMenuEvent = Pick<
   'clientX' | 'clientY' | 'preventDefault' | 'stopPropagation' | 'target'
 >;
 
+type CloseCanvasContextMenuOptions = Readonly<{
+  force?: boolean;
+}>;
+
 type UseCanvasContextMenuPresenterResult = Readonly<{
   model: CanvasContextMenuModel | null;
   menuRef: RefObject<HTMLDivElement>;
   contextSurfaceRef: RefObject<HTMLDivElement>;
-  closeContextMenu: () => void;
+  closeContextMenu: (options?: CloseCanvasContextMenuOptions) => void;
   handleViewportContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void;
   handlePaneContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onPaneContextMenu']>;
   handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']>;
@@ -51,6 +55,9 @@ type UseCanvasContextMenuPresenterResult = Readonly<{
 }>;
 
 export type CanvasContextMenuPresenter = UseCanvasContextMenuPresenterResult;
+
+const CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS = 350;
+type ContextMenuOpenTargetKind = CanvasContextMenuModel['kind'];
 
 function isCanvasViewportContextTarget(target: EventTarget | null): target is Element {
   if (!(target instanceof Element)) {
@@ -88,8 +95,23 @@ export function useCanvasContextMenuPresenter({
   const [model, setModel] = useState<CanvasContextMenuModel | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const contextSurfaceRef = useRef<HTMLDivElement>(null);
+  const lastContextMenuOpenedAtRef = useRef(0);
+  const lastContextMenuOpenedTargetKindRef = useRef<ContextMenuOpenTargetKind | null>(null);
 
-  const closeContextMenu = useCallback(() => {
+  const markContextMenuOpened = useCallback((targetKind: ContextMenuOpenTargetKind) => {
+    lastContextMenuOpenedAtRef.current = Date.now();
+    lastContextMenuOpenedTargetKindRef.current = targetKind;
+  }, []);
+
+  const closeContextMenu = useCallback((options?: CloseCanvasContextMenuOptions) => {
+    if (
+      options?.force !== true &&
+      lastContextMenuOpenedTargetKindRef.current === 'pane' &&
+      Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS
+    ) {
+      return;
+    }
+
     setModel(null);
   }, []);
 
@@ -112,7 +134,7 @@ export function useCanvasContextMenuPresenter({
     };
     const handleDocumentKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
-        closeContextMenu();
+        closeContextMenu({ force: true });
       }
     };
 
@@ -129,6 +151,7 @@ export function useCanvasContextMenuPresenter({
     (screenPosition: CanvasContextMenuPosition) => {
       const flowPosition = screenToFlowPosition(screenPosition);
 
+      markContextMenuOpened('pane');
       flushSync(() => {
         setModel(
           buildCanvasContextMenuModel({
@@ -154,6 +177,7 @@ export function useCanvasContextMenuPresenter({
       canOpenProjectExplorer,
       canPreviewExecutionPlan,
       canOpenCanvasSettings,
+      markContextMenuOpened,
       onOpenSourceImport,
       onOpenProjectExplorer,
       onPreviewExecutionPlan,
@@ -216,6 +240,7 @@ export function useCanvasContextMenuPresenter({
     useCallback(
       (event, edge) => {
         event.preventDefault();
+        markContextMenuOpened('edge');
         flushSync(() => {
           setModel(
             buildCanvasContextMenuModel({
@@ -232,7 +257,7 @@ export function useCanvasContextMenuPresenter({
           );
         });
       },
-      [authoringNodeKinds, canEditEdges]
+      [authoringNodeKinds, canEditEdges, markContextMenuOpened]
     );
 
   const handleCanvasAction = useCallback(
@@ -247,7 +272,7 @@ export function useCanvasContextMenuPresenter({
         onOpenCanvasSettings?.();
       }
 
-      closeContextMenu();
+      closeContextMenu({ force: true });
     },
     [
       closeContextMenu,
@@ -265,7 +290,7 @@ export function useCanvasContextMenuPresenter({
         onCreateAuthoringNode(action.registration, model.flowPosition);
       }
 
-      closeContextMenu();
+      closeContextMenu({ force: true });
     },
     [closeContextMenu, model?.flowPosition, onCreateAuthoringNode]
   );
@@ -276,7 +301,7 @@ export function useCanvasContextMenuPresenter({
         onEdgesChange([buildCanvasEdgeContextRemovalChange({ id: model.edgeId })]);
       }
 
-      closeContextMenu();
+      closeContextMenu({ force: true });
     },
     [closeContextMenu, model?.edgeId, onEdgesChange]
   );
