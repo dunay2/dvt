@@ -174,9 +174,55 @@ values
     'scripts/planning-db-query.test.cjs',
     'must_prove',
     true
+  ),
+  (
+    'PLANNING-DB-QUERY-LIMIT-HELPER-COMPONENT-20260617',
+    'component',
+    'SYS-CI-GOVERNANCE-SCRIPTS',
+    'may_reference',
+    true
   )
 on conflict (design_id, subject_kind, subject_id, scope_kind) do update set
   required = excluded.required;
+
+insert into architecture.component (
+  component_id,
+  name,
+  kind,
+  layer,
+  owner,
+  repo_path,
+  public_contract,
+  runtime,
+  criticality,
+  status,
+  parent_component_id
+)
+values (
+  'SYS-CI-GOVERNANCE-SCRIPTS',
+  'Repository governance automation scripts',
+  'module',
+  'infra',
+  'Repository Automation',
+  'scripts',
+  'Executable repository governance, docs, planning, quality, and CI support scripts.',
+  'node',
+  'medium',
+  'review',
+  null
+)
+on conflict (component_id) do update set
+  name = excluded.name,
+  kind = excluded.kind,
+  layer = excluded.layer,
+  owner = excluded.owner,
+  repo_path = excluded.repo_path,
+  public_contract = excluded.public_contract,
+  runtime = excluded.runtime,
+  criticality = excluded.criticality,
+  status = excluded.status,
+  parent_component_id = excluded.parent_component_id,
+  updated_at = now();
 
 insert into architecture.component (
   component_id,
@@ -216,6 +262,29 @@ on conflict (component_id) do update set
   status = excluded.status,
   parent_component_id = excluded.parent_component_id,
   updated_at = now();
+
+insert into architecture.component_responsibility (
+  responsibility_id,
+  component_id,
+  responsibility,
+  reason_to_change,
+  ddd_owner,
+  status
+)
+values (
+  'RESP-SYS-CI-GOVERNANCE-SCRIPTS',
+  'SYS-CI-GOVERNANCE-SCRIPTS',
+  'Owns executable repository governance, docs, planning, quality, and CI support scripts.',
+  'Repository automation script, generator, checker, or CI support behavior changes.',
+  'RepositoryAutomation',
+  'implemented'
+)
+on conflict (responsibility_id) do update set
+  component_id = excluded.component_id,
+  responsibility = excluded.responsibility,
+  reason_to_change = excluded.reason_to_change,
+  ddd_owner = excluded.ddd_owner,
+  status = excluded.status;
 
 insert into architecture.component_responsibility (
   responsibility_id,
@@ -278,6 +347,32 @@ on conflict (relation_id) do update set
   source_refs = excluded.source_refs,
   status = excluded.status,
   updated_at = now();
+
+insert into architecture.component_test (
+  test_id,
+  component_id,
+  test_path,
+  test_kind,
+  coverage_level,
+  required,
+  validation_command
+)
+values (
+  'TEST-CI-GOVERNANCE-SCRIPTS-UNIT-COVERAGE',
+  'SYS-CI-GOVERNANCE-SCRIPTS',
+  'scripts/check-governance-unit-coverage.test.cjs',
+  'unit',
+  'behavior',
+  true,
+  'node --test scripts/check-governance-unit-coverage.test.cjs'
+)
+on conflict (test_id) do update set
+  component_id = excluded.component_id,
+  test_path = excluded.test_path,
+  test_kind = excluded.test_kind,
+  coverage_level = excluded.coverage_level,
+  required = excluded.required,
+  validation_command = excluded.validation_command;
 
 insert into architecture.component_test (
   test_id,

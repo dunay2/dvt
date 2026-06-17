@@ -279,6 +279,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/108_retire_canvas_node_workbench_overlay_orphan.sql
   - tools/planning-db/migrations/112_planning_db_query_limit_helper_component.sql
   - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
+  - tools/planning-db/migrations/114_repoint_canvas_reload_recovery_test_support_rail.sql
+  - tools/planning-db/migrations/115_repoint_canvas_create_document_test_support_rail.sql
   - scripts/planning-db-import.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
   - scripts/planning-db/query-limit.cjs
