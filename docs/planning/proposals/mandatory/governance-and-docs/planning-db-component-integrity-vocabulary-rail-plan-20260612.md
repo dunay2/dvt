@@ -278,6 +278,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/107_retire_tarea_rail_duplicates_and_repoint_sources.sql
   - tools/planning-db/migrations/108_retire_canvas_node_workbench_overlay_orphan.sql
   - tools/planning-db/migrations/112_planning_db_query_limit_helper_component.sql
+  - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
   - scripts/planning-db-import.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
   - scripts/planning-db/query-limit.cjs

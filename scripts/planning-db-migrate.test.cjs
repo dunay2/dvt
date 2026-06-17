@@ -1141,6 +1141,32 @@ test('tracked migrations create the Planning DB query limit helper component', (
   assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations repoint stale Canvas test support local rails', () => {
+  const migrations = readMigrationFiles();
+  const canvasTestSupportMigration = migrations.find(
+    (migration) => migration.fileName === '113_repoint_canvas_test_support_local_rails.sql'
+  );
+
+  assert.ok(canvasTestSupportMigration);
+  assert.match(
+    canvasTestSupportMigration.sql,
+    /CanvasInspectorPanel\.test\.support\.tsx no longer exists/
+  );
+  assert.match(
+    canvasTestSupportMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasInspectorPanel\.test\.tsx/
+  );
+  assert.match(
+    canvasTestSupportMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasGraphHandlers\.test\.support\.tsx/
+  );
+  assert.match(canvasTestSupportMigration.sql, /rail_status = 'retired'/);
+  assert.match(canvasTestSupportMigration.sql, /sourceRepointReason/);
+  assert.match(canvasTestSupportMigration.sql, /pnpm planning:db:integrity:check/);
+  assert.doesNotMatch(canvasTestSupportMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasTestSupportMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(
