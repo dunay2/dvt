@@ -1150,17 +1150,18 @@ test('tracked migrations repoint stale Canvas test support local rails', () => {
   assert.ok(canvasTestSupportMigration);
   assert.match(
     canvasTestSupportMigration.sql,
-    /CanvasInspectorPanel\.test\.support\.tsx no longer exists/
+    /Confirmed against tracked CanvasInspectorPanel\.test\.support\.tsx/
   );
   assert.match(
     canvasTestSupportMigration.sql,
-    /apps\/web\/src\/app\/views\/canvas\/CanvasInspectorPanel\.test\.tsx/
+    /apps\/web\/src\/app\/views\/canvas\/CanvasInspectorPanel\.test\.support\.tsx/
   );
   assert.match(
     canvasTestSupportMigration.sql,
-    /apps\/web\/src\/app\/views\/canvas\/useCanvasGraphHandlers\.test\.support\.tsx/
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasGraphHandlers\.nodeAuthoring\.test\.support\.ts/
   );
-  assert.match(canvasTestSupportMigration.sql, /rail_status = 'retired'/);
+  assert.match(canvasTestSupportMigration.sql, /rail_status = 'implemented'/);
+  assert.match(canvasTestSupportMigration.sql, /mechanization_status = 'implemented'/);
   assert.match(canvasTestSupportMigration.sql, /sourceRepointReason/);
   assert.match(canvasTestSupportMigration.sql, /pnpm planning:db:integrity:check/);
   assert.doesNotMatch(canvasTestSupportMigration.sql, /delete\s+from/i);

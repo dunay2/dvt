@@ -1,23 +1,37 @@
--- Repoint or retire stale Canvas test-support local rails away from removed
--- support files. These rows are historical DB-local mechanization records, not
--- active product rails; keeping them on missing source paths breaks source
--- drift integrity.
+-- Reconcile Canvas test-support local rails with the tracked modularized
+-- support files on main. Older local DB projections can drift during branch
+-- integration; these rows must point to real support modules, not deprecated
+-- or temporary replacement tests.
 
 update planning_query_store.feature_mechanization_local_rails
 set
-  mechanization_status = 'closed',
-  rail_status = 'retired',
-  source_path = 'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx',
-  source_content_sha256 = 'c0027554900596f315e5e1145407478af2ee22c43ee385615f374af1a4e40537',
+  mechanization_status = 'implemented',
+  rail_status = 'implemented',
+  source_path = 'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx',
+  source_content_sha256 = 'f7a3d4cf1320b86ab006ed42160cc9a80436ee1c72ba4d63f8fed2ab01f763e0',
   symbol_refs = jsonb_build_array(
-    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx#CanvasInspectorPanel',
-    'apps/web/src/app/views/canvas/CanvasInspectorPanel.modelerActions.test.tsx#CanvasInspectorPanel modeler actions',
-    'apps/web/src/app/views/canvas/CanvasInspectorPanel.canvasProperties.test.tsx#CanvasInspectorPanel canvas properties'
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#InspectorProps',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildDbtInspectorModelNode',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildDvtInspectorNode',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildImportedSourceEdges',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildImportedWarehouseSourceNode',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildInspectorNode',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#renderInspectorPanel',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#selectInspectorMoreItem',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#tabByText',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#wrapInspectorWithRunsProvider'
   ),
   implementation_refs = jsonb_build_array(
-    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx',
-    'apps/web/src/app/views/canvas/CanvasInspectorPanel.modelerActions.test.tsx',
-    'apps/web/src/app/views/canvas/CanvasInspectorPanel.canvasProperties.test.tsx'
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#InspectorProps',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildDbtInspectorModelNode',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildDvtInspectorNode',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildImportedSourceEdges',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildImportedWarehouseSourceNode',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#buildInspectorNode',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#renderInspectorPanel',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#selectInspectorMoreItem',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#tabByText',
+    'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx#wrapInspectorWithRunsProvider'
   ),
   documentation_refs = jsonb_build_array(
     'docs/architecture/components/web/frontend-component-inventory.md',
@@ -40,12 +54,12 @@ set
     jsonb_set(
       coalesce(raw_rail, '{}'::jsonb),
       '{status}',
-      '"retired"'::jsonb,
+      '"implemented"'::jsonb,
       true
     ),
-    '{retirementReason}',
+    '{sourceRepointReason}',
     to_jsonb(
-      'Retired stale DB-local test-support rail: CanvasInspectorPanel.test.support.tsx no longer exists, and inspector behavior is covered by focused tracked component tests.'::text
+      'Confirmed against tracked CanvasInspectorPanel.test.support.tsx after integration with the Canvas test modularization slice.'::text
     ),
     true
   ),
@@ -53,32 +67,32 @@ set
     jsonb_set(
       coalesce(raw_manifest, '{}'::jsonb),
       '{mechanizationStatus}',
-      '"closed"'::jsonb,
+      '"implemented"'::jsonb,
       true
     ),
     '{sourceRepointReason}',
     to_jsonb(
-      'Repointed from removed CanvasInspectorPanel.test.support.tsx to tracked CanvasInspectorPanel tests and retired because the support rail is obsolete.'::text
+      'Confirmed against tracked CanvasInspectorPanel.test.support.tsx after integration with the Canvas test modularization slice.'::text
     ),
     true
   ),
   revision = greatest(revision, 1) + 1,
   updated_at = now()
-where rail_id = 'local#CANVAS-TEST-MODULARIZATION-20260617#query#verifycanvasinspectorpaneltestsupport'
-  and source_path = 'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.support.tsx';
+where rail_id = 'local#CANVAS-TEST-MODULARIZATION-20260617#query#verifycanvasinspectorpaneltestsupport';
 
 update planning_query_store.feature_mechanization_local_rails
 set
-  source_path = 'apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.support.tsx',
-  source_content_sha256 = 'dde11d717e88655ba80e1640cbad610fa639c5f3d478e44b4a632dcc7ee8064b',
+  mechanization_status = 'implemented',
+  rail_status = 'implemented',
+  source_path = 'apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeAuthoring.test.support.ts',
+  source_content_sha256 = '1abb4dc54c4ad31b4a3bc487c2ba4ee2a377b077585b63405e7a3eba5f3e80b5',
   symbol_refs = jsonb_build_array(
-    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.support.tsx#buildCanonicalNode',
-    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.support.tsx#buildDraftSession',
-    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.support.tsx#renderGraphHandlersHook'
+    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeAuthoring.test.support.ts#buildCanonicalDropEvent',
+    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeAuthoring.test.support.ts#requireAuthoringNodeKind'
   ),
   implementation_refs = jsonb_build_array(
-    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.test.support.tsx',
-    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeDrop.test.tsx'
+    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeAuthoring.test.support.ts#buildCanonicalDropEvent',
+    'apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeAuthoring.test.support.ts#requireAuthoringNodeKind'
   ),
   documentation_refs = jsonb_build_array(
     'docs/architecture/components/web/frontend-component-inventory.md',
@@ -97,15 +111,32 @@ set
     'pnpm planning:db:integrity:check',
     'pnpm verify:prepush'
   ),
-  raw_manifest = jsonb_set(
-    coalesce(raw_manifest, '{}'::jsonb),
+  raw_rail = jsonb_set(
+    jsonb_set(
+      coalesce(raw_rail, '{}'::jsonb),
+      '{status}',
+      '"implemented"'::jsonb,
+      true
+    ),
     '{sourceRepointReason}',
     to_jsonb(
-      'Repointed from removed useCanvasGraphHandlers.nodeAuthoring.test.support.ts to the tracked shared graph handler test support module.'::text
+      'Confirmed against tracked useCanvasGraphHandlers.nodeAuthoring.test.support.ts after integration with the Canvas test modularization slice.'::text
+    ),
+    true
+  ),
+  raw_manifest = jsonb_set(
+    jsonb_set(
+      coalesce(raw_manifest, '{}'::jsonb),
+      '{mechanizationStatus}',
+      '"implemented"'::jsonb,
+      true
+    ),
+    '{sourceRepointReason}',
+    to_jsonb(
+      'Confirmed against tracked useCanvasGraphHandlers.nodeAuthoring.test.support.ts after integration with the Canvas test modularization slice.'::text
     ),
     true
   ),
   revision = greatest(revision, 1) + 1,
   updated_at = now()
-where rail_id = 'local#CANVAS-TEST-MODULARIZATION-20260617#query#verifycanvasgraphnodeauthoringtestsupport'
-  and source_path = 'apps/web/src/app/views/canvas/useCanvasGraphHandlers.nodeAuthoring.test.support.ts';
+where rail_id = 'local#CANVAS-TEST-MODULARIZATION-20260617#query#verifycanvasgraphnodeauthoringtestsupport';
