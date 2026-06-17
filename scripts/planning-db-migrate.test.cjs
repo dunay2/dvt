@@ -1061,6 +1061,10 @@ test('tracked migrations retire superseded aliases and remap DBT node card owner
     ownershipMigration.sql,
     /apps\/web\/src\/app\/components\/canvas\/DbtNodeComponent\*/
   );
+  assert.match(
+    ownershipMigration.sql,
+    /join planning_query_store\.governance_component_local_definitions component/
+  );
   assert.match(ownershipMigration.sql, /SYS-WEB-CANVAS-NODE-CONTEXT-MENU-MODEL/);
   assert.match(ownershipMigration.sql, /SYS-WEB-CANVAS-NODE-RENDERING-COMPONENTS/);
   assert.doesNotMatch(

@@ -131,7 +131,13 @@ insert into planning_query_store.governance_component_local_ownership_patterns (
   pattern,
   pattern_order
 )
-values
+select
+  ownership.component_id,
+  ownership.pattern_kind,
+  ownership.pattern,
+  ownership.pattern_order
+from (
+  values
   (
     'SYS-WEB-CANVAS-DBT-NODE-CARD',
     'owns',
@@ -156,6 +162,9 @@ values
     'apps/web/src/app/components/canvas/DbtNodeComponent*',
     0
   )
+) as ownership(component_id, pattern_kind, pattern, pattern_order)
+join planning_query_store.governance_component_local_definitions component
+  on component.component_id = ownership.component_id
 on conflict (component_id, pattern_kind, pattern) do update set
   pattern_order = excluded.pattern_order;
 
