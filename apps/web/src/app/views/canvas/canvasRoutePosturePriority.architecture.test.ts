@@ -179,26 +179,18 @@ describe('canvas route posture priority architecture', () => {
   });
 
   it('keeps Canvas viewport mocks in named test-local components for static analysis', () => {
-    const viewportTestSource = readAppSource('CanvasViewport.test.tsx');
+    const viewportTestHarnessSource = readAppSource('CanvasViewport.testHarness.tsx');
 
-    expect(viewportTestSource).toContain('type MockMiniMapProps = Readonly<{');
-    expect(viewportTestSource).toContain('function MockMiniMap(');
-    expect(viewportTestSource).not.toContain('MiniMap: ({');
+    expect(viewportTestHarnessSource).toContain('type MockMiniMapProps = Readonly<{');
+    expect(viewportTestHarnessSource).toContain('function MockMiniMap(');
+    expect(viewportTestHarnessSource).not.toContain('MiniMap: ({');
   });
 
   it('keeps the active web graph slice free of retired-route shims', () => {
     const activeSources = [
       readRepoFile('apps/web/src/app/services/plans/plansService.ts'),
       readRepoFile('apps/web/src/app/services/runs/runsService.ts'),
-      readRepoFile('apps/web/src/app/services/workspace/workspacePorts.api.test.ts'),
-      readRepoFile('apps/web/src/app/stores/uiLayoutStore.test.ts'),
-      readRepoFile('apps/web/src/app/views/Canvas.routeStates.smoke.test.tsx'),
-      readRepoFile('apps/web/src/app/views/Canvas.routeStates.first-canvas-policy.test.tsx'),
-      readRepoFile('apps/web/src/app/views/Canvas.routeStates.host-cycle-persistence.test.tsx'),
-      readRepoFile('apps/web/src/app/views/Canvas.routeStates.backend-recovery-priority.test.tsx'),
-      readRepoFile('apps/web/src/app/views/canvas/CanvasViewport.test.tsx'),
       readRepoFile('apps/web/src/app/views/canvas/canvasPalette.ts'),
-      readRepoFile('apps/web/src/app/views/canvas/canvasPalette.test.ts'),
       readRepoFile(
         'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md'
       ),
