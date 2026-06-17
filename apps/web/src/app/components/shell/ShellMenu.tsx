@@ -20,6 +20,7 @@ import {
 import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
 import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { Button } from '../ui/button';
+import type { ShellViewControlsReadModel } from './shellViewControlsModel';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -46,6 +47,7 @@ const GRID_OPTIONS = [
 
 type ShellMenuProps = {
   readonly kind: 'workspace' | 'view';
+  readonly viewControls: ShellViewControlsReadModel;
   readonly inspectorPanelVisible: boolean;
   readonly consolePanelVisible: boolean;
   readonly focusMode: boolean;
@@ -65,6 +67,7 @@ type ShellMenuProps = {
 
 export function ShellMenu({
   kind,
+  viewControls,
   inspectorPanelVisible,
   consolePanelVisible,
   focusMode,
@@ -139,28 +142,34 @@ export function ShellMenu({
         ) : (
           <>
             <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem
-              checked={inspectorPanelVisible}
-              onCheckedChange={toggleInspectorPanel}
-            >
-              <PanelRightClose className="mr-2 size-4" />
-              {copy.inspectorPanel}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={consolePanelVisible}
-              onCheckedChange={toggleConsolePanel}
-            >
-              <TerminalSquare className="mr-2 size-4" />
-              {copy.consolePanel}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={focusMode} onCheckedChange={toggleFocusMode}>
-              {focusMode ? (
-                <Minimize2 className="mr-2 size-4" />
-              ) : (
-                <Maximize2 className="mr-2 size-4" />
-              )}
-              {copy.focusMode}
-            </DropdownMenuCheckboxItem>
+            {viewControls.showInspectorPanelToggle ? (
+              <DropdownMenuCheckboxItem
+                checked={inspectorPanelVisible}
+                onCheckedChange={toggleInspectorPanel}
+              >
+                <PanelRightClose className="mr-2 size-4" />
+                {copy.inspectorPanel}
+              </DropdownMenuCheckboxItem>
+            ) : null}
+            {viewControls.showConsolePanelToggle ? (
+              <DropdownMenuCheckboxItem
+                checked={consolePanelVisible}
+                onCheckedChange={toggleConsolePanel}
+              >
+                <TerminalSquare className="mr-2 size-4" />
+                {copy.consolePanel}
+              </DropdownMenuCheckboxItem>
+            ) : null}
+            {viewControls.showFocusModeToggle ? (
+              <DropdownMenuCheckboxItem checked={focusMode} onCheckedChange={toggleFocusMode}>
+                {focusMode ? (
+                  <Minimize2 className="mr-2 size-4" />
+                ) : (
+                  <Maximize2 className="mr-2 size-4" />
+                )}
+                {copy.focusMode}
+              </DropdownMenuCheckboxItem>
+            ) : null}
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <span
@@ -228,7 +237,7 @@ export function ShellMenu({
             <DropdownMenuSeparator />
             <DropdownMenuLabel>{copy.viewOptions}</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => setGridSize(20)}>{copy.resetGrid}</DropdownMenuItem>
-            <CanvasViewMenuControls />
+            {viewControls.showCanvasViewContributionControls ? <CanvasViewMenuControls /> : null}
           </>
         )}
       </DropdownMenuContent>

@@ -144,6 +144,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
     cy.contains('Contexto del workspace').should('not.exist');
     cy.contains('Contexto Git').should('not.exist');
+    cy.contains('Panel inspector').should('not.exist');
     cy.contains('Opciones de vista').should('be.visible');
     cy.get('body').type('{esc}');
 

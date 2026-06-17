@@ -16,6 +16,7 @@ import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
 import { ShellProjectIdentityBadge } from './shell/ShellProjectIdentityBadge';
 import { ShellWorkspaceContextMenu } from './shell/ShellWorkspaceContextMenu';
+import { resolveShellViewControls } from './shell/shellViewControlsModel';
 import type { ShellTopBarProps } from './shell/types';
 import { TooltipProvider } from './ui/tooltip';
 
@@ -48,6 +49,7 @@ export function ShellTopBar({
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
   const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
   const exposeWorkspaceNavigationMenu = focusMode || navigationDisposition.railMode === 'hidden';
+  const shellViewControls = resolveShellViewControls(navigationDisposition);
   const projectIdentityBadge = buildProjectIdentityBadge({
     workspaceBootstrap,
     selectedTenant,
@@ -85,6 +87,7 @@ export function ShellTopBar({
         {exposeWorkspaceNavigationMenu && (
           <ShellMenu
             kind="workspace"
+            viewControls={shellViewControls}
             inspectorPanelVisible={inspectorPanelVisible}
             consolePanelVisible={consolePanelVisible}
             focusMode={focusMode}
@@ -104,6 +107,7 @@ export function ShellTopBar({
         )}
         <ShellMenu
           kind="view"
+          viewControls={shellViewControls}
           inspectorPanelVisible={inspectorPanelVisible}
           consolePanelVisible={consolePanelVisible}
           focusMode={focusMode}

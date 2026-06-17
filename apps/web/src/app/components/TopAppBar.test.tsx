@@ -100,6 +100,10 @@ describe('ShellTopBar workspace context', () => {
       await waitFor(() => {
         expect(document.body.textContent).toContain('View options');
         expect(document.body.textContent).toContain('Panels');
+        expect(document.body.textContent).not.toContain(resolveShellTopBarCopy().inspectorPanel);
+        expect(document.body.textContent).not.toContain(
+          resolveShellTopBarCopy('es-ES').inspectorPanel
+        );
         expect(
           document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
         ).toHaveLength(0);
