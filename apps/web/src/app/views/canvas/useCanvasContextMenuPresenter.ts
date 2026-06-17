@@ -97,6 +97,10 @@ export function useCanvasContextMenuPresenter({
     }
 
     const handleDocumentPointerDown = (event: Event): void => {
+      if (event instanceof MouseEvent && event.button !== 0) {
+        return;
+      }
+
       const target = event.target;
       if (target instanceof Node && menuRef.current?.contains(target)) {
         return;

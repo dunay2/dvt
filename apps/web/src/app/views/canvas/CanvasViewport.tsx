@@ -243,7 +243,11 @@ function CanvasViewportReactFlowSurface({
     onOpenCanvasSettings,
   });
 
-  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = () => {
+  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
+    if (typeof event.button === 'number' && event.button !== 0) {
+      return;
+    }
+
     contextMenuPresenter.closeContextMenu();
   };
   const handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']> = (event, node) => {

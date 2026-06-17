@@ -518,6 +518,71 @@ describe('CanvasViewport', () => {
     expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
   });
 
+  it('keeps the background context menu open through the right-button pane click emitted by the same gesture', async () => {
+    const props = buildProps({
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+    const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault: vi.fn(),
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
+
+    await act(async () => {
+      paneClick?.({ button: 2 } as React.MouseEvent<Element>);
+    });
+
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
+  });
+
+  it('keeps the background context menu open through a right-button document pointer event', async () => {
+    const props = buildProps({
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    await act(async () => {
+      root.render(<CanvasViewport {...props} />);
+    });
+
+    const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+
+    await act(async () => {
+      paneContextMenu?.({
+        preventDefault: vi.fn(),
+        clientX: 480,
+        clientY: 320,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
+
+    await act(async () => {
+      document.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 2 }));
+    });
+
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
+  });
+
   it('disambiguates source import from local source node creation in the background context menu', async () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const props = buildProps({
