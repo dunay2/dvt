@@ -135,14 +135,18 @@ export function useCanvasContextMenuPresenter({
       }
 
       const lastPanePosition = lastPaneContextMenuScreenPositionRef.current;
-      const isPendingEchoAtContextPoint =
+      const isPendingBrowserClickEcho =
+        pendingPaneClickEchoRef.current &&
+        lastContextMenuOpenedTargetKindRef.current === 'pane' &&
+        Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS;
+      const isPendingDelayedEchoAtContextPoint =
         pendingPaneClickEchoRef.current &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
         lastPanePosition != null &&
         Math.abs(event.clientX - lastPanePosition.x) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX &&
         Math.abs(event.clientY - lastPanePosition.y) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX;
 
-      if (isPendingEchoAtContextPoint) {
+      if (isPendingBrowserClickEcho || isPendingDelayedEchoAtContextPoint) {
         pendingPaneClickEchoRef.current = false;
         return;
       }

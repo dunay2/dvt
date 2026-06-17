@@ -181,6 +181,13 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.get('.react-flow__pane').should('be.visible').rightclick(320, 260, { force: true });
+    cy.get('.react-flow__pane').trigger('click', {
+      button: 0,
+      clientX: 356,
+      clientY: 288,
+      bubbles: true,
+      force: true,
+    });
 
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
     cy.wait(1_500);
