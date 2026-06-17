@@ -1244,6 +1244,90 @@ test('tracked migrations repoint Canvas create-document command test support rai
   assert.doesNotMatch(canvasCreateDocumentSupportMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations persist Web Canvas leaf component mapping', () => {
+  const migrations = readMigrationFiles();
+  const canvasLeafMappingMigration = migrations.find(
+    (migration) => migration.fileName === '116_web_canvas_leaf_component_mapping.sql'
+  );
+
+  assert.ok(canvasLeafMappingMigration);
+  for (const componentId of [
+    'SYS-WEB-CANVAS-GRAPH-VIEWPORT-PRESENTATION',
+    'SYS-WEB-CANVAS-NODE-WORKBENCH-FIELD-TESTS',
+    'SYS-WEB-CANVAS-NODE-WORKBENCH-OVERLAY',
+    'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
+    'SYS-WEB-CANVAS-SHELL-MAIN-PANEL-ARCHITECTURE-TEST',
+    'SYS-WEB-CANVAS-SHELL-TEST-HARNESS',
+    'SYS-WEB-CANVAS-VIEWPORT-TEST-HARNESS',
+  ]) {
+    assert.match(canvasLeafMappingMigration.sql, new RegExp(componentId));
+  }
+
+  assert.match(canvasLeafMappingMigration.sql, /CanvasNodeWorkbenchOverlay\.tsx/);
+  assert.match(canvasLeafMappingMigration.sql, /status = excluded\.status/);
+  assert.match(canvasLeafMappingMigration.sql, /RESP-WEB-CANVAS-NODE-WORKBENCH-OVERLAY/);
+  assert.match(canvasLeafMappingMigration.sql, /status = 'drift'/);
+  assert.match(canvasLeafMappingMigration.sql, /REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-OVERLAY/);
+  assert.match(canvasLeafMappingMigration.sql, /TEST-WEB-CANVAS-SHELL-MAIN-PANEL-ARCHITECTURE/);
+  assert.match(
+    canvasLeafMappingMigration.sql,
+    /insert into planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(canvasLeafMappingMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(canvasLeafMappingMigration.sql, /insert into architecture\.component_relation/);
+  assert.match(canvasLeafMappingMigration.sql, /insert into architecture\.component_test/);
+  assert.doesNotMatch(canvasLeafMappingMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasLeafMappingMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations resolve duplicate Web Canvas node workbench panel mapping', () => {
+  const migrations = readMigrationFiles();
+  const duplicateResolutionMigration = migrations.find(
+    (migration) => migration.fileName === '117_web_canvas_node_workbench_duplicate_resolution.sql'
+  );
+
+  assert.ok(duplicateResolutionMigration);
+  assert.match(duplicateResolutionMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-FIELDS/);
+  assert.match(duplicateResolutionMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-PANEL/);
+  assert.match(duplicateResolutionMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(duplicateResolutionMigration.sql, /status = 'superseded'/);
+  assert.match(duplicateResolutionMigration.sql, /status = 'deprecated'/);
+  assert.match(duplicateResolutionMigration.sql, /REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-FIELDS/);
+  assert.match(
+    duplicateResolutionMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-INSPECTOR-PANEL/
+  );
+  assert.match(
+    duplicateResolutionMigration.sql,
+    /REL-WEB-APP-COMPONENTS-CONTAINS-CANVAS-INSPECTOR-PANEL/
+  );
+  assert.match(duplicateResolutionMigration.sql, /useCanvasViewportGraphModel\.ts/);
+  assert.match(duplicateResolutionMigration.sql, /required = false/);
+  assert.doesNotMatch(duplicateResolutionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(duplicateResolutionMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize Web Canvas DBT and DVT field components', () => {
+  const migrations = readMigrationFiles();
+  const fieldCanonicalizationMigration = migrations.find(
+    (migration) => migration.fileName === '118_web_canvas_field_component_canonicalization.sql'
+  );
+
+  assert.ok(fieldCanonicalizationMigration);
+  assert.match(fieldCanonicalizationMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-DBT-FIELDS/);
+  assert.match(fieldCanonicalizationMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-DVT-FIELDS/);
+  assert.match(fieldCanonicalizationMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-FIELDS/);
+  assert.match(fieldCanonicalizationMigration.sql, /status = 'superseded'/);
+  assert.match(fieldCanonicalizationMigration.sql, /status = 'deprecated'/);
+  assert.match(fieldCanonicalizationMigration.sql, /relation-retirement rail/);
+  assert.match(fieldCanonicalizationMigration.sql, /REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-FIELDS/);
+  assert.match(fieldCanonicalizationMigration.sql, /REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-PANEL/);
+  assert.match(fieldCanonicalizationMigration.sql, /status = 'implemented'/);
+  assert.match(fieldCanonicalizationMigration.sql, /required = false/);
+  assert.doesNotMatch(fieldCanonicalizationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(fieldCanonicalizationMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(
