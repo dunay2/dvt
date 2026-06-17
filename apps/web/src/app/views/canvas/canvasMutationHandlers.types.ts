@@ -1,11 +1,8 @@
-import type {
-  Edge,
-  EdgeChange,
-  NodeChange,
-} from '@xyflow/react';
+import type { Edge, EdgeChange, NodeChange } from '@xyflow/react';
 
 import type { ImportSourcesResult } from '../../ports/workspace';
 import type {
+  CanvasSourceImportCompletionContext,
   CanvasMutationEffects,
   CanvasMutationPolicy,
   CanvasMutationState,
@@ -22,6 +19,9 @@ export type CanvasGraphChangeHandlers = {
 
 export type CanvasSourceImportHandlers = {
   importedNodeFocusIds: string[];
-  handleSourceImportComplete: (result: ImportSourcesResult) => void;
+  handleSourceImportComplete: (
+    result: ImportSourcesResult,
+    context?: CanvasSourceImportCompletionContext
+  ) => void;
   handleImportedNodeFocusComplete: () => void;
 };

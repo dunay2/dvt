@@ -20,6 +20,9 @@ function graphChange(contracts: CanvasMutationContracts): CanvasGraphChangeContr
 
 function sourceImport(contracts: CanvasMutationContracts): CanvasSourceImportContracts {
   return {
+    state: {
+      graphModel: contracts.state.graphModel,
+    },
     effects: contracts.effects,
     policy: contracts.policy,
   };

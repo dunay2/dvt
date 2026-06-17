@@ -10,6 +10,10 @@ type CanvasDraftSessionSetter = Dispatch<SetStateAction<CanvasDraftSession>>;
 type CanvasNodePositions = Record<string, { x: number; y: number }>;
 type CanvasLayoutCompletionHandler = (positions: CanvasNodePositions) => void;
 
+export type CanvasSourceImportCompletionContext = Readonly<{
+  canvasPosition: { x: number; y: number };
+}>;
+
 export type CanvasGraphModelLike = {
   nodes: Node[];
   edges: Edge[];
@@ -102,6 +106,11 @@ export type CanvasSourceImportEffects = {
   setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
+  onLayoutComplete: CanvasLayoutCompletionHandler;
+};
+
+export type CanvasSourceImportState = {
+  graphModel: CanvasGraphModelLike;
 };
 
 export type CanvasSourceImportPolicy = {
@@ -110,6 +119,7 @@ export type CanvasSourceImportPolicy = {
 };
 
 export type CanvasSourceImportContracts = {
+  state: CanvasSourceImportState;
   effects: CanvasSourceImportEffects;
   policy: CanvasSourceImportPolicy;
 };

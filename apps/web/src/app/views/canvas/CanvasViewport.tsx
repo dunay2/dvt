@@ -86,7 +86,7 @@ type CanvasViewportProps = {
   readonly importedNodeFocusIds: string[];
   readonly onImportedNodeFocusComplete: () => void;
   readonly canOpenSourceImport?: boolean;
-  readonly onOpenSourceImport?: () => void;
+  readonly onOpenSourceImport?: (flowPosition?: { x: number; y: number }) => void;
   readonly canOpenProjectExplorer?: boolean;
   readonly onOpenProjectExplorer?: () => void;
   readonly canPreviewExecutionPlan?: boolean;
@@ -243,7 +243,11 @@ function CanvasViewportReactFlowSurface({
     onOpenCanvasSettings,
   });
 
-  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = () => {
+  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
+    if (typeof event.button === 'number' && event.button !== 0) {
+      return;
+    }
+
     contextMenuPresenter.closeContextMenu();
   };
   const handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']> = (event, node) => {

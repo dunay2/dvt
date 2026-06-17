@@ -129,7 +129,13 @@ function CanvasShellViewport({
       onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
       canOpenSourceImport={typeof onOpenSourceImport === 'function'}
       onOpenSourceImport={
-        onOpenSourceImport == null ? undefined : () => onOpenSourceImport(undefined)
+        onOpenSourceImport == null
+          ? undefined
+          : (flowPosition) =>
+              onOpenSourceImport(
+                undefined,
+                flowPosition == null ? undefined : { canvasPosition: flowPosition }
+              )
       }
       canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
       onOpenProjectExplorer={onOpenProjectExplorer}
