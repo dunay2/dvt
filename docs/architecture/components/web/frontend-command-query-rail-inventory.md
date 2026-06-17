@@ -456,13 +456,10 @@ The detailed Canvas catalog remains canonical in
 `graph/canvas-workbench-command-query-catalog.md`. Frontend-wide inventory
 groups those rails by concern:
 
-- Shell/tab presentation queries and commands:
+- Shell and contextual Canvas presentation queries and commands:
   - `ListShellNavigationItems`;
-  - `ListCanvasWorkbenchTabs`;
-  - `ResolveCanvasWorkbenchContext`;
-  - `SelectCanvasWorkbenchTab`;
   - `RequestCanvasExecutionScope`;
-  - `OpenCanvasScopedRunTab`.
+  - `RenderCanvasContextualGraphSurface`.
 - Plugin placement:
   - `RegisterPluginViewPlacement`.
 - Layout and viewport:
@@ -496,10 +493,9 @@ groups those rails by concern:
   - `ExportProjectSnapshot`;
   - `ValidateProjectImport`;
   - `ImportProjectSnapshot`.
-- Governance and browser proof:
+- Governance:
   - `RecordCanvasFowlerCanon`;
-  - `ClassifyCanvasFowlerDisposition`;
-  - `VerifyCanvasWorkbenchVisualPosture`.
+  - `ClassifyCanvasFowlerDisposition`.
 
 ## Repetitions And Consolidation Opportunities
 

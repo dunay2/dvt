@@ -17,8 +17,8 @@ component_type: user-stories
 ### Canvas maintainer
 
 As a Canvas maintainer, I want a Canvas Fowler finding to resolve to one
-component owner so that graph strategy, runtime policy, workbench tabs, layout
-projection, and browser proof do not compete for the same decision.
+component owner so that graph strategy, runtime policy, contextual surfaces,
+layout projection, and browser proof do not compete for the same decision.
 
 Acceptance:
 
@@ -26,21 +26,21 @@ Acceptance:
   and admission components.
 - Accepted TF-E2-POL runtime-policy findings remain owned by the runtime-policy
   boundary.
-- Workbench tab findings route to `CanvasWorkbenchTabs`.
+- Contextual Canvas surface findings route to their active component owner.
 - Layout findings route to `CanvasLayoutPersistence`.
 
 ### Frontend maintainer
 
-As a frontend maintainer, I want global shell navigation and Canvas-local tabs
-to stay separate so that mature-workbench behavior does not drift into a
-single navigation model.
+As a frontend maintainer, I want global shell navigation and Canvas contextual
+surfaces to stay separate so that mature-workbench behavior does not drift into
+a single navigation model.
 
 Acceptance:
 
 - `ListShellNavigationItems` remains a shell query.
-- `ListCanvasWorkbenchTabs` remains a Canvas-local query.
-- `VerifyCanvasWorkbenchVisualPosture` proves rendered placement without
-  redefining product semantics.
+- `RenderCanvasContextualGraphSurface` remains a Canvas-local query.
+- Browser proof stays attached to the component evidence row without redefining
+  product semantics.
 
 ### Planning steward
 
@@ -62,8 +62,9 @@ query rail so that geometry assertions remain explainable and reviewable.
 
 Acceptance:
 
-- Tab placement proof maps to `VerifyCanvasWorkbenchVisualPosture`.
-- Label readability proof maps to the same read model.
+- Graph composition proof maps to the current Canvas component evidence row.
+- Label readability proof maps to the component or presenter that owns the
+  rendered surface.
 - Route locality proof checks Canvas outlet ownership rather than shell-nav
   placement.
 

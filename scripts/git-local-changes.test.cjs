@@ -34,7 +34,7 @@ test('listLocalChangedFiles excludes upstream-only base-vs-worktree changes', ()
     }
 
     if (args.join(' ') === 'ls-files --others --exclude-standard') {
-      return ['apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts'];
+      return ['apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx'];
     }
 
     return [];
@@ -48,7 +48,7 @@ test('listLocalChangedFiles excludes upstream-only base-vs-worktree changes', ()
     [
       'apps/web/src/app/routes.ts',
       'apps/web/src/app/views/Canvas.tsx',
-      'apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts',
+      'apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx',
     ]
   );
   assert.ok(calls.includes('ls-files --others --exclude-standard'));

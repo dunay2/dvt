@@ -17,10 +17,8 @@ component_type: governance
 - `RecordCanvasFowlerCanon(input)`: records a Canvas Fowler input as `closed`,
   `reference`, `accepted`, `superseded`, or `promoted-to-task`.
 - `ClassifyCanvasFowlerDisposition(input)`: returns the canonical owner,
-  affected component guide, proof expectation, and whether Planning DB work is
-  required.
-- `VerifyCanvasWorkbenchVisualPosture(input)`: test-only query for rendered
-  Canvas workbench tab placement, readability, and route locality.
+  affected component guide, proof expectation, whether Planning DB work is
+  required, and the current component owner for rendered Canvas proof.
 
 ## Invariants
 
@@ -28,8 +26,8 @@ component_type: governance
   Planning DB owns the task.
 - Runtime Canvas behavior remains owned by the existing Canvas component guide
   family, not by this canon component.
-- Shell navigation and Canvas-local workbench tabs remain separate read models.
-- Browser visual proof remains a semantic fitness query, not product authority.
+- Shell navigation and Canvas contextual surfaces remain separate read models.
+- Browser visual proof remains component evidence, not product authority.
 - Docs, user stories, review status, component guide links, and architecture
   tests must name the same owner and rail.
 
@@ -54,20 +52,20 @@ stateDiagram-v2
 
 - Canvas maintainers use this component to decide whether a Fowler finding is
   already owned by TF-E2/F-15-era component work or needs a new task.
-- Frontend maintainers use it to keep shell navigation, Canvas tabs, layout
-  projection, and visual proof separated.
+- Frontend maintainers use it to keep shell navigation, Canvas contextual
+  surfaces, layout projection, and visual proof separated.
 - Planning stewards use it to prevent mandatory proposals from becoming orphan
   queues.
-- Browser proof reviewers use it to route Cypress claims through
-  `VerifyCanvasWorkbenchVisualPosture`.
+- Browser proof reviewers use it to route Cypress claims through the current
+  component owner and evidence row.
 
 ## Command And Query Rail
 
-| Rail                                 | Type    | Owner                                 | Surface                                              |
-| ------------------------------------ | ------- | ------------------------------------- | ---------------------------------------------------- |
-| `RecordCanvasFowlerCanon`            | command | Canvas Fowler canon aggregate         | Planning DB task closure and review-board updates    |
-| `ClassifyCanvasFowlerDisposition`    | query   | Canvas Fowler disposition read model  | Component guide, plan, and review status board       |
-| `VerifyCanvasWorkbenchVisualPosture` | query   | Canvas workbench visual-posture model | Cypress/browser geometry and label-readability proof |
+| Rail                                 | Type    | Owner                                | Surface                                             |
+| ------------------------------------ | ------- | ------------------------------------ | --------------------------------------------------- |
+| `RecordCanvasFowlerCanon`            | command | Canvas Fowler canon aggregate        | Planning DB task closure and review-board updates   |
+| `ClassifyCanvasFowlerDisposition`    | query   | Canvas Fowler disposition read model | Component guide, plan, and review status board      |
+| `RenderCanvasContextualGraphSurface` | query   | Canvas contextual graph surface      | Current browser/component proof for rendered Canvas |
 
 ## Semantic Fitness Function
 
@@ -84,7 +82,7 @@ presence.
 flowchart TD
   Canon["Canvas Fowler Canon"]
   CQ["Canvas Workbench Command Query Catalog"]
-  Tabs["Canvas Workbench Tabs"]
+  Context["Canvas Contextual Surfaces"]
   Layout["Canvas Layout Persistence"]
   Policy["Canvas Runtime Policy"]
   Strategy["Canvas Graph Strategy"]
@@ -92,7 +90,7 @@ flowchart TD
   Proof["Semantic Fitness Tests"]
 
   Canon --> CQ
-  Canon --> Tabs
+  Canon --> Context
   Canon --> Layout
   Canon --> Policy
   Canon --> Strategy

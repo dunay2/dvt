@@ -70,28 +70,26 @@ semantics.
 | `web.component.canvas.CanvasSurfaceStrategy`  | CanvasSurfaceStrategy | query-view       | current          | extract        | Canvas workbench         | Project DBT and DVT Canvas surface placement policy through explicit runtime strategies.    | `@dvt/web` | `/canvas`                                                                       | dbt; dvt                                         | bottom drawer rendering remains separate product slice                          | `graphStrategyRegistry.test.ts`; `canvasDraftAuthoringComponent.architecture.test.ts` |
 | `web.component.canvas.SourceImportDialog`     | SourceImportDialog    | modal            | current          | harden         | Canvas source discovery  | Browse warehouse connections, schemas, tables, columns, and import selected sources.        | `@dvt/web` | `/canvas`                                                                       | dbt; dvt-warehouse-source                        | modal-first UX still needs browser proof after panel retirement                 | `SourceImportWizard.test.tsx`; `sourceImportWizardModel.test.ts`                      |
 | `web.component.canvas.NodeWorkbench`          | NodeWorkbench         | canvas-inspector | partial          | harden         | Canvas node authoring    | Present node properties, columns, metadata, tests, and authoring commands for selection.    | `@dvt/web` | `/canvas`                                                                       | dbt; dvt                                         | permanent inspector and contextual workbench are not yet converged              | `nodePropertiesReadModel.test.ts`; `CanvasInspectorPanel.test.tsx`                    |
-| `web.component.canvas.CanvasWorkbenchTabs`    | CanvasWorkbenchTabs   | tab-strip        | retire           | retire         | Canvas workbench         | Retired route tabs; Canvas route no longer mounts the strip/panel.                          | `@dvt/web` | `/canvas/:workbenchTab`                                                         | dbt; monitoring                                  | delete legacy modules after drawer/contextual workbench migration               | `canvasWorkbenchTabs.test.ts`; `canvasWorkbenchTabs.architecture.test.ts`             |
 
 ## Frontend Surface Component Links
 
-| Component ID                                  | Surface ID         | Route path              | Placement kind   | Placement order |
-| --------------------------------------------- | ------------------ | ----------------------- | ---------------- | --------------- |
-| `web.component.shell.AppShellFrame`           | `web.shell.root`   | `/`                     | shell            | 10              |
-| `web.component.shell.ShellTopBar`             | `web.shell.root`   | `/`                     | top-bar          | 20              |
-| `web.component.shell.LeftNavigationRail`      | `web.shell.root`   | `/`                     | left-navigation  | 30              |
-| `web.component.shell.BottomConsoleDrawer`     | `web.shell.root`   | `/`                     | bottom-drawer    | 90              |
-| `web.component.workbench.RouteWorkbenchFrame` | `web.canvas.graph` | `/canvas`               | primary-surface  | 40              |
-| `web.component.workbench.WorkbenchStates`     | `web.runs.list`    | `/runs`                 | primary-surface  | 50              |
-| `web.component.templates.TemplatesWorkbench`  | `web.templates`    | `/templates`            | primary-surface  | 40              |
-| `web.component.artifacts.ArtifactsWorkbench`  | `web.canvas.tabs`  | `/canvas/:workbenchTab` | workbench-tab    | 50              |
-| `web.component.canvas.CanvasShellChrome`      | `web.canvas.graph` | `/canvas`               | route-toolbar    | 20              |
-| `web.component.canvas.CanvasViewport`         | `web.canvas.graph` | `/canvas`               | primary-surface  | 45              |
-| `web.component.canvas.CanvasContextMenu`      | `web.canvas.graph` | `/canvas`               | context-menu     | 46              |
-| `web.component.canvas.GraphNodeCardStrategy`  | `web.canvas.graph` | `/canvas`               | graph-card       | 47              |
-| `web.component.canvas.CanvasSurfaceStrategy`  | `web.canvas.graph` | `/canvas`               | surface-policy   | 48              |
-| `web.component.canvas.SourceImportDialog`     | `web.canvas.graph` | `/canvas`               | modal            | 60              |
-| `web.component.canvas.NodeWorkbench`          | `web.canvas.graph` | `/canvas`               | context-panel    | 70              |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `web.canvas.tabs`  | `/canvas/:workbenchTab` | legacy-tab-strip | 10              |
+| Component ID                                  | Surface ID         | Route path              | Placement kind  | Placement order |
+| --------------------------------------------- | ------------------ | ----------------------- | --------------- | --------------- |
+| `web.component.shell.AppShellFrame`           | `web.shell.root`   | `/`                     | shell           | 10              |
+| `web.component.shell.ShellTopBar`             | `web.shell.root`   | `/`                     | top-bar         | 20              |
+| `web.component.shell.LeftNavigationRail`      | `web.shell.root`   | `/`                     | left-navigation | 30              |
+| `web.component.shell.BottomConsoleDrawer`     | `web.shell.root`   | `/`                     | bottom-drawer   | 90              |
+| `web.component.workbench.RouteWorkbenchFrame` | `web.canvas.graph` | `/canvas`               | primary-surface | 40              |
+| `web.component.workbench.WorkbenchStates`     | `web.runs.list`    | `/runs`                 | primary-surface | 50              |
+| `web.component.templates.TemplatesWorkbench`  | `web.templates`    | `/templates`            | primary-surface | 40              |
+| `web.component.artifacts.ArtifactsWorkbench`  | `web.canvas.tabs`  | `/canvas/:workbenchTab` | workbench-tab   | 50              |
+| `web.component.canvas.CanvasShellChrome`      | `web.canvas.graph` | `/canvas`               | route-toolbar   | 20              |
+| `web.component.canvas.CanvasViewport`         | `web.canvas.graph` | `/canvas`               | primary-surface | 45              |
+| `web.component.canvas.CanvasContextMenu`      | `web.canvas.graph` | `/canvas`               | context-menu    | 46              |
+| `web.component.canvas.GraphNodeCardStrategy`  | `web.canvas.graph` | `/canvas`               | graph-card      | 47              |
+| `web.component.canvas.CanvasSurfaceStrategy`  | `web.canvas.graph` | `/canvas`               | surface-policy  | 48              |
+| `web.component.canvas.SourceImportDialog`     | `web.canvas.graph` | `/canvas`               | modal           | 60              |
+| `web.component.canvas.NodeWorkbench`          | `web.canvas.graph` | `/canvas`               | context-panel   | 70              |
 
 ## Frontend Component Files
 
@@ -172,10 +170,6 @@ semantics.
 | `web.component.canvas.NodeWorkbench`          | `apps/web/src/app/components/inspector/nodePropertiesReadModel.ts`                    | view-model        | buildNodePropertiesReadModel              |
 | `web.component.canvas.NodeWorkbench`          | `apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts`               | test              | none                                      |
 | `web.component.canvas.NodeWorkbench`          | `apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx`                         | test              | none                                      |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `apps/web/src/app/views/canvas/CanvasWorkbenchTabStrip.tsx`                           | component         | CanvasWorkbenchTabStrip                   |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts`                                | model             | buildCanvasWorkbenchTabItems              |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts`                           | test              | none                                      |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts`              | architecture-test | none                                      |
 
 ## Frontend Component Command Query Rails
 
@@ -215,8 +209,6 @@ semantics.
 | `web.component.canvas.NodeWorkbench`          | `InspectCanvasNodeProperties`           | query   | `InspectCanvasNodeProperties`           | query       | implemented-local      | Canvas node properties read model          |
 | `web.component.canvas.NodeWorkbench`          | `ConfigureCanvasDbtNode`                | command | `ConfigureCanvasDbtNode`                | command     | implemented-local      | Canvas DBT node aggregate                  |
 | `web.component.canvas.NodeWorkbench`          | `ConfigureCanvasDvtNode`                | command | `ConfigureCanvasDvtNode`                | command     | implemented-local      | Canvas DVT node aggregate                  |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `ListCanvasWorkbenchTabs`               | query   | `ListCanvasWorkbenchTabs`               | query       | not-front-default      | Canvas workbench tab read model            |
-| `web.component.canvas.CanvasWorkbenchTabs`    | `SelectCanvasWorkbenchTab`              | command | `SelectCanvasWorkbenchTab`              | command     | not-front-default      | Canvas workbench route state               |
 
 ## Frontend Component Evidence
 
@@ -254,7 +246,3 @@ semantics.
 | `web.component.canvas.SourceImportDialog.unit`            | `web.component.canvas.SourceImportDialog`     | unit-test         | `apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts`           | accepted        |
 | `web.component.canvas.NodeWorkbench.unit`                 | `web.component.canvas.NodeWorkbench`          | unit-test         | `apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts`                    | accepted        |
 | `web.component.canvas.NodeWorkbench.presentation`         | `web.component.canvas.NodeWorkbench`          | presentation-test | `apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx`                              | accepted        |
-| `web.component.canvas.CanvasWorkbenchTabs.unit`           | `web.component.canvas.CanvasWorkbenchTabs`    | unit-test         | `apps/web/src/app/views/canvas/canvasWorkbenchTabs.test.ts`                                | accepted        |
-| `web.component.canvas.CanvasWorkbenchTabs.architecture`   | `web.component.canvas.CanvasWorkbenchTabs`    | architecture-test | `apps/web/src/app/views/canvas/canvasWorkbenchTabs.architecture.test.ts`                   | accepted        |
-| `web.component.canvas.CanvasWorkbenchTabs.route-hardcut`  | `web.component.canvas.CanvasWorkbenchTabs`    | architecture-test | `apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx`                          | accepted        |
-| `web.component.canvas.CanvasWorkbenchTabs.route-redirect` | `web.component.canvas.CanvasWorkbenchTabs`    | route-test        | `apps/web/src/app/routes.test.tsx`                                                         | accepted        |

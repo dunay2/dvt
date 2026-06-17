@@ -29,17 +29,17 @@ graph state, Git operations, or route-local workbench commands.
 
 ## Public API
 
-| API                              | Kind                | Rail                            | Contract                                                                                     |
-| -------------------------------- | ------------------- | ------------------------------- | -------------------------------------------------------------------------------------------- |
-| `ProjectIdentityBadge`           | read model          | `ResolveCanvasWorkbenchContext` | Carries active tenant, project, environment, deployment adapter, compact id, slug, and draft |
-| `ProjectIdentityBadgeInput`      | query input         | `ResolveCanvasWorkbenchContext` | Supplies session ids and bootstrap option labels                                             |
-| `buildProjectIdentityBadge`      | projection function | `ResolveCanvasWorkbenchContext` | Resolves labels and preserves raw ids when labels are unavailable                            |
-| `ShellProjectIdentityBadge`      | passive view        | `ResolveCanvasWorkbenchContext` | Renders breadcrumb-style identity labels with no mutation affordance                         |
-| `ShellWorkspaceContextMenu`      | details UI          | shell context display           | Opens read-only workspace context details                                                    |
-| `ShellWorkspaceContextDetails`   | passive view        | shell context display           | Displays tenant, project, environment, and deployment adapter without mutation controls      |
-| `TopAppBar.architecture.test.ts` | semantic fitness    | semantic posture proof          | Guards ownership, docs, invariants, and read-only posture                                    |
+| API                              | Kind                | Rail                           | Contract                                                                                     |
+| -------------------------------- | ------------------- | ------------------------------ | -------------------------------------------------------------------------------------------- |
+| `ProjectIdentityBadge`           | read model          | `GetEffectiveWorkspaceContext` | Carries active tenant, project, environment, deployment adapter, compact id, slug, and draft |
+| `ProjectIdentityBadgeInput`      | query input         | `GetEffectiveWorkspaceContext` | Supplies session ids and bootstrap option labels                                             |
+| `buildProjectIdentityBadge`      | projection function | `GetEffectiveWorkspaceContext` | Resolves labels and preserves raw ids when labels are unavailable                            |
+| `ShellProjectIdentityBadge`      | passive view        | `GetEffectiveWorkspaceContext` | Renders breadcrumb-style identity labels with no mutation affordance                         |
+| `ShellWorkspaceContextMenu`      | details UI          | shell context display          | Opens read-only workspace context details                                                    |
+| `ShellWorkspaceContextDetails`   | passive view        | shell context display          | Displays tenant, project, environment, and deployment adapter without mutation controls      |
+| `TopAppBar.architecture.test.ts` | semantic fitness    | semantic posture proof         | Guards ownership, docs, invariants, and read-only posture                                    |
 
-The browser posture proof is `VerifyCanvasWorkbenchVisualPosture`.
+The browser posture proof is the Canvas-first shell composition check.
 
 ## Invariants
 
@@ -139,8 +139,8 @@ checks more than import shape. It validates:
 - API, invariants, transitions, consumers, and diagrams stay documented.
 
 The browser posture proof in
-[`canvas-workbench-tabs.cy.ts`](../../../../../apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts)
-then checks the rendered Stage 1 behavior from the user surface.
+[`canvas-workbench-screen-composition.cy.ts`](../../../../../apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts)
+then checks the rendered Canvas-first shell behavior from the user surface.
 
 ## Drift Guard
 

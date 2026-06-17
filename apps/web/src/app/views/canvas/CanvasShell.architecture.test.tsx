@@ -103,8 +103,6 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_SOURCE).not.toContain('DbtExplorer');
     expect(CANVAS_SHELL_SOURCE).not.toContain('CanvasInspectorPanel');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasShellNodeWorkbenchOverlay');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('canvas-node-workbench-overlay');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasInspectorPanel');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainSurface(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('pointer-events-none h-full');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('pointer-events-auto h-full');

@@ -124,13 +124,13 @@ sequenceDiagram
 
 ## Command And Query Rails
 
-| Rail                                 | Type    | Owner                         | Use                                                             |
-| ------------------------------------ | ------- | ----------------------------- | --------------------------------------------------------------- |
-| `ResolveShellNavigationDisposition`  | query   | Frontend shell                | Decides whether Canvas hides the rail.                          |
-| `ListShellNavigationItems`           | query   | Frontend shell                | Supplies global route destinations for rail and menu rendering. |
-| `ResolveCanvasWorkbenchContext`      | query   | Canvas workbench presentation | Supplies read-only workspace and draft posture labels.          |
-| `CreateCanvasDocumentCommand`        | command | Canvas document               | Persists the first canvas document after template selection.    |
-| `VerifyCanvasWorkbenchVisualPosture` | query   | Browser/test read model       | Proves screen composition without creating product behavior.    |
+| Rail                                 | Type    | Owner                     | Use                                                             |
+| ------------------------------------ | ------- | ------------------------- | --------------------------------------------------------------- |
+| `ResolveShellNavigationDisposition`  | query   | Frontend shell            | Decides whether Canvas hides the rail.                          |
+| `ListShellNavigationItems`           | query   | Frontend shell            | Supplies global route destinations for rail and menu rendering. |
+| `GetEffectiveWorkspaceContext`       | query   | Frontend shell            | Supplies read-only workspace and draft posture labels.          |
+| `CreateCanvasDocumentCommand`        | command | Canvas document           | Persists the first canvas document after template selection.    |
+| `RenderCanvasContextualGraphSurface` | query   | Canvas graph presentation | Proves screen composition without creating product behavior.    |
 
 No backend command/query rail changes are introduced by this component.
 
