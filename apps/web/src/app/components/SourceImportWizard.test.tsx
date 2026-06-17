@@ -69,7 +69,7 @@ function buildWarehouseSourceImportPort(
       checkedAt: '2026-06-08T00:00:00.000Z',
       tableCount: 1,
     }),
-    importSources: async () => ({
+    importSources: async (input) => ({
       success: true,
       sourcesCreated: 1,
       tablesImported: 1,
@@ -77,9 +77,9 @@ function buildWarehouseSourceImportPort(
       importedNodeIds: ['src_erp_orders'],
       grouping: 'schema',
       options: {
-        includeColumns: false,
-        addTests: false,
-        addFreshness: false,
+        includeColumns: input.includeColumns,
+        addTests: input.addTests,
+        addFreshness: input.addFreshness,
       },
     }),
     ...overrides,
@@ -427,6 +427,28 @@ describe('SourceImportWizard', () => {
 
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('requests column metadata by default when attaching selected sources', async () => {
+    const importSources = vi.fn(buildWarehouseSourceImportPort().importSources);
+
+    await renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({ importSources }),
+    });
+
+    await clickClickableDivByText('Snowflake PROD');
+    await clickTab('Browse');
+    await clickClickableDivByText('ORDERS');
+    await clickTab('Selected');
+    await clickButtonContaining('Attach sources to canvas');
+
+    expect(importSources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      })
+    );
   });
 
   it('renders only the source import options declared by the active plugin', async () => {

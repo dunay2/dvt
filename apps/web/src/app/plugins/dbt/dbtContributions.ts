@@ -162,7 +162,7 @@ export const dbtContributions: PluginContributions = {
           label: 'Include Column Metadata',
           description:
             'Add column names and data types to YAML (stored under meta.warehouse_data_type).',
-          defaultEnabled: false,
+          defaultEnabled: true,
           order: 10,
         },
         {
