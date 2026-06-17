@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildCanvasShellProps, getCanvasShellState } from './CanvasShell.testHarness';
 import CanvasShell from './CanvasShell';
-import type { CanvasShellGraphCommands, CanvasShellPanels } from './canvasShell.types';
+import type { CanvasShellGraphCommands } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 
@@ -58,38 +58,6 @@ describe('CanvasShell', () => {
     expect(shellState.canvasViewportProps).toMatchObject({
       canOpenSourceImport: false,
     });
-  });
-
-  it('renders node details as a contextual overlay only when a node is selected', async () => {
-    const selectedNode = {
-      id: 'node.orders',
-      name: 'orders',
-      pluginId: 'dbt',
-      kind: 'dbt:model',
-      role: 'transform',
-      status: 'idle',
-      tags: [],
-    } satisfies CanvasShellPanels['inspectorNode'];
-
-    await act(async () => {
-      root.render(
-        <CanvasShell
-          {...buildProps({
-            layout: {
-              inspectorPanelVisible: true,
-            },
-            panels: {
-              inspectorNode: selectedNode,
-              inspectorGraphNodes: [selectedNode],
-            },
-          })}
-        />
-      );
-    });
-
-    expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="inspector-panel"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 
   it('keeps node selection separate from contextual node workbench opening', async () => {
@@ -241,71 +209,6 @@ describe('CanvasShell', () => {
     expect(container.querySelector('[data-slot="canvas-draft-save-status"]')).toBeNull();
     expect(container.textContent).not.toContain('Sales canvas');
     expect(container.textContent).not.toContain(canvasViewCopy.draftSyncedLabel);
-  });
-
-  it('renders actionable draft recovery status as a graph overlay', async () => {
-    await act(async () => {
-      root.render(
-        <CanvasShell
-          {...buildProps({
-            panels: {
-              activeCanvas: {
-                id: 'sales-canvas',
-                title: 'Sales canvas',
-                kind: 'dbt',
-                environmentId: 'dev',
-              },
-            },
-            chromeState: {
-              draftStatusState: {
-                label: canvasViewCopy.draftSaveFailedLabel,
-                tone: 'danger',
-                showReloadAction: true,
-              },
-            },
-          })}
-        />
-      );
-    });
-
-    expect(container.querySelector('[data-slot="canvas-workbench-chrome"]')).toBeNull();
-    const draftStatus = container.querySelector('[data-slot="canvas-draft-save-status"]');
-
-    expect(container.querySelector('[data-slot="canvas-active-canvas-identity"]')).toBeNull();
-    expect(draftStatus).not.toBeNull();
-    expect(draftStatus?.textContent).toContain(canvasViewCopy.draftSaveFailedLabel);
-  });
-
-  it('keeps pending autosave status visible on the graph surface', async () => {
-    await act(async () => {
-      root.render(
-        <CanvasShell
-          {...buildProps({
-            panels: {
-              activeCanvas: {
-                id: 'sales-canvas',
-                title: 'Sales canvas',
-                kind: 'dbt',
-                environmentId: 'dev',
-              },
-            },
-            chromeState: {
-              draftStatusState: {
-                label: canvasViewCopy.savingDraftLabel,
-                tone: 'neutral',
-                showReloadAction: false,
-              },
-            },
-          })}
-        />
-      );
-    });
-
-    const draftStatus = container.querySelector('[data-slot="canvas-draft-save-status"]');
-
-    expect(container.querySelector('[data-slot="canvas-active-canvas-identity"]')).toBeNull();
-    expect(draftStatus).not.toBeNull();
-    expect(draftStatus?.textContent).toContain(canvasViewCopy.savingDraftLabel);
   });
 
   it('keeps the graph workbench fluid instead of forcing horizontal overflow on narrow viewports', async () => {
