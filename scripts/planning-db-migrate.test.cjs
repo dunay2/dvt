@@ -660,6 +660,72 @@ test('tracked migrations expose component integrity and rail vocabulary query ra
   assert.match(integrityMigration.sql, /filesystem_coverage/);
 });
 
+test('tracked migrations expose code symbol duplicate and source drift query rails', () => {
+  const migrations = readMigrationFiles();
+  const codeSymbolMigration = migrations.find(
+    (migration) => migration.fileName === '105_code_symbol_duplicate_queries.sql'
+  );
+
+  assert.ok(codeSymbolMigration);
+  assert.match(
+    codeSymbolMigration.sql,
+    /create table if not exists planning_query_store\.code_symbols/
+  );
+  assert.match(
+    codeSymbolMigration.sql,
+    /create or replace view planning_query_store\.code_symbol_inventory_query/
+  );
+  assert.match(
+    codeSymbolMigration.sql,
+    /create or replace view planning_query_store\.code_symbol_exact_duplicate_query/
+  );
+  assert.match(
+    codeSymbolMigration.sql,
+    /create or replace view planning_query_store\.code_symbol_semantic_candidate_query/
+  );
+  assert.match(
+    codeSymbolMigration.sql,
+    /create or replace view planning_query_store\.governed_source_drift_query/
+  );
+  assert.match(codeSymbolMigration.sql, /exact_body_duplicate/);
+  assert.match(codeSymbolMigration.sql, /missing_source_file/);
+  assert.doesNotMatch(codeSymbolMigration.sql, /delete from planning_query_store\.code_symbols/);
+});
+
+test('tracked migrations keep the governance problem dashboard on lightweight views', () => {
+  const migrations = readMigrationFiles();
+  const dashboardMigration = migrations.find(
+    (migration) => migration.fileName === '106_lightweight_governance_problem_dashboard.sql'
+  );
+
+  assert.ok(dashboardMigration);
+  assert.match(
+    dashboardMigration.sql,
+    /create or replace view planning_query_store\.governance_problem_dashboard_query/
+  );
+  assert.match(dashboardMigration.sql, /planning_query_store\.code_symbol_problem_query/);
+  assert.match(dashboardMigration.sql, /planning_query_store\.governed_source_drift_query/);
+  assert.doesNotMatch(dashboardMigration.sql, /planning_query_store\.component_integrity_query/);
+});
+
+test('tracked migrations retire active TAREA rail duplicates and repoint missing local rail sources', () => {
+  const migrations = readMigrationFiles();
+  const sourceDriftMigration = migrations.find(
+    (migration) => migration.fileName === '107_retire_tarea_rail_duplicates_and_repoint_sources.sql'
+  );
+
+  assert.ok(sourceDriftMigration);
+  assert.match(sourceDriftMigration.sql, /CANVAS-SOURCE-IMPORT-CONTEXT-PLACEMENT-20260617/);
+  assert.match(sourceDriftMigration.sql, /CANVAS-DBT-TEST-METADATA-WORKBENCH-20260616/);
+  assert.match(sourceDriftMigration.sql, /CANVAS-EMPTY-CONTEXT-MENU-PASSTHROUGH-20260616/);
+  assert.match(sourceDriftMigration.sql, /CANVAS-CONTEXT-MENU-STABLE-RIGHT-CLICK-20260617/);
+  assert.match(sourceDriftMigration.sql, /agent-prompt:21-component-architecture-fitness-dbfirst/);
+  assert.match(sourceDriftMigration.sql, /planning-db:task:E\/E-MS-GAP-012-TRANSFORM-SELECTION-1/);
+  assert.match(sourceDriftMigration.sql, /rail_status = 'retired'/);
+  assert.match(sourceDriftMigration.sql, /planning-db-component-coherence-prompt-20260615\.md/);
+  assert.doesNotMatch(sourceDriftMigration.sql, /delete from planning_query_store/);
+});
+
 test('tracked migrations exclude retired rails from active duplicate vocabulary checks', () => {
   const migrations = readMigrationFiles();
   const deprecationMigration = migrations.find(

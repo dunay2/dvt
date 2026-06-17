@@ -10,6 +10,7 @@ const {
 test('Planning DB integrity check reports historical debt without failing report mode', () => {
   const result = buildIntegrityCheckResult({
     componentRows: [],
+    sourceDriftRows: [],
     railRows: [
       {
         finding_kind: 'gap_rail',
@@ -35,6 +36,13 @@ test('Planning DB integrity check reports historical debt without failing report
       blocker: 0,
       error: 0,
       warning: 1,
+      info: 0,
+    },
+    sourceDrift: {
+      total: 0,
+      blocker: 0,
+      error: 0,
+      warning: 0,
       info: 0,
     },
   });
@@ -72,6 +80,40 @@ test('Planning DB integrity check fails report mode on progressive regressions',
     },
   ]);
   assert.match(formatIntegrityCheckSummary(result), /progressive_baseline fail/);
+});
+
+test('Planning DB integrity check fails report mode on governed source drift', () => {
+  const result = buildIntegrityCheckResult({
+    componentRows: [],
+    railRows: [],
+    sourceDriftRows: [
+      {
+        finding_kind: 'missing_source_file',
+        severity: 'error',
+        source_path: 'buzon/TAREA.TXT',
+      },
+    ],
+    strict: false,
+  });
+
+  assert.equal(result.exitCode, 1);
+  assert.deepEqual(result.baselineViolations, [
+    {
+      surface: 'source_drift',
+      kind: 'missing_source_file',
+      metric: 'total',
+      actual: 1,
+      allowed: 0,
+    },
+    {
+      surface: 'source_drift',
+      kind: 'missing_source_file',
+      metric: 'error',
+      actual: 1,
+      allowed: 0,
+    },
+  ]);
+  assert.match(formatIntegrityCheckSummary(result), /source_drift total=1 blocker=0 error=1/);
 });
 
 test('Planning DB integrity check fails report mode on any new surface-named rail', () => {

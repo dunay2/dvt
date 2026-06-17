@@ -32,6 +32,7 @@ const {
 const {
   buildFrontendComponentReflectionSnapshot,
 } = require('./planning-db/frontend-component-inventory.cjs');
+const { buildCodeSymbolSnapshot } = require('./planning-db/code-symbol-inventory.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
@@ -66,6 +67,7 @@ const governanceImportDeleteTables = [
   'frontend_surface_component_links',
   'frontend_components',
   'frontend_mechanical_truth_surfaces',
+  'code_symbols',
   'risk_debt_items',
   'governance_component_files',
   'governance_component_file_shards',
@@ -2526,6 +2528,60 @@ async function insertGovernanceSnapshot(client, snapshot) {
   }
 }
 
+async function insertCodeSymbolSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.code_symbols`);
+
+  await insertRows(
+    client,
+    'code_symbols',
+    [
+      'symbol_id',
+      'source_path',
+      'source_content_sha256',
+      'file_path',
+      'component_id',
+      'owning_unit',
+      'root_unit',
+      'domain_unit',
+      'symbol_name',
+      'symbol_kind',
+      'export_kind',
+      'signature',
+      'signature_sha256',
+      'start_line',
+      'end_line',
+      'body_sha256',
+      'normalized_body_length',
+      { name: 'import_refs', cast: 'jsonb' },
+      { name: 'metadata', cast: 'jsonb' },
+      { name: 'raw_symbol', cast: 'jsonb' },
+    ],
+    snapshot.symbols,
+    (symbol) => [
+      symbol.symbolId,
+      symbol.sourcePath,
+      symbol.sourceContentSha256,
+      symbol.filePath,
+      symbol.componentId,
+      symbol.owningUnit,
+      symbol.rootUnit,
+      symbol.domainUnit,
+      symbol.symbolName,
+      symbol.symbolKind,
+      symbol.exportKind,
+      symbol.signature,
+      symbol.signatureSha256,
+      symbol.startLine,
+      symbol.endLine,
+      symbol.bodySha256,
+      symbol.normalizedBodyLength,
+      toJson(symbol.importRefs),
+      toJson(symbol.metadata),
+      toJson(symbol.rawSymbol),
+    ]
+  );
+}
+
 async function insertRepositoryCommandSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.repository_commands`);
 
@@ -3129,6 +3185,9 @@ async function importContent(options = {}) {
   const commandQueryRailSnapshot = includeGovernance
     ? buildCommandQueryRailSnapshot({ governanceSnapshot })
     : null;
+  const codeSymbolSnapshot = includeGovernance
+    ? buildCodeSymbolSnapshot({ governanceSnapshot })
+    : null;
   const frontendMechanicalTruthSnapshot = includeGovernance
     ? buildFrontendMechanicalTruthSnapshot()
     : null;
@@ -3178,6 +3237,7 @@ async function importContent(options = {}) {
     }
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
+      await insertCodeSymbolSnapshot(client, codeSymbolSnapshot);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
       await insertCommandQueryRailSnapshot(client, commandQueryRailSnapshot);
       await insertFrontendMechanicalTruthSnapshot(client, frontendMechanicalTruthSnapshot);
@@ -3212,6 +3272,7 @@ async function importContent(options = {}) {
     riskDebtItems: governanceSnapshot?.riskDebtItems.length ?? 0,
     repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
     commandQueryRails: commandQueryRailSnapshot?.rails.length ?? 0,
+    codeSymbols: codeSymbolSnapshot?.symbols.length ?? 0,
     frontendMechanicalTruthSurfaces: frontendMechanicalTruthSnapshot?.surfaces.length ?? 0,
     frontendComponents: frontendComponentReflectionSnapshot?.components.length ?? 0,
     prReadinessChecks: prReadinessSnapshot ? 1 : 0,
@@ -3234,6 +3295,7 @@ async function importContent(options = {}) {
       `riskDebtItems=${result.riskDebtItems}`,
       `repositoryCommands=${result.repositoryCommands}`,
       `commandQueryRails=${result.commandQueryRails}`,
+      `codeSymbols=${result.codeSymbols}`,
       `frontendMechanicalTruthSurfaces=${result.frontendMechanicalTruthSurfaces}`,
       `frontendComponents=${result.frontendComponents}`,
       `prReadinessChecks=${result.prReadinessChecks}`,
@@ -3324,6 +3386,20 @@ function compareGovernanceAuxiliaryState(expected, actual) {
         'componentStatus',
         'reuseDecision',
         'frontendOwner',
+        'sourcePath',
+        'sourceContentSha256',
+      ],
+    }),
+    codeSymbols: compareImportRows(expected.codeSymbols, actual.codeSymbols, {
+      keyOf: (row) => row.symbolId,
+      compareFields: [
+        'symbolName',
+        'symbolKind',
+        'componentId',
+        'filePath',
+        'startLine',
+        'endLine',
+        'bodySha256',
         'sourcePath',
         'sourceContentSha256',
       ],
@@ -3430,6 +3506,9 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
     options.frontendMechanicalTruthSnapshot || buildFrontendMechanicalTruthSnapshot();
   const frontendComponentReflectionSnapshot =
     options.frontendComponentReflectionSnapshot || buildFrontendComponentReflectionSnapshot();
+  const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
+  const codeSymbolSnapshot =
+    options.codeSymbolSnapshot || buildCodeSymbolSnapshot({ governanceSnapshot });
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const docsDispositionSnapshot =
@@ -3437,7 +3516,6 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
     buildDocsDispositionSnapshot({
       planningTaskIds: planningSnapshot.tasks.map((task) => task.taskId),
     });
-  const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
   const knowledgeIntakeRepositoryReferenceSnapshot =
     options.knowledgeIntakeRepositoryReferenceSnapshot ||
     buildKnowledgeIntakeRepositoryReferenceSnapshot();
@@ -3477,6 +3555,18 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       frontendOwner: component.frontendOwner,
       sourcePath: component.sourcePath,
       sourceContentSha256: component.sourceContentSha256,
+    })),
+    codeSymbols: codeSymbolSnapshot.symbols.map((symbol) => ({
+      symbolId: symbol.symbolId,
+      symbolName: symbol.symbolName,
+      symbolKind: symbol.symbolKind,
+      componentId: symbol.componentId,
+      filePath: symbol.filePath,
+      startLine: symbol.startLine,
+      endLine: symbol.endLine,
+      bodySha256: symbol.bodySha256,
+      sourcePath: symbol.sourcePath,
+      sourceContentSha256: symbol.sourceContentSha256,
     })),
     prReadinessChecks: [
       {
@@ -3558,6 +3648,7 @@ async function readGovernanceAuxiliaryState(client) {
     riskDebtItems,
     frontendMechanicalTruthSurfaces,
     frontendComponents,
+    codeSymbols,
   ] = await Promise.all([
     client.query(`
       select
@@ -3687,6 +3778,21 @@ async function readGovernanceAuxiliaryState(client) {
       from ${schemaName}.frontend_components
       order by component_id
     `),
+    client.query(`
+      select
+        symbol_id as "symbolId",
+        symbol_name as "symbolName",
+        symbol_kind as "symbolKind",
+        component_id as "componentId",
+        file_path as "filePath",
+        start_line::int as "startLine",
+        end_line::int as "endLine",
+        body_sha256 as "bodySha256",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.code_symbols
+      order by symbol_id
+    `),
   ]);
 
   return {
@@ -3701,6 +3807,7 @@ async function readGovernanceAuxiliaryState(client) {
     riskDebtItems: riskDebtItems.rows,
     frontendMechanicalTruthSurfaces: frontendMechanicalTruthSurfaces.rows,
     frontendComponents: frontendComponents.rows,
+    codeSymbols: codeSymbols.rows,
   };
 }
 
@@ -3798,6 +3905,11 @@ function compareGovernanceAuxiliarySourceState(expected, actual) {
     commandQueryRailSources: compareImportRows(
       expected.commandQueryRailSources,
       actual.commandQueryRailSources,
+      sourceHashComparison
+    ),
+    codeSymbolSources: compareImportRows(
+      expected.codeSymbolSources,
+      actual.codeSymbolSources,
       sourceHashComparison
     ),
     docDispositionDocuments: compareImportRows(
@@ -3923,6 +4035,9 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
   const commandQueryRailSnapshot =
     options.commandQueryRailSnapshot || buildCommandQueryRailSnapshot();
+  const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
+  const codeSymbolSnapshot =
+    options.codeSymbolSnapshot || buildCodeSymbolSnapshot({ governanceSnapshot });
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
   const knowledgeDocuments =
@@ -3937,6 +4052,10 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
     }),
     repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
     commandQueryRailSources: uniqueSourceHashRows(commandQueryRailSnapshot.rails),
+    codeSymbolSources: uniqueSourceHashRows(codeSymbolSnapshot.symbols, {
+      pathField: 'sourcePath',
+      hashField: 'sourceContentSha256',
+    }),
     docDispositionDocuments: documentSourceHashRows(markdownDocuments),
     knowledgeDocuments: options.knowledgeSnapshotDocuments
       ? uniqueSourceHashRows(options.knowledgeSnapshotDocuments, {
@@ -4029,6 +4148,7 @@ async function readGovernanceAuxiliarySourceState(client) {
     planningSources,
     repositoryCommandSources,
     commandQueryRailSources,
+    codeSymbolSources,
     prReadinessChecks,
     docDispositionDocuments,
     knowledgeDocuments,
@@ -4054,6 +4174,13 @@ async function readGovernanceAuxiliarySourceState(client) {
         source_path as "sourcePath",
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.command_query_rails
+      order by source_path
+    `),
+    client.query(`
+      select distinct
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.code_symbols
       order by source_path
     `),
     client.query(`
@@ -4100,6 +4227,7 @@ async function readGovernanceAuxiliarySourceState(client) {
     planningSources: planningSources.rows,
     repositoryCommandSources: repositoryCommandSources.rows,
     commandQueryRailSources: commandQueryRailSources.rows,
+    codeSymbolSources: codeSymbolSources.rows,
     prReadinessChecks: prReadinessChecks.rows,
     docDispositionDocuments: docDispositionDocuments.rows,
     knowledgeDocuments: knowledgeDocuments.rows,
@@ -4280,6 +4408,7 @@ module.exports = {
   buildDocsDispositionSnapshot,
   buildGovernanceAuxiliaryExpectedState,
   buildGovernanceAuxiliarySourceExpectedState,
+  buildCodeSymbolSnapshot,
   buildGovernanceFileSnapshot,
   buildGovernanceGeneratedInputs,
   buildGovernanceSourceExpectedState,
@@ -4304,6 +4433,7 @@ module.exports = {
   governanceImportDeleteTables,
   importContent,
   insertGovernanceSnapshot,
+  insertCodeSymbolSnapshot,
   insertRows,
   mergePlanningTaskIds,
   insertDocsDispositionSnapshot,
