@@ -898,6 +898,66 @@ test('tracked migrations retire the source import ListWarehouseConnections dupli
   );
 });
 
+test('tracked migrations retire the source import ImportWarehouseSources duplicate', () => {
+  const migrations = readMigrationFiles();
+  const duplicateMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '104_retire_source_import_import_warehouse_sources_duplicate.sql'
+  );
+
+  assert.ok(duplicateMigration);
+  assert.match(duplicateMigration.sql, /CANVAS-SOURCE-IMPORT-COLUMNS-DEFAULT-20260616/);
+  assert.match(duplicateMigration.sql, /ImportWarehouseSources/);
+  assert.match(duplicateMigration.sql, /normalized_rail_name = 'importwarehousesources'/);
+  assert.match(duplicateMigration.sql, /rail_status = 'retired'/);
+  assert.match(duplicateMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(duplicateMigration.sql, /ADR-0058-warehouse-source-import-rails\.md/);
+  assert.match(duplicateMigration.sql, /frontend-component-inventory\.md/);
+  assert.doesNotMatch(
+    duplicateMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
+test('tracked migrations allow audited governance component reparent operations', () => {
+  const migrations = readMigrationFiles();
+  const reparentMigration = migrations.find(
+    (migration) => migration.fileName === '102_governance_component_reparent_operation.sql'
+  );
+
+  assert.ok(reparentMigration);
+  assert.match(reparentMigration.sql, /governance_component_local_operations_operation_type_check/);
+  assert.match(reparentMigration.sql, /'component_create'/);
+  assert.match(reparentMigration.sql, /'component_reparent'/);
+});
+
+test('tracked migrations persist governance component reparent overlays outside import snapshots', () => {
+  const migrations = readMigrationFiles();
+  const reparentOverlayMigration = migrations.find(
+    (migration) => migration.fileName === '103_governance_component_reparent_persistent_overlay.sql'
+  );
+
+  assert.ok(reparentOverlayMigration);
+  assert.match(
+    reparentOverlayMigration.sql,
+    /create table if not exists planning_query_store\.governance_component_reparent_overrides/
+  );
+  assert.match(reparentOverlayMigration.sql, /operation_type = 'component_reparent'/);
+  assert.match(
+    reparentOverlayMigration.sql,
+    /create or replace view planning_query_store\.governance_component_reparent_override_query/
+  );
+  assert.match(
+    reparentOverlayMigration.sql,
+    /create or replace view component_engineering\.component_tree_query/
+  );
+  assert.match(reparentOverlayMigration.sql, /coalesce\(reparent\.parent_id/);
+  assert.doesNotMatch(
+    reparentOverlayMigration.sql,
+    /update\s+planning_query_store\.governance_components/i
+  );
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(

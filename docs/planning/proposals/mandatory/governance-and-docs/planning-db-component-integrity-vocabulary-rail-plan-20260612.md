@@ -171,16 +171,17 @@ is clean.
 
 ## Fowler Analysis
 
-| scenario                                                                                                     | opportunity         | Fowler pattern                                       | DDD owner                                | command/query rail                        | implementation surfaces                                                                                  | test                                                                                    | out of scope                                     |
-| ------------------------------------------------------------------------------------------------------------ | ------------------- | ---------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Component facts are scattered across profiles, architecture authority, file ownership, and dependency scans. | Hidden authority    | Consolidate read model                               | ComponentIntegrityReadModel              | `ValidateComponentIntegrity`              | `planning_query_store.component_integrity_query`, `planning:db:query component-integrity`                | `node --test scripts/planning-db-query.test.cjs`                                        | New non-DB inventory format                      |
-| Rail catalog catches exact duplicates but misses semantic drift and surface names.                           | Duplicate semantics | Replace implicit convention with explicit vocabulary | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_vocabulary_query`, `planning:db:query rail-vocabulary`          | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs`   | Renaming all historical rails in one unsafe edit |
-| Rail projection reports documentary gap rows even when the same rail has implemented manifest refs.          | False gap signal    | Prefer materialized fact over weaker source          | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_query`, `planning:db:integrity:check`                           | `node --test scripts/planning-db-migrate.test.cjs`                                      | Direct SQL repair outside migrations             |
-| CI has inventory checks but no single progressive component-integrity gate.                                  | Quality gate gap    | Guard clause                                         | PlanningDbIntegrityCheck                 | `CheckPlanningDbComponentIntegrity`       | `scripts/planning-db-integrity-check.cjs`, `package.json`, `scripts/local-validation-plan.cjs`           | `node --test scripts/planning-db-integrity-check.test.cjs`                              | Blocking historical debt before baseline cleanup |
-| Relations can be recorded only as proposed through the command rail.                                         | Workflow mismatch   | Align command lifecycle with domain state            | ArchitectureRelationCommand              | `RecordArchitectureRelation`              | `scripts/planning-db-operate.cjs`                                                                        | `node --test scripts/planning-db-operate.test.cjs`                                      | Direct SQL relation updates                      |
-| New architecture components can receive authority without query-visible test evidence.                       | Evidence gap        | Complete read model                                  | ArchitectureTestEvidenceCommand          | `RecordArchitectureTestEvidence`          | `architecture.component_test`, `planning:db:query component-profile`, `scripts/planning-db-operate.cjs`  | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs`   | File-only test inference outside the BBDD        |
-| Architecture components can have observability maturity gaps without a governed write rail.                  | Evidence gap        | Complete read model                                  | ArchitectureObservabilityEvidenceCommand | `RecordArchitectureObservabilityEvidence` | `architecture.component_observability`, `planning:db:operate architecture-evidence record-observability` | `node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs` | Direct SQL observability evidence writes         |
-| Component profiles can miss DB-owned observability evidence even after maturity consumes it.                 | Hidden authority    | Complete read model                                  | ComponentProfileReadModel                | `ReadComponentProfile`                    | `architecture.component_observability`, `planning:db:query component-profile`                            | `node --test scripts/planning-db-query.test.cjs`                                        | Inferring observability from source grep         |
+| scenario                                                                                                     | opportunity         | Fowler pattern                                       | DDD owner                                | command/query rail                        | implementation surfaces                                                                                                       | test                                                                                    | out of scope                                      |
+| ------------------------------------------------------------------------------------------------------------ | ------------------- | ---------------------------------------------------- | ---------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Component facts are scattered across profiles, architecture authority, file ownership, and dependency scans. | Hidden authority    | Consolidate read model                               | ComponentIntegrityReadModel              | `ValidateComponentIntegrity`              | `planning_query_store.component_integrity_query`, `planning:db:query component-integrity`                                     | `node --test scripts/planning-db-query.test.cjs`                                        | New non-DB inventory format                       |
+| Rail catalog catches exact duplicates but misses semantic drift and surface names.                           | Duplicate semantics | Replace implicit convention with explicit vocabulary | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_vocabulary_query`, `planning:db:query rail-vocabulary`                               | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs`   | Renaming all historical rails in one unsafe edit  |
+| Rail projection reports documentary gap rows even when the same rail has implemented manifest refs.          | False gap signal    | Prefer materialized fact over weaker source          | RailVocabularyReadModel                  | `ValidateRailVocabulary`                  | `planning_query_store.command_query_rail_query`, `planning:db:integrity:check`                                                | `node --test scripts/planning-db-migrate.test.cjs`                                      | Direct SQL repair outside migrations              |
+| CI has inventory checks but no single progressive component-integrity gate.                                  | Quality gate gap    | Guard clause                                         | PlanningDbIntegrityCheck                 | `CheckPlanningDbComponentIntegrity`       | `scripts/planning-db-integrity-check.cjs`, `package.json`, `scripts/local-validation-plan.cjs`                                | `node --test scripts/planning-db-integrity-check.test.cjs`                              | Blocking historical debt before baseline cleanup  |
+| Relations can be recorded only as proposed through the command rail.                                         | Workflow mismatch   | Align command lifecycle with domain state            | ArchitectureRelationCommand              | `RecordArchitectureRelation`              | `scripts/planning-db-operate.cjs`                                                                                             | `node --test scripts/planning-db-operate.test.cjs`                                      | Direct SQL relation updates                       |
+| New architecture components can receive authority without query-visible test evidence.                       | Evidence gap        | Complete read model                                  | ArchitectureTestEvidenceCommand          | `RecordArchitectureTestEvidence`          | `architecture.component_test`, `planning:db:query component-profile`, `scripts/planning-db-operate.cjs`                       | `node --test scripts/planning-db-query.test.cjs scripts/planning-db-operate.test.cjs`   | File-only test inference outside the BBDD         |
+| Architecture components can have observability maturity gaps without a governed write rail.                  | Evidence gap        | Complete read model                                  | ArchitectureObservabilityEvidenceCommand | `RecordArchitectureObservabilityEvidence` | `architecture.component_observability`, `planning:db:operate architecture-evidence record-observability`                      | `node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs` | Direct SQL observability evidence writes          |
+| Component profiles can miss DB-owned observability evidence even after maturity consumes it.                 | Hidden authority    | Complete read model                                  | ComponentProfileReadModel                | `ReadComponentProfile`                    | `architecture.component_observability`, `planning:db:query component-profile`                                                 | `node --test scripts/planning-db-query.test.cjs`                                        | Inferring observability from source grep          |
+| Existing governance components can have a wrong parent while architecture relations are correct.             | Boundary drift      | Explicit command method                              | GovernanceComponentTreeCommand           | `ReparentGovernanceComponent`             | `planning_query_store.governance_component_reparent_overrides`, `planning_query_store.governance_component_local_definitions` | `node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs` | Direct SQL reparent outside `planning:db:operate` |
 
 ## Feature Mechanization
 
@@ -214,6 +215,9 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/**/index.md
   - .github/PR_INSTRUCTIONS.md
+  - apps/web/src/app/components/figma/ImageWithFallback.test.tsx
+  - apps/web/src/app/plugins/cost/costContributions.test.ts
+  - apps/web/src/app/plugins/monitoring/monitoringContributions.test.ts
   - tools/planning-db/migrations/081_component_integrity_rail_vocabulary.sql
   - tools/planning-db/migrations/082_rail_vocabulary_deprecation_hardening.sql
   - tools/planning-db/migrations/083_architecture_test_evidence_operation_rail.sql
@@ -224,6 +228,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/099_surface_named_gap_rail_vocabulary.sql
   - tools/planning-db/migrations/100_exclude_surface_named_gap_rails.sql
   - tools/planning-db/migrations/101_prefer_implemented_rail_refs.sql
+  - tools/planning-db/migrations/102_governance_component_reparent_operation.sql
+  - tools/planning-db/migrations/103_governance_component_reparent_persistent_overlay.sql
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs
@@ -238,6 +244,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db-migrate.test.cjs
   - scripts/planning-db-operate.cjs
   - scripts/planning-db-operate.test.cjs
+  - scripts/planning-db-operate-tests/component-create.test.cjs
   - scripts/planning-db-operate-tests/architecture-parse.test.cjs
   - scripts/planning-db-operate-tests/architecture-plan.test.cjs
   - scripts/planning-db-import.test.cjs
@@ -246,7 +253,6 @@ allowedImplementationSurfaces:
   - scripts/verify-changed.test.cjs
   - package.json
 forbiddenImplementationSurfaces:
-  - apps/**
   - packages/**
   - specs/contracts/**
 commandQueryRails:
@@ -286,6 +292,9 @@ commandQueryRails:
   - name: RecordArchitecturePort
     type: command
     dddOwner: ArchitecturePortCommand
+  - name: ReparentGovernanceComponent
+    type: command
+    dddOwner: GovernanceComponentTreeCommand
 domainObjects:
   - name: ComponentIntegrityReadModel
     type: read model
@@ -314,6 +323,9 @@ domainObjects:
   - name: ArchitecturePortCommand
     type: command rail
     owner: Architecture / Planning DB / CI
+  - name: GovernanceComponentTreeCommand
+    type: command rail
+    owner: Architecture / Planning DB / CI
 fowlerSignals:
   - Hidden Authority from component health being visible only through several separate queries.
   - Duplicate Semantics from command/query rails sharing intent without one vocabulary check.
@@ -322,6 +334,7 @@ fowlerSignals:
   - Incomplete Evidence risk if observability facts are written outside architecture.component_observability.
   - Hidden Authority risk if component-profile cannot display observability rows that maturity already consumes.
   - Hidden Authority risk if contracts and command/query ports exist in schema but cannot be written through planning:db:operate.
+  - Boundary Drift risk if component parent changes require SQL instead of an audited planning:db:operate rail.
 architectureGuards:
   - node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs scripts/planning-db-integrity-check.test.cjs scripts/planning-db-operate.test.cjs
   - pnpm planning:db:migrate
@@ -431,7 +444,157 @@ redGreenCycles:
       - scripts/local-validation-plan.cjs
       - scripts/verify-changed.test.cjs
     greenTest: node --test scripts/verify-changed.test.cjs
+  - id: governance-component-reparent-rail
+    redTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs
+    expectedFailure: Existing governance components with corrected architecture relations cannot be reparented through planning:db:operate without SQL.
+    patchSurfaces:
+      - tools/planning-db/migrations/102_governance_component_reparent_operation.sql
+      - tools/planning-db/migrations/103_governance_component_reparent_persistent_overlay.sql
+      - scripts/planning-db-operate.cjs
+      - scripts/planning-db-operate-tests/component-create.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+    greenTest: node --test scripts/planning-db-operate.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: web-leaf-component-evidence-tests
+    redTest: pnpm --filter @dvt/web test:changed
+    expectedFailure: Cost, monitoring, and fallback plugin leaf components do not have focused evidence tests attached to the DB component profile.
+    patchSurfaces:
+      - apps/web/src/app/components/figma/ImageWithFallback.test.tsx
+      - apps/web/src/app/plugins/cost/costContributions.test.ts
+      - apps/web/src/app/plugins/monitoring/monitoringContributions.test.ts
+    greenTest: pnpm --filter @dvt/web test:changed
 symbols:
+  - name: validateComponentReparentCommand
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - component parent corrections must be rejected before self-parent drift can be written
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: normalizeImportedGovernanceComponent
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - imported and DB-local component rows share one reparent planning model
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: normalizeOperationRevision
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - audited component reparent operations use one optimistic revision vocabulary
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: normalizeUnitPathRows
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - governance unit paths are rebuilt from the DB read model instead of string shortcuts
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: reparentRawComponent
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - raw component metadata records the governed reparent source without becoming a parallel inventory
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: planComponentReparentOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - component parent drift is planned with a validated parent path before writes
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readGovernanceUnitPath
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - parent paths are read from governance_unit_query instead of rebuilt from filesystem assumptions
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readImportedGovernanceComponent
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - imported component rows can be corrected through an audited DB command rail
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readLocalGovernanceComponent
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - DB-authored component rows use the same reparent rail as imported rows
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: readLatestComponentOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - reparent operations keep revision evidence in the component audit ledger
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: writePlannedComponentReparentOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - component reparent writes and audit rows are persisted together
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
+  - name: applyComponentReparentOperation
+    path: scripts/planning-db-operate.cjs
+    dddOwner: GovernanceComponentTreeCommand
+    cqRails:
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - planning:db:operate exposes component tree corrections without SQL bypasses
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
   - name: createComponentIntegrityReadModelComponent
     path: scripts/planning-db/queries/component-integrity-query.cjs
     dddOwner: ComponentIntegrityReadModel
