@@ -531,6 +531,18 @@ redGreenCycles:
       - apps/web/src/app/plugins/monitoring/monitoringContributions.test.ts
     greenTest: pnpm --filter @dvt/web test:changed
 symbols:
+  - name: componentEngineeringSchemaName
+    path: scripts/planning-db-operate.cjs
+    dddOwner: CreateGovernanceComponentCommandAdapter
+    cqRails:
+      - CreateGovernanceComponent
+      - ReparentGovernanceComponent
+    fowlerSignals:
+      - component write operations use the canonical component_engineering schema constant instead of an undeclared runtime name
+    architectureGuard: node --test scripts/planning-db-operate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-operate.test.cjs
   - name: validateComponentReparentCommand
     path: scripts/planning-db-operate.cjs
     dddOwner: GovernanceComponentTreeCommand
