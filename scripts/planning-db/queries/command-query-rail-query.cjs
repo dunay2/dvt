@@ -114,6 +114,15 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
   }
 
   function creationIntentAction(row) {
+    const railStatus = String(row.rail_status ?? row.railStatus ?? '').toLowerCase();
+    if (railStatus === 'retired') {
+      return 'retired-rail-do-not-reuse';
+    }
+
+    if (railStatus === 'deprecated') {
+      return 'deprecated-rail-do-not-reuse';
+    }
+
     if (row.is_duplicate ?? row.isDuplicate) {
       return 'resolve-duplicate-before-creating';
     }
@@ -257,7 +266,11 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
      select *
      from ranked
      where intent_match_score > 0
-     order by intent_match_score desc, is_gap asc, is_duplicate asc, rail_name
+     order by (rail_status in ('deprecated', 'retired')) asc,
+       intent_match_score desc,
+       is_gap asc,
+       is_duplicate asc,
+       rail_name
      limit $${params.length}`,
       params
     );

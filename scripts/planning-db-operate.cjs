@@ -12,6 +12,7 @@ const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
+const componentEngineeringSchemaName = 'component_engineering';
 const { runArchitectureFitnessScan } = require('./planning-db/architecture-fitness/scan.cjs');
 const {
   allowedDbSurfaceMigrationStates,
