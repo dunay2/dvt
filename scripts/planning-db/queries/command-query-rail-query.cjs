@@ -1,23 +1,12 @@
 /** Owned concern: expose command/query rail catalog read models for planning DB queries. */
+const { parseLimit } = require('../query-limit.cjs');
+
 function createCommandQueryRailReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
 
   function flagLabel(value, label) {
     return value ? label : '-';
-  }
-
-  function parseLimit(value, defaultLimit) {
-    if (value === undefined || value === null || value === '') {
-      return defaultLimit;
-    }
-
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-    }
-
-    return parsed;
   }
 
   function appendFilter(predicates, params, column, value) {

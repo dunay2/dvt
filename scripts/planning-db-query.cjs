@@ -24,6 +24,7 @@ const {
   buildFrontendMechanicalTruthRows,
   readFrontendMechanicalTruthRows,
 } = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+const { parseLimit } = require('./planning-db/query-limit.cjs');
 const {
   buildFrontendComponentFileRows,
   buildFrontendComponentRailRows,
@@ -541,19 +542,6 @@ async function ensureFreshGovernanceProjection(queryName, options = {}) {
   }
 
   return result;
-}
-
-function parseLimit(value, defaultLimit) {
-  if (value === undefined || value === null || value === '') {
-    return defaultLimit;
-  }
-
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-  }
-
-  return parsed;
 }
 
 function parseCerSchemaVersion(value) {

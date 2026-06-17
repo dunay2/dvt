@@ -1118,6 +1118,132 @@ test('tracked migrations remap canvas context menu away from child palette path'
   assert.doesNotMatch(contextMenuMigration.sql, /delete\s+from/i);
 });
 
+test('tracked migrations create the Planning DB query limit helper component', () => {
+  const migrations = readMigrationFiles();
+  const helperMigration = migrations.find(
+    (migration) => migration.fileName === '112_planning_db_query_limit_helper_component.sql'
+  );
+
+  assert.ok(helperMigration);
+  assert.match(helperMigration.sql, /SYS-CI-GOVERNANCE-SCRIPTS'/);
+  assert.match(helperMigration.sql, /Repository governance automation scripts/);
+  assert.match(helperMigration.sql, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-LIMIT/);
+  assert.match(helperMigration.sql, /scripts\/planning-db\/query-limit\.cjs/);
+  assert.match(helperMigration.sql, /DetectCodeSymbolDuplicates/);
+  assert.match(helperMigration.sql, /TEST-CI-GOVERNANCE-SCRIPTS-UNIT-COVERAGE/);
+  assert.match(
+    helperMigration.sql,
+    /insert into planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(helperMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_responsibility/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_relation/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_test/);
+  assert.match(helperMigration.sql, /hidden_authority/);
+  assert.doesNotMatch(helperMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations repoint stale Canvas test support local rails', () => {
+  const migrations = readMigrationFiles();
+  const canvasTestSupportMigration = migrations.find(
+    (migration) => migration.fileName === '113_repoint_canvas_test_support_local_rails.sql'
+  );
+
+  assert.ok(canvasTestSupportMigration);
+  assert.match(
+    canvasTestSupportMigration.sql,
+    /Confirmed against tracked CanvasInspectorPanel\.test\.support\.tsx/
+  );
+  assert.match(
+    canvasTestSupportMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasInspectorPanel\.test\.support\.tsx/
+  );
+  assert.match(
+    canvasTestSupportMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasGraphHandlers\.nodeAuthoring\.test\.support\.ts/
+  );
+  assert.match(canvasTestSupportMigration.sql, /rail_status = 'implemented'/);
+  assert.match(canvasTestSupportMigration.sql, /mechanization_status = 'implemented'/);
+  assert.match(canvasTestSupportMigration.sql, /sourceRepointReason/);
+  assert.match(canvasTestSupportMigration.sql, /pnpm planning:db:integrity:check/);
+  assert.doesNotMatch(canvasTestSupportMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasTestSupportMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations repoint Canvas reload recovery test support rails', () => {
+  const migrations = readMigrationFiles();
+  const canvasReloadSupportMigration = migrations.find(
+    (migration) => migration.fileName === '114_repoint_canvas_reload_recovery_test_support_rail.sql'
+  );
+
+  assert.ok(canvasReloadSupportMigration);
+  assert.match(
+    canvasReloadSupportMigration.sql,
+    /useCanvasController\.reloadRecovery\.test\.support\.ts/
+  );
+  assert.match(canvasReloadSupportMigration.sql, /createReloadRecoveryHarness/);
+  assert.match(canvasReloadSupportMigration.sql, /reloadLatestDraft/);
+  assert.match(canvasReloadSupportMigration.sql, /sourceRepointReason/);
+  assert.match(canvasReloadSupportMigration.sql, /rail_status = 'implemented'/);
+  assert.match(canvasReloadSupportMigration.sql, /noHumanDecisionsRemaining/);
+  assert.match(canvasReloadSupportMigration.sql, /implementationPlan/);
+  assert.match(canvasReloadSupportMigration.sql, /componentGuides/);
+  assert.match(canvasReloadSupportMigration.sql, /redGreenCycles/);
+  assert.match(canvasReloadSupportMigration.sql, /cypressCoverage/);
+  assert.match(canvasReloadSupportMigration.sql, /fowlerSignals/);
+  assert.doesNotMatch(
+    canvasReloadSupportMigration.sql,
+    /source_path = 'apps\/web\/src\/app\/views\/canvas\/useCanvasController\.reloadConflictRecovery\.test\.support\.ts'/
+  );
+  assert.match(canvasReloadSupportMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(canvasReloadSupportMigration.sql, /reloadProtectedDraft\.test\.tsx/);
+  assert.doesNotMatch(
+    canvasReloadSupportMigration.sql,
+    /source_path = 'apps\/web\/src\/app\/views\/canvas\/useCanvasController\.reloadProtectedDraft\.test\.tsx'/
+  );
+  assert.doesNotMatch(canvasReloadSupportMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasReloadSupportMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations repoint Canvas create-document command test support rails', () => {
+  const migrations = readMigrationFiles();
+  const canvasCreateDocumentSupportMigration = migrations.find(
+    (migration) => migration.fileName === '115_repoint_canvas_create_document_test_support_rail.sql'
+  );
+
+  assert.ok(canvasCreateDocumentSupportMigration);
+  assert.match(
+    canvasCreateDocumentSupportMigration.sql,
+    /canvasCreateCanvasDocumentCommand\.test\.ts/
+  );
+  assert.match(canvasCreateDocumentSupportMigration.sql, /buildCommandArgs/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /buildEmptyDraft/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /deprecatedSourcePaths/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /sourceRepointReason/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /rail_status = 'implemented'/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /noHumanDecisionsRemaining/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /implementationPlan/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /componentGuides/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /redGreenCycles/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /cypressCoverage/);
+  assert.match(canvasCreateDocumentSupportMigration.sql, /fowlerSignals/);
+  assert.doesNotMatch(
+    canvasCreateDocumentSupportMigration.sql,
+    /source_path = 'apps\/web\/src\/app\/views\/canvas\/canvasCreateCanvasDocumentCommand\.test\.support\.ts'/
+  );
+  assert.doesNotMatch(
+    canvasCreateDocumentSupportMigration.sql,
+    /source_path = 'apps\/web\/src\/app\/views\/canvas\/canvasCreateCanvasDocumentCommand\.replacement\.test\.ts'/
+  );
+  assert.doesNotMatch(
+    canvasCreateDocumentSupportMigration.sql,
+    /source_path = 'apps\/web\/src\/app\/views\/canvas\/canvasCreateCanvasDocumentCommand\.guards\.test\.ts'/
+  );
+  assert.doesNotMatch(canvasCreateDocumentSupportMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasCreateDocumentSupportMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(

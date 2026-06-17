@@ -1,20 +1,9 @@
 /** Owned concern: expose DB-owned component roadmap facts for planning DB queries. */
+const { parseLimit } = require('../query-limit.cjs');
+
 function createComponentRoadmapReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function parseLimit(value, defaultLimit) {
-    if (value === undefined || value === null || value === '') {
-      return defaultLimit;
-    }
-
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-    }
-
-    return parsed;
-  }
 
   function appendFilter(predicates, params, column, value) {
     if (value === undefined || value === null || value === '') {
