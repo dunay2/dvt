@@ -180,10 +180,10 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.get('[data-slot="canvas-viewport-context-surface"]')
-      .should('be.visible')
-      .rightclick(96, 220, { force: true });
+    cy.get('.react-flow__pane').should('be.visible').rightclick(320, 260, { force: true });
 
+    cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
+    cy.wait(1_500);
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
     cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'SQL transform').should(
       'be.visible'
