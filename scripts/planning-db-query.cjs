@@ -100,6 +100,16 @@ const {
   buildRailVocabularyRows,
   readRailVocabularyRows,
 } = require('./planning-db/queries/rail-vocabulary-query.cjs');
+const {
+  buildCodeSymbolDuplicateRows,
+  buildCodeSymbolRows,
+  buildGovernanceProblemRows,
+  buildSourceDriftRows,
+  readCodeSymbolDuplicateRows,
+  readCodeSymbolRows,
+  readGovernanceProblemRows,
+  readSourceDriftRows,
+} = require('./planning-db/queries/code-symbol-query.cjs');
 const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
@@ -126,6 +136,11 @@ const knownQueries = new Set([
   'command-query-rails',
   'rail-vocabulary',
   'rail-duplicates',
+  'code-symbols',
+  'code-symbol-duplicates',
+  'code-symbol-semantic-candidates',
+  'source-drift',
+  'governance-problem-dashboard',
   'ai-project-context',
   'creation-intent',
   'frontend-surfaces',
@@ -199,6 +214,11 @@ const governanceProjectionQueryNames = new Set([
   'debt',
   'drift',
   'command-query-rails',
+  'code-symbols',
+  'code-symbol-duplicates',
+  'code-symbol-semantic-candidates',
+  'source-drift',
+  'governance-problem-dashboard',
   'ai-project-context',
   'creation-intent',
   'frontend-surfaces',
@@ -255,6 +275,11 @@ const pathCommonFilterQueryNames = new Set([
   'documentation-panels',
   'component-roadmap',
   'mandatory-proposal-gaps',
+  'code-symbols',
+  'code-symbol-duplicates',
+  'code-symbol-semantic-candidates',
+  'source-drift',
+  'governance-problem-dashboard',
 ]);
 const componentCommonFilterQueryNames = new Set([
   'components',
@@ -293,6 +318,10 @@ const componentCommonFilterQueryNames = new Set([
   'architecture-dependency-classification',
   'architecture-fitness',
   'architecture-fitness-gaps',
+  'code-symbols',
+  'code-symbol-duplicates',
+  'code-symbol-semantic-candidates',
+  'governance-problem-dashboard',
 ]);
 
 function isHelpCommand(value) {
@@ -4182,6 +4211,54 @@ async function runQuery(options = {}) {
       return railRows;
     }
 
+    if (queryName === 'code-symbols') {
+      const rows = await readCodeSymbolRows(client, options.filters || {});
+      const symbolRows = buildCodeSymbolRows(rows);
+      if (options.print !== false) {
+        printTaskRows(symbolRows);
+      }
+      return symbolRows;
+    }
+
+    if (queryName === 'code-symbol-duplicates') {
+      const rows = await readCodeSymbolDuplicateRows(client, options.filters || {});
+      const duplicateRows = buildCodeSymbolDuplicateRows(rows);
+      if (options.print !== false) {
+        printTaskRows(duplicateRows);
+      }
+      return duplicateRows;
+    }
+
+    if (queryName === 'code-symbol-semantic-candidates') {
+      const rows = await readCodeSymbolDuplicateRows(client, {
+        ...(options.filters || {}),
+        kind: 'semantic_duplicate_candidate',
+      });
+      const candidateRows = buildCodeSymbolDuplicateRows(rows);
+      if (options.print !== false) {
+        printTaskRows(candidateRows);
+      }
+      return candidateRows;
+    }
+
+    if (queryName === 'source-drift') {
+      const rows = await readSourceDriftRows(client, options.filters || {});
+      const driftRows = buildSourceDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
+    if (queryName === 'governance-problem-dashboard') {
+      const rows = await readGovernanceProblemRows(client, options.filters || {});
+      const problemRows = buildGovernanceProblemRows(rows);
+      if (options.print !== false) {
+        printTaskRows(problemRows);
+      }
+      return problemRows;
+    }
+
     if (queryName === 'ai-project-context') {
       const context = await readAiProjectContext(client, options.filters || {});
       if (options.print !== false) {
@@ -4927,8 +5004,12 @@ module.exports = {
   buildArchitectureRelationRows,
   buildArchitectureResponsibilityRows,
   buildArchitectureTestRows,
+  buildCodeSymbolDuplicateRows,
+  buildCodeSymbolRows,
   buildComponentIntegrityRows,
+  buildGovernanceProblemRows,
   buildRailVocabularyRows,
+  buildSourceDriftRows,
   buildHashDriftRows,
   buildPlanningDbQueryHelpText,
   buildComponentEngineeringComponentMetadataRows,
@@ -5006,8 +5087,12 @@ module.exports = {
   readArchitectureRelationRows,
   readArchitectureResponsibilityRows,
   readArchitectureTestRows,
+  readCodeSymbolDuplicateRows,
+  readCodeSymbolRows,
   readComponentIntegrityRows,
+  readGovernanceProblemRows,
   readRailVocabularyRows,
+  readSourceDriftRows,
   readFocusRows,
   readRealWorkRows,
   readGovernanceComponentRows,

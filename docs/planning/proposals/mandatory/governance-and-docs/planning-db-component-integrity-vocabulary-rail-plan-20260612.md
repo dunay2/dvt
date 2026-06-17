@@ -169,6 +169,49 @@ read models. CI runs a progressive checker in report mode while historical debt
 is still being retired; strict mode becomes the hard baseline once the database
 is clean.
 
+## Code Symbol Duplicate Detection Slice
+
+### Objective
+
+Expose repeated or equivalent code functions as Planning DB facts instead of
+one-off filesystem scans. The database must be able to answer which code
+symbols exist, which files and components own them, which symbols have exact
+body duplicates, which symbols have repeated names across components, which
+symbols are semantic duplicate candidates, and which governed source references
+point to files that no longer exist.
+
+### Execution Plan
+
+1. Add a governed code-symbol snapshot table populated by
+   `planning:db:import` during the governance import.
+2. Derive symbol ownership from the existing governance file ownership snapshot
+   so code symbols inherit component, root, domain, and owning-unit facts from
+   the canonical component map.
+3. Create DB views:
+   - `planning_query_store.code_symbol_inventory_query`
+   - `planning_query_store.code_symbol_exact_duplicate_query`
+   - `planning_query_store.code_symbol_name_duplicate_query`
+   - `planning_query_store.code_symbol_semantic_candidate_query`
+   - `planning_query_store.code_symbol_problem_query`
+   - `planning_query_store.governed_source_drift_query`
+4. Expose the views through `planning:db:query` rails:
+   - `code-symbols`
+   - `code-symbol-duplicates`
+   - `code-symbol-semantic-candidates`
+   - `source-drift`
+   - `governance-problem-dashboard`
+5. Keep CI progressive: the first pass exposes historical code duplication as
+   queryable findings, while hard-fail enforcement is reserved for new duplicate
+   rail regressions and later baseline tightening.
+
+### Fowler Matrix
+
+| scenario                                                                          | opportunity         | Fowler pattern          | DDD owner                    | command/query rail           | implementation surfaces                                                                          | test                                                                                  | out of scope                                                 |
+| --------------------------------------------------------------------------------- | ------------------- | ----------------------- | ---------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Function-equivalent code exists only as ad hoc scanner output.                    | Duplicate semantics | Consolidate read model  | CodeSymbolInventoryReadModel | `InspectCodeSymbolInventory` | `planning_query_store.code_symbols`, `planning:db:query code-symbols`                            | `node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs`  | Automated refactoring of duplicate code                      |
+| Exact body duplicates and repeated symbol names need component context.           | Duplicate semantics | Derived diagnostic view | CodeSymbolDuplicateReadModel | `DetectCodeSymbolDuplicates` | `planning_query_store.code_symbol_*_duplicate_query`, `planning:db:query code-symbol-duplicates` | `node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs` | Treating semantic candidates as hard failures before review  |
+| DB references can point to removed source files such as historical prompt inputs. | Documentation drift | Drift query             | GovernedSourceDriftReadModel | `DetectGovernedSourceDrift`  | `planning_query_store.governed_source_drift_query`, `planning:db:query source-drift`             | `node --test scripts/planning-db-migrate.test.cjs scripts/planning-db-query.test.cjs` | Deleting historical source rows without retirement rationale |
+
 ## Fowler Analysis
 
 | scenario                                                                                                     | opportunity         | Fowler pattern                                       | DDD owner                                | command/query rail                        | implementation surfaces                                                                                                       | test                                                                                    | out of scope                                      |
@@ -230,6 +273,12 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/101_prefer_implemented_rail_refs.sql
   - tools/planning-db/migrations/102_governance_component_reparent_operation.sql
   - tools/planning-db/migrations/103_governance_component_reparent_persistent_overlay.sql
+  - tools/planning-db/migrations/105_code_symbol_duplicate_queries.sql
+  - tools/planning-db/migrations/106_lightweight_governance_problem_dashboard.sql
+  - tools/planning-db/migrations/107_retire_tarea_rail_duplicates_and_repoint_sources.sql
+  - scripts/planning-db-import.cjs
+  - scripts/planning-db/code-symbol-inventory.cjs
+  - scripts/planning-db/queries/code-symbol-query.cjs
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs
@@ -295,6 +344,15 @@ commandQueryRails:
   - name: ReparentGovernanceComponent
     type: command
     dddOwner: GovernanceComponentTreeCommand
+  - name: InspectCodeSymbolInventory
+    type: query
+    dddOwner: CodeSymbolInventoryReadModel
+  - name: DetectCodeSymbolDuplicates
+    type: query
+    dddOwner: CodeSymbolDuplicateReadModel
+  - name: DetectGovernedSourceDrift
+    type: query
+    dddOwner: GovernedSourceDriftReadModel
 domainObjects:
   - name: ComponentIntegrityReadModel
     type: read model
@@ -325,6 +383,15 @@ domainObjects:
     owner: Architecture / Planning DB / CI
   - name: GovernanceComponentTreeCommand
     type: command rail
+    owner: Architecture / Planning DB / CI
+  - name: CodeSymbolInventoryReadModel
+    type: read model
+    owner: Architecture / Planning DB / CI
+  - name: CodeSymbolDuplicateReadModel
+    type: read model
+    owner: Architecture / Planning DB / CI
+  - name: GovernedSourceDriftReadModel
+    type: read model
     owner: Architecture / Planning DB / CI
 fowlerSignals:
   - Hidden Authority from component health being visible only through several separate queries.
@@ -1379,6 +1446,352 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-operate.test.cjs
+  - name: insertCodeSymbolSnapshot
+    path: scripts/planning-db-import.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - code symbol facts are persisted through the Planning DB import rail instead of an external scan
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: crypto
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - duplicate code detection uses deterministic hashes imported into the Planning DB
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: fs
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - symbol inventory reads repository files only to populate the governed DB projection
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: path
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - repository paths are normalized before joining symbols to component ownership
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: repoRoot
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - code symbol inventory is rooted at the repository authority boundary
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: codeFileExtensions
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - executable symbol inventory is scoped to source-code file types before DB import
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: excludedPathParts
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - generated and dependency paths are excluded from duplicate-source diagnostics
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: includedSourceRoots
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - source scanning remains bounded to governed repository source roots
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: sha256
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - exact duplicate symbol findings are based on stable content hashes
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: toPosix
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - file paths use one canonical DB representation across platforms
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: normalizeSourcePath
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - symbol ownership joins use normalized source paths
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: isCodeSourcePath
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - code symbol inventory admits only governed source paths
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: listTrackedCodeFiles
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - Planning DB symbol import scans tracked code files rather than transient workspace artifacts
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: buildOwnershipByPath
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - code symbols inherit component ownership from the existing governance snapshot
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: lineNumberAt
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - symbol findings carry line evidence for reviewable DB output
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: skipString
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - lightweight parsing avoids treating string contents as executable symbol structure
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: skipTemplate
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - template literal contents do not corrupt symbol boundary detection
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: skipComment
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - comment bodies are excluded from executable symbol boundary detection
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: findMatchingBrace
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - function bodies are bounded before duplicate hashes are generated
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: stripComments
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - duplicate body comparison ignores comments while preserving code structure
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: normalizeBody
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - exact duplicate detection normalizes function bodies before hashing
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: normalizeSignature
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - symbol signatures are stable DB fields independent of local whitespace
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: extractImports
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - semantic duplicate candidates include import context for reviewer triage
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: exportedPrefix
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - exported symbol signatures preserve adapter-facing visibility in the read model
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: symbolRecordsForRegex
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated symbol extraction rules produce one DB record shape for duplicate analysis
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: extractCodeSymbolsFromFile
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - source files are transformed into governed symbol facts before query exposure
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: buildCodeSymbolSnapshot
+    path: scripts/planning-db/code-symbol-inventory.cjs
+    dddOwner: CodeSymbolInventoryReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - function-equivalent code facts are imported into the Planning DB instead of living in ad hoc scans
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
+  - name: createCodeSymbolReadModelComponent
+    path: scripts/planning-db/queries/code-symbol-query.cjs
+    dddOwner: CodeSymbolDuplicateReadModel
+    cqRails:
+      - InspectCodeSymbolInventory
+      - DetectCodeSymbolDuplicates
+      - DetectGovernedSourceDrift
+    fowlerSignals:
+      - code symbol duplicate, semantic candidate, and source drift findings are exposed through Planning DB query rails
+    architectureGuard: node --test scripts/planning-db-query.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+      - scripts/planning-db-migrate.test.cjs
   - name: architectureTestSelect
     path: scripts/planning-db-query.cjs
     dddOwner: ComponentIntegrityReadModel

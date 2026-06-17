@@ -10,6 +10,7 @@ const {
   readComponentIntegrityRows,
 } = require('./planning-db/queries/component-integrity-query.cjs');
 const { readRailVocabularyRows } = require('./planning-db/queries/rail-vocabulary-query.cjs');
+const { readSourceDriftRows } = require('./planning-db/queries/code-symbol-query.cjs');
 
 const databaseUrl = process.env.PLANNING_DATABASE_URL || process.env.DATABASE_URL || defaultPgUrl;
 const severityOrder = Object.freeze(['blocker', 'error', 'warning', 'info']);
@@ -30,6 +31,9 @@ const progressiveBaseline = Object.freeze({
     missing_ddd_owner: Object.freeze({ total: 0 }),
     semantic_duplicate: Object.freeze({ total: 0 }),
     surface_named_rail: Object.freeze({ warning: 0, total: 0 }),
+  }),
+  sourceDrift: Object.freeze({
+    missing_source_file: Object.freeze({ total: 0 }),
   }),
 });
 
@@ -164,10 +168,16 @@ function buildProgressiveBaselineViolations(kindCounts = {}, baseline = {}) {
   return violations;
 }
 
-function buildIntegrityCheckResult({ componentRows = [], railRows = [], strict = false } = {}) {
+function buildIntegrityCheckResult({
+  componentRows = [],
+  railRows = [],
+  sourceDriftRows = [],
+  strict = false,
+} = {}) {
   const kindCounts = {
     componentIntegrity: countRowsByKindAndSeverity(componentRows),
     railVocabulary: countRowsByKindAndSeverity(railRows),
+    sourceDrift: countRowsByKindAndSeverity(sourceDriftRows),
   };
   const baselineViolations = [
     ...buildProgressiveBaselineViolations(
@@ -178,13 +188,20 @@ function buildIntegrityCheckResult({ componentRows = [], railRows = [], strict =
       kindCounts.railVocabulary,
       progressiveBaseline.railVocabulary
     ).map((violation) => ({ ...violation, surface: 'rail_vocabulary' })),
+    ...buildProgressiveBaselineViolations(
+      kindCounts.sourceDrift,
+      progressiveBaseline.sourceDrift
+    ).map((violation) => ({ ...violation, surface: 'source_drift' })),
   ];
   const counts = {
     componentIntegrity: countRowsBySeverity(componentRows),
     railVocabulary: countRowsBySeverity(railRows),
+    sourceDrift: countRowsBySeverity(sourceDriftRows),
   };
   const blocking =
-    hasBlockingFinding(counts.componentIntegrity) || hasBlockingFinding(counts.railVocabulary);
+    hasBlockingFinding(counts.componentIntegrity) ||
+    hasBlockingFinding(counts.railVocabulary) ||
+    hasBlockingFinding(counts.sourceDrift);
 
   return {
     mode: strict ? 'strict' : 'report',
@@ -209,6 +226,7 @@ function formatIntegrityCheckSummary(result) {
     `[planning:db:integrity] mode=${result.mode} exit=${result.exitCode}`,
     formatCountLine('component_integrity', result.counts.componentIntegrity),
     formatCountLine('rail_vocabulary', result.counts.railVocabulary),
+    formatCountLine('source_drift', result.counts.sourceDrift),
     `progressive_baseline ${result.baselineViolations.length === 0 ? 'pass' : `fail violations=${result.baselineViolations.length}`}`,
   ];
   for (const violation of result.baselineViolations) {
@@ -229,14 +247,16 @@ async function runIntegrityCheck(options = {}) {
       await client.connect();
     }
     const limit = options.limit || 5000;
-    const [componentRows, railRows] = await Promise.all([
+    const [componentRows, railRows, sourceDriftRows] = await Promise.all([
       readComponentIntegrityRows(client, { limit }),
       readRailVocabularyRows(client, { limit }),
+      readSourceDriftRows(client, { limit }),
     ]);
 
     return buildIntegrityCheckResult({
       componentRows,
       railRows,
+      sourceDriftRows,
       strict: options.strict === true,
     });
   } finally {
