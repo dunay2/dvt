@@ -277,8 +277,10 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/106_lightweight_governance_problem_dashboard.sql
   - tools/planning-db/migrations/107_retire_tarea_rail_duplicates_and_repoint_sources.sql
   - tools/planning-db/migrations/108_retire_canvas_node_workbench_overlay_orphan.sql
+  - tools/planning-db/migrations/112_planning_db_query_limit_helper_component.sql
   - scripts/planning-db-import.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
+  - scripts/planning-db/query-limit.cjs
   - scripts/planning-db/queries/code-symbol-query.cjs
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
@@ -531,6 +533,18 @@ redGreenCycles:
       - apps/web/src/app/plugins/monitoring/monitoringContributions.test.ts
     greenTest: pnpm --filter @dvt/web test:changed
 symbols:
+  - name: parseLimit
+    path: scripts/planning-db/query-limit.cjs
+    dddOwner: CodeSymbolDuplicateReadModel
+    cqRails:
+      - DetectCodeSymbolDuplicates
+      - InspectCodeSymbolInventory
+    fowlerSignals:
+      - repeated Planning DB query limit parsers use one canonical helper instead of adapter-local duplicate functions
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
   - name: componentEngineeringSchemaName
     path: scripts/planning-db-operate.cjs
     dddOwner: CreateGovernanceComponentCommandAdapter
