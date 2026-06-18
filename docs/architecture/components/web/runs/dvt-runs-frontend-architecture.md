@@ -160,7 +160,7 @@ Current residual constraint after that fix:
 
 ## F-10 Event Timeline Convergence
 
-F-10 closes the live event chronology gap between the shell console and the
+F-10 closes the live event chronology gap between the shell operational drawer and the
 durable Runs workspace. The local event stream model owns ordering, duplicate
 collapse, active-status polling posture, and cursor preservation before either
 surface renders events.
@@ -168,17 +168,17 @@ surface renders events.
 ```mermaid
 flowchart LR
   Events["GET /runs/:runId/events"] --> TimelineModel["runEventTimelineModel"]
-  TimelineModel --> Console["useConsoleLogStream"]
+  TimelineModel --> LiveLog["useConsoleLogStream"]
   TimelineModel --> Facade["RunWorkspaceFacade"]
-  Console --> Terminal["BottomConsoleDrawer terminal lines"]
+  LiveLog --> Terminal["BottomOperationalDrawer terminal lines"]
   Facade --> Workspace["RunWorkspaceStateView"]
   Workspace --> Table["RunEventTimelineTable"]
 ```
 
 Rules:
 
-1. Console and Runs must consume the same timeline ordering and dedupe model.
-2. Console remains a shell companion stream.
+1. The operational drawer log and Runs must consume the same timeline ordering and dedupe model.
+2. The operational drawer log remains a shell companion stream.
 3. Runs remains durable snapshot-plus-timeline authority.
 4. Timeline events remain chronology-only and must not infer snapshot evidence.
 

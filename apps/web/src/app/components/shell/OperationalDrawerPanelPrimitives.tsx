@@ -10,10 +10,22 @@ import type {
 const operationalDrawerPanelClassNames = {
   panelSurface: 'h-full min-h-0 overflow-auto px-4 py-3',
   emptyState: 'text-sm text-[var(--text-subtle)]',
+  problemList: 'space-y-2',
+  problemItem:
+    'grid grid-cols-[6rem_1fr] gap-3 border-b border-[color:var(--border-muted)] py-2 text-sm last:border-b-0',
+  problemMessageFrame: 'min-w-0',
+  problemMessage: 'block text-[var(--text-default)]',
   warningBadge:
     'h-fit rounded border border-amber-400/50 px-2 py-0.5 text-[11px] font-semibold uppercase text-amber-100',
   codeToken: 'rounded border border-amber-400/40 px-2 py-0.5 font-mono text-[11px] text-amber-100',
   detailCode: 'mt-1 block font-mono text-[11px] text-[var(--text-muted)]',
+  runSummary: 'grid gap-1',
+  runSummaryLabel: 'text-[var(--text-muted)]',
+  runSummaryValue: 'font-mono text-[var(--text-strong)]',
+  previewLayout: 'flex flex-wrap items-start gap-3',
+  previewContent: 'min-w-0 flex-1',
+  previewSummary: 'mt-1 text-[var(--text-default)]',
+  previewBlockers: 'mt-2 flex flex-wrap gap-1.5',
   sectionKicker: 'text-[11px] font-semibold uppercase text-[var(--text-muted)]',
   tabList: 'flex shrink-0 items-center gap-1 border-b border-[color:var(--border-default)] px-3',
   tabButton:
@@ -69,7 +81,7 @@ export function OperationalDrawerWarningBadge({
 export function OperationalDrawerProblemList({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
-  return <ol className="space-y-2">{children}</ol>;
+  return <ol className={operationalDrawerPanelClassNames.problemList}>{children}</ol>;
 }
 
 export function OperationalDrawerProblemItem({
@@ -82,12 +94,12 @@ export function OperationalDrawerProblemItem({
   severity: string;
 }>): JSX.Element {
   return (
-    <li className="grid grid-cols-[6rem_1fr] gap-3 border-b border-[color:var(--border-muted)] py-2 text-sm last:border-b-0">
+    <li className={operationalDrawerPanelClassNames.problemItem}>
       <OperationalDrawerWarningBadge dataSlot="bottom-operational-problem-severity">
         {severity}
       </OperationalDrawerWarningBadge>
-      <span className="min-w-0">
-        <span className="block text-[var(--text-default)]">{message}</span>
+      <span className={operationalDrawerPanelClassNames.problemMessageFrame}>
+        <span className={operationalDrawerPanelClassNames.problemMessage}>{message}</span>
         <OperationalDrawerDetailCode>{detail}</OperationalDrawerDetailCode>
       </span>
     </li>
@@ -131,9 +143,9 @@ export function OperationalDrawerRunActiveSummary({
   activeRunId,
 }: Readonly<{ activeRunId: string }>): JSX.Element {
   return (
-    <div className="grid gap-1">
-      <span className="text-[var(--text-muted)]">Active run</span>
-      <code className="font-mono text-[var(--text-strong)]">{activeRunId}</code>
+    <div className={operationalDrawerPanelClassNames.runSummary}>
+      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>Active run</span>
+      <code className={operationalDrawerPanelClassNames.runSummaryValue}>{activeRunId}</code>
     </div>
   );
 }
@@ -143,8 +155,8 @@ export function OperationalDrawerPreviewLayout({
   children,
 }: Readonly<{ action: ReactNode; children: ReactNode }>): JSX.Element {
   return (
-    <div className="flex flex-wrap items-start gap-3">
-      <div className="min-w-0 flex-1">{children}</div>
+    <div className={operationalDrawerPanelClassNames.previewLayout}>
+      <div className={operationalDrawerPanelClassNames.previewContent}>{children}</div>
       {action}
     </div>
   );
@@ -162,9 +174,9 @@ export function OperationalDrawerPreviewSummary({
   return (
     <>
       <OperationalDrawerSectionKicker>{statusLabel}</OperationalDrawerSectionKicker>
-      <p className="mt-1 text-[var(--text-default)]">{summary}</p>
+      <p className={operationalDrawerPanelClassNames.previewSummary}>{summary}</p>
       {blockers.length > 0 ? (
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className={operationalDrawerPanelClassNames.previewBlockers}>
           {blockers.map((blocker) => (
             <OperationalDrawerCodeToken key={blocker} dataSlot="bottom-operational-preview-blocker">
               {blocker}

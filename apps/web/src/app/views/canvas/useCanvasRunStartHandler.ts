@@ -10,14 +10,14 @@ import { executeCanvasRunStartAction } from './canvasRunStartAction';
 type UseCanvasRunStartHandlerArgs = Pick<
   UseCanvasExecutionActionsParams,
   | 'canRun'
-  | 'consolePanelVisible'
+  | 'bottomDrawerVisible'
   | 'currentPlan'
   | 'onRunStarted'
   | 'runsService'
   | 'sessionContext'
-  | 'setConsolePanelHeight'
+  | 'setBottomDrawerHeight'
   | 'shellFeedback'
-  | 'toggleConsolePanel'
+  | 'toggleBottomDrawer'
 > & {
   executableGraphFailureMessage: string | null;
   hasPersistedPlanForRun: boolean;
@@ -25,25 +25,25 @@ type UseCanvasRunStartHandlerArgs = Pick<
   setPlanModalOpen: SetPlanModalOpen;
 };
 
-function revealStartedRunConsole({
-  consolePanelVisible,
-  setConsolePanelHeight,
-  toggleConsolePanel,
+function revealStartedRunOperations({
+  bottomDrawerVisible,
+  setBottomDrawerHeight,
+  toggleBottomDrawer,
 }: Pick<
   UseCanvasExecutionActionsParams,
-  'consolePanelVisible' | 'setConsolePanelHeight' | 'toggleConsolePanel'
+  'bottomDrawerVisible' | 'setBottomDrawerHeight' | 'toggleBottomDrawer'
 >): void {
-  if (consolePanelVisible) {
-    setConsolePanelHeight(160);
+  if (bottomDrawerVisible) {
+    setBottomDrawerHeight(160);
     return;
   }
 
-  toggleConsolePanel();
+  toggleBottomDrawer();
 }
 
 export function useCanvasRunStartHandler({
   canRun,
-  consolePanelVisible,
+  bottomDrawerVisible,
   currentPlan,
   executableGraphFailureMessage,
   hasPersistedPlanForRun,
@@ -51,10 +51,10 @@ export function useCanvasRunStartHandler({
   onRunStarted,
   runsService,
   sessionContext,
-  setConsolePanelHeight,
+  setBottomDrawerHeight,
   setPlanModalOpen,
   shellFeedback,
-  toggleConsolePanel,
+  toggleBottomDrawer,
 }: UseCanvasRunStartHandlerArgs): () => Promise<void> {
   return useCallback(async () => {
     const result = await executeCanvasRunStartAction({
@@ -76,17 +76,17 @@ export function useCanvasRunStartHandler({
     }
 
     setPlanModalOpen(false);
-    revealStartedRunConsole({
-      consolePanelVisible,
-      setConsolePanelHeight,
-      toggleConsolePanel,
+    revealStartedRunOperations({
+      bottomDrawerVisible,
+      setBottomDrawerHeight,
+      toggleBottomDrawer,
     });
 
     shellFeedback.success(canvasViewCopy.runStartedMessage);
     onRunStarted(result.runId);
   }, [
     canRun,
-    consolePanelVisible,
+    bottomDrawerVisible,
     currentPlan,
     executableGraphFailureMessage,
     hasPersistedPlanForRun,
@@ -94,9 +94,9 @@ export function useCanvasRunStartHandler({
     onRunStarted,
     runsService,
     sessionContext,
-    setConsolePanelHeight,
+    setBottomDrawerHeight,
     setPlanModalOpen,
     shellFeedback,
-    toggleConsolePanel,
+    toggleBottomDrawer,
   ]);
 }

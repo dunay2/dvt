@@ -29,9 +29,9 @@ type CanvasStoreFacade = {
   currentPlan: ReturnType<typeof useExecutionStore.getState>['currentPlan'];
   currentRun: ReturnType<typeof useExecutionStore.getState>['currentRun'];
   userPermissions: UserPermissions;
-  setConsolePanelHeight: (height: number) => void;
-  consolePanelVisible: boolean;
-  toggleConsolePanel: () => void;
+  setBottomDrawerHeight: (height: number) => void;
+  bottomDrawerVisible: boolean;
+  toggleBottomDrawer: () => void;
   inspectorPanelVisible: boolean;
   gridSize: number;
   canvasPalette: CanvasPaletteId;
@@ -88,12 +88,12 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const currentPlan = useExecutionStore((state) => state.currentPlan);
   const currentRun = useExecutionStore((state) => state.currentRun);
   const userPermissions = useAuthorizationStore((state) => state.userPermissions);
-  const setConsolePanelHeight = useUiLayoutStore((state) => state.setConsolePanelHeight);
-  const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
+  const setBottomDrawerHeight = useUiLayoutStore((state) => state.setBottomDrawerHeight);
+  const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
   const showInspectorPanelStore = useUiLayoutStore((state) => state.showInspectorPanel);
   const hideInspectorPanelStore = useUiLayoutStore((state) => state.hideInspectorPanel);
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
-  const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
+  const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
@@ -148,9 +148,9 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     currentPlan,
     currentRun,
     userPermissions,
-    setConsolePanelHeight,
-    consolePanelVisible,
-    toggleConsolePanel,
+    setBottomDrawerHeight,
+    bottomDrawerVisible,
+    toggleBottomDrawer,
     inspectorPanelVisible,
     gridSize,
     canvasPalette,

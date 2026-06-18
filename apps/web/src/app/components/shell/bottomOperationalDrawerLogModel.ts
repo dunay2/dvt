@@ -3,29 +3,29 @@ import type { DataSourceMode } from '../../services/config/dataSource';
 const API_IDLE_MESSAGE = 'Start a run to see live run events here.';
 const LOADING_MESSAGE = 'Loading run events...';
 
-type BottomConsoleDrawerModelBase = {
+type BottomOperationalDrawerLogModelBase = {
   readonly title: string;
   readonly modeLabel: string | null;
 };
 
-export type BottomConsoleDrawerModel =
-  | (BottomConsoleDrawerModelBase & {
+export type BottomOperationalDrawerLogModel =
+  | (BottomOperationalDrawerLogModelBase & {
       readonly kind: 'idle';
       readonly runLabel: null;
       readonly message: string;
     })
-  | (BottomConsoleDrawerModelBase & {
+  | (BottomOperationalDrawerLogModelBase & {
       readonly kind: 'loading';
       readonly runLabel: string;
       readonly message: string;
     })
-  | (BottomConsoleDrawerModelBase & {
+  | (BottomOperationalDrawerLogModelBase & {
       readonly kind: 'streaming';
       readonly runLabel: string;
       readonly lines: readonly string[];
     });
 
-type BuildBottomConsoleDrawerModelInput = {
+type BuildBottomOperationalDrawerLogModelInput = {
   readonly title: string;
   readonly dataSourceMode: DataSourceMode;
   readonly runId: string | undefined;
@@ -33,13 +33,13 @@ type BuildBottomConsoleDrawerModelInput = {
   readonly lines: readonly string[];
 };
 
-export function buildBottomConsoleDrawerModel({
+export function buildBottomOperationalDrawerLogModel({
   title,
   dataSourceMode: _dataSourceMode,
   runId,
   isLoading,
   lines,
-}: BuildBottomConsoleDrawerModelInput): BottomConsoleDrawerModel {
+}: BuildBottomOperationalDrawerLogModelInput): BottomOperationalDrawerLogModel {
   const modeLabel = null;
 
   if (!runId) {

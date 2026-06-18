@@ -18,33 +18,33 @@ import {
 
 type ExecutionActionsHarness = ReturnType<typeof renderExecutionActionsHarness>;
 
-type StartedRunConsoleScenario = Readonly<{
+type StartedRunOperationsScenario = Readonly<{
   name: string;
   runId: string;
-  consolePanelVisible: boolean;
-  assertConsoleReveal: (args: {
-    setConsolePanelHeight: ReturnType<typeof vi.fn<(height: number) => void>>;
-    toggleConsolePanel: ReturnType<typeof vi.fn<() => void>>;
+  bottomDrawerVisible: boolean;
+  assertOperationsReveal: (args: {
+    setBottomDrawerHeight: ReturnType<typeof vi.fn<(height: number) => void>>;
+    toggleBottomDrawer: ReturnType<typeof vi.fn<() => void>>;
   }) => void;
 }>;
 
-const startedRunConsoleScenarios: readonly StartedRunConsoleScenario[] = [
+const startedRunOperationsScenarios: readonly StartedRunOperationsScenario[] = [
   {
-    name: 'opens the console panel when a run starts from a collapsed console',
-    runId: 'run-toggle-console',
-    consolePanelVisible: false,
-    assertConsoleReveal: ({ setConsolePanelHeight, toggleConsolePanel }) => {
-      expect(toggleConsolePanel).toHaveBeenCalledTimes(1);
-      expect(setConsolePanelHeight).not.toHaveBeenCalled();
+    name: 'opens the bottom operational drawer when a run starts from a collapsed drawer',
+    runId: 'run-toggle-operations',
+    bottomDrawerVisible: false,
+    assertOperationsReveal: ({ setBottomDrawerHeight, toggleBottomDrawer }) => {
+      expect(toggleBottomDrawer).toHaveBeenCalledTimes(1);
+      expect(setBottomDrawerHeight).not.toHaveBeenCalled();
     },
   },
   {
-    name: 'expands the console panel when a run starts with the console already visible',
-    runId: 'run-expand-console',
-    consolePanelVisible: true,
-    assertConsoleReveal: ({ setConsolePanelHeight, toggleConsolePanel }) => {
-      expect(setConsolePanelHeight).toHaveBeenCalledWith(160);
-      expect(toggleConsolePanel).not.toHaveBeenCalled();
+    name: 'expands the bottom operational drawer when a run starts with the drawer already visible',
+    runId: 'run-expand-operations',
+    bottomDrawerVisible: true,
+    assertOperationsReveal: ({ setBottomDrawerHeight, toggleBottomDrawer }) => {
+      expect(setBottomDrawerHeight).toHaveBeenCalledWith(160);
+      expect(toggleBottomDrawer).not.toHaveBeenCalled();
     },
   },
 ];
@@ -54,9 +54,9 @@ async function renderRunStartHarness(
     runsService?: ReturnType<typeof createRunsServiceMock>;
     currentPlan?: PlanViewModel | null;
     executionEnvironmentId?: string;
-    consolePanelVisible?: boolean;
-    setConsolePanelHeight?: (height: number) => void;
-    toggleConsolePanel?: () => void;
+    bottomDrawerVisible?: boolean;
+    setBottomDrawerHeight?: (height: number) => void;
+    toggleBottomDrawer?: () => void;
   } = {}
 ): Promise<{
   runsService: ReturnType<typeof createRunsServiceMock>;
@@ -72,9 +72,9 @@ async function renderRunStartHarness(
     canonicalNodes: buildCanonicalNodes(),
     canonicalEdges: buildCanonicalEdges(),
     executionEnvironmentId: args.executionEnvironmentId,
-    consolePanelVisible: args.consolePanelVisible,
-    setConsolePanelHeight: args.setConsolePanelHeight,
-    toggleConsolePanel: args.toggleConsolePanel,
+    bottomDrawerVisible: args.bottomDrawerVisible,
+    setBottomDrawerHeight: args.setBottomDrawerHeight,
+    toggleBottomDrawer: args.toggleBottomDrawer,
   });
 
   await harness.render();
@@ -85,11 +85,11 @@ async function renderRunStartHarness(
   };
 }
 
-async function expectStartedRunConsoleScenario(
-  scenario: StartedRunConsoleScenario
+async function expectStartedRunOperationsScenario(
+  scenario: StartedRunOperationsScenario
 ): Promise<ExecutionActionsHarness> {
-  const setConsolePanelHeight = vi.fn<(height: number) => void>();
-  const toggleConsolePanel = vi.fn<() => void>();
+  const setBottomDrawerHeight = vi.fn<(height: number) => void>();
+  const toggleBottomDrawer = vi.fn<() => void>();
   const startedScenario = await renderRunStartHarness({
     runsService: createRunsServiceMock({
       startRun: vi.fn(async () => ({
@@ -97,16 +97,16 @@ async function expectStartedRunConsoleScenario(
         accepted: true,
       })),
     }),
-    consolePanelVisible: scenario.consolePanelVisible,
-    setConsolePanelHeight,
-    toggleConsolePanel,
+    bottomDrawerVisible: scenario.bottomDrawerVisible,
+    setBottomDrawerHeight,
+    toggleBottomDrawer,
   });
 
   await startedScenario.harness.clickStartRun();
 
-  scenario.assertConsoleReveal({
-    setConsolePanelHeight,
-    toggleConsolePanel,
+  scenario.assertOperationsReveal({
+    setBottomDrawerHeight,
+    toggleBottomDrawer,
   });
   expect(startedScenario.harness.onRunStarted).toHaveBeenCalledWith(scenario.runId);
 
@@ -197,7 +197,7 @@ describe('useCanvasExecutionActions successful run start', () => {
     );
   });
 
-  it.each(startedRunConsoleScenarios)('$name', async (scenario) => {
-    harness = await expectStartedRunConsoleScenario(scenario);
+  it.each(startedRunOperationsScenarios)('$name', async (scenario) => {
+    harness = await expectStartedRunOperationsScenario(scenario);
   });
 });

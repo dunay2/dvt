@@ -47,11 +47,11 @@ export type UseCanvasExecutionActionsParams = {
     WorkspaceBootstrapConfig,
     'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
   >;
-  consolePanelVisible: boolean;
+  bottomDrawerVisible: boolean;
   currentPlan: PlanViewModel | null;
   setCurrentPlan: (plan: PlanViewModel | null) => void;
-  setConsolePanelHeight: (height: number) => void;
-  toggleConsolePanel: () => void;
+  setBottomDrawerHeight: (height: number) => void;
+  toggleBottomDrawer: () => void;
   onRunStarted: (runId: string) => void;
 };
 

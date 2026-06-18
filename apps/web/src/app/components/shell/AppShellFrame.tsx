@@ -26,7 +26,7 @@ export function AppShellFrame({
   showBottomDrawer,
 }: AppShellFrameProps) {
   const showLeftNavigation = !focusMode && navigationDisposition.railMode === 'visible';
-  const showConsoleDrawer = !focusMode && showBottomDrawer;
+  const showOperationalDrawer = !focusMode && showBottomDrawer;
 
   return (
     <div
@@ -46,13 +46,13 @@ export function AppShellFrame({
 
           <div data-slot="app-shell-main" className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <ResizablePanelGroup direction="vertical">
-              <ResizablePanel defaultSize={showConsoleDrawer ? 78 : 100}>
+              <ResizablePanel defaultSize={showOperationalDrawer ? 78 : 100}>
                 <div data-slot="app-shell-outlet" className="h-full w-full overflow-hidden">
                   {children}
                 </div>
               </ResizablePanel>
 
-              {showConsoleDrawer && (
+              {showOperationalDrawer && (
                 <>
                   <ResizableHandle />
                   <ResizablePanel defaultSize={22} minSize={12} maxSize={40}>

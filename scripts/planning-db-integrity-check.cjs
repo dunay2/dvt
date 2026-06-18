@@ -246,6 +246,7 @@ async function runIntegrityCheck(options = {}) {
     if (ownsClient) {
       await client.connect();
     }
+    await client.query('set statement_timeout = 0');
     const limit = options.limit || 5000;
     const [componentRows, railRows, sourceDriftRows] = await Promise.all([
       readComponentIntegrityRows(client, { limit }),
