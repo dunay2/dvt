@@ -718,6 +718,55 @@ test('tracked migrations project code symbols through effective component owners
   assert.doesNotMatch(codeSymbolOwnershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Planning DB query read models into leaf components', () => {
+  const migrations = readMigrationFiles();
+  const queryLeafMigration = migrations.find(
+    (migration) => migration.fileName === '175_planning_db_query_read_model_leaf_components.sql'
+  );
+
+  assert.ok(queryLeafMigration);
+  assert.match(queryLeafMigration.sql, /create temporary table planning_db_query_leaf_map/);
+  assert.match(
+    queryLeafMigration.sql,
+    /'SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-CODE-SYMBOLS'/
+  );
+  assert.match(queryLeafMigration.sql, /'SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-CQ-RAILS'/);
+  assert.match(
+    queryLeafMigration.sql,
+    /'SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-COMPONENT-INTEGRITY'/
+  );
+  assert.match(queryLeafMigration.sql, /children_required\s*,[\s\S]*true/);
+  assert.match(
+    queryLeafMigration.sql,
+    /insert into planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.match(queryLeafMigration.sql, /cross join lateral unnest\(owns\)/);
+  assert.match(queryLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(queryLeafMigration.sql, /insert into architecture\.component_storage_io/);
+  assert.match(queryLeafMigration.sql, /REL-PLANNING-DB-QUERY-CONTAINS-/);
+  assert.match(queryLeafMigration.sql, /PLANNING-DB-QUERY-READ-MODEL-LEAF-MAPPING-20260618/);
+  assert.doesNotMatch(queryLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(queryLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations repoint Planning DB query parent away from CLI file path', () => {
+  const migrations = readMigrationFiles();
+  const queryParentPathMigration = migrations.find(
+    (migration) => migration.fileName === '176_repoint_planning_db_query_parent_repo_path.sql'
+  );
+
+  assert.ok(queryParentPathMigration);
+  assert.match(
+    queryParentPathMigration.sql,
+    /PLANNING-DB-QUERY-PARENT-REPO-PATH-CANONICALIZATION-20260618/
+  );
+  assert.match(queryParentPathMigration.sql, /repo_path = 'scripts\/planning-db\/queries'/);
+  assert.match(queryParentPathMigration.sql, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-CLI/);
+  assert.match(queryParentPathMigration.sql, /scripts\/planning-db-query\.cjs/);
+  assert.doesNotMatch(queryParentPathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(queryParentPathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations keep the governance problem dashboard on lightweight views', () => {
   const migrations = readMigrationFiles();
   const dashboardMigration = migrations.find(
