@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   buildIntegrityCheckResult,
   formatIntegrityCheckSummary,
+  runIntegrityCheck,
   shouldFailIntegrityCheck,
 } = require('./planning-db-integrity-check.cjs');
 
@@ -271,4 +272,19 @@ test('Planning DB integrity check fails strict mode on blocker or error findings
   assert.equal(shouldFailIntegrityCheck(result), true);
   assert.match(formatIntegrityCheckSummary(result), /mode=strict/);
   assert.match(formatIntegrityCheckSummary(result), /component_integrity total=1 blocker=1/);
+});
+
+test('Planning DB integrity check disables statement timeout before reading heavy views', async () => {
+  const queries = [];
+  const fakeClient = {
+    async query(sql) {
+      queries.push(sql);
+      return { rows: [] };
+    },
+  };
+
+  const result = await runIntegrityCheck({ client: fakeClient, limit: 10 });
+
+  assert.equal(queries[0], 'set statement_timeout = 0');
+  assert.equal(result.exitCode, 0);
 });

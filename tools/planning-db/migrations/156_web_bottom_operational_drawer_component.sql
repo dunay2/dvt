@@ -449,6 +449,8 @@ with drawer_feature_common as (
       'docs/architecture/components/web/screen-layout-and-cross-surface-behavior-rules.md',
       'docs/architecture/components/web/web-store-domain-ownership-component.md',
       'docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md',
+      'scripts/planning-db-integrity-check.cjs',
+      'scripts/planning-db-integrity-check.test.cjs',
       'scripts/planning-db-frontend-component-inventory.test.cjs',
       'scripts/planning-db/frontend-component-inventory.cjs',
       'tools/planning-db/migrations/156_web_bottom_operational_drawer_component.sql',
