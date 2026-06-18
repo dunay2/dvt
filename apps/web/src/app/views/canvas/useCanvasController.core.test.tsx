@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { act } from 'react';
 
 import {
   buildRemoteDraftRecord,
@@ -138,5 +139,40 @@ describe('useCanvasController core', () => {
         onRunStarted: harness.state.navigationActionsResult.handleRunStarted,
       })
     );
+  });
+
+  it('returns a safe presentation state when the graph query fails', async () => {
+    harness.cleanup();
+    harness = setupCanvasControllerHarness();
+    await harness.renderProbe();
+
+    harness.setGraphQueryError();
+    await harness.renderProbe();
+
+    const result = harness.getLatestResult();
+    expect(result).not.toBeNull();
+    expect(result?.inspectorGraphNodes).toEqual([]);
+    expect(result?.edges).toEqual([]);
+    expect(result?.nodesWithImpact).toEqual([]);
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+    });
+
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).not.toHaveBeenCalled();
+  });
+
+  it('keeps runtime overlay selected when protected draft semantics do not expose cost data', async () => {
+    await harness.toggleCostOverlay();
+    await harness.renderProbe();
+    expect(harness.getLatestResult()?.exclusiveOverlayMode).toBe('runtime');
+
+    harness.removeNodeCostsAndRefreshGraphSnapshot();
+    await harness.renderProbe();
+
+    expect(harness.getLatestResult()?.canUseCostOverlay).toBe(false);
+    expect(harness.getLatestResult()?.exclusiveOverlayMode).toBe('runtime');
   });
 });
