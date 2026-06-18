@@ -289,6 +289,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/121_repoint_canvas_viewport_graph_model_test_support_rail.sql
   - tools/planning-db/migrations/122_web_canvas_test_ownership_canonicalization.sql
   - tools/planning-db/migrations/123_web_canvas_viewport_model_test_responsibility.sql
+  - tools/planning-db/migrations/124_reconcile_web_canvas_parallel_test_drift.sql
   - scripts/planning-db-import.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
   - scripts/planning-db/query-limit.cjs

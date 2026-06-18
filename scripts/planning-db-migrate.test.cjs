@@ -1325,6 +1325,31 @@ test('tracked migrations complete Web Canvas viewport model test maturity eviden
   assert.doesNotMatch(viewportModelTestResponsibilityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Web Canvas parallel test drift without deleting history', () => {
+  const migrations = readMigrationFiles();
+  const parallelTestDriftMigration = migrations.find(
+    (migration) => migration.fileName === '124_reconcile_web_canvas_parallel_test_drift.sql'
+  );
+
+  assert.ok(parallelTestDriftMigration);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.test\.support\.ts/);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.edges\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.nodeData\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.layout\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /CanvasContextMenuView\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /SYS-WEB-CANVAS-CONTEXT-MENU-VIEW-TESTS/);
+  assert.match(parallelTestDriftMigration.sql, /REL-WEB-CANVAS-CONTEXT-MENU-CONTAINS-VIEW-TESTS/);
+  assert.match(parallelTestDriftMigration.sql, /TEST-WEB-CANVAS-CONTEXT-MENU-VIEW/);
+  assert.match(parallelTestDriftMigration.sql, /pattern_kind = 'excludes'/);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /CanvasShell\.legacyGuides\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /deprecatedSourcePaths/);
+  assert.match(parallelTestDriftMigration.sql, /retired: CanvasShell\.legacyGuides\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /DetectGovernedSourceDrift/);
+  assert.doesNotMatch(parallelTestDriftMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(parallelTestDriftMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations persist Web Canvas leaf component mapping', () => {
   const migrations = readMigrationFiles();
   const canvasLeafMappingMigration = migrations.find(
