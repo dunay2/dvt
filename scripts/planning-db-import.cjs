@@ -2718,6 +2718,52 @@ async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
   );
 }
 
+async function reconcileDeprecatedLocalRailSources(client) {
+  await client.query(`
+    with deprecated_local_rails as (
+      select
+        rail.rail_id,
+        rail.raw_rail->>'currentImplementationSourcePath' as current_source_path
+      from ${schemaName}.feature_mechanization_local_rails rail
+      where nullif(rail.raw_rail->>'currentImplementationSourcePath', '') is not null
+        and exists (
+          select 1
+          from jsonb_array_elements_text(
+            coalesce(
+              rail.raw_rail->'deprecatedSourcePaths',
+              rail.raw_manifest->'deprecatedSourcePaths',
+              '[]'::jsonb
+            )
+          ) deprecated_source(path)
+          where deprecated_source.path = rail.source_path
+        )
+    )
+    update ${schemaName}.feature_mechanization_local_rails rail
+    set
+      source_path = deprecated_local_rails.current_source_path,
+      source_content_sha256 = coalesce(
+        (
+          select file_ref.content_hash
+          from ${schemaName}.governance_files file_ref
+          where file_ref.path = deprecated_local_rails.current_source_path
+        ),
+        rail.source_content_sha256
+      ),
+      raw_manifest = coalesce(rail.raw_manifest, '{}'::jsonb)
+        || jsonb_build_object(
+          'currentImplementationSourcePath',
+          deprecated_local_rails.current_source_path,
+          'sourcePathReconciledBy',
+          'planning-db-import-reconcile-deprecated-local-rail-sources'
+        ),
+      revision = rail.revision + 1,
+      updated_at = now()
+    from deprecated_local_rails
+    where rail.rail_id = deprecated_local_rails.rail_id
+      and rail.source_path <> deprecated_local_rails.current_source_path
+  `);
+}
+
 async function insertFrontendComponentReflectionSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.frontend_component_evidence`);
   await client.query(`delete from ${schemaName}.frontend_component_cq_rails`);
@@ -3249,6 +3295,7 @@ async function importContent(options = {}) {
         client,
         knowledgeIntakeRepositoryReferenceSnapshot
       );
+      await reconcileDeprecatedLocalRailSources(client);
     }
     await client.query('commit');
   } catch (error) {
@@ -4452,6 +4499,7 @@ module.exports = {
   readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,
   readYamlSource,
+  reconcileDeprecatedLocalRailSources,
   runPlanningImport,
   sha256,
 };

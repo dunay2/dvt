@@ -927,6 +927,101 @@ test('tracked migrations repoint bottom operational drawer local feature sources
   assert.doesNotMatch(drawerSourceMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations stabilize deprecated bottom operational drawer sources without inventory dependency', () => {
+  const migrations = readMigrationFiles();
+  const drawerSourceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '165_stabilize_bottom_operational_drawer_deprecated_sources.sql'
+  );
+
+  assert.ok(drawerSourceMigration);
+  assert.match(drawerSourceMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(
+    drawerSourceMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/bottomConsoleDrawerModel\.ts/
+  );
+  assert.match(
+    drawerSourceMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/OperationalDrawerPanels\.tsx/
+  );
+  assert.match(drawerSourceMigration.sql, /deprecatedSourcePaths/);
+  assert.match(drawerSourceMigration.sql, /currentImplementationSourcePath/);
+  assert.match(drawerSourceMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(drawerSourceMigration.sql, /coalesce\(\s*\(\s*select file_ref\.content_hash/);
+  assert.doesNotMatch(drawerSourceMigration.sql, /join source_files/i);
+  assert.doesNotMatch(
+    drawerSourceMigration.sql,
+    /from planning_query_store\.governance_file_query/i
+  );
+  assert.doesNotMatch(drawerSourceMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(drawerSourceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split Web Canvas residual files into semantic components', () => {
+  const migrations = readMigrationFiles();
+  const canvasSplitMigration = migrations.find(
+    (migration) => migration.fileName === '166_web_canvas_residual_component_split.sql'
+  );
+
+  assert.ok(canvasSplitMigration);
+  assert.match(canvasSplitMigration.sql, /PLANNING-DB-WEB-CANVAS-RESIDUAL-SPLIT-20260618/);
+  assert.match(canvasSplitMigration.sql, /SYS-WEB-CANVAS-DRAFT-LIFECYCLE/);
+  assert.match(canvasSplitMigration.sql, /SYS-WEB-CANVAS-CONTROLLER-INTERACTION/);
+  assert.match(canvasSplitMigration.sql, /SYS-WEB-CANVAS-COPY-LOCALIZATION/);
+  assert.match(canvasSplitMigration.sql, /governance_component_local_ownership_patterns/);
+  assert.match(canvasSplitMigration.sql, /architecture\.component/);
+  assert.match(canvasSplitMigration.sql, /architecture\.component_test/);
+  assert.match(canvasSplitMigration.sql, /apps\/web\/src\/app\/views\/canvas\/copy\.test\.ts/);
+  assert.match(canvasSplitMigration.sql, /SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES/);
+  assert.doesNotMatch(canvasSplitMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasSplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations sanitize Web Canvas split maturity and repo path anchors', () => {
+  const migrations = readMigrationFiles();
+  const canvasMaturityMigration = migrations.find(
+    (migration) => migration.fileName === '167_web_canvas_split_maturity_and_path_sanitization.sql'
+  );
+
+  assert.ok(canvasMaturityMigration);
+  assert.match(canvasMaturityMigration.sql, /repo_path_repoints/);
+  assert.match(
+    canvasMaturityMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasShellChromeStateBuilder\.ts/
+  );
+  assert.match(
+    canvasMaturityMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuPrimitives\.tsx/
+  );
+  assert.match(canvasMaturityMigration.sql, /architecture\.component_observability/);
+  assert.match(canvasMaturityMigration.sql, /not_applicable/);
+  assert.match(canvasMaturityMigration.sql, /SYS-WEB-CANVAS-CONTROLLER-INTERACTION/);
+  assert.doesNotMatch(canvasMaturityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasMaturityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations map Canvas output target template catalog out of residual ownership', () => {
+  const migrations = readMigrationFiles();
+  const outputTargetMigration = migrations.find(
+    (migration) => migration.fileName === '168_web_canvas_output_target_template_component.sql'
+  );
+
+  assert.ok(outputTargetMigration);
+  assert.match(outputTargetMigration.sql, /SYS-WEB-CANVAS-OUTPUT-TARGET-TEMPLATES/);
+  assert.match(
+    outputTargetMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasOutputTargetTemplateCatalog/
+  );
+  assert.match(outputTargetMigration.sql, /ListCanvasOutputTargetTemplates/);
+  assert.match(outputTargetMigration.sql, /buildCanvasOutputTargetTemplateCatalog/);
+  assert.match(outputTargetMigration.sql, /published_language/);
+  assert.match(outputTargetMigration.sql, /architecture\.component_test/);
+  assert.match(outputTargetMigration.sql, /CanvasAddNodePalette\.test\.tsx/);
+  assert.match(outputTargetMigration.sql, /architecture\.component_observability/);
+  assert.doesNotMatch(outputTargetMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(outputTargetMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations retire orphan canvas node workbench overlay rails', () => {
   const migrations = readMigrationFiles();
   const orphanOverlayMigration = migrations.find(
