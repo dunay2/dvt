@@ -294,6 +294,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/126_web_canvas_source_import_frame_leaf_mapping.sql
   - tools/planning-db/migrations/183_api_http_entrypoint_leaf_components.sql
   - tools/planning-db/migrations/184_api_http_entrypoint_integrity_followup.sql
+  - tools/planning-db/migrations/185_api_test_leaf_components.sql
   - apps/api/src/entrypoints/http/httpBearerAuthentication.ts
   - apps/api/src/entrypoints/http/projectOnboardingRoutes.ts
   - apps/api/src/entrypoints/http/sessionRoute.ts

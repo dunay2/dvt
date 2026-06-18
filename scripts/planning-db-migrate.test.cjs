@@ -1038,6 +1038,56 @@ test('tracked migrations keep API HTTP authentication integrity before source re
   assert.doesNotMatch(apiHttpIntegrityFollowup.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split API test evidence into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const apiTestLeafMigration = migrations.find(
+    (migration) => migration.fileName === '185_api_test_leaf_components.sql'
+  );
+
+  assert.ok(apiTestLeafMigration);
+  assert.match(apiTestLeafMigration.sql, /create temporary table api_test_leaf_map/);
+
+  for (const componentId of [
+    'SYS-API-TESTS-APP-ROUTE-SHELL',
+    'SYS-API-TESTS-APPLICATION-SERVICES',
+    'SYS-API-TESTS-ARCHITECTURE-CONTRACTS',
+    'SYS-API-TESTS-FIXTURES',
+    'SYS-API-TESTS-INFRASTRUCTURE',
+    'SYS-API-TESTS-INTEGRATION',
+    'SYS-API-TESTS-MODULE-COMPOSITION',
+    'SYS-API-TESTS-PLUGIN-CONFIG',
+  ]) {
+    assert.match(apiTestLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const sourcePath of [
+    'apps/api/test/app/**',
+    'apps/api/test/application/**',
+    'apps/api/test/architecture/**',
+    'apps/api/test/fixtures/**',
+    'apps/api/test/infrastructure/**',
+    'apps/api/test/integration/**',
+    'apps/api/test/modules/**',
+    'apps/api/test/plugins/**',
+  ]) {
+    assert.match(
+      apiTestLeafMigration.sql,
+      new RegExp(sourcePath.replaceAll('/', '\\/').replaceAll('*', '\\*'))
+    );
+  }
+
+  assert.match(apiTestLeafMigration.sql, /ValidateApiApplicationServices/);
+  assert.match(apiTestLeafMigration.sql, /ValidateApiProtectedRuntimeIntegration/);
+  assert.match(apiTestLeafMigration.sql, /SYS-API-HTTP-ENTRYPOINT-TESTS/);
+  assert.match(apiTestLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(apiTestLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(apiTestLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(apiTestLeafMigration.sql, /repo_path = 'apps\/api\/test'/);
+  assert.doesNotMatch(apiTestLeafMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(apiTestLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiTestLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations keep the governance problem dashboard on lightweight views', () => {
   const migrations = readMigrationFiles();
   const dashboardMigration = migrations.find(
