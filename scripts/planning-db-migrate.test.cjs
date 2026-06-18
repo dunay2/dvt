@@ -2550,6 +2550,121 @@ test('tracked migrations reconcile Docs root entrypoint files after leaf split',
   assert.doesNotMatch(docsEntrypointReconciliationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split planning documentation into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const planningDocsLeafMigration = migrations.find(
+    (migration) => migration.fileName === '186_docs_planning_leaf_components.sql'
+  );
+
+  assert.ok(planningDocsLeafMigration);
+  assert.match(planningDocsLeafMigration.sql, /create temporary table docs_planning_leaf_map/);
+
+  for (const componentId of [
+    'SYS-DOCS-PLANNING-ENTRYPOINTS',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202603',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202604',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202605',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202606',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-LEGACY',
+    'SYS-DOCS-PLANNING-PROPOSALS-ROOT',
+    'SYS-DOCS-PLANNING-PROPOSALS-MANDATORY',
+    'SYS-DOCS-PLANNING-PROPOSALS-DISPOSABLE',
+    'SYS-DOCS-PLANNING-PROPOSALS-SUPERSEDED',
+    'SYS-DOCS-PLANNING-PROPOSALS-NICE-TO-HAVE',
+    'SYS-DOCS-PLANNING-PROPOSALS-BUNDLES',
+    'SYS-DOCS-PLANNING-REVIEWS-ROOT',
+    'SYS-DOCS-PLANNING-REVIEWS-ARCHITECTURE-GOVERNANCE',
+    'SYS-DOCS-PLANNING-REVIEWS-SPRINTS',
+    'SYS-DOCS-PLANNING-REVIEWS-EXECUTION-RUNTIME',
+    'SYS-DOCS-PLANNING-REVIEWS-CI-DELIVERY',
+    'SYS-DOCS-PLANNING-REVIEWS-EVENT-TRACEABILITY',
+    'SYS-DOCS-PLANNING-ARCHIVE',
+    'SYS-DOCS-PLANNING-STATUS',
+    'SYS-DOCS-PLANNING-STATE',
+    'SYS-DOCS-PLANNING-ROADMAP',
+    'SYS-DOCS-PLANNING-TEMPLATES',
+    'SYS-DOCS-PLANNING-DOMAINS',
+    'SYS-DOCS-PLANNING-EXECUTION-MODEL',
+    'SYS-DOCS-PLANNING-GAPS',
+  ]) {
+    assert.match(planningDocsLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/planning/index\\.md',
+    'docs/planning/closeouts/202603\\*\\.md',
+    'docs/planning/closeouts/202604\\*\\.md',
+    'docs/planning/closeouts/202605\\*\\.md',
+    'docs/planning/closeouts/202606\\*\\.md',
+    'docs/planning/proposals/mandatory/\\*\\*',
+    'docs/planning/proposals/disposable/\\*\\*',
+    'docs/planning/proposals/superseded/\\*\\*',
+    'docs/planning/reviews/architecture-and-governance/\\*\\*',
+    'docs/planning/reviews/event-lifecycle-and-retention/\\*\\*',
+    'docs/planning/status/\\*\\*',
+    'docs/planning/state/\\*\\*',
+    'docs/planning/roadmap/\\*\\*',
+    'docs/planning/templates/\\*\\*',
+    'docs/planning/domains/\\*\\*',
+    'docs/planning/execution-model/\\*\\*',
+    'docs/planning/gaps/\\*\\*',
+  ]) {
+    assert.match(planningDocsLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(planningDocsLeafMigration.sql, /SYS-DOCS-GOVERNANCE-PLANNING/);
+  assert.match(planningDocsLeafMigration.sql, /REL-DOCS-PLANNING-CONTAINS-/);
+  assert.match(planningDocsLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(planningDocsLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(planningDocsLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(planningDocsLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(planningDocsLeafMigration.sql, /ReadMandatoryPlanningProposals/);
+  assert.match(planningDocsLeafMigration.sql, /ReadPlanningLegacyCloseoutRecords/);
+  assert.doesNotMatch(planningDocsLeafMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(planningDocsLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(planningDocsLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize nonphysical planning closeout leaves', () => {
+  const migrations = readMigrationFiles();
+  const planningDocsCloseoutMigration = migrations.find(
+    (migration) => migration.fileName === '187_docs_planning_closeout_path_canonicalization.sql'
+  );
+
+  assert.ok(planningDocsCloseoutMigration);
+  assert.match(planningDocsCloseoutMigration.sql, /SYS-DOCS-PLANNING-CLOSEOUTS/);
+  assert.match(planningDocsCloseoutMigration.sql, /docs\/planning\/closeouts\/\*\*/);
+  assert.match(planningDocsCloseoutMigration.sql, /ReadPlanningCloseoutRecords/);
+  assert.match(planningDocsCloseoutMigration.sql, /REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS/);
+
+  for (const componentId of [
+    'SYS-DOCS-PLANNING-ENTRYPOINTS',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202603',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202604',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202605',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202606',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-LEGACY',
+  ]) {
+    assert.match(planningDocsCloseoutMigration.sql, new RegExp(componentId));
+  }
+
+  assert.match(planningDocsCloseoutMigration.sql, /status\s*=\s*'superseded'/);
+  assert.match(planningDocsCloseoutMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.match(planningDocsCloseoutMigration.sql, /status\s*=\s*'approved'/);
+  assert.match(planningDocsCloseoutMigration.sql, /'transition'/);
+  assert.match(planningDocsCloseoutMigration.sql, /Superseded by SYS-DOCS-PLANNING-CLOSEOUTS/);
+  assert.doesNotMatch(planningDocsCloseoutMigration.sql, /retirement_rationale/);
+  assert.match(planningDocsCloseoutMigration.sql, /insert into architecture\.contract/);
+  assert.match(planningDocsCloseoutMigration.sql, /insert into architecture\.component_port/);
+  assert.match(planningDocsCloseoutMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    planningDocsCloseoutMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.doesNotMatch(planningDocsCloseoutMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(planningDocsCloseoutMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(
