@@ -1350,6 +1350,22 @@ test('tracked migrations reconcile Web Canvas parallel test drift without deleti
   assert.doesNotMatch(parallelTestDriftMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations complete Web Canvas viewport test mechanization user stories', () => {
+  const migrations = readMigrationFiles();
+  const userStoryMigration = migrations.find(
+    (migration) => migration.fileName === '125_web_canvas_viewport_test_manifest_user_stories.sql'
+  );
+
+  assert.ok(userStoryMigration);
+  assert.match(userStoryMigration.sql, /CANVAS-VIEWPORT-GRAPH-MODEL-TEST-MODULARIZATION-20260618/);
+  assert.match(userStoryMigration.sql, /userStories/);
+  assert.match(userStoryMigration.sql, /As a Canvas maintainer/);
+  assert.match(userStoryMigration.sql, /As a Planning DB reviewer/);
+  assert.match(userStoryMigration.sql, /not raw_manifest \? 'userStories'/);
+  assert.doesNotMatch(userStoryMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(userStoryMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations persist Web Canvas leaf component mapping', () => {
   const migrations = readMigrationFiles();
   const canvasLeafMappingMigration = migrations.find(
