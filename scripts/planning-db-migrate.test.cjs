@@ -1006,6 +1006,45 @@ test('tracked migrations retire the source import ImportWarehouseSources duplica
   );
 });
 
+test('tracked migrations repoint the bottom operational drawer log rail away from retired console source', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '157_repoint_bottom_operational_drawer_log_model_rail.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /BuildBottomOperationalDrawerLogModel/i);
+  assert.match(migration.sql, /bottomConsoleDrawerModel\.ts/);
+  assert.match(migration.sql, /bottomOperationalDrawerLogModel\.ts/);
+  assert.match(
+    migration.sql,
+    /source_path = 'apps\/web\/src\/app\/components\/shell\/bottomOperationalDrawerLogModel\.ts'/
+  );
+  assert.match(migration.sql, /normalized_rail_name = 'buildbottomoperationaldrawerlogmodel'/);
+  assert.doesNotMatch(
+    migration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
+test('tracked migrations harden bottom operational drawer manifests away from console vocabulary', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '158_harden_bottom_operational_drawer_feature_manifests.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /BuildBottomOperationalDrawerLogModel/);
+  assert.match(migration.sql, /RenderBottomOperationalDrawer/);
+  assert.match(migration.sql, /BottomOperationalDrawerLogModel/);
+  assert.match(migration.sql, /BottomOperationalProblemsPanel/);
+  assert.match(migration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(migration.sql, /cypressCoverage/);
+  assert.doesNotMatch(migration.sql, /BottomConsoleDrawerModel/);
+  assert.doesNotMatch(migration.sql, /bottomConsoleDrawerModel\.test\.ts/);
+});
+
 test('tracked migrations allow audited governance component reparent operations', () => {
   const migrations = readMigrationFiles();
   const reparentMigration = migrations.find(
