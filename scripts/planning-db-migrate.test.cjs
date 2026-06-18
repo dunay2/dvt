@@ -923,6 +923,54 @@ test('tracked migrations close CI docs generation component integrity gaps', () 
   assert.doesNotMatch(docsGenerationFollowupMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split runtime state-store package into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const stateStoreLeafMigration = migrations.find(
+    (migration) => migration.fileName === '182_runtime_state_store_leaf_components.sql'
+  );
+
+  assert.ok(stateStoreLeafMigration);
+  assert.match(stateStoreLeafMigration.sql, /create temporary table runtime_state_store_leaf_map/);
+
+  for (const componentId of [
+    'SYS-RUNTIME-STATE-STORE-PACKAGE-SHELL',
+    'SYS-RUNTIME-STATE-STORE-COMMAND-PORT',
+    'SYS-RUNTIME-STATE-STORE-ARCHIVE-UNIT-POLICY',
+    'SYS-RUNTIME-STATE-STORE-ARCHIVE-RUNTIME-CONTRACTS',
+    'SYS-RUNTIME-STATE-STORE-ARCHIVE-ARTIFACTS',
+    'SYS-RUNTIME-STATE-STORE-ARCHIVE-OBJECT-STORAGE',
+    'SYS-RUNTIME-STATE-STORE-ARCHIVE-ORCHESTRATION',
+    'SYS-RUNTIME-STATE-STORE-ARCHIVE-RESTORE-DELETE',
+    'SYS-RUNTIME-STATE-STORE-DELIVERY-BUFFER-PURGE',
+  ]) {
+    assert.match(stateStoreLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const sourcePath of [
+    'packages/@dvt/state-store/src/inMemoryRunStateCommandPort.ts',
+    'packages/@dvt/state-store/src/lifecycle/archiveArtifacts.ts',
+    'packages/@dvt/state-store/src/lifecycle/archiveRuntime.ts',
+    'packages/@dvt/state-store/src/lifecycle/ObjectStorageRunArchiveExporter.ts',
+    'packages/@dvt/state-store/src/lifecycle/RunArchiveCoordinator.ts',
+    'packages/@dvt/state-store/src/lifecycle/RunArchiveRestorer.ts',
+    'packages/@dvt/state-store/src/lifecycle/DeliveryBufferPurger.ts',
+    'packages/@dvt/state-store/test/RunArchiveLifecycleIntegration.test.ts',
+  ]) {
+    assert.match(stateStoreLeafMigration.sql, new RegExp(sourcePath.replaceAll('/', '\\/')));
+  }
+
+  assert.match(stateStoreLeafMigration.sql, /ADR-0037-run-event-lifecycle/);
+  assert.match(stateStoreLeafMigration.sql, /ADR-0038-delivery-buffer-retention/);
+  assert.match(stateStoreLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(stateStoreLeafMigration.sql, /insert into architecture\.component_storage_io/);
+  assert.match(stateStoreLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(stateStoreLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(stateStoreLeafMigration.sql, /repo_path = 'packages\/@dvt\/state-store'/);
+  assert.doesNotMatch(stateStoreLeafMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(stateStoreLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(stateStoreLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations keep the governance problem dashboard on lightweight views', () => {
   const migrations = readMigrationFiles();
   const dashboardMigration = migrations.find(
