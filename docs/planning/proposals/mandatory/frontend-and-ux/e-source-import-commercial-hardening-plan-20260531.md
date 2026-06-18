@@ -322,13 +322,15 @@ xWebSymbol: &web_symbol
   dddOwner: dbt plugin + Canvas shell
   cqRails: [ImportWarehouseSources]
   fowlerSignals: [Plugin-owned source artifact options were hardcoded in app UI, Graph consumer-owned visual tokens drifted from graph token component]
-  architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/registry.test.ts src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts src/app/components/SourceImportWizard.test.tsx src/app/views/canvas/CanvasShell.test.tsx src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts src/app/views/canvas/useCanvasNodeAuthoringHandlers.architecture.test.ts src/app/plugins/graph/graphVisualTokenConvergence.architecture.test.ts
+  architectureGuard: pnpm --filter @dvt/web test -- src/app/plugins/registry.test.ts src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts src/app/components/sourceImportWizard/SourceImportSectionTabs.test.tsx src/app/components/SourceImportWizard.test.tsx src/app/components/SourceImportWizard.architecture.test.tsx src/app/views/canvas/CanvasShell.test.tsx src/app/views/canvas/CanvasEmptyAuthoringEntrypoint.architecture.test.ts src/app/views/canvas/useCanvasNodeAuthoringHandlers.architecture.test.ts src/app/plugins/graph/graphVisualTokenConvergence.architecture.test.ts
   cypressCoverage: N/A - registry and shell unit coverage only
   unitTests:
     - apps/web/src/app/plugins/registry.test.ts
     - apps/web/src/app/plugins/graph/graphVisualTokenConvergence.architecture.test.ts
     - apps/web/src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts
+    - apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.test.tsx
     - apps/web/src/app/components/SourceImportWizard.test.tsx
+    - apps/web/src/app/components/SourceImportWizard.architecture.test.tsx
     - apps/web/src/app/views/canvas/CanvasShell.test.tsx
 symbols:
   - <<: *api_symbol
@@ -622,6 +624,24 @@ symbols:
   - <<: *web_symbol
     name: SourceImportWizard
     path: apps/web/src/app/components/SourceImportWizard.tsx
+  - <<: *web_symbol
+    name: sourceImportSectionTabClassNames
+    path: apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.tsx
+  - <<: *web_symbol
+    name: SourceImportSectionTabListProps
+    path: apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.tsx
+  - <<: *web_symbol
+    name: SourceImportSectionTabList
+    path: apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.tsx
+  - <<: *web_symbol
+    name: SourceImportSectionTabProps
+    path: apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.tsx
+  - <<: *web_symbol
+    name: SourceImportSectionTab
+    path: apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.tsx
+  - <<: *web_symbol
+    name: SourceImportSectionTabs
+    path: apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.tsx
   - <<: *web_symbol
     name: ConnectionStep
     path: apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
