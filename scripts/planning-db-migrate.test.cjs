@@ -843,6 +843,86 @@ test('tracked migrations classify code-symbol duplicates against legacy componen
   assert.doesNotMatch(codeSymbolLegacyMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split CI docs generation scripts into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const docsGenerationLeafMigration = migrations.find(
+    (migration) => migration.fileName === '180_ci_docs_generation_leaf_components.sql'
+  );
+
+  assert.ok(docsGenerationLeafMigration);
+  assert.match(
+    docsGenerationLeafMigration.sql,
+    /create temporary table ci_docs_generation_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-STATUS-REPORTS',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-SPEC-TRACEABILITY',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-CONTRACT-INDEX',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DOCS-SYNC',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-KNOWLEDGE-INTAKE',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-MARKDOWN-TABLES',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DATE-POLICY',
+    'SYS-RUNTIME-STATE-STORE-SNAPSHOT-BACKFILL-CLI',
+  ]) {
+    assert.match(docsGenerationLeafMigration.sql, new RegExp(componentId));
+  }
+
+  assert.match(docsGenerationLeafMigration.sql, /children_required[\s\S]*true/);
+  assert.match(docsGenerationLeafMigration.sql, /docs\/generated-docs-policy\.json/);
+  assert.match(docsGenerationLeafMigration.sql, /scripts\/rebuild-snapshots\.js/);
+  assert.match(docsGenerationLeafMigration.sql, /StateStoreSnapshotRebuildMaintenanceCommand/);
+  assert.match(
+    docsGenerationLeafMigration.sql,
+    /REL-RUNTIME-STATE-STORE-CONTAINS-SNAPSHOT-BACKFILL-CLI/
+  );
+  assert.match(
+    docsGenerationLeafMigration.sql,
+    /Function-level duplicates remain queryable in code-symbol-duplicates/
+  );
+  assert.match(docsGenerationLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(docsGenerationLeafMigration.sql, /insert into architecture\.component_storage_io/);
+  assert.match(docsGenerationLeafMigration.sql, /insert into architecture\.contract/);
+  assert.doesNotMatch(docsGenerationLeafMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(docsGenerationLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(docsGenerationLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations close CI docs generation component integrity gaps', () => {
+  const migrations = readMigrationFiles();
+  const docsGenerationFollowupMigration = migrations.find(
+    (migration) => migration.fileName === '181_ci_docs_generation_component_integrity_followup.sql'
+  );
+
+  assert.ok(docsGenerationFollowupMigration);
+  assert.match(
+    docsGenerationFollowupMigration.sql,
+    /PLANNING-DB-CI-DOCS-GENERATION-INTEGRITY-FOLLOWUP-20260618/
+  );
+  assert.match(
+    docsGenerationFollowupMigration.sql,
+    /repo_path\s*=\s*'docs\/generated-docs-policy\.json'/
+  );
+  assert.match(
+    docsGenerationFollowupMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.match(
+    docsGenerationFollowupMigration.sql,
+    /SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DOCS-SYNC/
+  );
+  assert.match(
+    docsGenerationFollowupMigration.sql,
+    /SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS/
+  );
+  assert.match(docsGenerationFollowupMigration.sql, /docs-workboard-check-changed/);
+  assert.doesNotMatch(docsGenerationFollowupMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(docsGenerationFollowupMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(docsGenerationFollowupMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations keep the governance problem dashboard on lightweight views', () => {
   const migrations = readMigrationFiles();
   const dashboardMigration = migrations.find(
