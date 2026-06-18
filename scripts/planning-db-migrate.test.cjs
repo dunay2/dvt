@@ -1046,6 +1046,115 @@ test('tracked migrations map Canvas output target template catalog out of residu
   assert.doesNotMatch(outputTargetMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations deprecate Canvas output target duplicate and repoint drawer rails', () => {
+  const migrations = readMigrationFiles();
+  const driftRepairMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '170_deprecate_canvas_output_target_and_repoint_drawer_rails.sql'
+  );
+
+  assert.ok(driftRepairMigration);
+  assert.match(driftRepairMigration.sql, /PLANNING-DB-CANVAS-OUTPUT-TARGET-DEPRECATION/);
+  assert.match(driftRepairMigration.sql, /SYS-WEB-CANVAS-OUTPUT-TARGET-TEMPLATES/);
+  assert.match(driftRepairMigration.sql, /status = 'deprecated'/);
+  assert.match(driftRepairMigration.sql, /status = 'legacy'/);
+  assert.match(driftRepairMigration.sql, /SYS-WEB-CANVAS-LEGACY-ADD-NODE-PALETTE-RETIREMENT/);
+  assert.match(
+    driftRepairMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasOutputTargetTemplateCatalog\.ts/
+  );
+  assert.match(
+    driftRepairMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/bottomOperationalDrawerLogModel\.ts/
+  );
+  assert.match(
+    driftRepairMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/BottomOperationalDrawer\.tsx/
+  );
+  assert.match(
+    driftRepairMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/bottomConsoleDrawerModel\.ts/
+  );
+  assert.match(driftRepairMigration.sql, /deprecatedSourcePaths/);
+  assert.match(driftRepairMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(driftRepairMigration.sql, /currentImplementationSourcePath/);
+  assert.match(driftRepairMigration.sql, /cypressCoverage/);
+  assert.doesNotMatch(driftRepairMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(driftRepairMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reparent deprecated Canvas output target under legacy retirement', () => {
+  const migrations = readMigrationFiles();
+  const reparentMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '171_reparent_deprecated_canvas_output_target_component.sql'
+  );
+
+  assert.ok(reparentMigration);
+  assert.match(reparentMigration.sql, /SYS-WEB-CANVAS-OUTPUT-TARGET-TEMPLATES/);
+  assert.match(reparentMigration.sql, /SYS-WEB-CANVAS-LEGACY-ADD-NODE-PALETTE-RETIREMENT/);
+  assert.match(
+    reparentMigration.sql,
+    /parent_id = 'SYS-WEB-CANVAS-LEGACY-ADD-NODE-PALETTE-RETIREMENT'/
+  );
+  assert.match(reparentMigration.sql, /component-quality/);
+  assert.doesNotMatch(reparentMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(reparentMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations move Canvas output target relation to legacy retirement', () => {
+  const migrations = readMigrationFiles();
+  const relationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '172_move_canvas_output_target_relation_to_legacy_retirement.sql'
+  );
+
+  assert.ok(relationMigration);
+  assert.match(relationMigration.sql, /SYS-WEB-CANVAS-LEGACY-ADD-NODE-PALETTE-RETIREMENT/);
+  assert.match(
+    relationMigration.sql,
+    /REL-WEB-CANVAS-LEGACY-ADD-NODE-RETIREMENT-CONTAINS-OUTPUT-TARGET-TEMPLATES/
+  );
+  assert.match(
+    relationMigration.sql,
+    /REL-WEB-CANVAS-NODE-EDGE-AUTHORING-CONTAINS-OUTPUT-TARGET-TEMPLATES/
+  );
+  assert.match(
+    relationMigration.sql,
+    /source_component_id = 'SYS-WEB-CANVAS-LEGACY-ADD-NODE-PALETTE-RETIREMENT'/
+  );
+  assert.match(relationMigration.sql, /'deprecated'/);
+  assert.doesNotMatch(relationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(relationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations leaf deprecated Canvas add-node palette paths', () => {
+  const migrations = readMigrationFiles();
+  const legacyPaletteLeafMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '173_leaf_canvas_legacy_add_node_palette_deprecated_paths.sql'
+  );
+
+  assert.ok(legacyPaletteLeafMigration);
+  assert.match(legacyPaletteLeafMigration.sql, /SYS-WEB-CANVAS-ADD-NODE-PALETTE/);
+  assert.match(legacyPaletteLeafMigration.sql, /SYS-WEB-CANVAS-LEGACY-ADD-NODE-PALETTE-RETIREMENT/);
+  assert.match(
+    legacyPaletteLeafMigration.sql,
+    /REL-WEB-CANVAS-LEGACY-ADD-NODE-RETIREMENT-CONTAINS-ADD-NODE-PALETTE/
+  );
+  assert.match(legacyPaletteLeafMigration.sql, /file_without_leaf_component/);
+  assert.match(
+    legacyPaletteLeafMigration.sql,
+    /tools\/planning-db\/migrations\/149_web_canvas_legacy_palette_deprecated_paths\.sql/
+  );
+  assert.match(
+    legacyPaletteLeafMigration.sql,
+    /delete from planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.doesNotMatch(legacyPaletteLeafMigration.sql, /delete\s+from\s+architecture\./i);
+  assert.doesNotMatch(legacyPaletteLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations retire orphan canvas node workbench overlay rails', () => {
   const migrations = readMigrationFiles();
   const orphanOverlayMigration = migrations.find(
