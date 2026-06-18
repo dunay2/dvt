@@ -15,6 +15,7 @@ const validComponentKinds = new Set([
   'navigation',
   'health-banner',
   'console-drawer',
+  'operational-drawer',
   'route-workbench',
   'route-toolbar',
   'state-view',

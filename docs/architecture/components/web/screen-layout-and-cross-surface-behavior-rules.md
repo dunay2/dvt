@@ -75,7 +75,7 @@ Visual tone:
 flowchart LR
   Explorer["Explorer panel"] --> Graph["Graph viewport"]
   Graph --> Inspector["Inspector panel"]
-  Graph --> Console["Bottom console drawer"]
+  Graph --> Operations["Bottom operational drawer"]
 ```
 
 Canvas is graph-first.

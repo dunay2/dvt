@@ -3,7 +3,7 @@ import type { ShellNavigationDisposition } from '../../shell/shellNavigationDisp
 
 export type ShellViewControlsReadModel = Readonly<{
   showInspectorPanelToggle: boolean;
-  showConsolePanelToggle: boolean;
+  showBottomDrawerToggle: boolean;
   showFocusModeToggle: boolean;
   showCanvasViewContributionControls: boolean;
 }>;
@@ -15,7 +15,7 @@ export function resolveShellViewControls(
 
   return {
     showInspectorPanelToggle: !isWorkbenchRoute,
-    showConsolePanelToggle: true,
+    showBottomDrawerToggle: true,
     showFocusModeToggle: true,
     showCanvasViewContributionControls: isWorkbenchRoute,
   };

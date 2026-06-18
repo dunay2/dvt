@@ -288,12 +288,14 @@ describe('Runs domain boundary', () => {
     expect(useWorkspaceSource).toContain('classifyHttpError');
   });
 
-  it('converges console and Runs timeline consumers on one semantic event timeline model', () => {
+  it('converges the operational drawer log and Runs timeline consumers on one semantic event timeline model', () => {
     const timelineModelSource = readAppSource('services/runs/runEventTimelineModel.ts');
     const facadeSource = readAppSource('services/runs/runWorkspaceFacade.ts');
     const consoleHookSource = readAppSource('components/console/useConsoleLogStream.ts');
-    const consoleDrawerModelSource = readAppSource('components/shell/bottomConsoleDrawerModel.ts');
-    const consoleDrawerSource = readAppSource('components/Console.tsx');
+    const operationalDrawerModelSource = readAppSource(
+      'components/shell/bottomOperationalDrawerLogModel.ts'
+    );
+    const operationalDrawerSource = readAppSource('components/shell/BottomOperationalDrawer.tsx');
     const xtermConsoleSource = readAppSource('components/console/XtermConsole.tsx');
     const workspaceSource = readAppSource('views/runs/RunWorkspaceStateView.tsx');
     const timelineTableSource = readAppSource('views/runs/RunEventTimelineTable.tsx');
@@ -312,10 +314,10 @@ describe('Runs domain boundary', () => {
     expect(consoleHookSource).toContain('mergeRunEventTimelinePage');
     expect(consoleHookSource).toContain('isRunEventStreamLiveStatus');
     expect(consoleHookSource).toContain('RUN_EVENT_LIVE_POLL_INTERVAL_MS');
-    expect(consoleDrawerModelSource).toContain('Start a run to see live run events here.');
-    expect(consoleDrawerModelSource).not.toContain('not available');
-    expect(consoleDrawerSource).toContain('lazy(() => import');
-    expect(consoleDrawerSource).toContain('./console/XtermConsole');
+    expect(operationalDrawerModelSource).toContain('Start a run to see live run events here.');
+    expect(operationalDrawerModelSource).not.toContain('not available');
+    expect(operationalDrawerSource).toContain('lazy(() => import');
+    expect(operationalDrawerSource).toContain('../console/XtermConsole');
     expect(xtermConsoleSource).toContain('@xterm/xterm');
     expect(xtermConsoleSource).toContain('disableStdin: true');
 

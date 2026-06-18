@@ -42,7 +42,7 @@ describe('AppShellFrame', () => {
     await act(async () => {
       root.render(
         <AppShellFrame
-          bottomDrawer={<div data-testid="console-drawer">Console drawer</div>}
+          bottomDrawer={<div data-testid="bottom-operational-drawer">Operations drawer</div>}
           focusMode={false}
           healthBanner={<div data-testid="shell-banner">Shell banner</div>}
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
@@ -72,7 +72,7 @@ describe('AppShellFrame', () => {
     expect(main?.parentElement).toBe(body);
     expect(outlet?.textContent).toContain('Route outlet');
     expect(outlet?.closest('[data-slot="app-shell-main"]')).toBe(main);
-    expect(bottomDrawer?.textContent).toContain('Console drawer');
+    expect(bottomDrawer?.textContent).toContain('Operations drawer');
     expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(main);
   });
 
@@ -80,7 +80,7 @@ describe('AppShellFrame', () => {
     await act(async () => {
       root.render(
         <AppShellFrame
-          bottomDrawer={<div>Console drawer</div>}
+          bottomDrawer={<div>Operations drawer</div>}
           focusMode
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
@@ -108,7 +108,7 @@ describe('AppShellFrame', () => {
     await act(async () => {
       root.render(
         <AppShellFrame
-          bottomDrawer={<div>Console drawer</div>}
+          bottomDrawer={<div>Operations drawer</div>}
           focusMode={false}
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}

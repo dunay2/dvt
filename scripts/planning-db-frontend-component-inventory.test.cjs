@@ -96,6 +96,17 @@ test('frontend component reflection rejects unknown component vocabulary', () =>
   );
 });
 
+test('frontend component reflection accepts bottom operational drawer vocabulary', () => {
+  const snapshot = buildFrontendComponentReflectionSnapshot({
+    docs: [inventoryDocument(sampleInventory().replace('shell-frame', 'operational-drawer'))],
+  });
+
+  const shellComponent = snapshot.components.find(
+    (component) => component.componentId === 'web.component.shell.AppShellFrame'
+  );
+  assert.equal(shellComponent.componentKind, 'operational-drawer');
+});
+
 test('frontend component reflection query rows expose component counts and source', () => {
   const snapshot = buildFrontendComponentReflectionSnapshot({
     docs: [inventoryDocument(sampleInventory())],

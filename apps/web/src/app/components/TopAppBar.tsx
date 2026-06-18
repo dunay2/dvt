@@ -37,9 +37,9 @@ export function ShellTopBar({
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
-  const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
+  const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
-  const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
+  const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
@@ -89,7 +89,7 @@ export function ShellTopBar({
             kind="workspace"
             viewControls={shellViewControls}
             inspectorPanelVisible={inspectorPanelVisible}
-            consolePanelVisible={consolePanelVisible}
+            bottomDrawerVisible={bottomDrawerVisible}
             focusMode={focusMode}
             gridSize={gridSize}
             canvasPalette={canvasPalette}
@@ -98,7 +98,7 @@ export function ShellTopBar({
             gitBranch={workspaceBootstrap.gitBranch}
             gitSha={workspaceBootstrap.gitSha}
             toggleInspectorPanel={toggleInspectorPanel}
-            toggleConsolePanel={toggleConsolePanel}
+            toggleBottomDrawer={toggleBottomDrawer}
             toggleFocusMode={toggleFocusMode}
             setGridSize={setGridSize}
             setCanvasPalette={setCanvasPalette}
@@ -109,7 +109,7 @@ export function ShellTopBar({
           kind="view"
           viewControls={shellViewControls}
           inspectorPanelVisible={inspectorPanelVisible}
-          consolePanelVisible={consolePanelVisible}
+          bottomDrawerVisible={bottomDrawerVisible}
           focusMode={focusMode}
           gridSize={gridSize}
           canvasPalette={canvasPalette}
@@ -118,7 +118,7 @@ export function ShellTopBar({
           gitBranch={workspaceBootstrap.gitBranch}
           gitSha={workspaceBootstrap.gitSha}
           toggleInspectorPanel={toggleInspectorPanel}
-          toggleConsolePanel={toggleConsolePanel}
+          toggleBottomDrawer={toggleBottomDrawer}
           toggleFocusMode={toggleFocusMode}
           setGridSize={setGridSize}
           setCanvasPalette={setCanvasPalette}

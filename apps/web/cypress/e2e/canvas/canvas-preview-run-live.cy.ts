@@ -81,12 +81,12 @@ function openSourceImportFromCanvas(): void {
   cy.contains('[role="menuitem"]', 'Add source', { timeout: 20_000 }).click();
 }
 
-function closeRunConsoleIfOpen(): void {
+function closeRunOperationsIfOpen(): void {
   cy.get('body').then(($body) => {
-    const closeButton = $body.find('[data-slot="bottom-console-drawer-close"]');
+    const closeButton = $body.find('[data-slot="bottom-operational-drawer-close"]');
 
     if (closeButton.length > 0) {
-      cy.get('[data-slot="bottom-console-drawer-close"]').click({ force: true });
+      cy.get('[data-slot="bottom-operational-drawer-close"]').click({ force: true });
     }
   });
 }
@@ -172,7 +172,7 @@ describe('Canvas preview-run live protected runtime', () => {
 
     cy.contains(/^Run /, { timeout: 20_000 }).should('exist');
     cy.contains('Runtime snapshot', { timeout: 30_000 }).should('be.visible');
-    closeRunConsoleIfOpen();
+    closeRunOperationsIfOpen();
     cy.get('[data-slot="run-materialization-card"]', { timeout: 30_000 })
       .scrollIntoView()
       .should('be.visible')

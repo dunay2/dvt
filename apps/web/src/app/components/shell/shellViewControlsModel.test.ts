@@ -10,7 +10,7 @@ describe('resolveShellViewControls', () => {
       const controls = resolveShellViewControls(resolveShellNavigationDisposition(pathname));
 
       expect(controls.showInspectorPanelToggle).toBe(false);
-      expect(controls.showConsolePanelToggle).toBe(true);
+      expect(controls.showBottomDrawerToggle).toBe(true);
       expect(controls.showFocusModeToggle).toBe(true);
       expect(controls.showCanvasViewContributionControls).toBe(true);
     }
@@ -20,7 +20,7 @@ describe('resolveShellViewControls', () => {
     const controls = resolveShellViewControls(resolveShellNavigationDisposition('/legacy'));
 
     expect(controls.showInspectorPanelToggle).toBe(true);
-    expect(controls.showConsolePanelToggle).toBe(true);
+    expect(controls.showBottomDrawerToggle).toBe(true);
     expect(controls.showFocusModeToggle).toBe(true);
     expect(controls.showCanvasViewContributionControls).toBe(false);
   });

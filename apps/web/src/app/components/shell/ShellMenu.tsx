@@ -1,12 +1,12 @@
 /** Owned concern: render top-bar workspace navigation and view-control menus without owning route behavior. */
 import {
+  Activity,
   BriefcaseBusiness,
   Grid2X2,
   Maximize2,
   Minimize2,
   PanelRightClose,
   SlidersHorizontal,
-  TerminalSquare,
 } from 'lucide-react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { NavLink } from 'react-router';
@@ -49,7 +49,7 @@ type ShellMenuProps = {
   readonly kind: 'workspace' | 'view';
   readonly viewControls: ShellViewControlsReadModel;
   readonly inspectorPanelVisible: boolean;
-  readonly consolePanelVisible: boolean;
+  readonly bottomDrawerVisible: boolean;
   readonly focusMode: boolean;
   readonly gridSize: number;
   readonly canvasPalette: CanvasPaletteId;
@@ -58,7 +58,7 @@ type ShellMenuProps = {
   readonly gitBranch: string;
   readonly gitSha: string;
   readonly toggleInspectorPanel: () => void;
-  readonly toggleConsolePanel: () => void;
+  readonly toggleBottomDrawer: () => void;
   readonly toggleFocusMode: () => void;
   readonly setGridSize: (size: number) => void;
   readonly setCanvasPalette: (palette: CanvasPaletteId) => void;
@@ -69,7 +69,7 @@ export function ShellMenu({
   kind,
   viewControls,
   inspectorPanelVisible,
-  consolePanelVisible,
+  bottomDrawerVisible,
   focusMode,
   gridSize,
   canvasPalette,
@@ -78,7 +78,7 @@ export function ShellMenu({
   gitBranch,
   gitSha,
   toggleInspectorPanel,
-  toggleConsolePanel,
+  toggleBottomDrawer,
   toggleFocusMode,
   setGridSize,
   setCanvasPalette,
@@ -151,13 +151,13 @@ export function ShellMenu({
                 {copy.inspectorPanel}
               </DropdownMenuCheckboxItem>
             ) : null}
-            {viewControls.showConsolePanelToggle ? (
+            {viewControls.showBottomDrawerToggle ? (
               <DropdownMenuCheckboxItem
-                checked={consolePanelVisible}
-                onCheckedChange={toggleConsolePanel}
+                checked={bottomDrawerVisible}
+                onCheckedChange={toggleBottomDrawer}
               >
-                <TerminalSquare className="mr-2 size-4" />
-                {copy.consolePanel}
+                <Activity className="mr-2 size-4" />
+                {copy.operationalDrawer}
               </DropdownMenuCheckboxItem>
             ) : null}
             {viewControls.showFocusModeToggle ? (

@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildBottomConsoleDrawerModel } from './bottomConsoleDrawerModel';
+import { buildBottomOperationalDrawerLogModel } from './bottomOperationalDrawerLogModel';
 
-describe('buildBottomConsoleDrawerModel', () => {
+describe('buildBottomOperationalDrawerLogModel', () => {
   it('returns live-log idle guidance when no run is active', () => {
     expect(
-      buildBottomConsoleDrawerModel({
-        title: 'Console',
+      buildBottomOperationalDrawerLogModel({
+        title: 'Operations',
         dataSourceMode: 'api',
         runId: undefined,
         isLoading: false,
         lines: [],
       })
     ).toEqual({
-      title: 'Console',
+      title: 'Operations',
       modeLabel: null,
       kind: 'idle',
       runLabel: null,
@@ -23,15 +23,15 @@ describe('buildBottomConsoleDrawerModel', () => {
 
   it('returns a loading model with run badge and no runtime badge', () => {
     expect(
-      buildBottomConsoleDrawerModel({
-        title: 'Console',
+      buildBottomOperationalDrawerLogModel({
+        title: 'Operations',
         dataSourceMode: 'api',
         runId: 'run-42',
         isLoading: true,
         lines: [],
       })
     ).toEqual({
-      title: 'Console',
+      title: 'Operations',
       modeLabel: null,
       kind: 'loading',
       runLabel: 'Run run-42',
@@ -41,15 +41,15 @@ describe('buildBottomConsoleDrawerModel', () => {
 
   it('returns a streaming model with stable lines once the stream is ready', () => {
     expect(
-      buildBottomConsoleDrawerModel({
-        title: 'Console',
+      buildBottomOperationalDrawerLogModel({
+        title: 'Operations',
         dataSourceMode: 'api',
         runId: 'run-42',
         isLoading: false,
         lines: ['step: started', 'step: finished'],
       })
     ).toEqual({
-      title: 'Console',
+      title: 'Operations',
       modeLabel: null,
       kind: 'streaming',
       runLabel: 'Run run-42',
