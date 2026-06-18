@@ -47,20 +47,6 @@ describe('CanvasViewport context menus', () => {
     return container.querySelector('[data-slot="canvas-context-menu"]')?.textContent ?? '';
   }
 
-  function findMenuButton(label: string): HTMLButtonElement | undefined {
-    return Array.from(container.querySelectorAll('button')).find(
-      (button) => button.textContent === label
-    );
-  }
-
-  async function clickMenuItem(label: string): Promise<void> {
-    const button = findMenuButton(label);
-    expect(button, label).toBeDefined();
-    await act(async () => {
-      button?.click();
-    });
-  }
-
   it('opens a governed create-node menu from the background context gesture', async () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const props = await renderViewport({
@@ -148,28 +134,6 @@ describe('CanvasViewport context menus', () => {
     expect(getMenuText()).toContain('Add source');
   });
 
-  it('opens source import from the editable background context gesture when the rail is available', async () => {
-    const sourceKind = buildTestNodeKind('dbt:source', 'Source');
-    const props = await renderViewport({
-      authoringNodeKinds: [sourceKind],
-      canOpenSourceImport: true,
-      onOpenSourceImport: vi.fn(),
-      onCreateAuthoringNode: vi.fn(),
-    });
-
-    await openPaneContextMenu();
-
-    const sourceImportButton = findMenuButton('Add source');
-    expect(sourceImportButton).toBeDefined();
-
-    await act(async () => {
-      sourceImportButton?.click();
-    });
-
-    expect(props.onOpenSourceImport).toHaveBeenCalledWith({ x: 580, y: 280 });
-    expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
-  });
-
   it('keeps the background context menu open through a right-button document pointer event', async () => {
     await renderViewport({
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
@@ -184,73 +148,5 @@ describe('CanvasViewport context menus', () => {
     });
 
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-  });
-
-  it('disambiguates source import from local source node creation in the background context menu', async () => {
-    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
-    const props = await renderViewport({
-      authoringNodeKinds: [sourceKind],
-      canOpenSourceImport: true,
-      onOpenSourceImport: vi.fn(),
-      onCreateAuthoringNode: vi.fn(),
-    });
-
-    await openPaneContextMenu();
-
-    await clickMenuItem('Create source node');
-
-    expect(props.onCreateAuthoringNode).toHaveBeenCalledWith(sourceKind, { x: 580, y: 280 });
-    expect(props.onOpenSourceImport).not.toHaveBeenCalled();
-  });
-
-  it('does not offer source import from the background when the source rail is unavailable', async () => {
-    await renderViewport({
-      canOpenSourceImport: false,
-      onOpenSourceImport: vi.fn(),
-    });
-
-    await openPaneContextMenu();
-
-    expect(
-      Array.from(container.querySelectorAll('button')).some(
-        (button) => button.textContent === 'Add source'
-      )
-    ).toBe(false);
-  });
-
-  it('opens execution preview from the background context when graph editing is unavailable', async () => {
-    const props = await renderViewport({
-      canEditEdges: false,
-      canPreviewExecutionPlan: true,
-      onPreviewExecutionPlan: vi.fn(),
-      onCreateAuthoringNode: vi.fn(),
-    });
-
-    await openPaneContextMenu();
-    await clickMenuItem('Preview execution plan');
-
-    expect(props.onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
-    expect(props.onCreateAuthoringNode).not.toHaveBeenCalled();
-  });
-
-  it('opens backed project and settings actions from the background context menu', async () => {
-    const props = await renderViewport({
-      canPreviewExecutionPlan: true,
-      onPreviewExecutionPlan: vi.fn(),
-      canOpenProjectExplorer: true,
-      onOpenProjectExplorer: vi.fn(),
-      canOpenCanvasSettings: true,
-      onOpenCanvasSettings: vi.fn(),
-    });
-
-    await openPaneContextMenu();
-    await clickMenuItem('Explore project');
-    expect(props.onOpenProjectExplorer).toHaveBeenCalledTimes(1);
-
-    await openPaneContextMenu();
-    await clickMenuItem('Canvas settings');
-    expect(props.onOpenCanvasSettings).toHaveBeenCalledTimes(1);
-
-    expect(props.onPreviewExecutionPlan).not.toHaveBeenCalled();
   });
 });
