@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   buildRemoteDraftRecord,
   createHarnessWithDraft,
+  waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
 import { projectCanvasHarnessDraftReadModel } from './useCanvasController.test.draftAuthoring';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
@@ -110,5 +111,26 @@ describe('useCanvasController permission and posture contract', () => {
         canEditEdges: false,
       })
     );
+  });
+
+  it('does not autosave the draft when graph edits are gated', async () => {
+    const userPermissions = harness.state.store.userPermissions as {
+      canPlan: boolean;
+      canRun: boolean;
+      canEditEdges: boolean;
+      canManagePlugins: boolean;
+      canManageRBAC: boolean;
+    };
+    harness.state.store.userPermissions = {
+      ...userPermissions,
+      canEditEdges: false,
+    };
+
+    await harness.renderProbe();
+    await waitForAutosaveDebounce();
+
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).not.toHaveBeenCalled();
   });
 });
