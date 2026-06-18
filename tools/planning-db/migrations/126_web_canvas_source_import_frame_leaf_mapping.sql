@@ -38,6 +38,17 @@ values
     now()
   ),
   (
+    'PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-FRAME-COMPOSITE-20260618',
+    'PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612',
+    'Web Canvas source import frame composite',
+    'Architecture / Planning DB / Frontend',
+    'review',
+    'The source import frame is a composite boundary under the source import wizard. Fresh Planning DB migrations need this parent component before creating frame presentation and test leaves, otherwise child architecture rows depend on local operate-only state.',
+    'responsibility_overload',
+    'CreateArchitectureDesign;CreateGovernanceComponent;RecordArchitectureComponent;RecordArchitectureRelation;RecordArchitectureTestEvidence;CheckPlanningDbComponentIntegrity',
+    now()
+  ),
+  (
     'PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-FRAME-PRESENTATION-20260618',
     'PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612',
     'Web Canvas source import frame presentation leaf',
@@ -63,6 +74,12 @@ insert into architecture.design_scope (
   required
 )
 values
+  ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-FRAME-COMPOSITE-20260618', 'component', 'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD', 'may_reference', true),
+  ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-FRAME-COMPOSITE-20260618', 'component', 'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'may_create', true),
+  ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-FRAME-COMPOSITE-20260618', 'component', 'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'may_reference', true),
+  ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-FRAME-COMPOSITE-20260618', 'path', 'apps/web/src/app/components/sourceImportWizard', 'may_reference', true),
+  ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-FRAME-COMPOSITE-20260618', 'relation', 'REL-WEB-CANVAS-SOURCE-IMPORT-WIZARD-CONTAINS-FRAME', 'may_create', true),
+  ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-FRAME-COMPOSITE-20260618', 'test', 'TEST-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'may_create', true),
   ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS-20260618', 'component', 'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'may_reference', true),
   ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS-20260618', 'component', 'SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS', 'may_create', true),
   ('PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS-20260618', 'path', 'apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.test.tsx', 'may_update', true),
@@ -101,6 +118,23 @@ insert into planning_query_store.governance_component_local_definitions (
   created_by
 )
 values
+  (
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME',
+    'planning_query_store.governance_component_local_definitions',
+    '5a3ccc05f77a8389ce3d0cf442d6d8a752173b6fbed7b0133ad067d766338d24',
+    0,
+    'Canvas source import frame',
+    'component',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD',
+    'SYS-DVT',
+    'SYS-DVT',
+    'review',
+    true,
+    'Composite source import frame boundary; runtime presentation files and focused tests are owned by child leaves.',
+    'SourceImportWizardFrameComposite',
+    'ListWarehouseConnections;ListWarehouseConnectionTables;ImportWarehouseSources',
+    'codex'
+  ),
   (
     'SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS',
     'planning_query_store.governance_component_local_definitions',
@@ -172,6 +206,13 @@ insert into planning_query_store.governance_component_local_semantic_items (
   item_order
 )
 values
+  ('SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'responsibility', 'Coordinate the source import wizard frame boundary while delegating presentation widgets and focused tests to child leaves.', 0),
+  ('SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'reason_to_change', 'Source import frame composition, child ownership, or wizard-frame boundary changes.', 0),
+  ('SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'public_api', 'SourceImportWizardFrame', 0),
+  ('SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'invariant', 'The frame remains a composite owner; direct source files must be owned by leaf presentation or test components.', 0),
+  ('SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'consumer', 'SourceImportWizard', 0),
+  ('SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'governance_ref', 'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md', 0),
+  ('SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME', 'fowler_signal', 'responsibility_overload', 0),
   ('SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS', 'responsibility', 'Validate SourceImportSectionTabs tab selection and accessible section navigation behavior.', 0),
   ('SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS', 'reason_to_change', 'Source import section tab presentation, accessibility, or section switching behavior changes.', 0),
   ('SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS', 'public_api', 'SourceImportSectionTabs', 0),
@@ -206,6 +247,19 @@ insert into architecture.component (
   parent_component_id
 )
 values
+  (
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME',
+    'Canvas source import frame',
+    'ui-view',
+    'ui',
+    'Frontend / Canvas',
+    'apps/web/src/app/components/sourceImportWizard',
+    'Composite SourceImportWizard frame boundary; presentation widgets and focused tests are owned by child components.',
+    'browser',
+    'medium',
+    'review',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD'
+  ),
   (
     'SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS',
     'Canvas source import section tabs tests',
@@ -255,6 +309,14 @@ insert into architecture.component_responsibility (
 )
 values
   (
+    'RESP-SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME',
+    'Coordinate the source import wizard frame boundary while delegating presentation widgets and focused tests to child leaves.',
+    'Source import frame composition, child ownership, or wizard-frame boundary changes.',
+    'SourceImportWizardFrameComposite',
+    'proposed'
+  ),
+  (
     'RESP-SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS',
     'SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS',
     'Validate SourceImportSectionTabs tab selection and accessible section navigation behavior.',
@@ -291,6 +353,19 @@ insert into architecture.component_relation (
   status
 )
 values
+  (
+    'REL-WEB-CANVAS-SOURCE-IMPORT-WIZARD-CONTAINS-FRAME',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME',
+    'contains',
+    'outbound',
+    'sync',
+    null,
+    'not_applicable',
+    'internal-ui-component-ownership',
+    '["docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md"]'::jsonb,
+    'implemented'
+  ),
   (
     'REL-WEB-CANVAS-SOURCE-IMPORT-FRAME-CONTAINS-SECTION-TABS-TESTS',
     'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME',
@@ -340,6 +415,15 @@ insert into architecture.component_test (
   validation_command
 )
 values
+  (
+    'TEST-WEB-CANVAS-SOURCE-IMPORT-FRAME',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME',
+    'apps/web/src/app/components/sourceImportWizard/SourceImportSectionTabs.test.tsx',
+    'unit',
+    'behavior',
+    true,
+    'pnpm --filter @dvt/web test:presentation:run -- src/app/components/sourceImportWizard/SourceImportSectionTabs.test.tsx'
+  ),
   (
     'TEST-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS',
     'SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS',

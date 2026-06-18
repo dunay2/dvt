@@ -82,6 +82,55 @@ test('Planning DB integrity check fails report mode on progressive regressions',
   assert.match(formatIntegrityCheckSummary(result), /progressive_baseline fail/);
 });
 
+test('Planning DB integrity check budgets historical component warnings only', () => {
+  const historicalComponentWarnings = [
+    ...Array.from({ length: 53 }, (_, index) => ({
+      finding_kind: 'component_evidence_gap',
+      severity: 'warning',
+      component_id: `SYS-HISTORICAL-EVIDENCE-${index}`,
+    })),
+    ...Array.from({ length: 54 }, (_, index) => ({
+      finding_kind: 'component_missing_architecture_authority',
+      severity: 'warning',
+      component_id: `SYS-HISTORICAL-AUTHORITY-${index}`,
+    })),
+  ];
+
+  const baselineResult = buildIntegrityCheckResult({
+    componentRows: historicalComponentWarnings,
+    railRows: [],
+    sourceDriftRows: [],
+    strict: false,
+  });
+
+  assert.equal(baselineResult.exitCode, 0);
+
+  const regressionResult = buildIntegrityCheckResult({
+    componentRows: [
+      ...historicalComponentWarnings,
+      {
+        finding_kind: 'component_evidence_gap',
+        severity: 'warning',
+        component_id: 'SYS-NEW-EVIDENCE-GAP',
+      },
+    ],
+    railRows: [],
+    sourceDriftRows: [],
+    strict: false,
+  });
+
+  assert.equal(regressionResult.exitCode, 1);
+  assert.deepEqual(regressionResult.baselineViolations, [
+    {
+      surface: 'component_integrity',
+      kind: 'component_evidence_gap',
+      metric: 'total',
+      actual: 54,
+      allowed: 53,
+    },
+  ]);
+});
+
 test('Planning DB integrity check fails report mode on governed source drift', () => {
   const result = buildIntegrityCheckResult({
     componentRows: [],
