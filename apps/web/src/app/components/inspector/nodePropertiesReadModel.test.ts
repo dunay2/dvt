@@ -1,65 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { buildNodePropertiesReadModel } from './nodePropertiesReadModel';
+import {
+  buildNodePropertiesReadModel,
+  type NodePropertiesReadModel,
+  type NodePropertySection,
+} from './nodePropertiesReadModel';
 
-function buildSourceNode(): CanonicalNode {
-  return {
-    id: 'src-orders',
-    name: 'Orders Source',
-    description: 'Imported source for analytics.raw.orders',
-    pluginId: 'dvt.warehouse-source',
-    kind: 'dvt:source',
-    role: 'input',
-    status: 'idle',
-    tags: ['source', 'raw'],
-    path: 'models/sources/src_orders.yml',
-    metadata: {
-      sourceName: 'warehouse_prod_analytics_raw',
-      database: 'analytics',
-      schema: 'raw',
-      tableName: 'orders',
-      owner: 'data-platform',
-      columns: [
-        {
-          name: 'order_id',
-          type: 'number',
-          nullable: false,
-          primaryKey: true,
-          description: 'Warehouse order identifier',
-        },
-        {
-          name: 'customer_id',
-          type: 'number',
-          nullable: false,
-        },
-      ],
-      indexes: [
-        {
-          name: 'idx_orders_customer',
-          type: 'btree',
-          columns: ['customer_id'],
-          unique: false,
-        },
-      ],
-      foreignKeys: [
-        {
-          name: 'fk_orders_customer',
-          localColumns: ['customer_id'],
-          referencedTable: 'customers',
-          referencedColumns: ['customer_id'],
-        },
-      ],
-      constraints: [
-        {
-          name: 'ck_orders_amount',
-          expression: 'amount >= 0',
-        },
-      ],
-      sql: 'select * from analytics.raw.orders',
-    },
-  };
-}
+const expectedSectionIds = [
+  'general',
+  'columns',
+  'inputs-outputs',
+  'tests',
+  'keys',
+  'indexes',
+  'foreign-keys',
+  'constraints',
+  'comments',
+  'code',
+  'summary',
+] as const;
 
 const downstreamNode: CanonicalNode = {
   id: 'transform-orders',
@@ -80,105 +40,132 @@ const graphEdges: readonly CanonicalEdge[] = [
   },
 ];
 
-function sectionById(
-  model: ReturnType<typeof buildNodePropertiesReadModel>,
-  id: string
-): ReturnType<typeof buildNodePropertiesReadModel>['sections'][number] {
+function buildSourceNode(overrides: Partial<CanonicalNode> = {}): CanonicalNode {
+  return {
+    id: 'src-orders',
+    name: 'Orders Source',
+    description: 'Imported source for analytics.raw.orders',
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source', 'raw'],
+    path: 'models/sources/src_orders.yml',
+    metadata: {
+      sourceName: 'warehouse_prod_analytics_raw',
+      database: 'analytics',
+      schema: 'raw',
+      tableName: 'orders',
+      owner: 'data-platform',
+      sql: 'select * from analytics.raw.orders',
+      columns: [
+        {
+          name: 'order_id',
+          type: 'number',
+          nullable: false,
+          primaryKey: true,
+          description: 'Warehouse order identifier',
+        },
+        { name: 'customer_id', type: 'number', nullable: false },
+      ],
+      indexes: [{ name: 'idx_orders_customer', type: 'btree', columns: ['customer_id'] }],
+      foreignKeys: [
+        {
+          name: 'fk_orders_customer',
+          localColumns: ['customer_id'],
+          referencedTable: 'customers',
+          referencedColumns: ['customer_id'],
+        },
+      ],
+      constraints: [{ name: 'ck_orders_amount', expression: 'amount >= 0' }],
+    },
+    ...overrides,
+  };
+}
+
+function buildSourceModel(node = buildSourceNode()): NodePropertiesReadModel {
+  return buildNodePropertiesReadModel({
+    node,
+    nodes: [node, downstreamNode],
+    edges: graphEdges,
+  });
+}
+
+function sectionById(model: NodePropertiesReadModel, id: string): NodePropertySection {
   const section = model.sections.find((candidate) => candidate.id === id);
   expect(section, `missing section ${id}`).toBeDefined();
   return section!;
 }
 
-function rowValue(section: ReturnType<typeof sectionById>, label: string): string | undefined {
-  return section.rows.find((row) => row.label === label)?.value;
+function expectRows(section: NodePropertySection, expected: Record<string, string>): void {
+  for (const [label, value] of Object.entries(expected)) {
+    expect(section.rows.find((row) => row.label === label)?.value).toBe(value);
+  }
 }
 
-function tableRowById(
-  section: ReturnType<typeof sectionById>,
-  id: string
-): ReturnType<typeof sectionById>['tableRows'][number] | undefined {
-  return section.tableRows.find((row) => row.id === id);
+function expectTableCells(
+  section: NodePropertySection,
+  id: string,
+  expected: Record<string, string>
+): void {
+  expect(section.tableRows.find((row) => row.id === id)?.cells).toMatchObject(expected);
 }
 
 describe('nodePropertiesReadModel', () => {
-  it('projects source metadata into SQL-Developer-style property sections', () => {
-    const node = buildSourceNode();
-    const model = buildNodePropertiesReadModel({
-      node,
-      nodes: [node, downstreamNode],
-      edges: graphEdges,
+  it('projects source metadata into table-modeler sections', () => {
+    const model = buildSourceModel();
+
+    expect(model.sections.map((section) => section.id)).toEqual(
+      expect.arrayContaining([...expectedSectionIds])
+    );
+    expect(new Set(model.sections.map((section) => section.id)).size).toBe(
+      expectedSectionIds.length
+    );
+
+    expectRows(sectionById(model, 'general'), {
+      Schema: 'raw',
+      Table: 'orders',
+      Path: 'models/sources/src_orders.yml',
+    });
+    expectRows(sectionById(model, 'summary'), {
+      'Upstream nodes': '0',
+      'Downstream nodes': 'Clean Orders',
+      Tags: 'source, raw',
     });
 
-    const sectionIds = model.sections.map((section) => section.id);
-    expect(sectionIds).toEqual(
-      expect.arrayContaining([
-        'general',
-        'columns',
-        'inputs-outputs',
-        'tests',
-        'keys',
-        'indexes',
-        'foreign-keys',
-        'constraints',
-        'comments',
-        'code',
-        'summary',
-      ])
-    );
-    expect(new Set(sectionIds).size).toBe(sectionIds.length);
-
-    const general = sectionById(model, 'general');
-    expect(rowValue(general, 'Schema')).toBe('raw');
-    expect(rowValue(general, 'Table')).toBe('orders');
-    expect(rowValue(general, 'Path')).toBe('models/sources/src_orders.yml');
-
-    const columns = sectionById(model, 'columns');
-    expect(tableRowById(columns, 'order_id')?.cells).toMatchObject({
+    expectTableCells(sectionById(model, 'columns'), 'order_id', {
       name: 'order_id',
       type: 'number',
       nullable: 'not null',
       key: 'PK',
       comment: 'Warehouse order identifier',
     });
-    expect(tableRowById(columns, 'customer_id')?.cells).toMatchObject({
+    expectTableCells(sectionById(model, 'columns'), 'customer_id', {
       name: 'customer_id',
       type: 'number',
       nullable: 'not null',
     });
-
-    const keys = sectionById(model, 'keys');
-    expect(tableRowById(keys, 'pk:order_id')?.cells).toMatchObject({
+    expectTableCells(sectionById(model, 'keys'), 'pk:order_id', {
       columns: 'order_id',
       type: 'primary',
     });
-
-    expect(tableRowById(sectionById(model, 'indexes'), 'idx_orders_customer')?.cells).toMatchObject(
-      {
-        columns: 'customer_id',
-        unique: 'no',
-      }
-    );
-    expect(
-      tableRowById(sectionById(model, 'foreign-keys'), 'fk_orders_customer')?.cells
-    ).toMatchObject({
+    expectTableCells(sectionById(model, 'indexes'), 'idx_orders_customer', {
+      columns: 'customer_id',
+      unique: 'no',
+    });
+    expectTableCells(sectionById(model, 'foreign-keys'), 'fk_orders_customer', {
       localColumns: 'customer_id',
       referencedTable: 'customers',
     });
-    expect(
-      tableRowById(sectionById(model, 'constraints'), 'ck_orders_amount')?.cells
-    ).toMatchObject({
+    expectTableCells(sectionById(model, 'constraints'), 'ck_orders_amount', {
       expression: 'amount >= 0',
     });
-
-    expect(sectionById(model, 'code').code).toBe('select * from analytics.raw.orders');
-
-    expect(
-      tableRowById(sectionById(model, 'inputs-outputs'), 'output:edge-source-transform')?.cells
-    ).toMatchObject({
+    expectTableCells(sectionById(model, 'inputs-outputs'), 'output:edge-source-transform', {
       direction: 'Output',
       node: 'Clean Orders',
       relation: 'lineage',
     });
+    expect(sectionById(model, 'code').code).toBe('select * from analytics.raw.orders');
   });
 
   it('keeps the expected table-modeler section vocabulary without requiring records', () => {
@@ -189,42 +176,26 @@ describe('nodePropertiesReadModel', () => {
     });
 
     expect(model.sections.map((section) => section.id)).toEqual(
-      expect.arrayContaining([
-        'general',
-        'columns',
-        'inputs-outputs',
-        'tests',
-        'keys',
-        'indexes',
-        'foreign-keys',
-        'constraints',
-        'comments',
-        'code',
-        'summary',
-      ])
+      expect.arrayContaining([...expectedSectionIds])
     );
   });
 
-  it('renders explicit empty states instead of fabricated records', () => {
-    const node: CanonicalNode = {
-      ...buildSourceNode(),
-      metadata: {
-        columns: [],
-      },
-    };
-    const model = buildNodePropertiesReadModel({ node, nodes: [node], edges: [] });
-
-    for (const sectionId of ['columns', 'indexes', 'constraints'] as const) {
+  it.each(['columns', 'indexes', 'constraints', 'keys', 'foreign-keys', 'tests'] as const)(
+    'renders explicit empty state for %s instead of fabricated records',
+    (sectionId) => {
+      const model = buildNodePropertiesReadModel({
+        node: buildSourceNode({ metadata: { columns: [] } }),
+        nodes: [buildSourceNode()],
+        edges: [],
+      });
       const section = sectionById(model, sectionId);
+
       expect(section.tableRows).toEqual([]);
       expect(section.emptyState).toMatch(/\S/);
     }
-    expect(sectionById(model, 'keys').tableRows).toEqual([]);
-    expect(sectionById(model, 'foreign-keys').tableRows).toEqual([]);
-    expect(sectionById(model, 'tests').emptyState).toMatch(/\S/);
-  });
+  );
 
-  it('projects dbt test semantics without fabricating unavailable metadata', () => {
+  it('projects dbt test target semantics without fabricating unavailable metadata', () => {
     const node: CanonicalNode = {
       id: 'test-orders-order-id',
       name: 'not_null_orders_order_id',
@@ -241,85 +212,34 @@ describe('nodePropertiesReadModel', () => {
       },
     };
 
-    expect(
-      tableRowById(
-        sectionById(buildNodePropertiesReadModel({ node, nodes: [node], edges: [] }), 'tests'),
-        `test:${node.id}`
-      )?.cells
-    ).toMatchObject({
-      name: 'not_null_orders_order_id',
-      type: 'not_null',
-      target: 'orders.order_id',
-      column: 'order_id',
-      severity: 'error',
-    });
+    expectTableCells(
+      sectionById(buildNodePropertiesReadModel({ node, nodes: [node], edges: [] }), 'tests'),
+      `test:${node.id}`,
+      {
+        name: 'not_null_orders_order_id',
+        type: 'not_null',
+        target: 'orders.order_id',
+        column: 'order_id',
+        severity: 'error',
+      }
+    );
   });
 
-  it('summarizes graph relationships without reading renderer state', () => {
+  it.each([
+    ['compiled SQL', { compiledSql: 'select compiled', sql: 'select metadata' }, 'select compiled'],
+    [
+      'metadata SQL',
+      { sql: 'select metadata', config: { sql: 'select config' } },
+      'select metadata',
+    ],
+    ['config SQL', { config: { sql: 'select config' } }, 'select config'],
+  ])('uses deterministic SQL precedence for %s', (_name, metadata, expectedCode) => {
     const model = buildNodePropertiesReadModel({
-      node: buildSourceNode(),
-      nodes: [buildSourceNode(), downstreamNode],
-      edges: graphEdges,
+      node: buildSourceNode({ metadata }),
+      nodes: [buildSourceNode()],
+      edges: [],
     });
 
-    const summary = sectionById(model, 'summary');
-    expect(rowValue(summary, 'Upstream nodes')).toBe('0');
-    expect(rowValue(summary, 'Downstream nodes')).toBe('Clean Orders');
-    expect(rowValue(summary, 'Tags')).toBe('source, raw');
-  });
-
-  it('uses deterministic SQL precedence across compiled, metadata, and config SQL', () => {
-    const node = buildSourceNode();
-
-    expect(
-      sectionById(
-        buildNodePropertiesReadModel({
-          node: {
-            ...node,
-            metadata: {
-              compiledSql: 'select compiled',
-              sql: 'select metadata',
-              config: { sql: 'select config' },
-            },
-          },
-          nodes: [node],
-          edges: [],
-        }),
-        'code'
-      ).code
-    ).toBe('select compiled');
-
-    expect(
-      sectionById(
-        buildNodePropertiesReadModel({
-          node: {
-            ...node,
-            metadata: {
-              sql: 'select metadata',
-              config: { sql: 'select config' },
-            },
-          },
-          nodes: [node],
-          edges: [],
-        }),
-        'code'
-      ).code
-    ).toBe('select metadata');
-
-    expect(
-      sectionById(
-        buildNodePropertiesReadModel({
-          node: {
-            ...node,
-            metadata: {
-              config: { sql: 'select config' },
-            },
-          },
-          nodes: [node],
-          edges: [],
-        }),
-        'code'
-      ).code
-    ).toBe('select config');
+    expect(sectionById(model, 'code').code).toBe(expectedCode);
   });
 });
