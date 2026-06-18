@@ -29,6 +29,7 @@ const {
   mergePlanningTaskIds,
   normalizeText,
   parseArgs,
+  readTrackedDocumentPaths,
   readLocalPlanningTaskIds,
   runPlanningImport,
   sha256,
@@ -127,6 +128,50 @@ test('code symbol import behavior lives in a focused inventory component', () =>
   const codeSymbolInventoryComponent = require('./planning-db/code-symbol-inventory.cjs');
 
   assert.equal(codeSymbolInventoryComponent.buildCodeSymbolSnapshot, buildCodeSymbolSnapshot);
+});
+
+test('code symbol inventory ignores tracked files deleted in the worktree', () => {
+  const { listTrackedCodeFiles } = require('./planning-db/code-symbol-inventory.cjs');
+  const readPaths = [];
+
+  const files = listTrackedCodeFiles({
+    execFileSync: () =>
+      [
+        'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+        'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+        'docs/readme.md',
+      ].join('\n'),
+    fileExists: (sourcePath) =>
+      sourcePath !== 'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+    readFileSync: (sourcePath) => {
+      readPaths.push(sourcePath);
+      return 'export function sampleSymbol() { return true; }';
+    },
+  });
+
+  assert.deepEqual(
+    files.map((file) => file.path),
+    ['apps/web/src/app/views/canvas/CanvasContextMenuView.tsx']
+  );
+  assert.deepEqual(readPaths, ['apps/web/src/app/views/canvas/CanvasContextMenuView.tsx']);
+});
+
+test('tracked document path reader ignores files deleted in the worktree', () => {
+  const paths = readTrackedDocumentPaths(['**/*'], {
+    execFileSync: () =>
+      [
+        'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+        'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+        'docs/planning/index.md',
+      ].join('\n'),
+    fileExists: (sourcePath) =>
+      sourcePath !== 'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+  });
+
+  assert.deepEqual(paths, [
+    'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+    'docs/planning/index.md',
+  ]);
 });
 
 test('code symbol snapshot extracts owned functions and exact body duplicate hashes', () => {
@@ -461,6 +506,31 @@ test('command/query rail snapshot keeps canonical rail names when API aliases ap
     snapshot.rails.some((rail) => /^Api/.test(rail.railName)),
     false
   );
+});
+
+test('command/query rail catalog ignores tracked source files deleted in the worktree', () => {
+  const {
+    createCommandQueryRailCatalogComponent,
+  } = require('./planning-db/command-query-rail-catalog.cjs');
+  const catalog = createCommandQueryRailCatalogComponent({
+    childProcess: {
+      execFileSync: () =>
+        [
+          'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+          'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+        ].join('\n'),
+    },
+    fs: {
+      existsSync: (sourcePath) => !sourcePath.includes('CanvasAddNodePalette.test.tsx'),
+      readFileSync: () => '',
+    },
+    path: require('node:path'),
+    repoRoot: 'C:/repo',
+  });
+
+  assert.deepEqual(catalog.readTrackedDocumentPaths(['apps/**']), [
+    'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+  ]);
 });
 
 test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {

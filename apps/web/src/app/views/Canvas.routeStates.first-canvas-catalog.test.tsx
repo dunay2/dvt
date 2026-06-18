@@ -1,10 +1,11 @@
-import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   createCanvasRouteHarness,
+  currentCanvasRouteState,
   expectActiveCanvasShellIdentity,
   renderCanvasRouteWithController,
+  requireAuthoringNodeKind,
   type CanvasRouteHarness,
 } from './Canvas.test.support';
 
@@ -19,17 +20,24 @@ describe('Canvas route first-canvas catalog', () => {
     harness.cleanup();
   });
 
-  async function openFirstNodePalette(firstNodeLabel: string): Promise<void> {
-    const trigger = Array.from(harness.container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes(firstNodeLabel)
-    );
-    expect(trigger).toBeDefined();
-    await act(async () => {
-      trigger?.click();
-    });
+  function expectViewportAuthoringKinds(
+    expectedKinds: readonly string[],
+    absentKinds: readonly string[]
+  ): void {
+    const authoringNodeKinds = currentCanvasRouteState().viewportProps?.authoringNodeKinds as
+      | readonly ReturnType<typeof requireAuthoringNodeKind>[]
+      | undefined;
+
+    expect(authoringNodeKinds).toBeDefined();
+    for (const kind of expectedKinds) {
+      expect(authoringNodeKinds).toContain(requireAuthoringNodeKind(kind));
+    }
+    for (const kind of absentKinds) {
+      expect(authoringNodeKinds).not.toContain(requireAuthoringNodeKind(kind));
+    }
   }
 
-  it('shows a typed transformation empty canvas catalog instead of the dbt catalog', async () => {
+  it('publishes a typed transformation empty canvas catalog to the contextual viewport', async () => {
     await renderCanvasRouteWithController(harness, {
       canvasDocument: {
         kind: 'transformation',
@@ -38,19 +46,16 @@ describe('Canvas route first-canvas catalog', () => {
     });
 
     expect(harness.container.textContent).toContain('Start transformation canvas');
-    expect(harness.container.textContent).toContain('Add first transformation node');
+    expect(harness.container.textContent).not.toContain('Add first transformation node');
     expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Main canvas',
       kindLabel: 'Transformation',
     });
-    await openFirstNodePalette('Add first transformation node');
-    expect(document.body.textContent).toContain('SQL transform');
-    expect(document.body.textContent).not.toContain('Exposure');
-    expect(document.body.textContent).not.toContain('Metric');
+    expectViewportAuthoringKinds(['dvt:sql_transform'], ['dbt:exposure', 'dbt:metric']);
   });
 
-  it('shows a typed dbt empty canvas catalog instead of the transformation catalog', async () => {
+  it('publishes a typed dbt empty canvas catalog to the contextual viewport', async () => {
     await renderCanvasRouteWithController(harness, {
       canvasDocument: {
         kind: 'dbt',
@@ -60,15 +65,12 @@ describe('Canvas route first-canvas catalog', () => {
     });
 
     expect(harness.container.textContent).toContain('Start dbt canvas');
-    expect(harness.container.textContent).toContain('Add first dbt node');
+    expect(harness.container.textContent).not.toContain('Add first dbt node');
     expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'dbt canvas',
       kindLabel: 'dbt',
     });
-    await openFirstNodePalette('Add first dbt node');
-    expect(document.body.textContent).toContain('Exposure');
-    expect(document.body.textContent).toContain('Metric');
-    expect(document.body.textContent).not.toContain('SQL transform');
+    expectViewportAuthoringKinds(['dbt:exposure', 'dbt:metric'], ['dvt:sql_transform']);
   });
 });

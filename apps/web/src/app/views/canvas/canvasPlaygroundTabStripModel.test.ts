@@ -18,8 +18,6 @@ const transformationCanvasKind: CanvasKindRegistration = {
   emptyState: {
     title: 'No graph content loaded',
     editableMessage: 'Add governed nodes to start authoring.',
-    firstNodeLabel: 'Add first node',
-    firstNodeHelper: 'Choose a node kind.',
   },
   nodeKinds: [],
 };
@@ -33,8 +31,6 @@ const dbtCanvasKind: CanvasKindRegistration = {
   emptyState: {
     title: 'No dbt content loaded',
     editableMessage: 'Add dbt resources to start authoring.',
-    firstNodeLabel: 'Add first dbt node',
-    firstNodeHelper: 'Choose a dbt resource.',
   },
   nodeKinds: [],
 };

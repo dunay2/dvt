@@ -42,8 +42,15 @@ function isCodeSourcePath(sourcePath) {
   return !normalizedPath.split('/').some((part) => excludedPathParts.has(part));
 }
 
-function listTrackedCodeFiles() {
-  const output = execFileSync('git', ['ls-files'], {
+function listTrackedCodeFiles(options = {}) {
+  const runGit = options.execFileSync || execFileSync;
+  const fileExists =
+    options.fileExists ||
+    ((sourcePath) => fs.existsSync(path.join(repoRoot, ...sourcePath.split('/'))));
+  const readFile =
+    options.readFileSync ||
+    ((sourcePath) => fs.readFileSync(path.join(repoRoot, ...sourcePath.split('/')), 'utf8'));
+  const output = runGit('git', ['ls-files'], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
@@ -53,9 +60,10 @@ function listTrackedCodeFiles() {
     .map((entry) => entry.trim())
     .filter(Boolean)
     .filter(isCodeSourcePath)
+    .filter((sourcePath) => fileExists(normalizeSourcePath(sourcePath)))
     .map((sourcePath) => ({
       path: normalizeSourcePath(sourcePath),
-      content: fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8'),
+      content: readFile(normalizeSourcePath(sourcePath)),
     }));
 }
 

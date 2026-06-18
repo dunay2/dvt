@@ -137,7 +137,7 @@ describe('Canvas empty authoring entrypoint architecture', () => {
     expect(cycleState.unavailableMessage).toBeNull();
   });
 
-  it('derives first-node copy and catalog from the active canvas kind', () => {
+  it('derives typed empty copy and contextual node catalog from the active canvas kind', () => {
     const onCreateAuthoringNode = vi.fn();
     const transformationRuntime = getCanvasRuntimeRegistrations().find(
       (registration) => registration.kind === 'transformation'
@@ -153,8 +153,6 @@ describe('Canvas empty authoring entrypoint architecture', () => {
       kind: 'typed_empty',
       title: transformationRuntime?.emptyState.title,
       message: transformationRuntime?.emptyState.editableMessage,
-      firstNodeLabel: transformationRuntime?.emptyState.firstNodeLabel,
-      firstNodeHelper: transformationRuntime?.emptyState.firstNodeHelper,
     });
     if (cycleState?.kind !== 'typed_empty') {
       return;
@@ -206,8 +204,6 @@ describe('Canvas empty authoring entrypoint architecture', () => {
       kind: 'typed_empty',
       title: dbtRuntime?.emptyState.title,
       message: canvasViewCopy.routeEmptyReadOnlyMessage,
-      firstNodeLabel: dbtRuntime?.emptyState.firstNodeLabel,
-      firstNodeHelper: dbtRuntime?.emptyState.firstNodeHelper,
       nodeKinds: [],
       onCreateAuthoringNode: undefined,
     });

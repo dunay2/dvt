@@ -50,6 +50,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
           .map((value) => normalizeText(value).trim())
           .filter(Boolean)
           .map(toPosix)
+          .filter((sourcePath) => fs.existsSync(path.join(repoRoot, ...sourcePath.split('/'))))
       ),
     ].sort();
   }

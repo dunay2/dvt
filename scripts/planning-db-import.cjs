@@ -1068,8 +1068,12 @@ function listChangedFiles(baseRef, headRef, runGitDiff = defaultRunGitDiff) {
     .map(toPosix);
 }
 
-function readTrackedDocumentPaths(gitPathspecs) {
-  const output = execFileSync('git', ['ls-files', '--', ...gitPathspecs], {
+function readTrackedDocumentPaths(gitPathspecs, options = {}) {
+  const runGit = options.execFileSync || execFileSync;
+  const fileExists =
+    options.fileExists ||
+    ((sourcePath) => fs.existsSync(path.join(repoRoot, ...sourcePath.split('/'))));
+  const output = runGit('git', ['ls-files', '--', ...gitPathspecs], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
@@ -1080,6 +1084,7 @@ function readTrackedDocumentPaths(gitPathspecs) {
         .map((value) => normalizeText(value).trim())
         .filter(Boolean)
         .map(toPosix)
+        .filter(fileExists)
     ),
   ].sort();
 }
@@ -4447,6 +4452,7 @@ module.exports = {
   listChangedFiles,
   normalizeText,
   parseArgs,
+  readTrackedDocumentPaths,
   readLocalPlanningTaskIds,
   readGovernanceSourceState,
   readGovernanceAuxiliarySourceState,

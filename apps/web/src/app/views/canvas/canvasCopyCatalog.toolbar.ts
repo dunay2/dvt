@@ -77,26 +77,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.importSnapshotLabel',
     fallback: 'Import',
   },
-  toolbarInsertLabel: {
-    key: 'canvas.toolbar.insertLabel',
-    fallback: 'Insert',
-  },
-  toolbarPlanLabel: {
-    key: 'canvas.toolbar.planLabel',
-    fallback: 'Preview execution plan',
-  },
-  toolbarRunLabel: {
-    key: 'canvas.toolbar.runLabel',
-    fallback: 'Run',
-  },
-  addNodePaletteSearchLabel: {
-    key: 'canvas.addNodePalette.searchLabel',
-    fallback: 'Search node types',
-  },
-  addNodePaletteEmptyLabel: {
-    key: 'canvas.addNodePalette.emptyLabel',
-    fallback: 'No node types match this search.',
-  },
   projectSnapshotExportUnavailableMessage: {
     key: 'canvas.projectSnapshot.exportUnavailableMessage',
     fallback: 'Project snapshot export is available after the draft is saved.',
@@ -112,34 +92,6 @@ export const canvasViewToolbarCopyByKey = {
   newCanvasLabel: {
     key: 'canvas.toolbar.newCanvasLabel',
     fallback: 'New canvas',
-  },
-  workbenchGraphTabLabel: {
-    key: 'canvas.workbench.tabs.graphLabel',
-    fallback: 'Graph',
-  },
-  workbenchLogsTabLabel: {
-    key: 'canvas.workbench.tabs.logsLabel',
-    fallback: 'Log',
-  },
-  workbenchCodeTabLabel: {
-    key: 'canvas.workbench.tabs.codeLabel',
-    fallback: 'Code',
-  },
-  workbenchLineageTabLabel: {
-    key: 'canvas.workbench.tabs.lineageLabel',
-    fallback: 'Lineage',
-  },
-  workbenchDiffTabLabel: {
-    key: 'canvas.workbench.tabs.diffLabel',
-    fallback: 'Diff',
-  },
-  workbenchArtifactsTabLabel: {
-    key: 'canvas.workbench.tabs.artifactsLabel',
-    fallback: 'Artifacts',
-  },
-  workbenchRunsTabLabel: {
-    key: 'canvas.workbench.tabs.runsLabel',
-    fallback: 'Runs',
   },
   replaceCanvasTitle: {
     key: 'canvas.toolbar.replaceCanvasTitle',

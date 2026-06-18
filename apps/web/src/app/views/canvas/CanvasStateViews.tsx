@@ -8,11 +8,6 @@ import {
   routeWorkbenchMutedTextClassName,
   routeWorkbenchPanelClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
-import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
-import { CanvasAddNodePalette } from './CanvasAddNodePalette';
-import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
-import { buildCanvasOutputTargetTemplateCatalog } from './canvasOutputTargetTemplateCatalog';
-import { buildCanvasTransformationTemplateCatalog } from './canvasTransformationTemplateCatalog';
 import type { CanvasReadOnlyState } from './canvasWorkbenchStateModel';
 import { canvasViewCopy } from './copy';
 
@@ -70,37 +65,6 @@ function CanvasSurfaceStateCard({
   );
 }
 
-function CanvasEmptyAuthoringCatalog({
-  nodeKinds,
-  onCreateAuthoringNode,
-  firstNodeLabel,
-  firstNodeHelper,
-}: Readonly<{
-  nodeKinds: readonly NodeKindRegistration[];
-  onCreateAuthoringNode: CreateCanvasAuthoringNode;
-  firstNodeLabel: string;
-  firstNodeHelper: string;
-}>) {
-  const transformationTemplates = buildCanvasTransformationTemplateCatalog(nodeKinds);
-  const outputTargetTemplates = buildCanvasOutputTargetTemplateCatalog(nodeKinds);
-
-  return (
-    <div data-slot="canvas-empty-authoring-catalog" className="mt-5 space-y-3">
-      <div>
-        <h3 className="text-sm font-semibold text-(--text-default)">{firstNodeLabel}</h3>
-        <p className={cn('mt-1 text-xs', routeWorkbenchMutedTextClassName)}>{firstNodeHelper}</p>
-      </div>
-      <CanvasAddNodePalette
-        nodeKinds={nodeKinds}
-        onCreateAuthoringNode={onCreateAuthoringNode}
-        transformationTemplates={transformationTemplates}
-        outputTargetTemplates={outputTargetTemplates}
-        triggerLabel={firstNodeLabel}
-      />
-    </div>
-  );
-}
-
 export function CanvasLoadingStateView({
   title = canvasViewCopy.routeLoadingTitle,
   message = canvasViewCopy.routeLoadingMessage,
@@ -115,25 +79,15 @@ export function CanvasEmptyStateView({
   canvasTitle = null,
   title = canvasViewCopy.routeEmptyTitle,
   message = canvasViewCopy.routeEmptyEditableMessage,
-  firstNodeLabel = canvasViewCopy.routeEmptyFirstNodeLabel,
-  firstNodeHelper = canvasViewCopy.routeEmptyFirstNodeHelper,
-  nodeKinds = [],
-  onCreateAuthoringNode,
   emptyStateGuideVisible = true,
   onEmptyStateGuideVisibilityChange,
 }: Readonly<{
   canvasTitle?: string | null;
   title?: string;
   message?: string;
-  firstNodeLabel?: string;
-  firstNodeHelper?: string;
-  nodeKinds?: readonly NodeKindRegistration[];
-  onCreateAuthoringNode?: CreateCanvasAuthoringNode;
   emptyStateGuideVisible?: boolean;
   onEmptyStateGuideVisibilityChange?: (visible: boolean) => void;
 }>) {
-  const canCreateAuthoringNode = onCreateAuthoringNode != null && nodeKinds.length > 0;
-
   return (
     <CanvasSurfaceStateCard
       dataSlot="canvas-empty-state"
@@ -148,14 +102,6 @@ export function CanvasEmptyStateView({
         >
           {canvasTitle}
         </p>
-      ) : null}
-      {canCreateAuthoringNode ? (
-        <CanvasEmptyAuthoringCatalog
-          nodeKinds={nodeKinds}
-          onCreateAuthoringNode={onCreateAuthoringNode}
-          firstNodeLabel={firstNodeLabel}
-          firstNodeHelper={firstNodeHelper}
-        />
       ) : null}
       {onEmptyStateGuideVisibilityChange != null ? (
         <label
