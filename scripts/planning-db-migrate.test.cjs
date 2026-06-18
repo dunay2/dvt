@@ -1366,6 +1366,83 @@ test('tracked migrations complete Web Canvas viewport test mechanization user st
   assert.doesNotMatch(userStoryMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations map Web Canvas source import frame leaf components', () => {
+  const migrations = readMigrationFiles();
+  const frameLeafMigration = migrations.find(
+    (migration) => migration.fileName === '126_web_canvas_source_import_frame_leaf_mapping.sql'
+  );
+
+  assert.ok(frameLeafMigration);
+  for (const componentId of [
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-FRAME-PRESENTATION',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS-TESTS',
+  ]) {
+    assert.match(frameLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const sourcePath of [
+    'SourceImportWizardFrame\\.tsx',
+    'WizardProgress\\.tsx',
+    'SourceImportMetadataPanel\\.tsx',
+    'SourceImportSectionTabs\\.tsx',
+    'SourceImportSectionTabs\\.test\\.tsx',
+  ]) {
+    assert.match(frameLeafMigration.sql, new RegExp(sourcePath));
+  }
+
+  assert.match(frameLeafMigration.sql, /REL-WEB-CANVAS-SOURCE-IMPORT-WIZARD-CONTAINS-FRAME/);
+  assert.match(frameLeafMigration.sql, /REL-WEB-CANVAS-SOURCE-IMPORT-FRAME-CONTAINS-PRESENTATION/);
+  assert.match(
+    frameLeafMigration.sql,
+    /REL-WEB-CANVAS-SOURCE-IMPORT-FRAME-CONTAINS-SECTION-TABS-TESTS/
+  );
+  assert.match(frameLeafMigration.sql, /TEST-WEB-CANVAS-SOURCE-IMPORT-FRAME/);
+  assert.match(frameLeafMigration.sql, /TEST-WEB-CANVAS-SOURCE-IMPORT-FRAME-PRESENTATION/);
+  assert.match(frameLeafMigration.sql, /TEST-WEB-CANVAS-SOURCE-IMPORT-SECTION-TABS/);
+  assert.match(frameLeafMigration.sql, /CreateGovernanceComponent/);
+  assert.match(frameLeafMigration.sql, /RecordArchitectureTestEvidence/);
+  assert.match(frameLeafMigration.sql, /old or\s+-- nonfunctional paths/);
+  assert.doesNotMatch(frameLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(frameLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations close Web Canvas architecture maturity evidence', () => {
+  const migrations = readMigrationFiles();
+  const maturityMigration = migrations.find(
+    (migration) => migration.fileName === '127_web_canvas_architecture_maturity_evidence.sql'
+  );
+
+  assert.ok(maturityMigration);
+  for (const componentId of [
+    'SYS-WEB-ROOT',
+    'SYS-WEB-VIEW-CANVAS',
+    'SYS-WEB-CANVAS-CONTEXTUAL-WORKBENCH',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD',
+  ]) {
+    assert.match(maturityMigration.sql, new RegExp(componentId));
+  }
+
+  for (const testPath of [
+    'Root\\.test\\.tsx',
+    'Canvas\\.architecture\\.test\\.ts',
+    'CanvasModalHost\\.architecture\\.test\\.tsx',
+    'sourceImportWizardModel\\.test\\.ts',
+  ]) {
+    assert.match(maturityMigration.sql, new RegExp(testPath));
+  }
+
+  assert.match(maturityMigration.sql, /REL-WEB-ROOT-CONTAINS-CANVAS-VIEW/);
+  assert.match(
+    maturityMigration.sql,
+    /REL-WEB-CANVAS-ADD-SOURCE-DIALOG-CONTAINS-SOURCE-IMPORT-WIZARD/
+  );
+  assert.match(maturityMigration.sql, /useSourceImportWizard\.ts/);
+  assert.match(maturityMigration.sql, /RecordArchitectureTestEvidence/);
+  assert.doesNotMatch(maturityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(maturityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations persist Web Canvas leaf component mapping', () => {
   const migrations = readMigrationFiles();
   const canvasLeafMappingMigration = migrations.find(
