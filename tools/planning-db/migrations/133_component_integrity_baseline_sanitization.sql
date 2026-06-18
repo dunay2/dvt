@@ -2,6 +2,56 @@
 -- pre-push gate. This migration records DB-first component path ownership and
 -- observability facts; it does not relax the integrity check or delete source.
 
+insert into architecture.component (
+  component_id,
+  name,
+  kind,
+  layer,
+  owner,
+  repo_path,
+  public_contract,
+  runtime,
+  criticality,
+  status
+)
+values
+  ('SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS', 'Planning DB migration catalog', 'module', 'infra', 'PlanningDbMigrationCatalog', 'tools/planning-db/migrations', 'Planning DB migration catalog boundary', 'node', 'high', 'review'),
+  ('SYS-CI-GOVERNANCE-ROOT', 'CI and automation root component', 'module', 'infra', 'Architecture / CI', '.github', 'Composite CI governance boundary for workflows, hooks, tools, scripts, and repository automation.', 'node', 'high', 'review'),
+  ('SYS-CI-GOVERNANCE-SCRIPTS', 'Repository governance automation scripts', 'module', 'infra', 'RepositoryAutomationScriptCatalog', 'scripts', 'Composite repository automation script boundary with leaf-owned concrete script responsibilities.', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-COMPAT-MATRIX', 'Plan compatibility matrix contract', 'module', 'contracts', 'PlanCompatibilityMatrix', 'contracts/compat/plan-compat.schema.json', 'Plan compatibility matrix schema boundary', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-ENGINE-RUNTIME-CONTRACTS', 'Engine runtime contract family', 'port', 'contracts', 'EngineRuntimeContractFamily', 'packages/@dvt/contracts/src/contracts/engine/IWorkflowEngine.v1.ts', 'Engine runtime contract family boundary', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-PACKAGE-ENTRYPOINTS', 'Contracts package entrypoints', 'api', 'contracts', 'ContractsPackageEntrypoint', 'packages/@dvt/contracts/index.ts', '@dvt/contracts package entrypoint boundary', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-PACKAGE-TESTS', 'Contracts package test evidence', 'module', 'contracts', 'ContractsPackageTestEvidence', 'packages/@dvt/contracts/test', 'Contracts package test evidence boundary', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-PLANNER-CONTRACTS', 'Planner contract family', 'port', 'contracts', 'PlannerContractFamily', 'packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts', 'Planner contract family boundary', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-ROOT', 'Contracts root component', 'package', 'contracts', 'Architecture / Contracts', 'packages/@dvt/contracts', 'Composite contracts boundary with leaf-owned contract families.', 'node', 'critical', 'review'),
+  ('SYS-CONTRACTS-SCHEMA-PACKS', 'Runtime schema pack contract family', 'module', 'contracts', 'RuntimeSchemaPackCatalog', 'packages/@dvt/contracts/src/schema-packs/execution-plan.ts', 'Runtime schema pack boundary', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-SHARED-TYPES-UTILS', 'Shared contract types and primitives', 'module', 'contracts', 'SharedContractPrimitiveCatalog', 'packages/@dvt/contracts/src/utils/contractPrimitives.ts', 'Shared contract primitive boundary', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-STEP-REGISTRY', 'Step type registry contract family', 'module', 'contracts', 'StepTypeRegistryContractFamily', 'packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts', 'Step type registry contract boundary', 'node', 'high', 'review'),
+  ('SYS-CONTRACTS-VALIDATION-RUNTIME', 'Contract runtime validation functions', 'api', 'contracts', 'ContractRuntimeValidation', 'packages/@dvt/contracts/src/validation.ts', 'Contract runtime validation boundary', 'node', 'high', 'review'),
+  ('SYS-PLANNER-CONTRACTS-PACKAGE', 'Planner contracts compatibility package', 'api', 'contracts', 'PlannerContractsCompatibilityPackage', 'packages/@dvt/planner-contracts/index.ts', '@dvt/planner-contracts compatibility package boundary', 'node', 'high', 'review'),
+  ('SYS-REPO-METADATA-FOWLER-INBOX', 'Fowler analysis intake inbox', 'module', 'infra', 'FowlerAnalysisIntakeCatalog', 'buzon', 'Fowler analysis intake boundary', 'none', 'medium', 'review'),
+  ('SYS-REPO-METADATA-INFRA-DB-MIGRATIONS', 'Infrastructure database migration archive', 'module', 'infra', 'InfrastructureDatabaseMigrationCatalog', 'infra/db/migrations', 'Infrastructure database migration boundary', 'none', 'medium', 'review'),
+  ('SYS-REPO-METADATA-ROOT', 'Repository metadata root component', 'module', 'infra', 'Architecture / Repository Metadata', '.', 'Composite repository metadata boundary with leaf-owned concrete files.', 'none', 'high', 'review'),
+  ('SYS-WORKERS-OUTBOX-BUS-ADAPTERS', 'Outbox worker event bus adapters', 'adapter', 'adapter', 'OutboxEventBusAdapter', 'apps/outbox-worker/src/bus/HttpEventBus.ts', 'Outbox event bus adapter boundary', 'node', 'high', 'review'),
+  ('SYS-WORKERS-OUTBOX-CANARY-TESTS', 'Outbox worker standalone canary tests', 'module', 'application', 'OutboxWorkerCanaryEvidence', 'apps/outbox-worker/test/canary/standaloneCanaryAcceptance.health.test.ts', 'Outbox worker standalone canary evidence boundary', 'node', 'high', 'review'),
+  ('SYS-WORKERS-OUTBOX-DB-ADAPTER', 'Outbox worker database adapter', 'adapter', 'adapter', 'OutboxWorkerDatabaseAdapter', 'apps/outbox-worker/src/db/pool.ts', 'Outbox worker database adapter boundary', 'node', 'high', 'review'),
+  ('SYS-WORKERS-OUTBOX-HOST-LIFECYCLE', 'Outbox worker host lifecycle', 'service', 'application', 'OutboxWorkerHost', 'apps/outbox-worker/src/host/runOutboxWorkerHost.ts', 'Outbox worker host lifecycle boundary', 'node', 'high', 'review'),
+  ('SYS-WORKERS-OUTBOX-OPS', 'Outbox worker operational monitor', 'service', 'application', 'OutboxWorkerOperationalMonitor', 'apps/outbox-worker/src/ops/OperationalServer.ts', 'Outbox worker operational API boundary', 'node', 'high', 'review'),
+  ('SYS-WORKERS-OUTBOX-OWNERSHIP', 'Outbox worker shard ownership gate', 'service', 'application', 'OutboxShardOwnershipGate', 'apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts', 'Outbox shard ownership boundary', 'node', 'high', 'review'),
+  ('SYS-WORKERS-OUTBOX-RUNTIME', 'Outbox worker delivery and retention runtime', 'service', 'application', 'OutboxWorkerRuntime', 'apps/outbox-worker/src/runtime/OutboxWorkerRuntime.ts', 'Outbox delivery and retention runtime boundary', 'node', 'high', 'review'),
+  ('SYS-WORKERS-ROOT', 'Worker root component', 'service', 'application', 'Architecture / Workers', 'apps/outbox-worker', 'Composite worker boundary with leaf-owned hosts, runtimes, adapters, ops, and tests.', 'node', 'high', 'review')
+on conflict (component_id) do update set
+  name = excluded.name,
+  kind = excluded.kind,
+  layer = excluded.layer,
+  owner = excluded.owner,
+  repo_path = excluded.repo_path,
+  public_contract = excluded.public_contract,
+  runtime = excluded.runtime,
+  criticality = excluded.criticality,
+  status = excluded.status,
+  updated_at = now();
+
 insert into architecture.design (
   design_id,
   work_item_id,

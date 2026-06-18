@@ -2,6 +2,46 @@
 -- cleanup exposes planner and traceability package roots. This records package
 -- root paths and observability facts without changing product runtime code.
 
+insert into architecture.component (
+  component_id,
+  name,
+  kind,
+  layer,
+  owner,
+  repo_path,
+  public_contract,
+  runtime,
+  criticality,
+  status
+)
+values
+  ('SYS-PLANNER-APPLICATION-FACADE', 'Planner application facade and envelope mapper', 'service', 'application', 'PlannerFacade', 'packages/@dvt/planner/src/application/PlannerFacade.ts', 'Planner application facade command boundary', 'node', 'high', 'review'),
+  ('SYS-PLANNER-CONTRACT-PORTS', 'Planner contract port interfaces', 'port', 'contracts', 'PlannerContractPorts', 'packages/@dvt/planner/src/contracts/PlanExecutabilityValidation.ts', 'Planner contract port boundary', 'node', 'high', 'review'),
+  ('SYS-PLANNER-DOMAIN-GRAPH', 'Planner domain graph and selection model', 'module', 'domain', 'PlannerGraph', 'packages/@dvt/planner/src/domain/graph/GraphBuilder.ts', 'Planner graph domain boundary', 'node', 'high', 'review'),
+  ('SYS-PLANNER-DOMAIN-MANIFEST-INPUT', 'Planner manifest input and envelope validation', 'module', 'domain', 'PlannerManifestInput', 'packages/@dvt/planner/src/domain/manifest.ts', 'Planner manifest and input validation boundary', 'node', 'high', 'review'),
+  ('SYS-PLANNER-DOMAIN-PLAN-ASSEMBLY', 'Planner domain plan assembly and determinism', 'service', 'domain', 'PlannerDomainService', 'packages/@dvt/planner/src/domain/Planner.ts', 'Planner domain build-plan command boundary', 'node', 'high', 'review'),
+  ('SYS-PLANNER-EXECUTABLE-SUBGRAPH', 'Planner executable subgraph derivation', 'module', 'application', 'ExecutableSubgraphDeriver', 'packages/@dvt/planner/src/application/ExecutableSubgraphDeriver.ts', 'Executable subgraph query boundary', 'node', 'high', 'review'),
+  ('SYS-PLANNER-PACKAGE-SHELL', 'Planner package shell and public exports', 'package', 'application', 'PlannerPackageShell', 'packages/@dvt/planner/src/index.ts', 'Planner public package export boundary', 'node', 'high', 'review'),
+  ('SYS-PLANNER-ROOT', 'Planner root component', 'service', 'application', 'Architecture / Planner', 'packages/@dvt/planner', 'Composite planner package, application facade, domain planner, contracts, docs, examples, and compatibility boundary.', 'node', 'high', 'review'),
+  ('SYS-PLANNER-STEP-FACTORY', 'Planner step factory and registry integration', 'module', 'domain', 'PlannerStepFactory', 'packages/@dvt/planner/src/domain/stepFactory/dbtStepFactory.ts', 'Planner step factory boundary', 'node', 'high', 'review'),
+  ('SYS-TRACEABILITY-LINEAGE-COMPILED-CODE', 'Traceability compiled-code resolution', 'module', 'application', 'CompiledCodeResolution', 'packages/@dvt/traceability-service/src/lineage/resolver/CachedRetryCompiledCodeResolver.ts', 'Compiled-code resolution policy and reader boundary', 'node', 'high', 'review'),
+  ('SYS-TRACEABILITY-LINEAGE-CONTRACTS', 'Traceability lineage contracts and error vocabulary', 'module', 'contracts', 'LineageContracts', 'packages/@dvt/traceability-service/src/lineage/contracts.ts', 'Lineage published language and OpenLineage schema contract', 'node', 'high', 'review'),
+  ('SYS-TRACEABILITY-LINEAGE-MAPPER', 'Traceability OpenLineage mapper and facets', 'module', 'application', 'StepStartedLineageMapper', 'packages/@dvt/traceability-service/src/lineage/mapper/StepStartedLineageMapper.ts', 'StepStarted OpenLineage mapping boundary', 'node', 'high', 'review'),
+  ('SYS-TRACEABILITY-LINEAGE-SINK-OBSERVER', 'Traceability OpenLineage sink and outbox observer', 'adapter', 'adapter', 'LineageEventSink', 'packages/@dvt/traceability-service/src/lineage/HttpOpenLineageSink.ts', 'OpenLineage outbound sink and outbox observer boundary', 'node', 'high', 'review'),
+  ('SYS-TRACEABILITY-LINEAGE-WORKER-RUNTIME', 'Traceability lineage worker runtime', 'service', 'application', 'LineageWorkerRuntime', 'packages/@dvt/traceability-service/src/lineage/LineageWorkerRuntime.ts', 'Lineage worker runtime command boundary', 'node', 'high', 'review'),
+  ('SYS-TRACEABILITY-ROOT', 'Traceability root component', 'service', 'application', 'Architecture / Traceability', 'packages/@dvt/traceability-service', 'Composite traceability package, manifest validation, and lineage boundary with leaf-owned implementation files.', 'node', 'high', 'review')
+on conflict (component_id) do update set
+  name = excluded.name,
+  kind = excluded.kind,
+  layer = excluded.layer,
+  owner = excluded.owner,
+  repo_path = excluded.repo_path,
+  public_contract = excluded.public_contract,
+  runtime = excluded.runtime,
+  criticality = excluded.criticality,
+  status = excluded.status,
+  updated_at = now();
+
 insert into architecture.design_scope (
   design_id,
   subject_kind,
