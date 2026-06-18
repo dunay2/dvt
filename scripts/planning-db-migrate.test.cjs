@@ -1244,6 +1244,87 @@ test('tracked migrations repoint Canvas create-document command test support rai
   assert.doesNotMatch(canvasCreateDocumentSupportMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations repoint Canvas viewport graph-model test support rail', () => {
+  const migrations = readMigrationFiles();
+  const canvasViewportGraphModelSupportMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '121_repoint_canvas_viewport_graph_model_test_support_rail.sql'
+  );
+
+  assert.ok(canvasViewportGraphModelSupportMigration);
+  assert.match(
+    canvasViewportGraphModelSupportMigration.sql,
+    /useCanvasViewportGraphModel\.test\.tsx/
+  );
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /buildCanonicalNode/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /renderViewportGraphModel/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /deprecatedSourcePaths/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /sourceRepointReason/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /rail_status/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /implemented/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /noHumanDecisionsRemaining/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /implementationPlan/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /redGreenCycles/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /cypressCoverage/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /fowlerSignals/);
+  assert.match(canvasViewportGraphModelSupportMigration.sql, /on conflict \(rail_id\) do update/);
+  assert.doesNotMatch(
+    canvasViewportGraphModelSupportMigration.sql,
+    /source_path\s*=\s*'apps\/web\/src\/app\/views\/canvas\/useCanvasViewportGraphModel\.test\.support\.ts'/
+  );
+  assert.doesNotMatch(canvasViewportGraphModelSupportMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasViewportGraphModelSupportMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize Web Canvas test ownership after source repoint', () => {
+  const migrations = readMigrationFiles();
+  const canvasTestOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '122_web_canvas_test_ownership_canonicalization.sql'
+  );
+
+  assert.ok(canvasTestOwnershipMigration);
+  assert.match(canvasTestOwnershipMigration.sql, /SYS-WEB-CANVAS-GRAPH-VIEWPORT-MODEL-TESTS/);
+  assert.match(canvasTestOwnershipMigration.sql, /useCanvasViewportGraphModel\.test\.tsx/);
+  assert.match(canvasTestOwnershipMigration.sql, /CanvasShell\.legacyGuides\.test\.tsx/);
+  assert.match(
+    canvasTestOwnershipMigration.sql,
+    /REL-WEB-CANVAS-GRAPH-VIEWPORT-CONTAINS-MODEL-TESTS/
+  );
+  assert.match(canvasTestOwnershipMigration.sql, /TEST-WEB-CANVAS-GRAPH-VIEWPORT-MODEL/);
+  assert.match(canvasTestOwnershipMigration.sql, /TEST-WEB-CANVAS-SHELL-LEGACY-GUIDES/);
+  assert.match(canvasTestOwnershipMigration.sql, /pattern_kind = 'excludes'/);
+  assert.match(canvasTestOwnershipMigration.sql, /useCanvasViewportGraphModel\.test\.support\.ts/);
+  assert.match(canvasTestOwnershipMigration.sql, /on conflict \(component_id\) do update/);
+  assert.match(canvasTestOwnershipMigration.sql, /on conflict \(test_id\) do update/);
+  assert.doesNotMatch(canvasTestOwnershipMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasTestOwnershipMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Web Canvas viewport model test maturity evidence', () => {
+  const migrations = readMigrationFiles();
+  const viewportModelTestResponsibilityMigration = migrations.find(
+    (migration) => migration.fileName === '123_web_canvas_viewport_model_test_responsibility.sql'
+  );
+
+  assert.ok(viewportModelTestResponsibilityMigration);
+  assert.match(
+    viewportModelTestResponsibilityMigration.sql,
+    /RESP-WEB-CANVAS-GRAPH-VIEWPORT-MODEL-TESTS/
+  );
+  assert.match(
+    viewportModelTestResponsibilityMigration.sql,
+    /SYS-WEB-CANVAS-GRAPH-VIEWPORT-MODEL-TESTS/
+  );
+  assert.match(viewportModelTestResponsibilityMigration.sql, /component_responsibility/);
+  assert.match(
+    viewportModelTestResponsibilityMigration.sql,
+    /CanvasGraphViewportPresentationTestContract/
+  );
+  assert.match(viewportModelTestResponsibilityMigration.sql, /implemented/);
+  assert.doesNotMatch(viewportModelTestResponsibilityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(viewportModelTestResponsibilityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations persist Web Canvas leaf component mapping', () => {
   const migrations = readMigrationFiles();
   const canvasLeafMappingMigration = migrations.find(
@@ -1377,6 +1458,51 @@ test('tracked migrations persist Web Canvas modularized test leaf mapping', () =
   assert.match(modularizedTestLeafMigration.sql, /insert into architecture\.component_test/);
   assert.doesNotMatch(modularizedTestLeafMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(modularizedTestLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations persist CI governance scripts leaf mapping', () => {
+  const migrations = readMigrationFiles();
+  const ciScriptsLeafMigration = migrations.find(
+    (migration) => migration.fileName === '120_ci_governance_scripts_leaf_mapping.sql'
+  );
+
+  assert.ok(ciScriptsLeafMigration);
+  for (const componentId of [
+    'SYS-CI-GOVERNANCE-SCRIPTS-AI-INTAKE',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION',
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-QUALITY',
+    'SYS-CI-GOVERNANCE-SCRIPTS-GOVERNANCE-INDEXES',
+    'SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CORE',
+    'SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-OPERATE',
+    'SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY',
+    'SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CATALOGS',
+    'SYS-CI-GOVERNANCE-SCRIPTS-CHANGED-CLOSEOUT',
+    'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION',
+    'SYS-CI-GOVERNANCE-SCRIPTS-RUNTIME-PROOFS',
+  ]) {
+    assert.match(ciScriptsLeafMigration.sql, new RegExp(componentId));
+  }
+
+  assert.match(ciScriptsLeafMigration.sql, /create temporary table ci_governance_script_leaf_map/);
+  assert.match(ciScriptsLeafMigration.sql, /scripts\/planning-db-operate-tests\/\*\*/);
+  assert.match(ciScriptsLeafMigration.sql, /scripts\/planning-db\/queries\/\*\*/);
+  assert.match(ciScriptsLeafMigration.sql, /scripts\/run-\*\.cjs/);
+  assert.match(ciScriptsLeafMigration.sql, /REL-CI-GOVERNANCE-SCRIPTS-CONTAINS-/);
+  assert.match(ciScriptsLeafMigration.sql, /TEST-SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY/);
+  assert.match(
+    ciScriptsLeafMigration.sql,
+    /component-profile --component SYS-CI-GOVERNANCE-SCRIPTS/
+  );
+  assert.doesNotMatch(ciScriptsLeafMigration.sql, /component-profile SYS-CI-GOVERNANCE-SCRIPTS/);
+  assert.match(
+    ciScriptsLeafMigration.sql,
+    /insert into planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(ciScriptsLeafMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(ciScriptsLeafMigration.sql, /insert into architecture\.component_relation/);
+  assert.match(ciScriptsLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.doesNotMatch(ciScriptsLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(ciScriptsLeafMigration.sql, /truncate\s+/i);
 });
 
 test('tracked migrations include architecture test evidence operations after W83', () => {
