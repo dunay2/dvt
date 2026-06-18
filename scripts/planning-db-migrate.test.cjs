@@ -799,6 +799,134 @@ test('tracked migrations reconcile BottomOperationalDrawer local authority to tr
   assert.doesNotMatch(bottomOperationalDrawerMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations sanitize post-import component architecture anchors', () => {
+  const migrations = readMigrationFiles();
+  const anchorMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '160_component_integrity_post_import_anchor_sanitization.sql'
+  );
+
+  assert.ok(anchorMigration);
+  assert.match(
+    anchorMigration.sql,
+    /PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618/
+  );
+  assert.match(
+    anchorMigration.sql,
+    /SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS'[\s\S]+001_content_read_model\.sql/
+  );
+  assert.match(
+    anchorMigration.sql,
+    /packages\/@dvt\/contracts\/test\/plan-version\.contract\.test\.ts/
+  );
+  assert.match(anchorMigration.sql, /buzon\/pretest-inventory-db\.md/);
+  assert.match(anchorMigration.sql, /infra\/db\/migrations\/2026-03-04_g3_start_run_intent\.sql/);
+  assert.match(anchorMigration.sql, /SYS-PLANSTORE-TEMPORAL-COMPOSITION/);
+  assert.match(anchorMigration.sql, /packages\/@dvt\/adapter-temporal\/src/);
+  assert.doesNotMatch(anchorMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(anchorMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations repoint Fowler inbox architecture anchor to tracked source', () => {
+  const migrations = readMigrationFiles();
+  const fowlerAnchorMigration = migrations.find(
+    (migration) => migration.fileName === '161_repoint_fowler_inbox_component_anchor.sql'
+  );
+
+  assert.ok(fowlerAnchorMigration);
+  assert.match(fowlerAnchorMigration.sql, /SYS-REPO-METADATA-FOWLER-INBOX/);
+  assert.match(
+    fowlerAnchorMigration.sql,
+    /buzon\/20260423-codex-fowler-access-decision-component-analysis-and-remediation\.md/
+  );
+  assert.doesNotMatch(fowlerAnchorMigration.sql, /pretest-inventory-db\.md/);
+  assert.doesNotMatch(fowlerAnchorMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(fowlerAnchorMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep component integrity on a lightweight read model', () => {
+  const migrations = readMigrationFiles();
+  const lightweightIntegrityMigration = migrations.find(
+    (migration) => migration.fileName === '162_component_integrity_lightweight_read_model.sql'
+  );
+
+  assert.ok(lightweightIntegrityMigration);
+  assert.match(
+    lightweightIntegrityMigration.sql,
+    /PLANNING-DB-COMPONENT-INTEGRITY-LIGHTWEIGHT-READMODEL-20260618/
+  );
+  assert.match(
+    lightweightIntegrityMigration.sql,
+    /create or replace view planning_query_store\.component_integrity_query/
+  );
+  assert.match(lightweightIntegrityMigration.sql, /component_tree as materialized/);
+  assert.match(lightweightIntegrityMigration.sql, /file_ownership as materialized/);
+  assert.match(lightweightIntegrityMigration.sql, /sourceSummary/);
+  assert.doesNotMatch(
+    lightweightIntegrityMigration.sql,
+    /from planning_query_store\.component_engineering_component_metadata_query/
+  );
+  assert.doesNotMatch(lightweightIntegrityMigration.sql, /source_paths/);
+  assert.doesNotMatch(lightweightIntegrityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(lightweightIntegrityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep component integrity off the heavy quality rollup', () => {
+  const migrations = readMigrationFiles();
+  const qualityLiteMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '163_component_integrity_drop_heavy_quality_dependency.sql'
+  );
+
+  assert.ok(qualityLiteMigration);
+  assert.match(qualityLiteMigration.sql, /PLANNING-DB-COMPONENT-INTEGRITY-QUALITY-LITE-20260618/);
+  assert.match(
+    qualityLiteMigration.sql,
+    /create or replace view planning_query_store\.component_integrity_query/
+  );
+  assert.match(qualityLiteMigration.sql, /component_test_file_counts as materialized/);
+  assert.match(qualityLiteMigration.sql, /leaf_component_id as component_id/);
+  assert.match(qualityLiteMigration.sql, /file_role = 'test'/);
+  assert.match(qualityLiteMigration.sql, /quality_state/);
+  assert.doesNotMatch(qualityLiteMigration.sql, /component_engineering_quality_query/);
+  assert.doesNotMatch(qualityLiteMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(qualityLiteMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations repoint bottom operational drawer local feature sources', () => {
+  const migrations = readMigrationFiles();
+  const drawerSourceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '164_repoint_bottom_operational_drawer_local_feature_sources.sql'
+  );
+
+  assert.ok(drawerSourceMigration);
+  assert.match(
+    drawerSourceMigration.sql,
+    /PLANNING-DB-BOTTOM-OPERATIONAL-DRAWER-LOCAL-SOURCE-REPOINT-20260618/
+  );
+  assert.match(drawerSourceMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(
+    drawerSourceMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/bottomConsoleDrawerModel\.ts/
+  );
+  assert.match(
+    drawerSourceMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/OperationalDrawerPanels\.tsx/
+  );
+  assert.match(drawerSourceMigration.sql, /deprecatedSourcePath/);
+  assert.match(
+    drawerSourceMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/bottomOperationalDrawerLogModel\.ts/
+  );
+  assert.match(
+    drawerSourceMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/BottomOperationalDrawer\.tsx/
+  );
+  assert.doesNotMatch(drawerSourceMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(drawerSourceMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations retire orphan canvas node workbench overlay rails', () => {
   const migrations = readMigrationFiles();
   const orphanOverlayMigration = migrations.find(
