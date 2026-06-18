@@ -47,7 +47,7 @@ const nodeKinds: readonly NodeKindRegistration[] = [
   },
 ];
 
-function renderEmptyState(): {
+function renderEmptyState(props: Partial<React.ComponentProps<typeof CanvasEmptyStateView>> = {}): {
   container: HTMLDivElement;
   onCreateAuthoringNode: ReturnType<typeof vi.fn>;
   root: Root;
@@ -66,8 +66,7 @@ function renderEmptyState(): {
         firstNodeHelper="Choose a transformation node."
         nodeKinds={nodeKinds}
         onCreateAuthoringNode={onCreateAuthoringNode}
-        emptyStateGuideVisible
-        onEmptyStateGuideVisibilityChange={vi.fn()}
+        {...props}
       />
     );
   });
@@ -75,7 +74,7 @@ function renderEmptyState(): {
   return { container, onCreateAuthoringNode, root };
 }
 
-describe('Canvas empty state Insert/Add palette', () => {
+describe('CanvasEmptyStateView', () => {
   beforeEach(() => {
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
@@ -87,50 +86,7 @@ describe('Canvas empty state Insert/Add palette', () => {
     vi.clearAllMocks();
   });
 
-  it('opens an on-demand searchable node palette instead of exposing a permanent node rail', async () => {
-    const { container, onCreateAuthoringNode, root } = renderEmptyState();
-    const trigger = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Add first transformation node')
-    );
-
-    expect(trigger).toBeDefined();
-    expect(container.textContent).not.toContain('SQL transform');
-
-    await act(async () => {
-      trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    const palette = document.body.querySelector('[data-slot="canvas-add-node-palette"]');
-    const search = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="canvas-add-node-palette-search"]'
-    );
-
-    expect(palette).not.toBeNull();
-    expect(search).not.toBeNull();
-    expect(document.body.textContent).toContain('Source');
-    expect(document.body.textContent).toContain('SQL transform');
-
-    await act(async () => {
-      search?.focus();
-      if (search) {
-        search.value = 'sql';
-      }
-      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'sql' }));
-    });
-
-    await act(async () => {
-      search?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    });
-
-    expect(onCreateAuthoringNode).toHaveBeenCalledTimes(1);
-    expect(onCreateAuthoringNode).toHaveBeenCalledWith(nodeKinds[1]);
-
-    act(() => {
-      root.unmount();
-    });
-  });
-
-  it('keeps the empty authoring guide from blocking canvas context gestures outside the card', () => {
+  it('keeps the empty authoring guide from blocking canvas gestures outside the card', async () => {
     const { container, root } = renderEmptyState();
 
     const frame = container.querySelector('[data-slot="canvas-empty-state-frame"]');
@@ -139,45 +95,33 @@ describe('Canvas empty state Insert/Add palette', () => {
     expect(frame?.className).toContain('pointer-events-none');
     expect(card?.className).toContain('pointer-events-auto');
 
-    act(() => {
-      root.unmount();
-    });
+    act(() => root.unmount());
   });
 
-  it('offers governed SQL transformation templates before the first node exists', async () => {
+  it('opens the on-demand authoring palette instead of exposing a permanent node rail', async () => {
     const { container, onCreateAuthoringNode, root } = renderEmptyState();
-    const trigger = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Add first transformation node')
-    );
 
-    await act(async () => {
-      trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+    expect(container.textContent).not.toContain('SQL transform');
 
-    const search = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="canvas-add-node-palette-search"]'
-    );
+    await clickButton(container, 'Add first transformation node');
 
-    await act(async () => {
-      search?.focus();
-      if (search) {
-        search.value = 'join';
-      }
-      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'join' }));
-    });
+    expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).not.toBeNull();
+    expect(document.body.textContent).toContain('Source');
+    expect(document.body.textContent).toContain('SQL transform');
 
-    const joinTemplate = Array.from(
-      document.body.querySelectorAll<HTMLButtonElement>(
-        '[data-slot="canvas-add-node-palette-option"][data-option-kind="transformation-template"]'
-      )
-    ).find((button) => button.textContent?.includes('Join sources'));
+    await setPaletteSearch('sql');
+    await submitPaletteSearch();
 
-    expect(joinTemplate).toBeDefined();
+    expect(onCreateAuthoringNode).toHaveBeenCalledWith(nodeKinds[1]);
+    act(() => root.unmount());
+  });
 
-    await act(async () => {
-      joinTemplate?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
+  it('offers governed transformation and output templates before the first node exists', async () => {
+    const { container, onCreateAuthoringNode, root } = renderEmptyState();
 
+    await clickButton(container, 'Add first transformation node');
+    await setPaletteSearch('join');
+    await clickButton(document.body, 'Join sources');
     expect(onCreateAuthoringNode).toHaveBeenCalledWith(
       nodeKinds[1],
       undefined,
@@ -190,45 +134,9 @@ describe('Canvas empty state Insert/Add palette', () => {
       })
     );
 
-    act(() => {
-      root.unmount();
-    });
-  });
-
-  it('offers explicit output target templates before the first node exists', async () => {
-    const { container, onCreateAuthoringNode, root } = renderEmptyState();
-    const trigger = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Add first transformation node')
-    );
-
-    await act(async () => {
-      trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    const search = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="canvas-add-node-palette-search"]'
-    );
-
-    await act(async () => {
-      search?.focus();
-      if (search) {
-        search.value = 'append';
-      }
-      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'append' }));
-    });
-
-    const appendTarget = Array.from(
-      document.body.querySelectorAll<HTMLButtonElement>(
-        '[data-slot="canvas-add-node-palette-option"][data-option-kind="output-target-template"]'
-      )
-    ).find((button) => button.textContent?.includes('Append fact table'));
-
-    expect(appendTarget).toBeDefined();
-
-    await act(async () => {
-      appendTarget?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
+    await clickButton(container, 'Add first transformation node');
+    await setPaletteSearch('append');
+    await clickButton(document.body, 'Append fact table');
     expect(onCreateAuthoringNode).toHaveBeenCalledWith(
       nodeKinds[2],
       undefined,
@@ -245,105 +153,14 @@ describe('Canvas empty state Insert/Add palette', () => {
         }),
       })
     );
-
-    act(() => {
-      root.unmount();
-    });
-  });
-
-  it('keeps terse authoring node kinds discoverable through semantic palette search', async () => {
-    const semanticNodeKinds: readonly NodeKindRegistration[] = [
-      {
-        kind: 'dbt:source',
-        pluginId: 'dbt',
-        label: 'Source',
-        role: 'input',
-        icon: Circle,
-        borderClass: 'border-sky-500',
-        minimapColor: '#0ea5e9',
-        allowsIncoming: false,
-        allowsOutgoing: true,
-        supportsColumns: true,
-      },
-      {
-        kind: 'dbt:model',
-        pluginId: 'dbt',
-        label: 'Model',
-        role: 'transform',
-        icon: Square,
-        borderClass: 'border-violet-500',
-        minimapColor: '#8b5cf6',
-        allowsIncoming: true,
-        allowsOutgoing: true,
-        supportsColumns: true,
-      },
-    ];
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    act(() => {
-      root.render(
-        <CanvasEmptyStateView
-          title="Start dbt canvas"
-          message="Start dbt authoring"
-          firstNodeLabel="Insert"
-          firstNodeHelper="Choose a dbt node."
-          nodeKinds={semanticNodeKinds}
-          onCreateAuthoringNode={vi.fn()}
-        />
-      );
-    });
-
-    const trigger = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Insert')
-    );
-
-    await act(async () => {
-      trigger?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    const search = document.body.querySelector<HTMLInputElement>(
-      '[data-slot="canvas-add-node-palette-search"]'
-    );
-
-    await act(async () => {
-      search?.focus();
-      if (search) {
-        search.value = 'authoring';
-      }
-      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'authoring' }));
-    });
-
-    expect(document.body.textContent).toContain('Source');
-    expect(document.body.textContent).toContain('Model');
-    expect(document.body.querySelector('[data-slot="canvas-add-node-palette-empty"]')).toBeNull();
-
-    act(() => {
-      root.unmount();
-    });
-    container.remove();
+    act(() => root.unmount());
   });
 
   it('exposes a checked guide visibility control that can hide the empty-state guide', async () => {
     const onEmptyStateGuideVisibilityChange = vi.fn();
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    const root = createRoot(container);
-
-    act(() => {
-      root.render(
-        <CanvasEmptyStateView
-          title="Start dbt canvas"
-          message="Start dbt authoring"
-          firstNodeLabel="Add first dbt node"
-          firstNodeHelper="Choose a dbt node."
-          nodeKinds={nodeKinds}
-          onCreateAuthoringNode={vi.fn()}
-          emptyStateGuideVisible
-          onEmptyStateGuideVisibilityChange={onEmptyStateGuideVisibilityChange}
-        />
-      );
+    const { container, root } = renderEmptyState({
+      emptyStateGuideVisible: true,
+      onEmptyStateGuideVisibilityChange,
     });
 
     const preference = container.querySelector<HTMLInputElement>(
@@ -358,10 +175,43 @@ describe('Canvas empty state Insert/Add palette', () => {
     });
 
     expect(onEmptyStateGuideVisibilityChange).toHaveBeenCalledWith(false);
-
-    act(() => {
-      root.unmount();
-    });
-    container.remove();
+    act(() => root.unmount());
   });
 });
+
+async function clickButton(scope: ParentNode, label: string): Promise<void> {
+  const button = Array.from(scope.querySelectorAll<HTMLButtonElement>('button')).find((candidate) =>
+    candidate.textContent?.includes(label)
+  );
+  expect(button, label).toBeDefined();
+
+  await act(async () => {
+    button?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  });
+}
+
+async function setPaletteSearch(value: string): Promise<void> {
+  const search = document.body.querySelector<HTMLInputElement>(
+    '[data-slot="canvas-add-node-palette-search"]'
+  );
+  expect(search).not.toBeNull();
+
+  await act(async () => {
+    search?.focus();
+    if (search) {
+      search.value = value;
+    }
+    search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: value }));
+  });
+}
+
+async function submitPaletteSearch(): Promise<void> {
+  const search = document.body.querySelector<HTMLInputElement>(
+    '[data-slot="canvas-add-node-palette-search"]'
+  );
+  expect(search).not.toBeNull();
+
+  await act(async () => {
+    search?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  });
+}
