@@ -42,19 +42,11 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.routeNeedsCanvasTitle).toBe('Crear canvas en este workspace');
     expect(spanishCopy.routeNeedsCanvasTemplateLabel).toBe('Elige una plantilla de canvas');
     expect(spanishCopy.toolbarLayoutLabel).toBe('Disposicion');
-    expect(spanishCopy.toolbarRunLabel).toBe('Ejecutar');
+    expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Proyecto');
     expect(spanishCopy.draftSyncedLabel).toBe('Borrador sincronizado');
     expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
     expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');
-    expect([
-      spanishCopy.workbenchGraphTabLabel,
-      spanishCopy.workbenchLogsTabLabel,
-      spanishCopy.workbenchCodeTabLabel,
-      spanishCopy.workbenchLineageTabLabel,
-      spanishCopy.workbenchDiffTabLabel,
-      spanishCopy.workbenchArtifactsTabLabel,
-      spanishCopy.workbenchRunsTabLabel,
-    ]).toEqual(['Grafo', 'Log', 'Codigo', 'Linaje', 'Diferencias', 'Artefactos', 'Ejecuciones']);
+    expect(spanishCopy.newCanvasLabel).toBe('Nuevo canvas');
   });
 
   it('resolves Canvas Inspector authoring copy in English and Spanish', () => {

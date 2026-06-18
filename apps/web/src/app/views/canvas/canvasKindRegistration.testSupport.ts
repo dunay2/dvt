@@ -34,8 +34,6 @@ export function buildTestCanvasKind(
     emptyState: {
       title: kind,
       editableMessage: kind,
-      firstNodeLabel: kind,
-      firstNodeHelper: kind,
     },
     nodeKinds,
   };

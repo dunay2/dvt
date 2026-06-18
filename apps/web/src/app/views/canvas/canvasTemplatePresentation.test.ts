@@ -13,8 +13,6 @@ function buildCanvasKind(overrides?: Partial<CanvasKindRegistration>): CanvasKin
     emptyState: {
       title: 'Start transformation canvas',
       editableMessage: 'Start transformation authoring',
-      firstNodeLabel: 'Add first transformation node',
-      firstNodeHelper: 'Choose a transformation node.',
     },
     nodeKinds: [],
     ...overrides,

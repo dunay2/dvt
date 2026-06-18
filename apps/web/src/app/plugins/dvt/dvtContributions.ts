@@ -68,9 +68,6 @@ export const dvtContributions: PluginContributions = {
         title: 'Start transformation canvas',
         editableMessage:
           'Start this transformation canvas by adding a governed source, SQL transform, or sink node.',
-        firstNodeLabel: 'Add first transformation node',
-        firstNodeHelper:
-          'Choose a governed transformation node kind to start this protected authoring flow.',
       },
       nodeKinds: DVT_AUTHORING_NODE_KINDS,
     },

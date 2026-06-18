@@ -186,8 +186,9 @@ flowchart LR
   route-owned Inspector authoring contract.
 - `CanvasShellMainPanel.tsx` passes the active authoring catalog and graph
   command seam into the viewport.
-- `CanvasToolbar.tsx` and `CanvasAddNodePalette.tsx` continue to use the same
-  node creation command for toolbar insertion.
+- Fixed toolbar and palette insertion surfaces are retired; creation flows
+  through the viewport context menu and the same `CreateCanvasAuthoringNode`
+  command seam.
 - `useCanvasEdgeChangeHandlers.ts` consumes edge removal as a normal
   `EdgeChange`.
 

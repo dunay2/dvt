@@ -27,13 +27,13 @@ const CANVAS_SHELL_BUILDER_TYPES_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasShellBuilder.types.ts'
 );
-const CANVAS_ADD_NODE_PALETTE_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasAddNodePalette.tsx'
-);
 const CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/canvasWorkspaceExplorerModel.ts'
+);
+const LEGACY_CANVAS_ADD_NODE_PALETTE_PATH = resolve(
+  import.meta.dirname,
+  'CanvasAddNodePalette.tsx'
 );
 const SHELL_MENU_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -157,8 +157,8 @@ describe('CanvasShell architecture', () => {
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('userPermissions.canEditEdges');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('getAllNodeKinds');
-    expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('function selectOption(');
-    expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('onCreateAuthoringNode(option.registration');
+    expect(existsSync(LEGACY_CANVAS_ADD_NODE_PALETTE_PATH)).toBe(false);
+    expect(CANVAS_SHELL_SOURCE).not.toContain('CanvasAddNodePalette');
     expect(CANVAS_SHELL_SOURCE).not.toContain('nodeKinds={authoringNodeKinds}');
     expect(CANVAS_SHELL_SOURCE).not.toContain(
       'onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}'

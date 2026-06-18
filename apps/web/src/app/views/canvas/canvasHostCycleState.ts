@@ -23,8 +23,6 @@ export type CanvasHostCycleState =
       canvasTitle: string | null;
       title: string;
       message: string;
-      firstNodeLabel: string;
-      firstNodeHelper: string;
       nodeKinds: readonly NodeKindRegistration[];
       onCreateAuthoringNode: CreateAuthoringNodeCommand | undefined;
     }
@@ -144,10 +142,6 @@ export function deriveCanvasHostCycleState(
         canvasDocument,
         availableCanvasKinds,
       }),
-      firstNodeLabel:
-        activeCanvasKind?.emptyState.firstNodeLabel ?? canvasViewCopy.routeEmptyFirstNodeLabel,
-      firstNodeHelper:
-        activeCanvasKind?.emptyState.firstNodeHelper ?? canvasViewCopy.routeEmptyFirstNodeHelper,
       nodeKinds: canCreateNode ? (activeCanvasKind?.nodeKinds ?? []) : [],
       onCreateAuthoringNode: canCreateNode ? onCreateAuthoringNode : undefined,
     };

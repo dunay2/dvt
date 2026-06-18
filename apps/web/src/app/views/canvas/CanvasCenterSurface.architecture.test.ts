@@ -51,9 +51,12 @@ describe('CanvasCenterSurface architecture', () => {
     expect(WORKBENCH_SURFACE_SOURCE).toContain('deriveCanvasHostCycleState');
     expect(WORKBENCH_SURFACE_SOURCE).toContain("cycleState.kind !== 'typed_empty'");
     expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.title');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.firstNodeLabel');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.firstNodeHelper');
-    expect(WORKBENCH_SURFACE_SOURCE).toContain('cycleState.onCreateAuthoringNode');
+    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('cycleState.firstNodeLabel');
+    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('cycleState.firstNodeHelper');
+    expect(WORKBENCH_SURFACE_SOURCE).not.toContain('nodeKinds={cycleState.nodeKinds}');
+    expect(WORKBENCH_SURFACE_SOURCE).not.toContain(
+      'onCreateAuthoringNode={cycleState.onCreateAuthoringNode}'
+    );
     expect(WORKBENCH_SURFACE_SOURCE).not.toContain('DVT_AUTHORING_NODE_KINDS');
   });
 
