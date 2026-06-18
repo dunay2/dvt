@@ -2741,6 +2741,83 @@ test('tracked migrations split architecture documentation into physical leaves',
   assert.doesNotMatch(architectureDocsLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split archive documentation into deprecated physical leaves', () => {
+  const migrations = readMigrationFiles();
+  const archiveDocsLeafMigration = migrations.find(
+    (migration) => migration.fileName === '189_docs_archive_leaf_components.sql'
+  );
+
+  assert.ok(archiveDocsLeafMigration);
+  assert.match(archiveDocsLeafMigration.sql, /create temporary table docs_archive_leaf_map/);
+
+  for (const componentId of [
+    'SYS-DOCS-ARCHIVE-ROOT-RECORDS',
+    'SYS-DOCS-ARCHIVE-ARCHITECTURE-ROOT',
+    'SYS-DOCS-ARCHIVE-ARCHITECTURE-COMPONENTS',
+    'SYS-DOCS-ARCHIVE-PLANNING-GAPS',
+    'SYS-DOCS-ARCHIVE-PLANNING-PROPOSALS',
+    'SYS-DOCS-ARCHIVE-PLANNING-ROOT',
+    'SYS-DOCS-ARCHIVE-TRACEABILITY-PACK',
+    'SYS-DOCS-ARCHIVE-PLANNER',
+    'SYS-DOCS-ARCHIVE-ARTIFACT-STORE-PACK',
+    'SYS-DOCS-ARCHIVE-WORKING-NOTES',
+    'SYS-DOCS-ARCHIVE-HISTORICAL-BLUEPRINTS',
+  ]) {
+    assert.match(archiveDocsLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/archive/\\*',
+    'docs/archive/closeouts/\\*\\*',
+    'docs/archive/architecture/\\*',
+    'docs/archive/architecture/engine/\\*\\*',
+    'docs/archive/architecture/frontend/\\*\\*',
+    'docs/archive/architecture/components/\\*\\*',
+    'docs/archive/planning/gaps/\\*\\*',
+    'docs/archive/planning/proposals/\\*\\*',
+    'docs/archive/planning/index\\.md',
+    'docs/archive/dvt-traceability-pack-v2-lite-R6/\\*\\*',
+    'docs/archive/planner/\\*\\*',
+    'docs/archive/dvt_artifact_store_spec_pack/\\*\\*',
+    'docs/archive/working-notes/\\*\\*',
+    'docs/archive/historical-blueprints/\\*\\*',
+  ]) {
+    assert.match(archiveDocsLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(archiveDocsLeafMigration.sql, /SYS-DOCS-GOVERNANCE-ARCHIVE/);
+  assert.match(archiveDocsLeafMigration.sql, /PLANNING-DB-DOCS-ARCHIVE-LEAF-MAPPING-20260618/);
+  assert.match(archiveDocsLeafMigration.sql, /status,\n\s+children_required/);
+  assert.match(archiveDocsLeafMigration.sql, /'legacy',/);
+  assert.match(archiveDocsLeafMigration.sql, /'deprecated'/);
+  assert.match(archiveDocsLeafMigration.sql, /old or nonfunctional material remains queryable/);
+  assert.match(archiveDocsLeafMigration.sql, /REL-DOCS-ARCHIVE-CONTAINS-/);
+  assert.match(archiveDocsLeafMigration.sql, /ReadArchivedPlanningGapRecords/);
+  assert.match(archiveDocsLeafMigration.sql, /ReadArchivedTraceabilityPack/);
+  assert.match(archiveDocsLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(archiveDocsLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(archiveDocsLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(archiveDocsLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.doesNotMatch(archiveDocsLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(archiveDocsLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep archive contracts out of architecture drift', () => {
+  const migrations = readMigrationFiles();
+  const archiveContractStatusMigration = migrations.find(
+    (migration) => migration.fileName === '190_docs_archive_contract_status_canonicalization.sql'
+  );
+
+  assert.ok(archiveContractStatusMigration);
+  assert.match(archiveContractStatusMigration.sql, /update architecture\.contract/);
+  assert.match(archiveContractStatusMigration.sql, /owner_component_id like 'SYS-DOCS-ARCHIVE-%'/);
+  assert.match(archiveContractStatusMigration.sql, /status = 'implemented'/);
+  assert.match(archiveContractStatusMigration.sql, /architecture-drift/);
+  assert.match(archiveContractStatusMigration.sql, /archive leaves themselves remain deprecated/i);
+  assert.doesNotMatch(archiveContractStatusMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(archiveContractStatusMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(

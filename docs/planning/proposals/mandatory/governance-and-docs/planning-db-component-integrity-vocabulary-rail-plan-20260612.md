@@ -298,6 +298,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/186_docs_planning_leaf_components.sql
   - tools/planning-db/migrations/187_docs_planning_closeout_path_canonicalization.sql
   - tools/planning-db/migrations/188_docs_architecture_leaf_components.sql
+  - tools/planning-db/migrations/189_docs_archive_leaf_components.sql
+  - tools/planning-db/migrations/190_docs_archive_contract_status_canonicalization.sql
   - apps/api/src/entrypoints/http/httpBearerAuthentication.ts
   - apps/api/src/entrypoints/http/projectOnboardingRoutes.ts
   - apps/api/src/entrypoints/http/sessionRoute.ts
