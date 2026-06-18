@@ -767,6 +767,82 @@ test('tracked migrations repoint Planning DB query parent away from CLI file pat
   assert.doesNotMatch(queryParentPathMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split runtime CLI validation into active and legacy leaves', () => {
+  const migrations = readMigrationFiles();
+  const runtimeCliLeafMigration = migrations.find(
+    (migration) => migration.fileName === '177_runtime_cli_validation_leaf_components.sql'
+  );
+
+  assert.ok(runtimeCliLeafMigration);
+  assert.match(
+    runtimeCliLeafMigration.sql,
+    /create temporary table runtime_cli_validation_leaf_map/
+  );
+  assert.match(runtimeCliLeafMigration.sql, /SYS-RUNTIME-CLI-VALIDATION-DVT-CLI-PACKAGE/);
+  assert.match(runtimeCliLeafMigration.sql, /SYS-RUNTIME-CLI-VALIDATION-LEGACY-LOOSE-PACKAGE/);
+  assert.match(runtimeCliLeafMigration.sql, /packages\/@dvt\/cli\/\*\*/);
+  assert.match(runtimeCliLeafMigration.sql, /packages\/cli\/validate-contracts\.cjs/);
+  assert.match(runtimeCliLeafMigration.sql, /local_status[\s\S]*'legacy'/);
+  assert.match(runtimeCliLeafMigration.sql, /architecture_status[\s\S]*'deprecated'/);
+  assert.match(runtimeCliLeafMigration.sql, /docs\/architecture\/shared\/cli\.md/);
+  assert.match(
+    runtimeCliLeafMigration.sql,
+    /web-physical-module-decomposition-debt-plan-20260508\.md/
+  );
+  assert.match(runtimeCliLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(runtimeCliLeafMigration.sql, /insert into architecture\.component_storage_io/);
+  assert.match(runtimeCliLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(
+    runtimeCliLeafMigration.sql,
+    /REL-RUNTIME-CLI-VALIDATION-CONTAINS-LEGACY-LOOSE-PACKAGE/
+  );
+  assert.doesNotMatch(runtimeCliLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(runtimeCliLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep runtime CLI legacy contract out of drift', () => {
+  const migrations = readMigrationFiles();
+  const runtimeCliContractMigration = migrations.find(
+    (migration) => migration.fileName === '178_runtime_cli_legacy_contract_drift_sanitization.sql'
+  );
+
+  assert.ok(runtimeCliContractMigration);
+  assert.match(
+    runtimeCliContractMigration.sql,
+    /CONTRACT-SYS-RUNTIME-CLI-VALIDATION-LEGACY-LOOSE-PACKAGE-PATH/
+  );
+  assert.match(runtimeCliContractMigration.sql, /SYS-RUNTIME-CLI-VALIDATION-LEGACY-LOOSE-PACKAGE/);
+  assert.match(runtimeCliContractMigration.sql, /status = 'implemented'/);
+  assert.match(runtimeCliContractMigration.sql, /component status carries deprecation/);
+  assert.match(runtimeCliContractMigration.sql, /CheckPlanningDbComponentIntegrity/);
+  assert.doesNotMatch(runtimeCliContractMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(runtimeCliContractMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations classify code-symbol duplicates against legacy components', () => {
+  const migrations = readMigrationFiles();
+  const codeSymbolLegacyMigration = migrations.find(
+    (migration) => migration.fileName === '179_code_symbol_legacy_duplicate_classification.sql'
+  );
+
+  assert.ok(codeSymbolLegacyMigration);
+  assert.match(
+    codeSymbolLegacyMigration.sql,
+    /create or replace view planning_query_store\.code_symbol_exact_duplicate_query/
+  );
+  assert.match(codeSymbolLegacyMigration.sql, /governance_component_definition_query/);
+  assert.match(codeSymbolLegacyMigration.sql, /is_legacy_or_deprecated_component/);
+  assert.match(codeSymbolLegacyMigration.sql, /activeComponentCount/);
+  assert.match(codeSymbolLegacyMigration.sql, /legacyOrDeprecatedComponentCount/);
+  assert.match(codeSymbolLegacyMigration.sql, /legacy_or_deprecated_counterpart/);
+  assert.match(
+    codeSymbolLegacyMigration.sql,
+    /Keep the active implementation canonical and retire or wrap the legacy duplicate path/
+  );
+  assert.doesNotMatch(codeSymbolLegacyMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(codeSymbolLegacyMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations keep the governance problem dashboard on lightweight views', () => {
   const migrations = readMigrationFiles();
   const dashboardMigration = migrations.find(
