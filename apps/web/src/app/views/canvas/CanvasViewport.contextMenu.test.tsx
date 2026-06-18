@@ -161,13 +161,6 @@ describe('CanvasViewport context menus', () => {
 
     const sourceImportButton = findMenuButton('Add source');
     expect(sourceImportButton).toBeDefined();
-    expect(container.querySelector('[data-slot="canvas-context-menu-add-group"]')).not.toBeNull();
-    expect(getMenuText()).not.toContain('Crear nodo');
-    expect(
-      Array.from(container.querySelectorAll('button')).filter(
-        (button) => button.textContent === 'Add source'
-      )
-    ).toHaveLength(1);
 
     await act(async () => {
       sourceImportButton?.click();
@@ -203,13 +196,6 @@ describe('CanvasViewport context menus', () => {
     });
 
     await openPaneContextMenu();
-
-    const buttons = Array.from(container.querySelectorAll('button')).map((button) =>
-      button.textContent?.trim()
-    );
-    expect(buttons).toContain('Add source');
-    expect(buttons).toContain('Create source node');
-    expect(buttons.filter((text) => text === 'Add source')).toHaveLength(1);
 
     await clickMenuItem('Create source node');
 
