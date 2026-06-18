@@ -1328,6 +1328,57 @@ test('tracked migrations canonicalize Web Canvas DBT and DVT field components', 
   assert.doesNotMatch(fieldCanonicalizationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations persist Web Canvas modularized test leaf mapping', () => {
+  const migrations = readMigrationFiles();
+  const modularizedTestLeafMigration = migrations.find(
+    (migration) => migration.fileName === '119_web_canvas_modularized_test_leaf_mapping.sql'
+  );
+
+  assert.ok(modularizedTestLeafMigration);
+  for (const componentId of [
+    'SYS-WEB-CANVAS-INSPECTOR-NODE-PROPERTIES-TABS-PRESENTER',
+    'SYS-WEB-CANVAS-INSPECTOR-NODE-PROPERTIES-TABS-TESTS',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD-TEST-HARNESS',
+    'SYS-WEB-CANVAS-SHELL-CONTEXTUAL-DIALOG-TESTS',
+    'SYS-WEB-CANVAS-SHELL-SOURCE-IMPORT-TESTS',
+    'SYS-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-TESTS',
+    'SYS-WEB-CANVAS-GRAPH-STATUS-OVERLAY-TESTS',
+    'SYS-WEB-CANVAS-CONTEXT-MENU-PRESENTER-TESTS',
+  ]) {
+    assert.match(modularizedTestLeafMigration.sql, new RegExp(componentId));
+  }
+
+  assert.match(modularizedTestLeafMigration.sql, /CanvasShell\.sourceImportLifecycle\.test\.tsx/);
+  assert.match(modularizedTestLeafMigration.sql, /CanvasShell\.contextualDialogs\.test\.tsx/);
+  assert.match(modularizedTestLeafMigration.sql, /CanvasNodeWorkbenchOverlay\.test\.tsx/);
+  assert.match(modularizedTestLeafMigration.sql, /CanvasGraphStatusOverlay\.test\.tsx/);
+  assert.match(modularizedTestLeafMigration.sql, /useCanvasContextMenuPresenter\.test\.tsx/);
+  assert.match(
+    modularizedTestLeafMigration.sql,
+    /apps\/web\/src\/app\/components\/inspector', 'Composite inspector tabs directory boundary/
+  );
+  assert.match(
+    modularizedTestLeafMigration.sql,
+    /REL-WEB-CANVAS-SHELL-MAIN-PANEL-CONTAINS-SOURCE-IMPORT-TESTS/
+  );
+  assert.match(modularizedTestLeafMigration.sql, /TEST-WEB-CANVAS-SHELL-SOURCE-IMPORT/);
+  assert.match(
+    modularizedTestLeafMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-TEST-EVIDENCE-COMMAND-CANONICALIZATION-20260617/
+  );
+  assert.match(modularizedTestLeafMigration.sql, /test:presentation:run/);
+  assert.doesNotMatch(modularizedTestLeafMigration.sql, /@dvt\/web test --/);
+  assert.match(
+    modularizedTestLeafMigration.sql,
+    /insert into planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(modularizedTestLeafMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(modularizedTestLeafMigration.sql, /insert into architecture\.component_relation/);
+  assert.match(modularizedTestLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.doesNotMatch(modularizedTestLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(modularizedTestLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(

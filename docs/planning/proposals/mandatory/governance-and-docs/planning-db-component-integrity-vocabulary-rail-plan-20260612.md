@@ -284,6 +284,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/116_web_canvas_leaf_component_mapping.sql
   - tools/planning-db/migrations/117_web_canvas_node_workbench_duplicate_resolution.sql
   - tools/planning-db/migrations/118_web_canvas_field_component_canonicalization.sql
+  - tools/planning-db/migrations/119_web_canvas_modularized_test_leaf_mapping.sql
   - scripts/planning-db-import.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
   - scripts/planning-db/query-limit.cjs
