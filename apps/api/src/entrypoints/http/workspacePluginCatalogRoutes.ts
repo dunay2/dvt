@@ -1,7 +1,7 @@
 /**
  * Owned concern: adapt protected workspace plugin catalog query rail to HTTP.
  */
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
 import {
   AUTHORIZATION_ACTION,
@@ -12,7 +12,7 @@ import type { AuthorizeCommandScopeService } from '../../application/services/au
 import type { ListWorkspacePluginsUseCase } from '../../application/services/listWorkspacePluginsUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
-import { extractBearerToken } from './authHeaders.js';
+import { authenticateHttpBearerRequest } from './httpBearerAuthentication.js';
 import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 
 type WorkspacePluginCatalogRouteDeps = {
@@ -46,7 +46,7 @@ export function registerWorkspacePluginCatalogRoutes(
     RUNTIME_ROUTE_PATH.workspacePlugins,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
-      const principal = await authenticateWorkspacePluginCatalogRequest(request, reply, deps);
+      const principal = await authenticateHttpBearerRequest(request, reply, deps.authenticator);
       if (principal === null) return;
 
       const parsedScope = parseWorkspacePluginCatalogScope(request.query);
@@ -91,27 +91,6 @@ export function registerWorkspacePluginCatalogRoutes(
       reply.code(200).send({ plugins });
     }
   );
-}
-
-async function authenticateWorkspacePluginCatalogRequest(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  deps: Pick<WorkspacePluginCatalogRouteDeps, 'authenticator'>
-) {
-  const authResult = await deps.authenticator.authenticateBearerToken(
-    extractBearerToken(request.headers.authorization)
-  );
-  if (!authResult.ok) {
-    reply.code(401).send({
-      error: {
-        type: 'unauthorized',
-        reason: 'authentication_failed',
-      },
-    });
-    return null;
-  }
-
-  return authResult.principal;
 }
 
 function parseWorkspacePluginCatalogScope(

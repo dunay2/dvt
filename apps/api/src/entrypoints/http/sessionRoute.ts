@@ -3,7 +3,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
 
-import { extractBearerToken } from './authHeaders.js';
+import { authenticateHttpBearerRequest } from './httpBearerAuthentication.js';
 
 type SessionRouteDeps = Readonly<{
   authenticator: IAuthenticator;
@@ -14,20 +14,9 @@ export async function sessionRoute(
   reply: FastifyReply,
   deps: SessionRouteDeps
 ): Promise<void> {
-  const authResult = await deps.authenticator.authenticateBearerToken(
-    extractBearerToken(request.headers.authorization)
-  );
-  if (!authResult.ok) {
-    reply.code(401).send({
-      error: {
-        type: 'unauthorized',
-        reason: 'authentication_failed',
-      },
-    });
-    return;
-  }
+  const principal = await authenticateHttpBearerRequest(request, reply, deps.authenticator);
+  if (principal === null) return;
 
-  const principal = authResult.principal;
   reply.code(200).send({
     principal: {
       principalId: principal.principalId,

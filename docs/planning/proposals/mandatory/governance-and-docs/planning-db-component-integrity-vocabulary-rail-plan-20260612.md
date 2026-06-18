@@ -292,6 +292,14 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/124_reconcile_web_canvas_parallel_test_drift.sql
   - tools/planning-db/migrations/125_web_canvas_viewport_test_manifest_user_stories.sql
   - tools/planning-db/migrations/126_web_canvas_source_import_frame_leaf_mapping.sql
+  - tools/planning-db/migrations/183_api_http_entrypoint_leaf_components.sql
+  - tools/planning-db/migrations/184_api_http_entrypoint_integrity_followup.sql
+  - apps/api/src/entrypoints/http/httpBearerAuthentication.ts
+  - apps/api/src/entrypoints/http/projectOnboardingRoutes.ts
+  - apps/api/src/entrypoints/http/sessionRoute.ts
+  - apps/api/src/entrypoints/http/workspaceContextRoute.ts
+  - apps/api/src/entrypoints/http/workspacePluginCatalogRoutes.ts
+  - apps/api/test/entrypoints/http/httpBearerAuthentication.test.ts
   - scripts/planning-db-import.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
   - scripts/planning-db/query-limit.cjs
@@ -547,6 +555,18 @@ redGreenCycles:
       - apps/web/src/app/plugins/monitoring/monitoringContributions.test.ts
     greenTest: pnpm --filter @dvt/web test:changed
 symbols:
+  - name: authenticateHttpBearerRequest
+    path: apps/api/src/entrypoints/http/httpBearerAuthentication.ts
+    dddOwner: HttpAuthenticationAdapter
+    cqRails:
+      - DetectCodeSymbolDuplicates
+      - ReadComponentProfile
+    fowlerSignals:
+      - duplicate bearer authentication helpers converge into one API HTTP authentication component helper
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --component SYS-API-HTTP-ENTRYPOINTS --no-refresh --severity warning --limit 180
+    cypressCoverage: N/A
+    unitTests:
+      - apps/api/test/entrypoints/http/httpBearerAuthentication.test.ts
   - name: parseLimit
     path: scripts/planning-db/query-limit.cjs
     dddOwner: CodeSymbolDuplicateReadModel

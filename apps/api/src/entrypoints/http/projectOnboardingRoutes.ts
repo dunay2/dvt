@@ -1,13 +1,13 @@
 /**
  * Owned concern: adapt authenticated project onboarding rails to HTTP.
  */
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
 import type { CreateProjectUseCase } from '../../application/services/createProjectUseCase.js';
 import type { ListProjectsUseCase } from '../../application/services/listProjectsUseCase.js';
 
-import { extractBearerToken } from './authHeaders.js';
+import { authenticateHttpBearerRequest } from './httpBearerAuthentication.js';
 import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 
 type ProjectOnboardingRouteDeps = {
@@ -30,7 +30,7 @@ export function registerProjectOnboardingRoutes(
     RUNTIME_ROUTE_PATH.projects,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
-      const principal = await authenticateProjectOnboardingRequest(request, reply, deps);
+      const principal = await authenticateHttpBearerRequest(request, reply, deps.authenticator);
       if (principal === null) return;
 
       reply.code(200).send(await deps.listProjectsUseCase.execute(principal));
@@ -41,7 +41,7 @@ export function registerProjectOnboardingRoutes(
     RUNTIME_ROUTE_PATH.projects,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
-      const principal = await authenticateProjectOnboardingRequest(request, reply, deps);
+      const principal = await authenticateHttpBearerRequest(request, reply, deps.authenticator);
       if (principal === null) return;
 
       const parsed = parseCreateProjectRequest(request.body, request.headers['idempotency-key']);
@@ -90,27 +90,6 @@ export function registerProjectOnboardingRoutes(
       }
     }
   );
-}
-
-async function authenticateProjectOnboardingRequest(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  deps: Pick<ProjectOnboardingRouteDeps, 'authenticator'>
-) {
-  const authResult = await deps.authenticator.authenticateBearerToken(
-    extractBearerToken(request.headers.authorization)
-  );
-  if (!authResult.ok) {
-    reply.code(401).send({
-      error: {
-        type: 'unauthorized',
-        reason: 'authentication_failed',
-      },
-    });
-    return null;
-  }
-
-  return authResult.principal;
 }
 
 function parseCreateProjectRequest(

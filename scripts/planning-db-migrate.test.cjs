@@ -971,6 +971,73 @@ test('tracked migrations split runtime state-store package into semantic leaves'
   assert.doesNotMatch(stateStoreLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split API HTTP entrypoints into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const apiHttpLeafMigration = migrations.find(
+    (migration) => migration.fileName === '183_api_http_entrypoint_leaf_components.sql'
+  );
+
+  assert.ok(apiHttpLeafMigration);
+  assert.match(apiHttpLeafMigration.sql, /create temporary table api_http_entrypoint_leaf_map/);
+
+  for (const componentId of [
+    'SYS-API-HTTP-AUTHENTICATION',
+    'SYS-API-HTTP-ADMIN-REPAIR',
+    'SYS-API-HTTP-RUNTIME-ROUTE-REGISTRY',
+    'SYS-API-HTTP-ERROR-TRANSLATION',
+    'SYS-API-HTTP-PLAN-COMMANDS',
+    'SYS-API-HTTP-RUN-LIFECYCLE',
+    'SYS-API-HTTP-WORKSPACE-ROUTES',
+  ]) {
+    assert.match(apiHttpLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const sourcePath of [
+    'apps/api/src/entrypoints/http/httpBearerAuthentication.ts',
+    'apps/api/src/entrypoints/http/projectOnboardingRoutes.ts',
+    'apps/api/src/entrypoints/http/workspacePluginCatalogRoutes.ts',
+    'apps/api/src/entrypoints/http/previewPlanRoute.ts',
+    'apps/api/src/entrypoints/http/startRunRoute.ts',
+    'apps/api/src/entrypoints/http/httpErrorTranslation.ts',
+    'apps/api/test/entrypoints/http/httpBearerAuthentication.test.ts',
+  ]) {
+    assert.match(apiHttpLeafMigration.sql, new RegExp(sourcePath.replaceAll('/', '\\/')));
+  }
+
+  assert.match(apiHttpLeafMigration.sql, /AuthenticateHttpBearerPrincipal/);
+  assert.match(apiHttpLeafMigration.sql, /StartRun/);
+  assert.match(apiHttpLeafMigration.sql, /ListWorkspacePlugins/);
+  assert.match(apiHttpLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(apiHttpLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(apiHttpLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.doesNotMatch(apiHttpLeafMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(apiHttpLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiHttpLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep API HTTP authentication integrity before source refresh', () => {
+  const migrations = readMigrationFiles();
+  const apiHttpIntegrityFollowup = migrations.find(
+    (migration) => migration.fileName === '184_api_http_entrypoint_integrity_followup.sql'
+  );
+
+  assert.ok(apiHttpIntegrityFollowup);
+  assert.match(
+    apiHttpIntegrityFollowup.sql,
+    /PLANNING-DB-API-HTTP-ENTRYPOINT-INTEGRITY-FOLLOWUP-20260618/
+  );
+  assert.match(apiHttpIntegrityFollowup.sql, /SYS-API-HTTP-AUTHENTICATION/);
+  assert.match(apiHttpIntegrityFollowup.sql, /apps\/api\/src\/entrypoints\/http\/authHeaders\.ts/);
+  assert.match(
+    apiHttpIntegrityFollowup.sql,
+    /apps\/api\/src\/entrypoints\/http\/httpBearerAuthentication\.ts/
+  );
+  assert.match(apiHttpIntegrityFollowup.sql, /code-symbol-duplicates/);
+  assert.doesNotMatch(apiHttpIntegrityFollowup.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(apiHttpIntegrityFollowup.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiHttpIntegrityFollowup.sql, /truncate\s+/i);
+});
+
 test('tracked migrations keep the governance problem dashboard on lightweight views', () => {
   const migrations = readMigrationFiles();
   const dashboardMigration = migrations.find(
