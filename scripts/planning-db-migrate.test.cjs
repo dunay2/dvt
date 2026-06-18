@@ -1325,6 +1325,47 @@ test('tracked migrations complete Web Canvas viewport model test maturity eviden
   assert.doesNotMatch(viewportModelTestResponsibilityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Web Canvas parallel test drift without deleting history', () => {
+  const migrations = readMigrationFiles();
+  const parallelTestDriftMigration = migrations.find(
+    (migration) => migration.fileName === '124_reconcile_web_canvas_parallel_test_drift.sql'
+  );
+
+  assert.ok(parallelTestDriftMigration);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.test\.support\.ts/);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.edges\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.nodeData\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.layout\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /CanvasContextMenuView\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /SYS-WEB-CANVAS-CONTEXT-MENU-VIEW-TESTS/);
+  assert.match(parallelTestDriftMigration.sql, /REL-WEB-CANVAS-CONTEXT-MENU-CONTAINS-VIEW-TESTS/);
+  assert.match(parallelTestDriftMigration.sql, /TEST-WEB-CANVAS-CONTEXT-MENU-VIEW/);
+  assert.match(parallelTestDriftMigration.sql, /pattern_kind = 'excludes'/);
+  assert.match(parallelTestDriftMigration.sql, /useCanvasViewportGraphModel\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /CanvasShell\.legacyGuides\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /deprecatedSourcePaths/);
+  assert.match(parallelTestDriftMigration.sql, /retired: CanvasShell\.legacyGuides\.test\.tsx/);
+  assert.match(parallelTestDriftMigration.sql, /DetectGovernedSourceDrift/);
+  assert.doesNotMatch(parallelTestDriftMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(parallelTestDriftMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Web Canvas viewport test mechanization user stories', () => {
+  const migrations = readMigrationFiles();
+  const userStoryMigration = migrations.find(
+    (migration) => migration.fileName === '125_web_canvas_viewport_test_manifest_user_stories.sql'
+  );
+
+  assert.ok(userStoryMigration);
+  assert.match(userStoryMigration.sql, /CANVAS-VIEWPORT-GRAPH-MODEL-TEST-MODULARIZATION-20260618/);
+  assert.match(userStoryMigration.sql, /userStories/);
+  assert.match(userStoryMigration.sql, /As a Canvas maintainer/);
+  assert.match(userStoryMigration.sql, /As a Planning DB reviewer/);
+  assert.match(userStoryMigration.sql, /not raw_manifest \? 'userStories'/);
+  assert.doesNotMatch(userStoryMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(userStoryMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations persist Web Canvas leaf component mapping', () => {
   const migrations = readMigrationFiles();
   const canvasLeafMappingMigration = migrations.find(
