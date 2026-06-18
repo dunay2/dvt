@@ -31,6 +31,7 @@ const {
   parseArgs,
   readTrackedDocumentPaths,
   readLocalPlanningTaskIds,
+  reconcileDeprecatedLocalRailSources,
   runPlanningImport,
   sha256,
 } = require('./planning-db-import.cjs');
@@ -1306,6 +1307,25 @@ test('frontend mechanical truth import reloads surface rows with JSONB metadata'
     'Runs workbench',
   ]);
   assert.equal(insertQuery.params[5], JSON.stringify(['monitoring']));
+});
+
+test('planning DB import reconciles deprecated DB-local rail source paths after snapshot reload', async () => {
+  const queries = [];
+
+  await reconcileDeprecatedLocalRailSources({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+    },
+  });
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /feature_mechanization_local_rails/);
+  assert.match(queries[0].sql, /deprecatedSourcePaths/);
+  assert.match(queries[0].sql, /currentImplementationSourcePath/);
+  assert.match(queries[0].sql, /planning-db-import-reconcile-deprecated-local-rail-sources/);
+  assert.match(queries[0].sql, /governance_files/);
+  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
+  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
 });
 
 test('frontend component reflection import reloads normalized component rows', async () => {
