@@ -1542,6 +1542,574 @@ test('tracked migrations correct Web Canvas component path extension', () => {
   assert.doesNotMatch(pathExtensionFixMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Web Canvas node properties tabs split tests', () => {
+  const migrations = readMigrationFiles();
+  const tabsSplitTestMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '131_web_canvas_node_properties_tabs_split_test_reconciliation.sql'
+  );
+
+  assert.ok(tabsSplitTestMigration);
+  assert.match(tabsSplitTestMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-NODE-PROPERTIES-TABS-TESTS/);
+  for (const sourcePath of [
+    'NodePropertiesTabs\\.overflow\\.test\\.tsx',
+    'NodePropertiesTabs\\.primarySections\\.test\\.tsx',
+    'NodePropertiesTabs\\.sectionContent\\.test\\.tsx',
+  ]) {
+    assert.match(tabsSplitTestMigration.sql, new RegExp(sourcePath));
+  }
+
+  assert.match(tabsSplitTestMigration.sql, /pattern_kind = 'excludes'/);
+  assert.match(tabsSplitTestMigration.sql, /NodePropertiesTabs\.test\.tsx/);
+  assert.match(tabsSplitTestMigration.sql, /deprecated removed test path/);
+  assert.match(tabsSplitTestMigration.sql, /DetectGovernedSourceDrift/);
+  assert.match(
+    tabsSplitTestMigration.sql,
+    /TEST-WEB-CANVAS-INSPECTOR-NODE-PROPERTIES-TABS-OVERFLOW/
+  );
+  assert.match(
+    tabsSplitTestMigration.sql,
+    /TEST-WEB-CANVAS-INSPECTOR-NODE-PROPERTIES-TABS-PRIMARY-SECTIONS/
+  );
+  assert.match(
+    tabsSplitTestMigration.sql,
+    /TEST-WEB-CANVAS-INSPECTOR-NODE-PROPERTIES-TABS-SECTION-CONTENT/
+  );
+  assert.doesNotMatch(tabsSplitTestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(tabsSplitTestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile Web Canvas context menu presenter split tests', () => {
+  const migrations = readMigrationFiles();
+  const presenterSplitTestMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '132_web_canvas_context_menu_presenter_split_test_reconciliation.sql'
+  );
+
+  assert.ok(presenterSplitTestMigration);
+  assert.match(presenterSplitTestMigration.sql, /SYS-WEB-CANVAS-CONTEXT-MENU-PRESENTER-TESTS/);
+  for (const sourcePath of [
+    'useCanvasContextMenuPresenter\\.lifecycle\\.test\\.tsx',
+    'useCanvasContextMenuPresenter\\.graphActions\\.test\\.tsx',
+    'useCanvasContextMenuPresenter\\.canvasActions\\.test\\.tsx',
+  ]) {
+    assert.match(presenterSplitTestMigration.sql, new RegExp(sourcePath));
+  }
+
+  assert.match(presenterSplitTestMigration.sql, /pattern_kind = 'excludes'/);
+  assert.match(presenterSplitTestMigration.sql, /useCanvasContextMenuPresenter\.test\.tsx/);
+  assert.match(presenterSplitTestMigration.sql, /deprecated removed test path/);
+  assert.match(presenterSplitTestMigration.sql, /DetectGovernedSourceDrift/);
+  assert.match(presenterSplitTestMigration.sql, /TEST-WEB-CANVAS-CONTEXT-MENU-PRESENTER-LIFECYCLE/);
+  assert.match(
+    presenterSplitTestMigration.sql,
+    /TEST-WEB-CANVAS-CONTEXT-MENU-PRESENTER-GRAPH-ACTIONS/
+  );
+  assert.match(
+    presenterSplitTestMigration.sql,
+    /TEST-WEB-CANVAS-CONTEXT-MENU-PRESENTER-CANVAS-ACTIONS/
+  );
+  assert.doesNotMatch(presenterSplitTestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(presenterSplitTestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split Docs governance root into leaf components', () => {
+  const migrations = readMigrationFiles();
+  const docsGovernanceSplitMigration = migrations.find(
+    (migration) => migration.fileName === '133_docs_governance_root_leaf_components.sql'
+  );
+
+  assert.ok(docsGovernanceSplitMigration);
+  for (const componentId of [
+    'SYS-DOCS-GOVERNANCE-ENTRYPOINTS',
+    'SYS-DOCS-GOVERNANCE-ADR',
+    'SYS-DOCS-GOVERNANCE-ARCHITECTURE',
+    'SYS-DOCS-GOVERNANCE-PLANNING',
+    'SYS-DOCS-GOVERNANCE-ARCHIVE',
+    'SYS-DOCS-GOVERNANCE-EVIDENCE',
+    'SYS-DOCS-GOVERNANCE-RISK-REGISTER',
+    'SYS-DOCS-GOVERNANCE-GUIDES',
+    'SYS-DOCS-GOVERNANCE-CONTRACTS',
+    'SYS-DOCS-GOVERNANCE-CONCEPTS',
+    'SYS-DOCS-GOVERNANCE-RUNBOOKS',
+    'SYS-DOCS-GOVERNANCE-JAVASCRIPTS',
+  ]) {
+    assert.match(docsGovernanceSplitMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'AGENTS\\.md',
+    'docs/adr/\\*\\*',
+    'docs/architecture/\\*\\*',
+    'docs/planning/\\*\\*',
+    'docs/archive/\\*\\*',
+    'docs/evidence/\\*\\*',
+    'docs/risk-register/\\*\\*',
+    'docs/runbooks/\\*\\*',
+    'runbooks/\\*\\*',
+    'docs/javascripts/\\*\\*',
+  ]) {
+    assert.match(docsGovernanceSplitMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(docsGovernanceSplitMigration.sql, /SYS-DOCS-GOVERNANCE-ROOT/);
+  assert.match(docsGovernanceSplitMigration.sql, /architecture\.component/);
+  assert.match(docsGovernanceSplitMigration.sql, /architecture\.component_relation/);
+  assert.match(docsGovernanceSplitMigration.sql, /architecture\.component_test/);
+  assert.match(docsGovernanceSplitMigration.sql, /REL-DOCS-GOVERNANCE-ROOT-CONTAINS-/);
+  assert.match(docsGovernanceSplitMigration.sql, /TEST-SYS-DOCS-GOVERNANCE-ROOT-COMPONENT-PROFILE/);
+  assert.match(
+    docsGovernanceSplitMigration.sql,
+    /old or nonfunctional files are deprecated or retired explicitly/
+  );
+  assert.doesNotMatch(docsGovernanceSplitMigration.sql, /docs\/\*\.md/);
+  assert.doesNotMatch(docsGovernanceSplitMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(docsGovernanceSplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile Docs root entrypoint files after leaf split', () => {
+  const migrations = readMigrationFiles();
+  const docsEntrypointReconciliationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '134_docs_governance_entrypoint_root_file_reconciliation.sql'
+  );
+
+  assert.ok(docsEntrypointReconciliationMigration);
+  assert.match(docsEntrypointReconciliationMigration.sql, /SYS-DOCS-GOVERNANCE-ENTRYPOINTS/);
+  assert.match(docsEntrypointReconciliationMigration.sql, /docs\/index\.md/);
+  assert.match(docsEntrypointReconciliationMigration.sql, /docs\/generated-docs-policy\.json/);
+  assert.match(
+    docsEntrypointReconciliationMigration.sql,
+    /rather than the composite documentation root/
+  );
+  assert.doesNotMatch(docsEntrypointReconciliationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(docsEntrypointReconciliationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split CI governance root and materialize scripts parent', () => {
+  const migrations = readMigrationFiles();
+  const ciGovernanceSplitMigration = migrations.find(
+    (migration) => migration.fileName === '135_ci_governance_root_leaf_components.sql'
+  );
+
+  assert.ok(ciGovernanceSplitMigration);
+  for (const componentId of [
+    'SYS-CI-GOVERNANCE-SCRIPTS',
+    'SYS-CI-GOVERNANCE-GITHUB',
+    'SYS-CI-GOVERNANCE-HOOKS',
+    'SYS-CI-GOVERNANCE-TOOLS-CI',
+    'SYS-CI-GOVERNANCE-TOOLS-DOCS',
+    'SYS-CI-GOVERNANCE-PACKAGE-TESTS',
+  ]) {
+    assert.match(ciGovernanceSplitMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    '\\.github/\\*\\*',
+    '\\.husky/\\*\\*',
+    'tools/ci/\\*\\*',
+    'tools/docs/\\*\\*',
+    'packages/test/\\*\\*',
+    '\\.dependency-cruiser\\.cjs',
+  ]) {
+    assert.match(ciGovernanceSplitMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(ciGovernanceSplitMigration.sql, /REL-CI-GOVERNANCE-ROOT-CONTAINS-SCRIPTS/);
+  assert.match(ciGovernanceSplitMigration.sql, /TEST-SYS-CI-GOVERNANCE-SCRIPTS-COMPONENT-PROFILE/);
+  assert.match(ciGovernanceSplitMigration.sql, /unresolved_parent drift/);
+  assert.match(ciGovernanceSplitMigration.sql, /architecture\.component_relation/);
+  assert.match(ciGovernanceSplitMigration.sql, /architecture\.component_test/);
+  assert.doesNotMatch(ciGovernanceSplitMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(ciGovernanceSplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations map Planning DB migrations out of CI governance root', () => {
+  const migrations = readMigrationFiles();
+  const planningDbMigrationCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '136_ci_governance_planning_db_migrations_component.sql'
+  );
+
+  assert.ok(planningDbMigrationCatalogMigration);
+  assert.match(planningDbMigrationCatalogMigration.sql, /SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS/);
+  assert.match(planningDbMigrationCatalogMigration.sql, /tools\/planning-db\/migrations\/\*\*/);
+  assert.match(planningDbMigrationCatalogMigration.sql, /vitest\.config\.ts/);
+  assert.match(
+    planningDbMigrationCatalogMigration.sql,
+    /REL-CI-GOVERNANCE-ROOT-CONTAINS-PLANNING-DB-MIGRATIONS/
+  );
+  assert.match(
+    planningDbMigrationCatalogMigration.sql,
+    /TEST-SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS/
+  );
+  assert.match(planningDbMigrationCatalogMigration.sql, /not remain as direct files/);
+  assert.doesNotMatch(planningDbMigrationCatalogMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(planningDbMigrationCatalogMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations map remaining CI governance tool files', () => {
+  const migrations = readMigrationFiles();
+  const remainingCiToolMigration = migrations.find(
+    (migration) => migration.fileName === '137_ci_governance_remaining_tool_leaf_components.sql'
+  );
+
+  assert.ok(remainingCiToolMigration);
+  for (const componentId of [
+    'SYS-CI-GOVERNANCE-PLANNING-DB-KNOWLEDGE-TOOLS',
+    'SYS-CI-GOVERNANCE-OPS-EVIDENCE-COLLECTOR',
+  ]) {
+    assert.match(remainingCiToolMigration.sql, new RegExp(componentId));
+  }
+
+  assert.match(remainingCiToolMigration.sql, /tools\/planning-db\/knowledge\/\*\*/);
+  assert.match(remainingCiToolMigration.sql, /tools\/ops\/ar-c2-evidence-collector\.mjs/);
+  assert.match(remainingCiToolMigration.sql, /ar-c2-evidence-collector\.architecture\.test\.mjs/);
+  assert.match(remainingCiToolMigration.sql, /instead of deprecating functional files/);
+  assert.match(remainingCiToolMigration.sql, /architecture\.component_relation/);
+  assert.match(remainingCiToolMigration.sql, /architecture\.component_test/);
+  assert.doesNotMatch(remainingCiToolMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(remainingCiToolMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split repository metadata root into leaf components', () => {
+  const migrations = readMigrationFiles();
+  const repoMetadataSplitMigration = migrations.find(
+    (migration) => migration.fileName === '138_repo_metadata_root_leaf_components.sql'
+  );
+
+  assert.ok(repoMetadataSplitMigration);
+  for (const componentId of [
+    'SYS-REPO-METADATA-ARC-POLICY',
+    'SYS-REPO-METADATA-FOWLER-INBOX',
+    'SYS-REPO-METADATA-ROOT-TOOLCHAIN-CONFIG',
+    'SYS-REPO-METADATA-GITHUB-COMMENT-ARCHIVE',
+    'SYS-REPO-METADATA-GIT-HISTORY-REWRITE-ARCHIVE',
+    'SYS-REPO-METADATA-LEGACY-PROTOTYPE-INFRA',
+    'SYS-REPO-METADATA-PLANNING-DB-INFRA',
+  ]) {
+    assert.match(repoMetadataSplitMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    '\\.arc-policy\\.yaml',
+    'buzon/\\*\\*',
+    '\\.gh-comments/\\*\\*',
+    '\\.git\\.bfg-report/\\*\\*',
+    'infra/prototypes/\\*\\*',
+    'package\\.json',
+  ]) {
+    assert.match(repoMetadataSplitMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(repoMetadataSplitMigration.sql, /legacy/);
+  assert.match(repoMetadataSplitMigration.sql, /deprecated:/);
+  assert.match(repoMetadataSplitMigration.sql, /architecture\.component_relation/);
+  assert.match(repoMetadataSplitMigration.sql, /architecture\.component_test/);
+  assert.match(
+    repoMetadataSplitMigration.sql,
+    /component-drift --component SYS-REPO-METADATA-ROOT/
+  );
+  assert.doesNotMatch(repoMetadataSplitMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(repoMetadataSplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split contracts root into bounded contract components', () => {
+  const migrations = readMigrationFiles();
+  const contractsSplitMigration = migrations.find(
+    (migration) => migration.fileName === '139_contracts_root_leaf_components.sql'
+  );
+
+  assert.ok(contractsSplitMigration);
+  for (const componentId of [
+    'SYS-CONTRACTS-COMPAT-MATRIX',
+    'SYS-CONTRACTS-PACKAGE-ENTRYPOINTS',
+    'SYS-CONTRACTS-ENGINE-RUNTIME-CONTRACTS',
+    'SYS-CONTRACTS-PLANNER-CONTRACTS',
+    'SYS-CONTRACTS-SCHEMA-PACKS',
+    'SYS-CONTRACTS-VALIDATION-RUNTIME',
+    'SYS-CONTRACTS-PACKAGE-TESTS',
+    'SYS-PLANNER-CONTRACTS-PACKAGE',
+  ]) {
+    assert.match(contractsSplitMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'packages/@dvt/contracts/src/contracts/engine/\\*\\*',
+    'packages/@dvt/contracts/src/contracts/planner/\\*\\*',
+    'packages/@dvt/contracts/src/schema-packs/\\*\\*',
+    'packages/@dvt/contracts/test/\\*\\*',
+    'packages/@dvt/planner-contracts/\\*\\*',
+    'contracts/compat/\\*\\*',
+  ]) {
+    assert.match(contractsSplitMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(contractsSplitMigration.sql, /architecture\.contract/);
+  assert.match(contractsSplitMigration.sql, /'CONTRACT-' \|\| component_id/);
+  assert.match(contractsSplitMigration.sql, /'REL-CONTRACTS-ROOT-CONTAINS-' \|\|/);
+  assert.match(contractsSplitMigration.sql, /'SYS-PLANNER-CONTRACTS-'/);
+  assert.match(contractsSplitMigration.sql, /'PLANNER-CONTRACTS-'/);
+  assert.match(contractsSplitMigration.sql, /component-drift --component SYS-CONTRACTS-ROOT/);
+  assert.doesNotMatch(contractsSplitMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(contractsSplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations deprecate legacy Web DiffView harness references', () => {
+  const migrations = readMigrationFiles();
+  const legacyDiffHarnessMigration = migrations.find(
+    (migration) => migration.fileName === '140_web_views_legacy_diff_harness_deprecation.sql'
+  );
+
+  assert.ok(legacyDiffHarnessMigration);
+  assert.match(legacyDiffHarnessMigration.sql, /SYS-WEB-VIEWS-LEGACY-DIFF-HARNESS/);
+  assert.match(legacyDiffHarnessMigration.sql, /DiffViewHarness\.tsx/);
+  assert.match(legacyDiffHarnessMigration.sql, /'legacy'/);
+  assert.match(legacyDiffHarnessMigration.sql, /'deprecated'/);
+  assert.match(legacyDiffHarnessMigration.sql, /must not be recreated as a stub/);
+  assert.match(legacyDiffHarnessMigration.sql, /REL-WEB-APP-VIEWS-CONTAINS-LEGACY-DIFF-HARNESS/);
+  assert.match(legacyDiffHarnessMigration.sql, /component-drift --component SYS-WEB-ROOT/);
+  assert.doesNotMatch(legacyDiffHarnessMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(legacyDiffHarnessMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split workers root into runtime adapter and ops components', () => {
+  const migrations = readMigrationFiles();
+  const workersSplitMigration = migrations.find(
+    (migration) => migration.fileName === '141_workers_root_leaf_components.sql'
+  );
+
+  assert.ok(workersSplitMigration);
+  for (const componentId of [
+    'SYS-WORKERS-LINEAGE-HOST',
+    'SYS-WORKERS-LINEAGE-COMPILED-CODE-RESOLVER',
+    'SYS-WORKERS-OUTBOX-BUS-ADAPTERS',
+    'SYS-WORKERS-OUTBOX-DB-ADAPTER',
+    'SYS-WORKERS-OUTBOX-HOST-LIFECYCLE',
+    'SYS-WORKERS-OUTBOX-OPS',
+    'SYS-WORKERS-OUTBOX-OWNERSHIP',
+    'SYS-WORKERS-OUTBOX-RUNTIME',
+    'SYS-WORKERS-OUTBOX-CANARY-TESTS',
+    'SYS-WORKERS-PROJECTOR-APP',
+    'SYS-WORKERS-TEMPORAL-APP',
+  ]) {
+    assert.match(workersSplitMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/lineage-worker/\\*\\*',
+    'apps/outbox-worker/src/runtime/\\*\\*',
+    'apps/outbox-worker/src/bus/\\*\\*',
+    'apps/outbox-worker/src/ops/\\*\\*',
+    'apps/outbox-worker/test/canary/\\*\\*',
+    'apps/projector-worker/\\*\\*',
+    'apps/temporal-worker/\\*\\*',
+  ]) {
+    assert.match(workersSplitMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(workersSplitMigration.sql, /architecture\.component_port/);
+  assert.match(workersSplitMigration.sql, /RunOutboxDeliveryLoop/);
+  assert.match(workersSplitMigration.sql, /ReadOutboxWorkerHealth/);
+  assert.match(workersSplitMigration.sql, /PublishOutboxEvent/);
+  assert.match(workersSplitMigration.sql, /component-drift --component SYS-WORKERS-ROOT/);
+  assert.doesNotMatch(workersSplitMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(workersSplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete outbox worker host test leaf ownership', () => {
+  const migrations = readMigrationFiles();
+  const outboxHostTestMigration = migrations.find(
+    (migration) => migration.fileName === '142_workers_outbox_host_test_leaf_ownership.sql'
+  );
+
+  assert.ok(outboxHostTestMigration);
+  for (const ownedPath of [
+    'apps/outbox-worker/test/host/\\*\\*',
+    'apps/outbox-worker/test/lifecycle/\\*\\*',
+    'apps/outbox-worker/test/plugins/\\*\\*',
+    'apps/outbox-worker/test/tsconfig.json',
+  ]) {
+    assert.match(outboxHostTestMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(outboxHostTestMigration.sql, /SYS-WORKERS-OUTBOX-HOST-LIFECYCLE/);
+  assert.match(outboxHostTestMigration.sql, /architecture\.component_test/);
+  assert.doesNotMatch(outboxHostTestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(outboxHostTestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split traceability root into service manifest lineage and docs components', () => {
+  const migrations = readMigrationFiles();
+  const traceabilitySplitMigration = migrations.find(
+    (migration) => migration.fileName === '143_traceability_root_leaf_components.sql'
+  );
+
+  assert.ok(traceabilitySplitMigration);
+  for (const componentId of [
+    'SYS-TRACEABILITY-SERVICE-ENTRYPOINTS',
+    'SYS-TRACEABILITY-CORE-MANIFEST',
+    'SYS-TRACEABILITY-FILESYSTEM-ADAPTERS',
+    'SYS-TRACEABILITY-LINEAGE-CONTRACTS',
+    'SYS-TRACEABILITY-LINEAGE-COMPILED-CODE',
+    'SYS-TRACEABILITY-LINEAGE-MAPPER',
+    'SYS-TRACEABILITY-LINEAGE-SINK-OBSERVER',
+    'SYS-TRACEABILITY-LINEAGE-WORKER-RUNTIME',
+    'SYS-TRACEABILITY-DOCS-CONFIG',
+  ]) {
+    assert.match(traceabilitySplitMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'packages/@dvt/traceability-service/src/core/\\*\\*',
+    'packages/@dvt/traceability-service/src/adapters/\\*\\*',
+    'packages/@dvt/traceability-service/src/lineage/runtime/\\*\\*',
+    'packages/@dvt/traceability-service/test/fixtures/lineage/\\*\\*',
+    'packages/@dvt/traceability-service/docs/\\*\\*',
+    'traceability.manifest.json',
+  ]) {
+    assert.match(traceabilitySplitMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(traceabilitySplitMigration.sql, /architecture\.component_port/);
+  assert.match(traceabilitySplitMigration.sql, /RunTraceabilityValidation/);
+  assert.match(traceabilitySplitMigration.sql, /ValidateTraceabilityManifest/);
+  assert.match(traceabilitySplitMigration.sql, /MapStepStartedLineageEvent/);
+  assert.match(traceabilitySplitMigration.sql, /RunLineageWorkerRuntime/);
+  assert.match(traceabilitySplitMigration.sql, /component-drift --component SYS-TRACEABILITY-ROOT/);
+  assert.doesNotMatch(traceabilitySplitMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(traceabilitySplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split planner root and deprecate legacy planner artifacts', () => {
+  const migrations = readMigrationFiles();
+  const plannerSplitMigration = migrations.find(
+    (migration) => migration.fileName === '144_planner_root_leaf_components.sql'
+  );
+
+  assert.ok(plannerSplitMigration);
+  for (const componentId of [
+    'SYS-PLANNER-PACKAGE-SHELL',
+    'SYS-PLANNER-APPLICATION-FACADE',
+    'SYS-PLANNER-EXECUTABLE-SUBGRAPH',
+    'SYS-PLANNER-DOMAIN-GRAPH',
+    'SYS-PLANNER-DOMAIN-MANIFEST-INPUT',
+    'SYS-PLANNER-DOMAIN-PLAN-ASSEMBLY',
+    'SYS-PLANNER-STEP-FACTORY',
+    'SYS-PLANNER-CONTRACT-PORTS',
+    'SYS-PLANNER-ARTIFACT-COMPAT-BRIDGE',
+    'SYS-PLANNER-DOCS-EXAMPLES',
+    'SYS-PLANNER-LEGACY-AUDIT-ARTIFACT',
+  ]) {
+    assert.match(plannerSplitMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'packages/@dvt/planner/src/domain/graph/\\*\\*',
+    'packages/@dvt/planner/src/domain/stepFactory/\\*\\*',
+    'packages/@dvt/planner/test/compiledCode/\\*\\*',
+    'packages/@dvt/planner/docs/audit/planner_v2_3_2_audit\\.commented\\.ts',
+    'packages/@dvt/planner/examples/\\*\\*',
+  ]) {
+    assert.match(plannerSplitMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(plannerSplitMigration.sql, /'legacy'/);
+  assert.match(plannerSplitMigration.sql, /'deprecated'/);
+  assert.match(plannerSplitMigration.sql, /architecture\.component_port/);
+  assert.match(plannerSplitMigration.sql, /BuildExecutionPlan/);
+  assert.match(plannerSplitMigration.sql, /DeriveExecutableSubgraph/);
+  assert.match(plannerSplitMigration.sql, /ValidatePlanExecutability/);
+  assert.match(plannerSplitMigration.sql, /ReadPlannerCompiledCodeStorageCompat/);
+  assert.match(plannerSplitMigration.sql, /component-drift --component SYS-PLANNER-ROOT/);
+  assert.doesNotMatch(plannerSplitMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(plannerSplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split PlanStore and Observability buckets into leaves', () => {
+  const migrations = readMigrationFiles();
+  const planstoreObservabilityMigration = migrations.find(
+    (migration) => migration.fileName === '145_planstore_observability_leaf_components.sql'
+  );
+
+  assert.ok(planstoreObservabilityMigration);
+  for (const componentId of [
+    'SYS-PLANSTORE-ARTIFACTS-PACKAGE-SHELL',
+    'SYS-PLANSTORE-ARTIFACTS-COMPILED-CODE-STORAGE',
+    'SYS-PLANSTORE-ARTIFACTS-RUNTIME-READERS',
+    'SYS-PLANSTORE-API-STORED-PLAN-RESOLUTION',
+    'SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION',
+    'SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS',
+    'SYS-PLANSTORE-API-PLANREF-HTTP',
+    'SYS-PLANSTORE-API-WORKFLOW-ENGINE-FACTORY',
+    'SYS-PLANSTORE-POSTGRES-SCHEMA-SQL',
+    'SYS-PLANSTORE-POSTGRES-REPOSITORIES',
+    'SYS-PLANSTORE-TEMPORAL-ARTIFACT-READER',
+    'SYS-PLANSTORE-TEMPORAL-CAPACITY-SLA',
+    'SYS-PLANSTORE-TEMPORAL-WORKFLOW-ARTIFACT-HELPERS',
+    'SYS-PLANSTORE-ENGINE-PLANREF-POLICY',
+    'SYS-PLANSTORE-ENGINE-INTEGRITY-PORT',
+    'SYS-PLANSTORE-CONTRACTS-READER-WRITER-PORTS',
+    'SYS-OBSERVABILITY-CONTRACTS-NOOP',
+    'SYS-OBSERVABILITY-OTEL-ADAPTER',
+  ]) {
+    assert.match(planstoreObservabilityMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'packages/@dvt/artifacts/src/compiledCode/\\*\\*',
+    'apps/api/test/application/services/storedPlanExecutabilityValidator/\\*\\*',
+    'packages/@dvt/adapter-postgres/src/PostgresPlanStore\\.sql\\.ts',
+    'packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers\\.ts',
+    'packages/@dvt/engine/src/security/planRefPolicy\\.ts',
+    'packages/@dvt/observability/src/\\*\\*',
+    'packages/@dvt/observability-otel/src/\\*\\*',
+  ]) {
+    assert.match(planstoreObservabilityMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(planstoreObservabilityMigration.sql, /SYS-PLANSTORE-DOCS-RISK/);
+  assert.match(
+    planstoreObservabilityMigration.sql,
+    /s08-plan-store-command-query-matrix-20260501\.md/
+  );
+  assert.match(
+    planstoreObservabilityMigration.sql,
+    /docs\/risk-register\/quality\/R-20260514-S08-PLAN-STORE-INVENTORY-DRIFT\.yaml/
+  );
+  assert.match(
+    planstoreObservabilityMigration.sql,
+    /docs-risk-governance: owns tracked PlanStore docs/
+  );
+  assert.match(planstoreObservabilityMigration.sql, /architecture\.component_port/);
+  assert.match(planstoreObservabilityMigration.sql, /ResolveStoredExecutablePlan/);
+  assert.match(planstoreObservabilityMigration.sql, /ValidateStoredPlanExecutability/);
+  assert.match(planstoreObservabilityMigration.sql, /MigratePostgresPlanStoreSchema/);
+  assert.match(planstoreObservabilityMigration.sql, /ExportObservabilityToOpenTelemetry/);
+  assert.doesNotMatch(planstoreObservabilityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(planstoreObservabilityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile PlanStore docs risk as an imported document leaf', () => {
+  const migrations = readMigrationFiles();
+  const planstoreDocsRiskMigration = migrations.find(
+    (migration) => migration.fileName === '146_planstore_docs_risk_imported_leaf_reconciliation.sql'
+  );
+
+  assert.ok(planstoreDocsRiskMigration);
+  assert.match(planstoreDocsRiskMigration.sql, /SYS-PLANSTORE-DOCS-RISK/);
+  assert.match(
+    planstoreDocsRiskMigration.sql,
+    /update planning_query_store\.governance_components/
+  );
+  assert.match(planstoreDocsRiskMigration.sql, /children_required = false/);
+  assert.match(planstoreDocsRiskMigration.sql, /file\.component_unit = 'SYS-PLANSTORE-DOCS-RISK'/);
+  assert.match(planstoreDocsRiskMigration.sql, /PlanStoreDocsRiskEvidence/);
+  assert.match(planstoreDocsRiskMigration.sql, /ReadPlanStoreCommandQueryMatrix/);
+  assert.match(planstoreDocsRiskMigration.sql, /published_language/);
+  assert.doesNotMatch(planstoreDocsRiskMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(planstoreDocsRiskMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations persist Web Canvas leaf component mapping', () => {
   const migrations = readMigrationFiles();
   const canvasLeafMappingMigration = migrations.find(
