@@ -726,6 +726,79 @@ test('tracked migrations retire active TAREA rail duplicates and repoint missing
   assert.doesNotMatch(sourceDriftMigration.sql, /delete from planning_query_store/);
 });
 
+test('tracked migrations repoint VerifyCanvasUiRail away from missing migration source', () => {
+  const migrations = readMigrationFiles();
+  const verifyCanvasUiRailMigration = migrations.find(
+    (migration) => migration.fileName === '157_repoint_verify_canvas_ui_rail_source.sql'
+  );
+
+  assert.ok(verifyCanvasUiRailMigration);
+  assert.match(verifyCanvasUiRailMigration.sql, /VerifyCanvasUiRail/);
+  assert.match(verifyCanvasUiRailMigration.sql, /verifycanvasuirail/);
+  assert.match(
+    verifyCanvasUiRailMigration.sql,
+    /150_web_canvas_context_menu_retirement_feature_mechanization\.sql/
+  );
+  assert.match(verifyCanvasUiRailMigration.sql, /f29c-canvas-insert-palette-plan-20260525\.md/);
+  assert.match(verifyCanvasUiRailMigration.sql, /deprecatedSourcePath/);
+  assert.doesNotMatch(verifyCanvasUiRailMigration.sql, /delete from planning_query_store/);
+});
+
+test('tracked migrations repoint non-canonical Canvas UI rail rows away from missing source', () => {
+  const migrations = readMigrationFiles();
+  const allCanvasUiRowsMigration = migrations.find(
+    (migration) => migration.fileName === '158_repoint_all_canvas_ui_rail_missing_sources.sql'
+  );
+
+  assert.ok(allCanvasUiRowsMigration);
+  assert.match(
+    allCanvasUiRowsMigration.sql,
+    /where rail\.source_path = 'tools\/planning-db\/migrations\/150_web_canvas_context_menu_retirement_feature_mechanization\.sql'/
+  );
+  assert.match(allCanvasUiRowsMigration.sql, /f29c-canvas-insert-palette-plan-20260525\.md/);
+  assert.match(allCanvasUiRowsMigration.sql, /deprecatedSourcePath/);
+  assert.match(allCanvasUiRowsMigration.sql, /non-canonical duplicate rows/);
+  assert.doesNotMatch(allCanvasUiRowsMigration.sql, /delete from planning_query_store/);
+});
+
+test('tracked migrations reconcile BottomOperationalDrawer local authority to tracked files', () => {
+  const migrations = readMigrationFiles();
+  const bottomOperationalDrawerMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '159_reconcile_web_bottom_operational_drawer_local_authority.sql'
+  );
+
+  assert.ok(bottomOperationalDrawerMigration);
+  assert.match(
+    bottomOperationalDrawerMigration.sql,
+    /156_web_bottom_operational_drawer_component\.sql/
+  );
+  assert.match(
+    bottomOperationalDrawerMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasOperationalDrawerContributionRegistrar\.tsx/
+  );
+  assert.match(
+    bottomOperationalDrawerMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/bottomConsoleDrawerModel\.ts/
+  );
+  assert.match(
+    bottomOperationalDrawerMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/OperationalDrawerPanels\.tsx/
+  );
+  assert.match(
+    bottomOperationalDrawerMigration.sql,
+    /repo_path = 'apps\/web\/src\/app\/components\/console'/
+  );
+  assert.match(
+    bottomOperationalDrawerMigration.sql,
+    /TEST-SYS-WEB-APP-COMPONENTS-OPERATIONAL-DRAWER/
+  );
+  assert.match(bottomOperationalDrawerMigration.sql, /deprecatedSourcePath/);
+  assert.match(bottomOperationalDrawerMigration.sql, /not a tracked implementation file/);
+  assert.doesNotMatch(bottomOperationalDrawerMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(bottomOperationalDrawerMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations retire orphan canvas node workbench overlay rails', () => {
   const migrations = readMigrationFiles();
   const orphanOverlayMigration = migrations.find(
@@ -3402,6 +3475,30 @@ test('tracked migrations prefer local leaf component claims after W51', () => {
   assert.doesNotMatch(
     leafClaimPrecedenceMigration.sql,
     /order by\s+length\(matched_file\.own_pattern\) desc,\s+matched_file\.component_id/
+  );
+});
+
+test('tracked migrations keep local authority effective for imported components after W156', () => {
+  const migrations = readMigrationFiles();
+  const importedLocalAuthorityMigration = migrations.find(
+    (migration) => migration.fileName === '156_imported_component_local_authority_projection.sql'
+  );
+
+  assert.ok(importedLocalAuthorityMigration);
+  assert.match(importedLocalAuthorityMigration.sql, /local_import_override/);
+  assert.match(
+    importedLocalAuthorityMigration.sql,
+    /left join planning_query_store\.governance_component_local_metadata_query local_metadata/
+  );
+  assert.match(
+    importedLocalAuthorityMigration.sql,
+    /from planning_query_store\.governance_component_local_metadata_query local_metadata\s+where local_metadata\.status <> 'superseded'/
+  );
+  assert.match(importedLocalAuthorityMigration.sql, /SYS-ADAPTERS-TEMPORAL-DBT-PLUGIN/);
+  assert.match(importedLocalAuthorityMigration.sql, /SYS-PLANSTORE-DOCS-RISK/);
+  assert.match(
+    importedLocalAuthorityMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_file_ownership_query/
   );
 });
 
