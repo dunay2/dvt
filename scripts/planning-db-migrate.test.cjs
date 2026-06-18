@@ -3125,7 +3125,14 @@ test('latest command/query rail projection prefers implemented refs over importe
     .at(-1);
 
   assert.ok(latestRailProjectionMigration);
-  assert.equal(latestRailProjectionMigration.fileName, '101_prefer_implemented_rail_refs.sql');
+  assert.equal(
+    latestRailProjectionMigration.fileName,
+    '154_persist_post_import_rail_reconciliation.sql'
+  );
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /when rail\.source_path like 'docs\/archive\/%' then 'retired'/
+  );
   assert.match(
     latestRailProjectionMigration.sql,
     /case when rail\.rail_source = 'local' then 0 else 1 end,\s+rail\.is_gap,\s+rail\.authority_priority/
