@@ -3,6 +3,55 @@
 -- DB-first ownership, test, relation, and observability facts only; it does not
 -- relax validation and does not change runtime product code.
 
+insert into architecture.component (
+  component_id,
+  name,
+  kind,
+  layer,
+  owner,
+  repo_path,
+  public_contract,
+  runtime,
+  criticality,
+  status
+)
+values
+  ('SYS-OBSERVABILITY-ROOT', 'Observability root component', 'port', 'contracts', 'Architecture / Observability', 'packages/@dvt/observability/src', 'Composite observability contract and OpenTelemetry adapter package boundary.', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-API-ARTIFACT-RESOLUTION-ADAPTERS', 'API manifest and run-context artifact resolution adapters', 'adapter', 'adapter', 'PlanStoreArtifactResolvers', 'apps/api/src/infrastructure/planner/ManifestArtifactResolver.ts', 'API artifact resolver adapter boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-API-COMPOSITION', 'API plan-store composition and resolvers', 'service', 'application', 'Architecture / PlanStore API', 'apps/api/src/application/services', 'API application composition for stored executable plans, plan refs, artifact resolution, and workflow engine factory wiring.', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION', 'API stored plan executability validation', 'service', 'application', 'StoredPlanExecutabilityValidator', 'apps/api/src/application/services/StoredPlanExecutabilityValidator.ts', 'Stored plan executability validation boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-API-PLANREF-HTTP', 'API plan-ref HTTP mapping and parsing', 'api', 'adapter', 'PlanRefHttpBoundary', 'apps/api/src/entrypoints/http/planRefHttpMapper.ts', 'Plan-ref HTTP adapter boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-API-STORED-PLAN-RESOLUTION', 'API stored executable plan resolution', 'service', 'application', 'StoredExecutablePlanResolver', 'apps/api/src/application/services/StoredExecutablePlanResolver.ts', 'Stored executable plan resolution command boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-API-WORKFLOW-ENGINE-FACTORY', 'API workflow engine factory composition', 'service', 'application', 'WorkflowEngineFactory', 'apps/api/src/application/services/WorkflowEngineFactory.ts', 'Workflow engine factory composition boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-ARTIFACTS-COMPILED-CODE-STORAGE', 'Artifacts compiled-code storage adapters', 'adapter', 'adapter', 'CompiledCodeStorage', 'packages/@dvt/artifacts/src/compiledCode/attachCompiledCodeRefs.ts', 'Compiled-code artifact storage boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-ARTIFACTS-PACKAGE-SHELL', 'Artifacts package shell and exports', 'package', 'contracts', 'ArtifactsPackageShell', 'packages/@dvt/artifacts/src', 'Artifacts package public export boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-ARTIFACTS-PORTS', 'Plan-store artifacts ports and runtime readers', 'port', 'contracts', 'Architecture / PlanStore', 'packages/@dvt/artifacts/src/index.ts', 'Artifacts package ports and runtime readers for compiled code, bundles, run execution context, and plan artifacts.', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-ARTIFACTS-RUNTIME-READERS', 'Artifacts runtime readers and integrity checks', 'module', 'application', 'ArtifactRuntimeReaders', 'packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts', 'Runtime artifact reader and integrity boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-CONTRACTS', 'Plan-store contracts', 'port', 'contracts', 'Architecture / PlanStore Contracts', 'packages/@dvt/artifacts/src/ports', 'Plan-store reader and writer port contracts.', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-CONTRACTS-READER-WRITER-PORTS', 'Plan-store reader and writer ports', 'port', 'contracts', 'PlanStoreReaderWriterPorts', 'packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts', 'PlanStore reader/writer port contract', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-DOCS-RISK', 'Plan-store docs, reviews, risk, and evidence', 'module', 'infra', 'Architecture / PlanStore Docs', 'docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md', 'PlanStore governance docs, ADRs, evidence, risk entries, and command/query matrix sources.', 'node', 'medium', 'review'),
+  ('SYS-PLANSTORE-ENGINE-FETCH', 'Engine plan artifact fetch and plan-ref policy', 'port', 'application', 'Architecture / Engine PlanStore', 'packages/@dvt/engine/src/security', 'Engine plan-ref policy and integrity validation port boundary.', 'node', 'critical', 'review'),
+  ('SYS-PLANSTORE-ENGINE-INTEGRITY-PORT', 'Engine plan integrity validation port', 'port', 'application', 'EnginePlanIntegrityPort', 'packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts', 'Engine plan integrity validation port', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-ENGINE-PLANREF-POLICY', 'Engine plan-ref security policy', 'module', 'application', 'EnginePlanRefPolicy', 'packages/@dvt/engine/src/security/planRefPolicy.ts', 'Engine plan-ref policy boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-POSTGRES', 'Postgres plan-store adapter implementation', 'adapter', 'adapter', 'Architecture / PlanStore Postgres', 'packages/@dvt/adapter-postgres/src', 'Postgres plan-store adapter with schema, repositories, SQL, transactions, and integration tests.', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-POSTGRES-REPOSITORIES', 'Postgres plan-store repositories and composer', 'adapter', 'adapter', 'PostgresPlanStoreRepositories', 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts', 'Postgres plan-store repository adapter boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-POSTGRES-SCHEMA-SQL', 'Postgres plan-store schema SQL and transactions', 'adapter', 'adapter', 'PostgresPlanStoreSchemaSql', 'packages/@dvt/adapter-postgres/src/PostgresPlanStore.sql.ts', 'Postgres plan-store schema and SQL boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-TEMPORAL-ARTIFACT-READER', 'Temporal plan artifact reader activity', 'adapter', 'adapter', 'TemporalPlanArtifactReader', 'packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts', 'Temporal plan artifact reader activity boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-TEMPORAL-CAPACITY-SLA', 'Temporal plan-ref capacity SLA policy', 'module', 'application', 'TemporalPlanRefCapacitySlaPolicy', 'packages/@dvt/adapter-temporal/src/temporalPlanRefCapacitySlaPolicy.ts', 'Temporal plan-ref capacity SLA policy boundary', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-TEMPORAL-COMPOSITION', 'Temporal plan-store composition and plan-ref workflow boundary', 'adapter', 'adapter', 'Architecture / PlanStore Temporal', 'packages/@dvt/adapter-temporal/src', 'Temporal plan artifact reader, workflow helper, and plan-ref capacity SLA policy boundary.', 'node', 'high', 'review'),
+  ('SYS-PLANSTORE-TEMPORAL-WORKFLOW-ARTIFACT-HELPERS', 'Temporal workflow artifact helpers', 'module', 'adapter', 'TemporalWorkflowArtifactHelpers', 'packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts', 'Temporal workflow artifact helper boundary', 'node', 'high', 'review')
+on conflict (component_id) do update set
+  name = excluded.name,
+  kind = excluded.kind,
+  layer = excluded.layer,
+  owner = excluded.owner,
+  repo_path = excluded.repo_path,
+  public_contract = excluded.public_contract,
+  runtime = excluded.runtime,
+  criticality = excluded.criticality,
+  status = excluded.status,
+  updated_at = now();
+
 insert into architecture.design_scope (
   design_id,
   subject_kind,
