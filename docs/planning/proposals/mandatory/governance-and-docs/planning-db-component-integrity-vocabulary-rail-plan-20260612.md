@@ -1500,6 +1500,19 @@ symbols:
     unitTests:
       - scripts/planning-db-import.test.cjs
       - scripts/planning-db-query.test.cjs
+  - name: reconcileDeprecatedLocalRailSources
+    path: scripts/planning-db-import.cjs
+    dddOwner: GovernedSourceDriftReadModel
+    cqRails:
+      - DetectGovernedSourceDrift
+      - ValidateRailVocabulary
+    fowlerSignals:
+      - deprecated local rail sources are reconciled to their current implementation source during governed import
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-query.test.cjs
   - name: crypto
     path: scripts/planning-db/code-symbol-inventory.cjs
     dddOwner: CodeSymbolInventoryReadModel
