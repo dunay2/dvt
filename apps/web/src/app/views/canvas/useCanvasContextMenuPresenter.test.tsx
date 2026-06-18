@@ -11,9 +11,31 @@ import {
   type CanvasContextMenuPresenter,
 } from './useCanvasContextMenuPresenter';
 
+type PresenterCallbackSpies = Readonly<{
+  onCreateAuthoringNode: ReturnType<typeof vi.fn>;
+  onEdgesChange: ReturnType<typeof vi.fn>;
+  onOpenSourceImport: ReturnType<typeof vi.fn>;
+  onOpenProjectExplorer: ReturnType<typeof vi.fn>;
+  onPreviewExecutionPlan: ReturnType<typeof vi.fn>;
+  onOpenCanvasSettings: ReturnType<typeof vi.fn>;
+}>;
+
+function createPresenterCallbackSpies(): PresenterCallbackSpies {
+  return {
+    onCreateAuthoringNode: vi.fn(),
+    onEdgesChange: vi.fn(),
+    onOpenSourceImport: vi.fn(),
+    onOpenProjectExplorer: vi.fn(),
+    onPreviewExecutionPlan: vi.fn(),
+    onOpenCanvasSettings: vi.fn(),
+  };
+}
+
 function ContextMenuPresenterHarness({
+  callbacks,
   onPresenter,
 }: Readonly<{
+  callbacks: PresenterCallbackSpies;
   onPresenter: (presenter: CanvasContextMenuPresenter) => void;
 }>): JSX.Element {
   const presenter = useCanvasContextMenuPresenter({
@@ -24,12 +46,12 @@ function ContextMenuPresenterHarness({
     canOpenCanvasSettings: true,
     authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     screenToFlowPosition: ({ x, y }) => ({ x: x + 100, y: y - 40 }),
-    onCreateAuthoringNode: vi.fn(),
-    onEdgesChange: vi.fn(),
-    onOpenSourceImport: vi.fn(),
-    onOpenProjectExplorer: vi.fn(),
-    onPreviewExecutionPlan: vi.fn(),
-    onOpenCanvasSettings: vi.fn(),
+    onCreateAuthoringNode: callbacks.onCreateAuthoringNode,
+    onEdgesChange: callbacks.onEdgesChange,
+    onOpenSourceImport: callbacks.onOpenSourceImport,
+    onOpenProjectExplorer: callbacks.onOpenProjectExplorer,
+    onPreviewExecutionPlan: callbacks.onPreviewExecutionPlan,
+    onOpenCanvasSettings: callbacks.onOpenCanvasSettings,
   });
 
   onPresenter(presenter);
@@ -49,12 +71,14 @@ describe('useCanvasContextMenuPresenter', () => {
   let container: HTMLDivElement;
   let root: Root;
   let presenter: CanvasContextMenuPresenter | null;
+  let callbacks: PresenterCallbackSpies;
 
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
     presenter = null;
+    callbacks = createPresenterCallbackSpies();
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -72,7 +96,12 @@ describe('useCanvasContextMenuPresenter', () => {
 
   async function renderPresenter(): Promise<void> {
     await act(async () => {
-      root.render(<ContextMenuPresenterHarness onPresenter={(next) => (presenter = next)} />);
+      root.render(
+        <ContextMenuPresenterHarness
+          callbacks={callbacks}
+          onPresenter={(next) => (presenter = next)}
+        />
+      );
     });
   }
 
@@ -150,6 +179,60 @@ describe('useCanvasContextMenuPresenter', () => {
           clientY: 259,
         })
       );
+    });
+
+    expectMenuVisible();
+  });
+
+  it('routes canvas menu actions through the presenter callbacks and closes the menu', async () => {
+    await renderPresenter();
+
+    await openPaneMenuAt(320, 260);
+    await act(async () => {
+      presenter?.handleCanvasAction({ action: 'open-source-import', label: 'Add source' });
+    });
+    expect(callbacks.onOpenSourceImport).toHaveBeenCalledWith({ x: 420, y: 220 });
+    expectMenuClosed();
+
+    await openPaneMenuAt(320, 260);
+    await act(async () => {
+      presenter?.handleCanvasAction({
+        action: 'open-project-explorer',
+        label: 'Explore project',
+      });
+    });
+    expect(callbacks.onOpenProjectExplorer).toHaveBeenCalledTimes(1);
+    expectMenuClosed();
+
+    await openPaneMenuAt(320, 260);
+    await act(async () => {
+      presenter?.handleCanvasAction({
+        action: 'preview-execution-plan',
+        label: 'Preview execution plan',
+      });
+    });
+    expect(callbacks.onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
+    expectMenuClosed();
+
+    await openPaneMenuAt(320, 260);
+    await act(async () => {
+      presenter?.handleCanvasAction({
+        action: 'open-canvas-settings',
+        label: 'Canvas settings',
+      });
+    });
+    expect(callbacks.onOpenCanvasSettings).toHaveBeenCalledTimes(1);
+    expectMenuClosed();
+  });
+
+  it('keeps the menu open through a right-button document pointer event', async () => {
+    await renderPresenter();
+
+    await openPaneMenuAt(320, 260);
+    expectMenuVisible();
+
+    await act(async () => {
+      document.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 2 }));
     });
 
     expectMenuVisible();
