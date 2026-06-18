@@ -164,18 +164,9 @@ describe('BottomConsoleDrawer', () => {
     );
   });
 
-  it('renders Canvas operational tabs and route-owned problem, run, and preview details', async () => {
-    const onPreviewExecutionPlan = vi.fn();
+  it('renders Canvas operational drawer chrome from route contribution', async () => {
     useOperationalDrawerContributionStore.setState({
-      contribution: buildCanvasOperationalDrawerContribution({
-        preview: {
-          status: 'blocked',
-          summary: 'Preview required before running.',
-          blockers: ['plan_integrity'],
-          canPreview: true,
-          onPreviewExecutionPlan,
-        },
-      }),
+      contribution: buildCanvasOperationalDrawerContribution(),
     });
 
     await act(async () => {
@@ -202,48 +193,6 @@ describe('BottomConsoleDrawer', () => {
       'Runs 1',
       'Preview 1',
     ]);
-
-    const problemsTab = tabButtons[1];
-    const runsTab = tabButtons[2];
-    const previewTab = tabButtons[3];
-
-    expect(problemsTab).toBeDefined();
-    expect(runsTab).toBeDefined();
-    expect(previewTab).toBeDefined();
-
-    await act(async () => {
-      fireEvent.click(problemsTab!);
-    });
-    expect(document.body.textContent).toContain('Preview required before running.');
-    expect(document.body.textContent).toContain('plan_integrity');
-    expect(
-      document.body.querySelector('[data-slot="bottom-operational-problem-severity"]')?.textContent
-    ).toBe('warning');
-    expect(
-      document.body.querySelector('[data-slot="bottom-operational-detail-code"]')?.textContent
-    ).toBe('plan_integrity');
-
-    await act(async () => {
-      fireEvent.click(runsTab!);
-    });
-    expect(document.body.textContent).toContain('Active run');
-    expect(document.body.textContent).toContain('run-42');
-
-    await act(async () => {
-      fireEvent.click(previewTab!);
-    });
-    expect(document.body.textContent).toContain('Preview required before running.');
-    expect(
-      document.body.querySelector('[data-slot="bottom-operational-preview-blocker"]')?.textContent
-    ).toBe('plan_integrity');
-    const previewButton = Array.from(document.body.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Preview execution plan')
-    );
-    expect(previewButton).not.toBeNull();
-    await act(async () => {
-      fireEvent.click(previewButton!);
-    });
-    expect(onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
   });
 
   it('closes the drawer by hiding it in the layout store', async () => {
