@@ -131,4 +131,27 @@ describe('useCanvasContextMenuPresenter', () => {
 
     expectMenuClosed();
   });
+
+  it('keeps the menu open through a delayed pointer echo at the original context point', async () => {
+    vi.useFakeTimers();
+    await renderPresenter();
+
+    await openPaneMenuAt(320, 260);
+    expectMenuVisible();
+
+    vi.advanceTimersByTime(450);
+
+    await act(async () => {
+      document.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          bubbles: true,
+          button: 0,
+          clientX: 321,
+          clientY: 259,
+        })
+      );
+    });
+
+    expectMenuVisible();
+  });
 });
