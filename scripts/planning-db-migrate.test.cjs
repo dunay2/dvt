@@ -957,6 +957,30 @@ test('tracked migrations stabilize deprecated bottom operational drawer sources 
   assert.doesNotMatch(drawerSourceMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations complete bottom operational drawer manifest required fields', () => {
+  const migrations = readMigrationFiles();
+  const drawerManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '169_bottom_operational_drawer_manifest_required_fields.sql'
+  );
+
+  assert.ok(drawerManifestMigration);
+  assert.match(drawerManifestMigration.sql, /UXDB-BOTTOM-OPERATIONAL-DRAWER-P0-1/);
+  assert.match(drawerManifestMigration.sql, /cypressCoverage/);
+  assert.match(drawerManifestMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(drawerManifestMigration.sql, /deprecatedSourcePaths/);
+  assert.match(
+    drawerManifestMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/bottomConsoleDrawerModel\.ts/
+  );
+  assert.match(
+    drawerManifestMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/OperationalDrawerPanels\.tsx/
+  );
+  assert.doesNotMatch(drawerManifestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(drawerManifestMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split Web Canvas residual files into semantic components', () => {
   const migrations = readMigrationFiles();
   const canvasSplitMigration = migrations.find(
