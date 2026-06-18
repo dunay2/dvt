@@ -214,7 +214,7 @@ Indirect consumers:
 Primary tests:
 
 - `apps/web/src/app/views/canvas/useCanvasController.persistence.test.tsx`
-- `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.test.tsx`
+- `apps/web/src/app/views/canvas/useCanvasViewportGraphModel.layout.test.tsx`
 - `apps/web/src/app/views/canvas/CanvasViewport.test.tsx`
 - `apps/web/src/app/views/canvas/canvasDraftRecoveryBoundary.architecture.test.ts`
 
