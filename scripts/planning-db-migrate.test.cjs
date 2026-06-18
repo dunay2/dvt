@@ -1443,6 +1443,105 @@ test('tracked migrations close Web Canvas architecture maturity evidence', () =>
   assert.doesNotMatch(maturityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations map Web root filesystem leaf components', () => {
+  const migrations = readMigrationFiles();
+  const webRootLeafMigration = migrations.find(
+    (migration) => migration.fileName === '128_web_root_filesystem_leaf_components.sql'
+  );
+
+  assert.ok(webRootLeafMigration);
+  for (const componentId of [
+    'SYS-WEB-PACKAGE-CONFIG',
+    'SYS-WEB-CYPRESS-E2E',
+    'SYS-WEB-APP-BOOTSTRAP',
+    'SYS-WEB-APP-VIEWS',
+    'SYS-WEB-VIEW-CANVAS-ROUTE',
+    'SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES',
+    'SYS-WEB-APP-COMPONENTS-UI',
+    'SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD-CORE',
+    'SYS-WEB-SERVICES-WORKSPACE',
+    'SYS-WEB-PLUGINS-CORE',
+    'SYS-WEB-CAPABILITIES-PLATFORM-HEALTH',
+  ]) {
+    assert.match(webRootLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const sourcePath of [
+    'apps/web/cypress/e2e/\\*\\*',
+    'apps/web/src/app/bootstrap/\\*\\*',
+    'apps/web/src/app/views/canvas/\\*\\*',
+    'apps/web/src/app/components/ui/\\*\\*',
+    'apps/web/src/app/services/workspace/\\*\\*',
+    'apps/web/src/capabilities/platform-health/\\*\\*',
+  ]) {
+    assert.match(webRootLeafMigration.sql, new RegExp(sourcePath));
+  }
+
+  assert.match(webRootLeafMigration.sql, /SYS-WEB-ROOT stays composite/);
+  assert.match(webRootLeafMigration.sql, /REL-WEB-ROOT-CONTAINS-PACKAGE-CONFIG/);
+  assert.match(webRootLeafMigration.sql, /REL-WEB-APP-VIEWS-CONTAINS-RUNS/);
+  assert.match(webRootLeafMigration.sql, /REL-WEB-CANVAS-SOURCE-IMPORT-WIZARD-CONTAINS-CORE/);
+  assert.match(webRootLeafMigration.sql, /RecordArchitectureRelation/);
+  assert.match(webRootLeafMigration.sql, /RecordArchitectureTestEvidence/);
+  assert.match(webRootLeafMigration.sql, /old or nonfunctional files are deprecated/);
+  assert.doesNotMatch(webRootLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webRootLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations close Web root component integrity follow-up gaps', () => {
+  const migrations = readMigrationFiles();
+  const integrityFollowupMigration = migrations.find(
+    (migration) => migration.fileName === '129_web_root_component_integrity_followup.sql'
+  );
+
+  assert.ok(integrityFollowupMigration);
+  assert.match(integrityFollowupMigration.sql, /update architecture\.component/);
+  assert.match(
+    integrityFollowupMigration.sql,
+    /apps\/web\/src\/app\/components\/SourceImportWizard\.architecture\.test\.tsx/
+  );
+  assert.match(
+    integrityFollowupMigration.sql,
+    /apps\/web\/src\/app\/views\/Canvas\.architecture\.test\.ts/
+  );
+  assert.match(integrityFollowupMigration.sql, /insert into architecture\.component_observability/);
+  for (const componentId of [
+    'SYS-WEB-CANVAS-CONTEXTUAL-WORKBENCH',
+    'SYS-WEB-CANVAS-GRAPH-SURFACE',
+    'SYS-WEB-CANVAS-GRAPH-VIEWPORT',
+    'SYS-WEB-CANVAS-NODE-WORKBENCH',
+    'SYS-WEB-CANVAS-SHELL-MAIN-PANEL',
+    'SYS-WEB-SERVICES-RUNS',
+    'SYS-WEB-SERVICES-WORKSPACE',
+    'SYS-WEB-VIEW-CANVAS',
+    'SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES',
+    'SYS-WEB-VIEW-CANVAS-ROUTE',
+    'SYS-WEB-VIEWS-RUNS',
+  ]) {
+    assert.match(integrityFollowupMigration.sql, new RegExp(componentId));
+  }
+  assert.match(integrityFollowupMigration.sql, /not_applicable/);
+  assert.match(integrityFollowupMigration.sql, /Old or nonfunctional files are not inferred/);
+  assert.doesNotMatch(integrityFollowupMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(integrityFollowupMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations correct Web Canvas component path extension', () => {
+  const migrations = readMigrationFiles();
+  const pathExtensionFixMigration = migrations.find(
+    (migration) => migration.fileName === '130_web_canvas_component_path_extension_fix.sql'
+  );
+
+  assert.ok(pathExtensionFixMigration);
+  assert.match(pathExtensionFixMigration.sql, /SYS-WEB-VIEW-CANVAS/);
+  assert.match(
+    pathExtensionFixMigration.sql,
+    /apps\/web\/src\/app\/views\/Canvas\.architecture\.test\.tsx/
+  );
+  assert.doesNotMatch(pathExtensionFixMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(pathExtensionFixMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations persist Web Canvas leaf component mapping', () => {
   const migrations = readMigrationFiles();
   const canvasLeafMappingMigration = migrations.find(
