@@ -692,6 +692,32 @@ test('tracked migrations expose code symbol duplicate and source drift query rai
   assert.doesNotMatch(codeSymbolMigration.sql, /delete from planning_query_store\.code_symbols/);
 });
 
+test('tracked migrations project code symbols through effective component ownership', () => {
+  const migrations = readMigrationFiles();
+  const codeSymbolOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '174_code_symbol_effective_component_ownership.sql'
+  );
+
+  assert.ok(codeSymbolOwnershipMigration);
+  assert.match(
+    codeSymbolOwnershipMigration.sql,
+    /planning_query_store\.component_engineering_file_ownership_query/
+  );
+  assert.match(codeSymbolOwnershipMigration.sql, /coalesce\(ownership\.leaf_component_id/);
+  assert.match(codeSymbolOwnershipMigration.sql, /'importedComponentId'/);
+  assert.match(codeSymbolOwnershipMigration.sql, /'effectiveComponentId'/);
+  assert.match(
+    codeSymbolOwnershipMigration.sql,
+    /from planning_query_store\.code_symbol_inventory_query symbol/
+  );
+  assert.doesNotMatch(
+    codeSymbolOwnershipMigration.sql,
+    /from planning_query_store\.code_symbols symbol\s+join duplicate_/i
+  );
+  assert.doesNotMatch(codeSymbolOwnershipMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(codeSymbolOwnershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations keep the governance problem dashboard on lightweight views', () => {
   const migrations = readMigrationFiles();
   const dashboardMigration = migrations.find(
