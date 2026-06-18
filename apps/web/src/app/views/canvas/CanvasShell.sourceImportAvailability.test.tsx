@@ -64,6 +64,23 @@ describe('CanvasShell source import availability', () => {
     expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
   });
 
+  it('hides viewport source import affordances when graph mutation is blocked', async () => {
+    await renderShell({
+      panels: {
+        userPermissions: {
+          canPlan: false,
+          canRun: false,
+          canEditEdges: false,
+        },
+      },
+    });
+
+    expect(shellState.canvasViewportProps).toMatchObject({
+      canOpenSourceImport: false,
+    });
+    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
+  });
+
   it('hides viewport source import affordances when the dbt source import plugin is unavailable', async () => {
     await renderShell({
       panels: {
