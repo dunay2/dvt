@@ -285,6 +285,10 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/117_web_canvas_node_workbench_duplicate_resolution.sql
   - tools/planning-db/migrations/118_web_canvas_field_component_canonicalization.sql
   - tools/planning-db/migrations/119_web_canvas_modularized_test_leaf_mapping.sql
+  - tools/planning-db/migrations/120_ci_governance_scripts_leaf_mapping.sql
+  - tools/planning-db/migrations/121_repoint_canvas_viewport_graph_model_test_support_rail.sql
+  - tools/planning-db/migrations/122_web_canvas_test_ownership_canonicalization.sql
+  - tools/planning-db/migrations/123_web_canvas_viewport_model_test_responsibility.sql
   - scripts/planning-db-import.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
   - scripts/planning-db/query-limit.cjs
