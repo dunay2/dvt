@@ -2665,6 +2665,82 @@ test('tracked migrations canonicalize nonphysical planning closeout leaves', () 
   assert.doesNotMatch(planningDocsCloseoutMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split architecture documentation into physical leaves', () => {
+  const migrations = readMigrationFiles();
+  const architectureDocsLeafMigration = migrations.find(
+    (migration) => migration.fileName === '188_docs_architecture_leaf_components.sql'
+  );
+
+  assert.ok(architectureDocsLeafMigration);
+  assert.match(
+    architectureDocsLeafMigration.sql,
+    /create temporary table docs_architecture_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-DOCS-ARCHITECTURE-ENTRYPOINTS',
+    'SYS-DOCS-ARCHITECTURE-TEMPLATES',
+    'SYS-DOCS-ARCHITECTURE-ATLAS',
+    'SYS-DOCS-ARCHITECTURE-DIAGRAMS',
+    'SYS-DOCS-ARCHITECTURE-SHARED',
+    'SYS-DOCS-ARCHITECTURE-SYSTEM',
+    'SYS-DOCS-ARCHITECTURE-INFRA',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-ROOT',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-API',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-CI-GOVERNANCE',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-DELIVERY',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-ENGINE',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-LINEAGE-WORKER',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-OUTBOX-WORKER',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-PLANNER',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-PROJECTOR-WORKER',
+    'SYS-DOCS-ARCHITECTURE-COMPONENTS-WEB',
+  ]) {
+    assert.match(architectureDocsLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/architecture/\\*',
+    'docs/architecture/_templates/\\*\\*',
+    'docs/architecture/atlas/\\*\\*',
+    'docs/architecture/diagrams/\\*\\*',
+    'docs/architecture/shared/\\*\\*',
+    'docs/architecture/system/\\*\\*',
+    'docs/architecture/infra/\\*\\*',
+    'docs/architecture/components/index\\.md',
+    'docs/architecture/components/api/\\*\\*',
+    'docs/architecture/components/ci-governance/\\*\\*',
+    'docs/architecture/components/delivery/\\*\\*',
+    'docs/architecture/components/engine/\\*\\*',
+    'docs/architecture/components/lineage-worker/\\*\\*',
+    'docs/architecture/components/outbox-worker/\\*\\*',
+    'docs/architecture/components/planner/\\*\\*',
+    'docs/architecture/components/projector-worker/\\*\\*',
+    'docs/architecture/components/web/\\*\\*',
+  ]) {
+    assert.match(architectureDocsLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(architectureDocsLeafMigration.sql, /SYS-DOCS-GOVERNANCE-ARCHITECTURE/);
+  assert.match(
+    architectureDocsLeafMigration.sql,
+    /PLANNING-DB-DOCS-ARCHITECTURE-LEAF-MAPPING-20260618/
+  );
+  assert.match(architectureDocsLeafMigration.sql, /REL-DOCS-ARCHITECTURE-CONTAINS-/);
+  assert.match(architectureDocsLeafMigration.sql, /ReadArchitectureRootEntrypoints/);
+  assert.match(architectureDocsLeafMigration.sql, /ReadEngineArchitectureDocs/);
+  assert.match(architectureDocsLeafMigration.sql, /ReadWebArchitectureDocs/);
+  assert.match(architectureDocsLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(architectureDocsLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(architectureDocsLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    architectureDocsLeafMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.doesNotMatch(architectureDocsLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(architectureDocsLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(
