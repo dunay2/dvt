@@ -908,11 +908,45 @@ async function readFeatureMechanizationManifestsFromDb(options = {}) {
     }
 
     const result = await client.query(`
+      with db_feature_manifest_rows as (
+        select
+          rail_id,
+          source_path,
+          raw_manifest,
+          rail_source,
+          imported_at,
+          1 as projection_priority
+        from planning_query_store.command_query_rail_manifest_query
+        where raw_manifest ? 'featureId'
+        union all
+        select
+          rail_id,
+          source_path,
+          raw_manifest,
+          'local'::text as rail_source,
+          updated_at as imported_at,
+          0 as projection_priority
+        from planning_query_store.feature_mechanization_local_rails
+        where raw_manifest ? 'featureId'
+      ),
+      ranked_manifest_rows as (
+        select
+          source_path,
+          raw_manifest,
+          rail_source,
+          imported_at,
+          rail_id,
+          row_number() over (
+            partition by rail_id
+            order by projection_priority, imported_at desc
+          ) as projection_rank
+        from db_feature_manifest_rows
+      )
       select
         source_path,
         raw_manifest
-      from planning_query_store.command_query_rail_manifest_query
-      where raw_manifest ? 'featureId'
+      from ranked_manifest_rows
+      where projection_rank = 1
       order by source_path, raw_manifest->>'featureId', rail_source, imported_at, rail_id
     `);
     return normalizeDbFeatureMechanizationManifestRows(result.rows);

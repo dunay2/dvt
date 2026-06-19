@@ -5163,6 +5163,47 @@ test('tracked migrations provide final DB-first authority for Canvas node workbe
   assert.doesNotMatch(finalPanelAuthorityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reseed Canvas node workbench feature manifests after import refresh', () => {
+  const migrations = readMigrationFiles();
+  const reseedMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '239_web_canvas_node_workbench_panel_local_manifest_reseed.sql'
+  );
+
+  assert.ok(reseedMigration);
+  assert.match(reseedMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(reseedMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(reseedMigration.sql, /CanvasNodeWorkbenchPanel/);
+  assert.match(reseedMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(reseedMigration.sql, /NodeWorkbenchTabItem/);
+  assert.match(reseedMigration.sql, /renderSectionBody/);
+  assert.match(reseedMigration.sql, /resolveActiveNodeWorkbenchTab/);
+  assert.match(reseedMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(reseedMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(reseedMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(reseedMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Canvas node workbench DB-local feature manifests', () => {
+  const migrations = readMigrationFiles();
+  const completenessMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '240_web_canvas_node_workbench_panel_manifest_completeness.sql'
+  );
+
+  assert.ok(completenessMigration);
+  assert.match(completenessMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(completenessMigration.sql, /userStories/);
+  assert.match(completenessMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(completenessMigration.sql, /domainObjects/);
+  assert.match(completenessMigration.sql, /fowlerSignals/);
+  assert.match(completenessMigration.sql, /architectureGuards/);
+  assert.match(completenessMigration.sql, /cypressFlows/);
+  assert.match(completenessMigration.sql, /allowedImplementationSurfaces/);
+  assert.doesNotMatch(completenessMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(completenessMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations canonicalize Web Canvas DBT and DVT field components', () => {
   const migrations = readMigrationFiles();
   const fieldCanonicalizationMigration = migrations.find(
