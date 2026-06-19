@@ -325,6 +325,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/213_temporal_workflow_runtime_leaf_components.sql
   - tools/planning-db/migrations/214_temporal_workflow_runtime_parent_path_canonicalization.sql
   - tools/planning-db/migrations/215_contracts_package_test_leaf_components.sql
+  - tools/planning-db/migrations/216_web_canvas_execution_runs_leaf_components.sql
+  - tools/planning-db/migrations/217_web_canvas_execution_runs_parent_path_canonicalization.sql
   - apps/api/src/entrypoints/http/httpBearerAuthentication.ts
   - apps/api/src/entrypoints/http/projectOnboardingRoutes.ts
   - apps/api/src/entrypoints/http/sessionRoute.ts

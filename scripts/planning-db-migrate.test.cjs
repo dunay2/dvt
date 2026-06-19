@@ -4047,6 +4047,91 @@ test('tracked migrations split contracts package tests into evidence leaves', ()
   assert.doesNotMatch(contractsTestMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Web Canvas execution/runs into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const webCanvasExecutionMigration = migrations.find(
+    (migration) => migration.fileName === '216_web_canvas_execution_runs_leaf_components.sql'
+  );
+
+  assert.ok(webCanvasExecutionMigration);
+  assert.match(
+    webCanvasExecutionMigration.sql,
+    /create temporary table web_canvas_execution_runs_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-WEB-CANVAS-EXECUTION-ACTION-COMPOSITION',
+    'SYS-WEB-CANVAS-EXECUTION-DRAFT-FLUSH',
+    'SYS-WEB-CANVAS-EXECUTION-SELECTION',
+    'SYS-WEB-CANVAS-RUN-START-ACTION',
+    'SYS-WEB-CANVAS-RUNTIME-POLICY',
+    'SYS-WEB-CANVAS-PLAN-RUN-READINESS',
+    'SYS-WEB-CANVAS-OPERATIONAL-DRAWER-CONTRIBUTION',
+  ]) {
+    assert.match(webCanvasExecutionMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/web/src/app/views/canvas/useCanvasExecutionActions\\.ts',
+    'apps/web/src/app/views/canvas/useCanvasExecutionDraftFlush\\.ts',
+    'apps/web/src/app/views/canvas/canvasRunSelection\\.ts',
+    'apps/web/src/app/views/canvas/canvasRunStartAction\\.ts',
+    'apps/web/src/app/views/canvas/canvasRuntimePolicy\\.ts',
+    'apps/web/src/app/views/canvas/canvasExecutionState\\.ts',
+    'apps/web/src/app/views/canvas/CanvasOperationalDrawerContributionRegistrar\\.tsx',
+  ]) {
+    assert.match(webCanvasExecutionMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(webCanvasExecutionMigration.sql, /SYS-WEB-CANVAS-EXECUTION-RUNS/);
+  assert.match(webCanvasExecutionMigration.sql, /children_required = true/);
+  assert.match(webCanvasExecutionMigration.sql, /REL-WEB-CANVAS-EXECUTION-RUNS-CONTAINS-/);
+  assert.match(webCanvasExecutionMigration.sql, /'depends_on'/);
+  assert.match(webCanvasExecutionMigration.sql, /ObservePlanRunReadiness/);
+  assert.match(webCanvasExecutionMigration.sql, /StartCanvasRun/);
+  assert.match(webCanvasExecutionMigration.sql, /RegisterCanvasOperationalDrawerContribution/);
+  assert.match(webCanvasExecutionMigration.sql, /SYS-API-HTTP-RUN-LIFECYCLE/);
+  assert.match(webCanvasExecutionMigration.sql, /SYS-WEB-APP-COMPONENTS-CONSOLE/);
+  assert.match(webCanvasExecutionMigration.sql, /insert into architecture\.contract/);
+  assert.match(webCanvasExecutionMigration.sql, /insert into architecture\.component_port/);
+  assert.match(webCanvasExecutionMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    webCanvasExecutionMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.match(
+    webCanvasExecutionMigration.sql,
+    /nonfunctional files require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(webCanvasExecutionMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(webCanvasExecutionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webCanvasExecutionMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize Web Canvas execution/runs aggregate repo path', () => {
+  const migrations = readMigrationFiles();
+  const webCanvasExecutionPathMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '217_web_canvas_execution_runs_parent_path_canonicalization.sql'
+  );
+
+  assert.ok(webCanvasExecutionPathMigration);
+  assert.match(
+    webCanvasExecutionPathMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-EXECUTION-RUNS-PARENT-PATH-20260619/
+  );
+  assert.match(webCanvasExecutionPathMigration.sql, /SYS-WEB-CANVAS-EXECUTION-RUNS/);
+  assert.match(webCanvasExecutionPathMigration.sql, /SYS-WEB-CANVAS-CONTROLLER-INTERACTION/);
+  assert.match(
+    webCanvasExecutionPathMigration.sql,
+    /repo_path = 'docs\/architecture\/components\/web\/graph\/canvas-execution-selection-component\.md'/
+  );
+  assert.match(webCanvasExecutionPathMigration.sql, /boundary_drift/);
+  assert.doesNotMatch(webCanvasExecutionPathMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(webCanvasExecutionPathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webCanvasExecutionPathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
