@@ -153,12 +153,25 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuVisible();
   });
 
+  it('keeps the menu open through a delayed browser click echo away from the context point', async () => {
+    vi.useFakeTimers();
+    await harness.render();
+
+    await harness.openPaneMenuAt(320, 260);
+    vi.advanceTimersByTime(800);
+    await act(async () => {
+      harness.getPresenter().handlePaneClick({ button: 0, clientX: 560, clientY: 360 });
+    });
+
+    harness.expectMenuVisible();
+  });
+
   it('closes the menu on a later intentional background click away from the context point', async () => {
     vi.useFakeTimers();
     await harness.render();
 
     await harness.openPaneMenuAt(320, 260);
-    vi.advanceTimersByTime(351);
+    vi.advanceTimersByTime(1001);
     await act(async () => {
       harness.getPresenter().handlePaneClick({ button: 0, clientX: 560, clientY: 360 });
     });
