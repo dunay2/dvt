@@ -2665,6 +2665,114 @@ test('tracked migrations canonicalize nonphysical planning closeout leaves', () 
   assert.doesNotMatch(planningDocsCloseoutMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations restore planning closeout cohorts under the closeout aggregate', () => {
+  const migrations = readMigrationFiles();
+  const closeoutCohortRestoreMigration = migrations.find(
+    (migration) => migration.fileName === '198_docs_planning_closeout_cohort_leaf_restore.sql'
+  );
+
+  assert.ok(closeoutCohortRestoreMigration);
+  assert.match(
+    closeoutCohortRestoreMigration.sql,
+    /create temporary table docs_planning_closeout_cohort_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202603',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202604',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202605',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-202606',
+    'SYS-DOCS-PLANNING-CLOSEOUTS-LEGACY',
+  ]) {
+    assert.match(closeoutCohortRestoreMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/planning/closeouts/202603\\*\\.md',
+    'docs/planning/closeouts/202604\\*\\.md',
+    'docs/planning/closeouts/202605\\*\\.md',
+    'docs/planning/closeouts/202606\\*\\.md',
+    'docs/planning/closeouts/index\\.md',
+    'docs/planning/closeouts/F-04-RISK-A-QA-03-backend-owned-planref-closeout\\.md',
+  ]) {
+    assert.match(closeoutCohortRestoreMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(
+    closeoutCohortRestoreMigration.sql,
+    /PLANNING-DB-DOCS-CLOSEOUT-COHORT-LEAF-RESTORE-20260619/
+  );
+  assert.match(closeoutCohortRestoreMigration.sql, /SYS-DOCS-PLANNING-CLOSEOUTS/);
+  assert.match(closeoutCohortRestoreMigration.sql, /children_required = true/);
+  assert.match(closeoutCohortRestoreMigration.sql, /ReadPlanningCloseoutRecords202603/);
+  assert.match(closeoutCohortRestoreMigration.sql, /ReadPlanningCloseoutRecords202604/);
+  assert.match(closeoutCohortRestoreMigration.sql, /ReadPlanningCloseoutRecords202605/);
+  assert.match(closeoutCohortRestoreMigration.sql, /ReadPlanningCloseoutRecords202606/);
+  assert.match(closeoutCohortRestoreMigration.sql, /ReadPlanningLegacyCloseoutRecords/);
+  assert.match(closeoutCohortRestoreMigration.sql, /REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-/);
+  assert.match(closeoutCohortRestoreMigration.sql, /status = 'drift'/);
+  assert.match(closeoutCohortRestoreMigration.sql, /obsolete planning-catalog-to-cohort relations/);
+  assert.match(closeoutCohortRestoreMigration.sql, /Deprecated by PLANNING-DB-DOCS-CLOSEOUT/);
+  assert.match(closeoutCohortRestoreMigration.sql, /Closeout evidence is not deprecated by age/);
+  assert.match(closeoutCohortRestoreMigration.sql, /insert into architecture\.contract/);
+  assert.match(closeoutCohortRestoreMigration.sql, /insert into architecture\.component_port/);
+  assert.match(closeoutCohortRestoreMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    closeoutCohortRestoreMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.doesNotMatch(closeoutCohortRestoreMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(closeoutCohortRestoreMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations repair planning closeout cohort relation drift', () => {
+  const migrations = readMigrationFiles();
+  const closeoutRelationRepairMigration = migrations.find(
+    (migration) => migration.fileName === '199_docs_planning_closeout_relation_drift_repair.sql'
+  );
+
+  assert.ok(closeoutRelationRepairMigration);
+  assert.match(
+    closeoutRelationRepairMigration.sql,
+    /create temporary table docs_planning_closeout_relation_repair_map/
+  );
+
+  for (const relationId of [
+    'REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-202603',
+    'REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-202604',
+    'REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-202605',
+    'REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-202606',
+    'REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-LEGACY',
+  ]) {
+    assert.match(closeoutRelationRepairMigration.sql, new RegExp(relationId));
+  }
+
+  for (const duplicateRelationId of [
+    'REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-202603',
+    'REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-202604',
+    'REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-202605',
+    'REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-202606',
+    'REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-LEGACY',
+  ]) {
+    assert.match(closeoutRelationRepairMigration.sql, new RegExp(duplicateRelationId));
+  }
+
+  assert.match(
+    closeoutRelationRepairMigration.sql,
+    /PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619/
+  );
+  assert.match(
+    closeoutRelationRepairMigration.sql,
+    /source_component_id = 'SYS-DOCS-PLANNING-CLOSEOUTS'/
+  );
+  assert.match(closeoutRelationRepairMigration.sql, /status = 'implemented'/);
+  assert.match(closeoutRelationRepairMigration.sql, /ReadArchitectureDrift/);
+  assert.match(closeoutRelationRepairMigration.sql, /delete from architecture\.component_relation/);
+  assert.match(closeoutRelationRepairMigration.sql, /repair\.duplicate_relation_id/);
+  assert.match(closeoutRelationRepairMigration.sql, /duplicate relation IDs from migration 198/);
+  assert.doesNotMatch(closeoutRelationRepairMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split architecture documentation into physical leaves', () => {
   const migrations = readMigrationFiles();
   const architectureDocsLeafMigration = migrations.find(
