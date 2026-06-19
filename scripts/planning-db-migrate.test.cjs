@@ -3987,6 +3987,66 @@ test('tracked migrations canonicalize Temporal workflow runtime aggregate repo p
   assert.doesNotMatch(temporalWorkflowRuntimePathMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split contracts package tests into evidence leaves', () => {
+  const migrations = readMigrationFiles();
+  const contractsTestMigration = migrations.find(
+    (migration) => migration.fileName === '215_contracts_package_test_leaf_components.sql'
+  );
+
+  assert.ok(contractsTestMigration);
+  assert.match(
+    contractsTestMigration.sql,
+    /create temporary table contracts_package_test_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-CONTRACTS-TESTS-COMPILED-CODE-SCHEMA',
+    'SYS-CONTRACTS-TESTS-PLAN-ADMISSION',
+    'SYS-CONTRACTS-TESTS-PLANNER',
+    'SYS-CONTRACTS-TESTS-PLANSTORE-VERSION',
+    'SYS-CONTRACTS-TESTS-PROVIDER-ADAPTER',
+    'SYS-CONTRACTS-TESTS-START-RUN-BOUNDARY',
+    'SYS-CONTRACTS-TESTS-VALIDATION-HARNESS',
+    'SYS-CONTRACTS-TESTS-WORKSPACE-GRAPH-DRAFT',
+  ]) {
+    assert.match(contractsTestMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'packages/@dvt/contracts/test/compiled-code-ref\\.contract\\.test\\.ts',
+    'packages/@dvt/contracts/test/plan-admission-matrix\\.contract\\.test\\.ts',
+    'packages/@dvt/contracts/test/planner\\.contract\\.test\\.ts',
+    'packages/@dvt/contracts/test/plan-store-records-shape-sync\\.test\\.ts',
+    'packages/@dvt/contracts/test/provider-adapter\\.architecture\\.test\\.ts',
+    'packages/@dvt/contracts/test/start-run-boundary\\.contract\\.test\\.ts',
+    'packages/@dvt/contracts/test/validation\\.test\\.ts',
+    'packages/@dvt/contracts/test/workspace-graph-authoring-draft\\.contract\\.test\\.ts',
+  ]) {
+    assert.match(contractsTestMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(contractsTestMigration.sql, /SYS-CONTRACTS-PACKAGE-TESTS/);
+  assert.match(contractsTestMigration.sql, /children_required = true/);
+  assert.match(contractsTestMigration.sql, /repo_path = 'packages\/@dvt\/contracts\/test'/);
+  assert.match(contractsTestMigration.sql, /REL-CONTRACTS-PACKAGE-TESTS-CONTAINS-/);
+  assert.match(contractsTestMigration.sql, /'guards'/);
+  assert.match(contractsTestMigration.sql, /SYS-CONTRACTS-PLANNER-CONTRACTS/);
+  assert.match(contractsTestMigration.sql, /SYS-RUNTIME-ENGINE-CONTRACTS/);
+  assert.match(contractsTestMigration.sql, /ValidateContractsPackageTests/);
+  assert.match(contractsTestMigration.sql, /ValidateStartRunBoundaryContract/);
+  assert.match(contractsTestMigration.sql, /insert into architecture\.contract/);
+  assert.match(contractsTestMigration.sql, /insert into architecture\.component_port/);
+  assert.match(contractsTestMigration.sql, /insert into architecture\.component_test/);
+  assert.match(contractsTestMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(
+    contractsTestMigration.sql,
+    /nonfunctional tests require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(contractsTestMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(contractsTestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(contractsTestMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
