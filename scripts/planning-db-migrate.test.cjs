@@ -5204,6 +5204,31 @@ test('tracked migrations complete Canvas node workbench DB-local feature manifes
   assert.doesNotMatch(completenessMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations restore Canvas node workbench manifests after governance refresh', () => {
+  const migrations = readMigrationFiles();
+  const postRefreshMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '241_web_canvas_node_workbench_panel_post_refresh_manifest.sql'
+  );
+
+  assert.ok(postRefreshMigration);
+  assert.match(postRefreshMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(postRefreshMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(postRefreshMigration.sql, /CanvasNodeWorkbenchPanel/);
+  assert.match(postRefreshMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(postRefreshMigration.sql, /NodeWorkbenchTabItem/);
+  assert.match(postRefreshMigration.sql, /userStories/);
+  assert.match(postRefreshMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(postRefreshMigration.sql, /domainObjects/);
+  assert.match(postRefreshMigration.sql, /fowlerSignals/);
+  assert.match(postRefreshMigration.sql, /architectureGuards/);
+  assert.match(postRefreshMigration.sql, /cypressFlows/);
+  assert.match(postRefreshMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(postRefreshMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(postRefreshMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(postRefreshMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations canonicalize Web Canvas DBT and DVT field components', () => {
   const migrations = readMigrationFiles();
   const fieldCanonicalizationMigration = migrations.find(
