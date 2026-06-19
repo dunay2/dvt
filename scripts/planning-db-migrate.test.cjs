@@ -4209,6 +4209,103 @@ test('tracked migrations split Web Canvas controller orchestration into responsi
   assert.doesNotMatch(webCanvasControllerOrchestrationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Web Canvas shell chrome into responsibility leaves', () => {
+  const migrations = readMigrationFiles();
+  const webCanvasShellChromeMigration = migrations.find(
+    (migration) => migration.fileName === '219_web_canvas_shell_chrome_leaf_components.sql'
+  );
+
+  assert.ok(webCanvasShellChromeMigration);
+  assert.match(
+    webCanvasShellChromeMigration.sql,
+    /create temporary table web_canvas_shell_chrome_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-WEB-CANVAS-SHELL-CENTER-SURFACE',
+    'SYS-WEB-CANVAS-SHELL-ROUTE-STATE',
+    'SYS-WEB-CANVAS-SHELL-COMPOSITION-BUILDERS',
+    'SYS-WEB-CANVAS-SHELL-GRAPH-COMMANDS',
+    'SYS-WEB-CANVAS-SHELL-MENU-CONTRIBUTIONS',
+  ]) {
+    assert.match(webCanvasShellChromeMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/web/src/app/views/canvas/CanvasCenterSurface\\.tsx',
+    'apps/web/src/app/views/canvas/canvasRouteViewState\\.ts',
+    'apps/web/src/app/views/canvas/CanvasShell\\.tsx',
+    'apps/web/src/app/views/canvas/canvasShellGraphBuilder\\.ts',
+    'apps/web/src/app/views/canvas/CanvasWorkspaceMenuControls\\.tsx',
+  ]) {
+    assert.match(webCanvasShellChromeMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(webCanvasShellChromeMigration.sql, /SYS-WEB-CANVAS-SHELL-CHROME/);
+  assert.match(webCanvasShellChromeMigration.sql, /children_required = true/);
+  assert.match(webCanvasShellChromeMigration.sql, /REL-WEB-CANVAS-SHELL-CHROME-CONTAINS-/);
+  assert.match(webCanvasShellChromeMigration.sql, /'depends_on'/);
+  assert.match(webCanvasShellChromeMigration.sql, /ComposeCanvasShellChrome/);
+  assert.match(webCanvasShellChromeMigration.sql, /ReadCanvasRouteViewState/);
+  assert.match(webCanvasShellChromeMigration.sql, /RegisterCanvasShellMenuContribution/);
+  assert.match(webCanvasShellChromeMigration.sql, /SYS-WEB-CANVAS-GRAPH-SURFACE/);
+  assert.match(webCanvasShellChromeMigration.sql, /SYS-WEB-CANVAS-CANVAS-CONTEXT-MENU/);
+  assert.match(webCanvasShellChromeMigration.sql, /SYS-WEB-APP-COMPONENTS-CONSOLE/);
+  assert.match(webCanvasShellChromeMigration.sql, /insert into architecture\.contract/);
+  assert.match(webCanvasShellChromeMigration.sql, /insert into architecture\.component_port/);
+  assert.match(webCanvasShellChromeMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    webCanvasShellChromeMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.match(
+    webCanvasShellChromeMigration.sql,
+    /nonfunctional files require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(webCanvasShellChromeMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(webCanvasShellChromeMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webCanvasShellChromeMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize Web Canvas shell chrome aggregate repo paths', () => {
+  const migrations = readMigrationFiles();
+  const webCanvasShellChromePathMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '220_web_canvas_shell_chrome_parent_path_canonicalization.sql'
+  );
+
+  assert.ok(webCanvasShellChromePathMigration);
+  assert.match(
+    webCanvasShellChromePathMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SHELL-CHROME-PARENT-PATHS-20260619/
+  );
+
+  for (const componentId of [
+    'SYS-WEB-CANVAS-GRAPH-SURFACE',
+    'SYS-WEB-CANVAS-SHELL-MAIN-PANEL',
+    'SYS-WEB-CANVAS-SHELL-CENTER-SURFACE',
+    'SYS-WEB-CANVAS-SHELL-COMPOSITION-BUILDERS',
+  ]) {
+    assert.match(webCanvasShellChromePathMigration.sql, new RegExp(componentId));
+  }
+
+  assert.match(
+    webCanvasShellChromePathMigration.sql,
+    /docs\/architecture\/components\/web\/graph\/canvas-fowler-canon-component\.md/
+  );
+  assert.match(
+    webCanvasShellChromePathMigration.sql,
+    /docs\/architecture\/components\/web\/graph\/canvas-component-map-and-modernization-review\.md/
+  );
+  assert.match(webCanvasShellChromePathMigration.sql, /duplicate_repo_path/);
+  assert.match(webCanvasShellChromePathMigration.sql, /boundary_drift/);
+  assert.match(webCanvasShellChromePathMigration.sql, /concrete CanvasCenterSurface\.tsx/);
+  assert.match(webCanvasShellChromePathMigration.sql, /concrete CanvasShell\.tsx/);
+  assert.doesNotMatch(webCanvasShellChromePathMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(webCanvasShellChromePathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webCanvasShellChromePathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(

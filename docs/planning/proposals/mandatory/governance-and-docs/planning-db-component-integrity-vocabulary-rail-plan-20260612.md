@@ -152,6 +152,11 @@ Observed gaps:
   draft authoring, draft recovery, persistence guard, and test harness leaves.
   Old or nonfunctional files are deprecated only with explicit evidence, not as
   a filesystem-coverage shortcut.
+- The 2026-06-19 Web Canvas shell chrome slice keeps active shell files
+  functional and maps them into center surface, route state, composition
+  builders, graph command adapters, and menu/drawer contribution leaves. The
+  aggregate remains the shell chrome boundary; concrete files resolve to
+  responsibility leaves.
 
 ## Target State
 
