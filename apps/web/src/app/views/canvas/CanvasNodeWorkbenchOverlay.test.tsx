@@ -9,14 +9,14 @@ import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStra
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 
-const inspectorState = vi.hoisted(() => ({
+const workbenchState = vi.hoisted(() => ({
   props: null as null | Record<string, unknown>,
 }));
 
-vi.mock('./CanvasInspectorPanel', () => ({
-  CanvasInspectorPanel: (props: Record<string, unknown>) => {
-    inspectorState.props = props;
-    return <div data-testid="canvas-inspector-panel" />;
+vi.mock('./CanvasNodeWorkbenchPanel', () => ({
+  CanvasNodeWorkbenchPanel: (props: Record<string, unknown>) => {
+    workbenchState.props = props;
+    return <div data-testid="canvas-node-workbench-panel" />;
   },
 }));
 
@@ -70,7 +70,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
-    inspectorState.props = null;
+    workbenchState.props = null;
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -88,8 +88,8 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     renderOverlay(root);
 
     expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="canvas-inspector-panel"]')).not.toBeNull();
-    expect(inspectorState.props).toMatchObject({
+    expect(container.querySelector('[data-testid="canvas-node-workbench-panel"]')).not.toBeNull();
+    expect(workbenchState.props).toMatchObject({
       node: NODE,
       nodes: [NODE],
       activeRunId: 'run-42',
@@ -108,7 +108,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     });
 
     expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).toBeNull();
-    expect(inspectorState.props).toBeNull();
+    expect(workbenchState.props).toBeNull();
   });
 
   it('does not render when focus mode, hidden inspector, or missing node makes the workbench inactive', () => {
@@ -149,7 +149,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       renderOverlay(root, inactiveState);
 
       expect(container.querySelector('[data-slot="canvas-node-workbench-overlay"]')).toBeNull();
-      expect(inspectorState.props).toBeNull();
+      expect(workbenchState.props).toBeNull();
     }
   });
 });

@@ -2679,6 +2679,134 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
   );
 }
 
+async function readLocalFeatureMechanizationRails(client) {
+  const result = await client.query(`
+    select
+      rail_id as "railId",
+      feature_id as "featureId",
+      mechanization_status as "mechanizationStatus",
+      rail_name as "railName",
+      normalized_rail_name as "normalizedRailName",
+      rail_type as "railType",
+      ddd_owner as "dddOwner",
+      rail_status as "railStatus",
+      symbol_refs as "symbolRefs",
+      implementation_refs as "implementationRefs",
+      documentation_refs as "documentationRefs",
+      governing_sources as "governingSources",
+      allowed_implementation_surfaces as "allowedImplementationSurfaces",
+      architecture_guards as "architectureGuards",
+      completion_gate as "completionGate",
+      source_path as "sourcePath",
+      source_content_sha256 as "sourceContentSha256",
+      raw_rail as "rawRail",
+      raw_manifest as "rawManifest",
+      revision,
+      created_by as "createdBy",
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+    from ${schemaName}.feature_mechanization_local_rails
+    order by rail_id
+  `);
+
+  return result.rows;
+}
+
+async function refreshLocalFeatureMechanizationRailSourceHashes(client) {
+  await client.query(`
+    update ${schemaName}.feature_mechanization_local_rails rail
+    set
+      source_content_sha256 = file_ref.content_hash,
+      updated_at = now()
+    from ${schemaName}.governance_files file_ref
+    where file_ref.path = rail.source_path
+      and rail.source_content_sha256 <> file_ref.content_hash
+  `);
+}
+
+async function restoreLocalFeatureMechanizationRails(client, rails) {
+  await insertRows(
+    client,
+    'feature_mechanization_local_rails',
+    [
+      'rail_id',
+      'feature_id',
+      'mechanization_status',
+      'rail_name',
+      'normalized_rail_name',
+      'rail_type',
+      'ddd_owner',
+      'rail_status',
+      { name: 'symbol_refs', cast: 'jsonb' },
+      { name: 'implementation_refs', cast: 'jsonb' },
+      { name: 'documentation_refs', cast: 'jsonb' },
+      { name: 'governing_sources', cast: 'jsonb' },
+      { name: 'allowed_implementation_surfaces', cast: 'jsonb' },
+      { name: 'architecture_guards', cast: 'jsonb' },
+      { name: 'completion_gate', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_rail', cast: 'jsonb' },
+      { name: 'raw_manifest', cast: 'jsonb' },
+      'revision',
+      'created_by',
+      { name: 'created_at', cast: 'timestamptz' },
+      { name: 'updated_at', cast: 'timestamptz' },
+    ],
+    rails,
+    (rail) => [
+      rail.railId,
+      rail.featureId,
+      rail.mechanizationStatus,
+      rail.railName,
+      rail.normalizedRailName,
+      rail.railType,
+      rail.dddOwner,
+      rail.railStatus,
+      toJson(rail.symbolRefs),
+      toJson(rail.implementationRefs),
+      toJson(rail.documentationRefs),
+      toJson(rail.governingSources),
+      toJson(rail.allowedImplementationSurfaces),
+      toJson(rail.architectureGuards),
+      toJson(rail.completionGate),
+      rail.sourcePath,
+      rail.sourceContentSha256,
+      toJson(rail.rawRail),
+      toJson(rail.rawManifest),
+      rail.revision,
+      rail.createdBy,
+      rail.createdAt,
+      rail.updatedAt,
+    ],
+    {
+      suffix: `on conflict (rail_id) do update set
+        feature_id = excluded.feature_id,
+        mechanization_status = excluded.mechanization_status,
+        rail_name = excluded.rail_name,
+        normalized_rail_name = excluded.normalized_rail_name,
+        rail_type = excluded.rail_type,
+        ddd_owner = excluded.ddd_owner,
+        rail_status = excluded.rail_status,
+        symbol_refs = excluded.symbol_refs,
+        implementation_refs = excluded.implementation_refs,
+        documentation_refs = excluded.documentation_refs,
+        governing_sources = excluded.governing_sources,
+        allowed_implementation_surfaces = excluded.allowed_implementation_surfaces,
+        architecture_guards = excluded.architecture_guards,
+        completion_gate = excluded.completion_gate,
+        source_path = excluded.source_path,
+        source_content_sha256 = excluded.source_content_sha256,
+        raw_rail = excluded.raw_rail,
+        raw_manifest = excluded.raw_manifest,
+        revision = greatest(${schemaName}.feature_mechanization_local_rails.revision, excluded.revision),
+        updated_at = now()`,
+    }
+  );
+
+  await refreshLocalFeatureMechanizationRailSourceHashes(client);
+}
+
 async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.frontend_mechanical_truth_surfaces`);
 
@@ -3270,6 +3398,9 @@ async function importContent(options = {}) {
 
   try {
     await runMigrations({ client, silent: true });
+    const localFeatureMechanizationRails = includeGovernance
+      ? await readLocalFeatureMechanizationRails(client)
+      : [];
     await beginImportTransaction(client);
     const planningTaskIds = includeGovernance
       ? mergePlanningTaskIds(
@@ -3300,6 +3431,7 @@ async function importContent(options = {}) {
         client,
         knowledgeIntakeRepositoryReferenceSnapshot
       );
+      await restoreLocalFeatureMechanizationRails(client, localFeatureMechanizationRails);
       await reconcileDeprecatedLocalRailSources(client);
     }
     await client.query('commit');
@@ -4500,12 +4632,15 @@ module.exports = {
   normalizeText,
   parseArgs,
   readTrackedDocumentPaths,
+  readLocalFeatureMechanizationRails,
   readLocalPlanningTaskIds,
   readGovernanceSourceState,
   readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,
   readYamlSource,
   reconcileDeprecatedLocalRailSources,
+  refreshLocalFeatureMechanizationRailSourceHashes,
+  restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,
 };

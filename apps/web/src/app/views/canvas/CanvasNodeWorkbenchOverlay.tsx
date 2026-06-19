@@ -1,12 +1,12 @@
 /** Owned concern: render the contextual NodeWorkbench overlay presentation shell. */
 import type { ReactNode } from 'react';
 
-import { CanvasInspectorPanel } from './CanvasInspectorPanel';
 import type {
   CanvasShellChromeCommands,
   CanvasShellLayout,
   CanvasShellPanels,
 } from './canvasShell.types';
+import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
 
 const CANVAS_NODE_WORKBENCH_OVERLAY_SURFACE_CLASS_NAME =
   'absolute top-16 right-4 bottom-4 z-20 w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-md border border-(--border-default) bg-(--surface-panel) shadow-xl';
@@ -58,7 +58,7 @@ export function CanvasNodeWorkbenchOverlay({
 
   return (
     <CanvasNodeWorkbenchOverlaySurface>
-      <CanvasInspectorPanel
+      <CanvasNodeWorkbenchPanel
         node={panels.inspectorNode}
         nodes={panels.inspectorGraphNodes}
         edges={panels.inspectorGraphEdges}
@@ -66,7 +66,7 @@ export function CanvasNodeWorkbenchOverlay({
         registeredPlugins={panels.registeredPlugins}
         preferredTabId={panels.inspectorPreferredTabId}
         preferredTabRequestId={panels.inspectorPreferredTabRequestId}
-        onHide={onHide}
+        onClose={onHide}
         authoring={panels.inspectorAuthoring}
       />
     </CanvasNodeWorkbenchOverlaySurface>
