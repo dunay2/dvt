@@ -8,17 +8,17 @@ const {
   shouldFailIntegrityCheck,
 } = require('./planning-db-integrity-check.cjs');
 
-test('Planning DB integrity check reports historical debt without failing report mode', () => {
+test('Planning DB integrity check reports historical component debt without failing report mode', () => {
   const result = buildIntegrityCheckResult({
-    componentRows: [],
-    sourceDriftRows: [],
-    railRows: [
+    componentRows: [
       {
-        finding_kind: 'gap_rail',
+        finding_kind: 'component_evidence_gap',
         severity: 'warning',
-        rail_name: 'ProposedWidgetQuery',
+        component_id: 'SYS-HISTORICAL-EVIDENCE',
       },
     ],
+    sourceDriftRows: [],
+    railRows: [],
     strict: false,
   });
 
@@ -26,17 +26,17 @@ test('Planning DB integrity check reports historical debt without failing report
   assert.equal(shouldFailIntegrityCheck(result), false);
   assert.deepEqual(result.counts, {
     componentIntegrity: {
-      total: 0,
-      blocker: 0,
-      error: 0,
-      warning: 0,
-      info: 0,
-    },
-    railVocabulary: {
       total: 1,
       blocker: 0,
       error: 0,
       warning: 1,
+      info: 0,
+    },
+    railVocabulary: {
+      total: 0,
+      blocker: 0,
+      error: 0,
+      warning: 0,
       info: 0,
     },
     sourceDrift: {
@@ -207,16 +207,10 @@ test('Planning DB integrity check fails report mode on any new surface-named rai
   ]);
 });
 
-test('Planning DB integrity check tightens gap rail baseline after implemented refs win', () => {
-  const baselineGapRails = Array.from({ length: 40 }, (_, index) => ({
-    finding_kind: 'gap_rail',
-    severity: 'warning',
-    rail_name: `HistoricalGapRail${index}`,
-  }));
-
+test('Planning DB integrity check fails report mode on any new gap rail after cleanup', () => {
   const baselineResult = buildIntegrityCheckResult({
     componentRows: [],
-    railRows: baselineGapRails,
+    railRows: [],
     strict: false,
   });
 
@@ -226,7 +220,6 @@ test('Planning DB integrity check tightens gap rail baseline after implemented r
   const regressionResult = buildIntegrityCheckResult({
     componentRows: [],
     railRows: [
-      ...baselineGapRails,
       {
         finding_kind: 'gap_rail',
         severity: 'warning',
@@ -242,15 +235,15 @@ test('Planning DB integrity check tightens gap rail baseline after implemented r
       surface: 'rail_vocabulary',
       kind: 'gap_rail',
       metric: 'total',
-      actual: 41,
-      allowed: 40,
+      actual: 1,
+      allowed: 0,
     },
     {
       surface: 'rail_vocabulary',
       kind: 'gap_rail',
       metric: 'warning',
-      actual: 41,
-      allowed: 40,
+      actual: 1,
+      allowed: 0,
     },
   ]);
 });

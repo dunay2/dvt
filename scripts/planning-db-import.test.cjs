@@ -33,6 +33,7 @@ const {
   readLocalFeatureMechanizationRails,
   readLocalPlanningTaskIds,
   reconcileDeprecatedLocalRailSources,
+  reconcileSupersededCanvasNodeWorkbenchPanel,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,
@@ -1328,6 +1329,51 @@ test('planning DB import reconciles deprecated DB-local rail source paths after 
   assert.match(queries[0].sql, /governance_files/);
   assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
   assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
+});
+
+test('planning DB import keeps Canvas node workbench panel authority when implementation files exist', async () => {
+  const queries = [];
+
+  await reconcileSupersededCanvasNodeWorkbenchPanel({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      return { rows: [{ file_count: 2 }] };
+    },
+  });
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /governance_files/);
+  assert.match(queries[0].sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
+  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
+});
+
+test('planning DB import reasserts superseded Canvas node workbench panel authority when files are absent', async () => {
+  const queries = [];
+
+  await reconcileSupersededCanvasNodeWorkbenchPanel({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      if (queries.length === 1) {
+        return { rows: [{ file_count: 0 }] };
+      }
+      return { rows: [] };
+    },
+  });
+
+  assert.equal(queries.length, 2);
+  const retirementQuery = queries[1];
+  assert.match(retirementQuery.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(retirementQuery.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(retirementQuery.sql, /governance_component_local_definitions/);
+  assert.match(retirementQuery.sql, /architecture\.component/);
+  assert.match(retirementQuery.sql, /architecture\.component_port/);
+  assert.match(retirementQuery.sql, /architecture\.component_relation/);
+  assert.match(retirementQuery.sql, /governance_component_files/);
+  assert.match(retirementQuery.sql, /governance_files/);
+  assert.match(retirementQuery.sql, /status = 'deprecated'/);
+  assert.match(retirementQuery.sql, /status = 'superseded'/);
+  assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
 });
 
 test('planning DB import preserves DB-local feature mechanization rails during governance reload', async () => {

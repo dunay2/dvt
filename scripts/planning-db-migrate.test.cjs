@@ -3911,6 +3911,412 @@ test('tracked migrations map source import catalog view and retire duplicate tab
   assert.doesNotMatch(sourceImportCatalogViewMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile remaining frontend gap rails and tighten local retirement precedence', () => {
+  const migrations = readMigrationFiles();
+  const frontendGapRailMigration = migrations.find(
+    (migration) => migration.fileName === '226_reconcile_remaining_frontend_gap_rails.sql'
+  );
+
+  assert.ok(frontendGapRailMigration);
+  assert.match(frontendGapRailMigration.sql, /FRONTEND-GAP-RAIL-RECONCILIATION-20260619/);
+  assert.match(frontendGapRailMigration.sql, /ApplyWorkspaceGraphAuthoringCommand/);
+  assert.match(frontendGapRailMigration.sql, /WorkspaceGraphAuthoringCommandSchema/);
+  assert.match(frontendGapRailMigration.sql, /ValidateCanvasTransformationRun/);
+  assert.match(frontendGapRailMigration.sql, /validateTransformationGraph/);
+  assert.match(frontendGapRailMigration.sql, /ListAdminRoles/);
+  assert.match(frontendGapRailMigration.sql, /ListAdminAuditLog/);
+  assert.match(frontendGapRailMigration.sql, /createApiWorkspaceAdminReadPort/);
+  assert.match(frontendGapRailMigration.sql, /SaveExecutionTemplateArtifact/);
+  assert.match(frontendGapRailMigration.sql, /RunPersistedDbtProject/);
+  assert.match(frontendGapRailMigration.sql, /'retired'/);
+  assert.match(frontendGapRailMigration.sql, /not rail_group\.has_active_non_gap/);
+  assert.match(frontendGapRailMigration.sql, /rail\.rail_source = 'local'/);
+  assert.doesNotMatch(frontendGapRailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(frontendGapRailMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations ignore imported gap duplicate candidates when local implementation exists', () => {
+  const migrations = readMigrationFiles();
+  const importedGapDuplicateMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '227_ignore_imported_gap_refs_when_local_implementation_exists.sql'
+  );
+
+  assert.ok(importedGapDuplicateMigration);
+  assert.match(importedGapDuplicateMigration.sql, /has_active_non_gap/);
+  assert.match(
+    importedGapDuplicateMigration.sql,
+    /not \(rail_group\.has_active_non_gap and rail\.is_gap\)/
+  );
+  assert.match(importedGapDuplicateMigration.sql, /canonical_candidate_count > 1/);
+  assert.match(importedGapDuplicateMigration.sql, /rail\.rail_source = 'local'/);
+  assert.doesNotMatch(importedGapDuplicateMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(importedGapDuplicateMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations retire phantom Canvas node workbench panel reactivation', () => {
+  const migrations = readMigrationFiles();
+  const phantomPanelMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '228_retire_canvas_node_workbench_panel_phantom_reactivation.sql'
+  );
+
+  assert.ok(phantomPanelMigration);
+  assert.match(phantomPanelMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(phantomPanelMigration.sql, /PANEL-PHANTOM-RETIREMENT-20260619/);
+  assert.match(phantomPanelMigration.sql, /CanvasNodeWorkbenchPanel\.tsx is not tracked/);
+  assert.match(
+    phantomPanelMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-INSPECTOR-PANEL/
+  );
+  assert.match(phantomPanelMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-PANEL/);
+  assert.match(phantomPanelMigration.sql, /status = 'deprecated'/);
+  assert.match(phantomPanelMigration.sql, /status = 'drift'/);
+  assert.match(phantomPanelMigration.sql, /scripts\/planning-db-migrate\.test\.cjs/);
+  assert.doesNotMatch(phantomPanelMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(phantomPanelMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations sanitize Canvas node workbench phantom panel drift relations', () => {
+  const migrations = readMigrationFiles();
+  const relationDriftMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '229_sanitize_canvas_node_workbench_panel_drift_relations.sql'
+  );
+
+  assert.ok(relationDriftMigration);
+  assert.match(relationDriftMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(relationDriftMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-PANEL/);
+  assert.match(relationDriftMigration.sql, /REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-PANEL/);
+  assert.match(
+    relationDriftMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL/
+  );
+  assert.match(relationDriftMigration.sql, /status = 'implemented'/);
+  assert.match(relationDriftMigration.sql, /Legacy relation id retained/);
+  assert.doesNotMatch(relationDriftMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(relationDriftMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Canvas node workbench phantom panel retirement evidence', () => {
+  const migrations = readMigrationFiles();
+  const retirementEvidenceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '230_complete_canvas_node_workbench_panel_retirement_evidence.sql'
+  );
+
+  assert.ok(retirementEvidenceMigration);
+  assert.match(
+    retirementEvidenceMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-PHANTOM-RETIREMENT-20260619/
+  );
+  assert.match(retirementEvidenceMigration.sql, /architecture\.design_scope/);
+  assert.match(retirementEvidenceMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(retirementEvidenceMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-PANEL/);
+  assert.match(retirementEvidenceMigration.sql, /deprecated phantom component/);
+  assert.doesNotMatch(retirementEvidenceMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(retirementEvidenceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations retire Canvas node workbench overlay panel alias relation', () => {
+  const migrations = readMigrationFiles();
+  const relationAliasRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '231_retire_canvas_node_workbench_overlay_panel_alias_relation.sql'
+  );
+
+  assert.ok(relationAliasRetirementMigration);
+  assert.match(
+    relationAliasRetirementMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-RELATION-DEDUP-20260619/
+  );
+  assert.match(relationAliasRetirementMigration.sql, /architecture\.design_scope/);
+  assert.match(relationAliasRetirementMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-OVERLAY/);
+  assert.match(relationAliasRetirementMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-PANEL/);
+  assert.match(
+    relationAliasRetirementMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-INSPECTOR-PANEL/
+  );
+  assert.match(
+    relationAliasRetirementMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL/
+  );
+  assert.match(relationAliasRetirementMigration.sql, /'may_delete'/);
+  assert.match(
+    relationAliasRetirementMigration.sql,
+    /delete from architecture\.component_relation relation\s+where relation\.relation_id = 'REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL'/m
+  );
+  assert.doesNotMatch(relationAliasRetirementMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations revert untracked Canvas node workbench panel reactivation', () => {
+  const migrations = readMigrationFiles();
+  const untrackedReactivationReversalMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '232_revert_untracked_canvas_node_workbench_panel_reactivation.sql'
+  );
+
+  assert.ok(untrackedReactivationReversalMigration);
+  assert.match(
+    untrackedReactivationReversalMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-UNTRACKED-REACTIVATION-REVERSAL-20260619/
+  );
+  assert.match(untrackedReactivationReversalMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(untrackedReactivationReversalMigration.sql, /status = 'superseded'/);
+  assert.match(untrackedReactivationReversalMigration.sql, /status = 'deprecated'/);
+  assert.match(
+    untrackedReactivationReversalMigration.sql,
+    /delete from planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.match(
+    untrackedReactivationReversalMigration.sql,
+    /delete from planning_query_store\.governance_files/
+  );
+  assert.match(
+    untrackedReactivationReversalMigration.sql,
+    /delete from planning_query_store\.schema_migrations/
+  );
+  assert.match(
+    untrackedReactivationReversalMigration.sql,
+    /225_web_canvas_node_workbench_panel_reactivation/
+  );
+  assert.match(
+    untrackedReactivationReversalMigration.sql,
+    /226_web_canvas_node_workbench_panel_effective_reactivation/
+  );
+  assert.match(
+    untrackedReactivationReversalMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-PANEL/
+  );
+  assert.doesNotMatch(untrackedReactivationReversalMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations harden untracked Canvas node workbench panel reversal', () => {
+  const migrations = readMigrationFiles();
+  const untrackedReactivationHardeningMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '233_harden_untracked_canvas_node_workbench_panel_reversal.sql'
+  );
+
+  assert.ok(untrackedReactivationHardeningMigration);
+  assert.match(
+    untrackedReactivationHardeningMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-UNTRACKED-REACTIVATION-HARDENING-20260619/
+  );
+  assert.match(
+    untrackedReactivationHardeningMigration.sql,
+    /delete from planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    untrackedReactivationHardeningMigration.sql,
+    /local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties/
+  );
+  assert.match(
+    untrackedReactivationHardeningMigration.sql,
+    /delete from planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.match(
+    untrackedReactivationHardeningMigration.sql,
+    /delete from architecture\.component_port/
+  );
+  assert.match(
+    untrackedReactivationHardeningMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL/
+  );
+  assert.match(
+    untrackedReactivationHardeningMigration.sql,
+    /227_web_canvas_node_workbench_panel_feature_mechanization/
+  );
+  assert.match(untrackedReactivationHardeningMigration.sql, /status = 'deprecated'/);
+  assert.match(untrackedReactivationHardeningMigration.sql, /status = 'superseded'/);
+  assert.doesNotMatch(untrackedReactivationHardeningMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations neutralize parallel Canvas node workbench panel reactivation without reopening it', () => {
+  const migrations = readMigrationFiles();
+  const parallelReactivationNeutralizationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '234_neutralize_parallel_canvas_node_workbench_panel_reactivation.sql'
+  );
+
+  assert.ok(parallelReactivationNeutralizationMigration);
+  assert.match(
+    parallelReactivationNeutralizationMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-PARALLEL-REACTIVATION-NEUTRALIZATION-20260619/
+  );
+  assert.match(
+    parallelReactivationNeutralizationMigration.sql,
+    /delete from planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    parallelReactivationNeutralizationMigration.sql,
+    /local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties/
+  );
+  assert.match(
+    parallelReactivationNeutralizationMigration.sql,
+    /delete from architecture\.component_port/
+  );
+  assert.match(
+    parallelReactivationNeutralizationMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL/
+  );
+  assert.match(parallelReactivationNeutralizationMigration.sql, /status = 'deprecated'/);
+  assert.match(parallelReactivationNeutralizationMigration.sql, /status = 'superseded'/);
+  assert.doesNotMatch(
+    parallelReactivationNeutralizationMigration.sql,
+    /delete from planning_query_store\.schema_migrations/
+  );
+  assert.doesNotMatch(parallelReactivationNeutralizationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations neutralize Canvas panel reassertion and prefer local implemented rails', () => {
+  const migrations = readMigrationFiles();
+  const panelReassertionNeutralizationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '235_canvas_panel_reassertion_neutralization_and_rail_precedence.sql'
+  );
+
+  assert.ok(panelReassertionNeutralizationMigration);
+  assert.match(
+    panelReassertionNeutralizationMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-REASSERTION-NEUTRALIZATION-20260619/
+  );
+  assert.match(
+    panelReassertionNeutralizationMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-PROFILE-REASSERTION-20260619/
+  );
+  assert.match(
+    panelReassertionNeutralizationMigration.sql,
+    /delete from planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    panelReassertionNeutralizationMigration.sql,
+    /delete from architecture\.component_port/
+  );
+  assert.match(
+    panelReassertionNeutralizationMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL/
+  );
+  assert.match(
+    panelReassertionNeutralizationMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(panelReassertionNeutralizationMigration.sql, /has_active_local_non_gap/);
+  assert.match(
+    panelReassertionNeutralizationMigration.sql,
+    /not \(rail_group\.has_active_local_non_gap and rail\.rail_source <> 'local'\)/
+  );
+  assert.match(panelReassertionNeutralizationMigration.sql, /status = 'deprecated'/);
+  assert.match(panelReassertionNeutralizationMigration.sql, /status = 'superseded'/);
+  assert.doesNotMatch(panelReassertionNeutralizationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations neutralize Canvas panel feature manifest rehydration', () => {
+  const migrations = readMigrationFiles();
+  const featureManifestRehydrationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '236_neutralize_canvas_panel_feature_manifest_rehydration.sql'
+  );
+
+  assert.ok(featureManifestRehydrationMigration);
+  assert.match(
+    featureManifestRehydrationMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-FEATURE-MANIFEST-REHYDRATION-NEUTRALIZATION-20260619/
+  );
+  assert.match(
+    featureManifestRehydrationMigration.sql,
+    /local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties/
+  );
+  assert.match(
+    featureManifestRehydrationMigration.sql,
+    /delete from planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(featureManifestRehydrationMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(featureManifestRehydrationMigration.sql, /status = 'deprecated'/);
+  assert.match(featureManifestRehydrationMigration.sql, /status = 'superseded'/);
+  assert.doesNotMatch(featureManifestRehydrationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations retire stale Canvas panel feature manifest without reopening component files', () => {
+  const migrations = readMigrationFiles();
+  const staleFeatureManifestRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '239_retire_canvas_node_workbench_panel_feature_manifest.sql'
+  );
+
+  assert.ok(staleFeatureManifestRetirementMigration);
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-FEATURE-MANIFEST-RETIREMENT-20260619/
+  );
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/
+  );
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties/
+  );
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /delete from planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /delete from planning_query_store\.governance_component_files/
+  );
+  assert.match(staleFeatureManifestRetirementMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(staleFeatureManifestRetirementMigration.sql, /status = 'deprecated'/);
+  assert.doesNotMatch(staleFeatureManifestRetirementMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations restore active Canvas panel authority after retirement merge', () => {
+  const migrations = readMigrationFiles();
+  const activeMergeReconciliationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '242_restore_canvas_node_workbench_panel_after_retirement_merge.sql'
+  );
+
+  assert.ok(activeMergeReconciliationMigration);
+  assert.match(
+    activeMergeReconciliationMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-ACTIVE-MERGE-RECONCILIATION-20260619/
+  );
+  assert.match(activeMergeReconciliationMigration.sql, /'implemented'/);
+  assert.match(activeMergeReconciliationMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(activeMergeReconciliationMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(activeMergeReconciliationMigration.sql, /ConfigureCanvasDbtNode/);
+  assert.match(activeMergeReconciliationMigration.sql, /ConfigureCanvasDvtNode/);
+  assert.match(activeMergeReconciliationMigration.sql, /PRIMARY_NODE_WORKBENCH_SECTION_IDS/);
+  assert.match(activeMergeReconciliationMigration.sql, /NodeWorkbenchTabItem/);
+  assert.match(activeMergeReconciliationMigration.sql, /renderSectionBody/);
+  assert.match(activeMergeReconciliationMigration.sql, /resolveActiveNodeWorkbenchTab/);
+  assert.match(activeMergeReconciliationMigration.sql, /docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(activeMergeReconciliationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations restore active Canvas panel relations after retirement merge', () => {
+  const migrations = readMigrationFiles();
+  const relationRestoreMigration = migrations.find(
+    (migration) => migration.fileName === '243_restore_canvas_node_workbench_panel_relations.sql'
+  );
+
+  assert.ok(relationRestoreMigration);
+  assert.match(
+    relationRestoreMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-RELATION-RESTORE-20260619/
+  );
+  assert.match(relationRestoreMigration.sql, /REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-PANEL/);
+  assert.match(
+    relationRestoreMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL/
+  );
+  assert.match(relationRestoreMigration.sql, /architecture\.component_relation/);
+  assert.match(relationRestoreMigration.sql, /must_prove/);
+  assert.match(relationRestoreMigration.sql, /'implemented'/);
+  assert.doesNotMatch(relationRestoreMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split API HTTP entrypoint tests into evidence leaves', () => {
   const migrations = readMigrationFiles();
   const apiHttpTestLeafMigration = migrations.find(
@@ -6214,7 +6620,15 @@ test('latest command/query rail projection counts canonical component docs as du
     /when rail\.source_path like 'docs\/architecture\/components\/%' then 2/
   );
   assert.match(latestRailProjectionMigration.sql, /count\(\*\) filter \(/);
-  assert.match(latestRailProjectionMigration.sql, /where authority_priority <= 2/);
+  assert.match(latestRailProjectionMigration.sql, /where rail\.authority_priority <= 2/);
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /not \(rail_group\.has_active_non_gap and rail\.is_gap\)/
+  );
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /not \(rail_group\.has_active_local_non_gap and rail\.rail_source <> 'local'\)/
+  );
   assert.match(
     latestRailProjectionMigration.sql,
     /lower\(coalesce\(rail_status, ''\)\) not in \('deprecated', 'retired'\)/
@@ -6222,7 +6636,7 @@ test('latest command/query rail projection counts canonical component docs as du
   assert.match(latestRailProjectionMigration.sql, /as canonical_candidate_count/);
 });
 
-test('latest command/query rail projection prefers implemented refs over imported gaps', () => {
+test('latest command/query rail projection prefers local implemented refs over imported declarations', () => {
   const migrations = readMigrationFiles();
   const latestRailProjectionMigration = migrations
     .filter((migration) =>
@@ -6233,11 +6647,17 @@ test('latest command/query rail projection prefers implemented refs over importe
   assert.ok(latestRailProjectionMigration);
   assert.equal(
     latestRailProjectionMigration.fileName,
-    '154_persist_post_import_rail_reconciliation.sql'
+    '235_canvas_panel_reassertion_neutralization_and_rail_precedence.sql'
   );
   assert.match(
     latestRailProjectionMigration.sql,
-    /when rail\.source_path like 'docs\/archive\/%' then 'retired'/
+    /when rail\.source_path like 'docs\/archive\/%' then 5/
+  );
+  assert.match(latestRailProjectionMigration.sql, /has_active_non_gap/);
+  assert.match(latestRailProjectionMigration.sql, /has_active_local_non_gap/);
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /not \(rail_group\.has_active_local_non_gap and rail\.rail_source <> 'local'\)/
   );
   assert.match(
     latestRailProjectionMigration.sql,
