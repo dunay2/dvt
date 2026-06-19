@@ -3841,6 +3841,59 @@ test('tracked migrations canonicalize Web Canvas draft lifecycle aggregate repo 
   assert.doesNotMatch(webCanvasDraftPathMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Web UI primitives into design-system leaves', () => {
+  const migrations = readMigrationFiles();
+  const webUiPrimitiveMigration = migrations.find(
+    (migration) => migration.fileName === '212_web_ui_primitive_leaf_components.sql'
+  );
+
+  assert.ok(webUiPrimitiveMigration);
+  assert.match(webUiPrimitiveMigration.sql, /create temporary table web_ui_primitive_leaf_map/);
+
+  for (const componentId of [
+    'SYS-WEB-UI-PRIMITIVES-FOUNDATION',
+    'SYS-WEB-UI-PRIMITIVES-FORM-CONTROLS',
+    'SYS-WEB-UI-PRIMITIVES-OVERLAYS',
+    'SYS-WEB-UI-PRIMITIVES-NAVIGATION',
+    'SYS-WEB-UI-PRIMITIVES-FEEDBACK',
+    'SYS-WEB-UI-PRIMITIVES-DATA-DISPLAY',
+    'SYS-WEB-UI-PRIMITIVES-COMPOSITION-LAYOUT',
+  ]) {
+    assert.match(webUiPrimitiveMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/web/src/app/components/ui/button\\.tsx',
+    'apps/web/src/app/components/ui/dialog\\.tsx',
+    'apps/web/src/app/components/ui/navigation-menu\\.tsx',
+    'apps/web/src/app/components/ui/alert\\.tsx',
+    'apps/web/src/app/components/ui/table\\.tsx',
+    'apps/web/src/app/components/ui/sidebar\\.tsx',
+    'apps/web/src/app/components/ui/utils\\.ts',
+  ]) {
+    assert.match(webUiPrimitiveMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(webUiPrimitiveMigration.sql, /SYS-WEB-APP-COMPONENTS-UI/);
+  assert.match(webUiPrimitiveMigration.sql, /children_required = true/);
+  assert.match(webUiPrimitiveMigration.sql, /REL-WEB-APP-COMPONENTS-UI-CONTAINS-/);
+  assert.match(webUiPrimitiveMigration.sql, /'depends_on'/);
+  assert.match(webUiPrimitiveMigration.sql, /ReadWebUiPrimitiveFoundation/);
+  assert.match(webUiPrimitiveMigration.sql, /RenderWebUiFormControlPrimitive/);
+  assert.match(webUiPrimitiveMigration.sql, /RenderWebUiOverlayPrimitive/);
+  assert.match(webUiPrimitiveMigration.sql, /insert into architecture\.contract/);
+  assert.match(webUiPrimitiveMigration.sql, /insert into architecture\.component_port/);
+  assert.match(webUiPrimitiveMigration.sql, /insert into architecture\.component_test/);
+  assert.match(webUiPrimitiveMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(
+    webUiPrimitiveMigration.sql,
+    /nonfunctional primitives require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(webUiPrimitiveMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(webUiPrimitiveMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webUiPrimitiveMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
