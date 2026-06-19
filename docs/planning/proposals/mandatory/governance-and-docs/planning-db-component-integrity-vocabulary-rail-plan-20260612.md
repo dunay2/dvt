@@ -157,6 +157,13 @@ Observed gaps:
   builders, graph command adapters, and menu/drawer contribution leaves. The
   aggregate remains the shell chrome boundary; concrete files resolve to
   responsibility leaves.
+- The 2026-06-19 API infrastructure slice keeps active infrastructure,
+  plugin, and database-pool files functional and maps them into auth,
+  backpressure/admission telemetry, start-run admission adapter, runtime
+  telemetry, workspace draft persistence, workspace local adapters, warehouse
+  source adapter, and runtime foundation leaves. The aggregate remains the API
+  infrastructure boundary; old or nonfunctional files require explicit
+  deprecation evidence.
 
 ## Target State
 
