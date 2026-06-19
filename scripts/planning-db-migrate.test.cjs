@@ -3861,6 +3861,56 @@ test('tracked migrations reconcile active Canvas contextual workbench panel owne
   assert.doesNotMatch(contextualWorkbenchPanelMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations map source import catalog view and retire duplicate table rail', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportCatalogViewMigration = migrations.find(
+    (migration) => migration.fileName === '225_web_source_import_catalog_view_component.sql'
+  );
+
+  assert.ok(sourceImportCatalogViewMigration);
+  assert.match(sourceImportCatalogViewMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
+  assert.match(
+    sourceImportCatalogViewMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/SourceImportCatalogView\.tsx/
+  );
+  assert.match(
+    sourceImportCatalogViewMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/SourceImportCatalogView\.test\.tsx/
+  );
+  assert.match(sourceImportCatalogViewMigration.sql, /SourceImportCatalogViewPresentation/);
+  assert.match(sourceImportCatalogViewMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(
+    sourceImportCatalogViewMigration.sql,
+    /REL-WEB-CANVAS-SOURCE-IMPORT-WIZARD-CONTAINS-CATALOG-VIEW/
+  );
+  assert.match(
+    sourceImportCatalogViewMigration.sql,
+    /REL-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW-DEPENDS-ON-CORE/
+  );
+  assert.match(
+    sourceImportCatalogViewMigration.sql,
+    /REL-WEB-CANVAS-SOURCE-IMPORT-STEPS-DEPENDS-ON-CATALOG-VIEW/
+  );
+  assert.match(
+    sourceImportCatalogViewMigration.sql,
+    /WEB-SOURCE-IMPORT-CONTEXTUAL-CATALOG-20260619/
+  );
+  assert.match(sourceImportCatalogViewMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(sourceImportCatalogViewMigration.sql, /rail_status = 'retired'/);
+  assert.match(sourceImportCatalogViewMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(
+    sourceImportCatalogViewMigration.sql,
+    /Duplicate local frontend component projection/
+  );
+  assert.match(sourceImportCatalogViewMigration.sql, /frontend-command-query-rail-inventory\.md/);
+  assert.match(sourceImportCatalogViewMigration.sql, /ADR-0058-warehouse-source-import-rails\.md/);
+  assert.doesNotMatch(
+    sourceImportCatalogViewMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+  assert.doesNotMatch(sourceImportCatalogViewMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split API HTTP entrypoint tests into evidence leaves', () => {
   const migrations = readMigrationFiles();
   const apiHttpTestLeafMigration = migrations.find(
