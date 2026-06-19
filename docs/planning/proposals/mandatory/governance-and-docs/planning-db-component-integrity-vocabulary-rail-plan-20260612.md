@@ -147,6 +147,11 @@ Observed gaps:
   `proposed`.
 - Historical debt must be reported without blocking the first baseline, but new
   hard failures must be wired into CI as stable rails.
+- The 2026-06-19 Web Canvas controller orchestration slice keeps active
+  `useCanvasController*` files functional and maps them into hook core, active
+  draft authoring, draft recovery, persistence guard, and test harness leaves.
+  Old or nonfunctional files are deprecated only with explicit evidence, not as
+  a filesystem-coverage shortcut.
 
 ## Target State
 
