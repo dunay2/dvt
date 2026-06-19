@@ -1583,6 +1583,19 @@ symbols:
     unitTests:
       - scripts/planning-db-import.test.cjs
       - scripts/planning-db-query.test.cjs
+  - name: reconcileSupersededCanvasNodeWorkbenchPanel
+    path: scripts/planning-db-import.cjs
+    dddOwner: ComponentIntegrityReadModel
+    cqRails:
+      - ValidateComponentIntegrity
+      - ValidateSourceDrift
+    fowlerSignals:
+      - post-import governance snapshots cannot reactivate superseded CanvasNodeWorkbenchPanel files that are absent from the filesystem
+    architectureGuard: node --test scripts/planning-db-import.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-import.test.cjs
+      - scripts/planning-db-migrate.test.cjs
   - name: crypto
     path: scripts/planning-db/code-symbol-inventory.cjs
     dddOwner: CodeSymbolInventoryReadModel

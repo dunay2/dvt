@@ -32,6 +32,7 @@ const {
   readTrackedDocumentPaths,
   readLocalPlanningTaskIds,
   reconcileDeprecatedLocalRailSources,
+  reconcileSupersededCanvasNodeWorkbenchPanel,
   runPlanningImport,
   sha256,
 } = require('./planning-db-import.cjs');
@@ -1325,6 +1326,29 @@ test('planning DB import reconciles deprecated DB-local rail source paths after 
   assert.match(queries[0].sql, /planning-db-import-reconcile-deprecated-local-rail-sources/);
   assert.match(queries[0].sql, /governance_files/);
   assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
+  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
+});
+
+test('planning DB import reasserts superseded Canvas node workbench panel authority', async () => {
+  const queries = [];
+
+  await reconcileSupersededCanvasNodeWorkbenchPanel({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+    },
+  });
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(queries[0].sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(queries[0].sql, /governance_component_local_definitions/);
+  assert.match(queries[0].sql, /architecture\.component/);
+  assert.match(queries[0].sql, /architecture\.component_port/);
+  assert.match(queries[0].sql, /architecture\.component_relation/);
+  assert.match(queries[0].sql, /governance_component_files/);
+  assert.match(queries[0].sql, /governance_files/);
+  assert.match(queries[0].sql, /status = 'deprecated'/);
+  assert.match(queries[0].sql, /status = 'superseded'/);
   assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
 });
 
