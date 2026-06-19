@@ -5,7 +5,7 @@ import type { SourceImportOptionContribution, SourceImportOptionId } from '../..
 import type { TableInfo } from './types';
 import { GroupingStep } from './GroupingStep';
 import { OptionsStep } from './OptionsStep';
-import { buildWarehouseTableKey } from './sourceImportWizardModel';
+import { buildSourceImportTableViewModel } from './sourceImportWizardModel';
 
 type SourceImportMetadataPanelProps = Readonly<{
   activeTable: TableInfo | null;
@@ -16,23 +16,6 @@ type SourceImportMetadataPanelProps = Readonly<{
   onSourceImportOptionChange: (optionId: SourceImportOptionId, value: boolean) => void;
 }>;
 
-function formatRowCount(rowCount: number | undefined): string {
-  if (rowCount == null) {
-    return 'Rows unknown';
-  }
-
-  return `${new Intl.NumberFormat('en-US').format(rowCount)} rows`;
-}
-
-function formatColumnCount(activeTable: Pick<TableInfo, 'columns'> | null): string {
-  const columnCount = activeTable?.columns?.length ?? 0;
-  return `${columnCount} ${columnCount === 1 ? 'column' : 'columns'}`;
-}
-
-function formatColumnNullability(nullable: boolean): string {
-  return nullable ? 'Nullable' : 'Required';
-}
-
 export function SourceImportMetadataPanel({
   activeTable,
   groupingStrategy,
@@ -41,7 +24,8 @@ export function SourceImportMetadataPanel({
   onGroupingChange,
   onSourceImportOptionChange,
 }: SourceImportMetadataPanelProps) {
-  const tableName = activeTable ? buildWarehouseTableKey(activeTable) : 'No source table selected';
+  const activeTableViewModel = activeTable ? buildSourceImportTableViewModel(activeTable, 0) : null;
+  const tableName = activeTableViewModel?.canonicalName ?? 'No source table selected';
 
   return (
     <div id="source-import-section-metadata" className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
@@ -58,25 +42,24 @@ export function SourceImportMetadataPanel({
             <div className="min-w-0">
               <div className="font-mono text-sm text-slate-100">{tableName}</div>
               <div className="mt-1 text-xs text-slate-400">
-                {formatRowCount(activeTable?.rowCount)} · {formatColumnCount(activeTable)}
+                {activeTableViewModel?.rowCountLabel ?? 'Rows unknown'} /{' '}
+                {activeTableViewModel?.columnCountLabel ?? '0 columns'}
               </div>
             </div>
-            {activeTable ? <Badge variant="outline">Warehouse source</Badge> : null}
+            {activeTableViewModel ? <Badge variant="outline">Warehouse source</Badge> : null}
           </div>
 
-          {activeTable?.columns && activeTable.columns.length > 0 ? (
+          {activeTableViewModel && activeTableViewModel.columns.length > 0 ? (
             <ScrollArea className="h-64">
               <div className="space-y-2">
-                {activeTable.columns.map((column) => (
+                {activeTableViewModel.columns.map((column) => (
                   <div
                     key={`${tableName}.${column.name}`}
                     className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2"
                   >
                     <span className="truncate font-mono text-xs text-slate-100">{column.name}</span>
                     <span className="font-mono text-[11px] text-slate-300">{column.type}</span>
-                    <span className="text-[11px] text-slate-400">
-                      {formatColumnNullability(column.nullable)}
-                    </span>
+                    <span className="text-[11px] text-slate-400">{column.nullabilityLabel}</span>
                   </div>
                 ))}
               </div>

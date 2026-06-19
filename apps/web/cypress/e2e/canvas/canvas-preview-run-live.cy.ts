@@ -91,10 +91,6 @@ function closeRunOperationsIfOpen(): void {
   });
 }
 
-function clickWizardNext(): void {
-  clickButtonNatively('Next');
-}
-
 describe('Canvas preview-run live protected runtime', () => {
   beforeEach(function () {
     if (!hasLiveProtectedRuntimeEnv()) {
@@ -205,41 +201,35 @@ describe('Canvas preview-run live protected runtime', () => {
       .and('contain.text', 'Execution provenance is not available yet');
   });
 
-  it('connects Canvas to seeded local warehouse sources through DataObject Registry', () => {
+  it('connects Canvas to seeded local warehouse sources through contextual Add Source', () => {
     seedLiveSelectedClosureDraft({ authoringGenerated: true });
     visitWithLiveWorkspaceSession('/canvas');
 
     openSourceImportFromCanvas();
 
-    cy.contains('DataObject Registry', { timeout: 20_000 }).should('be.visible');
-    cy.contains('Choose data source type').should('be.visible');
-    clickWizardNext();
-
-    cy.contains('Choose database connection', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
+    cy.contains('Choose database connection').should('be.visible');
     cy.contains('Local Postgres proof').should('be.visible').click();
-    clickWizardNext();
 
-    cy.contains('Select Tables', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[role="tab"]', 'Browse').click();
+    cy.contains('Browse source tables', { timeout: 20_000 }).should('be.visible');
     cy.contains('orders').should('be.visible').click();
     cy.contains('Selected: 1').should('be.visible');
-    clickWizardNext();
 
-    cy.contains('Grouping Strategy').should('be.visible');
-    clickWizardNext();
-
-    cy.contains('Metadata Options').should('be.visible');
+    cy.contains('[role="tab"]', 'Metadata').click();
+    cy.contains('Metadata Options', { timeout: 20_000 }).should('be.visible');
     cy.contains('h4', 'Include Column Metadata')
       .closest('[class*="border-slate-600"]')
       .find('[role="checkbox"]')
       .click();
-    clickWizardNext();
 
-    cy.contains('Review & Confirm').should('be.visible');
+    cy.contains('[role="tab"]', 'Selected').click();
+    cy.contains('Selected sources').should('be.visible');
     cy.contains('Connection:').parent().should('contain.text', 'Local Postgres proof');
     cy.contains('Tables Selected:').parent().should('contain.text', '1');
-    clickButtonNatively('Register data objects');
+    clickButtonNatively('Attach sources to canvas');
 
-    cy.contains('Registry update complete', { timeout: 30_000 }).should('be.visible');
+    cy.contains('Sources attached', { timeout: 30_000 }).should('be.visible');
     cy.contains('Tables registered:').parent().should('contain.text', '1');
     cy.contains('[file] models/sources/src_raw.yml').should('be.visible');
 

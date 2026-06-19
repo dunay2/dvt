@@ -16,6 +16,7 @@ import {
   resolveActiveTable,
   resolveSectionForStep,
   resolveStepForSection,
+  buildSourceImportCatalogViewModel,
 } from './sourceImportWizardModel';
 
 function buildTable(overrides?: Partial<TableInfo>): TableInfo {
@@ -121,5 +122,68 @@ describe('sourceImportWizardModel', () => {
     expect(canEnterSourceImportSection('browse', 'conn-1', 0)).toBe(true);
     expect(canEnterSourceImportSection('metadata', 'conn-1', 0)).toBe(false);
     expect(canEnterSourceImportSection('selected', 'conn-1', 1)).toBe(true);
+  });
+
+  it('projects a professional source catalog view model for browse, metadata, and selected surfaces', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({
+          schema: 'ERP',
+          table: 'ORDERS',
+          rowCount: 1500,
+          selected: true,
+          columns: [
+            { name: 'order_id', type: 'INTEGER', nullable: false },
+            { name: 'discount_code', type: 'TEXT', nullable: true },
+          ],
+        }),
+        buildTable({
+          schema: 'ERP',
+          table: 'CUSTOMERS',
+          rowCount: undefined,
+          selected: false,
+          columns: [{ name: 'customer_id', type: 'INTEGER', nullable: false }],
+        }),
+      ],
+      activeTableKey: 'RAW.ERP.ORDERS',
+    });
+
+    expect(viewModel.schemaGroups).toEqual([
+      expect.objectContaining({
+        schema: 'ERP',
+        tableCountLabel: '2 tables',
+        selected: false,
+        tables: [
+          expect.objectContaining({
+            canonicalName: 'RAW.ERP.ORDERS',
+            displayName: 'ORDERS',
+            rowCountLabel: '1,500 rows',
+            columnCountLabel: '2 columns',
+            columns: [
+              { name: 'order_id', type: 'INTEGER', nullabilityLabel: 'Required' },
+              { name: 'discount_code', type: 'TEXT', nullabilityLabel: 'Nullable' },
+            ],
+          }),
+          expect.objectContaining({
+            canonicalName: 'RAW.ERP.CUSTOMERS',
+            rowCountLabel: 'Rows unknown',
+            columnCountLabel: '1 column',
+          }),
+        ],
+      }),
+    ]);
+    expect(viewModel.activeTable).toEqual(
+      expect.objectContaining({
+        canonicalName: 'RAW.ERP.ORDERS',
+        rowCountLabel: '1,500 rows',
+        columnCountLabel: '2 columns',
+      })
+    );
+    expect(viewModel.selectedTables).toEqual([
+      expect.objectContaining({
+        canonicalName: 'RAW.ERP.ORDERS',
+        columnCountLabel: '2 columns',
+      }),
+    ]);
   });
 });
