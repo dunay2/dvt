@@ -270,6 +270,8 @@ test('feature mechanization readers query DB-first manifest projections', async 
 
   assert.equal(captured.length, 5);
   assert.match(sqlText, /from planning_query_store\.command_query_rail_manifest_query/);
+  assert.match(sqlText, /from planning_query_store\.feature_mechanization_local_rails/);
+  assert.match(sqlText, /distinct on \(rail\.rail_id\)/);
   assert.match(sqlText, /raw_manifest \? 'featureId'/);
   assert.match(captured[0].sql, /manifest\.mechanization_status = \$1/);
   assert.match(captured[0].sql, /manifest\.source_path = \$2/);
@@ -286,7 +288,7 @@ test('feature mechanization readers query DB-first manifest projections', async 
   ]);
   assert.match(captured[3].sql, /rail\.rail_type = \$1/);
   assert.match(captured[3].sql, /rail\.rail_name = \$2/);
-  assert.match(captured[3].sql, /rail\.raw_manifest \? 'featureId'/);
+  assert.match(captured[3].sql, /raw_manifest \? 'featureId'/);
   assert.deepEqual(captured[3].params, ['query', 'ListFeatureMechanizationRails', 8]);
   assert.match(captured[4].sql, /validation_rows\.validation_kind = \$1/);
   assert.match(captured[4].sql, /completionGate/);

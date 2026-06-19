@@ -30,9 +30,11 @@ const {
   normalizeText,
   parseArgs,
   readTrackedDocumentPaths,
+  readLocalFeatureMechanizationRails,
   readLocalPlanningTaskIds,
   reconcileDeprecatedLocalRailSources,
   reconcileSupersededCanvasNodeWorkbenchPanel,
+  restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,
 } = require('./planning-db-import.cjs');
@@ -1329,27 +1331,120 @@ test('planning DB import reconciles deprecated DB-local rail source paths after 
   assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
 });
 
-test('planning DB import reasserts superseded Canvas node workbench panel authority', async () => {
+test('planning DB import keeps Canvas node workbench panel authority when implementation files exist', async () => {
   const queries = [];
 
   await reconcileSupersededCanvasNodeWorkbenchPanel({
     query: async (sql, params = []) => {
       queries.push({ sql: String(sql), params });
+      return { rows: [{ file_count: 2 }] };
     },
   });
 
   assert.equal(queries.length, 1);
-  assert.match(queries[0].sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
-  assert.match(queries[0].sql, /CanvasNodeWorkbenchPanel\.tsx/);
-  assert.match(queries[0].sql, /governance_component_local_definitions/);
-  assert.match(queries[0].sql, /architecture\.component/);
-  assert.match(queries[0].sql, /architecture\.component_port/);
-  assert.match(queries[0].sql, /architecture\.component_relation/);
-  assert.match(queries[0].sql, /governance_component_files/);
   assert.match(queries[0].sql, /governance_files/);
-  assert.match(queries[0].sql, /status = 'deprecated'/);
-  assert.match(queries[0].sql, /status = 'superseded'/);
+  assert.match(queries[0].sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
   assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
+});
+
+test('planning DB import reasserts superseded Canvas node workbench panel authority when files are absent', async () => {
+  const queries = [];
+
+  await reconcileSupersededCanvasNodeWorkbenchPanel({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      if (queries.length === 1) {
+        return { rows: [{ file_count: 0 }] };
+      }
+      return { rows: [] };
+    },
+  });
+
+  assert.equal(queries.length, 2);
+  const retirementQuery = queries[1];
+  assert.match(retirementQuery.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(retirementQuery.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(retirementQuery.sql, /governance_component_local_definitions/);
+  assert.match(retirementQuery.sql, /architecture\.component/);
+  assert.match(retirementQuery.sql, /architecture\.component_port/);
+  assert.match(retirementQuery.sql, /architecture\.component_relation/);
+  assert.match(retirementQuery.sql, /governance_component_files/);
+  assert.match(retirementQuery.sql, /governance_files/);
+  assert.match(retirementQuery.sql, /status = 'deprecated'/);
+  assert.match(retirementQuery.sql, /status = 'superseded'/);
+  assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
+});
+
+test('planning DB import preserves DB-local feature mechanization rails during governance reload', async () => {
+  const queries = [];
+  const localRails = [
+    {
+      railId: 'local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties',
+      featureId: 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619',
+      mechanizationStatus: 'implemented',
+      railName: 'InspectCanvasNodeProperties',
+      normalizedRailName: 'inspectcanvasnodeproperties',
+      railType: 'query',
+      dddOwner: 'CanvasNodeWorkbenchPanel',
+      railStatus: 'implemented',
+      symbolRefs: [
+        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx#CanvasNodeWorkbenchPanel',
+      ],
+      implementationRefs: ['apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx'],
+      documentationRefs: ['buzon/TAREA.TXT'],
+      governingSources: ['docs/architecture/command-query-rail-governance.md'],
+      allowedImplementationSurfaces: ['apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx'],
+      architectureGuards: [
+        'apps/web/src/app/views/canvas/CanvasShellMainPanel.architecture.test.ts',
+      ],
+      completionGate: ['pnpm verify:prepush'],
+      sourcePath: 'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
+      sourceContentSha256: 'a'.repeat(64),
+      rawRail: { name: 'InspectCanvasNodeProperties' },
+      rawManifest: { featureId: 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619' },
+      revision: 3,
+      createdBy: 'codex',
+      createdAt: '2026-06-19T00:00:00.000Z',
+      updatedAt: '2026-06-19T00:00:00.000Z',
+    },
+  ];
+
+  const readRows = await readLocalFeatureMechanizationRails({
+    query: async (sql) => {
+      queries.push({ sql: String(sql), params: [] });
+      return { rows: localRails };
+    },
+  });
+  assert.equal(readRows[0].railId, localRails[0].railId);
+
+  await restoreLocalFeatureMechanizationRails(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql: String(sql), params });
+      },
+    },
+    localRails
+  );
+
+  const insertQuery = queries.find((query) =>
+    query.sql.includes(`insert into ${schemaName}.feature_mechanization_local_rails`)
+  );
+  assert.ok(insertQuery);
+  assert.match(insertQuery.sql, /on conflict \(rail_id\) do update set/);
+  assert.match(insertQuery.sql, /raw_manifest/);
+  assert.match(insertQuery.sql, /revision = greatest/);
+  assert.match(insertQuery.sql, /feature_mechanization_local_rails\.revision/);
+  assert.equal(insertQuery.params[0], localRails[0].railId);
+  assert.equal(insertQuery.params[1], localRails[0].featureId);
+
+  const hashRefreshQuery = queries.find((query) =>
+    query.sql.includes('update planning_query_store.feature_mechanization_local_rails rail')
+  );
+  assert.ok(hashRefreshQuery);
+  assert.match(hashRefreshQuery.sql, /governance_files file_ref/);
+  assert.doesNotMatch(insertQuery.sql, /delete\s+from/i);
+  assert.doesNotMatch(insertQuery.sql, /truncate\s+/i);
 });
 
 test('frontend component reflection import reloads normalized component rows', async () => {
