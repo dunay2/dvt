@@ -307,6 +307,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/195_docs_risk_register_leaf_components.sql
   - tools/planning-db/migrations/196_docs_engine_architecture_leaf_components.sql
   - tools/planning-db/migrations/197_planning_db_migration_catalog_leaf_components.sql
+  - tools/planning-db/migrations/198_docs_planning_closeout_cohort_leaf_restore.sql
+  - tools/planning-db/migrations/199_docs_planning_closeout_relation_drift_repair.sql
   - apps/api/src/entrypoints/http/httpBearerAuthentication.ts
   - apps/api/src/entrypoints/http/projectOnboardingRoutes.ts
   - apps/api/src/entrypoints/http/sessionRoute.ts
