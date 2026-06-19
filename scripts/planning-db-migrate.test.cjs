@@ -3053,6 +3053,72 @@ test('tracked migrations split risk-register documentation into physical leaves'
   assert.doesNotMatch(riskRegisterLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split engine architecture documentation into physical leaves', () => {
+  const migrations = readMigrationFiles();
+  const engineArchitectureLeafMigration = migrations.find(
+    (migration) => migration.fileName === '196_docs_engine_architecture_leaf_components.sql'
+  );
+
+  assert.ok(engineArchitectureLeafMigration);
+  assert.match(
+    engineArchitectureLeafMigration.sql,
+    /create temporary table docs_engine_architecture_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-DOCS-ARCHITECTURE-ENGINE-ROOT-RECORDS',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-ADAPTERS',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-ARCHITECTURE',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-CONTRACTS',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-DEV',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-OPS',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-REVIEWS',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-ROADMAP',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-SCHEMAS',
+    'SYS-DOCS-ARCHITECTURE-ENGINE-SECURITY',
+  ]) {
+    assert.match(engineArchitectureLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/architecture/components/engine/index\\.md',
+    'docs/architecture/components/engine/adapters/\\*\\*',
+    'docs/architecture/components/engine/architecture/\\*\\*',
+    'docs/architecture/components/engine/contracts/\\*\\*',
+    'docs/architecture/components/engine/dev/\\*\\*',
+    'docs/architecture/components/engine/ops/\\*\\*',
+    'docs/architecture/components/engine/reviews/\\*\\*',
+    'docs/architecture/components/engine/roadmap/\\*\\*',
+    'docs/architecture/components/engine/schemas/\\*\\*',
+    'docs/architecture/components/engine/security/\\*\\*',
+  ]) {
+    assert.match(engineArchitectureLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(
+    engineArchitectureLeafMigration.sql,
+    /PLANNING-DB-DOCS-ENGINE-ARCHITECTURE-LEAF-MAPPING-20260619/
+  );
+  assert.match(engineArchitectureLeafMigration.sql, /SYS-DOCS-ARCHITECTURE-COMPONENTS-ENGINE/);
+  assert.match(engineArchitectureLeafMigration.sql, /REL-DOCS-ENGINE-ARCHITECTURE-CONTAINS-/);
+  assert.match(engineArchitectureLeafMigration.sql, /ReadEngineArchitectureRootDocs/);
+  assert.match(engineArchitectureLeafMigration.sql, /ReadEngineAdapterArchitectureDocs/);
+  assert.match(engineArchitectureLeafMigration.sql, /ReadEngineCoreArchitectureDocs/);
+  assert.match(engineArchitectureLeafMigration.sql, /ReadEngineContractArchitectureDocs/);
+  assert.match(engineArchitectureLeafMigration.sql, /ReadEngineOperationsArchitectureDocs/);
+  assert.match(engineArchitectureLeafMigration.sql, /ReadEngineSecurityArchitectureDocs/);
+  assert.match(engineArchitectureLeafMigration.sql, /No engine architecture docs are deprecated/);
+  assert.match(engineArchitectureLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(engineArchitectureLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(engineArchitectureLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    engineArchitectureLeafMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.doesNotMatch(engineArchitectureLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(engineArchitectureLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(
