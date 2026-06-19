@@ -91,6 +91,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       },
       centerSurfaceMode: 'replace',
       centerSurface: undefined,
+      contextualWorkbench: undefined,
       readOnlyBanner: undefined,
       ...overrides?.layout,
     },

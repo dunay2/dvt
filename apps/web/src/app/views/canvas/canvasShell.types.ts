@@ -46,11 +46,19 @@ export type CanvasShellLayout = {
   hostTabState: CanvasPlaygroundTabState;
   hostTabStrip?: React.ReactNode;
   workbenchTabStrip?: React.ReactNode;
-  workbenchTabPanel?: React.ReactNode;
+  contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurfaceMode: 'replace' | 'overlay';
   centerSurface?: React.ReactNode;
   readOnlyBanner?: React.ReactNode;
 };
+
+export type CanvasShellContextualWorkbench = Readonly<{
+  id: 'project-code';
+  title: string;
+  description?: string;
+  panel: React.ReactNode;
+  onClose: () => void;
+}>;
 
 export type CanvasShellPanels = {
   authoringNodeKinds: readonly NodeKindRegistration[];

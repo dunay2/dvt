@@ -129,7 +129,12 @@ describe('CanvasShell graph base surface', () => {
       layout: {
         centerSurfaceMode: 'replace',
         centerSurface: <div data-testid="first-canvas-center-surface" />,
-        workbenchTabPanel: <div data-testid="code-workbench-panel" />,
+        contextualWorkbench: {
+          id: 'project-code',
+          title: 'Project code',
+          panel: <div data-testid="code-workbench-panel" />,
+          onClose: vi.fn(),
+        },
       },
       chromeState: {
         routeState: 'needs_canvas',
@@ -137,6 +142,23 @@ describe('CanvasShell graph base surface', () => {
     });
 
     expect(container.querySelector('[data-testid="first-canvas-center-surface"]')).not.toBeNull();
-    expect(container.querySelector('[data-testid="code-workbench-panel"]')).toBeNull();
+    expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
+  });
+
+  it('renders contextual workbench panels beside the graph instead of replacing it', async () => {
+    await renderShell({
+      layout: {
+        contextualWorkbench: {
+          id: 'project-code',
+          title: 'Project code',
+          panel: <div data-testid="code-workbench-panel" />,
+          onClose: vi.fn(),
+        },
+      },
+    });
+
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
+    expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
   });
 });

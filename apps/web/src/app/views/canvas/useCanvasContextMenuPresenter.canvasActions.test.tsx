@@ -15,6 +15,7 @@ type PresenterCallbackSpies = Readonly<{
   onEdgesChange: ReturnType<typeof vi.fn>;
   onOpenSourceImport: ReturnType<typeof vi.fn>;
   onOpenProjectExplorer: ReturnType<typeof vi.fn>;
+  onOpenProjectCode: ReturnType<typeof vi.fn>;
   onPreviewExecutionPlan: ReturnType<typeof vi.fn>;
   onOpenCanvasSettings: ReturnType<typeof vi.fn>;
 }>;
@@ -30,6 +31,7 @@ function PresenterHarness({
     canEditEdges: true,
     canOpenSourceImport: true,
     canOpenProjectExplorer: true,
+    canOpenProjectCode: true,
     canPreviewExecutionPlan: true,
     canOpenCanvasSettings: true,
     authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
@@ -38,6 +40,7 @@ function PresenterHarness({
     onEdgesChange: callbacks.onEdgesChange,
     onOpenSourceImport: callbacks.onOpenSourceImport,
     onOpenProjectExplorer: callbacks.onOpenProjectExplorer,
+    onOpenProjectCode: callbacks.onOpenProjectCode,
     onPreviewExecutionPlan: callbacks.onPreviewExecutionPlan,
     onOpenCanvasSettings: callbacks.onOpenCanvasSettings,
   });
@@ -58,6 +61,7 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
       onEdgesChange: vi.fn(),
       onOpenSourceImport: vi.fn(),
       onOpenProjectExplorer: vi.fn(),
+      onOpenProjectCode: vi.fn(),
       onPreviewExecutionPlan: vi.fn(),
       onOpenCanvasSettings: vi.fn(),
     };
@@ -116,6 +120,14 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
     menuPresenter = await renderAndOpenPaneMenu();
     await act(async () => {
       menuPresenter.handleCanvasAction({
+        action: 'open-project-code',
+        label: 'Open project code',
+      });
+    });
+
+    menuPresenter = await renderAndOpenPaneMenu();
+    await act(async () => {
+      menuPresenter.handleCanvasAction({
         action: 'preview-execution-plan',
         label: 'Preview execution plan',
       });
@@ -130,6 +142,7 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
     });
 
     expect(callbacks.onOpenProjectExplorer).toHaveBeenCalledTimes(1);
+    expect(callbacks.onOpenProjectCode).toHaveBeenCalledTimes(1);
     expect(callbacks.onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
     expect(callbacks.onOpenCanvasSettings).toHaveBeenCalledTimes(1);
     expect(presenter?.model ?? null).toBeNull();

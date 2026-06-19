@@ -92,6 +92,8 @@ type CanvasViewportProps = {
   readonly onOpenSourceImport?: (flowPosition?: { x: number; y: number }) => void;
   readonly canOpenProjectExplorer?: boolean;
   readonly onOpenProjectExplorer?: () => void;
+  readonly canOpenProjectCode?: boolean;
+  readonly onOpenProjectCode?: () => void;
   readonly canPreviewExecutionPlan?: boolean;
   readonly onPreviewExecutionPlan?: () => void;
   readonly canOpenCanvasSettings?: boolean;
@@ -480,6 +482,8 @@ function CanvasViewportWithPresenter({
       onOpenSourceImport={props.onOpenSourceImport}
       canOpenProjectExplorer={props.canOpenProjectExplorer}
       onOpenProjectExplorer={props.onOpenProjectExplorer}
+      canOpenProjectCode={props.canOpenProjectCode}
+      onOpenProjectCode={props.onOpenProjectCode}
       canPreviewExecutionPlan={props.canPreviewExecutionPlan}
       onPreviewExecutionPlan={props.onPreviewExecutionPlan}
       canOpenCanvasSettings={props.canOpenCanvasSettings}
@@ -496,6 +500,7 @@ function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
     canEditEdges: props.canEditEdges,
     canOpenSourceImport: props.canOpenSourceImport,
     canOpenProjectExplorer: props.canOpenProjectExplorer,
+    canOpenProjectCode: props.canOpenProjectCode,
     canPreviewExecutionPlan: props.canPreviewExecutionPlan,
     canOpenCanvasSettings: props.canOpenCanvasSettings,
     authoringNodeKinds: props.authoringNodeKinds,
@@ -504,6 +509,7 @@ function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
     onEdgesChange: props.onEdgesChange,
     onOpenSourceImport: props.onOpenSourceImport,
     onOpenProjectExplorer: props.onOpenProjectExplorer,
+    onOpenProjectCode: props.onOpenProjectCode,
     onPreviewExecutionPlan: props.onPreviewExecutionPlan,
     onOpenCanvasSettings: props.onOpenCanvasSettings,
   });

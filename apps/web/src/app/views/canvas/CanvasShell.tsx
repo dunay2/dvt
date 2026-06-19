@@ -1,7 +1,7 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import SourceImportWizard from '../../components/SourceImportWizard';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
@@ -12,10 +12,13 @@ import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type {
+  CanvasShellContextualWorkbench,
   CanvasShellOpenDataRegistryCommand,
   CanvasShellProps,
   CanvasShellSourceImportPlacement,
 } from './canvasShell.types';
+
+const CodeWorkbench = lazy(() => import('../CodeView'));
 
 export default function CanvasShell({
   layout,
@@ -30,6 +33,7 @@ export default function CanvasShell({
   const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
+  const [contextualWorkbenchId, setContextualWorkbenchId] = useState<'project-code' | null>(null);
   const [dataRegistryInitialSelection, setDataRegistryInitialSelection] =
     useState<Parameters<CanvasShellOpenDataRegistryCommand>[0]>(undefined);
   const [dataRegistryPlacement, setDataRegistryPlacement] = useState<
@@ -46,6 +50,39 @@ export default function CanvasShell({
   );
   const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const canOpenDataRegistry = canEditGraph && canBrowseDataRegistry;
+  const contextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
+    if (contextualWorkbenchId !== 'project-code') {
+      return undefined;
+    }
+
+    return {
+      id: 'project-code',
+      title: 'Project code',
+      description: 'Workspace files in the active project scope.',
+      onClose: () => setContextualWorkbenchId(null),
+      panel: (
+        <Suspense
+          fallback={
+            <div className="flex h-full items-center justify-center text-sm text-(--text-muted)">
+              Loading project code...
+            </div>
+          }
+        >
+          <CodeWorkbench />
+        </Suspense>
+      ),
+    };
+  }, [contextualWorkbenchId]);
+  const shellLayout = useMemo(
+    () =>
+      contextualWorkbench == null
+        ? layout
+        : {
+            ...layout,
+            contextualWorkbench,
+          },
+    [contextualWorkbench, layout]
+  );
   const handleOpenDataRegistry: CanvasShellOpenDataRegistryCommand | undefined = canOpenDataRegistry
     ? (initialSelection, placement) => {
         setDataRegistryInitialSelection(initialSelection);
@@ -57,6 +94,7 @@ export default function CanvasShell({
     canEditEdges: canEditGraph,
     canOpenSourceImport: canOpenDataRegistry,
     canOpenProjectExplorer: true,
+    canOpenProjectCode: true,
     canPreviewExecutionPlan: panels.userPermissions.canPlan && chromeState.canPlanGraph,
     canOpenCanvasSettings: true,
     authoringNodeKinds: panels.authoringNodeKinds,
@@ -72,6 +110,7 @@ export default function CanvasShell({
               flowPosition == null ? undefined : { canvasPosition: flowPosition }
             ),
     onOpenProjectExplorer: () => setProjectExplorerOpen(true),
+    onOpenProjectCode: () => setContextualWorkbenchId('project-code'),
     onPreviewExecutionPlan: chromeCommands.onPlan,
     onOpenCanvasSettings: () => setCanvasSettingsOpen(true),
   });
@@ -99,7 +138,7 @@ export default function CanvasShell({
         />
       )}
       <CanvasShellMainPanel
-        layout={layout}
+        layout={shellLayout}
         panels={panels}
         graph={graph}
         chromeState={chromeState}
@@ -107,6 +146,7 @@ export default function CanvasShell({
         chromeCommands={chromeCommands}
         onOpenSourceImport={handleOpenDataRegistry}
         onOpenProjectExplorer={() => setProjectExplorerOpen(true)}
+        onOpenProjectCode={() => setContextualWorkbenchId('project-code')}
         onOpenCanvasSettings={() => setCanvasSettingsOpen(true)}
         contextMenuPresenter={contextMenuPresenter}
       />

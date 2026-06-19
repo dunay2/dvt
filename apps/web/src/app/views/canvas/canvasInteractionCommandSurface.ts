@@ -30,9 +30,15 @@ export type CanvasContextMenuCanvasAction = Readonly<{
   action:
     | 'open-source-import'
     | 'open-project-explorer'
+    | 'open-project-code'
     | 'preview-execution-plan'
     | 'open-canvas-settings';
-  label: 'Add source' | 'Explore project' | 'Preview execution plan' | 'Canvas settings';
+  label:
+    | 'Add source'
+    | 'Explore project'
+    | 'Open project code'
+    | 'Preview execution plan'
+    | 'Canvas settings';
 }>;
 
 export type CanvasContextMenuEdgeAction = Readonly<{
@@ -55,6 +61,7 @@ type BuildCanvasContextMenuModelArgs = Readonly<{
   canMutateGraph: boolean;
   canOpenSourceImport?: boolean;
   canOpenProjectExplorer?: boolean;
+  canOpenProjectCode?: boolean;
   canPreviewExecutionPlan?: boolean;
   canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
@@ -93,6 +100,7 @@ export function buildCanvasContextMenuModel({
   canMutateGraph,
   canOpenSourceImport = false,
   canOpenProjectExplorer = false,
+  canOpenProjectCode = false,
   canPreviewExecutionPlan = false,
   canOpenCanvasSettings = false,
   authoringNodeKinds,
@@ -105,6 +113,9 @@ export function buildCanvasContextMenuModel({
     }
     if (canOpenProjectExplorer) {
       canvasActions.push({ action: 'open-project-explorer', label: 'Explore project' });
+    }
+    if (canOpenProjectCode) {
+      canvasActions.push({ action: 'open-project-code', label: 'Open project code' });
     }
     if (canPreviewExecutionPlan) {
       canvasActions.push({

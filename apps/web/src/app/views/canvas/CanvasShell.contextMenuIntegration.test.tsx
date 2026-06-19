@@ -12,6 +12,10 @@ import {
 import type { CanvasShellProps } from './canvasShell.types';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 
+vi.mock('../CodeView', () => ({
+  default: () => <div data-testid="code-workbench-panel" />,
+}));
+
 describe('CanvasShell context menu integration', () => {
   let container: HTMLDivElement;
   let renderShell: (overrides?: CanvasShellPropsOverrides) => Promise<CanvasShellProps>;
@@ -81,5 +85,20 @@ describe('CanvasShell context menu integration', () => {
     });
 
     expectMenuClosed();
+  });
+
+  it('opens project code as a contextual workbench from the canvas menu', async () => {
+    await renderShell();
+    const presenter = getContextMenuPresenter();
+
+    await act(async () => {
+      presenter.handleCanvasAction({
+        action: 'open-project-code',
+        label: 'Open project code',
+      });
+    });
+
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
   });
 });
