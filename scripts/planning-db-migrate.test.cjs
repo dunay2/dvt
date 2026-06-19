@@ -3894,6 +3894,99 @@ test('tracked migrations split Web UI primitives into design-system leaves', () 
   assert.doesNotMatch(webUiPrimitiveMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Temporal workflow runtime into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const temporalWorkflowRuntimeMigration = migrations.find(
+    (migration) => migration.fileName === '213_temporal_workflow_runtime_leaf_components.sql'
+  );
+
+  assert.ok(temporalWorkflowRuntimeMigration);
+  assert.match(
+    temporalWorkflowRuntimeMigration.sql,
+    /create temporary table temporal_workflow_runtime_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-ADAPTERS-TEMPORAL-WORKFLOW-RUN-MAPPING',
+    'SYS-ADAPTERS-TEMPORAL-WORKFLOW-ENTRYPOINT',
+    'SYS-ADAPTERS-TEMPORAL-WORKFLOW-LIFECYCLE-CONTROL',
+    'SYS-ADAPTERS-TEMPORAL-WORKFLOW-CURSOR-STATE',
+    'SYS-ADAPTERS-TEMPORAL-WORKFLOW-LAYER-EXECUTION',
+    'SYS-ADAPTERS-TEMPORAL-WORKFLOW-SEGMENT-RESOLUTION',
+    'SYS-ADAPTERS-TEMPORAL-WORKFLOW-INTEGRATION-HARNESS',
+  ]) {
+    assert.match(temporalWorkflowRuntimeMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'packages/@dvt/adapter-temporal/src/WorkflowMapper\\.ts',
+    'packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow\\.ts',
+    'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow\\.signals\\.ts',
+    'packages/@dvt/adapter-temporal/src/workflows/workflowCursorHelpers\\.ts',
+    'packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow\\.layers\\.ts',
+    'packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver\\.ts',
+    'packages/@dvt/adapter-temporal/test/integration\\.time-skipping\\.shared\\.ts',
+  ]) {
+    assert.match(temporalWorkflowRuntimeMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(temporalWorkflowRuntimeMigration.sql, /SYS-ADAPTERS-TEMPORAL-WORKFLOW-RUNTIME/);
+  assert.match(temporalWorkflowRuntimeMigration.sql, /children_required = true/);
+  assert.match(
+    temporalWorkflowRuntimeMigration.sql,
+    /REL-ADAPTERS-TEMPORAL-WORKFLOW-RUNTIME-CONTAINS-/
+  );
+  assert.match(temporalWorkflowRuntimeMigration.sql, /'depends_on'/);
+  assert.match(
+    temporalWorkflowRuntimeMigration.sql,
+    /SYS-PLANSTORE-TEMPORAL-WORKFLOW-ARTIFACT-HELPERS/
+  );
+  assert.match(temporalWorkflowRuntimeMigration.sql, /ExecuteTemporalRunPlanWorkflow/);
+  assert.match(temporalWorkflowRuntimeMigration.sql, /MapTemporalRunReference/);
+  assert.match(temporalWorkflowRuntimeMigration.sql, /ResolveTemporalWorkflowExecutionSegment/);
+  assert.match(temporalWorkflowRuntimeMigration.sql, /insert into architecture\.contract/);
+  assert.match(temporalWorkflowRuntimeMigration.sql, /insert into architecture\.component_port/);
+  assert.match(temporalWorkflowRuntimeMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    temporalWorkflowRuntimeMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.match(
+    temporalWorkflowRuntimeMigration.sql,
+    /nonfunctional files require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(temporalWorkflowRuntimeMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(temporalWorkflowRuntimeMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(temporalWorkflowRuntimeMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize Temporal workflow runtime aggregate repo path', () => {
+  const migrations = readMigrationFiles();
+  const temporalWorkflowRuntimePathMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '214_temporal_workflow_runtime_parent_path_canonicalization.sql'
+  );
+
+  assert.ok(temporalWorkflowRuntimePathMigration);
+  assert.match(
+    temporalWorkflowRuntimePathMigration.sql,
+    /PLANNING-DB-TEMPORAL-WORKFLOW-RUNTIME-PARENT-PATH-20260619/
+  );
+  assert.match(temporalWorkflowRuntimePathMigration.sql, /SYS-ADAPTERS-TEMPORAL-WORKFLOW-RUNTIME/);
+  assert.match(
+    temporalWorkflowRuntimePathMigration.sql,
+    /SYS-ADAPTERS-TEMPORAL-WORKFLOW-ENTRYPOINT/
+  );
+  assert.match(
+    temporalWorkflowRuntimePathMigration.sql,
+    /repo_path = 'packages\/@dvt\/adapter-temporal\/src\/workflows'/
+  );
+  assert.match(temporalWorkflowRuntimePathMigration.sql, /duplicate_repo_path drift/);
+  assert.doesNotMatch(temporalWorkflowRuntimePathMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(temporalWorkflowRuntimePathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(temporalWorkflowRuntimePathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
