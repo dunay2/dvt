@@ -2773,6 +2773,111 @@ test('tracked migrations repair planning closeout cohort relation drift', () => 
   assert.doesNotMatch(closeoutRelationRepairMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Canvas controller interaction into functional leaves', () => {
+  const migrations = readMigrationFiles();
+  const canvasControllerLeafMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '200_web_canvas_controller_interaction_leaf_components.sql'
+  );
+
+  assert.ok(canvasControllerLeafMigration);
+  assert.match(
+    canvasControllerLeafMigration.sql,
+    /create temporary table web_canvas_controller_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-WEB-CANVAS-CONTROLLER-READ-MODEL',
+    'SYS-WEB-CANVAS-CONTROLLER-GRAPH-MUTATIONS',
+    'SYS-WEB-CANVAS-CONTROLLER-COMMAND-SURFACE',
+    'SYS-WEB-CANVAS-CONTROLLER-PRESENTATION-POLICY',
+    'SYS-WEB-CANVAS-CONTROLLER-ORCHESTRATION',
+    'SYS-WEB-CANVAS-CONTROLLER-ENVIRONMENT',
+  ]) {
+    assert.match(canvasControllerLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/web/src/app/views/canvas/canvasBackendPosture%',
+    'apps/web/src/app/views/canvas/canvasMutationHandler%',
+    'apps/web/src/app/views/canvas/canvasInteractionCommandSurface%',
+    'apps/web/src/app/views/canvas/canvasPalette%',
+    'apps/web/src/app/views/canvas/useCanvasController%',
+    'apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts',
+  ]) {
+    assert.match(canvasControllerLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(
+    canvasControllerLeafMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-CONTROLLER-LEAF-COMPONENTS-20260619/
+  );
+  assert.match(canvasControllerLeafMigration.sql, /SYS-WEB-CANVAS-CONTROLLER-INTERACTION/);
+  assert.match(canvasControllerLeafMigration.sql, /children_required = true/);
+  assert.match(canvasControllerLeafMigration.sql, /ReadCanvasControllerViewModel/);
+  assert.match(canvasControllerLeafMigration.sql, /AuthorCanvasGraphMutation/);
+  assert.match(canvasControllerLeafMigration.sql, /ExecuteCanvasInteractionCommand/);
+  assert.match(canvasControllerLeafMigration.sql, /OrchestrateCanvasController/);
+  assert.match(canvasControllerLeafMigration.sql, /ResolveCanvasControllerEnvironment/);
+  assert.match(canvasControllerLeafMigration.sql, /'excludes'/);
+  assert.match(canvasControllerLeafMigration.sql, /REL-WEB-CANVAS-CONTROLLER-CONTAINS-/);
+  assert.match(canvasControllerLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(canvasControllerLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(canvasControllerLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    canvasControllerLeafMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.match(canvasControllerLeafMigration.sql, /No live Canvas controller file is deprecated/);
+  assert.doesNotMatch(canvasControllerLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasControllerLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize Canvas controller aggregate repo path', () => {
+  const migrations = readMigrationFiles();
+  const canvasControllerPathMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '201_web_canvas_controller_parent_path_canonicalization.sql'
+  );
+
+  assert.ok(canvasControllerPathMigration);
+  assert.match(
+    canvasControllerPathMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-CONTROLLER-PARENT-PATH-20260619/
+  );
+  assert.match(canvasControllerPathMigration.sql, /SYS-WEB-CANVAS-CONTROLLER-INTERACTION/);
+  assert.match(canvasControllerPathMigration.sql, /SYS-WEB-CANVAS-CONTROLLER-ORCHESTRATION/);
+  assert.match(canvasControllerPathMigration.sql, /apps\/web\/src\/app\/views\/canvas'/);
+  assert.match(
+    canvasControllerPathMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasController\.ts/
+  );
+  assert.match(canvasControllerPathMigration.sql, /duplicate_repo_path drift/);
+  assert.doesNotMatch(canvasControllerPathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canvasControllerPathMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations deprecate zero-file Canvas residual surfaces component', () => {
+  const migrations = readMigrationFiles();
+  const residualDeprecationMigration = migrations.find(
+    (migration) => migration.fileName === '202_web_canvas_residual_surfaces_deprecation.sql'
+  );
+
+  assert.ok(residualDeprecationMigration);
+  assert.match(
+    residualDeprecationMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-RESIDUAL-SURFACES-DEPRECATION-20260619/
+  );
+  assert.match(residualDeprecationMigration.sql, /SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES/);
+  assert.match(residualDeprecationMigration.sql, /REL-WEB-CANVAS-VIEW-CONTAINS-RESIDUAL-SURFACES/);
+  assert.match(residualDeprecationMigration.sql, /owns no files, has no children/);
+  assert.match(residualDeprecationMigration.sql, /status = 'deprecated'/);
+  assert.match(residualDeprecationMigration.sql, /status = 'superseded'/);
+  assert.match(residualDeprecationMigration.sql, /Do not recreate residual placeholder files/);
+  assert.doesNotMatch(residualDeprecationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(residualDeprecationMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split architecture documentation into physical leaves', () => {
   const migrations = readMigrationFiles();
   const architectureDocsLeafMigration = migrations.find(
