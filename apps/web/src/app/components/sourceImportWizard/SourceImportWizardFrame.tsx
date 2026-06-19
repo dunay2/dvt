@@ -93,17 +93,17 @@ export function SourceImportWizardFrame({
         }
       }}
     >
-      <DialogContent className="flex max-h-[90vh] max-w-5xl flex-col">
-        <DialogHeader>
+      <DialogContent className="flex h-[min(90vh,760px)] max-w-5xl flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle>{copy.title}</DialogTitle>
           <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
 
-        {isResultStep ? null : sections}
+        {isResultStep ? null : <div className="shrink-0">{sections}</div>}
 
-        <ScrollArea className="-mx-6 flex-1 px-6">{children}</ScrollArea>
+        <ScrollArea className="-mx-6 min-h-0 flex-1 px-6">{children}</ScrollArea>
 
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-4 shrink-0">
           <SourceImportWizardFooter
             isResultStep={isResultStep}
             isProcessing={isProcessing}
