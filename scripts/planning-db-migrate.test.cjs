@@ -2818,6 +2818,55 @@ test('tracked migrations keep archive contracts out of architecture drift', () =
   assert.doesNotMatch(archiveContractStatusMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split mandatory planning proposals into physical leaves', () => {
+  const migrations = readMigrationFiles();
+  const mandatoryProposalLeafMigration = migrations.find(
+    (migration) => migration.fileName === '191_docs_mandatory_proposal_leaf_components.sql'
+  );
+
+  assert.ok(mandatoryProposalLeafMigration);
+  assert.match(
+    mandatoryProposalLeafMigration.sql,
+    /create temporary table docs_mandatory_proposal_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-DOCS-PLANNING-PROPOSALS-MANDATORY-FRONTEND-UX',
+    'SYS-DOCS-PLANNING-PROPOSALS-MANDATORY-RUNTIME-CONTRACTS',
+    'SYS-DOCS-PLANNING-PROPOSALS-MANDATORY-GOVERNANCE-DOCS',
+  ]) {
+    assert.match(mandatoryProposalLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/planning/proposals/mandatory/frontend-and-ux/\\*\\*',
+    'docs/planning/proposals/mandatory/runtime-and-contracts/\\*\\*',
+    'docs/planning/proposals/mandatory/governance-and-docs/\\*\\*',
+  ]) {
+    assert.match(mandatoryProposalLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(
+    mandatoryProposalLeafMigration.sql,
+    /PLANNING-DB-DOCS-MANDATORY-PROPOSAL-LEAF-MAPPING-20260618/
+  );
+  assert.match(mandatoryProposalLeafMigration.sql, /SYS-DOCS-PLANNING-PROPOSALS-MANDATORY/);
+  assert.match(mandatoryProposalLeafMigration.sql, /REL-DOCS-MANDATORY-PROPOSALS-CONTAINS-/);
+  assert.match(mandatoryProposalLeafMigration.sql, /ReadFrontendUxMandatoryProposals/);
+  assert.match(mandatoryProposalLeafMigration.sql, /ReadRuntimeContractMandatoryProposals/);
+  assert.match(mandatoryProposalLeafMigration.sql, /ReadGovernanceDocMandatoryProposals/);
+  assert.match(mandatoryProposalLeafMigration.sql, /lifecycle\/deprecation semantics/);
+  assert.match(mandatoryProposalLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(mandatoryProposalLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(mandatoryProposalLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    mandatoryProposalLeafMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.doesNotMatch(mandatoryProposalLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(mandatoryProposalLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(
