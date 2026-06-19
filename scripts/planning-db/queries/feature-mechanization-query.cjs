@@ -22,6 +22,90 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
     return `jsonb_array_length(${jsonArray(valueExpression)})`;
   }
 
+  function featureMechanizationRailSourceSelect(activeSchemaName = defaultSchemaName) {
+    return `
+    select distinct on (rail.rail_id)
+      rail.rail_id,
+      rail.feature_id,
+      rail.mechanization_status,
+      rail.rail_name,
+      rail.normalized_rail_name,
+      rail.rail_type,
+      rail.ddd_owner,
+      rail.rail_status,
+      rail.symbol_refs,
+      rail.implementation_refs,
+      rail.documentation_refs,
+      jsonb_array_length(rail.implementation_refs) as implementation_ref_count,
+      jsonb_array_length(rail.documentation_refs) as documentation_ref_count,
+      rail.governing_sources,
+      rail.allowed_implementation_surfaces,
+      rail.architecture_guards,
+      rail.completion_gate,
+      rail.source_path,
+      rail.source_content_sha256,
+      rail.raw_rail,
+      rail.raw_manifest,
+      rail.rail_source,
+      rail.imported_at
+    from (
+      select
+        rail_id,
+        feature_id,
+        mechanization_status,
+        rail_name,
+        normalized_rail_name,
+        rail_type,
+        ddd_owner,
+        rail_status,
+        symbol_refs,
+        implementation_refs,
+        documentation_refs,
+        governing_sources,
+        allowed_implementation_surfaces,
+        architecture_guards,
+        completion_gate,
+        source_path,
+        source_content_sha256,
+        raw_rail,
+        raw_manifest,
+        rail_source,
+        imported_at,
+        1 as projection_priority
+      from ${activeSchemaName}.command_query_rail_manifest_query
+      where raw_manifest is not null
+        and raw_manifest ? 'featureId'
+      union all
+      select
+        rail_id,
+        feature_id,
+        mechanization_status,
+        rail_name,
+        normalized_rail_name,
+        rail_type,
+        ddd_owner,
+        rail_status,
+        symbol_refs,
+        implementation_refs,
+        documentation_refs,
+        governing_sources,
+        allowed_implementation_surfaces,
+        architecture_guards,
+        completion_gate,
+        source_path,
+        source_content_sha256,
+        raw_rail,
+        raw_manifest,
+        'local'::text as rail_source,
+        updated_at as imported_at,
+        0 as projection_priority
+      from ${activeSchemaName}.feature_mechanization_local_rails
+      where raw_manifest is not null
+        and raw_manifest ? 'featureId'
+    ) rail
+    order by rail.rail_id, rail.projection_priority, rail.imported_at desc`;
+  }
+
   function featureMechanizationManifestSelect(activeSchemaName = defaultSchemaName) {
     return `
     select distinct
@@ -31,9 +115,9 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
       rail.source_path,
       rail.source_content_sha256,
       rail.raw_manifest
-    from ${activeSchemaName}.command_query_rail_manifest_query rail
-    where rail.raw_manifest is not null
-      and rail.raw_manifest ? 'featureId'`;
+    from (
+      ${featureMechanizationRailSourceSelect(activeSchemaName)}
+    ) rail`;
   }
 
   function buildFeatureMechanizationFeatureRows(rows) {
@@ -131,7 +215,9 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
          rail.mechanization_status,
          rail.source_path,
          count(*)::int as rail_count
-       from ${defaultSchemaName}.command_query_rail_manifest_query rail
+       from (
+         ${featureMechanizationRailSourceSelect()}
+       ) rail
        group by rail.feature_id, rail.mechanization_status, rail.source_path
      )
      select
@@ -242,9 +328,10 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
        rail.rail_status,
        rail.rail_source,
        rail.source_path
-     from ${defaultSchemaName}.command_query_rail_manifest_query rail
-     where rail.raw_manifest is not null
-       and rail.raw_manifest ? 'featureId'
+     from (
+       ${featureMechanizationRailSourceSelect()}
+     ) rail
+     where true
        ${predicates.length > 0 ? `and ${predicates.join(' and ')}` : ''}
      order by rail.feature_id, rail.rail_type, rail.rail_name, rail.source_path
      limit $${params.length}`,

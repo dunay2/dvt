@@ -3024,7 +3024,7 @@ test('tracked migrations split archive documentation into deprecated physical le
 
   assert.match(archiveDocsLeafMigration.sql, /SYS-DOCS-GOVERNANCE-ARCHIVE/);
   assert.match(archiveDocsLeafMigration.sql, /PLANNING-DB-DOCS-ARCHIVE-LEAF-MAPPING-20260618/);
-  assert.match(archiveDocsLeafMigration.sql, /status,\n\s+children_required/);
+  assert.match(archiveDocsLeafMigration.sql, /status,\r?\n\s+children_required/);
   assert.match(archiveDocsLeafMigration.sql, /'legacy',/);
   assert.match(archiveDocsLeafMigration.sql, /'deprecated'/);
   assert.match(archiveDocsLeafMigration.sql, /old or nonfunctional material remains queryable/);
@@ -4917,6 +4917,366 @@ test('tracked migrations resolve duplicate Web Canvas node workbench panel mappi
   assert.match(duplicateResolutionMigration.sql, /required = false/);
   assert.doesNotMatch(duplicateResolutionMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(duplicateResolutionMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reactivate Web Canvas node workbench panel with a real panel source', () => {
+  const migrations = readMigrationFiles();
+  const nodeWorkbenchPanelMigration = migrations.find(
+    (migration) => migration.fileName === '225_web_canvas_node_workbench_panel_reactivation.sql'
+  );
+
+  assert.ok(nodeWorkbenchPanelMigration);
+  assert.match(nodeWorkbenchPanelMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(nodeWorkbenchPanelMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(nodeWorkbenchPanelMigration.sql, /CanvasNodeWorkbenchPanel\.test\.tsx/);
+  assert.match(nodeWorkbenchPanelMigration.sql, /CanvasNodeWorkbenchOverlay\.test\.tsx/);
+  assert.match(nodeWorkbenchPanelMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(nodeWorkbenchPanelMigration.sql, /ConfigureCanvasDbtNode;ConfigureCanvasDvtNode/);
+  assert.match(
+    nodeWorkbenchPanelMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL/
+  );
+  assert.match(
+    nodeWorkbenchPanelMigration.sql,
+    /The contextual overlay mounts CanvasNodeWorkbenchPanel, not CanvasInspectorPanel/
+  );
+  assert.match(nodeWorkbenchPanelMigration.sql, /insert into architecture\.component_test/);
+  assert.match(nodeWorkbenchPanelMigration.sql, /'unit'/);
+  assert.match(nodeWorkbenchPanelMigration.sql, /'architecture'/);
+  assert.doesNotMatch(nodeWorkbenchPanelMigration.sql, /'presentation'/);
+  assert.doesNotMatch(nodeWorkbenchPanelMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep Web Canvas node workbench panel reactivation effective', () => {
+  const migrations = readMigrationFiles();
+  const effectiveReactivationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '226_web_canvas_node_workbench_panel_effective_reactivation.sql'
+  );
+
+  assert.ok(effectiveReactivationMigration);
+  assert.match(effectiveReactivationMigration.sql, /local_definitions/);
+  assert.match(effectiveReactivationMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(effectiveReactivationMigration.sql, /CanvasNodeWorkbenchPanel\.test\.tsx/);
+  assert.match(effectiveReactivationMigration.sql, /source_path = excluded\.source_path/);
+  assert.match(effectiveReactivationMigration.sql, /status = excluded\.status/);
+  assert.match(
+    effectiveReactivationMigration.sql,
+    /where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL'/
+  );
+  assert.match(
+    effectiveReactivationMigration.sql,
+    /REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL/
+  );
+  assert.match(effectiveReactivationMigration.sql, /TEST-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(effectiveReactivationMigration.sql, /Prior phantom retirement is superseded/);
+  assert.doesNotMatch(effectiveReactivationMigration.sql, /CanvasNodeWorkbenchDuplicateResolution/);
+  assert.doesNotMatch(effectiveReactivationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Web Canvas node workbench panel feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const featureMechanizationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '227_web_canvas_node_workbench_panel_feature_mechanization.sql'
+  );
+
+  assert.ok(featureMechanizationMigration);
+  assert.match(featureMechanizationMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(featureMechanizationMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(featureMechanizationMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(featureMechanizationMigration.sql, /PRIMARY_NODE_WORKBENCH_SECTION_IDS/);
+  assert.match(featureMechanizationMigration.sql, /resolveActiveNodeWorkbenchTab/);
+  assert.match(featureMechanizationMigration.sql, /CanvasNodeWorkbenchSection/);
+  assert.match(featureMechanizationMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(featureMechanizationMigration.sql, /ConfigureCanvasDbtNode/);
+  assert.match(featureMechanizationMigration.sql, /ConfigureCanvasDvtNode/);
+  assert.match(
+    featureMechanizationMigration.sql,
+    /docs\/architecture\/command-query-rail-governance\.md/
+  );
+  assert.match(
+    featureMechanizationMigration.sql,
+    /docs\/architecture\/fowler-opportunity-planning-governance\.md/
+  );
+  assert.match(featureMechanizationMigration.sql, /pnpm verify:prepush/);
+  assert.match(
+    featureMechanizationMigration.sql,
+    /local#post-import-rail-reconciliation#FRONTEND-GAP-RAIL-RECONCILIATION-20260619#/
+  );
+  assert.match(featureMechanizationMigration.sql, /- 'featureId'/);
+  assert.match(featureMechanizationMigration.sql, /localRailReconciliation/);
+  assert.doesNotMatch(featureMechanizationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(featureMechanizationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations shadow imported frontend gap reconciliation manifests locally', () => {
+  const migrations = readMigrationFiles();
+  const frontendGapReconciliationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '228_frontend_gap_rail_reconciliation_feature_manifest_shadow.sql'
+  );
+
+  assert.ok(frontendGapReconciliationMigration);
+  assert.match(frontendGapReconciliationMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(frontendGapReconciliationMigration.sql, /command_query_rails imported/);
+  assert.match(frontendGapReconciliationMigration.sql, /FRONTEND-GAP-RAIL-RECONCILIATION-20260619/);
+  assert.match(frontendGapReconciliationMigration.sql, /distinct on/);
+  assert.match(frontendGapReconciliationMigration.sql, /- 'featureId'/);
+  assert.match(frontendGapReconciliationMigration.sql, /- 'mechanizationStatus'/);
+  assert.match(frontendGapReconciliationMigration.sql, /localRailReconciliation/);
+  assert.match(frontendGapReconciliationMigration.sql, /source_rank/);
+  assert.doesNotMatch(frontendGapReconciliationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(frontendGapReconciliationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations sanitize local frontend gap reconciliation feature manifests', () => {
+  const migrations = readMigrationFiles();
+  const localFrontendGapManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '229_frontend_gap_rail_reconciliation_local_manifest_sanitize.sql'
+  );
+
+  assert.ok(localFrontendGapManifestMigration);
+  assert.match(localFrontendGapManifestMigration.sql, /feature_mechanization_local_rails rail/);
+  assert.match(
+    localFrontendGapManifestMigration.sql,
+    /local#frontend-gap-rail-reconciliation-20260619#/
+  );
+  assert.match(localFrontendGapManifestMigration.sql, /- 'featureId'/);
+  assert.match(localFrontendGapManifestMigration.sql, /- 'mechanizationStatus'/);
+  assert.match(localFrontendGapManifestMigration.sql, /localRailReconciliation/);
+  assert.match(localFrontendGapManifestMigration.sql, /docs_feature_mechanization_excluded/);
+  assert.doesNotMatch(localFrontendGapManifestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(localFrontendGapManifestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reassert effective Web Canvas node workbench panel profile', () => {
+  const migrations = readMigrationFiles();
+  const nodeWorkbenchProfileMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '230_web_canvas_node_workbench_panel_profile_reassertion.sql'
+  );
+
+  assert.ok(nodeWorkbenchProfileMigration);
+  assert.match(nodeWorkbenchProfileMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(
+    nodeWorkbenchProfileMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasNodeWorkbenchPanel\.tsx/
+  );
+  assert.match(
+    nodeWorkbenchProfileMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasNodeWorkbenchPanel\.test\.tsx/
+  );
+  assert.match(nodeWorkbenchProfileMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(nodeWorkbenchProfileMigration.sql, /CanvasNodeWorkbenchPanel/);
+  assert.match(nodeWorkbenchProfileMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(nodeWorkbenchProfileMigration.sql, /ConfigureCanvasDbtNode/);
+  assert.match(nodeWorkbenchProfileMigration.sql, /ConfigureCanvasDvtNode/);
+  assert.match(nodeWorkbenchProfileMigration.sql, /component-profile/);
+  assert.match(nodeWorkbenchProfileMigration.sql, /files query ownership/);
+  assert.doesNotMatch(nodeWorkbenchProfileMigration.sql, /CanvasNodeWorkbenchDuplicateResolution/);
+  assert.doesNotMatch(nodeWorkbenchProfileMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(nodeWorkbenchProfileMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations rehydrate Web Canvas node workbench feature manifest after imports', () => {
+  const migrations = readMigrationFiles();
+  const featureManifestRehydrationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '231_web_canvas_node_workbench_panel_feature_manifest_rehydration.sql'
+  );
+
+  assert.ok(featureManifestRehydrationMigration);
+  assert.match(featureManifestRehydrationMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(featureManifestRehydrationMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(featureManifestRehydrationMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(featureManifestRehydrationMigration.sql, /PRIMARY_NODE_WORKBENCH_SECTION_IDS/);
+  assert.match(featureManifestRehydrationMigration.sql, /resolveActiveNodeWorkbenchTab/);
+  assert.match(featureManifestRehydrationMigration.sql, /symbols/);
+  assert.match(featureManifestRehydrationMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(featureManifestRehydrationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(featureManifestRehydrationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations restore Web Canvas node workbench panel after post-import legacy rows', () => {
+  const migrations = readMigrationFiles();
+  const postImportPanelMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '232_web_canvas_node_workbench_panel_post_import_authority.sql'
+  );
+
+  assert.ok(postImportPanelMigration);
+  assert.match(postImportPanelMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(postImportPanelMigration.sql, /CanvasNodeWorkbenchPanel/);
+  assert.match(
+    postImportPanelMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasNodeWorkbenchPanel\.tsx/
+  );
+  assert.match(
+    postImportPanelMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasNodeWorkbenchPanel\.test\.tsx/
+  );
+  assert.match(
+    postImportPanelMigration.sql,
+    /delete\s+from\s+planning_query_store\.governance_component_local_ownership_patterns/i
+  );
+  assert.match(
+    postImportPanelMigration.sql,
+    /delete\s+from\s+planning_query_store\.governance_component_local_semantic_items/i
+  );
+  assert.match(
+    postImportPanelMigration.sql,
+    /delete\s+from\s+architecture\.component_observability/i
+  );
+  assert.match(postImportPanelMigration.sql, /CanvasNodeWorkbenchDuplicateResolution/);
+  assert.match(postImportPanelMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(postImportPanelMigration.sql, /component-profile/);
+  assert.match(postImportPanelMigration.sql, /files query ownership/);
+  assert.doesNotMatch(postImportPanelMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations restore Web Canvas node workbench feature manifest after fixed imports', () => {
+  const migrations = readMigrationFiles();
+  const postImportFeatureManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '233_web_canvas_node_workbench_panel_feature_manifest_post_import_restore.sql'
+  );
+
+  assert.ok(postImportFeatureManifestMigration);
+  assert.match(postImportFeatureManifestMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(postImportFeatureManifestMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(postImportFeatureManifestMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(postImportFeatureManifestMigration.sql, /PRIMARY_NODE_WORKBENCH_SECTION_IDS/);
+  assert.match(postImportFeatureManifestMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(postImportFeatureManifestMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(postImportFeatureManifestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(postImportFeatureManifestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Planning DB import local rail persistence feature', () => {
+  const migrations = readMigrationFiles();
+  const importRailPersistenceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '234_planning_db_import_local_feature_rail_persistence_manifest.sql'
+  );
+
+  assert.ok(importRailPersistenceMigration);
+  assert.match(importRailPersistenceMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(
+    importRailPersistenceMigration.sql,
+    /PLANNING-DB-IMPORT-LOCAL-FEATURE-RAIL-PERSISTENCE-20260619/
+  );
+  assert.match(importRailPersistenceMigration.sql, /readLocalFeatureMechanizationRails/);
+  assert.match(
+    importRailPersistenceMigration.sql,
+    /refreshLocalFeatureMechanizationRailSourceHashes/
+  );
+  assert.match(importRailPersistenceMigration.sql, /restoreLocalFeatureMechanizationRails/);
+  assert.match(importRailPersistenceMigration.sql, /PreserveLocalFeatureMechanizationRails/);
+  assert.match(
+    importRailPersistenceMigration.sql,
+    /node --test scripts\/planning-db-import\.test\.cjs/
+  );
+  assert.match(
+    importRailPersistenceMigration.sql,
+    /pnpm docs:feature-mechanization:implementation/
+  );
+  assert.doesNotMatch(importRailPersistenceMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(importRailPersistenceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations provide final DB-first authority for Canvas node workbench panel', () => {
+  const migrations = readMigrationFiles();
+  const finalPanelAuthorityMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '238_web_canvas_node_workbench_panel_final_dbfirst_authority.sql'
+  );
+
+  assert.ok(finalPanelAuthorityMigration);
+  assert.match(finalPanelAuthorityMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(finalPanelAuthorityMigration.sql, /CanvasNodeWorkbenchPanel/);
+  assert.match(finalPanelAuthorityMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(finalPanelAuthorityMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(finalPanelAuthorityMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(finalPanelAuthorityMigration.sql, /governance_component_local_definitions/);
+  assert.match(
+    finalPanelAuthorityMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasNodeWorkbenchPanel\.tsx/
+  );
+  assert.match(
+    finalPanelAuthorityMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasNodeWorkbenchPanel\.test\.tsx/
+  );
+  assert.match(finalPanelAuthorityMigration.sql, /files query ownership/);
+  assert.doesNotMatch(finalPanelAuthorityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reseed Canvas node workbench feature manifests after import refresh', () => {
+  const migrations = readMigrationFiles();
+  const reseedMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '239_web_canvas_node_workbench_panel_local_manifest_reseed.sql'
+  );
+
+  assert.ok(reseedMigration);
+  assert.match(reseedMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(reseedMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(reseedMigration.sql, /CanvasNodeWorkbenchPanel/);
+  assert.match(reseedMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(reseedMigration.sql, /NodeWorkbenchTabItem/);
+  assert.match(reseedMigration.sql, /renderSectionBody/);
+  assert.match(reseedMigration.sql, /resolveActiveNodeWorkbenchTab/);
+  assert.match(reseedMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(reseedMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(reseedMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(reseedMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Canvas node workbench DB-local feature manifests', () => {
+  const migrations = readMigrationFiles();
+  const completenessMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '240_web_canvas_node_workbench_panel_manifest_completeness.sql'
+  );
+
+  assert.ok(completenessMigration);
+  assert.match(completenessMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(completenessMigration.sql, /userStories/);
+  assert.match(completenessMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(completenessMigration.sql, /domainObjects/);
+  assert.match(completenessMigration.sql, /fowlerSignals/);
+  assert.match(completenessMigration.sql, /architectureGuards/);
+  assert.match(completenessMigration.sql, /cypressFlows/);
+  assert.match(completenessMigration.sql, /allowedImplementationSurfaces/);
+  assert.doesNotMatch(completenessMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(completenessMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations restore Canvas node workbench manifests after governance refresh', () => {
+  const migrations = readMigrationFiles();
+  const postRefreshMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '241_web_canvas_node_workbench_panel_post_refresh_manifest.sql'
+  );
+
+  assert.ok(postRefreshMigration);
+  assert.match(postRefreshMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(postRefreshMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(postRefreshMigration.sql, /CanvasNodeWorkbenchPanel/);
+  assert.match(postRefreshMigration.sql, /CanvasNodeWorkbenchPanelProps/);
+  assert.match(postRefreshMigration.sql, /NodeWorkbenchTabItem/);
+  assert.match(postRefreshMigration.sql, /userStories/);
+  assert.match(postRefreshMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(postRefreshMigration.sql, /domainObjects/);
+  assert.match(postRefreshMigration.sql, /fowlerSignals/);
+  assert.match(postRefreshMigration.sql, /architectureGuards/);
+  assert.match(postRefreshMigration.sql, /cypressFlows/);
+  assert.match(postRefreshMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(postRefreshMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(postRefreshMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(postRefreshMigration.sql, /truncate\s+/i);
 });
 
 test('tracked migrations canonicalize Web Canvas DBT and DVT field components', () => {

@@ -372,6 +372,8 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
   ]);
   assert.equal(queryCalls.length, 2);
   assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
+  assert.match(queryCalls[1].sql, /planning_query_store\.feature_mechanization_local_rails/);
+  assert.match(queryCalls[1].sql, /partition by rail_id/);
   assert.doesNotMatch(queryCalls[1].sql, /distinct on/i);
   assert.deepEqual(result, [
     {
@@ -425,6 +427,7 @@ test('readFeatureMechanizationManifestsFromDb skips import when DB manifests are
 
   assert.deepEqual(importCalls, []);
   assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
+  assert.match(queryCalls[1].sql, /planning_query_store\.feature_mechanization_local_rails/);
   assert.equal(result.length, 1);
 });
 

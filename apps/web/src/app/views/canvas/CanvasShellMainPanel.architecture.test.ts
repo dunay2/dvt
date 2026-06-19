@@ -23,6 +23,7 @@ describe('CanvasShellMainPanel architecture', () => {
 
     expect(NODE_WORKBENCH_OVERLAY_SOURCE).toContain('data-slot="canvas-node-workbench-overlay"');
     expect(NODE_WORKBENCH_OVERLAY_SOURCE).toContain('function CanvasNodeWorkbenchOverlaySurface');
-    expect(NODE_WORKBENCH_OVERLAY_SOURCE).toContain('CanvasInspectorPanel');
+    expect(NODE_WORKBENCH_OVERLAY_SOURCE).toContain('CanvasNodeWorkbenchPanel');
+    expect(NODE_WORKBENCH_OVERLAY_SOURCE).not.toContain('CanvasInspectorPanel');
   });
 });
