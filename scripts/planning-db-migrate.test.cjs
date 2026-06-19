@@ -3700,6 +3700,120 @@ test('tracked migrations split API application service tests into evidence leave
   assert.doesNotMatch(apiServiceTestLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split API infrastructure into adapter leaves', () => {
+  const migrations = readMigrationFiles();
+  const apiInfrastructureLeafMigration = migrations.find(
+    (migration) => migration.fileName === '221_api_infrastructure_leaf_components.sql'
+  );
+
+  assert.ok(apiInfrastructureLeafMigration);
+  assert.match(
+    apiInfrastructureLeafMigration.sql,
+    /create temporary table api_infrastructure_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-API-INFRA-AUTH',
+    'SYS-API-INFRA-BACKPRESSURE',
+    'SYS-API-INFRA-START-RUN-ADMISSION',
+    'SYS-API-INFRA-RUNTIME-TELEMETRY',
+    'SYS-API-INFRA-WORKSPACE-DRAFT',
+    'SYS-API-INFRA-WORKSPACE-LOCAL-ADAPTERS',
+    'SYS-API-INFRA-WAREHOUSE-SOURCES',
+    'SYS-API-INFRA-RUNTIME-FOUNDATION',
+  ]) {
+    assert.match(apiInfrastructureLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/api/src/infrastructure/auth/oidcAuthenticator\\.ts',
+    'apps/api/src/infrastructure/backpressure/RawSqlBackpressureStore\\.ts',
+    'apps/api/src/infrastructure/startRun/PostgresDuplicateRunProbe\\.ts',
+    'apps/api/src/infrastructure/telemetry/ObservabilityStartRunSlaTelemetry\\.ts',
+    'apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore\\.ts',
+    'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository\\.ts',
+    'apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog\\.ts',
+    'apps/api/src/db/pool\\.ts',
+    'apps/api/src/plugins/observability\\.ts',
+  ]) {
+    assert.match(apiInfrastructureLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(apiInfrastructureLeafMigration.sql, /SYS-API-INFRASTRUCTURE/);
+  assert.match(apiInfrastructureLeafMigration.sql, /children_required = true/);
+  assert.match(apiInfrastructureLeafMigration.sql, /REL-API-INFRASTRUCTURE-CONTAINS-/);
+  assert.match(apiInfrastructureLeafMigration.sql, /'depends_on'/);
+  assert.match(
+    apiInfrastructureLeafMigration.sql,
+    /SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION/
+  );
+  assert.match(apiInfrastructureLeafMigration.sql, /SYS-API-APPLICATION-SERVICES-WORKSPACE/);
+  assert.match(apiInfrastructureLeafMigration.sql, /SYS-API-RUNTIME-COMPOSITION/);
+  assert.match(apiInfrastructureLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(apiInfrastructureLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(apiInfrastructureLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    apiInfrastructureLeafMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.match(
+    apiInfrastructureLeafMigration.sql,
+    /nonfunctional\s+-- files require explicit deprecation evidence|nonfunctional files require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(apiInfrastructureLeafMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(apiInfrastructureLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiInfrastructureLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations deprecate stale Canvas contextual workbench local rail source', () => {
+  const migrations = readMigrationFiles();
+  const staleCanvasRailMigration = migrations.find(
+    (migration) => migration.fileName === '222_deprecate_stale_canvas_contextual_workbench_rail.sql'
+  );
+
+  assert.ok(staleCanvasRailMigration);
+  assert.match(
+    staleCanvasRailMigration.sql,
+    /update planning_query_store\.feature_mechanization_local_rails rail/
+  );
+  assert.match(staleCanvasRailMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(staleCanvasRailMigration.sql, /rail_status = 'deprecated'/);
+  assert.match(
+    staleCanvasRailMigration.sql,
+    /CanvasContextualWorkbenchPanel\.tsx[\s\S]*deprecatedSourcePaths/
+  );
+  assert.match(staleCanvasRailMigration.sql, /canonicalRailSources/);
+  assert.match(
+    staleCanvasRailMigration.sql,
+    /docs\/architecture\/components\/web\/graph\/canvas-workbench-command-query-catalog\.md/
+  );
+  assert.match(staleCanvasRailMigration.sql, /canvasInteractionCommandSurface\.ts/);
+  assert.match(staleCanvasRailMigration.sql, /canvasNodeContextMenuModel\.ts/);
+  assert.match(staleCanvasRailMigration.sql, /sourcePathReconciledBy/);
+  assert.doesNotMatch(staleCanvasRailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(staleCanvasRailMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations harden deprecated Canvas contextual workbench rail completion gate', () => {
+  const migrations = readMigrationFiles();
+  const staleCanvasRailGateMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '223_canvas_contextual_workbench_deprecation_gate_hardening.sql'
+  );
+
+  assert.ok(staleCanvasRailGateMigration);
+  assert.match(
+    staleCanvasRailGateMigration.sql,
+    /local#CANVAS-CONTEXTUAL-PROJECT-CODE-20260619#query#resolvecanvascontextmenu/
+  );
+  assert.match(staleCanvasRailGateMigration.sql, /rail\.rail_status = 'deprecated'/);
+  assert.match(staleCanvasRailGateMigration.sql, /completion_gate = target_gate\.completion_gate/);
+  assert.match(staleCanvasRailGateMigration.sql, /pnpm verify:prepush/);
+  assert.match(staleCanvasRailGateMigration.sql, /completionGateHardenedBy/);
+  assert.doesNotMatch(staleCanvasRailGateMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(staleCanvasRailGateMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split API HTTP entrypoint tests into evidence leaves', () => {
   const migrations = readMigrationFiles();
   const apiHttpTestLeafMigration = migrations.find(
