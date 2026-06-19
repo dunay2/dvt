@@ -3641,6 +3641,65 @@ test('tracked migrations keep API application service aggregate on an existing p
   assert.doesNotMatch(apiServiceExistingPathMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split API application service tests into evidence leaves', () => {
+  const migrations = readMigrationFiles();
+  const apiServiceTestLeafMigration = migrations.find(
+    (migration) => migration.fileName === '208_api_application_service_test_leaf_components.sql'
+  );
+
+  assert.ok(apiServiceTestLeafMigration);
+  assert.match(
+    apiServiceTestLeafMigration.sql,
+    /create temporary table api_application_service_test_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-API-TESTS-APPLICATION-SERVICES-AUTHORIZATION',
+    'SYS-API-TESTS-APPLICATION-SERVICES-RUN-LIFECYCLE',
+    'SYS-API-TESTS-APPLICATION-SERVICES-START-RUN-ADMISSION',
+    'SYS-API-TESTS-APPLICATION-SERVICES-PLAN-COMMANDS',
+    'SYS-API-TESTS-APPLICATION-SERVICES-WORKSPACE',
+    'SYS-API-TESTS-APPLICATION-SERVICES-WAREHOUSE-SOURCES',
+    'SYS-API-TESTS-APPLICATION-SERVICES-PROJECTS-COST',
+    'SYS-API-TESTS-APPLICATION-SERVICES-PLANSTORE',
+    'SYS-API-TESTS-APPLICATION-SERVICES-ARCHITECTURE-HARNESS',
+  ]) {
+    assert.match(apiServiceTestLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/api/test/application/ports/accessDecision\\.test\\.ts',
+    'apps/api/test/application/services/startRunAuthorizedFacade\\.auth\\.test\\.ts',
+    'apps/api/test/application/services/CompilePlanUseCase\\.test\\.ts',
+    'apps/api/test/application/services/workspaceGraphDraftCapabilityPolicy\\.test\\.ts',
+    'apps/api/test/application/services/warehouseSourceYaml\\.test\\.ts',
+    'apps/api/test/application/services/StoredPlanExecutabilityValidator\\.test\\.ts',
+    'apps/api/test/application/services/applicationArchitectureAst\\.support\\.ts',
+  ]) {
+    assert.match(apiServiceTestLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(apiServiceTestLeafMigration.sql, /SYS-API-TESTS-APPLICATION-SERVICES/);
+  assert.match(apiServiceTestLeafMigration.sql, /children_required = true/);
+  assert.match(apiServiceTestLeafMigration.sql, /REL-API-TESTS-APPLICATION-SERVICES-CONTAINS-/);
+  assert.match(apiServiceTestLeafMigration.sql, /'guards'/);
+  assert.match(apiServiceTestLeafMigration.sql, /SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION/);
+  assert.match(apiServiceTestLeafMigration.sql, /SYS-PLANSTORE-API-EXECUTABILITY-VALIDATION/);
+  assert.match(apiServiceTestLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(apiServiceTestLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(apiServiceTestLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    apiServiceTestLeafMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.match(
+    apiServiceTestLeafMigration.sql,
+    /no\s+(?:--\s*)?application-service\s+test file is deprecated/i
+  );
+  assert.doesNotMatch(apiServiceTestLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiServiceTestLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
