@@ -4132,6 +4132,83 @@ test('tracked migrations canonicalize Web Canvas execution/runs aggregate repo p
   assert.doesNotMatch(webCanvasExecutionPathMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Web Canvas controller orchestration into responsibility leaves', () => {
+  const migrations = readMigrationFiles();
+  const webCanvasControllerOrchestrationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '218_web_canvas_controller_orchestration_leaf_components.sql'
+  );
+
+  assert.ok(webCanvasControllerOrchestrationMigration);
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /create temporary table web_canvas_controller_orchestration_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-WEB-CANVAS-CONTROLLER-HOOK-CORE',
+    'SYS-WEB-CANVAS-CONTROLLER-ACTIVE-DRAFT-AUTHORING',
+    'SYS-WEB-CANVAS-CONTROLLER-DRAFT-RECOVERY',
+    'SYS-WEB-CANVAS-CONTROLLER-PERSISTENCE-GUARDS',
+    'SYS-WEB-CANVAS-CONTROLLER-TEST-HARNESS',
+  ]) {
+    assert.match(webCanvasControllerOrchestrationMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/web/src/app/views/canvas/useCanvasController\\.ts',
+    'apps/web/src/app/views/canvas/useCanvasController\\.activeDraftNodeAuthoring\\.test\\.tsx',
+    'apps/web/src/app/views/canvas/useCanvasController\\.reloadHydrationGuards\\.test\\.tsx',
+    'apps/web/src/app/views/canvas/useCanvasController\\.persistence\\.test\\.tsx',
+    'apps/web/src/app/views/canvas/useCanvasController\\.test\\.harness\\.tsx',
+  ]) {
+    assert.match(webCanvasControllerOrchestrationMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /SYS-WEB-CANVAS-CONTROLLER-ORCHESTRATION/
+  );
+  assert.match(webCanvasControllerOrchestrationMigration.sql, /children_required = true/);
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /REL-WEB-CANVAS-CONTROLLER-ORCHESTRATION-CONTAINS-/
+  );
+  assert.match(webCanvasControllerOrchestrationMigration.sql, /'depends_on'/);
+  assert.match(webCanvasControllerOrchestrationMigration.sql, /OrchestrateCanvasController/);
+  assert.match(webCanvasControllerOrchestrationMigration.sql, /RecoverCanvasControllerDraft/);
+  assert.match(webCanvasControllerOrchestrationMigration.sql, /PersistCanvasControllerDraft/);
+  assert.match(webCanvasControllerOrchestrationMigration.sql, /BuildCanvasControllerTestHarness/);
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /SYS-WEB-CANVAS-DRAFT-AUTOSAVE-PERSISTENCE/
+  );
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD/
+  );
+  assert.match(webCanvasControllerOrchestrationMigration.sql, /insert into architecture\.contract/);
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /insert into architecture\.component_port/
+  );
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /insert into architecture\.component_test/
+  );
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.match(
+    webCanvasControllerOrchestrationMigration.sql,
+    /nonfunctional files require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(webCanvasControllerOrchestrationMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(webCanvasControllerOrchestrationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webCanvasControllerOrchestrationMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
