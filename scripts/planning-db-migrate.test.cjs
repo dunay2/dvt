@@ -3814,6 +3814,53 @@ test('tracked migrations harden deprecated Canvas contextual workbench rail comp
   assert.doesNotMatch(staleCanvasRailGateMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile active Canvas contextual workbench panel ownership', () => {
+  const migrations = readMigrationFiles();
+  const contextualWorkbenchPanelMigration = migrations.find(
+    (migration) => migration.fileName === '224_web_canvas_contextual_workbench_panel_reconcile.sql'
+  );
+
+  assert.ok(contextualWorkbenchPanelMigration);
+  assert.match(contextualWorkbenchPanelMigration.sql, /SYS-WEB-CANVAS-CONTEXTUAL-WORKBENCH-PANEL/);
+  assert.match(
+    contextualWorkbenchPanelMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextualWorkbenchPanel\.tsx/
+  );
+  assert.match(contextualWorkbenchPanelMigration.sql, /CanvasContextualWorkbenchPanelProps/);
+  assert.match(
+    contextualWorkbenchPanelMigration.sql,
+    /REL-WEB-CANVAS-CONTEXTUAL-WORKBENCH-CONTAINS-PANEL/
+  );
+  assert.match(
+    contextualWorkbenchPanelMigration.sql,
+    /REL-WEB-CANVAS-SHELL-COMPOSITION-DEPENDS-ON-CONTEXTUAL-WORKBENCH-PANEL/
+  );
+  assert.match(contextualWorkbenchPanelMigration.sql, /ReadCanvasShellContextualWorkbench/);
+  assert.match(contextualWorkbenchPanelMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(
+    contextualWorkbenchPanelMigration.sql,
+    /CanvasShell\.contextMenuIntegration\.test\.tsx/
+  );
+  assert.match(contextualWorkbenchPanelMigration.sql, /CanvasShell\.graphSurface\.test\.tsx/);
+  assert.match(contextualWorkbenchPanelMigration.sql, /rail_status = 'deprecated'/);
+  assert.match(
+    contextualWorkbenchPanelMigration.sql,
+    /duplicates the canonical Canvas context-menu query rail/
+  );
+  assert.match(
+    contextualWorkbenchPanelMigration.sql,
+    /activePresentationComponent', 'SYS-WEB-CANVAS-CONTEXTUAL-WORKBENCH-PANEL'/
+  );
+  assert.match(contextualWorkbenchPanelMigration.sql, /- 'deprecatedSourcePaths'/);
+  assert.doesNotMatch(contextualWorkbenchPanelMigration.sql, /deprecatedSourcePaths', to_jsonb/);
+  assert.doesNotMatch(
+    contextualWorkbenchPanelMigration.sql,
+    /CanvasContextualWorkbenchPanel\.tsx is no longer tracked/
+  );
+  assert.doesNotMatch(contextualWorkbenchPanelMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(contextualWorkbenchPanelMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split API HTTP entrypoint tests into evidence leaves', () => {
   const migrations = readMigrationFiles();
   const apiHttpTestLeafMigration = migrations.find(
