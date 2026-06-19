@@ -3700,6 +3700,65 @@ test('tracked migrations split API application service tests into evidence leave
   assert.doesNotMatch(apiServiceTestLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split API HTTP entrypoint tests into evidence leaves', () => {
+  const migrations = readMigrationFiles();
+  const apiHttpTestLeafMigration = migrations.find(
+    (migration) => migration.fileName === '209_api_http_entrypoint_test_leaf_components.sql'
+  );
+
+  assert.ok(apiHttpTestLeafMigration);
+  assert.match(
+    apiHttpTestLeafMigration.sql,
+    /create temporary table api_http_entrypoint_test_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-API-HTTP-ENTRYPOINT-TESTS-ADMIN-REPAIR',
+    'SYS-API-HTTP-ENTRYPOINT-TESTS-AUTHENTICATION',
+    'SYS-API-HTTP-ENTRYPOINT-TESTS-ERROR-TRANSLATION',
+    'SYS-API-HTTP-ENTRYPOINT-TESTS-PLAN-COMMANDS',
+    'SYS-API-HTTP-ENTRYPOINT-TESTS-RUN-LIFECYCLE',
+    'SYS-API-HTTP-ENTRYPOINT-TESTS-RUNTIME-ROUTE-REGISTRY',
+    'SYS-API-HTTP-ENTRYPOINT-TESTS-WORKSPACE-ROUTES',
+    'SYS-API-HTTP-ENTRYPOINT-TESTS-ARCHITECTURE-HARNESS',
+  ]) {
+    assert.match(apiHttpTestLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/api/test/entrypoints/http/adminRoutes\\.test\\.ts',
+    'apps/api/test/entrypoints/http/httpBearerAuthentication\\.test\\.ts',
+    'apps/api/test/entrypoints/http/httpErrorTranslation\\.respondAndStatic\\.test\\.ts',
+    'apps/api/test/entrypoints/http/previewPlanRoute\\.outcomes\\.test\\.ts',
+    'apps/api/test/entrypoints/http/startRunRoute\\.authAndSuccess\\.test\\.ts',
+    'apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes\\.test\\.ts',
+    'apps/api/test/entrypoints/http/workspacePluginCatalogRoutes\\.test\\.ts',
+    'apps/api/test/entrypoints/http/httpArchitectureAst\\.support\\.ts',
+  ]) {
+    assert.match(apiHttpTestLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(apiHttpTestLeafMigration.sql, /SYS-API-HTTP-ENTRYPOINT-TESTS/);
+  assert.match(apiHttpTestLeafMigration.sql, /children_required = true/);
+  assert.match(apiHttpTestLeafMigration.sql, /REL-API-HTTP-ENTRYPOINT-TESTS-CONTAINS-/);
+  assert.match(apiHttpTestLeafMigration.sql, /'guards'/);
+  assert.match(apiHttpTestLeafMigration.sql, /SYS-API-HTTP-RUN-LIFECYCLE/);
+  assert.match(apiHttpTestLeafMigration.sql, /SYS-API-HTTP-WORKSPACE-ROUTES/);
+  assert.match(apiHttpTestLeafMigration.sql, /SYS-API-HTTP-ERROR-TRANSLATION/);
+  assert.match(apiHttpTestLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(apiHttpTestLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(apiHttpTestLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(apiHttpTestLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(
+    apiHttpTestLeafMigration.sql,
+    /nonfunctional files require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(apiHttpTestLeafMigration.sql, /planRoutePlanSourcePolicy\.test\.ts/);
+  assert.doesNotMatch(apiHttpTestLeafMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(apiHttpTestLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiHttpTestLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
