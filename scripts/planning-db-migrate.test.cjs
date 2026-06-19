@@ -3548,6 +3548,99 @@ test('tracked migrations split CI tools into responsibility leaves', () => {
   assert.doesNotMatch(ciToolsLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split API application services into responsibility leaves', () => {
+  const migrations = readMigrationFiles();
+  const apiServiceLeafMigration = migrations.find(
+    (migration) => migration.fileName === '205_api_application_service_leaf_components.sql'
+  );
+
+  assert.ok(apiServiceLeafMigration);
+  assert.match(
+    apiServiceLeafMigration.sql,
+    /create temporary table api_application_service_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-API-APPLICATION-SERVICES-AUTHORIZATION',
+    'SYS-API-APPLICATION-SERVICES-RUN-LIFECYCLE',
+    'SYS-API-APPLICATION-SERVICES-START-RUN-ADMISSION',
+    'SYS-API-APPLICATION-SERVICES-PLAN-COMMANDS',
+    'SYS-API-APPLICATION-SERVICES-WORKSPACE',
+    'SYS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES',
+    'SYS-API-APPLICATION-SERVICES-PROJECTS-COST',
+  ]) {
+    assert.match(apiServiceLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/api/src/application/services/authorizeCommandScopeService\\.ts',
+    'apps/api/src/application/services/startRunAuthorizedFacade\\.ts',
+    'apps/api/src/application/services/CompilePlanUseCase\\.ts',
+    'apps/api/src/application/services/getWorkspaceGraphDraftUseCase\\.ts',
+    'apps/api/src/application/services/importWarehouseSourcesUseCase\\.ts',
+    'apps/api/src/application/services/getCostAttributionSummaryUseCase\\.ts',
+    'apps/api/src/application/services/warehouseSourceYamlTypes\\.ts',
+  ]) {
+    assert.match(apiServiceLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(apiServiceLeafMigration.sql, /SYS-API-APPLICATION-SERVICES/);
+  assert.match(apiServiceLeafMigration.sql, /children_required = true/);
+  assert.match(apiServiceLeafMigration.sql, /REL-API-APPLICATION-SERVICES-CONTAINS-/);
+  assert.match(apiServiceLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(apiServiceLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(apiServiceLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(apiServiceLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(
+    apiServiceLeafMigration.sql,
+    /no active service\s+-- file is deprecated|no active service file is deprecated/i
+  );
+  assert.doesNotMatch(apiServiceLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiServiceLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize API application service aggregate repo path', () => {
+  const migrations = readMigrationFiles();
+  const apiServiceParentAnchorMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '206_api_application_service_parent_repo_path_canonicalization.sql'
+  );
+
+  assert.ok(apiServiceParentAnchorMigration);
+  assert.match(apiServiceParentAnchorMigration.sql, /SYS-API-APPLICATION-SERVICES/);
+  assert.match(apiServiceParentAnchorMigration.sql, /SYS-PLANSTORE-API-COMPOSITION/);
+  assert.match(
+    apiServiceParentAnchorMigration.sql,
+    /planning_query_store\.governance_component_local_definitions#SYS-API-APPLICATION-SERVICES/
+  );
+  assert.match(apiServiceParentAnchorMigration.sql, /duplicate repo_path integrity findings/);
+  assert.match(apiServiceParentAnchorMigration.sql, /insert into architecture\.design/);
+  assert.match(apiServiceParentAnchorMigration.sql, /insert into architecture\.design_scope/);
+  assert.doesNotMatch(apiServiceParentAnchorMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiServiceParentAnchorMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep API application service aggregate on an existing path', () => {
+  const migrations = readMigrationFiles();
+  const apiServiceExistingPathMigration = migrations.find(
+    (migration) => migration.fileName === '207_api_application_service_parent_existing_path.sql'
+  );
+
+  assert.ok(apiServiceExistingPathMigration);
+  assert.match(apiServiceExistingPathMigration.sql, /SYS-API-APPLICATION-SERVICES/);
+  assert.match(apiServiceExistingPathMigration.sql, /apps\/api\/src\/application/);
+  assert.match(apiServiceExistingPathMigration.sql, /SYS-API-APPLICATION-PORTS/);
+  assert.match(apiServiceExistingPathMigration.sql, /SYS-PLANSTORE-API-COMPOSITION/);
+  assert.match(
+    apiServiceExistingPathMigration.sql,
+    /component-integrity while avoiding the duplicate/
+  );
+  assert.match(apiServiceExistingPathMigration.sql, /insert into architecture\.design/);
+  assert.match(apiServiceExistingPathMigration.sql, /insert into architecture\.design_scope/);
+  assert.doesNotMatch(apiServiceExistingPathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(apiServiceExistingPathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
