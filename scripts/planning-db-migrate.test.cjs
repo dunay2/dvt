@@ -3119,6 +3119,67 @@ test('tracked migrations split engine architecture documentation into physical l
   assert.doesNotMatch(engineArchitectureLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Planning DB migration catalog into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const migrationCatalogLeafMigration = migrations.find(
+    (migration) => migration.fileName === '197_planning_db_migration_catalog_leaf_components.sql'
+  );
+
+  assert.ok(migrationCatalogLeafMigration);
+  assert.match(
+    migrationCatalogLeafMigration.sql,
+    /create temporary table planning_db_migration_catalog_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS-FOUNDATION',
+    'SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS-RAIL-INTEGRITY',
+    'SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS-API-WEB-HARDENING',
+    'SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS-COMPONENT-AUTHORITY',
+    'SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS-LEAF-MAPPING',
+  ]) {
+    assert.match(migrationCatalogLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'tools/planning-db/migrations/00\\*\\.sql',
+    'tools/planning-db/migrations/04\\*\\.sql',
+    'tools/planning-db/migrations/05\\*\\.sql',
+    'tools/planning-db/migrations/08\\*\\.sql',
+    'tools/planning-db/migrations/09\\*\\.sql',
+    'tools/planning-db/migrations/12\\*\\.sql',
+    'tools/planning-db/migrations/13\\*\\.sql',
+    'tools/planning-db/migrations/17\\*\\.sql',
+    'tools/planning-db/migrations/18\\*\\.sql',
+    'tools/planning-db/migrations/19\\*\\.sql',
+  ]) {
+    assert.match(migrationCatalogLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(
+    migrationCatalogLeafMigration.sql,
+    /PLANNING-DB-MIGRATION-CATALOG-LEAF-MAPPING-20260619/
+  );
+  assert.match(migrationCatalogLeafMigration.sql, /SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS/);
+  assert.match(migrationCatalogLeafMigration.sql, /repo_path = 'tools\/planning-db\/migrations'/);
+  assert.match(migrationCatalogLeafMigration.sql, /REL-PLANNING-DB-MIGRATIONS-CONTAINS-/);
+  assert.match(migrationCatalogLeafMigration.sql, /ReadPlanningDbFoundationMigrations/);
+  assert.match(migrationCatalogLeafMigration.sql, /ReadPlanningDbRailIntegrityMigrations/);
+  assert.match(migrationCatalogLeafMigration.sql, /ReadPlanningDbApiWebHardeningMigrations/);
+  assert.match(migrationCatalogLeafMigration.sql, /ReadPlanningDbComponentAuthorityMigrations/);
+  assert.match(migrationCatalogLeafMigration.sql, /ReadPlanningDbLeafMappingMigrations/);
+  assert.match(migrationCatalogLeafMigration.sql, /No Planning DB migration files are deprecated/);
+  assert.match(migrationCatalogLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(migrationCatalogLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(migrationCatalogLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    migrationCatalogLeafMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.doesNotMatch(migrationCatalogLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(migrationCatalogLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(
