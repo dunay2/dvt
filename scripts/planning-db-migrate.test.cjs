@@ -3759,6 +3759,88 @@ test('tracked migrations split API HTTP entrypoint tests into evidence leaves', 
   assert.doesNotMatch(apiHttpTestLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Web Canvas draft lifecycle into semantic leaves', () => {
+  const migrations = readMigrationFiles();
+  const webCanvasDraftMigration = migrations.find(
+    (migration) => migration.fileName === '210_web_canvas_draft_lifecycle_leaf_components.sql'
+  );
+
+  assert.ok(webCanvasDraftMigration);
+  assert.match(
+    webCanvasDraftMigration.sql,
+    /create temporary table web_canvas_draft_lifecycle_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-WEB-CANVAS-DRAFT-ACCESS-POSTURE',
+    'SYS-WEB-CANVAS-DRAFT-AUTHORING-MODEL',
+    'SYS-WEB-CANVAS-DRAFT-REPOSITORY-SCOPE',
+    'SYS-WEB-CANVAS-DRAFT-SESSION-STATE',
+    'SYS-WEB-CANVAS-DRAFT-READ-PRESENTATION',
+    'SYS-WEB-CANVAS-DRAFT-AUTOSAVE-PERSISTENCE',
+    'SYS-WEB-CANVAS-DRAFT-BOOTSTRAP-RECOVERY',
+  ]) {
+    assert.match(webCanvasDraftMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'apps/web/src/app/views/canvas/canvasDraftAccessPostureModel\\.ts',
+    'apps/web/src/app/views/canvas/canvasDraftAuthoring\\.ts',
+    'apps/web/src/app/views/canvas/canvasDraftRepository\\.ts',
+    'apps/web/src/app/views/canvas/canvasDraftSession\\.ts',
+    'apps/web/src/app/views/canvas/canvasDraftReadModel\\.ts',
+    'apps/web/src/app/views/canvas/useCanvasDraftAutosave\\.ts',
+    'apps/web/src/app/views/canvas/useCanvasDraftBootstrapping\\.ts',
+    'apps/web/src/app/views/canvas/useCanvasDraftReloadHydration\\.ts',
+  ]) {
+    assert.match(webCanvasDraftMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(webCanvasDraftMigration.sql, /SYS-WEB-CANVAS-DRAFT-LIFECYCLE/);
+  assert.match(webCanvasDraftMigration.sql, /children_required = true/);
+  assert.match(webCanvasDraftMigration.sql, /REL-WEB-CANVAS-DRAFT-LIFECYCLE-CONTAINS-/);
+  assert.match(webCanvasDraftMigration.sql, /'depends_on'/);
+  assert.match(webCanvasDraftMigration.sql, /ManageCanvasDraftSessionState/);
+  assert.match(webCanvasDraftMigration.sql, /WriteCanvasDraftRecord/);
+  assert.match(webCanvasDraftMigration.sql, /ReadCanvasDraftPresentation/);
+  assert.match(webCanvasDraftMigration.sql, /RecoverCanvasDraft/);
+  assert.match(webCanvasDraftMigration.sql, /insert into architecture\.contract/);
+  assert.match(webCanvasDraftMigration.sql, /insert into architecture\.component_port/);
+  assert.match(webCanvasDraftMigration.sql, /insert into architecture\.component_test/);
+  assert.match(webCanvasDraftMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(
+    webCanvasDraftMigration.sql,
+    /nonfunctional files require explicit deprecation evidence/i
+  );
+  assert.doesNotMatch(webCanvasDraftMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(webCanvasDraftMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webCanvasDraftMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize Web Canvas draft lifecycle aggregate repo path', () => {
+  const migrations = readMigrationFiles();
+  const webCanvasDraftPathMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '211_web_canvas_draft_lifecycle_parent_path_canonicalization.sql'
+  );
+
+  assert.ok(webCanvasDraftPathMigration);
+  assert.match(
+    webCanvasDraftPathMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-DRAFT-LIFECYCLE-PARENT-PATH-20260619/
+  );
+  assert.match(webCanvasDraftPathMigration.sql, /SYS-WEB-CANVAS-DRAFT-LIFECYCLE/);
+  assert.match(webCanvasDraftPathMigration.sql, /SYS-WEB-CANVAS-CONTROLLER-INTERACTION/);
+  assert.match(
+    webCanvasDraftPathMigration.sql,
+    /repo_path = 'apps\/web\/src\/app\/views\/canvas\/useCanvasDraftLifecycle\.ts'/
+  );
+  assert.match(webCanvasDraftPathMigration.sql, /duplicate_repo_path drift/);
+  assert.doesNotMatch(webCanvasDraftPathMigration.sql, /status\s*=\s*'deprecated'/);
+  assert.doesNotMatch(webCanvasDraftPathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webCanvasDraftPathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(

@@ -319,6 +319,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/207_api_application_service_parent_existing_path.sql
   - tools/planning-db/migrations/208_api_application_service_test_leaf_components.sql
   - tools/planning-db/migrations/209_api_http_entrypoint_test_leaf_components.sql
+  - tools/planning-db/migrations/210_web_canvas_draft_lifecycle_leaf_components.sql
+  - tools/planning-db/migrations/211_web_canvas_draft_lifecycle_parent_path_canonicalization.sql
   - apps/api/src/entrypoints/http/httpBearerAuthentication.ts
   - apps/api/src/entrypoints/http/projectOnboardingRoutes.ts
   - apps/api/src/entrypoints/http/sessionRoute.ts
