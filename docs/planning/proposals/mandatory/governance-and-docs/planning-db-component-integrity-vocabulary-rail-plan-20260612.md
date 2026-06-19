@@ -314,6 +314,9 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/202_web_canvas_residual_surfaces_deprecation.sql
   - tools/planning-db/migrations/203_planning_db_migration_catalog_200s_leaf_mapping.sql
   - tools/planning-db/migrations/204_ci_tools_leaf_components.sql
+  - tools/planning-db/migrations/205_api_application_service_leaf_components.sql
+  - tools/planning-db/migrations/206_api_application_service_parent_repo_path_canonicalization.sql
+  - tools/planning-db/migrations/207_api_application_service_parent_existing_path.sql
   - apps/api/src/entrypoints/http/httpBearerAuthentication.ts
   - apps/api/src/entrypoints/http/projectOnboardingRoutes.ts
   - apps/api/src/entrypoints/http/sessionRoute.ts
