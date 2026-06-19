@@ -3502,6 +3502,52 @@ test('tracked migrations map remaining CI governance tool files', () => {
   assert.doesNotMatch(remainingCiToolMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split CI tools into responsibility leaves', () => {
+  const migrations = readMigrationFiles();
+  const ciToolsLeafMigration = migrations.find(
+    (migration) => migration.fileName === '204_ci_tools_leaf_components.sql'
+  );
+
+  assert.ok(ciToolsLeafMigration);
+  assert.match(ciToolsLeafMigration.sql, /create temporary table ci_tools_leaf_map/);
+
+  for (const componentId of [
+    'SYS-CI-GOVERNANCE-TOOLS-CI-SCOPE-MATRIX',
+    'SYS-CI-GOVERNANCE-TOOLS-CI-PR-QUALITY',
+    'SYS-CI-GOVERNANCE-TOOLS-CI-ARCHITECTURE-BOUNDARIES',
+    'SYS-CI-GOVERNANCE-TOOLS-CI-DOCS-CANON',
+    'SYS-CI-GOVERNANCE-TOOLS-CI-COMMAND-CATALOG',
+    'SYS-CI-GOVERNANCE-TOOLS-CI-HARNESS',
+    'SYS-CI-GOVERNANCE-TOOLS-CI-WEB-HARNESS',
+  ]) {
+    assert.match(ciToolsLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'tools/ci/repository-change-scope\\.mjs',
+    'tools/ci/pr-check-triage\\.mjs',
+    '\\.dependency-cruiser\\.cjs',
+    'tools/ci/canonization-guard\\.mjs',
+    'tools/ci/repository-command-catalog\\.mjs',
+    'tools/ci/ci-tool-test-suite\\.mjs',
+    'tools/ci/run-web-cypress-native\\.mjs',
+    'vitest\\.config\\.ts',
+  ]) {
+    assert.match(ciToolsLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(ciToolsLeafMigration.sql, /SYS-CI-GOVERNANCE-TOOLS-CI/);
+  assert.match(ciToolsLeafMigration.sql, /children_required = true/);
+  assert.match(ciToolsLeafMigration.sql, /REL-CI-GOVERNANCE-TOOLS-CI-CONTAINS-/);
+  assert.match(ciToolsLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(ciToolsLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(ciToolsLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(ciToolsLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.match(ciToolsLeafMigration.sql, /No tools\/ci file is deprecated/);
+  assert.doesNotMatch(ciToolsLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(ciToolsLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split repository metadata root into leaf components', () => {
   const migrations = readMigrationFiles();
   const repoMetadataSplitMigration = migrations.find(
