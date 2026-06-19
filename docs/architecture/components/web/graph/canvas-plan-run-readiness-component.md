@@ -142,7 +142,8 @@ sequenceDiagram
 
 - `apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts`
 - `apps/web/src/app/views/canvas/PlanRunReadinessPanel.test.tsx`
-- `apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx`
+- `apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx`
+- `apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx`
 - `apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx`
 - `apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts`
 - `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`

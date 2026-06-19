@@ -71,9 +71,12 @@ describe('Canvas plan/run readiness architecture', () => {
     const readinessTests = readRepoFile(
       'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts'
     );
-    const runStartTests = readRepoFile(
-      'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx'
-    );
+    const runStartTests = [
+      'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
+      'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',
+    ]
+      .map((filePath) => readRepoFile(filePath))
+      .join('\n');
     const browserProof = readRepoFile(
       'apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts'
     );
@@ -92,7 +95,8 @@ describe('Canvas plan/run readiness architecture', () => {
 
     for (const evidenceRef of [
       'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
-      'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx',
+      'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
+      'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',
       'apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts',
     ]) {
       expect(existsSync(path.join(REPO_ROOT, evidenceRef))).toBe(true);

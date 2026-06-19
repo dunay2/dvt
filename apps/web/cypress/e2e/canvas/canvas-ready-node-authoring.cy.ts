@@ -7,6 +7,10 @@ import {
   stubStatefulCanvasDraftAuthoring,
 } from '../../support/canvasDraftAuthoring';
 import {
+  clickCanvasContextMenuItem,
+  openCanvasContextMenuAt,
+} from '../../support/canvasExecutionSelection';
+import {
   getE2eApiCalls,
   getLastE2eApiCall,
   stubE2eJsonApi,
@@ -84,43 +88,9 @@ function assertNoDraftSaveStatus(): void {
   cy.get('[data-slot="canvas-draft-save-status"]').should('not.exist');
 }
 
-function dispatchCanvasContextMenu(clientX: number, clientY: number): void {
-  cy.get('[data-slot="canvas-viewport-context-surface"]')
-    .should('be.visible')
-    .then(($surface) => {
-      $surface[0]?.dispatchEvent(
-        new MouseEvent('contextmenu', {
-          clientX,
-          clientY,
-          button: 2,
-          bubbles: true,
-          cancelable: true,
-        })
-      );
-    });
-}
-
 function chooseSqlTransformFromCanvasContextMenu(): void {
-  cy.get('[data-slot="canvas-viewport-context-surface"]').should(($surface) => {
-    $surface[0]?.dispatchEvent(
-      new MouseEvent('contextmenu', {
-        clientX: 560,
-        clientY: 260,
-        button: 2,
-        bubbles: true,
-        cancelable: true,
-      })
-    );
-
-    const menu = $surface[0]?.ownerDocument.querySelector('[data-slot="canvas-context-menu"]');
-    expect(menu).not.to.equal(null);
-
-    const sqlTransformItem = Array.from(
-      $surface[0]?.ownerDocument.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') ?? []
-    ).find((button) => button.textContent?.includes('SQL transform'));
-    expect(sqlTransformItem).not.to.equal(undefined);
-    sqlTransformItem?.click();
-  });
+  openCanvasContextMenuAt(560, 260);
+  clickCanvasContextMenuItem('SQL transform');
 }
 
 function addSqlTransformNode(): void {
@@ -248,7 +218,7 @@ describe('Canvas ready node authoring', () => {
 
     cy.contains('Sales canvas').should('be.visible');
     cy.get('[data-slot="canvas-toolbar-insert-command"]').should('not.exist');
-    dispatchCanvasContextMenu(620, 340);
+    openCanvasContextMenuAt(620, 340);
     cy.contains('[role="menuitem"]', 'SQL transform').should('not.exist');
     cy.contains('[role="menuitem"]', 'Add source').should('not.exist');
     cy.then(() => {
