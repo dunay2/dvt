@@ -98,6 +98,7 @@ describe('canvasInteractionCommandSurface', () => {
       },
       canMutateGraph: true,
       canOpenProjectExplorer: true,
+      canOpenProjectCode: true,
       canOpenCanvasSettings: true,
       canPreviewExecutionPlan: true,
       authoringNodeKinds: [
@@ -109,6 +110,7 @@ describe('canvasInteractionCommandSurface', () => {
 
     expect(model.canvasActions).toEqual([
       { action: 'open-project-explorer', label: 'Explore project' },
+      { action: 'open-project-code', label: 'Open project code' },
       { action: 'preview-execution-plan', label: 'Preview execution plan' },
       { action: 'open-canvas-settings', label: 'Canvas settings' },
     ]);
@@ -124,6 +126,25 @@ describe('canvasInteractionCommandSurface', () => {
     expect(JSON.stringify(model)).not.toContain('Run from here');
     expect(JSON.stringify(model)).not.toContain('Duplicate');
     expect(JSON.stringify(model)).not.toContain('Delete');
+  });
+
+  it('offers project code from the canvas menu without requiring graph mutation', () => {
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 720, y: 180 },
+      },
+      canMutateGraph: false,
+      canOpenProjectCode: true,
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+    });
+
+    expect(model.canvasActions).toEqual([
+      { action: 'open-project-code', label: 'Open project code' },
+    ]);
+    expect(model.createNodeActions).toEqual([]);
+    expect(model.edgeActions).toEqual([]);
   });
 
   it('offers only edge deletion for an editable edge context menu', () => {

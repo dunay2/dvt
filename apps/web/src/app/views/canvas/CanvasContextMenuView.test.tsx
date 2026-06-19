@@ -56,6 +56,7 @@ describe('CanvasContextMenuView', () => {
       canMutateGraph: true,
       canOpenCanvasSettings: true,
       canOpenProjectExplorer: true,
+      canOpenProjectCode: true,
       canOpenSourceImport: true,
       canPreviewExecutionPlan: true,
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
@@ -80,6 +81,7 @@ describe('CanvasContextMenuView', () => {
     ]);
     expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual([
       'Explore project',
+      'Open project code',
       'Preview execution plan',
       'Canvas settings',
     ]);

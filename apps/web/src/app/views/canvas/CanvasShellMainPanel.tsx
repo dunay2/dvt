@@ -1,5 +1,6 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { ResizablePanel } from '../../components/ui/resizable';
+import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
@@ -29,6 +30,7 @@ type CanvasShellMainPanelProps = Readonly<{
   chromeCommands: CanvasShellChromeCommands;
   onOpenSourceImport?: CanvasShellOpenDataRegistryCommand;
   onOpenProjectExplorer?: () => void;
+  onOpenProjectCode?: () => void;
   onOpenCanvasSettings?: () => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
 }>;
@@ -81,6 +83,7 @@ function CanvasShellViewport({
   graphCommands,
   onOpenSourceImport,
   onOpenProjectExplorer,
+  onOpenProjectCode,
   onOpenCanvasSettings,
   canPreviewExecutionPlan,
   onPreviewExecutionPlan,
@@ -93,6 +96,7 @@ function CanvasShellViewport({
   | 'graphCommands'
   | 'onOpenSourceImport'
   | 'onOpenProjectExplorer'
+  | 'onOpenProjectCode'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
 > &
@@ -143,6 +147,8 @@ function CanvasShellViewport({
       }
       canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
       onOpenProjectExplorer={onOpenProjectExplorer}
+      canOpenProjectCode={typeof onOpenProjectCode === 'function'}
+      onOpenProjectCode={onOpenProjectCode}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
       onPreviewExecutionPlan={onPreviewExecutionPlan}
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
@@ -160,6 +166,7 @@ function CanvasShellMainSurface({
   chromeCommands,
   onOpenSourceImport,
   onOpenProjectExplorer,
+  onOpenProjectCode,
   onOpenCanvasSettings,
   canPreviewExecutionPlan,
   contextMenuPresenter,
@@ -172,6 +179,7 @@ function CanvasShellMainSurface({
   | 'chromeCommands'
   | 'onOpenSourceImport'
   | 'onOpenProjectExplorer'
+  | 'onOpenProjectCode'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
 > &
@@ -184,6 +192,7 @@ function CanvasShellMainSurface({
       graphCommands={graphCommands}
       onOpenSourceImport={onOpenSourceImport}
       onOpenProjectExplorer={onOpenProjectExplorer}
+      onOpenProjectCode={onOpenProjectCode}
       onOpenCanvasSettings={onOpenCanvasSettings}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
       onPreviewExecutionPlan={chromeCommands.onPlan}
@@ -191,24 +200,34 @@ function CanvasShellMainSurface({
     />
   );
 
-  if (layout.centerSurface == null) {
-    if (layout.workbenchTabPanel != null) {
-      return <>{layout.workbenchTabPanel}</>;
-    }
+  const baseSurface =
+    layout.centerSurface == null ? (
+      viewport
+    ) : layout.centerSurfaceMode === 'replace' ? (
+      <>{layout.centerSurface}</>
+    ) : (
+      <div className="relative flex min-h-0 flex-1">
+        {viewport}
+        <div className="pointer-events-none absolute inset-0">
+          <div className="pointer-events-none h-full">{layout.centerSurface}</div>
+        </div>
+      </div>
+    );
 
-    return viewport;
-  }
-
-  if (layout.centerSurfaceMode === 'replace') {
-    return <>{layout.centerSurface}</>;
+  if (layout.contextualWorkbench == null) {
+    return baseSurface;
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1">
-      {viewport}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="pointer-events-none h-full">{layout.centerSurface}</div>
-      </div>
+    <div className="flex min-h-0 flex-1">
+      <div className="min-w-0 flex-1">{baseSurface}</div>
+      <CanvasContextualWorkbenchPanel
+        title={layout.contextualWorkbench.title}
+        description={layout.contextualWorkbench.description}
+        onClose={layout.contextualWorkbench.onClose}
+      >
+        {layout.contextualWorkbench.panel}
+      </CanvasContextualWorkbenchPanel>
     </div>
   );
 }
@@ -236,6 +255,7 @@ export function CanvasShellMainPanel({
   chromeCommands,
   onOpenSourceImport,
   onOpenProjectExplorer,
+  onOpenProjectCode,
   onOpenCanvasSettings,
   contextMenuPresenter,
 }: CanvasShellMainPanelProps): JSX.Element {
@@ -260,6 +280,7 @@ export function CanvasShellMainPanel({
           chromeCommands={chromeCommands}
           onOpenSourceImport={onOpenSourceImport}
           onOpenProjectExplorer={onOpenProjectExplorer}
+          onOpenProjectCode={onOpenProjectCode}
           onOpenCanvasSettings={onOpenCanvasSettings}
           canPreviewExecutionPlan={panels.userPermissions.canPlan && chromeState.canPlanGraph}
           contextMenuPresenter={contextMenuPresenter}

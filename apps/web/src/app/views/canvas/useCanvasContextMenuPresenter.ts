@@ -20,6 +20,7 @@ type UseCanvasContextMenuPresenterArgs = Readonly<{
   canEditEdges: boolean;
   canOpenSourceImport?: boolean;
   canOpenProjectExplorer?: boolean;
+  canOpenProjectCode?: boolean;
   canPreviewExecutionPlan?: boolean;
   canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
@@ -28,6 +29,7 @@ type UseCanvasContextMenuPresenterArgs = Readonly<{
   onEdgesChange: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgesChange']>;
   onOpenSourceImport?: (flowPosition?: CanvasContextMenuPosition) => void;
   onOpenProjectExplorer?: () => void;
+  onOpenProjectCode?: () => void;
   onPreviewExecutionPlan?: () => void;
   onOpenCanvasSettings?: () => void;
 }>;
@@ -84,6 +86,7 @@ export function useCanvasContextMenuPresenter({
   canEditEdges,
   canOpenSourceImport,
   canOpenProjectExplorer,
+  canOpenProjectCode,
   canPreviewExecutionPlan,
   canOpenCanvasSettings,
   authoringNodeKinds,
@@ -92,6 +95,7 @@ export function useCanvasContextMenuPresenter({
   onEdgesChange,
   onOpenSourceImport,
   onOpenProjectExplorer,
+  onOpenProjectCode,
   onPreviewExecutionPlan,
   onOpenCanvasSettings,
 }: UseCanvasContextMenuPresenterArgs): UseCanvasContextMenuPresenterResult {
@@ -222,6 +226,7 @@ export function useCanvasContextMenuPresenter({
             canMutateGraph: canEditEdges,
             canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
             canOpenProjectExplorer: Boolean(canOpenProjectExplorer && onOpenProjectExplorer),
+            canOpenProjectCode: Boolean(canOpenProjectCode && onOpenProjectCode),
             canPreviewExecutionPlan: Boolean(canPreviewExecutionPlan && onPreviewExecutionPlan),
             canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
             authoringNodeKinds,
@@ -234,11 +239,13 @@ export function useCanvasContextMenuPresenter({
       canEditEdges,
       canOpenSourceImport,
       canOpenProjectExplorer,
+      canOpenProjectCode,
       canPreviewExecutionPlan,
       canOpenCanvasSettings,
       markContextMenuOpened,
       onOpenSourceImport,
       onOpenProjectExplorer,
+      onOpenProjectCode,
       onPreviewExecutionPlan,
       onOpenCanvasSettings,
       screenToFlowPosition,
@@ -325,6 +332,8 @@ export function useCanvasContextMenuPresenter({
         onOpenSourceImport?.(model?.flowPosition);
       } else if (action.action === 'open-project-explorer') {
         onOpenProjectExplorer?.();
+      } else if (action.action === 'open-project-code') {
+        onOpenProjectCode?.();
       } else if (action.action === 'preview-execution-plan') {
         onPreviewExecutionPlan?.();
       } else if (action.action === 'open-canvas-settings') {
@@ -337,6 +346,7 @@ export function useCanvasContextMenuPresenter({
       closeContextMenu,
       model?.flowPosition,
       onOpenCanvasSettings,
+      onOpenProjectCode,
       onOpenProjectExplorer,
       onOpenSourceImport,
       onPreviewExecutionPlan,
