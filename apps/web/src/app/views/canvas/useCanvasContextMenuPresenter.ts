@@ -60,7 +60,7 @@ type UseCanvasContextMenuPresenterResult = Readonly<{
 
 export type CanvasContextMenuPresenter = UseCanvasContextMenuPresenterResult;
 
-const CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS = 350;
+const CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS = 1000;
 const CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX = 2;
 type ContextMenuOpenTargetKind = CanvasContextMenuModel['kind'];
 

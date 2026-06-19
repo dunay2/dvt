@@ -72,7 +72,7 @@ describe('CanvasShell context menu integration', () => {
 
     expectMenuVisible();
 
-    vi.advanceTimersByTime(351);
+    vi.advanceTimersByTime(1001);
     await act(async () => {
       document.dispatchEvent(
         new MouseEvent('pointerdown', {
