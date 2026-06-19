@@ -7,7 +7,7 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-function stubCanvasWorkbenchApis(): void {
+function stubCodeWorkbenchApis(): void {
   stubShellBootstrapApis();
   stubCanvasDraftRead();
 
@@ -31,7 +31,7 @@ function stubCanvasWorkbenchApis(): void {
 
 describe('Retired Canvas Code workbench routes', () => {
   it('redirects direct Code route visits to Graph without querying workspace files', () => {
-    stubCanvasWorkbenchApis();
+    stubCodeWorkbenchApis();
 
     visitWithE2eWorkspaceSession('/canvas/code');
 
