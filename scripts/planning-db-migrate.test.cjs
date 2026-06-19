@@ -2867,6 +2867,102 @@ test('tracked migrations split mandatory planning proposals into physical leaves
   assert.doesNotMatch(mandatoryProposalLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split web architecture documentation into physical leaves', () => {
+  const migrations = readMigrationFiles();
+  const webArchitectureLeafMigration = migrations.find(
+    (migration) => migration.fileName === '192_docs_web_architecture_leaf_components.sql'
+  );
+
+  assert.ok(webArchitectureLeafMigration);
+  assert.match(
+    webArchitectureLeafMigration.sql,
+    /create temporary table docs_web_architecture_leaf_map/
+  );
+
+  for (const componentId of [
+    'SYS-DOCS-ARCHITECTURE-WEB-ROOT-RECORDS',
+    'SYS-DOCS-ARCHITECTURE-WEB-GRAPH',
+    'SYS-DOCS-ARCHITECTURE-WEB-APP-SHELL',
+    'SYS-DOCS-ARCHITECTURE-WEB-RUNS',
+    'SYS-DOCS-ARCHITECTURE-WEB-WORKSPACE',
+    'SYS-DOCS-ARCHITECTURE-WEB-MONACO',
+    'SYS-DOCS-ARCHITECTURE-WEB-TEMPLATES',
+    'SYS-DOCS-ARCHITECTURE-WEB-PLUGINS',
+    'SYS-DOCS-ARCHITECTURE-WEB-PUBLIC-DATA',
+    'SYS-DOCS-ARCHITECTURE-WEB-DIFF',
+    'SYS-DOCS-ARCHITECTURE-WEB-LINEAGE',
+    'SYS-DOCS-ARCHITECTURE-WEB-ARTIFACTS',
+    'SYS-DOCS-ARCHITECTURE-WEB-GIT',
+    'SYS-DOCS-ARCHITECTURE-WEB-CANVAS',
+    'SYS-DOCS-ARCHITECTURE-WEB-INSPECTOR',
+    'SYS-DOCS-ARCHITECTURE-WEB-OBSERVABILITY',
+    'SYS-DOCS-ARCHITECTURE-WEB-PLANNING',
+    'SYS-DOCS-ARCHITECTURE-WEB-VIEWS',
+  ]) {
+    assert.match(webArchitectureLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/architecture/components/web/\\*',
+    'docs/architecture/components/web/graph/\\*\\*',
+    'docs/architecture/components/web/appshell/\\*\\*',
+    'docs/architecture/components/web/runs/\\*\\*',
+    'docs/architecture/components/web/workspace/\\*\\*',
+    'docs/architecture/components/web/monaco/\\*\\*',
+    'docs/architecture/components/web/templates/\\*\\*',
+    'docs/architecture/components/web/plugins/\\*\\*',
+    'docs/architecture/components/web/public-data/\\*\\*',
+    'docs/architecture/components/web/diff/\\*\\*',
+    'docs/architecture/components/web/lineage/\\*\\*',
+    'docs/architecture/components/web/artifacts/\\*\\*',
+    'docs/architecture/components/web/git/\\*\\*',
+    'docs/architecture/components/web/canvas/\\*\\*',
+    'docs/architecture/components/web/inspector/\\*\\*',
+    'docs/architecture/components/web/observability/\\*\\*',
+    'docs/architecture/components/web/planning/\\*\\*',
+    'docs/architecture/components/web/views/\\*\\*',
+  ]) {
+    assert.match(webArchitectureLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(
+    webArchitectureLeafMigration.sql,
+    /PLANNING-DB-DOCS-WEB-ARCHITECTURE-LEAF-MAPPING-20260618/
+  );
+  assert.match(webArchitectureLeafMigration.sql, /SYS-DOCS-ARCHITECTURE-COMPONENTS-WEB/);
+  assert.match(webArchitectureLeafMigration.sql, /REL-DOCS-WEB-ARCHITECTURE-CONTAINS-/);
+  assert.match(webArchitectureLeafMigration.sql, /ReadWebGraphArchitectureDocs/);
+  assert.match(webArchitectureLeafMigration.sql, /ReadWebAppShellArchitectureDocs/);
+  assert.match(webArchitectureLeafMigration.sql, /ReadWebRunsArchitectureDocs/);
+  assert.match(webArchitectureLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(webArchitectureLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(webArchitectureLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(
+    webArchitectureLeafMigration.sql,
+    /insert into architecture\.component_observability/
+  );
+  assert.doesNotMatch(webArchitectureLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webArchitectureLeafMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize web architecture root leaf path after split', () => {
+  const migrations = readMigrationFiles();
+  const webArchitectureRootPathMigration = migrations.find(
+    (migration) => migration.fileName === '193_docs_web_architecture_root_path_canonicalization.sql'
+  );
+
+  assert.ok(webArchitectureRootPathMigration);
+  assert.match(webArchitectureRootPathMigration.sql, /SYS-DOCS-ARCHITECTURE-WEB-ROOT-RECORDS/);
+  assert.match(
+    webArchitectureRootPathMigration.sql,
+    /docs\/architecture\/components\/web\/index\.md/
+  );
+  assert.match(webArchitectureRootPathMigration.sql, /docs\/architecture\/components\/web\/\*/);
+  assert.match(webArchitectureRootPathMigration.sql, /repo_path =/);
+  assert.doesNotMatch(webArchitectureRootPathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(webArchitectureRootPathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(
