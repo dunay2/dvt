@@ -10,40 +10,28 @@ export function clickButtonNatively(label: string): void {
     });
 }
 
-export function openCanvasContextMenu(): void {
+export function openCanvasContextMenuAt(x = 96, y = 220): void {
   cy.get('body').type('{esc}', { force: true });
-  cy.get('[data-slot="canvas-viewport-context-surface"]', { timeout: 20_000 }).then(($surface) => {
-    const surface = $surface.get(0);
-    const rect = surface.getBoundingClientRect();
-
-    cy.wrap($surface).trigger('contextmenu', {
-      bubbles: true,
-      cancelable: true,
-      button: 2,
-      buttons: 2,
-      clientX: Math.round(rect.left + 96),
-      clientY: Math.round(rect.top + 220),
-      pageX: Math.round(window.scrollX + rect.left + 96),
-      pageY: Math.round(window.scrollY + rect.top + 220),
-      which: 3,
-      force: true,
-    });
+  cy.get('.react-flow__pane', { timeout: 20_000 }).should('be.visible').rightclick(x, y, {
+    force: true,
   });
   cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
 }
 
-export function clickPreviewExecutionPlanFromCanvasContextMenu(): void {
-  openCanvasContextMenu();
-  cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'Preview execution plan')
+export function clickCanvasContextMenuItem(label: string): void {
+  cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', label)
     .should('be.visible')
     .should('be.enabled')
-    .then(($button) => {
-      ($button.get(0) as HTMLButtonElement).click();
-    });
+    .click();
+}
+
+export function clickPreviewExecutionPlanFromCanvasContextMenu(): void {
+  openCanvasContextMenuAt();
+  clickCanvasContextMenuItem('Preview execution plan');
 }
 
 export function expectPreviewExecutionPlanUnavailableFromCanvasContextMenu(): void {
-  openCanvasContextMenu();
+  openCanvasContextMenuAt();
   cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Preview execution plan');
   cy.get('body').type('{esc}', { force: true });
 }

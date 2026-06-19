@@ -1,5 +1,5 @@
 /** Owned concern: guard Canvas contextual interaction semantics, docs, and Fowler traceability. */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -13,6 +13,18 @@ describe('Canvas interaction command surface architecture', () => {
     readFileSync(path.join(appRoot, relativePathFromApp), 'utf8');
   const appSourceExists = (relativePathFromApp: string): boolean =>
     existsSync(path.join(appRoot, relativePathFromApp));
+  const listTypeScriptFiles = (relativePathFromRepo: string): string[] => {
+    const absolutePath = path.join(repoRoot, relativePathFromRepo);
+    return readdirSync(absolutePath).flatMap((entry) => {
+      const entryPath = path.join(absolutePath, entry);
+      const relativeEntryPath = path.join(relativePathFromRepo, entry).replaceAll(path.sep, '/');
+      if (statSync(entryPath).isDirectory()) {
+        return listTypeScriptFiles(relativeEntryPath);
+      }
+
+      return /\.(?:ts|tsx)$/.test(entry) ? [relativeEntryPath] : [];
+    });
+  };
 
   it('documents the public API, invariants, transitions, consumers, stories, and Fowler analysis', () => {
     const componentGuide = readRepoFile(
@@ -158,5 +170,25 @@ describe('Canvas interaction command surface architecture', () => {
     expect(viewPrimitivesSource).not.toContain('useReactFlow');
 
     expect(authoringCommandSource).toContain('requestedPosition ??');
+  });
+
+  it('keeps Canvas context-menu browser coverage on real user gestures', () => {
+    const cypressContextMenuSurfaces = [
+      ...listTypeScriptFiles('apps/web/cypress/e2e/canvas'),
+      ...listTypeScriptFiles('apps/web/cypress/support'),
+    ];
+
+    expect(readRepoFile('apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts')).toContain(
+      '.rightclick('
+    );
+
+    for (const cypressSourcePath of cypressContextMenuSurfaces) {
+      const source = readRepoFile(cypressSourcePath);
+
+      expect(source, cypressSourcePath).not.toMatch(/MouseEvent\(['"]contextmenu/);
+      expect(source, cypressSourcePath).not.toMatch(/MouseEvent\(\s*['"]contextmenu/);
+      expect(source, cypressSourcePath).not.toMatch(/\.trigger\(['"]contextmenu/);
+      expect(source, cypressSourcePath).not.toMatch(/\.trigger\(\s*['"]contextmenu/);
+    }
   });
 });

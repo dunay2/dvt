@@ -1,4 +1,7 @@
-import { expectPreviewExecutionPlanUnavailableFromCanvasContextMenu } from '../../support/canvasExecutionSelection';
+import {
+  expectPreviewExecutionPlanUnavailableFromCanvasContextMenu,
+  openCanvasContextMenuAt,
+} from '../../support/canvasExecutionSelection';
 import { getE2eApiCalls, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   stubCanvasRuntimeApis,
@@ -23,10 +26,10 @@ describe('Canvas preview-run authoring guardrails', () => {
 
     cy.contains('Warehouse dbt').should('be.visible');
     cy.contains('Start dbt canvas').should('be.visible');
-    cy.contains('button', 'Add first dbt node').should('be.enabled').click();
-    cy.get('[data-slot="canvas-add-node-palette"]').within(() => {
-      cy.contains('button', 'Source').should('be.enabled');
-    });
+    cy.contains('button', 'Add first dbt node').should('not.exist');
+    openCanvasContextMenuAt(520, 300);
+    cy.get('[data-slot="canvas-context-menu"]').should('contain.text', 'Add source');
+    cy.get('body').type('{esc}', { force: true });
     expectPreviewExecutionPlanUnavailableFromCanvasContextMenu();
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
     cy.then(() => {
@@ -70,6 +73,6 @@ describe('Canvas preview-run authoring guardrails', () => {
     cy.contains('[role="menuitemcheckbox"]', /Empty canvas guide|Guia de canvas vacio/).click();
 
     cy.contains('Start dbt canvas').should('be.visible');
-    cy.contains('button', 'Add first dbt node').should('be.enabled');
+    cy.contains('button', 'Add first dbt node').should('not.exist');
   });
 });

@@ -172,7 +172,7 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
       failClosedProof:
         'empty, unavailable, unauthorized, not-found, traversal, oversize, and unsupported binary-like file types are explicit',
       happyPathProof:
-        'scoped authorized tree and first-file preview are visible read-only with freshness metadata',
+        'scoped authorized tree and first-file preview are covered by component/query rail tests; the retired Canvas Code route redirects to Graph without querying files',
       rails: ['ListWorkspaceFiles', 'GetWorkspaceFileContent'],
       recoveryState: 'ready',
       recoveryStates: ['ready', 'unauthorized', 'unavailable', 'not-found', 'stale'],
@@ -186,7 +186,8 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
         'docs/architecture/components/api/protected-runtime-command-query-rail-design.md',
         'docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md',
         'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
-        'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx',
+        'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
+        'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',
         'apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx',
         'apps/web/src/app/views/canvas/canvasPlanRunReadiness.architecture.test.ts',
         'apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts',

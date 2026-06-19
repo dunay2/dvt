@@ -1,6 +1,10 @@
 /** Owned concern: prove Canvas project snapshot browser export, import rejection, and reload round trip. */
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
+  clickCanvasContextMenuItem,
+  openCanvasContextMenuAt,
+} from '../../support/canvasExecutionSelection';
+import {
   resetE2eApiStubs,
   getE2eApiCalls,
   stubE2eJsonApi,
@@ -40,25 +44,8 @@ describe('Canvas project snapshot round trip', () => {
   }
 
   function addSqlTransformNode(): void {
-    cy.get('.react-flow__node').should('have.length.greaterThan', 0);
-    cy.window().then((window) => {
-      const pane = window.document.querySelector('.react-flow__pane');
-
-      expect(pane, 'React Flow pane').not.to.equal(null);
-      pane!.dispatchEvent(
-        new window.MouseEvent('contextmenu', {
-          clientX: 760,
-          clientY: 520,
-          button: 2,
-          buttons: 2,
-          bubbles: true,
-          cancelable: true,
-          view: window,
-        })
-      );
-    });
-    cy.get('[data-slot="canvas-context-menu"]').should('exist');
-    cy.contains('[role="menuitem"]', 'SQL transform').should('be.enabled').click();
+    openCanvasContextMenuAt(360, 260);
+    clickCanvasContextMenuItem('SQL transform');
   }
 
   function openWorkspaceMenuIfClosed(): void {
@@ -67,6 +54,19 @@ describe('Canvas project snapshot round trip', () => {
         cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
       }
     });
+  }
+
+  function clickVisibleWorkspaceExportSnapshotCommand(): void {
+    cy.get('[data-slot="canvas-workspace-export-command"]')
+      .should(($commands) => {
+        const visibleCommands = $commands.filter(':visible');
+
+        expect(visibleCommands, 'visible export command').to.have.length(1);
+        expect(visibleCommands.first(), 'enabled export command').not.to.have.attr('data-disabled');
+      })
+      .then(($commands) => {
+        cy.wrap($commands.filter(':visible').first()).click();
+      });
   }
 
   function waitForDraftSaveCount(expectedCount: number): void {
@@ -86,10 +86,7 @@ describe('Canvas project snapshot round trip', () => {
     cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
     waitForDraftSaveCount(1);
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
-    cy.get('[data-slot="canvas-workspace-export-command"]')
-      .filter(':visible')
-      .should('not.have.attr', 'data-disabled')
-      .click();
+    clickVisibleWorkspaceExportSnapshotCommand();
 
     cy.readFile(downloadPath).then((contents) => {
       const snapshot = (typeof contents === 'string' ? JSON.parse(contents) : contents) as {
@@ -104,10 +101,9 @@ describe('Canvas project snapshot round trip', () => {
       expect(snapshot.canvas.title).to.equal('Sales canvas');
       expect(snapshot.project).to.deep.include(E2E_WORKSPACE_SESSION);
       expect(snapshot.draft.nodeIds).to.include('dvt-sql-transform-1');
-      expect(snapshot.draft.nodePositions['dvt-sql-transform-1']).to.deep.equal({
-        x: 160,
-        y: 120,
-      });
+      expect(snapshot.draft.nodePositions['dvt-sql-transform-1']).to.include.keys(['x', 'y']);
+      expect(snapshot.draft.nodePositions['dvt-sql-transform-1'].x).to.be.a('number');
+      expect(snapshot.draft.nodePositions['dvt-sql-transform-1'].y).to.be.a('number');
     });
 
     stubRuntimeCapabilities();

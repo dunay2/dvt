@@ -109,7 +109,10 @@ describe('Code Monaco editable access architecture', () => {
     expect(codeSurface).toContain('onChange');
     expect(codeSurface).not.toContain('save');
 
-    expect(cypressSpec).toContain('shows Code beside Graph before a canvas document exists');
-    expect(cypressSpec).toContain('select 2 as first_canvas_edit');
+    expect(cypressSpec).toContain(
+      'Owned concern: prove retired Canvas Code workbench routes redirect to Graph without file queries'
+    );
+    expect(cypressSpec).toContain("visitWithE2eWorkspaceSession('/canvas/code')");
+    expect(cypressSpec).toContain("cy.location('pathname').should('eq', '/canvas')");
   });
 });

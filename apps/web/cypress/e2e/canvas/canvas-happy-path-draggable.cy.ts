@@ -1,4 +1,8 @@
 import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
+import {
+  clickCanvasContextMenuItem,
+  openCanvasContextMenuAt,
+} from '../../support/canvasExecutionSelection';
 import { stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_WORKSPACE_SESSION,
@@ -74,41 +78,24 @@ function createTransformationCanvasIfEmpty(): void {
   });
 }
 
-function openCanvasContextMenu(): void {
-  cy.get('.react-flow__pane', { timeout: 20_000 }).then(($pane) => {
-    const rect = $pane[0].getBoundingClientRect();
-    const position = {
-      x: rect.left + 32,
-      y: rect.top + 140,
-    };
-
-    $pane[0].dispatchEvent(
-      new MouseEvent('contextmenu', {
-        bubbles: true,
-        button: 2,
-        cancelable: true,
-        clientX: position.x,
-        clientY: position.y,
-      })
-    );
-  });
-}
-
 function addSourceNodeFromCanvasContextMenuIfMissing(): void {
   cy.get('body').then(($body) => {
     const hasSourceNode = $body.find('.react-flow__node:contains("Source 1")').length > 0;
     if (!hasSourceNode) {
-      openCanvasContextMenu();
-      cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 })
-        .should('be.visible')
-        .then(($menu) => {
-          const menuItems = Array.from($menu.find('[role="menuitem"]'));
-          const sourceNodeAction =
-            menuItems.find((item) => item.textContent?.trim() === 'Create source node') ??
-            menuItems.find((item) => item.textContent?.trim() === 'Add source');
-          expect(sourceNodeAction, 'source node context action').to.not.equal(undefined);
-          (sourceNodeAction as HTMLButtonElement).click();
-        });
+      openCanvasContextMenuAt(32, 140);
+      cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 }).should('be.visible');
+      cy.get('body').then(($nextBody) => {
+        const contextMenuText = $nextBody
+          .find('[data-slot="canvas-context-menu"] [role="menuitem"]')
+          .text();
+
+        if (contextMenuText.includes('Create source node')) {
+          clickCanvasContextMenuItem('Create source node');
+          return;
+        }
+
+        clickCanvasContextMenuItem('Add source');
+      });
     }
   });
 }
