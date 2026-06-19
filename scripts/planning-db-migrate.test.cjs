@@ -4237,6 +4237,39 @@ test('tracked migrations neutralize Canvas panel feature manifest rehydration', 
   assert.doesNotMatch(featureManifestRehydrationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations retire stale Canvas panel feature manifest without reopening component files', () => {
+  const migrations = readMigrationFiles();
+  const staleFeatureManifestRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '239_retire_canvas_node_workbench_panel_feature_manifest.sql'
+  );
+
+  assert.ok(staleFeatureManifestRetirementMigration);
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-FEATURE-MANIFEST-RETIREMENT-20260619/
+  );
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/
+  );
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties/
+  );
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /delete from planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    staleFeatureManifestRetirementMigration.sql,
+    /delete from planning_query_store\.governance_component_files/
+  );
+  assert.match(staleFeatureManifestRetirementMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(staleFeatureManifestRetirementMigration.sql, /status = 'deprecated'/);
+  assert.doesNotMatch(staleFeatureManifestRetirementMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split API HTTP entrypoint tests into evidence leaves', () => {
   const migrations = readMigrationFiles();
   const apiHttpTestLeafMigration = migrations.find(
