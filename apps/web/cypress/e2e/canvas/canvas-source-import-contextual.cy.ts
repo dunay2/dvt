@@ -59,6 +59,9 @@ describe('Canvas contextual source import', () => {
   it('opens Add Source from the canvas context menu and imports selected warehouse metadata', () => {
     visitCanvasWithSettledBootstrap();
 
+    cy.contains('Project Resources').should('not.exist');
+    cy.contains('Add data').should('not.exist');
+
     openCanvasContextMenuAt(520, 300);
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
     clickCanvasContextMenuItem('Add source');
