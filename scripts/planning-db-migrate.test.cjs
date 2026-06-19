@@ -2963,6 +2963,53 @@ test('tracked migrations canonicalize web architecture root leaf path after spli
   assert.doesNotMatch(webArchitectureRootPathMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split evidence documentation and deprecate archive leaf', () => {
+  const migrations = readMigrationFiles();
+  const evidenceLeafMigration = migrations.find(
+    (migration) => migration.fileName === '194_docs_evidence_leaf_components.sql'
+  );
+
+  assert.ok(evidenceLeafMigration);
+  assert.match(evidenceLeafMigration.sql, /create temporary table docs_evidence_leaf_map/);
+
+  for (const componentId of [
+    'SYS-DOCS-EVIDENCE-ROOT-RECORDS',
+    'SYS-DOCS-EVIDENCE-CRITICAL',
+    'SYS-DOCS-EVIDENCE-CONTEXT',
+    'SYS-DOCS-EVIDENCE-SUPPORTING',
+    'SYS-DOCS-EVIDENCE-ASSETS',
+    'SYS-DOCS-EVIDENCE-ARCHIVE',
+  ]) {
+    assert.match(evidenceLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/evidence/\\*.md',
+    'docs/evidence/critical/\\*\\*',
+    'docs/evidence/context/\\*\\*',
+    'docs/evidence/supporting/\\*\\*',
+    'docs/evidence/assets/\\*\\*',
+    'docs/evidence/archive/\\*\\*',
+  ]) {
+    assert.match(evidenceLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(evidenceLeafMigration.sql, /PLANNING-DB-DOCS-EVIDENCE-LEAF-MAPPING-20260618/);
+  assert.match(evidenceLeafMigration.sql, /SYS-DOCS-GOVERNANCE-EVIDENCE/);
+  assert.match(evidenceLeafMigration.sql, /REL-DOCS-EVIDENCE-CONTAINS-/);
+  assert.match(evidenceLeafMigration.sql, /ReadEvidenceRootRecords/);
+  assert.match(evidenceLeafMigration.sql, /ReadCriticalEvidenceRecords/);
+  assert.match(evidenceLeafMigration.sql, /ReadArchivedEvidenceRecords/);
+  assert.match(evidenceLeafMigration.sql, /documentation_lifecycle_archive/);
+  assert.match(evidenceLeafMigration.sql, /component_status = 'deprecated'/);
+  assert.match(evidenceLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(evidenceLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(evidenceLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(evidenceLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.doesNotMatch(evidenceLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(evidenceLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(
