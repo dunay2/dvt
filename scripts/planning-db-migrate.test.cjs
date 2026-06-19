@@ -2878,6 +2878,30 @@ test('tracked migrations deprecate zero-file Canvas residual surfaces component'
   assert.doesNotMatch(residualDeprecationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations map 200-series migration files to the leaf mapping component', () => {
+  const migrations = readMigrationFiles();
+  const migrationCatalog200sMapping = migrations.find(
+    (migration) => migration.fileName === '203_planning_db_migration_catalog_200s_leaf_mapping.sql'
+  );
+
+  assert.ok(migrationCatalog200sMapping);
+  assert.match(
+    migrationCatalog200sMapping.sql,
+    /PLANNING-DB-MIGRATION-CATALOG-200S-LEAF-MAPPING-20260619/
+  );
+  assert.match(
+    migrationCatalog200sMapping.sql,
+    /SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS-LEAF-MAPPING/
+  );
+  assert.match(migrationCatalog200sMapping.sql, /tools\/planning-db\/migrations\/2\*\.sql/);
+  assert.match(migrationCatalog200sMapping.sql, /file_without_leaf_component/);
+  assert.match(migrationCatalog200sMapping.sql, /ReadPlanningDbLeafMappingMigrations/);
+  assert.match(migrationCatalog200sMapping.sql, /ValidateComponentIntegrity/);
+  assert.match(migrationCatalog200sMapping.sql, /Do not deprecate applied Planning DB migrations/);
+  assert.doesNotMatch(migrationCatalog200sMapping.sql, /delete\s+from/i);
+  assert.doesNotMatch(migrationCatalog200sMapping.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split architecture documentation into physical leaves', () => {
   const migrations = readMigrationFiles();
   const architectureDocsLeafMigration = migrations.find(
