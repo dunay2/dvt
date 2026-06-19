@@ -3010,6 +3010,49 @@ test('tracked migrations split evidence documentation and deprecate archive leaf
   assert.doesNotMatch(evidenceLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split risk-register documentation into physical leaves', () => {
+  const migrations = readMigrationFiles();
+  const riskRegisterLeafMigration = migrations.find(
+    (migration) => migration.fileName === '195_docs_risk_register_leaf_components.sql'
+  );
+
+  assert.ok(riskRegisterLeafMigration);
+  assert.match(riskRegisterLeafMigration.sql, /create temporary table docs_risk_register_leaf_map/);
+
+  for (const componentId of [
+    'SYS-DOCS-RISK-REGISTER-ROOT-RECORDS',
+    'SYS-DOCS-RISK-REGISTER-ADAPTERS',
+    'SYS-DOCS-RISK-REGISTER-QUALITY',
+  ]) {
+    assert.match(riskRegisterLeafMigration.sql, new RegExp(componentId));
+  }
+
+  for (const ownedPath of [
+    'docs/risk-register/index\\.md',
+    'docs/risk-register/adapters/\\*\\*',
+    'docs/risk-register/quality/\\*\\*',
+  ]) {
+    assert.match(riskRegisterLeafMigration.sql, new RegExp(ownedPath));
+  }
+
+  assert.match(
+    riskRegisterLeafMigration.sql,
+    /PLANNING-DB-DOCS-RISK-REGISTER-LEAF-MAPPING-20260618/
+  );
+  assert.match(riskRegisterLeafMigration.sql, /SYS-DOCS-GOVERNANCE-RISK-REGISTER/);
+  assert.match(riskRegisterLeafMigration.sql, /REL-DOCS-RISK-REGISTER-CONTAINS-/);
+  assert.match(riskRegisterLeafMigration.sql, /ReadRiskRegisterRootRecords/);
+  assert.match(riskRegisterLeafMigration.sql, /ReadAdapterRiskRegisterRecords/);
+  assert.match(riskRegisterLeafMigration.sql, /ReadQualityRiskRegisterRecords/);
+  assert.match(riskRegisterLeafMigration.sql, /Old risk records are not deprecated by age/);
+  assert.match(riskRegisterLeafMigration.sql, /insert into architecture\.contract/);
+  assert.match(riskRegisterLeafMigration.sql, /insert into architecture\.component_port/);
+  assert.match(riskRegisterLeafMigration.sql, /insert into architecture\.component_test/);
+  assert.match(riskRegisterLeafMigration.sql, /insert into architecture\.component_observability/);
+  assert.doesNotMatch(riskRegisterLeafMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(riskRegisterLeafMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations split CI governance root and materialize scripts parent', () => {
   const migrations = readMigrationFiles();
   const ciGovernanceSplitMigration = migrations.find(
