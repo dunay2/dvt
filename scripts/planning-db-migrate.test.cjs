@@ -2085,6 +2085,35 @@ test('tracked migrations extend the Planning DB query format helper to generated
   assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations create the Planning DB frontend inventory table helper component', () => {
+  const migrations = readMigrationFiles();
+  const helperMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '252_planning_db_frontend_inventory_table_helper_component.sql'
+  );
+
+  assert.ok(helperMigration);
+  assert.match(
+    helperMigration.sql,
+    /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CATALOGS-FRONTEND-INVENTORY-TABLE/
+  );
+  assert.match(helperMigration.sql, /scripts\/planning-db\/frontend-inventory-table\.cjs/);
+  assert.match(helperMigration.sql, /scripts\/planning-db\/frontend-component-inventory\.cjs/);
+  assert.match(
+    helperMigration.sql,
+    /scripts\/planning-db\/frontend-mechanical-truth-inventory\.cjs/
+  );
+  assert.match(helperMigration.sql, /ListFrontendMechanicalTruthSurfaces/);
+  assert.match(helperMigration.sql, /ListFrontendComponentReflection/);
+  assert.match(helperMigration.sql, /ParsePlanningDbFrontendInventoryMarkdownTable/);
+  assert.match(helperMigration.sql, /hidden_authority/);
+  assert.match(helperMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_port/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_test/);
+  assert.doesNotMatch(helperMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations retire Canvas context-menu echo guard duplicate rail', () => {
   const migrations = readMigrationFiles();
   const duplicateRailMigration = migrations.find(

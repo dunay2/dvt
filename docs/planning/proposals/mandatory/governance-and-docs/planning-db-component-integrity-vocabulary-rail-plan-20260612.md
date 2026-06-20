@@ -300,6 +300,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/249_planning_db_query_filter_extended_helpers.sql
   - tools/planning-db/migrations/250_planning_db_query_format_helper_component.sql
   - tools/planning-db/migrations/251_planning_db_query_format_helper_generated_status_consumers.sql
+  - tools/planning-db/migrations/252_planning_db_frontend_inventory_table_helper_component.sql
   - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
   - tools/planning-db/migrations/114_repoint_canvas_reload_recovery_test_support_rail.sql
   - tools/planning-db/migrations/115_repoint_canvas_create_document_test_support_rail.sql
@@ -363,6 +364,9 @@ allowedImplementationSurfaces:
   - scripts/planning-db/query-limit.cjs
   - scripts/planning-db/query-filter.cjs
   - scripts/planning-db/query-format.cjs
+  - scripts/planning-db/frontend-inventory-table.cjs
+  - scripts/planning-db/frontend-component-inventory.cjs
+  - scripts/planning-db/frontend-mechanical-truth-inventory.cjs
   - scripts/planning-db/queries/code-symbol-query.cjs
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
@@ -382,6 +386,8 @@ allowedImplementationSurfaces:
   - scripts/planning-db-operate-tests/architecture-parse.test.cjs
   - scripts/planning-db-operate-tests/architecture-plan.test.cjs
   - scripts/planning-db-import.test.cjs
+  - scripts/planning-db-frontend-component-inventory.test.cjs
+  - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
   - scripts/planning-db/command-query-rail-shared.cjs
   - scripts/local-validation-plan.cjs
   - scripts/verify-changed.test.cjs
@@ -717,6 +723,118 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-query.test.cjs
+  - name: normalizeCell
+    path: scripts/planning-db/frontend-inventory-table.cjs
+    dddOwner: FrontendInventoryTableParser
+    cqRails:
+      - ListFrontendMechanicalTruthSurfaces
+      - ListFrontendComponentReflection
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated frontend inventory Markdown cell normalizers use one canonical helper instead of read-model-local copies
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --path scripts/planning-db/frontend-inventory-table.cjs --no-refresh --limit 80
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
+  - name: markdownCells
+    path: scripts/planning-db/frontend-inventory-table.cjs
+    dddOwner: FrontendInventoryTableParser
+    cqRails:
+      - ListFrontendMechanicalTruthSurfaces
+      - ListFrontendComponentReflection
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated frontend inventory Markdown row splitters use one canonical helper instead of read-model-local copies
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --path scripts/planning-db/frontend-inventory-table.cjs --no-refresh --limit 80
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
+  - name: isSeparatorRow
+    path: scripts/planning-db/frontend-inventory-table.cjs
+    dddOwner: FrontendInventoryTableParser
+    cqRails:
+      - ListFrontendMechanicalTruthSurfaces
+      - ListFrontendComponentReflection
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated frontend inventory Markdown separator predicates use one canonical helper instead of read-model-local copies
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --path scripts/planning-db/frontend-inventory-table.cjs --no-refresh --limit 80
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
+  - name: normalizeHeader
+    path: scripts/planning-db/frontend-inventory-table.cjs
+    dddOwner: FrontendInventoryTableParser
+    cqRails:
+      - ListFrontendMechanicalTruthSurfaces
+      - ListFrontendComponentReflection
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated frontend inventory Markdown header canonicalizers use one internal helper inside the canonical parser
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --path scripts/planning-db/frontend-inventory-table.cjs --no-refresh --limit 80
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
+  - name: headerIndexes
+    path: scripts/planning-db/frontend-inventory-table.cjs
+    dddOwner: FrontendInventoryTableParser
+    cqRails:
+      - ListFrontendMechanicalTruthSurfaces
+      - ListFrontendComponentReflection
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated frontend inventory Markdown header lookups use one canonical helper instead of read-model-local copies
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --path scripts/planning-db/frontend-inventory-table.cjs --no-refresh --limit 80
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
+  - name: rowValue
+    path: scripts/planning-db/frontend-inventory-table.cjs
+    dddOwner: FrontendInventoryTableParser
+    cqRails:
+      - ListFrontendMechanicalTruthSurfaces
+      - ListFrontendComponentReflection
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated frontend inventory Markdown indexed row readers use one canonical helper instead of read-model-local copies
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --path scripts/planning-db/frontend-inventory-table.cjs --no-refresh --limit 80
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
+  - name: rawRow
+    path: scripts/planning-db/frontend-inventory-table.cjs
+    dddOwner: FrontendInventoryTableParser
+    cqRails:
+      - ListFrontendMechanicalTruthSurfaces
+      - ListFrontendComponentReflection
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated frontend inventory Markdown raw-row projections use one canonical helper instead of read-model-local copies
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --path scripts/planning-db/frontend-inventory-table.cjs --no-refresh --limit 80
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
+  - name: countField
+    path: scripts/planning-db/frontend-inventory-table.cjs
+    dddOwner: FrontendInventoryTableParser
+    cqRails:
+      - ListFrontendMechanicalTruthSurfaces
+      - ListFrontendComponentReflection
+      - DetectCodeSymbolDuplicates
+    fowlerSignals:
+      - repeated frontend inventory row count formatters use one canonical helper instead of read-model-local copies
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --path scripts/planning-db/frontend-inventory-table.cjs --no-refresh --limit 80
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-frontend-component-inventory.test.cjs
+      - scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs
   - name: componentEngineeringSchemaName
     path: scripts/planning-db-operate.cjs
     dddOwner: CreateGovernanceComponentCommandAdapter
