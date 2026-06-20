@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const {
   buildFrontendComponentFileRows,
@@ -11,6 +13,15 @@ const {
   readFrontendComponentRailRows,
   readFrontendComponentRows,
 } = require('./planning-db/frontend-component-inventory.cjs');
+const {
+  countField,
+  headerIndexes,
+  isSeparatorRow,
+  markdownCells,
+  normalizeCell,
+  rawRow,
+  rowValue,
+} = require('./planning-db/frontend-inventory-table.cjs');
 
 function inventoryDocument(content) {
   return {
@@ -18,6 +29,33 @@ function inventoryDocument(content) {
     content,
   };
 }
+
+test('frontend inventory table helpers live in one canonical helper', () => {
+  const cells = markdownCells('| `Component ID` | Count |');
+  const indexes = headerIndexes(cells, ['Component ID', 'Count']);
+
+  assert.deepEqual(cells, ['`Component ID`', 'Count']);
+  assert.deepEqual(indexes, { 'Component ID': 0, Count: 1 });
+  assert.equal(rowValue(cells, indexes, 'Component ID'), 'Component ID');
+  assert.deepEqual(rawRow(cells, indexes, ['Component ID', 'Count']), {
+    'Component ID': 'Component ID',
+    Count: 'Count',
+  });
+  assert.equal(isSeparatorRow(markdownCells('| --- | :---: |')), true);
+  assert.equal(normalizeCell(' `Canvas`   shell '), 'Canvas shell');
+  assert.equal(countField({ surface_count: '4' }, 'surface_count', 'surfaceIds'), 4);
+  assert.equal(countField({ surfaceIds: ['a', 'b'] }, 'surface_count', 'surfaceIds'), 2);
+
+  const duplicatedLocalHelpers =
+    /function (markdownCells|headerIndexes|countField|normalizeCell|isSeparatorRow|rowValue)\b/;
+  for (const relativePath of [
+    'planning-db/frontend-component-inventory.cjs',
+    'planning-db/frontend-mechanical-truth-inventory.cjs',
+  ]) {
+    const source = fs.readFileSync(path.join(__dirname, relativePath), 'utf8');
+    assert.doesNotMatch(source, duplicatedLocalHelpers, `${relativePath} must import the helper`);
+  }
+});
 
 function sampleInventory() {
   return [

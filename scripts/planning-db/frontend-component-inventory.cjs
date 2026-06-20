@@ -4,6 +4,15 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { schemaName } = require('../planning-db-migrate.cjs');
+const {
+  countField,
+  headerIndexes,
+  isSeparatorRow,
+  markdownCells,
+  normalizeCell,
+  rawRow,
+  rowValue,
+} = require('./frontend-inventory-table.cjs');
 const { appendFilter } = require('./query-filter.cjs');
 const { parseLimit } = require('./query-limit.cjs');
 
@@ -132,14 +141,6 @@ function repoRelative(filePath) {
   return toPosix(path.relative(repoRoot, filePath));
 }
 
-function stripInlineCode(value) {
-  return String(value ?? '').replace(/`([^`]*)`/g, '$1');
-}
-
-function normalizeCell(value) {
-  return stripInlineCode(value).replace(/\s+/g, ' ').trim();
-}
-
 function normalizeOptional(value) {
   const normalized = normalizeCell(value);
   return normalized && !/^(-|none|n\/a)$/i.test(normalized) ? normalized : '';
@@ -155,45 +156,6 @@ function normalizeList(value) {
     .split(';')
     .map((item) => normalizeOptional(item))
     .filter(Boolean);
-}
-
-function markdownCells(line) {
-  return line
-    .trim()
-    .replace(/^\|/, '')
-    .replace(/\|$/, '')
-    .split('|')
-    .map((cell) => cell.trim());
-}
-
-function isSeparatorRow(cells) {
-  return cells.every((cell) => /^:?-{3,}:?$/.test(cell.trim()));
-}
-
-function normalizeHeader(value) {
-  return normalizeCell(value).toLowerCase();
-}
-
-function headerIndexes(cells, requiredHeaders) {
-  const byHeader = new Map(cells.map((cell, index) => [normalizeHeader(cell), index]));
-  const missing = requiredHeaders.filter((header) => !byHeader.has(normalizeHeader(header)));
-  if (missing.length > 0) {
-    return null;
-  }
-
-  return Object.fromEntries(
-    requiredHeaders.map((header) => [header, byHeader.get(normalizeHeader(header))])
-  );
-}
-
-function rowValue(cells, indexes, header) {
-  return normalizeCell(cells[indexes[header]]);
-}
-
-function rawRow(cells, indexes, headers) {
-  return Object.fromEntries(
-    headers.map((header) => [header, normalizeCell(cells[indexes[header]])])
-  );
 }
 
 function parseInteger(value) {
@@ -373,15 +335,6 @@ function buildFrontendComponentReflectionSnapshot(options = {}) {
     },
     { components: [], surfaceLinks: [], files: [], rails: [], evidence: [] }
   );
-}
-
-function countField(row, snakeName, camelName) {
-  const explicit = row[snakeName];
-  if (explicit !== undefined && explicit !== null) {
-    return Number(explicit);
-  }
-  const arrayValue = row[camelName];
-  return Array.isArray(arrayValue) ? arrayValue.length : 0;
 }
 
 function buildFrontendComponentRows(rows) {
