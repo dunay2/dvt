@@ -14,6 +14,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const { listMarkdownFiles } = require('./policy-validation-files.cjs');
+const { stripInlineCodeFragments } = require('./policy-validation-text.cjs');
 
 const ROOT = path.resolve(__dirname, '..');
 const CONTRACTS_DIR = path.join(ROOT, 'docs', 'architecture', 'engine', 'contracts');
@@ -65,7 +67,7 @@ function main() {
     process.exit(0);
   }
 
-  const files = walkMarkdown(CONTRACTS_DIR).sort();
+  const files = listMarkdownFiles(CONTRACTS_DIR).sort();
   const findings = [];
 
   for (const file of files) {
@@ -86,7 +88,7 @@ function main() {
         continue;
       }
 
-      const sanitized = sanitizeLine(line);
+      const sanitized = stripInlineCodeFragments(line);
       if (!sanitized.trim()) continue;
 
       const matches = [...sanitized.matchAll(LOWERCASE_PATTERN)];
@@ -147,27 +149,6 @@ function printReport(fileCount, findings) {
       );
     }
   }
-}
-
-function walkMarkdown(dir) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  const out = [];
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      out.push(...walkMarkdown(full));
-      continue;
-    }
-    if (entry.isFile() && entry.name.endsWith('.md')) {
-      out.push(full);
-    }
-  }
-  return out;
-}
-
-function sanitizeLine(line) {
-  // Remove fenced-code backticks and inline code fragments to avoid false positives.
-  return line.replace(/`[^`]*`/g, '');
 }
 
 function isFenceDelimiter(line) {
