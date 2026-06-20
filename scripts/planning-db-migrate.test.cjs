@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const {
   buildMigrationRecords,
@@ -817,6 +819,45 @@ test('tracked migrations keep runtime CLI legacy contract out of drift', () => {
   assert.match(runtimeCliContractMigration.sql, /CheckPlanningDbComponentIntegrity/);
   assert.doesNotMatch(runtimeCliContractMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(runtimeCliContractMigration.sql, /truncate\s+/i);
+});
+
+test('runtime CLI legacy validator delegates to the active @dvt CLI validator', () => {
+  const wrapperPath = path.join(__dirname, '..', 'packages', 'cli', 'validate-contracts.cjs');
+  const wrapperSource = fs.readFileSync(wrapperPath, 'utf8');
+
+  assert.match(wrapperSource, /require\('\.\.\/@dvt\/cli\/validate-contracts\.cjs'\)/);
+  assert.doesNotMatch(
+    wrapperSource,
+    /function\s+(collectJsonFiles|runCheck|validateGoldenResultsFile)\b/
+  );
+  assert.doesNotMatch(wrapperSource, /require\('\.\.\/contracts\/dist\/index\.js'\)/);
+});
+
+test('tracked migrations canonicalize runtime CLI legacy wrapper delegation', () => {
+  const migrations = readMigrationFiles();
+  const runtimeCliWrapperMigration = migrations.find(
+    (migration) => migration.fileName === '253_runtime_cli_legacy_wrapper_canonicalization.sql'
+  );
+
+  assert.ok(runtimeCliWrapperMigration);
+  assert.match(runtimeCliWrapperMigration.sql, /WEB-PHYSICAL-MODULE-DECOMPOSITION-DEBT-20260508/);
+  assert.match(runtimeCliWrapperMigration.sql, /SYS-RUNTIME-CLI-VALIDATION-LEGACY-LOOSE-PACKAGE/);
+  assert.match(runtimeCliWrapperMigration.sql, /SYS-RUNTIME-CLI-VALIDATION-DVT-CLI-PACKAGE/);
+  assert.match(runtimeCliWrapperMigration.sql, /packages\/cli\/validate-contracts\.cjs/);
+  assert.match(runtimeCliWrapperMigration.sql, /packages\/@dvt\/cli\/validate-contracts\.cjs/);
+  assert.match(
+    runtimeCliWrapperMigration.sql,
+    /REL-RUNTIME-CLI-VALIDATION-LEGACY-CALLS-DVT-CLI-PACKAGE/
+  );
+  assert.match(runtimeCliWrapperMigration.sql, /RunRuntimeCliValidation/);
+  assert.match(runtimeCliWrapperMigration.sql, /DetectCodeSymbolDuplicates/);
+  assert.match(runtimeCliWrapperMigration.sql, /delete from architecture\.component_storage_io/);
+  assert.match(
+    runtimeCliWrapperMigration.sql,
+    /node --test scripts\/planning-db-migrate\.test\.cjs/
+  );
+  assert.doesNotMatch(runtimeCliWrapperMigration.sql, /delete from architecture\.component\b/i);
+  assert.doesNotMatch(runtimeCliWrapperMigration.sql, /truncate\s+/i);
 });
 
 test('tracked migrations classify code-symbol duplicates against legacy components', () => {
