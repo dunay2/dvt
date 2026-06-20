@@ -298,6 +298,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/247_planning_db_query_filter_helper_component.sql
   - tools/planning-db/migrations/248_retire_canvas_context_menu_echo_guard_duplicate_rail.sql
   - tools/planning-db/migrations/249_planning_db_query_filter_extended_helpers.sql
+  - tools/planning-db/migrations/250_planning_db_query_format_helper_component.sql
+  - tools/planning-db/migrations/251_planning_db_query_format_helper_generated_status_consumers.sql
   - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
   - tools/planning-db/migrations/114_repoint_canvas_reload_recovery_test_support_rail.sql
   - tools/planning-db/migrations/115_repoint_canvas_create_document_test_support_rail.sql
@@ -353,10 +355,14 @@ allowedImplementationSurfaces:
   - apps/api/src/entrypoints/http/workspaceContextRoute.ts
   - apps/api/src/entrypoints/http/workspacePluginCatalogRoutes.ts
   - apps/api/test/entrypoints/http/httpBearerAuthentication.test.ts
+  - scripts/generate-db-surface-inventory.cjs
+  - scripts/generate-knowledge-intake-literature.cjs
   - scripts/planning-db-import.cjs
+  - scripts/planning-db-surface-inventory-check.cjs
   - scripts/planning-db/code-symbol-inventory.cjs
   - scripts/planning-db/query-limit.cjs
   - scripts/planning-db/query-filter.cjs
+  - scripts/planning-db/query-format.cjs
   - scripts/planning-db/queries/code-symbol-query.cjs
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
@@ -694,6 +700,19 @@ symbols:
       - ReadComponentProfile
     fowlerSignals:
       - component-pair Planning DB queries reuse one canonical predicate helper across read models and CLI surfaces
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --no-refresh --limit 160
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: textValue
+    path: scripts/planning-db/query-format.cjs
+    dddOwner: PlanningDbQueryFormatHelper
+    cqRails:
+      - DetectCodeSymbolDuplicates
+      - CheckPlanningDbComponentIntegrity
+      - ReadComponentProfile
+    fowlerSignals:
+      - repeated Planning DB query and generated-status text fallback formatters use one canonical helper instead of local duplicate functions
     architectureGuard: pnpm planning:db:query code-symbol-duplicates --no-refresh --limit 160
     cypressCoverage: N/A
     unitTests:

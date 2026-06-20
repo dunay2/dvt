@@ -1,30 +1,26 @@
 /** Owned concern: expose DB-first governance refresh run ledger facts. */
 const { appendFilter } = require('../query-filter.cjs');
+const { textValue } = require('../query-format.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createGovernanceRefreshRunReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
 
-  function textValue(value, fallback = '') {
-    const text = String(value ?? '').trim();
-    return text.length > 0 ? text : fallback;
-  }
-
   function buildGovernanceRefreshRunRows(rows) {
     return rows.map((row) => [
-      textValue(row.run_id ?? row.runId),
-      textValue(row.run_state ?? row.runState),
-      textValue(row.actor),
+      textValue(row.run_id ?? row.runId, ''),
+      textValue(row.run_state ?? row.runState, ''),
+      textValue(row.actor, ''),
       `passes=${row.generation_passes ?? row.generationPasses ?? 0}/${
         row.max_passes ?? row.maxPasses ?? 0
       }`,
       `stages=${row.stage_count ?? row.stageCount ?? 0} failed=${
         row.failed_stage_count ?? row.failedStageCount ?? 0
       }`,
-      textValue(row.started_at ?? row.startedAt),
-      textValue(row.completed_at ?? row.completedAt),
-      textValue(row.error_summary ?? row.errorSummary),
+      textValue(row.started_at ?? row.startedAt, ''),
+      textValue(row.completed_at ?? row.completedAt, ''),
+      textValue(row.error_summary ?? row.errorSummary, ''),
     ]);
   }
 

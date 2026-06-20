@@ -4,6 +4,7 @@ const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { runMigrations } = require('./planning-db-migrate.cjs');
+const { textValue } = require('./planning-db/query-format.cjs');
 const {
   allowedDbSurfaceMigrationStates,
   allowedDbSurfaceWriteRailKinds,
@@ -54,28 +55,24 @@ function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
 }
 
-function textValue(value) {
-  return String(value ?? '').trim();
-}
-
 function booleanValue(value) {
   return value === true || value === 'true';
 }
 
 function normalizeRow(row) {
   return {
-    surfaceName: textValue(row.surface_name ?? row.surfaceName),
-    canonicalSource: textValue(row.canonical_source ?? row.canonicalSource),
-    writeRail: textValue(row.write_rail ?? row.writeRail),
-    writeRailKind: textValue(row.write_rail_kind ?? row.writeRailKind),
-    readQueryRail: textValue(row.read_query_rail ?? row.readQueryRail),
-    projection: textValue(row.projection),
-    validation: textValue(row.validation),
-    migrationState: textValue(row.migration_state ?? row.migrationState),
-    sourceRef: textValue(row.source_ref ?? row.sourceRef),
-    sourceContentSha256: textValue(row.source_content_sha256 ?? row.sourceContentSha256),
+    surfaceName: textValue(row.surface_name ?? row.surfaceName, ''),
+    canonicalSource: textValue(row.canonical_source ?? row.canonicalSource, ''),
+    writeRail: textValue(row.write_rail ?? row.writeRail, ''),
+    writeRailKind: textValue(row.write_rail_kind ?? row.writeRailKind, ''),
+    readQueryRail: textValue(row.read_query_rail ?? row.readQueryRail, ''),
+    projection: textValue(row.projection, ''),
+    validation: textValue(row.validation, ''),
+    migrationState: textValue(row.migration_state ?? row.migrationState, ''),
+    sourceRef: textValue(row.source_ref ?? row.sourceRef, ''),
+    sourceContentSha256: textValue(row.source_content_sha256 ?? row.sourceContentSha256, ''),
     dbFirstEligible: booleanValue(row.db_first_eligible ?? row.dbFirstEligible),
-    dbFirstBlocker: textValue(row.db_first_blocker ?? row.dbFirstBlocker),
+    dbFirstBlocker: textValue(row.db_first_blocker ?? row.dbFirstBlocker, ''),
   };
 }
 

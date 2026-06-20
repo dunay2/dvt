@@ -281,6 +281,36 @@ test('planning DB query filtering helpers live in one canonical helper', () => {
   assert.deepEqual(componentParams, ['SYS-WEB-ROOT']);
 });
 
+test('planning DB query text formatting lives in one canonical helper', () => {
+  const queryFormatConsumers = [
+    'generate-db-surface-inventory.cjs',
+    'generate-knowledge-intake-literature.cjs',
+    'planning-db-surface-inventory-check.cjs',
+    'planning-db/db-surface-inventory.cjs',
+    'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/component-architecture-fitness-query.cjs',
+    'planning-db/queries/component-integrity-query.cjs',
+    'planning-db/queries/component-roadmap-query.cjs',
+    'planning-db/queries/documentation-panel-query.cjs',
+    'planning-db/queries/fowler-analysis-query.cjs',
+    'planning-db/queries/governance-refresh-run-query.cjs',
+    'planning-db/queries/rail-vocabulary-query.cjs',
+  ];
+  const duplicateFormatters = queryFormatConsumers.filter((relativePath) => {
+    const content = fs.readFileSync(path.join(__dirname, relativePath), 'utf8');
+    return /function textValue\s*\(/.test(content);
+  });
+
+  assert.deepEqual(duplicateFormatters, []);
+
+  const { textValue } = require('./planning-db/query-format.cjs');
+
+  assert.equal(textValue(undefined), '-');
+  assert.equal(textValue(null), '-');
+  assert.equal(textValue('  component  '), 'component');
+  assert.equal(textValue('   ', ''), '');
+});
+
 test('command/query rail query behavior lives in a focused read-model component', () => {
   const commandQueryRailQueryComponent = require('./planning-db/queries/command-query-rail-query.cjs');
 

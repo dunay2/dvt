@@ -1,15 +1,11 @@
 /** Owned concern: expose DB-owned Fowler analysis work and retirement facts. */
 const { appendBooleanFilter, appendFilter } = require('../query-filter.cjs');
+const { textValue } = require('../query-format.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createFowlerAnalysisReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function textValue(value, fallback = '-') {
-    const text = String(value ?? '').trim();
-    return text.length > 0 ? text : fallback;
-  }
 
   function buildFowlerAnalysisRows(rows) {
     return rows.map((row) => [
