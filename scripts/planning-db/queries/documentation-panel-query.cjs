@@ -1,15 +1,11 @@
 /** Owned concern: expose DB-owned documentation and component panel facts. */
 const { appendBooleanFilter, appendFilter } = require('../query-filter.cjs');
+const { textValue } = require('../query-format.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createDocumentationPanelReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function textValue(value, fallback = '-') {
-    const text = String(value ?? '').trim();
-    return text.length > 0 ? text : fallback;
-  }
 
   function buildDocumentationPanelRows(rows) {
     return rows.map((row) => [

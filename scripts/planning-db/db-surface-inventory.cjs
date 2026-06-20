@@ -1,6 +1,7 @@
 /** Owned concern: expose DB-governed surface inventory rows through Planning DB queries. */
 const { schemaName } = require('../planning-db-migrate.cjs');
 const { appendFilter } = require('./query-filter.cjs');
+const { textValue } = require('./query-format.cjs');
 
 const sourceView = `${schemaName}.db_governance_surface_query`;
 const allowedDbSurfaceMigrationStates = new Set([
@@ -25,11 +26,6 @@ function parseLimit(value, fallback = 20) {
     throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
   }
   return parsed;
-}
-
-function textValue(value, fallback = '-') {
-  const text = String(value ?? '').trim();
-  return text.length > 0 ? text : fallback;
 }
 
 function buildDbSurfaceRows(rows) {

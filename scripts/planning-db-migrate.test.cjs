@@ -2047,6 +2047,44 @@ test('tracked migrations extend the Planning DB query filter helper component', 
   assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations create the Planning DB query format helper component', () => {
+  const migrations = readMigrationFiles();
+  const helperMigration = migrations.find(
+    (migration) => migration.fileName === '250_planning_db_query_format_helper_component.sql'
+  );
+
+  assert.ok(helperMigration);
+  assert.match(helperMigration.sql, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-FORMAT/);
+  assert.match(helperMigration.sql, /scripts\/planning-db\/query-format\.cjs/);
+  assert.match(helperMigration.sql, /DetectCodeSymbolDuplicates/);
+  assert.match(helperMigration.sql, /textValue/);
+  assert.match(helperMigration.sql, /FormatPlanningDbQueryTextValue/);
+  assert.match(helperMigration.sql, /hidden_authority/);
+  assert.match(helperMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_port/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_test/);
+  assert.doesNotMatch(helperMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations extend the Planning DB query format helper to generated status consumers', () => {
+  const migrations = readMigrationFiles();
+  const helperMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '251_planning_db_query_format_helper_generated_status_consumers.sql'
+  );
+
+  assert.ok(helperMigration);
+  assert.match(helperMigration.sql, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-FORMAT/);
+  assert.match(helperMigration.sql, /scripts\/generate-db-surface-inventory\.cjs/);
+  assert.match(helperMigration.sql, /scripts\/generate-knowledge-intake-literature\.cjs/);
+  assert.match(helperMigration.sql, /scripts\/planning-db-surface-inventory-check\.cjs/);
+  assert.match(helperMigration.sql, /source_refs = jsonb_build_array/);
+  assert.match(helperMigration.sql, /textValue helper/);
+  assert.doesNotMatch(helperMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations retire Canvas context-menu echo guard duplicate rail', () => {
   const migrations = readMigrationFiles();
   const duplicateRailMigration = migrations.find(

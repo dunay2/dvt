@@ -6,6 +6,7 @@ const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { sourceView } = require('./planning-db/db-surface-inventory.cjs');
+const { textValue } = require('./planning-db/query-format.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultOutputPath = path.join(
@@ -33,11 +34,6 @@ function toPosix(filePath) {
 
 function relFromRepo(filePath) {
   return toPosix(path.relative(repoRoot, filePath));
-}
-
-function textValue(value, fallback = '-') {
-  const text = String(value ?? '').trim();
-  return text.length > 0 ? text : fallback;
 }
 
 function numericValue(value) {

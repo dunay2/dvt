@@ -1,15 +1,11 @@
 /** Owned concern: expose code-symbol duplicate and governed-source drift findings. */
 const { appendFilter } = require('../query-filter.cjs');
+const { textValue } = require('../query-format.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createCodeSymbolReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function textValue(value, fallback = '-') {
-    const text = String(value ?? '').trim();
-    return text.length > 0 ? text : fallback;
-  }
 
   function buildCodeSymbolRows(rows) {
     return rows.map((row) => [

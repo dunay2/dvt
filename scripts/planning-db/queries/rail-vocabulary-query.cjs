@@ -1,5 +1,6 @@
 /** Owned concern: expose canonical command/query rail vocabulary findings. */
 const { appendFilter } = require('../query-filter.cjs');
+const { textValue } = require('../query-format.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createRailVocabularyReadModelComponent(deps = {}) {
@@ -12,11 +13,6 @@ function createRailVocabularyReadModelComponent(deps = {}) {
     }
 
     predicates.push(`finding_kind in ('exact_duplicate', 'semantic_duplicate')`);
-  }
-
-  function textValue(value, fallback = '-') {
-    const text = String(value ?? '').trim();
-    return text.length > 0 ? text : fallback;
   }
 
   function buildRailVocabularyRows(rows) {
