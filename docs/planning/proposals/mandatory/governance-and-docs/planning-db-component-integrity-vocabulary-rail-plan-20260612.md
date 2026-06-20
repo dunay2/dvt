@@ -297,6 +297,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/112_planning_db_query_limit_helper_component.sql
   - tools/planning-db/migrations/247_planning_db_query_filter_helper_component.sql
   - tools/planning-db/migrations/248_retire_canvas_context_menu_echo_guard_duplicate_rail.sql
+  - tools/planning-db/migrations/249_planning_db_query_filter_extended_helpers.sql
   - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
   - tools/planning-db/migrations/114_repoint_canvas_reload_recovery_test_support_rail.sql
   - tools/planning-db/migrations/115_repoint_canvas_create_document_test_support_rail.sql
@@ -642,6 +643,58 @@ symbols:
     fowlerSignals:
       - repeated Planning DB query equality filters use one canonical helper instead of query-local duplicate functions
     architectureGuard: pnpm planning:db:query code-symbol-duplicates --no-refresh --limit 120
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: isEmptyFilterValue
+    path: scripts/planning-db/query-filter.cjs
+    dddOwner: PlanningDbQueryFilterHelper
+    cqRails:
+      - DetectCodeSymbolDuplicates
+      - CheckPlanningDbComponentIntegrity
+      - ReadComponentProfile
+    fowlerSignals:
+      - query filter helpers share one empty-value predicate instead of duplicating skip semantics
+    architectureGuard: node --test scripts/planning-db-query.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: appendBooleanFilter
+    path: scripts/planning-db/query-filter.cjs
+    dddOwner: PlanningDbQueryFilterHelper
+    cqRails:
+      - DetectCodeSymbolDuplicates
+      - CheckPlanningDbComponentIntegrity
+      - ReadComponentProfile
+    fowlerSignals:
+      - repeated Planning DB query boolean literal filters use one canonical helper instead of query-local duplicate functions
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --no-refresh --limit 160
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: appendBooleanParamFilter
+    path: scripts/planning-db/query-filter.cjs
+    dddOwner: PlanningDbQueryFilterHelper
+    cqRails:
+      - DetectCodeSymbolDuplicates
+      - CheckPlanningDbComponentIntegrity
+      - ReadComponentProfile
+    fowlerSignals:
+      - command/query rail duplicate checks use one boolean parameter predicate helper instead of a local near-duplicate
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --no-refresh --limit 160
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-query.test.cjs
+  - name: appendComponentPairFilter
+    path: scripts/planning-db/query-filter.cjs
+    dddOwner: PlanningDbQueryFilterHelper
+    cqRails:
+      - DetectCodeSymbolDuplicates
+      - CheckPlanningDbComponentIntegrity
+      - ReadComponentProfile
+    fowlerSignals:
+      - component-pair Planning DB queries reuse one canonical predicate helper across read models and CLI surfaces
+    architectureGuard: pnpm planning:db:query code-symbol-duplicates --no-refresh --limit 160
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-query.test.cjs

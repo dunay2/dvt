@@ -2027,6 +2027,26 @@ test('tracked migrations create the Planning DB query filter helper component', 
   assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations extend the Planning DB query filter helper component', () => {
+  const migrations = readMigrationFiles();
+  const helperMigration = migrations.find(
+    (migration) => migration.fileName === '249_planning_db_query_filter_extended_helpers.sql'
+  );
+
+  assert.ok(helperMigration);
+  assert.match(helperMigration.sql, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-FILTER/);
+  assert.match(helperMigration.sql, /appendBooleanFilter/);
+  assert.match(helperMigration.sql, /appendBooleanParamFilter/);
+  assert.match(helperMigration.sql, /appendComponentPairFilter/);
+  assert.match(helperMigration.sql, /AppendPlanningDbBooleanLiteralFilter/);
+  assert.match(helperMigration.sql, /AppendPlanningDbBooleanParamFilter/);
+  assert.match(helperMigration.sql, /AppendPlanningDbComponentPairFilter/);
+  assert.match(helperMigration.sql, /hidden_authority/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_port/);
+  assert.doesNotMatch(helperMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations retire Canvas context-menu echo guard duplicate rail', () => {
   const migrations = readMigrationFiles();
   const duplicateRailMigration = migrations.find(
