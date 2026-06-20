@@ -1,18 +1,10 @@
 /** Owned concern: expose DB-owned component integrity validation facts. */
+const { appendFilter } = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createComponentIntegrityReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function appendFilter(predicates, params, column, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(value);
-    predicates.push(`${column} = $${params.length}`);
-  }
 
   function appendComponentFilter(predicates, params, value) {
     if (value === undefined || value === null || value === '') {

@@ -24,6 +24,7 @@ const {
   buildFrontendMechanicalTruthRows,
   readFrontendMechanicalTruthRows,
 } = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+const { appendFilter } = require('./planning-db/query-filter.cjs');
 const { parseLimit } = require('./planning-db/query-limit.cjs');
 const {
   buildFrontendComponentFileRows,
@@ -1918,15 +1919,6 @@ function buildMandatoryProposalGapRows(rows) {
 
 function buildComponentEngineeringRecordRows(rows) {
   return rows.map((row) => row.record ?? row.componentEngineeringRecord);
-}
-
-function appendFilter(predicates, params, column, value) {
-  if (value === undefined || value === null || value === '') {
-    return;
-  }
-
-  params.push(value);
-  predicates.push(`${column} = $${params.length}`);
 }
 
 function appendResolutionFilter(predicates, params, value) {

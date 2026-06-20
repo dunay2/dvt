@@ -1,17 +1,9 @@
 /** Owned concern: expose DB-owned component architecture fitness observations and checks. */
+const { appendFilter } = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
   const defaultSchemaName = deps.schemaName || 'architecture';
-
-  function appendFilter(predicates, params, column, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(value);
-    predicates.push(`${column} = $${params.length}`);
-  }
 
   function appendComponentFilter(predicates, params, value) {
     if (value === undefined || value === null || value === '') {

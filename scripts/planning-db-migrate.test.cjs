@@ -2008,6 +2008,45 @@ test('tracked migrations create the Planning DB query limit helper component', (
   assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations create the Planning DB query filter helper component', () => {
+  const migrations = readMigrationFiles();
+  const helperMigration = migrations.find(
+    (migration) => migration.fileName === '247_planning_db_query_filter_helper_component.sql'
+  );
+
+  assert.ok(helperMigration);
+  assert.match(helperMigration.sql, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-FILTER/);
+  assert.match(helperMigration.sql, /scripts\/planning-db\/query-filter\.cjs/);
+  assert.match(helperMigration.sql, /DetectCodeSymbolDuplicates/);
+  assert.match(helperMigration.sql, /appendFilter/);
+  assert.match(helperMigration.sql, /hidden_authority/);
+  assert.match(helperMigration.sql, /insert into architecture\.component\s*\(/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_port/);
+  assert.match(helperMigration.sql, /insert into architecture\.component_test/);
+  assert.doesNotMatch(helperMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(helperMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations retire Canvas context-menu echo guard duplicate rail', () => {
+  const migrations = readMigrationFiles();
+  const duplicateRailMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '248_retire_canvas_context_menu_echo_guard_duplicate_rail.sql'
+  );
+
+  assert.ok(duplicateRailMigration);
+  assert.match(duplicateRailMigration.sql, /CANVAS-CONTEXTUAL-PROJECT-CODE-20260619/);
+  assert.match(duplicateRailMigration.sql, /DVT-CANVAS-P0-PRO-FLOW-1/);
+  assert.match(duplicateRailMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(duplicateRailMigration.sql, /rail_status = 'retired'/);
+  assert.match(duplicateRailMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(duplicateRailMigration.sql, /aliasOf/);
+  assert.match(duplicateRailMigration.sql, /canonicalRailFeatureId/);
+  assert.match(duplicateRailMigration.sql, /rail-vocabulary/);
+  assert.doesNotMatch(duplicateRailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(duplicateRailMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations repoint stale Canvas test support local rails', () => {
   const migrations = readMigrationFiles();
   const canvasTestSupportMigration = migrations.find(

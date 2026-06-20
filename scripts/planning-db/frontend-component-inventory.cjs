@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { schemaName } = require('../planning-db-migrate.cjs');
+const { appendFilter } = require('./query-filter.cjs');
 const { parseLimit } = require('./query-limit.cjs');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
@@ -414,14 +415,6 @@ function buildFrontendComponentRailRows(rows) {
     row.rail_kind ?? row.railKind,
     row.rail_status ?? row.railStatus,
   ]);
-}
-
-function appendFilter(predicates, params, column, value) {
-  if (value === undefined || value === null || value === '') {
-    return;
-  }
-  params.push(value);
-  predicates.push(`${column} = $${params.length}`);
 }
 
 async function readFrontendComponentRows(client, filters = {}, options = {}) {
