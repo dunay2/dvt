@@ -1,18 +1,10 @@
 /** Owned concern: expose DB-owned documentation and component panel facts. */
-const { appendFilter } = require('../query-filter.cjs');
+const { appendBooleanFilter, appendFilter } = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createDocumentationPanelReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function appendBooleanFilter(predicates, column, value) {
-    if (value === undefined) {
-      return;
-    }
-
-    predicates.push(`${column} is ${value === true ? 'true' : 'false'}`);
-  }
 
   function textValue(value, fallback = '-') {
     const text = String(value ?? '').trim();

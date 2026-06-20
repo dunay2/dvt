@@ -1,5 +1,5 @@
 /** Owned concern: expose command/query rail catalog read models for planning DB queries. */
-const { appendFilter } = require('../query-filter.cjs');
+const { appendBooleanParamFilter, appendFilter } = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createCommandQueryRailReadModelComponent(deps = {}) {
@@ -8,15 +8,6 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
 
   function flagLabel(value, label) {
     return value ? label : '-';
-  }
-
-  function appendBooleanFilter(predicates, params, column, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(Boolean(value));
-    predicates.push(`${column} = $${params.length}`);
   }
 
   function parseBooleanFilter(value, flagName) {
@@ -176,8 +167,8 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
     appendFilter(predicates, params, 'rail_status', filters.status);
     appendFilter(predicates, params, 'ddd_owner', filters.owner);
     appendFilter(predicates, params, 'rail_name', filters.rail);
-    appendBooleanFilter(predicates, params, 'is_duplicate', filters.duplicates);
-    appendBooleanFilter(predicates, params, 'is_gap', filters.gaps);
+    appendBooleanParamFilter(predicates, params, 'is_duplicate', filters.duplicates);
+    appendBooleanParamFilter(predicates, params, 'is_gap', filters.gaps);
 
     const limit = parseLimit(filters.limit, 50);
     params.push(limit);

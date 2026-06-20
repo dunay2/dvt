@@ -2,20 +2,12 @@
  * Owned concern: expose DB-owned documentation lifecycle facts for planning DB queries.
  * Command/query rails: `ListDocumentationLifecycleFacts`.
  */
-const { appendFilter } = require('../query-filter.cjs');
+const { appendBooleanFilter, appendFilter } = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createDocumentationLifecycleReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function appendBooleanFilter(predicates, column, value) {
-    if (value === undefined) {
-      return;
-    }
-
-    predicates.push(`${column} is ${value === true ? 'true' : 'false'}`);
-  }
 
   function buildDocumentationLifecycleRows(rows) {
     return rows.map((row) => [

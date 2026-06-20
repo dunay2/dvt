@@ -199,7 +199,7 @@ test('planning DB query limit parsing lives in one canonical helper', () => {
   assert.throws(() => parseLimit('0', 50), /Invalid --limit "0"\. Expected a positive integer\./);
 });
 
-test('planning DB query equality filtering lives in one canonical helper', () => {
+test('planning DB query filtering helpers live in one canonical helper', () => {
   const queryFilterConsumers = [
     'planning-db-query.cjs',
     'planning-db/db-surface-inventory.cjs',
@@ -220,12 +220,17 @@ test('planning DB query equality filtering lives in one canonical helper', () =>
   ];
   const duplicateFilters = queryFilterConsumers.filter((relativePath) => {
     const content = fs.readFileSync(path.join(__dirname, relativePath), 'utf8');
-    return /function appendFilter\s*\(/.test(content);
+    return /function append(?:Boolean|Component|ComponentEndpoint)?Filter\s*\(/.test(content);
   });
 
   assert.deepEqual(duplicateFilters, []);
 
-  const { appendFilter } = require('./planning-db/query-filter.cjs');
+  const {
+    appendBooleanFilter,
+    appendBooleanParamFilter,
+    appendComponentPairFilter,
+    appendFilter,
+  } = require('./planning-db/query-filter.cjs');
   const predicates = [];
   const params = [];
 
@@ -236,6 +241,44 @@ test('planning DB query equality filtering lives in one canonical helper', () =>
 
   assert.deepEqual(predicates, ['component_id = $1', 'status = $2']);
   assert.deepEqual(params, ['SYS-WEB-ROOT', 'review']);
+
+  const literalBooleanPredicates = [];
+  appendBooleanFilter(literalBooleanPredicates, 'is_gap', undefined);
+  appendBooleanFilter(literalBooleanPredicates, 'is_gap', true);
+  appendBooleanFilter(literalBooleanPredicates, 'is_duplicate', false);
+
+  assert.deepEqual(literalBooleanPredicates, ['is_gap is true', 'is_duplicate is false']);
+
+  const parameterizedBooleanPredicates = [];
+  const parameterizedBooleanParams = [];
+  appendBooleanParamFilter(
+    parameterizedBooleanPredicates,
+    parameterizedBooleanParams,
+    'is_gap',
+    ''
+  );
+  appendBooleanParamFilter(
+    parameterizedBooleanPredicates,
+    parameterizedBooleanParams,
+    'is_gap',
+    true
+  );
+
+  assert.deepEqual(parameterizedBooleanPredicates, ['is_gap = $1']);
+  assert.deepEqual(parameterizedBooleanParams, [true]);
+
+  const componentPredicates = [];
+  const componentParams = [];
+  appendComponentPairFilter(
+    componentPredicates,
+    componentParams,
+    'SYS-WEB-ROOT',
+    'source_component_id',
+    'target_component_id'
+  );
+
+  assert.deepEqual(componentPredicates, ['(source_component_id = $1 or target_component_id = $1)']);
+  assert.deepEqual(componentParams, ['SYS-WEB-ROOT']);
 });
 
 test('command/query rail query behavior lives in a focused read-model component', () => {

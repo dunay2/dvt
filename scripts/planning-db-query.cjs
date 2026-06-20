@@ -24,7 +24,7 @@ const {
   buildFrontendMechanicalTruthRows,
   readFrontendMechanicalTruthRows,
 } = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
-const { appendFilter } = require('./planning-db/query-filter.cjs');
+const { appendComponentPairFilter, appendFilter } = require('./planning-db/query-filter.cjs');
 const { parseLimit } = require('./planning-db/query-limit.cjs');
 const {
   buildFrontendComponentFileRows,
@@ -3514,17 +3514,6 @@ async function readComponentEngineeringQualityRows(client, filters = {}) {
   return result.rows;
 }
 
-function appendComponentEndpointFilter(predicates, params, value) {
-  if (value === undefined || value === null || value === '') {
-    return;
-  }
-
-  params.push(value);
-  predicates.push(
-    `(source_component_id = $${params.length} or target_component_id = $${params.length})`
-  );
-}
-
 async function readArchitectureDesignRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -3597,7 +3586,13 @@ async function readArchitectureRelationRows(client, filters = {}) {
   const params = [];
   const predicates = [];
   appendFilter(predicates, params, 'relation_id', filters.relation);
-  appendComponentEndpointFilter(predicates, params, filters.component);
+  appendComponentPairFilter(
+    predicates,
+    params,
+    filters.component,
+    'source_component_id',
+    'target_component_id'
+  );
   appendFilter(predicates, params, 'relation_type', filters.kind);
   appendFilter(predicates, params, 'status', filters.status);
 

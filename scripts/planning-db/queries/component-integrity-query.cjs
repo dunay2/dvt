@@ -1,21 +1,10 @@
 /** Owned concern: expose DB-owned component integrity validation facts. */
-const { appendFilter } = require('../query-filter.cjs');
+const { appendComponentPairFilter, appendFilter } = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createComponentIntegrityReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function appendComponentFilter(predicates, params, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(value);
-    predicates.push(
-      `(component_id = $${params.length} or related_component_id = $${params.length})`
-    );
-  }
 
   function textValue(value, fallback = '-') {
     const text = String(value ?? '').trim();
@@ -64,7 +53,13 @@ function createComponentIntegrityReadModelComponent(deps = {}) {
     appendFilter(predicates, params, 'finding_state', filters.state);
     appendFilter(predicates, params, 'path', filters.path);
     appendFilter(predicates, params, 'relation_id', filters.relation);
-    appendComponentFilter(predicates, params, filters.component);
+    appendComponentPairFilter(
+      predicates,
+      params,
+      filters.component,
+      'component_id',
+      'related_component_id'
+    );
 
     const limit = parseLimit(filters.limit, 50);
     params.push(limit);
