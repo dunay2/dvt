@@ -199,6 +199,45 @@ test('planning DB query limit parsing lives in one canonical helper', () => {
   assert.throws(() => parseLimit('0', 50), /Invalid --limit "0"\. Expected a positive integer\./);
 });
 
+test('planning DB query equality filtering lives in one canonical helper', () => {
+  const queryFilterConsumers = [
+    'planning-db-query.cjs',
+    'planning-db/db-surface-inventory.cjs',
+    'planning-db/frontend-component-inventory.cjs',
+    'planning-db/frontend-mechanical-truth-inventory.cjs',
+    'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/command-query-rail-query.cjs',
+    'planning-db/queries/component-architecture-fitness-query.cjs',
+    'planning-db/queries/component-integrity-query.cjs',
+    'planning-db/queries/component-roadmap-query.cjs',
+    'planning-db/queries/documentation-lifecycle-query.cjs',
+    'planning-db/queries/documentation-panel-query.cjs',
+    'planning-db/queries/feature-mechanization-query.cjs',
+    'planning-db/queries/fowler-analysis-query.cjs',
+    'planning-db/queries/governance-refresh-run-query.cjs',
+    'planning-db/queries/knowledge-intake-retirement-query.cjs',
+    'planning-db/queries/rail-vocabulary-query.cjs',
+  ];
+  const duplicateFilters = queryFilterConsumers.filter((relativePath) => {
+    const content = fs.readFileSync(path.join(__dirname, relativePath), 'utf8');
+    return /function appendFilter\s*\(/.test(content);
+  });
+
+  assert.deepEqual(duplicateFilters, []);
+
+  const { appendFilter } = require('./planning-db/query-filter.cjs');
+  const predicates = [];
+  const params = [];
+
+  appendFilter(predicates, params, 'component_id', undefined);
+  appendFilter(predicates, params, 'component_id', '');
+  appendFilter(predicates, params, 'component_id', 'SYS-WEB-ROOT');
+  appendFilter(predicates, params, 'status', 'review');
+
+  assert.deepEqual(predicates, ['component_id = $1', 'status = $2']);
+  assert.deepEqual(params, ['SYS-WEB-ROOT', 'review']);
+});
+
 test('command/query rail query behavior lives in a focused read-model component', () => {
   const commandQueryRailQueryComponent = require('./planning-db/queries/command-query-rail-query.cjs');
 

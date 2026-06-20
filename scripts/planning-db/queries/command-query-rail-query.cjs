@@ -1,4 +1,5 @@
 /** Owned concern: expose command/query rail catalog read models for planning DB queries. */
+const { appendFilter } = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createCommandQueryRailReadModelComponent(deps = {}) {
@@ -7,15 +8,6 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
 
   function flagLabel(value, label) {
     return value ? label : '-';
-  }
-
-  function appendFilter(predicates, params, column, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(value);
-    predicates.push(`${column} = $${params.length}`);
   }
 
   function appendBooleanFilter(predicates, params, column, value) {
