@@ -76,11 +76,11 @@ Related command seams:
   React Flow edge-change contract, which is then consumed by
   `canvasGraphLifecycle.edge`.
 - Node-level actions use the same `ResolveCanvasContextMenu` rail, then dispatch
-  to existing selection, duplicate, inspect, and remove-node callbacks supplied
-  by the Canvas route. Selection availability follows preview/run posture;
-  duplicate and remove availability follows graph mutation posture.
+  to existing workbench, selection, duplicate, and remove-node callbacks
+  supplied by the Canvas route. Selection availability follows preview/run
+  posture; duplicate and remove availability follows graph mutation posture.
 - The Inspector modeler action strip reuses the node action model minus the
-  current Properties action. It is not a new command/query rail and does not
+  workbench open action. It is not a new command/query rail and does not
   own role, status, or catalog vocabularies.
 
 ## File Responsibilities
@@ -89,10 +89,15 @@ Related command seams:
   model and edge-removal change construction.
 - `canvasNodeContextMenuModel.ts`: pure node-target contextual menu and
   Inspector modeler-action read models.
+- `CanvasNodeContextMenuView.tsx`: node context-menu presentation template; it
+  renders groups/actions from `CanvasNodeContextMenuModel` and does not own
+  workbench sections.
 - `CanvasViewport.tsx`: React Flow pane/edge gesture adapter and menu renderer;
   it does not own contextual action policy.
-- `DbtNodeComponent.tsx`: node-shell gesture adapter and menu renderer; it does
-  not own contextual action policy or node identity semantics.
+- `CanvasNodeShell.tsx`: React Flow node shell and context-menu trigger; it
+  delegates the menu template to `CanvasNodeContextMenuView`.
+- `DbtNodeComponent.tsx`: node card adapter; it does not own contextual action
+  policy, menu presentation, or node identity semantics.
 - `CanvasInspectorPanel.tsx`: right-panel consumer of the node modeler-action
   read model; it delegates command execution to route-supplied handlers and
   does not declare graph mutation policy.
@@ -111,11 +116,14 @@ Related command seams:
   actions.
 - Node right-click opens node-specific actions; it does not show background
   creation or edge-removal actions.
-- Node Properties/Open Inspector always remains available because it is a
-  route-local read/selection action.
+- Open workbench always remains available when the route can inspect the node
+  because it is a route-local read/selection action.
 - Read-only execution posture produces no execution-selection action.
 - Blocked graph mutation posture hides graph-edit actions such as duplicate,
-  remove, schema attachment, and execution selection.
+  remove, and schema attachment. Execution selection stays governed by
+  preview/run posture.
+- Node workbench sections such as Properties, Inputs / Outputs, Tests, SQL,
+  Preview, Runs, and Lineage are not node context-menu actions.
 - Context-menu node creation uses the clicked flow position, not a hidden
   default slot.
 - Toolbar and context-menu node creation share `CreateCanvasAuthoringNode`.
@@ -148,9 +156,9 @@ stateDiagram-v2
   EdgeMenu --> RemoveEdge: choose delete
   RemoveEdge --> EdgeChange: EdgeChange remove
   EdgeChange --> DraftGraph: canvasGraphLifecycle.edge.applyChanges
-  NodeMenu --> Inspector: choose Properties
+  NodeMenu --> Workbench: choose Open workbench
   NodeMenu --> NodeCommand: choose duplicate/select/remove
-  Inspector --> NodeCommand: choose modeler action
+  Workbench --> NodeCommand: choose modeler action
   NodeCommand --> DraftGraph
   DraftGraph --> Idle
 ```
@@ -163,10 +171,11 @@ flowchart LR
   NodeGesture["Node shell context gesture"] --> NodeRenderer["DbtNodeComponent.tsx"]
   Viewport --> Model["ResolveCanvasContextMenu<br>CanvasContextMenuModel"]
   NodeRenderer --> NodeModel["ResolveCanvasContextMenu<br>CanvasNodeContextMenuModel"]
+  NodeModel --> NodeMenuView["CanvasNodeContextMenuView"]
   InspectorPanel["CanvasInspectorPanel.tsx"] --> NodeModeler["CanvasNodeModelerActionModel"]
   Model --> Pane["pane actions"]
   Model --> Edge["edge actions"]
-  NodeModel --> NodeActions["node actions"]
+  NodeMenuView --> NodeActions["node actions"]
   NodeModeler --> InspectorActions["right-panel node actions"]
   Pane --> Create["CreateCanvasAuthoringNode"]
   Create --> Admission["useCanvasNodeAdmissionCommandRunner"]
