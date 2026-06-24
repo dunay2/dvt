@@ -136,6 +136,7 @@ const SCRIPT_FILE_RULES = [
     /^scripts\/validate-(contracts|executable-examples|glossary-usage|idempotency-vectors|references|rfc2119)\.cjs$/u,
     'contracts',
   ],
+  [/^scripts\/policy-validation-(files|text)\.cjs$/u, 'contracts'],
   [/^scripts\/planning-db-[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db\/(?:[\w-]+\/)*[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db-operate-tests\/[\w-]+\.cjs$/u, 'planning-db'],

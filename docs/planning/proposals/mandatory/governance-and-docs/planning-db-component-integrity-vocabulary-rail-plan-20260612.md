@@ -379,6 +379,8 @@ allowedImplementationSurfaces:
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs
+  - tools/ci/repository-command-catalog.mjs
+  - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/planner-package-governance.test.mjs
   - tools/ci/root-test-runner-config.test.mjs
   - scripts/planning-db-query.cjs
