@@ -5847,6 +5847,31 @@ test('tracked migrations register DVT node card runtime metrics feature mechaniz
   assert.doesNotMatch(runtimeMetricsMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register DVT destination target authoring feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const destinationTargetMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '283_register_dvt_destination_target_authoring_feature.sql'
+  );
+
+  assert.ok(destinationTargetMigration);
+  assert.match(destinationTargetMigration.sql, /DVT-CANVAS-P0-PRO-FLOW-1/);
+  assert.match(destinationTargetMigration.sql, /ConfigureDvtDestinationTarget/);
+  assert.match(destinationTargetMigration.sql, /CanvasInspectorAuthoringModel/);
+  assert.match(destinationTargetMigration.sql, /canvasDvtAuthoringModel\.ts/);
+  assert.match(destinationTargetMigration.sql, /DvtAuthoringFields\.tsx/);
+  assert.match(destinationTargetMigration.sql, /createSourceMetadata/);
+  assert.match(destinationTargetMigration.sql, /createSinkMetadata/);
+  assert.match(destinationTargetMigration.sql, /applyDvtNodeAuthoringMetadata/);
+  assert.match(destinationTargetMigration.sql, /formatQualifiedTarget/);
+  assert.match(destinationTargetMigration.sql, /partition strategy metadata/);
+  assert.match(destinationTargetMigration.sql, /packages\/@dvt\/contracts\/\*\*/);
+  assert.match(destinationTargetMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(destinationTargetMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(destinationTargetMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(destinationTargetMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reseed Canvas node workbench feature manifests after import refresh', () => {
   const migrations = readMigrationFiles();
   const reseedMigration = migrations.find(

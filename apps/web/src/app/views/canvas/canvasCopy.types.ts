@@ -179,6 +179,7 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSourceTitle: string;
   readonly inspectorDvtSqlTransformTitle: string;
   readonly inspectorDvtSinkTitle: string;
+  readonly inspectorDvtDatabaseLabel: string;
   readonly inspectorDvtSchemaLabel: string;
   readonly inspectorDvtTableLabel: string;
   readonly inspectorDvtAliasLabel: string;
@@ -190,6 +191,7 @@ export type CanvasViewCopy = {
   readonly inspectorDvtSqlLineSingularLabel: string;
   readonly inspectorDvtSqlLinePluralLabel: string;
   readonly inspectorDvtDestinationTargetLabel: string;
+  readonly inspectorDvtPartitionStrategyLabel: string;
   readonly inspectorDvtMaterializationTableLabel: string;
   readonly inspectorDvtMaterializationViewLabel: string;
   readonly inspectorDvtWriteModeReplaceLabel: string;
