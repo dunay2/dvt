@@ -56,6 +56,8 @@ function buildSourceNode(overrides: Partial<CanonicalNode> = {}): CanonicalNode 
       database: 'analytics',
       schema: 'raw',
       tableName: 'orders',
+      rowCount: 1500,
+      byteSize: 4096000,
       owner: 'data-platform',
       sql: 'select * from analytics.raw.orders',
       columns: [
@@ -125,6 +127,8 @@ describe('nodePropertiesReadModel', () => {
     expectRows(sectionById(model, 'general'), {
       Schema: 'raw',
       Table: 'orders',
+      Rows: '1,500',
+      Size: '3.9 MB',
       Path: 'models/sources/src_orders.yml',
     });
     expectRows(sectionById(model, 'summary'), {

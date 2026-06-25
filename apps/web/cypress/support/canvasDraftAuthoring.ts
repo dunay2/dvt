@@ -24,6 +24,7 @@ export type StubCanvasDraftReadOptions = {
   includeLooseNode?: boolean;
   canvasKind?: 'transformation' | 'dbt';
   emptyCanvas?: boolean;
+  importedWarehouseSource?: boolean;
   authoringGenerated?: boolean;
   title?: string;
   readOnly?: boolean;
@@ -43,6 +44,7 @@ export function buildCanvasAuthoringDraft({
   includeLooseNode = false,
   canvasKind = 'transformation',
   emptyCanvas = false,
+  importedWarehouseSource = false,
   authoringGenerated = false,
   title,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
@@ -57,6 +59,54 @@ export function buildCanvasAuthoringDraft({
       nodeIds: [],
       nodePositions: {},
       nodes: [],
+      edges: [],
+    });
+  }
+
+  if (canvasKind === 'dbt' && importedWarehouseSource) {
+    return buildWorkspaceGraphAuthoringDraft({
+      canvas,
+      nodeIds: ['src_erp_orders'],
+      nodePositions: {
+        src_erp_orders: { x: 520, y: 300 },
+      },
+      nodes: [
+        {
+          id: 'src_erp_orders',
+          name: 'src_erp_orders',
+          pluginId: 'dbt',
+          kind: 'dbt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['source', 'warehouse'],
+          path: 'models/sources/src_erp.yml',
+          metadata: {
+            database: 'RAW',
+            schema: 'ERP',
+            tableName: 'ORDERS',
+            rowCount: 1500,
+            byteSize: 4096000,
+            dbt: {
+              packageName: 'analytics',
+              sourceName: 'raw',
+              databaseName: 'RAW',
+              schemaName: 'ERP',
+              tableName: 'ORDERS',
+            },
+            columns: [
+              { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true },
+              { name: 'discount_code', type: 'TEXT', nullable: true },
+            ],
+            constraints: [
+              {
+                name: 'orders_order_id_not_null',
+                type: 'not_null',
+                expression: 'order_id is not null',
+              },
+            ],
+          },
+        },
+      ],
       edges: [],
     });
   }
