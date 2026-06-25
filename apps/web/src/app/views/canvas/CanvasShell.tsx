@@ -1,9 +1,11 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
+import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { CanvasContextMenuLayer } from './CanvasContextMenuLayer';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
@@ -29,6 +31,12 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [contextualWorkbenchId, setContextualWorkbenchId] = useState<'project-code' | null>(null);
+  const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
+  const setBottomDrawerHeight = useUiLayoutStore((state) => state.setBottomDrawerHeight);
+  const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
+  const selectOperationalDrawerTab = useOperationalDrawerContributionStore(
+    (state) => state.selectOperationalDrawerTab
+  );
   const canEditGraph = panels.userPermissions.canEditEdges;
   const sourceImportContributions = useMemo(
     () => getSourceImportContributions(panels.runtimeCapabilities),
@@ -74,11 +82,21 @@ export default function CanvasShell({
           },
     [contextualWorkbench, layout]
   );
+  const revealValidationProblems = useCallback(() => {
+    selectOperationalDrawerTab('problems');
+    if (bottomDrawerVisible) {
+      setBottomDrawerHeight(160);
+      return;
+    }
+
+    toggleBottomDrawer();
+  }, [bottomDrawerVisible, selectOperationalDrawerTab, setBottomDrawerHeight, toggleBottomDrawer]);
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: canEditGraph,
     canOpenSourceImport: canOpenDataRegistry,
     canOpenProjectExplorer: true,
     canOpenProjectCode: true,
+    canValidateGraph: panels.userPermissions.canPlan,
     canPreviewExecutionPlan: panels.userPermissions.canPlan && chromeState.canPlanGraph,
     canOpenCanvasSettings: true,
     authoringNodeKinds: panels.authoringNodeKinds,
@@ -95,6 +113,7 @@ export default function CanvasShell({
             ),
     onOpenProjectExplorer: () => setProjectExplorerOpen(true),
     onOpenProjectCode: () => setContextualWorkbenchId('project-code'),
+    onValidateGraph: revealValidationProblems,
     onPreviewExecutionPlan: chromeCommands.onPlan,
     onOpenCanvasSettings: () => setCanvasSettingsOpen(true),
   });

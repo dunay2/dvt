@@ -21,6 +21,7 @@ type UseCanvasContextMenuPresenterArgs = Readonly<{
   canOpenSourceImport?: boolean;
   canOpenProjectExplorer?: boolean;
   canOpenProjectCode?: boolean;
+  canValidateGraph?: boolean;
   canPreviewExecutionPlan?: boolean;
   canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
@@ -30,6 +31,7 @@ type UseCanvasContextMenuPresenterArgs = Readonly<{
   onOpenSourceImport?: (flowPosition?: CanvasContextMenuPosition) => void;
   onOpenProjectExplorer?: () => void;
   onOpenProjectCode?: () => void;
+  onValidateGraph?: () => void;
   onPreviewExecutionPlan?: () => void;
   onOpenCanvasSettings?: () => void;
 }>;
@@ -87,6 +89,7 @@ export function useCanvasContextMenuPresenter({
   canOpenSourceImport,
   canOpenProjectExplorer,
   canOpenProjectCode,
+  canValidateGraph,
   canPreviewExecutionPlan,
   canOpenCanvasSettings,
   authoringNodeKinds,
@@ -96,6 +99,7 @@ export function useCanvasContextMenuPresenter({
   onOpenSourceImport,
   onOpenProjectExplorer,
   onOpenProjectCode,
+  onValidateGraph,
   onPreviewExecutionPlan,
   onOpenCanvasSettings,
 }: UseCanvasContextMenuPresenterArgs): UseCanvasContextMenuPresenterResult {
@@ -234,6 +238,7 @@ export function useCanvasContextMenuPresenter({
             canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
             canOpenProjectExplorer: Boolean(canOpenProjectExplorer && onOpenProjectExplorer),
             canOpenProjectCode: Boolean(canOpenProjectCode && onOpenProjectCode),
+            canValidateGraph: Boolean(canValidateGraph && onValidateGraph),
             canPreviewExecutionPlan: Boolean(canPreviewExecutionPlan && onPreviewExecutionPlan),
             canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
             authoringNodeKinds,
@@ -247,12 +252,14 @@ export function useCanvasContextMenuPresenter({
       canOpenSourceImport,
       canOpenProjectExplorer,
       canOpenProjectCode,
+      canValidateGraph,
       canPreviewExecutionPlan,
       canOpenCanvasSettings,
       markContextMenuOpened,
       onOpenSourceImport,
       onOpenProjectExplorer,
       onOpenProjectCode,
+      onValidateGraph,
       onPreviewExecutionPlan,
       onOpenCanvasSettings,
       screenToFlowPosition,
@@ -341,6 +348,8 @@ export function useCanvasContextMenuPresenter({
         onOpenProjectExplorer?.();
       } else if (action.action === 'open-project-code') {
         onOpenProjectCode?.();
+      } else if (action.action === 'validate-graph') {
+        onValidateGraph?.();
       } else if (action.action === 'preview-execution-plan') {
         onPreviewExecutionPlan?.();
       } else if (action.action === 'open-canvas-settings') {
@@ -356,6 +365,7 @@ export function useCanvasContextMenuPresenter({
       onOpenProjectCode,
       onOpenProjectExplorer,
       onOpenSourceImport,
+      onValidateGraph,
       onPreviewExecutionPlan,
     ]
   );

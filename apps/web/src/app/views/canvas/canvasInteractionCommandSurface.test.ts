@@ -76,11 +76,13 @@ describe('canvasInteractionCommandSurface', () => {
         flowPosition: { x: 720, y: 180 },
       },
       canMutateGraph: false,
+      canValidateGraph: true,
       canPreviewExecutionPlan: true,
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     });
 
     expect(model.canvasActions).toEqual([
+      { action: 'validate-graph', label: 'Validate graph' },
       { action: 'preview-execution-plan', label: 'Preview execution plan' },
     ]);
     expect(model.createNodeActions).toEqual([]);
@@ -98,6 +100,7 @@ describe('canvasInteractionCommandSurface', () => {
       canOpenProjectExplorer: true,
       canOpenProjectCode: true,
       canOpenCanvasSettings: true,
+      canValidateGraph: true,
       canPreviewExecutionPlan: true,
       authoringNodeKinds: [
         buildTestNodeKind('dvt:source', 'Source'),
@@ -109,6 +112,7 @@ describe('canvasInteractionCommandSurface', () => {
     expect(model.canvasActions).toEqual([
       { action: 'open-project-explorer', label: 'Explore project' },
       { action: 'open-project-code', label: 'Open project code' },
+      { action: 'validate-graph', label: 'Validate graph' },
       { action: 'preview-execution-plan', label: 'Preview execution plan' },
       { action: 'open-canvas-settings', label: 'Canvas settings' },
     ]);

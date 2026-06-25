@@ -31,12 +31,14 @@ export type CanvasContextMenuCanvasAction = Readonly<{
     | 'open-source-import'
     | 'open-project-explorer'
     | 'open-project-code'
+    | 'validate-graph'
     | 'preview-execution-plan'
     | 'open-canvas-settings';
   label:
     | 'Add source'
     | 'Explore project'
     | 'Open project code'
+    | 'Validate graph'
     | 'Preview execution plan'
     | 'Canvas settings';
 }>;
@@ -62,6 +64,7 @@ type BuildCanvasContextMenuModelArgs = Readonly<{
   canOpenSourceImport?: boolean;
   canOpenProjectExplorer?: boolean;
   canOpenProjectCode?: boolean;
+  canValidateGraph?: boolean;
   canPreviewExecutionPlan?: boolean;
   canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
@@ -97,6 +100,7 @@ export function buildCanvasContextMenuModel({
   canOpenSourceImport = false,
   canOpenProjectExplorer = false,
   canOpenProjectCode = false,
+  canValidateGraph = false,
   canPreviewExecutionPlan = false,
   canOpenCanvasSettings = false,
   authoringNodeKinds,
@@ -112,6 +116,9 @@ export function buildCanvasContextMenuModel({
     }
     if (canOpenProjectCode) {
       canvasActions.push({ action: 'open-project-code', label: 'Open project code' });
+    }
+    if (canValidateGraph) {
+      canvasActions.push({ action: 'validate-graph', label: 'Validate graph' });
     }
     if (canPreviewExecutionPlan) {
       canvasActions.push({

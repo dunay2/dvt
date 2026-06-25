@@ -35,7 +35,7 @@ describe('BottomOperationalDrawer', () => {
     liveLogStreamState.lines = [];
     liveLogStreamState.isLoading = false;
     liveLogStreamState.runId = undefined;
-    useOperationalDrawerContributionStore.setState({ contribution: null });
+    useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
     useUiLayoutStore.setState({
       leftNavCollapsed: false,
       inspectorPanelWidth: 380,
@@ -59,7 +59,7 @@ describe('BottomOperationalDrawer', () => {
     act(() => {
       root.unmount();
     });
-    useOperationalDrawerContributionStore.setState({ contribution: null });
+    useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
     container.remove();
   });
 

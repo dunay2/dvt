@@ -9,6 +9,8 @@ import {
   getCanvasShellState,
   type CanvasShellPropsOverrides,
 } from './CanvasShell.testHarness';
+import { useUiLayoutStore } from '../../stores/uiLayoutStore';
+import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { CanvasShellProps } from './canvasShell.types';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 
@@ -106,5 +108,30 @@ describe('CanvasShell context menu integration', () => {
 
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
+  });
+
+  it('routes canvas validation to the operational drawer without previewing execution', async () => {
+    const onPlan = vi.fn();
+    useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });
+
+    await renderShell({
+      chromeCommands: { onPlan },
+      chromeState: { canPlanGraph: true },
+    });
+    const presenter = getContextMenuPresenter();
+
+    await act(async () => {
+      presenter.handleCanvasAction({
+        action: 'validate-graph',
+        label: 'Validate graph',
+      });
+    });
+
+    expect(onPlan).not.toHaveBeenCalled();
+    expect(useUiLayoutStore.getState()).toMatchObject({
+      bottomDrawerHeight: 160,
+      bottomDrawerVisible: true,
+    });
+    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('problems');
   });
 });

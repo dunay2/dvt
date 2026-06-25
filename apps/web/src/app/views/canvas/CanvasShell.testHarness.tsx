@@ -238,7 +238,7 @@ export function createCanvasShellHarness(): {
       act(() => {
         root.unmount();
       });
-      useOperationalDrawerContributionStore.setState({ contribution: null });
+      useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
       container.remove();
       vi.clearAllMocks();
     },
