@@ -7933,6 +7933,48 @@ test('tracked migrations persist local frontend component overlays after imports
   );
 });
 
+test('tracked migrations support DB-local frontend component declarations', () => {
+  const migrations = readMigrationFiles();
+  const localComponentMigration = migrations.find(
+    (migration) => migration.fileName === '273_frontend_component_local_component_overlay.sql'
+  );
+
+  assert.ok(localComponentMigration);
+  assert.match(
+    localComponentMigration.sql,
+    /create table if not exists planning_query_store\.frontend_component_local_components/
+  );
+  assert.match(
+    localComponentMigration.sql,
+    /create table if not exists planning_query_store\.frontend_component_local_surface_links/
+  );
+  assert.match(
+    localComponentMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_effective_component_query/
+  );
+  assert.match(
+    localComponentMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_surface_link_query/
+  );
+  assert.match(
+    localComponentMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.match(
+    localComponentMigration.sql,
+    /frontend_component_effective_component_query component/
+  );
+  assert.match(localComponentMigration.sql, /frontend_component_local_components local_component/);
+  assert.match(localComponentMigration.sql, /frontend_component_local_surface_links local_link/);
+  assert.match(
+    localComponentMigration.sql,
+    /create index if not exists frontend_component_files_component_idx/
+  );
+  assert.match(localComponentMigration.sql, /web\.component\.canvas\.CanvasContextMenuPresenter/);
+  assert.match(localComponentMigration.sql, /useCanvasContextMenuPresenter\.ts/);
+  assert.match(localComponentMigration.sql, /ResolveCanvasContextMenu/);
+});
+
 test('tracked migrations index frontend component profile evidence lookups', () => {
   const migrations = readMigrationFiles();
   const profileIndexMigration = migrations.find(
