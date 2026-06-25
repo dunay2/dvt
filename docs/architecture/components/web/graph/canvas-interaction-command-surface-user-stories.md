@@ -35,9 +35,10 @@ last_reviewed: 2026-06-05
   without native browser menus. Acceptance: presentation tests call React Flow
   context callbacks and assert rendered app actions.
 - `US-CANVAS-INTERACTION-009`: as a workflow author, I can right-click a node
-  and open its Properties in the route-local Inspector. Acceptance: the action
-  uses the existing Inspector selection/opening behavior and does not create a
-  second node-properties command.
+  and open its contextual workbench. Acceptance: the action uses the existing
+  node inspection/opening behavior and does not create separate context-menu
+  actions for Properties, Inputs / Outputs, Tests, SQL, Preview, Runs, or
+  Lineage sections.
 - `US-CANVAS-INTERACTION-010`: as a read-only reviewer, I can still inspect a
   node but I do not see duplicate, remove, or execution-selection actions.
   Acceptance: the node context-menu read model keeps inspect available, hides
@@ -66,8 +67,8 @@ last_reviewed: 2026-06-05
   `canvasAuthoringNodeCommand.test.ts`.
 - Architecture drift guard: all rails above; primary test:
   `canvasInteractionCommandSurface.architecture.test.ts`.
-- Node properties: `ResolveCanvasContextMenu` -> Inspector selection and
-  Inspector modeler-action strip; primary tests:
+- Node workbench: `ResolveCanvasContextMenu` -> node workbench opening and
+  modeler-action strip; primary tests:
   `canvasNodeContextMenuModel.test.ts`, `canvasShellPanelsBuilder.test.ts`,
   `CanvasInspectorPanel.test.tsx`.
 
@@ -80,14 +81,14 @@ flowchart LR
   Allowed -->|yes, pane| Create["CreateCanvasAuthoringNode"]
   Allowed -->|yes, edge| Remove["RemoveCanvasEdgeFromContext"]
   Allowed -->|no| Empty["No mutating actions"]
-  NodeModel --> Inspect["Inspect node"]
+  NodeModel --> Inspect["Open workbench"]
   NodeModel --> NodeMutationAllowed{"node graph mutation allowed?"}
   NodeMutationAllowed -->|yes| NodeGraphActions["duplicate / remove"]
   NodeModel --> ExecutionAllowed{"preview or run allowed?"}
   ExecutionAllowed -->|yes| SelectAction["select / deselect"]
   NodeMutationAllowed -->|no| Inspect
   ExecutionAllowed -->|no| Inspect
-  Inspect --> Inspector["Right Inspector"]
+  Inspect --> Inspector["Node workbench"]
   Inspector --> PanelActions["same node action model"]
   PanelActions --> NodeGraphActions
   PanelActions --> SelectAction
