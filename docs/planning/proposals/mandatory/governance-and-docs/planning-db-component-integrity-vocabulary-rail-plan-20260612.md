@@ -303,6 +303,7 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/252_planning_db_frontend_inventory_table_helper_component.sql
   - tools/planning-db/migrations/254_policy_validation_text_helper_components.sql
   - tools/planning-db/migrations/255_policy_validation_markdown_file_catalog_component.sql
+  - tools/planning-db/migrations/256_repoint_phantom_governance_component_retirement_rail_source.sql
   - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
   - tools/planning-db/migrations/114_repoint_canvas_reload_recovery_test_support_rail.sql
   - tools/planning-db/migrations/115_repoint_canvas_create_document_test_support_rail.sql
@@ -666,6 +667,14 @@ redGreenCycles:
       - tools/planning-db/migrations/255_policy_validation_markdown_file_catalog_component.sql
       - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
     greenTest: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: phantom-component-retirement-source-repair
+    redTest: pnpm planning:db:integrity:check
+    expectedFailure: governed_source_drift_query reports RetirePhantomGovernanceComponents against a non-existent migration source.
+    patchSurfaces:
+      - tools/planning-db/migrations/256_repoint_phantom_governance_component_retirement_rail_source.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
 symbols:
   - name: fs
     path: scripts/policy-validation-files.cjs

@@ -6047,6 +6047,31 @@ test('tracked migrations split policy validation Markdown file catalog leaf', ()
   assert.doesNotMatch(policyValidationFilesMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations repoint phantom governance component retirement rail source', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepairMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '256_repoint_phantom_governance_component_retirement_rail_source.sql'
+  );
+
+  assert.ok(sourceRepairMigration);
+  assert.match(sourceRepairMigration.sql, /RetirePhantomGovernanceComponents/);
+  assert.match(sourceRepairMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(
+    sourceRepairMigration.sql,
+    /246_retire_phantom_ci_governance_helper_components\.sql/
+  );
+  assert.match(
+    sourceRepairMigration.sql,
+    /256_repoint_phantom_governance_component_retirement_rail_source\.sql/
+  );
+  assert.match(sourceRepairMigration.sql, /source_path = repair\.new_source_path/);
+  assert.match(sourceRepairMigration.sql, /symbol_refs = jsonb_build_array/);
+  assert.match(sourceRepairMigration.sql, /implementation_refs = jsonb_build_array/);
+  assert.doesNotMatch(sourceRepairMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(sourceRepairMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(
