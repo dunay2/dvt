@@ -2853,18 +2853,29 @@ async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
 
 async function reconcileDeprecatedLocalRailSources(client) {
   await client.query(`
-    with deprecated_local_rails as (
+    with stale_source_overrides(stale_source_path, current_source_path, declared_status) as (
+      values
+        (
+          'tools/planning-db/migrations/265_restore_canvas_source_import_dialog_symbols_after_post_import_reconcile.sql',
+          'tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql',
+          'retired'
+        )
+    ),
+    deprecated_local_rails as (
       select
         rail.rail_id,
         coalesce(
+          override.current_source_path,
           nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
           nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
         ) as current_source_path,
         coalesce(
+          override.declared_status,
           nullif(rail.raw_rail->>'status', ''),
           nullif(rail.raw_manifest->>'status', ''),
           rail.rail_status
         ) as declared_status,
+        override.stale_source_path is not null as source_path_overridden,
         source_file.path is null as source_path_missing,
         exists (
           select 1
@@ -2878,14 +2889,18 @@ async function reconcileDeprecatedLocalRailSources(client) {
           where deprecated_source.path = rail.source_path
         ) as source_path_deprecated
       from ${schemaName}.feature_mechanization_local_rails rail
+      left join stale_source_overrides override
+        on override.stale_source_path = rail.source_path
       left join ${schemaName}.governance_files source_file
         on source_file.path = rail.source_path
       join ${schemaName}.governance_files current_file
         on current_file.path = coalesce(
+          override.current_source_path,
           nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
           nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
         )
       where coalesce(
+          override.current_source_path,
           nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
           nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
         ) is not null
@@ -2921,12 +2936,22 @@ async function reconcileDeprecatedLocalRailSources(client) {
           'sourcePathReconciledBy',
           'planning-db-import-reconcile-deprecated-local-rail-sources'
         ),
+      raw_rail = coalesce(rail.raw_rail, '{}'::jsonb) || jsonb_build_object(
+          'status',
+          deprecated_local_rails.declared_status,
+          'currentImplementationSourcePath',
+          deprecated_local_rails.current_source_path,
+          'sourcePathReconciledBy',
+          'planning-db-import-reconcile-deprecated-local-rail-sources'
+        ),
       revision = rail.revision + 1,
       updated_at = now()
     from deprecated_local_rails
     where rail.rail_id = deprecated_local_rails.rail_id
       and rail.source_path <> deprecated_local_rails.current_source_path
       and (
+        deprecated_local_rails.source_path_overridden
+        or
         deprecated_local_rails.source_path_deprecated
         or deprecated_local_rails.source_path_missing
       )
