@@ -4,6 +4,7 @@ import {
   buildDvtSqlTransformMetadata,
   readTransformationSqlMirrorState,
 } from './canvasTransformationSqlMirror';
+import { readDvtSelectedColumnRefs } from './canvasDvtTransformColumnModel';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
 export type DvtSourceAuthoringMetadata = Readonly<{
@@ -17,6 +18,7 @@ export type DvtSourceAuthoringMetadata = Readonly<{
 export type DvtSqlTransformAuthoringMetadata = Readonly<{
   kind: 'sql_transform';
   sql: string;
+  selectedColumns: readonly string[];
 }>;
 
 export type DvtSinkAuthoringMetadata = Readonly<{
@@ -55,6 +57,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function readString(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function normalizeSelectedColumnRefs(values: readonly string[] | undefined): readonly string[] {
+  return Array.from(
+    new Set((values ?? []).map((value) => value.trim()).filter((value) => value.length > 0))
+  );
 }
 
 function readNodeMetadataRecord(
@@ -111,6 +119,7 @@ function createSqlTransformMetadata(node: CanonicalNode): DvtSqlTransformAuthori
   return {
     kind: 'sql_transform',
     sql: mirrorState.draftSql ?? mirrorState.compiledSql ?? '',
+    selectedColumns: normalizeSelectedColumnRefs(readDvtSelectedColumnRefs(node.metadata)),
   };
 }
 
@@ -195,6 +204,11 @@ function readExistingConfig(node: CanonicalNode): Record<string, unknown> {
   return readNodeMetadataRecord(node, 'config') ?? {};
 }
 
+function readConfigFromMetadata(metadata: CanonicalNode['metadata']): Record<string, unknown> {
+  const config = metadata?.config;
+  return isRecord(config) ? config : {};
+}
+
 function optionalConfigString(
   config: Record<string, unknown>,
   key: string,
@@ -243,9 +257,22 @@ export function applyDvtNodeAuthoringMetadata(
   }
 
   if (metadata.kind === 'sql_transform') {
+    const transformMetadata = buildDvtSqlTransformMetadata(node, metadata.sql);
+    const transformConfig = readConfigFromMetadata(transformMetadata);
+    const selectedColumns = normalizeSelectedColumnRefs(metadata.selectedColumns);
+    const nextConfig = { ...transformConfig };
+    if (selectedColumns.length > 0) {
+      nextConfig.selectedColumns = selectedColumns;
+    } else {
+      delete nextConfig.selectedColumns;
+    }
+
     return {
       ...node,
-      metadata: buildDvtSqlTransformMetadata(node, metadata.sql),
+      metadata: {
+        ...transformMetadata,
+        config: nextConfig,
+      },
     };
   }
 

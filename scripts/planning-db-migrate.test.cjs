@@ -5895,6 +5895,31 @@ test('tracked migrations register DVT authoring field section components', () =>
   assert.doesNotMatch(authoringSectionMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register DVT transform column selection', () => {
+  const migrations = readMigrationFiles();
+  const transformColumnMigration = migrations.find(
+    (migration) => migration.fileName === '289_register_dvt_transform_column_selection.sql'
+  );
+
+  assert.ok(transformColumnMigration);
+  assert.match(transformColumnMigration.sql, /DVT-CANVAS-P0-PRO-FLOW-1/);
+  assert.match(transformColumnMigration.sql, /ReadDvtTransformInputColumns/);
+  assert.match(transformColumnMigration.sql, /ConfigureDvtTransformInputColumns/);
+  assert.match(transformColumnMigration.sql, /DvtSqlTransformAuthoringSection/);
+  assert.match(transformColumnMigration.sql, /canvasDvtTransformColumnModel\.ts/);
+  assert.match(transformColumnMigration.sql, /buildDvtTransformColumnOptions/);
+  assert.match(transformColumnMigration.sql, /readDvtSelectedColumnRefs/);
+  assert.match(transformColumnMigration.sql, /metadata\.config\.selectedColumns/);
+  assert.match(transformColumnMigration.sql, /frontend_component_local_files/);
+  assert.match(transformColumnMigration.sql, /frontend_component_local_cq_rails/);
+  assert.match(transformColumnMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(transformColumnMigration.sql, /p0FlowClosed', false/);
+  assert.match(transformColumnMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(transformColumnMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(transformColumnMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(transformColumnMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register DBT node card metadata metrics feature mechanization', () => {
   const migrations = readMigrationFiles();
   const dbtCardMetricsMigration = migrations.find(

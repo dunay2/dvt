@@ -353,6 +353,7 @@ describe('canvasInspectorAuthoringModel', () => {
       dvt: {
         kind: 'sql_transform' as const,
         sql: 'select order_id from raw.orders',
+        selectedColumns: [],
       },
     };
 
@@ -365,6 +366,39 @@ describe('canvasInspectorAuthoringModel', () => {
           sql: 'select order_id from raw.orders',
         },
         sql: 'select order_id from raw.orders',
+      },
+    });
+  });
+
+  it('applies DVT SQL transform selected columns into metadata config', () => {
+    const node = buildDvtNode('dvt:sql_transform', {
+      config: {
+        dialect: 'postgres',
+        sql: 'select * from raw.orders',
+        selectedColumns: ['stale-source.legacy_id'],
+      },
+    });
+    const draft = {
+      name: 'Clean orders',
+      description: '',
+      tags: ['authoring'],
+      dvt: {
+        kind: 'sql_transform' as const,
+        sql: 'select order_id, customer from raw.orders',
+        selectedColumns: ['source-orders.order_id', 'source-orders.customer'],
+      },
+    };
+
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual({
+      ...node,
+      description: undefined,
+      metadata: {
+        config: {
+          dialect: 'postgres',
+          sql: 'select order_id, customer from raw.orders',
+          selectedColumns: ['source-orders.order_id', 'source-orders.customer'],
+        },
+        sql: 'select order_id, customer from raw.orders',
       },
     });
   });
