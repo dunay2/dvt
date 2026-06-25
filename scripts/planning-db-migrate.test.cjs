@@ -7907,6 +7907,40 @@ test('tracked migrations index frontend component profile evidence lookups', () 
   assert.match(profileIndexMigration.sql, /\(component_id, evidence_id\)/);
 });
 
+test('tracked migrations materialize code symbol duplicate query inputs', () => {
+  const migrations = readMigrationFiles();
+  const codeSymbolProjectionMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '269_code_symbol_problem_query_materialized_projection.sql'
+  );
+
+  assert.ok(codeSymbolProjectionMigration);
+  assert.match(
+    codeSymbolProjectionMigration.sql,
+    /create materialized view planning_query_store\.code_symbol_effective_inventory_projection/
+  );
+  assert.match(
+    codeSymbolProjectionMigration.sql,
+    /from planning_query_store\.code_symbol_inventory_query/
+  );
+  assert.match(
+    codeSymbolProjectionMigration.sql,
+    /create index if not exists code_symbol_effective_inventory_projection_body_idx/
+  );
+  assert.match(
+    codeSymbolProjectionMigration.sql,
+    /create index if not exists code_symbol_effective_inventory_projection_name_idx/
+  );
+  assert.match(
+    codeSymbolProjectionMigration.sql,
+    /from planning_query_store\.code_symbol_effective_inventory_projection/
+  );
+  assert.doesNotMatch(
+    codeSymbolProjectionMigration.sql,
+    /from planning_query_store\.code_symbol_inventory_query symbol\s+join duplicate_bodies/i
+  );
+});
+
 test('tracked migrations restore Canvas source import feature mechanization manifest', () => {
   const migrations = readMigrationFiles();
   const manifestRestoreMigration = migrations.find(
@@ -8035,4 +8069,31 @@ test('tracked migrations declare CI policy validation import reconcile symbol', 
   assert.match(symbolRegistrationMigration.sql, /scripts\/planning-db-import\.cjs/);
   assert.match(symbolRegistrationMigration.sql, /scripts\/planning-db-import\.test\.cjs/);
   assert.match(symbolRegistrationMigration.sql, /RetirePhantomGovernanceComponents/);
+});
+
+test('tracked migrations declare code symbol projection refresh mechanization', () => {
+  const migrations = readMigrationFiles();
+  const symbolProjectionMigration = migrations.find(
+    (migration) => migration.fileName === '270_register_code_symbol_projection_refresh_feature.sql'
+  );
+
+  assert.ok(symbolProjectionMigration);
+  assert.match(
+    symbolProjectionMigration.sql,
+    /PLANNING-DB-CODE-SYMBOL-DUPLICATE-QUERY-PERF-20260625/
+  );
+  assert.match(symbolProjectionMigration.sql, /RefreshCodeSymbolDuplicateProjection/);
+  assert.match(symbolProjectionMigration.sql, /ListCodeSymbolDuplicateDiagnostics/);
+  assert.match(symbolProjectionMigration.sql, /refreshCodeSymbolMaterializedProjection/);
+  assert.match(symbolProjectionMigration.sql, /code_symbol_effective_inventory_projection/);
+  assert.match(
+    symbolProjectionMigration.sql,
+    /269_code_symbol_problem_query_materialized_projection\.sql/
+  );
+  assert.match(symbolProjectionMigration.sql, /scripts\/planning-db-import\.test\.cjs/);
+  assert.match(symbolProjectionMigration.sql, /scripts\/planning-db-migrate\.test\.cjs/);
+  assert.doesNotMatch(
+    symbolProjectionMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
 });

@@ -35,6 +35,7 @@ const {
   reconcileDeprecatedLocalRailSources,
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
+  refreshCodeSymbolMaterializedProjection,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,
@@ -625,6 +626,20 @@ test('planning DB import can silence importContent output for query-time refresh
       includeGovernance: true,
       silent: true,
     },
+  ]);
+});
+
+test('planning DB import refreshes the materialized code symbol duplicate projection', async () => {
+  const queries = [];
+
+  await refreshCodeSymbolMaterializedProjection({
+    query: async (sql) => {
+      queries.push(sql);
+    },
+  });
+
+  assert.deepEqual(queries, [
+    `refresh materialized view ${schemaName}.code_symbol_effective_inventory_projection`,
   ]);
 });
 
