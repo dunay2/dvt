@@ -8246,3 +8246,60 @@ test('tracked migrations declare component ownership projection refresh mechaniz
     /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
   );
 });
+
+test('tracked migrations materialize component rule evaluations for priority drift reads', () => {
+  const migrations = readMigrationFiles();
+  const ruleEvaluationProjectionMigration = migrations.find(
+    (migration) => migration.fileName === '276_component_rule_evaluation_priority_projection.sql'
+  );
+
+  assert.ok(ruleEvaluationProjectionMigration);
+  assert.match(
+    ruleEvaluationProjectionMigration.sql,
+    /create materialized view if not exists planning_query_store\.component_engineering_rule_evaluation_projection/i
+  );
+  assert.match(
+    ruleEvaluationProjectionMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_drift_query/i
+  );
+  assert.match(
+    ruleEvaluationProjectionMigration.sql,
+    /from planning_query_store\.component_engineering_rule_evaluation_projection evaluation/i
+  );
+  assert.match(
+    ruleEvaluationProjectionMigration.sql,
+    /component_engineering_rule_evaluation_projection_state_idx/i
+  );
+});
+
+test('tracked migrations declare component rule evaluation projection refresh mechanization', () => {
+  const migrations = readMigrationFiles();
+  const ruleEvaluationProjectionMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '277_register_component_rule_evaluation_projection_refresh_feature.sql'
+  );
+
+  assert.ok(ruleEvaluationProjectionMigration);
+  assert.match(
+    ruleEvaluationProjectionMigration.sql,
+    /PLANNING-DB-CODE-SYMBOL-DUPLICATE-QUERY-PERF-20260625/
+  );
+  assert.match(
+    ruleEvaluationProjectionMigration.sql,
+    /refreshComponentRuleEvaluationMaterializedProjection/
+  );
+  assert.match(
+    ruleEvaluationProjectionMigration.sql,
+    /component_engineering_rule_evaluation_projection/
+  );
+  assert.match(
+    ruleEvaluationProjectionMigration.sql,
+    /276_component_rule_evaluation_priority_projection\.sql/
+  );
+  assert.match(ruleEvaluationProjectionMigration.sql, /scripts\/planning-db-import\.test\.cjs/);
+  assert.match(ruleEvaluationProjectionMigration.sql, /scripts\/planning-db-migrate\.test\.cjs/);
+  assert.doesNotMatch(
+    ruleEvaluationProjectionMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
