@@ -5969,6 +5969,326 @@ test('tracked migrations persist CI governance scripts leaf mapping', () => {
   assert.doesNotMatch(ciScriptsLeafMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split policy validation text normalization leaves', () => {
+  const migrations = readMigrationFiles();
+  const policyValidationTextMigration = migrations.find(
+    (migration) => migration.fileName === '254_policy_validation_text_helper_components.sql'
+  );
+
+  assert.ok(policyValidationTextMigration);
+  for (const componentId of [
+    'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-REFERENCES',
+    'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-RFC2119',
+    'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT',
+  ]) {
+    assert.match(policyValidationTextMigration.sql, new RegExp(componentId));
+  }
+
+  assert.match(policyValidationTextMigration.sql, /scripts\/validate-references\.cjs/);
+  assert.match(policyValidationTextMigration.sql, /scripts\/validate-rfc2119\.cjs/);
+  assert.match(policyValidationTextMigration.sql, /scripts\/policy-validation-text\.cjs/);
+  assert.match(policyValidationTextMigration.sql, /stripInlineCodeFragments/);
+  assert.match(policyValidationTextMigration.sql, /ValidateContractReferences/);
+  assert.match(policyValidationTextMigration.sql, /ValidateRfc2119Language/);
+  assert.match(policyValidationTextMigration.sql, /NormalizePolicyValidationMarkdownText/);
+  assert.match(policyValidationTextMigration.sql, /'invariant'/);
+  assert.match(policyValidationTextMigration.sql, /'transition'/);
+  assert.match(policyValidationTextMigration.sql, /'consumer'/);
+  assert.match(
+    policyValidationTextMigration.sql,
+    /REL-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-REFERENCES-CALLS-TEXT/
+  );
+  assert.match(
+    policyValidationTextMigration.sql,
+    /REL-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-RFC2119-CALLS-TEXT/
+  );
+  assert.match(
+    policyValidationTextMigration.sql,
+    /node --test scripts\/policy-validation-text\.test\.cjs/
+  );
+  assert.match(policyValidationTextMigration.sql, /node scripts\/validate-references\.cjs/);
+  assert.match(policyValidationTextMigration.sql, /node scripts\/validate-rfc2119\.cjs/);
+  assert.doesNotMatch(policyValidationTextMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(policyValidationTextMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations split policy validation Markdown file catalog leaf', () => {
+  const migrations = readMigrationFiles();
+  const policyValidationFilesMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '255_policy_validation_markdown_file_catalog_component.sql'
+  );
+
+  assert.ok(policyValidationFilesMigration);
+  assert.match(
+    policyValidationFilesMigration.sql,
+    /SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES/
+  );
+  assert.match(policyValidationFilesMigration.sql, /scripts\/policy-validation-files\.cjs/);
+  assert.match(policyValidationFilesMigration.sql, /scripts\/policy-validation-files\.test\.cjs/);
+  assert.match(policyValidationFilesMigration.sql, /listMarkdownFiles/);
+  assert.match(policyValidationFilesMigration.sql, /ListPolicyValidationMarkdownFiles/);
+  assert.match(policyValidationFilesMigration.sql, /'invariant'/);
+  assert.match(policyValidationFilesMigration.sql, /'transition'/);
+  assert.match(policyValidationFilesMigration.sql, /'consumer'/);
+  assert.match(
+    policyValidationFilesMigration.sql,
+    /REL-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-REFERENCES-CALLS-FILES/
+  );
+  assert.match(
+    policyValidationFilesMigration.sql,
+    /REL-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-RFC2119-CALLS-FILES/
+  );
+  assert.match(
+    policyValidationFilesMigration.sql,
+    /node --test scripts\/policy-validation-files\.test\.cjs/
+  );
+  assert.doesNotMatch(policyValidationFilesMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(policyValidationFilesMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations repoint phantom governance component retirement rail source', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepairMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '256_repoint_phantom_governance_component_retirement_rail_source.sql'
+  );
+
+  assert.ok(sourceRepairMigration);
+  assert.match(sourceRepairMigration.sql, /RetirePhantomGovernanceComponents/);
+  assert.match(sourceRepairMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(
+    sourceRepairMigration.sql,
+    /246_retire_phantom_ci_governance_helper_components\.sql/
+  );
+  assert.match(
+    sourceRepairMigration.sql,
+    /256_repoint_phantom_governance_component_retirement_rail_source\.sql/
+  );
+  assert.match(sourceRepairMigration.sql, /source_path = repair\.new_source_path/);
+  assert.match(sourceRepairMigration.sql, /symbol_refs = jsonb_build_array/);
+  assert.match(sourceRepairMigration.sql, /implementation_refs = jsonb_build_array/);
+  assert.doesNotMatch(sourceRepairMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(sourceRepairMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations retire phantom Canvas source import dialog host', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '257_retire_canvas_source_import_dialog_host_phantom.sql'
+  );
+
+  assert.ok(sourceImportHostRetirementMigration);
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625/
+  );
+  assert.match(sourceImportHostRetirementMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST/);
+  assert.match(sourceImportHostRetirementMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD/);
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-WIZARD/
+  );
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /254_web_canvas_source_import_dialog_host\.sql/
+  );
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /257_retire_canvas_source_import_dialog_host_phantom\.sql/
+  );
+  assert.match(sourceImportHostRetirementMigration.sql, /DVT-CANVAS-UXDB-SOURCE-DIALOG-1/);
+  assert.match(sourceImportHostRetirementMigration.sql, /CanvasSourceImportDialogHost\.tsx/);
+  assert.match(sourceImportHostRetirementMigration.sql, /status = 'deprecated'/);
+  assert.match(sourceImportHostRetirementMigration.sql, /status = 'superseded'/);
+  assert.match(sourceImportHostRetirementMigration.sql, /rail_status = 'retired'/);
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /'ValidateComponentIntegrity;ValidateSourceDrift;ReadComponentProfile',\s+null,\s+now\(\)/
+  );
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /where exists \(\s+select 1\s+from architecture\.component component\s+where component\.component_id = 'SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST'\s+\)/
+  );
+  assert.doesNotMatch(sourceImportHostRetirementMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations delete stale Canvas source import dialog host drift relation', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostRelationRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '258_delete_canvas_source_import_dialog_host_drift_relation.sql'
+  );
+
+  assert.ok(sourceImportHostRelationRetirementMigration);
+  assert.match(
+    sourceImportHostRelationRetirementMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RELATION-RETIREMENT-20260625/
+  );
+  assert.match(
+    sourceImportHostRelationRetirementMigration.sql,
+    /REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-DIALOG-HOST/
+  );
+  assert.match(
+    sourceImportHostRelationRetirementMigration.sql,
+    /REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-WIZARD/
+  );
+  assert.match(
+    sourceImportHostRelationRetirementMigration.sql,
+    /delete from architecture\.component_relation/
+  );
+  assert.match(sourceImportHostRelationRetirementMigration.sql, /may_delete/);
+  assert.doesNotMatch(sourceImportHostRelationRetirementMigration.sql, /status = 'drift'/);
+  assert.doesNotMatch(sourceImportHostRelationRetirementMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile stale Canvas source import dialog rail sources', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostRailSourceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '259_reconcile_canvas_source_import_dialog_host_local_rail_source.sql'
+  );
+
+  assert.ok(sourceImportHostRailSourceMigration);
+  assert.match(
+    sourceImportHostRailSourceMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-SOURCE-RECONCILIATION-20260625/
+  );
+  assert.match(
+    sourceImportHostRailSourceMigration.sql,
+    /254_web_canvas_source_import_dialog_host\.sql/
+  );
+  assert.match(
+    sourceImportHostRailSourceMigration.sql,
+    /257_retire_canvas_source_import_dialog_host_phantom\.sql/
+  );
+  assert.match(sourceImportHostRailSourceMigration.sql, /sourcePathReconciledBy/);
+  assert.match(sourceImportHostRailSourceMigration.sql, /currentImplementationSourcePath/);
+  assert.match(sourceImportHostRailSourceMigration.sql, /deprecatedSourcePaths/);
+  assert.match(sourceImportHostRailSourceMigration.sql, /rail_status = 'retired'/);
+  assert.match(sourceImportHostRailSourceMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(
+    sourceImportHostRailSourceMigration.sql,
+    /where rail\.source_path = 'tools\/planning-db\/migrations\/254_web_canvas_source_import_dialog_host\.sql'/
+  );
+  assert.doesNotMatch(sourceImportHostRailSourceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations sanitize retired Canvas source import dialog local rail manifests', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostManifestSanitizerMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '260_sanitize_canvas_source_import_dialog_local_rail_manifest.sql'
+  );
+
+  assert.ok(sourceImportHostManifestSanitizerMigration);
+  assert.match(
+    sourceImportHostManifestSanitizerMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-MANIFEST-SANITIZE-20260625/
+  );
+  assert.match(sourceImportHostManifestSanitizerMigration.sql, /DVT-CANVAS-UXDB-SOURCE-DIALOG-1/);
+  assert.match(sourceImportHostManifestSanitizerMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(sourceImportHostManifestSanitizerMigration.sql, /- 'featureId'/);
+  assert.match(
+    sourceImportHostManifestSanitizerMigration.sql,
+    /featureMechanizationManifestSource/
+  );
+  assert.match(
+    sourceImportHostManifestSanitizerMigration.sql,
+    /docs\/planning\/proposals\/mandatory\/governance-and-docs\/planning-db-component-integrity-vocabulary-rail-plan-20260612\.md/
+  );
+  assert.doesNotMatch(sourceImportHostManifestSanitizerMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile legacy Canvas source import dialog local rails', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostLegacyRailMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '261_reconcile_canvas_source_import_dialog_legacy_local_rails.sql'
+  );
+
+  assert.ok(sourceImportHostLegacyRailMigration);
+  assert.match(
+    sourceImportHostLegacyRailMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LEGACY-LOCAL-RAIL-RECONCILIATION-20260625/
+  );
+  assert.match(
+    sourceImportHostLegacyRailMigration.sql,
+    /255_web_canvas_source_import_dialog_post_import_persistence\.sql/
+  );
+  assert.match(
+    sourceImportHostLegacyRailMigration.sql,
+    /257_retire_canvas_source_import_dialog_host_phantom\.sql/
+  );
+  assert.match(sourceImportHostLegacyRailMigration.sql, /- 'featureId'/);
+  assert.match(sourceImportHostLegacyRailMigration.sql, /- 'symbols'/);
+  assert.match(sourceImportHostLegacyRailMigration.sql, /rail_status = 'retired'/);
+  assert.match(sourceImportHostLegacyRailMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(
+    sourceImportHostLegacyRailMigration.sql,
+    /where rail\.feature_id = 'DVT-CANVAS-UXDB-SOURCE-DIALOG-1'/
+  );
+  assert.doesNotMatch(sourceImportHostLegacyRailMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile restored Canvas source import dialog feature manifests', () => {
+  const migrations = readMigrationFiles();
+  const restoredFeatureManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '263_reconcile_restored_canvas_source_import_dialog_feature_manifest.sql'
+  );
+
+  assert.ok(restoredFeatureManifestMigration);
+  assert.match(
+    restoredFeatureManifestMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RESTORED-FEATURE-MANIFEST-RECONCILIATION-20260625/
+  );
+  assert.match(
+    restoredFeatureManifestMigration.sql,
+    /262_restore_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(
+    restoredFeatureManifestMigration.sql,
+    /263_reconcile_restored_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(restoredFeatureManifestMigration.sql, /- 'featureId'/);
+  assert.match(restoredFeatureManifestMigration.sql, /- 'symbols'/);
+  assert.match(restoredFeatureManifestMigration.sql, /rail_status = 'retired'/);
+  assert.match(restoredFeatureManifestMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(restoredFeatureManifestMigration.sql, /restoredFeatureManifestReconciledBy/);
+  assert.doesNotMatch(restoredFeatureManifestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile post-import Canvas source import dialog feature manifests', () => {
+  const migrations = readMigrationFiles();
+  const postImportFeatureManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql'
+  );
+
+  assert.ok(postImportFeatureManifestMigration);
+  assert.match(
+    postImportFeatureManifestMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-POST-IMPORT-FEATURE-MANIFEST-RECONCILIATION-20260625/
+  );
+  assert.match(
+    postImportFeatureManifestMigration.sql,
+    /262_restore_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(
+    postImportFeatureManifestMigration.sql,
+    /264_reconcile_post_import_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(postImportFeatureManifestMigration.sql, /- 'featureId'/);
+  assert.match(postImportFeatureManifestMigration.sql, /- 'symbols'/);
+  assert.match(postImportFeatureManifestMigration.sql, /postImportFeatureManifestReconciledBy/);
+  assert.match(postImportFeatureManifestMigration.sql, /rail_status = 'retired'/);
+  assert.match(postImportFeatureManifestMigration.sql, /mechanization_status = 'closed'/);
+  assert.doesNotMatch(postImportFeatureManifestMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(

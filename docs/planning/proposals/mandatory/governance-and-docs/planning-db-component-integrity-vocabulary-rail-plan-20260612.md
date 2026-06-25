@@ -301,6 +301,16 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/250_planning_db_query_format_helper_component.sql
   - tools/planning-db/migrations/251_planning_db_query_format_helper_generated_status_consumers.sql
   - tools/planning-db/migrations/252_planning_db_frontend_inventory_table_helper_component.sql
+  - tools/planning-db/migrations/254_policy_validation_text_helper_components.sql
+  - tools/planning-db/migrations/255_policy_validation_markdown_file_catalog_component.sql
+  - tools/planning-db/migrations/256_repoint_phantom_governance_component_retirement_rail_source.sql
+  - tools/planning-db/migrations/257_retire_canvas_source_import_dialog_host_phantom.sql
+  - tools/planning-db/migrations/258_delete_canvas_source_import_dialog_host_drift_relation.sql
+  - tools/planning-db/migrations/259_reconcile_canvas_source_import_dialog_host_local_rail_source.sql
+  - tools/planning-db/migrations/260_sanitize_canvas_source_import_dialog_local_rail_manifest.sql
+  - tools/planning-db/migrations/261_reconcile_canvas_source_import_dialog_legacy_local_rails.sql
+  - tools/planning-db/migrations/263_reconcile_restored_canvas_source_import_dialog_feature_manifest.sql
+  - tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql
   - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
   - tools/planning-db/migrations/114_repoint_canvas_reload_recovery_test_support_rail.sql
   - tools/planning-db/migrations/115_repoint_canvas_create_document_test_support_rail.sql
@@ -368,9 +378,17 @@ allowedImplementationSurfaces:
   - scripts/planning-db/frontend-component-inventory.cjs
   - scripts/planning-db/frontend-mechanical-truth-inventory.cjs
   - scripts/planning-db/queries/code-symbol-query.cjs
+  - scripts/policy-validation-files.cjs
+  - scripts/policy-validation-files.test.cjs
+  - scripts/policy-validation-text.cjs
+  - scripts/policy-validation-text.test.cjs
+  - scripts/validate-references.cjs
+  - scripts/validate-rfc2119.cjs
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs
+  - tools/ci/repository-command-catalog.mjs
+  - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/planner-package-governance.test.mjs
   - tools/ci/root-test-runner-config.test.mjs
   - scripts/planning-db-query.cjs
@@ -444,6 +462,18 @@ commandQueryRails:
   - name: DetectGovernedSourceDrift
     type: query
     dddOwner: GovernedSourceDriftReadModel
+  - name: ValidateContractReferences
+    type: command
+    dddOwner: ContractReferenceValidationCommand
+  - name: ValidateRfc2119Language
+    type: command
+    dddOwner: Rfc2119LanguageValidationCommand
+  - name: NormalizePolicyValidationMarkdownText
+    type: query
+    dddOwner: RepositoryPolicyValidationTextNormalizer
+  - name: ListPolicyValidationMarkdownFiles
+    type: query
+    dddOwner: RepositoryPolicyValidationMarkdownFileCatalog
 domainObjects:
   - name: ComponentIntegrityReadModel
     type: read model
@@ -620,7 +650,240 @@ redGreenCycles:
       - apps/web/src/app/plugins/cost/costContributions.test.ts
       - apps/web/src/app/plugins/monitoring/monitoringContributions.test.ts
     greenTest: pnpm --filter @dvt/web test:changed
+  - id: policy-validation-inline-code-helper
+    redTest: pnpm planning:db:query code-symbol-duplicates --path scripts/validate-references.cjs --no-refresh --limit 80
+    expectedFailure: validate-references and validate-rfc2119 carry equivalent inline-code stripping helpers inside one policy-validation bounded context.
+    patchSurfaces:
+      - scripts/policy-validation-text.cjs
+      - scripts/policy-validation-text.test.cjs
+      - scripts/validate-references.cjs
+      - scripts/validate-rfc2119.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - tools/planning-db/migrations/254_policy_validation_text_helper_components.sql
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: node --test scripts/policy-validation-text.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: policy-validation-markdown-file-helper
+    redTest: pnpm planning:db:query code-symbol-duplicates --path scripts/validate-references.cjs --no-refresh --limit 80
+    expectedFailure: validate-references and validate-rfc2119 carry equivalent recursive walkMarkdown helpers inside one policy-validation bounded context.
+    patchSurfaces:
+      - scripts/policy-validation-files.cjs
+      - scripts/policy-validation-files.test.cjs
+      - scripts/validate-references.cjs
+      - scripts/validate-rfc2119.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - tools/planning-db/migrations/255_policy_validation_markdown_file_catalog_component.sql
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: phantom-component-retirement-source-repair
+    redTest: pnpm planning:db:integrity:check
+    expectedFailure: governed_source_drift_query reports RetirePhantomGovernanceComponents against a non-existent migration source.
+    patchSurfaces:
+      - tools/planning-db/migrations/256_repoint_phantom_governance_component_retirement_rail_source.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
+  - id: canvas-source-import-dialog-host-phantom-retirement
+    redTest: pnpm planning:db:integrity:check
+    expectedFailure: component_integrity reports SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST without files and source_drift reports tools/planning-db/migrations/254_web_canvas_source_import_dialog_host.sql.
+    patchSurfaces:
+      - tools/planning-db/migrations/257_retire_canvas_source_import_dialog_host_phantom.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
+  - id: canvas-source-import-dialog-host-drift-relation-retirement
+    redTest: pnpm planning:db:integrity:check
+    expectedFailure: architecture_drift reports REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-DIALOG-HOST because relation drift is an active error state, not retirement.
+    patchSurfaces:
+      - tools/planning-db/migrations/258_delete_canvas_source_import_dialog_host_drift_relation.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
+  - id: canvas-source-import-dialog-host-local-rail-source-reconciliation
+    redTest: pnpm verify:changed
+    expectedFailure: source_drift reports the restored local OpenCanvasSourceImportDialog rail against tools/planning-db/migrations/254_web_canvas_source_import_dialog_host.sql after the retirement migration has already been applied.
+    patchSurfaces:
+      - tools/planning-db/migrations/257_retire_canvas_source_import_dialog_host_phantom.sql
+      - tools/planning-db/migrations/259_reconcile_canvas_source_import_dialog_host_local_rail_source.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
+  - id: canvas-source-import-dialog-host-local-rail-manifest-sanitization
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: The retired DB-local OpenCanvasSourceImportDialog rail carries raw_manifest.featureId, so feature mechanization implementation validation treats retirement metadata as a sparse feature manifest.
+    patchSurfaces:
+      - tools/planning-db/migrations/260_sanitize_canvas_source_import_dialog_local_rail_manifest.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm docs:feature-mechanization:implementation
+  - id: canvas-source-import-dialog-host-legacy-local-rail-reconciliation
+    redTest: pnpm planning:db:integrity:check
+    expectedFailure: source_drift reports the restored OpenCanvasSourceImportDialog rail against tools/planning-db/migrations/255_web_canvas_source_import_dialog_post_import_persistence.sql after a full Planning DB import removes stale governance_files.
+    patchSurfaces:
+      - tools/planning-db/migrations/261_reconcile_canvas_source_import_dialog_legacy_local_rails.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
+  - id: canvas-source-import-dialog-host-restored-feature-manifest-reconciliation
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: A restored local OpenCanvasSourceImportDialog rail points to tools/planning-db/migrations/262_restore_canvas_source_import_dialog_feature_manifest.sql with raw_manifest.featureId and removed CanvasSourceImportDialogHost symbols, so the implementation guard validates sparse retirement metadata as a feature manifest.
+    patchSurfaces:
+      - tools/planning-db/migrations/263_reconcile_restored_canvas_source_import_dialog_feature_manifest.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm docs:feature-mechanization:implementation
+  - id: canvas-source-import-dialog-host-post-import-feature-manifest-reconciliation
+    redTest: pnpm planning:db:integrity:check
+    expectedFailure: A governance import can restore the historic OpenCanvasSourceImportDialog local rail after the earlier reconciliation migration has already run, leaving source_drift against tools/planning-db/migrations/262_restore_canvas_source_import_dialog_feature_manifest.sql.
+    patchSurfaces:
+      - tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
 symbols:
+  - name: RetireCanvasSourceImportDialogHost
+    path: tools/planning-db/migrations/257_retire_canvas_source_import_dialog_host_phantom.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateComponentIntegrity
+      - ValidateSourceDrift
+    fowlerSignals:
+      - phantom_component
+      - source_drift
+      - boundary_drift
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: DeleteCanvasSourceImportDialogHostDriftRelation
+    path: tools/planning-db/migrations/258_delete_canvas_source_import_dialog_host_drift_relation.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateComponentIntegrity
+      - ValidateArchitectureDrift
+    fowlerSignals:
+      - boundary_drift
+      - phantom_component
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: ReconcileCanvasSourceImportDialogHostLocalRailSource
+    path: tools/planning-db/migrations/259_reconcile_canvas_source_import_dialog_host_local_rail_source.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateSourceDrift
+      - ValidateComponentIntegrity
+    fowlerSignals:
+      - source_drift
+      - phantom_component
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: SanitizeCanvasSourceImportDialogLocalRailManifest
+    path: tools/planning-db/migrations/260_sanitize_canvas_source_import_dialog_local_rail_manifest.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateFeatureMechanizationImplementation
+      - ValidateSourceDrift
+    fowlerSignals:
+      - boundary_drift
+      - source_drift
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: ReconcileCanvasSourceImportDialogLegacyLocalRails
+    path: tools/planning-db/migrations/261_reconcile_canvas_source_import_dialog_legacy_local_rails.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateSourceDrift
+      - ValidateFeatureMechanizationImplementation
+    fowlerSignals:
+      - source_drift
+      - phantom_component
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: ReconcileRestoredCanvasSourceImportDialogFeatureManifest
+    path: tools/planning-db/migrations/263_reconcile_restored_canvas_source_import_dialog_feature_manifest.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateFeatureMechanizationImplementation
+      - ValidateSourceDrift
+    fowlerSignals:
+      - source_drift
+      - phantom_component
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: ReconcilePostImportCanvasSourceImportDialogFeatureManifest
+    path: tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateFeatureMechanizationImplementation
+      - ValidateSourceDrift
+    fowlerSignals:
+      - source_drift
+      - phantom_component
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: fs
+    path: scripts/policy-validation-files.cjs
+    dddOwner: RepositoryPolicyValidationMarkdownFileCatalog
+    cqRails:
+      - ListPolicyValidationMarkdownFiles
+    fowlerSignals:
+      - Markdown file catalog reads repository files through Node fs before DB-backed component validation
+    architectureGuard: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/policy-validation-files.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+  - name: path
+    path: scripts/policy-validation-files.cjs
+    dddOwner: RepositoryPolicyValidationMarkdownFileCatalog
+    cqRails:
+      - ListPolicyValidationMarkdownFiles
+    fowlerSignals:
+      - Markdown file catalog normalizes recursive paths through Node path before DB-backed component validation
+    architectureGuard: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/policy-validation-files.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+  - name: listMarkdownFiles
+    path: scripts/policy-validation-files.cjs
+    dddOwner: RepositoryPolicyValidationMarkdownFileCatalog
+    cqRails:
+      - ListPolicyValidationMarkdownFiles
+      - DetectCodeSymbolDuplicates
+      - ReadComponentProfile
+    fowlerSignals:
+      - duplicate recursive Markdown file walking moves into one policy-validation file catalog component
+    architectureGuard: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/policy-validation-files.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+  - name: stripInlineCodeFragments
+    path: scripts/policy-validation-text.cjs
+    dddOwner: RepositoryPolicyValidationTextNormalizer
+    cqRails:
+      - NormalizePolicyValidationMarkdownText
+      - DetectCodeSymbolDuplicates
+      - ReadComponentProfile
+    fowlerSignals:
+      - duplicate inline-code stripping moves into one policy-validation text normalizer component
+    architectureGuard: node --test scripts/policy-validation-text.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/policy-validation-text.test.cjs
+      - scripts/planning-db-migrate.test.cjs
   - name: authenticateHttpBearerRequest
     path: apps/api/src/entrypoints/http/httpBearerAuthentication.ts
     dddOwner: HttpAuthenticationAdapter
