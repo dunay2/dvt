@@ -113,6 +113,8 @@ describe('Canvas contextual source import', () => {
     waitForE2eApiCall(/\/workspace\/warehouse\/connections\/[^/]+\/tables/, 'GET');
     cy.get('[data-source-import-table="RAW.ERP.ORDERS"]')
       .should('be.visible')
+      .and('have.attr', 'role', 'button')
+      .and('have.attr', 'aria-label', 'Select source table RAW.ERP.ORDERS. 1,500 rows. 2 columns.')
       .and('contain.text', 'RAW.ERP.ORDERS')
       .and('contain.text', '1,500 rows')
       .and('contain.text', '2 columns')

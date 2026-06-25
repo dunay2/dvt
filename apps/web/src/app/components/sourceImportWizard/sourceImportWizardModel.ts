@@ -12,6 +12,7 @@ export type SourceImportTableViewModel = Readonly<{
   index: number;
   canonicalName: string;
   displayName: string;
+  accessibilityLabel: string;
   rowCountLabel: string;
   columnCountLabel: string;
   selected: boolean;
@@ -76,12 +77,17 @@ export function buildSourceImportTableViewModel(
   table: TableInfo,
   index: number
 ): SourceImportTableViewModel {
+  const canonicalName = buildWarehouseTableKey(table);
+  const rowCountLabel = formatSourceImportRowCount(table.rowCount);
+  const columnCountLabel = formatSourceImportColumnCount(table.columns?.length ?? 0);
+
   return {
     index,
-    canonicalName: buildWarehouseTableKey(table),
+    canonicalName,
     displayName: table.table,
-    rowCountLabel: formatSourceImportRowCount(table.rowCount),
-    columnCountLabel: formatSourceImportColumnCount(table.columns?.length ?? 0),
+    accessibilityLabel: `Select source table ${canonicalName}. ${rowCountLabel}. ${columnCountLabel}.`,
+    rowCountLabel,
+    columnCountLabel,
     selected: table.selected,
     columns:
       table.columns?.map((column) => ({

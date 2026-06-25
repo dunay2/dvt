@@ -44,19 +44,31 @@ function SourceImportTableColumns({
 }
 
 function SourceImportTableCard({ table, onToggleTable }: SourceImportTableCardProps): JSX.Element {
+  const toggleTable = () => onToggleTable(table.index);
+
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={table.accessibilityLabel}
       data-source-import-table={table.canonicalName}
-      className="cursor-pointer rounded border border-slate-700 bg-slate-950/30 p-3 hover:bg-slate-950"
-      onClick={() => onToggleTable(table.index)}
+      className="cursor-pointer rounded border border-slate-700 bg-slate-950/30 p-3 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40"
+      onClick={toggleTable}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          toggleTable();
+        }
+      }}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-2">
           <Checkbox
+            aria-label={table.accessibilityLabel}
             checked={table.selected}
             onClick={(event) => {
               event.stopPropagation();
-              onToggleTable(table.index);
+              toggleTable();
             }}
           />
           <Table className="mt-0.5 size-4 shrink-0 text-slate-300" />
