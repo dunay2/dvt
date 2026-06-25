@@ -51,7 +51,7 @@ describe('canvasInteractionCommandSurface', () => {
     expect(model.createNodeActions).toEqual([]);
   });
 
-  it('keeps DVT source creation visible because dbt source import does not materialize DVT nodes', () => {
+  it('keeps source creation behind the source import rail to avoid duplicate canvas actions', () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const model = buildCanvasContextMenuModel({
       target: {
@@ -65,9 +65,7 @@ describe('canvasInteractionCommandSurface', () => {
     });
 
     expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
-    expect(model.createNodeActions).toEqual([
-      { action: 'create-node', label: 'Create source node', registration: sourceKind },
-    ]);
+    expect(model.createNodeActions).toEqual([]);
   });
 
   it('offers execution preview from the canvas menu independently from graph mutation', () => {
