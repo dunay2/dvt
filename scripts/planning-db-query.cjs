@@ -3282,129 +3282,21 @@ async function readComponentProfileFileRows(client, filters = {}) {
        from ${componentEngineeringSchemaName}.component_tree_query tree
        join component_scope on tree.parent_component_id = component_scope.component_id
        where not tree.component_id = any(component_scope.visited)
-     ),
-     base_files as (
-       select
-        governance_file.path as file_path,
-        governance_file.component_unit as imported_component_id,
-        governance_file.owning_unit as imported_owning_unit,
-        governance_file.root_unit as imported_root_unit,
-        governance_file.domain_unit as imported_domain_unit,
-        governance_file.owner_level as imported_owner_level,
-        governance_file.governance_state as imported_governance_state,
-        governance_file.is_drift as imported_is_drift,
-        governance_file.is_legacy as imported_is_legacy,
-        governance_file.ddd_owner as imported_ddd_owner,
-        governance_file.cq_rails as imported_cq_rails,
-        governance_file.source_path as imported_source_path,
-        governance_file.source_content_sha256 as imported_source_content_sha256
-       from ${schemaName}.governance_file_query governance_file
-     ),
-     scoped_local_components as (
-       select
-        local_metadata.component_id,
-        local_metadata.level,
-        local_metadata.root_unit,
-        local_metadata.domain_unit,
-        local_metadata.status,
-        local_metadata.ddd_owner,
-        local_metadata.cq_rails,
-        local_metadata.source_path,
-        local_metadata.source_content_sha256,
-        component_scope.scope_depth
-       from ${schemaName}.governance_component_local_metadata_query local_metadata
-       join component_scope
-         on component_scope.component_id = local_metadata.component_id
-       where local_metadata.status <> 'superseded'
-     ),
-     local_file_claims as (
-       select
-        matched_file.file_path,
-        matched_file.component_id,
-        matched_file.level,
-        matched_file.root_unit,
-        matched_file.domain_unit,
-        matched_file.status,
-        matched_file.ddd_owner,
-        matched_file.cq_rails,
-        matched_file.source_path,
-        matched_file.source_content_sha256,
-        row_number() over (
-          partition by matched_file.file_path
-          order by
-            matched_file.scope_depth desc,
-            matched_file.is_leaf_component desc,
-            matched_file.exact_match desc,
-            length(matched_file.own_pattern) desc,
-            matched_file.component_id
-        ) as claim_rank
-       from (
-        select
-          base_file.file_path,
-          local_component.component_id,
-          local_component.level,
-          local_component.root_unit,
-          local_component.domain_unit,
-          local_component.status,
-          local_component.ddd_owner,
-          local_component.cq_rails,
-          local_component.source_path,
-          local_component.source_content_sha256,
-          local_component.scope_depth,
-          own_pattern.pattern as own_pattern,
-          base_file.file_path = own_pattern.pattern as exact_match,
-          coalesce(claim_tree.is_leaf_component, false) as is_leaf_component
-        from base_files base_file
-        join scoped_local_components local_component on true
-        join ${schemaName}.governance_component_local_ownership_patterns own_pattern
-          on own_pattern.component_id = local_component.component_id
-         and own_pattern.pattern_kind = 'owns'
-        left join ${componentEngineeringSchemaName}.component_tree_query claim_tree
-          on claim_tree.component_id = local_component.component_id
-        where (
-            base_file.file_path = own_pattern.pattern
-            or base_file.file_path like replace(replace(own_pattern.pattern, '**', '%'), '*', '%')
-          )
-          and not exists (
-            select 1
-            from ${schemaName}.governance_component_local_ownership_patterns exclude_pattern
-            where exclude_pattern.component_id = local_component.component_id
-              and exclude_pattern.pattern_kind = 'excludes'
-              and (
-                base_file.file_path = exclude_pattern.pattern
-                or base_file.file_path like replace(
-                  replace(exclude_pattern.pattern, '**', '%'),
-                  '*',
-                  '%'
-                )
-              )
-          )
-       ) matched_file
      )
      select
-       base_file.file_path as path,
-       coalesce(local_claim.component_id, base_file.imported_component_id) as component_unit,
-       coalesce(local_claim.component_id, base_file.imported_owning_unit) as owning_unit,
-       coalesce(local_claim.root_unit, base_file.imported_root_unit) as root_unit,
-       coalesce(local_claim.domain_unit, base_file.imported_domain_unit) as domain_unit,
-       coalesce(
-        case
-          when local_claim.status = 'canonical' then 'governed'
-          else local_claim.status
-        end,
-        base_file.imported_governance_state
-       ) as governance_state,
-       coalesce(local_claim.status = 'drift', base_file.imported_is_drift) as is_drift,
-       coalesce(local_claim.status = 'legacy', base_file.imported_is_legacy) as is_legacy,
-       coalesce(local_claim.ddd_owner, base_file.imported_ddd_owner) as ddd_owner,
-       coalesce(local_claim.cq_rails, base_file.imported_cq_rails) as cq_rails
-     from base_files base_file
-     left join local_file_claims local_claim
-       on local_claim.file_path = base_file.file_path
-      and local_claim.claim_rank = 1
-     where local_claim.file_path is not null
-        or base_file.imported_component_id in (select component_id from component_scope)
-        or base_file.imported_owning_unit in (select component_id from component_scope)
+       ownership.file_path as path,
+       ownership.leaf_component_id as component_unit,
+       ownership.owning_unit,
+       ownership.root_unit,
+       ownership.domain_unit,
+       ownership.governance_state,
+       ownership.is_drift,
+       ownership.is_legacy,
+       ownership.ddd_owner,
+       ownership.cq_rails
+     from ${schemaName}.component_engineering_file_ownership_projection ownership
+     where ownership.leaf_component_id in (select component_id from component_scope)
+        or ownership.owning_unit in (select component_id from component_scope)
      order by is_drift desc, component_unit, path
      limit $2`,
     [component, limit]

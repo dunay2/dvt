@@ -2593,6 +2593,12 @@ async function refreshCodeSymbolMaterializedProjection(client) {
   );
 }
 
+async function refreshComponentTreeMaterializedProjection(client) {
+  await client.query(
+    `refresh materialized view ${schemaName}.component_engineering_component_tree_projection`
+  );
+}
+
 async function refreshComponentFileOwnershipMaterializedProjection(client) {
   await client.query(
     `refresh materialized view ${schemaName}.component_engineering_file_ownership_projection`
@@ -3742,6 +3748,7 @@ async function importContent(options = {}) {
     }
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
+      await refreshComponentTreeMaterializedProjection(client);
       await refreshComponentFileOwnershipMaterializedProjection(client);
       await refreshComponentRuleEvaluationMaterializedProjection(client);
       await insertCodeSymbolSnapshot(client, codeSymbolSnapshot);
@@ -4970,6 +4977,7 @@ module.exports = {
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
   refreshCodeSymbolMaterializedProjection,
+  refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,
   refreshComponentRuleEvaluationMaterializedProjection,
   refreshLocalFeatureMechanizationRailSourceHashes,
