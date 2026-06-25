@@ -5,7 +5,7 @@ import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createCanvasInspectorNodeDraft,
   validateCanvasInspectorNodeDraft,
@@ -49,7 +49,24 @@ function buildImportedWarehouseSourceNode(): CanonicalNode {
   };
 }
 
-function DvtAuthoringFieldsHarness({ node }: Readonly<{ node: CanonicalNode }>): JSX.Element {
+function buildEdge(sourceId: string, targetId: string): CanonicalEdge {
+  return {
+    id: `${sourceId}-${targetId}`,
+    sourceId,
+    targetId,
+    relation: 'lineage',
+  };
+}
+
+function DvtAuthoringFieldsHarness({
+  node,
+  nodes = [node],
+  edges = [],
+}: Readonly<{
+  node: CanonicalNode;
+  nodes?: readonly CanonicalNode[];
+  edges?: readonly CanonicalEdge[];
+}>): JSX.Element {
   const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
   const errors = validateCanvasInspectorNodeDraft(draft);
 
@@ -57,6 +74,8 @@ function DvtAuthoringFieldsHarness({ node }: Readonly<{ node: CanonicalNode }>):
     <>
       <DvtAuthoringFields
         node={node}
+        nodes={nodes}
+        edges={edges}
         disabled={false}
         draft={draft}
         errors={errors}
@@ -88,9 +107,14 @@ describe('DvtAuthoringFields', () => {
     vi.clearAllMocks();
   });
 
-  function renderFields(node: CanonicalNode): void {
+  function renderFields(
+    node: CanonicalNode,
+    graph?: Readonly<{ nodes: readonly CanonicalNode[]; edges: readonly CanonicalEdge[] }>
+  ): void {
     act(() => {
-      root.render(<DvtAuthoringFieldsHarness node={node} />);
+      root.render(
+        <DvtAuthoringFieldsHarness node={node} nodes={graph?.nodes} edges={graph?.edges} />
+      );
     });
   }
 
@@ -146,6 +170,37 @@ describe('DvtAuthoringFields', () => {
     });
 
     expect(draftJson()).toContain('"sql":"select id from public.orders"');
+  });
+
+  it('renders connected source columns as selectable DVT transform inputs', () => {
+    const source = buildImportedWarehouseSourceNode();
+    const transform = buildDvtNode('dvt:sql_transform', {
+      config: {
+        sql: 'select id from analytics.erp.orders',
+        selectedColumns: [`${source.id}.id`],
+      },
+    });
+
+    renderFields(transform, {
+      nodes: [source, transform],
+      edges: [buildEdge(source.id, transform.id)],
+    });
+
+    const selectedColumn = container.querySelector(
+      `input[name="dvt-transform-column"][value="${source.id}.id"]`
+    ) as HTMLInputElement | null;
+
+    expect(container.textContent).toContain('Input columns');
+    expect(container.textContent).toContain('src_warehouse_prod_analytics_erp_orders');
+    expect(container.textContent).toContain('id');
+    expect(container.textContent).toContain('number');
+    expect(selectedColumn?.checked).toBe(true);
+
+    act(() => {
+      fireEvent.click(selectedColumn!);
+    });
+
+    expect(draftJson()).toContain('"selectedColumns":[]');
   });
 
   it('renders sink destination posture and updates materialization controls', () => {

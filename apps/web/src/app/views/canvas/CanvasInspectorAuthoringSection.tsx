@@ -125,6 +125,8 @@ export function CanvasInspectorAuthoringSection({
 
         <DvtAuthoringFields
           node={node}
+          nodes={nodes}
+          edges={edges}
           disabled={!authoring.canEditNode}
           draft={draft}
           errors={errors}
