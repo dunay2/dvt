@@ -4792,14 +4792,89 @@ test('readComponentProfileRows reads files through the component descendant tree
     limit: 5,
   });
 
-  assert.match(capturedSql.join('\n'), /with recursive component_scope\(component_id\) as/i);
-  assert.match(capturedSql.join('\n'), /parent_component_id = component_scope\.component_id/);
   assert.match(
     capturedSql.join('\n'),
-    /leaf_component_id in \(select component_id from component_scope\)/
+    /with recursive component_scope\(component_id, scope_depth, visited\) as/i
   );
+  assert.match(capturedSql.join('\n'), /parent_component_id = component_scope\.component_id/);
+  assert.match(capturedSql.join('\n'), /scoped_local_components as/i);
+  assert.match(
+    capturedSql.join('\n'),
+    /join component_scope\s+on component_scope\.component_id = local_metadata\.component_id/i
+  );
+  assert.match(
+    capturedSql.join('\n'),
+    /imported_component_id in \(select component_id from component_scope\)/
+  );
+  assert.doesNotMatch(capturedSql.join('\n'), /from component_engineering\.file_ownership_query/);
   assert.match(capturedSql.join('\n'), /from architecture\.component_test/);
   assert.match(capturedSql.join('\n'), /from architecture\.component_observability/);
+});
+
+test('readComponentProfileRows uses frontend inventory for frontend components', async () => {
+  const capturedSql = [];
+  const client = {
+    async query(sql) {
+      capturedSql.push(sql);
+      if (sql.includes('frontend_component_summary_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'web.component.canvas.SourceImportDialog',
+              component_name: 'SourceImportDialog',
+              component_kind: 'modal',
+              component_status: 'current',
+              frontend_owner: 'Canvas / Source import',
+              cq_rails: 'OpenCanvasSourceImportDialog;ImportWarehouseSources',
+            },
+          ],
+        };
+      }
+      if (sql.includes('frontend_component_file_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'web.component.canvas.SourceImportDialog',
+              file_path: 'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx',
+              file_role: 'component',
+              exported_symbol: 'CanvasSourceImportDialogHost',
+            },
+          ],
+        };
+      }
+      if (sql.includes('frontend_component_rail_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'web.component.canvas.SourceImportDialog',
+              rail_name: 'OpenCanvasSourceImportDialog',
+              rail_kind: 'local-command',
+              rail_status: 'implemented-local',
+            },
+          ],
+        };
+      }
+      return { rows: [] };
+    },
+  };
+
+  const profile = await readComponentProfileRows(client, {
+    component: 'web.component.canvas.SourceImportDialog',
+    limit: 5,
+  });
+
+  assert.equal(profile.component.component_id, 'web.component.canvas.SourceImportDialog');
+  assert.equal(
+    profile.files[0].path,
+    'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx'
+  );
+  assert.equal(profile.component.cq_rails, 'OpenCanvasSourceImportDialog');
+  assert.match(
+    capturedSql.join('\n'),
+    /from planning_query_store\.frontend_component_summary_query/
+  );
+  assert.doesNotMatch(capturedSql.join('\n'), /component_tree_query/);
+  assert.doesNotMatch(capturedSql.join('\n'), /component_metadata_query/);
 });
 
 test('readArchitectureRelationRows queries the DB architecture relation graph view', async () => {

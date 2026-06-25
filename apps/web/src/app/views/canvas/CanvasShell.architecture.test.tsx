@@ -165,6 +165,17 @@ describe('CanvasShell architecture', () => {
     );
   });
 
+  it('keeps contextual source import hosted outside the shell composition state', () => {
+    expect(CANVAS_SHELL_SOURCE).toContain('CanvasSourceImportDialogHost');
+    expect(CANVAS_SHELL_SOURCE).toContain('useCanvasSourceImportDialogState');
+    expect(CANVAS_SHELL_SOURCE).not.toContain(
+      "import SourceImportWizard from '../../components/SourceImportWizard'"
+    );
+    expect(CANVAS_SHELL_SOURCE).not.toContain('const [dataRegistryOpen');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('const [dataRegistryInitialSelection');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('const [dataRegistryPlacement');
+  });
+
   it('does not expose a legacy fixed explorer panel from the global view menu', () => {
     expect(SHELL_MENU_SOURCE).not.toContain('explorerPanelVisible');
     expect(SHELL_MENU_SOURCE).not.toContain('toggleExplorerPanel');

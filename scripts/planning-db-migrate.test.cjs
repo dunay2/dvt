@@ -7859,3 +7859,180 @@ test('tracked migrations include frontend component reflection inventory project
     /create or replace view planning_query_store\.frontend_component_rail_query/
   );
 });
+
+test('tracked migrations persist local frontend component overlays after imports', () => {
+  const migrations = readMigrationFiles();
+  const overlayMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '255_web_canvas_source_import_dialog_post_import_persistence.sql'
+  );
+
+  assert.ok(overlayMigration);
+  assert.match(
+    overlayMigration.sql,
+    /create table if not exists planning_query_store\.frontend_component_local_files/
+  );
+  assert.match(
+    overlayMigration.sql,
+    /create table if not exists planning_query_store\.frontend_component_local_cq_rails/
+  );
+  assert.match(
+    overlayMigration.sql,
+    /create table if not exists planning_query_store\.frontend_component_local_evidence/
+  );
+  assert.match(
+    overlayMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.match(overlayMigration.sql, /frontend_component_local_files local_file/);
+  assert.match(overlayMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(
+    overlayMigration.sql,
+    /local#DVT-CANVAS-UXDB-SOURCE-DIALOG-1#command#opencanvassourceimportdialog/
+  );
+});
+
+test('tracked migrations index frontend component profile evidence lookups', () => {
+  const migrations = readMigrationFiles();
+  const profileIndexMigration = migrations.find(
+    (migration) => migration.fileName === '256_frontend_component_profile_query_indexes.sql'
+  );
+
+  assert.ok(profileIndexMigration);
+  assert.match(
+    profileIndexMigration.sql,
+    /create index if not exists frontend_component_evidence_component_idx/
+  );
+  assert.match(profileIndexMigration.sql, /on planning_query_store\.frontend_component_evidence/);
+  assert.match(profileIndexMigration.sql, /\(component_id, evidence_id\)/);
+});
+
+test('tracked migrations restore Canvas source import feature mechanization manifest', () => {
+  const migrations = readMigrationFiles();
+  const manifestRestoreMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '262_restore_canvas_source_import_dialog_feature_manifest.sql'
+  );
+
+  assert.ok(manifestRestoreMigration);
+  assert.match(
+    manifestRestoreMigration.sql,
+    /local#DVT-CANVAS-UXDB-SOURCE-DIALOG-1#command#opencanvassourceimportdialog/
+  );
+  assert.match(manifestRestoreMigration.sql, /'version', 1/);
+  assert.match(manifestRestoreMigration.sql, /'featureId', 'DVT-CANVAS-UXDB-SOURCE-DIALOG-1'/);
+  assert.match(manifestRestoreMigration.sql, /'mechanizationStatus', 'implemented'/);
+  assert.match(manifestRestoreMigration.sql, /'noHumanDecisionsRemaining', true/);
+  assert.match(manifestRestoreMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(manifestRestoreMigration.sql, /readFrontendComponentProfileRows/);
+});
+
+test('tracked migrations keep Canvas source import component files fresh-DB safe', () => {
+  const migrations = readMigrationFiles();
+  const sourceDialogHostMigration = migrations.find(
+    (migration) => migration.fileName === '254_web_canvas_source_import_dialog_host.sql'
+  );
+
+  assert.ok(sourceDialogHostMigration);
+  assert.match(
+    sourceDialogHostMigration.sql,
+    /insert into planning_query_store\.frontend_components/
+  );
+  assert.match(sourceDialogHostMigration.sql, /on conflict \(component_id\) do nothing/);
+  assert.match(
+    sourceDialogHostMigration.sql,
+    /insert into planning_query_store\.frontend_component_files/
+  );
+  assert.match(sourceDialogHostMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+});
+
+test('tracked migrations reassert Canvas source import symbols after post-import reconciliation', () => {
+  const migrations = readMigrationFiles();
+  const symbolRestoreMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '265_restore_canvas_source_import_dialog_symbols_after_post_import_reconcile.sql'
+  );
+
+  assert.ok(symbolRestoreMigration);
+  assert.match(symbolRestoreMigration.sql, /'featureId', 'DVT-CANVAS-UXDB-SOURCE-DIALOG-1'/);
+  assert.match(symbolRestoreMigration.sql, /CanvasSourceImportDialogHost/);
+  assert.match(symbolRestoreMigration.sql, /useCanvasSourceImportDialogState/);
+  assert.match(symbolRestoreMigration.sql, /readFrontendComponentProfileRows/);
+  assert.match(symbolRestoreMigration.sql, /OpenCanvasSourceImportDialog/);
+});
+
+test('tracked migrations repoint stale local feature rail sources to versioned files', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepointMigration = migrations.find(
+    (migration) => migration.fileName === '266_repoint_stale_local_feature_rail_sources.sql'
+  );
+
+  assert.ok(sourceRepointMigration);
+  assert.match(
+    sourceRepointMigration.sql,
+    /256_repoint_phantom_governance_component_retirement_rail_source\.sql/
+  );
+  assert.match(
+    sourceRepointMigration.sql,
+    /246_retire_phantom_ci_governance_helper_components\.sql/
+  );
+  assert.match(
+    sourceRepointMigration.sql,
+    /264_reconcile_post_import_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(sourceRepointMigration.sql, /266_repoint_stale_local_feature_rail_sources\.sql/);
+  assert.match(sourceRepointMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(sourceRepointMigration.sql, /readFrontendComponentProfileRows/);
+  assert.doesNotMatch(
+    sourceRepointMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
+test('tracked migrations anchor Canvas source import active rail to governed frontend source', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepointMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '267_repoint_canvas_source_import_dialog_active_rail_source.sql'
+  );
+
+  assert.ok(sourceRepointMigration);
+  assert.match(
+    sourceRepointMigration.sql,
+    /265_restore_canvas_source_import_dialog_symbols_after_post_import_reconcile\.sql/
+  );
+  assert.match(sourceRepointMigration.sql, /apps\/web\/src\/app\/views\/canvas\/CanvasShell\.tsx/);
+  assert.match(sourceRepointMigration.sql, /currentImplementationSourcePath/);
+  assert.match(sourceRepointMigration.sql, /CanvasSourceImportDialogHostProps/);
+  assert.match(sourceRepointMigration.sql, /useCanvasSourceImportDialogState/);
+  assert.match(sourceRepointMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(
+    sourceRepointMigration.sql,
+    /postImportFeatureManifestReconciledBy'.*267_repoint_canvas_source_import_dialog_active_rail_source/s
+  );
+  assert.doesNotMatch(
+    sourceRepointMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
+test('tracked migrations declare CI policy validation import reconcile symbol', () => {
+  const migrations = readMigrationFiles();
+  const symbolRegistrationMigration = migrations.find(
+    (migration) => migration.fileName === '268_register_ci_policy_validation_reconcile_symbol.sql'
+  );
+
+  assert.ok(symbolRegistrationMigration);
+  assert.match(
+    symbolRegistrationMigration.sql,
+    /CI-GOVERNANCE-PHANTOM-COMPONENT-RETIREMENT-20260625/
+  );
+  assert.match(
+    symbolRegistrationMigration.sql,
+    /reconcileSupersededCiPolicyValidationSplitComponents/
+  );
+  assert.match(symbolRegistrationMigration.sql, /scripts\/planning-db-import\.cjs/);
+  assert.match(symbolRegistrationMigration.sql, /scripts\/planning-db-import\.test\.cjs/);
+  assert.match(symbolRegistrationMigration.sql, /RetirePhantomGovernanceComponents/);
+});

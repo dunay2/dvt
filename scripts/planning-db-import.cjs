@@ -3127,6 +3127,77 @@ async function reconcileSupersededCanvasNodeWorkbenchPanel(client) {
     where path in (
       'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
       'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
+      );
+  `);
+}
+
+async function reconcileSupersededCiPolicyValidationSplitComponents(client) {
+  const activePolicySplitFiles = await client.query(`
+    select count(*)::int as file_count
+    from ${schemaName}.governance_files
+    where path in (
+      'scripts/policy-validation-files.cjs',
+      'scripts/policy-validation-text.cjs'
+    )
+  `);
+  const activePolicySplitFileCount = Number(activePolicySplitFiles.rows?.[0]?.file_count || 0);
+  if (activePolicySplitFileCount > 0) {
+    return;
+  }
+
+  await client.query(`
+    with phantom_components(component_id, replacement_contract) as (
+      values
+        (
+          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
+          'Superseded phantom split: scripts/policy-validation-files.cjs does not exist. Policy validation file discovery is owned by the active repository policy validation component.'
+        ),
+        (
+          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT',
+          'Superseded phantom split: scripts/policy-validation-text.cjs does not exist. Policy validation text normalization is owned by the active repository policy validation component.'
+        )
+    )
+    update architecture.component component
+    set
+      status = 'deprecated',
+      repo_path = 'planning_query_store.governance_component_local_definitions#' || component.component_id,
+      public_contract = phantom_components.replacement_contract,
+      updated_at = now()
+    from phantom_components
+    where component.component_id = phantom_components.component_id;
+
+    with phantom_components(component_id, replacement_contract) as (
+      values
+        (
+          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
+          'Superseded phantom split: scripts/policy-validation-files.cjs does not exist. Policy validation file discovery is owned by the active repository policy validation component.'
+        ),
+        (
+          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT',
+          'Superseded phantom split: scripts/policy-validation-text.cjs does not exist. Policy validation text normalization is owned by the active repository policy validation component.'
+        )
+    )
+    update ${schemaName}.governance_component_local_definitions definition
+    set
+      status = 'superseded',
+      source_path = 'planning_query_store.governance_component_local_definitions#'
+        || definition.component_id,
+      source_content_sha256 =
+        md5(definition.component_id || ':policy-validation-phantom-superseded')
+        || md5(definition.component_id || ':planning-db-import'),
+      owned_concern = phantom_components.replacement_contract,
+      revision = greatest(definition.revision, 1) + 1
+    from phantom_components
+    where definition.component_id = phantom_components.component_id;
+
+    delete from ${schemaName}.governance_component_local_ownership_patterns
+    where component_id in (
+      'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
+      'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT'
+    )
+    and pattern in (
+      'scripts/policy-validation-files.cjs',
+      'scripts/policy-validation-text.cjs'
     );
   `);
 }
@@ -3668,6 +3739,7 @@ async function importContent(options = {}) {
       await restoreLocalFeatureMechanizationRails(client, localFeatureMechanizationRails);
       await reconcileDeprecatedLocalRailSources(client);
       await reconcileSupersededCanvasNodeWorkbenchPanel(client);
+      await reconcileSupersededCiPolicyValidationSplitComponents(client);
     }
     await client.query('commit');
   } catch (error) {
@@ -4874,6 +4946,7 @@ module.exports = {
   readGovernanceAuxiliaryState,
   readYamlSource,
   reconcileDeprecatedLocalRailSources,
+  reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
   refreshLocalFeatureMechanizationRailSourceHashes,
   restoreLocalFeatureMechanizationRails,
