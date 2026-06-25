@@ -8106,6 +8106,27 @@ test('tracked migrations materialize component ownership for priority integrity 
   );
 });
 
+test('tracked migrations keep component path coverage on indexed ownership projection', () => {
+  const migrations = readMigrationFiles();
+  const pathCoverageMigration = migrations.find(
+    (migration) => migration.fileName === '284_component_integrity_path_coverage_projection.sql'
+  );
+
+  assert.ok(pathCoverageMigration);
+  assert.match(
+    pathCoverageMigration.sql,
+    /not exists \(\s*select 1\s+from planning_query_store\.component_engineering_file_ownership_projection ownership\s+where ownership\.file_path = component\.repo_path\s*\)/i
+  );
+  assert.match(
+    pathCoverageMigration.sql,
+    /not exists \(\s*select 1\s+from planning_query_store\.component_engineering_file_ownership_projection ownership\s+where ownership\.file_path like component\.repo_path \|\| '\/%'\s*\)/i
+  );
+  assert.doesNotMatch(
+    pathCoverageMigration.sql,
+    /from file_ownership ownership\s+where ownership\.file_path = component\.repo_path\s+or ownership\.file_path like component\.repo_path \|\| '\/%'/i
+  );
+});
+
 test('tracked migrations restore Canvas source import feature mechanization manifest', () => {
   const migrations = readMigrationFiles();
   const manifestRestoreMigration = migrations.find(
