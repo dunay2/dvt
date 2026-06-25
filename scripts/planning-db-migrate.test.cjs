@@ -8078,6 +8078,31 @@ test('tracked migrations index frontend component profile evidence lookups', () 
   assert.match(profileIndexMigration.sql, /\(component_id, evidence_id\)/);
 });
 
+test('tracked migrations index feature mechanization manifest symbol lookups', () => {
+  const migrations = readMigrationFiles();
+  const symbolLookupMigration = migrations.find(
+    (migration) => migration.fileName === '287_feature_mechanization_symbol_lookup_indexes.sql'
+  );
+
+  assert.ok(symbolLookupMigration);
+  assert.match(
+    symbolLookupMigration.sql,
+    /create index if not exists command_query_rails_raw_manifest_gin_idx/
+  );
+  assert.match(
+    symbolLookupMigration.sql,
+    /on planning_query_store\.command_query_rails using gin \(raw_manifest jsonb_path_ops\)/
+  );
+  assert.match(
+    symbolLookupMigration.sql,
+    /create index if not exists feature_mechanization_local_rails_raw_manifest_gin_idx/
+  );
+  assert.match(
+    symbolLookupMigration.sql,
+    /on planning_query_store\.feature_mechanization_local_rails using gin \(raw_manifest jsonb_path_ops\)/
+  );
+});
+
 test('tracked migrations materialize code symbol duplicate query inputs', () => {
   const migrations = readMigrationFiles();
   const codeSymbolProjectionMigration = migrations.find(

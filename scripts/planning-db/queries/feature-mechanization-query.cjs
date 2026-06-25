@@ -40,62 +40,10 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
       rail.raw_manifest,
       rail.rail_source,
       rail.imported_at
-    from (
-      select
-        rail_id,
-        feature_id,
-        mechanization_status,
-        rail_name,
-        normalized_rail_name,
-        rail_type,
-        ddd_owner,
-        rail_status,
-        symbol_refs,
-        implementation_refs,
-        documentation_refs,
-        governing_sources,
-        allowed_implementation_surfaces,
-        architecture_guards,
-        completion_gate,
-        source_path,
-        source_content_sha256,
-        raw_rail,
-        raw_manifest,
-        rail_source,
-        imported_at,
-        1 as projection_priority
-      from ${activeSchemaName}.command_query_rail_manifest_query
-      where raw_manifest is not null
-        and raw_manifest ? 'featureId'
-      union all
-      select
-        rail_id,
-        feature_id,
-        mechanization_status,
-        rail_name,
-        normalized_rail_name,
-        rail_type,
-        ddd_owner,
-        rail_status,
-        symbol_refs,
-        implementation_refs,
-        documentation_refs,
-        governing_sources,
-        allowed_implementation_surfaces,
-        architecture_guards,
-        completion_gate,
-        source_path,
-        source_content_sha256,
-        raw_rail,
-        raw_manifest,
-        'local'::text as rail_source,
-        updated_at as imported_at,
-        0 as projection_priority
-      from ${activeSchemaName}.feature_mechanization_local_rails
-      where raw_manifest is not null
-        and raw_manifest ? 'featureId'
-    ) rail
-    order by rail.rail_id, rail.projection_priority, rail.imported_at desc`;
+    from ${activeSchemaName}.command_query_rail_manifest_query rail
+    where rail.raw_manifest is not null
+      and rail.raw_manifest ? 'featureId'
+    order by rail.rail_id, rail.imported_at desc`;
   }
 
   function featureMechanizationManifestSelect(activeSchemaName = defaultSchemaName) {
@@ -270,9 +218,17 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
 
   async function readFeatureMechanizationSymbolRows(client, filters = {}) {
     const params = [];
-    const predicates = [];
-    appendFilter(predicates, params, 'manifest.mechanization_status', filters.state);
-    appendFilter(predicates, params, "symbol_ref.value->>'path'", filters.path);
+    const manifestPredicates = [];
+    const symbolPredicates = [];
+    appendFilter(manifestPredicates, params, 'manifest.mechanization_status', filters.state);
+    if (filters.path) {
+      params.push(filters.path);
+      const symbolPathParam = `$${params.length}`;
+      manifestPredicates.push(
+        `manifest.raw_manifest @> jsonb_build_object('symbols', jsonb_build_array(jsonb_build_object('path', ${symbolPathParam}::text)))`
+      );
+      symbolPredicates.push(`symbol_ref.value->>'path' = ${symbolPathParam}`);
+    }
 
     const limit = parseLimit(filters.limit, 50);
     params.push(limit);
@@ -280,6 +236,11 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
     const result = await client.query(
       `with manifests as (
        ${featureMechanizationManifestSelect()}
+     ),
+     filtered_manifests as (
+       select *
+       from manifests manifest
+       ${manifestPredicates.length > 0 ? `where ${manifestPredicates.join(' and ')}` : ''}
      )
      select
        manifest.feature_id,
@@ -288,11 +249,11 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
        symbol_ref.value->>'dddOwner' as ddd_owner,
        ${jsonArray("symbol_ref.value->'cqRails'")} as cq_rails,
        manifest.source_path
-     from manifests manifest
+     from filtered_manifests manifest
      cross join lateral jsonb_array_elements(${jsonArray(
        "manifest.raw_manifest->'symbols'"
      )}) as symbol_ref(value)
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     ${symbolPredicates.length > 0 ? `where ${symbolPredicates.join(' and ')}` : ''}
      order by manifest.feature_id, symbol_path, symbol_name, manifest.source_path
      limit $${params.length}`,
       params
