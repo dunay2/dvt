@@ -139,6 +139,36 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it('adds DBT source operational metrics from recorded warehouse metadata', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dbt:source',
+        pluginId: 'dbt',
+        name: 'src_erp_orders',
+        metadata: {
+          database: 'RAW',
+          schema: 'ERP',
+          tableName: 'ORDERS',
+          rowCount: 1500,
+          byteSize: 4096000,
+          columns: [
+            { name: 'order_id', type: 'INTEGER' },
+            { name: 'discount_code', type: 'TEXT' },
+          ],
+        },
+      }),
+      {},
+      [dbtGraphNodeCardStrategy]
+    );
+
+    expect(model.subtitle).toBe('RAW.ERP.ORDERS');
+    expect(model.metrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '1.5k' },
+      { id: 'bytes', label: 'Size', value: '3.9 MB' },
+      { id: 'columns', label: 'Columns', value: '2' },
+    ]);
+  });
+
   it('adds DBT test target and severity metrics from recorded metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({

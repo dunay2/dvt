@@ -1,15 +1,28 @@
 import {
+  buildCanvasDraftReadResponse,
+  stubCanvasDraftSave,
+} from '../../support/canvasDraftAuthoring';
+import {
   clickCanvasContextMenuItem,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
-import { getLastE2eApiCall, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getLastE2eApiCall,
+  getE2eApiCalls,
+  stubE2eApi,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   stubCanvasRuntimeApis,
   stubPreviewRunShellBootstrap,
   visitCanvasWithSettledBootstrap,
 } from '../../support/test/canvasPreviewRunPersisted';
+import { E2E_WORKSPACE_SESSION } from '../../support/workspaceSession';
 
 function stubWarehouseSourceImportApis(): void {
+  let imported = false;
+
   stubE2eJsonApi('GET', '/workspace/warehouse/connections', [
     {
       id: 'local-postgres-proof',
@@ -30,18 +43,40 @@ function stubWarehouseSourceImportApis(): void {
       ],
     },
   ]);
-  stubE2eJsonApi('POST', '/workspace/sources/import', {
-    success: true,
-    sourcesCreated: 1,
-    tablesImported: 1,
-    yamlFiles: ['models/sources/src_erp.yml'],
-    importedNodeIds: ['src_erp_orders'],
-    grouping: 'schema',
-    options: {
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    },
+  stubE2eApi('GET', '/workspace/graph/draft', ({ url }) => {
+    expect(Object.fromEntries(url.searchParams.entries())).to.deep.include({
+      tenantId: E2E_WORKSPACE_SESSION.tenantId,
+      projectId: E2E_WORKSPACE_SESSION.projectId,
+      environmentId: E2E_WORKSPACE_SESSION.environmentId,
+    });
+
+    return {
+      statusCode: 200,
+      body: buildCanvasDraftReadResponse(E2E_WORKSPACE_SESSION, {
+        canvasKind: 'dbt',
+        title: 'Warehouse dbt',
+        ...(imported ? { importedWarehouseSource: true } : { emptyCanvas: true }),
+      }),
+    };
+  });
+  stubE2eApi('POST', '/workspace/sources/import', () => {
+    imported = true;
+
+    return {
+      body: {
+        success: true,
+        sourcesCreated: 1,
+        tablesImported: 1,
+        yamlFiles: ['models/sources/src_erp.yml'],
+        importedNodeIds: ['src_erp_orders'],
+        grouping: 'schema',
+        options: {
+          includeColumns: true,
+          addTests: false,
+          addFreshness: false,
+        },
+      },
+    };
   });
 }
 
@@ -52,8 +87,10 @@ describe('Canvas contextual source import', () => {
       canvasKind: 'dbt',
       emptyCanvas: true,
       title: 'Warehouse dbt',
+      skipDraftRead: true,
     });
     stubWarehouseSourceImportApis();
+    stubCanvasDraftSave();
   });
 
   it('opens Add Source from the canvas context menu and imports selected warehouse metadata', () => {
@@ -121,5 +158,34 @@ describe('Canvas contextual source import', () => {
       ]);
     });
     cy.contains('[role="dialog"]', 'Sources attached', { timeout: 20_000 }).should('be.visible');
+    cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/workspace/graph/draft', 'GET').length).to.be.greaterThan(1);
+    });
+    cy.contains('[role="dialog"] button', 'Done').click();
+
+    cy.contains('.react-flow__node', 'src_erp_orders', { timeout: 20_000 })
+      .should('be.visible')
+      .and('contain.text', 'Rows')
+      .and('contain.text', '1.5k')
+      .and('contain.text', 'Size')
+      .and('contain.text', '3.9 MB')
+      .and('contain.text', 'Columns')
+      .and('contain.text', '2');
+
+    cy.contains('[data-slot="graph-node-card"]', 'src_erp_orders').rightclick({ force: true });
+    cy.contains('[role="menuitem"]', 'Open workbench').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 20_000 })
+      .should('be.visible')
+      .and('contain.text', 'src_erp_orders')
+      .and('contain.text', 'dbt:source');
+    cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
+    cy.get('[data-slot="canvas-node-workbench-columns-section"]')
+      .should('be.visible')
+      .and('contain.text', 'order_id')
+      .and('contain.text', 'INTEGER')
+      .and('contain.text', 'not null')
+      .and('contain.text', 'discount_code')
+      .and('contain.text', 'TEXT')
+      .and('contain.text', 'nullable');
   });
 });

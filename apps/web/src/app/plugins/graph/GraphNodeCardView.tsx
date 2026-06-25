@@ -50,6 +50,7 @@ export function GraphNodeCardView({
 
   return (
     <div
+      data-slot="graph-node-card"
       className={cn(
         graphVisualClasses.nodeCard,
         borderClass,

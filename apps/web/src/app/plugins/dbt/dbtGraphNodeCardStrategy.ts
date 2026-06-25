@@ -7,7 +7,10 @@ import type {
 } from '../graph/graphNodeCardStrategyContracts';
 import {
   arrayCount,
+  formatBytes,
+  formatCompactNumber,
   metadataOf,
+  numericValue,
   pushMetric,
   pushRuntimeMetrics,
   resolveColumnCount,
@@ -26,8 +29,36 @@ function resolveDbtMaterialization(metadata: Record<string, unknown>): string | 
 
 function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): GraphNodeCardReadModel {
   const metadata = metadataOf(node);
+  const dbt = metadata.dbt;
+  const dbtRecord =
+    typeof dbt === 'object' && dbt !== null && !Array.isArray(dbt)
+      ? (dbt as Record<string, unknown>)
+      : {};
+  const config = metadata.config;
+  const configRecord =
+    typeof config === 'object' && config !== null && !Array.isArray(config)
+      ? (config as Record<string, unknown>)
+      : {};
+  const database =
+    stringValue(metadata.database) ??
+    stringValue(configRecord.database) ??
+    stringValue(dbtRecord.databaseName);
+  const schema =
+    stringValue(metadata.schema) ??
+    stringValue(configRecord.schema) ??
+    stringValue(dbtRecord.schemaName);
+  const table =
+    stringValue(metadata.table) ??
+    stringValue(metadata.tableName) ??
+    stringValue(configRecord.table) ??
+    stringValue(dbtRecord.tableName);
+  const relation = [database, schema, table].filter(Boolean).join('.');
+  const relationSubtitle = relation.length > 0 ? relation : null;
   const metrics: GraphNodeCardMetric[] = [];
   const materialization = resolveDbtMaterialization(metadata);
+  const rowCount = numericValue(metadata.rowCount) ?? numericValue(metadata.rows);
+  const byteSize =
+    numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
   const targetModel =
     stringValue(metadata.testTargetModel) ??
     stringValue(metadata.targetModel) ??
@@ -45,6 +76,8 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     (composedTestTarget.length > 0 ? composedTestTarget : null);
   const severity = stringValue(metadata.severity) ?? stringValue(data.severity);
 
+  pushMetric(metrics, 'rows', 'Rows', rowCount == null ? null : formatCompactNumber(rowCount));
+  pushMetric(metrics, 'bytes', 'Size', byteSize == null ? null : formatBytes(byteSize));
   pushMetric(metrics, 'materialization', 'Mat.', materialization);
   pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
   pushMetric(metrics, 'test-target', 'Target', testTarget);
@@ -54,7 +87,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
 
   return {
     title: node.name,
-    subtitle: stringValue(metadata.package) ?? node.path ?? null,
+    subtitle: stringValue(metadata.package) ?? relationSubtitle ?? node.path ?? null,
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
     metrics,
   };

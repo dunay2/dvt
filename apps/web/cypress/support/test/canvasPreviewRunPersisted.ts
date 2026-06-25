@@ -18,6 +18,7 @@ type CanvasRuntimeApiOptions = {
   canvasKind?: 'transformation' | 'dbt';
   emptyCanvas?: boolean;
   title?: string;
+  skipDraftRead?: boolean;
 };
 
 type PlanRejectedCause =
@@ -256,7 +257,9 @@ export function stubCanvasRuntimeApis(options: CanvasRuntimeApiOptions = {}): vo
     effectiveWorkspace: E2E_WORKSPACE_SESSION,
     availableWorkspaces: [E2E_WORKSPACE_SESSION],
   });
-  stubCanvasDraftRead(options);
+  if (options.skipDraftRead !== true) {
+    stubCanvasDraftRead(options);
+  }
 }
 
 export function assertPreviewPlanRequest(): void {

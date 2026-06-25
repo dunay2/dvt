@@ -139,6 +139,18 @@ function buildGeneralRows(
   node: CanonicalNode,
   metadata: Record<string, unknown>
 ): NodePropertyRow[] {
+  const formatBytes = (value: number): string => {
+    if (Math.abs(value) >= 1024 * 1024 * 1024) {
+      return `${(value / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
+    }
+    if (Math.abs(value) >= 1024 * 1024) {
+      return `${(value / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
+    }
+    if (Math.abs(value) >= 1024) {
+      return `${(value / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
+    }
+    return `${value} B`;
+  };
   const config = asRecord(metadata.config);
   const dbt = asRecord(metadata.dbt);
   const rows: NodePropertyRow[] = [];
@@ -173,7 +185,13 @@ function buildGeneralRows(
     addRow(rows, 'Rows', new Intl.NumberFormat('en-US').format(rowCount));
   }
 
-  addRow(rows, 'Size', readFirstString(metadata.size, metadata.sizeLabel));
+  const byteSize = readNumber(metadata.byteSize) ?? readNumber(metadata.bytes);
+  addRow(
+    rows,
+    'Size',
+    readFirstString(metadata.size, metadata.sizeLabel) ??
+      (byteSize == null ? undefined : formatBytes(byteSize))
+  );
 
   if (node.lastDuration != null) {
     addRow(rows, 'Duration', `${node.lastDuration}s`);

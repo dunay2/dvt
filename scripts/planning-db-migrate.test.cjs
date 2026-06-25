@@ -5872,6 +5872,26 @@ test('tracked migrations register DVT destination target authoring feature mecha
   assert.doesNotMatch(destinationTargetMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register DBT node card metadata metrics feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const dbtCardMetricsMigration = migrations.find(
+    (migration) => migration.fileName === '285_register_dbt_node_card_metadata_metrics_feature.sql'
+  );
+
+  assert.ok(dbtCardMetricsMigration);
+  assert.match(dbtCardMetricsMigration.sql, /DBT-CANVAS-P0-PRO-FLOW-1/);
+  assert.match(dbtCardMetricsMigration.sql, /RenderDbtGraphNodeCardMetrics/);
+  assert.match(dbtCardMetricsMigration.sql, /GraphNodeCardStrategy/);
+  assert.match(dbtCardMetricsMigration.sql, /dbtGraphNodeCardStrategy\.ts/);
+  assert.match(dbtCardMetricsMigration.sql, /dbtGraphNodeCardStrategy/);
+  assert.match(dbtCardMetricsMigration.sql, /canvas-source-import-contextual\.cy\.ts/);
+  assert.match(dbtCardMetricsMigration.sql, /workspace graph draft read model/);
+  assert.match(dbtCardMetricsMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(dbtCardMetricsMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(dbtCardMetricsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(dbtCardMetricsMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reseed Canvas node workbench feature manifests after import refresh', () => {
   const migrations = readMigrationFiles();
   const reseedMigration = migrations.find(
