@@ -18,6 +18,10 @@ const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
 );
+const CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasShellMainPanelFrame.tsx'
+);
 const CANVAS_CONTEXT_MENU_LAYER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasContextMenuLayer.tsx'
@@ -116,13 +120,12 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_SOURCE).not.toContain('CanvasInspectorPanel');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasShellNodeWorkbenchOverlay');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainSurface(');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('pointer-events-none h-full');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('pointer-events-auto h-full');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasShellOverlayCenterSurfaceFrame');
+    expect(CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE).toContain('pointer-events-none h-full');
+    expect(CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE).not.toContain('pointer-events-auto h-full');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellViewport(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainPanel(');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
-      'defaultSize={resolveCanvasShellMainPanelDefaultSize()}'
-    );
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('resolveCanvasShellMainPanelDefaultSize()');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('onOpenSourceImport');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDvtFlowGuide');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDbtFlowGuide');

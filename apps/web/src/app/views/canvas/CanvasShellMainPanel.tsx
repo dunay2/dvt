@@ -1,7 +1,11 @@
 /** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
-import { ResizablePanel } from '../../components/ui/resizable';
-import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
+import {
+  CanvasShellContextualWorkbenchSplit,
+  CanvasShellMainPanelFrame,
+  CanvasShellOverlayCenterSurfaceFrame,
+  CanvasShellReadOnlyBannerSlot,
+} from './CanvasShellMainPanelFrame';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
 import CanvasViewport from './CanvasViewport';
@@ -206,12 +210,10 @@ function CanvasShellMainSurface({
     ) : layout.centerSurfaceMode === 'replace' ? (
       <>{layout.centerSurface}</>
     ) : (
-      <div className="relative flex min-h-0 flex-1">
-        {viewport}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="pointer-events-none h-full">{layout.centerSurface}</div>
-        </div>
-      </div>
+      <CanvasShellOverlayCenterSurfaceFrame
+        viewport={viewport}
+        centerSurface={layout.centerSurface}
+      />
     );
 
   if (layout.contextualWorkbench == null) {
@@ -219,16 +221,14 @@ function CanvasShellMainSurface({
   }
 
   return (
-    <div className="flex min-h-0 flex-1">
-      <div className="min-w-0 flex-1">{baseSurface}</div>
-      <CanvasContextualWorkbenchPanel
-        title={layout.contextualWorkbench.title}
-        description={layout.contextualWorkbench.description}
-        onClose={layout.contextualWorkbench.onClose}
-      >
-        {layout.contextualWorkbench.panel}
-      </CanvasContextualWorkbenchPanel>
-    </div>
+    <CanvasShellContextualWorkbenchSplit
+      baseSurface={baseSurface}
+      title={layout.contextualWorkbench.title}
+      description={layout.contextualWorkbench.description}
+      onClose={layout.contextualWorkbench.onClose}
+    >
+      {layout.contextualWorkbench.panel}
+    </CanvasShellContextualWorkbenchSplit>
   );
 }
 
@@ -263,41 +263,41 @@ export function CanvasShellMainPanel({
     layout.centerSurface == null || layout.centerSurfaceMode === 'overlay';
 
   return (
-    <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
-      <div className="relative h-full flex flex-col bg-(--surface-panel)">
-        <CanvasShellMenuContributionRegistrars
-          panels={panels}
-          graph={graph}
-          chromeState={chromeState}
-          chromeCommands={chromeCommands}
+    <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
+      <CanvasShellMenuContributionRegistrars
+        panels={panels}
+        graph={graph}
+        chromeState={chromeState}
+        chromeCommands={chromeCommands}
+      />
+      {layout.readOnlyBanner ? (
+        <CanvasShellReadOnlyBannerSlot>{layout.readOnlyBanner}</CanvasShellReadOnlyBannerSlot>
+      ) : null}
+      <CanvasShellMainSurface
+        layout={layout}
+        panels={panels}
+        graph={graph}
+        graphCommands={graphCommands}
+        chromeCommands={chromeCommands}
+        onOpenSourceImport={onOpenSourceImport}
+        onOpenProjectExplorer={onOpenProjectExplorer}
+        onOpenProjectCode={onOpenProjectCode}
+        onOpenCanvasSettings={onOpenCanvasSettings}
+        canPreviewExecutionPlan={panels.userPermissions.canPlan && chromeState.canPlanGraph}
+        contextMenuPresenter={contextMenuPresenter}
+      />
+      {shouldShowGraphStatusOverlay ? (
+        <CanvasGraphStatusOverlay
+          activeCanvas={panels.activeCanvas}
+          draftStatusState={chromeState.draftStatusState}
+          onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
         />
-        {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
-        <CanvasShellMainSurface
-          layout={layout}
-          panels={panels}
-          graph={graph}
-          graphCommands={graphCommands}
-          chromeCommands={chromeCommands}
-          onOpenSourceImport={onOpenSourceImport}
-          onOpenProjectExplorer={onOpenProjectExplorer}
-          onOpenProjectCode={onOpenProjectCode}
-          onOpenCanvasSettings={onOpenCanvasSettings}
-          canPreviewExecutionPlan={panels.userPermissions.canPlan && chromeState.canPlanGraph}
-          contextMenuPresenter={contextMenuPresenter}
-        />
-        {shouldShowGraphStatusOverlay ? (
-          <CanvasGraphStatusOverlay
-            activeCanvas={panels.activeCanvas}
-            draftStatusState={chromeState.draftStatusState}
-            onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
-          />
-        ) : null}
-        <CanvasShellNodeWorkbenchOverlay
-          layout={layout}
-          panels={panels}
-          chromeCommands={chromeCommands}
-        />
-      </div>
-    </ResizablePanel>
+      ) : null}
+      <CanvasShellNodeWorkbenchOverlay
+        layout={layout}
+        panels={panels}
+        chromeCommands={chromeCommands}
+      />
+    </CanvasShellMainPanelFrame>
   );
 }
