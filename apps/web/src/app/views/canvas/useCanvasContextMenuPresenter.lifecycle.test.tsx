@@ -122,6 +122,28 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuVisible();
   });
 
+  it('keeps the menu open when the browser pointer echo is followed by React Flow pane click echo', async () => {
+    vi.useFakeTimers();
+    await harness.render();
+
+    await harness.openPaneMenuAt(320, 260);
+    await act(async () => {
+      document.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          bubbles: true,
+          button: 0,
+          clientX: 700,
+          clientY: 180,
+        })
+      );
+    });
+    await act(async () => {
+      harness.getPresenter().handlePaneClick({ button: 0, clientX: 700, clientY: 180 });
+    });
+
+    harness.expectMenuVisible();
+  });
+
   it('suppresses the first document pointer echo and closes on a later background click', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
