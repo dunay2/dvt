@@ -77,6 +77,7 @@ describe('CanvasInspectorPanel authoring contract', () => {
       tags: ['finance', 'critical'],
       dvt: {
         kind: 'source',
+        database: '',
         schema: 'public',
         table: 'orders_source',
         alias: 'orders_source',
