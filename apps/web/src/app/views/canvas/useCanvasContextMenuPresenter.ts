@@ -105,12 +105,14 @@ export function useCanvasContextMenuPresenter({
   const lastContextMenuOpenedAtRef = useRef(0);
   const lastContextMenuOpenedTargetKindRef = useRef<ContextMenuOpenTargetKind | null>(null);
   const lastPaneContextMenuScreenPositionRef = useRef<CanvasContextMenuPosition | null>(null);
+  const pendingDocumentPointerEchoRef = useRef(false);
   const pendingPaneClickEchoRef = useRef(false);
 
   const markContextMenuOpened = useCallback(
     (targetKind: ContextMenuOpenTargetKind, screenPosition?: CanvasContextMenuPosition) => {
       lastContextMenuOpenedAtRef.current = Date.now();
       lastContextMenuOpenedTargetKindRef.current = targetKind;
+      pendingDocumentPointerEchoRef.current = targetKind === 'pane';
       pendingPaneClickEchoRef.current = targetKind === 'pane';
       lastPaneContextMenuScreenPositionRef.current =
         targetKind === 'pane' ? (screenPosition ?? null) : null;
@@ -119,6 +121,7 @@ export function useCanvasContextMenuPresenter({
   );
 
   const closeContextMenu = useCallback((_options?: CloseCanvasContextMenuOptions) => {
+    pendingDocumentPointerEchoRef.current = false;
     pendingPaneClickEchoRef.current = false;
     lastPaneContextMenuScreenPositionRef.current = null;
     setModel(null);
@@ -169,7 +172,7 @@ export function useCanvasContextMenuPresenter({
 
       if (
         event instanceof MouseEvent &&
-        pendingPaneClickEchoRef.current &&
+        pendingDocumentPointerEchoRef.current &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
         lastPaneContextMenuScreenPositionRef.current != null
       ) {
@@ -182,7 +185,7 @@ export function useCanvasContextMenuPresenter({
           Math.abs(event.clientY - lastPanePosition.y) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX;
 
         if (isPendingBrowserClickEcho || isDelayedEchoAtContextPoint) {
-          pendingPaneClickEchoRef.current = false;
+          pendingDocumentPointerEchoRef.current = false;
           return;
         }
       }

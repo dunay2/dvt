@@ -149,4 +149,61 @@ describe('CanvasViewport context menus', () => {
 
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
   });
+
+  it('keeps the Add source action clickable after the browser context-menu echo sequence', async () => {
+    const onOpenSourceImport = vi.fn();
+    await renderViewport({
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+      canOpenSourceImport: true,
+      onOpenSourceImport,
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
+    expect(contextSurface).toBeDefined();
+
+    await act(async () => {
+      contextSurface?.dispatchEvent(
+        new MouseEvent('contextmenu', {
+          clientX: 480,
+          clientY: 320,
+          button: 2,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    });
+    await act(async () => {
+      document.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          bubbles: true,
+          button: 0,
+          clientX: 720,
+          clientY: 220,
+        })
+      );
+    });
+
+    const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
+      | ((event: React.MouseEvent<Element>) => void)
+      | undefined;
+    await act(async () => {
+      paneClick?.({
+        button: 0,
+        clientX: 720,
+        clientY: 220,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    const addSourceButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent?.trim() === 'Add source'
+    );
+    expect(addSourceButton).toBeDefined();
+
+    await act(async () => {
+      addSourceButton?.click();
+    });
+
+    expect(onOpenSourceImport).toHaveBeenCalledWith({ x: 580, y: 280 });
+  });
 });
