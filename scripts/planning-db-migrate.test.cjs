@@ -6102,6 +6102,14 @@ test('tracked migrations retire phantom Canvas source import dialog host', () =>
   assert.match(sourceImportHostRetirementMigration.sql, /status = 'deprecated'/);
   assert.match(sourceImportHostRetirementMigration.sql, /status = 'superseded'/);
   assert.match(sourceImportHostRetirementMigration.sql, /rail_status = 'retired'/);
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /'ValidateComponentIntegrity;ValidateSourceDrift;ReadComponentProfile',\s+null,\s+now\(\)/
+  );
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /where exists \(\s+select 1\s+from architecture\.component component\s+where component\.component_id = 'SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST'\s+\)/
+  );
   assert.doesNotMatch(sourceImportHostRetirementMigration.sql, /truncate\s+/i);
 });
 

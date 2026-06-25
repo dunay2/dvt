@@ -23,7 +23,7 @@ values (
   'The Planning DB carried SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST as a review component backed by CanvasSourceImportDialogHost.tsx and a local feature manifest backed by tools/planning-db/migrations/254_web_canvas_source_import_dialog_host.sql. Neither file is tracked. The active implementation is CanvasShell rendering SourceImportWizard and the existing SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD component tree. This migration preserves audit history, retires the phantom host, and redirects shell chrome dependency evidence to the real wizard component.',
   'boundary_drift',
   'ValidateComponentIntegrity;ValidateSourceDrift;ReadComponentProfile',
-  'WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625',
+  null,
   now()
 )
 on conflict (design_id) do update set
@@ -210,13 +210,17 @@ insert into architecture.component_observability (
   required,
   status
 )
-values (
+select
   'OBS-SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT',
   'SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST',
   'Phantom host retirement is observable through component-integrity, source-drift, component-profile, and migration evidence.',
   'dashboard',
   true,
   'implemented'
+where exists (
+  select 1
+  from architecture.component component
+  where component.component_id = 'SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST'
 )
 on conflict (observability_id) do update set
   signal_name = excluded.signal_name,
