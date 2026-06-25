@@ -223,7 +223,8 @@ test('frontend component reflection query applies component, kind, state, owner,
   assert.match(calls[0].sql, /component_kind = \$2/);
   assert.match(calls[0].sql, /component_status = \$3/);
   assert.match(calls[0].sql, /frontend_owner = \$4/);
-  assert.match(calls[0].sql, /frontend_surface_component_links/);
+  assert.match(calls[0].sql, /frontend_component_surface_link_query/);
+  assert.doesNotMatch(calls[0].sql, /frontend_surface_component_links/);
   assert.deepEqual(calls[0].params, [
     'web.component.canvas.CanvasShellChrome',
     'route-toolbar',

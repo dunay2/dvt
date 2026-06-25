@@ -387,7 +387,7 @@ async function readFrontendComponentRows(client, filters = {}, options = {}) {
     params.push(filters.surface || filters.surfaceId);
     predicates.push(`component_id in (
       select component_id
-      from ${activeSchemaName}.frontend_surface_component_links
+      from ${activeSchemaName}.frontend_component_surface_link_query
       where surface_id = $${params.length}
     )`);
   }
