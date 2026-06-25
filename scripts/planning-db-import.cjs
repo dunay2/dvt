@@ -2593,6 +2593,12 @@ async function refreshCodeSymbolMaterializedProjection(client) {
   );
 }
 
+async function refreshComponentFileOwnershipMaterializedProjection(client) {
+  await client.query(
+    `refresh materialized view ${schemaName}.component_engineering_file_ownership_projection`
+  );
+}
+
 async function insertRepositoryCommandSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.repository_commands`);
 
@@ -3730,6 +3736,7 @@ async function importContent(options = {}) {
     }
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
+      await refreshComponentFileOwnershipMaterializedProjection(client);
       await insertCodeSymbolSnapshot(client, codeSymbolSnapshot);
       await refreshCodeSymbolMaterializedProjection(client);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
@@ -4956,6 +4963,7 @@ module.exports = {
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
   refreshCodeSymbolMaterializedProjection,
+  refreshComponentFileOwnershipMaterializedProjection,
   refreshLocalFeatureMechanizationRailSourceHashes,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,

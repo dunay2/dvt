@@ -36,6 +36,7 @@ const {
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
   refreshCodeSymbolMaterializedProjection,
+  refreshComponentFileOwnershipMaterializedProjection,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,
@@ -640,6 +641,20 @@ test('planning DB import refreshes the materialized code symbol duplicate projec
 
   assert.deepEqual(queries, [
     `refresh materialized view ${schemaName}.code_symbol_effective_inventory_projection`,
+  ]);
+});
+
+test('planning DB import refreshes the materialized component file ownership projection', async () => {
+  const queries = [];
+
+  await refreshComponentFileOwnershipMaterializedProjection({
+    query: async (sql) => {
+      queries.push(sql);
+    },
+  });
+
+  assert.deepEqual(queries, [
+    `refresh materialized view ${schemaName}.component_engineering_file_ownership_projection`,
   ]);
 });
 
