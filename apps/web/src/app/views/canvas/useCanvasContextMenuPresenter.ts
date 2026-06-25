@@ -121,9 +121,11 @@ export function useCanvasContextMenuPresenter({
   const closeContextMenu = useCallback((options?: CloseCanvasContextMenuOptions) => {
     if (
       options?.force !== true &&
+      pendingPaneClickEchoRef.current &&
       lastContextMenuOpenedTargetKindRef.current === 'pane' &&
       Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS
     ) {
+      pendingPaneClickEchoRef.current = false;
       return;
     }
 

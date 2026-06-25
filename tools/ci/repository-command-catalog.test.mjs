@@ -145,6 +145,8 @@ test('classifies current command file paths without broad script-directory assum
     'runtime-capability'
   );
   assert.equal(classifyScriptFilePath('scripts/generate-contract-index.cjs').domain, 'contracts');
+  assert.equal(classifyScriptFilePath('scripts/policy-validation-files.cjs').domain, 'contracts');
+  assert.equal(classifyScriptFilePath('scripts/policy-validation-text.cjs').domain, 'contracts');
   assert.equal(
     classifyScriptFilePath('scripts/generate-governance-document-unit-map.cjs').domain,
     'docs-governance'

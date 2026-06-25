@@ -301,6 +301,9 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/250_planning_db_query_format_helper_component.sql
   - tools/planning-db/migrations/251_planning_db_query_format_helper_generated_status_consumers.sql
   - tools/planning-db/migrations/252_planning_db_frontend_inventory_table_helper_component.sql
+  - tools/planning-db/migrations/254_policy_validation_text_helper_components.sql
+  - tools/planning-db/migrations/255_policy_validation_markdown_file_catalog_component.sql
+  - tools/planning-db/migrations/256_repoint_phantom_governance_component_retirement_rail_source.sql
   - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
   - tools/planning-db/migrations/114_repoint_canvas_reload_recovery_test_support_rail.sql
   - tools/planning-db/migrations/115_repoint_canvas_create_document_test_support_rail.sql
@@ -368,9 +371,17 @@ allowedImplementationSurfaces:
   - scripts/planning-db/frontend-component-inventory.cjs
   - scripts/planning-db/frontend-mechanical-truth-inventory.cjs
   - scripts/planning-db/queries/code-symbol-query.cjs
+  - scripts/policy-validation-files.cjs
+  - scripts/policy-validation-files.test.cjs
+  - scripts/policy-validation-text.cjs
+  - scripts/policy-validation-text.test.cjs
+  - scripts/validate-references.cjs
+  - scripts/validate-rfc2119.cjs
   - tools/ci/contracts-compat-schema-parity.test.mjs
   - tools/ci/contracts-package-governance.test.mjs
   - tools/ci/github-collaboration-governance.test.mjs
+  - tools/ci/repository-command-catalog.mjs
+  - tools/ci/repository-command-catalog.test.mjs
   - tools/ci/planner-package-governance.test.mjs
   - tools/ci/root-test-runner-config.test.mjs
   - scripts/planning-db-query.cjs
@@ -444,6 +455,18 @@ commandQueryRails:
   - name: DetectGovernedSourceDrift
     type: query
     dddOwner: GovernedSourceDriftReadModel
+  - name: ValidateContractReferences
+    type: command
+    dddOwner: ContractReferenceValidationCommand
+  - name: ValidateRfc2119Language
+    type: command
+    dddOwner: Rfc2119LanguageValidationCommand
+  - name: NormalizePolicyValidationMarkdownText
+    type: query
+    dddOwner: RepositoryPolicyValidationTextNormalizer
+  - name: ListPolicyValidationMarkdownFiles
+    type: query
+    dddOwner: RepositoryPolicyValidationMarkdownFileCatalog
 domainObjects:
   - name: ComponentIntegrityReadModel
     type: read model
@@ -620,7 +643,91 @@ redGreenCycles:
       - apps/web/src/app/plugins/cost/costContributions.test.ts
       - apps/web/src/app/plugins/monitoring/monitoringContributions.test.ts
     greenTest: pnpm --filter @dvt/web test:changed
+  - id: policy-validation-inline-code-helper
+    redTest: pnpm planning:db:query code-symbol-duplicates --path scripts/validate-references.cjs --no-refresh --limit 80
+    expectedFailure: validate-references and validate-rfc2119 carry equivalent inline-code stripping helpers inside one policy-validation bounded context.
+    patchSurfaces:
+      - scripts/policy-validation-text.cjs
+      - scripts/policy-validation-text.test.cjs
+      - scripts/validate-references.cjs
+      - scripts/validate-rfc2119.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - tools/planning-db/migrations/254_policy_validation_text_helper_components.sql
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: node --test scripts/policy-validation-text.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: policy-validation-markdown-file-helper
+    redTest: pnpm planning:db:query code-symbol-duplicates --path scripts/validate-references.cjs --no-refresh --limit 80
+    expectedFailure: validate-references and validate-rfc2119 carry equivalent recursive walkMarkdown helpers inside one policy-validation bounded context.
+    patchSurfaces:
+      - scripts/policy-validation-files.cjs
+      - scripts/policy-validation-files.test.cjs
+      - scripts/validate-references.cjs
+      - scripts/validate-rfc2119.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - tools/planning-db/migrations/255_policy_validation_markdown_file_catalog_component.sql
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+  - id: phantom-component-retirement-source-repair
+    redTest: pnpm planning:db:integrity:check
+    expectedFailure: governed_source_drift_query reports RetirePhantomGovernanceComponents against a non-existent migration source.
+    patchSurfaces:
+      - tools/planning-db/migrations/256_repoint_phantom_governance_component_retirement_rail_source.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
 symbols:
+  - name: fs
+    path: scripts/policy-validation-files.cjs
+    dddOwner: RepositoryPolicyValidationMarkdownFileCatalog
+    cqRails:
+      - ListPolicyValidationMarkdownFiles
+    fowlerSignals:
+      - Markdown file catalog reads repository files through Node fs before DB-backed component validation
+    architectureGuard: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/policy-validation-files.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+  - name: path
+    path: scripts/policy-validation-files.cjs
+    dddOwner: RepositoryPolicyValidationMarkdownFileCatalog
+    cqRails:
+      - ListPolicyValidationMarkdownFiles
+    fowlerSignals:
+      - Markdown file catalog normalizes recursive paths through Node path before DB-backed component validation
+    architectureGuard: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/policy-validation-files.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+  - name: listMarkdownFiles
+    path: scripts/policy-validation-files.cjs
+    dddOwner: RepositoryPolicyValidationMarkdownFileCatalog
+    cqRails:
+      - ListPolicyValidationMarkdownFiles
+      - DetectCodeSymbolDuplicates
+      - ReadComponentProfile
+    fowlerSignals:
+      - duplicate recursive Markdown file walking moves into one policy-validation file catalog component
+    architectureGuard: node --test scripts/policy-validation-files.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/policy-validation-files.test.cjs
+      - scripts/planning-db-migrate.test.cjs
+  - name: stripInlineCodeFragments
+    path: scripts/policy-validation-text.cjs
+    dddOwner: RepositoryPolicyValidationTextNormalizer
+    cqRails:
+      - NormalizePolicyValidationMarkdownText
+      - DetectCodeSymbolDuplicates
+      - ReadComponentProfile
+    fowlerSignals:
+      - duplicate inline-code stripping moves into one policy-validation text normalizer component
+    architectureGuard: node --test scripts/policy-validation-text.test.cjs scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/policy-validation-text.test.cjs
+      - scripts/planning-db-migrate.test.cjs
   - name: authenticateHttpBearerRequest
     path: apps/api/src/entrypoints/http/httpBearerAuthentication.ts
     dddOwner: HttpAuthenticationAdapter
