@@ -1663,6 +1663,47 @@ test('tracked migrations keep surface-named rails out of the generic gap bucket'
   assert.doesNotMatch(exclusiveGapMigration.sql, /surfacePrefixRule', '.*workflow/);
 });
 
+test('tracked migrations keep rail vocabulary rollups materialized for dashboard reads', () => {
+  const migrations = readMigrationFiles();
+  const vocabularyPerformanceMigration = migrations.find(
+    (migration) => migration.fileName === '271_materialize_rail_vocabulary_semantic_rollup.sql'
+  );
+
+  assert.ok(vocabularyPerformanceMigration);
+  assert.match(
+    vocabularyPerformanceMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_vocabulary_query/
+  );
+  assert.match(vocabularyPerformanceMigration.sql, /semantic_rollup as materialized/i);
+  assert.match(
+    vocabularyPerformanceMigration.sql,
+    /from planning_query_store\.command_query_rail_query rail/
+  );
+  assert.match(
+    vocabularyPerformanceMigration.sql,
+    /surfacePrefixRule', 'api\|ui\|cli\|worker\|adapter'/
+  );
+});
+
+test('tracked migrations keep command query rail reference rollups materialized', () => {
+  const migrations = readMigrationFiles();
+  const railProjectionPerformanceMigration = migrations.find(
+    (migration) => migration.fileName === '272_materialize_command_query_rail_reference_rollup.sql'
+  );
+
+  assert.ok(railProjectionPerformanceMigration);
+  assert.match(
+    railProjectionPerformanceMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(railProjectionPerformanceMigration.sql, /reference_rollup as materialized/i);
+  assert.match(
+    railProjectionPerformanceMigration.sql,
+    /from planning_query_store\.command_query_rail_manifest_query rail/
+  );
+  assert.match(railProjectionPerformanceMigration.sql, /has_active_local_non_gap/);
+});
+
 test('tracked migrations retire the orphan canvas contextual graph surface rail duplicate', () => {
   const migrations = readMigrationFiles();
   const orphanRailMigration = migrations.find(
@@ -7134,7 +7175,7 @@ test('latest command/query rail projection prefers local implemented refs over i
   assert.ok(latestRailProjectionMigration);
   assert.equal(
     latestRailProjectionMigration.fileName,
-    '235_canvas_panel_reassertion_neutralization_and_rail_precedence.sql'
+    '272_materialize_command_query_rail_reference_rollup.sql'
   );
   assert.match(
     latestRailProjectionMigration.sql,
