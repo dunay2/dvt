@@ -5872,6 +5872,29 @@ test('tracked migrations register DVT destination target authoring feature mecha
   assert.doesNotMatch(destinationTargetMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register DVT authoring field section components', () => {
+  const migrations = readMigrationFiles();
+  const authoringSectionMigration = migrations.find(
+    (migration) => migration.fileName === '286_register_dvt_authoring_field_sections.sql'
+  );
+
+  assert.ok(authoringSectionMigration);
+  assert.match(authoringSectionMigration.sql, /DVT-CANVAS-P0-PRO-FLOW-1/);
+  assert.match(authoringSectionMigration.sql, /frontend_component_local_components/);
+  assert.match(authoringSectionMigration.sql, /frontend_component_local_files/);
+  assert.match(authoringSectionMigration.sql, /frontend_component_local_cq_rails/);
+  assert.match(authoringSectionMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(authoringSectionMigration.sql, /DvtSourceAuthoringSection/);
+  assert.match(authoringSectionMigration.sql, /DvtSqlTransformAuthoringSection/);
+  assert.match(authoringSectionMigration.sql, /DvtSinkAuthoringSection/);
+  assert.match(authoringSectionMigration.sql, /ConfigureCanvasDvtNode/);
+  assert.match(authoringSectionMigration.sql, /ConfigureDvtDestinationTarget/);
+  assert.match(authoringSectionMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(authoringSectionMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(authoringSectionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(authoringSectionMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register DBT node card metadata metrics feature mechanization', () => {
   const migrations = readMigrationFiles();
   const dbtCardMetricsMigration = migrations.find(
