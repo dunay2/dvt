@@ -112,7 +112,7 @@ describe('DvtAuthoringFields', () => {
     ) as HTMLInputElement | null;
 
     expect(container.textContent).toContain('DVT source');
-    expect(container.textContent).toContain('erp.orders');
+    expect(container.textContent).toContain('analytics.erp.orders');
     expect(schemaInput?.value).toBe('erp');
     expect(tableInput?.value).toBe('orders');
     expect(aliasInput?.value).toBe('warehouse_prod_analytics_erp');
@@ -152,32 +152,46 @@ describe('DvtAuthoringFields', () => {
     renderFields(
       buildDvtNode('dvt:sink', {
         config: {
+          database: 'analytics_prod',
           schema: 'marts',
           table: 'orders_daily',
           materialization: 'view',
           writeMode: 'append',
+          partitionStrategy: 'daily_by_order_date',
         },
       })
     );
 
+    const databaseInput = container.querySelector(
+      'input[name="dvt-sink-database"]'
+    ) as HTMLInputElement | null;
     const materializationSelect = container.querySelector(
       'select[name="dvt-sink-materialization"]'
     ) as HTMLSelectElement | null;
     const writeModeSelect = container.querySelector(
       'select[name="dvt-sink-write-mode"]'
     ) as HTMLSelectElement | null;
+    const partitionStrategyInput = container.querySelector(
+      'input[name="dvt-sink-partition-strategy"]'
+    ) as HTMLInputElement | null;
 
     expect(container.textContent).toContain('DVT sink');
-    expect(container.textContent).toContain('marts.orders_daily');
+    expect(container.textContent).toContain('analytics_prod.marts.orders_daily');
+    expect(databaseInput?.value).toBe('analytics_prod');
     expect(materializationSelect?.value).toBe('view');
     expect(writeModeSelect?.value).toBe('append');
+    expect(partitionStrategyInput?.value).toBe('daily_by_order_date');
 
     act(() => {
+      fireEvent.input(databaseInput!, { target: { value: 'analytics_stage' } });
       fireEvent.change(materializationSelect!, { target: { value: 'table' } });
       fireEvent.change(writeModeSelect!, { target: { value: 'replace' } });
+      fireEvent.input(partitionStrategyInput!, { target: { value: 'none' } });
     });
 
+    expect(draftJson()).toContain('"database":"analytics_stage"');
     expect(draftJson()).toContain('"materialization":"table"');
     expect(draftJson()).toContain('"writeMode":"replace"');
+    expect(draftJson()).toContain('"partitionStrategy":"none"');
   });
 });

@@ -67,6 +67,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: [],
       dvt: {
         kind: 'source',
+        database: '',
         schema: 'public',
         table: 'orders_source',
         alias: 'orders_source',
@@ -158,6 +159,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['authoring'],
       dvt: {
         kind: 'source',
+        database: '',
         schema: 'analytics',
         table: 'orders',
         alias: 'raw_orders',
@@ -172,6 +174,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['source', 'erp'],
       dvt: {
         kind: 'source',
+        database: 'analytics',
         schema: 'erp',
         table: 'orders',
         alias: 'warehouse_prod_analytics_erp',
@@ -187,6 +190,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['source', 'finance'],
       dvt: {
         kind: 'source' as const,
+        database: 'warehouse_prod',
         schema: 'warehouse_raw',
         table: 'orders_final',
         alias: 'orders_src',
@@ -201,6 +205,7 @@ describe('canvasInspectorAuthoringModel', () => {
       metadata: {
         ...node.metadata,
         config: {
+          database: 'warehouse_prod',
           schema: 'warehouse_raw',
           table: 'orders_final',
           alias: 'orders_src',
@@ -221,10 +226,12 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['published'],
       dvt: {
         kind: 'sink' as const,
+        database: 'analytics_prod',
         schema: 'marts',
         table: 'fct_orders',
         materialization: 'table',
         writeMode: 'replace',
+        partitionStrategy: 'daily_by_order_date',
       },
     };
 
@@ -236,10 +243,12 @@ describe('canvasInspectorAuthoringModel', () => {
       metadata: {
         config: {
           owner: 'finance',
+          database: 'analytics_prod',
           schema: 'marts',
           table: 'fct_orders',
           materialization: 'table',
           writeMode: 'replace',
+          partitionStrategy: 'daily_by_order_date',
         },
       },
     });

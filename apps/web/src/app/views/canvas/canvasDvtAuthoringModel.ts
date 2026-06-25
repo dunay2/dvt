@@ -8,6 +8,7 @@ import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthori
 
 export type DvtSourceAuthoringMetadata = Readonly<{
   kind: 'source';
+  database: string;
   schema: string;
   table: string;
   alias: string;
@@ -20,10 +21,12 @@ export type DvtSqlTransformAuthoringMetadata = Readonly<{
 
 export type DvtSinkAuthoringMetadata = Readonly<{
   kind: 'sink';
+  database: string;
   schema: string;
   table: string;
   materialization: string;
   writeMode: string;
+  partitionStrategy: string;
 }>;
 
 export type DvtNodeAuthoringMetadata =
@@ -84,6 +87,7 @@ function normalizeEnumValue(
 
 function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
   const config = readNodeMetadataRecord(node, 'config');
+  const importedDatabase = readString(node.metadata?.database);
   const importedSourceName = readString(node.metadata?.sourceName);
   const importedSchema = readString(node.metadata?.schema);
   const importedTableName = readString(node.metadata?.tableName);
@@ -94,6 +98,7 @@ function createSourceMetadata(node: CanonicalNode): DvtSourceAuthoringMetadata {
 
   return {
     kind: 'source',
+    database: readString(config?.database) ?? importedDatabase ?? '',
     schema: readString(config?.schema) ?? importedSchema ?? DEFAULT_SCHEMA_NAME,
     table,
     alias: normalizeIdentifier(readString(config?.alias) ?? importedSourceName ?? table, table),
@@ -114,6 +119,7 @@ function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
 
   return {
     kind: 'sink',
+    database: readString(config?.database) ?? '',
     schema: readString(config?.schema) ?? DEFAULT_SCHEMA_NAME,
     table: normalizeIdentifier(readString(config?.table) ?? node.name, 'sink_table'),
     materialization: normalizeEnumValue(
@@ -126,6 +132,7 @@ function createSinkMetadata(node: CanonicalNode): DvtSinkAuthoringMetadata {
       DEFAULT_WRITE_MODE,
       VALID_WRITE_MODES
     ),
+    partitionStrategy: readString(config?.partitionStrategy) ?? '',
   };
 }
 
@@ -188,6 +195,11 @@ function readExistingConfig(node: CanonicalNode): Record<string, unknown> {
   return readNodeMetadataRecord(node, 'config') ?? {};
 }
 
+function optionalConfigString(key: string, value: string): Record<string, string> {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? { [key]: trimmed } : {};
+}
+
 function withConfig(
   node: CanonicalNode,
   config: Record<string, unknown>,
@@ -213,6 +225,7 @@ export function applyDvtNodeAuthoringMetadata(
     const table = normalizeIdentifier(metadata.table, 'source_table');
     return withConfig(node, {
       ...existingConfig,
+      ...optionalConfigString('database', metadata.database),
       schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
       table,
       alias: normalizeIdentifier(metadata.alias, table),
@@ -228,6 +241,7 @@ export function applyDvtNodeAuthoringMetadata(
 
   return withConfig(node, {
     ...existingConfig,
+    ...optionalConfigString('database', metadata.database),
     schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
     table: normalizeIdentifier(metadata.table, 'sink_table'),
     materialization: normalizeEnumValue(
@@ -236,5 +250,6 @@ export function applyDvtNodeAuthoringMetadata(
       VALID_MATERIALIZATIONS
     ),
     writeMode: normalizeEnumValue(metadata.writeMode, DEFAULT_WRITE_MODE, VALID_WRITE_MODES),
+    ...optionalConfigString('partitionStrategy', metadata.partitionStrategy),
   });
 }

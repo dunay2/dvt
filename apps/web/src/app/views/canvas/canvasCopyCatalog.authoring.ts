@@ -237,6 +237,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSinkTitle',
     fallback: 'DVT sink',
   },
+  inspectorDvtDatabaseLabel: {
+    key: 'canvas.inspector.authoring.dvtDatabaseLabel',
+    fallback: 'Database',
+  },
   inspectorDvtSchemaLabel: {
     key: 'canvas.inspector.authoring.dvtSchemaLabel',
     fallback: 'Schema',
@@ -280,6 +284,10 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtDestinationTargetLabel: {
     key: 'canvas.inspector.authoring.dvtDestinationTargetLabel',
     fallback: 'Destination target',
+  },
+  inspectorDvtPartitionStrategyLabel: {
+    key: 'canvas.inspector.authoring.dvtPartitionStrategyLabel',
+    fallback: 'Partition strategy',
   },
   inspectorDvtMaterializationTableLabel: {
     key: 'canvas.inspector.authoring.dvtMaterializationTableLabel',

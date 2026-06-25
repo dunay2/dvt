@@ -21,6 +21,11 @@ type DvtAuthoringFieldsProps = Readonly<{
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
+function formatQualifiedTarget(parts: readonly string[]): string {
+  const normalizedParts = parts.map((part) => part.trim()).filter((part) => part.length > 0);
+  return normalizedParts.length > 0 ? normalizedParts.join('.') : '-';
+}
+
 export function DvtAuthoringFields({
   node,
   disabled,
@@ -43,7 +48,11 @@ export function DvtAuthoringFields({
   ] as const;
 
   if (draft.dvt.kind === 'source') {
-    const sourceTarget = `${draft.dvt.schema || '-'}.${draft.dvt.table || '-'}`;
+    const sourceTarget = formatQualifiedTarget([
+      draft.dvt.database,
+      draft.dvt.schema,
+      draft.dvt.table,
+    ]);
     return (
       <div className={graphVisualClasses.inspectorDbtSection}>
         <h3 className={graphVisualClasses.contextPanelSectionTitle}>
@@ -66,6 +75,27 @@ export function DvtAuthoringFields({
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dvt-source-database-${node.id}`}>
+              {canvasViewCopy.inspectorDvtDatabaseLabel}
+            </Label>
+            <Input
+              id={`inspector-dvt-source-database-${node.id}`}
+              name="dvt-source-database"
+              value={draft.dvt.database}
+              disabled={disabled}
+              onChange={(event) =>
+                onChange((currentDraft) =>
+                  currentDraft.dvt?.kind === 'source'
+                    ? {
+                        ...currentDraft,
+                        dvt: { ...currentDraft.dvt, database: event.target.value },
+                      }
+                    : currentDraft
+                )
+              }
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor={`inspector-dvt-source-schema-${node.id}`}>
               {canvasViewCopy.inspectorDvtSchemaLabel}
@@ -209,7 +239,11 @@ export function DvtAuthoringFields({
     );
   }
 
-  const destinationTarget = `${draft.dvt.schema || '-'}.${draft.dvt.table || '-'}`;
+  const destinationTarget = formatQualifiedTarget([
+    draft.dvt.database,
+    draft.dvt.schema,
+    draft.dvt.table,
+  ]);
   return (
     <div className={graphVisualClasses.inspectorDbtSection}>
       <h3 className={graphVisualClasses.contextPanelSectionTitle}>
@@ -229,9 +263,35 @@ export function DvtAuthoringFields({
           <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">
             {draft.dvt.writeMode}
           </span>
+          {draft.dvt.partitionStrategy.trim().length > 0 ? (
+            <span className="rounded border border-[color:var(--border-default)] px-2 py-1 text-(--text-muted)">
+              {draft.dvt.partitionStrategy}
+            </span>
+          ) : null}
         </div>
       </div>
       <div className="grid grid-cols-1 gap-3">
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-dvt-sink-database-${node.id}`}>
+            {canvasViewCopy.inspectorDvtDatabaseLabel}
+          </Label>
+          <Input
+            id={`inspector-dvt-sink-database-${node.id}`}
+            name="dvt-sink-database"
+            value={draft.dvt.database}
+            disabled={disabled}
+            onChange={(event) =>
+              onChange((currentDraft) =>
+                currentDraft.dvt?.kind === 'sink'
+                  ? {
+                      ...currentDraft,
+                      dvt: { ...currentDraft.dvt, database: event.target.value },
+                    }
+                  : currentDraft
+              )
+            }
+          />
+        </div>
         <div className="space-y-2">
           <Label htmlFor={`inspector-dvt-sink-schema-${node.id}`}>
             {canvasViewCopy.inspectorDvtSchemaLabel}
@@ -353,6 +413,27 @@ export function DvtAuthoringFields({
               {formatCanvasInspectorNodeDraftError(errors.dvt.writeMode, canvasViewCopy)}
             </p>
           ) : null}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`inspector-dvt-sink-partition-strategy-${node.id}`}>
+            {canvasViewCopy.inspectorDvtPartitionStrategyLabel}
+          </Label>
+          <Input
+            id={`inspector-dvt-sink-partition-strategy-${node.id}`}
+            name="dvt-sink-partition-strategy"
+            value={draft.dvt.partitionStrategy}
+            disabled={disabled}
+            onChange={(event) =>
+              onChange((currentDraft) =>
+                currentDraft.dvt?.kind === 'sink'
+                  ? {
+                      ...currentDraft,
+                      dvt: { ...currentDraft.dvt, partitionStrategy: event.target.value },
+                    }
+                  : currentDraft
+              )
+            }
+          />
         </div>
       </div>
     </div>
