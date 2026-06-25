@@ -196,6 +196,20 @@ describe('CanvasViewport', () => {
       );
     });
 
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
+
+    await act(async () => {
+      vi.advanceTimersByTime(650);
+      document.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          bubbles: true,
+          button: 0,
+          clientX: 720,
+          clientY: 220,
+        })
+      );
+    });
+
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
     vi.useRealTimers();
   });
