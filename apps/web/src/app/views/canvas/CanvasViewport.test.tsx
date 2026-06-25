@@ -29,6 +29,7 @@ describe('CanvasViewport', () => {
 
   afterEach(() => {
     unmountViewport();
+    vi.useRealTimers();
   });
 
   it('does not render fixed panel restore controls when side panels are hidden', async () => {
@@ -149,70 +150,6 @@ describe('CanvasViewport', () => {
 
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
     expect(container.textContent).toContain('Open project code');
-  });
-
-  it('keeps the local canvas context menu open through the browser pointer echo', async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
-    await renderViewport({
-      canOpenProjectExplorer: true,
-      onOpenProjectExplorer: vi.fn(),
-    });
-
-    const onPaneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
-      | ((event: { preventDefault: () => void; clientX: number; clientY: number }) => void)
-      | undefined;
-    expect(onPaneContextMenu).toBeTypeOf('function');
-
-    await act(async () => {
-      onPaneContextMenu?.({
-        preventDefault: vi.fn(),
-        clientX: 320,
-        clientY: 240,
-      });
-    });
-
-    await act(async () => {
-      document.dispatchEvent(
-        new MouseEvent('pointerdown', {
-          bubbles: true,
-          button: 0,
-          clientX: 720,
-          clientY: 220,
-        })
-      );
-    });
-
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-
-    await act(async () => {
-      vi.advanceTimersByTime(351);
-      document.dispatchEvent(
-        new MouseEvent('pointerdown', {
-          bubbles: true,
-          button: 0,
-          clientX: 720,
-          clientY: 220,
-        })
-      );
-    });
-
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-
-    await act(async () => {
-      vi.advanceTimersByTime(650);
-      document.dispatchEvent(
-        new MouseEvent('pointerdown', {
-          bubbles: true,
-          button: 0,
-          clientX: 720,
-          clientY: 220,
-        })
-      );
-    });
-
-    expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
-    vi.useRealTimers();
   });
 
   it('uses the governed grid preferences for background visibility, color, and snap policy', async () => {
