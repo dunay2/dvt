@@ -118,15 +118,7 @@ export function useCanvasContextMenuPresenter({
     []
   );
 
-  const closeContextMenu = useCallback((options?: CloseCanvasContextMenuOptions) => {
-    if (
-      options?.force !== true &&
-      lastContextMenuOpenedTargetKindRef.current === 'pane' &&
-      Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS
-    ) {
-      return;
-    }
-
+  const closeContextMenu = useCallback((_options?: CloseCanvasContextMenuOptions) => {
     pendingPaneClickEchoRef.current = false;
     lastPaneContextMenuScreenPositionRef.current = null;
     setModel(null);
@@ -182,12 +174,14 @@ export function useCanvasContextMenuPresenter({
         lastPaneContextMenuScreenPositionRef.current != null
       ) {
         const lastPanePosition = lastPaneContextMenuScreenPositionRef.current;
+        const isPendingBrowserClickEcho =
+          Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS;
         const isDelayedEchoAtContextPoint =
           Math.abs(event.clientX - lastPanePosition.x) <=
             CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX &&
           Math.abs(event.clientY - lastPanePosition.y) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX;
 
-        if (isDelayedEchoAtContextPoint) {
+        if (isPendingBrowserClickEcho || isDelayedEchoAtContextPoint) {
           pendingPaneClickEchoRef.current = false;
           return;
         }
