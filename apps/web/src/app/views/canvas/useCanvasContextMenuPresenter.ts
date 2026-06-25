@@ -171,6 +171,16 @@ export function useCanvasContextMenuPresenter({
       }
 
       if (
+        !(event instanceof MouseEvent) &&
+        pendingDocumentPointerEchoRef.current &&
+        lastContextMenuOpenedTargetKindRef.current === 'pane' &&
+        Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS
+      ) {
+        pendingDocumentPointerEchoRef.current = false;
+        return;
+      }
+
+      if (
         event instanceof MouseEvent &&
         pendingDocumentPointerEchoRef.current &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&

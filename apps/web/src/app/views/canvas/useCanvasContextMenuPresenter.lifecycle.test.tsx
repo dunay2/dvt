@@ -122,6 +122,18 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuVisible();
   });
 
+  it('keeps the menu open through a generic document pointer echo after a right-click', async () => {
+    vi.useFakeTimers();
+    await harness.render();
+
+    await harness.openPaneMenuAt(320, 260);
+    await act(async () => {
+      document.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    });
+
+    harness.expectMenuVisible();
+  });
+
   it('keeps the menu open when the browser pointer echo is followed by React Flow pane click echo', async () => {
     vi.useFakeTimers();
     await harness.render();
