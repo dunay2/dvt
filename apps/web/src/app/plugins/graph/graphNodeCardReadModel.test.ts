@@ -82,6 +82,35 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it('keeps DVT canonical runtime metrics on strategy-owned cards', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:sql_transform',
+        pluginId: 'dvt',
+        name: 'customer_rollup',
+        lastDuration: 75,
+        lastCost: 0.42,
+        metadata: {
+          database: 'warehouse',
+          schema: 'mart',
+          table: 'customer_rollup',
+          rowCount: 1210,
+          byteSize: 2048,
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.metrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '1.2k' },
+      { id: 'bytes', label: 'Size', value: '2 KB' },
+      { id: 'columns', label: 'Columns', value: '0' },
+      { id: 'duration', label: 'Duration', value: '1m 15s' },
+      { id: 'cost', label: 'Cost', value: '$0.42' },
+    ]);
+  });
+
   it('uses a DBT card strategy for model context instead of DVT table ownership', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
