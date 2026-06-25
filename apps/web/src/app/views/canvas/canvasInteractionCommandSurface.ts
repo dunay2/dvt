@@ -67,10 +67,6 @@ type BuildCanvasContextMenuModelArgs = Readonly<{
   authoringNodeKinds: readonly NodeKindRegistration[];
 }>;
 
-function isSourceImportCoveredNodeKind(registration: NodeKindRegistration): boolean {
-  return registration.kind === 'dbt:source';
-}
-
 function isSourceNodeKind(registration: NodeKindRegistration): boolean {
   return registration.kind.endsWith(':source');
 }
@@ -145,9 +141,7 @@ export function buildCanvasContextMenuModel({
       ...baseModel,
       flowPosition: target.flowPosition,
       createNodeActions: authoringNodeKinds
-        .filter(
-          (registration) => !(canOpenSourceImport && isSourceImportCoveredNodeKind(registration))
-        )
+        .filter((registration) => !(canOpenSourceImport && isSourceNodeKind(registration)))
         .map((registration) => ({
           action: 'create-node',
           label: formatCreateNodeActionLabel(registration, sourceImportVisible),

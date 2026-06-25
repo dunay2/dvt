@@ -75,10 +75,7 @@ describe('CanvasContextMenuView', () => {
     });
 
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-    expect(menuButtonLabels('canvas-context-menu-add-group')).toEqual([
-      'Add source',
-      'Create source node',
-    ]);
+    expect(menuButtonLabels('canvas-context-menu-add-group')).toEqual(['Add source']);
     expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual([
       'Explore project',
       'Open project code',
@@ -99,10 +96,7 @@ describe('CanvasContextMenuView', () => {
       label: 'Add source',
     });
 
-    await clickMenuItem('Create source node');
-    expect(onCreateNodeAction).toHaveBeenCalledWith(
-      expect.objectContaining({ action: 'create-node', label: 'Create source node' })
-    );
+    expect(onCreateNodeAction).not.toHaveBeenCalled();
   });
 
   it('routes edge actions through the edge callback only', async () => {
