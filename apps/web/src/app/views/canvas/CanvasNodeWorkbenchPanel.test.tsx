@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
 import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
 
 const SOURCE_NODE: CanonicalNode = {
@@ -108,6 +109,12 @@ describe('CanvasNodeWorkbenchPanel', () => {
     });
     container.remove();
     vi.clearAllMocks();
+  });
+
+  it('composes the shared node properties presentation component instead of duplicating it', () => {
+    expect(CanvasNodeWorkbenchPanelSource).toContain('NodePropertiesTabs');
+    expect(CanvasNodeWorkbenchPanelSource).not.toContain('function renderSectionBody');
+    expect(CanvasNodeWorkbenchPanelSource).not.toContain('PRIMARY_NODE_WORKBENCH_SECTION_IDS');
   });
 
   it('renders primary text tabs and a More menu without tab icons', () => {

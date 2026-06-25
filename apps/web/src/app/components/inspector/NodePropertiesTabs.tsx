@@ -24,14 +24,27 @@ export type NodePropertiesTabsProps = Readonly<{
   activeTab: string;
   beforePanels?: ReactNode;
   tagsEditor?: ReactNode;
+  slotPrefix?: string;
+  surface?: 'inspector' | 'workbench';
+  showSectionCountBadge?: boolean;
   onActiveTabChange: (tab: string) => void;
   onHide: () => void;
 }>;
 
-function renderSectionBody(section: NodePropertySection): JSX.Element {
+function renderSectionBody(
+  section: NodePropertySection,
+  slots: Readonly<{ code: string }>,
+  surface: NodePropertiesTabsProps['surface']
+): JSX.Element {
   if (section.code != null) {
     return (
-      <pre className={cn('max-h-72 overflow-auto p-2', graphVisualClasses.inspectorCodeBlock)}>
+      <pre
+        data-slot={slots.code}
+        className={cn(
+          surface === 'workbench' ? 'max-h-80 overflow-auto p-3' : 'max-h-72 overflow-auto p-2',
+          graphVisualClasses.inspectorCodeBlock
+        )}
+      >
         {section.code}
       </pre>
     );
@@ -43,26 +56,55 @@ function renderSectionBody(section: NodePropertySection): JSX.Element {
     );
 
     return (
-      <div className="max-h-72 overflow-auto border-y border-slate-800">
+      <div
+        className={
+          surface === 'workbench'
+            ? 'max-h-80 overflow-auto rounded border border-(--border-subtle)'
+            : 'max-h-72 overflow-auto border-y border-slate-800'
+        }
+      >
         <table className="w-full border-collapse text-left text-xs">
-          <thead className="sticky top-0 bg-slate-950 text-slate-400">
+          <thead
+            className={
+              surface === 'workbench'
+                ? 'sticky top-0 bg-(--surface-panel) text-(--text-muted)'
+                : 'sticky top-0 bg-slate-950 text-slate-400'
+            }
+          >
             <tr>
               {columnKeys.map((key) => (
                 <th
                   key={key}
                   scope="col"
-                  className="border-b border-slate-800 px-2 py-2 font-medium"
+                  className={cn(
+                    surface === 'workbench'
+                      ? 'border-b border-(--border-subtle) capitalize'
+                      : 'border-b border-slate-800',
+                    'px-2 py-2 font-medium'
+                  )}
                 >
-                  {key}
+                  {surface === 'workbench' ? key.replace(/([a-z])([A-Z])/g, '$1 $2') : key}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody
+            className={
+              surface === 'workbench'
+                ? 'divide-y divide-(--border-subtle)'
+                : 'divide-y divide-slate-800'
+            }
+          >
             {section.tableRows.map((row) => (
               <tr key={row.id}>
                 {columnKeys.map((key) => (
-                  <td key={`${row.id}:${key}`} className="px-2 py-2 align-top text-slate-200">
+                  <td
+                    key={`${row.id}:${key}`}
+                    className={cn(
+                      'px-2 py-2 align-top',
+                      surface === 'workbench' ? 'text-(--text-primary)' : 'text-slate-200'
+                    )}
+                  >
                     {row.cells[key] || (
                       <span className={graphVisualClasses.inspectorSubtle}>-</span>
                     )}
@@ -78,14 +120,27 @@ function renderSectionBody(section: NodePropertySection): JSX.Element {
 
   if (section.rows.length > 0) {
     return (
-      <div className="grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm">
+      <dl
+        className={
+          surface === 'workbench'
+            ? 'grid grid-cols-[minmax(96px,0.36fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm'
+            : 'grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm'
+        }
+      >
         {section.rows.map((row) => (
           <div key={row.label} className="contents">
-            <span className={graphVisualClasses.inspectorLabel}>{row.label}</span>
-            <span className="min-w-0 break-words">{row.value}</span>
+            <dt className={graphVisualClasses.inspectorLabel}>{row.label}</dt>
+            <dd
+              className={cn(
+                'min-w-0 break-words',
+                surface === 'workbench' && 'text-(--text-primary)'
+              )}
+            >
+              {row.value}
+            </dd>
           </div>
         ))}
-      </div>
+      </dl>
     );
   }
 
@@ -96,8 +151,11 @@ function renderSectionBody(section: NodePropertySection): JSX.Element {
   );
 }
 
-function sectionSlot(section: NodePropertySection): string {
-  return `node-inspector-${section.id}-section`;
+function sectionSlot(
+  section: NodePropertySection,
+  slots: Readonly<{ sectionPrefix: string }>
+): string {
+  return `${slots.sectionPrefix}-${section.id}-section`;
 }
 
 const PRIMARY_NODE_WORKBENCH_SECTION_IDS = new Set<NodePropertySection['id']>([
@@ -128,9 +186,32 @@ export function NodePropertiesTabs({
   activeTab,
   beforePanels,
   tagsEditor,
+  slotPrefix,
+  surface = 'inspector',
+  showSectionCountBadge = false,
   onActiveTabChange,
   onHide,
 }: NodePropertiesTabsProps): JSX.Element {
+  const slots =
+    slotPrefix == null
+      ? {
+          root: 'node-inspector-core-tabs',
+          list: 'node-inspector-core-tabs-list',
+          tabPrefix: 'node-inspector-tab',
+          moreTrigger: 'node-inspector-more-trigger',
+          moreItemPrefix: 'node-inspector-more-item',
+          sectionPrefix: 'node-inspector',
+          code: 'node-inspector-code',
+        }
+      : {
+          root: `${slotPrefix}-tabs`,
+          list: `${slotPrefix}-tabs-list`,
+          tabPrefix: `${slotPrefix}-tab`,
+          moreTrigger: `${slotPrefix}-more-trigger`,
+          moreItemPrefix: `${slotPrefix}-more-item`,
+          sectionPrefix: slotPrefix,
+          code: `${slotPrefix}-code`,
+        };
   const primarySections = model.sections.filter(isPrimarySection);
   const overflowSections = model.sections.filter((section) => !isPrimarySection(section));
   const overflowItems = [
@@ -149,20 +230,17 @@ export function NodePropertiesTabs({
 
   return (
     <Tabs
-      data-slot="node-inspector-core-tabs"
+      data-slot={slots.root}
       value={activeTab}
       onValueChange={onActiveTabChange}
       className="gap-4"
     >
-      <TabsList
-        data-slot="node-inspector-core-tabs-list"
-        className={graphVisualClasses.contextPanelFlatTabsList}
-      >
+      <TabsList data-slot={slots.list} className={graphVisualClasses.contextPanelFlatTabsList}>
         {primarySections.map((section) => (
           <TabsTrigger
             key={section.id}
             value={section.id}
-            data-slot={`node-inspector-tab-${section.id}`}
+            data-slot={`${slots.tabPrefix}-${section.id}`}
             className={graphVisualClasses.contextPanelFlatTabTrigger}
           >
             {section.label}
@@ -174,7 +252,7 @@ export function NodePropertiesTabs({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                data-slot="node-inspector-more-trigger"
+                data-slot={slots.moreTrigger}
                 className={cn(
                   graphVisualClasses.contextPanelFlatTabTrigger,
                   activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
@@ -190,7 +268,7 @@ export function NodePropertiesTabs({
               {overflowItems.map((item) => (
                 <DropdownMenuItem
                   key={item.id}
-                  data-slot={`node-inspector-more-item-${item.id}`}
+                  data-slot={`${slots.moreItemPrefix}-${item.id}`}
                   onSelect={() => onActiveTabChange(item.id)}
                 >
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -208,11 +286,17 @@ export function NodePropertiesTabs({
 
       {model.sections.map((section) => (
         <TabsContent key={section.id} value={section.id} className="m-0">
-          <section data-slot={sectionSlot(section)} className="space-y-3">
-            <h3 className={graphVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
-            {renderSectionBody(section)}
+          <section data-slot={sectionSlot(section, slots)} className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className={graphVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
+              {showSectionCountBadge ? renderTabBadge(section) : null}
+            </div>
+            {renderSectionBody(section, slots, surface)}
             {section.id === 'general' && beforePanels ? (
-              <div data-slot="node-inspector-editable-properties" className="space-y-3 pt-1">
+              <div
+                data-slot={`${slots.sectionPrefix}-editable-properties`}
+                className="space-y-3 pt-1"
+              >
                 {beforePanels}
               </div>
             ) : null}
