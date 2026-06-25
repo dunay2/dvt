@@ -246,7 +246,7 @@ values (
   'resolvecanvascontextmenu',
   'query',
   'CanvasContextMenuLayer',
-  'implemented',
+  'retired',
   jsonb_build_array(
     'apps/web/src/app/views/canvas/CanvasContextMenuLayer.tsx#CanvasContextMenuLayer',
     'apps/web/src/app/views/canvas/CanvasShell.tsx#CanvasShell',
@@ -302,7 +302,11 @@ values (
     'name', 'ResolveCanvasContextMenu',
     'type', 'query',
     'dddOwner', 'CanvasContextMenuLayer',
-    'status', 'implemented'
+    'status', 'retired',
+    'aliasOf', 'ResolveCanvasContextMenu',
+    'canonicalFeatureId', 'DVT-CANVAS-P0-PRO-FLOW-1',
+    'retirementReason',
+    'Feature mechanization row records implementation evidence for the shell layer; the active local query rail is declared once through frontend_component_local_cq_rails.'
   ),
   jsonb_build_object(
     'version', 1,
