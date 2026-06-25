@@ -7622,3 +7622,31 @@ test('tracked migrations reassert Canvas source import symbols after post-import
   assert.match(symbolRestoreMigration.sql, /readFrontendComponentProfileRows/);
   assert.match(symbolRestoreMigration.sql, /OpenCanvasSourceImportDialog/);
 });
+
+test('tracked migrations repoint stale local feature rail sources to versioned files', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepointMigration = migrations.find(
+    (migration) => migration.fileName === '266_repoint_stale_local_feature_rail_sources.sql'
+  );
+
+  assert.ok(sourceRepointMigration);
+  assert.match(
+    sourceRepointMigration.sql,
+    /256_repoint_phantom_governance_component_retirement_rail_source\.sql/
+  );
+  assert.match(
+    sourceRepointMigration.sql,
+    /246_retire_phantom_ci_governance_helper_components\.sql/
+  );
+  assert.match(
+    sourceRepointMigration.sql,
+    /264_reconcile_post_import_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(sourceRepointMigration.sql, /266_repoint_stale_local_feature_rail_sources\.sql/);
+  assert.match(sourceRepointMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(sourceRepointMigration.sql, /readFrontendComponentProfileRows/);
+  assert.doesNotMatch(
+    sourceRepointMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
