@@ -214,6 +214,45 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
+  it('does not persist an empty DVT source database override', () => {
+    const node = buildDvtNode('dvt:source', {
+      config: {
+        owner: 'finance',
+        database: 'analytics_prod',
+        schema: 'raw',
+        table: 'orders',
+        alias: 'orders',
+      },
+    });
+    const draft = {
+      name: 'Orders source',
+      description: '',
+      tags: ['authoring'],
+      dvt: {
+        kind: 'source' as const,
+        database: '   ',
+        schema: 'raw',
+        table: 'orders',
+        alias: 'orders',
+      },
+    };
+
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual({
+      ...node,
+      name: 'Orders source',
+      description: undefined,
+      tags: ['authoring'],
+      metadata: {
+        config: {
+          owner: 'finance',
+          schema: 'raw',
+          table: 'orders',
+          alias: 'orders',
+        },
+      },
+    });
+  });
+
   it('applies DVT sink metadata into metadata.config without dropping existing config', () => {
     const node = buildDvtNode('dvt:sink', {
       config: {
