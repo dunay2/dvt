@@ -7696,3 +7696,23 @@ test('tracked migrations anchor Canvas source import active rail to governed fro
     /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
   );
 });
+
+test('tracked migrations declare CI policy validation import reconcile symbol', () => {
+  const migrations = readMigrationFiles();
+  const symbolRegistrationMigration = migrations.find(
+    (migration) => migration.fileName === '268_register_ci_policy_validation_reconcile_symbol.sql'
+  );
+
+  assert.ok(symbolRegistrationMigration);
+  assert.match(
+    symbolRegistrationMigration.sql,
+    /CI-GOVERNANCE-PHANTOM-COMPONENT-RETIREMENT-20260625/
+  );
+  assert.match(
+    symbolRegistrationMigration.sql,
+    /reconcileSupersededCiPolicyValidationSplitComponents/
+  );
+  assert.match(symbolRegistrationMigration.sql, /scripts\/planning-db-import\.cjs/);
+  assert.match(symbolRegistrationMigration.sql, /scripts\/planning-db-import\.test\.cjs/);
+  assert.match(symbolRegistrationMigration.sql, /RetirePhantomGovernanceComponents/);
+});

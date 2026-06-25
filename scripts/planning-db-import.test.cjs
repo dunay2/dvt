@@ -33,6 +33,7 @@ const {
   readLocalFeatureMechanizationRails,
   readLocalPlanningTaskIds,
   reconcileDeprecatedLocalRailSources,
+  reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,
@@ -1373,6 +1374,49 @@ test('planning DB import reasserts superseded Canvas node workbench panel author
   assert.match(retirementQuery.sql, /governance_files/);
   assert.match(retirementQuery.sql, /status = 'deprecated'/);
   assert.match(retirementQuery.sql, /status = 'superseded'/);
+  assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
+});
+
+test('planning DB import keeps active CI policy validation split components when files exist', async () => {
+  const queries = [];
+
+  await reconcileSupersededCiPolicyValidationSplitComponents({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      return { rows: [{ file_count: 2 }] };
+    },
+  });
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /policy-validation-files\.cjs/);
+  assert.match(queries[0].sql, /policy-validation-text\.cjs/);
+  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
+  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
+});
+
+test('planning DB import retires phantom CI policy validation split components when files are absent', async () => {
+  const queries = [];
+
+  await reconcileSupersededCiPolicyValidationSplitComponents({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      if (queries.length === 1) {
+        return { rows: [{ file_count: 0 }] };
+      }
+      return { rows: [] };
+    },
+  });
+
+  assert.equal(queries.length, 2);
+  const retirementQuery = queries[1];
+  assert.match(retirementQuery.sql, /SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES/);
+  assert.match(retirementQuery.sql, /SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT/);
+  assert.match(retirementQuery.sql, /status = 'deprecated'/);
+  assert.match(retirementQuery.sql, /status = 'superseded'/);
+  assert.match(retirementQuery.sql, /governance_component_local_definitions/);
+  assert.match(retirementQuery.sql, /governance_component_local_ownership_patterns/);
+  assert.match(retirementQuery.sql, /scripts\/policy-validation-files\.cjs/);
+  assert.match(retirementQuery.sql, /scripts\/policy-validation-text\.cjs/);
   assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
 });
 
