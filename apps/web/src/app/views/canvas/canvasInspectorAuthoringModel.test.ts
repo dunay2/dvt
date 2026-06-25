@@ -254,6 +254,50 @@ describe('canvasInspectorAuthoringModel', () => {
     });
   });
 
+  it('clears optional DVT target metadata when the inspector draft blanks it out', () => {
+    const node = buildDvtNode('dvt:sink', {
+      config: {
+        owner: 'finance',
+        database: 'analytics_prod',
+        schema: 'marts',
+        table: 'fct_orders',
+        materialization: 'table',
+        writeMode: 'replace',
+        partitionStrategy: 'daily_by_order_date',
+      },
+    });
+    const draft = {
+      name: 'orders_sink',
+      description: '',
+      tags: ['published'],
+      dvt: {
+        kind: 'sink' as const,
+        database: '   ',
+        schema: 'marts',
+        table: 'fct_orders',
+        materialization: 'table',
+        writeMode: 'replace',
+        partitionStrategy: '   ',
+      },
+    };
+
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual({
+      ...node,
+      name: 'orders_sink',
+      description: undefined,
+      tags: ['published'],
+      metadata: {
+        config: {
+          owner: 'finance',
+          schema: 'marts',
+          table: 'fct_orders',
+          materialization: 'table',
+          writeMode: 'replace',
+        },
+      },
+    });
+  });
+
   it('clears stale compiled SQL when applying DVT SQL transform edits', () => {
     const node = buildDvtNode('dvt:sql_transform', {
       sql: 'select stale_column from old_orders',

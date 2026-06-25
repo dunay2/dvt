@@ -195,9 +195,19 @@ function readExistingConfig(node: CanonicalNode): Record<string, unknown> {
   return readNodeMetadataRecord(node, 'config') ?? {};
 }
 
-function optionalConfigString(key: string, value: string): Record<string, string> {
+function optionalConfigString(
+  config: Record<string, unknown>,
+  key: string,
+  value: string
+): Record<string, unknown> {
+  const nextConfig = { ...config };
   const trimmed = value.trim();
-  return trimmed.length > 0 ? { [key]: trimmed } : {};
+  if (trimmed.length > 0) {
+    nextConfig[key] = trimmed;
+  } else {
+    delete nextConfig[key];
+  }
+  return nextConfig;
 }
 
 function withConfig(
@@ -223,9 +233,9 @@ export function applyDvtNodeAuthoringMetadata(
 
   if (metadata.kind === 'source') {
     const table = normalizeIdentifier(metadata.table, 'source_table');
+    const sourceConfig = optionalConfigString(existingConfig, 'database', metadata.database);
     return withConfig(node, {
-      ...existingConfig,
-      ...optionalConfigString('database', metadata.database),
+      ...sourceConfig,
       schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
       table,
       alias: normalizeIdentifier(metadata.alias, table),
@@ -239,9 +249,14 @@ export function applyDvtNodeAuthoringMetadata(
     };
   }
 
+  const sinkConfig = optionalConfigString(
+    optionalConfigString(existingConfig, 'database', metadata.database),
+    'partitionStrategy',
+    metadata.partitionStrategy
+  );
+
   return withConfig(node, {
-    ...existingConfig,
-    ...optionalConfigString('database', metadata.database),
+    ...sinkConfig,
     schema: metadata.schema.trim() || DEFAULT_SCHEMA_NAME,
     table: normalizeIdentifier(metadata.table, 'sink_table'),
     materialization: normalizeEnumValue(
@@ -250,6 +265,5 @@ export function applyDvtNodeAuthoringMetadata(
       VALID_MATERIALIZATIONS
     ),
     writeMode: normalizeEnumValue(metadata.writeMode, DEFAULT_WRITE_MODE, VALID_WRITE_MODES),
-    ...optionalConfigString('partitionStrategy', metadata.partitionStrategy),
   });
 }

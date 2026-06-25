@@ -113,7 +113,7 @@ values (
     'mechanizationStatus', 'implemented',
     'noHumanDecisionsRemaining', true,
     'implementationPlan',
-    'DVT inspector authoring captures source database metadata and sink database/schema/table/write mode/partition strategy metadata in metadata.config while leaving runtime execution contract scope unchanged.',
+    'DVT inspector authoring captures source database metadata and sink database/schema/table/write mode/partition strategy metadata in metadata.config, clears optional target metadata when users blank those fields, and leaves runtime execution contract scope unchanged.',
     'componentGuides', jsonb_build_array(
       'docs/architecture/components/web/frontend-component-inventory.md',
       'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md'
@@ -121,6 +121,7 @@ values (
     'userStories', jsonb_build_array(
       'As a DVT canvas user, imported source metadata shows the full database.schema.table target when the warehouse catalog provides a database.',
       'As a DVT canvas user, sink authoring lets me record the exact database/schema/table target and partition strategy before preview/run readiness.',
+      'As a DVT canvas user, clearing optional database or partition strategy fields removes stale target metadata instead of silently restoring previous config.',
       'As a maintainer, destination target authoring remains explicit metadata capture and does not silently expand the planner contract.'
     ),
     'governingSources', jsonb_build_array(
@@ -193,7 +194,7 @@ values (
         'redTest',
         'pnpm --filter @dvt/web test:unit:run -- src/app/views/canvas/canvasInspectorAuthoringModel.test.ts',
         'expectedFailure',
-        'DVT source and sink drafts drop database and partition strategy metadata.',
+        'DVT source and sink drafts drop database and partition strategy metadata, and existing optional target metadata cannot be cleared once set.',
         'patchSurfaces', jsonb_build_array(
           'apps/web/src/app/views/canvas/canvasDvtAuthoringModel.ts',
           'apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts'
