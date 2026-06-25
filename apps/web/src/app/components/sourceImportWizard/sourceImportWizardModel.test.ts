@@ -157,6 +157,7 @@ describe('sourceImportWizardModel', () => {
           expect.objectContaining({
             canonicalName: 'RAW.ERP.ORDERS',
             displayName: 'ORDERS',
+            accessibilityLabel: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 2 columns.',
             rowCountLabel: '1,500 rows',
             columnCountLabel: '2 columns',
             columns: [
@@ -166,6 +167,7 @@ describe('sourceImportWizardModel', () => {
           }),
           expect.objectContaining({
             canonicalName: 'RAW.ERP.CUSTOMERS',
+            accessibilityLabel: 'Select source table RAW.ERP.CUSTOMERS. Rows unknown. 1 column.',
             rowCountLabel: 'Rows unknown',
             columnCountLabel: '1 column',
           }),

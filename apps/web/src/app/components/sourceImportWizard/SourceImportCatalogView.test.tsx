@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, getByRole } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -78,9 +78,13 @@ describe('SourceImportCatalogView', () => {
     expect(container.textContent).toContain('discount_code');
     expect(container.textContent).toContain('Nullable');
 
+    const tableAction = getByRole(container, 'button', {
+      name: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 2 columns.',
+    });
+
     await act(async () => {
       fireEvent.click(container.querySelector('[data-source-import-schema="ERP"]')!);
-      fireEvent.click(container.querySelector('[data-source-import-table="RAW.ERP.ORDERS"]')!);
+      fireEvent.keyDown(tableAction, { key: 'Enter' });
     });
 
     expect(onToggleSchema).toHaveBeenCalledWith('ERP');
