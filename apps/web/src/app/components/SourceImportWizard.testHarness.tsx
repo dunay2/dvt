@@ -165,6 +165,11 @@ export function createSourceImportWizardHarness() {
       button.textContent?.includes(text)
     );
 
+  const findConnectionOption = (text: string): HTMLButtonElement | undefined =>
+    Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-slot="source-import-connection-option"]')
+    ).find((button) => button.textContent?.includes(text));
+
   const findClickableDivByText = (text: string): HTMLDivElement | undefined =>
     Array.from(document.querySelectorAll<HTMLDivElement>('div.cursor-pointer')).find((node) =>
       node.textContent?.includes(text)
@@ -181,6 +186,13 @@ export function createSourceImportWizardHarness() {
     const node = requireElement(findClickableDivByText(text), `EXPECTED_CLICKABLE_DIV:${text}`);
     await act(async () => {
       node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  }
+
+  async function clickConnectionOption(text: string): Promise<void> {
+    const button = requireElement(findConnectionOption(text), `EXPECTED_CONNECTION_OPTION:${text}`);
+    await act(async () => {
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
   }
 
@@ -206,7 +218,9 @@ export function createSourceImportWizardHarness() {
     findNextButton,
     findTab,
     findButtonContaining,
+    findConnectionOption,
     clickTab,
+    clickConnectionOption,
     clickClickableDivByText,
     clickButtonContaining,
     cleanup,

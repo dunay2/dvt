@@ -5920,6 +5920,31 @@ test('tracked migrations register DVT transform column selection', () => {
   assert.doesNotMatch(transformColumnMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas source import live proof feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportLiveProofMigration = migrations.find(
+    (migration) => migration.fileName === '290_register_canvas_source_import_live_proof.sql'
+  );
+
+  assert.ok(sourceImportLiveProofMigration);
+  assert.match(sourceImportLiveProofMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(sourceImportLiveProofMigration.sql, /AttachWarehouseSourceFromCanvasContext/);
+  assert.match(sourceImportLiveProofMigration.sql, /CanvasSourceImportDialog/);
+  assert.match(sourceImportLiveProofMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(sourceImportLiveProofMigration.sql, /run-canvas-source-import-live-proof\.cjs/);
+  assert.match(sourceImportLiveProofMigration.sql, /visitCleanDbtCanvas/);
+  assert.match(sourceImportLiveProofMigration.sql, /waitForLiveDraftSaved/);
+  assert.match(sourceImportLiveProofMigration.sql, /CanvasSourceImportLiveProofRunner/);
+  assert.match(sourceImportLiveProofMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(
+    sourceImportLiveProofMigration.sql,
+    /pnpm docs:feature-mechanization:implementation/
+  );
+  assert.match(sourceImportLiveProofMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(sourceImportLiveProofMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(sourceImportLiveProofMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register DBT node card metadata metrics feature mechanization', () => {
   const migrations = readMigrationFiles();
   const dbtCardMetricsMigration = migrations.find(

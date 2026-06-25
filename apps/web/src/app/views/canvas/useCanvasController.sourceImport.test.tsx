@@ -7,6 +7,7 @@ import {
   clearHarnessRemoteDraftRecord,
   createHarnessWithDraft,
   setHarnessRemoteDraftRecord,
+  waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
 import { setupCanvasControllerHarness } from './useCanvasController.test.harness';
 
@@ -34,6 +35,7 @@ describe('useCanvasController source import contract', () => {
     const storeState = harness.state.store as Record<string, unknown>;
     storeState.inspectorPanelVisible = false;
     await harness.renderProbe();
+    const saveGraphDraft = harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft;
 
     await act(async () => {
       harness.getLatestResult()?.handleSourceImportComplete({
@@ -65,6 +67,11 @@ describe('useCanvasController source import contract', () => {
       'src_erp_orders',
       'src_erp_customers',
     ]);
+    expect(saveGraphDraft).not.toHaveBeenCalled();
+
+    await waitForAutosaveDebounce();
+
+    expect(saveGraphDraft).not.toHaveBeenCalled();
 
     await act(async () => {
       harness.getLatestResult()?.handleImportedNodeFocusComplete();
@@ -76,6 +83,7 @@ describe('useCanvasController source import contract', () => {
   it('persists imported source nodes near the canvas context-menu anchor', async () => {
     await harness.renderProbe();
     harness.state.store.setCanvasNodePositions.mockClear();
+    const saveGraphDraft = harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft;
 
     await act(async () => {
       const complete = harness.getLatestResult()?.handleSourceImportComplete as
@@ -112,6 +120,11 @@ describe('useCanvasController source import contract', () => {
         src_erp_customers: { x: 660, y: 260 },
       })
     );
+    expect(saveGraphDraft).not.toHaveBeenCalled();
+
+    await waitForAutosaveDebounce();
+
+    expect(saveGraphDraft).not.toHaveBeenCalled();
   });
 
   it('ignores source import completion once the canvas is blocked by missing_remote', async () => {
