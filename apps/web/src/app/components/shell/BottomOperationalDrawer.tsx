@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Activity, X } from 'lucide-react';
 
 import { useAppDataSourceMode } from '../../services/AppServicesContext';
@@ -7,10 +7,7 @@ import { useConsoleLogStream } from '../console/useConsoleLogStream';
 import { buildBottomOperationalDrawerLogModel } from './bottomOperationalDrawerLogModel';
 import { bottomOperationalDrawerClasses } from './chrome';
 import { resolveShellTopBarCopy } from './copy';
-import {
-  useOperationalDrawerContributionStore,
-  type OperationalDrawerTabId,
-} from './operationalDrawerContributionStore';
+import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
 import {
   BottomOperationalDrawerBody,
   BottomOperationalDrawerTabs,
@@ -73,9 +70,12 @@ export function BottomOperationalDrawer() {
   const copy = resolveShellTopBarCopy();
   const hideBottomDrawer = useUiLayoutStore((state) => state.hideBottomDrawer);
   const contribution = useOperationalDrawerContributionStore((state) => state.contribution);
+  const activeOperationalTab = useOperationalDrawerContributionStore((state) => state.activeTab);
+  const setActiveOperationalTab = useOperationalDrawerContributionStore(
+    (state) => state.selectOperationalDrawerTab
+  );
   const dataSourceMode = useAppDataSourceMode();
   const { lines, isLoading, runId } = useConsoleLogStream();
-  const [activeOperationalTab, setActiveOperationalTab] = useState<OperationalDrawerTabId>('log');
   const model = buildBottomOperationalDrawerLogModel({
     title: copy.operationalDrawer,
     dataSourceMode,

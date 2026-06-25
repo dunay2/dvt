@@ -38,15 +38,19 @@ export type OperationalDrawerContribution = Readonly<{
 
 type OperationalDrawerContributionState = {
   contribution: OperationalDrawerContribution | null;
+  activeTab: OperationalDrawerTabId;
   registerOperationalDrawerContribution: (contribution: OperationalDrawerContribution) => void;
   clearOperationalDrawerContribution: (contribution: OperationalDrawerContribution) => void;
+  selectOperationalDrawerTab: (tab: OperationalDrawerTabId) => void;
 };
 
 export const useOperationalDrawerContributionStore = create<OperationalDrawerContributionState>(
   (set) => ({
     contribution: null,
+    activeTab: 'log',
     registerOperationalDrawerContribution: (contribution) => set({ contribution }),
     clearOperationalDrawerContribution: (contribution) =>
       set((state) => (state.contribution === contribution ? { contribution: null } : state)),
+    selectOperationalDrawerTab: (tab) => set({ activeTab: tab }),
   })
 );
