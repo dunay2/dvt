@@ -4,7 +4,7 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
-import { CanvasContextMenuView } from './CanvasContextMenuView';
+import { CanvasContextMenuLayer } from './CanvasContextMenuLayer';
 import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
@@ -126,13 +126,7 @@ export default function CanvasShell({
         onOpenCanvasSettings={() => setCanvasSettingsOpen(true)}
         contextMenuPresenter={contextMenuPresenter}
       />
-      <CanvasContextMenuView
-        model={contextMenuPresenter.model}
-        menuRef={contextMenuPresenter.menuRef}
-        onCanvasAction={contextMenuPresenter.handleCanvasAction}
-        onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
-        onEdgeAction={contextMenuPresenter.handleEdgeAction}
-      />
+      <CanvasContextMenuLayer presenter={contextMenuPresenter} />
 
       <CanvasSourceImportDialogHost
         open={sourceImportDialog.open}

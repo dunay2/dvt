@@ -43,8 +43,13 @@ describe('CanvasShell context menu integration', () => {
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
   }
 
+  function expectMenuLayerVisible(): void {
+    expect(container.querySelector('[data-slot="canvas-context-menu-layer"]')).not.toBeNull();
+  }
+
   function expectMenuClosed(): void {
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
+    expect(container.querySelector('[data-slot="canvas-context-menu-layer"]')).toBeNull();
   }
 
   it('keeps the shell-owned canvas menu open through the browser pointer echo', async () => {
@@ -71,6 +76,7 @@ describe('CanvasShell context menu integration', () => {
     });
 
     expectMenuVisible();
+    expectMenuLayerVisible();
 
     vi.advanceTimersByTime(1001);
     await act(async () => {
