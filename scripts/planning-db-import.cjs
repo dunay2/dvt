@@ -2856,10 +2856,17 @@ async function reconcileDeprecatedLocalRailSources(client) {
     with deprecated_local_rails as (
       select
         rail.rail_id,
-        rail.raw_rail->>'currentImplementationSourcePath' as current_source_path
-      from ${schemaName}.feature_mechanization_local_rails rail
-      where nullif(rail.raw_rail->>'currentImplementationSourcePath', '') is not null
-        and exists (
+        coalesce(
+          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
+          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
+        ) as current_source_path,
+        coalesce(
+          nullif(rail.raw_rail->>'status', ''),
+          nullif(rail.raw_manifest->>'status', ''),
+          rail.rail_status
+        ) as declared_status,
+        source_file.path is null as source_path_missing,
+        exists (
           select 1
           from jsonb_array_elements_text(
             coalesce(
@@ -2869,10 +2876,30 @@ async function reconcileDeprecatedLocalRailSources(client) {
             )
           ) deprecated_source(path)
           where deprecated_source.path = rail.source_path
+        ) as source_path_deprecated
+      from ${schemaName}.feature_mechanization_local_rails rail
+      left join ${schemaName}.governance_files source_file
+        on source_file.path = rail.source_path
+      join ${schemaName}.governance_files current_file
+        on current_file.path = coalesce(
+          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
+          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
         )
+      where coalesce(
+          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
+          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
+        ) is not null
     )
     update ${schemaName}.feature_mechanization_local_rails rail
     set
+      mechanization_status = case
+        when deprecated_local_rails.declared_status = 'retired' then 'closed'
+        else rail.mechanization_status
+      end,
+      rail_status = case
+        when deprecated_local_rails.declared_status = 'retired' then 'retired'
+        else rail.rail_status
+      end,
       source_path = deprecated_local_rails.current_source_path,
       source_content_sha256 = coalesce(
         (
@@ -2882,8 +2909,13 @@ async function reconcileDeprecatedLocalRailSources(client) {
         ),
         rail.source_content_sha256
       ),
-      raw_manifest = coalesce(rail.raw_manifest, '{}'::jsonb)
-        || jsonb_build_object(
+      raw_manifest = (
+        case
+          when deprecated_local_rails.declared_status = 'retired' then
+            coalesce(rail.raw_manifest, '{}'::jsonb) - 'featureId' - 'symbols'
+          else coalesce(rail.raw_manifest, '{}'::jsonb)
+        end
+      ) || jsonb_build_object(
           'currentImplementationSourcePath',
           deprecated_local_rails.current_source_path,
           'sourcePathReconciledBy',
@@ -2894,6 +2926,10 @@ async function reconcileDeprecatedLocalRailSources(client) {
     from deprecated_local_rails
     where rail.rail_id = deprecated_local_rails.rail_id
       and rail.source_path <> deprecated_local_rails.current_source_path
+      and (
+        deprecated_local_rails.source_path_deprecated
+        or deprecated_local_rails.source_path_missing
+      )
   `);
 }
 

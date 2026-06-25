@@ -1325,6 +1325,13 @@ test('planning DB import reconciles deprecated DB-local rail source paths after 
   assert.match(queries[0].sql, /feature_mechanization_local_rails/);
   assert.match(queries[0].sql, /deprecatedSourcePaths/);
   assert.match(queries[0].sql, /currentImplementationSourcePath/);
+  assert.match(queries[0].sql, /source_path_missing/);
+  assert.match(queries[0].sql, /source_path_deprecated/);
+  assert.match(queries[0].sql, /governance_files source_file/);
+  assert.match(queries[0].sql, /governance_files current_file/);
+  assert.match(queries[0].sql, /mechanization_status = case/);
+  assert.match(queries[0].sql, /rail_status = case/);
+  assert.match(queries[0].sql, /- 'featureId' - 'symbols'/);
   assert.match(queries[0].sql, /planning-db-import-reconcile-deprecated-local-rail-sources/);
   assert.match(queries[0].sql, /governance_files/);
   assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
