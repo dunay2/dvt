@@ -5827,6 +5827,26 @@ test('tracked migrations provide final DB-first authority for Canvas node workbe
   assert.doesNotMatch(finalPanelAuthorityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register DVT node card runtime metrics feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const runtimeMetricsMigration = migrations.find(
+    (migration) => migration.fileName === '282_register_dvt_node_card_runtime_metrics_feature.sql'
+  );
+
+  assert.ok(runtimeMetricsMigration);
+  assert.match(runtimeMetricsMigration.sql, /DVT-CANVAS-P0-PRO-FLOW-1/);
+  assert.match(runtimeMetricsMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(runtimeMetricsMigration.sql, /GraphNodeCardStrategy/);
+  assert.match(runtimeMetricsMigration.sql, /dvtGraphNodeCardStrategy\.ts/);
+  assert.match(runtimeMetricsMigration.sql, /resolveCanonicalDurationMs/);
+  assert.match(runtimeMetricsMigration.sql, /pushCanonicalCostMetric/);
+  assert.match(runtimeMetricsMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(runtimeMetricsMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(runtimeMetricsMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(runtimeMetricsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(runtimeMetricsMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reseed Canvas node workbench feature manifests after import refresh', () => {
   const migrations = readMigrationFiles();
   const reseedMigration = migrations.find(
