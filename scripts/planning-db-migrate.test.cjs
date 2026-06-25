@@ -8333,3 +8333,79 @@ test('tracked migrations declare component rule evaluation projection refresh me
     /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
   );
 });
+
+test('tracked migrations route Fowler reference reads through ownership projection', () => {
+  const migrations = readMigrationFiles();
+  const fowlerReferenceProjectionMigration = migrations.find(
+    (migration) => migration.fileName === '279_fowler_reference_component_profile_projection.sql'
+  );
+
+  assert.ok(fowlerReferenceProjectionMigration);
+  assert.match(
+    fowlerReferenceProjectionMigration.sql,
+    /create or replace view planning_query_store\.fowler_analysis_reference_query/i
+  );
+  assert.match(
+    fowlerReferenceProjectionMigration.sql,
+    /planning_query_store\.component_engineering_file_ownership_projection ownership/i
+  );
+  assert.doesNotMatch(
+    fowlerReferenceProjectionMigration.sql,
+    /planning_query_store\.component_engineering_file_ownership_query ownership/i
+  );
+});
+
+test('tracked migrations materialize component tree for profile reads', () => {
+  const migrations = readMigrationFiles();
+  const componentTreeProjectionMigration = migrations.find(
+    (migration) => migration.fileName === '280_component_tree_priority_projection.sql'
+  );
+
+  assert.ok(componentTreeProjectionMigration);
+  assert.match(
+    componentTreeProjectionMigration.sql,
+    /create materialized view planning_query_store\.component_engineering_component_tree_projection/i
+  );
+  assert.match(
+    componentTreeProjectionMigration.sql,
+    /from planning_query_store\.governance_unit_query unit/i
+  );
+  assert.match(
+    componentTreeProjectionMigration.sql,
+    /create unique index if not exists component_engineering_component_tree_projection_id_idx/i
+  );
+  assert.match(
+    componentTreeProjectionMigration.sql,
+    /create or replace view planning_query_store\.component_engineering_component_tree_query/i
+  );
+  assert.match(
+    componentTreeProjectionMigration.sql,
+    /from planning_query_store\.component_engineering_component_tree_projection/
+  );
+});
+
+test('tracked migrations declare component tree projection refresh mechanization', () => {
+  const migrations = readMigrationFiles();
+  const componentTreeRefreshMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '281_register_component_tree_projection_refresh_feature.sql'
+  );
+
+  assert.ok(componentTreeRefreshMigration);
+  assert.match(
+    componentTreeRefreshMigration.sql,
+    /PLANNING-DB-CODE-SYMBOL-DUPLICATE-QUERY-PERF-20260625/
+  );
+  assert.match(componentTreeRefreshMigration.sql, /refreshComponentTreeMaterializedProjection/);
+  assert.match(
+    componentTreeRefreshMigration.sql,
+    /component_engineering_component_tree_projection/
+  );
+  assert.match(componentTreeRefreshMigration.sql, /280_component_tree_priority_projection\.sql/);
+  assert.match(componentTreeRefreshMigration.sql, /scripts\/planning-db-import\.test\.cjs/);
+  assert.match(componentTreeRefreshMigration.sql, /scripts\/planning-db-migrate\.test\.cjs/);
+  assert.doesNotMatch(
+    componentTreeRefreshMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});

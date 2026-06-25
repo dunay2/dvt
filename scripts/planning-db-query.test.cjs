@@ -4797,15 +4797,17 @@ test('readComponentProfileRows reads files through the component descendant tree
     /with recursive component_scope\(component_id, scope_depth, visited\) as/i
   );
   assert.match(capturedSql.join('\n'), /parent_component_id = component_scope\.component_id/);
-  assert.match(capturedSql.join('\n'), /scoped_local_components as/i);
   assert.match(
     capturedSql.join('\n'),
-    /join component_scope\s+on component_scope\.component_id = local_metadata\.component_id/i
+    /from planning_query_store\.component_engineering_file_ownership_projection ownership/i
   );
   assert.match(
     capturedSql.join('\n'),
-    /imported_component_id in \(select component_id from component_scope\)/
+    /ownership\.leaf_component_id in \(select component_id from component_scope\)/
   );
+  assert.doesNotMatch(capturedSql.join('\n'), /scoped_local_components as/i);
+  assert.doesNotMatch(capturedSql.join('\n'), /governance_component_local_metadata_query/i);
+  assert.doesNotMatch(capturedSql.join('\n'), /governance_component_local_ownership_patterns/i);
   assert.doesNotMatch(capturedSql.join('\n'), /from component_engineering\.file_ownership_query/);
   assert.match(capturedSql.join('\n'), /from architecture\.component_test/);
   assert.match(capturedSql.join('\n'), /from architecture\.component_observability/);
