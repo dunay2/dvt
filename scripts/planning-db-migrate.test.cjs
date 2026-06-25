@@ -6072,6 +6072,157 @@ test('tracked migrations repoint phantom governance component retirement rail so
   assert.doesNotMatch(sourceRepairMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations retire phantom Canvas source import dialog host', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '257_retire_canvas_source_import_dialog_host_phantom.sql'
+  );
+
+  assert.ok(sourceImportHostRetirementMigration);
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625/
+  );
+  assert.match(sourceImportHostRetirementMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST/);
+  assert.match(sourceImportHostRetirementMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD/);
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-WIZARD/
+  );
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /254_web_canvas_source_import_dialog_host\.sql/
+  );
+  assert.match(
+    sourceImportHostRetirementMigration.sql,
+    /257_retire_canvas_source_import_dialog_host_phantom\.sql/
+  );
+  assert.match(sourceImportHostRetirementMigration.sql, /DVT-CANVAS-UXDB-SOURCE-DIALOG-1/);
+  assert.match(sourceImportHostRetirementMigration.sql, /CanvasSourceImportDialogHost\.tsx/);
+  assert.match(sourceImportHostRetirementMigration.sql, /status = 'deprecated'/);
+  assert.match(sourceImportHostRetirementMigration.sql, /status = 'superseded'/);
+  assert.match(sourceImportHostRetirementMigration.sql, /rail_status = 'retired'/);
+  assert.doesNotMatch(sourceImportHostRetirementMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations delete stale Canvas source import dialog host drift relation', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostRelationRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '258_delete_canvas_source_import_dialog_host_drift_relation.sql'
+  );
+
+  assert.ok(sourceImportHostRelationRetirementMigration);
+  assert.match(
+    sourceImportHostRelationRetirementMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RELATION-RETIREMENT-20260625/
+  );
+  assert.match(
+    sourceImportHostRelationRetirementMigration.sql,
+    /REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-DIALOG-HOST/
+  );
+  assert.match(
+    sourceImportHostRelationRetirementMigration.sql,
+    /REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-WIZARD/
+  );
+  assert.match(
+    sourceImportHostRelationRetirementMigration.sql,
+    /delete from architecture\.component_relation/
+  );
+  assert.match(sourceImportHostRelationRetirementMigration.sql, /may_delete/);
+  assert.doesNotMatch(sourceImportHostRelationRetirementMigration.sql, /status = 'drift'/);
+  assert.doesNotMatch(sourceImportHostRelationRetirementMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile stale Canvas source import dialog rail sources', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostRailSourceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '259_reconcile_canvas_source_import_dialog_host_local_rail_source.sql'
+  );
+
+  assert.ok(sourceImportHostRailSourceMigration);
+  assert.match(
+    sourceImportHostRailSourceMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-SOURCE-RECONCILIATION-20260625/
+  );
+  assert.match(
+    sourceImportHostRailSourceMigration.sql,
+    /254_web_canvas_source_import_dialog_host\.sql/
+  );
+  assert.match(
+    sourceImportHostRailSourceMigration.sql,
+    /257_retire_canvas_source_import_dialog_host_phantom\.sql/
+  );
+  assert.match(sourceImportHostRailSourceMigration.sql, /sourcePathReconciledBy/);
+  assert.match(sourceImportHostRailSourceMigration.sql, /currentImplementationSourcePath/);
+  assert.match(sourceImportHostRailSourceMigration.sql, /deprecatedSourcePaths/);
+  assert.match(sourceImportHostRailSourceMigration.sql, /rail_status = 'retired'/);
+  assert.match(sourceImportHostRailSourceMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(
+    sourceImportHostRailSourceMigration.sql,
+    /where rail\.source_path = 'tools\/planning-db\/migrations\/254_web_canvas_source_import_dialog_host\.sql'/
+  );
+  assert.doesNotMatch(sourceImportHostRailSourceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations sanitize retired Canvas source import dialog local rail manifests', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostManifestSanitizerMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '260_sanitize_canvas_source_import_dialog_local_rail_manifest.sql'
+  );
+
+  assert.ok(sourceImportHostManifestSanitizerMigration);
+  assert.match(
+    sourceImportHostManifestSanitizerMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-MANIFEST-SANITIZE-20260625/
+  );
+  assert.match(sourceImportHostManifestSanitizerMigration.sql, /DVT-CANVAS-UXDB-SOURCE-DIALOG-1/);
+  assert.match(sourceImportHostManifestSanitizerMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(sourceImportHostManifestSanitizerMigration.sql, /- 'featureId'/);
+  assert.match(
+    sourceImportHostManifestSanitizerMigration.sql,
+    /featureMechanizationManifestSource/
+  );
+  assert.match(
+    sourceImportHostManifestSanitizerMigration.sql,
+    /docs\/planning\/proposals\/mandatory\/governance-and-docs\/planning-db-component-integrity-vocabulary-rail-plan-20260612\.md/
+  );
+  assert.doesNotMatch(sourceImportHostManifestSanitizerMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile legacy Canvas source import dialog local rails', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportHostLegacyRailMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '261_reconcile_canvas_source_import_dialog_legacy_local_rails.sql'
+  );
+
+  assert.ok(sourceImportHostLegacyRailMigration);
+  assert.match(
+    sourceImportHostLegacyRailMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LEGACY-LOCAL-RAIL-RECONCILIATION-20260625/
+  );
+  assert.match(
+    sourceImportHostLegacyRailMigration.sql,
+    /255_web_canvas_source_import_dialog_post_import_persistence\.sql/
+  );
+  assert.match(
+    sourceImportHostLegacyRailMigration.sql,
+    /257_retire_canvas_source_import_dialog_host_phantom\.sql/
+  );
+  assert.match(sourceImportHostLegacyRailMigration.sql, /- 'featureId'/);
+  assert.match(sourceImportHostLegacyRailMigration.sql, /- 'symbols'/);
+  assert.match(sourceImportHostLegacyRailMigration.sql, /rail_status = 'retired'/);
+  assert.match(sourceImportHostLegacyRailMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(
+    sourceImportHostLegacyRailMigration.sql,
+    /where rail\.feature_id = 'DVT-CANVAS-UXDB-SOURCE-DIALOG-1'/
+  );
+  assert.doesNotMatch(sourceImportHostLegacyRailMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(
