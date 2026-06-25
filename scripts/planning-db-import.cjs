@@ -2587,6 +2587,12 @@ async function insertCodeSymbolSnapshot(client, snapshot) {
   );
 }
 
+async function refreshCodeSymbolMaterializedProjection(client) {
+  await client.query(
+    `refresh materialized view ${schemaName}.code_symbol_effective_inventory_projection`
+  );
+}
+
 async function insertRepositoryCommandSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.repository_commands`);
 
@@ -3725,6 +3731,7 @@ async function importContent(options = {}) {
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
       await insertCodeSymbolSnapshot(client, codeSymbolSnapshot);
+      await refreshCodeSymbolMaterializedProjection(client);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
       await insertCommandQueryRailSnapshot(client, commandQueryRailSnapshot);
       await insertFrontendMechanicalTruthSnapshot(client, frontendMechanicalTruthSnapshot);
@@ -4948,6 +4955,7 @@ module.exports = {
   reconcileDeprecatedLocalRailSources,
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
+  refreshCodeSymbolMaterializedProjection,
   refreshLocalFeatureMechanizationRailSourceHashes,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,
