@@ -6223,6 +6223,64 @@ test('tracked migrations reconcile legacy Canvas source import dialog local rail
   assert.doesNotMatch(sourceImportHostLegacyRailMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile restored Canvas source import dialog feature manifests', () => {
+  const migrations = readMigrationFiles();
+  const restoredFeatureManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '263_reconcile_restored_canvas_source_import_dialog_feature_manifest.sql'
+  );
+
+  assert.ok(restoredFeatureManifestMigration);
+  assert.match(
+    restoredFeatureManifestMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RESTORED-FEATURE-MANIFEST-RECONCILIATION-20260625/
+  );
+  assert.match(
+    restoredFeatureManifestMigration.sql,
+    /262_restore_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(
+    restoredFeatureManifestMigration.sql,
+    /263_reconcile_restored_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(restoredFeatureManifestMigration.sql, /- 'featureId'/);
+  assert.match(restoredFeatureManifestMigration.sql, /- 'symbols'/);
+  assert.match(restoredFeatureManifestMigration.sql, /rail_status = 'retired'/);
+  assert.match(restoredFeatureManifestMigration.sql, /mechanization_status = 'closed'/);
+  assert.match(restoredFeatureManifestMigration.sql, /restoredFeatureManifestReconciledBy/);
+  assert.doesNotMatch(restoredFeatureManifestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile post-import Canvas source import dialog feature manifests', () => {
+  const migrations = readMigrationFiles();
+  const postImportFeatureManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql'
+  );
+
+  assert.ok(postImportFeatureManifestMigration);
+  assert.match(
+    postImportFeatureManifestMigration.sql,
+    /PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-POST-IMPORT-FEATURE-MANIFEST-RECONCILIATION-20260625/
+  );
+  assert.match(
+    postImportFeatureManifestMigration.sql,
+    /262_restore_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(
+    postImportFeatureManifestMigration.sql,
+    /264_reconcile_post_import_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(postImportFeatureManifestMigration.sql, /- 'featureId'/);
+  assert.match(postImportFeatureManifestMigration.sql, /- 'symbols'/);
+  assert.match(postImportFeatureManifestMigration.sql, /postImportFeatureManifestReconciledBy/);
+  assert.match(postImportFeatureManifestMigration.sql, /rail_status = 'retired'/);
+  assert.match(postImportFeatureManifestMigration.sql, /mechanization_status = 'closed'/);
+  assert.doesNotMatch(postImportFeatureManifestMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations include architecture test evidence operations after W83', () => {
   const migrations = readMigrationFiles();
   const architectureEvidenceMigration = migrations.find(

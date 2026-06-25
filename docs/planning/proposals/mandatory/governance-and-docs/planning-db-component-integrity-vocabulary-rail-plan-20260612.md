@@ -309,6 +309,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/259_reconcile_canvas_source_import_dialog_host_local_rail_source.sql
   - tools/planning-db/migrations/260_sanitize_canvas_source_import_dialog_local_rail_manifest.sql
   - tools/planning-db/migrations/261_reconcile_canvas_source_import_dialog_legacy_local_rails.sql
+  - tools/planning-db/migrations/263_reconcile_restored_canvas_source_import_dialog_feature_manifest.sql
+  - tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql
   - tools/planning-db/migrations/113_repoint_canvas_test_support_local_rails.sql
   - tools/planning-db/migrations/114_repoint_canvas_reload_recovery_test_support_rail.sql
   - tools/planning-db/migrations/115_repoint_canvas_create_document_test_support_rail.sql
@@ -721,6 +723,22 @@ redGreenCycles:
       - scripts/planning-db-migrate.test.cjs
       - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
     greenTest: pnpm planning:db:integrity:check
+  - id: canvas-source-import-dialog-host-restored-feature-manifest-reconciliation
+    redTest: pnpm docs:feature-mechanization:implementation
+    expectedFailure: A restored local OpenCanvasSourceImportDialog rail points to tools/planning-db/migrations/262_restore_canvas_source_import_dialog_feature_manifest.sql with raw_manifest.featureId and removed CanvasSourceImportDialogHost symbols, so the implementation guard validates sparse retirement metadata as a feature manifest.
+    patchSurfaces:
+      - tools/planning-db/migrations/263_reconcile_restored_canvas_source_import_dialog_feature_manifest.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm docs:feature-mechanization:implementation
+  - id: canvas-source-import-dialog-host-post-import-feature-manifest-reconciliation
+    redTest: pnpm planning:db:integrity:check
+    expectedFailure: A governance import can restore the historic OpenCanvasSourceImportDialog local rail after the earlier reconciliation migration has already run, leaving source_drift against tools/planning-db/migrations/262_restore_canvas_source_import_dialog_feature_manifest.sql.
+    patchSurfaces:
+      - tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql
+      - scripts/planning-db-migrate.test.cjs
+      - docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md
+    greenTest: pnpm planning:db:integrity:check
 symbols:
   - name: RetireCanvasSourceImportDialogHost
     path: tools/planning-db/migrations/257_retire_canvas_source_import_dialog_host_phantom.sql
@@ -781,6 +799,32 @@ symbols:
     cqRails:
       - ValidateSourceDrift
       - ValidateFeatureMechanizationImplementation
+    fowlerSignals:
+      - source_drift
+      - phantom_component
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: ReconcileRestoredCanvasSourceImportDialogFeatureManifest
+    path: tools/planning-db/migrations/263_reconcile_restored_canvas_source_import_dialog_feature_manifest.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateFeatureMechanizationImplementation
+      - ValidateSourceDrift
+    fowlerSignals:
+      - source_drift
+      - phantom_component
+    architectureGuard: node --test scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: ReconcilePostImportCanvasSourceImportDialogFeatureManifest
+    path: tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql
+    dddOwner: PlanningDbComponentIntegrity
+    cqRails:
+      - ValidateFeatureMechanizationImplementation
+      - ValidateSourceDrift
     fowlerSignals:
       - source_drift
       - phantom_component
