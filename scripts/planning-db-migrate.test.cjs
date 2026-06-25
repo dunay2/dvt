@@ -8024,6 +8024,43 @@ test('tracked migrations materialize code symbol duplicate query inputs', () => 
   );
 });
 
+test('tracked migrations materialize component ownership for priority integrity reads', () => {
+  const migrations = readMigrationFiles();
+  const ownershipProjectionMigration = migrations.find(
+    (migration) => migration.fileName === '274_component_ownership_priority_projection.sql'
+  );
+
+  assert.ok(ownershipProjectionMigration);
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /create materialized view planning_query_store\.component_engineering_file_ownership_projection/
+  );
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /from planning_query_store\.component_engineering_file_ownership_query/
+  );
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /create unique index if not exists component_engineering_file_ownership_projection_file_idx/
+  );
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /create index if not exists component_engineering_file_ownership_projection_component_idx/
+  );
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /create or replace view planning_query_store\.component_integrity_query/
+  );
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /from planning_query_store\.component_engineering_file_ownership_projection/
+  );
+  assert.doesNotMatch(
+    ownershipProjectionMigration.sql,
+    /from planning_query_store\.component_engineering_file_ownership_query\s+ownership/
+  );
+});
+
 test('tracked migrations restore Canvas source import feature mechanization manifest', () => {
   const migrations = readMigrationFiles();
   const manifestRestoreMigration = migrations.find(
@@ -8177,6 +8214,35 @@ test('tracked migrations declare code symbol projection refresh mechanization', 
   assert.match(symbolProjectionMigration.sql, /scripts\/planning-db-migrate\.test\.cjs/);
   assert.doesNotMatch(
     symbolProjectionMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
+test('tracked migrations declare component ownership projection refresh mechanization', () => {
+  const migrations = readMigrationFiles();
+  const ownershipProjectionMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '275_register_component_ownership_projection_refresh_feature.sql'
+  );
+
+  assert.ok(ownershipProjectionMigration);
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /PLANNING-DB-CODE-SYMBOL-DUPLICATE-QUERY-PERF-20260625/
+  );
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /refreshComponentFileOwnershipMaterializedProjection/
+  );
+  assert.match(ownershipProjectionMigration.sql, /component_engineering_file_ownership_projection/);
+  assert.match(
+    ownershipProjectionMigration.sql,
+    /274_component_ownership_priority_projection\.sql/
+  );
+  assert.match(ownershipProjectionMigration.sql, /scripts\/planning-db-import\.test\.cjs/);
+  assert.match(ownershipProjectionMigration.sql, /scripts\/planning-db-migrate\.test\.cjs/);
+  assert.doesNotMatch(
+    ownershipProjectionMigration.sql,
     /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
   );
 });
