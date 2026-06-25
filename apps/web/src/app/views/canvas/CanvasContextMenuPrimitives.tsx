@@ -2,7 +2,7 @@
 import type { CSSProperties, ReactNode, RefObject } from 'react';
 
 const CANVAS_CONTEXT_MENU_SURFACE_CLASS_NAME =
-  'fixed z-50 min-w-52 rounded-md border border-(--border-default) bg-(--surface-panel) p-1 shadow-xl';
+  'pointer-events-auto fixed z-50 min-w-52 rounded-md border border-(--border-default) bg-(--surface-panel) p-1 shadow-xl';
 const CANVAS_CONTEXT_MENU_SECTION_TITLE_CLASS_NAME =
   'px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)';
 const CANVAS_CONTEXT_MENU_ITEM_CLASS_NAME =

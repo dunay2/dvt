@@ -8103,6 +8103,32 @@ test('tracked migrations index feature mechanization manifest symbol lookups', (
   );
 });
 
+test('tracked migrations register Canvas context menu shell layer authority', () => {
+  const migrations = readMigrationFiles();
+  const layerMigration = migrations.find(
+    (migration) => migration.fileName === '288_register_canvas_context_menu_layer.sql'
+  );
+
+  assert.ok(layerMigration);
+  assert.match(layerMigration.sql, /web\.component\.canvas\.CanvasContextMenu/);
+  assert.match(layerMigration.sql, /CanvasContextMenuLayer/);
+  assert.match(
+    layerMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuLayer\.tsx/
+  );
+  assert.match(
+    layerMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasShell\.contextMenuIntegration\.test\.tsx/
+  );
+  assert.match(layerMigration.sql, /frontend_component_local_files/);
+  assert.match(layerMigration.sql, /frontend_component_local_cq_rails/);
+  assert.match(layerMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(layerMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(layerMigration.sql, /CANVAS-CONTEXT-MENU-SHELL-LAYER-20260625/);
+  assert.doesNotMatch(layerMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(layerMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations materialize code symbol duplicate query inputs', () => {
   const migrations = readMigrationFiles();
   const codeSymbolProjectionMigration = migrations.find(
