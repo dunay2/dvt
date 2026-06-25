@@ -7607,6 +7607,25 @@ test('tracked migrations restore Canvas source import feature mechanization mani
   assert.match(manifestRestoreMigration.sql, /readFrontendComponentProfileRows/);
 });
 
+test('tracked migrations keep Canvas source import component files fresh-DB safe', () => {
+  const migrations = readMigrationFiles();
+  const sourceDialogHostMigration = migrations.find(
+    (migration) => migration.fileName === '254_web_canvas_source_import_dialog_host.sql'
+  );
+
+  assert.ok(sourceDialogHostMigration);
+  assert.match(
+    sourceDialogHostMigration.sql,
+    /insert into planning_query_store\.frontend_components/
+  );
+  assert.match(sourceDialogHostMigration.sql, /on conflict \(component_id\) do nothing/);
+  assert.match(
+    sourceDialogHostMigration.sql,
+    /insert into planning_query_store\.frontend_component_files/
+  );
+  assert.match(sourceDialogHostMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+});
+
 test('tracked migrations reassert Canvas source import symbols after post-import reconciliation', () => {
   const migrations = readMigrationFiles();
   const symbolRestoreMigration = migrations.find(
@@ -7645,6 +7664,33 @@ test('tracked migrations repoint stale local feature rail sources to versioned f
   assert.match(sourceRepointMigration.sql, /266_repoint_stale_local_feature_rail_sources\.sql/);
   assert.match(sourceRepointMigration.sql, /OpenCanvasSourceImportDialog/);
   assert.match(sourceRepointMigration.sql, /readFrontendComponentProfileRows/);
+  assert.doesNotMatch(
+    sourceRepointMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
+test('tracked migrations anchor Canvas source import active rail to governed frontend source', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepointMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '267_repoint_canvas_source_import_dialog_active_rail_source.sql'
+  );
+
+  assert.ok(sourceRepointMigration);
+  assert.match(
+    sourceRepointMigration.sql,
+    /265_restore_canvas_source_import_dialog_symbols_after_post_import_reconcile\.sql/
+  );
+  assert.match(sourceRepointMigration.sql, /apps\/web\/src\/app\/views\/canvas\/CanvasShell\.tsx/);
+  assert.match(sourceRepointMigration.sql, /currentImplementationSourcePath/);
+  assert.match(sourceRepointMigration.sql, /CanvasSourceImportDialogHostProps/);
+  assert.match(sourceRepointMigration.sql, /useCanvasSourceImportDialogState/);
+  assert.match(sourceRepointMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(
+    sourceRepointMigration.sql,
+    /postImportFeatureManifestReconciledBy'.*267_repoint_canvas_source_import_dialog_active_rail_source/s
+  );
   assert.doesNotMatch(
     sourceRepointMigration.sql,
     /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i

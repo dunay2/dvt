@@ -56,6 +56,50 @@ values
 on conflict (design_id, subject_kind, subject_id, scope_kind) do update set
   required = excluded.required;
 
+insert into planning_query_store.frontend_components (
+  component_id,
+  component_name,
+  component_kind,
+  component_status,
+  reuse_decision,
+  frontend_owner,
+  responsibility,
+  package_name,
+  route_scope,
+  plugin_scope,
+  capability_gaps,
+  evidence_refs,
+  source_path,
+  source_content_sha256,
+  raw_component
+)
+values (
+  'web.component.canvas.SourceImportDialog',
+  'SourceImportDialog',
+  'modal',
+  'current',
+  'harden',
+  'Frontend / Canvas',
+  'Contextual warehouse source import dialog and selected-source attachment workflow.',
+  '@dvt/web',
+  '/canvas',
+  null,
+  '[]'::jsonb,
+  jsonb_build_array(
+    'EV-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-ARCHITECTURE',
+    'EV-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PRESENTATION'
+  ),
+  'tools/planning-db/migrations/254_web_canvas_source_import_dialog_host.sql',
+  md5('web.component.canvas.SourceImportDialog:254:fresh-db')
+    || md5('OpenCanvasSourceImportDialog'),
+  jsonb_build_object(
+    'source', 'db-local fresh migration guard',
+    'rail', 'OpenCanvasSourceImportDialog',
+    'canonicalInventory', 'docs/architecture/components/web/frontend-component-inventory.md'
+  )
+)
+on conflict (component_id) do nothing;
+
 insert into planning_query_store.frontend_component_files (
   component_id,
   file_path,

@@ -153,6 +153,7 @@ describe('CanvasViewport', () => {
 
   it('keeps the local canvas context menu open through the browser pointer echo', async () => {
     vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
     await renderViewport({
       canOpenProjectExplorer: true,
       onOpenProjectExplorer: vi.fn(),
