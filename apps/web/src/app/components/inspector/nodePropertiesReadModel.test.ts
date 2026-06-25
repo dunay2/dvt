@@ -229,6 +229,67 @@ describe('nodePropertiesReadModel', () => {
     );
   });
 
+  it('projects dbt model columns and column tests from manifest-style metadata maps', () => {
+    const node: CanonicalNode = {
+      id: 'model-orders',
+      name: 'fct_orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: ['mart'],
+      metadata: {
+        database: 'analytics',
+        schema: 'mart',
+        tableName: 'fct_orders',
+        columns: {
+          order_id: {
+            data_type: 'integer',
+            description: 'Primary order key',
+            tests: ['not_null', 'unique'],
+          },
+          status: {
+            data_type: 'text',
+            description: 'Lifecycle status',
+            tests: [{ accepted_values: { values: ['created', 'paid'], severity: 'warn' } }],
+          },
+        },
+      },
+    };
+    const model = buildNodePropertiesReadModel({ node, nodes: [node], edges: [] });
+
+    expectTableCells(sectionById(model, 'columns'), 'order_id', {
+      name: 'order_id',
+      type: 'integer',
+      comment: 'Primary order key',
+    });
+    expectTableCells(sectionById(model, 'columns'), 'status', {
+      name: 'status',
+      type: 'text',
+      comment: 'Lifecycle status',
+    });
+    expectTableCells(sectionById(model, 'tests'), 'test:model-orders:order_id:not_null', {
+      name: 'not_null(order_id)',
+      type: 'not_null',
+      target: 'fct_orders.order_id',
+      column: 'order_id',
+    });
+    expectTableCells(sectionById(model, 'tests'), 'test:model-orders:order_id:unique', {
+      name: 'unique(order_id)',
+      type: 'unique',
+      target: 'fct_orders.order_id',
+      column: 'order_id',
+    });
+    expectTableCells(sectionById(model, 'tests'), 'test:model-orders:status:accepted_values', {
+      name: 'accepted_values(status)',
+      type: 'accepted_values',
+      target: 'fct_orders.status',
+      column: 'status',
+      severity: 'warn',
+      expression: 'values: created, paid',
+    });
+  });
+
   it.each([
     ['compiled SQL', { compiledSql: 'select compiled', sql: 'select metadata' }, 'select compiled'],
     [

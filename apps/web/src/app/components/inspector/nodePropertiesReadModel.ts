@@ -108,16 +108,12 @@ function addRow(rows: NodePropertyRow[], label: string, value: string | undefine
 }
 
 function readColumns(value: unknown): readonly InspectorColumn[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.flatMap((candidate): readonly InspectorColumn[] => {
+  const readColumn = (candidate: unknown, fallbackName?: string): readonly InspectorColumn[] => {
     if (!isRecord(candidate)) {
       return [];
     }
 
-    const name = readString(candidate.name);
+    const name = readString(candidate.name) ?? fallbackName;
     if (name == null) {
       return [];
     }
@@ -125,14 +121,26 @@ function readColumns(value: unknown): readonly InspectorColumn[] {
     return [
       {
         name,
-        type: readString(candidate.type) ?? 'unknown',
+        type: readFirstString(candidate.type, candidate.dataType, candidate.data_type) ?? 'unknown',
         nullable: readBoolean(candidate.nullable),
         primaryKey: readBoolean(candidate.primaryKey) ?? readBoolean(candidate.isPrimaryKey),
         defaultValue: readFirstString(candidate.default, candidate.defaultValue),
         comment: readFirstString(candidate.description, candidate.comment),
       },
     ];
-  });
+  };
+
+  if (Array.isArray(value)) {
+    return value.flatMap((candidate): readonly InspectorColumn[] => readColumn(candidate));
+  }
+
+  if (isRecord(value)) {
+    return Object.entries(value).flatMap(([key, candidate]): readonly InspectorColumn[] =>
+      readColumn(candidate, key)
+    );
+  }
+
+  return [];
 }
 
 function buildGeneralRows(
@@ -412,6 +420,87 @@ function buildTestRows(
   node: CanonicalNode,
   metadata: Record<string, unknown>
 ): readonly NodePropertyTableRow[] {
+  const readDbtTest = (
+    candidate: unknown
+  ): Readonly<{ type: string; severity?: string; expression?: string }> | null => {
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return { type: candidate.trim() };
+    }
+
+    if (!isRecord(candidate)) {
+      return null;
+    }
+
+    const directType = readFirstString(
+      candidate.type,
+      candidate.testType,
+      candidate.test_name,
+      candidate.name
+    );
+    if (directType != null) {
+      return {
+        type: directType,
+        severity: readString(candidate.severity),
+        expression: readFirstString(candidate.expression, candidate.sql, candidate.condition),
+      };
+    }
+
+    for (const [testType, config] of Object.entries(candidate)) {
+      const type = readString(testType);
+      if (type == null) {
+        continue;
+      }
+
+      const configRecord = asRecord(config);
+      const values = readStringArray(configRecord.values);
+      return {
+        type,
+        severity: readString(configRecord.severity),
+        expression:
+          values.length > 0
+            ? `values: ${values.join(', ')}`
+            : readFirstString(configRecord.expression, configRecord.sql, configRecord.condition),
+      };
+    }
+
+    return null;
+  };
+  const columnTestRows = (): readonly NodePropertyTableRow[] => {
+    const columns = isRecord(metadata.columns) ? metadata.columns : {};
+
+    return Object.entries(columns).flatMap(
+      ([columnKey, columnCandidate]): readonly NodePropertyTableRow[] => {
+        const column = asRecord(columnCandidate);
+        const columnName = readString(column.name) ?? columnKey;
+        const tests = Array.isArray(column.tests)
+          ? column.tests
+          : Array.isArray(column.dataTests)
+            ? column.dataTests
+            : [];
+
+        return tests.flatMap((testCandidate): readonly NodePropertyTableRow[] => {
+          const test = readDbtTest(testCandidate);
+          if (test == null) {
+            return [];
+          }
+
+          return [
+            {
+              id: `test:${node.id}:${columnName}:${test.type}`,
+              cells: {
+                name: `${test.type}(${columnName})`,
+                type: test.type,
+                target: `${node.name}.${columnName}`,
+                column: columnName,
+                severity: test.severity ?? '',
+                expression: test.expression ?? '',
+              },
+            },
+          ];
+        });
+      }
+    );
+  };
   const tests = Array.isArray(metadata.tests) ? metadata.tests : [];
   const rows = tests.flatMap((candidate): readonly NodePropertyTableRow[] => {
     if (!isRecord(candidate)) {
@@ -439,9 +528,10 @@ function buildTestRows(
       },
     ];
   });
+  const projectedRows = [...rows, ...columnTestRows()];
 
-  if (rows.length > 0) {
-    return rows;
+  if (projectedRows.length > 0) {
+    return projectedRows;
   }
 
   const testTargetModel = readFirstString(metadata.testTargetModel, metadata.targetModel);
