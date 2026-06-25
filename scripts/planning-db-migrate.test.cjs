@@ -8171,6 +8171,36 @@ test('tracked migrations anchor Canvas source import active rail to governed fro
   );
 });
 
+test('tracked migrations reconcile Canvas source import dialog host ownership after projection', () => {
+  const migrations = readMigrationFiles();
+  const hostOwnershipMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '278_reconcile_canvas_source_import_dialog_host_ownership.sql'
+  );
+
+  assert.ok(hostOwnershipMigration);
+  assert.match(hostOwnershipMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST/);
+  assert.match(hostOwnershipMigration.sql, /SYS-WEB-CANVAS-ADD-SOURCE-DIALOG/);
+  assert.match(
+    hostOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasSourceImportDialogHost\.tsx/
+  );
+  assert.match(
+    hostOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasSourceImportDialogState\.ts/
+  );
+  assert.match(hostOwnershipMigration.sql, /governance_component_local_ownership_patterns/);
+  assert.match(
+    hostOwnershipMigration.sql,
+    /SYS-WEB-CANVAS-SOURCE-PREVIEW-TRANSFORMATION[\s\S]*excludes[\s\S]*useCanvasSourceImportDialogState\.ts/
+  );
+  assert.match(hostOwnershipMigration.sql, /component_engineering_file_ownership_projection/);
+  assert.doesNotMatch(
+    hostOwnershipMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+});
+
 test('tracked migrations declare CI policy validation import reconcile symbol', () => {
   const migrations = readMigrationFiles();
   const symbolRegistrationMigration = migrations.find(
