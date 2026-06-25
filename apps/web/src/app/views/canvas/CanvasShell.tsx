@@ -1,8 +1,7 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import SourceImportWizard from '../../components/SourceImportWizard';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasContextMenuView } from './CanvasContextMenuView';
@@ -10,13 +9,10 @@ import { CanvasShellMainPanel } from './CanvasShellMainPanel';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
+import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
+import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogState';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
-import type {
-  CanvasShellContextualWorkbench,
-  CanvasShellOpenDataRegistryCommand,
-  CanvasShellProps,
-  CanvasShellSourceImportPlacement,
-} from './canvasShell.types';
+import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasShell.types';
 
 const CodeWorkbench = lazy(() => import('../CodeView'));
 
@@ -30,15 +26,9 @@ export default function CanvasShell({
   canvasCommands,
   canvasContextScreenToFlowPosition,
 }: CanvasShellProps): JSX.Element {
-  const [dataRegistryOpen, setDataRegistryOpen] = useState(false);
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [contextualWorkbenchId, setContextualWorkbenchId] = useState<'project-code' | null>(null);
-  const [dataRegistryInitialSelection, setDataRegistryInitialSelection] =
-    useState<Parameters<CanvasShellOpenDataRegistryCommand>[0]>(undefined);
-  const [dataRegistryPlacement, setDataRegistryPlacement] = useState<
-    CanvasShellSourceImportPlacement | undefined
-  >(undefined);
   const canEditGraph = panels.userPermissions.canEditEdges;
   const sourceImportContributions = useMemo(
     () => getSourceImportContributions(panels.runtimeCapabilities),
@@ -50,6 +40,7 @@ export default function CanvasShell({
   );
   const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const canOpenDataRegistry = canEditGraph && canBrowseDataRegistry;
+  const sourceImportDialog = useCanvasSourceImportDialogState(canOpenDataRegistry);
   const contextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
     if (contextualWorkbenchId !== 'project-code') {
       return undefined;
@@ -83,13 +74,6 @@ export default function CanvasShell({
           },
     [contextualWorkbench, layout]
   );
-  const handleOpenDataRegistry: CanvasShellOpenDataRegistryCommand | undefined = canOpenDataRegistry
-    ? (initialSelection, placement) => {
-        setDataRegistryInitialSelection(initialSelection);
-        setDataRegistryPlacement(placement);
-        setDataRegistryOpen(true);
-      }
-    : undefined;
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: canEditGraph,
     canOpenSourceImport: canOpenDataRegistry,
@@ -102,10 +86,10 @@ export default function CanvasShell({
     onCreateAuthoringNode: graphCommands.onCreateAuthoringNode,
     onEdgesChange: graphCommands.onEdgesChange,
     onOpenSourceImport:
-      handleOpenDataRegistry == null
+      sourceImportDialog.openCommand == null
         ? undefined
         : (flowPosition) =>
-            handleOpenDataRegistry(
+            sourceImportDialog.openCommand?.(
               undefined,
               flowPosition == null ? undefined : { canvasPosition: flowPosition }
             ),
@@ -114,14 +98,6 @@ export default function CanvasShell({
     onPreviewExecutionPlan: chromeCommands.onPlan,
     onOpenCanvasSettings: () => setCanvasSettingsOpen(true),
   });
-
-  useEffect(() => {
-    if (!canOpenDataRegistry && dataRegistryOpen) {
-      setDataRegistryOpen(false);
-      setDataRegistryInitialSelection(undefined);
-      setDataRegistryPlacement(undefined);
-    }
-  }, [canOpenDataRegistry, dataRegistryOpen]);
 
   return (
     <ResizablePanelGroup
@@ -144,7 +120,7 @@ export default function CanvasShell({
         chromeState={chromeState}
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
-        onOpenSourceImport={handleOpenDataRegistry}
+        onOpenSourceImport={sourceImportDialog.openCommand}
         onOpenProjectExplorer={() => setProjectExplorerOpen(true)}
         onOpenProjectCode={() => setContextualWorkbenchId('project-code')}
         onOpenCanvasSettings={() => setCanvasSettingsOpen(true)}
@@ -158,16 +134,13 @@ export default function CanvasShell({
         onEdgeAction={contextMenuPresenter.handleEdgeAction}
       />
 
-      <SourceImportWizard
-        open={dataRegistryOpen}
-        onClose={() => {
-          setDataRegistryOpen(false);
-          setDataRegistryInitialSelection(undefined);
-          setDataRegistryPlacement(undefined);
-        }}
-        onComplete={(result) => graphCommands.onSourceImportComplete(result, dataRegistryPlacement)}
+      <CanvasSourceImportDialogHost
+        open={sourceImportDialog.open}
+        onClose={sourceImportDialog.close}
+        onComplete={graphCommands.onSourceImportComplete}
         sourceImportOptions={sourceImportOptions}
-        initialSelection={dataRegistryInitialSelection}
+        initialSelection={sourceImportDialog.initialSelection}
+        placement={sourceImportDialog.placement}
       />
       <CanvasProjectExplorerDialog
         open={projectExplorerOpen}
