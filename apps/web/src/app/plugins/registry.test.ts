@@ -110,12 +110,16 @@ describe('plugin runtime projection', () => {
     expect(getBottomDiagnosticsContributions(capabilities)).toEqual([]);
   });
 
-  it('projects source import properties from available plugin declarations', () => {
-    const dbtImport = getSourceImportContributions().find(
-      (contribution) => contribution.pluginId === 'dbt'
+  it('projects warehouse source import independently from dbt runtime availability', () => {
+    const sourceImportContributions = getSourceImportContributions();
+    const warehouseImport = sourceImportContributions.find(
+      (contribution) => contribution.pluginId === 'dvt.warehouse-source'
     );
 
-    expect(dbtImport?.artifactKind).toBe('dbt-source-yaml');
+    expect(sourceImportContributions.map((contribution) => contribution.pluginId)).toEqual([
+      'dvt.warehouse-source',
+    ]);
+    expect(warehouseImport?.artifactKind).toBe('warehouse-source');
     expect(getSourceImportOptions().map((option) => option.id)).toEqual([
       'includeColumns',
       'addTests',
@@ -124,6 +128,9 @@ describe('plugin runtime projection', () => {
     expect(
       getSourceImportOptions().find((option) => option.id === 'includeColumns')?.defaultEnabled
     ).toBe(true);
-    expect(getSourceImportOptions(buildRuntimeCapabilities('dbt'))).toEqual([]);
+    expect(
+      getSourceImportOptions(buildRuntimeCapabilities('dbt')).map((option) => option.id)
+    ).toEqual(['includeColumns', 'addTests', 'addFreshness']);
+    expect(getSourceImportOptions(buildRuntimeCapabilities('dvt.warehouse-source'))).toEqual([]);
   });
 });

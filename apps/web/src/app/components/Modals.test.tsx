@@ -51,7 +51,7 @@ describe('PlanPreviewModal', () => {
           open={true}
           onClose={onClose}
           plan={mockExecutionPlan}
-          startRunMessage="Preview is stale. Re-run Plan before starting."
+          startRunMessage="Execution Preview is stale. Preview execution plan again before starting."
           onStartRun={onStartRun}
         />
       );

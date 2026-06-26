@@ -81,12 +81,39 @@ describe('CanvasShell source import availability', () => {
     expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
   });
 
-  it('hides viewport source import affordances when the dbt source import plugin is unavailable', async () => {
+  it('keeps viewport source import affordances when dbt is unavailable but warehouse import is available', async () => {
     await renderShell({
       panels: {
         runtimeCapabilities: {
           plugins: {
             dbt: {
+              available: false,
+              reason: 'disabled in test',
+            },
+          },
+        },
+      },
+    });
+
+    expect(shellState.canvasViewportProps).toMatchObject({
+      canOpenSourceImport: true,
+    });
+    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeTypeOf('function');
+    expect(shellState.sourceImportWizardProps).toMatchObject({
+      sourceImportOptions: [
+        expect.objectContaining({ id: 'includeColumns' }),
+        expect.objectContaining({ id: 'addTests' }),
+        expect.objectContaining({ id: 'addFreshness' }),
+      ],
+    });
+  });
+
+  it('hides viewport source import affordances when the warehouse source plugin is unavailable', async () => {
+    await renderShell({
+      panels: {
+        runtimeCapabilities: {
+          plugins: {
+            'dvt.warehouse-source': {
               available: false,
               reason: 'disabled in test',
             },

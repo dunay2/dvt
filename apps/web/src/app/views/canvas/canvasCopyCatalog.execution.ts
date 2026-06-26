@@ -19,7 +19,7 @@ export const canvasViewExecutionCopyByKey = {
   previewProvenanceTransformPathRequiredMessage: {
     key: 'canvas.preview.transformPathRequiredMessage',
     fallback:
-      'Plan needs SQL content. Select a workspace SQL file for the SQL transform, or use a canvas-authored transform so DVT can create one.',
+      'Execution Preview needs SQL content. Select a workspace SQL file for the SQL transform, or use a canvas-authored transform so DVT can create one.',
   },
   previewProvenanceWorkspaceNotConfiguredMessage: {
     key: 'canvas.preview.workspaceNotConfiguredMessage',
@@ -40,11 +40,11 @@ export const canvasViewExecutionCopyByKey = {
   },
   runNoPlanMessage: {
     key: 'canvas.run.noPlanMessage',
-    fallback: 'No execution plan available - run Plan first',
+    fallback: 'No execution plan available - preview the execution plan first.',
   },
   runPreviewStaleMessage: {
     key: 'canvas.run.previewStaleMessage',
-    fallback: 'Preview is stale. Re-run Plan before starting.',
+    fallback: 'Execution Preview is stale. Preview execution plan again before starting.',
   },
   runPlanRefUnavailableMessage: {
     key: 'canvas.run.planRefUnavailableMessage',
@@ -53,7 +53,7 @@ export const canvasViewExecutionCopyByKey = {
   runPersistedPreviewRequiredMessage: {
     key: 'canvas.run.persistedPreviewRequiredMessage',
     fallback:
-      'Run start requires a persisted preview plan bound to the current plan reference. Re-run Plan first.',
+      'Run start requires a persisted Execution Preview bound to the current plan reference. Preview execution plan again first.',
   },
   runFailedMessage: {
     key: 'canvas.run.failedMessage',
@@ -81,11 +81,13 @@ export const canvasViewExecutionCopyByKey = {
   },
   planStatusPreviewNotAlignedMessage: {
     key: 'canvas.planStatus.previewNotAlignedMessage',
-    fallback: 'Preview is not aligned with the active plan reference. Re-run Plan before starting.',
+    fallback:
+      'Execution Preview is not aligned with the active plan reference. Preview execution plan again before starting.',
   },
   planStatusPreviewNotPersistedMessage: {
     key: 'canvas.planStatus.previewNotPersistedMessage',
-    fallback: 'Preview is not persisted. Re-run Plan to create a persisted plan.',
+    fallback:
+      'Execution Preview is not persisted. Preview execution plan to create a persisted preview.',
   },
   planStatusPreviewReadyMessage: {
     key: 'canvas.planStatus.previewReadyMessage',

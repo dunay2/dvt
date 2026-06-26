@@ -62,7 +62,6 @@ describe('CanvasShell graph base surface', () => {
             },
           ],
         },
-        hostTabStrip: <div data-testid="canvas-host-tab-strip" />,
       },
     });
 
@@ -71,12 +70,7 @@ describe('CanvasShell graph base surface', () => {
   });
 
   it('does not mount a permanent workbench chrome row over the graph base surface', async () => {
-    await renderShell({
-      layout: {
-        hostTabStrip: <div data-testid="canvas-host-tab-strip" />,
-        workbenchTabStrip: <div data-testid="canvas-workbench-tab-strip" />,
-      },
-    });
+    await renderShell();
 
     expect(container.querySelector('[data-slot="canvas-workbench-chrome"]')).toBeNull();
     expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).toBeNull();

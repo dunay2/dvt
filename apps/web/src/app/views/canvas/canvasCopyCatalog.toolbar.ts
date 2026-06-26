@@ -27,7 +27,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   toolbarWorkflowPlanRequiredLabel: {
     key: 'canvas.toolbar.workflow.planRequiredLabel',
-    fallback: 'Plan required',
+    fallback: 'Execution Preview required',
   },
   toolbarLayoutLabel: {
     key: 'canvas.toolbar.layoutLabel',

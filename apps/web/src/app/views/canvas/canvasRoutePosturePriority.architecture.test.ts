@@ -8,58 +8,23 @@ import {
 } from './canvasStartupAndDraftRecovery.architecture.support';
 
 describe('canvas route posture priority architecture', () => {
-  it('keeps host tab rendering and replacement action behind named presenter seams', () => {
-    const tabStripSource = readAppSource('CanvasPlaygroundTabStrip.tsx');
-    const tabStripPresenterSource = readAppSource('useCanvasPlaygroundTabStripPresenter.ts');
-    const tabStripModelSource = readAppSource('canvasPlaygroundTabStripModel.ts');
-    const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
-
-    expect(tabStripSource).toContain("from './CanvasPlaygroundTabStrip.templates'");
-    expect(tabStripSource).toContain("from './useCanvasPlaygroundTabStripPresenter'");
-    expect(tabStripSource).not.toContain('AlertDialog');
-    expect(tabStripSource).not.toContain('TabsTrigger');
-    expect(tabStripSource).not.toContain("mode: 'replace_current'");
-    expect(tabStripSource).not.toContain('useState(');
-    expect(tabStripSource).not.toContain('useMemo(');
-
-    expect(tabStripPresenterSource).toContain('function useCanvasPlaygroundTabStripPresenter(');
-    expect(tabStripPresenterSource).toContain('resolveCanvasReplacementActionState');
-    expect(tabStripPresenterSource).toContain('createNewCanvasDocumentCommand');
-    expect(tabStripPresenterSource).toContain('resolveCanvasViewCopy');
-    expect(tabStripPresenterSource).toContain('CanvasPlaygroundTabStripTemplateProps');
-    expect(tabStripPresenterSource).not.toContain('JSX.Element');
-    expect(tabStripPresenterSource).not.toContain('<AlertDialog');
-    expect(tabStripPresenterSource).not.toContain('canvasViewCopy');
-
-    expect(tabStripModelSource).toContain('function resolveCanvasReplacementActionState(');
-    expect(tabStripModelSource).toContain('function createReplaceCurrentCanvasDocumentCommand(');
-    expect(tabStripModelSource).toContain('function createNewCanvasDocumentCommand(');
-    expect(tabStripModelSource).toContain('copy: CanvasReplacementActionCopy');
-    expect(tabStripModelSource).toContain('export type CanvasReplacementActionViewState');
-    expect(tabStripModelSource).toContain('viewState: CanvasReplacementActionViewState');
-    expect(tabStripModelSource).not.toContain('JSX.Element');
-
-    expect(tabStripPresenterSource).toContain('replacementActionState.viewState');
-    expect(tabStripTemplateSource).toContain('function CanvasPlaygroundTabStripTemplate(');
-    expect(tabStripTemplateSource).toContain('function CanvasPlaygroundTabsTemplate(');
-    expect(tabStripTemplateSource).toContain('function CanvasReplacementActionTemplate(');
-    expect(tabStripTemplateSource).toContain('CanvasReplacementActionViewState');
-    expect(tabStripTemplateSource).toContain('border-[color:var(--border-default)]');
-    expect(tabStripTemplateSource).toContain('bg-[var(--surface-panel)]');
-    expect(tabStripTemplateSource).toContain('canvasChromeClasses.tabKindBadge');
-    expect(tabStripTemplateSource).not.toContain('border-(--border-default)');
-    expect(tabStripTemplateSource).not.toContain('bg-(--surface-panel)');
-    expect(tabStripTemplateSource).not.toContain('text-(--text-subtle)');
-    expect(tabStripTemplateSource).not.toContain('CanvasReplacementActionState');
-    expect(tabStripTemplateSource).not.toContain("from './copy'");
-    expect(tabStripTemplateSource).not.toContain("mode: 'replace_current'");
-    expect(tabStripSource).not.toContain('canEditEdges && activeReplacementCanvasKind');
+  it('keeps fixed canvas tab-strip rendering retired from the graph-first route posture', () => {
+    for (const retiredFile of [
+      'CanvasPlaygroundTabStrip.tsx',
+      'useCanvasPlaygroundTabStripPresenter.ts',
+      'canvasPlaygroundTabStripModel.ts',
+      'CanvasPlaygroundTabStrip.templates.tsx',
+    ]) {
+      expect(repoFileExists(`apps/web/src/app/views/canvas/${retiredFile}`), retiredFile).toBe(
+        false
+      );
+    }
   });
 
   it('keeps Canvas route chrome visual classes behind the Canvas chrome token component', () => {
     const tokenSource = readAppSource('canvasChromeTokens.ts');
     const draftSaveStatusSource = readAppSource('CanvasDraftSaveStatus.tsx');
-    const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
+    const layoutSource = readAppSource('canvasShellLayoutBuilder.tsx');
     const componentGuide = readRepoFile(
       'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md'
     );
@@ -73,11 +38,12 @@ describe('canvas route posture priority architecture', () => {
     expect(tokenSource).toContain('resolveCanvasDraftStatusClassName');
     expect(tokenSource).toContain('resolveCanvasWorkflowStatusClassName');
 
-    for (const source of [draftSaveStatusSource, tabStripTemplateSource]) {
+    for (const source of [draftSaveStatusSource]) {
       expect(source).toContain("from './canvasChromeTokens'");
       expect(source).not.toMatch(/\b(?:slate|gray|zinc)-\d{2,3}\b/);
       expect(source).not.toMatch(/\b(?:rose|amber|emerald)-\d{2,3}\b/);
     }
+    expect(layoutSource).not.toContain('CanvasPlaygroundTabStrip');
 
     for (const retiredToolbarFile of [
       'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
