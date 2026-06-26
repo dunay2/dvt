@@ -8348,6 +8348,47 @@ test('tracked migrations register Canvas context menu shell layer authority', ()
   assert.doesNotMatch(layerMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas context menu echo consumption repair', () => {
+  const migrations = readMigrationFiles();
+  const echoRepairMigration = migrations.find(
+    (migration) => migration.fileName === '329_canvas_context_menu_echo_consumption_repair.sql'
+  );
+
+  assert.ok(echoRepairMigration);
+  assert.match(echoRepairMigration.sql, /E-CANVAS-CONTEXT-MENU-GRAMMAR-REPAIR-1/);
+  assert.match(echoRepairMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(echoRepairMigration.sql, /CanvasContextMenuReadModel/);
+  assert.match(echoRepairMigration.sql, /consumePendingPaneClickEcho/);
+  assert.match(
+    echoRepairMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasContextMenuPresenter\.lifecycle\.test\.tsx/
+  );
+  assert.match(echoRepairMigration.sql, /feature_mechanization_local_rails/);
+  assert.doesNotMatch(echoRepairMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(echoRepairMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Canvas context menu echo repair manifest', () => {
+  const migrations = readMigrationFiles();
+  const manifestCompletionMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '330_canvas_context_menu_echo_consumption_manifest_completion.sql'
+  );
+
+  assert.ok(manifestCompletionMigration);
+  assert.match(manifestCompletionMigration.sql, /E-CANVAS-CONTEXT-MENU-GRAMMAR-REPAIR-1/);
+  assert.match(manifestCompletionMigration.sql, /'version', 1/);
+  assert.match(manifestCompletionMigration.sql, /'implementationPlan'/);
+  assert.match(manifestCompletionMigration.sql, /'forbiddenImplementationSurfaces'/);
+  assert.match(manifestCompletionMigration.sql, /'redGreenCycles'/);
+  assert.match(manifestCompletionMigration.sql, /'completionGate'/);
+  assert.match(manifestCompletionMigration.sql, /'pnpm verify:prepush'/);
+  assert.match(manifestCompletionMigration.sql, /consumePendingPaneClickEcho/);
+  assert.match(manifestCompletionMigration.sql, /feature_mechanization_local_rails/);
+  assert.doesNotMatch(manifestCompletionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(manifestCompletionMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations materialize code symbol duplicate query inputs', () => {
   const migrations = readMigrationFiles();
   const codeSymbolProjectionMigration = migrations.find(

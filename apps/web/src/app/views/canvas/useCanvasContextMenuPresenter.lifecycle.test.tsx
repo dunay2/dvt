@@ -199,6 +199,32 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuVisible();
   });
 
+  it('closes on a later click at the context point after consuming the document pointer echo', async () => {
+    vi.useFakeTimers();
+    await harness.render();
+
+    await harness.openPaneMenuAt(320, 260);
+    vi.advanceTimersByTime(450);
+    await act(async () => {
+      document.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          bubbles: true,
+          button: 0,
+          clientX: 321,
+          clientY: 259,
+        })
+      );
+    });
+    harness.expectMenuVisible();
+
+    vi.advanceTimersByTime(1200);
+    await act(async () => {
+      harness.getPresenter().handlePaneClick({ button: 0, clientX: 321, clientY: 259 });
+    });
+
+    harness.expectMenuClosed();
+  });
+
   it('keeps the menu open through a right-button document pointer event', async () => {
     await harness.render();
 

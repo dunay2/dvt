@@ -123,6 +123,10 @@ export function useCanvasContextMenuPresenter({
   const lastPaneContextMenuScreenPositionRef = useRef<CanvasContextMenuPosition | null>(null);
   const pendingPaneClickEchoRef = useRef(false);
 
+  const consumePendingPaneClickEcho = useCallback(() => {
+    pendingPaneClickEchoRef.current = false;
+  }, []);
+
   const markContextMenuOpened = useCallback(
     (targetKind: ContextMenuOpenTargetKind, screenPosition?: CanvasContextMenuPosition) => {
       lastContextMenuOpenedAtRef.current = Date.now();
@@ -158,13 +162,13 @@ export function useCanvasContextMenuPresenter({
         isNearPosition(event, lastPanePosition);
 
       if (isPendingImmediateBrowserClickEcho || isPendingDelayedEchoAtContextPoint) {
-        pendingPaneClickEchoRef.current = false;
+        consumePendingPaneClickEcho();
         return;
       }
 
       closeContextMenu({ force: true });
     },
-    [closeContextMenu]
+    [closeContextMenu, consumePendingPaneClickEcho]
   );
 
   useEffect(() => {
@@ -187,7 +191,8 @@ export function useCanvasContextMenuPresenter({
         event instanceof MouseEvent &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
         Date.now() - lastContextMenuOpenedAtRef.current <
-          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS;
+          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS &&
+        isNearPosition(event, lastPaneContextMenuScreenPositionRef.current);
       const isPanePointerEchoAtContextPoint =
         pendingPaneClickEchoRef.current &&
         event instanceof MouseEvent &&
@@ -196,6 +201,7 @@ export function useCanvasContextMenuPresenter({
         isNearPosition(event, lastPaneContextMenuScreenPositionRef.current);
 
       if (isPendingImmediatePanePointerEcho || isPanePointerEchoAtContextPoint) {
+        consumePendingPaneClickEcho();
         return;
       }
 
@@ -214,7 +220,7 @@ export function useCanvasContextMenuPresenter({
       document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
       document.removeEventListener('keydown', handleDocumentKeyDown, true);
     };
-  }, [closeContextMenu, model]);
+  }, [closeContextMenu, consumePendingPaneClickEcho, model]);
 
   const openCanvasContextMenu = useCallback(
     (screenPosition: CanvasContextMenuPosition) => {
