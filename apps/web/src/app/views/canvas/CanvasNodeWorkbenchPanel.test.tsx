@@ -58,6 +58,23 @@ const MODEL_NODE: CanonicalNode = {
   role: 'transform',
   status: 'idle',
   tags: [],
+  metadata: {
+    columns: {
+      order_id: {
+        data_type: 'integer',
+        tests: [
+          {
+            not_null: {
+              severity: 'error',
+              selectedForExecution: true,
+              lastRunStatus: 'passed',
+              lastRunDurationMs: 1200,
+            },
+          },
+        ],
+      },
+    },
+  },
 };
 
 const EDGES: readonly CanonicalEdge[] = [
@@ -70,10 +87,18 @@ const EDGES: readonly CanonicalEdge[] = [
 ];
 
 function renderPanel(root: Root, preferredTabId: string | null = null): void {
+  renderNodePanel(root, SOURCE_NODE, preferredTabId);
+}
+
+function renderNodePanel(
+  root: Root,
+  node: CanonicalNode,
+  preferredTabId: string | null = null
+): void {
   act(() => {
     root.render(
       <CanvasNodeWorkbenchPanel
-        node={SOURCE_NODE}
+        node={node}
         nodes={[SOURCE_NODE, MODEL_NODE]}
         edges={EDGES}
         activeRunId={null}
@@ -146,6 +171,16 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).toContain('orders');
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('error');
+  });
+
+  it('shows dbt test meaning, execution selection, readiness impact and run history', () => {
+    renderNodePanel(root, MODEL_NODE, 'tests');
+
+    expect(container.textContent).toContain('not_null(order_id)');
+    expect(container.textContent).toContain('Value is present');
+    expect(container.textContent).toContain('selected');
+    expect(container.textContent).toContain('blocks run');
+    expect(container.textContent).toContain('passed in 1.2s');
   });
 
   it('keeps editable node properties inside the workbench general section', () => {
