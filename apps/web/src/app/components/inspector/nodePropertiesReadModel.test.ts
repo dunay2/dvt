@@ -246,7 +246,23 @@ describe('nodePropertiesReadModel', () => {
           order_id: {
             data_type: 'integer',
             description: 'Primary order key',
-            tests: ['not_null', 'unique'],
+            tests: [
+              {
+                not_null: {
+                  severity: 'error',
+                  selectedForExecution: true,
+                  lastRunStatus: 'passed',
+                  lastRunDurationMs: 1234,
+                },
+              },
+              {
+                unique: {
+                  severity: 'error',
+                  selectedForExecution: false,
+                  lastRunStatus: 'failed',
+                },
+              },
+            ],
           },
           status: {
             data_type: 'text',
@@ -273,12 +289,22 @@ describe('nodePropertiesReadModel', () => {
       type: 'not_null',
       target: 'fct_orders.order_id',
       column: 'order_id',
+      severity: 'error',
+      assertion: 'Value is present',
+      selection: 'selected',
+      readinessImpact: 'blocks run',
+      lastRun: 'passed in 1.2s',
     });
     expectTableCells(sectionById(model, 'tests'), 'test:model-orders:order_id:unique', {
       name: 'unique(order_id)',
       type: 'unique',
       target: 'fct_orders.order_id',
       column: 'order_id',
+      severity: 'error',
+      assertion: 'Values are unique',
+      selection: 'not selected',
+      readinessImpact: 'blocks run',
+      lastRun: 'failed',
     });
     expectTableCells(sectionById(model, 'tests'), 'test:model-orders:status:accepted_values', {
       name: 'accepted_values(status)',
@@ -287,6 +313,8 @@ describe('nodePropertiesReadModel', () => {
       column: 'status',
       severity: 'warn',
       expression: 'values: created, paid',
+      assertion: 'Value is one of created, paid',
+      readinessImpact: 'warning',
     });
   });
 

@@ -1,5 +1,6 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { projectDbtTestSemantics, type DbtTestSemanticsInput } from './dbtTestSemanticsPresenter';
 
 export type NodePropertySectionId =
   | 'general'
@@ -422,7 +423,16 @@ function buildTestRows(
 ): readonly NodePropertyTableRow[] {
   const readDbtTest = (
     candidate: unknown
-  ): Readonly<{ type: string; severity?: string; expression?: string }> | null => {
+  ): Readonly<{
+    type: string;
+    severity?: string;
+    expression?: string;
+    selectedForExecution?: boolean;
+    selectionState?: string;
+    readinessImpact?: string;
+    lastRunStatus?: string;
+    lastRunDurationMs?: number;
+  }> | null => {
     if (typeof candidate === 'string' && candidate.trim().length > 0) {
       return { type: candidate.trim() };
     }
@@ -442,6 +452,21 @@ function buildTestRows(
         type: directType,
         severity: readString(candidate.severity),
         expression: readFirstString(candidate.expression, candidate.sql, candidate.condition),
+        selectedForExecution:
+          readBoolean(candidate.selectedForExecution) ??
+          readBoolean(candidate.executionSelected) ??
+          readBoolean(candidate.selected),
+        selectionState: readFirstString(candidate.selectionState, candidate.executionSelection),
+        readinessImpact: readString(candidate.readinessImpact),
+        lastRunStatus: readFirstString(
+          candidate.lastRunStatus,
+          candidate.runStatus,
+          candidate.lastStatus
+        ),
+        lastRunDurationMs:
+          readNumber(candidate.lastRunDurationMs) ??
+          readNumber(candidate.lastDurationMs) ??
+          readNumber(candidate.durationMs),
       };
     }
 
@@ -460,11 +485,31 @@ function buildTestRows(
           values.length > 0
             ? `values: ${values.join(', ')}`
             : readFirstString(configRecord.expression, configRecord.sql, configRecord.condition),
+        selectedForExecution:
+          readBoolean(configRecord.selectedForExecution) ??
+          readBoolean(configRecord.executionSelected) ??
+          readBoolean(configRecord.selected),
+        selectionState: readFirstString(
+          configRecord.selectionState,
+          configRecord.executionSelection
+        ),
+        readinessImpact: readString(configRecord.readinessImpact),
+        lastRunStatus: readFirstString(
+          configRecord.lastRunStatus,
+          configRecord.runStatus,
+          configRecord.lastStatus
+        ),
+        lastRunDurationMs:
+          readNumber(configRecord.lastRunDurationMs) ??
+          readNumber(configRecord.lastDurationMs) ??
+          readNumber(configRecord.durationMs),
       };
     }
 
     return null;
   };
+  const testSemanticCells = (test: DbtTestSemanticsInput): Record<string, string> =>
+    projectDbtTestSemantics(test);
   const columnTestRows = (): readonly NodePropertyTableRow[] => {
     const columns = isRecord(metadata.columns) ? metadata.columns : {};
 
@@ -494,6 +539,7 @@ function buildTestRows(
                 column: columnName,
                 severity: test.severity ?? '',
                 expression: test.expression ?? '',
+                ...testSemanticCells(test),
               },
             },
           ];
@@ -524,6 +570,26 @@ function buildTestRows(
           severity: readString(candidate.severity) ?? '',
           expression:
             readFirstString(candidate.expression, candidate.sql, candidate.condition) ?? '',
+          ...testSemanticCells({
+            type: readFirstString(candidate.type, candidate.testType) ?? '',
+            severity: readString(candidate.severity),
+            expression: readFirstString(candidate.expression, candidate.sql, candidate.condition),
+            selectedForExecution:
+              readBoolean(candidate.selectedForExecution) ??
+              readBoolean(candidate.executionSelected) ??
+              readBoolean(candidate.selected),
+            selectionState: readFirstString(candidate.selectionState, candidate.executionSelection),
+            readinessImpact: readString(candidate.readinessImpact),
+            lastRunStatus: readFirstString(
+              candidate.lastRunStatus,
+              candidate.runStatus,
+              candidate.lastStatus
+            ),
+            lastRunDurationMs:
+              readNumber(candidate.lastRunDurationMs) ??
+              readNumber(candidate.lastDurationMs) ??
+              readNumber(candidate.durationMs),
+          }),
         },
       },
     ];
@@ -560,6 +626,21 @@ function buildTestRows(
         target: testTarget ?? [testTargetModel, testTargetColumn].filter(Boolean).join('.'),
         column: testTargetColumn ?? '',
         severity: severity ?? '',
+        ...testSemanticCells({
+          type: testType ?? '',
+          severity,
+          selectedForExecution:
+            readBoolean(metadata.selectedForExecution) ??
+            readBoolean(metadata.executionSelected) ??
+            readBoolean(metadata.selected),
+          selectionState: readFirstString(metadata.selectionState, metadata.executionSelection),
+          readinessImpact: readString(metadata.readinessImpact),
+          lastRunStatus: readFirstString(metadata.lastRunStatus, metadata.runStatus),
+          lastRunDurationMs:
+            readNumber(metadata.lastRunDurationMs) ??
+            readNumber(metadata.lastDurationMs) ??
+            readNumber(metadata.durationMs),
+        }),
       },
     },
   ];
