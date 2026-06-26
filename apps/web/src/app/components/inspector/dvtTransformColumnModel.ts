@@ -1,7 +1,7 @@
-/** Owned concern: project upstream DVT source columns for transform workbench selection. */
+/** Owned concern: project upstream source columns for transform workbench selection. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
-export type DvtTransformColumnOption = Readonly<{
+export type TransformColumnOption = Readonly<{
   columnName: string;
   columnRef: string;
   dataType: string;
@@ -11,14 +11,16 @@ export type DvtTransformColumnOption = Readonly<{
   sourceNodeName: string;
 }>;
 
-type BuildDvtTransformColumnOptionsArgs = Readonly<{
+type BuildTransformColumnOptionsArgs = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   selectedColumnRefs: readonly string[];
 }>;
 
-type DvtTransformColumn = Readonly<{
+export type DvtTransformColumnOption = TransformColumnOption;
+
+type TransformColumn = Readonly<{
   name: string;
   type: string;
   nullable?: boolean;
@@ -52,8 +54,8 @@ function readMetadataConfig(metadata: CanonicalNode['metadata']): Record<string,
   return isRecord(config) ? config : {};
 }
 
-function readColumns(value: unknown): readonly DvtTransformColumn[] {
-  const readColumn = (candidate: unknown, fallbackName?: string): readonly DvtTransformColumn[] => {
+function readColumns(value: unknown): readonly TransformColumn[] {
+  const readColumn = (candidate: unknown, fallbackName?: string): readonly TransformColumn[] => {
     if (!isRecord(candidate)) {
       return [];
     }
@@ -73,7 +75,7 @@ function readColumns(value: unknown): readonly DvtTransformColumn[] {
   };
 
   if (Array.isArray(value)) {
-    return value.flatMap((candidate): readonly DvtTransformColumn[] => readColumn(candidate));
+    return value.flatMap((candidate): readonly TransformColumn[] => readColumn(candidate));
   }
 
   if (isRecord(value)) {
@@ -83,23 +85,23 @@ function readColumns(value: unknown): readonly DvtTransformColumn[] {
   return [];
 }
 
-export function readDvtSelectedColumnRefs(metadata: CanonicalNode['metadata']): readonly string[] {
+export function readSelectedColumnRefs(metadata: CanonicalNode['metadata']): readonly string[] {
   return readStringArray(readMetadataConfig(metadata).selectedColumns);
 }
 
-export function buildDvtTransformColumnOptions({
+export function buildTransformColumnOptions({
   node,
   nodes,
   edges,
   selectedColumnRefs,
-}: BuildDvtTransformColumnOptionsArgs): readonly DvtTransformColumnOption[] {
+}: BuildTransformColumnOptionsArgs): readonly TransformColumnOption[] {
   const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
   const selectedColumnRefSet = new Set(selectedColumnRefs);
   const upstreamNodeIds = edges
     .filter((edge) => edge.targetId === node.id)
     .map((edge) => edge.sourceId);
 
-  return upstreamNodeIds.flatMap((sourceNodeId): readonly DvtTransformColumnOption[] => {
+  return upstreamNodeIds.flatMap((sourceNodeId): readonly TransformColumnOption[] => {
     const sourceNode = nodeById.get(sourceNodeId);
     if (sourceNode == null) {
       return [];
@@ -120,3 +122,6 @@ export function buildDvtTransformColumnOptions({
     });
   });
 }
+
+export const readDvtSelectedColumnRefs = readSelectedColumnRefs;
+export const buildDvtTransformColumnOptions = buildTransformColumnOptions;

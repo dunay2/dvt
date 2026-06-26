@@ -1,10 +1,7 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { projectDbtTestSemantics, type DbtTestSemanticsInput } from './dbtTestSemanticsPresenter';
-import {
-  buildDvtTransformColumnOptions,
-  readDvtSelectedColumnRefs,
-} from './dvtTransformColumnModel';
+import { buildTransformColumnOptions, readSelectedColumnRefs } from './dvtTransformColumnModel';
 
 export type NodePropertySectionId =
   | 'general'
@@ -230,7 +227,7 @@ function buildColumnRows(columns: readonly InspectorColumn[]): readonly NodeProp
   }));
 }
 
-function buildDvtTransformInputColumnRows({
+function buildTransformInputColumnRows({
   node,
   nodes,
   edges,
@@ -239,15 +236,15 @@ function buildDvtTransformInputColumnRows({
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
 }>): readonly NodePropertyTableRow[] {
-  if (node.kind !== 'dvt:sql_transform') {
+  if (node.role !== 'transform') {
     return [];
   }
 
-  return buildDvtTransformColumnOptions({
+  return buildTransformColumnOptions({
     node,
     nodes,
     edges,
-    selectedColumnRefs: readDvtSelectedColumnRefs(node.metadata),
+    selectedColumnRefs: readSelectedColumnRefs(node.metadata),
   }).map((option) => ({
     id: option.columnRef,
     cells: {
@@ -725,7 +722,7 @@ export function buildNodePropertiesReadModel({
   const columnRows =
     columns.length > 0
       ? buildColumnRows(columns)
-      : buildDvtTransformInputColumnRows({ node, nodes, edges });
+      : buildTransformInputColumnRows({ node, nodes, edges });
   const keyRows = buildKeyRows(metadata, columns);
   const indexRows = buildIndexRows(metadata);
   const foreignKeyRows = buildForeignKeyRows(metadata);

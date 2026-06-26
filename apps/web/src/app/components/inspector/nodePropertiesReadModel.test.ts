@@ -406,6 +406,67 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
+  it('projects dbt model input columns with source and selection state when catalog output is not recorded yet', () => {
+    const source: CanonicalNode = {
+      id: 'source-orders',
+      name: 'Orders source',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer', nullable: false },
+          { name: 'customer', type: 'text', nullable: true },
+        ],
+      },
+    };
+    const modelNode: CanonicalNode = {
+      id: 'model-orders',
+      name: 'Model orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          selectedColumns: ['source-orders.customer'],
+        },
+      },
+    };
+    const edge: CanonicalEdge = {
+      id: 'edge-source-model',
+      sourceId: source.id,
+      targetId: modelNode.id,
+      relation: 'lineage',
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: modelNode,
+      nodes: [source, modelNode],
+      edges: [edge],
+    });
+
+    expectTableCells(sectionById(model, 'columns'), 'source-orders.order_id', {
+      name: 'order_id',
+      type: 'integer',
+      nullable: 'not null',
+      source: 'Orders source',
+      reference: 'source-orders.order_id',
+      selection: 'available',
+    });
+    expectTableCells(sectionById(model, 'columns'), 'source-orders.customer', {
+      name: 'customer',
+      type: 'text',
+      nullable: 'nullable',
+      source: 'Orders source',
+      reference: 'source-orders.customer',
+      selection: 'selected',
+    });
+  });
+
   it.each([
     ['compiled SQL', { compiledSql: 'select compiled', sql: 'select metadata' }, 'select compiled'],
     [
