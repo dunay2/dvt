@@ -71,6 +71,17 @@ export function CanvasNodeWorkbenchPanel({
   const dotClass = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
   const preferredTabKey =
     preferredTabId == null ? null : `${node.id}:${preferredTabId}:${preferredTabRequestId}`;
+  const renderAuthoringSection = (section: 'general' | 'columns' | 'code'): JSX.Element => (
+    <div data-slot="canvas-node-workbench-authoring" className="space-y-3 pt-1">
+      <CanvasInspectorAuthoringSection
+        node={node}
+        nodes={nodes}
+        edges={edges}
+        authoring={authoring}
+        section={section}
+      />
+    </div>
+  );
 
   useEffect(() => {
     if (preferredTabKey == null || preferredTabKey === appliedPreferredTabKey) {
@@ -111,16 +122,11 @@ export function CanvasNodeWorkbenchPanel({
             panels={panels}
             activeTab={resolvedActiveTab}
             primarySectionIds={resolvedPrimarySectionIds}
-            beforePanels={
-              <div data-slot="canvas-node-workbench-authoring" className="space-y-3 pt-1">
-                <CanvasInspectorAuthoringSection
-                  node={node}
-                  nodes={nodes}
-                  edges={edges}
-                  authoring={authoring}
-                />
-              </div>
-            }
+            sectionChildren={{
+              general: renderAuthoringSection('general'),
+              columns: renderAuthoringSection('columns'),
+              code: renderAuthoringSection('code'),
+            }}
             slotPrefix="canvas-node-workbench"
             surface="workbench"
             showSectionCountBadge

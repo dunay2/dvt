@@ -25,6 +25,7 @@ export type NodePropertiesTabsProps = Readonly<{
   activeTab: string;
   primarySectionIds?: readonly NodePropertySection['id'][];
   beforePanels?: ReactNode;
+  sectionChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
   tagsEditor?: ReactNode;
   slotPrefix?: string;
   surface?: 'inspector' | 'workbench';
@@ -79,6 +80,7 @@ export function NodePropertiesTabs({
   activeTab,
   primarySectionIds,
   beforePanels,
+  sectionChildren,
   tagsEditor,
   slotPrefix,
   surface = 'inspector',
@@ -192,7 +194,7 @@ export function NodePropertiesTabs({
             surface={surface}
             showCountBadge={showSectionCountBadge}
           >
-            {section.id === 'general' ? beforePanels : null}
+            {sectionChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null)}
           </NodePropertySectionView>
         </TabsContent>
       ))}

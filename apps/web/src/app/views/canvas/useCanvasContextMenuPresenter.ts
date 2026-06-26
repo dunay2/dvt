@@ -191,8 +191,7 @@ export function useCanvasContextMenuPresenter({
         event instanceof MouseEvent &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
         Date.now() - lastContextMenuOpenedAtRef.current <
-          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS &&
-        isNearPosition(event, lastPaneContextMenuScreenPositionRef.current);
+          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS;
       const isPanePointerEchoAtContextPoint =
         pendingPaneClickEchoRef.current &&
         event instanceof MouseEvent &&
@@ -200,7 +199,11 @@ export function useCanvasContextMenuPresenter({
         Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS &&
         isNearPosition(event, lastPaneContextMenuScreenPositionRef.current);
 
-      if (isPendingImmediatePanePointerEcho || isPanePointerEchoAtContextPoint) {
+      if (isPendingImmediatePanePointerEcho) {
+        return;
+      }
+
+      if (isPanePointerEchoAtContextPoint) {
         consumePendingPaneClickEcho();
         return;
       }
