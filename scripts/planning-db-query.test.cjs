@@ -4864,7 +4864,10 @@ test('readCanvasUxdbSpecificationRows queries DB-owned TAREA specification recor
     limit: 5,
   });
 
-  assert.match(captured.sql, /from planning_query_store\.canvas_uxdb_specification_query/);
+  assert.match(
+    captured.sql,
+    /from planning_query_store\.canvas_uxdb_canonical_specification_query/
+  );
   assert.match(captured.sql, /canonical_task_id = \$1/);
   assert.match(captured.sql, /record_type = \$2/);
   assert.match(captured.sql, /component_id = \$3/);

@@ -33,7 +33,7 @@ function createCanvasUxdbSpecificationReadModelComponent(deps = {}) {
         legacy_posture,
         source_path,
         metadata
-      from ${activeSchemaName}.canvas_uxdb_specification_query`;
+      from ${activeSchemaName}.canvas_uxdb_canonical_specification_query`;
   }
 
   async function readCanvasUxdbSpecificationRows(client, filters = {}) {
