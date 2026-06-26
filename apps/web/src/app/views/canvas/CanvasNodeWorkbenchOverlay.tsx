@@ -45,9 +45,11 @@ export function CanvasNodeWorkbenchOverlay({
   panels,
   onHide,
 }: CanvasNodeWorkbenchOverlayProps): JSX.Element | null {
-  const nodeWorkbenchPlacement = layout.surfaceStrategy?.nodeWorkbench.placement;
+  const surfaceStrategy = layout.surfaceStrategy;
+  const nodeWorkbenchPlacement = surfaceStrategy?.nodeWorkbench.placement;
 
   if (
+    surfaceStrategy == null ||
     nodeWorkbenchPlacement !== 'contextual-overlay' ||
     layout.focusMode ||
     !layout.inspectorPanelVisible ||
@@ -66,6 +68,7 @@ export function CanvasNodeWorkbenchOverlay({
         registeredPlugins={panels.registeredPlugins}
         preferredTabId={panels.inspectorPreferredTabId}
         preferredTabRequestId={panels.inspectorPreferredTabRequestId}
+        primarySectionIds={surfaceStrategy.nodeWorkbench.sections}
         onClose={onHide}
         authoring={panels.inspectorAuthoring}
       />

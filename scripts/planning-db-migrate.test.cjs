@@ -8853,3 +8853,37 @@ test('tracked migrations register the Canvas viewport component slice boundaries
   assert.doesNotMatch(viewportSliceMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(viewportSliceMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register Canvas node workbench strategy sections', () => {
+  const migrations = readMigrationFiles();
+  const nodeWorkbenchStrategyMigration = migrations.find(
+    (migration) => migration.fileName === '298_canvas_node_workbench_strategy_sections.sql'
+  );
+
+  assert.ok(nodeWorkbenchStrategyMigration);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /E-CANVAS-SURFACE-STRATEGY-DBT-DVT-1/);
+  assert.match(
+    nodeWorkbenchStrategyMigration.sql,
+    /CANVAS-NODE-WORKBENCH-STRATEGY-SECTIONS-20260626/
+  );
+  assert.match(nodeWorkbenchStrategyMigration.sql, /web\.component\.canvas\.CanvasSurfaceStrategy/);
+  assert.match(
+    nodeWorkbenchStrategyMigration.sql,
+    /web\.component\.canvas\.CanvasNodeWorkbenchPanel/
+  );
+  assert.match(nodeWorkbenchStrategyMigration.sql, /web\.component\.canvas\.NodeWorkbench/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /canvasNodeWorkbenchSectionStrategy\.ts/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /resolveNodeWorkbenchPrimarySectionIds/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /CanvasNodeWorkbenchOverlay\.tsx/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /ResolveCanvasSurfaceStrategy/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /strategy_pattern/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /componentGuides/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /architectureGuards/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /completionGate/);
+  assert.doesNotMatch(nodeWorkbenchStrategyMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(nodeWorkbenchStrategyMigration.sql, /truncate\s+/i);
+});

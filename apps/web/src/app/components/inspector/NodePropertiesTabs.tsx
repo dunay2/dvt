@@ -23,6 +23,7 @@ export type NodePropertiesTabsProps = Readonly<{
   activeRunId: string | null;
   panels: readonly InspectorPanelContribution[];
   activeTab: string;
+  primarySectionIds?: readonly NodePropertySection['id'][];
   beforePanels?: ReactNode;
   tagsEditor?: ReactNode;
   slotPrefix?: string;
@@ -44,6 +45,24 @@ function isPrimarySection(section: NodePropertySection): boolean {
   return PRIMARY_NODE_WORKBENCH_SECTION_IDS.has(section.id);
 }
 
+function resolvePrimarySections({
+  sections,
+  primarySectionIds,
+}: Readonly<{
+  sections: readonly NodePropertySection[];
+  primarySectionIds?: readonly NodePropertySection['id'][];
+}>): readonly NodePropertySection[] {
+  if (primarySectionIds == null) {
+    return sections.filter(isPrimarySection);
+  }
+
+  const sectionById = new Map(sections.map((section) => [section.id, section]));
+  return primarySectionIds.flatMap((sectionId): readonly NodePropertySection[] => {
+    const section = sectionById.get(sectionId);
+    return section == null ? [] : [section];
+  });
+}
+
 function renderTabBadge(section: NodePropertySection): JSX.Element | null {
   return section.tableRows.length > 0 ? (
     <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
@@ -58,6 +77,7 @@ export function NodePropertiesTabs({
   activeRunId,
   panels,
   activeTab,
+  primarySectionIds,
   beforePanels,
   tagsEditor,
   slotPrefix,
@@ -86,8 +106,14 @@ export function NodePropertiesTabs({
           sectionPrefix: slotPrefix,
           code: `${slotPrefix}-code`,
         };
-  const primarySections = model.sections.filter(isPrimarySection);
-  const overflowSections = model.sections.filter((section) => !isPrimarySection(section));
+  const primarySections = resolvePrimarySections({
+    sections: model.sections,
+    primarySectionIds,
+  });
+  const primarySectionIdsSet = new Set(primarySections.map((section) => section.id));
+  const overflowSections = model.sections.filter(
+    (section) => !primarySectionIdsSet.has(section.id)
+  );
   const overflowItems = [
     ...overflowSections.map((section) => ({
       id: section.id,
