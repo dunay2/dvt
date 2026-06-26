@@ -18,21 +18,19 @@ import { canvasViewCopy } from './copy';
 import { DbtAuthoringFields } from './DbtAuthoringFields';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 
-type CanvasInspectorAuthoringDraftController = Readonly<{
-  draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
-  tagsText: string;
-  onDraftChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
-  onTagsTextChange: Dispatch<SetStateAction<string>>;
-  onResetDraft: () => void;
-}>;
-
 type CanvasInspectorAuthoringSectionProps = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   authoring: CanvasInspectorAuthoringContract;
   section?: 'all' | 'general' | 'columns' | 'code';
-  draftController?: CanvasInspectorAuthoringDraftController;
+  draftController?: Readonly<{
+    draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
+    tagsText: string;
+    onDraftChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
+    onTagsTextChange: Dispatch<SetStateAction<string>>;
+    onResetDraft: () => void;
+  }>;
 }>;
 
 export function CanvasInspectorAuthoringSection({
