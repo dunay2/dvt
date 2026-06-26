@@ -130,14 +130,16 @@ export function seedLiveSelectedClosureDraft(
     });
 }
 
-export function readLiveGraphDraft(): Cypress.Chainable<Cypress.Response<unknown>> {
-  const session = resolveLiveWorkspaceSession();
-
+export function readLiveGraphDraft(
+  session: CanvasDraftSessionScope = resolveLiveWorkspaceSession(),
+  options: { failOnStatusCode?: boolean } = {}
+): Cypress.Chainable<Cypress.Response<unknown>> {
   return cy.request({
     method: 'GET',
     url: buildDraftReadUrl(session),
     headers: buildAuthorizationHeaders(),
     auth: buildBearerAuth(),
+    failOnStatusCode: options.failOnStatusCode,
   });
 }
 
@@ -165,8 +167,10 @@ export function readLiveRunEvents(runId: string): Cypress.Chainable<Cypress.Resp
   });
 }
 
-export function readLiveWorkspaceFile(path: string): Cypress.Chainable<Cypress.Response<unknown>> {
-  const session = resolveLiveWorkspaceSession();
+export function readLiveWorkspaceFile(
+  path: string,
+  session: CanvasDraftSessionScope = resolveLiveWorkspaceSession()
+): Cypress.Chainable<Cypress.Response<unknown>> {
   const query = new URLSearchParams(session);
 
   return cy.request({

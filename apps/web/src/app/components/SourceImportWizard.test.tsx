@@ -41,8 +41,12 @@ describe('SourceImportWizard', () => {
     expect(harness.findTab('Browse')?.disabled).toBe(true);
     expect(harness.findTab('Metadata')?.disabled).toBe(true);
     expect(harness.findTab('Selected')?.disabled).toBe(true);
+    const connectionOption = harness.findConnectionOption('Snowflake PROD');
 
-    await harness.clickClickableDivByText('Snowflake PROD');
+    expect(connectionOption).toBeDefined();
+    expect(connectionOption?.tagName).toBe('BUTTON');
+
+    await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
 
     expect(document.body.textContent).toContain('Browse source tables');
@@ -55,7 +59,7 @@ describe('SourceImportWizard', () => {
 
     await harness.renderWizard({ onClose, onComplete });
 
-    await harness.clickClickableDivByText('Snowflake PROD');
+    await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
     await harness.clickClickableDivByText('ORDERS');
     await harness.clickTab('Selected');
@@ -103,7 +107,7 @@ describe('SourceImportWizard', () => {
       }),
     });
 
-    await harness.clickClickableDivByText('Snowflake PROD');
+    await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
     await harness.clickClickableDivByText('ORDERS');
     await harness.clickTab('Selected');

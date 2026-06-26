@@ -25,7 +25,7 @@ describe('SourceImportWizard plugin options', () => {
       warehouseSourceImport: buildWarehouseSourceImportPort({ importSources }),
     });
 
-    await harness.clickClickableDivByText('Snowflake PROD');
+    await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
     await harness.clickClickableDivByText('ORDERS');
     await harness.clickTab('Selected');
@@ -53,7 +53,7 @@ describe('SourceImportWizard plugin options', () => {
       ],
     });
 
-    await harness.clickClickableDivByText('Snowflake PROD');
+    await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
     await harness.clickClickableDivByText('ORDERS');
     await harness.clickTab('Metadata');
@@ -84,7 +84,7 @@ describe('SourceImportWizard plugin options', () => {
       ],
     });
 
-    await harness.clickClickableDivByText('Snowflake PROD');
+    await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
     await harness.clickClickableDivByText('ORDERS');
     await harness.clickTab('Metadata');

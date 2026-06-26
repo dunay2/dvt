@@ -162,7 +162,10 @@ const SCRIPT_FILE_RULES = [
     'ci-tooling',
   ],
   [/^scripts\/run-dev-stack(\.[\w-]+)?(\.test)?\.cjs$/u, 'dev-local'],
-  [/^scripts\/run-(canvas-first-authoring|selected-closure)-live-proof\.cjs$/u, 'dev-local'],
+  [
+    /^scripts\/run-(canvas-first-authoring|canvas-source-import|selected-closure)-live-proof\.cjs$/u,
+    'dev-local',
+  ],
   [
     /^scripts\/(enable-workflow\.sh|hygiene\.ps1|outbox-worker-canary-evidence\.ps1)$/u,
     'release-ops',
