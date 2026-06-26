@@ -1,15 +1,15 @@
 /** Owned concern: render the React Flow node shell around a precomputed Canvas node body. */
-import { Handle, Position } from '@xyflow/react';
 import { type DragEventHandler, type ReactNode } from 'react';
 
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import { cn } from '../ui/utils';
-import styles from './DbtNodeComponent.module.css';
 import { CanvasNodeContextMenuView } from './CanvasNodeContextMenuView';
+import { CanvasNodePortHandle } from './CanvasNodePortHandle';
 import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
 } from './canvasNodeContextMenuModel';
+import styles from './CanvasNodeShell.module.css';
 
 type CanvasNodeShellProps = Readonly<{
   children: ReactNode;
@@ -41,23 +41,11 @@ export function CanvasNodeShell({
           onDragOver={onDragOver}
           onDrop={onDrop}
         >
-          {shouldShowTargetHandle && (
-            <Handle
-              type="target"
-              position={Position.Left}
-              className="bg-gray-400! w-3! h-3! border-2! border-white!"
-            />
-          )}
+          {shouldShowTargetHandle && <CanvasNodePortHandle kind="target" />}
 
           <div className="relative">{children}</div>
 
-          {shouldShowSourceHandle && (
-            <Handle
-              type="source"
-              position={Position.Right}
-              className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
-            />
-          )}
+          {shouldShowSourceHandle && <CanvasNodePortHandle kind="source" />}
         </div>
       </ContextMenuTrigger>
 
