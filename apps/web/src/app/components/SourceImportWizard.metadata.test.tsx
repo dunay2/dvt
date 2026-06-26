@@ -37,7 +37,7 @@ describe('SourceImportWizard metadata exploration', () => {
       }),
     });
 
-    await harness.clickClickableDivByText('Snowflake PROD');
+    await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
     await harness.clickClickableDivByText('ORDERS');
     await harness.clickTab('Metadata');
@@ -129,7 +129,7 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('Selected: 1');
 
     await harness.clickTab('Connections');
-    await harness.clickClickableDivByText('Snowflake QA');
+    await harness.clickConnectionOption('Snowflake QA');
     await harness.clickTab('Browse');
     await harness.flushPendingWork();
 
