@@ -170,6 +170,22 @@ describe('Canvas ready node authoring', () => {
     );
   });
 
+  it('opens node workbench from node context only, not from plain node selection', () => {
+    stubCanvasDraftRead();
+    stubCanvasDraftSave();
+
+    visitReadyCanvas();
+
+    cy.contains('.react-flow__node', 'model_orders').should('be.visible').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
+
+    cy.contains('.react-flow__node', 'model_orders').rightclick();
+    cy.contains('[role="menuitem"]', 'Open workbench').click();
+
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('contain.text', 'model_orders');
+  });
+
   it('persists add and remove authoring changes across route reloads', () => {
     stubStatefulCanvasDraftAuthoring();
 

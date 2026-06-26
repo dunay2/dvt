@@ -58,16 +58,17 @@ describe('useCanvasGraphHandlers selection', () => {
     expect(setInspectorNode).not.toHaveBeenCalled();
   });
 
-  it('sets inspector node when an existing canonical node is clicked', async () => {
+  it('does not open node workbench from a plain graph node click', async () => {
     const setInspectorNode = vi.fn();
     harness = renderSelectionHarness({
+      inspectorPanelVisible: true,
       setInspectorNode,
     });
     await harness.render();
 
     clickNode(harness, 'source-node');
 
-    expect(setInspectorNode).toHaveBeenCalledWith('source-node');
+    expect(setInspectorNode).not.toHaveBeenCalled();
   });
 
   it('does not let React Flow visual selection overwrite execution scope', async () => {

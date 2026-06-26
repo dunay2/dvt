@@ -40,12 +40,8 @@ export function useCanvasSelectionHandlers({
       if (!canonicalNodesById.has(node.id)) {
         return;
       }
-
-      if (inspectorPanelVisible && !focusMode) {
-        setInspectorNode(node.id);
-      }
     },
-    [canonicalNodesById, focusMode, inspectorPanelVisible, setInspectorNode]
+    [canonicalNodesById]
   );
 
   const onSelectionChange = useCallback<
