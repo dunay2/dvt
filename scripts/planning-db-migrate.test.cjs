@@ -4119,6 +4119,38 @@ test('tracked migrations map source import catalog view and retire duplicate tab
   assert.doesNotMatch(sourceImportCatalogViewMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations map source import catalog primitives under catalog view ownership', () => {
+  const migrations = readMigrationFiles();
+  const sourceImportCatalogPrimitivesMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '327_source_import_catalog_primitives_component_boundary.sql'
+  );
+
+  assert.ok(sourceImportCatalogPrimitivesMigration);
+  assert.match(
+    sourceImportCatalogPrimitivesMigration.sql,
+    /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/
+  );
+  assert.match(
+    sourceImportCatalogPrimitivesMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/SourceImportCatalogPrimitives\.tsx/
+  );
+  assert.match(
+    sourceImportCatalogPrimitivesMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/SourceImportCatalogView\.architecture\.test\.ts/
+  );
+  assert.match(sourceImportCatalogPrimitivesMigration.sql, /frontend_component_local_files/);
+  assert.match(sourceImportCatalogPrimitivesMigration.sql, /frontend_component_local_evidence/);
+  assert.match(sourceImportCatalogPrimitivesMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(sourceImportCatalogPrimitivesMigration.sql, /SourceImportTableCard/);
+  assert.match(sourceImportCatalogPrimitivesMigration.sql, /SourceImportColumnPreviewList/);
+  assert.doesNotMatch(
+    sourceImportCatalogPrimitivesMigration.sql,
+    /delete\s+from\s+planning_query_store\.frontend_component_local_files/i
+  );
+  assert.doesNotMatch(sourceImportCatalogPrimitivesMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile remaining frontend gap rails and tighten local retirement precedence', () => {
   const migrations = readMigrationFiles();
   const frontendGapRailMigration = migrations.find(
