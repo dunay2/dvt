@@ -8653,3 +8653,25 @@ test('tracked migrations keep planned Canvas backlog components out of maturity 
   );
   assert.doesNotMatch(canvasBacklogIntegrityMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations expose Canvas UX DB-first traceability review as a query', () => {
+  const migrations = readMigrationFiles();
+  const traceabilityMigration = migrations.find(
+    (migration) => migration.fileName === '292_canvas_uxdb_traceability_review_query.sql'
+  );
+
+  assert.ok(traceabilityMigration);
+  assert.match(
+    traceabilityMigration.sql,
+    /create or replace view planning_query_store\.canvas_uxdb_traceability_query/i
+  );
+  assert.match(traceabilityMigration.sql, /source_path', 'buzon\/TAREA\.TXT'/);
+  assert.match(traceabilityMigration.sql, /UX-009/);
+  assert.match(traceabilityMigration.sql, /DB-001/);
+  assert.match(traceabilityMigration.sql, /E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1/);
+  assert.match(traceabilityMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(traceabilityMigration.sql, /E-CANVAS-UXDB-SPEC-PERSISTENCE-1/);
+  assert.match(traceabilityMigration.sql, /duplicate_owner_count/);
+  assert.match(traceabilityMigration.sql, /coverage_state/);
+  assert.doesNotMatch(traceabilityMigration.sql, /'DVT-CANVAS-UXDB-SOURCE-DIALOG-1'/);
+});

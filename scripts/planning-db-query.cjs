@@ -79,6 +79,10 @@ const {
   readComponentRoadmapRows,
 } = require('./planning-db/queries/component-roadmap-query.cjs');
 const {
+  buildCanvasUxdbTraceabilityRows,
+  readCanvasUxdbTraceabilityRows,
+} = require('./planning-db/queries/canvas-uxdb-traceability-query.cjs');
+const {
   buildGovernanceRefreshRunRows,
   readGovernanceRefreshRunRows,
 } = require('./planning-db/queries/governance-refresh-run-query.cjs');
@@ -175,6 +179,7 @@ const knownQueries = new Set([
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
+  'canvas-uxdb-traceability',
   'component-profile',
   'governance-refresh-runs',
   'mandatory-proposal-gaps',
@@ -258,6 +263,7 @@ const taskIdCommonFilterQueryNames = new Set([
   'next',
   'task-trace',
   'task-gaps',
+  'canvas-uxdb-traceability',
   'focus',
   'real-work',
 ]);
@@ -412,6 +418,11 @@ function buildPlanningDbQueryHelpText(queryName) {
       examples.push(
         `  pnpm planning:db:query ${queryName} --gaps true --limit 20`,
         `  pnpm planning:db:query ${queryName} --component docs/architecture/components/web/index.md --limit 20`
+      );
+    } else if (queryName === 'canvas-uxdb-traceability') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --filter E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1 --limit 20`,
+        `  pnpm planning:db:query ${queryName} --kind ux_rule --state not-started --limit 20`
       );
     } else if (queryName === 'architecture-dependency-observations') {
       examples.push(
@@ -795,6 +806,7 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'documentation-lifecycle' ||
         queryName === 'documentation-panels' ||
         queryName === 'component-roadmap' ||
+        queryName === 'canvas-uxdb-traceability' ||
         queryName === 'governance-refresh-runs' ||
         queryName === 'db-surfaces' ||
         queryName === 'component-integrity' ||
@@ -4623,6 +4635,15 @@ async function runQuery(options = {}) {
       return roadmapRows;
     }
 
+    if (queryName === 'canvas-uxdb-traceability') {
+      const rows = await readCanvasUxdbTraceabilityRows(client, options.filters || {});
+      const traceabilityRows = buildCanvasUxdbTraceabilityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(traceabilityRows);
+      }
+      return traceabilityRows;
+    }
+
     if (queryName === 'governance-refresh-runs') {
       const rows = await readGovernanceRefreshRunRows(client, options.filters || {});
       const refreshRows = buildGovernanceRefreshRunRows(rows);
@@ -5082,6 +5103,7 @@ module.exports = {
   buildDocumentationLifecycleRows,
   buildDocumentationPanelRows,
   buildComponentRoadmapRows,
+  buildCanvasUxdbTraceabilityRows,
   buildMandatoryProposalGapRows,
   buildPlanningArtifactRows,
   buildPlanningDependencyRows,
@@ -5178,6 +5200,7 @@ module.exports = {
   readDocumentationLifecycleRows,
   readDocumentationPanelRows,
   readComponentRoadmapRows,
+  readCanvasUxdbTraceabilityRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readMandatoryProposalGapRows,

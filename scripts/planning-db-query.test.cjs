@@ -17,6 +17,7 @@ const {
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentMetadataRows,
   buildComponentRoadmapRows,
+  buildCanvasUxdbTraceabilityRows,
   buildArchitectureComponentRows,
   buildArchitectureDependencyClassificationRows,
   buildArchitectureDependencyObservationRows,
@@ -97,6 +98,7 @@ const {
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentMetadataRows,
   readComponentRoadmapRows,
+  readCanvasUxdbTraceabilityRows,
   readArchitectureComponentRows,
   readArchitectureDependencyClassificationRows,
   readArchitectureDependencyObservationRows,
@@ -142,6 +144,7 @@ test('planning DB query CLI prints root help without opening a DB connection', (
   assert.match(result.stdout, /Planning DB query CLI/);
   assert.match(result.stdout, /Usage:/);
   assert.match(result.stdout, /component-metadata/);
+  assert.match(result.stdout, /canvas-uxdb-traceability/);
   assert.match(result.stdout, /feature-mechanization/);
   assert.doesNotMatch(result.stderr, /Unknown planning DB query|Missing value/);
 });
@@ -173,6 +176,7 @@ test('planning DB query limit parsing lives in one canonical helper', () => {
     'planning-db/frontend-component-inventory.cjs',
     'planning-db/frontend-mechanical-truth-inventory.cjs',
     'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/canvas-uxdb-traceability-query.cjs',
     'planning-db/queries/command-query-rail-query.cjs',
     'planning-db/queries/component-architecture-fitness-query.cjs',
     'planning-db/queries/component-integrity-query.cjs',
@@ -206,6 +210,7 @@ test('planning DB query filtering helpers live in one canonical helper', () => {
     'planning-db/frontend-component-inventory.cjs',
     'planning-db/frontend-mechanical-truth-inventory.cjs',
     'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/canvas-uxdb-traceability-query.cjs',
     'planning-db/queries/command-query-rail-query.cjs',
     'planning-db/queries/component-architecture-fitness-query.cjs',
     'planning-db/queries/component-integrity-query.cjs',
@@ -400,6 +405,19 @@ test('documentation panel query behavior lives in a focused read-model component
     buildDocumentationPanelRows
   );
   assert.equal(documentationPanelComponent.readDocumentationPanelRows, readDocumentationPanelRows);
+});
+
+test('Canvas UX DB-first traceability query behavior lives in a focused read-model component', () => {
+  const canvasTraceabilityComponent = require('./planning-db/queries/canvas-uxdb-traceability-query.cjs');
+
+  assert.equal(
+    canvasTraceabilityComponent.buildCanvasUxdbTraceabilityRows,
+    buildCanvasUxdbTraceabilityRows
+  );
+  assert.equal(
+    canvasTraceabilityComponent.readCanvasUxdbTraceabilityRows,
+    readCanvasUxdbTraceabilityRows
+  );
 });
 
 test('component architecture fitness query behavior lives in a focused read-model component', () => {
@@ -4751,6 +4769,60 @@ test('readArchitectureDesignRows queries the DB architecture design authority vi
     'Architecture',
     5,
   ]);
+});
+
+test('readCanvasUxdbTraceabilityRows queries DB-owned TAREA traceability coverage', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCanvasUxdbTraceabilityRows(client, {
+    taskId: 'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+    kind: 'ux_rule',
+    state: 'ready',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.canvas_uxdb_traceability_query/);
+  assert.match(captured.sql, /canonical_task_id = \$1/);
+  assert.match(captured.sql, /criterion_kind = \$2/);
+  assert.match(captured.sql, /coverage_state = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1', 'ux_rule', 'ready', 5]);
+});
+
+test('buildCanvasUxdbTraceabilityRows formats canonical owner and duplicate state', () => {
+  assert.deepEqual(
+    buildCanvasUxdbTraceabilityRows([
+      {
+        criterion_code: 'UX-009',
+        criterion_kind: 'ux_rule',
+        canonical_task_id: 'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        task_status: 'queued',
+        coverage_state: 'ready',
+        duplicate_owner_count: 0,
+        duplicate_state: 'single-owner',
+        action_hint:
+          'Implement CanvasContextMenu and NodeContextMenu through separate governed rails.',
+      },
+    ]),
+    [
+      [
+        'UX-009',
+        'ux_rule',
+        'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        'queued',
+        'ready',
+        'single-owner',
+        'Implement CanvasContextMenu and NodeContextMenu through separate governed rails.',
+      ],
+    ]
+  );
 });
 
 test('readArchitectureComponentRows queries the DB architecture component view', async () => {
