@@ -547,6 +547,50 @@ function buildTestRows(
   };
   const testSemanticCells = (test: DbtTestSemanticsInput): Record<string, string> =>
     projectDbtTestSemantics(test);
+  const readConnectedDbtTest = (testMetadata: Record<string, unknown>): DbtTestSemanticsInput => {
+    const buildFromConfig = (
+      type: string,
+      config: Record<string, unknown>
+    ): DbtTestSemanticsInput => {
+      const values = readStringArray(config.values);
+      return {
+        type,
+        severity: readString(config.severity),
+        expression:
+          values.length > 0
+            ? `values: ${values.join(', ')}`
+            : readFirstString(config.expression, config.sql, config.condition),
+        selectedForExecution:
+          readBoolean(config.selectedForExecution) ??
+          readBoolean(config.executionSelected) ??
+          readBoolean(config.selected),
+        selectionState: readFirstString(config.selectionState, config.executionSelection),
+        readinessImpact: readString(config.readinessImpact),
+        lastRunStatus: readFirstString(config.lastRunStatus, config.runStatus, config.lastStatus),
+        lastRunDurationMs:
+          readNumber(config.lastRunDurationMs) ??
+          readNumber(config.lastDurationMs) ??
+          readNumber(config.durationMs),
+      };
+    };
+
+    const explicitType = readFirstString(
+      testMetadata.type,
+      testMetadata.testType,
+      testMetadata.test_name
+    );
+    if (explicitType != null) {
+      return buildFromConfig(explicitType, testMetadata);
+    }
+
+    for (const knownType of ['not_null', 'unique', 'accepted_values', 'relationships']) {
+      if (Object.prototype.hasOwnProperty.call(testMetadata, knownType)) {
+        return buildFromConfig(knownType, asRecord(testMetadata[knownType]));
+      }
+    }
+
+    return buildFromConfig('', testMetadata);
+  };
   const columnTestRows = (): readonly NodePropertyTableRow[] => {
     const columns = isRecord(metadata.columns) ? metadata.columns : {};
 
@@ -643,10 +687,7 @@ function buildTestRows(
         }
 
         const testMetadata = asRecord(testNode.metadata);
-        const test = readDbtTest(testMetadata);
-        if (test == null) {
-          return [];
-        }
+        const test = readConnectedDbtTest(testMetadata);
 
         const targetColumn = readFirstString(
           testMetadata.testTargetColumn,

@@ -402,6 +402,55 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
+  it('does not infer connected dbt test type from unrelated metadata keys', () => {
+    const modelNode: CanonicalNode = {
+      id: 'model-orders',
+      name: 'fct_orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {},
+    };
+    const customTestNode: CanonicalNode = {
+      id: 'test-orders-custom',
+      name: 'accepted_values_orders_status',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        package: 'analytics',
+        dependencies: ['fct_orders'],
+        severity: 'warn',
+      },
+    };
+    const edge: CanonicalEdge = {
+      id: 'edge-model-custom-test',
+      sourceId: modelNode.id,
+      targetId: customTestNode.id,
+      relation: 'validation',
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: modelNode,
+      nodes: [modelNode, customTestNode],
+      edges: [edge],
+    });
+
+    expectTableCells(sectionById(model, 'tests'), 'test:test-orders-custom', {
+      name: 'accepted_values_orders_status',
+      type: '',
+      target: 'fct_orders',
+      severity: 'warn',
+      assertion: '',
+      readinessImpact: 'warning',
+      lastRun: 'idle',
+    });
+  });
+
   it('projects DVT transform input columns with source and selection state', () => {
     const source: CanonicalNode = {
       id: 'source-orders',
