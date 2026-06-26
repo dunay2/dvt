@@ -156,7 +156,7 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuVisible();
   });
 
-  it('suppresses the first document pointer echo and closes on a later background click', async () => {
+  it('suppresses repeated document pointer echoes during the browser context-menu window', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
     await harness.render();
@@ -175,6 +175,20 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuVisible();
 
     vi.setSystemTime(new Date('2026-01-01T00:00:00.351Z'));
+    await act(async () => {
+      document.dispatchEvent(
+        new MouseEvent('pointerdown', {
+          bubbles: true,
+          button: 0,
+          clientX: 700,
+          clientY: 180,
+        })
+      );
+    });
+
+    harness.expectMenuVisible();
+
+    vi.setSystemTime(new Date('2026-01-01T00:00:01.001Z'));
     await act(async () => {
       document.dispatchEvent(
         new MouseEvent('pointerdown', {
