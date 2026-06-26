@@ -1,10 +1,10 @@
 /** Owned concern: derive and apply route-owned DVT transformation authoring metadata. */
 import type { CanonicalNode } from '../../types/canonical';
+import { readDvtSelectedColumnRefs } from '../../components/inspector/dvtTransformColumnModel';
 import {
   buildDvtSqlTransformMetadata,
   readTransformationSqlMirrorState,
 } from './canvasTransformationSqlMirror';
-import { readDvtSelectedColumnRefs } from './canvasDvtTransformColumnModel';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
 
 export type DvtSourceAuthoringMetadata = Readonly<{

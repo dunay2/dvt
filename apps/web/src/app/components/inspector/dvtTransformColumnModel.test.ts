@@ -4,7 +4,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   buildDvtTransformColumnOptions,
   readDvtSelectedColumnRefs,
-} from './canvasDvtTransformColumnModel';
+} from './dvtTransformColumnModel';
 
 function node(id: string, name: string, metadata?: CanonicalNode['metadata']): CanonicalNode {
   return {
@@ -28,7 +28,7 @@ function edge(sourceId: string, targetId: string): CanonicalEdge {
   };
 }
 
-describe('canvasDvtTransformColumnModel', () => {
+describe('dvtTransformColumnModel', () => {
   it('projects selectable upstream columns from connected source metadata', () => {
     const transform = node('transform-clean-orders', 'Clean orders', {
       config: {

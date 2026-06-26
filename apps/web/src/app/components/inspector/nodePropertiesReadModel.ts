@@ -1,6 +1,10 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { projectDbtTestSemantics, type DbtTestSemanticsInput } from './dbtTestSemanticsPresenter';
+import {
+  buildDvtTransformColumnOptions,
+  readDvtSelectedColumnRefs,
+} from './dvtTransformColumnModel';
 
 export type NodePropertySectionId =
   | 'general'
@@ -222,6 +226,37 @@ function buildColumnRows(columns: readonly InspectorColumn[]): readonly NodeProp
       key: column.primaryKey ? 'PK' : '',
       default: column.defaultValue ?? '',
       comment: column.comment ?? '',
+    },
+  }));
+}
+
+function buildDvtTransformInputColumnRows({
+  node,
+  nodes,
+  edges,
+}: Readonly<{
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}>): readonly NodePropertyTableRow[] {
+  if (node.kind !== 'dvt:sql_transform') {
+    return [];
+  }
+
+  return buildDvtTransformColumnOptions({
+    node,
+    nodes,
+    edges,
+    selectedColumnRefs: readDvtSelectedColumnRefs(node.metadata),
+  }).map((option) => ({
+    id: option.columnRef,
+    cells: {
+      name: option.columnName,
+      type: option.dataType,
+      nullable: option.nullable === false ? 'not null' : option.nullable === true ? 'nullable' : '',
+      source: option.sourceNodeName,
+      reference: option.columnRef,
+      selection: option.selected ? 'selected' : 'available',
     },
   }));
 }
@@ -679,6 +714,10 @@ export function buildNodePropertiesReadModel({
   const metadata = asRecord(node.metadata);
   const config = asRecord(metadata.config);
   const columns = readColumns(metadata.columns);
+  const columnRows =
+    columns.length > 0
+      ? buildColumnRows(columns)
+      : buildDvtTransformInputColumnRows({ node, nodes, edges });
   const keyRows = buildKeyRows(metadata, columns);
   const indexRows = buildIndexRows(metadata);
   const foreignKeyRows = buildForeignKeyRows(metadata);
@@ -700,8 +739,8 @@ export function buildNodePropertiesReadModel({
       createSection({
         id: 'columns',
         label: 'Columns',
-        tableRows: buildColumnRows(columns),
-        emptyState: columns.length === 0 ? 'No columns are recorded for this node.' : undefined,
+        tableRows: columnRows,
+        emptyState: columnRows.length === 0 ? 'No columns are recorded for this node.' : undefined,
       }),
       createSection({
         id: 'inputs-outputs',

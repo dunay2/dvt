@@ -1,4 +1,4 @@
-/** Owned concern: project upstream DVT source columns for transform authoring selection. */
+/** Owned concern: project upstream DVT source columns for transform workbench selection. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 export type DvtTransformColumnOption = Readonly<{

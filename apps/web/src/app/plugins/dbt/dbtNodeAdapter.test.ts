@@ -93,4 +93,26 @@ describe('dbtCanvasGraphStrategy', () => {
       testTarget: 'stg_orders.order_id',
     });
   });
+
+  it('preserves DBT node runtime and source metadata in canonical projection', () => {
+    const node = dbtCanvasGraphStrategy.mapNodeToCanonical(
+      buildDbtNode({
+        metadata: {
+          rowCount: 42_000,
+          byteSize: 1_204_000,
+          database: 'warehouse',
+          schema: 'public',
+          tableName: 'orders',
+        },
+      })
+    );
+
+    expect(node?.metadata).toMatchObject({
+      rowCount: 42_000,
+      byteSize: 1_204_000,
+      database: 'warehouse',
+      schema: 'public',
+      tableName: 'orders',
+    });
+  });
 });
