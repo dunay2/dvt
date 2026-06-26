@@ -8748,3 +8748,34 @@ test('tracked migrations persist the Canvas UX acceptance and test catalog in th
   assert.match(acceptanceCatalogMigration.sql, /'ListCanvasUxdbSpecification'/);
   assert.doesNotMatch(acceptanceCatalogMigration.sql, /feature_mechanization_local_rails/);
 });
+
+test('tracked migrations add a Canvas command-query rail drift guard', () => {
+  const migrations = readMigrationFiles();
+  const railDriftMigration = migrations.find(
+    (migration) => migration.fileName === '295_canvas_cq_rail_drift_guard.sql'
+  );
+
+  assert.ok(railDriftMigration);
+  assert.match(
+    railDriftMigration.sql,
+    /create or replace view planning_query_store\.canvas_cq_rail_drift_query/i
+  );
+  assert.match(
+    railDriftMigration.sql,
+    /from planning_query_store\.canvas_uxdb_specification_query/i
+  );
+  assert.match(railDriftMigration.sql, /planning_query_store\.command_query_rail_query/i);
+  assert.match(railDriftMigration.sql, /OpenCanvasAddSourceDialog/);
+  assert.match(railDriftMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(railDriftMigration.sql, /OpenCanvasNodeWorkbench/);
+  assert.match(railDriftMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(railDriftMigration.sql, /PreviewCanvasExecutionPlan/);
+  assert.match(railDriftMigration.sql, /PreviewExecutionPlan/);
+  assert.match(railDriftMigration.sql, /OpenCanvasSqlContextWorkbench/);
+  assert.match(railDriftMigration.sql, /ResolveCanvasWorkbenchContext/);
+  assert.match(railDriftMigration.sql, /legacy_alias/);
+  assert.match(railDriftMigration.sql, /missing_canonical_rail/);
+  assert.match(railDriftMigration.sql, /E-CANVAS-CQ-RAIL-DRIFT-GUARD-1/);
+  assert.doesNotMatch(railDriftMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(railDriftMigration.sql, /truncate\s+/i);
+});

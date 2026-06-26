@@ -176,6 +176,7 @@ test('planning DB read-model query components live under the queries directory',
 test('planning DB query limit parsing lives in one canonical helper', () => {
   const queryLimitConsumers = [
     'planning-db-query.cjs',
+    'planning-db/queries/canvas-cq-rail-drift-query.cjs',
     'planning-db/frontend-component-inventory.cjs',
     'planning-db/frontend-mechanical-truth-inventory.cjs',
     'planning-db/queries/code-symbol-query.cjs',
@@ -211,6 +212,7 @@ test('planning DB query filtering helpers live in one canonical helper', () => {
   const queryFilterConsumers = [
     'planning-db-query.cjs',
     'planning-db/db-surface-inventory.cjs',
+    'planning-db/queries/canvas-cq-rail-drift-query.cjs',
     'planning-db/frontend-component-inventory.cjs',
     'planning-db/frontend-mechanical-truth-inventory.cjs',
     'planning-db/queries/code-symbol-query.cjs',
@@ -4906,6 +4908,81 @@ test('buildCanvasUxdbSpecificationRows formats component, rail and legacy postur
       ],
     ]
   );
+});
+
+test('readCanvasCqRailDriftRows compares Canvas UX rails with canonical rail catalog', async () => {
+  const {
+    buildCanvasCqRailDriftRows,
+    readCanvasCqRailDriftRows,
+  } = require('./planning-db/queries/canvas-cq-rail-drift-query.cjs');
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return {
+        rows: [
+          {
+            record_id: 'canvas-menu.add-source',
+            record_type: 'context_action',
+            component_id: 'web.component.canvas.CanvasContextMenu',
+            requested_rail_name: 'OpenCanvasAddSourceDialog',
+            canonical_rail_name: 'OpenCanvasSourceImportDialog',
+            rail_type: 'command',
+            drift_state: 'legacy_alias',
+            severity: 'warning',
+            action_hint:
+              'Use canonical rail OpenCanvasSourceImportDialog instead of alias OpenCanvasAddSourceDialog.',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await readCanvasCqRailDriftRows(client, {
+    state: 'legacy_alias',
+    rail: 'OpenCanvasAddSourceDialog',
+    component: 'web.component.canvas.CanvasContextMenu',
+    taskId: 'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.canvas_cq_rail_drift_query/);
+  assert.match(captured.sql, /drift_state = \$1/);
+  assert.match(captured.sql, /requested_rail_name = \$2/);
+  assert.match(captured.sql, /component_id = \$3/);
+  assert.match(captured.sql, /canonical_task_id = \$4/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'legacy_alias',
+    'OpenCanvasAddSourceDialog',
+    'web.component.canvas.CanvasContextMenu',
+    'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1',
+    5,
+  ]);
+  assert.deepEqual(buildCanvasCqRailDriftRows(rows), [
+    [
+      'warning',
+      'legacy_alias',
+      'canvas-menu.add-source',
+      'context_action',
+      'web.component.canvas.CanvasContextMenu',
+      'OpenCanvasAddSourceDialog',
+      'OpenCanvasSourceImportDialog',
+      'command',
+      'Use canonical rail OpenCanvasSourceImportDialog instead of alias OpenCanvasAddSourceDialog.',
+    ],
+  ]);
+});
+
+test('planning DB query CLI exposes Canvas CQ rail drift help', () => {
+  const result = runPlanningDbQueryCli(['canvas-cq-rail-drift', '--help']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Planning DB query: canvas-cq-rail-drift/);
+  assert.match(result.stdout, /--component <id>/);
+  assert.match(result.stdout, /--rail <name>/);
+  assert.doesNotMatch(result.stderr, /Unknown planning DB query/);
 });
 
 test('readArchitectureComponentRows queries the DB architecture component view', async () => {
