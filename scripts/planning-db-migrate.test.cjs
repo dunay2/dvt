@@ -8389,6 +8389,23 @@ test('tracked migrations complete Canvas context menu echo repair manifest', () 
   assert.doesNotMatch(manifestCompletionMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reuse the canonical Canvas context menu rail owner', () => {
+  const migrations = readMigrationFiles();
+  const ownerAlignmentMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '331_canvas_context_menu_echo_repair_canonical_rail_owner.sql'
+  );
+
+  assert.ok(ownerAlignmentMigration);
+  assert.match(ownerAlignmentMigration.sql, /E-CANVAS-CONTEXT-MENU-GRAMMAR-REPAIR-1/);
+  assert.match(ownerAlignmentMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(ownerAlignmentMigration.sql, /CanvasNodeContextMenuView/);
+  assert.match(ownerAlignmentMigration.sql, /command_query_rail_vocabulary_query/);
+  assert.match(ownerAlignmentMigration.sql, /exact_duplicate/);
+  assert.doesNotMatch(ownerAlignmentMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(ownerAlignmentMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations materialize code symbol duplicate query inputs', () => {
   const migrations = readMigrationFiles();
   const codeSymbolProjectionMigration = migrations.find(
