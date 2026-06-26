@@ -117,7 +117,8 @@ function renderNodePanel(
   authoring: CanvasNodeWorkbenchPanelProps['authoring'] = {
     canEditNode: true,
     onApplyNodeDraft: vi.fn(),
-  }
+  },
+  preferredTabRequestId = 1
 ): void {
   act(() => {
     root.render(
@@ -136,7 +137,7 @@ function renderNodePanel(
         activeRunId={null}
         registeredPlugins={new Set()}
         preferredTabId={preferredTabId}
-        preferredTabRequestId={1}
+        preferredTabRequestId={preferredTabRequestId}
         authoring={authoring}
         onClose={vi.fn()}
       />
@@ -280,5 +281,64 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(sqlEditor).not.toBeNull();
     expect(sqlEditor?.value).toBe('select order_id from source.orders');
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
+  });
+
+  it('preserves one DVT transform authoring draft across workbench section switches', () => {
+    const onApplyNodeDraft = vi.fn();
+
+    renderNodePanel(root, DVT_TRANSFORM_NODE, 'columns', {
+      canEditNode: true,
+      onApplyNodeDraft,
+    });
+
+    const selectedColumn = container.querySelector<HTMLInputElement>(
+      `input[name="dvt-transform-column"][value="${SOURCE_NODE.id}.order_id"]`
+    );
+    expect(selectedColumn).not.toBeNull();
+
+    act(() => {
+      fireEvent.click(selectedColumn!);
+    });
+
+    renderNodePanel(
+      root,
+      DVT_TRANSFORM_NODE,
+      'code',
+      {
+        canEditNode: true,
+        onApplyNodeDraft,
+      },
+      2
+    );
+
+    const sqlEditor = container.querySelector<HTMLTextAreaElement>(
+      'textarea[name="dvt-transform-sql"]'
+    );
+    expect(sqlEditor).not.toBeNull();
+
+    act(() => {
+      fireEvent.change(sqlEditor!, {
+        target: { value: 'select customer from source.orders' },
+      });
+    });
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Apply'
+    );
+    expect(applyButton).toBeDefined();
+
+    act(() => {
+      fireEvent.click(applyButton!);
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dvt: expect.objectContaining({
+          kind: 'sql_transform',
+          selectedColumns: [],
+          sql: 'select customer from source.orders',
+        }),
+      })
+    );
   });
 });
