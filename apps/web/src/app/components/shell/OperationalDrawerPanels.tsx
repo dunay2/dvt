@@ -10,6 +10,7 @@ import {
   OperationalDrawerProblemItem,
   OperationalDrawerProblemList,
   OperationalDrawerRunActiveSummary,
+  OperationalDrawerRunStatusSummary,
   OperationalDrawerTabs,
 } from './OperationalDrawerPanelPrimitives';
 import type {
@@ -37,6 +38,7 @@ export function BottomOperationalProblemsPanel({
               detail={problem.detail}
               message={problem.message}
               severity={problem.severity}
+              action={problem.action}
             />
           ))}
         </OperationalDrawerProblemList>
@@ -55,9 +57,21 @@ export function BottomOperationalRunsPanel({
       textSm
     >
       {contribution.runs.activeRunId == null ? (
-        <OperationalDrawerEmptyState>No active Canvas run.</OperationalDrawerEmptyState>
+        <OperationalDrawerRunStatusSummary
+          statusLabel={
+            contribution.runs.status === 'ready'
+              ? 'Run ready'
+              : contribution.runs.status === 'blocked'
+                ? 'Run blocked'
+                : 'Run active'
+          }
+          summary={contribution.runs.summary}
+        />
       ) : (
-        <OperationalDrawerRunActiveSummary activeRunId={contribution.runs.activeRunId} />
+        <OperationalDrawerRunActiveSummary
+          activeRunId={contribution.runs.activeRunId}
+          summary={contribution.runs.summary}
+        />
       )}
     </OperationalDrawerPanelSurface>
   );
