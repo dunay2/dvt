@@ -118,8 +118,8 @@ describe('canvasInteractionCommandSurface', () => {
     ]);
     expect(model.createNodeActions.map((action) => action.label)).toEqual([
       'Add source',
-      'Add SQL transform',
-      'Add sink',
+      'Add transformation',
+      'Add output',
     ]);
     expect(JSON.stringify(model)).not.toContain('Edit SQL');
     expect(JSON.stringify(model)).not.toContain('Properties');
@@ -128,6 +128,48 @@ describe('canvasInteractionCommandSurface', () => {
     expect(JSON.stringify(model)).not.toContain('Run from here');
     expect(JSON.stringify(model)).not.toContain('Duplicate');
     expect(JSON.stringify(model)).not.toContain('Delete');
+  });
+
+  it('uses role-level spatial add grammar for model, transformation, test and output nodes', () => {
+    const modelKind = { ...buildTestNodeKind('dbt:model', 'Model'), role: 'transform' as const };
+    const transformKind = {
+      ...buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+      role: 'transform' as const,
+    };
+    const testKind = {
+      ...buildTestNodeKind('dbt:test', 'Test'),
+      role: 'check' as const,
+      allowsOutgoing: false,
+    };
+    const outputKind = {
+      ...buildTestNodeKind('dvt:sink', 'Sink'),
+      role: 'output' as const,
+      allowsIncoming: true,
+      allowsOutgoing: false,
+    };
+
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 720, y: 180 },
+      },
+      canMutateGraph: true,
+      authoringNodeKinds: [modelKind, transformKind, testKind, outputKind],
+    });
+
+    expect(model.createNodeActions.map((action) => action.label)).toEqual([
+      'Add model',
+      'Add transformation',
+      'Add test',
+      'Add output',
+    ]);
+    expect(model.createNodeActions.map((action) => action.registration.kind)).toEqual([
+      'dbt:model',
+      'dvt:sql_transform',
+      'dbt:test',
+      'dvt:sink',
+    ]);
   });
 
   it('offers project code from the canvas menu without requiring graph mutation', () => {
