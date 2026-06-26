@@ -15,16 +15,22 @@ function isTestRuntime(): boolean {
 
 export function usePublishedRouteBootstrap(
   routeId: string,
-  presentation: RouteBootstrapPresentation
+  presentation: RouteBootstrapPresentation,
+  options: Readonly<{ enabled?: boolean }> = {}
 ): void {
-  const allowMissingDataRouterContext = isTestRuntime();
+  const enabled = options.enabled ?? true;
+  const allowMissingDataRouterContext = isTestRuntime() || !enabled;
   const locale = detectRouteBootstrapLocale();
-  const registration = useActiveRouteBootstrapRegistration(routeId, {
+  const registration = useActiveRouteBootstrapRegistration(enabled ? routeId : undefined, {
     allowMissingDataRouterContext,
     locale,
   });
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     if (!registration) {
       if (allowMissingDataRouterContext) {
         return;
@@ -48,9 +54,14 @@ export function usePublishedRouteBootstrap(
     registration,
     routeId,
     locale,
+    enabled,
   ]);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     if (!registration || registration.routeBootstrap.mode !== 'published') {
       return;
     }
@@ -58,5 +69,5 @@ export function usePublishedRouteBootstrap(
     return () => {
       resetRouteBootstrapPresentation(registration);
     };
-  }, [registration]);
+  }, [enabled, registration]);
 }

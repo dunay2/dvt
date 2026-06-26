@@ -63,6 +63,7 @@ type UseCanvasContextMenuPresenterResult = Readonly<{
 export type CanvasContextMenuPresenter = UseCanvasContextMenuPresenterResult;
 
 const CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS = 1000;
+const CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS = 100;
 const CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX = 2;
 type ContextMenuOpenTargetKind = CanvasContextMenuModel['kind'];
 
@@ -81,6 +82,17 @@ function isCanvasViewportContextTarget(target: EventTarget | null): target is El
         '.react-flow__minimap',
       ].join(',')
     ) == null
+  );
+}
+
+function isNearPosition(
+  event: Pick<MouseEvent, 'clientX' | 'clientY'>,
+  position: CanvasContextMenuPosition | null
+): boolean {
+  return (
+    position != null &&
+    Math.abs(event.clientX - position.x) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX &&
+    Math.abs(event.clientY - position.y) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX
   );
 }
 
@@ -135,18 +147,17 @@ export function useCanvasContextMenuPresenter({
       }
 
       const lastPanePosition = lastPaneContextMenuScreenPositionRef.current;
-      const isPendingBrowserClickEcho =
+      const isPendingImmediateBrowserClickEcho =
         pendingPaneClickEchoRef.current &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
-        Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS;
+        Date.now() - lastContextMenuOpenedAtRef.current <
+          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS;
       const isPendingDelayedEchoAtContextPoint =
         pendingPaneClickEchoRef.current &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
-        lastPanePosition != null &&
-        Math.abs(event.clientX - lastPanePosition.x) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX &&
-        Math.abs(event.clientY - lastPanePosition.y) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX;
+        isNearPosition(event, lastPanePosition);
 
-      if (isPendingBrowserClickEcho || isPendingDelayedEchoAtContextPoint) {
+      if (isPendingImmediateBrowserClickEcho || isPendingDelayedEchoAtContextPoint) {
         pendingPaneClickEchoRef.current = false;
         return;
       }
@@ -171,11 +182,15 @@ export function useCanvasContextMenuPresenter({
         return;
       }
 
-      const isWithinPaneOpenEchoWindow =
+      const isPanePointerEchoAtContextPoint =
+        pendingPaneClickEchoRef.current &&
+        event instanceof MouseEvent &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
-        Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS;
+        Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS &&
+        isNearPosition(event, lastPaneContextMenuScreenPositionRef.current);
 
-      if (isWithinPaneOpenEchoWindow) {
+      if (isPanePointerEchoAtContextPoint) {
+        pendingPaneClickEchoRef.current = false;
         return;
       }
 

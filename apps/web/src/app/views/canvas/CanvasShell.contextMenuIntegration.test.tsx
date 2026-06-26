@@ -14,8 +14,13 @@ import { useOperationalDrawerContributionStore } from '../../components/shell/op
 import type { CanvasShellProps } from './canvasShell.types';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 
+const mockCodeView = vi.hoisted(() => vi.fn());
+
 vi.mock('../CodeView', () => ({
-  default: () => <div data-testid="code-workbench-panel" />,
+  default: (props: Record<string, unknown>) => {
+    mockCodeView(props);
+    return <div data-testid="code-workbench-panel" />;
+  },
 }));
 
 describe('CanvasShell context menu integration', () => {
@@ -32,6 +37,7 @@ describe('CanvasShell context menu integration', () => {
 
   afterEach(() => {
     unmountShell();
+    mockCodeView.mockClear();
     vi.useRealTimers();
   });
 
@@ -71,8 +77,8 @@ describe('CanvasShell context menu integration', () => {
         new MouseEvent('pointerdown', {
           bubbles: true,
           button: 0,
-          clientX: 720,
-          clientY: 220,
+          clientX: 481,
+          clientY: 319,
         })
       );
     });
@@ -108,6 +114,9 @@ describe('CanvasShell context menu integration', () => {
 
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
+    expect(mockCodeView).toHaveBeenCalledWith(
+      expect.objectContaining({ publishRouteBootstrap: false })
+    );
   });
 
   it('routes canvas validation to the operational drawer without previewing execution', async () => {

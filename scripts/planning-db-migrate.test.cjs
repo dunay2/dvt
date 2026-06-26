@@ -7287,7 +7287,7 @@ test('latest command/query rail projection counts canonical component docs as du
   );
   assert.match(
     latestRailProjectionMigration.sql,
-    /count\(distinct rail\.canonical_declaration_key\) filter \(/
+    /count\(distinct case\s+when rail\.rail_source = 'local' then rail\.canonical_declaration_key\s+else rail\.canonical_declaration_key \|\| ':' \|\| rail\.rail_id\s+end\) filter \(/
   );
   assert.match(latestRailProjectionMigration.sql, /where rail\.authority_priority <= 2/);
   assert.match(
@@ -7321,7 +7321,7 @@ test('latest command/query rail projection collapses same-owner local feature ev
   );
   assert.match(
     latestRailProjectionMigration.sql,
-    /count\(distinct rail\.canonical_declaration_key\) filter \([\s\S]*as canonical_candidate_count/
+    /count\(distinct case[\s\S]*when rail\.rail_source = 'local' then rail\.canonical_declaration_key[\s\S]*else rail\.canonical_declaration_key \|\| ':' \|\| rail\.rail_id[\s\S]*as canonical_candidate_count/
   );
   assert.match(
     latestRailProjectionMigration.sql,
@@ -7344,7 +7344,7 @@ test('latest command/query rail projection prefers local implemented refs over i
   assert.ok(latestRailProjectionMigration);
   assert.equal(
     latestRailProjectionMigration.fileName,
-    '307_command_query_rail_same_owner_feature_evidence_rollup.sql'
+    '326_review_comment_closeout_canvas_rails.sql'
   );
   assert.match(
     latestRailProjectionMigration.sql,
@@ -7359,6 +7359,70 @@ test('latest command/query rail projection prefers local implemented refs over i
   assert.match(
     latestRailProjectionMigration.sql,
     /case when rail\.rail_source = 'local' then 0 else 1 end,\s+rail\.is_gap,\s+rail\.authority_priority/
+  );
+});
+
+test('Canvas review comment closeout projection keeps canonical rail duplicates visible', () => {
+  const migrations = readMigrationFiles();
+  const reviewCloseoutMigration = migrations.find(
+    (migration) => migration.fileName === '326_review_comment_closeout_canvas_rails.sql'
+  );
+
+  assert.ok(reviewCloseoutMigration);
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /create or replace view planning_query_store\.command_query_rail_query/
+  );
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /when rail\.rail_source = 'local' then rail\.canonical_declaration_key/
+  );
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /else rail\.canonical_declaration_key \|\| ':' \|\| rail\.rail_id/
+  );
+  assert.match(reviewCloseoutMigration.sql, /as canonical_candidate_count/);
+});
+
+test('Canvas review comment closeout preserves local feature rail overlays', () => {
+  const migrations = readMigrationFiles();
+  const reviewCloseoutMigration = migrations.find(
+    (migration) => migration.fileName === '326_review_comment_closeout_canvas_rails.sql'
+  );
+
+  assert.ok(reviewCloseoutMigration);
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /existing_local_target_rail as \([\s\S]*from planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /imported_target_rail as \([\s\S]*from planning_query_store\.command_query_rails/
+  );
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /where not exists \(select 1 from existing_local_target_rail\)/
+  );
+  assert.match(reviewCloseoutMigration.sql, /rejectCrossPluginIncomingInputEdge/);
+  assert.match(reviewCloseoutMigration.sql, /CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS/);
+  assert.match(reviewCloseoutMigration.sql, /isNearPosition/);
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasContextMenuPresenter\.ts/
+  );
+  assert.match(reviewCloseoutMigration.sql, /ResolveCanvasWorkbenchContext/);
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /apps\/web\/src\/app\/bootstrap\/usePublishedRouteBootstrap\.ts/
+  );
+  assert.match(reviewCloseoutMigration.sql, /apps\/web\/src\/app\/views\/CodeView\.tsx/);
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /apps\/web\/src\/app\/components\/inspector\/dvtTransformColumnModel\.ts#buildDvtTransformColumnOptions/
+  );
+  assert.match(
+    reviewCloseoutMigration.sql,
+    /apps\/web\/src\/app\/components\/inspector\/dvtTransformColumnModel\.ts#readDvtSelectedColumnRefs/
   );
 });
 

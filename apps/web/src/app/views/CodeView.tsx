@@ -16,7 +16,7 @@ import {
   useWorkspaceGraphForViewQuery,
   useWorkspaceFileTreeQuery,
 } from '../queries/workspaceQueries';
-import { CANVAS_WORKBENCH_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
+import { CANVAS_ROUTE_ID } from './canvas/canvasDraftPresentationStore';
 import { deriveCodeRouteBootstrapPresentation } from './code/codeRouteBootstrap';
 import {
   CodePreviewEmptyStateView,
@@ -39,7 +39,10 @@ import { useCodeEditableBuffer } from './code/useCodeEditableBuffer';
 
 const CODE_GRAPH_FILE_SCOPE_VIEW_ID = 'canvas-code-file-scope';
 
-export default function CodeView() {
+export default function CodeView({
+  publishRouteBootstrap = true,
+  routeBootstrapId = CANVAS_ROUTE_ID,
+}: Readonly<{ publishRouteBootstrap?: boolean; routeBootstrapId?: string }> = {}) {
   const copy = resolveCodeViewCopy();
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const graphSnapshotQuery = useWorkspaceGraphForViewQuery(CODE_GRAPH_FILE_SCOPE_VIEW_ID);
@@ -80,7 +83,7 @@ export default function CodeView() {
   const editableBuffer = useCodeEditableBuffer(fileContentQuery.data);
 
   usePublishedRouteBootstrap(
-    CANVAS_WORKBENCH_ROUTE_ID,
+    routeBootstrapId,
     deriveCodeRouteBootstrapPresentation(
       {
         isLoadingFileTree:
@@ -91,7 +94,8 @@ export default function CodeView() {
         filePreviewErrorMessage: filePreviewErrorPresentation?.message ?? null,
       },
       copy
-    )
+    ),
+    { enabled: publishRouteBootstrap }
   );
 
   if (fileTreeQuery.isPending || (fileTreeQuery.isSuccess && graphSnapshotQuery.isPending)) {

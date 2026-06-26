@@ -456,6 +456,9 @@ function buildTestRows(
   node: CanonicalNode,
   metadata: Record<string, unknown>
 ): readonly NodePropertyTableRow[] {
+  const canonicalTestLastRunStatus = node.kind.endsWith(':test') ? node.status : undefined;
+  const canonicalTestLastRunDurationMs =
+    node.kind.endsWith(':test') && node.lastDuration != null ? node.lastDuration * 1000 : undefined;
   const readDbtTest = (
     candidate: unknown
   ): Readonly<{
@@ -670,11 +673,16 @@ function buildTestRows(
             readBoolean(metadata.selected),
           selectionState: readFirstString(metadata.selectionState, metadata.executionSelection),
           readinessImpact: readString(metadata.readinessImpact),
-          lastRunStatus: readFirstString(metadata.lastRunStatus, metadata.runStatus),
+          lastRunStatus: readFirstString(
+            metadata.lastRunStatus,
+            metadata.runStatus,
+            canonicalTestLastRunStatus
+          ),
           lastRunDurationMs:
             readNumber(metadata.lastRunDurationMs) ??
             readNumber(metadata.lastDurationMs) ??
-            readNumber(metadata.durationMs),
+            readNumber(metadata.durationMs) ??
+            canonicalTestLastRunDurationMs,
         }),
       },
     },
