@@ -8887,3 +8887,31 @@ test('tracked migrations register Canvas node workbench strategy sections', () =
   assert.doesNotMatch(nodeWorkbenchStrategyMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(nodeWorkbenchStrategyMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register Canvas component registry drift guard', () => {
+  const migrations = readMigrationFiles();
+  const registryDriftMigration = migrations.find(
+    (migration) => migration.fileName === '299_canvas_component_registry_drift_guard.sql'
+  );
+
+  assert.ok(registryDriftMigration);
+  assert.match(registryDriftMigration.sql, /E-CANVAS-COMPONENT-REGISTRY-DRIFT-1/);
+  assert.match(registryDriftMigration.sql, /CANVAS-COMPONENT-REGISTRY-DRIFT-GUARD-20260626/);
+  assert.match(
+    registryDriftMigration.sql,
+    /create or replace view planning_query_store\.canvas_component_registry_drift_query/
+  );
+  assert.match(registryDriftMigration.sql, /frontend_component_file_query/);
+  assert.match(registryDriftMigration.sql, /governance_file_query/);
+  assert.match(registryDriftMigration.sql, /unmapped_canvas_component_file/);
+  assert.match(registryDriftMigration.sql, /duplicate_canvas_component_file_owner/);
+  assert.match(registryDriftMigration.sql, /legacy_canvas_palette_surface/);
+  assert.match(registryDriftMigration.sql, /ListCanvasComponentRegistryDrift/);
+  assert.match(registryDriftMigration.sql, /canvas-component-registry-drift-query\.cjs/);
+  assert.match(registryDriftMigration.sql, /componentGuides/);
+  assert.match(registryDriftMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(registryDriftMigration.sql, /architectureGuards/);
+  assert.match(registryDriftMigration.sql, /completionGate/);
+  assert.doesNotMatch(registryDriftMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(registryDriftMigration.sql, /truncate\s+/i);
+});
