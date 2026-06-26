@@ -128,11 +128,11 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     waitForPersistedDbtModelConfig();
 
     clickPreviewExecutionPlanFromCanvasContextMenu();
-    cy.contains('Execution Plan Preview', { timeout: 30_000 }).should('be.visible');
-    cy.contains('Plan Metadata').should('be.visible');
+    cy.contains('Execution Preview', { timeout: 30_000 }).should('be.visible');
+    cy.contains('Execution Preview identity').should('be.visible');
     cy.contains('Persistence Evidence').should('be.visible');
     cy.get('body').type('{esc}', { force: true });
-    cy.contains('Execution Plan Preview').should('not.exist');
+    cy.contains('Execution Preview').should('not.exist');
 
     readLiveWorkspaceFile('models/payments_model.sql').then((fileResponse) => {
       expect(fileResponse.status).to.equal(200);

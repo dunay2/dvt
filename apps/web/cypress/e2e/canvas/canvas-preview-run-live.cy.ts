@@ -111,8 +111,8 @@ describe('Canvas preview-run live protected runtime', () => {
 
     clickPreviewExecutionPlanFromCanvasContextMenu();
 
-    cy.contains('Execution Plan Preview', { timeout: 20_000 }).should('be.visible');
-    cy.contains('Plan identity').should('be.visible');
+    cy.contains('Execution Preview', { timeout: 20_000 }).should('be.visible');
+    cy.contains('Execution Preview identity').should('be.visible');
     cy.contains('Execution target').should('be.visible');
     cy.contains('Persisted preview summary').scrollIntoView().should('be.visible');
     cy.contains('Source tables').parent().should('contain.text', 'public.source_1');
@@ -180,17 +180,17 @@ describe('Canvas preview-run live protected runtime', () => {
       .scrollIntoView()
       .should('be.visible')
       .and('contain.text', 'Diagnostics')
-      .and('contain.text', 'Plan SHA')
+      .and('contain.text', 'Preview SHA')
       .and('contain.text', 'Trace and log pointers')
       .and('not.contain.text', 'Not available');
     cy.get('[data-slot="run-plan-provenance-card"]', { timeout: 30_000 })
       .scrollIntoView()
       .should('be.visible')
-      .and('contain.text', 'Plan and authoring provenance')
-      .and('contain.text', 'Plan record')
-      .and('contain.text', 'Plan source ref')
+      .and('contain.text', 'Execution Preview and authoring provenance')
+      .and('contain.text', 'Preview record')
+      .and('contain.text', 'Preview source ref')
       .and('contain.text', 'dvt-plan://')
-      .and('contain.text', 'Canonical plan SHA-256')
+      .and('contain.text', 'Canonical preview SHA-256')
       .and('contain.text', 'Graph artifact')
       .and('contain.text', 'SQL artifact')
       .and('not.contain.text', 'Not available');

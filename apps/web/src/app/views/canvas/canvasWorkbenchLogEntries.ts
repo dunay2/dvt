@@ -174,7 +174,7 @@ export function buildCanvasWorkbenchLogEntries({
     pushEntry({
       severity: 'warning',
       source: 'permission',
-      message: 'Plan preview is unavailable for this workspace scope.',
+      message: 'Execution Preview is unavailable for this workspace scope.',
       detail: 'plan_unavailable',
     });
   }

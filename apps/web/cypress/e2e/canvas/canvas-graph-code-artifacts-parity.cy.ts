@@ -268,9 +268,9 @@ describe('Canvas graph to execution-preview source parity', () => {
     clickPreviewExecutionPlanFromCanvasContextMenu();
     waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
     waitForE2eApiCall('/plans/preview', 'POST');
-    cy.contains('Execution Plan Preview').should('be.visible');
+    cy.contains('Execution Preview').should('be.visible');
     cy.get('body').type('{esc}', { force: true });
-    cy.contains('Execution Plan Preview').should('not.exist');
+    cy.contains('Execution Preview').should('not.exist');
     cy.wrap(null).should(() => {
       const saveCall = getLastE2eApiCall(
         '/workspace/files/pipelines%2Fsales_pipeline.yaml',

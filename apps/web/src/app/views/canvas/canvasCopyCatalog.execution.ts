@@ -48,7 +48,7 @@ export const canvasViewExecutionCopyByKey = {
   },
   runPlanRefUnavailableMessage: {
     key: 'canvas.run.planRefUnavailableMessage',
-    fallback: 'Plan reference is unavailable for this mode',
+    fallback: 'Execution Preview reference is unavailable for this mode',
   },
   runPersistedPreviewRequiredMessage: {
     key: 'canvas.run.persistedPreviewRequiredMessage',
@@ -61,11 +61,11 @@ export const canvasViewExecutionCopyByKey = {
   },
   canvasExecutionUnavailableMessage: {
     key: 'canvas.execution.unavailableMessage',
-    fallback: 'Plan preview and run start are not available for this canvas kind.',
+    fallback: 'Execution Preview and run start are not available for this canvas kind.',
   },
   planCreatedMessage: {
     key: 'canvas.plan.createdMessage',
-    fallback: 'Execution plan created',
+    fallback: 'Execution Preview created',
   },
   runStartedMessage: {
     key: 'canvas.run.startedMessage',

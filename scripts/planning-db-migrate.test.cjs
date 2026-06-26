@@ -9271,6 +9271,38 @@ test('tracked migrations align Canvas node shell files with registry drift guard
   assert.doesNotMatch(driftGuardAlignmentMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations align Canvas surface strategy launch policy manifest', () => {
+  const migrations = readMigrationFiles();
+  const launchPolicyMigration = migrations.find(
+    (migration) => migration.fileName === '325_canvas_surface_strategy_launch_policy_manifest.sql'
+  );
+
+  assert.ok(launchPolicyMigration);
+  assert.match(launchPolicyMigration.sql, /E-CANVAS-SURFACE-STRATEGY-DBT-DVT-1/);
+  assert.match(launchPolicyMigration.sql, /ResolveCanvasSurfaceStrategy/);
+  assert.match(
+    launchPolicyMigration.sql,
+    /apps\/web\/src\/app\/plugins\/canvasSurfaceStrategyContracts\.ts/
+  );
+  assert.match(
+    launchPolicyMigration.sql,
+    /apps\/web\/src\/app\/plugins\/dbt\/dbtCanvasSurfaceStrategy\.ts/
+  );
+  assert.match(
+    launchPolicyMigration.sql,
+    /apps\/web\/src\/app\/plugins\/dvt\/dvtCanvasSurfaceStrategy\.ts/
+  );
+  assert.match(
+    launchPolicyMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graphStrategyRegistry\.test\.ts/
+  );
+  assert.match(launchPolicyMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(launchPolicyMigration.sql, /implementationRefs/);
+  assert.match(launchPolicyMigration.sql, /architectureGuards/);
+  assert.doesNotMatch(launchPolicyMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(launchPolicyMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register DBT authoring fields as an effective Canvas component', () => {
   const migrations = readMigrationFiles();
   const dbtAuthoringMigration = migrations.find(

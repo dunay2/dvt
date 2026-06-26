@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // PluginRegistry — thin facade over the static PLUGIN_REGISTRY
 //
-// Route, shell, and workbench readers use explicit query rails from
+// Route and shell readers use explicit query rails from
 // registry.ts instead of deriving placement locally.
 // ---------------------------------------------------------------------------
 
@@ -10,7 +10,6 @@ export {
   getAllViews,
   getRouteViews,
   getShellNavigationViews,
-  getCanvasWorkbenchTabViews,
   getDefaultCoreViewPath,
   getAllNodeKinds,
   getAllOverlays,

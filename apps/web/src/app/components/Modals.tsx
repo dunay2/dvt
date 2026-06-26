@@ -138,17 +138,17 @@ export function PlanPreviewModal({
             ) : null}
 
             <PlanPreviewSection
-              title="Plan identity"
+              title="Execution Preview identity"
               caption="Immutable identifiers for the persisted preview."
             >
               <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                <PlanPreviewField label="Plan ID" long>
+                <PlanPreviewField label="Preview ID" long>
                   {plan.planId}
                 </PlanPreviewField>
                 <PlanPreviewField label="Version">{plan.planVersion}</PlanPreviewField>
                 {plan.planRef ? (
                   <div className="md:col-span-2">
-                    <PlanPreviewField label="Plan Ref" long>
+                    <PlanPreviewField label="Preview Ref" long>
                       {plan.planRef.uri}
                     </PlanPreviewField>
                   </div>
@@ -203,7 +203,7 @@ export function PlanPreviewModal({
             {previewSummary ? (
               <PlanPreviewSection
                 title="Persisted preview summary"
-                caption="Graph size and table scope captured by the plan preview."
+                caption="Graph size and table scope captured by the execution preview."
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
                   <PlanPreviewField label="Nodes">{previewSummary.nodeCount}</PlanPreviewField>
@@ -221,13 +221,13 @@ export function PlanPreviewModal({
             {persistedPreview ? (
               <PlanPreviewSection
                 title="Persistence evidence"
-                caption="Proof that this preview is backed by a stored canonical plan."
+                caption="Proof that this preview is backed by a stored canonical preview."
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                  <PlanPreviewField label="Plan record" long>
+                  <PlanPreviewField label="Preview record" long>
                     {persistedPreview.planRecordId}
                   </PlanPreviewField>
-                  <PlanPreviewField label="Canonical SHA" long>
+                  <PlanPreviewField label="Canonical preview SHA" long>
                     {persistedPreview.canonicalPlanSha256}
                   </PlanPreviewField>
                 </div>
@@ -237,7 +237,7 @@ export function PlanPreviewModal({
             {provenance ? (
               <PlanPreviewSection
                 title="Provenance"
-                caption="Repository artifacts used to generate the plan."
+                caption="Repository artifacts used to generate the preview."
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
                   {provenance.graphArtifact ? (
@@ -484,7 +484,7 @@ export function RePlanRequiredModal({ open, onClose, onRePlan }: RePlanRequiredM
           </AlertDialogTitle>
           <AlertDialogDescription className="text-slate-300">
             The current execution preview is outdated. The project state has changed. Preview the
-            execution plan again before starting a run.
+            execution preview again before starting a run.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

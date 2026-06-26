@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileCode2, FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
 import type { PluginContributions } from '../registry';
@@ -50,7 +50,8 @@ export const dbtContributions: PluginContributions = {
   nodeRenderers,
   graphNodeCardStrategies: [dbtGraphNodeCardStrategy],
   inspectorPanels: dbtInspectorPanels,
-  // View placements define shell navigation and Canvas-scoped workbench tabs.
+  // View placements define shell navigation only. Canvas-scoped Code,
+  // Lineage, Diff, and Artifacts open from contextual workbench actions.
   views: [
     {
       pluginId: DBT_PLUGIN_ID,
@@ -66,62 +67,6 @@ export const dbtContributions: PluginContributions = {
         icon: LayoutDashboard,
         order: 10,
         level: 'core',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.lineage',
-      component: React.lazy(() => import('../../views/LineageView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'lineage',
-        label: 'Lineage',
-        icon: GitGraph,
-        order: 30,
-        scope: 'canvas',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.code',
-      component: React.lazy(() => import('../../views/CodeView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'code',
-        label: 'Code',
-        icon: FileCode2,
-        order: 20,
-        scope: 'workspace',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.diff',
-      component: React.lazy(() => import('../../views/DiffView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'diff',
-        label: 'Diff',
-        icon: GitCompare,
-        order: 40,
-        scope: 'canvas',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.artifacts',
-      component: React.lazy(() => import('../../views/ArtifactsView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'artifacts',
-        label: 'Artifacts',
-        icon: FileText,
-        order: 50,
-        scope: 'run',
       },
     },
   ],

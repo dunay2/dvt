@@ -18,13 +18,14 @@ export const canvasViewExecutionCopyEs = {
     'No hay un plan de ejecucion disponible: previsualiza el plan de ejecucion antes.',
   runPreviewStaleMessage:
     'Execution Preview esta obsoleto. Previsualiza el plan de ejecucion otra vez antes de arrancar.',
-  runPlanRefUnavailableMessage: 'La referencia del plan no esta disponible para este modo',
+  runPlanRefUnavailableMessage:
+    'La referencia del Execution Preview no esta disponible para este modo',
   runPersistedPreviewRequiredMessage:
     'El arranque del run requiere un Execution Preview persistido y vinculado a la referencia de plan actual. Previsualiza el plan de ejecucion otra vez primero.',
   runFailedMessage: 'No se ha podido arrancar el run',
   canvasExecutionUnavailableMessage:
-    'El preview de plan y el arranque de run no estan disponibles para este tipo de canvas.',
-  planCreatedMessage: 'Plan de ejecucion creado',
+    'Execution Preview y el arranque de run no estan disponibles para este tipo de canvas.',
+  planCreatedMessage: 'Execution Preview creado',
   runStartedMessage: 'Run arrancado',
   planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',
   planStatusPreviewRequiredMessage: 'Se requiere un preview antes de arrancar.',
