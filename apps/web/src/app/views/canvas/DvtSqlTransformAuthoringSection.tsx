@@ -3,10 +3,10 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
+import { buildDvtTransformColumnOptions } from '../../components/inspector/dvtTransformColumnModel';
 import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DvtSqlTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
-import { buildDvtTransformColumnOptions } from './canvasDvtTransformColumnModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import type {
   CanvasInspectorNodeDraft,

@@ -318,6 +318,67 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
+  it('projects DVT transform input columns with source and selection state', () => {
+    const source: CanonicalNode = {
+      id: 'source-orders',
+      name: 'Orders source',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer', nullable: false },
+          { name: 'customer', type: 'text', nullable: true },
+        ],
+      },
+    };
+    const transform: CanonicalNode = {
+      id: 'transform-orders',
+      name: 'Clean orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          selectedColumns: ['source-orders.order_id'],
+        },
+      },
+    };
+    const edge: CanonicalEdge = {
+      id: 'edge-source-transform',
+      sourceId: source.id,
+      targetId: transform.id,
+      relation: 'lineage',
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: transform,
+      nodes: [source, transform],
+      edges: [edge],
+    });
+
+    expectTableCells(sectionById(model, 'columns'), 'source-orders.order_id', {
+      name: 'order_id',
+      type: 'integer',
+      nullable: 'not null',
+      source: 'Orders source',
+      reference: 'source-orders.order_id',
+      selection: 'selected',
+    });
+    expectTableCells(sectionById(model, 'columns'), 'source-orders.customer', {
+      name: 'customer',
+      type: 'text',
+      nullable: 'nullable',
+      source: 'Orders source',
+      reference: 'source-orders.customer',
+      selection: 'available',
+    });
+  });
+
   it.each([
     ['compiled SQL', { compiledSql: 'select compiled', sql: 'select metadata' }, 'select compiled'],
     [

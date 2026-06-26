@@ -205,6 +205,7 @@ export function mapDbtNodeToCanonical(node: DbtNode): CanonicalNode {
     lastDuration: node.lastDuration,
     lastCost: node.lastCost,
     metadata: {
+      ...node.metadata,
       package: node.package,
       dependencies: node.dependencies,
       compiledSql: node.compiledSql,

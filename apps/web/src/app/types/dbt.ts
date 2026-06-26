@@ -27,6 +27,7 @@ export interface DbtNode {
   description?: string;
   config?: Record<string, any>;
   compiledSql?: string;
+  metadata?: Record<string, unknown>;
   dependencies: string[];
   columns?: DbtColumn[];
 }
