@@ -109,14 +109,12 @@ export function useCanvasContextMenuPresenter({
   const lastContextMenuOpenedAtRef = useRef(0);
   const lastContextMenuOpenedTargetKindRef = useRef<ContextMenuOpenTargetKind | null>(null);
   const lastPaneContextMenuScreenPositionRef = useRef<CanvasContextMenuPosition | null>(null);
-  const pendingDocumentPointerEchoRef = useRef(false);
   const pendingPaneClickEchoRef = useRef(false);
 
   const markContextMenuOpened = useCallback(
     (targetKind: ContextMenuOpenTargetKind, screenPosition?: CanvasContextMenuPosition) => {
       lastContextMenuOpenedAtRef.current = Date.now();
       lastContextMenuOpenedTargetKindRef.current = targetKind;
-      pendingDocumentPointerEchoRef.current = targetKind === 'pane';
       pendingPaneClickEchoRef.current = targetKind === 'pane';
       lastPaneContextMenuScreenPositionRef.current =
         targetKind === 'pane' ? (screenPosition ?? null) : null;
@@ -125,7 +123,6 @@ export function useCanvasContextMenuPresenter({
   );
 
   const closeContextMenu = useCallback((_options?: CloseCanvasContextMenuOptions) => {
-    pendingDocumentPointerEchoRef.current = false;
     pendingPaneClickEchoRef.current = false;
     lastPaneContextMenuScreenPositionRef.current = null;
     setModel(null);
@@ -174,34 +171,12 @@ export function useCanvasContextMenuPresenter({
         return;
       }
 
-      if (
-        !(event instanceof MouseEvent) &&
-        pendingDocumentPointerEchoRef.current &&
+      const isWithinPaneOpenEchoWindow =
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
-        Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS
-      ) {
-        pendingDocumentPointerEchoRef.current = false;
+        Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS;
+
+      if (isWithinPaneOpenEchoWindow) {
         return;
-      }
-
-      if (
-        event instanceof MouseEvent &&
-        pendingDocumentPointerEchoRef.current &&
-        lastContextMenuOpenedTargetKindRef.current === 'pane' &&
-        lastPaneContextMenuScreenPositionRef.current != null
-      ) {
-        const lastPanePosition = lastPaneContextMenuScreenPositionRef.current;
-        const isPendingBrowserClickEcho =
-          Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS;
-        const isDelayedEchoAtContextPoint =
-          Math.abs(event.clientX - lastPanePosition.x) <=
-            CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX &&
-          Math.abs(event.clientY - lastPanePosition.y) <= CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX;
-
-        if (isPendingBrowserClickEcho || isDelayedEchoAtContextPoint) {
-          pendingDocumentPointerEchoRef.current = false;
-          return;
-        }
       }
 
       closeContextMenu();
