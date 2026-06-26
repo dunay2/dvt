@@ -65,6 +65,7 @@ describe('Code Monaco editable access architecture', () => {
     const codeEditor = readAppSource('components/monaco/MonacoCodeEditor.tsx');
     const codeViewer = readAppSource('components/monaco/MonacoCodeViewer.tsx');
     const codeSurface = readAppSource('components/monaco/MonacoCodeSurface.tsx');
+    const canvasShell = readAppSource('views/canvas/CanvasShell.tsx');
     const dbtContributions = readAppSource('plugins/dbt/dbtContributions.ts');
     const cypressSpec = readFileSync(
       path.join(APP_ROOT, '../../cypress/e2e/canvas/code-workbench-workspace-files.cy.ts'),
@@ -80,10 +81,12 @@ describe('Code Monaco editable access architecture', () => {
       expect(source.trimStart().startsWith('/** Owned concern:'), modulePath).toBe(true);
     }
 
-    expect(dbtContributions).toContain("id: 'dbt.code'");
-    expect(dbtContributions).toContain("scope: 'workspace'");
+    expect(dbtContributions).toContain("id: 'dbt.canvas'");
+    expect(dbtContributions).not.toContain("id: 'dbt.code'");
+    expect(dbtContributions).not.toContain("scope: 'workspace'");
 
     expect(codeView).toContain('MonacoCodeEditor');
+    expect(codeView).toContain('publishRouteBootstrap = true');
     expect(codeView).toContain('resolveCodeViewCopy');
     expect(codeView).toContain('useCodeEditableBuffer');
     expect(codeView).not.toContain('useState<Record<string, string>>');
@@ -108,6 +111,8 @@ describe('Code Monaco editable access architecture', () => {
     expect(codeSurface).toContain('readOnly = true');
     expect(codeSurface).toContain('onChange');
     expect(codeSurface).not.toContain('save');
+
+    expect(canvasShell).toContain('<CodeWorkbench publishRouteBootstrap={false} />');
 
     expect(cypressSpec).toContain(
       'Owned concern: prove retired Canvas Code workbench routes redirect to Graph without file queries'
