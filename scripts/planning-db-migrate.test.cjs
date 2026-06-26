@@ -8619,3 +8619,37 @@ test('tracked migrations declare component tree projection refresh mechanization
     /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
   );
 });
+
+test('tracked migrations keep planned Canvas backlog components out of maturity blockers', () => {
+  const migrations = readMigrationFiles();
+  const canvasBacklogIntegrityMigration = migrations.find(
+    (migration) => migration.fileName === '291_canvas_backlog_integrity_readiness_projection.sql'
+  );
+
+  assert.ok(canvasBacklogIntegrityMigration);
+  assert.match(
+    canvasBacklogIntegrityMigration.sql,
+    /create or replace view planning_query_store\.component_integrity_query/i
+  );
+  assert.match(
+    canvasBacklogIntegrityMigration.sql,
+    /component\.status\s+in\s+\('approved',\s*'implemented',\s*'drift'\)/i
+  );
+  assert.match(
+    canvasBacklogIntegrityMigration.sql,
+    /local#E-CANVAS-UXDB-COMPONENT-SLICES-1#query#rendercanvasshellmainpanelframe/
+  );
+  assert.match(
+    canvasBacklogIntegrityMigration.sql,
+    /planning-db:task\/E-CANVAS-UXDB-COMPONENT-SLICES-1/
+  );
+  assert.match(
+    canvasBacklogIntegrityMigration.sql,
+    /tools\/planning-db\/migrations\/291_canvas_backlog_integrity_readiness_projection\.sql/
+  );
+  assert.doesNotMatch(
+    canvasBacklogIntegrityMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+  assert.doesNotMatch(canvasBacklogIntegrityMigration.sql, /truncate\s+/i);
+});
