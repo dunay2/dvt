@@ -8779,3 +8779,50 @@ test('tracked migrations add a Canvas command-query rail drift guard', () => {
   assert.doesNotMatch(railDriftMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(railDriftMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations normalize Canvas UX command-query rail vocabulary', () => {
+  const migrations = readMigrationFiles();
+  const normalizationMigration = migrations.find(
+    (migration) => migration.fileName === '296_canvas_cq_rail_vocabulary_normalization.sql'
+  );
+
+  assert.ok(normalizationMigration);
+  assert.match(
+    normalizationMigration.sql,
+    /create or replace view planning_query_store\.canvas_uxdb_canonical_specification_query/i
+  );
+  assert.match(
+    normalizationMigration.sql,
+    /from planning_query_store\.canvas_uxdb_specification_query/i
+  );
+  assert.match(normalizationMigration.sql, /OpenCanvasAddSourceDialog/);
+  assert.match(normalizationMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(normalizationMigration.sql, /OpenCanvasNodeWorkbench/);
+  assert.match(normalizationMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(normalizationMigration.sql, /PreviewCanvasExecutionPlan/);
+  assert.match(normalizationMigration.sql, /PreviewExecutionPlan/);
+  assert.match(normalizationMigration.sql, /OpenCanvasSqlContextWorkbench/);
+  assert.match(normalizationMigration.sql, /ResolveCanvasWorkbenchContext/);
+  assert.match(normalizationMigration.sql, /RenderCanvasGraphBase/);
+  assert.match(normalizationMigration.sql, /RenderCanvasShellChrome/);
+  assert.match(normalizationMigration.sql, /OpenCanvasProjectExplorer/);
+  assert.match(normalizationMigration.sql, /ExportCanvasUxdbManual/);
+  assert.match(normalizationMigration.sql, /VerifyDbtCanvasFlowInBrowser/);
+  assert.match(normalizationMigration.sql, /VerifyDvtCanvasFlowInBrowser/);
+  assert.match(
+    normalizationMigration.sql,
+    /from planning_query_store\.canvas_uxdb_canonical_specification_query spec/i
+  );
+  assert.match(normalizationMigration.sql, /E-CANVAS-CQ-RAIL-VOCABULARY-NORMALIZE-1/);
+  assert.match(normalizationMigration.sql, /componentGuides/);
+  assert.match(normalizationMigration.sql, /userStories/);
+  assert.match(normalizationMigration.sql, /domainObjects/);
+  assert.match(normalizationMigration.sql, /fowlerSignals/);
+  assert.match(normalizationMigration.sql, /architectureGuards/);
+  assert.match(normalizationMigration.sql, /cypressFlows/);
+  assert.match(normalizationMigration.sql, /completionGate/);
+  assert.match(normalizationMigration.sql, /patchSurfaces/);
+  assert.match(normalizationMigration.sql, /cypressCoverage/);
+  assert.doesNotMatch(normalizationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(normalizationMigration.sql, /truncate\s+/i);
+});
