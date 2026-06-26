@@ -18,7 +18,7 @@ describe('RunStates snapshot evidence', () => {
     harness.cleanup();
   });
 
-  it('renders persisted-plan and authoring provenance from snapshot fields', async () => {
+  it('renders persisted execution preview and authoring provenance from snapshot fields', async () => {
     await harness.render(
       <RunWorkspaceState
         workspace={buildWorkspace({
@@ -56,7 +56,8 @@ describe('RunStates snapshot evidence', () => {
       />
     );
 
-    expect(harness.container.textContent).toContain('Plan and authoring provenance');
+    expect(harness.container.textContent).toContain('Execution Preview and authoring provenance');
+    expect(harness.container.textContent).not.toContain('Plan and authoring provenance');
     expect(
       harness.container.querySelector('[data-slot="run-plan-provenance-card"]')
     ).not.toBeNull();

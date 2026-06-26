@@ -49,13 +49,17 @@ describe('Canvas preview-run persisted path', () => {
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
 
-    cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains(/Persisted preview summary/i)
-      .scrollIntoView()
-      .should('be.visible');
-    cy.contains('Nodes').parent().should('contain.text', '3');
-    cy.contains('Source tables').parent().should('contain.text', 'raw.orders');
-    cy.contains('Sink tables').parent().should('contain.text', 'analytics.orders_daily');
+    cy.get('[role="dialog"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('[data-slot="dialog-title"]', 'Execution Preview').should('be.visible');
+        cy.contains(/Persisted preview summary/i)
+          .scrollIntoView()
+          .should('be.visible');
+        cy.contains('Nodes').parent().should('contain.text', '3');
+        cy.contains('Source tables').parent().should('contain.text', 'raw.orders');
+        cy.contains('Sink tables').parent().should('contain.text', 'analytics.orders_daily');
+      });
     clickButtonNatively('Start Run');
 
     waitForE2eApiCall('/runs/start', 'POST');
@@ -85,8 +89,12 @@ describe('Canvas preview-run persisted path', () => {
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
 
-    cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains(canvasViewCopy.planStatusPreviewReadyMessage).should('be.visible');
+    cy.get('[role="dialog"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('[data-slot="dialog-title"]', 'Execution Preview').should('be.visible');
+        cy.contains(canvasViewCopy.planStatusPreviewReadyMessage).should('be.visible');
+      });
     clickButtonNatively('Start Run');
 
     waitForE2eApiCall('/runs/start', 'POST');
@@ -112,8 +120,12 @@ describe('Canvas preview-run persisted path', () => {
     });
     assertPreviewPlanRequest();
 
-    cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains(canvasViewCopy.planStatusPreviewReadyMessage).should('be.visible');
+    cy.get('[role="dialog"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('[data-slot="dialog-title"]', 'Execution Preview').should('be.visible');
+        cy.contains(canvasViewCopy.planStatusPreviewReadyMessage).should('be.visible');
+      });
     clickButtonNatively('Start Run');
 
     cy.wrap(null).should(() => {
@@ -146,8 +158,12 @@ describe('Canvas preview-run persisted path', () => {
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
 
-    cy.contains('Execution Plan Preview').should('be.visible');
-    cy.contains(canvasViewCopy.planStatusPreviewNotAlignedMessage).should('be.visible');
+    cy.get('[role="dialog"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('[data-slot="dialog-title"]', 'Execution Preview').should('be.visible');
+        cy.contains(canvasViewCopy.planStatusPreviewNotAlignedMessage).should('be.visible');
+      });
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
     cy.contains('button', 'Start Run').should('be.disabled');
     cy.then(() => {

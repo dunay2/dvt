@@ -86,7 +86,8 @@ vi.mock('./canvas/CanvasViewport', () => ({
 }));
 
 vi.mock('../components/Modals', () => ({
-  PlanPreviewModal: ({ open }: { open: boolean }) => (open ? <div>Plan preview modal</div> : null),
+  PlanPreviewModal: ({ open }: { open: boolean }) =>
+    open ? <div>Execution Preview modal</div> : null,
   ConfirmEdgeModal: ({ open }: { open: boolean }) => (open ? <div>Confirm edge modal</div> : null),
 }));
 
@@ -101,7 +102,7 @@ async function renderCanvasRoute(root: Root): Promise<void> {
     [
       {
         id: 'dbt.canvas',
-        path: '/canvas/:workbenchTab?',
+        path: '/canvas/*',
         handle: {
           routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
         },

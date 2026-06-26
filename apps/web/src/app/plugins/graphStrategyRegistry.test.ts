@@ -129,6 +129,7 @@ describe('resolveCanvasGraphStrategy', () => {
       'preview',
       'runs',
     ]);
+    expect(strategy.nodeWorkbench.openedFrom).toEqual(['node-context-menu', 'double-click']);
   });
 
   it('resolves transformation strategy when explicitly requested', () => {
@@ -162,6 +163,7 @@ describe('resolveCanvasGraphStrategy', () => {
 
     expect(strategy.id).toBe('dvt-transformation-contextual-canvas');
     expect(strategy.sourceImport.openedFrom).toEqual(['canvas-context-menu', 'command-palette']);
+    expect(strategy.nodeWorkbench.openedFrom).toEqual(['node-context-menu', 'double-click']);
     expect(strategy.nodeWorkbench.sections).toEqual([
       'properties',
       'columns',

@@ -59,7 +59,7 @@ describe('RunStates workspace basics', () => {
     );
   });
 
-  it('renders return navigation and persisted plan execution scope for completed runs', async () => {
+  it('renders return navigation and persisted execution preview scope for completed runs', async () => {
     await harness.render(
       <RunWorkspaceState
         workspace={buildWorkspace({
@@ -98,7 +98,8 @@ describe('RunStates workspace basics', () => {
     expect(harness.container.textContent).toContain('Run itinerary');
     expect(harness.container.textContent).toContain('Back to Canvas');
     expect(harness.container.textContent).toContain('All runs');
-    expect(harness.container.textContent).toContain('Plan');
+    expect(harness.container.textContent).toContain('Execution Preview');
+    expect(harness.container.textContent).not.toContain('Plan');
     expect(harness.container.textContent).toContain('plan_123');
     expect(harness.container.textContent).toContain('Source tables');
     expect(harness.container.textContent).toContain('raw.orders');

@@ -45,7 +45,7 @@ describe('buildCanvasWorkbenchLogEntries', () => {
       ['info', 'route', 'Canvas is ready'],
       ['error', 'draft', 'The protected draft write failed.'],
       ['warning', 'plan', 'Preview must be regenerated before Run.'],
-      ['warning', 'permission', 'Plan preview is unavailable for this workspace scope.'],
+      ['warning', 'permission', 'Execution Preview is unavailable for this workspace scope.'],
       ['warning', 'permission', 'Run start is unavailable for this workspace scope.'],
       ['info', 'graph', 'Graph contains 3 nodes and 2 edges.'],
       ['info', 'selection', 'Selected node: orders.'],

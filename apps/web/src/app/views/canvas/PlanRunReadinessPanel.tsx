@@ -17,7 +17,7 @@ const blockerLabels: Record<PlanRunReadinessBlocker, string> = {
   authorization_denied: 'Authorization denied',
   backpressure: 'Backpressure',
   capability_mismatch: 'Capability mismatch',
-  plan_integrity: 'Plan integrity',
+  plan_integrity: 'Execution Preview integrity',
 };
 
 export function PlanRunReadinessPanel({
@@ -29,7 +29,7 @@ export function PlanRunReadinessPanel({
 
   return (
     <section
-      aria-label="Plan/run readiness"
+      aria-label="Execution readiness"
       aria-live="polite"
       data-slot="plan-run-readiness-panel"
       data-status={readiness.status}

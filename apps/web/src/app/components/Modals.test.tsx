@@ -107,9 +107,20 @@ describe('PlanPreviewModal', () => {
     expect(modal?.className).toContain('sm:max-w-4xl');
 
     const bodyText = document.body.textContent ?? '';
+    expect(bodyText).toContain('Execution Preview identity');
+    expect(bodyText).toContain('Preview ID');
+    expect(bodyText).toContain('Preview Ref');
+    expect(bodyText).toContain('Preview record');
+    expect(bodyText).toContain('Canonical preview');
     expect(bodyText).toContain('Execution target');
     expect(bodyText).toContain('Not estimated');
     expect(bodyText).not.toContain('Est. Cost:$');
+    expect(bodyText).not.toContain('Plan identity');
+    expect(bodyText).not.toContain('Plan ID');
+    expect(bodyText).not.toContain('Plan Ref');
+    expect(bodyText).not.toContain('Plan record');
+    expect(bodyText).not.toContain('plan preview');
+    expect(bodyText).not.toContain('canonical plan');
 
     const longValues = Array.from(
       document.querySelectorAll('[data-testid="plan-preview-long-value"]')
@@ -150,6 +161,7 @@ describe('RePlanRequiredModal', () => {
 
     expect(bodyText).toContain('Execution Preview Required');
     expect(bodyText).toContain('Preview execution plan');
+    expect(bodyText).not.toContain('execution plan again before starting');
     expect(bodyText).not.toContain('Re-Plan');
     expect(bodyText).not.toContain('Create New Plan');
   });
