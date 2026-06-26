@@ -1,7 +1,7 @@
 import type { Connection, Edge } from '@xyflow/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
+import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import {
@@ -42,16 +42,7 @@ function buildDraftSession(
   } satisfies CanvasDraftSession;
 }
 
-const pluginPortMap = new Map([
-  [
-    'dvt',
-    {
-      connectionRules: [],
-      produces: [],
-      consumes: [],
-    },
-  ],
-]) satisfies PluginPortMap;
+const pluginPortMap = getPluginPortMap();
 
 describe('canvasEdgeAdmissionTransaction', () => {
   afterEach(() => {
@@ -165,7 +156,7 @@ describe('canvasEdgeAdmissionTransaction', () => {
 
     expect(transaction).toEqual({
       outcome: 'noop',
-      rejection: { code: 'role_rule_blocked', sourceRole: 'output', targetRole: 'input' },
+      rejection: { code: 'plugin_rule_blocked', reason: 'Sinks are terminal nodes' },
     });
   });
 

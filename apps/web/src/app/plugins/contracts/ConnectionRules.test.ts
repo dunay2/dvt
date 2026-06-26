@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { getPluginPortMap } from '../registry';
-import { evaluateConnection } from './ConnectionRules';
+import { evaluateConnection, type PluginPortMap } from './ConnectionRules';
 
 function buildNode(
   pluginId: CanonicalNode['pluginId'],
@@ -91,6 +91,59 @@ describe('evaluateConnection', () => {
       sourceRole: 'input',
       targetPluginId: 'dvt',
       targetRole: 'output',
+    });
+  });
+
+  it('fails closed when a same-plugin policy is registered without rules', () => {
+    const pluginPortMap = new Map([
+      [
+        'example',
+        {
+          connectionRules: [],
+          produces: [],
+          consumes: [],
+        },
+      ],
+    ]) satisfies PluginPortMap;
+
+    const connection = evaluateConnection(
+      buildNode('example', 'example:source', 'input'),
+      buildNode('example', 'example:model', 'transform'),
+      [],
+      pluginPortMap
+    );
+
+    expect(connection).toEqual({
+      allowed: false,
+      reasonCode: 'plugin_policy_missing',
+      pluginId: 'example',
+    });
+  });
+
+  it('fails closed when same-plugin rules do not match a proposed edge', () => {
+    const pluginPortMap = new Map([
+      [
+        'example',
+        {
+          connectionRules: [
+            { sourceKind: 'example:seed', targetKind: 'example:model', allowed: true },
+          ],
+          produces: [],
+          consumes: [],
+        },
+      ],
+    ]) satisfies PluginPortMap;
+
+    const connection = evaluateConnection(
+      buildNode('example', 'example:source', 'input'),
+      buildNode('example', 'example:model', 'transform'),
+      [],
+      pluginPortMap
+    );
+
+    expect(connection).toEqual({
+      allowed: false,
+      reasonCode: 'plugin_rule_blocked',
     });
   });
 });
