@@ -82,6 +82,26 @@ function formatCreateNodeActionLabel(
     return 'Create source node';
   }
 
+  if (registration.kind.endsWith(':source')) {
+    return 'Add source';
+  }
+
+  if (registration.kind === 'dbt:model') {
+    return 'Add model';
+  }
+
+  if (registration.kind === 'dvt:sql_transform' || registration.role === 'transform') {
+    return 'Add transformation';
+  }
+
+  if (registration.kind.endsWith(':test') || registration.role === 'check') {
+    return 'Add test';
+  }
+
+  if (registration.kind === 'dvt:sink' || registration.role === 'output') {
+    return 'Add output';
+  }
+
   const label = registration.label.trim();
   if (label.length === 0) {
     return 'Add node';
