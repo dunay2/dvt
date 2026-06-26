@@ -9240,6 +9240,36 @@ test('tracked migrations register Canvas node workbench strategy sections', () =
   assert.doesNotMatch(nodeWorkbenchStrategyMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node workbench section authoring', () => {
+  const migrations = readMigrationFiles();
+  const nodeWorkbenchSectionAuthoringMigration = migrations.find(
+    (migration) => migration.fileName === '334_canvas_node_workbench_section_authoring.sql'
+  );
+
+  assert.ok(nodeWorkbenchSectionAuthoringMigration);
+  assert.match(
+    nodeWorkbenchSectionAuthoringMigration.sql,
+    /CANVAS-NODE-WORKBENCH-SECTION-AUTHORING-20260626/
+  );
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /E-CANVAS-NODE-WORKBENCH-1/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /CanvasInspectorAuthoringSection\.tsx/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /DvtAuthoringFields\.tsx/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /DvtSqlTransformAuthoringSection\.tsx/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /useCanvasContextMenuPresenter\.ts/);
+  assert.match(
+    nodeWorkbenchSectionAuthoringMigration.sql,
+    /CanvasViewport\.contextMenu\.test\.tsx/
+  );
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /sectionChildren/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(nodeWorkbenchSectionAuthoringMigration.sql, /redGreenCycles/);
+  assert.doesNotMatch(nodeWorkbenchSectionAuthoringMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Canvas component registry drift guard', () => {
   const migrations = readMigrationFiles();
   const registryDriftMigration = migrations.find(

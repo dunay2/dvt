@@ -21,6 +21,7 @@ export function DvtSqlTransformAuthoringSection({
   disabled,
   draft,
   errors,
+  section = 'all',
   onChange,
 }: Readonly<{
   node: CanonicalNode;
@@ -29,8 +30,11 @@ export function DvtSqlTransformAuthoringSection({
   disabled: boolean;
   draft: DvtSqlTransformAuthoringMetadata;
   errors: CanvasInspectorNodeDraftErrors['dvt'];
+  section?: 'all' | 'columns' | 'code';
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
+  const showCode = section === 'all' || section === 'code';
+  const showColumns = section === 'all' || section === 'columns';
   const normalizedSqlLines = draft.sql
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -68,92 +72,98 @@ export function DvtSqlTransformAuthoringSection({
 
   return (
     <div className={graphVisualClasses.inspectorDbtSection}>
-      <h3 className={graphVisualClasses.contextPanelSectionTitle}>
-        {canvasViewCopy.inspectorDvtSqlTransformTitle}
-      </h3>
-      <div className="mb-3 rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-(--text-muted)">{canvasViewCopy.inspectorDvtSqlBodyLabel}</span>
-          <span className="text-(--text-muted)">
-            {sqlLineCount} {sqlLineLabel}
-          </span>
-        </div>
-        <code className="mt-2 block max-h-24 overflow-hidden whitespace-pre-wrap text-(--text-default)">
-          {draft.sql || '-'}
-        </code>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`inspector-dvt-transform-sql-${node.id}`}>
-          {canvasViewCopy.inspectorDvtSqlLabel}
-        </Label>
-        <Textarea
-          id={`inspector-dvt-transform-sql-${node.id}`}
-          name="dvt-transform-sql"
-          value={draft.sql}
-          disabled={disabled}
-          aria-invalid={errors?.sql ? 'true' : undefined}
-          onChange={(event) =>
-            onChange((currentDraft) =>
-              currentDraft.dvt?.kind === 'sql_transform'
-                ? {
-                    ...currentDraft,
-                    dvt: { ...currentDraft.dvt, sql: event.target.value },
-                  }
-                : currentDraft
-            )
-          }
-        />
-        {errors?.sql ? (
-          <p className={graphVisualClasses.inspectorErrorText}>
-            {formatCanvasInspectorNodeDraftError(errors.sql, canvasViewCopy)}
-          </p>
-        ) : null}
-      </div>
-      <div className="mt-4 space-y-2">
-        <div className="flex items-center justify-between gap-3">
-          <h4 className={graphVisualClasses.contextPanelSectionTitle}>Input columns</h4>
-          {columnOptions.length > 0 ? (
-            <span className={graphVisualClasses.inspectorSubtle}>
-              {draft.selectedColumns.length}/{columnOptions.length} selected
-            </span>
-          ) : null}
-        </div>
-        {columnOptions.length > 0 ? (
-          <div className="max-h-48 overflow-auto rounded border border-[color:var(--border-default)]">
-            {columnOptions.map((option) => (
-              <label
-                key={option.columnRef}
-                className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--border-muted)] px-3 py-2 text-xs last:border-b-0"
-              >
-                <input
-                  type="checkbox"
-                  name="dvt-transform-column"
-                  value={option.columnRef}
-                  checked={option.selected}
-                  disabled={disabled}
-                  onChange={(event) =>
-                    updateColumnSelection(option.columnRef, event.target.checked)
-                  }
-                />
-                <span className="min-w-0">
-                  <span className="block truncate font-mono text-(--text-default)">
-                    {option.sourceNodeName}.{option.columnName}
-                  </span>
-                  <span className="block truncate text-(--text-muted)">{option.columnRef}</span>
-                </span>
-                <span className="rounded border border-[color:var(--border-default)] px-2 py-1 font-mono text-(--text-muted)">
-                  {option.dataType}
-                  {option.nullable === false ? ' not null' : ''}
-                </span>
-              </label>
-            ))}
+      {showCode ? (
+        <div className="space-y-3">
+          <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+            {canvasViewCopy.inspectorDvtSqlTransformTitle}
+          </h3>
+          <div className="rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-(--text-muted)">{canvasViewCopy.inspectorDvtSqlBodyLabel}</span>
+              <span className="text-(--text-muted)">
+                {sqlLineCount} {sqlLineLabel}
+              </span>
+            </div>
+            <code className="mt-2 block max-h-24 overflow-hidden whitespace-pre-wrap text-(--text-default)">
+              {draft.sql || '-'}
+            </code>
           </div>
-        ) : (
-          <p className={graphVisualClasses.inspectorBody}>
-            Connect a source with recorded columns to choose transform inputs.
-          </p>
-        )}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-dvt-transform-sql-${node.id}`}>
+              {canvasViewCopy.inspectorDvtSqlLabel}
+            </Label>
+            <Textarea
+              id={`inspector-dvt-transform-sql-${node.id}`}
+              name="dvt-transform-sql"
+              value={draft.sql}
+              disabled={disabled}
+              aria-invalid={errors?.sql ? 'true' : undefined}
+              onChange={(event) =>
+                onChange((currentDraft) =>
+                  currentDraft.dvt?.kind === 'sql_transform'
+                    ? {
+                        ...currentDraft,
+                        dvt: { ...currentDraft.dvt, sql: event.target.value },
+                      }
+                    : currentDraft
+                )
+              }
+            />
+            {errors?.sql ? (
+              <p className={graphVisualClasses.inspectorErrorText}>
+                {formatCanvasInspectorNodeDraftError(errors.sql, canvasViewCopy)}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      {showColumns ? (
+        <div className={showCode ? 'mt-4 space-y-2' : 'space-y-2'}>
+          <div className="flex items-center justify-between gap-3">
+            <h4 className={graphVisualClasses.contextPanelSectionTitle}>Input columns</h4>
+            {columnOptions.length > 0 ? (
+              <span className={graphVisualClasses.inspectorSubtle}>
+                {draft.selectedColumns.length}/{columnOptions.length} selected
+              </span>
+            ) : null}
+          </div>
+          {columnOptions.length > 0 ? (
+            <div className="max-h-48 overflow-auto rounded border border-[color:var(--border-default)]">
+              {columnOptions.map((option) => (
+                <label
+                  key={option.columnRef}
+                  className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-[color:var(--border-muted)] px-3 py-2 text-xs last:border-b-0"
+                >
+                  <input
+                    type="checkbox"
+                    name="dvt-transform-column"
+                    value={option.columnRef}
+                    checked={option.selected}
+                    disabled={disabled}
+                    onChange={(event) =>
+                      updateColumnSelection(option.columnRef, event.target.checked)
+                    }
+                  />
+                  <span className="min-w-0">
+                    <span className="block truncate font-mono text-(--text-default)">
+                      {option.sourceNodeName}.{option.columnName}
+                    </span>
+                    <span className="block truncate text-(--text-muted)">{option.columnRef}</span>
+                  </span>
+                  <span className="rounded border border-[color:var(--border-default)] px-2 py-1 font-mono text-(--text-muted)">
+                    {option.dataType}
+                    {option.nullable === false ? ' not null' : ''}
+                  </span>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <p className={graphVisualClasses.inspectorBody}>
+              Connect a source with recorded columns to choose transform inputs.
+            </p>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

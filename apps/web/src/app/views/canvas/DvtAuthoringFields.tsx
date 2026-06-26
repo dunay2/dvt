@@ -17,6 +17,7 @@ type DvtAuthoringFieldsProps = Readonly<{
   disabled: boolean;
   draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
+  section?: 'all' | 'general' | 'columns' | 'code';
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
@@ -32,6 +33,7 @@ export function DvtAuthoringFields({
   disabled,
   draft,
   errors,
+  section = 'all',
   onChange,
 }: DvtAuthoringFieldsProps): JSX.Element | null {
   if (!draft.dvt) {
@@ -39,6 +41,10 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'source') {
+    if (section !== 'all' && section !== 'general') {
+      return null;
+    }
+
     return (
       <DvtSourceAuthoringSection
         node={node}
@@ -56,6 +62,10 @@ export function DvtAuthoringFields({
   }
 
   if (draft.dvt.kind === 'sql_transform') {
+    if (section !== 'all' && section !== 'columns' && section !== 'code') {
+      return null;
+    }
+
     return (
       <DvtSqlTransformAuthoringSection
         node={node}
@@ -64,9 +74,14 @@ export function DvtAuthoringFields({
         disabled={disabled}
         draft={draft.dvt}
         errors={errors.dvt}
+        section={section}
         onChange={onChange}
       />
     );
+  }
+
+  if (section !== 'all' && section !== 'general') {
+    return null;
   }
 
   return (

@@ -2,12 +2,16 @@
 
 /** Owned concern: prove CanvasNodeWorkbenchPanel presents governed node metadata directly. */
 import React, { act } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
-import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
+import {
+  CanvasNodeWorkbenchPanel,
+  type CanvasNodeWorkbenchPanelProps,
+} from './CanvasNodeWorkbenchPanel';
 
 const SOURCE_NODE: CanonicalNode = {
   id: 'source.orders',
@@ -77,6 +81,22 @@ const MODEL_NODE: CanonicalNode = {
   },
 };
 
+const DVT_TRANSFORM_NODE: CanonicalNode = {
+  id: 'transform.orders',
+  name: 'Clean Orders',
+  pluginId: 'dvt',
+  kind: 'dvt:sql_transform',
+  role: 'transform',
+  status: 'idle',
+  tags: [],
+  metadata: {
+    config: {
+      sql: 'select order_id from source.orders',
+      selectedColumns: [`${SOURCE_NODE.id}.order_id`],
+    },
+  },
+};
+
 const EDGES: readonly CanonicalEdge[] = [
   {
     id: 'edge-source-model',
@@ -93,22 +113,31 @@ function renderPanel(root: Root, preferredTabId: string | null = null): void {
 function renderNodePanel(
   root: Root,
   node: CanonicalNode,
-  preferredTabId: string | null = null
+  preferredTabId: string | null = null,
+  authoring: CanvasNodeWorkbenchPanelProps['authoring'] = {
+    canEditNode: true,
+    onApplyNodeDraft: vi.fn(),
+  }
 ): void {
   act(() => {
     root.render(
       <CanvasNodeWorkbenchPanel
         node={node}
-        nodes={[SOURCE_NODE, MODEL_NODE]}
-        edges={EDGES}
+        nodes={[SOURCE_NODE, MODEL_NODE, DVT_TRANSFORM_NODE]}
+        edges={[
+          ...EDGES,
+          {
+            id: 'edge-source-transform',
+            sourceId: SOURCE_NODE.id,
+            targetId: DVT_TRANSFORM_NODE.id,
+            relation: 'lineage',
+          },
+        ]}
         activeRunId={null}
         registeredPlugins={new Set()}
         preferredTabId={preferredTabId}
         preferredTabRequestId={1}
-        authoring={{
-          canEditNode: true,
-          onApplyNodeDraft: vi.fn(),
-        }}
+        authoring={authoring}
         onClose={vi.fn()}
       />
     );
@@ -193,5 +222,63 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(generalSection?.textContent).toContain('Name');
     expect(generalSection?.querySelector('input[name="node-name"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).not.toBeNull();
+  });
+
+  it('renders DVT transform column selection inside the Columns tab', () => {
+    const onApplyNodeDraft = vi.fn();
+
+    renderNodePanel(root, DVT_TRANSFORM_NODE, 'columns', {
+      canEditNode: true,
+      onApplyNodeDraft,
+    });
+
+    const columnsSection = container.querySelector(
+      '[data-slot="canvas-node-workbench-columns-section"]'
+    );
+    const selectedColumn = columnsSection?.querySelector<HTMLInputElement>(
+      `input[name="dvt-transform-column"][value="${SOURCE_NODE.id}.order_id"]`
+    );
+
+    expect(columnsSection).not.toBeNull();
+    expect(selectedColumn).not.toBeNull();
+    expect(selectedColumn?.checked).toBe(true);
+    expect(container.querySelector('textarea[name="dvt-transform-sql"]')).toBeNull();
+
+    act(() => {
+      fireEvent.click(selectedColumn!);
+    });
+
+    const applyButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Apply'
+    );
+
+    expect(applyButton).toBeDefined();
+
+    act(() => {
+      fireEvent.click(applyButton!);
+    });
+
+    expect(onApplyNodeDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        dvt: expect.objectContaining({
+          kind: 'sql_transform',
+          selectedColumns: [],
+        }),
+      })
+    );
+  });
+
+  it('renders DVT transform SQL editing inside the Code tab', () => {
+    renderNodePanel(root, DVT_TRANSFORM_NODE, 'code');
+
+    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
+    const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
+      'textarea[name="dvt-transform-sql"]'
+    );
+
+    expect(codeSection).not.toBeNull();
+    expect(sqlEditor).not.toBeNull();
+    expect(sqlEditor?.value).toBe('select order_id from source.orders');
+    expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 });
