@@ -96,6 +96,7 @@ describe('Canvas interaction command surface architecture', () => {
   it('keeps contextual gestures split into semantic model, presenter, and view template', () => {
     const modelSource = readAppSource('views/canvas/canvasInteractionCommandSurface.ts');
     const viewportSource = readAppSource('views/canvas/CanvasViewport.tsx');
+    const viewportSurfaceViewSource = readAppSource('views/canvas/CanvasViewportSurfaceView.tsx');
     const presenterPath = 'views/canvas/useCanvasContextMenuPresenter.ts';
     const viewTemplatePath = 'views/canvas/CanvasContextMenuView.tsx';
     const viewPrimitivesPath = 'views/canvas/CanvasContextMenuPrimitives.tsx';
@@ -112,6 +113,7 @@ describe('Canvas interaction command surface architecture', () => {
     for (const [modulePath, source] of [
       ['views/canvas/canvasInteractionCommandSurface.ts', modelSource],
       ['views/canvas/CanvasViewport.tsx', viewportSource],
+      ['views/canvas/CanvasViewportSurfaceView.tsx', viewportSurfaceViewSource],
       [presenterPath, presenterSource],
       [viewTemplatePath, viewTemplateSource],
       [viewPrimitivesPath, viewPrimitivesSource],
@@ -126,14 +128,9 @@ describe('Canvas interaction command surface architecture', () => {
     expect(modelSource).not.toContain('useState');
     expect(modelSource).not.toContain('ReactFlow');
 
-    expect(viewportSource).toContain(
-      'onPaneContextMenu={contextMenuPresenter.handlePaneContextMenu}'
-    );
-    expect(viewportSource).toContain(
-      'onEdgeContextMenu={contextMenuPresenter.handleEdgeContextMenu}'
-    );
-    expect(viewportSource).toContain('CanvasContextMenuView');
     expect(viewportSource).toContain('useCanvasContextMenuPresenter');
+    expect(viewportSource).toContain('CanvasViewportSurfaceView');
+    expect(viewportSource).not.toContain('CanvasContextMenuView');
     expect(viewportSource).not.toContain('buildCanvasContextMenuModel');
     expect(viewportSource).not.toContain('buildCanvasEdgeContextRemovalChange');
     expect(viewportSource).not.toContain('CanvasContextMenuModel');
@@ -142,6 +139,22 @@ describe('Canvas interaction command surface architecture', () => {
     expect(viewportSource).not.toContain('role="menu"');
     expect(viewportSource).not.toContain('role="menuitem"');
     expect(viewportSource).not.toContain("type: 'remove'");
+
+    expect(viewportSurfaceViewSource).toContain(
+      'onPaneContextMenu={contextMenuPresenter.handlePaneContextMenu}'
+    );
+    expect(viewportSurfaceViewSource).toContain(
+      'onEdgeContextMenu={contextMenuPresenter.handleEdgeContextMenu}'
+    );
+    expect(viewportSurfaceViewSource).toContain('CanvasContextMenuView');
+    expect(viewportSurfaceViewSource).not.toContain('buildCanvasContextMenuModel');
+    expect(viewportSurfaceViewSource).not.toContain('buildCanvasEdgeContextRemovalChange');
+    expect(viewportSurfaceViewSource).not.toContain('CanvasContextMenuModel');
+    expect(viewportSurfaceViewSource).not.toContain('flushSync');
+    expect(viewportSurfaceViewSource).not.toContain('dataset.contextmenuAccepted');
+    expect(viewportSurfaceViewSource).not.toContain('role="menu"');
+    expect(viewportSurfaceViewSource).not.toContain('role="menuitem"');
+    expect(viewportSurfaceViewSource).not.toContain("type: 'remove'");
 
     expect(presenterSource).toContain('buildCanvasContextMenuModel');
     expect(presenterSource).toContain('buildCanvasEdgeContextRemovalChange');
