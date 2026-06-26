@@ -8886,6 +8886,66 @@ test('tracked migrations normalize Canvas UX command-query rail vocabulary', () 
   assert.doesNotMatch(normalizationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations persist the professional Canvas UX reference catalog', () => {
+  const migrations = readMigrationFiles();
+  const referenceCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '309_canvas_uxdb_professional_reference_catalog.sql'
+  );
+
+  assert.ok(referenceCatalogMigration);
+  assert.match(referenceCatalogMigration.sql, /E-CANVAS-UXDB-REFERENCE-CATALOG-1/);
+  assert.match(referenceCatalogMigration.sql, /CANVAS-UXDB-PROFESSIONAL-REFERENCE-CATALOG/);
+  assert.match(referenceCatalogMigration.sql, /canvas_uxdb_specification_records/);
+
+  for (const ruleId of ['UX-001', 'UX-015', 'DB-001', 'DB-010']) {
+    assert.match(referenceCatalogMigration.sql, new RegExp(`'${ruleId}'`));
+  }
+
+  for (const componentId of [
+    'component.edge-context-menu',
+    'component.port-context-menu',
+    'component.command-palette',
+    'component.global-menu-bar',
+    'component.run-status-indicator',
+  ]) {
+    assert.match(referenceCatalogMigration.sql, new RegExp(`'${componentId}'`));
+  }
+
+  for (const railSpecId of [
+    'command.open-canvas-context-menu',
+    'command.open-node-context-menu',
+    'command.preview-execution-plan',
+    'query.get-canvas-context-menu-items',
+    'query.get-node-workbench-tabs',
+    'query.get-available-sources',
+  ]) {
+    assert.match(referenceCatalogMigration.sql, new RegExp(`'${railSpecId}'`));
+  }
+
+  for (const referenceId of [
+    'reference.comfyui',
+    'reference.unreal-blueprints',
+    'reference.kestra',
+    'reference.dbt-cloud-ide',
+    'reference.datahub',
+    'reference.jetbrains',
+    'reference.github-actions',
+    'reference.raycast',
+    'reference.linear',
+  ]) {
+    assert.match(referenceCatalogMigration.sql, new RegExp(`'${referenceId}'`));
+  }
+
+  assert.match(referenceCatalogMigration.sql, /'manual-export.canvas-uxdb'/);
+  assert.match(referenceCatalogMigration.sql, /ListCanvasUxdbProfessionalReferenceCatalog/);
+  assert.match(referenceCatalogMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(referenceCatalogMigration.sql, /'cypressFlows'/);
+  assert.match(referenceCatalogMigration.sql, /'fowlerSignals'/);
+  assert.match(referenceCatalogMigration.sql, /'cypressCoverage'/);
+  assert.doesNotMatch(referenceCatalogMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(referenceCatalogMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register the Canvas viewport component slice boundaries', () => {
   const migrations = readMigrationFiles();
   const viewportSliceMigration = migrations.find(
