@@ -7285,7 +7285,10 @@ test('latest command/query rail projection counts canonical component docs as du
     latestRailProjectionMigration.sql,
     /when rail\.source_path like 'docs\/architecture\/components\/%' then 2/
   );
-  assert.match(latestRailProjectionMigration.sql, /count\(\*\) filter \(/);
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /count\(distinct rail\.canonical_declaration_key\) filter \(/
+  );
   assert.match(latestRailProjectionMigration.sql, /where rail\.authority_priority <= 2/);
   assert.match(
     latestRailProjectionMigration.sql,
@@ -7302,6 +7305,34 @@ test('latest command/query rail projection counts canonical component docs as du
   assert.match(latestRailProjectionMigration.sql, /as canonical_candidate_count/);
 });
 
+test('latest command/query rail projection collapses same-owner local feature evidence', () => {
+  const migrations = readMigrationFiles();
+  const latestRailProjectionMigration = migrations
+    .filter((migration) =>
+      /create or replace view planning_query_store\.command_query_rail_query/.test(migration.sql)
+    )
+    .at(-1);
+
+  assert.ok(latestRailProjectionMigration);
+  assert.match(latestRailProjectionMigration.sql, /canonical_declaration_key/);
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /rail\.rail_type\s+\|\|\s+':'\s+\|\|\s+rail\.normalized_rail_name\s+\|\|\s+':'\s+\|\|\s+coalesce\(nullif\(rail\.ddd_owner, ''\), '-'\)/
+  );
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /count\(distinct rail\.canonical_declaration_key\) filter \([\s\S]*as canonical_candidate_count/
+  );
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /jsonb_agg\(distinct rail\.feature_id order by rail\.feature_id\)/
+  );
+  assert.match(
+    latestRailProjectionMigration.sql,
+    /jsonb_agg\(distinct rail\.source_path order by rail\.source_path\)/
+  );
+});
+
 test('latest command/query rail projection prefers local implemented refs over imported declarations', () => {
   const migrations = readMigrationFiles();
   const latestRailProjectionMigration = migrations
@@ -7313,7 +7344,7 @@ test('latest command/query rail projection prefers local implemented refs over i
   assert.ok(latestRailProjectionMigration);
   assert.equal(
     latestRailProjectionMigration.fileName,
-    '272_materialize_command_query_rail_reference_rollup.sql'
+    '307_command_query_rail_same_owner_feature_evidence_rollup.sql'
   );
   assert.match(
     latestRailProjectionMigration.sql,
@@ -8352,6 +8383,34 @@ test('tracked migrations repoint stale local feature rail sources to versioned f
     sourceRepointMigration.sql,
     /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
   );
+});
+
+test('tracked migrations repoint DBT test semantics workbench rail away from raw intake', () => {
+  const migrations = readMigrationFiles();
+  const sourceRepairMigration = migrations.find(
+    (migration) => migration.fileName === '308_repoint_dbt_test_semantics_workbench_rail_source.sql'
+  );
+
+  assert.ok(sourceRepairMigration);
+  assert.match(
+    sourceRepairMigration.sql,
+    /local#E-CANVAS-DBT-TEST-SEMANTICS-WORKBENCH-1#query#inspectcanvasnodeproperties/
+  );
+  assert.match(
+    sourceRepairMigration.sql,
+    /source_path = 'apps\/web\/src\/app\/views\/canvas\/CanvasNodeWorkbenchPanel\.tsx'/
+  );
+  assert.match(sourceRepairMigration.sql, /'implementationPlan',/);
+  assert.match(
+    sourceRepairMigration.sql,
+    /planning-db:\/\/canvas-uxdb-specification\/component\.node-workbench\.tests/
+  );
+  assert.match(sourceRepairMigration.sql, /'userStories',\s+jsonb_build_array\(/);
+  assert.match(
+    sourceRepairMigration.sql,
+    /'forbiddenSurfaces', jsonb_build_array\('buzon\/\*\*'\)/
+  );
+  assert.doesNotMatch(sourceRepairMigration.sql, /source_path = 'buzon\/TAREA\.TXT'/);
 });
 
 test('tracked migrations anchor Canvas source import active rail to governed frontend source', () => {
