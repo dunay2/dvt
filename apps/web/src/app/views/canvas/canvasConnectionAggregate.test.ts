@@ -159,6 +159,29 @@ describe('canvasConnectionAggregate', () => {
     });
   });
 
+  it('rejects cross-plugin bridges into input nodes before evaluating tabular ports', () => {
+    const dvtTransform = node('dvt-transform', 'transform', 'dvt:transform');
+    const dbtSource = dbtNode('dbt-source', 'input', 'dbt:source');
+
+    expect(
+      proposeConnection({
+        connection: link(dvtTransform.id, dbtSource.id),
+        canonicalNodesById: byId([dvtTransform, dbtSource]),
+        edges: [],
+        pluginPortMap: getPluginPortMap(),
+      })
+    ).toEqual({
+      outcome: 'rejected',
+      rejection: {
+        code: 'cross_plugin_bridge_missing',
+        sourcePluginId: 'dvt',
+        sourceRole: 'transform',
+        targetPluginId: 'dbt',
+        targetRole: 'input',
+      },
+    });
+  });
+
   it('rejects policy-incompatible, duplicate, self, and cyclic edges', () => {
     const source = node('source-node', 'input', 'warehouse:source');
     const sink = node('sink-node', 'output', 'dvt:sink');

@@ -90,6 +90,23 @@ function mapConnectionRuleRejection(result: Exclude<ConnectionRuleResult, { allo
   }
 }
 
+function rejectCrossPluginIncomingInputEdge(
+  sourceNode: CanonicalNode,
+  targetNode: CanonicalNode
+): CanvasConnectionRejection | null {
+  if (sourceNode.pluginId === targetNode.pluginId || targetNode.role !== 'input') {
+    return null;
+  }
+
+  return {
+    code: 'cross_plugin_bridge_missing',
+    sourcePluginId: sourceNode.pluginId,
+    sourceRole: sourceNode.role,
+    targetPluginId: targetNode.pluginId,
+    targetRole: targetNode.role,
+  };
+}
+
 export function proposeConnection({
   connection,
   canonicalNodesById,
@@ -115,6 +132,11 @@ export function proposeConnection({
   }
   if (wouldCreateCycle(sourceNode.id, targetNode.id, canonicalEdges)) {
     return { outcome: 'rejected', rejection: { code: 'cycle_detected' } };
+  }
+
+  const endpointDirectionRejection = rejectCrossPluginIncomingInputEdge(sourceNode, targetNode);
+  if (endpointDirectionRejection != null) {
+    return { outcome: 'rejected', rejection: endpointDirectionRejection };
   }
 
   const connectionResult = evaluateConnection(

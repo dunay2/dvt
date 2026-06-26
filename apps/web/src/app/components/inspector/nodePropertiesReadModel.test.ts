@@ -229,6 +229,33 @@ describe('nodePropertiesReadModel', () => {
     );
   });
 
+  it('falls back to canonical dbt test run status and duration when metadata omits them', () => {
+    const node: CanonicalNode = {
+      id: 'test-orders-unique',
+      name: 'unique_orders_order_id',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'failed',
+      lastDuration: 2.5,
+      tags: [],
+      metadata: {
+        testTargetModel: 'orders',
+        testTargetColumn: 'order_id',
+        severity: 'error',
+        testType: 'unique',
+      },
+    };
+
+    expectTableCells(
+      sectionById(buildNodePropertiesReadModel({ node, nodes: [node], edges: [] }), 'tests'),
+      `test:${node.id}`,
+      {
+        lastRun: 'failed in 2.5s',
+      }
+    );
+  });
+
   it('projects dbt model columns and column tests from manifest-style metadata maps', () => {
     const node: CanonicalNode = {
       id: 'model-orders',

@@ -67,7 +67,7 @@ export default function CanvasShell({
             </div>
           }
         >
-          <CodeWorkbench />
+          <CodeWorkbench publishRouteBootstrap={false} />
         </Suspense>
       ),
     };

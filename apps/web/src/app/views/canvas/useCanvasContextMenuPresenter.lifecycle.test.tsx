@@ -103,7 +103,7 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuVisible();
   });
 
-  it('keeps the menu open through an immediate document pointer echo after a right-click', async () => {
+  it('closes the menu on an immediate real outside click away from the context point', async () => {
     vi.useFakeTimers();
     await harness.render();
 
@@ -119,10 +119,10 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
       );
     });
 
-    harness.expectMenuVisible();
+    harness.expectMenuClosed();
   });
 
-  it('keeps the menu open through a generic document pointer echo after a right-click', async () => {
+  it('closes the menu on a generic outside pointerdown after a right-click', async () => {
     vi.useFakeTimers();
     await harness.render();
 
@@ -131,32 +131,22 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
       document.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     });
 
-    harness.expectMenuVisible();
+    harness.expectMenuClosed();
   });
 
-  it('keeps the menu open when the browser pointer echo is followed by React Flow pane click echo', async () => {
+  it('keeps the menu open when the React Flow pane click echo matches the context point', async () => {
     vi.useFakeTimers();
     await harness.render();
 
     await harness.openPaneMenuAt(320, 260);
     await act(async () => {
-      document.dispatchEvent(
-        new MouseEvent('pointerdown', {
-          bubbles: true,
-          button: 0,
-          clientX: 700,
-          clientY: 180,
-        })
-      );
-    });
-    await act(async () => {
-      harness.getPresenter().handlePaneClick({ button: 0, clientX: 700, clientY: 180 });
+      harness.getPresenter().handlePaneClick({ button: 0, clientX: 321, clientY: 259 });
     });
 
     harness.expectMenuVisible();
   });
 
-  it('suppresses repeated document pointer echoes during the browser context-menu window', async () => {
+  it('suppresses only the document pointer echo at the original context point', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
     await harness.render();
@@ -167,28 +157,14 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
         new MouseEvent('pointerdown', {
           bubbles: true,
           button: 0,
-          clientX: 700,
-          clientY: 180,
+          clientX: 321,
+          clientY: 259,
         })
       );
     });
     harness.expectMenuVisible();
 
     vi.setSystemTime(new Date('2026-01-01T00:00:00.351Z'));
-    await act(async () => {
-      document.dispatchEvent(
-        new MouseEvent('pointerdown', {
-          bubbles: true,
-          button: 0,
-          clientX: 700,
-          clientY: 180,
-        })
-      );
-    });
-
-    harness.expectMenuVisible();
-
-    vi.setSystemTime(new Date('2026-01-01T00:00:01.001Z'));
     await act(async () => {
       document.dispatchEvent(
         new MouseEvent('pointerdown', {
@@ -234,7 +210,7 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuVisible();
   });
 
-  it('keeps the menu open through a delayed browser click echo away from the context point', async () => {
+  it('closes the menu through a delayed browser click away from the context point', async () => {
     vi.useFakeTimers();
     await harness.render();
 
@@ -244,7 +220,7 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
       harness.getPresenter().handlePaneClick({ button: 0, clientX: 560, clientY: 360 });
     });
 
-    harness.expectMenuVisible();
+    harness.expectMenuClosed();
   });
 
   it('closes the menu on a later intentional background click away from the context point', async () => {
