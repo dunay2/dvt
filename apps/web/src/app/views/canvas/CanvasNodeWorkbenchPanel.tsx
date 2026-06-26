@@ -12,6 +12,7 @@ import { buildNodePropertiesReadModel } from '../../components/inspector/nodePro
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import { resolveNodeWorkbenchPrimarySectionIds } from './canvasNodeWorkbenchSectionStrategy';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -21,6 +22,7 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   registeredPlugins?: ReadonlySet<string>;
   preferredTabId?: string | null;
   preferredTabRequestId?: number;
+  primarySectionIds?: readonly string[];
   authoring: CanvasInspectorAuthoringContract;
   onClose: () => void;
 }>;
@@ -52,6 +54,7 @@ export function CanvasNodeWorkbenchPanel({
   registeredPlugins = new Set(),
   preferredTabId = null,
   preferredTabRequestId = 0,
+  primarySectionIds,
   authoring,
   onClose,
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
@@ -59,6 +62,10 @@ export function CanvasNodeWorkbenchPanel({
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
   const model = buildNodePropertiesReadModel({ node, nodes, edges });
   const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
+  const resolvedPrimarySectionIds =
+    primarySectionIds == null
+      ? undefined
+      : resolveNodeWorkbenchPrimarySectionIds(primarySectionIds);
   const panelIds = panels.map((panel) => panel.id);
   const resolvedActiveTab = resolveActiveNodeWorkbenchTab({ activeTab, model, panelIds });
   const dotClass = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
@@ -103,6 +110,7 @@ export function CanvasNodeWorkbenchPanel({
             activeRunId={activeRunId}
             panels={panels}
             activeTab={resolvedActiveTab}
+            primarySectionIds={resolvedPrimarySectionIds}
             beforePanels={
               <div data-slot="canvas-node-workbench-authoring" className="space-y-3 pt-1">
                 <CanvasInspectorAuthoringSection

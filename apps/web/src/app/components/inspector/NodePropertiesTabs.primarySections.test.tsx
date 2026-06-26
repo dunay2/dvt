@@ -83,4 +83,30 @@ describe('NodePropertiesTabs primary sections', () => {
     expect(tabsList?.getAttribute('class')).not.toContain('overflow-x-auto');
     expect(tabsList?.querySelector('svg')).toBeNull();
   });
+
+  it('uses caller-provided primary section order instead of the global default', () => {
+    act(() => {
+      root.render(
+        <NodePropertiesTabs
+          node={node}
+          model={readModel}
+          activeRunId={null}
+          panels={[]}
+          activeTab="general"
+          primarySectionIds={['general', 'columns', 'code']}
+          onActiveTabChange={vi.fn()}
+          onHide={vi.fn()}
+        />
+      );
+    });
+
+    const tabsList = container.querySelector('[data-slot="node-inspector-core-tabs-list"]');
+
+    expect(tabsList?.textContent).toContain('General');
+    expect(tabsList?.textContent).toContain('Columns');
+    expect(tabsList?.textContent).toContain('Code');
+    expect(container.querySelector('[data-slot="node-inspector-tab-inputs-outputs"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-tab-tests"]')).toBeNull();
+    expect(container.querySelector('[data-slot="node-inspector-more-trigger"]')).not.toBeNull();
+  });
 });

@@ -95,6 +95,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       activeRunId: 'run-42',
       preferredTabId: 'columns',
       preferredTabRequestId: 7,
+      primarySectionIds: dvtCanvasSurfaceStrategy.nodeWorkbench.sections,
     });
   });
 
