@@ -8704,3 +8704,47 @@ test('tracked migrations persist Canvas UX specification records in the Planning
   assert.doesNotMatch(specificationMigration.sql, /^\s+'node-menu\.inputs',/m);
   assert.doesNotMatch(specificationMigration.sql, /^\s+'node-menu\.tests',/m);
 });
+
+test('tracked migrations persist the Canvas UX acceptance and test catalog in the Planning DB', () => {
+  const migrations = readMigrationFiles();
+  const acceptanceCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '294_canvas_uxdb_acceptance_catalog.sql'
+  );
+
+  assert.ok(acceptanceCatalogMigration);
+  assert.match(
+    acceptanceCatalogMigration.sql,
+    /create table if not exists planning_query_store\.canvas_uxdb_specification_records/i
+  );
+  assert.match(
+    acceptanceCatalogMigration.sql,
+    /create or replace view planning_query_store\.canvas_uxdb_specification_query/i
+  );
+
+  for (let index = 1; index <= 16; index += 1) {
+    assert.match(
+      acceptanceCatalogMigration.sql,
+      new RegExp(`'TEST-UX-${String(index).padStart(3, '0')}'`)
+    );
+  }
+
+  for (let index = 1; index <= 10; index += 1) {
+    assert.match(
+      acceptanceCatalogMigration.sql,
+      new RegExp(`'TEST-DB-${String(index).padStart(3, '0')}'`)
+    );
+  }
+
+  for (const criterionId of [
+    'ACCEPTANCE-CANVAS-PRODUCT-01',
+    'ACCEPTANCE-CANVAS-PRODUCT-13',
+    'ACCEPTANCE-CANVAS-IMPLEMENTATION-05',
+    'ACCEPTANCE-CANVAS-VALIDATION-04',
+  ]) {
+    assert.match(acceptanceCatalogMigration.sql, new RegExp(`'${criterionId}'`));
+  }
+
+  assert.match(acceptanceCatalogMigration.sql, /'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1'/);
+  assert.match(acceptanceCatalogMigration.sql, /'ListCanvasUxdbSpecification'/);
+  assert.doesNotMatch(acceptanceCatalogMigration.sql, /feature_mechanization_local_rails/);
+});
