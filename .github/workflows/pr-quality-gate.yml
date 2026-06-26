@@ -119,6 +119,11 @@ jobs:
           steps.scope.outputs.feature_mechanization_relevant == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/prepare-planning-db
+        env:
+          GIT_BASE:
+            ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) ||
+            'origin/main' }}
+          GIT_HEAD: ${{ github.sha }}
         with:
           import-planning:
             ${{ steps.scope.outputs.lane_yaml_changed == 'true' && 'true' || 'false' }}
