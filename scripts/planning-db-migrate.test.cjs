@@ -8980,3 +8980,74 @@ test('tracked migrations focus Canvas component registry drift on UI surfaces', 
   assert.doesNotMatch(registryDriftFocusMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(registryDriftFocusMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile Canvas component registry ownership backlog', () => {
+  const migrations = readMigrationFiles();
+  const registryOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '301_canvas_component_registry_ownership_reconcile.sql'
+  );
+
+  assert.ok(registryOwnershipMigration);
+  assert.match(registryOwnershipMigration.sql, /E-CANVAS-COMPONENT-REGISTRY-DRIFT-1/);
+  assert.match(registryOwnershipMigration.sql, /frontend_component_local_components/);
+  assert.match(registryOwnershipMigration.sql, /frontend_component_local_files/);
+  assert.match(registryOwnershipMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(registryOwnershipMigration.sql, /web\.component\.canvas\.DbtNodeCard/);
+  assert.match(registryOwnershipMigration.sql, /web\.component\.canvas\.LegacyCanvasPalette/);
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeShell\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/DbtNodeComponent\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasPalette\.ts/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/ConnectionStep\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasWorkspaceMenuControls\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/DbtAuthoringFields\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /web\.component\.canvas\.DvtSqlTransformAuthoringSection/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/DvtAuthoringFields\.tsx/
+  );
+  assert.doesNotMatch(registryOwnershipMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register DBT authoring fields as an effective Canvas component', () => {
+  const migrations = readMigrationFiles();
+  const dbtAuthoringMigration = migrations.find(
+    (migration) => migration.fileName === '302_register_dbt_authoring_fields_component.sql'
+  );
+
+  assert.ok(dbtAuthoringMigration);
+  assert.match(dbtAuthoringMigration.sql, /frontend_component_local_components/);
+  assert.match(dbtAuthoringMigration.sql, /web\.component\.canvas\.DbtAuthoringFields/);
+  assert.match(
+    dbtAuthoringMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/DbtAuthoringFields\.tsx/
+  );
+  assert.match(dbtAuthoringMigration.sql, /ConfigureCanvasDbtNode/);
+  assert.match(dbtAuthoringMigration.sql, /E-CANVAS-COMPONENT-REGISTRY-DRIFT-1/);
+  assert.doesNotMatch(dbtAuthoringMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(dbtAuthoringMigration.sql, /truncate\s+/i);
+});
