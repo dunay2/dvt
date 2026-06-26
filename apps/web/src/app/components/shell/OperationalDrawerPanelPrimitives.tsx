@@ -13,7 +13,7 @@ const operationalDrawerPanelClassNames = {
   problemList: 'space-y-2',
   problemItem:
     'grid grid-cols-[6rem_1fr] gap-3 border-b border-[color:var(--border-muted)] py-2 text-sm last:border-b-0',
-  problemMessageFrame: 'min-w-0',
+  problemMessageFrame: 'min-w-0 space-y-2',
   problemMessage: 'block text-[var(--text-default)]',
   warningBadge:
     'h-fit rounded border border-amber-400/50 px-2 py-0.5 text-[11px] font-semibold uppercase text-amber-100',
@@ -22,6 +22,7 @@ const operationalDrawerPanelClassNames = {
   runSummary: 'grid gap-1',
   runSummaryLabel: 'text-[var(--text-muted)]',
   runSummaryValue: 'font-mono text-[var(--text-strong)]',
+  runSummaryText: 'text-[var(--text-default)]',
   previewLayout: 'flex flex-wrap items-start gap-3',
   previewContent: 'min-w-0 flex-1',
   previewSummary: 'mt-1 text-[var(--text-default)]',
@@ -85,10 +86,12 @@ export function OperationalDrawerProblemList({
 }
 
 export function OperationalDrawerProblemItem({
+  action,
   detail,
   message,
   severity,
 }: Readonly<{
+  action?: Readonly<{ label: string; onAction: () => void }> | null;
   detail: string;
   message: string;
   severity: string;
@@ -101,6 +104,11 @@ export function OperationalDrawerProblemItem({
       <span className={operationalDrawerPanelClassNames.problemMessageFrame}>
         <span className={operationalDrawerPanelClassNames.problemMessage}>{message}</span>
         <OperationalDrawerDetailCode>{detail}</OperationalDrawerDetailCode>
+        {action == null ? null : (
+          <OperationalDrawerSecondaryAction onClick={action.onAction}>
+            {action.label}
+          </OperationalDrawerSecondaryAction>
+        )}
       </span>
     </li>
   );
@@ -141,11 +149,28 @@ export function OperationalDrawerSectionKicker({
 
 export function OperationalDrawerRunActiveSummary({
   activeRunId,
-}: Readonly<{ activeRunId: string }>): JSX.Element {
+  statusLabel = 'Active run',
+  summary,
+}: Readonly<{ activeRunId: string; statusLabel?: string; summary?: string }>): JSX.Element {
   return (
     <div className={operationalDrawerPanelClassNames.runSummary}>
-      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>Active run</span>
+      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>
       <code className={operationalDrawerPanelClassNames.runSummaryValue}>{activeRunId}</code>
+      {summary == null ? null : (
+        <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
+      )}
+    </div>
+  );
+}
+
+export function OperationalDrawerRunStatusSummary({
+  statusLabel,
+  summary,
+}: Readonly<{ statusLabel: string; summary: string }>): JSX.Element {
+  return (
+    <div className={operationalDrawerPanelClassNames.runSummary}>
+      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>
+      <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
     </div>
   );
 }
@@ -199,6 +224,20 @@ export function OperationalDrawerPrimaryAction({
 }>): JSX.Element {
   return (
     <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onClick}>
+      {children}
+    </Button>
+  );
+}
+
+export function OperationalDrawerSecondaryAction({
+  children,
+  onClick,
+}: Readonly<{
+  children: ReactNode;
+  onClick: () => void;
+}>): JSX.Element {
+  return (
+    <Button type="button" variant="outline" size="sm" onClick={onClick}>
       {children}
     </Button>
   );

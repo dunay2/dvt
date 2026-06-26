@@ -14,6 +14,10 @@ export type OperationalDrawerProblem = Readonly<{
   severity: 'info' | 'warning' | 'error';
   message: string;
   detail: string;
+  action?: Readonly<{
+    label: string;
+    onAction: () => void;
+  }> | null;
 }>;
 
 export type OperationalDrawerContribution = Readonly<{
@@ -26,6 +30,8 @@ export type OperationalDrawerContribution = Readonly<{
   runs: Readonly<{
     activeRunId: string | null;
     canStartRun: boolean;
+    status: 'active' | 'ready' | 'blocked';
+    summary: string;
   }>;
   preview: Readonly<{
     status: 'ready' | 'blocked';

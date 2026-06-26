@@ -36,6 +36,8 @@ function buildCanvasOperationalDrawerContribution(
     runs: {
       activeRunId: 'run-42',
       canStartRun: false,
+      status: 'active',
+      summary: 'Run run-42 is active.',
     },
     preview: {
       status: 'blocked',

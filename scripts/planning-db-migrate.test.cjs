@@ -8406,6 +8406,43 @@ test('tracked migrations reuse the canonical Canvas context menu rail owner', ()
   assert.doesNotMatch(ownerAlignmentMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas bottom drawer actionable read model', () => {
+  const migrations = readMigrationFiles();
+  const drawerActionMigration = migrations.find(
+    (migration) => migration.fileName === '332_canvas_bottom_drawer_actionable_read_model.sql'
+  );
+  const drawerManifestHardeningMigration = migrations.find(
+    (migration) => migration.fileName === '333_canvas_bottom_drawer_feature_manifest_hardening.sql'
+  );
+
+  assert.ok(drawerActionMigration);
+  assert.ok(drawerManifestHardeningMigration);
+  assert.match(drawerActionMigration.sql, /E-CANVAS-BOTTOM-DRAWER-OPS-1/);
+  assert.match(drawerActionMigration.sql, /UXDB-BOTTOM-OPERATIONAL-DRAWER-P0-1/);
+  assert.match(drawerActionMigration.sql, /RenderBottomOperationalDrawer/);
+  assert.match(drawerActionMigration.sql, /web\.component\.shell\.BottomOperationalDrawer/);
+  assert.match(
+    drawerActionMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasOperationalDrawerContribution\.ts/
+  );
+  assert.match(
+    drawerActionMigration.sql,
+    /apps\/web\/src\/app\/components\/shell\/OperationalDrawerPanels\.actions\.test\.tsx/
+  );
+  assert.match(drawerActionMigration.sql, /OperationalDrawerRunStatusSummary/);
+  assert.match(drawerActionMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(drawerActionMigration.sql, /frontend_component_local_files/);
+  assert.doesNotMatch(drawerActionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(drawerActionMigration.sql, /truncate\s+/i);
+  assert.match(drawerManifestHardeningMigration.sql, /forbiddenImplementationSurfaces/);
+  assert.match(drawerManifestHardeningMigration.sql, /redGreenCycles/);
+  assert.match(drawerManifestHardeningMigration.sql, /symbols/);
+  assert.match(drawerManifestHardeningMigration.sql, /OperationalDrawerSecondaryAction/);
+  assert.match(drawerManifestHardeningMigration.sql, /buildCanvasOperationalDrawerContribution/);
+  assert.doesNotMatch(drawerManifestHardeningMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(drawerManifestHardeningMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations materialize code symbol duplicate query inputs', () => {
   const migrations = readMigrationFiles();
   const codeSymbolProjectionMigration = migrations.find(
