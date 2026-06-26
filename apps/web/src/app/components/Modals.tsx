@@ -119,13 +119,13 @@ export function PlanPreviewModal({
       >
         <DialogHeader className="min-w-0 border-b border-slate-800 px-4 py-4 sm:px-6 sm:py-5">
           <DialogTitle className="flex min-w-0 flex-wrap items-center gap-2 pr-8 text-lg text-slate-50 sm:text-xl">
-            Execution Plan Preview
+            Execution Preview
             <Badge variant="outline" className="border-blue-400/50 bg-blue-500/10 text-blue-100">
               Read-only
             </Badge>
           </DialogTitle>
           <DialogDescription className="text-slate-200">
-            Plan is immutable. Review before starting run.
+            Review the immutable execution preview before starting a run.
           </DialogDescription>
         </DialogHeader>
 
@@ -480,11 +480,11 @@ export function RePlanRequiredModal({ open, onClose, onRePlan }: RePlanRequiredM
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2 text-orange-400">
             <AlertTriangle className="size-5" />
-            Re-Plan Required (409 Conflict)
+            Execution Preview Required (409 Conflict)
           </AlertDialogTitle>
           <AlertDialogDescription className="text-slate-300">
-            The current execution plan is outdated. The project state has changed. Please create a
-            new plan.
+            The current execution preview is outdated. The project state has changed. Preview the
+            execution plan again before starting a run.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -495,7 +495,7 @@ export function RePlanRequiredModal({ open, onClose, onRePlan }: RePlanRequiredM
               onClose();
             }}
           >
-            Create New Plan
+            Preview execution plan
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
