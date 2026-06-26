@@ -40,7 +40,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
       planRef: undefined,
     },
     expectedSummary: canvasViewCopy.runPlanRefUnavailableMessage,
-    expectedError: 'Plan reference is unavailable for this mode',
+    expectedError: 'Execution Preview reference is unavailable for this mode',
     expectedModalState: 'true',
     expectedBlocker: 'plan_integrity',
   },
