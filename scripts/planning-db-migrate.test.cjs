@@ -8915,3 +8915,68 @@ test('tracked migrations register Canvas component registry drift guard', () => 
   assert.doesNotMatch(registryDriftMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(registryDriftMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations focus Canvas component registry drift on UI surfaces', () => {
+  const migrations = readMigrationFiles();
+  const registryDriftFocusMigration = migrations.find(
+    (migration) => migration.fileName === '300_canvas_component_registry_drift_focus.sql'
+  );
+
+  assert.ok(registryDriftFocusMigration);
+  assert.match(registryDriftFocusMigration.sql, /E-CANVAS-COMPONENT-REGISTRY-DRIFT-1/);
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /create or replace view planning_query_store\.canvas_component_registry_drift_query/
+  );
+  assert.match(registryDriftFocusMigration.sql, /canvas_component_registry_ui_surface_paths/);
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasShellMainPanel\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuLayer\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuPrimitives\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuView\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasContextMenuPresenter\.ts/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeContextMenuView\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasAddNodePalette\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasPalette\.ts/
+  );
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasShellChrome/);
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasContextMenu/);
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /web\.component\.canvas\.CanvasContextMenuPresenter/
+  );
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasNodeContextMenu/);
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.LegacyCanvasPalette/);
+  assert.doesNotMatch(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasDraftRepository\.ts/
+  );
+  assert.doesNotMatch(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasDraftSessionMachine\.ts/
+  );
+  assert.doesNotMatch(registryDriftFocusMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(registryDriftFocusMigration.sql, /truncate\s+/i);
+});
