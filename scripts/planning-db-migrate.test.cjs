@@ -9085,3 +9085,50 @@ test('tracked migrations backfill Canvas palette feature user stories after loca
   assert.match(paletteUserStoriesMigration.sql, /canvasPalette\.ts/);
   assert.doesNotMatch(paletteUserStoriesMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register Canvas node context menu primitives in feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const nodeContextMenuPrimitivesMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '305_canvas_node_context_menu_primitives_feature_manifest.sql'
+  );
+
+  assert.ok(nodeContextMenuPrimitivesMigration);
+  assert.match(
+    nodeContextMenuPrimitivesMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeContextMenuPrimitives\.tsx/
+  );
+  assert.match(
+    nodeContextMenuPrimitivesMigration.sql,
+    /web\.component\.canvas\.CanvasNodeContextMenu/
+  );
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /DVT-CANVAS-NODE-CONTEXT-MENU-VIEW/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /CanvasNodeContextMenuActionPrimitive/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /canvasNodeContextMenuClassNames/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /legacyViewSymbolsRetired/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /NODE_CONTEXT_MENU_CONTENT_CLASS_NAME/);
+  assert.doesNotMatch(nodeContextMenuPrimitivesMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(nodeContextMenuPrimitivesMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations normalize Canvas node context menu primitive manifest version', () => {
+  const migrations = readMigrationFiles();
+  const primitiveManifestVersionMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '306_canvas_node_context_menu_primitives_manifest_version_normalization.sql'
+  );
+
+  assert.ok(primitiveManifestVersionMigration);
+  assert.match(primitiveManifestVersionMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(primitiveManifestVersionMigration.sql, /raw_manifest/);
+  assert.match(primitiveManifestVersionMigration.sql, /'version', 1/);
+  assert.match(primitiveManifestVersionMigration.sql, /DVT-CANVAS-NODE-CONTEXT-MENU-VIEW/);
+  assert.match(
+    primitiveManifestVersionMigration.sql,
+    /306_canvas_node_context_menu_primitives_manifest_version_normalization\.sql/
+  );
+  assert.doesNotMatch(primitiveManifestVersionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(primitiveManifestVersionMigration.sql, /truncate\s+/i);
+});
