@@ -1,5 +1,5 @@
 /** Owned concern: orchestrate the route-owned Inspector authoring surface for governed node details. */
-import { useEffect, useMemo, useState } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -24,6 +24,13 @@ type CanvasInspectorAuthoringSectionProps = Readonly<{
   edges: readonly CanonicalEdge[];
   authoring: CanvasInspectorAuthoringContract;
   section?: 'all' | 'general' | 'columns' | 'code';
+  draftController?: Readonly<{
+    draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
+    tagsText: string;
+    onDraftChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
+    onTagsTextChange: Dispatch<SetStateAction<string>>;
+    onResetDraft: () => void;
+  }>;
 }>;
 
 export function CanvasInspectorAuthoringSection({
@@ -32,17 +39,26 @@ export function CanvasInspectorAuthoringSection({
   edges,
   authoring,
   section = 'all',
+  draftController,
 }: CanvasInspectorAuthoringSectionProps) {
-  const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
-  const [tagsText, setTagsText] = useState(() =>
+  const [localDraft, setLocalDraft] = useState(() => createCanvasInspectorNodeDraft(node));
+  const [localTagsText, setLocalTagsText] = useState(() =>
     createCanvasInspectorNodeDraft(node).tags.join(', ')
   );
+  const draft = draftController?.draft ?? localDraft;
+  const tagsText = draftController?.tagsText ?? localTagsText;
+  const setDraft = draftController?.onDraftChange ?? setLocalDraft;
+  const setTagsText = draftController?.onTagsTextChange ?? setLocalTagsText;
 
   useEffect(() => {
+    if (draftController != null) {
+      return;
+    }
+
     const nextDraft = createCanvasInspectorNodeDraft(node);
-    setDraft(nextDraft);
-    setTagsText(nextDraft.tags.join(', '));
-  }, [node.description, node.id, node.metadata, node.name, node.tags]);
+    setLocalDraft(nextDraft);
+    setLocalTagsText(nextDraft.tags.join(', '));
+  }, [draftController, node.description, node.id, node.metadata, node.name, node.tags]);
 
   const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft), [draft]);
   const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
@@ -184,9 +200,14 @@ export function CanvasInspectorAuthoringSection({
               variant="ghost"
               size="sm"
               onClick={() => {
+                if (draftController != null) {
+                  draftController.onResetDraft();
+                  return;
+                }
+
                 const nextDraft = createCanvasInspectorNodeDraft(node);
-                setDraft(nextDraft);
-                setTagsText(nextDraft.tags.join(', '));
+                setLocalDraft(nextDraft);
+                setLocalTagsText(nextDraft.tags.join(', '));
               }}
             >
               {canvasViewCopy.inspectorCancelLabel}
