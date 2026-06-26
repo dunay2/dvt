@@ -50,6 +50,6 @@ describe('RunStates list states', () => {
     await harness.render(<RunsEmptyState />);
 
     expect(harness.container.textContent).toContain('No runs available');
-    expect(harness.container.textContent).toContain('Go to canvas to plan and start a run');
+    expect(harness.container.textContent).toContain('Go to canvas to preview and start a run');
   });
 });
