@@ -8826,3 +8826,30 @@ test('tracked migrations normalize Canvas UX command-query rail vocabulary', () 
   assert.doesNotMatch(normalizationMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(normalizationMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register the Canvas viewport component slice boundaries', () => {
+  const migrations = readMigrationFiles();
+  const viewportSliceMigration = migrations.find(
+    (migration) => migration.fileName === '297_canvas_viewport_component_slice_boundaries.sql'
+  );
+
+  assert.ok(viewportSliceMigration);
+  assert.match(viewportSliceMigration.sql, /E-CANVAS-UXDB-COMPONENT-SLICES-1/);
+  assert.match(viewportSliceMigration.sql, /CANVAS-VIEWPORT-COMPONENT-SLICE-20260626/);
+  assert.match(viewportSliceMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(viewportSliceMigration.sql, /CanvasViewportSurfaceView\.tsx/);
+  assert.match(viewportSliceMigration.sql, /canvasViewportStyle\.ts/);
+  assert.match(viewportSliceMigration.sql, /useCanvasViewportLifecycle\.ts/);
+  assert.match(viewportSliceMigration.sql, /CanvasViewport\.architecture\.test\.ts/);
+  assert.match(viewportSliceMigration.sql, /RenderCanvasContextualGraphSurface/);
+  assert.match(viewportSliceMigration.sql, /GetCanvasLayout/);
+  assert.match(viewportSliceMigration.sql, /CanvasViewportSurfaceView#CanvasViewportSurfaceView/);
+  assert.match(viewportSliceMigration.sql, /canvasViewportStyle#resolveCanvasViewportStyle/);
+  assert.match(viewportSliceMigration.sql, /useCanvasViewportLifecycle#useCanvasViewportLifecycle/);
+  assert.match(viewportSliceMigration.sql, /componentGuides/);
+  assert.match(viewportSliceMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(viewportSliceMigration.sql, /architectureGuards/);
+  assert.match(viewportSliceMigration.sql, /completionGate/);
+  assert.doesNotMatch(viewportSliceMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(viewportSliceMigration.sql, /truncate\s+/i);
+});
