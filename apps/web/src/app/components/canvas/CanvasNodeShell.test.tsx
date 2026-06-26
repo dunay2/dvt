@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { ReactFlowProvider } from '@xyflow/react';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -60,5 +61,26 @@ describe('CanvasNodeShell', () => {
     });
 
     expect(openWorkbench).toHaveBeenCalledOnce();
+  });
+
+  it('renders graph ports through component-owned presentation slots', () => {
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <CanvasNodeShell
+            contextMenuModel={CONTEXT_MENU_MODEL}
+            shouldShowSourceHandle
+            shouldShowTargetHandle
+            onContextMenuAction={vi.fn()}
+          >
+            <div>Orders model</div>
+          </CanvasNodeShell>
+        </ReactFlowProvider>
+      );
+    });
+
+    const ports = Array.from(container.querySelectorAll('[data-slot="canvas-node-port-handle"]'));
+
+    expect(ports.map((port) => port.getAttribute('data-port'))).toEqual(['target', 'source']);
   });
 });

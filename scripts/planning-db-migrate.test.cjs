@@ -9152,6 +9152,95 @@ test('tracked migrations reconcile Canvas component registry ownership backlog',
   assert.doesNotMatch(registryOwnershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node port handle presentation boundary', () => {
+  const migrations = readMigrationFiles();
+  const portHandleMigration = migrations.find(
+    (migration) => migration.fileName === '310_canvas_node_port_handle_presentation_boundary.sql'
+  );
+
+  assert.ok(portHandleMigration);
+  assert.match(portHandleMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(portHandleMigration.sql, /CANVAS-NODE-PORT-HANDLE-PRESENTATION-BOUNDARY/);
+  assert.match(portHandleMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(portHandleMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(
+    portHandleMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodePortHandle\.tsx/
+  );
+  assert.match(
+    portHandleMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeShell\.test\.tsx/
+  );
+  assert.match(portHandleMigration.sql, /EV-WEB-CANVAS-NODE-PORT-HANDLE-PRESENTATION/);
+  assert.match(portHandleMigration.sql, /canvas-node-port-handle data slots/);
+  assert.doesNotMatch(portHandleMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(portHandleMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Canvas node port handle feature symbols', () => {
+  const migrations = readMigrationFiles();
+  const portHandleSymbolsMigration = migrations.find(
+    (migration) => migration.fileName === '311_canvas_node_port_handle_feature_symbols.sql'
+  );
+
+  assert.ok(portHandleSymbolsMigration);
+  assert.match(portHandleSymbolsMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(portHandleSymbolsMigration.sql, /raw_manifest/);
+  assert.match(portHandleSymbolsMigration.sql, /CanvasNodePortHandle/);
+  assert.match(portHandleSymbolsMigration.sql, /CanvasNodePortHandleKind/);
+  assert.match(portHandleSymbolsMigration.sql, /CanvasNodePortHandleProps/);
+  assert.match(portHandleSymbolsMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(
+    portHandleSymbolsMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodePortHandle\.tsx/
+  );
+  assert.doesNotMatch(portHandleSymbolsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(portHandleSymbolsMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations persist Canvas node port handle feature rail', () => {
+  const migrations = readMigrationFiles();
+  const portHandleFeatureRailMigration = migrations.find(
+    (migration) => migration.fileName === '312_canvas_node_port_handle_feature_rail.sql'
+  );
+
+  assert.ok(portHandleFeatureRailMigration);
+  assert.match(portHandleFeatureRailMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(portHandleFeatureRailMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(portHandleFeatureRailMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(portHandleFeatureRailMigration.sql, /CanvasNodePortHandle/);
+  assert.match(portHandleFeatureRailMigration.sql, /CanvasNodePortHandleKind/);
+  assert.match(portHandleFeatureRailMigration.sql, /CanvasNodePortHandleProps/);
+  assert.match(portHandleFeatureRailMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(portHandleFeatureRailMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(portHandleFeatureRailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(portHandleFeatureRailMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations move Canvas node shell styles out of DBT component CSS', () => {
+  const migrations = readMigrationFiles();
+  const shellCssBoundaryMigration = migrations.find(
+    (migration) => migration.fileName === '313_canvas_node_shell_css_boundary.sql'
+  );
+
+  assert.ok(shellCssBoundaryMigration);
+  assert.match(shellCssBoundaryMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(
+    shellCssBoundaryMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeShell\.module\.css/
+  );
+  assert.match(
+    shellCssBoundaryMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/DbtNodeComponent\.module\.css/
+  );
+  assert.match(shellCssBoundaryMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(
+    shellCssBoundaryMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.doesNotMatch(shellCssBoundaryMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register DBT authoring fields as an effective Canvas component', () => {
   const migrations = readMigrationFiles();
   const dbtAuthoringMigration = migrations.find(
