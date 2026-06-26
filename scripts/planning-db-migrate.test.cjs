@@ -9241,6 +9241,36 @@ test('tracked migrations move Canvas node shell styles out of DBT component CSS'
   assert.doesNotMatch(shellCssBoundaryMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations align Canvas node shell files with registry drift guard', () => {
+  const migrations = readMigrationFiles();
+  const driftGuardAlignmentMigration = migrations.find(
+    (migration) => migration.fileName === '314_canvas_node_shell_drift_guard_alignment.sql'
+  );
+
+  assert.ok(driftGuardAlignmentMigration);
+  assert.match(
+    driftGuardAlignmentMigration.sql,
+    /create or replace view planning_query_store\.canvas_component_registry_drift_query/
+  );
+  assert.match(
+    driftGuardAlignmentMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeShell\.module\.css/
+  );
+  assert.match(
+    driftGuardAlignmentMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodePortHandle\.tsx/
+  );
+  assert.match(driftGuardAlignmentMigration.sql, /node-card-style/);
+  assert.match(driftGuardAlignmentMigration.sql, /node-card-port/);
+  assert.match(driftGuardAlignmentMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(driftGuardAlignmentMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(driftGuardAlignmentMigration.sql, /ListCanvasComponentRegistryDrift/);
+  assert.match(driftGuardAlignmentMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(driftGuardAlignmentMigration.sql, /CanvasNodeShellDriftGuardAlignment/);
+  assert.doesNotMatch(driftGuardAlignmentMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(driftGuardAlignmentMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register DBT authoring fields as an effective Canvas component', () => {
   const migrations = readMigrationFiles();
   const dbtAuthoringMigration = migrations.find(
