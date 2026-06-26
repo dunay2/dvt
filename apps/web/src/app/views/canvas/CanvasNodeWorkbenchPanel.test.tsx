@@ -81,6 +81,23 @@ const MODEL_NODE: CanonicalNode = {
   },
 };
 
+const CONNECTED_TEST_NODE: CanonicalNode = {
+  id: 'test.orders.order_id',
+  name: 'not_null_orders_order_id',
+  pluginId: 'dbt',
+  kind: 'dbt:test',
+  role: 'check',
+  status: 'failed',
+  lastDuration: 1.7,
+  tags: [],
+  metadata: {
+    testType: 'not_null',
+    testTargetColumn: 'order_id',
+    severity: 'error',
+    selectedForExecution: true,
+  },
+};
+
 const DVT_TRANSFORM_NODE: CanonicalNode = {
   id: 'transform.orders',
   name: 'Clean Orders',
@@ -124,9 +141,15 @@ function renderNodePanel(
     root.render(
       <CanvasNodeWorkbenchPanel
         node={node}
-        nodes={[SOURCE_NODE, MODEL_NODE, DVT_TRANSFORM_NODE]}
+        nodes={[SOURCE_NODE, MODEL_NODE, CONNECTED_TEST_NODE, DVT_TRANSFORM_NODE]}
         edges={[
           ...EDGES,
+          {
+            id: 'edge-model-test',
+            sourceId: MODEL_NODE.id,
+            targetId: CONNECTED_TEST_NODE.id,
+            relation: 'validation',
+          },
           {
             id: 'edge-source-transform',
             sourceId: SOURCE_NODE.id,
@@ -211,6 +234,20 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.textContent).toContain('selected');
     expect(container.textContent).toContain('blocks run');
     expect(container.textContent).toContain('passed in 1.2s');
+  });
+
+  it('shows connected downstream dbt test nodes when inspecting a model', () => {
+    renderNodePanel(
+      root,
+      { ...MODEL_NODE, metadata: { columns: { order_id: { data_type: 'integer' } } } },
+      'tests'
+    );
+
+    expect(container.textContent).toContain('not_null_orders_order_id');
+    expect(container.textContent).toContain('Orders Model.order_id');
+    expect(container.textContent).toContain('Value is present');
+    expect(container.textContent).toContain('selected');
+    expect(container.textContent).toContain('failed in 1.7s');
   });
 
   it('keeps editable node properties inside the workbench general section', () => {

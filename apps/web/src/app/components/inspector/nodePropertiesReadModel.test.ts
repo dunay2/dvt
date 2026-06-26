@@ -345,6 +345,63 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
+  it('projects connected downstream dbt test nodes for a selected model', () => {
+    const modelNode: CanonicalNode = {
+      id: 'model-orders',
+      name: 'fct_orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: {
+          order_id: { data_type: 'integer' },
+        },
+      },
+    };
+    const testNode: CanonicalNode = {
+      id: 'test-orders-order-id',
+      name: 'not_null_orders_order_id',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'failed',
+      lastDuration: 1.7,
+      tags: [],
+      metadata: {
+        testType: 'not_null',
+        testTargetColumn: 'order_id',
+        severity: 'error',
+        selectedForExecution: true,
+      },
+    };
+    const edge: CanonicalEdge = {
+      id: 'edge-model-test',
+      sourceId: modelNode.id,
+      targetId: testNode.id,
+      relation: 'validation',
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: modelNode,
+      nodes: [modelNode, testNode],
+      edges: [edge],
+    });
+
+    expectTableCells(sectionById(model, 'tests'), 'test:test-orders-order-id', {
+      name: 'not_null_orders_order_id',
+      type: 'not_null',
+      target: 'fct_orders.order_id',
+      column: 'order_id',
+      severity: 'error',
+      assertion: 'Value is present',
+      selection: 'selected',
+      readinessImpact: 'blocks run',
+      lastRun: 'failed in 1.7s',
+    });
+  });
+
   it('projects DVT transform input columns with source and selection state', () => {
     const source: CanonicalNode = {
       id: 'source-orders',

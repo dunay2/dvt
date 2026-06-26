@@ -451,7 +451,9 @@ function buildInputsOutputsRows(
 
 function buildTestRows(
   node: CanonicalNode,
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown>,
+  nodes: readonly CanonicalNode[],
+  edges: readonly CanonicalEdge[]
 ): readonly NodePropertyTableRow[] {
   const canonicalTestLastRunStatus = node.kind.endsWith(':test') ? node.status : undefined;
   const canonicalTestLastRunDurationMs =
@@ -629,7 +631,62 @@ function buildTestRows(
       },
     ];
   });
-  const projectedRows = [...rows, ...columnTestRows()];
+  const connectedTestRows = (): readonly NodePropertyTableRow[] => {
+    const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
+
+    return edges
+      .filter((edge) => edge.sourceId === node.id)
+      .flatMap((edge): readonly NodePropertyTableRow[] => {
+        const testNode = nodeById.get(edge.targetId);
+        if (testNode == null || !testNode.kind.endsWith(':test')) {
+          return [];
+        }
+
+        const testMetadata = asRecord(testNode.metadata);
+        const test = readDbtTest(testMetadata);
+        if (test == null) {
+          return [];
+        }
+
+        const targetColumn = readFirstString(
+          testMetadata.testTargetColumn,
+          testMetadata.targetColumn,
+          testMetadata.column
+        );
+        const targetModel =
+          readFirstString(
+            testMetadata.testTargetModel,
+            testMetadata.targetModel,
+            testMetadata.model
+          ) ?? node.name;
+        const target =
+          readFirstString(testMetadata.testTarget, testMetadata.target) ??
+          [targetModel, targetColumn].filter(Boolean).join('.');
+        const lastRunDurationMs =
+          test.lastRunDurationMs ??
+          (testNode.lastDuration == null ? undefined : testNode.lastDuration * 1000);
+
+        return [
+          {
+            id: `test:${testNode.id}`,
+            cells: {
+              name: testNode.name,
+              type: test.type,
+              target,
+              column: targetColumn ?? '',
+              severity: test.severity ?? '',
+              expression: test.expression ?? '',
+              ...testSemanticCells({
+                ...test,
+                lastRunStatus: test.lastRunStatus ?? testNode.status,
+                lastRunDurationMs,
+              }),
+            },
+          },
+        ];
+      });
+  };
+  const projectedRows = [...rows, ...columnTestRows(), ...connectedTestRows()];
 
   if (projectedRows.length > 0) {
     return projectedRows;
@@ -728,7 +785,7 @@ export function buildNodePropertiesReadModel({
   const foreignKeyRows = buildForeignKeyRows(metadata);
   const constraintRows = buildConstraintRows(metadata);
   const inputsOutputsRows = buildInputsOutputsRows(node, nodes, edges);
-  const testRows = buildTestRows(node, metadata);
+  const testRows = buildTestRows(node, metadata, nodes, edges);
   const code =
     readString(metadata.compiledSql) ?? readString(metadata.sql) ?? readString(config.sql);
 
