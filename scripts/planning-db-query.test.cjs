@@ -17,6 +17,7 @@ const {
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentMetadataRows,
   buildComponentRoadmapRows,
+  buildCanvasUxdbSpecificationRows,
   buildCanvasUxdbTraceabilityRows,
   buildArchitectureComponentRows,
   buildArchitectureDependencyClassificationRows,
@@ -98,6 +99,7 @@ const {
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentMetadataRows,
   readComponentRoadmapRows,
+  readCanvasUxdbSpecificationRows,
   readCanvasUxdbTraceabilityRows,
   readArchitectureComponentRows,
   readArchitectureDependencyClassificationRows,
@@ -144,6 +146,7 @@ test('planning DB query CLI prints root help without opening a DB connection', (
   assert.match(result.stdout, /Planning DB query CLI/);
   assert.match(result.stdout, /Usage:/);
   assert.match(result.stdout, /component-metadata/);
+  assert.match(result.stdout, /canvas-uxdb-specification/);
   assert.match(result.stdout, /canvas-uxdb-traceability/);
   assert.match(result.stdout, /feature-mechanization/);
   assert.doesNotMatch(result.stderr, /Unknown planning DB query|Missing value/);
@@ -176,6 +179,7 @@ test('planning DB query limit parsing lives in one canonical helper', () => {
     'planning-db/frontend-component-inventory.cjs',
     'planning-db/frontend-mechanical-truth-inventory.cjs',
     'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/canvas-uxdb-specification-query.cjs',
     'planning-db/queries/canvas-uxdb-traceability-query.cjs',
     'planning-db/queries/command-query-rail-query.cjs',
     'planning-db/queries/component-architecture-fitness-query.cjs',
@@ -210,6 +214,7 @@ test('planning DB query filtering helpers live in one canonical helper', () => {
     'planning-db/frontend-component-inventory.cjs',
     'planning-db/frontend-mechanical-truth-inventory.cjs',
     'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/canvas-uxdb-specification-query.cjs',
     'planning-db/queries/canvas-uxdb-traceability-query.cjs',
     'planning-db/queries/command-query-rail-query.cjs',
     'planning-db/queries/component-architecture-fitness-query.cjs',
@@ -417,6 +422,19 @@ test('Canvas UX DB-first traceability query behavior lives in a focused read-mod
   assert.equal(
     canvasTraceabilityComponent.readCanvasUxdbTraceabilityRows,
     readCanvasUxdbTraceabilityRows
+  );
+});
+
+test('Canvas UX DB-first specification query behavior lives in a focused read-model component', () => {
+  const canvasSpecificationComponent = require('./planning-db/queries/canvas-uxdb-specification-query.cjs');
+
+  assert.equal(
+    canvasSpecificationComponent.buildCanvasUxdbSpecificationRows,
+    buildCanvasUxdbSpecificationRows
+  );
+  assert.equal(
+    canvasSpecificationComponent.readCanvasUxdbSpecificationRows,
+    readCanvasUxdbSpecificationRows
   );
 });
 
@@ -4820,6 +4838,71 @@ test('buildCanvasUxdbTraceabilityRows formats canonical owner and duplicate stat
         'ready',
         'single-owner',
         'Implement CanvasContextMenu and NodeContextMenu through separate governed rails.',
+      ],
+    ]
+  );
+});
+
+test('readCanvasUxdbSpecificationRows queries DB-owned TAREA specification records', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCanvasUxdbSpecificationRows(client, {
+    taskId: 'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+    recordType: 'context_action',
+    component: 'web.component.canvas.CanvasContextMenu',
+    rail: 'ResolveCanvasContextMenu',
+    state: 'accepted',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.canvas_uxdb_specification_query/);
+  assert.match(captured.sql, /canonical_task_id = \$1/);
+  assert.match(captured.sql, /record_type = \$2/);
+  assert.match(captured.sql, /component_id = \$3/);
+  assert.match(captured.sql, /rail_name = \$4/);
+  assert.match(captured.sql, /spec_state = \$5/);
+  assert.match(captured.sql, /limit \$6/);
+  assert.deepEqual(captured.params, [
+    'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+    'context_action',
+    'web.component.canvas.CanvasContextMenu',
+    'ResolveCanvasContextMenu',
+    'accepted',
+    5,
+  ]);
+});
+
+test('buildCanvasUxdbSpecificationRows formats component, rail and legacy posture', () => {
+  assert.deepEqual(
+    buildCanvasUxdbSpecificationRows([
+      {
+        record_id: 'node-menu.open-workbench',
+        record_type: 'context_action',
+        record_title: 'Open node workbench',
+        canonical_task_id: 'E-CANVAS-NODE-WORKBENCH-1',
+        component_id: 'web.component.canvas.NodeWorkbench',
+        rail_name: 'OpenCanvasNodeWorkbench',
+        spec_state: 'accepted',
+        legacy_posture: 'replaces-direct-properties-inputs-tests-actions',
+      },
+    ]),
+    [
+      [
+        'node-menu.open-workbench',
+        'context_action',
+        'Open node workbench',
+        'E-CANVAS-NODE-WORKBENCH-1',
+        'web.component.canvas.NodeWorkbench',
+        'OpenCanvasNodeWorkbench',
+        'accepted',
+        'replaces-direct-properties-inputs-tests-actions',
       ],
     ]
   );

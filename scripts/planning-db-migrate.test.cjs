@@ -8675,3 +8675,32 @@ test('tracked migrations expose Canvas UX DB-first traceability review as a quer
   assert.match(traceabilityMigration.sql, /coverage_state/);
   assert.doesNotMatch(traceabilityMigration.sql, /'DVT-CANVAS-UXDB-SOURCE-DIALOG-1'/);
 });
+
+test('tracked migrations persist Canvas UX specification records in the Planning DB', () => {
+  const migrations = readMigrationFiles();
+  const specificationMigration = migrations.find(
+    (migration) => migration.fileName === '293_canvas_uxdb_specification_persistence.sql'
+  );
+
+  assert.ok(specificationMigration);
+  assert.match(
+    specificationMigration.sql,
+    /create or replace view planning_query_store\.canvas_uxdb_specification_query/i
+  );
+  assert.match(specificationMigration.sql, /'graph-base'/);
+  assert.match(specificationMigration.sql, /'canvas-menu\.add-source'/);
+  assert.match(specificationMigration.sql, /'node-menu\.open-workbench'/);
+  assert.match(specificationMigration.sql, /'node-workbench\.properties'/);
+  assert.match(specificationMigration.sql, /'acceptance\.dvt-flow-e2e'/);
+  assert.match(specificationMigration.sql, /'test\.context-menu-human-proof'/);
+  assert.match(specificationMigration.sql, /'evidence\.tarea-intake'/);
+  assert.match(specificationMigration.sql, /'export\.db-generated-manual'/);
+  assert.match(specificationMigration.sql, /'React Flow'/);
+  assert.match(specificationMigration.sql, /'OpenCanvasNodeWorkbench'/);
+  assert.match(specificationMigration.sql, /'replaces-direct-properties-inputs-tests-actions'/);
+  assert.match(specificationMigration.sql, /E-CANVAS-UXDB-SPEC-PERSISTENCE-1/);
+  assert.match(specificationMigration.sql, /ListCanvasUxdbSpecification/);
+  assert.doesNotMatch(specificationMigration.sql, /^\s+'node-menu\.properties',/m);
+  assert.doesNotMatch(specificationMigration.sql, /^\s+'node-menu\.inputs',/m);
+  assert.doesNotMatch(specificationMigration.sql, /^\s+'node-menu\.tests',/m);
+});
