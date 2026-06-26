@@ -87,6 +87,10 @@ const {
   readCanvasUxdbTraceabilityRows,
 } = require('./planning-db/queries/canvas-uxdb-traceability-query.cjs');
 const {
+  buildCanvasCqRailDriftRows,
+  readCanvasCqRailDriftRows,
+} = require('./planning-db/queries/canvas-cq-rail-drift-query.cjs');
+const {
   buildGovernanceRefreshRunRows,
   readGovernanceRefreshRunRows,
 } = require('./planning-db/queries/governance-refresh-run-query.cjs');
@@ -183,6 +187,7 @@ const knownQueries = new Set([
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
+  'canvas-cq-rail-drift',
   'canvas-uxdb-specification',
   'canvas-uxdb-traceability',
   'component-profile',
@@ -268,6 +273,7 @@ const taskIdCommonFilterQueryNames = new Set([
   'next',
   'task-trace',
   'task-gaps',
+  'canvas-cq-rail-drift',
   'canvas-uxdb-specification',
   'canvas-uxdb-traceability',
   'focus',
@@ -316,6 +322,7 @@ const componentCommonFilterQueryNames = new Set([
   'component-rules',
   'component-rule-evaluations',
   'component-quality',
+  'canvas-cq-rail-drift',
   'architecture-components',
   'architecture-relations',
   'architecture-responsibilities',
@@ -362,8 +369,15 @@ function buildPlanningDbQueryHelpText(queryName) {
 
   if (queryName) {
     const examples = [`  pnpm planning:db:query ${queryName} --limit 20`];
+    const querySpecificOptions = [];
     if (queryName === 'component-profile') {
       examples.push(`  pnpm planning:db:query ${queryName} --component SYS-WEB-ROOT --limit 50`);
+    } else if (queryName === 'canvas-cq-rail-drift') {
+      querySpecificOptions.push('--rail <name>');
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state missing_canonical_rail --limit 20`,
+        `  pnpm planning:db:query ${queryName} --rail OpenCanvasAddSourceDialog --limit 20`
+      );
     } else if (
       taskIdCommonFilterQueryNames.has(queryName) ||
       pathCommonFilterQueryNames.has(queryName) ||
@@ -471,6 +485,9 @@ function buildPlanningDbQueryHelpText(queryName) {
       '',
       'Common filters:',
       `  ${commonOptions.join(', ')}`,
+      ...(querySpecificOptions.length > 0
+        ? ['', 'Query-specific filters:', `  ${querySpecificOptions.join(', ')}`]
+        : []),
       '',
       'Examples:',
       ...examples,
@@ -817,6 +834,7 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'documentation-lifecycle' ||
         queryName === 'documentation-panels' ||
         queryName === 'component-roadmap' ||
+        queryName === 'canvas-cq-rail-drift' ||
         queryName === 'canvas-uxdb-specification' ||
         queryName === 'canvas-uxdb-traceability' ||
         queryName === 'governance-refresh-runs' ||
@@ -4647,6 +4665,15 @@ async function runQuery(options = {}) {
       return roadmapRows;
     }
 
+    if (queryName === 'canvas-cq-rail-drift') {
+      const rows = await readCanvasCqRailDriftRows(client, options.filters || {});
+      const driftRows = buildCanvasCqRailDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
     if (queryName === 'canvas-uxdb-specification') {
       const rows = await readCanvasUxdbSpecificationRows(client, options.filters || {});
       const specificationRows = buildCanvasUxdbSpecificationRows(rows);
@@ -5124,6 +5151,7 @@ module.exports = {
   buildDocumentationLifecycleRows,
   buildDocumentationPanelRows,
   buildComponentRoadmapRows,
+  buildCanvasCqRailDriftRows,
   buildCanvasUxdbSpecificationRows,
   buildCanvasUxdbTraceabilityRows,
   buildMandatoryProposalGapRows,
@@ -5222,6 +5250,7 @@ module.exports = {
   readDocumentationLifecycleRows,
   readDocumentationPanelRows,
   readComponentRoadmapRows,
+  readCanvasCqRailDriftRows,
   readCanvasUxdbSpecificationRows,
   readCanvasUxdbTraceabilityRows,
   readKnowledgeIntakeReferenceRows,
