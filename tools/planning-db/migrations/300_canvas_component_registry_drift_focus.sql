@@ -136,9 +136,29 @@ with canvas_component_registry_ui_surface_paths (
       'web.component.canvas.CanvasShellChrome'
     ),
     (
+      'apps/web/src/app/views/canvas/CanvasContextMenuLayer.tsx',
+      'canvas-context-menu',
+      'web.component.canvas.CanvasContextMenu'
+    ),
+    (
+      'apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx',
+      'canvas-context-menu',
+      'web.component.canvas.CanvasContextMenu'
+    ),
+    (
+      'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+      'canvas-context-menu',
+      'web.component.canvas.CanvasContextMenu'
+    ),
+    (
       'apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts',
       'canvas-context-menu-presenter',
       'web.component.canvas.CanvasContextMenuPresenter'
+    ),
+    (
+      'apps/web/src/app/components/canvas/CanvasNodeContextMenuView.tsx',
+      'node-context-menu',
+      'web.component.canvas.CanvasNodeContextMenu'
     ),
     (
       'apps/web/src/app/views/canvas/CanvasNodeWorkbenchOverlay.tsx',

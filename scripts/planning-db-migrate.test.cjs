@@ -8935,7 +8935,23 @@ test('tracked migrations focus Canvas component registry drift on UI surfaces', 
   );
   assert.match(
     registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuLayer\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuPrimitives\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuView\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
     /apps\/web\/src\/app\/views\/canvas\/useCanvasContextMenuPresenter\.ts/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeContextMenuView\.tsx/
   );
   assert.match(
     registryDriftFocusMigration.sql,
@@ -8946,10 +8962,12 @@ test('tracked migrations focus Canvas component registry drift on UI surfaces', 
     /apps\/web\/src\/app\/views\/canvas\/canvasPalette\.ts/
   );
   assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasShellChrome/);
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasContextMenu/);
   assert.match(
     registryDriftFocusMigration.sql,
     /web\.component\.canvas\.CanvasContextMenuPresenter/
   );
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasNodeContextMenu/);
   assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.LegacyCanvasPalette/);
   assert.doesNotMatch(
     registryDriftFocusMigration.sql,
