@@ -6,6 +6,7 @@ const { runPlanningDbQueryCli } = require('./planning-db-query-tests/helpers.cjs
 require('./planning-db-query-tests/feature-mechanization.test.cjs');
 require('./planning-db-query-tests/fowler-analysis.test.cjs');
 require('./planning-db-query-tests/governance-refresh.test.cjs');
+require('./planning-db-query-tests/canvas-component-registry-drift.test.cjs');
 
 const {
   buildDocsDispositionRows,
@@ -176,6 +177,7 @@ test('planning DB read-model query components live under the queries directory',
 test('planning DB query limit parsing lives in one canonical helper', () => {
   const queryLimitConsumers = [
     'planning-db-query.cjs',
+    'planning-db/queries/canvas-component-registry-drift-query.cjs',
     'planning-db/queries/canvas-cq-rail-drift-query.cjs',
     'planning-db/frontend-component-inventory.cjs',
     'planning-db/frontend-mechanical-truth-inventory.cjs',
@@ -211,6 +213,7 @@ test('planning DB query limit parsing lives in one canonical helper', () => {
 test('planning DB query filtering helpers live in one canonical helper', () => {
   const queryFilterConsumers = [
     'planning-db-query.cjs',
+    'planning-db/queries/canvas-component-registry-drift-query.cjs',
     'planning-db/db-surface-inventory.cjs',
     'planning-db/queries/canvas-cq-rail-drift-query.cjs',
     'planning-db/frontend-component-inventory.cjs',
