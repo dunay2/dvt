@@ -98,6 +98,37 @@ export const dvtWarehouseSourceContributions: PluginContributions = {
   displayName: 'DVT Warehouse Source',
   version: '1.0.0',
   capabilities: ['canvas.render'],
+  sourceImport: [
+    {
+      id: 'dvt.warehouse-source.import',
+      pluginId: DVT_WAREHOUSE_SOURCE_PLUGIN_ID,
+      sourceType: 'database',
+      artifactKind: 'warehouse-source',
+      options: [
+        {
+          id: 'includeColumns',
+          label: 'Include Column Metadata',
+          description: 'Add column names and data types to imported source metadata.',
+          defaultEnabled: true,
+          order: 10,
+        },
+        {
+          id: 'addTests',
+          label: 'Add Generic Tests',
+          description: 'Automatically add not_null and unique tests for detected primary keys.',
+          defaultEnabled: false,
+          order: 20,
+        },
+        {
+          id: 'addFreshness',
+          label: 'Add Freshness Checks',
+          description: 'Add default freshness thresholds for imported source freshness metadata.',
+          defaultEnabled: false,
+          order: 30,
+        },
+      ],
+    },
+  ],
   produces: [{ portType: 'data.tabular', forRoles: ['input'] }],
   consumes: [],
 };

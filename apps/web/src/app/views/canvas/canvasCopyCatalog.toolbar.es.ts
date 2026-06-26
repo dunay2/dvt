@@ -7,7 +7,7 @@ export const canvasViewToolbarCopyEs = {
   toolbarWorkflowRecoveryLabel: 'Recuperacion',
   toolbarWorkflowReadOnlyLabel: 'Solo lectura',
   toolbarWorkflowRunReadyLabel: 'Ejecucion lista',
-  toolbarWorkflowPlanRequiredLabel: 'Plan requerido',
+  toolbarWorkflowPlanRequiredLabel: 'Execution Preview requerido',
   toolbarLayoutLabel: 'Disposicion',
   toolbarImpactLabel: 'Impacto',
   toolbarColumnsLabel: 'Columnas',

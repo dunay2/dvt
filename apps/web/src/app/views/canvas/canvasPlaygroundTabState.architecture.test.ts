@@ -1,22 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import { readArchitectureSiblingSource } from '../architecture.test.support';
+import { repoFileExists } from './canvasStartupAndDraftRecovery.architecture.support';
 
 const TAB_STATE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasPlaygroundTabState.ts'
-);
-const TAB_STRIP_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasPlaygroundTabStrip.tsx'
-);
-const TAB_STRIP_TEMPLATE_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasPlaygroundTabStrip.templates.tsx'
-);
-const TAB_STRIP_PRESENTER_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'useCanvasPlaygroundTabStripPresenter.ts'
 );
 
 describe('canvasPlaygroundTabState architecture', () => {
@@ -32,16 +21,14 @@ describe('canvasPlaygroundTabState architecture', () => {
     expect(TAB_STATE_SOURCE).not.toContain('ReactNode');
   });
 
-  it('renders the host tab strip from the semantic tab-state contract rather than route/controller props', () => {
-    expect(TAB_STRIP_SOURCE).toContain(
-      'Owned concern: mount the host-owned Canvas tab-strip presentation boundary.'
-    );
-    expect(TAB_STRIP_PRESENTER_SOURCE).toContain('CanvasPlaygroundTabState');
-    expect(TAB_STRIP_SOURCE).toContain('CanvasPlaygroundTabStripTemplate');
-    expect(TAB_STRIP_SOURCE).toContain('useCanvasPlaygroundTabStripPresenter');
-    expect(TAB_STRIP_TEMPLATE_SOURCE).toContain('canvas-playground-tab-strip');
-    expect(TAB_STRIP_SOURCE).not.toContain("'./useCanvasController'");
-    expect(TAB_STRIP_SOURCE).not.toContain('WorkspaceGraphDraft');
-    expect(TAB_STRIP_SOURCE).not.toContain('CanvasPlaygroundTabState');
+  it('keeps host tab state semantic while retiring the fixed visual tab-strip surface', () => {
+    for (const retiredPath of [
+      'apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.tsx',
+      'apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.templates.tsx',
+      'apps/web/src/app/views/canvas/useCanvasPlaygroundTabStripPresenter.ts',
+      'apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.ts',
+    ]) {
+      expect(repoFileExists(retiredPath), retiredPath).toBe(false);
+    }
   });
 });

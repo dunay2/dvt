@@ -18,6 +18,10 @@ const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
 );
+const CANVAS_SHELL_LAYOUT_BUILDER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellLayoutBuilder.tsx'
+);
 const CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanelFrame.tsx'
@@ -129,6 +133,10 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('onOpenSourceImport');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDvtFlowGuide');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDbtFlowGuide');
+    expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('CanvasPlaygroundTabStrip');
+    expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('hostTabStrip:');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('hostTabStrip?:');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('workbenchTabStrip?:');
   });
 
   it('keeps retired workbench tab composition out of the Canvas route', () => {

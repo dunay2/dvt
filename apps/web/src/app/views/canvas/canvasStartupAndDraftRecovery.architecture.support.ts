@@ -80,16 +80,6 @@ export const ownedConcernModules = [
     phrase: 'Owned concern: project semantic authoring truth into React Flow viewport state',
   },
   {
-    label: 'canvas tab-strip presenter',
-    path: 'useCanvasPlaygroundTabStripPresenter.ts',
-    phrase: 'Owned concern: adapt Canvas tab-strip creation policy',
-  },
-  {
-    label: 'canvas tab-strip creation model',
-    path: 'canvasPlaygroundTabStripModel.ts',
-    phrase: 'Owned concern: resolve Canvas playground tab-strip creation policy',
-  },
-  {
     label: 'create canvas command policy',
     path: 'canvasCreateCanvasDocumentCommandPolicy.ts',
     phrase: 'Owned concern: decide create-canvas document CAS eligibility',
@@ -98,11 +88,6 @@ export const ownedConcernModules = [
     label: 'create canvas command save result',
     path: 'canvasCreateCanvasDocumentSaveResult.ts',
     phrase: 'Owned concern: apply authoritative create-canvas save outcomes',
-  },
-  {
-    label: 'canvas tab-strip presentation templates',
-    path: 'CanvasPlaygroundTabStrip.templates.tsx',
-    phrase: 'Owned concern: render Canvas playground tab-strip presentation templates',
   },
   {
     label: 'canvas playground host templates',

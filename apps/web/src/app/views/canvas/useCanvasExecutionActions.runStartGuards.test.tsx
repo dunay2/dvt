@@ -30,7 +30,7 @@ type UnavailableRunStartScenario = Readonly<{
 }>;
 
 const PERSISTED_PREVIEW_REQUIRED_MESSAGE =
-  'Run start requires a persisted preview plan bound to the current plan reference. Re-run Plan first.';
+  'Run start requires a persisted Execution Preview bound to the current plan reference. Preview execution plan again first.';
 
 const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
   {
