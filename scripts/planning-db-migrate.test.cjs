@@ -9051,3 +9051,37 @@ test('tracked migrations register DBT authoring fields as an effective Canvas co
   assert.doesNotMatch(dbtAuthoringMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(dbtAuthoringMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations classify visual Canvas palette tokens outside legacy add-node palette retirement', () => {
+  const migrations = readMigrationFiles();
+  const paletteVocabularyMigration = migrations.find(
+    (migration) => migration.fileName === '303_reclassify_canvas_visual_palette_tokens.sql'
+  );
+
+  assert.ok(paletteVocabularyMigration);
+  assert.match(paletteVocabularyMigration.sql, /canvas_component_registry_drift_query/);
+  assert.match(
+    paletteVocabularyMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasPalette\.ts/
+  );
+  assert.match(paletteVocabularyMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(paletteVocabularyMigration.sql, /canvas-viewport-style/);
+  assert.match(paletteVocabularyMigration.sql, /E-CANVAS-LEGACY-PALETTE-RETIRE-1/);
+  assert.match(paletteVocabularyMigration.sql, /CanvasAddNodePalette\.tsx/);
+  assert.doesNotMatch(paletteVocabularyMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations backfill Canvas palette feature user stories after local rail import', () => {
+  const migrations = readMigrationFiles();
+  const paletteUserStoriesMigration = migrations.find(
+    (migration) => migration.fileName === '304_backfill_canvas_palette_feature_user_stories.sql'
+  );
+
+  assert.ok(paletteUserStoriesMigration);
+  assert.match(paletteUserStoriesMigration.sql, /E-CANVAS-LEGACY-PALETTE-RETIRE-1/);
+  assert.match(paletteUserStoriesMigration.sql, /userStories/);
+  assert.match(paletteUserStoriesMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(paletteUserStoriesMigration.sql, /CanvasAddNodePalette\.tsx/);
+  assert.match(paletteUserStoriesMigration.sql, /canvasPalette\.ts/);
+  assert.doesNotMatch(paletteUserStoriesMigration.sql, /truncate\s+/i);
+});
