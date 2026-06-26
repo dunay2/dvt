@@ -4151,6 +4151,48 @@ test('tracked migrations map source import catalog primitives under catalog view
   assert.doesNotMatch(sourceImportCatalogPrimitivesMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register transform column metadata workbench projection', () => {
+  const migrations = readMigrationFiles();
+  const columnMetadataWorkbenchMigration = migrations.find(
+    (migration) => migration.fileName === '328_canvas_column_metadata_workbench_projection.sql'
+  );
+
+  assert.ok(columnMetadataWorkbenchMigration);
+  assert.match(columnMetadataWorkbenchMigration.sql, /E-CANVAS-COLUMN-METADATA-SELECTION-1/);
+  assert.match(columnMetadataWorkbenchMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(
+    columnMetadataWorkbenchMigration.sql,
+    /apps\/web\/src\/app\/components\/inspector\/dvtTransformColumnModel\.ts#TransformColumnOption/
+  );
+  assert.match(
+    columnMetadataWorkbenchMigration.sql,
+    /apps\/web\/src\/app\/components\/inspector\/dvtTransformColumnModel\.ts#buildTransformColumnOptions/
+  );
+  assert.match(
+    columnMetadataWorkbenchMigration.sql,
+    /apps\/web\/src\/app\/components\/inspector\/dvtTransformColumnModel\.ts#readSelectedColumnRefs/
+  );
+  assert.match(
+    columnMetadataWorkbenchMigration.sql,
+    /apps\/web\/src\/app\/components\/inspector\/nodePropertiesReadModel\.ts#buildTransformInputColumnRows/
+  );
+  assert.match(
+    columnMetadataWorkbenchMigration.sql,
+    /projects dbt model input columns with source and selection state/
+  );
+  assert.match(columnMetadataWorkbenchMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(columnMetadataWorkbenchMigration.sql, /frontend_component_local_files/);
+  assert.match(
+    columnMetadataWorkbenchMigration.sql,
+    /pnpm docs:feature-mechanization:implementation/
+  );
+  assert.doesNotMatch(
+    columnMetadataWorkbenchMigration.sql,
+    /delete\s+from\s+planning_query_store\.feature_mechanization_local_rails/i
+  );
+  assert.doesNotMatch(columnMetadataWorkbenchMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile remaining frontend gap rails and tighten local retirement precedence', () => {
   const migrations = readMigrationFiles();
   const frontendGapRailMigration = migrations.find(
