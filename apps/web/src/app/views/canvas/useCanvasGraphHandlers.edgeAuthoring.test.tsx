@@ -188,7 +188,12 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('formats role-rule rejections at the adapter boundary', async () => {
+  it('formats plugin-rule rejections at the adapter boundary', async () => {
+    rejectGraphHandlerConnectionWith({
+      allowed: false,
+      reasonCode: 'plugin_rule_blocked',
+      reason: 'Connection not permitted by DVT authoring rules',
+    });
     const harness = renderGraphHandlersHook({
       canEditEdges: true,
       canonicalNodes: [
@@ -208,7 +213,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     });
 
     expect(toastState.error).toHaveBeenCalledWith(
-      canvasViewCopy.transformationConnectionOrderMessage
+      'Connection not permitted by DVT authoring rules'
     );
     expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
 

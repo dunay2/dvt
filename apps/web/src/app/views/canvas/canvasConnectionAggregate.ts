@@ -11,18 +11,6 @@ import { resolveCanvasEdgeType } from '../../plugins/nodeTypeRegistry';
 import type { CanonicalNode, CoreNodeRole } from '../../types/canonical';
 import { createCanvasEdgeFromConnection } from './canvasNodeMapper';
 
-const AUTHORING_ROLE_TARGETS: Readonly<Record<CoreNodeRole, readonly CoreNodeRole[]>> = {
-  input: ['transform', 'check'],
-  transform: ['transform', 'check', 'output'],
-  check: [],
-  output: [],
-  control: ['input', 'transform', 'check', 'output'],
-};
-
-function canConnectAuthoringRoles(sourceRole: CoreNodeRole, targetRole: CoreNodeRole): boolean {
-  return AUTHORING_ROLE_TARGETS[sourceRole].includes(targetRole);
-}
-
 function mapEdgesToCanonicalEdges(edges: Edge[]) {
   return edges.map((edge) => ({
     id: edge.id,
@@ -58,9 +46,8 @@ export type CanvasConnectionRejection =
       code: 'self_connection' | 'duplicate_edge' | 'cycle_detected';
     }
   | {
-      code: 'role_rule_blocked';
-      sourceRole: CoreNodeRole;
-      targetRole: CoreNodeRole;
+      code: 'plugin_policy_missing';
+      pluginId: string;
     }
   | {
       code: 'plugin_rule_blocked';
@@ -76,6 +63,11 @@ export type CanvasConnectionRejection =
 
 function mapConnectionRuleRejection(result: Exclude<ConnectionRuleResult, { allowed: true }>) {
   switch (result.reasonCode) {
+    case 'plugin_policy_missing':
+      return {
+        code: 'plugin_policy_missing',
+        pluginId: result.pluginId,
+      } satisfies CanvasConnectionRejection;
     case 'plugin_rule_blocked':
       return {
         code: 'plugin_rule_blocked',
@@ -123,17 +115,6 @@ export function proposeConnection({
   }
   if (wouldCreateCycle(sourceNode.id, targetNode.id, canonicalEdges)) {
     return { outcome: 'rejected', rejection: { code: 'cycle_detected' } };
-  }
-
-  if (!canConnectAuthoringRoles(sourceNode.role, targetNode.role)) {
-    return {
-      outcome: 'rejected',
-      rejection: {
-        code: 'role_rule_blocked',
-        sourceRole: sourceNode.role,
-        targetRole: targetNode.role,
-      },
-    };
   }
 
   const connectionResult = evaluateConnection(

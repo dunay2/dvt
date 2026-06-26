@@ -1,11 +1,6 @@
 import type { CoreNodeRole, PluginNodeKind } from '../types/canonical';
 
-import {
-  CANVAS_NODE_KINDS,
-  CONNECTION_RULES,
-  EDGE_TYPE_STRATEGIES,
-  FALLBACK_NODE_KIND,
-} from './nodeTypeCatalog';
+import { CANVAS_NODE_KINDS, EDGE_TYPE_STRATEGIES, FALLBACK_NODE_KIND } from './nodeTypeCatalog';
 import type {
   CanvasEdgeType,
   EdgeTypeStrategyContext,
@@ -40,10 +35,6 @@ export function resolvePreviewStepKind(kind: string, role: CoreNodeRole): string
     case 'control':
       return 'CANVAS_CONTROL';
   }
-}
-
-export function canConnectNodeRoles(sourceRole: CoreNodeRole, targetRole: CoreNodeRole): boolean {
-  return CONNECTION_RULES[sourceRole].includes(targetRole);
 }
 
 export function resolveCanvasEdgeType(context: EdgeTypeStrategyContext): CanvasEdgeType {

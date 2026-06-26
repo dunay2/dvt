@@ -1,8 +1,7 @@
 import type { Connection, Edge } from '@xyflow/react';
 import { describe, expect, it } from 'vitest';
 
-import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
-import { dbtContributions } from '../../plugins/dbt/dbtContributions';
+import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import { confirmConnection, proposeConnection } from './canvasConnectionAggregate';
 
@@ -47,19 +46,6 @@ function byId(nodes: readonly CanonicalNode[]): Map<string, CanonicalNode> {
   return new Map(nodes.map((candidate) => [candidate.id, candidate]));
 }
 
-function dbtPluginPorts(): PluginPortMap {
-  return new Map([
-    [
-      'dbt',
-      {
-        connectionRules: dbtContributions.connectionRules ?? [],
-        produces: dbtContributions.produces ?? [],
-        consumes: dbtContributions.consumes ?? [],
-      },
-    ],
-  ]);
-}
-
 describe('canvasConnectionAggregate', () => {
   it('rejects incomplete and missing-node connections before edge creation', () => {
     const source = node('source-node', 'input');
@@ -83,20 +69,21 @@ describe('canvasConnectionAggregate', () => {
     ).toEqual({ outcome: 'rejected', rejection: { code: 'node_not_found_in_graph' } });
   });
 
-  it('allows realistic authoring graph connections without a three-node guard', () => {
-    const source = node('warehouse-source', 'input', 'warehouse:source');
-    const firstModel = node('first-model', 'transform', 'dbt:model');
-    const secondModel = node('second-model', 'transform', 'dbt:model');
-    const modelTest = node('model-test', 'check', 'dbt:test');
-    const exposure = node('exposure', 'output', 'dbt:exposure');
+  it('allows realistic dbt authoring graph connections through registered plugin policy', () => {
+    const source = dbtNode('source-node', 'input', 'dbt:source');
+    const firstModel = dbtNode('first-model', 'transform', 'dbt:model');
+    const secondModel = dbtNode('second-model', 'transform', 'dbt:model');
+    const modelTest = dbtNode('model-test', 'check', 'dbt:test');
+    const exposure = dbtNode('exposure', 'output', 'dbt:exposure');
     const canonicalNodesById = byId([source, firstModel, secondModel, modelTest, exposure]);
+    const pluginPortMap = getPluginPortMap();
 
     expect(
       proposeConnection({
         connection: link(source.id, firstModel.id),
         canonicalNodesById,
         edges: [],
-        pluginPortMap: new Map(),
+        pluginPortMap,
       })
     ).toMatchObject({ outcome: 'allowed', edgeType: 'source' });
 
@@ -105,7 +92,7 @@ describe('canvasConnectionAggregate', () => {
         connection: link(firstModel.id, secondModel.id),
         canonicalNodesById,
         edges: [],
-        pluginPortMap: new Map(),
+        pluginPortMap,
       })
     ).toMatchObject({ outcome: 'allowed', edgeType: 'ref' });
 
@@ -114,7 +101,7 @@ describe('canvasConnectionAggregate', () => {
         connection: link(firstModel.id, modelTest.id),
         canonicalNodesById,
         edges: [],
-        pluginPortMap: new Map(),
+        pluginPortMap,
       })
     ).toMatchObject({ outcome: 'allowed', edgeType: 'test' });
 
@@ -123,7 +110,7 @@ describe('canvasConnectionAggregate', () => {
         connection: link(firstModel.id, exposure.id),
         canonicalNodesById,
         edges: [],
-        pluginPortMap: new Map(),
+        pluginPortMap,
       })
     ).toMatchObject({ outcome: 'allowed', edgeType: 'exposure' });
   });
@@ -134,7 +121,7 @@ describe('canvasConnectionAggregate', () => {
     const sourceTest = dbtNode('source-test', 'check', 'dbt:test');
     const seedTest = dbtNode('seed-test', 'check', 'dbt:test');
     const canonicalNodesById = byId([source, seed, sourceTest, seedTest]);
-    const pluginPortMap = dbtPluginPorts();
+    const pluginPortMap = getPluginPortMap();
 
     expect(
       proposeConnection({
@@ -155,24 +142,45 @@ describe('canvasConnectionAggregate', () => {
     ).toMatchObject({ outcome: 'allowed', edgeType: 'test' });
   });
 
-  it('rejects role-incompatible, duplicate, self, and cyclic edges', () => {
+  it('rejects same-plugin authoring connections when the plugin policy is unavailable', () => {
+    const firstModel = dbtNode('first-model', 'transform', 'dbt:model');
+    const secondModel = dbtNode('second-model', 'transform', 'dbt:model');
+
+    expect(
+      proposeConnection({
+        connection: link(firstModel.id, secondModel.id),
+        canonicalNodesById: byId([firstModel, secondModel]),
+        edges: [],
+        pluginPortMap: new Map(),
+      })
+    ).toEqual({
+      outcome: 'rejected',
+      rejection: { code: 'plugin_policy_missing', pluginId: 'dbt' },
+    });
+  });
+
+  it('rejects policy-incompatible, duplicate, self, and cyclic edges', () => {
     const source = node('source-node', 'input', 'warehouse:source');
     const sink = node('sink-node', 'output', 'dvt:sink');
     const firstModel = node('first-model', 'transform');
     const secondModel = node('second-model', 'transform');
     const canonicalNodesById = byId([source, sink, firstModel, secondModel]);
     const duplicateEdges: Edge[] = [{ id: 'edge-1', source: source.id, target: firstModel.id }];
+    const pluginPortMap = getPluginPortMap();
 
     expect(
       proposeConnection({
         connection: link(source.id, sink.id),
         canonicalNodesById,
         edges: [],
-        pluginPortMap: new Map(),
+        pluginPortMap,
       })
     ).toEqual({
       outcome: 'rejected',
-      rejection: { code: 'role_rule_blocked', sourceRole: 'input', targetRole: 'output' },
+      rejection: {
+        code: 'plugin_rule_blocked',
+        reason: 'Connection not permitted by DVT authoring rules',
+      },
     });
 
     expect(
@@ -180,7 +188,7 @@ describe('canvasConnectionAggregate', () => {
         connection: link(source.id, firstModel.id),
         canonicalNodesById,
         edges: duplicateEdges,
-        pluginPortMap: new Map(),
+        pluginPortMap,
       })
     ).toEqual({ outcome: 'rejected', rejection: { code: 'duplicate_edge' } });
 
@@ -189,7 +197,7 @@ describe('canvasConnectionAggregate', () => {
         connection: link(source.id, source.id),
         canonicalNodesById,
         edges: [],
-        pluginPortMap: new Map(),
+        pluginPortMap,
       })
     ).toEqual({ outcome: 'rejected', rejection: { code: 'self_connection' } });
 
@@ -198,7 +206,7 @@ describe('canvasConnectionAggregate', () => {
         connection: link(firstModel.id, secondModel.id),
         canonicalNodesById,
         edges: [{ id: 'edge-2', source: secondModel.id, target: firstModel.id }],
-        pluginPortMap: new Map(),
+        pluginPortMap,
       })
     ).toEqual({ outcome: 'rejected', rejection: { code: 'cycle_detected' } });
   });
