@@ -11,6 +11,10 @@ const CANVAS_NODE_CONTEXT_MENU_VIEW_PATH = resolve(
   import.meta.dirname,
   'CanvasNodeContextMenuView.tsx'
 );
+const CANVAS_NODE_CONTEXT_MENU_PRIMITIVES_PATH = resolve(
+  import.meta.dirname,
+  'CanvasNodeContextMenuPrimitives.tsx'
+);
 
 describe('DbtNodeComponent architecture', () => {
   it('keeps the whole node card as the React Flow drag surface', () => {
@@ -43,9 +47,14 @@ describe('DbtNodeComponent architecture', () => {
   it('delegates React Flow shell markup to the shared CanvasNodeShell template', () => {
     expect(existsSync(CANVAS_NODE_SHELL_PATH)).toBe(true);
     expect(existsSync(CANVAS_NODE_CONTEXT_MENU_VIEW_PATH)).toBe(true);
+    expect(existsSync(CANVAS_NODE_CONTEXT_MENU_PRIMITIVES_PATH)).toBe(true);
     const canvasNodeShellSource = readFileSync(CANVAS_NODE_SHELL_PATH, 'utf8');
     const canvasNodeContextMenuViewSource = readFileSync(
       CANVAS_NODE_CONTEXT_MENU_VIEW_PATH,
+      'utf8'
+    );
+    const canvasNodeContextMenuPrimitivesSource = readFileSync(
+      CANVAS_NODE_CONTEXT_MENU_PRIMITIVES_PATH,
       'utf8'
     );
 
@@ -59,6 +68,13 @@ describe('DbtNodeComponent architecture', () => {
     expect(canvasNodeShellSource).toContain('ContextMenuTrigger');
     expect(canvasNodeShellSource).toContain('CanvasNodeContextMenuView');
     expect(canvasNodeShellSource).not.toContain('ContextMenuContent');
-    expect(canvasNodeContextMenuViewSource).toContain('ContextMenuContent');
+    expect(canvasNodeContextMenuViewSource).toContain("from './CanvasNodeContextMenuPrimitives'");
+    expect(canvasNodeContextMenuViewSource).not.toContain("from '../ui/context-menu'");
+    expect(canvasNodeContextMenuViewSource).not.toContain('className=');
+    expect(canvasNodeContextMenuViewSource).not.toContain('text-[10px]');
+    expect(canvasNodeContextMenuPrimitivesSource).toContain('ContextMenuContent');
+    expect(canvasNodeContextMenuPrimitivesSource).toContain(
+      'const canvasNodeContextMenuClassNames'
+    );
   });
 });

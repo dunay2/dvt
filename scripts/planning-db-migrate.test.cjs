@@ -8653,3 +8653,482 @@ test('tracked migrations keep planned Canvas backlog components out of maturity 
   );
   assert.doesNotMatch(canvasBacklogIntegrityMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations expose Canvas UX DB-first traceability review as a query', () => {
+  const migrations = readMigrationFiles();
+  const traceabilityMigration = migrations.find(
+    (migration) => migration.fileName === '292_canvas_uxdb_traceability_review_query.sql'
+  );
+
+  assert.ok(traceabilityMigration);
+  assert.match(
+    traceabilityMigration.sql,
+    /create or replace view planning_query_store\.canvas_uxdb_traceability_query/i
+  );
+  assert.match(traceabilityMigration.sql, /source_path', 'buzon\/TAREA\.TXT'/);
+  assert.match(traceabilityMigration.sql, /UX-009/);
+  assert.match(traceabilityMigration.sql, /DB-001/);
+  assert.match(traceabilityMigration.sql, /E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1/);
+  assert.match(traceabilityMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(traceabilityMigration.sql, /E-CANVAS-UXDB-SPEC-PERSISTENCE-1/);
+  assert.match(traceabilityMigration.sql, /duplicate_owner_count/);
+  assert.match(traceabilityMigration.sql, /coverage_state/);
+  assert.doesNotMatch(traceabilityMigration.sql, /'DVT-CANVAS-UXDB-SOURCE-DIALOG-1'/);
+});
+
+test('tracked migrations persist Canvas UX specification records in the Planning DB', () => {
+  const migrations = readMigrationFiles();
+  const specificationMigration = migrations.find(
+    (migration) => migration.fileName === '293_canvas_uxdb_specification_persistence.sql'
+  );
+
+  assert.ok(specificationMigration);
+  assert.match(
+    specificationMigration.sql,
+    /create or replace view planning_query_store\.canvas_uxdb_specification_query/i
+  );
+  assert.match(specificationMigration.sql, /'graph-base'/);
+  assert.match(specificationMigration.sql, /'canvas-menu\.add-source'/);
+  assert.match(specificationMigration.sql, /'node-menu\.open-workbench'/);
+  assert.match(specificationMigration.sql, /'node-workbench\.properties'/);
+  assert.match(specificationMigration.sql, /'acceptance\.dvt-flow-e2e'/);
+  assert.match(specificationMigration.sql, /'test\.context-menu-human-proof'/);
+  assert.match(specificationMigration.sql, /'evidence\.tarea-intake'/);
+  assert.match(specificationMigration.sql, /'export\.db-generated-manual'/);
+  assert.match(specificationMigration.sql, /'React Flow'/);
+  assert.match(specificationMigration.sql, /'OpenCanvasNodeWorkbench'/);
+  assert.match(specificationMigration.sql, /'replaces-direct-properties-inputs-tests-actions'/);
+  assert.match(specificationMigration.sql, /E-CANVAS-UXDB-SPEC-PERSISTENCE-1/);
+  assert.match(specificationMigration.sql, /ListCanvasUxdbSpecification/);
+  assert.doesNotMatch(specificationMigration.sql, /^\s+'node-menu\.properties',/m);
+  assert.doesNotMatch(specificationMigration.sql, /^\s+'node-menu\.inputs',/m);
+  assert.doesNotMatch(specificationMigration.sql, /^\s+'node-menu\.tests',/m);
+});
+
+test('tracked migrations persist the Canvas UX acceptance and test catalog in the Planning DB', () => {
+  const migrations = readMigrationFiles();
+  const acceptanceCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '294_canvas_uxdb_acceptance_catalog.sql'
+  );
+
+  assert.ok(acceptanceCatalogMigration);
+  assert.match(
+    acceptanceCatalogMigration.sql,
+    /create table if not exists planning_query_store\.canvas_uxdb_specification_records/i
+  );
+  assert.match(
+    acceptanceCatalogMigration.sql,
+    /create or replace view planning_query_store\.canvas_uxdb_specification_query/i
+  );
+
+  for (let index = 1; index <= 16; index += 1) {
+    assert.match(
+      acceptanceCatalogMigration.sql,
+      new RegExp(`'TEST-UX-${String(index).padStart(3, '0')}'`)
+    );
+  }
+
+  for (let index = 1; index <= 10; index += 1) {
+    assert.match(
+      acceptanceCatalogMigration.sql,
+      new RegExp(`'TEST-DB-${String(index).padStart(3, '0')}'`)
+    );
+  }
+
+  for (const criterionId of [
+    'ACCEPTANCE-CANVAS-PRODUCT-01',
+    'ACCEPTANCE-CANVAS-PRODUCT-13',
+    'ACCEPTANCE-CANVAS-IMPLEMENTATION-05',
+    'ACCEPTANCE-CANVAS-VALIDATION-04',
+  ]) {
+    assert.match(acceptanceCatalogMigration.sql, new RegExp(`'${criterionId}'`));
+  }
+
+  assert.match(acceptanceCatalogMigration.sql, /'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1'/);
+  assert.match(acceptanceCatalogMigration.sql, /'ListCanvasUxdbSpecification'/);
+  assert.doesNotMatch(acceptanceCatalogMigration.sql, /feature_mechanization_local_rails/);
+});
+
+test('tracked migrations add a Canvas command-query rail drift guard', () => {
+  const migrations = readMigrationFiles();
+  const railDriftMigration = migrations.find(
+    (migration) => migration.fileName === '295_canvas_cq_rail_drift_guard.sql'
+  );
+
+  assert.ok(railDriftMigration);
+  assert.match(
+    railDriftMigration.sql,
+    /create or replace view planning_query_store\.canvas_cq_rail_drift_query/i
+  );
+  assert.match(
+    railDriftMigration.sql,
+    /from planning_query_store\.canvas_uxdb_specification_query/i
+  );
+  assert.match(railDriftMigration.sql, /planning_query_store\.command_query_rail_query/i);
+  assert.match(railDriftMigration.sql, /OpenCanvasAddSourceDialog/);
+  assert.match(railDriftMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(railDriftMigration.sql, /OpenCanvasNodeWorkbench/);
+  assert.match(railDriftMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(railDriftMigration.sql, /PreviewCanvasExecutionPlan/);
+  assert.match(railDriftMigration.sql, /PreviewExecutionPlan/);
+  assert.match(railDriftMigration.sql, /OpenCanvasSqlContextWorkbench/);
+  assert.match(railDriftMigration.sql, /ResolveCanvasWorkbenchContext/);
+  assert.match(railDriftMigration.sql, /legacy_alias/);
+  assert.match(railDriftMigration.sql, /missing_canonical_rail/);
+  assert.match(railDriftMigration.sql, /E-CANVAS-CQ-RAIL-DRIFT-GUARD-1/);
+  assert.doesNotMatch(railDriftMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(railDriftMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations normalize Canvas UX command-query rail vocabulary', () => {
+  const migrations = readMigrationFiles();
+  const normalizationMigration = migrations.find(
+    (migration) => migration.fileName === '296_canvas_cq_rail_vocabulary_normalization.sql'
+  );
+
+  assert.ok(normalizationMigration);
+  assert.match(
+    normalizationMigration.sql,
+    /create or replace view planning_query_store\.canvas_uxdb_canonical_specification_query/i
+  );
+  assert.match(
+    normalizationMigration.sql,
+    /from planning_query_store\.canvas_uxdb_specification_query/i
+  );
+  assert.match(normalizationMigration.sql, /OpenCanvasAddSourceDialog/);
+  assert.match(normalizationMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(normalizationMigration.sql, /OpenCanvasNodeWorkbench/);
+  assert.match(normalizationMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(normalizationMigration.sql, /PreviewCanvasExecutionPlan/);
+  assert.match(normalizationMigration.sql, /PreviewExecutionPlan/);
+  assert.match(normalizationMigration.sql, /OpenCanvasSqlContextWorkbench/);
+  assert.match(normalizationMigration.sql, /ResolveCanvasWorkbenchContext/);
+  assert.match(normalizationMigration.sql, /RenderCanvasGraphBase/);
+  assert.match(normalizationMigration.sql, /RenderCanvasShellChrome/);
+  assert.match(normalizationMigration.sql, /OpenCanvasProjectExplorer/);
+  assert.match(normalizationMigration.sql, /ExportCanvasUxdbManual/);
+  assert.match(normalizationMigration.sql, /VerifyDbtCanvasFlowInBrowser/);
+  assert.match(normalizationMigration.sql, /VerifyDvtCanvasFlowInBrowser/);
+  assert.match(
+    normalizationMigration.sql,
+    /from planning_query_store\.canvas_uxdb_canonical_specification_query spec/i
+  );
+  assert.match(normalizationMigration.sql, /E-CANVAS-CQ-RAIL-VOCABULARY-NORMALIZE-1/);
+  assert.match(normalizationMigration.sql, /componentGuides/);
+  assert.match(normalizationMigration.sql, /userStories/);
+  assert.match(normalizationMigration.sql, /domainObjects/);
+  assert.match(normalizationMigration.sql, /fowlerSignals/);
+  assert.match(normalizationMigration.sql, /architectureGuards/);
+  assert.match(normalizationMigration.sql, /cypressFlows/);
+  assert.match(normalizationMigration.sql, /completionGate/);
+  assert.match(normalizationMigration.sql, /patchSurfaces/);
+  assert.match(normalizationMigration.sql, /cypressCoverage/);
+  assert.doesNotMatch(normalizationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(normalizationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register the Canvas viewport component slice boundaries', () => {
+  const migrations = readMigrationFiles();
+  const viewportSliceMigration = migrations.find(
+    (migration) => migration.fileName === '297_canvas_viewport_component_slice_boundaries.sql'
+  );
+
+  assert.ok(viewportSliceMigration);
+  assert.match(viewportSliceMigration.sql, /E-CANVAS-UXDB-COMPONENT-SLICES-1/);
+  assert.match(viewportSliceMigration.sql, /CANVAS-VIEWPORT-COMPONENT-SLICE-20260626/);
+  assert.match(viewportSliceMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(viewportSliceMigration.sql, /CanvasViewportSurfaceView\.tsx/);
+  assert.match(viewportSliceMigration.sql, /canvasViewportStyle\.ts/);
+  assert.match(viewportSliceMigration.sql, /useCanvasViewportLifecycle\.ts/);
+  assert.match(viewportSliceMigration.sql, /CanvasViewport\.architecture\.test\.ts/);
+  assert.match(viewportSliceMigration.sql, /RenderCanvasContextualGraphSurface/);
+  assert.match(viewportSliceMigration.sql, /GetCanvasLayout/);
+  assert.match(viewportSliceMigration.sql, /CanvasViewportSurfaceView#CanvasViewportSurfaceView/);
+  assert.match(viewportSliceMigration.sql, /canvasViewportStyle#resolveCanvasViewportStyle/);
+  assert.match(viewportSliceMigration.sql, /useCanvasViewportLifecycle#useCanvasViewportLifecycle/);
+  assert.match(viewportSliceMigration.sql, /componentGuides/);
+  assert.match(viewportSliceMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(viewportSliceMigration.sql, /architectureGuards/);
+  assert.match(viewportSliceMigration.sql, /completionGate/);
+  assert.doesNotMatch(viewportSliceMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(viewportSliceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Canvas node workbench strategy sections', () => {
+  const migrations = readMigrationFiles();
+  const nodeWorkbenchStrategyMigration = migrations.find(
+    (migration) => migration.fileName === '298_canvas_node_workbench_strategy_sections.sql'
+  );
+
+  assert.ok(nodeWorkbenchStrategyMigration);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /E-CANVAS-SURFACE-STRATEGY-DBT-DVT-1/);
+  assert.match(
+    nodeWorkbenchStrategyMigration.sql,
+    /CANVAS-NODE-WORKBENCH-STRATEGY-SECTIONS-20260626/
+  );
+  assert.match(nodeWorkbenchStrategyMigration.sql, /web\.component\.canvas\.CanvasSurfaceStrategy/);
+  assert.match(
+    nodeWorkbenchStrategyMigration.sql,
+    /web\.component\.canvas\.CanvasNodeWorkbenchPanel/
+  );
+  assert.match(nodeWorkbenchStrategyMigration.sql, /web\.component\.canvas\.NodeWorkbench/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /canvasNodeWorkbenchSectionStrategy\.ts/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /resolveNodeWorkbenchPrimarySectionIds/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /CanvasNodeWorkbenchOverlay\.tsx/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /ResolveCanvasSurfaceStrategy/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /strategy_pattern/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /componentGuides/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /architectureGuards/);
+  assert.match(nodeWorkbenchStrategyMigration.sql, /completionGate/);
+  assert.doesNotMatch(nodeWorkbenchStrategyMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(nodeWorkbenchStrategyMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Canvas component registry drift guard', () => {
+  const migrations = readMigrationFiles();
+  const registryDriftMigration = migrations.find(
+    (migration) => migration.fileName === '299_canvas_component_registry_drift_guard.sql'
+  );
+
+  assert.ok(registryDriftMigration);
+  assert.match(registryDriftMigration.sql, /E-CANVAS-COMPONENT-REGISTRY-DRIFT-1/);
+  assert.match(registryDriftMigration.sql, /CANVAS-COMPONENT-REGISTRY-DRIFT-GUARD-20260626/);
+  assert.match(
+    registryDriftMigration.sql,
+    /create or replace view planning_query_store\.canvas_component_registry_drift_query/
+  );
+  assert.match(registryDriftMigration.sql, /frontend_component_file_query/);
+  assert.match(registryDriftMigration.sql, /governance_file_query/);
+  assert.match(registryDriftMigration.sql, /unmapped_canvas_component_file/);
+  assert.match(registryDriftMigration.sql, /duplicate_canvas_component_file_owner/);
+  assert.match(registryDriftMigration.sql, /legacy_canvas_palette_surface/);
+  assert.match(registryDriftMigration.sql, /ListCanvasComponentRegistryDrift/);
+  assert.match(registryDriftMigration.sql, /canvas-component-registry-drift-query\.cjs/);
+  assert.match(registryDriftMigration.sql, /componentGuides/);
+  assert.match(registryDriftMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(registryDriftMigration.sql, /architectureGuards/);
+  assert.match(registryDriftMigration.sql, /completionGate/);
+  assert.doesNotMatch(registryDriftMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(registryDriftMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations focus Canvas component registry drift on UI surfaces', () => {
+  const migrations = readMigrationFiles();
+  const registryDriftFocusMigration = migrations.find(
+    (migration) => migration.fileName === '300_canvas_component_registry_drift_focus.sql'
+  );
+
+  assert.ok(registryDriftFocusMigration);
+  assert.match(registryDriftFocusMigration.sql, /E-CANVAS-COMPONENT-REGISTRY-DRIFT-1/);
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /create or replace view planning_query_store\.canvas_component_registry_drift_query/
+  );
+  assert.match(registryDriftFocusMigration.sql, /canvas_component_registry_ui_surface_paths/);
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasShellMainPanel\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuLayer\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuPrimitives\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuView\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/useCanvasContextMenuPresenter\.ts/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeContextMenuView\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasAddNodePalette\.tsx/
+  );
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasPalette\.ts/
+  );
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasShellChrome/);
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasContextMenu/);
+  assert.match(
+    registryDriftFocusMigration.sql,
+    /web\.component\.canvas\.CanvasContextMenuPresenter/
+  );
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.CanvasNodeContextMenu/);
+  assert.match(registryDriftFocusMigration.sql, /web\.component\.canvas\.LegacyCanvasPalette/);
+  assert.doesNotMatch(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasDraftRepository\.ts/
+  );
+  assert.doesNotMatch(
+    registryDriftFocusMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasDraftSessionMachine\.ts/
+  );
+  assert.doesNotMatch(registryDriftFocusMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(registryDriftFocusMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile Canvas component registry ownership backlog', () => {
+  const migrations = readMigrationFiles();
+  const registryOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '301_canvas_component_registry_ownership_reconcile.sql'
+  );
+
+  assert.ok(registryOwnershipMigration);
+  assert.match(registryOwnershipMigration.sql, /E-CANVAS-COMPONENT-REGISTRY-DRIFT-1/);
+  assert.match(registryOwnershipMigration.sql, /frontend_component_local_components/);
+  assert.match(registryOwnershipMigration.sql, /frontend_component_local_files/);
+  assert.match(registryOwnershipMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(registryOwnershipMigration.sql, /web\.component\.canvas\.DbtNodeCard/);
+  assert.match(registryOwnershipMigration.sql, /web\.component\.canvas\.LegacyCanvasPalette/);
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeShell\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/DbtNodeComponent\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasPalette\.ts/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/ConnectionStep\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasWorkspaceMenuControls\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/DbtAuthoringFields\.tsx/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /web\.component\.canvas\.DvtSqlTransformAuthoringSection/
+  );
+  assert.match(
+    registryOwnershipMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/DvtAuthoringFields\.tsx/
+  );
+  assert.doesNotMatch(registryOwnershipMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register DBT authoring fields as an effective Canvas component', () => {
+  const migrations = readMigrationFiles();
+  const dbtAuthoringMigration = migrations.find(
+    (migration) => migration.fileName === '302_register_dbt_authoring_fields_component.sql'
+  );
+
+  assert.ok(dbtAuthoringMigration);
+  assert.match(dbtAuthoringMigration.sql, /frontend_component_local_components/);
+  assert.match(dbtAuthoringMigration.sql, /web\.component\.canvas\.DbtAuthoringFields/);
+  assert.match(
+    dbtAuthoringMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/DbtAuthoringFields\.tsx/
+  );
+  assert.match(dbtAuthoringMigration.sql, /ConfigureCanvasDbtNode/);
+  assert.match(dbtAuthoringMigration.sql, /E-CANVAS-COMPONENT-REGISTRY-DRIFT-1/);
+  assert.doesNotMatch(dbtAuthoringMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(dbtAuthoringMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations classify visual Canvas palette tokens outside legacy add-node palette retirement', () => {
+  const migrations = readMigrationFiles();
+  const paletteVocabularyMigration = migrations.find(
+    (migration) => migration.fileName === '303_reclassify_canvas_visual_palette_tokens.sql'
+  );
+
+  assert.ok(paletteVocabularyMigration);
+  assert.match(paletteVocabularyMigration.sql, /canvas_component_registry_drift_query/);
+  assert.match(
+    paletteVocabularyMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/canvasPalette\.ts/
+  );
+  assert.match(paletteVocabularyMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(paletteVocabularyMigration.sql, /canvas-viewport-style/);
+  assert.match(paletteVocabularyMigration.sql, /E-CANVAS-LEGACY-PALETTE-RETIRE-1/);
+  assert.match(paletteVocabularyMigration.sql, /CanvasAddNodePalette\.tsx/);
+  assert.doesNotMatch(paletteVocabularyMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations backfill Canvas palette feature user stories after local rail import', () => {
+  const migrations = readMigrationFiles();
+  const paletteUserStoriesMigration = migrations.find(
+    (migration) => migration.fileName === '304_backfill_canvas_palette_feature_user_stories.sql'
+  );
+
+  assert.ok(paletteUserStoriesMigration);
+  assert.match(paletteUserStoriesMigration.sql, /E-CANVAS-LEGACY-PALETTE-RETIRE-1/);
+  assert.match(paletteUserStoriesMigration.sql, /userStories/);
+  assert.match(paletteUserStoriesMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(paletteUserStoriesMigration.sql, /CanvasAddNodePalette\.tsx/);
+  assert.match(paletteUserStoriesMigration.sql, /canvasPalette\.ts/);
+  assert.doesNotMatch(paletteUserStoriesMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Canvas node context menu primitives in feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const nodeContextMenuPrimitivesMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '305_canvas_node_context_menu_primitives_feature_manifest.sql'
+  );
+
+  assert.ok(nodeContextMenuPrimitivesMigration);
+  assert.match(
+    nodeContextMenuPrimitivesMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeContextMenuPrimitives\.tsx/
+  );
+  assert.match(
+    nodeContextMenuPrimitivesMigration.sql,
+    /web\.component\.canvas\.CanvasNodeContextMenu/
+  );
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /DVT-CANVAS-NODE-CONTEXT-MENU-VIEW/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /CanvasNodeContextMenuActionPrimitive/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /canvasNodeContextMenuClassNames/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /legacyViewSymbolsRetired/);
+  assert.match(nodeContextMenuPrimitivesMigration.sql, /NODE_CONTEXT_MENU_CONTENT_CLASS_NAME/);
+  assert.doesNotMatch(nodeContextMenuPrimitivesMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(nodeContextMenuPrimitivesMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations normalize Canvas node context menu primitive manifest version', () => {
+  const migrations = readMigrationFiles();
+  const primitiveManifestVersionMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '306_canvas_node_context_menu_primitives_manifest_version_normalization.sql'
+  );
+
+  assert.ok(primitiveManifestVersionMigration);
+  assert.match(primitiveManifestVersionMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(primitiveManifestVersionMigration.sql, /raw_manifest/);
+  assert.match(primitiveManifestVersionMigration.sql, /'version', 1/);
+  assert.match(primitiveManifestVersionMigration.sql, /DVT-CANVAS-NODE-CONTEXT-MENU-VIEW/);
+  assert.match(
+    primitiveManifestVersionMigration.sql,
+    /306_canvas_node_context_menu_primitives_manifest_version_normalization\.sql/
+  );
+  assert.doesNotMatch(primitiveManifestVersionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(primitiveManifestVersionMigration.sql, /truncate\s+/i);
+});
