@@ -180,6 +180,10 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('scripts/planning-db-query-tests/helpers.cjs').domain,
     'planning-db'
   );
+  assert.equal(
+    classifyScriptFilePath('scripts/run-canvas-source-import-live-proof.cjs').domain,
+    'dev-local'
+  );
 });
 
 test('detects repository command files and excludes non-command metadata', () => {
