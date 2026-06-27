@@ -9,10 +9,11 @@ import {
   getCanvasShellState,
   type CanvasShellPropsOverrides,
 } from './CanvasShell.testHarness';
+import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import type { CanvasShellProps } from './canvasShell.types';
 
 const shellState = getCanvasShellState();
-type DialogViewportCommand = 'onOpenProjectExplorer' | 'onOpenCanvasSettings';
+type DialogViewportCommand = 'onOpenCanvasSettings';
 
 describe('CanvasShell contextual dialogs', () => {
   let container: HTMLDivElement;
@@ -63,8 +64,7 @@ describe('CanvasShell contextual dialogs', () => {
     });
 
     await act(async () => {
-      const openProjectExplorer = getViewportCommand('onOpenProjectExplorer');
-      openProjectExplorer?.();
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectExplorer?.();
     });
 
     expect(container.querySelector('[data-slot="canvas-project-explorer-dialog"]')).not.toBeNull();

@@ -16,7 +16,6 @@ function PresenterHarness({
   const presenter = useCanvasContextMenuPresenter({
     canEditEdges: true,
     canOpenSourceImport: true,
-    canOpenProjectExplorer: true,
     canPreviewExecutionPlan: true,
     canOpenCanvasSettings: true,
     authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
@@ -24,7 +23,6 @@ function PresenterHarness({
     onCreateAuthoringNode: vi.fn(),
     onEdgesChange: vi.fn(),
     onOpenSourceImport: vi.fn(),
-    onOpenProjectExplorer: vi.fn(),
     onPreviewExecutionPlan: vi.fn(),
     onOpenCanvasSettings: vi.fn(),
   });

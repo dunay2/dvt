@@ -1,5 +1,5 @@
 /** Owned concern: render Canvas project commands inside the shell Workspace menu. */
-import { Download, Upload } from 'lucide-react';
+import { Code2, Download, FolderOpen, Upload } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 import {
@@ -47,6 +47,26 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
 
   return (
     <>
+      <DropdownMenuSeparator />
+      <DropdownMenuLabel>Project</DropdownMenuLabel>
+      <DropdownMenuItem
+        data-slot="canvas-workspace-explore-project-command"
+        disabled={
+          !contribution.canOpenProjectExplorer || contribution.onOpenProjectExplorer == null
+        }
+        onClick={contribution.onOpenProjectExplorer}
+      >
+        <FolderOpen className="mr-2 size-4" />
+        Explore project
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        data-slot="canvas-workspace-open-project-code-command"
+        disabled={!contribution.canOpenProjectCode || contribution.onOpenProjectCode == null}
+        onClick={contribution.onOpenProjectCode}
+      >
+        <Code2 className="mr-2 size-4" />
+        Open project code
+      </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuLabel>{canvasViewCopy.toolbarProjectSnapshotMenuLabel}</DropdownMenuLabel>
       <DropdownMenuItem

@@ -133,8 +133,6 @@ export function buildCanvasViewportProps(
     onImportedNodeFocusComplete: vi.fn(),
     canPreviewExecutionPlan: false,
     onPreviewExecutionPlan: vi.fn(),
-    canOpenProjectExplorer: false,
-    onOpenProjectExplorer: vi.fn(),
     canOpenCanvasSettings: false,
     onOpenCanvasSettings: vi.fn(),
     ...overrides,

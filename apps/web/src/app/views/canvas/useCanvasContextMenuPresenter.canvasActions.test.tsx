@@ -14,8 +14,6 @@ type PresenterCallbackSpies = Readonly<{
   onCreateAuthoringNode: ReturnType<typeof vi.fn>;
   onEdgesChange: ReturnType<typeof vi.fn>;
   onOpenSourceImport: ReturnType<typeof vi.fn>;
-  onOpenProjectExplorer: ReturnType<typeof vi.fn>;
-  onOpenProjectCode: ReturnType<typeof vi.fn>;
   onValidateGraph: ReturnType<typeof vi.fn>;
   onPreviewExecutionPlan: ReturnType<typeof vi.fn>;
   onOpenCanvasSettings: ReturnType<typeof vi.fn>;
@@ -31,8 +29,6 @@ function PresenterHarness({
   const presenter = useCanvasContextMenuPresenter({
     canEditEdges: true,
     canOpenSourceImport: true,
-    canOpenProjectExplorer: true,
-    canOpenProjectCode: true,
     canValidateGraph: true,
     canPreviewExecutionPlan: true,
     canOpenCanvasSettings: true,
@@ -41,8 +37,6 @@ function PresenterHarness({
     onCreateAuthoringNode: callbacks.onCreateAuthoringNode,
     onEdgesChange: callbacks.onEdgesChange,
     onOpenSourceImport: callbacks.onOpenSourceImport,
-    onOpenProjectExplorer: callbacks.onOpenProjectExplorer,
-    onOpenProjectCode: callbacks.onOpenProjectCode,
     onValidateGraph: callbacks.onValidateGraph,
     onPreviewExecutionPlan: callbacks.onPreviewExecutionPlan,
     onOpenCanvasSettings: callbacks.onOpenCanvasSettings,
@@ -63,8 +57,6 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
       onCreateAuthoringNode: vi.fn(),
       onEdgesChange: vi.fn(),
       onOpenSourceImport: vi.fn(),
-      onOpenProjectExplorer: vi.fn(),
-      onOpenProjectCode: vi.fn(),
       onValidateGraph: vi.fn(),
       onPreviewExecutionPlan: vi.fn(),
       onOpenCanvasSettings: vi.fn(),
@@ -116,22 +108,6 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
     let menuPresenter = await renderAndOpenPaneMenu();
     await act(async () => {
       menuPresenter.handleCanvasAction({
-        action: 'open-project-explorer',
-        label: 'Explore project',
-      });
-    });
-
-    menuPresenter = await renderAndOpenPaneMenu();
-    await act(async () => {
-      menuPresenter.handleCanvasAction({
-        action: 'open-project-code',
-        label: 'Open project code',
-      });
-    });
-
-    menuPresenter = await renderAndOpenPaneMenu();
-    await act(async () => {
-      menuPresenter.handleCanvasAction({
         action: 'validate-graph',
         label: 'Validate graph',
       });
@@ -153,8 +129,6 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
       });
     });
 
-    expect(callbacks.onOpenProjectExplorer).toHaveBeenCalledTimes(1);
-    expect(callbacks.onOpenProjectCode).toHaveBeenCalledTimes(1);
     expect(callbacks.onValidateGraph).toHaveBeenCalledTimes(1);
     expect(callbacks.onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
     expect(callbacks.onOpenCanvasSettings).toHaveBeenCalledTimes(1);

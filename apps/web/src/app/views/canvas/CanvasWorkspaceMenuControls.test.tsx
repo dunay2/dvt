@@ -43,6 +43,8 @@ describe('CanvasWorkspaceMenuControls', () => {
   it('renders contributed project snapshot commands in the Workspace menu', async () => {
     const onExportProjectSnapshot = vi.fn();
     const onImportProjectSnapshotFile = vi.fn();
+    const onOpenProjectExplorer = vi.fn();
+    const onOpenProjectCode = vi.fn();
     const snapshotFile = new File(['{}'], 'project-snapshot.json', {
       type: 'application/json',
     });
@@ -55,8 +57,12 @@ describe('CanvasWorkspaceMenuControls', () => {
             <CanvasWorkspaceMenuContributionRegistrar
               canExportProjectSnapshot
               canImportProjectSnapshot
+              canOpenProjectExplorer
+              canOpenProjectCode
               onExportProjectSnapshot={onExportProjectSnapshot}
               onImportProjectSnapshotFile={onImportProjectSnapshotFile}
+              onOpenProjectExplorer={onOpenProjectExplorer}
+              onOpenProjectCode={onOpenProjectCode}
             />
             <CanvasWorkspaceMenuControls />
           </DropdownMenuContent>
@@ -71,6 +77,20 @@ describe('CanvasWorkspaceMenuControls', () => {
     });
 
     expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      document.body
+        .querySelector<HTMLDivElement>('[data-slot="canvas-workspace-explore-project-command"]')
+        ?.click();
+    });
+    await act(async () => {
+      document.body
+        .querySelector<HTMLDivElement>('[data-slot="canvas-workspace-open-project-code-command"]')
+        ?.click();
+    });
+
+    expect(onOpenProjectExplorer).toHaveBeenCalledTimes(1);
+    expect(onOpenProjectCode).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       fireEvent.change(
@@ -122,14 +142,22 @@ describe('CanvasWorkspaceMenuControls', () => {
     const staleContribution = {
       canExportProjectSnapshot: false,
       canImportProjectSnapshot: false,
+      canOpenProjectExplorer: false,
+      canOpenProjectCode: false,
       onExportProjectSnapshot: vi.fn(),
       onImportProjectSnapshotFile: vi.fn(),
+      onOpenProjectExplorer: vi.fn(),
+      onOpenProjectCode: vi.fn(),
     };
     const activeContribution = {
       canExportProjectSnapshot: true,
       canImportProjectSnapshot: true,
+      canOpenProjectExplorer: true,
+      canOpenProjectCode: true,
       onExportProjectSnapshot: vi.fn(),
       onImportProjectSnapshotFile: vi.fn(),
+      onOpenProjectExplorer: vi.fn(),
+      onOpenProjectCode: vi.fn(),
     };
 
     const { registerCanvasWorkspaceMenuContribution, clearCanvasWorkspaceMenuContribution } =
