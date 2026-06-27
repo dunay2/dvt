@@ -9132,6 +9132,40 @@ test('tracked migrations normalize Canvas UX command-query rail vocabulary', () 
   assert.doesNotMatch(normalizationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations retire legacy Canvas execution preview rail aliases from frontend inventory', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '339_canvas_frontend_execution_preview_rail_alias_retirement.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /frontend_component_cq_rails/i);
+  assert.match(migration.sql, /command_query_rails/i);
+  assert.match(migration.sql, /PreviewExecutablePlan/);
+  assert.match(migration.sql, /PreviewExecutionPlan/);
+  assert.match(migration.sql, /web\.component\.canvas\.CanvasContextMenu/);
+  assert.match(migration.sql, /E-CANVAS-UX-DBFIRST-MAP-1/);
+  assert.match(migration.sql, /legacyRailName/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations retire protected runtime execution preview rail alias from active rails', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '340_preview_execution_plan_protected_rail_alias_retirement.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /command_query_rails/i);
+  assert.match(migration.sql, /feature_mechanization_local_rails/i);
+  assert.match(migration.sql, /PreviewExecutablePlan/);
+  assert.match(migration.sql, /previewexecutableplan/);
+  assert.match(migration.sql, /PreviewExecutionPlan/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations persist the professional Canvas UX reference catalog', () => {
   const migrations = readMigrationFiles();
   const referenceCatalogMigration = migrations.find(

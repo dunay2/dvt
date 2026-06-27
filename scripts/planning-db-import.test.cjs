@@ -517,6 +517,46 @@ test('command/query rail snapshot keeps canonical rail names when API aliases ap
   );
 });
 
+test('command/query rail snapshot canonicalizes legacy execution preview manifest rails', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/frontend-and-ux/legacy-preview.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: LEGACY-PREVIEW-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: PreviewExecutablePlan',
+        '    type: command',
+        '    dddOwner: Protected runtime',
+        'symbols:',
+        '  - name: executeCanvasPlanAction',
+        '    path: apps/web/src/app/views/canvas/canvasPlanAction.ts',
+        '    dddOwner: CanvasExecutionPlanAction',
+        '    cqRails: [PreviewExecutablePlan]',
+        '```',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({ docs });
+
+  assert.deepEqual(
+    snapshot.rails.map((rail) => rail.railName),
+    ['PreviewExecutionPlan']
+  );
+  assert.equal(snapshot.rails[0].normalizedRailName, 'previewexecutionplan');
+  assert.deepEqual(snapshot.rails[0].symbolRefs, [
+    {
+      name: 'executeCanvasPlanAction',
+      path: 'apps/web/src/app/views/canvas/canvasPlanAction.ts',
+      dddOwner: 'CanvasExecutionPlanAction',
+      unitTests: [],
+    },
+  ]);
+});
+
 test('command/query rail catalog ignores tracked source files deleted in the worktree', () => {
   const {
     createCommandQueryRailCatalogComponent,
@@ -1620,10 +1660,10 @@ test('frontend component reflection import reloads normalized component rows', a
       rails: [
         {
           componentId: 'web.component.canvas.CanvasToolbar',
-          railName: 'PreviewExecutablePlan',
+          railName: 'PreviewExecutionPlan',
           railKind: 'command',
           railStatus: 'implemented-api',
-          rawRail: { railName: 'PreviewExecutablePlan' },
+          rawRail: { railName: 'PreviewExecutionPlan' },
         },
       ],
       evidence: [
@@ -1680,7 +1720,7 @@ test('frontend component reflection import reloads normalized component rows', a
   ]);
   assert.deepEqual(railInsert.params.slice(0, 4), [
     'web.component.canvas.CanvasToolbar',
-    'PreviewExecutablePlan',
+    'PreviewExecutionPlan',
     'command',
     'implemented-api',
   ]);

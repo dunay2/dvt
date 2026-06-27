@@ -27,5 +27,5 @@ Retirement decision:
 - Do not recreate route-local Canvas tabs.
 - Do not use this document as active command/query, component, or test guidance.
 - Use `RenderCanvasContextualGraphSurface`, `ResolveCanvasContextMenu`,
-  `InspectCanvasNodeProperties`, and `PreviewExecutablePlan` for current Canvas
+  `InspectCanvasNodeProperties`, and `PreviewExecutionPlan` for current Canvas
   graph behavior.

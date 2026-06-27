@@ -4,7 +4,9 @@ const { parseLimit } = require('../query-limit.cjs');
 
 function createCommandQueryRailReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
+  const shared = deps.shared || require('../command-query-rail-shared.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
+  const { canonicalizeRailName } = shared;
 
   function flagLabel(value, label) {
     return value ? label : '-';
@@ -41,6 +43,7 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
 
   function normalizeCreationIntentForSearch(value) {
     return String(value ?? '')
+      .replace(/\bPreviewExecutablePlan\b/g, canonicalizeRailName('PreviewExecutablePlan'))
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, ' ')

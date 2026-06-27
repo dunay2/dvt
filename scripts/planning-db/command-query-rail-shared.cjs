@@ -22,6 +22,15 @@ function createCommandQueryRailSharedComponent(deps = {}) {
     return normalizeText(value).trim().toLowerCase();
   }
 
+  function canonicalizeRailName(value) {
+    const railName = normalizeText(value).trim();
+    if (railName === 'PreviewExecutablePlan') {
+      return 'PreviewExecutionPlan';
+    }
+
+    return railName;
+  }
+
   function normalizeRailStatus(value) {
     const status = normalizeText(value).trim();
     return status || 'declared';
@@ -125,6 +134,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
   }
 
   return {
+    canonicalizeRailName,
     cleanRailNameCandidate,
     extractSpecificRailNamesFromText,
     inferRailTypeFromName,

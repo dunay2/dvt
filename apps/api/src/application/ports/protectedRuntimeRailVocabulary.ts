@@ -106,8 +106,8 @@ export const PROTECTED_RUNTIME_PLAN_RAIL = {
     adapterSurface: 'POST /plans/import',
     scopeAndAuthorization: 'run:start authorization, tenant scope',
   },
-  previewExecutablePlan: {
-    name: 'PreviewExecutablePlan',
+  previewExecutionPlan: {
+    name: 'PreviewExecutionPlan',
     boundedContext: 'Planner/runtime admission',
     dddObject: 'Executable plan draft',
     applicationPort: 'PreviewPlanUseCase',

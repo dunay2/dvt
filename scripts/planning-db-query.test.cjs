@@ -1147,7 +1147,7 @@ test('parseArgs parses frontend component reflection filters for DB-first compon
       '--component',
       'web.component.canvas.CanvasToolbar',
       '--rail',
-      'PreviewExecutablePlan',
+      'PreviewExecutionPlan',
       '--kind',
       'command',
       '--status',
@@ -1159,7 +1159,7 @@ test('parseArgs parses frontend component reflection filters for DB-first compon
       queryName: 'frontend-component-rails',
       filters: {
         component: 'web.component.canvas.CanvasToolbar',
-        rail: 'PreviewExecutablePlan',
+        rail: 'PreviewExecutionPlan',
         kind: 'command',
         status: 'implemented-api',
         limit: 4,
@@ -3002,6 +3002,30 @@ test('readCreationIntentRows queries existing rails from the DB-first rail catal
   ]);
 });
 
+test('readCreationIntentRows canonicalizes retired execution preview intent aliases', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCreationIntentRows(client, {
+    intent: 'PreviewExecutablePlan',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.command_query_rail_query/);
+  assert.deepEqual(captured.params, [
+    'PreviewExecutablePlan',
+    'previewexecutionplan',
+    ['previewexecutionplan'],
+    5,
+  ]);
+});
+
 test('buildKnowledgeIntakeRetirementRows exposes DB-first retirement posture', () => {
   assert.deepEqual(
     buildKnowledgeIntakeRetirementRows([
@@ -3959,7 +3983,7 @@ test('runQuery dispatches frontend component reflection through focused queries'
           rows: [
             {
               component_id: 'web.component.canvas.CanvasToolbar',
-              rail_name: 'PreviewExecutablePlan',
+              rail_name: 'PreviewExecutionPlan',
               rail_kind: 'command',
               rail_status: 'implemented-api',
             },
@@ -4027,7 +4051,7 @@ test('runQuery dispatches frontend component reflection through focused queries'
     ],
   ]);
   assert.deepEqual(railRows, [
-    ['web.component.canvas.CanvasToolbar', 'PreviewExecutablePlan', 'command', 'implemented-api'],
+    ['web.component.canvas.CanvasToolbar', 'PreviewExecutionPlan', 'command', 'implemented-api'],
   ]);
   assert.equal(calls.length, 3);
 });

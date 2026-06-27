@@ -2,6 +2,7 @@
 function createCommandQueryRailDocumentationComponent(deps = {}) {
   const shared = deps.shared || require('./command-query-rail-shared.cjs');
   const {
+    canonicalizeRailName,
     cleanRailNameCandidate,
     extractSpecificRailNamesFromText,
     inferRailTypeFromName,
@@ -175,9 +176,10 @@ function createCommandQueryRailDocumentationComponent(deps = {}) {
           continue;
         }
 
-        const railName = cells
+        const rawRailName = cells
           .flatMap(extractSpecificRailNamesFromText)
           .find((name) => normalizeRailName(name) !== normalizeRailName(explicitType));
+        const railName = canonicalizeRailName(rawRailName);
         if (!railName) {
           continue;
         }
