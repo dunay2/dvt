@@ -70,8 +70,14 @@ export function useCanvasSourceImportHandlers({
   policy,
 }: UseCanvasSourceImportHandlersArgs): UseCanvasSourceImportHandlersResult {
   const { graphModel } = state;
-  const { setDraftSession, setSelectedNodes, setInspectorNode, setCurrentPlan, onLayoutComplete } =
-    effects;
+  const {
+    setDraftSession,
+    setSelectedNodes,
+    setInspectorNode,
+    setCurrentPlan,
+    onLayoutComplete,
+    invalidateInFlightSaveAttempt,
+  } = effects;
   const { canMutateGraph, workspaceLayoutKey } = policy;
 
   const queryClient = useQueryClient();
@@ -85,6 +91,7 @@ export function useCanvasSourceImportHandlers({
 
       const nextImportedNodeIds = result.importedNodeIds ?? [];
       setCurrentPlan(null);
+      invalidateInFlightSaveAttempt();
 
       setDraftSession((currentSession) => {
         const nextSession =
@@ -115,6 +122,7 @@ export function useCanvasSourceImportHandlers({
       canMutateGraph,
       graphModel.nodes,
       onLayoutComplete,
+      invalidateInFlightSaveAttempt,
       queryClient,
       setCurrentPlan,
       setDraftSession,

@@ -151,6 +151,7 @@ export function useCanvasController() {
     showInspectorPanel: store.showInspectorPanel,
     setCurrentPlan: store.setCurrentPlan,
     onLayoutComplete: persistence.handleNodePositionsSave,
+    invalidateInFlightSaveAttempt: authoringRuntime.invalidateInFlightSaveAttempt,
   });
 
   const graphHandlers = useCanvasGraphHandlers({

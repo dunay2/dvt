@@ -263,6 +263,7 @@ export function useCanvasDraftLifecycle({
 
   return {
     draftSaveStatus: effectiveDraftSaveStatus,
+    invalidateInFlightSaveAttempt,
     flushDraftForExecution,
     reloadLatestDraft,
     handleCreateCanvasDocument,
