@@ -228,8 +228,6 @@ stateDiagram-v2
 - `apps/web/src/app/views/canvas/canvasDraftStructuralSignature.ts`
 - `apps/web/src/app/views/canvas/canvasDraftSessionWorkingSet.ts`
 - `apps/web/src/app/views/canvas/canvasHostCycleState.ts`
-- `apps/web/src/app/views/canvas/canvasPlaygroundTabState.architecture.test.ts`
-- `apps/web/src/app/views/canvas/canvasPlaygroundTabState.ts`
 - `apps/web/src/app/views/canvas/useCanvasController.ts`
 - `apps/web/src/app/views/canvas/useCanvasAuthoringProjection.architecture.test.ts`
 - `apps/web/src/app/views/canvas/useCanvasAuthoringProjection.ts`
