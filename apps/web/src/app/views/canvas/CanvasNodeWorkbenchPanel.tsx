@@ -6,6 +6,7 @@ import { graphStatusDotClasses, graphVisualClasses } from '../../plugins/graph/g
 import { Button } from '../../components/ui/button';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { cn } from '../../components/ui/utils';
+import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';
 import type { NodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
 import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
@@ -23,7 +24,7 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   registeredPlugins?: ReadonlySet<string>;
   preferredTabId?: string | null;
   preferredTabRequestId?: number;
-  primarySectionIds?: readonly string[];
+  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[];
   authoring: CanvasInspectorAuthoringContract;
   onClose: () => void;
 }>;
@@ -81,7 +82,9 @@ export function CanvasNodeWorkbenchPanel({
     setAuthoringDraft(nextDraft);
     setAuthoringTagsText(nextDraft.tags.join(', '));
   }, [node.description, node.id, node.metadata, node.name, node.tags]);
-  const renderAuthoringSection = (section: 'general' | 'columns' | 'code'): JSX.Element => (
+  const renderAuthoringSection = (
+    section: 'general' | 'columns' | 'code' | 'sink'
+  ): JSX.Element => (
     <div data-slot="canvas-node-workbench-authoring" className="space-y-3 pt-1">
       <CanvasInspectorAuthoringSection
         node={node}
@@ -147,6 +150,7 @@ export function CanvasNodeWorkbenchPanel({
               general: renderAuthoringSection('general'),
               columns: renderAuthoringSection('columns'),
               code: renderAuthoringSection('code'),
+              sink: renderAuthoringSection('sink'),
             }}
             slotPrefix="canvas-node-workbench"
             surface="workbench"

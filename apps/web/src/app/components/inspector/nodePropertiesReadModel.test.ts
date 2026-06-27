@@ -542,6 +542,44 @@ describe('nodePropertiesReadModel', () => {
     });
   });
 
+  it('projects DVT sink target and write policy into a dedicated sink section', () => {
+    const sink: CanonicalNode = {
+      id: 'sink-orders',
+      name: 'Orders sink',
+      pluginId: 'dvt',
+      kind: 'dvt:sink',
+      role: 'output',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          database: 'analytics',
+          schema: 'mart',
+          table: 'fct_orders',
+          materialization: 'table',
+          writeMode: 'replace',
+          partitionStrategy: 'date_day',
+        },
+      },
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: sink,
+      nodes: [sink],
+      edges: [],
+    });
+
+    expectRows(sectionById(model, 'sink'), {
+      Destination: 'analytics.mart.fct_orders',
+      Database: 'analytics',
+      Schema: 'mart',
+      Table: 'fct_orders',
+      Materialization: 'table',
+      'Write mode': 'replace',
+      'Partition strategy': 'date_day',
+    });
+  });
+
   it('projects dbt model input columns with source and selection state when catalog output is not recorded yet', () => {
     const source: CanonicalNode = {
       id: 'source-orders',

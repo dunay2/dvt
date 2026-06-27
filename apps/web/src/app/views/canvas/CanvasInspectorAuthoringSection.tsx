@@ -23,7 +23,7 @@ type CanvasInspectorAuthoringSectionProps = Readonly<{
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   authoring: CanvasInspectorAuthoringContract;
-  section?: 'all' | 'general' | 'columns' | 'code';
+  section?: 'all' | 'general' | 'columns' | 'code' | 'sink';
   draftController?: Readonly<{
     draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
     tagsText: string;
@@ -67,9 +67,11 @@ export function CanvasInspectorAuthoringSection({
   const showDvtAuthoring =
     draft.dvt != null &&
     (section === 'all' ||
-      (section === 'general' && draft.dvt.kind !== 'sql_transform') ||
+      (section === 'general' && draft.dvt.kind === 'source') ||
       (section === 'columns' && draft.dvt.kind === 'sql_transform') ||
-      (section === 'code' && draft.dvt.kind === 'sql_transform'));
+      (section === 'code' && draft.dvt.kind === 'sql_transform') ||
+      (section === 'sink' && draft.dvt.kind === 'sink'));
+  const dvtAuthoringSection = section === 'sink' ? 'general' : section;
 
   if (!showGeneral && !showDvtAuthoring) {
     return null;
@@ -156,16 +158,18 @@ export function CanvasInspectorAuthoringSection({
           </>
         ) : null}
 
-        <DvtAuthoringFields
-          node={node}
-          nodes={nodes}
-          edges={edges}
-          disabled={!authoring.canEditNode}
-          draft={draft}
-          errors={errors}
-          section={section}
-          onChange={setDraft}
-        />
+        {showDvtAuthoring ? (
+          <DvtAuthoringFields
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            disabled={!authoring.canEditNode}
+            draft={draft}
+            errors={errors}
+            section={dvtAuthoringSection}
+            onChange={setDraft}
+          />
+        ) : null}
 
         {showGeneral ? (
           <div className="space-y-2">

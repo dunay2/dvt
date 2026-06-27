@@ -1,7 +1,11 @@
 /** Owned concern: translate Canvas surface strategy sections into node workbench read-model sections. */
+import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import type { NodePropertySectionId } from '../../components/inspector/nodePropertiesReadModel';
 
-const STRATEGY_SECTION_TO_NODE_PROPERTY_SECTION = new Map<string, NodePropertySectionId>([
+const STRATEGY_SECTION_TO_NODE_PROPERTY_SECTION = new Map<
+  CanvasNodeWorkbenchSectionPolicyId,
+  NodePropertySectionId
+>([
   ['properties', 'general'],
   ['metadata', 'general'],
   ['columns', 'columns'],
@@ -12,10 +16,11 @@ const STRATEGY_SECTION_TO_NODE_PROPERTY_SECTION = new Map<string, NodePropertySe
   ['tests', 'tests'],
   ['sql', 'code'],
   ['code', 'code'],
+  ['sink', 'sink'],
 ]);
 
 export function resolveNodeWorkbenchPrimarySectionIds(
-  strategySectionIds: readonly string[]
+  strategySectionIds: readonly CanvasNodeWorkbenchSectionPolicyId[]
 ): readonly NodePropertySectionId[] {
   const sectionIds: NodePropertySectionId[] = [];
   const seenSectionIds = new Set<NodePropertySectionId>();
