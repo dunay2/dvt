@@ -62,6 +62,25 @@ test('parseArgs parses Canvas component registry drift filters', () => {
   );
 });
 
+test('parseArgs maps Canvas component registry drift common filter to component', () => {
+  assert.deepEqual(
+    parseArgs([
+      'canvas-component-registry-drift',
+      '--filter',
+      'web.component.canvas.GraphNodeCard',
+      '--limit',
+      '20',
+    ]),
+    {
+      queryName: 'canvas-component-registry-drift',
+      filters: {
+        component: 'web.component.canvas.GraphNodeCard',
+        limit: 20,
+      },
+    }
+  );
+});
+
 test('buildCanvasComponentRegistryDriftRows formats registry drift findings', () => {
   assert.deepEqual(
     buildCanvasComponentRegistryDriftRows([

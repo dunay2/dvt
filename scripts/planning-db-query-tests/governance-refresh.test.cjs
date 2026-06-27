@@ -1,7 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { buildGovernanceRefreshRunRows, parseArgs, runQuery } = require('../planning-db-query.cjs');
+const {
+  buildGovernanceRefreshRunRows,
+  parseArgs,
+  runQuery,
+  usesGovernanceProjection,
+} = require('../planning-db-query.cjs');
 
 test('parseArgs parses governance refresh run ledger filters', () => {
   assert.deepEqual(
@@ -23,6 +28,11 @@ test('parseArgs parses governance refresh run ledger filters', () => {
       },
     }
   );
+});
+
+test('Canvas drift queries opt into governance projection refresh', () => {
+  assert.equal(usesGovernanceProjection('canvas-cq-rail-drift'), true);
+  assert.equal(usesGovernanceProjection('canvas-component-registry-drift'), true);
 });
 
 test('buildGovernanceRefreshRunRows formats DB-first refresh ledger rows', () => {
