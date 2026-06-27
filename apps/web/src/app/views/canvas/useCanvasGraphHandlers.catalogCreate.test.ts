@@ -213,6 +213,72 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     harness.cleanup();
   });
 
+  it('creates source, model, transformation, test, and output nodes at explicit canvas positions', async () => {
+    let currentNodes: Node[] = [];
+    const setNodes = vi.fn((nextNodes) => {
+      currentNodes = nextNodes;
+    });
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      draftSession: {
+        ...buildDraftSession(),
+        workingSet: {
+          visibleNodeIds: [],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+      },
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    const authoringRequests = [
+      { kind: 'dvt:source', position: { x: 100, y: 80 } },
+      { kind: 'dbt:model', position: { x: 320, y: 80 } },
+      { kind: 'dvt:sql_transform', position: { x: 540, y: 80 } },
+      { kind: 'dbt:test', position: { x: 760, y: 80 } },
+      { kind: 'dvt:sink', position: { x: 980, y: 80 } },
+    ] as const;
+
+    act(() => {
+      for (const request of authoringRequests) {
+        harness
+          .latest()
+          ?.handleCreateAuthoringNode(requireAuthoringNodeKind(request.kind), request.position);
+      }
+    });
+
+    expect(currentNodes.map((node) => ({ id: node.id, position: node.position }))).toEqual([
+      { id: 'dvt-source-1', position: { x: 100, y: 80 } },
+      { id: 'dbt-model-1', position: { x: 320, y: 80 } },
+      { id: 'dvt-sql-transform-1', position: { x: 540, y: 80 } },
+      { id: 'dbt-test-1', position: { x: 760, y: 80 } },
+      { id: 'dvt-sink-1', position: { x: 980, y: 80 } },
+    ]);
+    expect(setDraftSession).toHaveBeenCalledTimes(authoringRequests.length);
+    const latestDraftSession = setDraftSession.mock.calls.at(-1)?.[0];
+    expect(typeof latestDraftSession).not.toBe('function');
+    expect(latestDraftSession.workingSet.visibleNodeIds).toEqual([
+      'dvt-source-1',
+      'dbt-model-1',
+      'dvt-sql-transform-1',
+      'dbt-test-1',
+      'dvt-sink-1',
+    ]);
+    expect(Object.keys(latestDraftSession.localNodeCatalog ?? {})).toEqual([
+      'dvt-source-1',
+      'dbt-model-1',
+      'dvt-sql-transform-1',
+      'dbt-test-1',
+      'dvt-sink-1',
+    ]);
+
+    harness.cleanup();
+  });
+
   it('serializes consecutive catalog-created nodes into one draft session before rerender', async () => {
     let currentNodes: Node[] = [];
     const setNodes = vi.fn((nextNodes) => {
