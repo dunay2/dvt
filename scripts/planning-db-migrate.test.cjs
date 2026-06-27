@@ -9678,3 +9678,24 @@ test('tracked migrations normalize Canvas node context menu primitive manifest v
   assert.doesNotMatch(primitiveManifestVersionMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(primitiveManifestVersionMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations retire the duplicate Node Workbench inspect-properties rail', () => {
+  const migrations = readMigrationFiles();
+  const duplicateRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '337_retire_node_workbench_inspect_properties_duplicate.sql'
+  );
+
+  assert.ok(duplicateRetirementMigration);
+  assert.match(duplicateRetirementMigration.sql, /CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604/);
+  assert.match(duplicateRetirementMigration.sql, /WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619/);
+  assert.match(duplicateRetirementMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(duplicateRetirementMigration.sql, /rail_status = 'retired'/);
+  assert.match(duplicateRetirementMigration.sql, /duplicateRetirementReason/);
+  assert.match(
+    duplicateRetirementMigration.sql,
+    /planning:db:integrity:check must report zero exact_duplicate rail_vocabulary errors/
+  );
+  assert.doesNotMatch(duplicateRetirementMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(duplicateRetirementMigration.sql, /truncate\s+/i);
+});
