@@ -451,7 +451,9 @@ function buildInputsOutputsRows(
 
 function buildTestRows(
   node: CanonicalNode,
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown>,
+  nodes: readonly CanonicalNode[],
+  edges: readonly CanonicalEdge[]
 ): readonly NodePropertyTableRow[] {
   const canonicalTestLastRunStatus = node.kind.endsWith(':test') ? node.status : undefined;
   const canonicalTestLastRunDurationMs =
@@ -545,6 +547,50 @@ function buildTestRows(
   };
   const testSemanticCells = (test: DbtTestSemanticsInput): Record<string, string> =>
     projectDbtTestSemantics(test);
+  const readConnectedDbtTest = (testMetadata: Record<string, unknown>): DbtTestSemanticsInput => {
+    const buildFromConfig = (
+      type: string,
+      config: Record<string, unknown>
+    ): DbtTestSemanticsInput => {
+      const values = readStringArray(config.values);
+      return {
+        type,
+        severity: readString(config.severity),
+        expression:
+          values.length > 0
+            ? `values: ${values.join(', ')}`
+            : readFirstString(config.expression, config.sql, config.condition),
+        selectedForExecution:
+          readBoolean(config.selectedForExecution) ??
+          readBoolean(config.executionSelected) ??
+          readBoolean(config.selected),
+        selectionState: readFirstString(config.selectionState, config.executionSelection),
+        readinessImpact: readString(config.readinessImpact),
+        lastRunStatus: readFirstString(config.lastRunStatus, config.runStatus, config.lastStatus),
+        lastRunDurationMs:
+          readNumber(config.lastRunDurationMs) ??
+          readNumber(config.lastDurationMs) ??
+          readNumber(config.durationMs),
+      };
+    };
+
+    const explicitType = readFirstString(
+      testMetadata.type,
+      testMetadata.testType,
+      testMetadata.test_name
+    );
+    if (explicitType != null) {
+      return buildFromConfig(explicitType, testMetadata);
+    }
+
+    for (const knownType of ['not_null', 'unique', 'accepted_values', 'relationships']) {
+      if (Object.prototype.hasOwnProperty.call(testMetadata, knownType)) {
+        return buildFromConfig(knownType, asRecord(testMetadata[knownType]));
+      }
+    }
+
+    return buildFromConfig('', testMetadata);
+  };
   const columnTestRows = (): readonly NodePropertyTableRow[] => {
     const columns = isRecord(metadata.columns) ? metadata.columns : {};
 
@@ -629,7 +675,59 @@ function buildTestRows(
       },
     ];
   });
-  const projectedRows = [...rows, ...columnTestRows()];
+  const connectedTestRows = (): readonly NodePropertyTableRow[] => {
+    const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
+
+    return edges
+      .filter((edge) => edge.sourceId === node.id)
+      .flatMap((edge): readonly NodePropertyTableRow[] => {
+        const testNode = nodeById.get(edge.targetId);
+        if (testNode == null || !testNode.kind.endsWith(':test')) {
+          return [];
+        }
+
+        const testMetadata = asRecord(testNode.metadata);
+        const test = readConnectedDbtTest(testMetadata);
+
+        const targetColumn = readFirstString(
+          testMetadata.testTargetColumn,
+          testMetadata.targetColumn,
+          testMetadata.column
+        );
+        const targetModel =
+          readFirstString(
+            testMetadata.testTargetModel,
+            testMetadata.targetModel,
+            testMetadata.model
+          ) ?? node.name;
+        const target =
+          readFirstString(testMetadata.testTarget, testMetadata.target) ??
+          [targetModel, targetColumn].filter(Boolean).join('.');
+        const lastRunDurationMs =
+          test.lastRunDurationMs ??
+          (testNode.lastDuration == null ? undefined : testNode.lastDuration * 1000);
+
+        return [
+          {
+            id: `test:${testNode.id}`,
+            cells: {
+              name: testNode.name,
+              type: test.type,
+              target,
+              column: targetColumn ?? '',
+              severity: test.severity ?? '',
+              expression: test.expression ?? '',
+              ...testSemanticCells({
+                ...test,
+                lastRunStatus: test.lastRunStatus ?? testNode.status,
+                lastRunDurationMs,
+              }),
+            },
+          },
+        ];
+      });
+  };
+  const projectedRows = [...rows, ...columnTestRows(), ...connectedTestRows()];
 
   if (projectedRows.length > 0) {
     return projectedRows;
@@ -728,7 +826,7 @@ export function buildNodePropertiesReadModel({
   const foreignKeyRows = buildForeignKeyRows(metadata);
   const constraintRows = buildConstraintRows(metadata);
   const inputsOutputsRows = buildInputsOutputsRows(node, nodes, edges);
-  const testRows = buildTestRows(node, metadata);
+  const testRows = buildTestRows(node, metadata, nodes, edges);
   const code =
     readString(metadata.compiledSql) ?? readString(metadata.sql) ?? readString(config.sql);
 
