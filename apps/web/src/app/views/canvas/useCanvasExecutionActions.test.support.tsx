@@ -166,7 +166,7 @@ function ExecutionActionsHookView({
       <button
         type="button"
         onClick={() => {
-          void hook.handlePlan();
+          void hook.handlePreviewExecutionPlan();
         }}
       >
         plan

@@ -171,7 +171,7 @@ describe('Canvas route host-cycle persistence', () => {
       buildCanvasHostCycleControllerState({ kind: 'needs_canvas' })
     );
 
-    const handlePlan = vi.fn(async () => {
+    const handlePreviewExecutionPlan = vi.fn(async () => {
       currentController = buildController({
         ...buildCanvasHostCycleControllerState({
           kind: 'graph_ready',
@@ -181,7 +181,7 @@ describe('Canvas route host-cycle persistence', () => {
         }),
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
-        handlePlan,
+        handlePreviewExecutionPlan,
         canStartRun: true,
         planStatusSummary: canvasViewCopy.planStatusPreviewReadyMessage,
         transformationValidation: {
@@ -203,7 +203,7 @@ describe('Canvas route host-cycle persistence', () => {
         }),
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
-        handlePlan,
+        handlePreviewExecutionPlan,
       });
     });
     const handleCreateAuthoringNode = vi.fn((registration: NodeKindRegistration) => {
@@ -216,7 +216,7 @@ describe('Canvas route host-cycle persistence', () => {
         }),
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
-        handlePlan,
+        handlePreviewExecutionPlan,
         planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
         transformationValidation: {
           valid: true,
@@ -233,7 +233,7 @@ describe('Canvas route host-cycle persistence', () => {
       ...buildCanvasHostCycleControllerState({ kind: 'needs_canvas' }),
       handleCreateCanvasDocument,
       handleCreateAuthoringNode,
-      handlePlan,
+      handlePreviewExecutionPlan,
     });
     mockedUseCanvasController.mockImplementation(() => currentController);
 
@@ -260,7 +260,7 @@ describe('Canvas route host-cycle persistence', () => {
     previewCommand?.click();
     await harness.render();
 
-    expect(handlePlan).toHaveBeenCalledTimes(1);
+    expect(handlePreviewExecutionPlan).toHaveBeenCalledTimes(1);
     expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Transformation canvas',

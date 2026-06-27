@@ -188,7 +188,7 @@ function buildCanvasShellChromeCommandsArgs({
       handleExportProjectSnapshot: controller.handleExportProjectSnapshot,
       handleImportProjectSnapshotFile: controller.handleImportProjectSnapshotFile,
       reloadLatestDraft: controller.reloadLatestDraft,
-      handlePlan: controller.handlePlan,
+      handlePreviewExecutionPlan: controller.handlePreviewExecutionPlan,
       handleStartRun: controller.handleStartRun,
     },
   };

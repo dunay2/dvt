@@ -153,7 +153,7 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'handleExportProjectSnapshot'
     | 'handleImportProjectSnapshotFile'
     | 'reloadLatestDraft'
-    | 'handlePlan'
+    | 'handlePreviewExecutionPlan'
     | 'handleStartRun'
   >;
 }>;

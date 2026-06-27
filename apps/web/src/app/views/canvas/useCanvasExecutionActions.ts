@@ -111,7 +111,7 @@ export function useCanvasExecutionActions({
     setLastPlannedDraftSignature,
   });
 
-  const handlePlan = useCanvasPlanActionHandler({
+  const handlePreviewExecutionPlan = useCanvasPlanActionHandler({
     canPlan,
     canonicalEdges,
     canonicalNodes,
@@ -155,7 +155,7 @@ export function useCanvasExecutionActions({
     isCurrentPlanStale,
     planRunReadiness,
     planStatusSummary,
-    handlePlan,
+    handlePreviewExecutionPlan,
     handleStartRun,
   };
 }

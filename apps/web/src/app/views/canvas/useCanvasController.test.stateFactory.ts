@@ -144,7 +144,7 @@ function buildDefaultCanvasHarnessExecutionActionsResult(): CanvasHarnessState['
       summary: 'Preview required before running.',
     },
     planStatusSummary: 'Preview required before running.',
-    handlePlan: vi.fn(),
+    handlePreviewExecutionPlan: vi.fn(),
     handleStartRun: vi.fn(),
   };
 }

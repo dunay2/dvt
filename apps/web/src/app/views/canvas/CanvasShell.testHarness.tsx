@@ -191,7 +191,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onExportProjectSnapshot: vi.fn(),
       onImportProjectSnapshotFile: vi.fn(),
       onReloadLatestDraft: vi.fn(),
-      onPlan: vi.fn(),
+      onPreviewExecutionPlan: vi.fn(),
       onRun: vi.fn(),
       ...overrides?.chromeCommands,
     },

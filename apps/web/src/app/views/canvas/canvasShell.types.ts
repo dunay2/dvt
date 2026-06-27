@@ -143,7 +143,7 @@ export type CanvasShellChromeCommands = {
   onExportProjectSnapshot: () => void;
   onImportProjectSnapshotFile: (file: File) => void;
   onReloadLatestDraft: () => void;
-  onPlan: () => void;
+  onPreviewExecutionPlan: () => void;
   onRun: () => void;
 };
 

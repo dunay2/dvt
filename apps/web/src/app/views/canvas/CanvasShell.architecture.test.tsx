@@ -139,6 +139,19 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('workbenchTabStrip?:');
   });
 
+  it('names execution-preview commands by product intent instead of legacy plan chrome', () => {
+    for (const source of [
+      CANVAS_SHELL_SOURCE,
+      CANVAS_SHELL_TYPES_SOURCE,
+      CANVAS_SHELL_MAIN_PANEL_SOURCE,
+    ]) {
+      expect(source).toContain('onPreviewExecutionPlan');
+      expect(source).not.toMatch(/\bonPlan\b/);
+    }
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).toContain('handlePreviewExecutionPlan');
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).not.toMatch(/\bhandlePlan\b/);
+  });
+
   it('keeps retired workbench tab composition out of the Canvas route', () => {
     expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasWorkbenchTabStrip');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasWorkbenchTabPanel');
