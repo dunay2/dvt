@@ -90,6 +90,7 @@ export type ImportSourcesInput = {
 
 export type ImportSourcesResult = {
   success: true;
+  draftRevision?: string;
   sourcesCreated: number;
   tablesImported: number;
   yamlFiles: string[];

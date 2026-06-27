@@ -529,6 +529,7 @@ describe('warehouseSourceImportRoutes', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       success: true,
+      draftRevision: 'rev-2',
       sourcesCreated: 1,
       tablesImported: 1,
       yamlFiles: ['models/sources/src_erp.yml'],

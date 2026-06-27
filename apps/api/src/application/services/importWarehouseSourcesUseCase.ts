@@ -135,6 +135,7 @@ export class ImportWarehouseSourcesUseCase {
 
     return {
       success: true,
+      draftRevision: saveResult.revision,
       sourcesCreated: mutation.importedNodeIds.length,
       tablesImported: input.tables.length,
       yamlFiles: sourceYamlUpdates.map((update) => update.path),

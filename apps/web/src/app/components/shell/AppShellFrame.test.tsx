@@ -61,6 +61,8 @@ describe('AppShellFrame', () => {
     const main = container.querySelector('[data-slot="app-shell-main"]');
     const outlet = container.querySelector('[data-slot="app-shell-outlet"]');
     const bottomDrawer = container.querySelector('[data-slot="app-shell-bottom-drawer"]');
+    const panelGroup = container.querySelector('[data-slot="resizable-panel-group"]');
+    const panels = Array.from(container.querySelectorAll('[data-slot="resizable-panel"]'));
 
     expect(frame?.textContent).toContain('Top bar');
     expect(frame?.textContent).toContain('Shell banner');
@@ -74,6 +76,13 @@ describe('AppShellFrame', () => {
     expect(outlet?.closest('[data-slot="app-shell-main"]')).toBe(main);
     expect(bottomDrawer?.textContent).toContain('Operations drawer');
     expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(main);
+    expect(panelGroup?.getAttribute('id')).toBe('app-shell-vertical-panels');
+    expect(panels.map((panel) => panel.getAttribute('id'))).toContain(
+      'app-shell-route-outlet-panel'
+    );
+    expect(panels.map((panel) => panel.getAttribute('id'))).toContain(
+      'app-shell-bottom-drawer-panel'
+    );
   });
 
   it('hides navigation and bottom drawer in focus mode while keeping top bar and outlet', async () => {

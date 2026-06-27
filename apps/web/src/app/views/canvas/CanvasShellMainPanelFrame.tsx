@@ -22,7 +22,7 @@ export function CanvasShellMainPanelFrame({
   defaultSize: number;
 }>): JSX.Element {
   return (
-    <ResizablePanel defaultSize={defaultSize}>
+    <ResizablePanel id="canvas-shell-main-panel" order={1} defaultSize={defaultSize}>
       <div className={canvasShellMainPanelFrameClassNames.root}>{children}</div>
     </ResizablePanel>
   );

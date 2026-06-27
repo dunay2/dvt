@@ -261,6 +261,31 @@ describe('canvasDraftSession', () => {
     expect(session.baseline.record?.revision).toBe('rev-conflict');
   });
 
+  it('adopts an external command revision without keeping stale saving state', () => {
+    const session = canvasDraftSession.machine.adoptExternalRevision(
+      {
+        ...canvasDraftSession.machine.applyConflict(
+          canvasDraftSession.machine.bootstrap({
+            remoteDraft: null,
+            canonicalNodeIds: ['node_1'],
+            canonicalEdges: [],
+          }),
+          buildRemoteDraftRecord({ revision: 'rev-stale' })
+        ),
+        savingWorkingSet: {
+          visibleNodeIds: ['node_1'],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+      },
+      'rev-imported'
+    );
+
+    expect(session.syncState).toBe('editing');
+    expect(session.draftRevision).toBe('rev-imported');
+    expect(session.savingWorkingSet).toBeUndefined();
+  });
+
   it('promotes a successful save into the new editing baseline', () => {
     const session = canvasDraftSession.machine.applySaveSuccess(
       canvasDraftSession.machine.markSaving(

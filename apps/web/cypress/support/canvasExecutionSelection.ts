@@ -10,6 +10,27 @@ export function clickButtonNatively(label: string): void {
     });
 }
 
+export function getVisibleCanvasNode(nodeName: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  return cy
+    .get('.react-flow__node', { timeout: 20_000 })
+    .filter((_, element) => {
+      const text = element.textContent ?? '';
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+
+      return (
+        text.includes(nodeName) &&
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.visibility !== 'hidden' &&
+        style.display !== 'none' &&
+        style.opacity !== '0'
+      );
+    })
+    .should('have.length.greaterThan', 0)
+    .first();
+}
+
 export function openCanvasContextMenuAt(x = 96, y = 220): void {
   cy.get('body').type('{esc}', { force: true });
   cy.get('.react-flow__pane', { timeout: 20_000 }).should('be.visible').rightclick(x, y, {
@@ -38,10 +59,15 @@ export function expectPreviewExecutionPlanUnavailableFromCanvasContextMenu(): vo
 
 export function selectCanvasClosure(nodeNames: string[]): void {
   for (const nodeName of nodeNames) {
-    cy.contains('.react-flow__node', nodeName).rightclick();
-    cy.get('[role="menu"]').then(($menu) => {
+    getVisibleCanvasNode(nodeName).rightclick();
+    cy.get('[data-slot="canvas-node-context-menu"]').then(($menu) => {
+      if ($menu.text().includes('Select for execution')) {
+        cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Select for execution').click();
+        return;
+      }
+
       if ($menu.text().includes('Select node')) {
-        cy.contains('[role="menuitem"]', 'Select node').click();
+        cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Select node').click();
         return;
       }
 

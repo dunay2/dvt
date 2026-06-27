@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import type { ImportSourcesResult } from '../../ports/workspace';
 import { queryKeys } from '../../queries/queryKeys';
+import { canvasDraftSession } from './canvasDraftSession';
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import type {
   CanvasSourceImportCompletionContext,
@@ -85,10 +86,16 @@ export function useCanvasSourceImportHandlers({
       const nextImportedNodeIds = result.importedNodeIds ?? [];
       setCurrentPlan(null);
 
+      setDraftSession((currentSession) => {
+        const nextSession =
+          nextImportedNodeIds.length > 0
+            ? canvasGraphLifecycle.node.queueImported(currentSession, nextImportedNodeIds)
+            : currentSession;
+
+        return canvasDraftSession.machine.adoptExternalRevision(nextSession, result.draftRevision);
+      });
+
       if (nextImportedNodeIds.length > 0) {
-        setDraftSession((currentSession) =>
-          canvasGraphLifecycle.node.queueImported(currentSession, nextImportedNodeIds)
-        );
         setSelectedNodes(nextImportedNodeIds);
         setInspectorNode(nextImportedNodeIds[0] ?? null);
         setImportedNodeFocusIds(nextImportedNodeIds);

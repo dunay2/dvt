@@ -9,7 +9,7 @@ function resolveScopeNodeIds({
   nodes,
   selectedNodeIds,
   workspaceNodeIds,
-}: ValidateTransformationGraphArgs): string[] {
+}: ValidateTransformationGraphArgs): readonly string[] {
   if (selectedNodeIds?.length === TRANSFORMATION_REQUIRED_NODE_COUNT) {
     return selectedNodeIds;
   }
