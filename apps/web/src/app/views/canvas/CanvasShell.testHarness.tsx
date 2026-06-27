@@ -85,10 +85,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       inspectorPanelVisible: false,
       canOpenSourceImport: true,
       surfaceStrategy: dvtCanvasSurfaceStrategy,
-      hostTabState: {
-        activeTabId: null,
-        tabs: [],
-      },
       centerSurfaceMode: 'replace',
       centerSurface: undefined,
       contextualWorkbench: undefined,

@@ -14,7 +14,6 @@ import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyC
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
-import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
 import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
@@ -43,7 +42,6 @@ export type CanvasShellLayout = {
   inspectorPanelVisible: boolean;
   canOpenSourceImport: boolean;
   surfaceStrategy: CanvasSurfaceStrategy | null;
-  hostTabState: CanvasPlaygroundTabState;
   contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurfaceMode: 'replace' | 'overlay';
   centerSurface?: React.ReactNode;
