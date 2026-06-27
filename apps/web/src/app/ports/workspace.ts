@@ -67,6 +67,8 @@ export type WarehouseColumn = {
   name: string;
   type: string;
   nullable: boolean;
+  primaryKey?: boolean;
+  unique?: boolean;
 };
 
 export type WarehouseTable = {

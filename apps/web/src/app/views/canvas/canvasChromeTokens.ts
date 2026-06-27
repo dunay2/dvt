@@ -1,4 +1,4 @@
-/** Owned concern: own Canvas route chrome visual tokens for toolbar and tab-strip presentation. */
+/** Owned concern: own Canvas route chrome visual tokens for compact shell presentation. */
 export const canvasChromeClasses = {
   toolbar:
     'flex h-11 shrink-0 items-center justify-end gap-2 border-b border-[color:var(--border-default)] bg-[var(--surface-panel)] px-3',

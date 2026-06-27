@@ -56,12 +56,9 @@ changes from `Proposed` to `Active`.
 | `buildBlankCanvasDocumentDraftInput(...)`             | `canvasCreateCanvasDocumentCommandPolicy.ts` | Build the authoritative empty draft save request.                                 |
 | `applyCanvasDocumentSaveSuccess(...)`                 | `canvasCreateCanvasDocumentSaveResult.ts`    | Apply saved draft truth to cache, session, and save status.                       |
 | `applyCanvasDocumentSaveConflict(...)`                | `canvasCreateCanvasDocumentSaveResult.ts`    | Apply conflict draft truth to cache, session, and save status.                    |
-| `CanvasPlaygroundTabStrip`                            | `CanvasPlaygroundTabStrip.tsx`               | Mount the host tab-strip presentation boundary.                                   |
-| `useCanvasPlaygroundTabStripPresenter(...)`           | `useCanvasPlaygroundTabStripPresenter.ts`    | Coordinate authoritative host tabs and confirmed replacement callbacks.           |
-| `resolveCanvasReplacementActionState(...)`            | `canvasPlaygroundTabStripModel.ts`           | Resolve locale-backed replacement labels, permission state, and active kind.      |
-| `CanvasReplacementActionViewState`                    | `canvasPlaygroundTabStripModel.ts`           | Carry only replacement labels and enablement that templates render.               |
-| `CanvasPlaygroundTabStripTemplate`                    | `CanvasPlaygroundTabStrip.templates.tsx`     | Render tab-strip HTML from resolved view state without command policy.            |
 | `CanvasPlaygroundHostTemplate`                        | `CanvasPlaygroundHost.templates.tsx`         | Render first-canvas host HTML without constructing draft command DTOs.            |
+| `CanvasShell`                                         | `CanvasShell.tsx`                            | Mount the graph-first Canvas shell without route-mode tabs.                       |
+| `CanvasShellMainPanel`                                | `CanvasShellMainPanel.tsx`                   | Render the central graph surface and contextual dialogs from shell props.         |
 | `resolveCanvasRecoveryBannerViewState(...)`           | `canvasRecoveryBannerModel.ts`               | Resolve route recovery reason into renderable banner state and copy.              |
 | `CanvasRecoveryBannerTemplate`                        | `CanvasRecoveryBanner.templates.tsx`         | Render recovery banner HTML from resolved view state only.                        |
 | `deriveCanvasDraftAuthTransportPosture(...)`          | `canvasDraftAuthTransportPosture.ts`         | Planned: normalize final draft auth errors for Canvas posture.                    |
@@ -99,18 +96,9 @@ changes from `Proposed` to `Active`.
 - `workspaceGraphDraftProjection.ts` must project protected authoring truth
   into route-facing draft and canonical semantic graph models only. DBT-shaped
   snapshot rules belong in `workspaceGraphDraftSnapshotProjection.ts`.
-- `CanvasPlaygroundTabStrip.tsx` must remain a thin React mount for the
-  tab-strip presentation boundary. Detailed HTML belongs in
-  `CanvasPlaygroundTabStrip.templates.tsx`; presenter callbacks belong in
-  `useCanvasPlaygroundTabStripPresenter.ts`; replacement permission, copy, and
-  command decisions belong in `canvasPlaygroundTabStripModel.ts`.
-- Tab-strip templates must receive already-resolved copy and state. They must
-  not import locale catalogs or construct `replace_current` command DTOs.
-- The tab-strip presenter must resolve copy through `resolveCanvasViewCopy(...)`
-  so rendered labels stay locale-backed instead of using hardcoded or static
-  English strings.
-- Tab-strip templates must depend on `CanvasReplacementActionViewState`, not on
-  command-selection state such as `activeCanvasKind`.
+- Replacement actions must stay host-owned and draft-CAS guarded; the
+  graph-first shell must not reintroduce a fixed route tab strip or a local reset
+  shortcut.
 - `CanvasPlaygroundHost.tsx` must own first-canvas command construction; its
   template renders host HTML from copy and kind registrations only.
 - Recovery-banner state must be resolved by `canvasRecoveryBannerModel.ts`.
@@ -158,16 +146,16 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
   participant Operator
-  participant Tabs as CanvasPlaygroundTabStrip
+  participant Host as CanvasPlaygroundHost
   participant Command as executeCreateCanvasDocumentCommand
   participant Draft as protected workspace draft port
   participant Cache as draft query cache
   participant Session as canvasDraftSession
 
-  Operator->>Tabs: New canvas
-  Tabs->>Operator: confirm replacement
-  Operator->>Tabs: confirm
-  Tabs->>Command: replace_current(kind,title)
+  Operator->>Host: New canvas
+  Host->>Operator: confirm replacement
+  Operator->>Host: confirm
+  Host->>Command: replace_current(kind,title)
   Command->>Command: resolve eligibility and blank draft input
   Command->>Draft: saveGraphDraft(expectedRevision=current)
   Draft-->>Command: saved or conflict
@@ -239,7 +227,8 @@ Direct consumers:
 - `canvasDraftRepository.ts`
 - `canvasCreateCanvasDocumentCommand.ts`
 - `CanvasPlaygroundHost.tsx`
-- `CanvasPlaygroundTabStrip.tsx`
+- `CanvasShell.tsx`
+- `CanvasShellMainPanel.tsx`
 - `CanvasRecoveryBanner.tsx`
 - `CanvasViewport.tsx`
 - `DbtNodeComponent.tsx`
@@ -289,19 +278,13 @@ flowchart LR
 | Policy Object                 | `canvasCreateCanvasDocumentCommandPolicy.ts` | create/replace CAS rules are testable without UI   |
 | Domain Event Handler          | `canvasCreateCanvasDocumentSaveResult.ts`    | save outcomes update session state in one place    |
 | Decision Table                | `DBT_NODE_TYPE_RULES`                        | projection policy is data-driven and extensible    |
-| Passive View                  | `CanvasPlaygroundTabStrip`                   | mount host state without owning presenter policy   |
-| Presentation Model            | `useCanvasPlaygroundTabStripPresenter`       | coordinate callbacks without rendering HTML        |
-| Presentation Template         | `CanvasPlaygroundTabStripTemplate`           | keep JSX separate from replacement policy          |
-| Presentation Model            | `CanvasReplacementActionViewState`           | expose only renderable action state to templates   |
 | Presentation Template         | `CanvasPlaygroundHostTemplate`               | render host selection HTML without command DTOs    |
 | Presentation Model            | `CanvasRecoveryBannerViewState`              | reduce recovery reasons to renderable state        |
 | Presentation Template         | `CanvasRecoveryBannerTemplate`               | render recovery HTML without route state imports   |
 | Presentation Model            | `CanvasDraftAccessPosture`                   | keep draft access truth in one posture object      |
 | Policy Object                 | `isCanvasDraftPostureMutationBlocked`        | gate unsafe mutations from one semantic policy     |
-| Separated Domain Model        | `canvasPlaygroundTabStripModel.ts`           | test command and i18n state without React          |
 | Intention Revealing Interface | whole node drag surface                      | gesture ownership is named and testable            |
 | Parameter Object              | `MapCanonicalNodeToCanvasNodeArgs`           | viewport projection options are named at callsite  |
-| Extract Component             | `CanvasReplacementAction`                    | destructive action UI is isolated and testable     |
 
 ## Negative coverage
 
@@ -327,22 +310,13 @@ It validates semantics, not only barrel thinness:
   chains;
 - canonical-node viewport projection uses `MapCanonicalNodeToCanvasNodeArgs`
   instead of a positional argument train;
-- host tab rendering and replacement action rendering stay behind template
-  functions, while replacement copy and command state stay in
-  `canvasPlaygroundTabStripModel.ts`;
-- replacement templates consume `CanvasReplacementActionViewState`, not
-  command-selection state;
-- `CanvasPlaygroundTabStrip.tsx` does not re-own `AlertDialog`, `TabsTrigger`,
-  React state hooks, or `replace_current` command construction;
-- `useCanvasPlaygroundTabStripPresenter.ts` coordinates tab-strip callbacks
-  without rendering JSX;
-- `CanvasPlaygroundTabStrip.templates.tsx` does not import Canvas copy catalogs
-  or command DTO literals;
+- host rendering and replacement command routing stay behind host-owned
+  template and command seams without reintroducing route-mode tabs;
 - `CanvasPlaygroundHost.tsx` builds create-canvas commands while
   `CanvasPlaygroundHost.templates.tsx` owns host HTML;
 - `CanvasRecoveryBanner.tsx` delegates recovery state resolution and renders
   through `CanvasRecoveryBanner.templates.tsx`;
-- tab strip confirmation stays tied to edit permission;
+- replacement confirmation stays tied to edit permission;
 - mapped and dropped nodes do not carry a React Flow `dragHandle` selector;
 - branch-owned modules keep owned-concern docblocks;
 - protected-runtime auth refresh stays inside the API client component;

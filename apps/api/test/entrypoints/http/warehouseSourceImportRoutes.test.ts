@@ -195,7 +195,9 @@ function buildApp(
           schema: 'erp',
           table: 'orders',
           rowCount: 42,
-          columns: [{ name: 'id', type: 'number', nullable: false }],
+          columns: [
+            { name: 'id', type: 'number', nullable: false, primaryKey: true, unique: true },
+          ],
         },
       ],
     },
@@ -505,7 +507,7 @@ describe('warehouseSourceImportRoutes', () => {
         schema: 'erp',
         table: 'orders',
         rowCount: 42,
-        columns: [{ name: 'id', type: 'number', nullable: false }],
+        columns: [{ name: 'id', type: 'number', nullable: false, primaryKey: true, unique: true }],
       },
     ]);
   });
@@ -592,7 +594,9 @@ describe('warehouseSourceImportRoutes', () => {
           nodes: [
             expect.objectContaining({
               metadata: expect.objectContaining({
-                columns: [{ name: 'id', type: 'number', nullable: false }],
+                columns: [
+                  { name: 'id', type: 'number', nullable: false, primaryKey: true, unique: true },
+                ],
               }),
             }),
           ],

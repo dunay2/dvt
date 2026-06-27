@@ -6,6 +6,7 @@ export type SourceImportColumnViewModel = Readonly<{
   name: string;
   type: string;
   nullabilityLabel: 'Nullable' | 'Required';
+  constraintLabels: readonly string[];
 }>;
 
 export type SourceImportTableViewModel = Readonly<{
@@ -90,11 +91,21 @@ export function buildSourceImportTableViewModel(
     columnCountLabel,
     selected: table.selected,
     columns:
-      table.columns?.map((column) => ({
-        name: column.name,
-        type: column.type,
-        nullabilityLabel: formatSourceImportNullability(column.nullable),
-      })) ?? [],
+      table.columns?.map((column) => {
+        const nullabilityLabel = formatSourceImportNullability(column.nullable);
+        const constraintLabels = [
+          ...(column.primaryKey === true ? ['Primary key'] : []),
+          ...(column.unique === true ? ['Unique'] : []),
+          nullabilityLabel,
+        ];
+
+        return {
+          name: column.name,
+          type: column.type,
+          nullabilityLabel,
+          constraintLabels,
+        };
+      }) ?? [],
   };
 }
 
