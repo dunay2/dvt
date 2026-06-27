@@ -1,10 +1,10 @@
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export const canvasViewExecutionCopyEs = {
-  planPermissionDeniedMessage: 'No tienes permisos para crear planes',
+  planPermissionDeniedMessage: 'No tienes permisos para crear Execution Previews',
   planSqlArtifactRequiredMessage:
-    'La provenance del preview debe resolver el artefacto SQL antes de crear un plan persistido.',
-  planUnableToCreateMessage: 'No se ha podido crear el plan de ejecucion',
+    'La provenance del preview debe resolver el artefacto SQL antes de crear un Execution Preview persistido.',
+  planUnableToCreateMessage: 'No se ha podido crear el Execution Preview',
   previewProvenanceTransformPathRequiredMessage:
     'Execution Preview necesita contenido SQL. Selecciona un fichero SQL del workspace para el SQL transform o usa un transform creado en el canvas para que DVT lo cree.',
   previewProvenanceWorkspaceNotConfiguredMessage:
@@ -14,14 +14,13 @@ export const canvasViewExecutionCopyEs = {
   previewProvenanceWorkspaceFilesUnavailableMessage:
     'No se ha podido resolver la provenance del preview a partir de los ficheros del workspace.',
   runPermissionDeniedMessage: 'No tienes permisos para arrancar runs',
-  runNoPlanMessage:
-    'No hay un plan de ejecucion disponible: previsualiza el plan de ejecucion antes.',
+  runNoPlanMessage: 'No hay un Execution Preview disponible: previsualiza la ejecucion antes.',
   runPreviewStaleMessage:
-    'Execution Preview esta obsoleto. Previsualiza el plan de ejecucion otra vez antes de arrancar.',
+    'Execution Preview esta obsoleto. Previsualiza la ejecucion otra vez antes de arrancar.',
   runPlanRefUnavailableMessage:
     'La referencia del Execution Preview no esta disponible para este modo',
   runPersistedPreviewRequiredMessage:
-    'El arranque del run requiere un Execution Preview persistido y vinculado a la referencia de plan actual. Previsualiza el plan de ejecucion otra vez primero.',
+    'El arranque del run requiere un Execution Preview persistido y vinculado a la referencia de Execution Preview actual. Previsualiza la ejecucion otra vez primero.',
   runFailedMessage: 'No se ha podido arrancar el run',
   canvasExecutionUnavailableMessage:
     'Execution Preview y el arranque de run no estan disponibles para este tipo de canvas.',
@@ -30,8 +29,8 @@ export const canvasViewExecutionCopyEs = {
   planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',
   planStatusPreviewRequiredMessage: 'Se requiere un preview antes de arrancar.',
   planStatusPreviewNotAlignedMessage:
-    'Execution Preview no esta alineado con la referencia de plan activa. Previsualiza el plan de ejecucion otra vez antes de arrancar.',
+    'Execution Preview no esta alineado con la referencia de Execution Preview activa. Previsualiza la ejecucion otra vez antes de arrancar.',
   planStatusPreviewNotPersistedMessage:
-    'Execution Preview no esta persistido. Previsualiza el plan de ejecucion para crear un preview persistido.',
+    'Execution Preview no esta persistido. Previsualiza la ejecucion para crear un preview persistido.',
   planStatusPreviewReadyMessage: 'El preview actual esta listo para arrancar.',
 } satisfies Partial<CanvasViewCopy>;
