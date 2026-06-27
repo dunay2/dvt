@@ -47,7 +47,6 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'canCreateCanvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
-    | 'canvasTabState'
     | 'effectiveUserPermissions'
     | 'readOnlyState'
   >;

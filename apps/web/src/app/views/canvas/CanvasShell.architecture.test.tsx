@@ -135,8 +135,12 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDbtFlowGuide');
     expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('CanvasPlaygroundTabStrip');
     expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('hostTabStrip:');
+    expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('hostTabState:');
+    expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('routePresentation.canvasTabState');
     expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('hostTabStrip?:');
     expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('workbenchTabStrip?:');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('CanvasPlaygroundTabState');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('hostTabState:');
   });
 
   it('names execution-preview commands by product intent instead of legacy plan chrome', () => {

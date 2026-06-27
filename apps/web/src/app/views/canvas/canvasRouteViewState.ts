@@ -30,7 +30,6 @@ export type CanvasRouteViewState = {
   canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   draftSaveStatus: CanvasController['draftSaveStatus'];
   availableCanvasKinds: CanvasRouteInteractionState['availableCanvasKinds'];
-  canvasTabState: CanvasRouteInteractionState['canvasTabState'];
   effectiveUserPermissions: CanvasRouteInteractionState['effectiveUserPermissions'];
   readOnlyState: CanvasRouteInteractionState['readOnlyState'];
   presentationState: CanvasDraftPresentationState;
@@ -59,7 +58,6 @@ export function deriveCanvasRouteViewState(controller: CanvasController): Canvas
     canCreateCanvasDocument: controller.canCreateCanvasDocument,
     draftSaveStatus: controller.draftSaveStatus,
     availableCanvasKinds: interactionState.availableCanvasKinds,
-    canvasTabState: interactionState.canvasTabState,
     effectiveUserPermissions: interactionState.effectiveUserPermissions,
     readOnlyState: interactionState.readOnlyState,
     presentationState,

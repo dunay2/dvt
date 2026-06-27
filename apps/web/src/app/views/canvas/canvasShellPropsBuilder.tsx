@@ -60,7 +60,6 @@ function buildCanvasShellLayoutArgs({
       canCreateCanvasDocument: routeViewState.canCreateCanvasDocument,
       draftSaveStatus: routeViewState.draftSaveStatus,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
-      canvasTabState: routeViewState.canvasTabState,
       effectiveUserPermissions: routeViewState.effectiveUserPermissions,
       readOnlyState: routeViewState.readOnlyState,
     },

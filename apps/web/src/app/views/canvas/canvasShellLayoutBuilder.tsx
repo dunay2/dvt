@@ -69,7 +69,6 @@ export function buildCanvasShellLayout({
     inspectorPanelVisible: layoutState.inspectorPanelVisible,
     canOpenSourceImport: layoutState.canOpenSourceImport,
     surfaceStrategy: layoutState.canvasSurfaceStrategy,
-    hostTabState: routePresentation.canvasTabState,
     centerSurfaceMode,
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,

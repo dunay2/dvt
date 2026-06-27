@@ -48,22 +48,7 @@ describe('CanvasShell graph base surface', () => {
   });
 
   it('keeps host-owned tab chrome out of the graph base panel', async () => {
-    await renderShell({
-      layout: {
-        hostTabState: {
-          activeTabId: 'workspace-draft-canvas',
-          tabs: [
-            {
-              id: 'workspace-draft-canvas',
-              title: 'Transformation canvas',
-              kind: 'transformation',
-              kindLabel: 'Transformation',
-              source: 'workspace_draft',
-            },
-          ],
-        },
-      },
-    });
+    await renderShell();
 
     expect(container.querySelector('[data-testid="canvas-host-tab-strip"]')).toBeNull();
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
