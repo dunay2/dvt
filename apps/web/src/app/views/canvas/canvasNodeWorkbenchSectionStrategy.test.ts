@@ -13,7 +13,7 @@ describe('canvasNodeWorkbenchSectionStrategy', () => {
         'preview',
         'runs',
       ])
-    ).toEqual(['general', 'columns', 'code']);
+    ).toEqual(['general', 'columns', 'code', 'sink']);
 
     expect(
       resolveNodeWorkbenchPrimarySectionIds([

@@ -7,6 +7,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
+import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
 import {
   CanvasNodeWorkbenchPanel,
@@ -114,6 +116,26 @@ const DVT_TRANSFORM_NODE: CanonicalNode = {
   },
 };
 
+const DVT_SINK_NODE: CanonicalNode = {
+  id: 'sink.orders',
+  name: 'Orders Sink',
+  pluginId: 'dvt',
+  kind: 'dvt:sink',
+  role: 'output',
+  status: 'idle',
+  tags: [],
+  metadata: {
+    config: {
+      database: 'analytics',
+      schema: 'mart',
+      table: 'fct_orders',
+      materialization: 'table',
+      writeMode: 'replace',
+      partitionStrategy: 'date_day',
+    },
+  },
+};
+
 const EDGES: readonly CanonicalEdge[] = [
   {
     id: 'edge-source-model',
@@ -135,13 +157,14 @@ function renderNodePanel(
     canEditNode: true,
     onApplyNodeDraft: vi.fn(),
   },
-  preferredTabRequestId = 1
+  preferredTabRequestId = 1,
+  primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[]
 ): void {
   act(() => {
     root.render(
       <CanvasNodeWorkbenchPanel
         node={node}
-        nodes={[SOURCE_NODE, MODEL_NODE, CONNECTED_TEST_NODE, DVT_TRANSFORM_NODE]}
+        nodes={[SOURCE_NODE, MODEL_NODE, CONNECTED_TEST_NODE, DVT_TRANSFORM_NODE, DVT_SINK_NODE]}
         edges={[
           ...EDGES,
           {
@@ -161,6 +184,7 @@ function renderNodePanel(
         registeredPlugins={new Set()}
         preferredTabId={preferredTabId}
         preferredTabRequestId={preferredTabRequestId}
+        primarySectionIds={primarySectionIds}
         authoring={authoring}
         onClose={vi.fn()}
       />
@@ -318,6 +342,46 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(sqlEditor).not.toBeNull();
     expect(sqlEditor?.value).toBe('select order_id from source.orders');
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
+  });
+
+  it('renders DVT sink target editing in a dedicated Sink tab without duplicating it in General', () => {
+    renderNodePanel(
+      root,
+      DVT_SINK_NODE,
+      'general',
+      {
+        canEditNode: true,
+        onApplyNodeDraft: vi.fn(),
+      },
+      1,
+      dvtCanvasSurfaceStrategy.nodeWorkbench.sections
+    );
+
+    const generalSection = container.querySelector(
+      '[data-slot="canvas-node-workbench-general-section"]'
+    );
+    expect(generalSection?.querySelector('input[name="dvt-sink-table"]')).toBeNull();
+
+    renderNodePanel(
+      root,
+      DVT_SINK_NODE,
+      'sink',
+      {
+        canEditNode: true,
+        onApplyNodeDraft: vi.fn(),
+      },
+      2,
+      dvtCanvasSurfaceStrategy.nodeWorkbench.sections
+    );
+
+    const tabsList = container.querySelector('[data-slot="canvas-node-workbench-tabs-list"]');
+    const sinkSection = container.querySelector('[data-slot="canvas-node-workbench-sink-section"]');
+
+    expect(tabsList?.textContent).toContain('Sink');
+    expect(sinkSection?.textContent).toContain('analytics.mart.fct_orders');
+    expect(sinkSection?.textContent).toContain('replace');
+    expect(sinkSection?.querySelector('input[name="dvt-sink-table"]')).not.toBeNull();
+    expect(sinkSection?.querySelector('select[name="dvt-sink-write-mode"]')).not.toBeNull();
   });
 
   it('preserves one DVT transform authoring draft across workbench section switches', () => {

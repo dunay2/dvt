@@ -13,6 +13,7 @@ export type NodePropertySectionId =
   | 'foreign-keys'
   | 'constraints'
   | 'comments'
+  | 'sink'
   | 'code'
   | 'summary';
 
@@ -209,6 +210,45 @@ function buildGeneralRows(
   if (node.lastCost != null) {
     addRow(rows, 'Cost', `$${node.lastCost.toFixed(2)}`);
   }
+
+  return rows;
+}
+
+function buildSinkRows(node: CanonicalNode, metadata: Record<string, unknown>): NodePropertyRow[] {
+  if (node.kind !== 'dvt:sink') {
+    return [];
+  }
+
+  const config = asRecord(metadata.config);
+  const database = readFirstString(config.database, metadata.database);
+  const schema = readFirstString(config.schema, metadata.schema);
+  const table = readFirstString(config.table, metadata.tableName);
+  const rows: NodePropertyRow[] = [];
+
+  addRow(
+    rows,
+    'Destination',
+    [database, schema, table]
+      .flatMap((part): readonly string[] => {
+        const value = readString(part);
+        return value == null ? [] : [value];
+      })
+      .join('.')
+  );
+  addRow(rows, 'Database', database);
+  addRow(rows, 'Schema', schema);
+  addRow(rows, 'Table', table);
+  addRow(
+    rows,
+    'Materialization',
+    readFirstString(config.materialization, config.materialized, metadata.materialization)
+  );
+  addRow(rows, 'Write mode', readFirstString(config.writeMode, metadata.writeMode));
+  addRow(
+    rows,
+    'Partition strategy',
+    readFirstString(config.partitionStrategy, metadata.partitionStrategy)
+  );
 
   return rows;
 }
@@ -492,6 +532,7 @@ export function buildNodePropertiesReadModel({
   const constraintRows = buildConstraintRows(metadata);
   const inputsOutputsRows = buildInputsOutputsRows(node, nodes, edges);
   const testRows = buildDbtTestRows({ node, metadata, nodes, edges });
+  const sinkRows = buildSinkRows(node, metadata);
   const code =
     readString(metadata.compiledSql) ?? readString(metadata.sql) ?? readString(config.sql);
 
@@ -565,6 +606,19 @@ export function buildNodePropertiesReadModel({
             ? 'No comments are recorded for this node.'
             : undefined,
       }),
+      ...(node.kind === 'dvt:sink'
+        ? [
+            createSection({
+              id: 'sink',
+              label: 'Sink',
+              rows: sinkRows,
+              emptyState:
+                sinkRows.length === 0
+                  ? 'No sink target or write policy is recorded for this node.'
+                  : undefined,
+            }),
+          ]
+        : []),
       createSection({
         id: 'code',
         label: 'Code',
