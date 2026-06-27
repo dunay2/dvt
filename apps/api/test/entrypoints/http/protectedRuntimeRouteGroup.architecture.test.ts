@@ -187,4 +187,11 @@ describe('protected runtime route group architecture', () => {
     expect(docText).toContain('`POST /runs/:runId/cancel` is the canonical cancel command route');
     expect(docText).toContain('No protected runtime rail accepts legacy behavior as canonical');
   });
+
+  it('uses execution preview vocabulary for protected plan preview rail names', () => {
+    const railNames = PROTECTED_RUNTIME_COMMAND_QUERY_RAILS.map((rail) => rail.name);
+
+    expect(railNames).toContain('PreviewExecutionPlan');
+    expect(railNames).not.toContain('PreviewExecutablePlan');
+  });
 });

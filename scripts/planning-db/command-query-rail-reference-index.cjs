@@ -2,6 +2,7 @@
 function createCommandQueryRailReferenceIndexComponent(deps = {}) {
   const shared = deps.shared || require('./command-query-rail-shared.cjs');
   const {
+    canonicalizeRailName,
     extractSpecificRailNamesFromText,
     isCommandQueryRailGap,
     normalizeArray,
@@ -11,12 +12,12 @@ function createCommandQueryRailReferenceIndexComponent(deps = {}) {
   } = shared;
 
   function symbolReferencesForRail(manifest, railName) {
-    const normalizedRailName = normalizeRailName(railName);
+    const normalizedRailName = normalizeRailName(canonicalizeRailName(railName));
 
     return normalizeArray(manifest.symbols)
       .filter((symbol) =>
         normalizeArray(symbol?.cqRails).some(
-          (cqRail) => normalizeRailName(cqRail) === normalizedRailName
+          (cqRail) => normalizeRailName(canonicalizeRailName(cqRail)) === normalizedRailName
         )
       )
       .map((symbol) => ({

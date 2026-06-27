@@ -347,7 +347,7 @@ test('real frontend component inventory maps Canvas contextual UX components wit
   );
 });
 
-test('real frontend component inventory keeps execution preview out of fixed canvas chrome', () => {
+test('real frontend component inventory uses canonical execution preview rail vocabulary', () => {
   const snapshot = buildFrontendComponentReflectionSnapshot();
   const chromeRails = snapshot.rails
     .filter((rail) => rail.componentId === 'web.component.canvas.CanvasShellChrome')
@@ -358,12 +358,16 @@ test('real frontend component inventory keeps execution preview out of fixed can
 
   assert.ok(
     !chromeRails.includes('PreviewExecutablePlan'),
-    'CanvasShellChrome must not own PreviewExecutablePlan after preview moved to the canvas context menu'
+    'CanvasShellChrome must not own the legacy PreviewExecutablePlan alias'
   );
   assert.ok(chromeRails.includes('ObservePlanRunReadiness'));
   assert.ok(
-    contextMenuRails.includes('PreviewExecutablePlan'),
-    'CanvasContextMenu must own PreviewExecutablePlan as the spatial canvas action'
+    !contextMenuRails.includes('PreviewExecutablePlan'),
+    'CanvasContextMenu must not expose the legacy PreviewExecutablePlan alias'
+  );
+  assert.ok(
+    contextMenuRails.includes('PreviewExecutionPlan'),
+    'CanvasContextMenu must own PreviewExecutionPlan as the spatial canvas action'
   );
 });
 

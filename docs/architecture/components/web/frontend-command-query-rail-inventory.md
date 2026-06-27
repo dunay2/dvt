@@ -332,7 +332,7 @@ credentials, or define backend template contracts.
 
 ## Plan Rails
 
-### `PreviewExecutablePlan`
+### `PreviewExecutionPlan`
 
 - Type: command.
 - Status: `implemented-api`.
