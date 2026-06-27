@@ -192,7 +192,8 @@ export function useCanvasContextMenuPresenter({
         event.target === document &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
         Date.now() - lastContextMenuOpenedAtRef.current <
-          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS;
+          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS &&
+        isNearPosition(event, lastPaneContextMenuScreenPositionRef.current);
       const isPendingImmediatePanePointerEcho =
         pendingPaneClickEchoRef.current &&
         event instanceof MouseEvent &&
