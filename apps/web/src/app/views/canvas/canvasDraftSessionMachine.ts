@@ -32,6 +32,7 @@ function transition(
     workingSet,
     draftRevision: record?.revision ?? null,
     savingWorkingSet: undefined,
+    savingBaseRevision: undefined,
     localNodeCatalog,
   };
 }
@@ -72,6 +73,7 @@ function markSaving(session: CanvasDraftSession): CanvasDraftSession {
     ...session,
     syncState: 'saving',
     savingWorkingSet: session.workingSet,
+    savingBaseRevision: session.draftRevision,
   };
 }
 
@@ -101,6 +103,21 @@ function applySaveSuccess(
   session: CanvasDraftSession,
   record: CanvasAuthoringDraftRecord
 ): CanvasDraftSession {
+  const saveBaseWasSuperseded =
+    session.savingWorkingSet != null &&
+    session.savingBaseRevision !== undefined &&
+    session.savingBaseRevision !== session.draftRevision &&
+    record.revision !== session.draftRevision;
+
+  if (saveBaseWasSuperseded) {
+    return {
+      ...session,
+      syncState: 'editing',
+      savingWorkingSet: undefined,
+      savingBaseRevision: undefined,
+    };
+  }
+
   const persistedWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
   const hasEditsWhileSaving =
     session.savingWorkingSet != null &&
@@ -156,7 +173,8 @@ function adoptExternalRevision(
   return {
     ...session,
     draftRevision,
-    savingWorkingSet: undefined,
+    savingWorkingSet: session.syncState === 'saving' ? session.savingWorkingSet : undefined,
+    savingBaseRevision: session.syncState === 'saving' ? session.savingBaseRevision : undefined,
     syncState: session.syncState === 'conflict' ? 'editing' : session.syncState,
   };
 }

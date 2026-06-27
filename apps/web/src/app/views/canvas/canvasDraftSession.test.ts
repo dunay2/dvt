@@ -286,6 +286,63 @@ describe('canvasDraftSession', () => {
     expect(session.savingWorkingSet).toBeUndefined();
   });
 
+  it('keeps imported working set when an older in-flight save resolves after an external revision', () => {
+    const savingSession = canvasDraftSession.machine.markSaving(
+      canvasDraftSession.machine.bootstrap({
+        remoteDraft: buildRemoteDraftRecord({
+          revision: 'rev-before-import',
+          draft: buildAuthoringDraft({
+            canvas: {
+              kind: 'transformation',
+              title: 'Main canvas',
+            },
+            nodeIds: ['node_1'],
+            nodePositions: {
+              node_1: { x: 0, y: 0 },
+            },
+            edges: [],
+          }),
+        }),
+        canonicalNodeIds: ['node_1'],
+        canonicalEdges: [],
+      })
+    );
+    const importedSession = canvasDraftSession.workingSet.queueExplicitNodeIds(savingSession, [
+      'node_imported',
+    ]);
+    const adoptedSession = canvasDraftSession.machine.adoptExternalRevision(
+      importedSession,
+      'rev-imported'
+    );
+
+    const session = canvasDraftSession.machine.applySaveSuccess(
+      adoptedSession,
+      buildRemoteDraftRecord({
+        revision: 'rev-stale-save',
+        draft: buildAuthoringDraft({
+          canvas: {
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
+          nodeIds: ['node_1'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+          },
+          edges: [],
+        }),
+      })
+    );
+
+    expect(session.syncState).toBe('editing');
+    expect(session.draftRevision).toBe('rev-imported');
+    expect(session.workingSet).toEqual({
+      visibleNodeIds: ['node_1'],
+      visibleEdges: [],
+      pendingExplicitNodeIds: ['node_imported'],
+    });
+    expect(session.savingWorkingSet).toBeUndefined();
+  });
+
   it('promotes a successful save into the new editing baseline', () => {
     const session = canvasDraftSession.machine.applySaveSuccess(
       canvasDraftSession.machine.markSaving(
