@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { CanvasDraftSession } from './canvasDraftSession';
 import { useCanvasSourceImportHandlers } from './useCanvasSourceImportHandlers';
 
 type LatestHook = ReturnType<typeof useCanvasSourceImportHandlers> | null;
@@ -129,5 +130,29 @@ describe('useCanvasSourceImportHandlers', () => {
     expect(harness.spies.invalidateInFlightSaveAttempt.mock.invocationCallOrder[0]).toBeLessThan(
       harness.spies.setDraftSession.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY
     );
+    const sessionUpdater = harness.spies.setDraftSession.mock.calls[0]?.[0] as
+      | ((currentSession: CanvasDraftSession) => CanvasDraftSession)
+      | undefined;
+    const session = sessionUpdater?.({
+      syncState: 'saving',
+      baseline: { record: null },
+      draftRevision: 'rev-before-import',
+      workingSet: {
+        visibleNodeIds: ['node_1'],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+      savingBaseRevision: 'rev-before-import',
+      savingWorkingSet: {
+        visibleNodeIds: ['node_1'],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    });
+
+    expect(session?.syncState).toBe('editing');
+    expect(session?.draftRevision).toBe('rev-imported');
+    expect(session?.savingBaseRevision).toBeUndefined();
+    expect(session?.savingWorkingSet).toBeUndefined();
   });
 });
