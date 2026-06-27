@@ -173,9 +173,12 @@ function adoptExternalRevision(
   return {
     ...session,
     draftRevision,
-    savingWorkingSet: session.syncState === 'saving' ? session.savingWorkingSet : undefined,
-    savingBaseRevision: session.syncState === 'saving' ? session.savingBaseRevision : undefined,
-    syncState: session.syncState === 'conflict' ? 'editing' : session.syncState,
+    savingWorkingSet: undefined,
+    savingBaseRevision: undefined,
+    syncState:
+      session.syncState === 'conflict' || session.syncState === 'saving'
+        ? 'editing'
+        : session.syncState,
   };
 }
 

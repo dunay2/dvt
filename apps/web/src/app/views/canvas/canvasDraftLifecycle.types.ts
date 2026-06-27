@@ -135,6 +135,7 @@ export type CanvasDraftLifecycleDto = {
 
 export type CanvasDraftLifecycle = {
   draftSaveStatus: DraftSaveStatus;
+  invalidateInFlightSaveAttempt: () => void;
   flushDraftForExecution: () => Promise<
     | {
         ok: true;

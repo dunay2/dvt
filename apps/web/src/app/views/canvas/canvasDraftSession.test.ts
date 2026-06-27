@@ -286,7 +286,7 @@ describe('canvasDraftSession', () => {
     expect(session.savingWorkingSet).toBeUndefined();
   });
 
-  it('keeps imported working set when an older in-flight save resolves after an external revision', () => {
+  it('adopts an external revision as editing state while preserving the imported working set', () => {
     const savingSession = canvasDraftSession.machine.markSaving(
       canvasDraftSession.machine.bootstrap({
         remoteDraft: buildRemoteDraftRecord({
@@ -315,32 +315,15 @@ describe('canvasDraftSession', () => {
       'rev-imported'
     );
 
-    const session = canvasDraftSession.machine.applySaveSuccess(
-      adoptedSession,
-      buildRemoteDraftRecord({
-        revision: 'rev-stale-save',
-        draft: buildAuthoringDraft({
-          canvas: {
-            kind: 'transformation',
-            title: 'Main canvas',
-          },
-          nodeIds: ['node_1'],
-          nodePositions: {
-            node_1: { x: 0, y: 0 },
-          },
-          edges: [],
-        }),
-      })
-    );
-
-    expect(session.syncState).toBe('editing');
-    expect(session.draftRevision).toBe('rev-imported');
-    expect(session.workingSet).toEqual({
+    expect(adoptedSession.syncState).toBe('editing');
+    expect(adoptedSession.draftRevision).toBe('rev-imported');
+    expect(adoptedSession.workingSet).toEqual({
       visibleNodeIds: ['node_1'],
       visibleEdges: [],
       pendingExplicitNodeIds: ['node_imported'],
     });
-    expect(session.savingWorkingSet).toBeUndefined();
+    expect(adoptedSession.savingBaseRevision).toBeUndefined();
+    expect(adoptedSession.savingWorkingSet).toBeUndefined();
   });
 
   it('promotes a successful save into the new editing baseline', () => {

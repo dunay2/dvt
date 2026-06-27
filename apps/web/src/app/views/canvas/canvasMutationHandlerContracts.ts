@@ -35,6 +35,7 @@ export type CanvasMutationEffects = {
   showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
+  invalidateInFlightSaveAttempt: () => void;
 };
 
 export type CanvasMutationPolicy = {
@@ -107,6 +108,7 @@ export type CanvasSourceImportEffects = {
   showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
+  invalidateInFlightSaveAttempt: () => void;
 };
 
 export type CanvasSourceImportState = {
