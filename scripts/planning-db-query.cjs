@@ -271,6 +271,8 @@ const governanceProjectionQueryNames = new Set([
   'documentation-lifecycle',
   'documentation-panels',
   'mandatory-proposal-gaps',
+  'canvas-cq-rail-drift',
+  'canvas-component-registry-drift',
 ]);
 const taskIdCommonFilterQueryNames = new Set([
   'tasks',
@@ -279,7 +281,6 @@ const taskIdCommonFilterQueryNames = new Set([
   'task-trace',
   'task-gaps',
   'canvas-cq-rail-drift',
-  'canvas-component-registry-drift',
   'canvas-uxdb-specification',
   'canvas-uxdb-traceability',
   'focus',
@@ -5314,4 +5315,5 @@ module.exports = {
   readTaskReferenceRows,
   resolveQueryName,
   runQuery,
+  usesGovernanceProjection,
 };
