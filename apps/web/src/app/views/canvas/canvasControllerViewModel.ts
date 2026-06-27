@@ -205,7 +205,7 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
   } = args;
 
   return {
-    handlePlan: executionActions.handlePlan,
+    handlePreviewExecutionPlan: executionActions.handlePreviewExecutionPlan,
     handleStartRun: executionActions.handleStartRun,
     canPlanGraph: executionActions.canPlanGraph,
     canStartRun: executionActions.canStartRun && runtimePolicy.commands.canRun,

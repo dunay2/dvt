@@ -114,7 +114,7 @@ export default function CanvasShell({
     onOpenProjectExplorer: () => setProjectExplorerOpen(true),
     onOpenProjectCode: () => setContextualWorkbenchId('project-code'),
     onValidateGraph: revealValidationProblems,
-    onPreviewExecutionPlan: chromeCommands.onPlan,
+    onPreviewExecutionPlan: chromeCommands.onPreviewExecutionPlan,
     onOpenCanvasSettings: () => setCanvasSettingsOpen(true),
   });
 
@@ -129,7 +129,7 @@ export default function CanvasShell({
           policy={layout.surfaceStrategy.operationalDrawer}
           panels={panels}
           chromeState={chromeState}
-          onPreviewExecutionPlan={chromeCommands.onPlan}
+          onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
           onStartRun={chromeCommands.onRun}
         />
       )}

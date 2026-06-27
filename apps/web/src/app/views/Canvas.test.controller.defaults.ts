@@ -301,7 +301,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'setCanvasGridColor'
   | 'setCanvasSnapToGrid'
   | 'setCanvasEmptyStateGuideVisible'
-  | 'handlePlan'
+  | 'handlePreviewExecutionPlan'
   | 'handleStartRun'
   | 'reloadLatestDraft'
   | 'setPlanModalOpen'
@@ -345,7 +345,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     setCanvasGridColor: vi.fn(),
     setCanvasSnapToGrid: vi.fn(),
     setCanvasEmptyStateGuideVisible: vi.fn(),
-    handlePlan: vi.fn(),
+    handlePreviewExecutionPlan: vi.fn(),
     handleStartRun: vi.fn(),
     reloadLatestDraft: vi.fn(),
     setPlanModalOpen: vi.fn(),

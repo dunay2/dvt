@@ -121,7 +121,9 @@ describe('useCanvasController core', () => {
     );
     expect(result?.registeredPlugins?.has('dbt')).toBe(true);
     expect(result?.registeredPlugins?.has('monitoring')).toBe(true);
-    expect(result?.handlePlan).toBe(harness.state.executionActionsResult.handlePlan);
+    expect(result?.handlePreviewExecutionPlan).toBe(
+      harness.state.executionActionsResult.handlePreviewExecutionPlan
+    );
     expect(result?.handleStartRun).toBe(harness.state.executionActionsResult.handleStartRun);
     expect(result?.canStartRun).toBe(false);
     expect(result?.canEditInspectorNode).toBe(true);

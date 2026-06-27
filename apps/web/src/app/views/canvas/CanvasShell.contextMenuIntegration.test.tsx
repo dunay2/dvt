@@ -120,11 +120,11 @@ describe('CanvasShell context menu integration', () => {
   });
 
   it('routes canvas validation to the operational drawer without previewing execution', async () => {
-    const onPlan = vi.fn();
+    const onPreviewExecutionPlan = vi.fn();
     useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });
 
     await renderShell({
-      chromeCommands: { onPlan },
+      chromeCommands: { onPreviewExecutionPlan },
       chromeState: { canPlanGraph: true },
     });
     const presenter = getContextMenuPresenter();
@@ -136,7 +136,7 @@ describe('CanvasShell context menu integration', () => {
       });
     });
 
-    expect(onPlan).not.toHaveBeenCalled();
+    expect(onPreviewExecutionPlan).not.toHaveBeenCalled();
     expect(useUiLayoutStore.getState()).toMatchObject({
       bottomDrawerHeight: 160,
       bottomDrawerVisible: true,

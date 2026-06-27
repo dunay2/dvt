@@ -106,7 +106,7 @@ function CanvasShellViewport({
 > &
   Readonly<{
     canPreviewExecutionPlan: boolean;
-    onPreviewExecutionPlan: CanvasShellChromeCommands['onPlan'];
+    onPreviewExecutionPlan: CanvasShellChromeCommands['onPreviewExecutionPlan'];
   }>): JSX.Element {
   const handleNodeClick: CanvasShellGraphCommands['onNodeClick'] = (event, node) => {
     graphCommands.onNodeClick(event, node);
@@ -199,7 +199,7 @@ function CanvasShellMainSurface({
       onOpenProjectCode={onOpenProjectCode}
       onOpenCanvasSettings={onOpenCanvasSettings}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
-      onPreviewExecutionPlan={chromeCommands.onPlan}
+      onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
       contextMenuPresenter={contextMenuPresenter}
     />
   );
