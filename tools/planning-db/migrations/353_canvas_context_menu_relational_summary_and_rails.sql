@@ -115,6 +115,79 @@ values (
     'featureId', 'CANVAS-CONTEXT-MENU-SHELL-LAYER-20260625',
     'mechanizationStatus', 'implemented',
     'noHumanDecisionsRemaining', true,
+    'implementationPlan',
+    'Reconcile the Canvas context-menu host read model so RenderCanvasContextMenu is a canonical query rail, context actions resolve canonical rails, and edge context ownership remains semantic until dedicated edge source files exist.',
+    'componentGuides', jsonb_build_array(
+      'web.component.canvas.CanvasContextMenu',
+      'web.component.canvas.CanvasEdgeContextMenu'
+    ),
+    'userStories', jsonb_build_array(
+      jsonb_build_object(
+        'role', 'Canvas author',
+        'need', 'Use the right-click Canvas menu through one governed context-menu host.',
+        'acceptance', 'The host render action is visible as RenderCanvasContextMenu in the canonical rail query.'
+      ),
+      jsonb_build_object(
+        'role', 'Frontend maintainer',
+        'need', 'Understand why EdgeContextMenu has no owned source files.',
+        'acceptance', 'The component summary reports semantic-context-no-owned-files and fileCountZeroIsValid.'
+      )
+    ),
+    'governingSources', jsonb_build_array(
+      'AGENTS.md',
+      'docs/planning/status/governance-document-rule-inventory.md',
+      'docs/guides/ai-work-protocol.md',
+      'docs/architecture/command-query-rail-governance.md',
+      'docs/architecture/fowler-opportunity-planning-governance.md'
+    ),
+    'allowedImplementationSurfaces', jsonb_build_array(
+      'scripts/planning-db-migrate.test.cjs',
+      'tools/planning-db/migrations/353_canvas_context_menu_relational_summary_and_rails.sql'
+    ),
+    'forbiddenImplementationSurfaces', jsonb_build_array(
+      'apps/web/src/app/views/canvas/**#new_behavior',
+      'apps/web/cypress/e2e/**#fake_contextmenu_success',
+      'packages/@dvt/contracts/**'
+    ),
+    'domainObjects', jsonb_build_array(
+      'CanvasContextMenuLayer',
+      'CanvasContextMenuSurface',
+      'CanvasEdgeContextMenu'
+    ),
+    'fowlerSignals', jsonb_build_array(
+      'responsibility_overload',
+      'duplicate_semantics',
+      'documentation_drift'
+    ),
+    'architectureGuards', jsonb_build_array(
+      'node --test --test-name-pattern "tracked migrations reconcile Canvas context menu summary and canonical rails relationally" scripts/planning-db-migrate.test.cjs',
+      'pnpm planning:db:integrity:check',
+      'pnpm docs:feature-mechanization:implementation'
+    ),
+    'cypressFlows', jsonb_build_array(
+      'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts'
+    ),
+    'completionGate', jsonb_build_array(
+      'node --test scripts/planning-db-migrate.test.cjs',
+      'pnpm planning:db:migrate',
+      'pnpm planning:db:integrity:check',
+      'pnpm verify:prepush'
+    ),
+    'redGreenCycles', jsonb_build_array(
+      jsonb_build_object(
+        'id', 'canvas-context-menu-relational-summary-and-canonical-rails',
+        'redTest',
+        'node --test --test-name-pattern "tracked migrations reconcile Canvas context menu summary and canonical rails relationally" scripts/planning-db-migrate.test.cjs',
+        'expectedFailure',
+        'The migration test failed while migration 353 was absent.',
+        'patchSurfaces', jsonb_build_array(
+          'scripts/planning-db-migrate.test.cjs',
+          'tools/planning-db/migrations/353_canvas_context_menu_relational_summary_and_rails.sql'
+        ),
+        'greenTest',
+        'node --test --test-name-pattern "tracked migrations reconcile Canvas context menu summary and canonical rails relationally" scripts/planning-db-migrate.test.cjs'
+      )
+    ),
     'commandQueryRails', jsonb_build_array(
       jsonb_build_object(
         'name', 'RenderCanvasContextMenu',
@@ -128,13 +201,31 @@ values (
         'name', 'CanvasContextMenuLayer',
         'path', 'apps/web/src/app/views/canvas/CanvasContextMenuLayer.tsx',
         'dddOwner', 'CanvasContextMenuLayer',
-        'cqRails', jsonb_build_array('RenderCanvasContextMenu')
+        'cqRails', jsonb_build_array('RenderCanvasContextMenu'),
+        'fowlerSignals', jsonb_build_array('responsibility_overload', 'duplicate_semantics'),
+        'architectureGuard',
+        'apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx',
+        'cypressCoverage',
+        'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
+        'unitTests', jsonb_build_array(
+          'apps/web/src/app/views/canvas/CanvasShell.contextMenuIntegration.test.tsx',
+          'scripts/planning-db-migrate.test.cjs'
+        )
       ),
       jsonb_build_object(
         'name', 'CanvasContextMenuSurface',
         'path', 'apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx',
         'dddOwner', 'CanvasContextMenuLayer',
-        'cqRails', jsonb_build_array('RenderCanvasContextMenu')
+        'cqRails', jsonb_build_array('RenderCanvasContextMenu'),
+        'fowlerSignals', jsonb_build_array('responsibility_overload', 'duplicate_semantics'),
+        'architectureGuard',
+        'apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx',
+        'cypressCoverage',
+        'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
+        'unitTests', jsonb_build_array(
+          'apps/web/src/app/views/canvas/canvasContextMenuViewModel.test.ts',
+          'scripts/planning-db-migrate.test.cjs'
+        )
       )
     )
   ),
