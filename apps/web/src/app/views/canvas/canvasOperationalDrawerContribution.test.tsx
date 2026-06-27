@@ -37,13 +37,13 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       expect.objectContaining({
         id: 'plan_integrity',
         severity: 'warning',
-        detail: 'plan_integrity',
+        detail: 'Execution Preview integrity',
         action: expect.objectContaining({ label: 'Preview execution plan' }),
       }),
       expect.objectContaining({
         id: 'backpressure',
         severity: 'warning',
-        detail: 'backpressure',
+        detail: 'Backpressure',
         action: null,
       }),
     ]);
@@ -55,7 +55,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     });
     expect(contribution.preview).toMatchObject({
       status: 'blocked',
-      blockers: ['plan_integrity', 'backpressure'],
+      blockers: ['Execution Preview integrity', 'Backpressure'],
       canPreview: true,
     });
   });

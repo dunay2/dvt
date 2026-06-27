@@ -5,6 +5,7 @@ import type {
   OperationalDrawerTabId,
 } from '../../components/shell/operationalDrawerContributionStore';
 import type { CanvasOperationalDrawerSurfacePolicy } from '../../plugins/canvasSurfaceStrategyContracts';
+import type { PlanRunReadinessBlocker } from './canvasPlanReadiness';
 import type { CanvasShellChromeState, CanvasShellPanels } from './canvasShell.types';
 
 type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
@@ -23,28 +24,27 @@ const tabLabels = {
 } satisfies Record<OperationalDrawerTabId, string>;
 
 function buildReadinessProblems({
+  blockers,
   canPreviewExecutionPlan,
   chromeState,
+  labelBlocker,
   onPreviewExecutionPlan,
 }: Readonly<{
+  blockers: readonly PlanRunReadinessBlocker[];
   canPreviewExecutionPlan: boolean;
   chromeState: CanvasShellChromeState;
+  labelBlocker: (blocker: PlanRunReadinessBlocker) => string;
   onPreviewExecutionPlan: () => void;
 }>): readonly OperationalDrawerProblem[] {
   if (chromeState.planRunReadiness.status === 'ready') {
     return [];
   }
 
-  const blockers =
-    chromeState.planRunReadiness.blockers.length > 0
-      ? chromeState.planRunReadiness.blockers
-      : ['plan_integrity'];
-
   return blockers.map((blocker) => ({
     id: blocker,
     severity: blocker === 'authorization_denied' ? 'error' : 'warning',
     message: chromeState.planRunReadiness.summary || chromeState.planStatusSummary,
-    detail: blocker,
+    detail: labelBlocker(blocker),
     action:
       canPreviewExecutionPlan && blocker === 'plan_integrity'
         ? {
@@ -63,14 +63,29 @@ export function buildCanvasOperationalDrawerContribution({
   chromeState,
 }: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
   const canPreviewExecutionPlan = panels.userPermissions.canPlan && chromeState.canPlanGraph;
+  const labelBlocker = (blocker: PlanRunReadinessBlocker): string =>
+    blocker === 'plan_integrity'
+      ? 'Execution Preview integrity'
+      : blocker
+          .split('_')
+          .map((part, index) => (index === 0 ? part[0]?.toUpperCase() + part.slice(1) : part))
+          .join(' ');
+  const readinessBlockers: readonly PlanRunReadinessBlocker[] =
+    chromeState.planRunReadiness.status === 'ready'
+      ? []
+      : chromeState.planRunReadiness.blockers.length > 0
+        ? chromeState.planRunReadiness.blockers
+        : ['plan_integrity'];
   const problems = buildReadinessProblems({
+    blockers: readinessBlockers,
     canPreviewExecutionPlan,
     chromeState,
+    labelBlocker,
     onPreviewExecutionPlan,
   });
   const activeRunId = panels.activeRunId ?? null;
   const previewStatus = chromeState.planRunReadiness.status === 'ready' ? 'ready' : 'blocked';
-  const previewBlockers = chromeState.planRunReadiness.blockers;
+  const previewBlockers = readinessBlockers.map(labelBlocker);
   const runsStatus = activeRunId != null ? 'active' : chromeState.canStartRun ? 'ready' : 'blocked';
 
   return {
