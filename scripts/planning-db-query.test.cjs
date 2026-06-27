@@ -3024,6 +3024,18 @@ test('readCreationIntentRows canonicalizes retired execution preview intent alia
     ['previewexecutionplan'],
     5,
   ]);
+
+  await readCreationIntentRows(client, {
+    intent: 'previewexecutableplan',
+    limit: 5,
+  });
+
+  assert.deepEqual(captured.params, [
+    'previewexecutableplan',
+    'previewexecutionplan',
+    ['previewexecutionplan'],
+    5,
+  ]);
 });
 
 test('buildKnowledgeIntakeRetirementRows exposes DB-first retirement posture', () => {

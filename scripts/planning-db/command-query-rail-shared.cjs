@@ -24,7 +24,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
 
   function canonicalizeRailName(value) {
     const railName = normalizeText(value).trim();
-    if (railName === 'PreviewExecutablePlan') {
+    if (railName.toLowerCase() === 'previewexecutableplan') {
       return 'PreviewExecutionPlan';
     }
 

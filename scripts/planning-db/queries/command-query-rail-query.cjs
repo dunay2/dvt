@@ -43,7 +43,7 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
 
   function normalizeCreationIntentForSearch(value) {
     return String(value ?? '')
-      .replace(/\bPreviewExecutablePlan\b/g, canonicalizeRailName('PreviewExecutablePlan'))
+      .replace(/\bPreviewExecutablePlan\b/gi, canonicalizeRailName('PreviewExecutablePlan'))
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, ' ')
