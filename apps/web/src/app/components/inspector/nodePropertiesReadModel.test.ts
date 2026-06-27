@@ -302,8 +302,10 @@ describe('nodePropertiesReadModel', () => {
             tests: [
               {
                 relationships: {
-                  to: "ref('dim_customers')",
-                  field: 'customer_id',
+                  arguments: {
+                    to: "ref('dim_customers')",
+                    field: 'customer_id',
+                  },
                   severity: 'error',
                 },
               },

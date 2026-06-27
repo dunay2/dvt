@@ -481,8 +481,23 @@ function buildTestRows(
       return undefined;
     }
 
-    const relationTarget = readFirstString(config.to, config.target, config.targetModel);
-    const relationField = readFirstString(config.field, config.targetColumn, config.column);
+    const argumentsRecord = asRecord(config.arguments);
+    const relationTarget = readFirstString(
+      argumentsRecord.to,
+      argumentsRecord.target,
+      argumentsRecord.targetModel,
+      config.to,
+      config.target,
+      config.targetModel
+    );
+    const relationField = readFirstString(
+      argumentsRecord.field,
+      argumentsRecord.targetColumn,
+      argumentsRecord.column,
+      config.field,
+      config.targetColumn,
+      config.column
+    );
     const relationshipExpression = [relationTarget, relationField].filter(Boolean).join('.');
 
     return relationshipExpression.length > 0 ? relationshipExpression : undefined;
