@@ -14,8 +14,7 @@ describe('canvasContextMenuViewModel', () => {
       },
       canMutateGraph: true,
       canOpenSourceImport: true,
-      canOpenProjectExplorer: true,
-      canOpenProjectCode: true,
+      canValidateGraph: true,
       canPreviewExecutionPlan: true,
       canOpenCanvasSettings: true,
       authoringNodeKinds: [
@@ -56,16 +55,10 @@ describe('canvasContextMenuViewModel', () => {
         title: 'Canvas',
         items: [
           {
-            id: 'canvas:open-project-explorer',
-            label: 'Explore project',
+            id: 'canvas:validate-graph',
+            label: 'Validate graph',
             kind: 'canvas',
-            action: { action: 'open-project-explorer', label: 'Explore project' },
-          },
-          {
-            id: 'canvas:open-project-code',
-            label: 'Open project code',
-            kind: 'canvas',
-            action: { action: 'open-project-code', label: 'Open project code' },
+            action: { action: 'validate-graph', label: 'Validate graph' },
           },
           {
             id: 'canvas:preview-execution-plan',

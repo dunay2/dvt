@@ -55,9 +55,8 @@ describe('CanvasContextMenuView', () => {
       },
       canMutateGraph: true,
       canOpenCanvasSettings: true,
-      canOpenProjectExplorer: true,
-      canOpenProjectCode: true,
       canOpenSourceImport: true,
+      canValidateGraph: true,
       canPreviewExecutionPlan: true,
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     });
@@ -77,8 +76,7 @@ describe('CanvasContextMenuView', () => {
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
     expect(menuButtonLabels('canvas-context-menu-add-group')).toEqual(['Add source']);
     expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual([
-      'Explore project',
-      'Open project code',
+      'Validate graph',
       'Preview execution plan',
       'Canvas settings',
     ]);

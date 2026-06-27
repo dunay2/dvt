@@ -22,7 +22,6 @@ function PresenterHarness({
   const presenter = useCanvasContextMenuPresenter({
     canEditEdges: true,
     canOpenSourceImport: false,
-    canOpenProjectExplorer: false,
     canPreviewExecutionPlan: false,
     canOpenCanvasSettings: false,
     authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],

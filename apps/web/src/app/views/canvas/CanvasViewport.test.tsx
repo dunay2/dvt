@@ -129,10 +129,10 @@ describe('CanvasViewport', () => {
     });
   });
 
-  it('keeps canvas command capabilities wired into the rendered context menu', async () => {
+  it('keeps canvas-local command capabilities wired into the rendered context menu', async () => {
     await renderViewport({
-      canOpenProjectCode: true,
-      onOpenProjectCode: vi.fn(),
+      canOpenCanvasSettings: true,
+      onOpenCanvasSettings: vi.fn(),
     });
 
     const onPaneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
@@ -149,7 +149,7 @@ describe('CanvasViewport', () => {
     });
 
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-    expect(container.textContent).toContain('Open project code');
+    expect(container.textContent).toContain('Canvas settings');
   });
 
   it('uses the governed grid preferences for background visibility, color, and snap policy', async () => {

@@ -44,9 +44,16 @@ function CanvasShellMenuContributionRegistrars({
   graph,
   chromeState,
   chromeCommands,
+  onOpenProjectExplorer,
+  onOpenProjectCode,
 }: Pick<
   CanvasShellMainPanelProps,
-  'panels' | 'graph' | 'chromeState' | 'chromeCommands'
+  | 'panels'
+  | 'graph'
+  | 'chromeState'
+  | 'chromeCommands'
+  | 'onOpenProjectExplorer'
+  | 'onOpenProjectCode'
 >): JSX.Element {
   return (
     <>
@@ -73,8 +80,12 @@ function CanvasShellMenuContributionRegistrars({
         activeCanvas={panels.activeCanvas}
         canExportProjectSnapshot={chromeState.canExportProjectSnapshot}
         canImportProjectSnapshot={chromeState.canImportProjectSnapshot}
+        canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
+        canOpenProjectCode={typeof onOpenProjectCode === 'function'}
         onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
         onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
+        onOpenProjectExplorer={onOpenProjectExplorer}
+        onOpenProjectCode={onOpenProjectCode}
       />
     </>
   );
@@ -86,8 +97,6 @@ function CanvasShellViewport({
   graph,
   graphCommands,
   onOpenSourceImport,
-  onOpenProjectExplorer,
-  onOpenProjectCode,
   onOpenCanvasSettings,
   canPreviewExecutionPlan,
   onPreviewExecutionPlan,
@@ -99,8 +108,6 @@ function CanvasShellViewport({
   | 'graph'
   | 'graphCommands'
   | 'onOpenSourceImport'
-  | 'onOpenProjectExplorer'
-  | 'onOpenProjectCode'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
 > &
@@ -149,10 +156,6 @@ function CanvasShellViewport({
                 flowPosition == null ? undefined : { canvasPosition: flowPosition }
               )
       }
-      canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
-      onOpenProjectExplorer={onOpenProjectExplorer}
-      canOpenProjectCode={typeof onOpenProjectCode === 'function'}
-      onOpenProjectCode={onOpenProjectCode}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
       onPreviewExecutionPlan={onPreviewExecutionPlan}
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
@@ -169,8 +172,6 @@ function CanvasShellMainSurface({
   graphCommands,
   chromeCommands,
   onOpenSourceImport,
-  onOpenProjectExplorer,
-  onOpenProjectCode,
   onOpenCanvasSettings,
   canPreviewExecutionPlan,
   contextMenuPresenter,
@@ -182,8 +183,6 @@ function CanvasShellMainSurface({
   | 'graphCommands'
   | 'chromeCommands'
   | 'onOpenSourceImport'
-  | 'onOpenProjectExplorer'
-  | 'onOpenProjectCode'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
 > &
@@ -195,8 +194,6 @@ function CanvasShellMainSurface({
       graph={graph}
       graphCommands={graphCommands}
       onOpenSourceImport={onOpenSourceImport}
-      onOpenProjectExplorer={onOpenProjectExplorer}
-      onOpenProjectCode={onOpenProjectCode}
       onOpenCanvasSettings={onOpenCanvasSettings}
       canPreviewExecutionPlan={canPreviewExecutionPlan}
       onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
@@ -269,6 +266,8 @@ export function CanvasShellMainPanel({
         graph={graph}
         chromeState={chromeState}
         chromeCommands={chromeCommands}
+        onOpenProjectExplorer={onOpenProjectExplorer}
+        onOpenProjectCode={onOpenProjectCode}
       />
       {layout.readOnlyBanner ? (
         <CanvasShellReadOnlyBannerSlot>{layout.readOnlyBanner}</CanvasShellReadOnlyBannerSlot>
@@ -280,8 +279,6 @@ export function CanvasShellMainPanel({
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
         onOpenSourceImport={onOpenSourceImport}
-        onOpenProjectExplorer={onOpenProjectExplorer}
-        onOpenProjectCode={onOpenProjectCode}
         onOpenCanvasSettings={onOpenCanvasSettings}
         canPreviewExecutionPlan={panels.userPermissions.canPlan && chromeState.canPlanGraph}
         contextMenuPresenter={contextMenuPresenter}

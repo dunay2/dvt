@@ -47,10 +47,6 @@ type CanvasViewportProps = {
   readonly onImportedNodeFocusComplete: () => void;
   readonly canOpenSourceImport?: boolean;
   readonly onOpenSourceImport?: (flowPosition?: { x: number; y: number }) => void;
-  readonly canOpenProjectExplorer?: boolean;
-  readonly onOpenProjectExplorer?: () => void;
-  readonly canOpenProjectCode?: boolean;
-  readonly onOpenProjectCode?: () => void;
   readonly canPreviewExecutionPlan?: boolean;
   readonly onPreviewExecutionPlan?: () => void;
   readonly canOpenCanvasSettings?: boolean;
@@ -119,8 +115,6 @@ function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: props.canEditEdges,
     canOpenSourceImport: props.canOpenSourceImport,
-    canOpenProjectExplorer: props.canOpenProjectExplorer,
-    canOpenProjectCode: props.canOpenProjectCode,
     canPreviewExecutionPlan: props.canPreviewExecutionPlan,
     canOpenCanvasSettings: props.canOpenCanvasSettings,
     authoringNodeKinds: props.authoringNodeKinds,
@@ -128,8 +122,6 @@ function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
     onCreateAuthoringNode: props.onCreateAuthoringNode,
     onEdgesChange: props.onEdgesChange,
     onOpenSourceImport: props.onOpenSourceImport,
-    onOpenProjectExplorer: props.onOpenProjectExplorer,
-    onOpenProjectCode: props.onOpenProjectCode,
     onPreviewExecutionPlan: props.onPreviewExecutionPlan,
     onOpenCanvasSettings: props.onOpenCanvasSettings,
   });

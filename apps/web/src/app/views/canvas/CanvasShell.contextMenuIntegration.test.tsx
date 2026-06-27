@@ -103,24 +103,6 @@ describe('CanvasShell context menu integration', () => {
     expectMenuClosed();
   });
 
-  it('opens project code as a contextual workbench from the canvas menu', async () => {
-    await renderShell();
-    const presenter = getContextMenuPresenter();
-
-    await act(async () => {
-      presenter.handleCanvasAction({
-        action: 'open-project-code',
-        label: 'Open project code',
-      });
-    });
-
-    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
-    expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
-    expect(mockCodeView).toHaveBeenCalledWith(
-      expect.objectContaining({ publishRouteBootstrap: false })
-    );
-  });
-
   it('routes canvas validation to the operational drawer without previewing execution', async () => {
     const onPreviewExecutionPlan = vi.fn();
     useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });

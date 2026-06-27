@@ -94,8 +94,6 @@ export default function CanvasShell({
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: canEditGraph,
     canOpenSourceImport: canOpenDataRegistry,
-    canOpenProjectExplorer: true,
-    canOpenProjectCode: true,
     canValidateGraph: true,
     canPreviewExecutionPlan: panels.userPermissions.canPlan,
     canOpenCanvasSettings: true,
@@ -111,8 +109,6 @@ export default function CanvasShell({
               undefined,
               flowPosition == null ? undefined : { canvasPosition: flowPosition }
             ),
-    onOpenProjectExplorer: () => setProjectExplorerOpen(true),
-    onOpenProjectCode: () => setContextualWorkbenchId('project-code'),
     onValidateGraph: revealValidationProblems,
     onPreviewExecutionPlan: chromeCommands.onPreviewExecutionPlan,
     onOpenCanvasSettings: () => setCanvasSettingsOpen(true),

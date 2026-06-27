@@ -9759,3 +9759,120 @@ test('tracked migrations retire the duplicate Node Workbench inspect-properties 
   assert.doesNotMatch(duplicateRetirementMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(duplicateRetirementMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations model Canvas context menu ownership as relational context actions', () => {
+  const migrations = readMigrationFiles();
+  const contextActionCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '350_canvas_context_menu_context_action_catalog.sql'
+  );
+
+  assert.ok(contextActionCatalogMigration);
+  assert.match(contextActionCatalogMigration.sql, /frontend_component_context_action_query/);
+  assert.match(contextActionCatalogMigration.sql, /frontend_component_plugin_scope_query/);
+  assert.match(contextActionCatalogMigration.sql, /frontend_component_capability_gap_query/);
+  assert.match(contextActionCatalogMigration.sql, /frontend_component_validation_evidence_query/);
+  assert.match(contextActionCatalogMigration.sql, /web\.component\.canvas\.CanvasContextMenu/);
+  assert.match(
+    contextActionCatalogMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_components\s+where component_id = 'web\.component\.canvas\.CanvasContextMenuHost'/
+  );
+  assert.doesNotMatch(
+    contextActionCatalogMigration.sql,
+    /md5\('web\.component\.canvas\.CanvasContextMenuHost:350:child'\)/
+  );
+  assert.match(
+    contextActionCatalogMigration.sql,
+    /web\.component\.canvas\.CanvasBackgroundContextMenu/
+  );
+  assert.match(contextActionCatalogMigration.sql, /web\.component\.canvas\.CanvasEdgeContextMenu/);
+  assert.match(contextActionCatalogMigration.sql, /web\.component\.canvas\.CanvasNodeContextMenu/);
+  assert.match(
+    contextActionCatalogMigration.sql,
+    /web\.component\.canvas\.CanvasSelectionContextMenu/
+  );
+  assert.match(contextActionCatalogMigration.sql, /canvas-background/);
+  assert.match(contextActionCatalogMigration.sql, /edge/);
+  assert.match(contextActionCatalogMigration.sql, /node/);
+  assert.match(contextActionCatalogMigration.sql, /selection/);
+  assert.match(contextActionCatalogMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(contextActionCatalogMigration.sql, /RenderCanvasContextMenu/);
+  assert.match(contextActionCatalogMigration.sql, /CreateCanvasAuthoringNode/);
+  assert.match(contextActionCatalogMigration.sql, /RemoveCanvasEdgeFromContext/);
+  assert.match(contextActionCatalogMigration.sql, /PreviewExecutionPlan/);
+  assert.match(
+    contextActionCatalogMigration.sql,
+    /apps\/web\/src\/app\/views\/canvas\/CanvasContextMenuView\.tsx/
+  );
+  assert.match(
+    contextActionCatalogMigration.sql,
+    /apps\/web\/cypress\/e2e\/shell\/canvas-workbench-screen-composition\.cy\.ts/
+  );
+  assert.doesNotMatch(contextActionCatalogMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations overlay the imported CanvasContextMenu aggregate summary as a host component', () => {
+  const migrations = readMigrationFiles();
+  const hostSummaryMigration = migrations.find(
+    (migration) => migration.fileName === '351_canvas_context_menu_host_summary_overlay.sql'
+  );
+
+  assert.ok(hostSummaryMigration);
+  assert.match(hostSummaryMigration.sql, /web\.component\.canvas\.CanvasContextMenu/);
+  assert.match(hostSummaryMigration.sql, /CanvasContextMenuHost/);
+  assert.match(hostSummaryMigration.sql, /context-specific child components/);
+  assert.match(hostSummaryMigration.sql, /web\.component\.canvas\.CanvasBackgroundContextMenu/);
+  assert.match(hostSummaryMigration.sql, /web\.component\.canvas\.CanvasEdgeContextMenu/);
+  assert.match(hostSummaryMigration.sql, /web\.component\.canvas\.CanvasNodeContextMenu/);
+  assert.match(hostSummaryMigration.sql, /web\.component\.canvas\.CanvasSelectionContextMenu/);
+  assert.match(hostSummaryMigration.sql, /supersededSummaryListsRetired/);
+  assert.match(hostSummaryMigration.sql, /plugin_scope = excluded\.plugin_scope/);
+  assert.match(hostSummaryMigration.sql, /capability_gaps = excluded\.capability_gaps/);
+  assert.match(hostSummaryMigration.sql, /evidence_refs = excluded\.evidence_refs/);
+  assert.doesNotMatch(hostSummaryMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations retire superseded CanvasContextMenu aggregate ownership after context split', () => {
+  const migrations = readMigrationFiles();
+  const railRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '352_retire_canvas_context_menu_host_superseded_ownership.sql'
+  );
+
+  assert.ok(railRetirementMigration);
+  assert.match(railRetirementMigration.sql, /frontend_component_local_cq_rails/);
+  assert.match(railRetirementMigration.sql, /frontend_component_local_files/);
+  assert.match(railRetirementMigration.sql, /web\.component\.canvas\.CanvasContextMenu/);
+  assert.match(railRetirementMigration.sql, /retiredForContextActionCatalog/);
+  assert.match(railRetirementMigration.sql, /frontend_component_context_action_query/);
+  assert.match(railRetirementMigration.sql, /CreateCanvasAuthoringNode/);
+  assert.match(railRetirementMigration.sql, /ImportWarehouseSources/);
+  assert.match(railRetirementMigration.sql, /RemoveCanvasEdgeFromContext/);
+  assert.match(railRetirementMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(railRetirementMigration.sql, /PreviewExecutionPlan/);
+  assert.match(railRetirementMigration.sql, /RenderCanvasContextMenu/);
+  assert.match(railRetirementMigration.sql, /canvasInteractionCommandSurface\.ts/);
+  assert.match(railRetirementMigration.sql, /canvasContextMenuViewModel\.ts/);
+  assert.match(
+    railRetirementMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_rail_query/
+  );
+  assert.match(
+    railRetirementMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_file_query/
+  );
+  assert.match(
+    railRetirementMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.match(railRetirementMigration.sql, /frontend_component_context_actions action/);
+  assert.match(railRetirementMigration.sql, /action\.action_status <> 'retired'/);
+  assert.match(
+    railRetirementMigration.sql,
+    /not coalesce\(\(rail\.raw_rail ->> 'retiredForContextActionCatalog'\)::boolean, false\)/
+  );
+  assert.match(
+    railRetirementMigration.sql,
+    /not coalesce\(\(file_ref\.raw_file ->> 'retiredForContextActionCatalog'\)::boolean, false\)/
+  );
+  assert.doesNotMatch(railRetirementMigration.sql, /truncate\s+/i);
+});

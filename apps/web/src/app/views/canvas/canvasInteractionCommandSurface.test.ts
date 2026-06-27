@@ -89,7 +89,7 @@ describe('canvasInteractionCommandSurface', () => {
     expect(model.edgeActions).toEqual([]);
   });
 
-  it('offers backed project and settings commands from the canvas menu without node actions', () => {
+  it('keeps project navigation out of the canvas menu while preserving canvas-local commands', () => {
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -97,8 +97,6 @@ describe('canvasInteractionCommandSurface', () => {
         flowPosition: { x: 720, y: 180 },
       },
       canMutateGraph: true,
-      canOpenProjectExplorer: true,
-      canOpenProjectCode: true,
       canOpenCanvasSettings: true,
       canValidateGraph: true,
       canPreviewExecutionPlan: true,
@@ -110,8 +108,6 @@ describe('canvasInteractionCommandSurface', () => {
     });
 
     expect(model.canvasActions).toEqual([
-      { action: 'open-project-explorer', label: 'Explore project' },
-      { action: 'open-project-code', label: 'Open project code' },
       { action: 'validate-graph', label: 'Validate graph' },
       { action: 'preview-execution-plan', label: 'Preview execution plan' },
       { action: 'open-canvas-settings', label: 'Canvas settings' },
@@ -170,25 +166,6 @@ describe('canvasInteractionCommandSurface', () => {
       'dbt:test',
       'dvt:sink',
     ]);
-  });
-
-  it('offers project code from the canvas menu without requiring graph mutation', () => {
-    const model = buildCanvasContextMenuModel({
-      target: {
-        kind: 'pane',
-        screenPosition: { x: 480, y: 320 },
-        flowPosition: { x: 720, y: 180 },
-      },
-      canMutateGraph: false,
-      canOpenProjectCode: true,
-      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
-    });
-
-    expect(model.canvasActions).toEqual([
-      { action: 'open-project-code', label: 'Open project code' },
-    ]);
-    expect(model.createNodeActions).toEqual([]);
-    expect(model.edgeActions).toEqual([]);
   });
 
   it('offers only edge deletion for an editable edge context menu', () => {

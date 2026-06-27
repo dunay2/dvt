@@ -7,8 +7,12 @@ export type CanvasWorkspaceMenuContribution = Readonly<{
   activeCanvas?: ProjectCanvasDocument | null;
   canExportProjectSnapshot: boolean;
   canImportProjectSnapshot: boolean;
+  canOpenProjectExplorer?: boolean;
+  canOpenProjectCode?: boolean;
   onExportProjectSnapshot: () => void;
   onImportProjectSnapshotFile: (file: File) => void;
+  onOpenProjectExplorer?: () => void;
+  onOpenProjectCode?: () => void;
 }>;
 
 type CanvasWorkspaceMenuContributionState = {

@@ -19,8 +19,6 @@ import {
 type UseCanvasContextMenuPresenterArgs = Readonly<{
   canEditEdges: boolean;
   canOpenSourceImport?: boolean;
-  canOpenProjectExplorer?: boolean;
-  canOpenProjectCode?: boolean;
   canValidateGraph?: boolean;
   canPreviewExecutionPlan?: boolean;
   canOpenCanvasSettings?: boolean;
@@ -29,8 +27,6 @@ type UseCanvasContextMenuPresenterArgs = Readonly<{
   onCreateAuthoringNode: CreateCanvasAuthoringNode;
   onEdgesChange: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgesChange']>;
   onOpenSourceImport?: (flowPosition?: CanvasContextMenuPosition) => void;
-  onOpenProjectExplorer?: () => void;
-  onOpenProjectCode?: () => void;
   onValidateGraph?: () => void;
   onPreviewExecutionPlan?: () => void;
   onOpenCanvasSettings?: () => void;
@@ -99,8 +95,6 @@ function isNearPosition(
 export function useCanvasContextMenuPresenter({
   canEditEdges,
   canOpenSourceImport,
-  canOpenProjectExplorer,
-  canOpenProjectCode,
   canValidateGraph,
   canPreviewExecutionPlan,
   canOpenCanvasSettings,
@@ -109,8 +103,6 @@ export function useCanvasContextMenuPresenter({
   onCreateAuthoringNode,
   onEdgesChange,
   onOpenSourceImport,
-  onOpenProjectExplorer,
-  onOpenProjectCode,
   onValidateGraph,
   onPreviewExecutionPlan,
   onOpenCanvasSettings,
@@ -285,8 +277,6 @@ export function useCanvasContextMenuPresenter({
             },
             canMutateGraph: canEditEdges,
             canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
-            canOpenProjectExplorer: Boolean(canOpenProjectExplorer && onOpenProjectExplorer),
-            canOpenProjectCode: Boolean(canOpenProjectCode && onOpenProjectCode),
             canValidateGraph: Boolean(canValidateGraph && onValidateGraph),
             canPreviewExecutionPlan: Boolean(canPreviewExecutionPlan && onPreviewExecutionPlan),
             canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
@@ -299,15 +289,11 @@ export function useCanvasContextMenuPresenter({
       authoringNodeKinds,
       canEditEdges,
       canOpenSourceImport,
-      canOpenProjectExplorer,
-      canOpenProjectCode,
       canValidateGraph,
       canPreviewExecutionPlan,
       canOpenCanvasSettings,
       markContextMenuOpened,
       onOpenSourceImport,
-      onOpenProjectExplorer,
-      onOpenProjectCode,
       onValidateGraph,
       onPreviewExecutionPlan,
       onOpenCanvasSettings,
@@ -393,10 +379,6 @@ export function useCanvasContextMenuPresenter({
     (action: CanvasContextMenuCanvasAction) => {
       if (action.action === 'open-source-import') {
         onOpenSourceImport?.(model?.flowPosition);
-      } else if (action.action === 'open-project-explorer') {
-        onOpenProjectExplorer?.();
-      } else if (action.action === 'open-project-code') {
-        onOpenProjectCode?.();
       } else if (action.action === 'validate-graph') {
         onValidateGraph?.();
       } else if (action.action === 'preview-execution-plan') {
@@ -411,8 +393,6 @@ export function useCanvasContextMenuPresenter({
       closeContextMenu,
       model?.flowPosition,
       onOpenCanvasSettings,
-      onOpenProjectCode,
-      onOpenProjectExplorer,
       onOpenSourceImport,
       onValidateGraph,
       onPreviewExecutionPlan,

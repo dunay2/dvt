@@ -29,18 +29,10 @@ export type CanvasContextMenuCreateNodeAction = Readonly<{
 export type CanvasContextMenuCanvasAction = Readonly<{
   action:
     | 'open-source-import'
-    | 'open-project-explorer'
-    | 'open-project-code'
     | 'validate-graph'
     | 'preview-execution-plan'
     | 'open-canvas-settings';
-  label:
-    | 'Add source'
-    | 'Explore project'
-    | 'Open project code'
-    | 'Validate graph'
-    | 'Preview execution plan'
-    | 'Canvas settings';
+  label: 'Add source' | 'Validate graph' | 'Preview execution plan' | 'Canvas settings';
 }>;
 
 export type CanvasContextMenuEdgeAction = Readonly<{
@@ -62,8 +54,6 @@ type BuildCanvasContextMenuModelArgs = Readonly<{
   target: CanvasContextMenuTarget;
   canMutateGraph: boolean;
   canOpenSourceImport?: boolean;
-  canOpenProjectExplorer?: boolean;
-  canOpenProjectCode?: boolean;
   canValidateGraph?: boolean;
   canPreviewExecutionPlan?: boolean;
   canOpenCanvasSettings?: boolean;
@@ -118,8 +108,6 @@ export function buildCanvasContextMenuModel({
   target,
   canMutateGraph,
   canOpenSourceImport = false,
-  canOpenProjectExplorer = false,
-  canOpenProjectCode = false,
   canValidateGraph = false,
   canPreviewExecutionPlan = false,
   canOpenCanvasSettings = false,
@@ -130,12 +118,6 @@ export function buildCanvasContextMenuModel({
   if (target.kind === 'pane') {
     if (sourceImportVisible) {
       canvasActions.push({ action: 'open-source-import', label: 'Add source' });
-    }
-    if (canOpenProjectExplorer) {
-      canvasActions.push({ action: 'open-project-explorer', label: 'Explore project' });
-    }
-    if (canOpenProjectCode) {
-      canvasActions.push({ action: 'open-project-code', label: 'Open project code' });
     }
     if (canValidateGraph) {
       canvasActions.push({ action: 'validate-graph', label: 'Validate graph' });
