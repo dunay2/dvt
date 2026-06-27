@@ -10,11 +10,13 @@ import { useUiLayoutStore } from '../stores/uiLayoutStore';
 import { CanvasWorkspaceTopBarIdentity } from '../views/canvas/CanvasWorkspaceMenuControls';
 import { topAppBarClasses } from './shell/chrome';
 import { detectShellTopBarLocale, resolveShellTopBarCopy } from './shell/copy';
+import { useOperationalDrawerContributionStore } from './shell/operationalDrawerContributionStore';
 import { ShellAppMenu } from './shell/ShellAppMenu';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
 import { ShellProjectIdentityBadge } from './shell/ShellProjectIdentityBadge';
+import { ShellRunStatusIndicator } from './shell/ShellRunStatusIndicator';
 import { ShellWorkspaceContextMenu } from './shell/ShellWorkspaceContextMenu';
 import { resolveShellViewControls } from './shell/shellViewControlsModel';
 import type { ShellTopBarProps } from './shell/types';
@@ -44,6 +46,9 @@ export function ShellTopBar({
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
+  const operationalDrawerContribution = useOperationalDrawerContributionStore(
+    (state) => state.contribution
+  );
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy(detectShellTopBarLocale());
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
@@ -84,6 +89,7 @@ export function ShellTopBar({
           connectionDetail={connectionDetail}
           copy={copy}
         />
+        <ShellRunStatusIndicator contribution={operationalDrawerContribution} />
         {exposeWorkspaceNavigationMenu && (
           <ShellMenu
             kind="workspace"

@@ -36,6 +36,7 @@ function buildCanvasOperationalDrawerContribution(
     runs: {
       activeRunId: 'run-42',
       canStartRun: false,
+      onStartRun: vi.fn(),
       status: 'active',
       summary: 'Run run-42 is active.',
     },

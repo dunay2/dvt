@@ -8414,9 +8414,13 @@ test('tracked migrations register Canvas bottom drawer actionable read model', (
   const drawerManifestHardeningMigration = migrations.find(
     (migration) => migration.fileName === '333_canvas_bottom_drawer_feature_manifest_hardening.sql'
   );
+  const drawerTopBarRunStatusMigration = migrations.find(
+    (migration) => migration.fileName === '335_canvas_topbar_run_status_indicator_manifest.sql'
+  );
 
   assert.ok(drawerActionMigration);
   assert.ok(drawerManifestHardeningMigration);
+  assert.ok(drawerTopBarRunStatusMigration);
   assert.match(drawerActionMigration.sql, /E-CANVAS-BOTTOM-DRAWER-OPS-1/);
   assert.match(drawerActionMigration.sql, /UXDB-BOTTOM-OPERATIONAL-DRAWER-P0-1/);
   assert.match(drawerActionMigration.sql, /RenderBottomOperationalDrawer/);
@@ -8441,6 +8445,15 @@ test('tracked migrations register Canvas bottom drawer actionable read model', (
   assert.match(drawerManifestHardeningMigration.sql, /buildCanvasOperationalDrawerContribution/);
   assert.doesNotMatch(drawerManifestHardeningMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(drawerManifestHardeningMigration.sql, /truncate\s+/i);
+  assert.match(drawerTopBarRunStatusMigration.sql, /ShellRunStatusIndicator/);
+  assert.match(
+    drawerTopBarRunStatusMigration.sql,
+    /apps\/web\/src\/app\/components\/TopAppBar\.tsx/
+  );
+  assert.match(drawerTopBarRunStatusMigration.sql, /RenderBottomOperationalDrawer/);
+  assert.match(drawerTopBarRunStatusMigration.sql, /E-CANVAS-EXECUTION-PREVIEW-READINESS-1/);
+  assert.doesNotMatch(drawerTopBarRunStatusMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(drawerTopBarRunStatusMigration.sql, /truncate\s+/i);
 });
 
 test('tracked migrations materialize code symbol duplicate query inputs', () => {
