@@ -186,18 +186,30 @@ export function useCanvasContextMenuPresenter({
         return;
       }
 
+      const isDocumentLevelPanePointerEcho =
+        pendingPaneClickEchoRef.current &&
+        event instanceof MouseEvent &&
+        event.target === document &&
+        lastContextMenuOpenedTargetKindRef.current === 'pane' &&
+        Date.now() - lastContextMenuOpenedAtRef.current <
+          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS;
       const isPendingImmediatePanePointerEcho =
         pendingPaneClickEchoRef.current &&
         event instanceof MouseEvent &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
         Date.now() - lastContextMenuOpenedAtRef.current <
-          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS;
+          CONTEXT_MENU_PANE_CLICK_ECHO_SUPPRESSION_MS &&
+        isNearPosition(event, lastPaneContextMenuScreenPositionRef.current);
       const isPanePointerEchoAtContextPoint =
         pendingPaneClickEchoRef.current &&
         event instanceof MouseEvent &&
         lastContextMenuOpenedTargetKindRef.current === 'pane' &&
         Date.now() - lastContextMenuOpenedAtRef.current < CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS &&
         isNearPosition(event, lastPaneContextMenuScreenPositionRef.current);
+
+      if (isDocumentLevelPanePointerEcho) {
+        return;
+      }
 
       if (isPendingImmediatePanePointerEcho) {
         return;

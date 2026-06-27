@@ -107,9 +107,12 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     vi.useFakeTimers();
     await harness.render();
 
+    const outsideTarget = document.createElement('button');
+    document.body.appendChild(outsideTarget);
+
     await harness.openPaneMenuAt(320, 260);
     await act(async () => {
-      document.dispatchEvent(
+      outsideTarget.dispatchEvent(
         new MouseEvent('pointerdown', {
           bubbles: true,
           button: 0,
@@ -120,6 +123,7 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     });
 
     harness.expectMenuClosed();
+    outsideTarget.remove();
   });
 
   it('closes the menu on a generic outside pointerdown after a right-click', async () => {
