@@ -55,7 +55,7 @@ describe('warehouse source YAML builder', () => {
           schema: 'erp',
           table: 'orders',
           columns: [
-            { name: 'id', type: 'integer', nullable: false },
+            { name: 'id', type: 'integer', nullable: false, primaryKey: true, unique: true },
             { name: 'created_at', type: 'timestamp', nullable: false },
             { name: 'notes', type: 'text', nullable: true },
           ],
@@ -87,6 +87,7 @@ describe('warehouse source YAML builder', () => {
           '            data_type: integer',
           '            tests:',
           '              - not_null',
+          '              - unique',
           '          - name: created_at',
           '            data_type: timestamp',
           '            tests:',

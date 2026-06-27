@@ -17,6 +17,8 @@ export type WarehouseColumn = {
   readonly name: string;
   readonly type: string;
   readonly nullable: boolean;
+  readonly primaryKey?: boolean;
+  readonly unique?: boolean;
 };
 
 export type WarehouseTable = {

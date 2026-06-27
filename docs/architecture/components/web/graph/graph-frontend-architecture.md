@@ -329,13 +329,13 @@ draft already exists, the first-canvas empty state is therefore intentionally
 hidden.
 
 The mature recovery path is an explicit replacement transition from the
-host-owned tab strip. This is not a local reset and not a frontend mock escape
-hatch: it writes a new blank draft through the same protected draft repository
-used by normal authoring saves.
+host-owned graph-first Canvas shell. This is not a local reset and not a
+frontend mock escape hatch: it writes a new blank draft through the same
+protected draft repository used by normal authoring saves.
 
 ```mermaid
 flowchart LR
-  Tab["Host tab strip"] --> Confirm["Confirm replacement"]
+  Host["Canvas host shell"] --> Confirm["Confirm replacement"]
   Confirm --> Command["replace_current create-canvas command"]
   Command --> CAS["saveGraphDraft expectedRevision=current"]
   CAS --> Saved["Saved blank draft"]

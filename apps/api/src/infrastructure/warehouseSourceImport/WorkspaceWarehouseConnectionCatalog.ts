@@ -21,6 +21,8 @@ export const WarehouseColumnCatalogSchema = z.object({
   name: z.string().min(1),
   type: z.string().min(1),
   nullable: z.boolean(),
+  primaryKey: z.boolean().optional(),
+  unique: z.boolean().optional(),
 });
 
 export const WarehouseTableCatalogSchema = z.object({
@@ -136,7 +138,19 @@ export async function resolveWorkspaceWarehouseCatalog(
             schema: table.schema,
             table: table.table,
             ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
-            ...(table.columns !== undefined ? { columns: table.columns } : {}),
+            ...(table.columns !== undefined
+              ? {
+                  columns: table.columns.map((column) => ({
+                    name: column.name,
+                    type: column.type,
+                    nullable: column.nullable,
+                    ...(typeof column.primaryKey === 'boolean'
+                      ? { primaryKey: column.primaryKey }
+                      : {}),
+                    ...(typeof column.unique === 'boolean' ? { unique: column.unique } : {}),
+                  })),
+                }
+              : {}),
           })
         ),
       });

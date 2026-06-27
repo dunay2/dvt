@@ -21,6 +21,30 @@ describe('canvas route posture priority architecture', () => {
     }
   });
 
+  it('keeps active Canvas architecture docs from routing through retired tab-strip seams', () => {
+    const activeDocs = [
+      'docs/architecture/components/web/graph/canvas-route-chrome-token-component.md',
+      'docs/architecture/components/web/graph/canvas-route-chrome-token-user-stories.md',
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-component.md',
+      'docs/architecture/components/web/graph/canvas-startup-and-draft-recovery-user-stories.md',
+      'docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md',
+      'docs/architecture/components/web/graph/graph-frontend-architecture.md',
+    ];
+    const retiredTerms = [
+      'CanvasPlaygroundTabStrip',
+      'useCanvasPlaygroundTabStripPresenter',
+      'canvasPlaygroundTabStripModel',
+      'Host tab strip',
+    ];
+
+    for (const docPath of activeDocs) {
+      const docSource = readRepoFile(docPath);
+      for (const retiredTerm of retiredTerms) {
+        expect(docSource, docPath).not.toContain(retiredTerm);
+      }
+    }
+  });
+
   it('keeps Canvas route chrome visual classes behind the Canvas chrome token component', () => {
     const tokenSource = readAppSource('canvasChromeTokens.ts');
     const draftSaveStatusSource = readAppSource('CanvasDraftSaveStatus.tsx');

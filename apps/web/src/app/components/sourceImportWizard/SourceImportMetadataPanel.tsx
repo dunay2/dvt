@@ -64,11 +64,19 @@ export function SourceImportMetadataPanel({
                 {activeTableViewModel.columns.map((column) => (
                   <div
                     key={`${tableName}.${column.name}`}
-                    className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2"
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2"
                   >
-                    <span className="truncate font-mono text-xs text-slate-100">{column.name}</span>
+                    <div className="min-w-0">
+                      <div className="truncate font-mono text-xs text-slate-100">{column.name}</div>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {column.constraintLabels.map((label) => (
+                          <Badge key={`${column.name}.${label}`} variant="outline">
+                            {label}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                     <span className="font-mono text-[11px] text-slate-300">{column.type}</span>
-                    <span className="text-[11px] text-slate-400">{column.nullabilityLabel}</span>
                   </div>
                 ))}
               </div>

@@ -33,15 +33,15 @@ Acceptance:
   `CanvasDraftSaveStatus`.
 - `canvasToolbarViewModel` uses `resolveCanvasWorkflowStatusClassName`.
 
-## US-F24-CANVAS-CHROME-03: Keep Tab Strip Chrome Separate From Canvas Policy
+## US-F24-CANVAS-CHROME-03: Keep Compact Shell Chrome Separate From Canvas Policy
 
-As a Canvas route maintainer, I need tab-strip visual chrome to use a token
-component while replacement policy stays in the presenter/model, so F-24 remains
-visual-system convergence rather than command-policy refactoring.
+As a Canvas route maintainer, I need compact shell visual chrome to use a token
+component while graph-first command policy stays in shell builders and presenters,
+so F-24 remains visual-system convergence rather than command-policy refactoring.
 
 Acceptance:
 
-- `CanvasPlaygroundTabStrip.templates.tsx` uses `canvasChromeClasses`.
+- Compact Canvas shell/status presentation uses `canvasChromeClasses`.
 - The token component does not import route command, graph, or draft state
   types.
 
@@ -51,4 +51,4 @@ Acceptance:
 | ------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------- |
 | `US-F24-CANVAS-CHROME-01` | `CanvasToolbar`, `CanvasToolbarPrimaryControls`                               | `canvasRoutePosturePriority.architecture.test.ts` |
 | `US-F24-CANVAS-CHROME-02` | `CanvasToolbarDraftStatus`, `CanvasDraftSaveStatus`, `canvasToolbarViewModel` | `canvasRoutePosturePriority.architecture.test.ts` |
-| `US-F24-CANVAS-CHROME-03` | `CanvasPlaygroundTabStrip.templates.tsx`                                      | `canvasRoutePosturePriority.architecture.test.ts` |
+| `US-F24-CANVAS-CHROME-03` | compact Canvas shell/status presentation                                      | `canvasRoutePosturePriority.architecture.test.ts` |

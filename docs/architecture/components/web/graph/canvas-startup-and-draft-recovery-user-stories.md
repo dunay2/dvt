@@ -406,17 +406,17 @@ Acceptance criteria:
   registrations.
 - The template does not import command DTO types.
 
-### US-CANVAS-PRESENTATION-002: keep tab-strip HTML passive
+### US-CANVAS-PRESENTATION-002: keep graph-first shell HTML passive
 
-As a frontend maintainer, I want tab-strip HTML to render only resolved view
-state, so replacement policy, i18n, and command dispatch do not recombine in
-the template.
+As a frontend maintainer, I want graph-first shell HTML to render only resolved
+view state, so replacement policy, i18n, and command dispatch do not recombine
+in route templates.
 
 Acceptance criteria:
 
-- `CanvasPlaygroundTabStrip.tsx` is a thin mount.
-- `useCanvasPlaygroundTabStripPresenter.ts` coordinates callbacks and copy.
-- `CanvasPlaygroundTabStrip.templates.tsx` renders labels and actions only.
+- `CanvasShell.tsx` remains the graph-first shell mount.
+- shell builders coordinate command wiring and resolved copy outside templates.
+- shell presentation does not reintroduce fixed route-mode tabs.
 
 ### US-CANVAS-PRESENTATION-003: keep node drag gesture ownership explicit
 
@@ -471,7 +471,7 @@ Acceptance criteria:
 | US-CANVAS-DRAFT-001           | Protected draft endpoint                        | `workspaceGraphDraftHttp.ts`                                                   | `canvasStartupBootstrapPublication.architecture.test.ts`                                                                                                        |
 | US-CANVAS-DRAFT-002           | Semantic and DBT snapshot projection split      | `workspaceGraphDraftProjection.ts`, `workspaceGraphDraftSnapshotProjection.ts` | `workspaceGraphDraftSnapshotProjection.test.ts`                                                                                                                 |
 | US-CANVAS-DRAFT-003           | Create first Canvas only when empty             | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                                                                                                     |
-| US-CANVAS-DRAFT-004           | Confirmed replacement command                   | `useCanvasPlaygroundTabStripPresenter.ts`                                      | `CanvasPlaygroundTabStrip.test.tsx`                                                                                                                             |
+| US-CANVAS-DRAFT-004           | Confirmed replacement command                   | `canvasCreateCanvasDocumentCommand.ts`                                         | `canvasCreateCanvasDocumentCommand.test.ts`                                                                                                                     |
 | US-CANVAS-DRAFT-005           | CAS-protected replacement                       | `canvasCreateCanvasDocumentCommandPolicy.ts`                                   | `canvasCreateCanvasDocumentCommand.test.ts`                                                                                                                     |
 | US-CANVAS-DRAFT-006           | Recovery banner surfaces                        | `canvasRecoveryBannerModel.ts`, `CanvasRecoveryBanner.templates.tsx`           | `canvasDraftRecoveryBoundary.architecture.test.ts`                                                                                                              |
 | US-CANVAS-DRAFT-007           | Session denial versus forbidden scope           | `canvasDraftAccessPostureModel.ts`                                             | `canvasDraftAccessPostureModel.test.ts`, Cypress draft access posture spec                                                                                      |
@@ -490,7 +490,7 @@ Acceptance criteria:
 | US-CANVAS-LAYOUT-002          | Settled live drag positions persist             | `useCanvasLayoutPersistence.ts`, `useCanvasViewportGraphModel.ts`              | `useCanvasController.persistence.test.tsx`, `useCanvasViewportGraphModel.layout.test.tsx`                                                                       |
 | US-CANVAS-LAYOUT-003          | Pending route state blocks layout writes        | `useCanvasLayoutPersistence.ts`                                                | `useCanvasController.persistence.test.tsx`                                                                                                                      |
 | US-CANVAS-PRESENTATION-001    | Passive host template                           | `CanvasPlaygroundHost.templates.tsx`                                           | `canvasDraftRecoveryBoundary.architecture.test.ts`                                                                                                              |
-| US-CANVAS-PRESENTATION-002    | Passive tab-strip template                      | `CanvasPlaygroundTabStrip.templates.tsx`                                       | `CanvasPlaygroundTabStrip.test.tsx`, `canvasRoutePosturePriority.architecture.test.ts`                                                                          |
+| US-CANVAS-PRESENTATION-002    | Passive graph-first shell                       | `CanvasShell.tsx`, shell builders                                              | `CanvasShell.architecture.test.tsx`, `canvasRoutePosturePriority.architecture.test.ts`                                                                          |
 | US-CANVAS-PRESENTATION-003    | Drag surface is explicit                        | `canvasNodeMapper.ts`, `DbtNodeComponent.tsx`                                  | `canvasStartupBootstrapPublication.architecture.test.ts`                                                                                                        |
 | US-CANVAS-ARCH-001            | Semantic architecture guard                     | split Canvas architecture tests                                                | `canvasStartupBootstrapPublication.architecture.test.ts`, `canvasDraftRecoveryBoundary.architecture.test.ts`, `canvasRoutePosturePriority.architecture.test.ts` |
 | US-CANVAS-ARCH-002            | Fixture boundaries                              | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                    | `workspaceGraphDraftFixtureBoundaries.architecture.test.ts`                                                                                                     |

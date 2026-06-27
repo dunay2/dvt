@@ -28,9 +28,9 @@ describe('SourceImportWizard metadata exploration', () => {
             table: 'ORDERS',
             rowCount: 1500,
             columns: [
-              { name: 'order_id', type: 'INTEGER', nullable: false },
+              { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true },
               { name: 'customer_id', type: 'INTEGER', nullable: false },
-              { name: 'discount_code', type: 'TEXT', nullable: true },
+              { name: 'discount_code', type: 'TEXT', nullable: true, unique: true },
             ],
           }),
         ],
@@ -48,8 +48,10 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('3 columns');
     expect(document.body.textContent).toContain('order_id');
     expect(document.body.textContent).toContain('INTEGER');
+    expect(document.body.textContent).toContain('Primary key');
     expect(document.body.textContent).toContain('Required');
     expect(document.body.textContent).toContain('discount_code');
+    expect(document.body.textContent).toContain('Unique');
     expect(document.body.textContent).toContain('Nullable');
     expect(document.body.textContent).toContain('Metadata Options');
 

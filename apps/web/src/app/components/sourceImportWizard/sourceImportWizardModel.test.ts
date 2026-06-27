@@ -133,7 +133,7 @@ describe('sourceImportWizardModel', () => {
           rowCount: 1500,
           selected: true,
           columns: [
-            { name: 'order_id', type: 'INTEGER', nullable: false },
+            { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true, unique: true },
             { name: 'discount_code', type: 'TEXT', nullable: true },
           ],
         }),
@@ -161,8 +161,18 @@ describe('sourceImportWizardModel', () => {
             rowCountLabel: '1,500 rows',
             columnCountLabel: '2 columns',
             columns: [
-              { name: 'order_id', type: 'INTEGER', nullabilityLabel: 'Required' },
-              { name: 'discount_code', type: 'TEXT', nullabilityLabel: 'Nullable' },
+              {
+                name: 'order_id',
+                type: 'INTEGER',
+                nullabilityLabel: 'Required',
+                constraintLabels: ['Primary key', 'Unique', 'Required'],
+              },
+              {
+                name: 'discount_code',
+                type: 'TEXT',
+                nullabilityLabel: 'Nullable',
+                constraintLabels: ['Nullable'],
+              },
             ],
           }),
           expect.objectContaining({

@@ -408,7 +408,13 @@ function parseColumns(input: readonly unknown[]): RouteParseResult<readonly Ware
     ) {
       return invalidBody();
     }
-    columns.push({ name: item.name, type: item.type, nullable: item.nullable });
+    columns.push({
+      name: item.name,
+      type: item.type,
+      nullable: item.nullable,
+      ...(typeof item.primaryKey === 'boolean' ? { primaryKey: item.primaryKey } : {}),
+      ...(typeof item.unique === 'boolean' ? { unique: item.unique } : {}),
+    });
   }
   return { ok: true, value: columns };
 }

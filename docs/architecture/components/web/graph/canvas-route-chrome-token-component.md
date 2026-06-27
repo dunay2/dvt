@@ -10,26 +10,26 @@ domain: frontend
 
 ## Purpose
 
-This component owns Canvas toolbar and tab-strip visual tokens. Canvas route
+This component owns compact Canvas shell and status visual tokens. Canvas route
 chrome can stay aligned with the operator-workbench visual system without
-placing raw Tailwind color families in command controls or tab templates.
+placing raw Tailwind color families in route controls or status templates.
 
 Owned concern: Canvas route chrome consumes named presentation tokens;
 `theme.css` owns raw semantic values.
 
 ## Public API
 
-| API                                    | Kind         | Contract                                                  |
-| -------------------------------------- | ------------ | --------------------------------------------------------- |
-| `canvasChromeClasses`                  | constant     | Shared toolbar, separator, button, dialog, and tab chrome |
-| `canvasDraftStatusToneClasses`         | constant     | Draft save and recovery tone classes                      |
-| `resolveCanvasDraftStatusClassName`    | query helper | Resolves `neutral`, `warning`, or `danger` draft tone     |
-| `resolveCanvasWorkflowStatusClassName` | query helper | Resolves workflow status text tone for toolbar badges     |
+| API                                    | Kind         | Contract                                                   |
+| -------------------------------------- | ------------ | ---------------------------------------------------------- |
+| `canvasChromeClasses`                  | constant     | Shared shell, separator, button, dialog, and status chrome |
+| `canvasDraftStatusToneClasses`         | constant     | Draft save and recovery tone classes                       |
+| `resolveCanvasDraftStatusClassName`    | query helper | Resolves `neutral`, `warning`, or `danger` draft tone      |
+| `resolveCanvasWorkflowStatusClassName` | query helper | Resolves workflow status text tone for toolbar badges      |
 
 ## Invariants
 
-1. Canvas toolbar and tab-strip presentation uses `canvasChromeTokens`.
-2. Toolbar and tab-strip modules do not contain raw `slate-*`, `rose-*`,
+1. Canvas compact shell and draft-status presentation uses `canvasChromeTokens`.
+2. Shell and status modules do not contain raw `slate-*`, `rose-*`,
    `amber-*`, `emerald-*`, `gray-*`, or `zinc-*` color classes.
 3. The token component does not own Canvas command availability, graph
    mutation, draft persistence, React Flow configuration, or route policy.
@@ -55,14 +55,9 @@ stateDiagram-v2
 
 ## Consumers
 
-- `CanvasToolbar` uses toolbar and separator chrome.
-- `CanvasToolbarPrimaryControls` uses badge, separator, project menu, and
-  command classes.
 - `CanvasDraftSaveStatus` resolves draft status tone through token helpers.
-- `CanvasToolbarDraftStatus` delegates draft-status rendering to
-  `CanvasDraftSaveStatus`.
-- `CanvasPlaygroundTabStrip.templates.tsx` uses shared replacement and
-  tab-kind token classes.
+- Compact Canvas shell builders may consume button, separator, and status
+  classes without owning raw color families.
 
 ## Consumer Diagram
 
@@ -70,27 +65,19 @@ stateDiagram-v2
 flowchart TB
   Theme["apps/web/src/styles/theme.css"]
   Tokens["canvasChromeTokens.ts"]
-  Toolbar["CanvasToolbar.tsx"]
-  Controls["CanvasToolbarPrimaryControls.tsx"]
-  ProjectMenu["Project snapshot menu"]
-  DraftWrapper["CanvasToolbarDraftStatus.tsx"]
+  Shell["CanvasShell"]
+  Commands["Canvas shell commands"]
   Draft["CanvasDraftSaveStatus.tsx"]
-  Tabs["CanvasPlaygroundTabStrip.templates.tsx"]
   Guard["canvasRoutePosturePriority.architecture.test.ts"]
 
   Theme --> Tokens
-  Tokens --> Toolbar
-  Tokens --> Controls
-  Controls --> ProjectMenu
-  DraftWrapper --> Draft
+  Tokens --> Shell
+  Tokens --> Commands
   Tokens --> Draft
-  Tokens --> Tabs
   Guard --> Tokens
-  Guard --> Toolbar
-  Guard --> Controls
-  Guard --> DraftWrapper
+  Guard --> Shell
+  Guard --> Commands
   Guard --> Draft
-  Guard --> Tabs
 ```
 
 ## Negative Rules

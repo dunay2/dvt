@@ -170,7 +170,6 @@ sequenceDiagram
   participant Host as Playground host
   participant Registry as Canvas kind registry
   participant Draft as Protected draft boundary
-  participant Tabs as Host tab strip
   participant Shell as Canvas shell
 
   User->>Host: open workspace canvas route
@@ -181,16 +180,16 @@ sequenceDiagram
   User->>Host: create canvas(kind)
   Host->>Draft: save empty draft with canvas identity
   Draft-->>Host: saved
-  Host->>Tabs: derive active workspace-draft tab
+  Host->>Shell: derive active workspace-draft canvas
   Host->>Shell: render typed empty canvas
   User->>Shell: add first node from typed catalog
   Shell->>Draft: persist first authoring node through draft lifecycle
   Draft-->>Host: graph-backed canvas draft
   Host->>Shell: render graph-ready canvas
-  User->>Tabs: New canvas
-  Tabs->>User: confirm replacement
-  User->>Tabs: confirm
-  Tabs->>Draft: save blank draft with expectedRevision=current
+  User->>Host: New canvas
+  Host->>User: confirm replacement
+  User->>Host: confirm
+  Host->>Draft: save blank draft with expectedRevision=current
   Draft-->>Host: replacement saved or conflict posture
 ```
 
@@ -201,15 +200,14 @@ sequenceDiagram
   participant User as Operator
   participant Host as Playground host
   participant Draft as Protected draft boundary
-  participant Tabs as Host tab strip
   participant Shell as Canvas shell
 
   User->>Host: reopen workspace
   Host->>Draft: read authoritative draft
   Draft-->>Host: canvasDocument(kind,title) plus graph truth
-  Host->>Tabs: derive workspace-draft active tab
+  Host->>Shell: derive workspace-draft canvas identity
   Host->>Shell: render typed empty overlay or graph-ready posture
-  Shell-->>User: restored tab and posture from draft truth
+  Shell-->>User: restored canvas and posture from draft truth
 ```
 
 ## Consumers
