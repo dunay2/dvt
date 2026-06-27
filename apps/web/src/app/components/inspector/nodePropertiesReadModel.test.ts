@@ -296,6 +296,19 @@ describe('nodePropertiesReadModel', () => {
             description: 'Lifecycle status',
             tests: [{ accepted_values: { values: ['created', 'paid'], severity: 'warn' } }],
           },
+          customer_id: {
+            data_type: 'integer',
+            description: 'Customer foreign key',
+            tests: [
+              {
+                relationships: {
+                  to: "ref('dim_customers')",
+                  field: 'customer_id',
+                  severity: 'error',
+                },
+              },
+            ],
+          },
         },
       },
     };
@@ -310,6 +323,11 @@ describe('nodePropertiesReadModel', () => {
       name: 'status',
       type: 'text',
       comment: 'Lifecycle status',
+    });
+    expectTableCells(sectionById(model, 'columns'), 'customer_id', {
+      name: 'customer_id',
+      type: 'integer',
+      comment: 'Customer foreign key',
     });
     expectTableCells(sectionById(model, 'tests'), 'test:model-orders:order_id:not_null', {
       name: 'not_null(order_id)',
@@ -342,6 +360,16 @@ describe('nodePropertiesReadModel', () => {
       expression: 'values: created, paid',
       assertion: 'Value is one of created, paid',
       readinessImpact: 'warning',
+    });
+    expectTableCells(sectionById(model, 'tests'), 'test:model-orders:customer_id:relationships', {
+      name: 'relationships(customer_id)',
+      type: 'relationships',
+      target: 'fct_orders.customer_id',
+      column: 'customer_id',
+      severity: 'error',
+      expression: "ref('dim_customers').customer_id",
+      assertion: "Value references ref('dim_customers').customer_id",
+      readinessImpact: 'blocks run',
     });
   });
 

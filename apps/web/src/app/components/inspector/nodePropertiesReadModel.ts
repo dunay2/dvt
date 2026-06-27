@@ -458,6 +458,35 @@ function buildTestRows(
   const canonicalTestLastRunStatus = node.kind.endsWith(':test') ? node.status : undefined;
   const canonicalTestLastRunDurationMs =
     node.kind.endsWith(':test') && node.lastDuration != null ? node.lastDuration * 1000 : undefined;
+  const readDbtTestExpression = (
+    type: string,
+    config: Record<string, unknown>
+  ): string | undefined => {
+    const values = readStringArray(config.values);
+    if (values.length > 0) {
+      return `values: ${values.join(', ')}`;
+    }
+
+    const directExpression = readFirstString(config.expression, config.sql, config.condition);
+    if (directExpression != null) {
+      return directExpression;
+    }
+
+    if (
+      type
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, '_') !== 'relationships'
+    ) {
+      return undefined;
+    }
+
+    const relationTarget = readFirstString(config.to, config.target, config.targetModel);
+    const relationField = readFirstString(config.field, config.targetColumn, config.column);
+    const relationshipExpression = [relationTarget, relationField].filter(Boolean).join('.');
+
+    return relationshipExpression.length > 0 ? relationshipExpression : undefined;
+  };
   const readDbtTest = (
     candidate: unknown
   ): Readonly<{
@@ -488,7 +517,7 @@ function buildTestRows(
       return {
         type: directType,
         severity: readString(candidate.severity),
-        expression: readFirstString(candidate.expression, candidate.sql, candidate.condition),
+        expression: readDbtTestExpression(directType, candidate),
         selectedForExecution:
           readBoolean(candidate.selectedForExecution) ??
           readBoolean(candidate.executionSelected) ??
@@ -514,14 +543,10 @@ function buildTestRows(
       }
 
       const configRecord = asRecord(config);
-      const values = readStringArray(configRecord.values);
       return {
         type,
         severity: readString(configRecord.severity),
-        expression:
-          values.length > 0
-            ? `values: ${values.join(', ')}`
-            : readFirstString(configRecord.expression, configRecord.sql, configRecord.condition),
+        expression: readDbtTestExpression(type, configRecord),
         selectedForExecution:
           readBoolean(configRecord.selectedForExecution) ??
           readBoolean(configRecord.executionSelected) ??
@@ -552,14 +577,10 @@ function buildTestRows(
       type: string,
       config: Record<string, unknown>
     ): DbtTestSemanticsInput => {
-      const values = readStringArray(config.values);
       return {
         type,
         severity: readString(config.severity),
-        expression:
-          values.length > 0
-            ? `values: ${values.join(', ')}`
-            : readFirstString(config.expression, config.sql, config.condition),
+        expression: readDbtTestExpression(type, config),
         selectedForExecution:
           readBoolean(config.selectedForExecution) ??
           readBoolean(config.executionSelected) ??

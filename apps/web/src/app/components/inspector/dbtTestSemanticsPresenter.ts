@@ -58,7 +58,9 @@ function formatAssertion(input: DbtTestSemanticsInput): string {
   }
 
   if (type === 'relationships') {
-    return 'Value references related model';
+    return input.expression == null || input.expression.length === 0
+      ? 'Value references related model'
+      : `Value references ${input.expression}`;
   }
 
   return input.expression == null ? '' : 'Custom assertion';
