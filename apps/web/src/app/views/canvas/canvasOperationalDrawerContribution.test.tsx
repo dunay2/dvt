@@ -24,6 +24,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       panels: props.panels,
       chromeState: props.chromeState,
       onPreviewExecutionPlan,
+      onStartRun: vi.fn(),
     });
 
     expect(contribution.tabs).toEqual([
@@ -81,6 +82,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       panels: props.panels,
       chromeState: props.chromeState,
       onPreviewExecutionPlan: vi.fn(),
+      onStartRun: vi.fn(),
     });
 
     expect(contribution.tabs.find((tab) => tab.id === 'problems')?.count).toBe(0);

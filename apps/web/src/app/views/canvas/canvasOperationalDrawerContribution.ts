@@ -12,6 +12,7 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   panels: CanvasShellPanels;
   chromeState: CanvasShellChromeState;
   onPreviewExecutionPlan: () => void;
+  onStartRun: () => void;
 }>;
 
 const tabLabels = {
@@ -56,6 +57,7 @@ function buildReadinessProblems({
 
 export function buildCanvasOperationalDrawerContribution({
   onPreviewExecutionPlan,
+  onStartRun,
   panels,
   policy,
   chromeState,
@@ -92,6 +94,7 @@ export function buildCanvasOperationalDrawerContribution({
     runs: {
       activeRunId,
       canStartRun: chromeState.canStartRun,
+      onStartRun,
       status: runsStatus,
       summary:
         runsStatus === 'active'

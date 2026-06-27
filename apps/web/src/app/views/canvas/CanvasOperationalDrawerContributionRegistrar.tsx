@@ -11,10 +11,12 @@ type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   panels: CanvasShellPanels;
   chromeState: CanvasShellChromeState;
   onPreviewExecutionPlan: () => void;
+  onStartRun: () => void;
 }>;
 
 export function CanvasOperationalDrawerContributionRegistrar({
   onPreviewExecutionPlan,
+  onStartRun,
   panels,
   policy,
   chromeState,
@@ -32,8 +34,9 @@ export function CanvasOperationalDrawerContributionRegistrar({
         panels,
         chromeState,
         onPreviewExecutionPlan,
+        onStartRun,
       }),
-    [onPreviewExecutionPlan, panels, policy, chromeState]
+    [onPreviewExecutionPlan, onStartRun, panels, policy, chromeState]
   );
 
   useEffect(() => {

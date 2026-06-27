@@ -30,6 +30,7 @@ export type OperationalDrawerContribution = Readonly<{
   runs: Readonly<{
     activeRunId: string | null;
     canStartRun: boolean;
+    onStartRun: () => void;
     status: 'active' | 'ready' | 'blocked';
     summary: string;
   }>;

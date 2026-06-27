@@ -41,6 +41,7 @@ function buildContribution(
     runs: {
       activeRunId: null,
       canStartRun: false,
+      onStartRun: vi.fn(),
       status: 'blocked',
       summary: 'Preview required before running.',
     },
@@ -118,6 +119,7 @@ describe('OperationalDrawerPanels action surfaces', () => {
             runs: {
               activeRunId: null,
               canStartRun: true,
+              onStartRun: vi.fn(),
               status: 'ready',
               summary: 'Run is ready after the current execution preview.',
             },

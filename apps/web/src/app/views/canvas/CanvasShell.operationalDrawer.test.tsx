@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasShell publishes Canvas operations into the bottom drawer. */
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import {
@@ -26,9 +26,13 @@ describe('CanvasShell operational drawer registration', () => {
   });
 
   it('registers Canvas operational drawer tabs from the surface strategy', async () => {
+    const onRun = vi.fn();
     await renderShell({
       panels: {
         activeRunId: 'run-42',
+      },
+      chromeCommands: {
+        onRun,
       },
     });
 
@@ -58,5 +62,8 @@ describe('CanvasShell operational drawer registration', () => {
         message: canvasViewCopy.planStatusPreviewRequiredMessage,
       }),
     ]);
+
+    contribution?.runs.onStartRun();
+    expect(onRun).toHaveBeenCalledTimes(1);
   });
 });

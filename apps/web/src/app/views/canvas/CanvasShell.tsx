@@ -130,6 +130,7 @@ export default function CanvasShell({
           panels={panels}
           chromeState={chromeState}
           onPreviewExecutionPlan={chromeCommands.onPlan}
+          onStartRun={chromeCommands.onRun}
         />
       )}
       <CanvasShellMainPanel
