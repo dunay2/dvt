@@ -30,7 +30,7 @@ function buildContribution(
           id: 'plan_integrity',
           severity: 'warning',
           message: 'Preview required before running.',
-          detail: 'plan_integrity',
+          detail: 'Execution Preview integrity',
           action: {
             label: 'Preview execution plan',
             onAction: vi.fn(),
@@ -48,7 +48,7 @@ function buildContribution(
     preview: {
       status: 'blocked',
       summary: 'Preview required before running.',
-      blockers: ['plan_integrity'],
+      blockers: ['Execution Preview integrity'],
       canPreview: true,
       onPreviewExecutionPlan: vi.fn(),
     },
@@ -83,7 +83,7 @@ describe('OperationalDrawerPanels action surfaces', () => {
             id: 'plan_integrity',
             severity: 'warning',
             message: 'Preview required before running.',
-            detail: 'plan_integrity',
+            detail: 'Execution Preview integrity',
             action: { label: 'Preview execution plan', onAction },
           },
         ],

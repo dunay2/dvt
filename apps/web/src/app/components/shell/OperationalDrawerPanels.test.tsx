@@ -29,7 +29,7 @@ function buildCanvasOperationalDrawerContribution(
           id: 'plan_integrity',
           severity: 'warning',
           message: 'Preview required before running.',
-          detail: 'plan_integrity',
+          detail: 'Execution Preview integrity',
         },
       ],
     },
@@ -43,7 +43,7 @@ function buildCanvasOperationalDrawerContribution(
     preview: {
       status: 'blocked',
       summary: 'Preview required before running.',
-      blockers: ['plan_integrity'],
+      blockers: ['Execution Preview integrity'],
       canPreview: true,
       onPreviewExecutionPlan: vi.fn(),
     },
@@ -110,7 +110,7 @@ describe('OperationalDrawerPanels', () => {
       preview: {
         status: 'blocked',
         summary: 'Preview required before running.',
-        blockers: ['plan_integrity'],
+        blockers: ['Execution Preview integrity'],
         canPreview: true,
         onPreviewExecutionPlan,
       },
@@ -127,7 +127,8 @@ describe('OperationalDrawerPanels', () => {
     });
 
     expect(container.textContent).toContain('Preview required before running.');
-    expect(container.textContent).toContain('plan_integrity');
+    expect(container.textContent).toContain('Execution Preview integrity');
+    expect(container.textContent).not.toContain('plan_integrity');
     expect(
       container.querySelector('[data-slot="bottom-operational-problem-severity"]')?.textContent
     ).toBe('warning');
@@ -158,7 +159,8 @@ describe('OperationalDrawerPanels', () => {
     expect(container.textContent).toContain('Preview required before running.');
     expect(
       container.querySelector('[data-slot="bottom-operational-preview-blocker"]')?.textContent
-    ).toBe('plan_integrity');
+    ).toBe('Execution Preview integrity');
+    expect(container.textContent).not.toContain('plan_integrity');
 
     const previewButton = Array.from(container.querySelectorAll('button')).find((button) =>
       button.textContent?.includes('Preview execution plan')
