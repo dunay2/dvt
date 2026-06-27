@@ -6,15 +6,16 @@ type CanvasCopySection = Partial<Record<keyof CanvasViewCopy, LocalizableString>
 export const canvasViewExecutionCopyByKey = {
   planPermissionDeniedMessage: {
     key: 'canvas.plan.permissionDeniedMessage',
-    fallback: 'You do not have permission to create plans',
+    fallback: 'You do not have permission to create Execution Previews',
   },
   planSqlArtifactRequiredMessage: {
     key: 'canvas.plan.sqlArtifactRequiredMessage',
-    fallback: 'Preview provenance must resolve the SQL artifact before creating a persisted plan.',
+    fallback:
+      'Preview provenance must resolve the SQL artifact before creating a persisted Execution Preview.',
   },
   planUnableToCreateMessage: {
     key: 'canvas.plan.unableToCreateMessage',
-    fallback: 'Unable to create execution plan',
+    fallback: 'Unable to create Execution Preview',
   },
   previewProvenanceTransformPathRequiredMessage: {
     key: 'canvas.preview.transformPathRequiredMessage',
@@ -40,11 +41,11 @@ export const canvasViewExecutionCopyByKey = {
   },
   runNoPlanMessage: {
     key: 'canvas.run.noPlanMessage',
-    fallback: 'No execution plan available - preview the execution plan first.',
+    fallback: 'No Execution Preview available - preview execution first.',
   },
   runPreviewStaleMessage: {
     key: 'canvas.run.previewStaleMessage',
-    fallback: 'Execution Preview is stale. Preview execution plan again before starting.',
+    fallback: 'Execution Preview is stale. Preview execution again before starting.',
   },
   runPlanRefUnavailableMessage: {
     key: 'canvas.run.planRefUnavailableMessage',
@@ -53,7 +54,7 @@ export const canvasViewExecutionCopyByKey = {
   runPersistedPreviewRequiredMessage: {
     key: 'canvas.run.persistedPreviewRequiredMessage',
     fallback:
-      'Run start requires a persisted Execution Preview bound to the current plan reference. Preview execution plan again first.',
+      'Run start requires a persisted Execution Preview bound to the current Execution Preview reference. Preview execution again first.',
   },
   runFailedMessage: {
     key: 'canvas.run.failedMessage',
@@ -82,12 +83,12 @@ export const canvasViewExecutionCopyByKey = {
   planStatusPreviewNotAlignedMessage: {
     key: 'canvas.planStatus.previewNotAlignedMessage',
     fallback:
-      'Execution Preview is not aligned with the active plan reference. Preview execution plan again before starting.',
+      'Execution Preview is not aligned with the active Execution Preview reference. Preview execution again before starting.',
   },
   planStatusPreviewNotPersistedMessage: {
     key: 'canvas.planStatus.previewNotPersistedMessage',
     fallback:
-      'Execution Preview is not persisted. Preview execution plan to create a persisted preview.',
+      'Execution Preview is not persisted. Preview execution to create a persisted preview.',
   },
   planStatusPreviewReadyMessage: {
     key: 'canvas.planStatus.previewReadyMessage',

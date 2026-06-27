@@ -23,7 +23,6 @@ describe('canvas execution copy', () => {
       canvasViewToolbarCopyByKey.toolbarWorkflowPlanRequiredLabel.fallback,
     ].join('\n');
 
-    expect(visibleExecutionCopy).toContain('Preview execution plan');
     expect(visibleExecutionCopy).toContain('Execution Preview');
     expect(visibleExecutionCopy).not.toMatch(/\b(?:run|re-run)[^\S\r\n]+Plan\b/i);
     expect(visibleExecutionCopy).not.toContain('Plan required');
@@ -35,5 +34,13 @@ describe('canvas execution copy', () => {
     expect(visibleExecutionCopy).toContain('Execution Preview');
     expect(visibleExecutionCopy).not.toMatch(/\bplanes?\b/i);
     expect(visibleExecutionCopy).not.toMatch(/\bplan de ejecuci[oó]n\b/i);
+  });
+
+  it('keeps English readiness feedback on Execution Preview vocabulary', () => {
+    const visibleExecutionCopy = executionFallbacks().join('\n');
+
+    expect(visibleExecutionCopy).toContain('Execution Preview');
+    expect(visibleExecutionCopy).not.toMatch(/\bplans?\b/i);
+    expect(visibleExecutionCopy).not.toMatch(/\bexecution plan\b/i);
   });
 });
