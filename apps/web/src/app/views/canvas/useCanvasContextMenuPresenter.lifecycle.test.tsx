@@ -183,6 +183,91 @@ describe('useCanvasContextMenuPresenter lifecycle', () => {
     harness.expectMenuClosed();
   });
 
+  it('closes an unmatched document-level pointerdown away after the echo window', async () => {
+    vi.useFakeTimers();
+    await harness.render();
+
+    const pointerListeners: EventListener[] = [];
+    const originalAddEventListener = document.addEventListener.bind(document);
+    const addEventListenerSpy = vi
+      .spyOn(document, 'addEventListener')
+      .mockImplementation((type, listener, options) => {
+        if (type === 'pointerdown' && typeof listener === 'function') {
+          pointerListeners.push(listener);
+        }
+
+        originalAddEventListener(type, listener, options);
+      });
+
+    try {
+      await harness.openPaneMenuAt(320, 260);
+
+      expect(pointerListeners.length).toBeGreaterThan(0);
+      const outsideDocumentPointer = new MouseEvent('pointerdown', {
+        button: 0,
+        clientX: 700,
+        clientY: 180,
+      });
+      Object.defineProperty(outsideDocumentPointer, 'target', { value: document });
+
+      await act(async () => {
+        pointerListeners.at(-1)?.(outsideDocumentPointer);
+      });
+    } finally {
+      addEventListenerSpy.mockRestore();
+    }
+
+    harness.expectMenuVisible();
+    await act(async () => {
+      vi.advanceTimersByTime(101);
+    });
+
+    harness.expectMenuClosed();
+  });
+
+  it('keeps the menu open when a document-level pointer echo is followed by a pane click echo', async () => {
+    vi.useFakeTimers();
+    await harness.render();
+
+    const pointerListeners: EventListener[] = [];
+    const originalAddEventListener = document.addEventListener.bind(document);
+    const addEventListenerSpy = vi
+      .spyOn(document, 'addEventListener')
+      .mockImplementation((type, listener, options) => {
+        if (type === 'pointerdown' && typeof listener === 'function') {
+          pointerListeners.push(listener);
+        }
+
+        originalAddEventListener(type, listener, options);
+      });
+
+    try {
+      await harness.openPaneMenuAt(320, 260);
+
+      const documentPointerEcho = new MouseEvent('pointerdown', {
+        button: 0,
+        clientX: 700,
+        clientY: 180,
+      });
+      Object.defineProperty(documentPointerEcho, 'target', { value: document });
+
+      await act(async () => {
+        pointerListeners.at(-1)?.(documentPointerEcho);
+      });
+      await act(async () => {
+        harness.getPresenter().handlePaneClick({ button: 0, clientX: 700, clientY: 180 });
+      });
+    } finally {
+      addEventListenerSpy.mockRestore();
+    }
+
+    await act(async () => {
+      vi.advanceTimersByTime(101);
+    });
+
+    harness.expectMenuVisible();
+  });
+
   it('keeps the menu open through a delayed pointer echo at the original context point', async () => {
     vi.useFakeTimers();
     await harness.render();
