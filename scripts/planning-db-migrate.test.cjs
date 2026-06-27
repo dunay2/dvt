@@ -6019,6 +6019,32 @@ test('tracked migrations register Canvas source import live proof feature mechan
   assert.doesNotMatch(sourceImportLiveProofMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Source Import Postgres metadata probe feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const metadataProbeMigration = migrations.find(
+    (migration) => migration.fileName === '341_register_source_import_postgres_metadata_probe.sql'
+  );
+
+  assert.ok(metadataProbeMigration);
+  assert.match(metadataProbeMigration.sql, /E-CANVAS-SOURCE-IMPORT-METADATA-PROBE-1/);
+  assert.match(metadataProbeMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(metadataProbeMigration.sql, /CreateWarehouseConnection/);
+  assert.match(metadataProbeMigration.sql, /TestWarehouseConnection/);
+  assert.match(metadataProbeMigration.sql, /WorkspaceWarehouseConnectionProbe\.ts/);
+  assert.match(metadataProbeMigration.sql, /WorkspaceWarehouseConnectionProbe\.test\.ts/);
+  assert.match(metadataProbeMigration.sql, /PostgresColumnDiscoveryRow/);
+  assert.match(metadataProbeMigration.sql, /PostgresTableDiscoveryRow/);
+  assert.match(metadataProbeMigration.sql, /groupPostgresColumnsByTable/);
+  assert.match(metadataProbeMigration.sql, /parseOptionalRowCount/);
+  assert.match(metadataProbeMigration.sql, /postgresTableKey/);
+  assert.match(metadataProbeMigration.sql, /toWarehouseTable/);
+  assert.match(metadataProbeMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(metadataProbeMigration.sql, /pnpm verify:prepush/);
+  assert.match(metadataProbeMigration.sql, /sourceImportAvailable_false/);
+  assert.doesNotMatch(metadataProbeMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(metadataProbeMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register DBT node card metadata metrics feature mechanization', () => {
   const migrations = readMigrationFiles();
   const dbtCardMetricsMigration = migrations.find(
