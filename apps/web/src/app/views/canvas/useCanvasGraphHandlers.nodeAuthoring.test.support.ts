@@ -1,12 +1,12 @@
 import type React from 'react';
 import { vi } from 'vitest';
 
-import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
+import { CANVAS_NODE_KINDS } from '../../plugins/nodeTypeCatalog';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { buildCanonicalNode } from './useCanvasGraphHandlers.test.support';
 
 export function requireAuthoringNodeKind(kind: string): NodeKindRegistration {
-  const registration = DVT_AUTHORING_NODE_KINDS.find((candidate) => candidate.kind === kind);
+  const registration = CANVAS_NODE_KINDS.find((candidate) => candidate.kind === kind);
   if (registration == null) {
     throw new Error(`Missing authoring node kind fixture: ${kind}`);
   }
