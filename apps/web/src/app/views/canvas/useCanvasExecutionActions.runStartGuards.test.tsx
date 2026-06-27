@@ -29,9 +29,6 @@ type UnavailableRunStartScenario = Readonly<{
   expectedBlocker: string;
 }>;
 
-const PERSISTED_PREVIEW_REQUIRED_MESSAGE =
-  'Run start requires a persisted Execution Preview bound to the current plan reference. Preview execution plan again first.';
-
 const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
   {
     name: 'does not call startRun and reopens the modal when planRef is missing',
@@ -54,7 +51,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
       },
     },
     expectedSummary: canvasViewCopy.planStatusPreviewNotPersistedMessage,
-    expectedError: PERSISTED_PREVIEW_REQUIRED_MESSAGE,
+    expectedError: canvasViewCopy.runPersistedPreviewRequiredMessage,
     expectedModalState: 'true',
     expectedBlocker: 'plan_integrity',
   },
@@ -79,7 +76,7 @@ const unavailableRunStartScenarios: readonly UnavailableRunStartScenario[] = [
       },
     },
     expectedSummary: canvasViewCopy.planStatusPreviewNotAlignedMessage,
-    expectedError: PERSISTED_PREVIEW_REQUIRED_MESSAGE,
+    expectedError: canvasViewCopy.runPersistedPreviewRequiredMessage,
     expectedModalState: 'true',
     expectedBlocker: 'plan_integrity',
   },
