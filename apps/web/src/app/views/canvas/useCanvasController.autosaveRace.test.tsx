@@ -101,6 +101,66 @@ describe('useCanvasController autosave race guards', () => {
     );
   });
 
+  it('ignores a late successful autosave after a source import adopts a newer draft revision', async () => {
+    const targetHarness = createDraftCompletionHarness();
+    harness = targetHarness;
+    let resolveSave: ((value: WorkspaceGraphDraftAuthoringSaveResult) => void) | null = null;
+    targetHarness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(
+      async () =>
+        await new Promise<WorkspaceGraphDraftAuthoringSaveResult>((resolve) => {
+          resolveSave = resolve;
+        })
+    );
+
+    await triggerGovernedAutosave(targetHarness);
+
+    expect(
+      targetHarness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      targetHarness.getLatestResult()?.handleSourceImportComplete({
+        success: true,
+        sourcesCreated: 1,
+        tablesImported: 1,
+        yamlFiles: ['models/sources/src_erp.yml'],
+        importedNodeIds: ['src_erp_orders'],
+        grouping: 'schema',
+        draftRevision: 'rev-imported',
+        options: {
+          includeColumns: true,
+          addTests: false,
+          addFreshness: false,
+        },
+      });
+      await Promise.resolve();
+    });
+    targetHarness.state.queryClient.setQueryData.mockClear();
+
+    await act(async () => {
+      resolveSave?.({
+        ...buildDraftSaveSavedResponse(
+          {
+            tenantId: 'tenant-a',
+            projectId: 'project-a',
+            environmentId: 'dev',
+          },
+          { revision: 'rev-stale' }
+        ),
+      });
+      await Promise.resolve();
+    });
+    await targetHarness.renderProbe();
+
+    expect(targetHarness.state.queryClient.setQueryData).not.toHaveBeenCalledWith(
+      ['workspace', 'graph-draft', 'tenant-a::project-a::dev'],
+      expect.objectContaining({
+        revision: 'rev-stale',
+      })
+    );
+    expect(targetHarness.getLatestResult()?.importedNodeFocusIds).toEqual(['src_erp_orders']);
+  });
+
   function createDraftCompletionHarness(): CanvasControllerHarness {
     const nextHarness = setupCanvasControllerHarness();
     configureDropToCompleteGovernedDraft(nextHarness);
