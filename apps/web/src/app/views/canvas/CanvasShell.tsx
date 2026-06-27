@@ -96,8 +96,8 @@ export default function CanvasShell({
     canOpenSourceImport: canOpenDataRegistry,
     canOpenProjectExplorer: true,
     canOpenProjectCode: true,
-    canValidateGraph: panels.userPermissions.canPlan,
-    canPreviewExecutionPlan: panels.userPermissions.canPlan && chromeState.canPlanGraph,
+    canValidateGraph: true,
+    canPreviewExecutionPlan: panels.userPermissions.canPlan,
     canOpenCanvasSettings: true,
     authoringNodeKinds: panels.authoringNodeKinds,
     screenToFlowPosition: canvasContextScreenToFlowPosition ?? ((screenPosition) => screenPosition),
@@ -121,6 +121,7 @@ export default function CanvasShell({
   return (
     <ResizablePanelGroup
       data-slot="canvas-shell-panel-group"
+      id="canvas-shell-horizontal-panels"
       direction="horizontal"
       className="h-full min-w-0"
     >

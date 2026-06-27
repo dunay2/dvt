@@ -148,6 +148,82 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     expect(harness.shellFeedback.success).toHaveBeenCalledWith(canvasViewCopy.planCreatedMessage);
   });
 
+  it('validates the flushed draft graph before previewing an authoring-generated workflow', async () => {
+    const plansService = createPlansServiceMock();
+    const authoringNodes: CanonicalNode[] = [
+      {
+        id: 'source-1',
+        name: 'Source 1',
+        pluginId: 'dvt',
+        kind: 'dvt:source',
+        role: 'input' as const,
+        status: 'idle' as const,
+        tags: ['authoring'],
+        metadata: { typeLabel: 'Source' },
+      },
+      {
+        id: 'dvt-sql-transform-1',
+        name: 'SQL transform 1',
+        pluginId: 'dvt',
+        kind: 'dvt:sql_transform',
+        role: 'transform' as const,
+        status: 'idle' as const,
+        tags: ['authoring'],
+        metadata: { typeLabel: 'SQL transform' },
+      },
+      {
+        id: 'sink-1',
+        name: 'Sink 1',
+        pluginId: 'dvt',
+        kind: 'dvt:sink',
+        role: 'output' as const,
+        status: 'idle' as const,
+        tags: ['authoring'],
+        metadata: { typeLabel: 'Sink' },
+      },
+    ];
+    const authoringEdges: CanonicalEdge[] = [
+      {
+        id: 'edge-source-transform',
+        sourceId: 'source-1',
+        targetId: 'dvt-sql-transform-1',
+        relation: 'lineage' as const,
+      },
+      {
+        id: 'edge-transform-sink',
+        sourceId: 'dvt-sql-transform-1',
+        targetId: 'sink-1',
+        relation: 'lineage' as const,
+      },
+    ];
+    const workspaceFilePorts = createWorkspaceFilePortMocks({});
+
+    harness = renderExecutionActionsHarness({
+      plansService,
+      runsService: createRunsServiceMock(),
+      ...workspaceFilePorts,
+      canonicalNodes: [],
+      canonicalEdges: [],
+      workspaceNodeIds: [],
+      flushDraftForExecution: async () => ({
+        ok: true,
+        canonicalNodes: authoringNodes,
+        canonicalEdges: authoringEdges,
+        workspaceNodeIds: authoringNodes.map((node) => node.id),
+      }),
+    });
+    await harness.render();
+
+    await harness.clickPlan();
+
+    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
+    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
+      'models/dvt-sql-transform-1.sql',
+      'select *\nfrom public.source_1;\n'
+    );
+    expect(harness.shellFeedback.error).not.toHaveBeenCalled();
+  });
+
   it('adds preview provenance for temporal targets when workspace files resolve', async () => {
     const canonicalNodes = buildCanonicalNodes();
     const canonicalEdges = buildCanonicalEdges();

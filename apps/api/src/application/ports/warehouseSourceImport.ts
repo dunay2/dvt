@@ -107,6 +107,7 @@ export type ImportWarehouseSourcesInput = {
 
 export type ImportWarehouseSourcesResult = {
   readonly success: true;
+  readonly draftRevision: string;
   readonly sourcesCreated: number;
   readonly tablesImported: number;
   readonly yamlFiles: readonly string[];

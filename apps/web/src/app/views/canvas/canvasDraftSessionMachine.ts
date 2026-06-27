@@ -145,6 +145,22 @@ function reloadFromRemote(
   );
 }
 
+function adoptExternalRevision(
+  session: CanvasDraftSession,
+  draftRevision: string | undefined
+): CanvasDraftSession {
+  if (!draftRevision || session.draftRevision === draftRevision) {
+    return session;
+  }
+
+  return {
+    ...session,
+    draftRevision,
+    savingWorkingSet: undefined,
+    syncState: session.syncState === 'conflict' ? 'editing' : session.syncState,
+  };
+}
+
 // Machine owns aggregate sync-state transitions over the draft session.
 export const canvasDraftSessionMachine = {
   createBootstrapping,
@@ -154,4 +170,5 @@ export const canvasDraftSessionMachine = {
   applyConflict,
   markRemoteDraftMissing,
   reloadFromRemote,
+  adoptExternalRevision,
 } as const;

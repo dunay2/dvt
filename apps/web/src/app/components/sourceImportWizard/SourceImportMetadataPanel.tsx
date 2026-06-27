@@ -29,7 +29,16 @@ export function SourceImportMetadataPanel({
 
   return (
     <div id="source-import-section-metadata" className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-      <div className="space-y-4">
+      <div className="space-y-4 lg:order-2">
+        <OptionsStep
+          sourceImportOptions={sourceImportOptions}
+          sourceImportOptionValues={sourceImportOptionValues}
+          onSourceImportOptionChange={onSourceImportOptionChange}
+        />
+        <GroupingStep groupingStrategy={groupingStrategy} onGroupingChange={onGroupingChange} />
+      </div>
+
+      <div className="space-y-4 lg:order-1">
         <div>
           <h3 className="mb-2 text-lg font-medium">Source metadata</h3>
           <p className="text-sm text-slate-300">
@@ -70,15 +79,6 @@ export function SourceImportMetadataPanel({
             </div>
           )}
         </Card>
-      </div>
-
-      <div className="space-y-4">
-        <GroupingStep groupingStrategy={groupingStrategy} onGroupingChange={onGroupingChange} />
-        <OptionsStep
-          sourceImportOptions={sourceImportOptions}
-          sourceImportOptionValues={sourceImportOptionValues}
-          onSourceImportOptionChange={onSourceImportOptionChange}
-        />
       </div>
     </div>
   );

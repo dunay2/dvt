@@ -5,6 +5,7 @@
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromCanvasContextMenu,
+  getVisibleCanvasNode,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { resetE2eApiStubs } from '../../support/e2eApiStub';
@@ -77,8 +78,23 @@ function waitForCompletedLiveRun(
 }
 
 function openSourceImportFromCanvas(): void {
-  cy.get('.react-flow__pane', { timeout: 20_000 }).rightclick(320, 260);
+  cy.get('.react-flow__pane', { timeout: 20_000 }).rightclick(140, 500);
   cy.contains('[role="menuitem"]', 'Add source', { timeout: 20_000 }).click();
+}
+
+function getOpenSourceImportDialog(): Cypress.Chainable<JQuery<HTMLElement>> {
+  return cy
+    .get('[data-slot="dialog-content"][data-state="open"]', { timeout: 20_000 })
+    .then(($dialogs) => {
+      const visibleDialogs = $dialogs.filter((_, element) => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden';
+      });
+
+      expect(visibleDialogs.length, 'open visible source import dialog').to.be.greaterThan(0);
+      return cy.wrap(visibleDialogs.last());
+    });
 }
 
 function closeRunOperationsIfOpen(): void {
@@ -103,9 +119,9 @@ describe('Canvas preview-run live protected runtime', () => {
     seedLiveSelectedClosureDraft({ authoringGenerated: true });
     visitWithLiveWorkspaceSession('/canvas');
 
-    cy.contains('.react-flow__node', 'Source 1').should('be.visible');
-    cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
-    cy.contains('.react-flow__node', 'Sink 1').should('be.visible');
+    getVisibleCanvasNode('Source 1').should('be.visible');
+    getVisibleCanvasNode('SQL transform 1').should('be.visible');
+    getVisibleCanvasNode('Sink 1').should('be.visible');
 
     selectCanvasClosure(['Source 1', 'SQL transform 1', 'Sink 1']);
 
@@ -207,31 +223,43 @@ describe('Canvas preview-run live protected runtime', () => {
 
     openSourceImportFromCanvas();
 
-    cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
-    cy.contains('Choose database connection').should('be.visible');
-    cy.contains('Local Postgres proof').should('be.visible').click();
+    getOpenSourceImportDialog().within(() => {
+      cy.contains('Add source').should('be.visible');
+      cy.contains('Choose database connection').should('be.visible');
+      cy.contains('Local Postgres proof').should('be.visible').click();
+    });
 
-    cy.contains('[role="tab"]', 'Browse').click();
-    cy.contains('Browse source tables', { timeout: 20_000 }).should('be.visible');
-    cy.contains('orders').should('be.visible').click();
-    cy.contains('Selected: 1').should('be.visible');
+    getOpenSourceImportDialog().within(() => {
+      cy.contains('[role="tab"]', 'Browse').click();
+      cy.contains('Browse source tables', { timeout: 20_000 }).should('be.visible');
+      cy.get('[data-source-import-table="dvt.raw.orders"]', { timeout: 20_000 }).click();
+    });
+    getOpenSourceImportDialog().should('contain.text', 'Selected: 1');
 
-    cy.contains('[role="tab"]', 'Metadata').click();
-    cy.contains('Metadata Options', { timeout: 20_000 }).should('be.visible');
-    cy.contains('h4', 'Include Column Metadata')
-      .closest('[class*="border-slate-600"]')
-      .find('[role="checkbox"]')
-      .click();
+    getOpenSourceImportDialog().within(() => {
+      cy.contains('[role="tab"]', 'Metadata').click();
+      cy.contains('Add Generic Tests', { timeout: 20_000 }).should('be.visible');
+      cy.contains('Add Generic Tests')
+        .closest('[class*="border-slate-600"]')
+        .find('[role="checkbox"]')
+        .click();
+    });
 
-    cy.contains('[role="tab"]', 'Selected').click();
-    cy.contains('Selected sources').should('be.visible');
-    cy.contains('Connection:').parent().should('contain.text', 'Local Postgres proof');
-    cy.contains('Tables Selected:').parent().should('contain.text', '1');
+    getOpenSourceImportDialog().within(() => {
+      cy.contains('[role="tab"]', 'Selected').click();
+      cy.contains('Connection:').parent().should('contain.text', 'Local Postgres proof');
+      cy.contains('Tables Selected:').parent().should('contain.text', '1');
+      cy.contains('Add Generic Tests').parent().should('contain.text', 'Yes');
+    });
     clickButtonNatively('Attach sources to canvas');
 
-    cy.contains('Sources attached', { timeout: 30_000 }).should('be.visible');
-    cy.contains('Tables registered:').parent().should('contain.text', '1');
-    cy.contains('[file] models/sources/src_raw.yml').should('be.visible');
+    getOpenSourceImportDialog().within(() => {
+      cy.contains('Your selected tables have been attached to the workspace graph.', {
+        timeout: 30_000,
+      }).should('be.visible');
+      cy.contains('Tables registered:').parent().should('contain.text', '1');
+    });
+    cy.contains('Stale version').should('not.exist');
 
     readLiveWorkspaceFile('models/sources/src_raw.yml').then((sourceYamlResponse) => {
       expect(sourceYamlResponse.status).to.equal(200);

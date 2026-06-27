@@ -86,7 +86,9 @@ describe('CanvasShell context menu integration', () => {
     expectMenuVisible();
     expectMenuLayerVisible();
 
-    vi.advanceTimersByTime(1001);
+    await act(async () => {
+      vi.advanceTimersByTime(1001);
+    });
     await act(async () => {
       document.dispatchEvent(
         new MouseEvent('pointerdown', {
@@ -142,5 +144,99 @@ describe('CanvasShell context menu integration', () => {
       bottomDrawerVisible: true,
     });
     expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('problems');
+  });
+
+  it('keeps execution preview available from the canvas menu when readiness is blocked', async () => {
+    const onPreviewExecutionPlan = vi.fn();
+
+    await renderShell({
+      chromeCommands: { onPreviewExecutionPlan },
+      chromeState: { canPlanGraph: false },
+    });
+    const presenter = getContextMenuPresenter();
+
+    await act(async () => {
+      presenter.handlePaneContextMenu({
+        preventDefault: vi.fn(),
+        clientX: 520,
+        clientY: 360,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).toContain(
+      'Preview execution plan'
+    );
+
+    expect(onPreviewExecutionPlan).not.toHaveBeenCalled();
+  });
+
+  it('dispatches execution preview from the rendered canvas menu item', async () => {
+    const onPreviewExecutionPlan = vi.fn();
+
+    await renderShell({
+      chromeCommands: { onPreviewExecutionPlan },
+      chromeState: { canPlanGraph: false },
+    });
+    const presenter = getContextMenuPresenter();
+
+    await act(async () => {
+      presenter.handlePaneContextMenu({
+        preventDefault: vi.fn(),
+        clientX: 520,
+        clientY: 360,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    const previewItem = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-context-menu"] [role="menuitem"]'
+      )
+    ).find((element) => element.textContent === 'Preview execution plan');
+
+    expect(previewItem).toBeDefined();
+
+    await act(async () => {
+      previewItem?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
+    expectMenuClosed();
+  });
+
+  it('does not expose execution preview when route permissions block planning', async () => {
+    const onPreviewExecutionPlan = vi.fn();
+
+    await renderShell({
+      chromeCommands: { onPreviewExecutionPlan },
+      panels: {
+        userPermissions: {
+          canPlan: false,
+          canRun: false,
+          canEditEdges: true,
+        },
+      },
+    });
+    const presenter = getContextMenuPresenter();
+
+    await act(async () => {
+      presenter.handlePaneContextMenu({
+        preventDefault: vi.fn(),
+        clientX: 520,
+        clientY: 360,
+      } as unknown as React.MouseEvent<Element>);
+    });
+
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).not.toContain(
+      'Preview execution plan'
+    );
+
+    await act(async () => {
+      presenter.handleCanvasAction({
+        action: 'preview-execution-plan',
+        label: 'Preview execution plan',
+      });
+    });
+
+    expect(onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
   });
 });

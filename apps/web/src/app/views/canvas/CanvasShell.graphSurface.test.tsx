@@ -104,6 +104,7 @@ describe('CanvasShell graph base surface', () => {
     const shellPanelGroup = container.querySelector('[data-slot="canvas-shell-panel-group"]');
 
     expect(shellPanelGroup).not.toBeNull();
+    expect(shellPanelGroup?.getAttribute('id')).toBe('canvas-shell-horizontal-panels');
     expect(shellPanelGroup?.getAttribute('class')).toContain('min-w-0');
     expect(shellPanelGroup?.getAttribute('class')).not.toContain('min-w-[960px]');
   });

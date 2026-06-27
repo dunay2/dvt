@@ -52,6 +52,14 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('discount_code');
     expect(document.body.textContent).toContain('Nullable');
     expect(document.body.textContent).toContain('Metadata Options');
+
+    const metadataText = document.body.textContent ?? '';
+    expect(metadataText.indexOf('Metadata Options')).toBeLessThan(
+      metadataText.indexOf('Source metadata')
+    );
+    expect(metadataText.indexOf('Metadata Options')).toBeLessThan(
+      metadataText.indexOf('Grouping Strategy')
+    );
   });
 
   it('opens at the selected warehouse tables when launched from the source explorer', async () => {

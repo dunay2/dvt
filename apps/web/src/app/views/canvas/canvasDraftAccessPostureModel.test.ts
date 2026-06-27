@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  applyCanvasDraftPostureToRuntimePolicyInput,
   deriveCanvasDraftAccessPosture,
   isCanvasDraftPostureMutationBlocked,
   toCanvasDraftRecoveryBannerViewState,
@@ -126,6 +127,36 @@ describe('canvasDraftAccessPostureModel', () => {
       kind: 'unauthenticated',
       recoveryAction: 'refresh_session',
       mutationBlocked: true,
+    });
+  });
+
+  it('allows preview planning while autosave is in progress and keeps run start blocked', () => {
+    const posture = deriveCanvasDraftAccessPosture({
+      draftAccessMode: 'writable',
+      draftCapabilityReason: 'authorized',
+      draftFormatError: null,
+      recoveryReason: null,
+      draftSaveStatus: 'saving',
+      authTransportPosture: 'none',
+    });
+
+    expect(posture).toMatchObject({
+      kind: 'saving',
+      mutationBlocked: false,
+    });
+    expect(
+      applyCanvasDraftPostureToRuntimePolicyInput({
+        posture,
+        canMutateGraph: true,
+        canPlan: true,
+        canRun: true,
+        canReloadLatestDraft: false,
+      })
+    ).toEqual({
+      canMutateGraph: true,
+      canPlan: true,
+      canRun: false,
+      canReloadLatestDraft: false,
     });
   });
 });

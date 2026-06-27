@@ -250,7 +250,7 @@ describe('resolveCanvasRuntimePolicy', () => {
     });
   });
 
-  it('blocks plan and run while a writable draft save is pending', () => {
+  it('allows preview planning and blocks run while a writable draft save is pending', () => {
     const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
       posture: deriveCanvasDraftAccessPosture({
         draftAccessMode: 'writable',
@@ -268,7 +268,7 @@ describe('resolveCanvasRuntimePolicy', () => {
 
     expect(draftAdmission).toEqual({
       canMutateGraph: true,
-      canPlan: false,
+      canPlan: true,
       canRun: false,
       canReloadLatestDraft: false,
     });

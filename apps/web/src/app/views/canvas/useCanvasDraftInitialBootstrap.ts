@@ -39,31 +39,31 @@ export function useCanvasDraftInitialBootstrap({
       return;
     }
 
+    const remoteDraft = graphDraftQuery.data?.record ?? null;
+
+    if (remoteDraft == null) {
+      lastSavedSignatureRef.current = null;
+    } else {
+      if (
+        shouldSeedCanvasLayoutFromRemoteDraft({
+          persistedNodePositions,
+          remoteNodePositions: remoteDraft.draft.nodePositions,
+        })
+      ) {
+        setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
+      }
+      lastSavedSignatureRef.current = serializeCanvasDraftAuthoringBaselineSignature({
+        record: remoteDraft,
+      });
+    }
+
+    lastFailedSignatureRef.current = null;
+    setDraftSaveStatus('idle');
+
     setDraftSession((currentSession) => {
       if (currentSession.syncState !== 'bootstrapping') {
         return currentSession;
       }
-
-      const remoteDraft = graphDraftQuery.data?.record ?? null;
-
-      if (remoteDraft == null) {
-        lastSavedSignatureRef.current = null;
-      } else {
-        if (
-          shouldSeedCanvasLayoutFromRemoteDraft({
-            persistedNodePositions,
-            remoteNodePositions: remoteDraft.draft.nodePositions,
-          })
-        ) {
-          setCanvasNodePositions(workspaceLayoutKey, remoteDraft.draft.nodePositions);
-        }
-        lastSavedSignatureRef.current = serializeCanvasDraftAuthoringBaselineSignature({
-          record: remoteDraft,
-        });
-      }
-
-      lastFailedSignatureRef.current = null;
-      setDraftSaveStatus('idle');
 
       return canvasDraftSession.machine.bootstrap({
         remoteDraft,

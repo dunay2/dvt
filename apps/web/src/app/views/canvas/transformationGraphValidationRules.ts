@@ -14,10 +14,10 @@ import {
 } from './transformationGraphValidation.types';
 
 export type ExecutableTransformationPath = {
-  scopedNodes: CanonicalNode[];
-  scopedNodeIds: string[];
-  scopedEdges: CanonicalEdge[];
-  scopedEdgeIds: string[];
+  scopedNodes: readonly CanonicalNode[];
+  scopedNodeIds: readonly string[];
+  scopedEdges: readonly CanonicalEdge[];
+  scopedEdgeIds: readonly string[];
 };
 
 export type ExecutableTransformationPathResolution =
