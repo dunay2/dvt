@@ -12,6 +12,10 @@ import {
   CanvasContextMenuSection,
   CanvasContextMenuSurface,
 } from './CanvasContextMenuPrimitives';
+import {
+  buildCanvasContextMenuSections,
+  type CanvasContextMenuViewItem,
+} from './canvasContextMenuViewModel';
 
 type CanvasContextMenuViewProps = Readonly<{
   model: CanvasContextMenuModel | null;
@@ -36,54 +40,56 @@ export function CanvasContextMenuView({
     left: model.screenPosition.x,
     top: model.screenPosition.y,
   };
-  const addCanvasActions = model.canvasActions.filter(
-    (action) => action.action === 'open-source-import'
-  );
-  const canvasCommandActions = model.canvasActions.filter(
-    (action) => action.action !== 'open-source-import'
-  );
-  const shouldShowAddGroup = addCanvasActions.length > 0 || model.createNodeActions.length > 0;
+  const sections = buildCanvasContextMenuSections(model);
 
   return (
     <CanvasContextMenuSurface menuRef={menuRef} style={menuStyle}>
-      {shouldShowAddGroup ? (
-        <CanvasContextMenuSection dataSlot="canvas-context-menu-add-group" title="Add">
-          {addCanvasActions.map((action) => (
+      {sections.map((section) => (
+        <CanvasContextMenuSection
+          key={section.id}
+          dataSlot={`canvas-context-menu-${section.id}-group`}
+          title={section.title}
+        >
+          {section.items.map((item) => (
             <CanvasContextMenuItem
-              key={action.action}
-              label={action.label}
-              onSelect={() => onCanvasAction(action)}
-            />
-          ))}
-          {model.createNodeActions.map((action) => (
-            <CanvasContextMenuItem
-              key={action.registration.kind}
-              label={action.label}
-              onSelect={() => onCreateNodeAction(action)}
-            />
-          ))}
-        </CanvasContextMenuSection>
-      ) : null}
-
-      {canvasCommandActions.length > 0 ? (
-        <CanvasContextMenuSection dataSlot="canvas-context-menu-canvas-group" title="Canvas">
-          {canvasCommandActions.map((action) => (
-            <CanvasContextMenuItem
-              key={action.action}
-              label={action.label}
-              onSelect={() => onCanvasAction(action)}
+              key={item.id}
+              label={item.label}
+              onSelect={() =>
+                selectCanvasContextMenuItem({
+                  item,
+                  onCanvasAction,
+                  onCreateNodeAction,
+                  onEdgeAction,
+                })
+              }
             />
           ))}
         </CanvasContextMenuSection>
-      ) : null}
-
-      {model.edgeActions.map((action) => (
-        <CanvasContextMenuItem
-          key={action.action}
-          label={action.label}
-          onSelect={() => onEdgeAction(action)}
-        />
       ))}
     </CanvasContextMenuSurface>
   );
+}
+
+function selectCanvasContextMenuItem({
+  item,
+  onCanvasAction,
+  onCreateNodeAction,
+  onEdgeAction,
+}: Readonly<{
+  item: CanvasContextMenuViewItem;
+  onCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
+  onCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
+  onEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
+}>): void {
+  if (item.kind === 'canvas') {
+    onCanvasAction(item.action);
+    return;
+  }
+
+  if (item.kind === 'create-node') {
+    onCreateNodeAction(item.action);
+    return;
+  }
+
+  onEdgeAction(item.action);
 }
