@@ -75,8 +75,6 @@ before that boundary exists.
   typed-empty-canvas, active-canvas.
 - `CanvasHostCycleState`: story-shaped host cycle DTO: needs-canvas,
   typed-empty, graph-ready.
-- `CanvasPlaygroundTabState`: host-visible active tab state derived from the
-  authoritative workspace draft.
 - `CreateCanvasDocumentCommand`: host-owned command that persists first or
   explicitly replaced canvas identity through the draft boundary.
 - `CanvasPlaygroundHostTemplate`: first-canvas host template that renders
@@ -92,10 +90,11 @@ before that boundary exists.
 - The first canvas must round-trip through canonical draft persistence.
 - Replacement of an existing draft-backed canvas must use `replace_current`,
   operator confirmation, and the current draft revision as CAS guard.
-- The host tab strip must only reflect authoritative draft-backed canvas truth.
+- The graph canvas is the base work surface; the host must not expose a
+  separate tab-state seam for graph/code/log/project modes.
 - The host must not invent local-only semantic success.
-- The host may render one active canvas tab in this slice, but must not imply
-  multi-canvas persistence that the backend does not yet support.
+- The host may render one active canvas document label in this slice, but must
+  not imply multi-canvas persistence that the backend does not yet support.
 - Host and workbench tests must consume `CanvasHostCycleState` rather than
   reconstructing wide transport-shaped scenario bags for every cycle.
 - Route test-support for host cycles must live in a dedicated scenario module;
@@ -107,7 +106,7 @@ before that boundary exists.
 - Test-support fixtures must resolve first-node kinds from the registered
   catalog for the active canvas kind; `dbt` proofs must not borrow
   transformation-only fixtures.
-- On reopen, the active host tab and typed posture must derive from the
+- On reopen, the active canvas identity and typed posture must derive from the
   authoritative draft-backed `canvasDocument`; ambient controller mode must not
   override restore posture.
 - Restored typed-empty posture remains an overlay on the authoritative canvas
@@ -130,12 +129,12 @@ before that boundary exists.
 stateDiagram-v2
   [*] --> HostNeedsCanvas
   HostNeedsCanvas --> CreatingCanvas: choose kind
-  CreatingCanvas --> DraftBackedTab: saved empty draft with canvas identity
-  DraftBackedTab --> TypedEmptyCanvas: restore host tab from workspace draft
+  CreatingCanvas --> DraftBackedCanvas: saved empty draft with canvas identity
+  DraftBackedCanvas --> TypedEmptyCanvas: restore canvas identity from workspace draft
   TypedEmptyCanvas --> ActiveCanvas: first node persisted
   ActiveCanvas --> ActiveCanvas: edit graph
   ActiveCanvas --> ConfirmingReplacement: New canvas
-  ConfirmingReplacement --> DraftBackedTab: replace_current saved through CAS
+  ConfirmingReplacement --> DraftBackedCanvas: replace_current saved through CAS
 ```
 
 ## Component ownership
@@ -146,8 +145,6 @@ flowchart LR
   Host["Playground host"]
   HostTemplate["Playground host template"]
   Cycle["CanvasHostCycleState"]
-  TabState["CanvasPlaygroundTabState"]
-  Tabs["CanvasPlaygroundTabStrip"]
   Registry["Canvas kind registry"]
   Empty["Typed empty canvas"]
   Shell["Existing Canvas shell"]
@@ -156,13 +153,10 @@ flowchart LR
   Route --> Host
   Host --> HostTemplate
   Host --> Cycle
-  Host --> TabState
-  TabState --> Tabs
   Host --> Registry
   Cycle --> Empty
   Cycle --> Shell
   Host --> Draft
-  Draft --> TabState
   Draft --> Cycle
   Empty --> Draft
   Shell --> Draft
