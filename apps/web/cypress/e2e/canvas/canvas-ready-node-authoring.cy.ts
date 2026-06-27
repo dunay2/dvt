@@ -90,7 +90,7 @@ function assertNoDraftSaveStatus(): void {
 
 function chooseSqlTransformFromCanvasContextMenu(): void {
   openCanvasContextMenuAt(560, 260);
-  clickCanvasContextMenuItem('SQL transform');
+  clickCanvasContextMenuItem('Add transformation');
 }
 
 function addSqlTransformNode(): void {
@@ -162,7 +162,7 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
     cy.wait(1_500);
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
-    cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'SQL transform').should(
+    cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'Add transformation').should(
       'be.visible'
     );
     cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'Explore project').should(
@@ -235,7 +235,7 @@ describe('Canvas ready node authoring', () => {
     cy.contains('Sales canvas').should('be.visible');
     cy.get('[data-slot="canvas-toolbar-insert-command"]').should('not.exist');
     openCanvasContextMenuAt(620, 340);
-    cy.contains('[role="menuitem"]', 'SQL transform').should('not.exist');
+    cy.contains('[role="menuitem"]', 'Add transformation').should('not.exist');
     cy.contains('[role="menuitem"]', 'Add source').should('not.exist');
     cy.then(() => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
