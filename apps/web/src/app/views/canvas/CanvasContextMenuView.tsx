@@ -7,6 +7,8 @@ import type {
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';
+import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
+import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
 import {
   CanvasContextMenuItem,
   CanvasContextMenuSection,
@@ -40,10 +42,37 @@ export function CanvasContextMenuView({
     left: model.screenPosition.x,
     top: model.screenPosition.y,
   };
-  const sections = buildCanvasContextMenuSections(model);
+  const sections =
+    model.surface === 'add-node-catalog'
+      ? buildCanvasContextMenuSections(model)
+          .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => item.kind === 'canvas'),
+          }))
+          .filter((section) => section.items.length > 0)
+      : buildCanvasContextMenuSections(model);
+  const catalogItems =
+    model.surface === 'add-node-catalog'
+      ? buildCanvasAddNodeCatalogItems({
+          authoringNodeKinds: model.createNodeActions.map((action) => action.registration),
+        })
+      : [];
 
   return (
     <CanvasContextMenuSurface menuRef={menuRef} style={menuStyle}>
+      {model.surface === 'add-node-catalog' ? (
+        <CanvasAddNodeCatalogView
+          items={catalogItems}
+          onSelectItem={(item) => {
+            const action = model.createNodeActions.find(
+              (candidate) => candidate.registration.kind === item.registration.kind
+            );
+            if (action) {
+              onCreateNodeAction(action);
+            }
+          }}
+        />
+      ) : null}
       {sections.map((section) => (
         <CanvasContextMenuSection
           key={section.id}

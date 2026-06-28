@@ -98,15 +98,24 @@ describe('Canvas interaction command surface architecture', () => {
     const viewportSource = readAppSource('views/canvas/CanvasViewport.tsx');
     const viewportSurfaceViewSource = readAppSource('views/canvas/CanvasViewportSurfaceView.tsx');
     const presenterPath = 'views/canvas/useCanvasContextMenuPresenter.ts';
+    const presenterContractPath = 'views/canvas/canvasContextMenuPresenter.types.ts';
+    const presenterLifecyclePath = 'views/canvas/useCanvasContextMenuLifecycle.ts';
+    const targetPolicyPath = 'views/canvas/canvasContextMenuTargetPolicy.ts';
     const viewTemplatePath = 'views/canvas/CanvasContextMenuView.tsx';
     const viewPrimitivesPath = 'views/canvas/CanvasContextMenuPrimitives.tsx';
     const authoringCommandSource = readAppSource('views/canvas/canvasAuthoringNodeCommand.ts');
 
     expect(appSourceExists(presenterPath), presenterPath).toBe(true);
+    expect(appSourceExists(presenterContractPath), presenterContractPath).toBe(true);
+    expect(appSourceExists(presenterLifecyclePath), presenterLifecyclePath).toBe(true);
+    expect(appSourceExists(targetPolicyPath), targetPolicyPath).toBe(true);
     expect(appSourceExists(viewTemplatePath), viewTemplatePath).toBe(true);
     expect(appSourceExists(viewPrimitivesPath), viewPrimitivesPath).toBe(true);
 
     const presenterSource = readAppSource(presenterPath);
+    const presenterContractSource = readAppSource(presenterContractPath);
+    const presenterLifecycleSource = readAppSource(presenterLifecyclePath);
+    const targetPolicySource = readAppSource(targetPolicyPath);
     const viewTemplateSource = readAppSource(viewTemplatePath);
     const viewPrimitivesSource = readAppSource(viewPrimitivesPath);
 
@@ -115,6 +124,9 @@ describe('Canvas interaction command surface architecture', () => {
       ['views/canvas/CanvasViewport.tsx', viewportSource],
       ['views/canvas/CanvasViewportSurfaceView.tsx', viewportSurfaceViewSource],
       [presenterPath, presenterSource],
+      [presenterContractPath, presenterContractSource],
+      [presenterLifecyclePath, presenterLifecycleSource],
+      [targetPolicyPath, targetPolicySource],
       [viewTemplatePath, viewTemplateSource],
       [viewPrimitivesPath, viewPrimitivesSource],
       ['views/canvas/canvasAuthoringNodeCommand.ts', authoringCommandSource],
@@ -163,8 +175,22 @@ describe('Canvas interaction command surface architecture', () => {
     expect(presenterSource).toContain('handleCanvasAction');
     expect(presenterSource).toContain('handleCreateNodeAction');
     expect(presenterSource).toContain('handleEdgeAction');
+    expect(presenterSource).toContain("from './canvasContextMenuPresenter.types'");
+    expect(presenterSource).toContain("from './useCanvasContextMenuLifecycle'");
+    expect(presenterSource).toContain("from './canvasContextMenuTargetPolicy'");
+    expect(presenterSource).not.toContain('CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS');
+    expect(presenterSource).not.toContain('isCanvasViewportContextTarget');
+    expect(presenterSource).not.toContain('document.addEventListener');
     expect(presenterSource).not.toContain('role="menu"');
     expect(presenterSource).not.toContain('role="menuitem"');
+
+    expect(presenterContractSource).toContain('UseCanvasContextMenuPresenterArgs');
+    expect(presenterContractSource).toContain('UseCanvasContextMenuPresenterResult');
+    expect(presenterContractSource).not.toContain('useState');
+    expect(presenterLifecycleSource).toContain('useCanvasContextMenuLifecycle');
+    expect(presenterLifecycleSource).toContain('document.addEventListener');
+    expect(targetPolicySource).toContain('isCanvasViewportContextTarget');
+    expect(targetPolicySource).not.toContain('useState');
 
     expect(viewTemplateSource).toContain("from './CanvasContextMenuPrimitives'");
     expect(viewTemplateSource).not.toContain('buildCanvasContextMenuModel');

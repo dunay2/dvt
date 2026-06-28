@@ -84,6 +84,7 @@ function addSourceNodeFromCanvasContextMenuIfMissing(): void {
     if (!hasSourceNode) {
       openCanvasContextMenuAt(32, 140);
       cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 }).should('be.visible');
+      clickCanvasContextMenuItem('Add...');
       cy.get('body').then(($nextBody) => {
         const contextMenuText = $nextBody
           .find('[data-slot="canvas-context-menu"] [role="menuitem"]')

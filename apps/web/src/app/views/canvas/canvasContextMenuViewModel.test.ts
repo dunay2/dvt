@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
-import { buildCanvasContextMenuModel } from './canvasInteractionCommandSurface';
+import {
+  buildCanvasAddNodeCatalogMenuModel,
+  buildCanvasContextMenuModel,
+} from './canvasInteractionCommandSurface';
 import { buildCanvasContextMenuSections } from './canvasContextMenuViewModel';
 
 describe('canvasContextMenuViewModel', () => {
-  it('groups pane actions into Add and Canvas sections without leaking callback policy into the view', () => {
+  it('groups background root actions without rendering the node-type catalog inline', () => {
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -13,9 +16,6 @@ describe('canvasContextMenuViewModel', () => {
         flowPosition: { x: 220, y: 90 },
       },
       canMutateGraph: true,
-      canOpenSourceImport: true,
-      canValidateGraph: true,
-      canPreviewExecutionPlan: true,
       canOpenCanvasSettings: true,
       authoringNodeKinds: [
         buildTestNodeKind('dbt:model', 'Model'),
@@ -28,25 +28,12 @@ describe('canvasContextMenuViewModel', () => {
     expect(sections).toEqual([
       {
         id: 'add',
-        title: 'Add',
         items: [
           {
-            id: 'canvas:open-source-import',
-            label: 'Add source',
+            id: 'canvas:open-add-node-catalog',
+            label: 'Add...',
             kind: 'canvas',
-            action: { action: 'open-source-import', label: 'Add source' },
-          },
-          {
-            id: 'create-node:dbt:model',
-            label: 'Add model',
-            kind: 'create-node',
-            action: model.createNodeActions[0],
-          },
-          {
-            id: 'create-node:dvt:sql_transform',
-            label: 'Add transformation',
-            kind: 'create-node',
-            action: model.createNodeActions[1],
+            action: { action: 'open-add-node-catalog', label: 'Add...' },
           },
         ],
       },
@@ -55,22 +42,53 @@ describe('canvasContextMenuViewModel', () => {
         title: 'Canvas',
         items: [
           {
-            id: 'canvas:validate-graph',
-            label: 'Validate graph',
-            kind: 'canvas',
-            action: { action: 'validate-graph', label: 'Validate graph' },
-          },
-          {
-            id: 'canvas:preview-execution-plan',
-            label: 'Preview execution plan',
-            kind: 'canvas',
-            action: { action: 'preview-execution-plan', label: 'Preview execution plan' },
-          },
-          {
             id: 'canvas:open-canvas-settings',
             label: 'Canvas settings',
             kind: 'canvas',
             action: { action: 'open-canvas-settings', label: 'Canvas settings' },
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('groups add-node catalog entries only after the add catalog action is selected', () => {
+    const modelKind = buildTestNodeKind('dbt:model', 'Model');
+    const transformKind = buildTestNodeKind('dvt:sql_transform', 'SQL transform');
+    const model = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 320, y: 180 },
+        flowPosition: { x: 220, y: 90 },
+      },
+      canMutateGraph: true,
+      authoringNodeKinds: [modelKind, transformKind],
+    });
+    const catalogModel = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: model,
+      authoringNodeKinds: [modelKind, transformKind],
+    });
+    if (catalogModel == null) {
+      throw new Error('Expected pane root model to build an add-node catalog model.');
+    }
+
+    const sections = buildCanvasContextMenuSections(catalogModel);
+
+    expect(sections).toEqual([
+      {
+        id: 'add',
+        items: [
+          {
+            id: 'create-node:dbt:model',
+            label: 'Add model',
+            kind: 'create-node',
+            action: catalogModel.createNodeActions[0],
+          },
+          {
+            id: 'create-node:dvt:sql_transform',
+            label: 'Add transformation',
+            kind: 'create-node',
+            action: catalogModel.createNodeActions[1],
           },
         ],
       },

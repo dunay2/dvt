@@ -5,7 +5,7 @@
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   clickButtonNatively,
-  clickPreviewExecutionPlanFromCanvasContextMenu,
+  clickPreviewExecutionPlanFromOperationalDrawer,
 } from '../../support/canvasExecutionSelection';
 import {
   hasLiveProtectedRuntimeEnv,
@@ -127,7 +127,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     waitForDraftSaveSettled();
     waitForPersistedDbtModelConfig();
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
+    clickPreviewExecutionPlanFromOperationalDrawer();
     cy.contains('Execution Preview', { timeout: 30_000 }).should('be.visible');
     cy.contains('Execution Preview identity').should('be.visible');
     cy.contains('Persistence Evidence').should('be.visible');

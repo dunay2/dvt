@@ -2,6 +2,7 @@
 import type { Edge, EdgeChange } from '@xyflow/react';
 
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import { canvasViewCopy, type CanvasViewCopy } from './copy';
 
 export type CanvasContextMenuPosition = Readonly<{
   x: number;
@@ -27,20 +28,17 @@ export type CanvasContextMenuCreateNodeAction = Readonly<{
 }>;
 
 export type CanvasContextMenuCanvasAction = Readonly<{
-  action:
-    | 'open-source-import'
-    | 'validate-graph'
-    | 'preview-execution-plan'
-    | 'open-canvas-settings';
-  label: 'Add source' | 'Validate graph' | 'Preview execution plan' | 'Canvas settings';
+  action: 'open-add-node-catalog' | 'open-source-import' | 'open-canvas-settings';
+  label: string;
 }>;
 
 export type CanvasContextMenuEdgeAction = Readonly<{
   action: 'remove-edge';
-  label: 'Eliminar conexión';
+  label: string;
 }>;
 
 export type CanvasContextMenuModel = Readonly<{
+  surface: 'root' | 'add-node-catalog' | 'edge';
   kind: CanvasContextMenuTarget['kind'];
   screenPosition: CanvasContextMenuPosition;
   flowPosition?: CanvasContextMenuPosition;
@@ -53,11 +51,9 @@ export type CanvasContextMenuModel = Readonly<{
 type BuildCanvasContextMenuModelArgs = Readonly<{
   target: CanvasContextMenuTarget;
   canMutateGraph: boolean;
-  canOpenSourceImport?: boolean;
-  canValidateGraph?: boolean;
-  canPreviewExecutionPlan?: boolean;
   canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
+  copy?: CanvasViewCopy;
 }>;
 
 function isSourceNodeKind(registration: NodeKindRegistration): boolean {
@@ -66,74 +62,70 @@ function isSourceNodeKind(registration: NodeKindRegistration): boolean {
 
 function formatCreateNodeActionLabel(
   registration: NodeKindRegistration,
-  sourceImportVisible: boolean
+  sourceImportVisible: boolean,
+  copy: CanvasViewCopy
 ): string {
   if (sourceImportVisible && isSourceNodeKind(registration)) {
     return 'Create source node';
   }
 
   if (registration.kind.endsWith(':source')) {
-    return 'Add source';
+    return copy.canvasContextMenuAddSourceLabel;
   }
 
   if (registration.kind === 'dbt:model') {
-    return 'Add model';
+    return copy.canvasContextMenuAddModelLabel;
   }
 
   if (registration.kind === 'dvt:sql_transform' || registration.role === 'transform') {
-    return 'Add transformation';
+    return copy.canvasContextMenuAddTransformationLabel;
   }
 
   if (registration.kind.endsWith(':test') || registration.role === 'check') {
-    return 'Add test';
+    return copy.canvasContextMenuAddTestLabel;
   }
 
   if (registration.kind === 'dvt:sink' || registration.role === 'output') {
-    return 'Add output';
+    return copy.canvasContextMenuAddOutputLabel;
   }
 
   const label = registration.label.trim();
   if (label.length === 0) {
-    return 'Add node';
+    return copy.canvasContextMenuAddNodeLabel;
   }
 
   if (/^[A-Z]{2,}\b/.test(label)) {
-    return `Add ${label}`;
+    return `${copy.canvasContextMenuAddNodeLabel} ${label}`;
   }
 
-  return `Add ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
+  return `${copy.canvasContextMenuAddNodeLabel} ${label.charAt(0).toLowerCase()}${label.slice(1)}`;
 }
 
 export function buildCanvasContextMenuModel({
   target,
   canMutateGraph,
-  canOpenSourceImport = false,
-  canValidateGraph = false,
-  canPreviewExecutionPlan = false,
   canOpenCanvasSettings = false,
   authoringNodeKinds,
+  copy = canvasViewCopy,
 }: BuildCanvasContextMenuModelArgs): CanvasContextMenuModel {
   const canvasActions: CanvasContextMenuCanvasAction[] = [];
-  const sourceImportVisible = target.kind === 'pane' && canMutateGraph && canOpenSourceImport;
   if (target.kind === 'pane') {
-    if (sourceImportVisible) {
-      canvasActions.push({ action: 'open-source-import', label: 'Add source' });
-    }
-    if (canValidateGraph) {
-      canvasActions.push({ action: 'validate-graph', label: 'Validate graph' });
-    }
-    if (canPreviewExecutionPlan) {
+    if (canMutateGraph && authoringNodeKinds.length > 0) {
       canvasActions.push({
-        action: 'preview-execution-plan',
-        label: 'Preview execution plan',
+        action: 'open-add-node-catalog',
+        label: copy.canvasContextMenuAddLabel,
       });
     }
     if (canOpenCanvasSettings) {
-      canvasActions.push({ action: 'open-canvas-settings', label: 'Canvas settings' });
+      canvasActions.push({
+        action: 'open-canvas-settings',
+        label: copy.canvasContextMenuCanvasSettingsLabel,
+      });
     }
   }
 
   const baseModel = {
+    surface: target.kind === 'edge' ? 'edge' : 'root',
     kind: target.kind,
     screenPosition: target.screenPosition,
     canvasActions,
@@ -149,13 +141,6 @@ export function buildCanvasContextMenuModel({
     return {
       ...baseModel,
       flowPosition: target.flowPosition,
-      createNodeActions: authoringNodeKinds
-        .filter((registration) => !(canOpenSourceImport && isSourceNodeKind(registration)))
-        .map((registration) => ({
-          action: 'create-node',
-          label: formatCreateNodeActionLabel(registration, sourceImportVisible),
-          registration,
-        })),
     };
   }
 
@@ -163,6 +148,40 @@ export function buildCanvasContextMenuModel({
     ...baseModel,
     edgeId: target.edgeId,
     edgeActions: [{ action: 'remove-edge', label: 'Eliminar conexión' }],
+  };
+}
+
+export function buildCanvasAddNodeCatalogMenuModel({
+  sourceModel,
+  authoringNodeKinds,
+  canOpenSourceImport = false,
+  copy = canvasViewCopy,
+}: Readonly<{
+  sourceModel: CanvasContextMenuModel | null;
+  authoringNodeKinds: readonly NodeKindRegistration[];
+  canOpenSourceImport?: boolean;
+  copy?: CanvasViewCopy;
+}>): CanvasContextMenuModel | null {
+  if (sourceModel == null || sourceModel.kind !== 'pane' || sourceModel.flowPosition == null) {
+    return null;
+  }
+
+  const sourceImportActions: CanvasContextMenuCanvasAction[] = canOpenSourceImport
+    ? [{ action: 'open-source-import', label: copy.canvasContextMenuAddSourceLabel }]
+    : [];
+
+  return {
+    ...sourceModel,
+    surface: 'add-node-catalog',
+    canvasActions: sourceImportActions,
+    createNodeActions: authoringNodeKinds
+      .filter((registration) => !(canOpenSourceImport && isSourceNodeKind(registration)))
+      .map((registration) => ({
+        action: 'create-node',
+        label: formatCreateNodeActionLabel(registration, false, copy),
+        registration,
+      })),
+    edgeActions: [],
   };
 }
 

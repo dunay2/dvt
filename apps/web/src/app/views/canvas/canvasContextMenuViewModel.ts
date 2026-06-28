@@ -28,7 +28,7 @@ export type CanvasContextMenuViewItem =
 
 export type CanvasContextMenuViewSection = Readonly<{
   id: 'add' | 'canvas' | 'edge';
-  title?: 'Add' | 'Canvas';
+  title?: 'Canvas';
   items: readonly CanvasContextMenuViewItem[];
 }>;
 
@@ -65,19 +65,23 @@ export function buildCanvasContextMenuSections(
   model: CanvasContextMenuModel
 ): readonly CanvasContextMenuViewSection[] {
   const addItems = [
-    ...model.canvasActions.filter((action) => action.action === 'open-source-import'),
+    ...model.canvasActions.filter(
+      (action) =>
+        action.action === 'open-add-node-catalog' || action.action === 'open-source-import'
+    ),
     ...model.createNodeActions,
   ].map((action) =>
     action.action === 'create-node' ? createNodeActionItem(action) : canvasActionItem(action)
   );
   const canvasItems = model.canvasActions
+    .filter((action) => action.action !== 'open-add-node-catalog')
     .filter((action) => action.action !== 'open-source-import')
     .map(canvasActionItem);
   const edgeItems = model.edgeActions.map(edgeActionItem);
   const sections: CanvasContextMenuViewSection[] = [];
 
   if (addItems.length > 0) {
-    sections.push({ id: 'add', title: 'Add', items: addItems });
+    sections.push({ id: 'add', items: addItems });
   }
 
   if (canvasItems.length > 0) {

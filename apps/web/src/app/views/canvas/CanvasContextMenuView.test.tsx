@@ -5,7 +5,10 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
-import { buildCanvasContextMenuModel } from './canvasInteractionCommandSurface';
+import {
+  buildCanvasAddNodeCatalogMenuModel,
+  buildCanvasContextMenuModel,
+} from './canvasInteractionCommandSurface';
 import { CanvasContextMenuView } from './CanvasContextMenuView';
 
 describe('CanvasContextMenuView', () => {
@@ -44,9 +47,10 @@ describe('CanvasContextMenuView', () => {
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
   });
 
-  it('renders add and canvas command groups without node-scoped actions', async () => {
+  it('renders the background root menu without inline node-scoped actions', async () => {
     const onCanvasAction = vi.fn();
     const onCreateNodeAction = vi.fn();
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -55,10 +59,7 @@ describe('CanvasContextMenuView', () => {
       },
       canMutateGraph: true,
       canOpenCanvasSettings: true,
-      canOpenSourceImport: true,
-      canValidateGraph: true,
-      canPreviewExecutionPlan: true,
-      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+      authoringNodeKinds: [sourceKind],
     });
 
     await act(async () => {
@@ -74,12 +75,11 @@ describe('CanvasContextMenuView', () => {
     });
 
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
-    expect(menuButtonLabels('canvas-context-menu-add-group')).toEqual(['Add source']);
-    expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual([
-      'Validate graph',
-      'Preview execution plan',
-      'Canvas settings',
-    ]);
+    expect(menuButtonLabels('canvas-context-menu-add-group')).toEqual(['Add...']);
+    expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual(['Canvas settings']);
+    expect(container.textContent).not.toContain('Add source');
+    expect(container.textContent).not.toContain('Validate graph');
+    expect(container.textContent).not.toContain('Preview execution plan');
     expect(container.textContent).not.toContain('Edit SQL');
     expect(container.textContent).not.toContain('Properties');
     expect(container.textContent).not.toContain('Inputs');
@@ -88,13 +88,58 @@ describe('CanvasContextMenuView', () => {
     expect(container.textContent).not.toContain('Duplicate');
     expect(container.textContent).not.toContain('Delete');
 
-    await clickMenuItem('Add source');
+    await clickMenuItem('Add...');
     expect(onCanvasAction).toHaveBeenCalledWith({
-      action: 'open-source-import',
-      label: 'Add source',
+      action: 'open-add-node-catalog',
+      label: 'Add...',
     });
 
     expect(onCreateNodeAction).not.toHaveBeenCalled();
+  });
+
+  it('renders catalog node actions only for the add-node catalog surface', async () => {
+    const onCanvasAction = vi.fn();
+    const onCreateNodeAction = vi.fn();
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const rootModel = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 580, y: 280 },
+      },
+      canMutateGraph: true,
+      authoringNodeKinds: [sourceKind],
+    });
+    const catalogModel = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: rootModel,
+      authoringNodeKinds: [sourceKind],
+    });
+
+    await act(async () => {
+      root.render(
+        <CanvasContextMenuView
+          model={catalogModel}
+          menuRef={createRef<HTMLDivElement>()}
+          onCanvasAction={onCanvasAction}
+          onCreateNodeAction={onCreateNodeAction}
+          onEdgeAction={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('Add component');
+    expect(container.textContent).toContain('Add source');
+    expect(container.textContent).toContain('Sources');
+    expect(container.textContent).toContain('Attach a governed warehouse or dbt source');
+
+    await clickMenuItem('Add source');
+
+    expect(onCreateNodeAction).toHaveBeenCalledWith({
+      action: 'create-node',
+      label: 'Add source',
+      registration: sourceKind,
+    });
+    expect(onCanvasAction).not.toHaveBeenCalled();
   });
 
   it('routes edge actions through the edge callback only', async () => {
@@ -134,8 +179,8 @@ describe('CanvasContextMenuView', () => {
   });
 
   async function clickMenuItem(label: string): Promise<void> {
-    const button = Array.from(container.querySelectorAll('button')).find(
-      (candidate) => candidate.textContent === label
+    const button = Array.from(container.querySelectorAll('button')).find((candidate) =>
+      candidate.textContent?.includes(label)
     );
     expect(button, label).toBeDefined();
 

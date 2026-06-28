@@ -61,6 +61,126 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.canvasSettingsLabel',
     fallback: 'Canvas settings',
   },
+  canvasContextMenuAddLabel: {
+    key: 'canvas.contextMenu.addLabel',
+    fallback: 'Add...',
+  },
+  canvasContextMenuAddSourceLabel: {
+    key: 'canvas.contextMenu.addSourceLabel',
+    fallback: 'Add source',
+  },
+  canvasContextMenuAddModelLabel: {
+    key: 'canvas.contextMenu.addModelLabel',
+    fallback: 'Add model',
+  },
+  canvasContextMenuAddSeedLabel: {
+    key: 'canvas.contextMenu.addSeedLabel',
+    fallback: 'Add seed',
+  },
+  canvasContextMenuAddTransformationLabel: {
+    key: 'canvas.contextMenu.addTransformationLabel',
+    fallback: 'Add transformation',
+  },
+  canvasContextMenuAddTestLabel: {
+    key: 'canvas.contextMenu.addTestLabel',
+    fallback: 'Add test',
+  },
+  canvasContextMenuAddOutputLabel: {
+    key: 'canvas.contextMenu.addOutputLabel',
+    fallback: 'Add output',
+  },
+  canvasContextMenuAddMacroLabel: {
+    key: 'canvas.contextMenu.addMacroLabel',
+    fallback: 'Add macro',
+  },
+  canvasContextMenuAddNodeLabel: {
+    key: 'canvas.contextMenu.addNodeLabel',
+    fallback: 'Add',
+  },
+  canvasContextMenuCanvasSettingsLabel: {
+    key: 'canvas.contextMenu.canvasSettingsLabel',
+    fallback: 'Canvas settings',
+  },
+  canvasAddNodeCatalogTitle: {
+    key: 'canvas.addNodeCatalog.title',
+    fallback: 'Add component',
+  },
+  canvasAddNodeCatalogSearchLabel: {
+    key: 'canvas.addNodeCatalog.searchLabel',
+    fallback: 'Search components',
+  },
+  canvasAddNodeCatalogSearchPlaceholder: {
+    key: 'canvas.addNodeCatalog.searchPlaceholder',
+    fallback: 'Search source, model, transformation, test, output...',
+  },
+  canvasAddNodeCatalogEmptyMessage: {
+    key: 'canvas.addNodeCatalog.emptyMessage',
+    fallback: 'No matching components',
+  },
+  canvasAddNodeCatalogSourceCategoryLabel: {
+    key: 'canvas.addNodeCatalog.sourceCategoryLabel',
+    fallback: 'Sources',
+  },
+  canvasAddNodeCatalogModelCategoryLabel: {
+    key: 'canvas.addNodeCatalog.modelCategoryLabel',
+    fallback: 'Models',
+  },
+  canvasAddNodeCatalogSeedCategoryLabel: {
+    key: 'canvas.addNodeCatalog.seedCategoryLabel',
+    fallback: 'Seeds',
+  },
+  canvasAddNodeCatalogTransformationCategoryLabel: {
+    key: 'canvas.addNodeCatalog.transformationCategoryLabel',
+    fallback: 'Transformations',
+  },
+  canvasAddNodeCatalogTestCategoryLabel: {
+    key: 'canvas.addNodeCatalog.testCategoryLabel',
+    fallback: 'Tests',
+  },
+  canvasAddNodeCatalogOutputCategoryLabel: {
+    key: 'canvas.addNodeCatalog.outputCategoryLabel',
+    fallback: 'Outputs',
+  },
+  canvasAddNodeCatalogMacroCategoryLabel: {
+    key: 'canvas.addNodeCatalog.macroCategoryLabel',
+    fallback: 'Macros',
+  },
+  canvasAddNodeCatalogNodeCategoryLabel: {
+    key: 'canvas.addNodeCatalog.nodeCategoryLabel',
+    fallback: 'Components',
+  },
+  canvasAddNodeCatalogSourceDescription: {
+    key: 'canvas.addNodeCatalog.sourceDescription',
+    fallback: 'Attach a governed warehouse or dbt source to the graph.',
+  },
+  canvasAddNodeCatalogModelDescription: {
+    key: 'canvas.addNodeCatalog.modelDescription',
+    fallback: 'Create a modeled dataset that can receive inputs and feed downstream checks.',
+  },
+  canvasAddNodeCatalogSeedDescription: {
+    key: 'canvas.addNodeCatalog.seedDescription',
+    fallback: 'Add a static seed dataset managed by the project.',
+  },
+  canvasAddNodeCatalogTransformationDescription: {
+    key: 'canvas.addNodeCatalog.transformationDescription',
+    fallback: 'Add a SQL transformation between upstream sources and downstream outputs.',
+  },
+  canvasAddNodeCatalogTestDescription: {
+    key: 'canvas.addNodeCatalog.testDescription',
+    fallback: 'Add a validation node that explains what it checks and what it targets.',
+  },
+  canvasAddNodeCatalogOutputDescription: {
+    key: 'canvas.addNodeCatalog.outputDescription',
+    fallback: 'Declare the exact destination table, write mode, and publishing target.',
+  },
+  canvasAddNodeCatalogMacroDescription: {
+    key: 'canvas.addNodeCatalog.macroDescription',
+    fallback: 'Add a reusable project macro component.',
+  },
+  canvasAddNodeCatalogNodeDescription: {
+    key: 'canvas.addNodeCatalog.nodeDescription',
+    fallback: 'Add a registered Canvas component.',
+  },
   toolbarEmptyCanvasGuideLabel: {
     key: 'canvas.toolbar.emptyCanvasGuideLabel',
     fallback: 'Empty canvas guide',

@@ -75,6 +75,7 @@ describe('Canvas source import live clean proof', () => {
     cy.contains('Start dbt canvas', { timeout: 20_000 }).should('be.visible');
     waitForLiveDraftSaved(session);
     openCanvasContextMenuAt(420, 280);
+    clickCanvasContextMenuItem('Add...');
     clickCanvasContextMenuItem('Add source');
 
     cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');

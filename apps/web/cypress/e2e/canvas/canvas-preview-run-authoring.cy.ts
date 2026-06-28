@@ -1,4 +1,5 @@
 import {
+  clickCanvasContextMenuItem,
   expectPreviewExecutionPlanUnavailableFromCanvasContextMenu,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
@@ -28,7 +29,15 @@ describe('Canvas preview-run authoring guardrails', () => {
     cy.contains('Start dbt canvas').should('be.visible');
     cy.contains('button', 'Add first dbt node').should('not.exist');
     openCanvasContextMenuAt(520, 300);
-    cy.get('[data-slot="canvas-context-menu"]').should('contain.text', 'Add source');
+    cy.get('[data-slot="canvas-context-menu"]').should(($menu) => {
+      expect($menu.text()).to.match(/Add\.\.\.|Anadir\.\.\./);
+    });
+    cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Add source');
+    cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Anadir origen');
+    clickCanvasContextMenuItem(/Add\.\.\.|Anadir\.\.\./);
+    cy.get('[data-slot="canvas-context-menu"]').should(($menu) => {
+      expect($menu.text()).to.match(/Add source|Anadir origen/);
+    });
     cy.get('body').type('{esc}', { force: true });
     expectPreviewExecutionPlanUnavailableFromCanvasContextMenu();
     cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');

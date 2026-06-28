@@ -22,7 +22,6 @@ function PresenterHarness({
   const presenter = useCanvasContextMenuPresenter({
     canEditEdges: true,
     canOpenSourceImport: false,
-    canPreviewExecutionPlan: false,
     canOpenCanvasSettings: false,
     authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     screenToFlowPosition: ({ x, y }) => ({ x: x + 100, y: y - 40 }),
@@ -71,7 +70,7 @@ describe('useCanvasContextMenuPresenter graph actions', () => {
     });
   }
 
-  it('creates authoring nodes at the flow position captured from the canvas gesture', async () => {
+  it('creates authoring nodes from the add-node catalog at the captured flow position', async () => {
     await renderPresenter();
     await act(async () => {
       presenter?.handlePaneContextMenu({
@@ -79,6 +78,10 @@ describe('useCanvasContextMenuPresenter graph actions', () => {
         clientX: 320,
         clientY: 260,
       } as unknown as React.MouseEvent<Element>);
+    });
+
+    await act(async () => {
+      presenter?.handleCanvasAction({ action: 'open-add-node-catalog', label: 'Add...' });
     });
 
     const action = presenter?.model?.createNodeActions[0];
