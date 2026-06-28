@@ -9876,3 +9876,55 @@ test('tracked migrations retire superseded CanvasContextMenu aggregate ownership
   );
   assert.doesNotMatch(railRetirementMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile Canvas context menu summary and canonical rails relationally', () => {
+  const migrations = readMigrationFiles();
+  const reconciliationMigration = migrations.find(
+    (migration) => migration.fileName === '353_canvas_context_menu_relational_summary_and_rails.sql'
+  );
+
+  assert.ok(reconciliationMigration);
+  assert.match(
+    reconciliationMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.match(reconciliationMigration.sql, /frontend_component_capability_gaps gap/);
+  assert.match(reconciliationMigration.sql, /frontend_component_validation_evidence evidence/);
+  assert.match(
+    reconciliationMigration.sql,
+    /coalesce\(gap_counts\.capability_gap_count, 0\) as capability_gap_count/
+  );
+  assert.match(
+    reconciliationMigration.sql,
+    /coalesce\(validation_evidence_counts\.evidence_ref_count, 0\) as evidence_ref_count/
+  );
+  assert.doesNotMatch(
+    reconciliationMigration.sql,
+    /jsonb_array_length\(component\.capability_gaps\) as capability_gap_count/
+  );
+  assert.doesNotMatch(
+    reconciliationMigration.sql,
+    /jsonb_array_length\(component\.evidence_refs\) as evidence_ref_count/
+  );
+  assert.match(
+    reconciliationMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_context_action_query/
+  );
+  assert.match(reconciliationMigration.sql, /canonical_rails as/);
+  assert.match(reconciliationMigration.sql, /planning_query_store\.command_query_rail_query/);
+  assert.match(
+    reconciliationMigration.sql,
+    /coalesce\(rail\.rail_kind, canonical_rail\.rail_type\) as frontend_rail_kind/
+  );
+  assert.match(
+    reconciliationMigration.sql,
+    /coalesce\(rail\.rail_status, canonical_rail\.rail_status\) as frontend_rail_status/
+  );
+  assert.match(reconciliationMigration.sql, /web\.component\.canvas\.CanvasEdgeContextMenu/);
+  assert.match(reconciliationMigration.sql, /semantic-context-no-owned-files/);
+  assert.match(reconciliationMigration.sql, /fileCountZeroIsValid/);
+  assert.match(reconciliationMigration.sql, /RenderCanvasContextMenu/);
+  assert.match(reconciliationMigration.sql, /CanvasContextMenuLayer/);
+  assert.match(reconciliationMigration.sql, /feature_mechanization_local_rails/);
+  assert.doesNotMatch(reconciliationMigration.sql, /truncate\s+/i);
+});
