@@ -6,11 +6,15 @@ import {
   type NodeTypes,
   type ReactFlowProps,
 } from '@xyflow/react';
-import { useRef, type DragEventHandler } from 'react';
+import { useCallback, useRef, useState, type DragEventHandler } from 'react';
 
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import {
+  buildCanvasNodeFloatingToolbarModel,
+  type CanvasNodeFloatingToolbarModel,
+} from './canvasNodeFloatingToolbarModel';
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {
@@ -65,8 +69,47 @@ function CanvasViewportWithPresenter({
 }: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [nodeFloatingToolbarModel, setNodeFloatingToolbarModel] =
+    useState<CanvasNodeFloatingToolbarModel | null>(null);
   const resolvedCanvasPalette = normalizeCanvasPaletteId(props.canvasPalette);
   const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, props.gridSize);
+  const closeNodeFloatingToolbar = useCallback(() => {
+    setNodeFloatingToolbarModel(null);
+  }, []);
+  const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
+    (event, node) => {
+      const surfaceRect = viewportRef.current?.getBoundingClientRect();
+      const localX = surfaceRect == null ? event.clientX : event.clientX - surfaceRect.left;
+      const localY = surfaceRect == null ? event.clientY : event.clientY - surfaceRect.top;
+      const data = node.data as Record<string, unknown>;
+      const nodeName = typeof data.name === 'string' && data.name.length > 0 ? data.name : node.id;
+      const inspectNode = data.onInspectNode;
+      const toggleNodeSelection = data.onToggleNodeSelection;
+
+      setNodeFloatingToolbarModel(
+        buildCanvasNodeFloatingToolbarModel({
+          nodeId: node.id,
+          nodeName,
+          selectedForExecution: data.selectedForExecution === true,
+          position: { x: Math.max(8, localX - 8), y: Math.max(8, localY - 52) },
+          onOpenCode:
+            typeof inspectNode === 'function'
+              ? (nodeId) => {
+                  inspectNode(nodeId, 'code');
+                }
+              : undefined,
+          onToggleExecutionSelection:
+            typeof toggleNodeSelection === 'function'
+              ? (nodeId, shouldSelect) => {
+                  toggleNodeSelection(nodeId, shouldSelect);
+                }
+              : undefined,
+        })
+      );
+      props.onNodeClick(event, node);
+    },
+    [props.onNodeClick]
+  );
 
   useCanvasViewportLifecycle({
     viewportRef,
@@ -95,7 +138,7 @@ function CanvasViewportWithPresenter({
       onEdgesChange={props.onEdgesChange}
       onConnect={props.onConnect}
       onReconnect={props.onReconnect}
-      onNodeClick={props.onNodeClick}
+      onNodeClick={handleNodeClick}
       onSelectionChange={props.onSelectionChange}
       onViewportChange={props.onViewportChange}
       onNodeDrag={props.onNodeDrag}
@@ -104,6 +147,8 @@ function CanvasViewportWithPresenter({
       onDragOver={props.onDragOver}
       contextMenuPresenter={contextMenuPresenter}
       renderContextMenuView={renderContextMenuView}
+      nodeFloatingToolbarModel={nodeFloatingToolbarModel}
+      onCloseNodeFloatingToolbar={closeNodeFloatingToolbar}
     />
   );
 }
