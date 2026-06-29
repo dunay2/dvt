@@ -123,6 +123,30 @@ describe('CanvasViewport node floating toolbar', () => {
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
   });
 
+  it('closes the node floating toolbar when its owning node is removed', async () => {
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'source_orders',
+          position: { x: 40, y: 80 },
+          data: { name: 'Orders source', selectedForExecution: false },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('source_orders', 320, 180);
+    expect(
+      document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')
+    ).not.toBeNull();
+
+    await renderViewport({
+      nodesWithImpact: [] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+  });
+
   async function clickNode(
     nodeId: string,
     eventInput:

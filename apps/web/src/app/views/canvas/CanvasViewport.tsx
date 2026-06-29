@@ -6,7 +6,7 @@ import {
   type NodeTypes,
   type ReactFlowProps,
 } from '@xyflow/react';
-import { useCallback, useRef, useState, type DragEventHandler } from 'react';
+import { useCallback, useEffect, useRef, useState, type DragEventHandler } from 'react';
 
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
@@ -76,6 +76,20 @@ function CanvasViewportWithPresenter({
   const closeNodeFloatingToolbar = useCallback(() => {
     setNodeFloatingToolbarModel(null);
   }, []);
+
+  useEffect(() => {
+    if (nodeFloatingToolbarModel == null) {
+      return;
+    }
+
+    const toolbarOwnerStillExists = props.nodesWithImpact.some(
+      (node) => node.id === nodeFloatingToolbarModel.nodeId
+    );
+    if (!toolbarOwnerStillExists) {
+      setNodeFloatingToolbarModel(null);
+    }
+  }, [nodeFloatingToolbarModel, props.nodesWithImpact]);
+
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
     (event, node) => {
       const eventTarget = event.currentTarget as Element | undefined;
