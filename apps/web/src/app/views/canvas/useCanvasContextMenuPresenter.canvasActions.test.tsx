@@ -102,7 +102,14 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
     expect(presenter?.model).toMatchObject({
       surface: 'add-node-catalog',
       flowPosition: { x: 420, y: 220 },
-      canvasActions: [{ action: 'open-source-import', label: 'Add source' }],
+      canvasActions: [],
+      catalogActions: [
+        {
+          action: 'open-source-import',
+          label: 'Add source',
+          registration: expect.objectContaining({ kind: 'dvt:source' }),
+        },
+      ],
       createNodeActions: [],
     });
   });
