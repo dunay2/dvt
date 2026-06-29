@@ -14,6 +14,8 @@ import type { DragEventHandler, RefObject } from 'react';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { CanvasPaletteId } from './canvasPalette';
 import { CanvasContextMenuView } from './CanvasContextMenuView';
+import { CanvasNodeFloatingToolbarView } from './CanvasNodeFloatingToolbarView';
+import type { CanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 
 type CanvasViewportSurfaceViewProps = Readonly<{
@@ -41,6 +43,8 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   onDragOver: DragEventHandler<HTMLDivElement>;
   contextMenuPresenter: CanvasContextMenuPresenter;
   renderContextMenuView: boolean;
+  nodeFloatingToolbarModel: CanvasNodeFloatingToolbarModel | null;
+  onCloseNodeFloatingToolbar: () => void;
 }>;
 
 function resolveMiniMapNodeColor(node: { data?: unknown }): string {
@@ -70,11 +74,13 @@ function CanvasViewportReactFlowSurface({
   onDrop,
   onDragOver,
   contextMenuPresenter,
+  onCloseNodeFloatingToolbar,
 }: Omit<
   CanvasViewportSurfaceViewProps,
-  'viewportRef' | 'resolvedCanvasPalette' | 'renderContextMenuView'
+  'viewportRef' | 'resolvedCanvasPalette' | 'renderContextMenuView' | 'nodeFloatingToolbarModel'
 >): JSX.Element {
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
+    onCloseNodeFloatingToolbar();
     contextMenuPresenter.handlePaneClick(event);
   };
   const handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']> = (event, node) => {
@@ -92,6 +98,7 @@ function CanvasViewportReactFlowSurface({
     nodes
   ) => {
     contextMenuPresenter.closeContextMenu();
+    onCloseNodeFloatingToolbar();
     onNodeDrag(event, node, nodes);
   };
   const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> = (
@@ -100,7 +107,21 @@ function CanvasViewportReactFlowSurface({
     nodes
   ) => {
     contextMenuPresenter.closeContextMenu();
+    onCloseNodeFloatingToolbar();
     onNodeDragStop(event, node, nodes);
+  };
+  const handlePaneContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onPaneContextMenu']> = (
+    event
+  ) => {
+    onCloseNodeFloatingToolbar();
+    contextMenuPresenter.handlePaneContextMenu(event);
+  };
+  const handleEdgeContextMenu: NonNullable<ReactFlowProps<Node, Edge>['onEdgeContextMenu']> = (
+    event,
+    edge
+  ) => {
+    onCloseNodeFloatingToolbar();
+    contextMenuPresenter.handleEdgeContextMenu(event, edge);
   };
 
   return (
@@ -142,8 +163,8 @@ function CanvasViewportReactFlowSurface({
         onNodeDrag={handleNodeDrag}
         onDrop={onDrop}
         onDragOver={onDragOver}
-        onPaneContextMenu={contextMenuPresenter.handlePaneContextMenu}
-        onEdgeContextMenu={contextMenuPresenter.handleEdgeContextMenu}
+        onPaneContextMenu={handlePaneContextMenu}
+        onEdgeContextMenu={handleEdgeContextMenu}
         className="bg-(--canvas-surface)"
       >
         {canvasGridVisible ? <Background color={canvasGridColor} gap={gridSize} /> : null}
@@ -168,6 +189,8 @@ export function CanvasViewportSurfaceView({
   resolvedCanvasPalette,
   renderContextMenuView,
   contextMenuPresenter,
+  nodeFloatingToolbarModel,
+  onCloseNodeFloatingToolbar,
   ...reactFlowSurfaceProps
 }: CanvasViewportSurfaceViewProps): JSX.Element {
   return (
@@ -180,7 +203,11 @@ export function CanvasViewportSurfaceView({
       <CanvasViewportReactFlowSurface
         {...reactFlowSurfaceProps}
         contextMenuPresenter={contextMenuPresenter}
+        onCloseNodeFloatingToolbar={onCloseNodeFloatingToolbar}
       />
+      {nodeFloatingToolbarModel == null ? null : (
+        <CanvasNodeFloatingToolbarView model={nodeFloatingToolbarModel} />
+      )}
       {renderContextMenuView ? (
         <CanvasContextMenuView
           model={contextMenuPresenter.model}
