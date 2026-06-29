@@ -32,6 +32,7 @@ import {
   graphStatusRingClasses,
   graphVisualClasses,
 } from '../graph/graphVisualTokens';
+import { buildGraphNodeCardPlayAction } from '../graph/graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
@@ -156,6 +157,7 @@ export function DbtNodeRenderer({
         ? data.type
         : (kindMeta?.label ?? node.kind);
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
+  const playAction = buildGraphNodeCardPlayAction({ nodeId: node.id, data });
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -178,6 +180,7 @@ export function DbtNodeRenderer({
       hovered={hovered}
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
+      playAction={playAction}
     />
   );
 }

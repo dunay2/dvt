@@ -198,6 +198,44 @@ describe('DbtNodeRenderer history panel', () => {
     expect(document.querySelector('[title="Columns"]')?.textContent).toBe('1');
   });
 
+  it('routes the card play affordance through execution selection', async () => {
+    const toggleNodeSelection = vi.fn();
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT?: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <DbtNodeRenderer
+          node={buildNode({ id: 'model_orders', name: 'fct_orders' })}
+          selected={false}
+          hovered={false}
+          overlayDecoration={null}
+          badges={[]}
+          graphNodeCardStrategies={[dbtGraphNodeCardStrategy]}
+          data={{
+            selectedForExecution: false,
+            onToggleNodeSelection: toggleNodeSelection,
+          }}
+        />
+      );
+    });
+
+    const playButton = container.querySelector('button[aria-label="Select for execution"]');
+    expect(playButton).not.toBeNull();
+
+    await act(async () => {
+      playButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+
+    expect(toggleNodeSelection).toHaveBeenCalledWith('model_orders', true);
+  });
+
   it('renders node-scoped runtime events for the active run', async () => {
     const runsService = buildRunsService({
       listRunEvents: vi.fn(async () => ({

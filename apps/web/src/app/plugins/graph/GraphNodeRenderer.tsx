@@ -4,6 +4,7 @@ import type { CSSProperties, ReactElement } from 'react';
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { graphStatusDotClasses, graphStatusRingClasses } from './graphVisualTokens';
+import { buildGraphNodeCardPlayAction } from './graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 import { GraphNodeCardView } from './GraphNodeCardView';
 
@@ -61,6 +62,7 @@ export function GraphNodeRenderer({
         ? data.type
         : kindMeta.label;
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
+  const playAction = buildGraphNodeCardPlayAction({ nodeId: node.id, data });
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -83,6 +85,7 @@ export function GraphNodeRenderer({
       hovered={hovered}
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
+      playAction={playAction}
     />
   );
 }

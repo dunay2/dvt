@@ -1,10 +1,11 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
 import { useState, type CSSProperties, type ReactElement } from 'react';
-import { ChevronDown, ChevronUp, Table } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
 import { cn } from '../../components/ui/utils';
+import type { GraphNodeCardPlayAction } from './graphNodeCardActions';
 import type { GraphNodeCardReadModel } from './graphNodeCardStrategyContracts';
 import { graphVisualClasses } from './graphVisualTokens';
 
@@ -28,6 +29,7 @@ export type GraphNodeCardViewProps = Readonly<{
   hovered: boolean;
   dimmed: boolean;
   overlayStyle?: CSSProperties;
+  playAction?: GraphNodeCardPlayAction | null;
 }>;
 
 export function GraphNodeCardView({
@@ -45,6 +47,7 @@ export function GraphNodeCardView({
   hovered,
   dimmed,
   overlayStyle,
+  playAction,
 }: GraphNodeCardViewProps): ReactElement {
   const [columnsExpanded, setColumnsExpanded] = useState(false);
 
@@ -72,7 +75,24 @@ export function GraphNodeCardView({
           )}
           <span className="truncate font-semibold leading-tight">{cardModel.title}</span>
         </div>
-        <div className={cn('size-2 shrink-0 rounded-full', statusDotClass)} />
+        <div className="flex shrink-0 items-center gap-1">
+          <div className={cn('size-2 rounded-full', statusDotClass)} />
+          {playAction ? (
+            <button
+              type="button"
+              aria-label={playAction.label}
+              title={playAction.label}
+              disabled={playAction.disabled}
+              onClick={(event) => {
+                event.stopPropagation();
+                playAction.onPress();
+              }}
+              className="nodrag inline-flex size-5 items-center justify-center rounded border border-transparent text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Play className="size-3" />
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <div className="mt-2">
