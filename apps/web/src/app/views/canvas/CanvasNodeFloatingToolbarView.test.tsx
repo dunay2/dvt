@@ -27,16 +27,13 @@ describe('CanvasNodeFloatingToolbarView', () => {
     container.remove();
   });
 
-  it('renders the node floating toolbar with code, freeze, green play, and overflow actions', () => {
+  it('renders the node floating toolbar with code, freeze, and overflow actions', () => {
     const onOpenCode = vi.fn();
-    const onToggleExecutionSelection = vi.fn();
     const model = buildCanvasNodeFloatingToolbarModel({
       nodeId: 'model_orders',
       nodeName: 'Orders model',
-      selectedForExecution: false,
       position: { x: 320, y: 160 },
       onOpenCode,
-      onToggleExecutionSelection,
     });
 
     act(() => {
@@ -51,18 +48,16 @@ describe('CanvasNodeFloatingToolbarView', () => {
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-y')).toBe('160px');
 
     expect(button('Código')).not.toBeNull();
+    expect(button('Código')?.classList.contains('cursor-pointer')).toBe(true);
     expect(button('Congelar')?.getAttribute('aria-disabled')).toBe('true');
-    const playButton = button('Seleccionar para ejecución');
-    expect(playButton).not.toBeNull();
-    expect(playButton?.dataset.tone).toBe('success');
-    expect(playButton?.classList.contains('cursor-pointer')).toBe(true);
+    expect(button('Seleccionar para ejecución')).toBeNull();
     expect(button('Más acciones')?.getAttribute('aria-disabled')).toBe('true');
 
     act(() => {
-      playButton?.click();
+      button('Código')?.click();
     });
 
-    expect(onToggleExecutionSelection).toHaveBeenCalledWith('model_orders', true);
+    expect(onOpenCode).toHaveBeenCalledWith('model_orders');
   });
 
   function button(label: string): HTMLButtonElement | null {
