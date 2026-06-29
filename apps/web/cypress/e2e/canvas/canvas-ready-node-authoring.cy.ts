@@ -40,6 +40,9 @@ type CanvasDraftStatusCopyKey = keyof Pick<
 >;
 
 function stubRuntimeCapabilities(): void {
+  stubShellBootstrapApis({
+    scopes: ['workspace:graph-draft:view', 'workspace:graph-draft:save', 'run:start'],
+  });
   stubE2eJsonApi('GET', '/workspace/context', {
     effectiveWorkspace: E2E_WORKSPACE_SESSION,
     availableWorkspaces: [E2E_WORKSPACE_SESSION],
@@ -90,7 +93,8 @@ function assertNoDraftSaveStatus(): void {
 
 function chooseSqlTransformFromCanvasContextMenu(): void {
   openCanvasContextMenuAt(560, 260);
-  clickCanvasContextMenuItem('Add transformation');
+  clickCanvasContextMenuItem(/^(Add|Anadir)\.\.\.$/);
+  clickCanvasContextMenuItem(/^(Add transformation|Anadir transformacion)/);
 }
 
 function addSqlTransformNode(): void {
@@ -106,7 +110,6 @@ function removeCanvasNode(nodeName: string): void {
 
 describe('Canvas ready node authoring', () => {
   beforeEach(() => {
-    stubShellBootstrapApis();
     stubRuntimeCapabilities();
   });
 
@@ -162,12 +165,11 @@ describe('Canvas ready node authoring', () => {
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
     cy.wait(1_500);
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
-    cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'Add transformation').should(
-      'be.visible'
-    );
-    cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'Explore project').should(
-      'be.visible'
-    );
+    cy.contains(
+      '[data-slot="canvas-context-menu"] [role="menuitem"]',
+      /^(Add|Anadir)\.\.\.$/
+    ).should('be.visible');
+    cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Explore project');
   });
 
   it('opens node workbench from node context only, not from plain node selection', () => {
@@ -177,6 +179,26 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'model_orders').should('be.visible').click();
+    cy.get('[data-slot="canvas-node-floating-toolbar"]')
+      .should('be.visible')
+      .should(($toolbar) => {
+        expect($toolbar[0].parentElement).to.equal($toolbar[0].ownerDocument.body);
+        const toolbarRect = $toolbar[0].getBoundingClientRect();
+        const viewportRect = $toolbar[0].ownerDocument.documentElement.getBoundingClientRect();
+
+        expect(toolbarRect.width, 'toolbar width').to.be.greaterThan(0);
+        expect(toolbarRect.height, 'toolbar height').to.be.greaterThan(0);
+        expect(toolbarRect.left, 'toolbar is not clipped left').to.be.greaterThan(
+          viewportRect.left
+        );
+        expect(toolbarRect.top, 'toolbar is not clipped top').to.be.greaterThan(viewportRect.top);
+      });
+    cy.get('[data-slot="canvas-node-floating-toolbar"]')
+      .find('button[aria-label="Seleccionar para ejecución"]')
+      .should(($button) => {
+        expect($button[0].dataset.tone).to.equal('success');
+        expect(getComputedStyle($button[0]).cursor).to.equal('pointer');
+      });
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
 
     cy.contains('.react-flow__node', 'model_orders').rightclick();
@@ -235,6 +257,7 @@ describe('Canvas ready node authoring', () => {
     cy.contains('Sales canvas').should('be.visible');
     cy.get('[data-slot="canvas-toolbar-insert-command"]').should('not.exist');
     openCanvasContextMenuAt(620, 340);
+    cy.contains('[role="menuitem"]', /^(Add|Anadir)\.\.\.$/).should('not.exist');
     cy.contains('[role="menuitem"]', 'Add transformation').should('not.exist');
     cy.contains('[role="menuitem"]', 'Add source').should('not.exist');
     cy.then(() => {

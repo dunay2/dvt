@@ -65,7 +65,7 @@ describe('CanvasViewport node floating toolbar', () => {
 
     await paneClick(440, 260);
 
-    expect(container.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
   });
 
   it('closes the node floating toolbar before opening the background context menu', async () => {
@@ -83,7 +83,9 @@ describe('CanvasViewport node floating toolbar', () => {
     });
 
     await clickNode('source_orders', 320, 180);
-    expect(container.querySelector('[data-slot="canvas-node-floating-toolbar"]')).not.toBeNull();
+    expect(
+      document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')
+    ).not.toBeNull();
 
     const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
       | ((event: React.MouseEvent<Element>) => void)
@@ -96,7 +98,7 @@ describe('CanvasViewport node floating toolbar', () => {
       } as unknown as React.MouseEvent<Element>);
     });
 
-    expect(container.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
   });
 
@@ -138,10 +140,12 @@ describe('CanvasViewport node floating toolbar', () => {
   }
 
   function toolbarText(): string {
-    return container.querySelector('[data-slot="canvas-node-floating-toolbar"]')?.textContent ?? '';
+    return (
+      document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')?.textContent ?? ''
+    );
   }
 
   function toolbarButton(label: string): HTMLButtonElement | null {
-    return container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+    return document.body.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
   }
 });

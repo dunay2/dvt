@@ -1,6 +1,7 @@
 /** Owned concern: render the node floating toolbar from an already-derived presentation model. */
 import { Code2, MoreHorizontal, Play, Snowflake } from 'lucide-react';
 import type { ReactElement } from 'react';
+import { createPortal } from 'react-dom';
 
 import { cn } from '../../components/ui/utils';
 import type {
@@ -24,6 +25,7 @@ function getActionClassName(action: CanvasNodeFloatingToolbarAction): string {
     'nodrag nopan inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-semibold transition',
     'border border-transparent bg-white/0 text-slate-100 hover:border-white/20 hover:bg-white/10',
     action.tone === 'success' && 'text-emerald-300 hover:text-emerald-200',
+    action.available && 'cursor-pointer',
     !action.available && 'cursor-not-allowed opacity-45 hover:border-transparent hover:bg-white/0'
   );
 }
@@ -31,12 +33,12 @@ function getActionClassName(action: CanvasNodeFloatingToolbarAction): string {
 export function CanvasNodeFloatingToolbarView({
   model,
 }: CanvasNodeFloatingToolbarViewProps): ReactElement {
-  return (
+  return createPortal(
     <div
       data-slot="canvas-node-floating-toolbar"
       aria-label={`Acciones de nodo ${model.nodeName}`}
       className={cn(
-        'absolute z-30 flex items-center gap-1 rounded-lg border border-white/12',
+        'fixed left-0 top-0 z-50 flex items-center gap-1 rounded-lg border border-white/12',
         'bg-slate-950/95 px-1.5 py-1.5 shadow-2xl shadow-slate-950/40 backdrop-blur',
         'translate-x-[var(--node-toolbar-x)] translate-y-[var(--node-toolbar-y)]'
       )}
@@ -71,6 +73,7 @@ export function CanvasNodeFloatingToolbarView({
           </button>
         );
       })}
-    </div>
+    </div>,
+    document.body
   );
 }

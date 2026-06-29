@@ -43,8 +43,10 @@ describe('CanvasNodeFloatingToolbarView', () => {
       root.render(<CanvasNodeFloatingToolbarView model={model} />);
     });
 
-    const toolbar = container.querySelector('[data-slot="canvas-node-floating-toolbar"]');
+    const toolbar = document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]');
     expect(toolbar).not.toBeNull();
+    expect(toolbar?.parentElement).toBe(document.body);
+    expect(toolbar?.classList.contains('fixed')).toBe(true);
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-x')).toBe('320px');
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-y')).toBe('160px');
 
@@ -53,6 +55,7 @@ describe('CanvasNodeFloatingToolbarView', () => {
     const playButton = button('Seleccionar para ejecución');
     expect(playButton).not.toBeNull();
     expect(playButton?.dataset.tone).toBe('success');
+    expect(playButton?.classList.contains('cursor-pointer')).toBe(true);
     expect(button('Más acciones')?.getAttribute('aria-disabled')).toBe('true');
 
     act(() => {
@@ -63,6 +66,6 @@ describe('CanvasNodeFloatingToolbarView', () => {
   });
 
   function button(label: string): HTMLButtonElement | null {
-    return container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+    return document.body.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
   }
 });
