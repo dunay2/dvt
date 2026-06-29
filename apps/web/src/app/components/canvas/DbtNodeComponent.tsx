@@ -21,6 +21,7 @@ import {
 } from '../canvasWorkspaceExplorerModel';
 import { cn } from '../ui/utils';
 import { CanvasNodeShell } from './CanvasNodeShell';
+import type { CanvasNodePortTone } from './CanvasNodePortHandle';
 import {
   buildCanvasNodeContextMenuModel,
   type CanvasNodeContextMenuActionId,
@@ -96,6 +97,14 @@ const COLOR_CLASSES: Record<NodeBadge['color'], string> = {
   yellow: 'bg-yellow-400 text-black',
   blue: 'bg-blue-500 text-white',
   gray: 'bg-neutral-500 text-white',
+};
+
+const NODE_ROLE_PORT_TONES: Record<CoreNodeRole, CanvasNodePortTone> = {
+  input: 'source',
+  transform: 'model',
+  check: 'test',
+  output: 'output',
+  control: 'control',
 };
 
 function NodeBadgeOverlay({ badge }: Readonly<{ badge: NodeBadge }>) {
@@ -193,6 +202,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;
+  const portTone = NODE_ROLE_PORT_TONES[role];
   const canMutateNodeCommands = data.canMutateGraph === true;
   const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
   const contextMenuModel = buildCanvasNodeContextMenuModel({
@@ -258,6 +268,8 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       contextMenuModel={contextMenuModel}
       shouldShowSourceHandle={shouldShowSourceHandle}
       shouldShowTargetHandle={shouldShowTargetHandle}
+      sourceHandleTone={portTone}
+      targetHandleTone={portTone}
       onContextMenuAction={handleContextMenuAction}
       onOpenWorkbench={
         typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined

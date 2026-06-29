@@ -9553,6 +9553,26 @@ test('tracked migrations persist Canvas node port handle feature rail', () => {
   assert.doesNotMatch(portHandleFeatureRailMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node port handle visual affordance rail', () => {
+  const migrations = readMigrationFiles();
+  const portHandleVisualAffordanceMigration = migrations.find(
+    (migration) => migration.fileName === '380_canvas_node_port_handle_visual_affordance.sql'
+  );
+
+  assert.ok(portHandleVisualAffordanceMigration);
+  assert.match(portHandleVisualAffordanceMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /CanvasNodePortTone/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /NODE_ROLE_PORT_TONES/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /CanvasNodeShell\.module\.css/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /EV-CANVAS-NODE-PORT-HANDLE-TONE-CONTRACT/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /source\/model data-tone values/);
+  assert.match(
+    portHandleVisualAffordanceMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.doesNotMatch(portHandleVisualAffordanceMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations move Canvas node shell styles out of DBT component CSS', () => {
   const migrations = readMigrationFiles();
   const shellCssBoundaryMigration = migrations.find(
