@@ -16,6 +16,7 @@ const BASE_PROPS = {
     status: { label: 'Draft', tone: 'warning' as const },
     metrics: [],
     operationalMetrics: [],
+    operationalDetail: null,
   },
   typeLabel: 'Model',
   tags: [],
@@ -89,6 +90,14 @@ describe('GraphNodeCardView', () => {
               { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
               { id: 'size', label: 'Size', value: '18.2 GB' },
             ],
+            operationalDetail: {
+              title: 'Postgres · public health',
+              rows: [
+                { id: 'freshness', label: 'Freshness', value: '12 min' },
+                { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
+                { id: 'size', label: 'Size', value: '18.2 GB' },
+              ],
+            },
           }}
           tags={['postgres', 'public']}
         />
@@ -106,6 +115,7 @@ describe('GraphNodeCardView', () => {
   it('opens operational details from the rail without bubbling to the node card', () => {
     const onOpenOperationalDetails = vi.fn();
     const onCardClick = vi.fn();
+    const anchorRect = new DOMRect(20, 30, 120, 40);
 
     act(() => {
       root.render(
@@ -118,6 +128,13 @@ describe('GraphNodeCardView', () => {
                 { id: 'freshness', label: 'Freshness', value: '12 min' },
                 { id: 'size', label: 'Size', value: '18.2 GB' },
               ],
+              operationalDetail: {
+                title: 'Orders model health',
+                rows: [
+                  { id: 'freshness', label: 'Freshness', value: '12 min' },
+                  { id: 'size', label: 'Size', value: '18.2 GB' },
+                ],
+              },
             }}
             onOpenOperationalDetails={onOpenOperationalDetails}
           />
@@ -130,12 +147,22 @@ describe('GraphNodeCardView', () => {
     );
     expect(rail).not.toBeNull();
     expect(rail?.getAttribute('aria-label')).toBe('Open node operational details');
+    vi.spyOn(rail!, 'getBoundingClientRect').mockReturnValue(anchorRect);
 
     act(() => {
       fireEvent.click(rail!);
     });
 
-    expect(onOpenOperationalDetails).toHaveBeenCalledOnce();
+    expect(onOpenOperationalDetails).toHaveBeenCalledWith(
+      {
+        title: 'Orders model health',
+        rows: [
+          { id: 'freshness', label: 'Freshness', value: '12 min' },
+          { id: 'size', label: 'Size', value: '18.2 GB' },
+        ],
+      },
+      anchorRect
+    );
     expect(onCardClick).not.toHaveBeenCalled();
   });
 });

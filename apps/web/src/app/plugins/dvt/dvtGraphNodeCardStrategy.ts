@@ -6,6 +6,7 @@ import type {
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
 import {
+  buildGraphNodeOperationalDetail,
   formatBytes,
   formatCompactNumber,
   metadataOf,
@@ -118,6 +119,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     ),
     metrics,
     operationalMetrics,
+    operationalDetail: buildGraphNodeOperationalDetail(node.name, operationalMetrics),
   };
 }
 

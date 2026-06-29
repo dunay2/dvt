@@ -10212,3 +10212,24 @@ test('tracked migrations register Graph node card presentation leaf components',
   assert.match(leafComponentsMigration.sql, /graphNodeCardPresentationLeaves/);
   assert.doesNotMatch(leafComponentsMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register Graph node health popover ownership', () => {
+  const migrations = readMigrationFiles();
+  const healthPopoverMigration = migrations.find(
+    (migration) => migration.fileName === '379_canvas_graph_node_health_popover.sql'
+  );
+
+  assert.ok(healthPopoverMigration);
+  assert.match(healthPopoverMigration.sql, /web\.component\.canvas\.GraphNodeHealthPopover/);
+  assert.match(healthPopoverMigration.sql, /GraphNodeHealthPopoverView\.tsx/);
+  assert.match(healthPopoverMigration.sql, /CanvasViewport\.nodeOperationalRail\.test\.tsx/);
+  assert.match(healthPopoverMigration.sql, /OpenCanvasNodeHealthPopover/);
+  assert.match(healthPopoverMigration.sql, /CloseCanvasNodeHealthPopover/);
+  assert.match(healthPopoverMigration.sql, /RenderCanvasNodeHealthPopover/);
+  assert.match(healthPopoverMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(healthPopoverMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(healthPopoverMigration.sql, /GraphNodeOperationalDetail/);
+  assert.match(healthPopoverMigration.sql, /buildGraphNodeOperationalDetail/);
+  assert.match(healthPopoverMigration.sql, /noDataLookup/);
+  assert.doesNotMatch(healthPopoverMigration.sql, /truncate\s+/i);
+});

@@ -6,6 +6,7 @@ import type {
   GraphNodeCardStrategy,
 } from './graphNodeCardStrategyContracts';
 import {
+  buildGraphNodeOperationalDetail,
   metadataOf,
   pushMetric,
   resolveNodeCardStatus,
@@ -42,6 +43,7 @@ function buildDefaultCard(
     status: resolveNodeCardStatus(node, metadata, data),
     metrics,
     operationalMetrics: [],
+    operationalDetail: buildGraphNodeOperationalDetail(node.name, []),
   };
 }
 

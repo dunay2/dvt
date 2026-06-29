@@ -6,6 +6,7 @@ import type { NodeRendererProps } from '../contracts/NodeRendering';
 import { graphStatusDotClasses, graphStatusRingClasses } from './graphVisualTokens';
 import { buildGraphNodeCardPlayAction } from './graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
+import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from './GraphNodeCardView';
 
 type ColumnMeta = {
@@ -63,6 +64,7 @@ export function GraphNodeRenderer({
         : kindMeta.label;
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
   const playAction = buildGraphNodeCardPlayAction({ nodeId: node.id, data });
+  const openOperationalDetails = data.onOpenOperationalDetails;
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -86,6 +88,13 @@ export function GraphNodeRenderer({
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
       playAction={playAction}
+      onOpenOperationalDetails={
+        typeof openOperationalDetails === 'function'
+          ? (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+              openOperationalDetails(detail, anchorRect);
+            }
+          : undefined
+      }
     />
   );
 }

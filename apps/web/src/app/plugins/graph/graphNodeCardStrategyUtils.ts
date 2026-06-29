@@ -1,6 +1,10 @@
 /** Owned concern: share pure graph card projection helpers across plugin strategies. */
 import type { CanonicalNode } from '../../types/canonical';
-import type { GraphNodeCardMetric, GraphNodeCardStatus } from './graphNodeCardStrategyContracts';
+import type {
+  GraphNodeCardMetric,
+  GraphNodeCardStatus,
+  GraphNodeOperationalDetail,
+} from './graphNodeCardStrategyContracts';
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -99,6 +103,20 @@ export function pushOperationalMetric(
   value: string | number | null
 ): void {
   pushMetric(metrics, id, label, value);
+}
+
+export function buildGraphNodeOperationalDetail(
+  title: string,
+  metrics: readonly GraphNodeCardMetric[]
+): GraphNodeOperationalDetail | null {
+  if (metrics.length === 0) {
+    return null;
+  }
+
+  return {
+    title: `${title} health`,
+    rows: metrics,
+  };
 }
 
 export function resolveRuntimeDurationLabel(

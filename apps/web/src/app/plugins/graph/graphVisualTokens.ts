@@ -27,6 +27,13 @@ export const graphVisualClasses = {
   nodeCardOperationalMetric: 'min-w-0 border-r border-slate-800/80 px-3 py-2 last:border-r-0',
   nodeCardOperationalLabel: 'block truncate text-[9px] uppercase tracking-wide text-slate-500',
   nodeCardOperationalValue: 'mt-0.5 block truncate text-[11px] font-medium text-slate-200',
+  nodeHealthPopover:
+    'absolute z-40 w-72 rounded-md border border-slate-700 bg-slate-950/95 p-3 text-xs text-slate-100 shadow-2xl shadow-slate-950/40 outline-none',
+  nodeHealthPopoverTitle: 'text-sm font-semibold text-slate-50',
+  nodeHealthPopoverRows: 'mt-3 space-y-2',
+  nodeHealthPopoverRow: 'flex items-center justify-between gap-4',
+  nodeHealthPopoverLabel: 'text-slate-400',
+  nodeHealthPopoverValue: 'text-right font-medium text-slate-100',
   fallbackNodeCard:
     'min-w-[140px] rounded-md border-2 border-dashed border-slate-500 bg-slate-900/60 px-3 py-2 text-xs text-slate-400',
   fallbackNodeTitle: 'truncate font-semibold text-slate-300',

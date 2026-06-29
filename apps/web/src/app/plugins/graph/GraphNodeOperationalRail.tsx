@@ -6,15 +6,15 @@ import { graphVisualClasses } from './graphVisualTokens';
 
 export type GraphNodeOperationalRailProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
-  onOpen?: () => void;
+  onOpen?: (anchorRect: DOMRect) => void;
 }>;
 
 function stopAndOpen(
   event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
-  onOpen: () => void
+  onOpen: (anchorRect: DOMRect) => void
 ): void {
   event.stopPropagation();
-  onOpen();
+  onOpen(event.currentTarget.getBoundingClientRect());
 }
 
 function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] {

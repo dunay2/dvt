@@ -9,7 +9,10 @@ import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeStatusChip } from './GraphNodeStatusChip';
 import { GraphNodeTagList } from './GraphNodeTagList';
 import type { GraphNodeCardPlayAction } from './graphNodeCardActions';
-import type { GraphNodeCardReadModel } from './graphNodeCardStrategyContracts';
+import type {
+  GraphNodeCardReadModel,
+  GraphNodeOperationalDetail,
+} from './graphNodeCardStrategyContracts';
 import { graphVisualClasses } from './graphVisualTokens';
 
 export type GraphNodeCardColumn = Readonly<{
@@ -33,7 +36,7 @@ export type GraphNodeCardViewProps = Readonly<{
   dimmed: boolean;
   overlayStyle?: CSSProperties;
   playAction?: GraphNodeCardPlayAction | null;
-  onOpenOperationalDetails?: () => void;
+  onOpenOperationalDetails?: (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => void;
 }>;
 
 export function GraphNodeCardView({
@@ -55,6 +58,7 @@ export function GraphNodeCardView({
   onOpenOperationalDetails,
 }: GraphNodeCardViewProps): ReactElement {
   const [columnsExpanded, setColumnsExpanded] = useState(false);
+  const operationalDetail = cardModel.operationalDetail;
 
   return (
     <div
@@ -148,7 +152,11 @@ export function GraphNodeCardView({
 
       <GraphNodeOperationalRail
         metrics={cardModel.operationalMetrics}
-        onOpen={onOpenOperationalDetails}
+        onOpen={
+          onOpenOperationalDetails == null || operationalDetail == null
+            ? undefined
+            : (anchorRect) => onOpenOperationalDetails(operationalDetail, anchorRect)
+        }
       />
     </div>
   );

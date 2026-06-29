@@ -34,6 +34,7 @@ import {
 } from '../graph/graphVisualTokens';
 import { buildGraphNodeCardPlayAction } from '../graph/graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
+import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
@@ -158,6 +159,7 @@ export function DbtNodeRenderer({
         : (kindMeta?.label ?? node.kind);
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
   const playAction = buildGraphNodeCardPlayAction({ nodeId: node.id, data });
+  const openOperationalDetails = data.onOpenOperationalDetails;
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -181,6 +183,13 @@ export function DbtNodeRenderer({
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
       playAction={playAction}
+      onOpenOperationalDetails={
+        typeof openOperationalDetails === 'function'
+          ? (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+              openOperationalDetails(detail, anchorRect);
+            }
+          : undefined
+      }
     />
   );
 }

@@ -7,6 +7,7 @@ import type {
 } from '../graph/graphNodeCardStrategyContracts';
 import {
   arrayCount,
+  buildGraphNodeOperationalDetail,
   formatBytes,
   formatCompactNumber,
   metadataOf,
@@ -130,6 +131,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     ),
     metrics,
     operationalMetrics,
+    operationalDetail: buildGraphNodeOperationalDetail(node.name, operationalMetrics),
   };
 }
 
