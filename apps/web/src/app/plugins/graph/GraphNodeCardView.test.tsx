@@ -12,7 +12,10 @@ const BASE_PROPS = {
     title: 'Orders model',
     kindLabel: 'Model',
     subtitle: 'analytics',
+    path: 'models/marts/orders.sql',
+    status: { label: 'Draft', tone: 'warning' as const },
     metrics: [],
+    operationalMetrics: [],
   },
   typeLabel: 'Model',
   tags: [],
@@ -67,5 +70,36 @@ describe('GraphNodeCardView', () => {
     });
 
     expect(onPlay).toHaveBeenCalledOnce();
+  });
+
+  it('renders semantic status, path, tags, and operational rail from the read model', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            title: 'Postgres · public',
+            kindLabel: 'Source',
+            subtitle: 'warehouse.public.orders',
+            path: 'models/sources/src_public.yml',
+            status: { label: 'Ready', tone: 'success' },
+            metrics: [{ id: 'columns', label: 'Columns', value: '3' }],
+            operationalMetrics: [
+              { id: 'freshness', label: 'Freshness', value: '12 min' },
+              { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
+              { id: 'size', label: 'Size', value: '18.2 GB' },
+            ],
+          }}
+          tags={['postgres', 'public']}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('Postgres · public');
+    expect(container.textContent).toContain('Ready');
+    expect(container.textContent).toContain('models/sources/src_public.yml');
+    expect(container.textContent).toContain('postgres');
+    expect(container.textContent).toContain('Freshness');
+    expect(container.textContent).toContain('42 MB/min');
   });
 });

@@ -10170,3 +10170,26 @@ test('tracked migrations extend Canvas add-node catalog with i18n Cypress eviden
   assert.match(i18nCypressMigration.sql, /i18n_safe_user_flow/);
   assert.doesNotMatch(i18nCypressMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register Graph node card operational surface ownership', () => {
+  const migrations = readMigrationFiles();
+  const operationalSurfaceMigration = migrations.find(
+    (migration) => migration.fileName === '377_canvas_graph_node_card_operational_surface.sql'
+  );
+
+  assert.ok(operationalSurfaceMigration);
+  assert.match(operationalSurfaceMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(operationalSurfaceMigration.sql, /GraphNodeStatusChip/);
+  assert.match(operationalSurfaceMigration.sql, /GraphNodeOperationalRail/);
+  assert.match(operationalSurfaceMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(operationalSurfaceMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(operationalSurfaceMigration.sql, /graphNodeCardStrategyContracts\.ts/);
+  assert.match(operationalSurfaceMigration.sql, /GraphNodeCardView\.tsx/);
+  assert.match(operationalSurfaceMigration.sql, /dbtGraphNodeCardStrategy\.ts/);
+  assert.match(operationalSurfaceMigration.sql, /dvtGraphNodeCardStrategy\.ts/);
+  assert.match(operationalSurfaceMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(operationalSurfaceMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(operationalSurfaceMigration.sql, /presentationOnlyTemplate/);
+  assert.match(operationalSurfaceMigration.sql, /noInventedMetrics/);
+  assert.doesNotMatch(operationalSurfaceMigration.sql, /truncate\s+/i);
+});

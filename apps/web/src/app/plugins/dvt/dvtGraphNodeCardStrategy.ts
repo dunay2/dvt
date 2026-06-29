@@ -10,9 +10,12 @@ import {
   formatCompactNumber,
   metadataOf,
   numericValue,
+  pushOperationalMetric,
   pushMetric,
   pushRuntimeMetrics,
+  resolveNodeCardStatus,
   resolveColumnCount,
+  resolveRuntimeDurationLabel,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 
@@ -59,6 +62,7 @@ function pushCanonicalCostMetric(
 function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): GraphNodeCardReadModel {
   const metadata = metadataOf(node);
   const metrics: GraphNodeCardMetric[] = [];
+  const operationalMetrics: GraphNodeCardMetric[] = [];
   const rowCount = numericValue(metadata.rowCount) ?? numericValue(data.rowCount);
   const byteSize =
     numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
@@ -73,11 +77,47 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   pushRuntimeMetrics(metrics, metadata, runtimeData);
   pushCanonicalCostMetric(metrics, node, metadata, data);
 
+  const lastRunAt = stringValue(metadata.lastRunAt) ?? stringValue(data.lastRunAt);
+  const durationLabel = resolveRuntimeDurationLabel(metadata, runtimeData);
+  if (lastRunAt || durationLabel) {
+    pushOperationalMetric(operationalMetrics, 'last-run', 'Last run', lastRunAt);
+    pushOperationalMetric(operationalMetrics, 'duration', 'Duration', durationLabel);
+    pushOperationalMetric(
+      operationalMetrics,
+      'rows',
+      'Rows',
+      rowCount == null ? null : formatCompactNumber(rowCount)
+    );
+  } else {
+    pushOperationalMetric(
+      operationalMetrics,
+      'rows',
+      'Rows',
+      rowCount == null ? null : formatCompactNumber(rowCount)
+    );
+    pushOperationalMetric(
+      operationalMetrics,
+      'size',
+      'Size',
+      byteSize == null ? null : formatBytes(byteSize)
+    );
+  }
+
   return {
     title: node.name,
     subtitle: buildDvtSubtitle(metadata, node.path),
+    path: buildDvtSubtitle(metadata, node.path),
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
+    status: resolveNodeCardStatus(
+      node,
+      metadata,
+      data,
+      node.role === 'input'
+        ? { label: 'Ready', tone: 'success' }
+        : { label: 'Draft', tone: 'warning' }
+    ),
     metrics,
+    operationalMetrics,
   };
 }
 

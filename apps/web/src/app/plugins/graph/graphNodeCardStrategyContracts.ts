@@ -7,11 +7,21 @@ export type GraphNodeCardMetric = Readonly<{
   value: string;
 }>;
 
+export type GraphNodeCardStatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+
+export type GraphNodeCardStatus = Readonly<{
+  label: string;
+  tone: GraphNodeCardStatusTone;
+}>;
+
 export type GraphNodeCardReadModel = Readonly<{
   title: string;
   subtitle: string | null;
+  path: string | null;
   kindLabel: string;
+  status: GraphNodeCardStatus;
   metrics: readonly GraphNodeCardMetric[];
+  operationalMetrics: readonly GraphNodeCardMetric[];
 }>;
 
 export type GraphNodeCardStrategy = Readonly<{

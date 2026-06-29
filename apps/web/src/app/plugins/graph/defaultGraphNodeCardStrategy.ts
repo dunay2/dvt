@@ -8,6 +8,7 @@ import type {
 import {
   metadataOf,
   pushMetric,
+  resolveNodeCardStatus,
   resolveColumnCount,
   stringValue,
 } from './graphNodeCardStrategyUtils';
@@ -36,8 +37,11 @@ function buildDefaultCard(
   return {
     title: node.name,
     subtitle: node.path ?? null,
+    path: node.path ?? null,
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
+    status: resolveNodeCardStatus(node, metadata, data),
     metrics,
+    operationalMetrics: [],
   };
 }
 
