@@ -102,4 +102,40 @@ describe('GraphNodeCardView', () => {
     expect(container.textContent).toContain('Freshness');
     expect(container.textContent).toContain('42 MB/min');
   });
+
+  it('opens operational details from the rail without bubbling to the node card', () => {
+    const onOpenOperationalDetails = vi.fn();
+    const onCardClick = vi.fn();
+
+    act(() => {
+      root.render(
+        <div onClick={onCardClick}>
+          <GraphNodeCardView
+            {...BASE_PROPS}
+            cardModel={{
+              ...BASE_PROPS.cardModel,
+              operationalMetrics: [
+                { id: 'freshness', label: 'Freshness', value: '12 min' },
+                { id: 'size', label: 'Size', value: '18.2 GB' },
+              ],
+            }}
+            onOpenOperationalDetails={onOpenOperationalDetails}
+          />
+        </div>
+      );
+    });
+
+    const rail = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-operational-rail"]'
+    );
+    expect(rail).not.toBeNull();
+    expect(rail?.getAttribute('aria-label')).toBe('Open node operational details');
+
+    act(() => {
+      fireEvent.click(rail!);
+    });
+
+    expect(onOpenOperationalDetails).toHaveBeenCalledOnce();
+    expect(onCardClick).not.toHaveBeenCalled();
+  });
 });

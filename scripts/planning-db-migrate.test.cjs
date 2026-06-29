@@ -10193,3 +10193,22 @@ test('tracked migrations register Graph node card operational surface ownership'
   assert.match(operationalSurfaceMigration.sql, /noInventedMetrics/);
   assert.doesNotMatch(operationalSurfaceMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register Graph node card presentation leaf components', () => {
+  const migrations = readMigrationFiles();
+  const leafComponentsMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '378_canvas_graph_node_card_presentation_leaf_components.sql'
+  );
+
+  assert.ok(leafComponentsMigration);
+  assert.match(leafComponentsMigration.sql, /GraphNodeStatusChip\.tsx/);
+  assert.match(leafComponentsMigration.sql, /GraphNodeMetricRow\.tsx/);
+  assert.match(leafComponentsMigration.sql, /GraphNodeTagList\.tsx/);
+  assert.match(leafComponentsMigration.sql, /GraphNodeOperationalRail\.tsx/);
+  assert.match(leafComponentsMigration.sql, /owned-leaf-component-files/);
+  assert.match(leafComponentsMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(leafComponentsMigration.sql, /EV-CANVAS-GRAPH-NODE-OPERATIONAL-RAIL-CLICK/);
+  assert.match(leafComponentsMigration.sql, /graphNodeCardPresentationLeaves/);
+  assert.doesNotMatch(leafComponentsMigration.sql, /truncate\s+/i);
+});

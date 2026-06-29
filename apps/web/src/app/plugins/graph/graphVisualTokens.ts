@@ -16,8 +16,14 @@ export const graphVisualClasses = {
   nodeCardPlayButton:
     'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-green-400/30 bg-green-500/15 text-green-300 transition hover:border-green-300/70 hover:bg-green-500/25 hover:text-green-100 disabled:cursor-not-allowed disabled:opacity-40',
   nodeCardMetricRow: 'mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-300',
+  nodeCardMetricItem: 'inline-flex items-baseline gap-1',
+  nodeCardMetricLabel: 'text-slate-500',
+  nodeCardMetricValue: 'font-medium text-slate-200',
+  nodeCardTagList: 'mt-3 flex flex-wrap gap-1.5',
   nodeCardOperationalRail:
     'grid grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55',
+  nodeCardOperationalRailButton:
+    'nodrag nopan grid w-full cursor-pointer grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55 text-left transition hover:bg-slate-800/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
   nodeCardOperationalMetric: 'min-w-0 border-r border-slate-800/80 px-3 py-2 last:border-r-0',
   nodeCardOperationalLabel: 'block truncate text-[9px] uppercase tracking-wide text-slate-500',
   nodeCardOperationalValue: 'mt-0.5 block truncate text-[11px] font-medium text-slate-200',

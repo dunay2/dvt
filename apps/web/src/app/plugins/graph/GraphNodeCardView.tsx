@@ -4,9 +4,13 @@ import { ChevronDown, ChevronUp, Play, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../components/ui/utils';
+import { GraphNodeMetricRow } from './GraphNodeMetricRow';
+import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
+import { GraphNodeStatusChip } from './GraphNodeStatusChip';
+import { GraphNodeTagList } from './GraphNodeTagList';
 import type { GraphNodeCardPlayAction } from './graphNodeCardActions';
 import type { GraphNodeCardReadModel } from './graphNodeCardStrategyContracts';
-import { graphNodeStatusChipClasses, graphVisualClasses } from './graphVisualTokens';
+import { graphVisualClasses } from './graphVisualTokens';
 
 export type GraphNodeCardColumn = Readonly<{
   name: string;
@@ -29,6 +33,7 @@ export type GraphNodeCardViewProps = Readonly<{
   dimmed: boolean;
   overlayStyle?: CSSProperties;
   playAction?: GraphNodeCardPlayAction | null;
+  onOpenOperationalDetails?: () => void;
 }>;
 
 export function GraphNodeCardView({
@@ -47,6 +52,7 @@ export function GraphNodeCardView({
   dimmed,
   overlayStyle,
   playAction,
+  onOpenOperationalDetails,
 }: GraphNodeCardViewProps): ReactElement {
   const [columnsExpanded, setColumnsExpanded] = useState(false);
 
@@ -76,14 +82,7 @@ export function GraphNodeCardView({
             <span className={graphVisualClasses.nodeCardTitle}>{cardModel.title}</span>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <span
-              className={cn(
-                graphVisualClasses.nodeCardStatus,
-                graphNodeStatusChipClasses[cardModel.status.tone]
-              )}
-            >
-              {cardModel.status.label}
-            </span>
+            <GraphNodeStatusChip status={cardModel.status} />
             <div className={cn('size-2 rounded-full', statusDotClass)} />
             {playAction ? (
               <button
@@ -105,18 +104,7 @@ export function GraphNodeCardView({
 
         <div className={graphVisualClasses.nodeCardKind}>{cardModel.kindLabel || typeLabel}</div>
 
-        {cardModel.metrics.length > 0 && (
-          <div className={graphVisualClasses.nodeCardMetricRow}>
-            {cardModel.metrics.map((metric) => (
-              <span key={metric.id} className="inline-flex items-baseline gap-1">
-                <span className="text-slate-500">{metric.label}</span>
-                <span title={metric.label} className="font-medium text-slate-200">
-                  {metric.value}
-                </span>
-              </span>
-            ))}
-          </div>
-        )}
+        <GraphNodeMetricRow metrics={cardModel.metrics} />
 
         {(cardModel.path ?? cardModel.subtitle) && (
           <div className={graphVisualClasses.nodeCardPath}>
@@ -124,15 +112,7 @@ export function GraphNodeCardView({
           </div>
         )}
 
-        {tags.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {tags.slice(0, 3).map((tag) => (
-              <span key={tag} className={graphVisualClasses.tag}>
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        <GraphNodeTagList tags={tags} />
 
         {showColumns && (
           <div className={graphVisualClasses.columnsShell}>
@@ -166,16 +146,10 @@ export function GraphNodeCardView({
         )}
       </div>
 
-      {cardModel.operationalMetrics.length > 0 && (
-        <div className={graphVisualClasses.nodeCardOperationalRail}>
-          {cardModel.operationalMetrics.map((metric) => (
-            <div key={metric.id} className={graphVisualClasses.nodeCardOperationalMetric}>
-              <span className={graphVisualClasses.nodeCardOperationalLabel}>{metric.label}</span>
-              <span className={graphVisualClasses.nodeCardOperationalValue}>{metric.value}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      <GraphNodeOperationalRail
+        metrics={cardModel.operationalMetrics}
+        onOpen={onOpenOperationalDetails}
+      />
     </div>
   );
 }
