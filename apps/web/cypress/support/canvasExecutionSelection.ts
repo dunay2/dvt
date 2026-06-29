@@ -48,7 +48,27 @@ export function clickCanvasContextMenuItem(label: CanvasMenuLabel): void {
     .click();
 }
 
+function revealOperationalDrawer(): void {
+  cy.get('body').then(($body) => {
+    if ($body.find('[data-slot="bottom-operational-drawer-tab"]').length > 0) {
+      return;
+    }
+
+    cy.get('[data-slot="shell-menu-trigger"]').should('be.visible').click();
+    cy.contains('[role="menuitemcheckbox"]', /^(Operations|Operaciones)$/)
+      .should('be.visible')
+      .then(($item) => {
+        if ($item.attr('aria-checked') !== 'true') {
+          cy.wrap($item).click();
+        }
+      });
+  });
+
+  cy.get('[data-slot="bottom-operational-drawer-tab"]', { timeout: 20_000 }).should('be.visible');
+}
+
 export function clickPreviewExecutionPlanFromOperationalDrawer(): void {
+  revealOperationalDrawer();
   cy.contains('[data-slot="bottom-operational-drawer-tab"]', 'Preview')
     .should('be.visible')
     .click();
