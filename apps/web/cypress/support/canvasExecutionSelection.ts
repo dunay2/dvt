@@ -2,6 +2,8 @@
  * Owned concern: provide the governed Cypress interaction seam for Canvas
  * selection and native button clicks used by selected-closure proof lanes.
  */
+type CanvasMenuLabel = string | RegExp;
+
 export function clickButtonNatively(label: string): void {
   cy.contains('button', label)
     .should('be.enabled')
@@ -39,21 +41,27 @@ export function openCanvasContextMenuAt(x = 96, y = 220): void {
   cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
 }
 
-export function clickCanvasContextMenuItem(label: string): void {
+export function clickCanvasContextMenuItem(label: CanvasMenuLabel): void {
   cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', label)
     .should('be.visible')
     .should('be.enabled')
     .click();
 }
 
-export function clickPreviewExecutionPlanFromCanvasContextMenu(): void {
-  openCanvasContextMenuAt();
-  clickCanvasContextMenuItem('Preview execution plan');
+export function clickPreviewExecutionPlanFromOperationalDrawer(): void {
+  cy.contains('[data-slot="bottom-operational-drawer-tab"]', 'Preview')
+    .should('be.visible')
+    .click();
+  cy.contains('[data-slot="bottom-operational-drawer-preview"] button', 'Preview execution plan')
+    .should('be.visible')
+    .should('be.enabled')
+    .click();
 }
 
 export function expectPreviewExecutionPlanUnavailableFromCanvasContextMenu(): void {
   openCanvasContextMenuAt();
   cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Preview execution plan');
+  cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Previsualizar plan');
   cy.get('body').type('{esc}', { force: true });
 }
 

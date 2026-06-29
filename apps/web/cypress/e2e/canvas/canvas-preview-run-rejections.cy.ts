@@ -1,6 +1,6 @@
 import {
   clickButtonNatively,
-  clickPreviewExecutionPlanFromCanvasContextMenu,
+  clickPreviewExecutionPlanFromOperationalDrawer,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { waitForSelectedClosurePreviewArtifacts } from '../../support/canvasPreviewArtifacts';
@@ -31,7 +31,7 @@ describe('Canvas preview-run rejection guidance', () => {
 
       selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
-      clickPreviewExecutionPlanFromCanvasContextMenu();
+      clickPreviewExecutionPlanFromOperationalDrawer();
       waitForSelectedClosurePreviewArtifacts();
       waitForE2eApiCall('/plans/preview', 'POST');
       assertPreviewPlanRequest();
@@ -58,7 +58,7 @@ describe('Canvas preview-run rejection guidance', () => {
 
     selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
+    clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();

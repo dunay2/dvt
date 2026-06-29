@@ -47,8 +47,6 @@ type CanvasViewportProps = {
   readonly onImportedNodeFocusComplete: () => void;
   readonly canOpenSourceImport?: boolean;
   readonly onOpenSourceImport?: (flowPosition?: { x: number; y: number }) => void;
-  readonly canPreviewExecutionPlan?: boolean;
-  readonly onPreviewExecutionPlan?: () => void;
   readonly canOpenCanvasSettings?: boolean;
   readonly onOpenCanvasSettings?: () => void;
   readonly contextMenuPresenter?: CanvasContextMenuPresenter;
@@ -115,14 +113,12 @@ function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: props.canEditEdges,
     canOpenSourceImport: props.canOpenSourceImport,
-    canPreviewExecutionPlan: props.canPreviewExecutionPlan,
     canOpenCanvasSettings: props.canOpenCanvasSettings,
     authoringNodeKinds: props.authoringNodeKinds,
     screenToFlowPosition: (screenPosition) => reactFlow.screenToFlowPosition(screenPosition),
     onCreateAuthoringNode: props.onCreateAuthoringNode,
     onEdgesChange: props.onEdgesChange,
     onOpenSourceImport: props.onOpenSourceImport,
-    onPreviewExecutionPlan: props.onPreviewExecutionPlan,
     onOpenCanvasSettings: props.onOpenCanvasSettings,
   });
 

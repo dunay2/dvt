@@ -14,8 +14,6 @@ type PresenterCallbackSpies = Readonly<{
   onCreateAuthoringNode: ReturnType<typeof vi.fn>;
   onEdgesChange: ReturnType<typeof vi.fn>;
   onOpenSourceImport: ReturnType<typeof vi.fn>;
-  onValidateGraph: ReturnType<typeof vi.fn>;
-  onPreviewExecutionPlan: ReturnType<typeof vi.fn>;
   onOpenCanvasSettings: ReturnType<typeof vi.fn>;
 }>;
 
@@ -29,16 +27,12 @@ function PresenterHarness({
   const presenter = useCanvasContextMenuPresenter({
     canEditEdges: true,
     canOpenSourceImport: true,
-    canValidateGraph: true,
-    canPreviewExecutionPlan: true,
     canOpenCanvasSettings: true,
     authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     screenToFlowPosition: ({ x, y }) => ({ x: x + 100, y: y - 40 }),
     onCreateAuthoringNode: callbacks.onCreateAuthoringNode,
     onEdgesChange: callbacks.onEdgesChange,
     onOpenSourceImport: callbacks.onOpenSourceImport,
-    onValidateGraph: callbacks.onValidateGraph,
-    onPreviewExecutionPlan: callbacks.onPreviewExecutionPlan,
     onOpenCanvasSettings: callbacks.onOpenCanvasSettings,
   });
 
@@ -57,8 +51,6 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
       onCreateAuthoringNode: vi.fn(),
       onEdgesChange: vi.fn(),
       onOpenSourceImport: vi.fn(),
-      onValidateGraph: vi.fn(),
-      onPreviewExecutionPlan: vi.fn(),
       onOpenCanvasSettings: vi.fn(),
     };
     container = document.createElement('div');
@@ -93,9 +85,42 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
     return presenter as CanvasContextMenuPresenter;
   }
 
-  it('routes source import with the flow position captured from the canvas gesture', async () => {
+  it('opens the add-node catalog without invoking source import or graph creation', async () => {
     const menuPresenter = await renderAndOpenPaneMenu();
 
+    expect(menuPresenter.model?.canvasActions).toEqual([
+      { action: 'open-add-node-catalog', label: 'Add...' },
+      { action: 'open-canvas-settings', label: 'Canvas settings' },
+    ]);
+
+    await act(async () => {
+      menuPresenter.handleCanvasAction({ action: 'open-add-node-catalog', label: 'Add...' });
+    });
+
+    expect(callbacks.onOpenSourceImport).not.toHaveBeenCalled();
+    expect(callbacks.onCreateAuthoringNode).not.toHaveBeenCalled();
+    expect(presenter?.model).toMatchObject({
+      surface: 'add-node-catalog',
+      flowPosition: { x: 420, y: 220 },
+      canvasActions: [],
+      catalogActions: [
+        {
+          action: 'open-source-import',
+          label: 'Add source',
+          registration: expect.objectContaining({ kind: 'dvt:source' }),
+        },
+      ],
+      createNodeActions: [],
+    });
+  });
+
+  it('routes source import from inside the add-node catalog with the captured flow position', async () => {
+    let menuPresenter = await renderAndOpenPaneMenu();
+    await act(async () => {
+      menuPresenter.handleCanvasAction({ action: 'open-add-node-catalog', label: 'Add...' });
+    });
+
+    menuPresenter = presenter as CanvasContextMenuPresenter;
     await act(async () => {
       menuPresenter.handleCanvasAction({ action: 'open-source-import', label: 'Add source' });
     });
@@ -104,24 +129,8 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
     expect(presenter?.model ?? null).toBeNull();
   });
 
-  it('routes canvas-level commands without inventing node actions', async () => {
-    let menuPresenter = await renderAndOpenPaneMenu();
-    await act(async () => {
-      menuPresenter.handleCanvasAction({
-        action: 'validate-graph',
-        label: 'Validate graph',
-      });
-    });
-
-    menuPresenter = await renderAndOpenPaneMenu();
-    await act(async () => {
-      menuPresenter.handleCanvasAction({
-        action: 'preview-execution-plan',
-        label: 'Preview execution plan',
-      });
-    });
-
-    menuPresenter = await renderAndOpenPaneMenu();
+  it('routes canvas settings from the background context menu', async () => {
+    const menuPresenter = await renderAndOpenPaneMenu();
     await act(async () => {
       menuPresenter.handleCanvasAction({
         action: 'open-canvas-settings',
@@ -129,8 +138,6 @@ describe('useCanvasContextMenuPresenter canvas actions', () => {
       });
     });
 
-    expect(callbacks.onValidateGraph).toHaveBeenCalledTimes(1);
-    expect(callbacks.onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
     expect(callbacks.onOpenCanvasSettings).toHaveBeenCalledTimes(1);
     expect(presenter?.model ?? null).toBeNull();
   });

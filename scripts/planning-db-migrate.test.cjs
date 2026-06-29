@@ -9928,3 +9928,245 @@ test('tracked migrations reconcile Canvas context menu summary and canonical rai
   assert.match(reconciliationMigration.sql, /feature_mechanization_local_rails/);
   assert.doesNotMatch(reconciliationMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations constrain Canvas background context menu to root spatial actions', () => {
+  const migrations = readMigrationFiles();
+  const backgroundContractMigration = migrations.find(
+    (migration) => migration.fileName === '354_canvas_background_context_menu_contract.sql'
+  );
+
+  assert.ok(backgroundContractMigration);
+  assert.match(
+    backgroundContractMigration.sql,
+    /web\.component\.canvas\.CanvasBackgroundContextMenu/
+  );
+  assert.match(backgroundContractMigration.sql, /canvas-background/);
+  assert.match(backgroundContractMigration.sql, /OpenCanvasAddNodeCatalog/);
+  assert.match(backgroundContractMigration.sql, /CanvasAddNodeCatalog/);
+  assert.match(backgroundContractMigration.sql, /OpenCanvasSettings/);
+  assert.match(backgroundContractMigration.sql, /CanvasSettings/);
+  assert.match(backgroundContractMigration.sql, /Add source/);
+  assert.match(backgroundContractMigration.sql, /moved-to-add-node-catalog/);
+  assert.match(backgroundContractMigration.sql, /Validate graph/);
+  assert.match(backgroundContractMigration.sql, /moved-to-run-preview/);
+  assert.match(backgroundContractMigration.sql, /Preview execution plan/);
+  assert.match(backgroundContractMigration.sql, /backgroundRootActions/);
+  assert.match(backgroundContractMigration.sql, /componentFamily/);
+  assert.doesNotMatch(backgroundContractMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations align Canvas background summary with spatial root contract', () => {
+  const migrations = readMigrationFiles();
+  const summaryAlignmentMigration = migrations.find(
+    (migration) => migration.fileName === '355_canvas_background_context_menu_summary_alignment.sql'
+  );
+
+  assert.ok(summaryAlignmentMigration);
+  assert.match(
+    summaryAlignmentMigration.sql,
+    /web\.component\.canvas\.CanvasBackgroundContextMenu/
+  );
+  assert.match(summaryAlignmentMigration.sql, /right-clicking Canvas background space/);
+  assert.match(summaryAlignmentMigration.sql, /emptyCanvasOnly/);
+  assert.match(summaryAlignmentMigration.sql, /backgroundRootActions/);
+  assert.match(summaryAlignmentMigration.sql, /OpenCanvasAddNodeCatalog/);
+  assert.match(summaryAlignmentMigration.sql, /OpenCanvasSettings/);
+  assert.doesNotMatch(summaryAlignmentMigration.sql, /empty Canvas background space/);
+  assert.doesNotMatch(summaryAlignmentMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Canvas context menu presentation test ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) => migration.fileName === '356_canvas_context_menu_presentation_test_ownership.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /frontend_component_local_files/);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.CanvasContextMenu/);
+  assert.match(ownershipMigration.sql, /CanvasContextMenuView\.test\.tsx/);
+  assert.match(ownershipMigration.sql, /presentation-test/);
+  assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile Canvas background context menu gaps and evidence relationally', () => {
+  const migrations = readMigrationFiles();
+  const gapEvidenceReconcileMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '357_canvas_background_context_menu_gap_evidence_reconcile.sql'
+  );
+
+  assert.ok(gapEvidenceReconcileMigration);
+  assert.match(gapEvidenceReconcileMigration.sql, /frontend_component_capability_gaps/);
+  assert.match(gapEvidenceReconcileMigration.sql, /frontend_component_validation_evidence/);
+  assert.match(gapEvidenceReconcileMigration.sql, /presentation-test/);
+  assert.match(gapEvidenceReconcileMigration.sql, /CanvasAddNodeCatalog/);
+  assert.match(gapEvidenceReconcileMigration.sql, /CanvasSettings/);
+  assert.match(gapEvidenceReconcileMigration.sql, /CANVAS-ADD-NODE-CATALOG-CATEGORIZED-SEARCH/);
+  assert.match(gapEvidenceReconcileMigration.sql, /CANVAS-SETTINGS-OWNED-COMPONENT-FILES/);
+  assert.match(gapEvidenceReconcileMigration.sql, /CANVAS-PREVIEW-ACTION-BELONGS-TO-RUN-PREVIEW/);
+  assert.match(gapEvidenceReconcileMigration.sql, /gap_status = 'closed'/);
+  assert.match(gapEvidenceReconcileMigration.sql, /CanvasContextMenuView\.test\.tsx/);
+  assert.match(gapEvidenceReconcileMigration.sql, /CanvasViewport\.contextMenu\.test\.tsx/);
+  assert.match(gapEvidenceReconcileMigration.sql, /gapSourceOfTruth/);
+  assert.match(gapEvidenceReconcileMigration.sql, /evidenceSourceOfTruth/);
+  assert.doesNotMatch(gapEvidenceReconcileMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Canvas context menu presenter SRP split ownership', () => {
+  const migrations = readMigrationFiles();
+  const presenterSplitMigration = migrations.find(
+    (migration) => migration.fileName === '358_canvas_context_menu_presenter_srp_split.sql'
+  );
+
+  assert.ok(presenterSplitMigration);
+  assert.match(presenterSplitMigration.sql, /web\.component\.canvas\.CanvasContextMenuPresenter/);
+  assert.match(presenterSplitMigration.sql, /frontend_component_local_files/);
+  assert.match(presenterSplitMigration.sql, /frontend_component_validation_evidence/);
+  assert.match(presenterSplitMigration.sql, /useCanvasContextMenuPresenter\.ts/);
+  assert.match(presenterSplitMigration.sql, /canvasContextMenuPresenter\.types\.ts/);
+  assert.match(presenterSplitMigration.sql, /useCanvasContextMenuLifecycle\.ts/);
+  assert.match(presenterSplitMigration.sql, /canvasContextMenuTargetPolicy\.ts/);
+  assert.match(presenterSplitMigration.sql, /responsibility_overload/);
+  assert.match(presenterSplitMigration.sql, /EV-CANVAS-CONTEXT-MENU-PRESENTER-SRP-ARCHITECTURE/);
+  assert.match(presenterSplitMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(presenterSplitMigration.sql, /CreateCanvasAuthoringNode/);
+  assert.match(presenterSplitMigration.sql, /RemoveCanvasEdgeFromContext/);
+  assert.doesNotMatch(presenterSplitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Canvas context menu presenter SRP feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const presenterManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '359_canvas_context_menu_presenter_srp_feature_manifest.sql'
+  );
+
+  assert.ok(presenterManifestMigration);
+  assert.match(presenterManifestMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(presenterManifestMigration.sql, /CANVAS-CONTEXT-MENU-PRESENTER-SRP-SPLIT-20260628/);
+  assert.match(presenterManifestMigration.sql, /clickPreviewExecutionPlanFromOperationalDrawer/);
+  assert.match(presenterManifestMigration.sql, /buildCanvasAddNodeCatalogMenuModel/);
+  assert.match(presenterManifestMigration.sql, /resolveCanvasViewportContextMenuRequest/);
+  assert.match(presenterManifestMigration.sql, /userStories/);
+  assert.match(presenterManifestMigration.sql, /domainObjects/);
+  assert.match(presenterManifestMigration.sql, /redGreenCycles/);
+  assert.match(presenterManifestMigration.sql, /unitTests/);
+  assert.match(presenterManifestMigration.sql, /fowlerSignals/);
+  assert.match(presenterManifestMigration.sql, /architectureGuard/);
+  assert.match(presenterManifestMigration.sql, /allowedImplementationSurfaces/);
+  assert.doesNotMatch(presenterManifestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep Canvas context menu presenter SRP manifest out of active rail vocabulary', () => {
+  const migrations = readMigrationFiles();
+  const presenterManifestVocabularyMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '360_canvas_context_menu_presenter_srp_manifest_vocabulary_state.sql'
+  );
+
+  assert.ok(presenterManifestVocabularyMigration);
+  assert.match(
+    presenterManifestVocabularyMigration.sql,
+    /CANVAS-CONTEXT-MENU-PRESENTER-SRP-SPLIT-20260628/
+  );
+  assert.match(presenterManifestVocabularyMigration.sql, /rail_status = 'retired'/);
+  assert.match(presenterManifestVocabularyMigration.sql, /manifest-only-reuses-existing-rail/);
+  assert.match(presenterManifestVocabularyMigration.sql, /canonicalRail/);
+  assert.doesNotMatch(presenterManifestVocabularyMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations allow Canvas context menu presenter report as governed evidence', () => {
+  const migrations = readMigrationFiles();
+  const presenterReportSurfaceMigration = migrations.find(
+    (migration) => migration.fileName === '361_canvas_context_menu_presenter_report_surface.sql'
+  );
+
+  assert.ok(presenterReportSurfaceMigration);
+  assert.match(
+    presenterReportSurfaceMigration.sql,
+    /CANVAS-CONTEXT-MENU-PRESENTER-SRP-SPLIT-20260628/
+  );
+  assert.match(
+    presenterReportSurfaceMigration.sql,
+    /2026-06-28-canvas-context-menu-presenter-informe\.md/
+  );
+  assert.match(presenterReportSurfaceMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(presenterReportSurfaceMigration.sql, /componentGuides/);
+  assert.doesNotMatch(presenterReportSurfaceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations promote Canvas add-node catalog to owned searchable component', () => {
+  const migrations = readMigrationFiles();
+  const addNodeCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '362_canvas_add_node_catalog_component.sql'
+  );
+
+  assert.ok(addNodeCatalogMigration);
+  assert.match(addNodeCatalogMigration.sql, /web\.component\.canvas\.CanvasAddNodeCatalog/);
+  assert.match(addNodeCatalogMigration.sql, /component_status = 'current'/);
+  assert.match(addNodeCatalogMigration.sql, /add-node-catalog/);
+  assert.match(addNodeCatalogMigration.sql, /ResolveCanvasAddNodeCatalog/);
+  assert.match(addNodeCatalogMigration.sql, /CreateCanvasAuthoringNode/);
+  assert.match(addNodeCatalogMigration.sql, /canvasAddNodeCatalogModel\.ts/);
+  assert.match(addNodeCatalogMigration.sql, /CanvasAddNodeCatalogView\.tsx/);
+  assert.match(addNodeCatalogMigration.sql, /canvasAddNodeCatalogModel\.test\.ts/);
+  assert.match(addNodeCatalogMigration.sql, /CanvasAddNodeCatalogView\.test\.tsx/);
+  assert.match(addNodeCatalogMigration.sql, /CANVAS-ADD-NODE-CATALOG-CATEGORIZED-SEARCH/);
+  assert.match(addNodeCatalogMigration.sql, /gap_status = 'closed'/);
+  assert.match(addNodeCatalogMigration.sql, /EV-CANVAS-ADD-NODE-CATALOG-MODEL-INVARIANTS/);
+  assert.match(addNodeCatalogMigration.sql, /EV-CANVAS-ADD-NODE-CATALOG-VIEW-PRESENTATION/);
+  assert.match(addNodeCatalogMigration.sql, /filter-subset/);
+  assert.match(addNodeCatalogMigration.sql, /filter-idempotence/);
+  assert.match(addNodeCatalogMigration.sql, /ResolveCanvasAddNodeCatalog/);
+  assert.doesNotMatch(addNodeCatalogMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Canvas add-node catalog feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const addNodeCatalogManifestMigration = migrations.find(
+    (migration) => migration.fileName === '363_canvas_add_node_catalog_feature_manifest.sql'
+  );
+
+  assert.ok(addNodeCatalogManifestMigration);
+  assert.match(addNodeCatalogManifestMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(addNodeCatalogManifestMigration.sql, /CANVAS-ADD-NODE-CATALOG-20260628/);
+  assert.match(addNodeCatalogManifestMigration.sql, /ResolveCanvasAddNodeCatalog/);
+  assert.match(addNodeCatalogManifestMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(addNodeCatalogManifestMigration.sql, /CanvasAddNodeCatalogView\.tsx/);
+  assert.match(addNodeCatalogManifestMigration.sql, /CanvasAddNodeCatalogView/);
+  assert.match(addNodeCatalogManifestMigration.sql, /canvasAddNodeCatalogModel\.ts/);
+  assert.match(addNodeCatalogManifestMigration.sql, /buildCanvasAddNodeCatalogItems/);
+  assert.doesNotMatch(addNodeCatalogManifestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Canvas add-node catalog feature red green evidence', () => {
+  const migrations = readMigrationFiles();
+  const redGreenMigration = migrations.find(
+    (migration) => migration.fileName === '364_canvas_add_node_catalog_red_green_cycles.sql'
+  );
+
+  assert.ok(redGreenMigration);
+  assert.match(redGreenMigration.sql, /CANVAS-ADD-NODE-CATALOG-20260628/);
+  assert.match(redGreenMigration.sql, /redGreenCycles/);
+  assert.match(redGreenMigration.sql, /canvasAddNodeCatalogModel\.test\.ts/);
+  assert.match(redGreenMigration.sql, /CanvasAddNodeCatalogView\.test\.tsx/);
+  assert.match(redGreenMigration.sql, /expectedFailure/);
+  assert.doesNotMatch(redGreenMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations extend Canvas add-node catalog with i18n Cypress evidence', () => {
+  const migrations = readMigrationFiles();
+  const i18nCypressMigration = migrations.find(
+    (migration) => migration.fileName === '365_canvas_add_node_catalog_i18n_cypress_manifest.sql'
+  );
+
+  assert.ok(i18nCypressMigration);
+  assert.match(i18nCypressMigration.sql, /CANVAS-ADD-NODE-CATALOG-20260628/);
+  assert.match(i18nCypressMigration.sql, /canvasExecutionSelection\.ts/);
+  assert.match(i18nCypressMigration.sql, /CanvasMenuLabel/);
+  assert.match(i18nCypressMigration.sql, /clickCanvasContextMenuItem/);
+  assert.match(i18nCypressMigration.sql, /canvas-preview-run-authoring\.cy\.ts/);
+  assert.match(i18nCypressMigration.sql, /i18n_safe_user_flow/);
+  assert.doesNotMatch(i18nCypressMigration.sql, /truncate\s+/i);
+});

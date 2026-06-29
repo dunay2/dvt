@@ -98,8 +98,6 @@ function CanvasShellViewport({
   graphCommands,
   onOpenSourceImport,
   onOpenCanvasSettings,
-  canPreviewExecutionPlan,
-  onPreviewExecutionPlan,
   contextMenuPresenter,
 }: Pick<
   CanvasShellMainPanelProps,
@@ -110,11 +108,7 @@ function CanvasShellViewport({
   | 'onOpenSourceImport'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
-> &
-  Readonly<{
-    canPreviewExecutionPlan: boolean;
-    onPreviewExecutionPlan: CanvasShellChromeCommands['onPreviewExecutionPlan'];
-  }>): JSX.Element {
+>): JSX.Element {
   const handleNodeClick: CanvasShellGraphCommands['onNodeClick'] = (event, node) => {
     graphCommands.onNodeClick(event, node);
   };
@@ -156,8 +150,6 @@ function CanvasShellViewport({
                 flowPosition == null ? undefined : { canvasPosition: flowPosition }
               )
       }
-      canPreviewExecutionPlan={canPreviewExecutionPlan}
-      onPreviewExecutionPlan={onPreviewExecutionPlan}
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
       onOpenCanvasSettings={onOpenCanvasSettings}
       contextMenuPresenter={contextMenuPresenter}
@@ -170,10 +162,8 @@ function CanvasShellMainSurface({
   panels,
   graph,
   graphCommands,
-  chromeCommands,
   onOpenSourceImport,
   onOpenCanvasSettings,
-  canPreviewExecutionPlan,
   contextMenuPresenter,
 }: Pick<
   CanvasShellMainPanelProps,
@@ -181,12 +171,10 @@ function CanvasShellMainSurface({
   | 'panels'
   | 'graph'
   | 'graphCommands'
-  | 'chromeCommands'
   | 'onOpenSourceImport'
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
-> &
-  Readonly<{ canPreviewExecutionPlan: boolean }>): JSX.Element {
+>): JSX.Element {
   const viewport = (
     <CanvasShellViewport
       layout={layout}
@@ -195,8 +183,6 @@ function CanvasShellMainSurface({
       graphCommands={graphCommands}
       onOpenSourceImport={onOpenSourceImport}
       onOpenCanvasSettings={onOpenCanvasSettings}
-      canPreviewExecutionPlan={canPreviewExecutionPlan}
-      onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
       contextMenuPresenter={contextMenuPresenter}
     />
   );
@@ -277,10 +263,8 @@ export function CanvasShellMainPanel({
         panels={panels}
         graph={graph}
         graphCommands={graphCommands}
-        chromeCommands={chromeCommands}
         onOpenSourceImport={onOpenSourceImport}
         onOpenCanvasSettings={onOpenCanvasSettings}
-        canPreviewExecutionPlan={panels.userPermissions.canPlan && chromeState.canPlanGraph}
         contextMenuPresenter={contextMenuPresenter}
       />
       {shouldShowGraphStatusOverlay ? (

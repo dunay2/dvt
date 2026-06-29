@@ -16,14 +16,12 @@ function PresenterHarness({
   const presenter = useCanvasContextMenuPresenter({
     canEditEdges: true,
     canOpenSourceImport: true,
-    canPreviewExecutionPlan: true,
     canOpenCanvasSettings: true,
     authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     screenToFlowPosition: ({ x, y }) => ({ x: x + 100, y: y - 40 }),
     onCreateAuthoringNode: vi.fn(),
     onEdgesChange: vi.fn(),
     onOpenSourceImport: vi.fn(),
-    onPreviewExecutionPlan: vi.fn(),
     onOpenCanvasSettings: vi.fn(),
   });
 

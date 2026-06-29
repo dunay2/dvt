@@ -131,8 +131,6 @@ export function buildCanvasViewportProps(
     onCreateAuthoringNode: vi.fn(),
     importedNodeFocusIds: [],
     onImportedNodeFocusComplete: vi.fn(),
-    canPreviewExecutionPlan: false,
-    onPreviewExecutionPlan: vi.fn(),
     canOpenCanvasSettings: false,
     onOpenCanvasSettings: vi.fn(),
     ...overrides,

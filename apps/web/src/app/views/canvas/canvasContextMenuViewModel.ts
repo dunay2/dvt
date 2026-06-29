@@ -1,6 +1,7 @@
 /** Owned concern: project Canvas context-menu models into presentation sections. */
 import type {
   CanvasContextMenuCanvasAction,
+  CanvasContextMenuCatalogAction,
   CanvasContextMenuCreateNodeAction,
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
@@ -15,9 +16,9 @@ export type CanvasContextMenuViewItem =
     }>
   | Readonly<{
       id: string;
-      kind: 'create-node';
+      kind: 'catalog';
       label: string;
-      action: CanvasContextMenuCreateNodeAction;
+      action: CanvasContextMenuCatalogAction;
     }>
   | Readonly<{
       id: string;
@@ -28,7 +29,7 @@ export type CanvasContextMenuViewItem =
 
 export type CanvasContextMenuViewSection = Readonly<{
   id: 'add' | 'canvas' | 'edge';
-  title?: 'Add' | 'Canvas';
+  title?: 'Canvas';
   items: readonly CanvasContextMenuViewItem[];
 }>;
 
@@ -41,12 +42,10 @@ function canvasActionItem(action: CanvasContextMenuCanvasAction): CanvasContextM
   };
 }
 
-function createNodeActionItem(
-  action: CanvasContextMenuCreateNodeAction
-): CanvasContextMenuViewItem {
+function catalogActionItem(action: CanvasContextMenuCatalogAction): CanvasContextMenuViewItem {
   return {
-    id: `create-node:${action.registration.kind}`,
-    kind: 'create-node',
+    id: `${action.action}:${action.registration.kind}`,
+    kind: 'catalog',
     label: action.label,
     action,
   };
@@ -65,19 +64,23 @@ export function buildCanvasContextMenuSections(
   model: CanvasContextMenuModel
 ): readonly CanvasContextMenuViewSection[] {
   const addItems = [
-    ...model.canvasActions.filter((action) => action.action === 'open-source-import'),
-    ...model.createNodeActions,
+    ...model.canvasActions.filter(
+      (action) =>
+        action.action === 'open-add-node-catalog' || action.action === 'open-source-import'
+    ),
+    ...model.catalogActions,
   ].map((action) =>
-    action.action === 'create-node' ? createNodeActionItem(action) : canvasActionItem(action)
+    'registration' in action ? catalogActionItem(action) : canvasActionItem(action)
   );
   const canvasItems = model.canvasActions
+    .filter((action) => action.action !== 'open-add-node-catalog')
     .filter((action) => action.action !== 'open-source-import')
     .map(canvasActionItem);
   const edgeItems = model.edgeActions.map(edgeActionItem);
   const sections: CanvasContextMenuViewSection[] = [];
 
   if (addItems.length > 0) {
-    sections.push({ id: 'add', title: 'Add', items: addItems });
+    sections.push({ id: 'add', items: addItems });
   }
 
   if (canvasItems.length > 0) {
