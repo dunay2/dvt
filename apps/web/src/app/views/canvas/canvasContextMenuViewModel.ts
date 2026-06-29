@@ -1,6 +1,7 @@
 /** Owned concern: project Canvas context-menu models into presentation sections. */
 import type {
   CanvasContextMenuCanvasAction,
+  CanvasContextMenuCatalogAction,
   CanvasContextMenuCreateNodeAction,
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
@@ -15,9 +16,9 @@ export type CanvasContextMenuViewItem =
     }>
   | Readonly<{
       id: string;
-      kind: 'create-node';
+      kind: 'catalog';
       label: string;
-      action: CanvasContextMenuCreateNodeAction;
+      action: CanvasContextMenuCatalogAction;
     }>
   | Readonly<{
       id: string;
@@ -41,12 +42,10 @@ function canvasActionItem(action: CanvasContextMenuCanvasAction): CanvasContextM
   };
 }
 
-function createNodeActionItem(
-  action: CanvasContextMenuCreateNodeAction
-): CanvasContextMenuViewItem {
+function catalogActionItem(action: CanvasContextMenuCatalogAction): CanvasContextMenuViewItem {
   return {
-    id: `create-node:${action.registration.kind}`,
-    kind: 'create-node',
+    id: `${action.action}:${action.registration.kind}`,
+    kind: 'catalog',
     label: action.label,
     action,
   };
@@ -69,9 +68,9 @@ export function buildCanvasContextMenuSections(
       (action) =>
         action.action === 'open-add-node-catalog' || action.action === 'open-source-import'
     ),
-    ...model.createNodeActions,
+    ...model.catalogActions,
   ].map((action) =>
-    action.action === 'create-node' ? createNodeActionItem(action) : canvasActionItem(action)
+    'registration' in action ? catalogActionItem(action) : canvasActionItem(action)
   );
   const canvasItems = model.canvasActions
     .filter((action) => action.action !== 'open-add-node-catalog')

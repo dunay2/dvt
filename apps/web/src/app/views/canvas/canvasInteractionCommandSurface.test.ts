@@ -71,7 +71,7 @@ describe('canvasInteractionCommandSurface', () => {
     ]);
   });
 
-  it('moves source import into the add-node catalog when the source rail is available', () => {
+  it('keeps source import as a categorized add-node catalog action when the source rail is available', () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const modelKind = buildTestNodeKind('dbt:model', 'Model');
     const model = buildCanvasAddNodeCatalogMenuModel({
@@ -89,8 +89,9 @@ describe('canvasInteractionCommandSurface', () => {
     });
 
     expect(model?.surface).toBe('add-node-catalog');
-    expect(model?.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
-    expect(model?.createNodeActions).toEqual([
+    expect(model?.canvasActions).toEqual([]);
+    expect(model?.catalogActions).toEqual([
+      { action: 'open-source-import', label: 'Add source', registration: sourceKind },
       { action: 'create-node', label: 'Add model', registration: modelKind },
     ]);
   });

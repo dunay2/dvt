@@ -48,8 +48,35 @@ describe('canvasAddNodeCatalogModel', () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
 
     expect(() =>
-      buildCanvasAddNodeCatalogItems({ authoringNodeKinds: [sourceKind, sourceKind] })
+      buildCanvasAddNodeCatalogItems({
+        actions: [
+          { action: 'create-node', label: 'Add source', registration: sourceKind },
+          { action: 'create-node', label: 'Add source', registration: sourceKind },
+        ],
+      })
     ).toThrow('Duplicate Canvas add-node catalog item "create-node:dvt:source".');
+  });
+
+  it('disambiguates distinct registrations that share the same visible action label', () => {
+    const items = buildCanvasAddNodeCatalogItems({
+      actions: [
+        {
+          action: 'create-node',
+          label: 'Add output',
+          registration: buildTestNodeKind('dvt:sink', 'Sink'),
+        },
+        {
+          action: 'create-node',
+          label: 'Add output',
+          registration: { ...buildTestNodeKind('dbt:output', 'Output'), role: 'output' },
+        },
+      ],
+    });
+
+    expect(items.map((item) => item.actionLabel)).toEqual([
+      'Add output: Output',
+      'Add output: Sink',
+    ]);
   });
 
   it('filters as a subset and is idempotent for the same query', () => {

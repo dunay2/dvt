@@ -14,6 +14,7 @@ export type CanvasAddNodeCatalogCategory =
 
 export type CanvasAddNodeCatalogItem = Readonly<{
   id: string;
+  actionId: string;
   actionLabel: string;
   category: CanvasAddNodeCatalogCategory;
   categoryLabel: string;
@@ -22,8 +23,15 @@ export type CanvasAddNodeCatalogItem = Readonly<{
   searchableText: string;
 }>;
 
+export type CanvasAddNodeCatalogAction = Readonly<{
+  action: string;
+  label: string;
+  registration: NodeKindRegistration;
+}>;
+
 type BuildCanvasAddNodeCatalogItemsArgs = Readonly<{
-  authoringNodeKinds: readonly NodeKindRegistration[];
+  actions?: readonly CanvasAddNodeCatalogAction[];
+  authoringNodeKinds?: readonly NodeKindRegistration[];
   copy?: CanvasViewCopy;
 }>;
 
@@ -77,24 +85,44 @@ export function inferCanvasAddNodeCatalogCategory(
 }
 
 export function buildCanvasAddNodeCatalogItems({
+  actions,
   authoringNodeKinds,
   copy = canvasViewCopy,
 }: BuildCanvasAddNodeCatalogItemsArgs): readonly CanvasAddNodeCatalogItem[] {
+  const catalogActions =
+    actions ??
+    authoringNodeKinds?.map((registration) => {
+      const category = inferCanvasAddNodeCatalogCategory(registration);
+      return {
+        action: 'create-node',
+        label: resolveCanvasAddNodeCatalogActionLabel(registration, category, copy),
+        registration,
+      } satisfies CanvasAddNodeCatalogAction;
+    }) ??
+    [];
   const seenIds = new Set<string>();
-  const items = authoringNodeKinds.map((registration) => {
+  const duplicateLabelCounts = countDuplicateVisibleLabels(catalogActions);
+  const items = catalogActions.map((action) => {
+    const { registration } = action;
     const category = inferCanvasAddNodeCatalogCategory(registration);
-    const id = `create-node:${registration.kind}`;
+    const id = `${action.action}:${registration.kind}`;
     if (seenIds.has(id)) {
       throw new Error(`Duplicate Canvas add-node catalog item "${id}".`);
     }
     seenIds.add(id);
 
-    const actionLabel = resolveCanvasAddNodeCatalogActionLabel(registration, category, copy);
+    const actionLabel = resolveCanvasAddNodeCatalogVisibleLabel({
+      actionLabel: action.label,
+      category,
+      duplicateLabelCounts,
+      registration,
+    });
     const categoryLabel = resolveCanvasAddNodeCatalogCategoryLabel(category, copy);
     const description = resolveCanvasAddNodeCatalogDescription(category, copy);
 
     return {
       id,
+      actionId: id,
       actionLabel,
       category,
       categoryLabel,
@@ -118,6 +146,44 @@ export function buildCanvasAddNodeCatalogItems({
       left.actionLabel.localeCompare(right.actionLabel) ||
       left.id.localeCompare(right.id)
   );
+}
+
+function countDuplicateVisibleLabels(
+  actions: readonly CanvasAddNodeCatalogAction[]
+): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>();
+  for (const action of actions) {
+    const category = inferCanvasAddNodeCatalogCategory(action.registration);
+    const key = visibleLabelKey(category, action.label);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
+function visibleLabelKey(category: CanvasAddNodeCatalogCategory, label: string): string {
+  return `${category}:${label.trim().toLowerCase()}`;
+}
+
+function resolveCanvasAddNodeCatalogVisibleLabel({
+  actionLabel,
+  category,
+  duplicateLabelCounts,
+  registration,
+}: Readonly<{
+  actionLabel: string;
+  category: CanvasAddNodeCatalogCategory;
+  duplicateLabelCounts: ReadonlyMap<string, number>;
+  registration: NodeKindRegistration;
+}>): string {
+  const label = actionLabel.trim();
+  if ((duplicateLabelCounts.get(visibleLabelKey(category, label)) ?? 0) <= 1) {
+    return label;
+  }
+
+  const registrationLabel = registration.label.trim();
+  return registrationLabel.length > 0
+    ? `${label}: ${registrationLabel}`
+    : `${label}: ${registration.kind}`;
 }
 
 export function filterCanvasAddNodeCatalogItems(

@@ -27,6 +27,16 @@ export type CanvasContextMenuCreateNodeAction = Readonly<{
   registration: NodeKindRegistration;
 }>;
 
+export type CanvasContextMenuSourceImportCatalogAction = Readonly<{
+  action: 'open-source-import';
+  label: string;
+  registration: NodeKindRegistration;
+}>;
+
+export type CanvasContextMenuCatalogAction =
+  | CanvasContextMenuCreateNodeAction
+  | CanvasContextMenuSourceImportCatalogAction;
+
 export type CanvasContextMenuCanvasAction = Readonly<{
   action: 'open-add-node-catalog' | 'open-source-import' | 'open-canvas-settings';
   label: string;
@@ -44,6 +54,7 @@ export type CanvasContextMenuModel = Readonly<{
   flowPosition?: CanvasContextMenuPosition;
   edgeId?: string;
   canvasActions: readonly CanvasContextMenuCanvasAction[];
+  catalogActions: readonly CanvasContextMenuCatalogAction[];
   createNodeActions: readonly CanvasContextMenuCreateNodeAction[];
   edgeActions: readonly CanvasContextMenuEdgeAction[];
 }>;
@@ -62,13 +73,8 @@ function isSourceNodeKind(registration: NodeKindRegistration): boolean {
 
 function formatCreateNodeActionLabel(
   registration: NodeKindRegistration,
-  sourceImportVisible: boolean,
   copy: CanvasViewCopy
 ): string {
-  if (sourceImportVisible && isSourceNodeKind(registration)) {
-    return 'Create source node';
-  }
-
   if (registration.kind.endsWith(':source')) {
     return copy.canvasContextMenuAddSourceLabel;
   }
@@ -129,6 +135,7 @@ export function buildCanvasContextMenuModel({
     kind: target.kind,
     screenPosition: target.screenPosition,
     canvasActions,
+    catalogActions: [],
     createNodeActions: [],
     edgeActions: [],
   } satisfies CanvasContextMenuModel;
@@ -166,21 +173,33 @@ export function buildCanvasAddNodeCatalogMenuModel({
     return null;
   }
 
-  const sourceImportActions: CanvasContextMenuCanvasAction[] = canOpenSourceImport
-    ? [{ action: 'open-source-import', label: copy.canvasContextMenuAddSourceLabel }]
-    : [];
+  const sourceImportRegistration = canOpenSourceImport
+    ? authoringNodeKinds.find(isSourceNodeKind)
+    : undefined;
+  const sourceImportActions: CanvasContextMenuSourceImportCatalogAction[] =
+    sourceImportRegistration == null
+      ? []
+      : [
+          {
+            action: 'open-source-import',
+            label: copy.canvasContextMenuAddSourceLabel,
+            registration: sourceImportRegistration,
+          },
+        ];
+  const createNodeActions: CanvasContextMenuCreateNodeAction[] = authoringNodeKinds
+    .filter((registration) => registration !== sourceImportRegistration)
+    .map((registration) => ({
+      action: 'create-node',
+      label: formatCreateNodeActionLabel(registration, copy),
+      registration,
+    }));
 
   return {
     ...sourceModel,
     surface: 'add-node-catalog',
-    canvasActions: sourceImportActions,
-    createNodeActions: authoringNodeKinds
-      .filter((registration) => !(canOpenSourceImport && isSourceNodeKind(registration)))
-      .map((registration) => ({
-        action: 'create-node',
-        label: formatCreateNodeActionLabel(registration, false, copy),
-        registration,
-      })),
+    canvasActions: [],
+    catalogActions: [...sourceImportActions, ...createNodeActions],
+    createNodeActions,
     edgeActions: [],
   };
 }

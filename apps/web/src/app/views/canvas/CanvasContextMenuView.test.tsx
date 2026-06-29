@@ -142,6 +142,49 @@ describe('CanvasContextMenuView', () => {
     expect(onCanvasAction).not.toHaveBeenCalled();
   });
 
+  it('routes source import catalog selection through the source import action', async () => {
+    const onCanvasAction = vi.fn();
+    const onCreateNodeAction = vi.fn();
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const rootModel = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 580, y: 280 },
+      },
+      canMutateGraph: true,
+      authoringNodeKinds: [sourceKind],
+    });
+    const catalogModel = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: rootModel,
+      authoringNodeKinds: [sourceKind],
+      canOpenSourceImport: true,
+    });
+
+    await act(async () => {
+      root.render(
+        <CanvasContextMenuView
+          model={catalogModel}
+          menuRef={createRef<HTMLDivElement>()}
+          onCanvasAction={onCanvasAction}
+          onCreateNodeAction={onCreateNodeAction}
+          onEdgeAction={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('Add source');
+    expect(container.textContent).toContain('Sources');
+
+    await clickMenuItem('Add source');
+
+    expect(onCanvasAction).toHaveBeenCalledWith({
+      action: 'open-source-import',
+      label: 'Add source',
+    });
+    expect(onCreateNodeAction).not.toHaveBeenCalled();
+  });
+
   it('routes edge actions through the edge callback only', async () => {
     const onCanvasAction = vi.fn();
     const onCreateNodeAction = vi.fn();

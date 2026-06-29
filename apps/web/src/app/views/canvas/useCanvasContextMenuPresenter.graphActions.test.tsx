@@ -84,7 +84,9 @@ describe('useCanvasContextMenuPresenter graph actions', () => {
       presenter?.handleCanvasAction({ action: 'open-add-node-catalog', label: 'Add...' });
     });
 
-    const action = presenter?.model?.createNodeActions[0];
+    const action = presenter?.model?.catalogActions.find(
+      (candidate) => candidate.action === 'create-node'
+    );
     expect(action).toBeDefined();
     await act(async () => {
       if (action != null) {

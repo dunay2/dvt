@@ -81,14 +81,14 @@ describe('canvasContextMenuViewModel', () => {
           {
             id: 'create-node:dbt:model',
             label: 'Add model',
-            kind: 'create-node',
-            action: catalogModel.createNodeActions[0],
+            kind: 'catalog',
+            action: catalogModel.catalogActions[0],
           },
           {
             id: 'create-node:dvt:sql_transform',
             label: 'Add transformation',
-            kind: 'create-node',
-            action: catalogModel.createNodeActions[1],
+            kind: 'catalog',
+            action: catalogModel.catalogActions[1],
           },
         ],
       },

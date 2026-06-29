@@ -3,6 +3,7 @@ import type { CSSProperties, RefObject } from 'react';
 
 import type {
   CanvasContextMenuCanvasAction,
+  CanvasContextMenuCatalogAction,
   CanvasContextMenuCreateNodeAction,
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
@@ -54,7 +55,7 @@ export function CanvasContextMenuView({
   const catalogItems =
     model.surface === 'add-node-catalog'
       ? buildCanvasAddNodeCatalogItems({
-          authoringNodeKinds: model.createNodeActions.map((action) => action.registration),
+          actions: model.catalogActions,
         })
       : [];
 
@@ -64,11 +65,16 @@ export function CanvasContextMenuView({
         <CanvasAddNodeCatalogView
           items={catalogItems}
           onSelectItem={(item) => {
-            const action = model.createNodeActions.find(
-              (candidate) => candidate.registration.kind === item.registration.kind
-            );
+            const action = model.catalogActions.find((candidate) => {
+              const candidateId = `${candidate.action}:${candidate.registration.kind}`;
+              return candidateId === item.actionId;
+            });
             if (action) {
-              onCreateNodeAction(action);
+              selectCanvasCatalogAction({
+                action,
+                onCanvasAction,
+                onCreateNodeAction,
+              });
             }
           }}
         />
@@ -99,6 +105,23 @@ export function CanvasContextMenuView({
   );
 }
 
+function selectCanvasCatalogAction({
+  action,
+  onCanvasAction,
+  onCreateNodeAction,
+}: Readonly<{
+  action: CanvasContextMenuCatalogAction;
+  onCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
+  onCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
+}>): void {
+  if (action.action === 'create-node') {
+    onCreateNodeAction(action);
+    return;
+  }
+
+  onCanvasAction({ action: action.action, label: action.label });
+}
+
 function selectCanvasContextMenuItem({
   item,
   onCanvasAction,
@@ -115,8 +138,12 @@ function selectCanvasContextMenuItem({
     return;
   }
 
-  if (item.kind === 'create-node') {
-    onCreateNodeAction(item.action);
+  if (item.kind === 'catalog') {
+    selectCanvasCatalogAction({
+      action: item.action,
+      onCanvasAction,
+      onCreateNodeAction,
+    });
     return;
   }
 
