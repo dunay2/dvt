@@ -178,7 +178,7 @@ describe('Canvas ready node authoring', () => {
 
     visitReadyCanvas();
 
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible').click();
+    cy.contains('.react-flow__node', 'model_orders').as('ordersNode').should('be.visible').click();
     cy.get('[data-slot="canvas-node-floating-toolbar"]')
       .should('be.visible')
       .should(($toolbar) => {
@@ -193,12 +193,19 @@ describe('Canvas ready node authoring', () => {
         );
         expect(toolbarRect.top, 'toolbar is not clipped top').to.be.greaterThan(viewportRect.top);
       });
+    cy.get('@ordersNode').then(($node) => {
+      cy.get('[data-slot="canvas-node-floating-toolbar"]').should(($toolbar) => {
+        const nodeRect = $node[0].getBoundingClientRect();
+        const toolbarRect = $toolbar[0].getBoundingClientRect();
+
+        expect(Math.round(toolbarRect.left), 'toolbar aligns to node left').to.equal(
+          Math.round(nodeRect.left)
+        );
+      });
+    });
     cy.get('[data-slot="canvas-node-floating-toolbar"]')
       .find('button[aria-label="Seleccionar para ejecución"]')
-      .should(($button) => {
-        expect($button[0].dataset.tone).to.equal('success');
-        expect(getComputedStyle($button[0]).cursor).to.equal('pointer');
-      });
+      .should('not.exist');
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
 
     cy.contains('.react-flow__node', 'model_orders').rightclick();

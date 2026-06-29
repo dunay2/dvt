@@ -78,30 +78,28 @@ function CanvasViewportWithPresenter({
   }, []);
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
     (event, node) => {
-      const surfaceRect = viewportRef.current?.getBoundingClientRect();
-      const localX = surfaceRect == null ? event.clientX : event.clientX - surfaceRect.left;
-      const localY = surfaceRect == null ? event.clientY : event.clientY - surfaceRect.top;
+      const eventTarget = event.currentTarget as Element | undefined;
+      const nodeRect =
+        typeof eventTarget?.getBoundingClientRect === 'function'
+          ? eventTarget.getBoundingClientRect()
+          : null;
       const data = node.data as Record<string, unknown>;
       const nodeName = typeof data.name === 'string' && data.name.length > 0 ? data.name : node.id;
       const inspectNode = data.onInspectNode;
-      const toggleNodeSelection = data.onToggleNodeSelection;
+      const toolbarPosition =
+        nodeRect == null
+          ? { x: Math.max(8, event.clientX - 8), y: Math.max(8, event.clientY - 52) }
+          : { x: Math.max(8, nodeRect.left), y: Math.max(8, nodeRect.top - 52) };
 
       setNodeFloatingToolbarModel(
         buildCanvasNodeFloatingToolbarModel({
           nodeId: node.id,
           nodeName,
-          selectedForExecution: data.selectedForExecution === true,
-          position: { x: Math.max(8, localX - 8), y: Math.max(8, localY - 52) },
+          position: toolbarPosition,
           onOpenCode:
             typeof inspectNode === 'function'
               ? (nodeId) => {
                   inspectNode(nodeId, 'code');
-                }
-              : undefined,
-          onToggleExecutionSelection:
-            typeof toggleNodeSelection === 'function'
-              ? (nodeId, shouldSelect) => {
-                  toggleNodeSelection(nodeId, shouldSelect);
                 }
               : undefined,
         })

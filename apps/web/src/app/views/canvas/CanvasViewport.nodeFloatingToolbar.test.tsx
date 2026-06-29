@@ -29,7 +29,6 @@ describe('CanvasViewport node floating toolbar', () => {
 
   it('opens the node floating toolbar on left-click and closes it on pane click', async () => {
     const onInspectNode = vi.fn();
-    const onToggleNodeSelection = vi.fn();
 
     await renderViewport({
       nodesWithImpact: [
@@ -40,7 +39,6 @@ describe('CanvasViewport node floating toolbar', () => {
             name: 'Orders model',
             selectedForExecution: false,
             onInspectNode,
-            onToggleNodeSelection,
           },
           type: 'dbtNode',
         },
@@ -51,21 +49,44 @@ describe('CanvasViewport node floating toolbar', () => {
 
     expect(toolbarText()).toContain('Código');
     expect(toolbarText()).toContain('Congelar');
-    expect(toolbarButton('Seleccionar para ejecución')?.dataset.tone).toBe('success');
+    expect(toolbarText()).not.toContain('Seleccionar para ejecución');
+    expect(toolbarButton('Seleccionar para ejecución')).toBeNull();
 
     await act(async () => {
       toolbarButton('Código')?.click();
     });
-    await act(async () => {
-      toolbarButton('Seleccionar para ejecución')?.click();
-    });
 
     expect(onInspectNode).toHaveBeenCalledWith('model_orders', 'code');
-    expect(onToggleNodeSelection).toHaveBeenCalledWith('model_orders', true);
 
     await paneClick(440, 260);
 
     expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+  });
+
+  it('aligns the node floating toolbar with the node card instead of the click point', async () => {
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'model_orders',
+          position: { x: 160, y: 90 },
+          data: { name: 'Orders model' },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('model_orders', {
+      clientX: 640,
+      clientY: 320,
+      nodeRect: { left: 320, top: 180, width: 180, height: 72 },
+    });
+
+    const toolbar = document.body.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-floating-toolbar"]'
+    );
+
+    expect(toolbar?.style.getPropertyValue('--node-toolbar-x')).toBe('320px');
+    expect(toolbar?.style.getPropertyValue('--node-toolbar-y')).toBe('128px');
   });
 
   it('closes the node floating toolbar before opening the background context menu', async () => {
@@ -102,7 +123,21 @@ describe('CanvasViewport node floating toolbar', () => {
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
   });
 
-  async function clickNode(nodeId: string, clientX: number, clientY: number): Promise<void> {
+  async function clickNode(
+    nodeId: string,
+    eventInput:
+      | number
+      | {
+          clientX: number;
+          clientY: number;
+          nodeRect?: { left: number; top: number; width: number; height: number };
+        },
+    legacyClientY?: number
+  ): Promise<void> {
+    const clickEvent =
+      typeof eventInput === 'number'
+        ? { clientX: eventInput, clientY: legacyClientY ?? 0 }
+        : eventInput;
     const onNodeClick = xyflowState.lastReactFlowProps?.onNodeClick as
       | ((
           event: React.MouseEvent<Element>,
@@ -117,8 +152,14 @@ describe('CanvasViewport node floating toolbar', () => {
     await act(async () => {
       onNodeClick?.(
         {
-          clientX,
-          clientY,
+          clientX: clickEvent.clientX,
+          clientY: clickEvent.clientY,
+          currentTarget:
+            clickEvent.nodeRect == null
+              ? undefined
+              : {
+                  getBoundingClientRect: () => clickEvent.nodeRect,
+                },
           stopPropagation: vi.fn(),
         } as unknown as React.MouseEvent<Element>,
         node as CanvasViewportProps['nodesWithImpact'][number]

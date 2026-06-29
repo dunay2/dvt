@@ -1,5 +1,5 @@
 /** Owned concern: render the node floating toolbar from an already-derived presentation model. */
-import { Code2, MoreHorizontal, Play, Snowflake } from 'lucide-react';
+import { Code2, MoreHorizontal, Snowflake } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -16,7 +16,6 @@ export type CanvasNodeFloatingToolbarViewProps = Readonly<{
 const ACTION_ICON = {
   code: Code2,
   freeze: Snowflake,
-  play: Play,
   more: MoreHorizontal,
 } as const;
 
@@ -69,7 +68,7 @@ export function CanvasNodeFloatingToolbarView({
             }}
           >
             <Icon className="size-4" aria-hidden="true" />
-            {action.id === 'play' || action.id === 'more' ? null : <span>{action.label}</span>}
+            {action.id === 'more' ? null : <span>{action.label}</span>}
           </button>
         );
       })}
