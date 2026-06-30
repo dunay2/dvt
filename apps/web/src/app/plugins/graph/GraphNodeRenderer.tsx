@@ -3,7 +3,7 @@ import type { CSSProperties, ReactElement } from 'react';
 
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
-import { graphStatusDotClasses, graphStatusRingClasses } from './graphVisualTokens';
+import { graphStatusRingClasses } from './graphVisualTokens';
 import { buildGraphNodeCardPlayAction } from './graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
@@ -50,7 +50,6 @@ export function GraphNodeRenderer({
   const kindMeta = resolveNodeKindRegistration(node.kind);
 
   const statusRing = graphStatusRingClasses[node.status] ?? '';
-  const statusDot = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
   const dimmed = overlayDecoration?.dimmed ?? false;
   const overlayProps = buildOverlayProps(
     overlayDecoration?.borderColor,
@@ -81,7 +80,6 @@ export function GraphNodeRenderer({
       icon={kindMeta.icon}
       iconColor={kindMeta.minimapColor}
       borderClass={kindMeta.borderClass}
-      statusDotClass={statusDot}
       statusRingClass={statusRing}
       selected={selected}
       hovered={hovered}

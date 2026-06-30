@@ -28,7 +28,6 @@ import type { InspectorPanelContribution, InspectorPanelProps } from '../contrac
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import {
   graphStatusBadgeClasses,
-  graphStatusDotClasses,
   graphStatusRingClasses,
   graphVisualClasses,
 } from '../graph/graphVisualTokens';
@@ -145,7 +144,6 @@ export function DbtNodeRenderer({
   const Icon: LucideIcon | undefined = kindMeta?.icon;
 
   const statusRing = graphStatusRingClasses[node.status] ?? '';
-  const statusDot = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
   const dimmed = overlayDecoration?.dimmed ?? false;
   const overlayProps = buildOverlayProps(
     overlayDecoration?.borderColor,
@@ -176,7 +174,6 @@ export function DbtNodeRenderer({
       icon={Icon}
       iconColor={kindMeta?.minimapColor}
       borderClass={kindMeta?.borderClass}
-      statusDotClass={statusDot}
       statusRingClass={statusRing}
       selected={selected}
       hovered={hovered}

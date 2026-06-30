@@ -29,7 +29,6 @@ export type GraphNodeCardViewProps = Readonly<{
   icon?: LucideIcon;
   iconColor?: string;
   borderClass?: string;
-  statusDotClass?: string;
   statusRingClass?: string;
   selected: boolean;
   hovered: boolean;
@@ -48,7 +47,6 @@ export function GraphNodeCardView({
   icon: Icon,
   iconColor,
   borderClass,
-  statusDotClass,
   statusRingClass,
   selected,
   hovered,
@@ -66,10 +64,10 @@ export function GraphNodeCardView({
       className={cn(
         graphVisualClasses.nodeCard,
         borderClass,
-        selected && 'ring-2 ring-white/40',
-        hovered && !selected && 'ring-1 ring-white/20',
+        selected && graphVisualClasses.nodeCardSelected,
+        hovered && !selected && graphVisualClasses.nodeCardHovered,
         statusRingClass,
-        dimmed && 'opacity-30'
+        dimmed && graphVisualClasses.nodeCardDimmed
       )}
       {...(overlayStyle ? { style: overlayStyle } : {})}
     >
@@ -79,15 +77,14 @@ export function GraphNodeCardView({
             {Icon && (
               <Icon
                 size={18}
-                className="shrink-0 opacity-80"
+                className={graphVisualClasses.nodeCardIcon}
                 {...(iconColor ? { style: { color: iconColor } as CSSProperties } : {})}
               />
             )}
             <span className={graphVisualClasses.nodeCardTitle}>{cardModel.title}</span>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className={graphVisualClasses.nodeCardHeaderActions}>
             <GraphNodeStatusChip status={cardModel.status} />
-            <div className={cn('size-2 rounded-full', statusDotClass)} />
             {playAction ? (
               <button
                 type="button"
@@ -100,7 +97,7 @@ export function GraphNodeCardView({
                 }}
                 className={graphVisualClasses.nodeCardPlayButton}
               >
-                <Play className="size-3.5 fill-current" />
+                <Play className={graphVisualClasses.nodeCardPlayIcon} />
               </button>
             ) : null}
           </div>
@@ -125,19 +122,19 @@ export function GraphNodeCardView({
               onClick={() => setColumnsExpanded((value) => !value)}
               className={graphVisualClasses.columnsToggle}
             >
-              <span className="flex items-center gap-1">
-                <Table className="size-3" />
+              <span className={graphVisualClasses.columnsToggleLabel}>
+                <Table className={graphVisualClasses.columnsToggleIcon} />
                 Columns ({columns.length})
               </span>
               {columnsExpanded ? (
-                <ChevronUp className="size-3" />
+                <ChevronUp className={graphVisualClasses.columnsToggleIcon} />
               ) : (
-                <ChevronDown className="size-3" />
+                <ChevronDown className={graphVisualClasses.columnsToggleIcon} />
               )}
             </button>
 
             {columnsExpanded && (
-              <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
+              <div className={graphVisualClasses.columnsList}>
                 {columns.map((column) => (
                   <div key={column.name} className={graphVisualClasses.columnRow}>
                     <span className={graphVisualClasses.columnName}>{column.name}</span>

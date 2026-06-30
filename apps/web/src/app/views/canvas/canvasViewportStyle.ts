@@ -5,13 +5,18 @@ import { deriveCanvasPaletteTokens, type CanvasPaletteId } from './canvasPalette
 
 export function resolveCanvasViewportStyle(
   canvasPalette: CanvasPaletteId,
-  gridSize: number
+  gridSize: number,
+  options: Readonly<{
+    gridVisible?: boolean;
+    gridColor?: CanvasPaletteId;
+  }> = {}
 ): CSSProperties {
   const tokens = deriveCanvasPaletteTokens(canvasPalette);
+  const gridVisible = options.gridVisible ?? true;
 
   return {
     '--canvas-surface': tokens.surface,
-    '--canvas-grid': tokens.grid,
+    '--canvas-grid': gridVisible ? (options.gridColor ?? tokens.grid) : 'transparent',
     '--canvas-controls-surface': tokens.controlsSurface,
     '--canvas-controls-button-surface': tokens.controlsButtonSurface,
     '--canvas-controls-button-hover': tokens.controlsButtonHover,
