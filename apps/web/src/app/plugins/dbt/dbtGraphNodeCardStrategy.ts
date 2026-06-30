@@ -5,6 +5,7 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
+import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
   arrayCount,
   buildGraphNodeOperationalDetail,
@@ -117,9 +118,15 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   }
 
   const isSource = node.kind === 'dbt:source';
+  const titlePresentation = buildGraphNodeTitlePresentation({
+    nodeName: node.name,
+    kind: node.kind,
+    metadata,
+  });
 
   return {
-    title: node.name,
+    title: titlePresentation.title,
+    technicalName: titlePresentation.technicalName,
     subtitle: stringValue(metadata.package) ?? relationSubtitle ?? node.path ?? null,
     path: node.path ?? relationSubtitle ?? null,
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
@@ -131,7 +138,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     ),
     metrics,
     operationalMetrics,
-    operationalDetail: buildGraphNodeOperationalDetail(node.name, operationalMetrics),
+    operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, operationalMetrics),
   };
 }
 

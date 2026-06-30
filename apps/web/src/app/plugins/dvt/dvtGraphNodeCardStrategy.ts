@@ -5,6 +5,7 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
+import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
   buildGraphNodeOperationalDetail,
   formatBytes,
@@ -67,6 +68,11 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const rowCount = numericValue(metadata.rowCount) ?? numericValue(data.rowCount);
   const byteSize =
     numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
+  const titlePresentation = buildGraphNodeTitlePresentation({
+    nodeName: node.name,
+    kind: node.kind,
+    metadata,
+  });
   const runtimeData = {
     ...data,
     durationMs: numericValue(data.durationMs) ?? resolveCanonicalDurationMs(node, metadata, data),
@@ -105,7 +111,8 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   }
 
   return {
-    title: node.name,
+    title: titlePresentation.title,
+    technicalName: titlePresentation.technicalName,
     subtitle: buildDvtSubtitle(metadata, node.path),
     path: buildDvtSubtitle(metadata, node.path),
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
@@ -119,7 +126,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     ),
     metrics,
     operationalMetrics,
-    operationalDetail: buildGraphNodeOperationalDetail(node.name, operationalMetrics),
+    operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, operationalMetrics),
   };
 }
 

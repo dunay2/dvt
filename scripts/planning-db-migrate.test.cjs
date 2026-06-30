@@ -10447,3 +10447,52 @@ test('tracked migrations declare Inspector visual token feature mechanization sy
   assert.match(symbolMigration.sql, /pnpm docs:feature-mechanization:implementation/);
   assert.doesNotMatch(symbolMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register Graph node title presentation ownership', () => {
+  const migrations = readMigrationFiles();
+  const titleMigration = migrations.find(
+    (migration) => migration.fileName === '391_graph_node_title_presentation.sql'
+  );
+
+  assert.ok(titleMigration);
+  assert.match(titleMigration.sql, /web\.component\.canvas\.GraphNodeTitlePresentation/);
+  assert.match(titleMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(titleMigration.sql, /graphNodeTitlePresentation\.ts/);
+  assert.match(titleMigration.sql, /graphNodeTitlePresentation\.test\.ts/);
+  assert.match(titleMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(titleMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(titleMigration.sql, /GraphNodeTitlePresentationInput/);
+  assert.match(titleMigration.sql, /buildGraphNodeTitlePresentation/);
+  assert.match(titleMigration.sql, /titleCaseIdentifier/);
+  assert.match(titleMigration.sql, /'\{symbols\}'/);
+  assert.match(
+    titleMigration.sql,
+    /not_applicable:read_model_projection_unit_and_presentation_covered/
+  );
+  assert.match(titleMigration.sql, /technicalName/);
+  assert.match(titleMigration.sql, /EV-CANVAS-GRAPH-NODE-TITLE-PRESENTATION/);
+  assert.match(titleMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(titleMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile Inspector visual token rail duplicate', () => {
+  const migrations = readMigrationFiles();
+  const duplicateMigration = migrations.find(
+    (migration) => migration.fileName === '392_inspector_visual_tokens_rail_duplicate_reconcile.sql'
+  );
+
+  assert.ok(duplicateMigration);
+  assert.match(duplicateMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(duplicateMigration.sql, /inspectorVisualTokens/);
+  assert.match(duplicateMigration.sql, /inspectcanvasnodeproperties-inspector-visual-tokens/);
+  assert.match(
+    duplicateMigration.sql,
+    /local#CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604#query#inspectcanvasnodeproperties/
+  );
+  assert.match(
+    duplicateMigration.sql,
+    /delete from planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(duplicateMigration.sql, /rail_vocabulary_exact_duplicate_reconciled/);
+  assert.doesNotMatch(duplicateMigration.sql, /truncate\s+/i);
+});
