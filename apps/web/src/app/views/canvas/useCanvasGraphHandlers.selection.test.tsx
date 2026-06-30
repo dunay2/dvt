@@ -58,16 +58,17 @@ describe('useCanvasGraphHandlers selection', () => {
     expect(setInspectorNode).not.toHaveBeenCalled();
   });
 
-  it('sets inspector node when an existing canonical node is clicked', async () => {
+  it('does not open node workbench from a plain graph node click', async () => {
     const setInspectorNode = vi.fn();
     harness = renderSelectionHarness({
+      inspectorPanelVisible: true,
       setInspectorNode,
     });
     await harness.render();
 
     clickNode(harness, 'source-node');
 
-    expect(setInspectorNode).toHaveBeenCalledWith('source-node');
+    expect(setInspectorNode).not.toHaveBeenCalled();
   });
 
   it('does not let React Flow visual selection overwrite execution scope', async () => {
@@ -108,6 +109,21 @@ describe('useCanvasGraphHandlers selection', () => {
 
     expect(setInspectorNode).toHaveBeenCalledWith('source-node');
     expect(toggleInspectorPanel).toHaveBeenCalledTimes(1);
+  });
+
+  it('passes node workbench tab preference through explicit inspect gestures', async () => {
+    const setInspectorNode = vi.fn();
+    const renderedHarness = renderSelectionHarness({
+      setInspectorNode,
+    });
+    harness = renderedHarness;
+    await renderedHarness.render();
+
+    act(() => {
+      renderedHarness.latest()?.handleInspectNode('source-node', 'inputs-outputs');
+    });
+
+    expect(setInspectorNode).toHaveBeenCalledWith('source-node', 'inputs-outputs');
   });
 
   it('adds and removes ids through toggle node selection', async () => {

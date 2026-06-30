@@ -5,6 +5,7 @@ const path = require('node:path');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
+const { textValue } = require('./planning-db/query-format.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const defaultOutputPath = path.join(
@@ -38,11 +39,6 @@ function relFromRepo(filePath) {
 function numericCount(value) {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function textValue(value, fallback = '-') {
-  const text = String(value ?? '').trim();
-  return text.length > 0 ? text : fallback;
 }
 
 function markdownCell(value) {

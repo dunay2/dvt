@@ -26,6 +26,8 @@ function buildArgs(
   return {
     panelState: {
       inspectorNode: null,
+      inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
       inspectorNodeSelectedForExecution: false,
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
@@ -150,6 +152,42 @@ describe('buildCanvasShellPanels', () => {
       onDuplicateNode: handleDuplicateNode,
       onToggleNodeSelection: handleToggleNodeSelection,
       onRemoveNode: handleRemoveNode,
+    });
+  });
+
+  it('keeps node workbench tab preference only while an inspector node is active', () => {
+    const inspectorNode = buildInspectorNode();
+
+    expect(
+      buildCanvasShellPanels(
+        buildArgs({
+          panelState: {
+            ...buildArgs().panelState,
+            inspectorNode,
+            inspectorPreferredTabId: 'inputs-outputs',
+            inspectorPreferredTabRequestId: 3,
+          },
+        })
+      )
+    ).toMatchObject({
+      inspectorPreferredTabId: 'inputs-outputs',
+      inspectorPreferredTabRequestId: 3,
+    });
+
+    expect(
+      buildCanvasShellPanels(
+        buildArgs({
+          panelState: {
+            ...buildArgs().panelState,
+            inspectorNode: null,
+            inspectorPreferredTabId: 'inputs-outputs',
+            inspectorPreferredTabRequestId: 3,
+          },
+        })
+      )
+    ).toMatchObject({
+      inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
     });
   });
 

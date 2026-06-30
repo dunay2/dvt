@@ -13,6 +13,7 @@ import type { PluginConnectionRule, PluginDataPort } from './PluginManifest';
 // ---------------------------------------------------------------------------
 
 export type ConnectionRuleReasonCode =
+  | 'plugin_policy_missing'
   | 'plugin_rule_blocked'
   | 'cross_plugin_bridge_missing'
   | 'self_connection'
@@ -21,6 +22,11 @@ export type ConnectionRuleReasonCode =
 
 export type ConnectionRuleResult =
   | { allowed: true }
+  | {
+      allowed: false;
+      reasonCode: 'plugin_policy_missing';
+      pluginId: string;
+    }
   | {
       allowed: false;
       reasonCode: 'plugin_rule_blocked';
@@ -97,7 +103,7 @@ export function hasDuplicateEdge(
 /**
  * Evaluates the plugin's own connectionRules for a given source → target pair.
  * Rules are evaluated in declaration order; first match wins.
- * If no rule matches, the connection is allowed by default.
+ * If no rule matches, the connection is denied by default.
  */
 export function evaluatePluginConnectionRules(
   source: CanonicalNode,
@@ -117,8 +123,7 @@ export function evaluatePluginConnectionRules(
           };
     }
   }
-  // No rule matched — allow by default
-  return { allowed: true };
+  return { allowed: false, reasonCode: 'plugin_rule_blocked' };
 }
 
 function portSupportsRole(port: PluginDataPort, role: CanonicalNode['role']): boolean {
@@ -187,10 +192,7 @@ export function evaluateCrossPluginBridge(
 // Shell connection evaluator — single entry point used by the canvas
 // ---------------------------------------------------------------------------
 
-export type PluginPortMap = ReadonlyMap<
-  string,
-  PluginPortDescriptor
->;
+export type PluginPortMap = ReadonlyMap<string, PluginPortDescriptor>;
 
 /**
  * Full connection evaluation pipeline:
@@ -230,8 +232,14 @@ export function evaluateConnection(
   // Intra-plugin
   if (source.pluginId === target.pluginId) {
     const plugin = pluginPorts.get(source.pluginId);
-    const rules = plugin?.connectionRules ?? [];
-    return evaluatePluginConnectionRules(source, target, rules);
+    if (!plugin) {
+      return { allowed: false, reasonCode: 'plugin_policy_missing', pluginId: source.pluginId };
+    }
+    if (plugin.connectionRules.length === 0) {
+      return { allowed: false, reasonCode: 'plugin_policy_missing', pluginId: source.pluginId };
+    }
+
+    return evaluatePluginConnectionRules(source, target, plugin.connectionRules);
   }
 
   // Cross-plugin bridge

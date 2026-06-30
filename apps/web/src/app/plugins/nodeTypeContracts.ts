@@ -28,8 +28,6 @@ export type CanvasKindRegistration = {
   emptyState: {
     title: string;
     editableMessage: string;
-    firstNodeLabel: string;
-    firstNodeHelper: string;
   };
   nodeKinds: readonly NodeKindRegistration[];
 };

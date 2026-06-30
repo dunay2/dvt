@@ -122,17 +122,18 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(mappedNode.dragHandle).toBeUndefined();
     expect(droppedNode.dragHandle).toBeUndefined();
 
-    const tabStripSource = readAppSource('CanvasPlaygroundTabStrip.tsx');
-    const tabStripModelSource = readAppSource('canvasPlaygroundTabStripModel.ts');
-    const tabStripTemplateSource = readAppSource('CanvasPlaygroundTabStrip.templates.tsx');
     const createCommandSource = readAppSource('canvasCreateCanvasDocumentCommand.ts');
     const createCommandPolicySource = readAppSource('canvasCreateCanvasDocumentCommandPolicy.ts');
+    const layoutBuilderSource = readAppSource('canvasShellLayoutBuilder.tsx');
     const workspaceApiPortsSource = readAppSource('../../services/workspace/workspacePorts.api.ts');
 
-    expect(tabStripSource).toContain('CanvasPlaygroundTabStripTemplate');
-    expect(tabStripModelSource).toContain("mode: 'create_new'");
-    expect(tabStripModelSource).toContain('resolveCanvasReplacementActionState');
-    expect(tabStripTemplateSource).toContain('AlertDialog');
+    expect(layoutBuilderSource).not.toContain('CanvasPlaygroundTabStrip');
+    expect(repoFileExists('apps/web/src/app/views/canvas/CanvasPlaygroundTabStrip.tsx')).toBe(
+      false
+    );
+    expect(repoFileExists('apps/web/src/app/views/canvas/canvasPlaygroundTabStripModel.ts')).toBe(
+      false
+    );
 
     expect(createCommandSource).toContain('resolveCreateCanvasDocumentCommandEligibility');
     expect(createCommandPolicySource).toContain("command.mode ?? 'create_first'");

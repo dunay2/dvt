@@ -16,7 +16,7 @@ export type ShellTopBarCopy = {
   readonly gitContext: string;
   readonly viewOptions: string;
   readonly inspectorPanel: string;
-  readonly consolePanel: string;
+  readonly operationalDrawer: string;
   readonly focusMode: string;
   readonly canvasPalette: string;
   readonly gridSize: string;
@@ -56,7 +56,7 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   gitContext: { key: 'shell.gitContext', fallback: 'Git context' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
   inspectorPanel: { key: 'shell.inspectorPanel', fallback: 'Inspector Panel' },
-  consolePanel: { key: 'shell.consolePanel', fallback: 'Console' },
+  operationalDrawer: { key: 'shell.operationalDrawer', fallback: 'Operations' },
   focusMode: { key: 'shell.focusMode', fallback: 'Focus Mode' },
   canvasPalette: { key: 'shell.canvasPalette', fallback: 'Canvas background' },
   gridSize: { key: 'shell.gridSize', fallback: 'Grid size' },
@@ -108,7 +108,7 @@ const COPY_ES: ShellTopBarCopy = {
   gitContext: 'Contexto Git',
   viewOptions: 'Opciones de vista',
   inspectorPanel: 'Panel inspector',
-  consolePanel: 'Consola',
+  operationalDrawer: 'Operaciones',
   focusMode: 'Modo foco',
   canvasPalette: 'Fondo del canvas',
   gridSize: 'Tamano de rejilla',
@@ -171,7 +171,7 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     gitContext: resolveString(COPY_BY_KEY.gitContext, locale),
     viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
     inspectorPanel: resolveString(COPY_BY_KEY.inspectorPanel, locale),
-    consolePanel: resolveString(COPY_BY_KEY.consolePanel, locale),
+    operationalDrawer: resolveString(COPY_BY_KEY.operationalDrawer, locale),
     focusMode: resolveString(COPY_BY_KEY.focusMode, locale),
     canvasPalette: resolveString(COPY_BY_KEY.canvasPalette, locale),
     gridSize: resolveString(COPY_BY_KEY.gridSize, locale),

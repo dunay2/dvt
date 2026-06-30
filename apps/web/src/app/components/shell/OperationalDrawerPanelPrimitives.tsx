@@ -1,0 +1,282 @@
+/** Owned concern: provide reusable presentation primitives for shell operational drawer panels. */
+import type { ReactNode } from 'react';
+
+import { Button } from '../ui/button';
+import type {
+  OperationalDrawerTab,
+  OperationalDrawerTabId,
+} from './operationalDrawerContributionStore';
+
+const operationalDrawerPanelClassNames = {
+  panelSurface: 'h-full min-h-0 overflow-auto px-4 py-3',
+  emptyState: 'text-sm text-[var(--text-subtle)]',
+  problemList: 'space-y-2',
+  problemItem:
+    'grid grid-cols-[6rem_1fr] gap-3 border-b border-[color:var(--border-muted)] py-2 text-sm last:border-b-0',
+  problemMessageFrame: 'min-w-0 space-y-2',
+  problemMessage: 'block text-[var(--text-default)]',
+  warningBadge:
+    'h-fit rounded border border-amber-400/50 px-2 py-0.5 text-[11px] font-semibold uppercase text-amber-100',
+  codeToken: 'rounded border border-amber-400/40 px-2 py-0.5 font-mono text-[11px] text-amber-100',
+  detailCode: 'mt-1 block font-mono text-[11px] text-[var(--text-muted)]',
+  runSummary: 'grid gap-1',
+  runSummaryLabel: 'text-[var(--text-muted)]',
+  runSummaryValue: 'font-mono text-[var(--text-strong)]',
+  runSummaryText: 'text-[var(--text-default)]',
+  previewLayout: 'flex flex-wrap items-start gap-3',
+  previewContent: 'min-w-0 flex-1',
+  previewSummary: 'mt-1 text-[var(--text-default)]',
+  previewBlockers: 'mt-2 flex flex-wrap gap-1.5',
+  sectionKicker: 'text-[11px] font-semibold uppercase text-[var(--text-muted)]',
+  tabList: 'flex shrink-0 items-center gap-1 border-b border-[color:var(--border-default)] px-3',
+  tabButton:
+    'h-9 border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
+} as const;
+
+export function OperationalDrawerPanelSurface({
+  ariaLabel,
+  children,
+  dataSlot,
+  textSm = false,
+}: Readonly<{
+  ariaLabel: string;
+  children: ReactNode;
+  dataSlot: string;
+  textSm?: boolean;
+}>): JSX.Element {
+  return (
+    <section
+      data-slot={dataSlot}
+      className={
+        textSm
+          ? `${operationalDrawerPanelClassNames.panelSurface} text-sm`
+          : operationalDrawerPanelClassNames.panelSurface
+      }
+      aria-label={ariaLabel}
+    >
+      {children}
+    </section>
+  );
+}
+
+export function OperationalDrawerEmptyState({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return <p className={operationalDrawerPanelClassNames.emptyState}>{children}</p>;
+}
+
+export function OperationalDrawerWarningBadge({
+  children,
+  dataSlot,
+}: Readonly<{
+  children: ReactNode;
+  dataSlot: string;
+}>): JSX.Element {
+  return (
+    <span data-slot={dataSlot} className={operationalDrawerPanelClassNames.warningBadge}>
+      {children}
+    </span>
+  );
+}
+
+export function OperationalDrawerProblemList({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return <ol className={operationalDrawerPanelClassNames.problemList}>{children}</ol>;
+}
+
+export function OperationalDrawerProblemItem({
+  action,
+  detail,
+  message,
+  severity,
+}: Readonly<{
+  action?: Readonly<{ label: string; onAction: () => void }> | null;
+  detail: string;
+  message: string;
+  severity: string;
+}>): JSX.Element {
+  return (
+    <li className={operationalDrawerPanelClassNames.problemItem}>
+      <OperationalDrawerWarningBadge dataSlot="bottom-operational-problem-severity">
+        {severity}
+      </OperationalDrawerWarningBadge>
+      <span className={operationalDrawerPanelClassNames.problemMessageFrame}>
+        <span className={operationalDrawerPanelClassNames.problemMessage}>{message}</span>
+        <OperationalDrawerDetailCode>{detail}</OperationalDrawerDetailCode>
+        {action == null ? null : (
+          <OperationalDrawerSecondaryAction onClick={action.onAction}>
+            {action.label}
+          </OperationalDrawerSecondaryAction>
+        )}
+      </span>
+    </li>
+  );
+}
+
+export function OperationalDrawerDetailCode({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return (
+    <span
+      data-slot="bottom-operational-detail-code"
+      className={operationalDrawerPanelClassNames.detailCode}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function OperationalDrawerCodeToken({
+  children,
+  dataSlot,
+}: Readonly<{
+  children: ReactNode;
+  dataSlot: string;
+}>): JSX.Element {
+  return (
+    <code data-slot={dataSlot} className={operationalDrawerPanelClassNames.codeToken}>
+      {children}
+    </code>
+  );
+}
+
+export function OperationalDrawerSectionKicker({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return <div className={operationalDrawerPanelClassNames.sectionKicker}>{children}</div>;
+}
+
+export function OperationalDrawerRunActiveSummary({
+  activeRunId,
+  statusLabel = 'Active run',
+  summary,
+}: Readonly<{ activeRunId: string; statusLabel?: string; summary?: string }>): JSX.Element {
+  return (
+    <div className={operationalDrawerPanelClassNames.runSummary}>
+      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>
+      <code className={operationalDrawerPanelClassNames.runSummaryValue}>{activeRunId}</code>
+      {summary == null ? null : (
+        <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
+      )}
+    </div>
+  );
+}
+
+export function OperationalDrawerRunStatusSummary({
+  statusLabel,
+  summary,
+}: Readonly<{ statusLabel: string; summary: string }>): JSX.Element {
+  return (
+    <div className={operationalDrawerPanelClassNames.runSummary}>
+      <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>
+      <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
+    </div>
+  );
+}
+
+export function OperationalDrawerPreviewLayout({
+  action,
+  children,
+}: Readonly<{ action: ReactNode; children: ReactNode }>): JSX.Element {
+  return (
+    <div className={operationalDrawerPanelClassNames.previewLayout}>
+      <div className={operationalDrawerPanelClassNames.previewContent}>{children}</div>
+      {action}
+    </div>
+  );
+}
+
+export function OperationalDrawerPreviewSummary({
+  blockers,
+  statusLabel,
+  summary,
+}: Readonly<{
+  blockers: readonly string[];
+  statusLabel: string;
+  summary: string;
+}>): JSX.Element {
+  return (
+    <>
+      <OperationalDrawerSectionKicker>{statusLabel}</OperationalDrawerSectionKicker>
+      <p className={operationalDrawerPanelClassNames.previewSummary}>{summary}</p>
+      {blockers.length > 0 ? (
+        <div className={operationalDrawerPanelClassNames.previewBlockers}>
+          {blockers.map((blocker) => (
+            <OperationalDrawerCodeToken key={blocker} dataSlot="bottom-operational-preview-blocker">
+              {blocker}
+            </OperationalDrawerCodeToken>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+export function OperationalDrawerPrimaryAction({
+  children,
+  disabled,
+  onClick,
+}: Readonly<{
+  children: ReactNode;
+  disabled: boolean;
+  onClick: () => void;
+}>): JSX.Element {
+  return (
+    <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onClick}>
+      {children}
+    </Button>
+  );
+}
+
+export function OperationalDrawerSecondaryAction({
+  children,
+  onClick,
+}: Readonly<{
+  children: ReactNode;
+  onClick: () => void;
+}>): JSX.Element {
+  return (
+    <Button type="button" variant="outline" size="sm" onClick={onClick}>
+      {children}
+    </Button>
+  );
+}
+
+export function OperationalDrawerTabs({
+  activeTab,
+  ariaLabel,
+  onSelectTab,
+  tabs,
+}: Readonly<{
+  activeTab: OperationalDrawerTabId;
+  ariaLabel: string;
+  onSelectTab: (tab: OperationalDrawerTabId) => void;
+  tabs: readonly OperationalDrawerTab[];
+}>): JSX.Element {
+  return (
+    <div
+      data-slot="bottom-operational-drawer-tabs"
+      className={operationalDrawerPanelClassNames.tabList}
+      role="tablist"
+      aria-label={ariaLabel}
+    >
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          role="tab"
+          aria-selected={activeTab === tab.id}
+          data-slot="bottom-operational-drawer-tab"
+          data-tab={tab.id}
+          className={operationalDrawerPanelClassNames.tabButton}
+          data-active={activeTab === tab.id}
+          onClick={() => onSelectTab(tab.id)}
+        >
+          {tab.label}
+          {tab.count == null ? null : <span> {tab.count}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}

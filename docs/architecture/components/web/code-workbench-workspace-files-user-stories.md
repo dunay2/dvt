@@ -125,18 +125,19 @@ choosing a canvas template.
 
 Acceptance criteria:
 
-- `/canvas` renders Graph and Code in the Canvas workbench tab strip;
-- Code is selected through `SelectCanvasWorkbenchTab(code)`;
+- project code opens from contextual Canvas actions instead of a permanent tab
+  strip;
+- Code activation preserves the graph context rather than selecting a route
+  tab;
 - `/canvas/code` loads `ListWorkspaceFiles` and `GetWorkspaceFileContent`;
 - Monaco accepts typed text in the local buffer;
 - Lineage, Diff, Artifacts, and Runs remain hidden until their scopes are ready.
 
 Tests:
 
-- Canvas tab model test: `workspace` scoped tabs stay available without a canvas
-  document;
-- Cypress: first-canvas entry shows Code beside Graph and Monaco accepts typed
-  text.
+- component/presenter tests keep Code behind contextual Canvas activation;
+- Cypress: contextual Code entry keeps Graph context visible and Monaco accepts
+  typed text.
 
 ## Scenario Matrix
 

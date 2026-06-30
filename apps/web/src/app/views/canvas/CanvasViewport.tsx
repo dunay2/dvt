@@ -1,63 +1,28 @@
-/** Owned concern: render the Canvas viewport over React Flow and forward governed gesture callbacks only. */
+/** Owned concern: orchestrate the Canvas viewport presenter, lifecycle, and presentation view. */
 import {
-  Background,
-  Controls,
-  MiniMap,
-  ReactFlow,
   useReactFlow,
   type Edge,
   type Node,
   type NodeTypes,
   type ReactFlowProps,
 } from '@xyflow/react';
-import { useEffect, useRef, type CSSProperties, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEventHandler } from 'react';
 
-import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
+import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
-import {
-  deriveCanvasPaletteTokens,
-  normalizeCanvasPaletteId,
-  type CanvasPaletteId,
-} from './canvasPalette';
-import { CanvasContextMenuView } from './CanvasContextMenuView';
+import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
-import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
-
-function resolveCanvasViewportStyle(
-  canvasPalette: CanvasPaletteId,
-  gridSize: number
-): CSSProperties {
-  const tokens = deriveCanvasPaletteTokens(canvasPalette);
-
-  return {
-    '--canvas-surface': tokens.surface,
-    '--canvas-grid': tokens.grid,
-    '--canvas-controls-surface': tokens.controlsSurface,
-    '--canvas-controls-button-surface': tokens.controlsButtonSurface,
-    '--canvas-controls-button-hover': tokens.controlsButtonHover,
-    '--canvas-controls-border': tokens.controlsBorder,
-    '--canvas-controls-foreground': tokens.controlsForeground,
-    '--canvas-minimap-surface': tokens.minimapSurface,
-    '--canvas-minimap-border': tokens.minimapBorder,
-    '--canvas-minimap-mask': tokens.minimapMask,
-    '--canvas-minimap-mask-stroke': tokens.minimapMaskStroke,
-    '--canvas-panel-toggle-surface': tokens.panelToggleSurface,
-    '--canvas-panel-toggle-hover': tokens.panelToggleHover,
-    '--canvas-panel-toggle-border': tokens.panelToggleBorder,
-    '--canvas-panel-toggle-foreground': tokens.panelToggleForeground,
-    '--canvas-grid-gap': `${gridSize}px`,
-  } as CSSProperties;
-}
-
-function applyCanvasViewportStyle(element: HTMLDivElement, canvasStyle: CSSProperties): void {
-  for (const [property, value] of Object.entries(canvasStyle)) {
-    if (typeof value !== 'string') {
-      continue;
-    }
-
-    element.style.setProperty(property, value);
-  }
-}
+import {
+  buildCanvasNodeFloatingToolbarModel,
+  type CanvasNodeFloatingToolbarModel,
+} from './canvasNodeFloatingToolbarModel';
+import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
+import { resolveCanvasViewportStyle } from './canvasViewportStyle';
+import {
+  useCanvasContextMenuPresenter,
+  type CanvasContextMenuPresenter,
+} from './useCanvasContextMenuPresenter';
+import { useCanvasViewportLifecycle } from './useCanvasViewportLifecycle';
 
 type CanvasViewportProps = {
   readonly canEditEdges: boolean;
@@ -79,335 +44,141 @@ type CanvasViewportProps = {
   readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   readonly onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
-  readonly onDrop: React.DragEventHandler<HTMLDivElement>;
-  readonly onDragOver: React.DragEventHandler<HTMLDivElement>;
+  readonly onDrop: DragEventHandler<HTMLDivElement>;
+  readonly onDragOver: DragEventHandler<HTMLDivElement>;
   readonly authoringNodeKinds: readonly NodeKindRegistration[];
   readonly onCreateAuthoringNode: CreateCanvasAuthoringNode;
   readonly importedNodeFocusIds: string[];
   readonly onImportedNodeFocusComplete: () => void;
   readonly canOpenSourceImport?: boolean;
-  readonly onOpenSourceImport?: () => void;
-  readonly canPreviewExecutionPlan?: boolean;
-  readonly onPreviewExecutionPlan?: () => void;
+  readonly onOpenSourceImport?: (flowPosition?: { x: number; y: number }) => void;
+  readonly canOpenCanvasSettings?: boolean;
+  readonly onOpenCanvasSettings?: () => void;
+  readonly contextMenuPresenter?: CanvasContextMenuPresenter;
 };
 
-type CanvasViewportLifecycleArgs = Readonly<{
-  viewportRef: RefObject<HTMLDivElement>;
-  canvasStyle: CSSProperties;
-  viewport: CanvasViewportProps['viewport'];
-  importedNodeFocusIds: CanvasViewportProps['importedNodeFocusIds'];
-  nodesWithImpact: CanvasViewportProps['nodesWithImpact'];
-  onImportedNodeFocusComplete: CanvasViewportProps['onImportedNodeFocusComplete'];
-  reactFlow: ReturnType<typeof useReactFlow<Node, Edge>>;
+type CanvasViewportWithPresenterProps = CanvasViewportProps &
+  Readonly<{
+    contextMenuPresenter: CanvasContextMenuPresenter;
+    renderContextMenuView: boolean;
+  }>;
+
+type NodeHealthPopoverModel = Readonly<{
+  nodeId: string;
+  detail: GraphNodeOperationalDetail;
+  position: { x: number; y: number };
 }>;
 
-function useCanvasViewportLifecycle({
-  viewportRef,
-  canvasStyle,
-  viewport,
-  importedNodeFocusIds,
-  nodesWithImpact,
-  onImportedNodeFocusComplete,
-  reactFlow,
-}: CanvasViewportLifecycleArgs): void {
-  useEffect(() => {
-    if (viewportRef.current == null) {
-      return;
-    }
-
-    applyCanvasViewportStyle(viewportRef.current, canvasStyle);
-  }, [canvasStyle]);
-
-  useEffect(() => {
-    if (viewport == null) {
-      return;
-    }
-
-    reactFlow.setViewport(viewport, { duration: 0 }).catch(() => undefined);
-  }, [reactFlow, viewport]);
-
-  useEffect(() => {
-    if (importedNodeFocusIds.length === 0) {
-      return;
-    }
-
-    const importedNodeIdSet = new Set(importedNodeFocusIds);
-    const focusNodes = nodesWithImpact.filter((node) => importedNodeIdSet.has(node.id));
-    if (focusNodes.length === 0) {
-      return;
-    }
-
-    reactFlow
-      .fitView({
-        nodes: focusNodes,
-        padding: 0.24,
-        maxZoom: 0.9,
-        duration: 300,
-      })
-      .catch(() => undefined);
-    onImportedNodeFocusComplete();
-  }, [importedNodeFocusIds, nodesWithImpact, onImportedNodeFocusComplete, reactFlow]);
-}
-
-function resolveMiniMapNodeColor(node: { data?: unknown }): string {
-  const pluginKind = (node.data as { pluginKind?: string }).pluginKind ?? 'dvt:unknown';
-  return resolveNodeKindRegistration(pluginKind).minimapColor;
-}
-
-type CanvasViewportReactFlowSurfaceProps = Readonly<
-  Pick<
-    CanvasViewportProps,
-    | 'canEditEdges'
-    | 'nodesWithImpact'
-    | 'edges'
-    | 'nodeTypes'
-    | 'gridSize'
-    | 'canvasGridVisible'
-    | 'canvasGridColor'
-    | 'canvasSnapToGrid'
-    | 'viewport'
-    | 'onNodesChange'
-    | 'onEdgesChange'
-    | 'onConnect'
-    | 'onReconnect'
-    | 'onNodeClick'
-    | 'onSelectionChange'
-    | 'onViewportChange'
-    | 'onNodeDrag'
-    | 'onNodeDragStop'
-    | 'onDrop'
-    | 'onDragOver'
-    | 'authoringNodeKinds'
-    | 'onCreateAuthoringNode'
-    | 'canOpenSourceImport'
-    | 'onOpenSourceImport'
-    | 'canPreviewExecutionPlan'
-    | 'onPreviewExecutionPlan'
-  >
->;
-
-function CanvasViewportReactFlowSurface({
-  canEditEdges,
-  nodesWithImpact,
-  edges,
-  nodeTypes,
-  gridSize,
-  canvasGridVisible,
-  canvasGridColor,
-  canvasSnapToGrid,
-  viewport,
-  onNodesChange,
-  onEdgesChange,
-  onConnect,
-  onReconnect,
-  onNodeClick,
-  onSelectionChange,
-  onViewportChange,
-  onNodeDrag,
-  onNodeDragStop,
-  onDrop,
-  onDragOver,
-  authoringNodeKinds,
-  onCreateAuthoringNode,
-  canOpenSourceImport,
-  onOpenSourceImport,
-  canPreviewExecutionPlan,
-  onPreviewExecutionPlan,
-}: CanvasViewportReactFlowSurfaceProps): JSX.Element {
-  const reactFlow = useReactFlow<Node, Edge>();
-  const contextMenuPresenter = useCanvasContextMenuPresenter({
-    canEditEdges,
-    canOpenSourceImport,
-    authoringNodeKinds,
-    screenToFlowPosition: (screenPosition) => reactFlow.screenToFlowPosition(screenPosition),
-    onCreateAuthoringNode,
-    onEdgesChange,
-    onOpenSourceImport,
-    canPreviewExecutionPlan,
-    onPreviewExecutionPlan,
-  });
-
-  const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = () => {
-    contextMenuPresenter.closeContextMenu();
-  };
-  const handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']> = (event, node) => {
-    contextMenuPresenter.closeContextMenu();
-    onNodeClick(event, node);
-  };
-  const handleSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']> = (
-    selection
-  ) => {
-    contextMenuPresenter.closeContextMenu();
-    onSelectionChange(selection);
-  };
-  const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
-    event,
-    node,
-    nodes
-  ) => {
-    contextMenuPresenter.closeContextMenu();
-    onNodeDrag(event, node, nodes);
-  };
-  const handleNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']> = (
-    event,
-    node,
-    nodes
-  ) => {
-    contextMenuPresenter.closeContextMenu();
-    onNodeDragStop(event, node, nodes);
-  };
-
-  return (
-    <div
-      ref={contextMenuPresenter.contextSurfaceRef}
-      data-slot="canvas-viewport-context-surface"
-      className="h-full w-full"
-      onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
-    >
-      <ReactFlow
-        nodes={nodesWithImpact}
-        edges={edges}
-        onNodesChange={canEditEdges ? onNodesChange : undefined}
-        onEdgesChange={canEditEdges ? onEdgesChange : undefined}
-        onConnect={onConnect}
-        onReconnect={canEditEdges ? onReconnect : undefined}
-        onNodeClick={handleNodeClick}
-        onPaneClick={handlePaneClick}
-        onNodeDragStop={handleNodeDragStop}
-        onSelectionChange={handleSelectionChange}
-        nodeTypes={nodeTypes}
-        nodesDraggable={canEditEdges}
-        nodesConnectable={canEditEdges}
-        snapToGrid={canvasSnapToGrid}
-        snapGrid={[gridSize, gridSize]}
-        nodesFocusable={canEditEdges}
-        edgesFocusable={canEditEdges}
-        edgesReconnectable={canEditEdges}
-        elementsSelectable={canEditEdges}
-        selectNodesOnDrag
-        multiSelectionKeyCode="Shift"
-        deleteKeyCode={canEditEdges ? undefined : null}
-        disableKeyboardA11y={!canEditEdges}
-        fitView={viewport == null}
-        fitViewOptions={{ padding: 0.2, maxZoom: 0.82 }}
-        minZoom={0.35}
-        defaultViewport={viewport ?? undefined}
-        onMoveEnd={(_event, nextViewport) => onViewportChange(nextViewport)}
-        onNodeDrag={handleNodeDrag}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        onPaneContextMenu={contextMenuPresenter.handlePaneContextMenu}
-        onEdgeContextMenu={contextMenuPresenter.handleEdgeContextMenu}
-        className="bg-(--canvas-surface)"
-      >
-        {canvasGridVisible ? <Background color={canvasGridColor} gap={gridSize} /> : null}
-        <Controls />
-        <MiniMap
-          pannable
-          zoomable
-          className="rounded-lg"
-          maskColor="var(--canvas-minimap-mask)"
-          maskStrokeColor="var(--canvas-minimap-mask-stroke)"
-          maskStrokeWidth={3}
-          nodeColor={resolveMiniMapNodeColor}
-          nodeBorderRadius={4}
-        />
-      </ReactFlow>
-      <CanvasContextMenuView
-        model={contextMenuPresenter.model}
-        menuRef={contextMenuPresenter.menuRef}
-        onCanvasAction={contextMenuPresenter.handleCanvasAction}
-        onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
-        onEdgeAction={contextMenuPresenter.handleEdgeAction}
-      />
-    </div>
-  );
-}
-
-type CanvasViewportSurfaceProps = Readonly<
-  Omit<
-    CanvasViewportProps,
-    'canvasPalette' | 'importedNodeFocusIds' | 'onImportedNodeFocusComplete'
-  > & {
-    viewportRef: RefObject<HTMLDivElement>;
-    resolvedCanvasPalette: CanvasPaletteId;
-  }
->;
-
-function CanvasViewportSurface({
-  viewportRef,
-  resolvedCanvasPalette,
-  canEditEdges,
-  nodesWithImpact,
-  edges,
-  nodeTypes,
-  gridSize,
-  canvasGridVisible,
-  canvasGridColor,
-  canvasSnapToGrid,
-  viewport,
-  onNodesChange,
-  onEdgesChange,
-  onConnect,
-  onReconnect,
-  onNodeClick,
-  onSelectionChange,
-  onViewportChange,
-  onNodeDrag,
-  onNodeDragStop,
-  onDrop,
-  onDragOver,
-  authoringNodeKinds,
-  onCreateAuthoringNode,
-  canOpenSourceImport,
-  onOpenSourceImport,
-  canPreviewExecutionPlan,
-  onPreviewExecutionPlan,
-}: CanvasViewportSurfaceProps): JSX.Element {
-  return (
-    <div
-      ref={viewportRef}
-      data-testid="canvas-viewport"
-      data-canvas-palette={resolvedCanvasPalette}
-      className="relative flex-1 overflow-hidden"
-    >
-      <CanvasViewportReactFlowSurface
-        canEditEdges={canEditEdges}
-        nodesWithImpact={nodesWithImpact}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        gridSize={gridSize}
-        canvasGridVisible={canvasGridVisible}
-        canvasGridColor={canvasGridColor}
-        canvasSnapToGrid={canvasSnapToGrid}
-        viewport={viewport}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onReconnect={onReconnect}
-        onNodeClick={onNodeClick}
-        onSelectionChange={onSelectionChange}
-        onViewportChange={onViewportChange}
-        onNodeDrag={onNodeDrag}
-        onNodeDragStop={onNodeDragStop}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        authoringNodeKinds={authoringNodeKinds}
-        onCreateAuthoringNode={onCreateAuthoringNode}
-        canOpenSourceImport={canOpenSourceImport}
-        onOpenSourceImport={onOpenSourceImport}
-        canPreviewExecutionPlan={canPreviewExecutionPlan}
-        onPreviewExecutionPlan={onPreviewExecutionPlan}
-      />
-    </div>
-  );
-}
-
-export default function CanvasViewport(props: CanvasViewportProps): JSX.Element {
+function CanvasViewportWithPresenter({
+  contextMenuPresenter,
+  renderContextMenuView,
+  ...props
+}: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [nodeFloatingToolbarModel, setNodeFloatingToolbarModel] =
+    useState<CanvasNodeFloatingToolbarModel | null>(null);
+  const [nodeHealthPopoverModel, setNodeHealthPopoverModel] =
+    useState<NodeHealthPopoverModel | null>(null);
   const resolvedCanvasPalette = normalizeCanvasPaletteId(props.canvasPalette);
-  const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, props.gridSize);
+  const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, props.gridSize, {
+    gridVisible: props.canvasGridVisible,
+    gridColor: props.canvasGridColor,
+  });
+  const closeNodeFloatingToolbar = useCallback(() => {
+    setNodeFloatingToolbarModel(null);
+  }, []);
+  const closeNodeHealthPopover = useCallback(() => {
+    setNodeHealthPopoverModel(null);
+  }, []);
+
+  const openNodeHealthPopover = useCallback(
+    (nodeId: string, detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+      setNodeFloatingToolbarModel(null);
+      setNodeHealthPopoverModel({
+        nodeId,
+        detail,
+        position: {
+          x: Math.max(8, anchorRect.left),
+          y: Math.max(8, anchorRect.bottom + 8),
+        },
+      });
+    },
+    []
+  );
+
+  const nodesWithOperationalDetails = useMemo(
+    () =>
+      props.nodesWithImpact.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onOpenOperationalDetails: (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) =>
+            openNodeHealthPopover(node.id, detail, anchorRect),
+        },
+      })),
+    [openNodeHealthPopover, props.nodesWithImpact]
+  );
+
+  useEffect(() => {
+    if (nodeFloatingToolbarModel == null) {
+      return;
+    }
+
+    const toolbarOwnerStillExists = props.nodesWithImpact.some(
+      (node) => node.id === nodeFloatingToolbarModel.nodeId
+    );
+    if (!toolbarOwnerStillExists) {
+      setNodeFloatingToolbarModel(null);
+    }
+  }, [nodeFloatingToolbarModel, props.nodesWithImpact]);
+
+  useEffect(() => {
+    if (nodeHealthPopoverModel == null) {
+      return;
+    }
+
+    const popoverOwnerStillExists = props.nodesWithImpact.some(
+      (node) => node.id === nodeHealthPopoverModel.nodeId
+    );
+    if (!popoverOwnerStillExists) {
+      setNodeHealthPopoverModel(null);
+    }
+  }, [nodeHealthPopoverModel, props.nodesWithImpact]);
+
+  const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
+    (event, node) => {
+      closeNodeHealthPopover();
+      const eventTarget = event.currentTarget as Element | undefined;
+      const nodeRect =
+        typeof eventTarget?.getBoundingClientRect === 'function'
+          ? eventTarget.getBoundingClientRect()
+          : null;
+      const data = node.data as Record<string, unknown>;
+      const nodeName = typeof data.name === 'string' && data.name.length > 0 ? data.name : node.id;
+      const inspectNode = data.onInspectNode;
+      const toolbarPosition =
+        nodeRect == null
+          ? { x: Math.max(8, event.clientX - 8), y: Math.max(8, event.clientY - 52) }
+          : { x: Math.max(8, nodeRect.left), y: Math.max(8, nodeRect.top - 52) };
+
+      setNodeFloatingToolbarModel(
+        buildCanvasNodeFloatingToolbarModel({
+          nodeId: node.id,
+          nodeName,
+          position: toolbarPosition,
+          onOpenCode:
+            typeof inspectNode === 'function'
+              ? (nodeId) => {
+                  inspectNode(nodeId, 'code');
+                }
+              : undefined,
+        })
+      );
+      props.onNodeClick(event, node);
+    },
+    [closeNodeHealthPopover, props.onNodeClick]
+  );
 
   useCanvasViewportLifecycle({
     viewportRef,
@@ -420,35 +191,72 @@ export default function CanvasViewport(props: CanvasViewportProps): JSX.Element 
   });
 
   return (
-    <CanvasViewportSurface
+    <CanvasViewportSurfaceView
       viewportRef={viewportRef}
       resolvedCanvasPalette={resolvedCanvasPalette}
       canEditEdges={props.canEditEdges}
-      nodesWithImpact={props.nodesWithImpact}
+      nodesWithImpact={nodesWithOperationalDetails}
       edges={props.edges}
       nodeTypes={props.nodeTypes}
       gridSize={props.gridSize}
-      canvasGridVisible={props.canvasGridVisible}
-      canvasGridColor={props.canvasGridColor}
       canvasSnapToGrid={props.canvasSnapToGrid}
       viewport={props.viewport}
       onNodesChange={props.onNodesChange}
       onEdgesChange={props.onEdgesChange}
       onConnect={props.onConnect}
       onReconnect={props.onReconnect}
-      onNodeClick={props.onNodeClick}
+      onNodeClick={handleNodeClick}
       onSelectionChange={props.onSelectionChange}
       onViewportChange={props.onViewportChange}
       onNodeDrag={props.onNodeDrag}
       onNodeDragStop={props.onNodeDragStop}
       onDrop={props.onDrop}
       onDragOver={props.onDragOver}
-      authoringNodeKinds={props.authoringNodeKinds}
-      onCreateAuthoringNode={props.onCreateAuthoringNode}
-      canOpenSourceImport={props.canOpenSourceImport}
-      onOpenSourceImport={props.onOpenSourceImport}
-      canPreviewExecutionPlan={props.canPreviewExecutionPlan}
-      onPreviewExecutionPlan={props.onPreviewExecutionPlan}
+      contextMenuPresenter={contextMenuPresenter}
+      renderContextMenuView={renderContextMenuView}
+      nodeFloatingToolbarModel={nodeFloatingToolbarModel}
+      onCloseNodeFloatingToolbar={closeNodeFloatingToolbar}
+      nodeHealthPopoverModel={nodeHealthPopoverModel}
+      onCloseNodeHealthPopover={closeNodeHealthPopover}
     />
   );
 }
+
+function CanvasViewportLocalPresenter(props: CanvasViewportProps): JSX.Element {
+  const reactFlow = useReactFlow<Node, Edge>();
+  const contextMenuPresenter = useCanvasContextMenuPresenter({
+    canEditEdges: props.canEditEdges,
+    canOpenSourceImport: props.canOpenSourceImport,
+    canOpenCanvasSettings: props.canOpenCanvasSettings,
+    authoringNodeKinds: props.authoringNodeKinds,
+    screenToFlowPosition: (screenPosition) => reactFlow.screenToFlowPosition(screenPosition),
+    onCreateAuthoringNode: props.onCreateAuthoringNode,
+    onEdgesChange: props.onEdgesChange,
+    onOpenSourceImport: props.onOpenSourceImport,
+    onOpenCanvasSettings: props.onOpenCanvasSettings,
+  });
+
+  return (
+    <CanvasViewportWithPresenter
+      {...props}
+      contextMenuPresenter={contextMenuPresenter}
+      renderContextMenuView
+    />
+  );
+}
+
+export default function CanvasViewport(props: CanvasViewportProps): JSX.Element {
+  if (props.contextMenuPresenter != null) {
+    return (
+      <CanvasViewportWithPresenter
+        {...props}
+        contextMenuPresenter={props.contextMenuPresenter}
+        renderContextMenuView={false}
+      />
+    );
+  }
+
+  return <CanvasViewportLocalPresenter {...props} />;
+}
+
+export type { CanvasViewportProps };

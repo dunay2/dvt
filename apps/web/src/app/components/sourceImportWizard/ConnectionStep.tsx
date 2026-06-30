@@ -108,9 +108,12 @@ export function ConnectionStep({
               </Card>
             ) : (
               visibleConnections.map((connection) => (
-                <Card
+                <button
+                  type="button"
                   key={connection.id}
-                  className={`cursor-pointer p-4 transition-all ${
+                  data-slot="source-import-connection-option"
+                  aria-pressed={selectedConnection === connection.id}
+                  className={`flex w-full flex-col gap-6 rounded-xl border bg-card p-4 text-left text-card-foreground transition-all ${
                     selectedConnection === connection.id
                       ? 'border-blue-500 bg-blue-900/20'
                       : 'border-slate-600 hover:border-gray-600'
@@ -134,7 +137,7 @@ export function ConnectionStep({
                       <CheckCircle2 className="size-5 shrink-0 text-blue-400" />
                     ) : null}
                   </div>
-                </Card>
+                </button>
               ))
             )}
           </>

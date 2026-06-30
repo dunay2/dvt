@@ -6,7 +6,7 @@ import { buildCanvasShellGraphCommands } from './canvasShellGraphCommandsBuilder
 import { buildCanvasShellGraph } from './canvasShellGraphBuilder';
 import { buildCanvasShellLayout } from './canvasShellLayoutBuilder';
 import { buildCanvasShellPanels } from './canvasShellPanelsBuilder';
-import { buildCanvasShellToolbar } from './canvasShellToolbarBuilder';
+import { buildCanvasShellChromeState } from './canvasShellChromeStateBuilder';
 import type {
   CanvasShellChromeCommandsBuilderArgs,
   CanvasShellGraphBuilderArgs,
@@ -14,7 +14,7 @@ import type {
   CanvasShellLayoutBuilderArgs,
   CanvasShellPanelsBuilderArgs,
   CanvasShellRouteComposerArgs,
-  CanvasShellToolbarBuilderArgs,
+  CanvasShellChromeStateBuilderArgs,
 } from './canvasShellBuilder.types';
 import type { CanvasShellProps } from './canvasShell.types';
 
@@ -60,7 +60,6 @@ function buildCanvasShellLayoutArgs({
       canCreateCanvasDocument: routeViewState.canCreateCanvasDocument,
       draftSaveStatus: routeViewState.draftSaveStatus,
       availableCanvasKinds: routeViewState.availableCanvasKinds,
-      canvasTabState: routeViewState.canvasTabState,
       effectiveUserPermissions: routeViewState.effectiveUserPermissions,
       readOnlyState: routeViewState.readOnlyState,
     },
@@ -74,6 +73,8 @@ function buildCanvasShellPanelsArgs({
   return {
     panelState: {
       inspectorNode: controller.inspectorNode,
+      inspectorPreferredTabId: controller.inspectorPreferredTabId,
+      inspectorPreferredTabRequestId: controller.inspectorPreferredTabRequestId,
       inspectorNodeSelectedForExecution: controller.inspectorNodeSelectedForExecution,
       inspectorGraphNodes: controller.inspectorGraphNodes,
       inspectorGraphEdges: controller.inspectorGraphEdges,
@@ -118,12 +119,12 @@ function buildCanvasShellGraphArgs({
   };
 }
 
-function buildCanvasShellToolbarArgs({
+function buildCanvasShellChromeStateArgs({
   controller,
   routeViewState,
-}: CanvasShellRouteComposerArgs): CanvasShellToolbarBuilderArgs {
+}: CanvasShellRouteComposerArgs): CanvasShellChromeStateBuilderArgs {
   return {
-    toolbarState: {
+    chromeStateSource: {
       canvasAuthoringMode: controller.canvasAuthoringMode,
       canPlanGraph: controller.canPlanGraph,
       canStartRun: controller.canStartRun,
@@ -186,7 +187,7 @@ function buildCanvasShellChromeCommandsArgs({
       handleExportProjectSnapshot: controller.handleExportProjectSnapshot,
       handleImportProjectSnapshotFile: controller.handleImportProjectSnapshotFile,
       reloadLatestDraft: controller.reloadLatestDraft,
-      handlePlan: controller.handlePlan,
+      handlePreviewExecutionPlan: controller.handlePreviewExecutionPlan,
       handleStartRun: controller.handleStartRun,
     },
   };
@@ -197,7 +198,7 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     layout: buildCanvasShellLayout(buildCanvasShellLayoutArgs(args)),
     panels: buildCanvasShellPanels(buildCanvasShellPanelsArgs(args)),
     graph: buildCanvasShellGraph(buildCanvasShellGraphArgs(args)),
-    toolbar: buildCanvasShellToolbar(buildCanvasShellToolbarArgs(args)),
+    chromeState: buildCanvasShellChromeState(buildCanvasShellChromeStateArgs(args)),
     graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
     canvasCommands: {

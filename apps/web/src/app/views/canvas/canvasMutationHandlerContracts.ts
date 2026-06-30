@@ -10,6 +10,10 @@ type CanvasDraftSessionSetter = Dispatch<SetStateAction<CanvasDraftSession>>;
 type CanvasNodePositions = Record<string, { x: number; y: number }>;
 type CanvasLayoutCompletionHandler = (positions: CanvasNodePositions) => void;
 
+export type CanvasSourceImportCompletionContext = Readonly<{
+  canvasPosition: { x: number; y: number };
+}>;
+
 export type CanvasGraphModelLike = {
   nodes: Node[];
   edges: Edge[];
@@ -27,10 +31,11 @@ export type CanvasMutationState = {
 export type CanvasMutationEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
+  invalidateInFlightSaveAttempt: () => void;
 };
 
 export type CanvasMutationPolicy = {
@@ -54,7 +59,7 @@ export type CanvasGraphChangeState = {
 export type CanvasGraphChangeEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
 };
 
@@ -73,7 +78,7 @@ export type CanvasNodeChangeState = {
 export type CanvasNodeChangeEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   onLayoutComplete: CanvasLayoutCompletionHandler;
 };
 
@@ -99,9 +104,15 @@ export type CanvasEdgeChangeContracts = {
 export type CanvasSourceImportEffects = {
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   showInspectorPanel: () => void;
   setCurrentPlan: (value: null) => void;
+  onLayoutComplete: CanvasLayoutCompletionHandler;
+  invalidateInFlightSaveAttempt: () => void;
+};
+
+export type CanvasSourceImportState = {
+  graphModel: CanvasGraphModelLike;
 };
 
 export type CanvasSourceImportPolicy = {
@@ -110,6 +121,7 @@ export type CanvasSourceImportPolicy = {
 };
 
 export type CanvasSourceImportContracts = {
+  state: CanvasSourceImportState;
   effects: CanvasSourceImportEffects;
   policy: CanvasSourceImportPolicy;
 };

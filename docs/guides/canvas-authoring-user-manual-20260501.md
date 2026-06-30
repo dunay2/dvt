@@ -52,10 +52,11 @@ autoridad de borrador.
 La vista principal tiene estas zonas:
 
 - Barra superior de workspace: estado de conexion, workspace y vista.
-- Barra del canvas: canvas activo, pestanas de trabajo y acciones.
 - Superficie de grafo: nodos, aristas, controles de zoom y minimapa.
-- Explorador lateral izquierdo: recursos de proyecto y entrada `Add data`.
-- Inspector lateral derecho: propiedades del nodo o canvas seleccionado.
+- Menu contextual del canvas: creacion de nodos, `Add source`, exploracion de
+  proyecto, codigo de proyecto, validacion y preview.
+- Workbench contextual del nodo: propiedades, columnas, metadata, tests,
+  codigo y evidencia del nodo seleccionado.
 - Consola inferior: eventos de ejecucion cuando existe un run activo.
 
 ![Canvas dbt actual](./assets/canvas-authoring-user-manual/08-current-dbt-canvas.png)
@@ -74,47 +75,44 @@ de muestra.
 
 ## Insertar nodos
 
-1. Pulsar `Insertar`.
-2. Buscar el tipo de nodo en el campo de la paleta.
-3. Seleccionar un tipo permitido por el canvas activo.
-4. Configurar el nodo en el inspector cuando quede seleccionado.
+1. Hacer click derecho sobre una zona vacia del canvas.
+2. Elegir el tipo de nodo permitido por el canvas activo.
+3. Confirmar que el nodo aparece en el punto contextual del grafo.
+4. Abrir el workbench del nodo con doble click o menu contextual del nodo.
 
 ![Busqueda de nodos](./assets/canvas-authoring-user-manual/09-insert-node-search.png)
 
-Resultado esperado: la paleta filtra el catalogo de nodos gobernado. En un
-canvas `dbt`, la busqueda `mod` muestra tipos como `Model` y `Snapshot`. La
-paleta de insercion no es el importador de datos; solo crea nodos del catalogo
-del canvas.
+Resultado esperado: el menu contextual solo muestra acciones del canvas y no
+mezcla propiedades de nodos. En un canvas `dbt`, las acciones crean tipos
+compatibles con dbt; en un canvas DVT, crean tipos compatibles con el flujo DVT.
+La insercion de nodos no sustituye al importador de fuentes gobernadas.
 
 ## Usar el explorador de proyecto
 
-1. Abrir el panel izquierdo con el boton lateral.
-2. Revisar `Project Resources`.
-3. Arrastrar recursos disponibles al canvas cuando el recurso sea arrastrable.
-4. Pulsar `Add data` para abrir el registro de objetos de datos si la capacidad
-   esta habilitada.
+1. Hacer click derecho sobre el canvas.
+2. Elegir `Explore project`.
+3. Buscar archivos, artefactos o canvases del workspace en el dialogo
+   contextual.
+4. Cerrar el dialogo para volver al grafo sin dejar un panel fijo abierto.
 
-![Explorador de proyecto](./assets/canvas-authoring-user-manual/13-dataobject-registry-connections.png)
-
-Resultado esperado: el explorador lista recursos existentes del proyecto. La
-creacion de nodos nuevos sigue estando en `Insertar`; el descubrimiento de
-fuentes gobernadas empieza en `Add data`.
+Resultado esperado: el explorador lista recursos existentes del proyecto bajo
+demanda. No debe aparecer un panel lateral fijo `Project Resources` en el modo
+base del grafo.
 
 ## Registrar fuentes de datos
 
-1. Abrir el explorador lateral izquierdo.
-2. Pulsar `Add data`.
-3. En `DataObject Registry`, elegir `Database`.
-4. Avanzar para cargar conexiones gobernadas desde el catalogo o desde el rail
-   protegido de warehouse.
-5. Seleccionar tablas candidatas y confirmar el registro.
+1. Hacer click derecho sobre una zona vacia del canvas.
+2. Elegir `Add source`.
+3. En `Connections`, elegir una conexion gobernada.
+4. En `Browse`, revisar esquemas, tablas, filas y columnas disponibles.
+5. En `Metadata`, revisar columnas y metadata del origen activo.
+6. En `Selected`, confirmar la cesta de tablas y pulsar `Attach sources to
+canvas`.
 
-![DataObject Registry](./assets/canvas-authoring-user-manual/11-dataobject-registry-connection.png)
-
-Resultado esperado: el flujo registra objetos de datos de tipo `Database` y los
-proyecta como nodos de fuente en el workspace. Los tipos `File`, `API` y
-`Stream` aparecen como frontera de producto, pero no estan disponibles todavia
-en esta slice.
+Resultado esperado: el flujo registra fuentes gobernadas desde los rails
+`ListWarehouseConnections`, `ListWarehouseConnectionTables` e
+`ImportWarehouseSources`, y las proyecta como nodos de fuente en el canvas cerca
+del punto donde se abrio el menu contextual.
 
 ## Gestionar proyecto
 
@@ -165,13 +163,12 @@ seleccionado.
   escribir en la paleta de insercion. Evidencia:
   `09-insert-node-search.png`. Limite: busca tipos, no origenes warehouse.
 - Inspeccionar recursos:
-  abrir panel izquierdo de proyecto. Evidencia:
-  `13-dataobject-registry-connections.png`. Limite: no demuestra columnas ni
-  metadata completas.
-- Abrir DataObject Registry:
-  `Project Resources > Add data`. Evidencia:
-  `11-dataobject-registry-connection.png`. Limite: no demuestra seleccion
-  profesional de origen con destino final.
+  abrir `Explore project` desde el menu contextual del canvas. Limite: no
+  demuestra columnas ni metadata de warehouse.
+- Abrir Add Source:
+  `Canvas context menu > Add source`. Evidencia E2E:
+  `apps/web/cypress/e2e/canvas/canvas-source-import-contextual.cy.ts`. Limite:
+  no demuestra todavia seleccion profesional de destino final.
 - Importar/exportar snapshot:
   `Proyecto > Exportar` o `Importar`. Evidencia:
   `10-project-snapshot-menu.png`. Limite: es snapshot, no flujo de conexion,
@@ -231,7 +228,7 @@ contextual independiente.
 
 ### Conectores externos reales siguen gobernados por rail
 
-La UI puede abrir `DataObject Registry`, pero la verdad de conexiones no debe
+La UI abre `Add source` desde el canvas, pero la verdad de conexiones no debe
 salir de fixtures locales ni de formularios ad hoc. Las conexiones deben venir
 de rails protegidos como `ListWarehouseConnections`,
 `ListWarehouseConnectionTables` e `ImportWarehouseSources`.
@@ -239,13 +236,14 @@ de rails protegidos como `ListWarehouseConnections`,
 ## Lista de comprobacion QA
 
 - Abrir `/canvas` y comprobar que no se cargan datos de muestra sin proyecto.
-- Confirmar que `Insertar` muestra solo tipos compatibles con el canvas activo.
-- Buscar `mod` y confirmar que aparecen tipos `dbt` como `Model`.
+- Confirmar que el menu contextual del canvas muestra solo acciones de canvas.
+- Confirmar que no existe panel fijo `Project Resources` ni accion `Add data`
+  en el modo base del grafo.
 - Crear un nodo y verificar que queda visible en el mismo contexto del grafo.
-- Seleccionar un nodo y revisar que el inspector muestra datos del nodo real.
-- Abrir el explorador lateral y comprobar que `Add data` abre
-  `DataObject Registry`.
-- Confirmar que `Database` aparece disponible y `File`, `API`, `Stream` no.
+- Seleccionar un nodo y revisar que el workbench contextual muestra datos del
+  nodo real.
+- Abrir `Add source` desde el menu contextual y comprobar conexiones, tablas,
+  columnas, metadata y cesta de seleccion.
 - Abrir `Proyecto` y confirmar que `Importar` es snapshot, no conexion.
 - Confirmar que `Ejecutar` no se habilita con `Plan requerido`.
 - Abrir `Codigo`, `Artefactos` y `Ejecuciones` y comprobar que cada vista
@@ -255,9 +253,9 @@ de rails protegidos como `ListWarehouseConnections`,
 
 | Sintoma                                  | Revision                                                         |
 | ---------------------------------------- | ---------------------------------------------------------------- |
-| `Insertar` no abre catalogo              | Permisos de escritura y catalogo del canvas activo               |
+| Menu contextual no abre                  | Permisos de escritura y captura de click derecho en el canvas    |
 | El nodo creado no persiste               | Respuesta del guardado de borrador y revision esperada           |
-| No aparece `Add data`                    | Capacidad de source import y plugin `dvt.warehouse-source`       |
+| No aparece `Add source`                  | Capacidad de source import y plugin `dvt.warehouse-source`       |
 | `Proyecto > Importar` no descubre tablas | Es correcto: es importacion de snapshot                          |
 | `Ejecutar` esta deshabilitado            | Revisar `Plan requerido` y generar plan valido                   |
 | El inspector no muestra datos            | Seleccion activa y metadata del nodo en el borrador              |

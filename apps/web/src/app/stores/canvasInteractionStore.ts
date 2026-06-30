@@ -44,13 +44,15 @@ interface CanvasInteractionState {
   columnLevelLineageEnabled: boolean;
   canvasLayouts: Record<string, WorkspaceCanvasLayout>;
   inspectorNodeId: string | null;
+  inspectorPreferredTabId: string | null;
+  inspectorPreferredTabRequestId: number;
 
   setSelectedNodes: (nodes: string[]) => void;
   toggleImpactOverlay: () => void;
   toggleColumnLevelLineage: () => void;
   setCanvasViewport: (workspaceKey: string, viewport: CanvasViewportState | null) => void;
   setCanvasNodePositions: (workspaceKey: string, positions: Record<string, CanvasPosition>) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 }
 
 type CanvasInteractionPersistedState = Partial<
@@ -100,6 +102,8 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
       columnLevelLineageEnabled: false,
       canvasLayouts: {},
       inspectorNodeId: null,
+      inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
 
       setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
       toggleImpactOverlay: () =>
@@ -135,7 +139,15 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
             },
           };
         }),
-      setInspectorNode: (nodeId) => set({ inspectorNodeId: nodeId }),
+      setInspectorNode: (nodeId, preferredTabId = null) =>
+        set((state) => ({
+          inspectorNodeId: nodeId,
+          inspectorPreferredTabId: nodeId == null ? null : preferredTabId,
+          inspectorPreferredTabRequestId:
+            nodeId != null && preferredTabId != null
+              ? state.inspectorPreferredTabRequestId + 1
+              : state.inspectorPreferredTabRequestId,
+        })),
     }),
     {
       name: 'dvt-web-canvas-interaction',

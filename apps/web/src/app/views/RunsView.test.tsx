@@ -128,7 +128,7 @@ describe('RunsView', () => {
     );
 
     expect(mounted.container.textContent).toContain('No runs available');
-    expect(mounted.container.textContent).toContain('Go to canvas to plan and start a run');
+    expect(mounted.container.textContent).toContain('Go to canvas to preview and start a run');
   });
 
   it('renders the governed missing state for /runs/:runId when the snapshot is absent', async () => {

@@ -6,8 +6,15 @@ import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
 import { Badge } from '../ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../ui/utils';
+import { NodePropertySectionView } from './NodePropertySectionView';
 import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesReadModel';
 
 export type NodePropertiesTabsProps = Readonly<{
@@ -16,82 +23,53 @@ export type NodePropertiesTabsProps = Readonly<{
   activeRunId: string | null;
   panels: readonly InspectorPanelContribution[];
   activeTab: string;
+  primarySectionIds?: readonly NodePropertySection['id'][];
   beforePanels?: ReactNode;
+  sectionChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
   tagsEditor?: ReactNode;
+  slotPrefix?: string;
+  surface?: 'inspector' | 'workbench';
+  showSectionCountBadge?: boolean;
   onActiveTabChange: (tab: string) => void;
   onHide: () => void;
 }>;
 
-function renderSectionBody(section: NodePropertySection): JSX.Element {
-  if (section.code != null) {
-    return (
-      <pre className={cn('max-h-72 overflow-auto p-2', graphVisualClasses.inspectorCodeBlock)}>
-        {section.code}
-      </pre>
-    );
-  }
+const PRIMARY_NODE_WORKBENCH_SECTION_IDS = new Set<NodePropertySection['id']>([
+  'general',
+  'columns',
+  'inputs-outputs',
+  'tests',
+  'code',
+]);
 
-  if (section.tableRows.length > 0) {
-    const columnKeys = Array.from(
-      new Set(section.tableRows.flatMap((row) => Object.keys(row.cells)))
-    );
-
-    return (
-      <div className="max-h-72 overflow-auto border-y border-slate-800">
-        <table className="w-full border-collapse text-left text-xs">
-          <thead className="sticky top-0 bg-slate-950 text-slate-400">
-            <tr>
-              {columnKeys.map((key) => (
-                <th
-                  key={key}
-                  scope="col"
-                  className="border-b border-slate-800 px-2 py-2 font-medium"
-                >
-                  {key}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {section.tableRows.map((row) => (
-              <tr key={row.id}>
-                {columnKeys.map((key) => (
-                  <td key={`${row.id}:${key}`} className="px-2 py-2 align-top text-slate-200">
-                    {row.cells[key] || (
-                      <span className={graphVisualClasses.inspectorSubtle}>-</span>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
-
-  if (section.rows.length > 0) {
-    return (
-      <div className="grid grid-cols-[minmax(92px,0.42fr)_minmax(0,1fr)] gap-x-4 gap-y-3 text-sm">
-        {section.rows.map((row) => (
-          <div key={row.label} className="contents">
-            <span className={graphVisualClasses.inspectorLabel}>{row.label}</span>
-            <span className="min-w-0 break-words">{row.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <p className={graphVisualClasses.inspectorBody}>
-      {section.emptyState ?? 'No properties are recorded for this section.'}
-    </p>
-  );
+function isPrimarySection(section: NodePropertySection): boolean {
+  return PRIMARY_NODE_WORKBENCH_SECTION_IDS.has(section.id);
 }
 
-function sectionSlot(section: NodePropertySection): string {
-  return `node-inspector-${section.id}-section`;
+function resolvePrimarySections({
+  sections,
+  primarySectionIds,
+}: Readonly<{
+  sections: readonly NodePropertySection[];
+  primarySectionIds?: readonly NodePropertySection['id'][];
+}>): readonly NodePropertySection[] {
+  if (primarySectionIds == null) {
+    return sections.filter(isPrimarySection);
+  }
+
+  const sectionById = new Map(sections.map((section) => [section.id, section]));
+  return primarySectionIds.flatMap((sectionId): readonly NodePropertySection[] => {
+    const section = sectionById.get(sectionId);
+    return section == null ? [] : [section];
+  });
+}
+
+function renderTabBadge(section: NodePropertySection): JSX.Element | null {
+  return section.tableRows.length > 0 ? (
+    <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
+      {section.tableRows.length}
+    </Badge>
+  ) : null;
 }
 
 export function NodePropertiesTabs({
@@ -100,63 +78,124 @@ export function NodePropertiesTabs({
   activeRunId,
   panels,
   activeTab,
+  primarySectionIds,
   beforePanels,
+  sectionChildren,
   tagsEditor,
+  slotPrefix,
+  surface = 'inspector',
+  showSectionCountBadge = false,
   onActiveTabChange,
   onHide,
 }: NodePropertiesTabsProps): JSX.Element {
+  const slots =
+    slotPrefix == null
+      ? {
+          root: 'node-inspector-core-tabs',
+          list: 'node-inspector-core-tabs-list',
+          tabPrefix: 'node-inspector-tab',
+          moreTrigger: 'node-inspector-more-trigger',
+          moreItemPrefix: 'node-inspector-more-item',
+          sectionPrefix: 'node-inspector',
+          code: 'node-inspector-code',
+        }
+      : {
+          root: `${slotPrefix}-tabs`,
+          list: `${slotPrefix}-tabs-list`,
+          tabPrefix: `${slotPrefix}-tab`,
+          moreTrigger: `${slotPrefix}-more-trigger`,
+          moreItemPrefix: `${slotPrefix}-more-item`,
+          sectionPrefix: slotPrefix,
+          code: `${slotPrefix}-code`,
+        };
+  const primarySections = resolvePrimarySections({
+    sections: model.sections,
+    primarySectionIds,
+  });
+  const primarySectionIdsSet = new Set(primarySections.map((section) => section.id));
+  const overflowSections = model.sections.filter(
+    (section) => !primarySectionIdsSet.has(section.id)
+  );
+  const overflowItems = [
+    ...overflowSections.map((section) => ({
+      id: section.id,
+      label: section.label,
+      count: section.tableRows.length,
+    })),
+    ...panels.map((panel) => ({
+      id: panel.id,
+      label: resolveString(panel.label),
+      count: 0,
+    })),
+  ];
+  const activeOverflowItem = overflowItems.find((item) => item.id === activeTab);
+
   return (
     <Tabs
-      data-slot="node-inspector-core-tabs"
+      data-slot={slots.root}
       value={activeTab}
       onValueChange={onActiveTabChange}
       className="gap-4"
     >
-      <TabsList
-        data-slot="node-inspector-core-tabs-list"
-        className={graphVisualClasses.contextPanelFlatTabsList}
-      >
-        {model.sections.map((section) => (
+      <TabsList data-slot={slots.list} className={graphVisualClasses.contextPanelFlatTabsList}>
+        {primarySections.map((section) => (
           <TabsTrigger
             key={section.id}
             value={section.id}
-            data-slot={`node-inspector-tab-${section.id}`}
+            data-slot={`${slots.tabPrefix}-${section.id}`}
             className={graphVisualClasses.contextPanelFlatTabTrigger}
           >
             {section.label}
-            {section.tableRows.length > 0 ? (
-              <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
-                {section.tableRows.length}
-              </Badge>
-            ) : null}
+            {renderTabBadge(section)}
           </TabsTrigger>
         ))}
-        {panels.map((panel) => {
-          const Icon = panel.icon;
-          return (
-            <TabsTrigger
-              key={panel.id}
-              value={panel.id}
-              className={graphVisualClasses.contextPanelFlatTabTrigger}
+        {overflowItems.length > 0 ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                data-slot={slots.moreTrigger}
+                className={cn(
+                  graphVisualClasses.contextPanelFlatTabTrigger,
+                  activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
+                )}
+              >
+                {activeOverflowItem == null ? 'More' : `More: ${activeOverflowItem.label}`}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              className="border-slate-700 bg-slate-950 text-slate-50"
             >
-              <Icon className="mr-1 size-3" />
-              {resolveString(panel.label)}
-            </TabsTrigger>
-          );
-        })}
+              {overflowItems.map((item) => (
+                <DropdownMenuItem
+                  key={item.id}
+                  data-slot={`${slots.moreItemPrefix}-${item.id}`}
+                  onSelect={() => onActiveTabChange(item.id)}
+                >
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.count > 0 ? (
+                    <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
+                      {item.count}
+                    </Badge>
+                  ) : null}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : null}
       </TabsList>
 
       {model.sections.map((section) => (
         <TabsContent key={section.id} value={section.id} className="m-0">
-          <section data-slot={sectionSlot(section)} className="space-y-3">
-            <h3 className={graphVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
-            {renderSectionBody(section)}
-            {section.id === 'general' && beforePanels ? (
-              <div data-slot="node-inspector-editable-properties" className="space-y-3 pt-1">
-                {beforePanels}
-              </div>
-            ) : null}
-          </section>
+          <NodePropertySectionView
+            section={section}
+            slots={slots}
+            surface={surface}
+            showCountBadge={showSectionCountBadge}
+          >
+            {sectionChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null)}
+          </NodePropertySectionView>
         </TabsContent>
       ))}
 

@@ -77,6 +77,10 @@ function readMetadataString(metadata: CanonicalNode['metadata'], key: string): s
   return typeof value === 'string' ? value : undefined;
 }
 
+function cloneMetadata(metadata: CanonicalNode['metadata']): Record<string, unknown> | undefined {
+  return metadata != null ? { ...metadata } : undefined;
+}
+
 function hasOptionalDbtColumnDescription(column: Record<string, unknown>): boolean {
   return column.description == null || typeof column.description === 'string';
 }
@@ -144,6 +148,10 @@ function projectCanonicalNodeToDbtNode(args: {
   }
   if (node.description != null) {
     dbtNode.description = node.description;
+  }
+  const metadata = cloneMetadata(node.metadata);
+  if (metadata != null) {
+    dbtNode.metadata = metadata;
   }
   if (config != null) {
     dbtNode.config = config;

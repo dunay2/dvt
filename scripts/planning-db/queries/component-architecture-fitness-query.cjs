@@ -1,44 +1,10 @@
 /** Owned concern: expose DB-owned component architecture fitness observations and checks. */
+const { appendComponentPairFilter, appendFilter } = require('../query-filter.cjs');
+const { textValue } = require('../query-format.cjs');
+const { parseLimit } = require('../query-limit.cjs');
+
 function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
   const defaultSchemaName = deps.schemaName || 'architecture';
-
-  function parseLimit(value, defaultLimit) {
-    if (value === undefined || value === null || value === '') {
-      return defaultLimit;
-    }
-
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-    }
-
-    return parsed;
-  }
-
-  function appendFilter(predicates, params, column, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(value);
-    predicates.push(`${column} = $${params.length}`);
-  }
-
-  function appendComponentFilter(predicates, params, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(value);
-    predicates.push(
-      `(source_component_id = $${params.length} or target_component_id = $${params.length})`
-    );
-  }
-
-  function textValue(value, fallback = '-') {
-    const text = String(value ?? '').trim();
-    return text.length > 0 ? text : fallback;
-  }
 
   function buildArchitectureDependencyObservationRows(rows) {
     return rows.map((row) => [
@@ -150,7 +116,13 @@ function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
     appendFilter(predicates, params, 'scan_id', filters.scan);
     appendFilter(predicates, params, 'source_path', filters.path || filters.sourcePath);
     appendFilter(predicates, params, 'target_path', filters.targetPath);
-    appendComponentFilter(predicates, params, filters.component);
+    appendComponentPairFilter(
+      predicates,
+      params,
+      filters.component,
+      'source_component_id',
+      'target_component_id'
+    );
     appendFilter(predicates, params, 'relation_type', filters.type);
 
     const limit = parseLimit(filters.limit, 50);
@@ -197,7 +169,13 @@ function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
     appendFilter(predicates, params, 'design_id', filters.design);
     appendFilter(predicates, params, 'scan_id', filters.scan);
     appendFilter(predicates, params, 'dependency_classification', filters.classification);
-    appendComponentFilter(predicates, params, filters.component);
+    appendComponentPairFilter(
+      predicates,
+      params,
+      filters.component,
+      'source_component_id',
+      'target_component_id'
+    );
     appendFilter(predicates, params, 'fitness_state', filters.state);
     appendFilter(predicates, params, 'relation_type', filters.type);
 
@@ -256,7 +234,13 @@ function createComponentArchitectureFitnessReadModelComponent(deps = {}) {
     appendFilter(predicates, params, 'gap_kind', filters.kind || filters.classification);
     appendFilter(predicates, params, 'fitness_state', filters.state);
     appendFilter(predicates, params, 'severity', filters.severity);
-    appendComponentFilter(predicates, params, filters.component);
+    appendComponentPairFilter(
+      predicates,
+      params,
+      filters.component,
+      'source_component_id',
+      'target_component_id'
+    );
 
     const limit = parseLimit(filters.limit, 50);
     params.push(limit);

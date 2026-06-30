@@ -22,7 +22,7 @@ export function AdminPermissionsTab({ roles }: Readonly<{ roles: Role[] }>) {
               <TableHeader>
                 <TableRow className="border-slate-700">
                   <TableHead className="text-white">{copy.labels.role}</TableHead>
-                  <TableHead className="text-center text-white">Plan</TableHead>
+                  <TableHead className="text-center text-white">Preview</TableHead>
                   <TableHead className="text-center text-white">Run</TableHead>
                   <TableHead className="text-center text-white">Edit Edges</TableHead>
                   <TableHead className="text-center text-white">Manage Plugins</TableHead>

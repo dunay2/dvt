@@ -1,0 +1,96 @@
+// @vitest-environment jsdom
+
+import React, { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
+import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
+import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
+
+describe('CanvasAddNodeCatalogView', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('renders searchable categorized catalog items with descriptions', async () => {
+    await renderCatalog();
+
+    expect(container.textContent).toContain('Add component');
+    expect(searchInput()).toBeDefined();
+    expect(container.textContent).toContain('Add source');
+    expect(container.textContent).toContain('Sources');
+    expect(container.textContent).toContain('Attach a governed warehouse or dbt source');
+    expect(container.textContent).toContain('Add transformation');
+    expect(container.textContent).toContain('Transformations');
+  });
+
+  it('filters catalog items without mutating the source list', async () => {
+    await renderCatalog();
+
+    await act(async () => {
+      const input = searchInput();
+      input.value = 'transform';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    expect(container.textContent).toContain('Add transformation');
+    expect(container.textContent).not.toContain('Add source');
+  });
+
+  it('routes item selection by semantic catalog item', async () => {
+    const onSelectItem = vi.fn();
+    await renderCatalog(onSelectItem);
+
+    await act(async () => {
+      findButton('Add transformation')?.click();
+    });
+
+    expect(onSelectItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'create-node:dvt:sql_transform',
+        category: 'transformation',
+      })
+    );
+  });
+
+  async function renderCatalog(onSelectItem = vi.fn()): Promise<void> {
+    const items = buildCanvasAddNodeCatalogItems({
+      authoringNodeKinds: [
+        buildTestNodeKind('dvt:source', 'Source'),
+        buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
+      ],
+    });
+
+    await act(async () => {
+      root.render(<CanvasAddNodeCatalogView items={items} onSelectItem={onSelectItem} />);
+    });
+  }
+
+  function searchInput(): HTMLInputElement {
+    const input = container.querySelector<HTMLInputElement>('input[type="search"]');
+    expect(input).toBeDefined();
+    return input as HTMLInputElement;
+  }
+
+  function findButton(label: string): HTMLButtonElement | undefined {
+    return Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+      button.textContent?.includes(label)
+    );
+  }
+});

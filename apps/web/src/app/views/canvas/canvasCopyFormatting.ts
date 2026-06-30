@@ -142,8 +142,8 @@ export function formatCanvasConnectionRejection(
       return copy.connectionIncompleteMessage;
     case 'node_not_found_in_graph':
       return copy.nodeNotFoundInGraphMessage;
-    case 'role_rule_blocked':
-      return copy.transformationConnectionOrderMessage;
+    case 'plugin_policy_missing':
+      return `Connection policy is unavailable for plugin ${rejection.pluginId}.`;
     case 'self_connection':
       return copy.connectionSelfNotAllowedMessage;
     case 'duplicate_edge':

@@ -1,5 +1,5 @@
 /** Owned concern: guard Canvas contextual interaction semantics, docs, and Fowler traceability. */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -13,6 +13,18 @@ describe('Canvas interaction command surface architecture', () => {
     readFileSync(path.join(appRoot, relativePathFromApp), 'utf8');
   const appSourceExists = (relativePathFromApp: string): boolean =>
     existsSync(path.join(appRoot, relativePathFromApp));
+  const listTypeScriptFiles = (relativePathFromRepo: string): string[] => {
+    const absolutePath = path.join(repoRoot, relativePathFromRepo);
+    return readdirSync(absolutePath).flatMap((entry) => {
+      const entryPath = path.join(absolutePath, entry);
+      const relativeEntryPath = path.join(relativePathFromRepo, entry).replaceAll(path.sep, '/');
+      if (statSync(entryPath).isDirectory()) {
+        return listTypeScriptFiles(relativeEntryPath);
+      }
+
+      return /\.(?:ts|tsx)$/.test(entry) ? [relativeEntryPath] : [];
+    });
+  };
 
   it('documents the public API, invariants, transitions, consumers, stories, and Fowler analysis', () => {
     const componentGuide = readRepoFile(
@@ -84,21 +96,39 @@ describe('Canvas interaction command surface architecture', () => {
   it('keeps contextual gestures split into semantic model, presenter, and view template', () => {
     const modelSource = readAppSource('views/canvas/canvasInteractionCommandSurface.ts');
     const viewportSource = readAppSource('views/canvas/CanvasViewport.tsx');
+    const viewportSurfaceViewSource = readAppSource('views/canvas/CanvasViewportSurfaceView.tsx');
     const presenterPath = 'views/canvas/useCanvasContextMenuPresenter.ts';
+    const presenterContractPath = 'views/canvas/canvasContextMenuPresenter.types.ts';
+    const presenterLifecyclePath = 'views/canvas/useCanvasContextMenuLifecycle.ts';
+    const targetPolicyPath = 'views/canvas/canvasContextMenuTargetPolicy.ts';
     const viewTemplatePath = 'views/canvas/CanvasContextMenuView.tsx';
+    const viewPrimitivesPath = 'views/canvas/CanvasContextMenuPrimitives.tsx';
     const authoringCommandSource = readAppSource('views/canvas/canvasAuthoringNodeCommand.ts');
 
     expect(appSourceExists(presenterPath), presenterPath).toBe(true);
+    expect(appSourceExists(presenterContractPath), presenterContractPath).toBe(true);
+    expect(appSourceExists(presenterLifecyclePath), presenterLifecyclePath).toBe(true);
+    expect(appSourceExists(targetPolicyPath), targetPolicyPath).toBe(true);
     expect(appSourceExists(viewTemplatePath), viewTemplatePath).toBe(true);
+    expect(appSourceExists(viewPrimitivesPath), viewPrimitivesPath).toBe(true);
 
     const presenterSource = readAppSource(presenterPath);
+    const presenterContractSource = readAppSource(presenterContractPath);
+    const presenterLifecycleSource = readAppSource(presenterLifecyclePath);
+    const targetPolicySource = readAppSource(targetPolicyPath);
     const viewTemplateSource = readAppSource(viewTemplatePath);
+    const viewPrimitivesSource = readAppSource(viewPrimitivesPath);
 
     for (const [modulePath, source] of [
       ['views/canvas/canvasInteractionCommandSurface.ts', modelSource],
       ['views/canvas/CanvasViewport.tsx', viewportSource],
+      ['views/canvas/CanvasViewportSurfaceView.tsx', viewportSurfaceViewSource],
       [presenterPath, presenterSource],
+      [presenterContractPath, presenterContractSource],
+      [presenterLifecyclePath, presenterLifecycleSource],
+      [targetPolicyPath, targetPolicySource],
       [viewTemplatePath, viewTemplateSource],
+      [viewPrimitivesPath, viewPrimitivesSource],
       ['views/canvas/canvasAuthoringNodeCommand.ts', authoringCommandSource],
     ] as const) {
       expect(source.trimStart().startsWith('/** Owned concern:'), modulePath).toBe(true);
@@ -110,14 +140,9 @@ describe('Canvas interaction command surface architecture', () => {
     expect(modelSource).not.toContain('useState');
     expect(modelSource).not.toContain('ReactFlow');
 
-    expect(viewportSource).toContain(
-      'onPaneContextMenu={contextMenuPresenter.handlePaneContextMenu}'
-    );
-    expect(viewportSource).toContain(
-      'onEdgeContextMenu={contextMenuPresenter.handleEdgeContextMenu}'
-    );
-    expect(viewportSource).toContain('CanvasContextMenuView');
     expect(viewportSource).toContain('useCanvasContextMenuPresenter');
+    expect(viewportSource).toContain('CanvasViewportSurfaceView');
+    expect(viewportSource).not.toContain('CanvasContextMenuView');
     expect(viewportSource).not.toContain('buildCanvasContextMenuModel');
     expect(viewportSource).not.toContain('buildCanvasEdgeContextRemovalChange');
     expect(viewportSource).not.toContain('CanvasContextMenuModel');
@@ -127,6 +152,22 @@ describe('Canvas interaction command surface architecture', () => {
     expect(viewportSource).not.toContain('role="menuitem"');
     expect(viewportSource).not.toContain("type: 'remove'");
 
+    expect(viewportSurfaceViewSource).toContain(
+      'onPaneContextMenu={contextMenuPresenter.handlePaneContextMenu}'
+    );
+    expect(viewportSurfaceViewSource).toContain(
+      'onEdgeContextMenu={contextMenuPresenter.handleEdgeContextMenu}'
+    );
+    expect(viewportSurfaceViewSource).toContain('CanvasContextMenuView');
+    expect(viewportSurfaceViewSource).not.toContain('buildCanvasContextMenuModel');
+    expect(viewportSurfaceViewSource).not.toContain('buildCanvasEdgeContextRemovalChange');
+    expect(viewportSurfaceViewSource).not.toContain('CanvasContextMenuModel');
+    expect(viewportSurfaceViewSource).not.toContain('flushSync');
+    expect(viewportSurfaceViewSource).not.toContain('dataset.contextmenuAccepted');
+    expect(viewportSurfaceViewSource).not.toContain('role="menu"');
+    expect(viewportSurfaceViewSource).not.toContain('role="menuitem"');
+    expect(viewportSurfaceViewSource).not.toContain("type: 'remove'");
+
     expect(presenterSource).toContain('buildCanvasContextMenuModel');
     expect(presenterSource).toContain('buildCanvasEdgeContextRemovalChange');
     expect(presenterSource).toContain('useState<CanvasContextMenuModel | null>');
@@ -134,18 +175,59 @@ describe('Canvas interaction command surface architecture', () => {
     expect(presenterSource).toContain('handleCanvasAction');
     expect(presenterSource).toContain('handleCreateNodeAction');
     expect(presenterSource).toContain('handleEdgeAction');
+    expect(presenterSource).toContain("from './canvasContextMenuPresenter.types'");
+    expect(presenterSource).toContain("from './useCanvasContextMenuLifecycle'");
+    expect(presenterSource).toContain("from './canvasContextMenuTargetPolicy'");
+    expect(presenterSource).not.toContain('CONTEXT_MENU_OPEN_ECHO_SUPPRESSION_MS');
+    expect(presenterSource).not.toContain('isCanvasViewportContextTarget');
+    expect(presenterSource).not.toContain('document.addEventListener');
     expect(presenterSource).not.toContain('role="menu"');
     expect(presenterSource).not.toContain('role="menuitem"');
 
-    expect(viewTemplateSource).toContain('role="menu"');
-    expect(viewTemplateSource).toContain('role="menuitem"');
-    expect(viewTemplateSource).toContain('data-slot="canvas-context-menu"');
+    expect(presenterContractSource).toContain('UseCanvasContextMenuPresenterArgs');
+    expect(presenterContractSource).toContain('UseCanvasContextMenuPresenterResult');
+    expect(presenterContractSource).not.toContain('useState');
+    expect(presenterLifecycleSource).toContain('useCanvasContextMenuLifecycle');
+    expect(presenterLifecycleSource).toContain('document.addEventListener');
+    expect(targetPolicySource).toContain('isCanvasViewportContextTarget');
+    expect(targetPolicySource).not.toContain('useState');
+
+    expect(viewTemplateSource).toContain("from './CanvasContextMenuPrimitives'");
     expect(viewTemplateSource).not.toContain('buildCanvasContextMenuModel');
     expect(viewTemplateSource).not.toContain('buildCanvasEdgeContextRemovalChange');
     expect(viewTemplateSource).not.toContain('useState');
     expect(viewTemplateSource).not.toContain('useEffect');
     expect(viewTemplateSource).not.toContain('useReactFlow');
 
+    expect(viewPrimitivesSource).toContain('role="menu"');
+    expect(viewPrimitivesSource).toContain('role="menuitem"');
+    expect(viewPrimitivesSource).toContain('data-slot="canvas-context-menu"');
+    expect(viewPrimitivesSource).not.toContain('buildCanvasContextMenuModel');
+    expect(viewPrimitivesSource).not.toContain('buildCanvasEdgeContextRemovalChange');
+    expect(viewPrimitivesSource).not.toContain('useState');
+    expect(viewPrimitivesSource).not.toContain('useEffect');
+    expect(viewPrimitivesSource).not.toContain('useReactFlow');
+
     expect(authoringCommandSource).toContain('requestedPosition ??');
+  });
+
+  it('keeps Canvas context-menu browser coverage on real user gestures', () => {
+    const cypressContextMenuSurfaces = [
+      ...listTypeScriptFiles('apps/web/cypress/e2e/canvas'),
+      ...listTypeScriptFiles('apps/web/cypress/support'),
+    ];
+
+    expect(readRepoFile('apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts')).toContain(
+      '.rightclick('
+    );
+
+    for (const cypressSourcePath of cypressContextMenuSurfaces) {
+      const source = readRepoFile(cypressSourcePath);
+
+      expect(source, cypressSourcePath).not.toMatch(/MouseEvent\(['"]contextmenu/);
+      expect(source, cypressSourcePath).not.toMatch(/MouseEvent\(\s*['"]contextmenu/);
+      expect(source, cypressSourcePath).not.toMatch(/\.trigger\(['"]contextmenu/);
+      expect(source, cypressSourcePath).not.toMatch(/\.trigger\(\s*['"]contextmenu/);
+    }
   });
 });

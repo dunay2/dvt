@@ -1,39 +1,27 @@
 /** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
-import styles from './DbtNodeComponent.module.css';
-import { Handle, Node, NodeProps, Position } from '@xyflow/react';
-import { Copy, Info, MousePointer, Trash2 } from 'lucide-react';
-import { Fragment, memo, type CSSProperties, type DragEvent } from 'react';
+import type { Node, NodeProps } from '@xyflow/react';
+import { memo, type CSSProperties, type DragEvent } from 'react';
 
-import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
-import {
-  getGraphNodeCardStrategies,
-  getNodeBadges,
-  getNodeRenderer,
-  type RuntimeCapabilities,
-} from '../../plugins/registry';
-import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type {
   BadgeContext,
   MergedNodeDecoration,
   NodeBadge,
   NodeRendererProps,
 } from '../../plugins/contracts/NodeRendering';
+import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
+import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
+import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
+import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 import { parsePluginNodeKind } from '../../types/canonicalGuards';
 import { DbtNodeType, NodeStatus } from '../../types/dbt';
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuLabel,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from '../ui/context-menu';
 import {
   CANVAS_WORKSPACE_RESOURCE_DRAG_MIME_TYPE,
   parseCanvasWorkspaceResourceDragPayload,
 } from '../canvasWorkspaceExplorerModel';
 import { cn } from '../ui/utils';
+import { CanvasNodeShell } from './CanvasNodeShell';
+import type { CanvasNodePortTone } from './CanvasNodePortHandle';
 import {
   buildCanvasNodeContextMenuModel,
   type CanvasNodeContextMenuActionId,
@@ -66,10 +54,14 @@ export interface DbtNodeData extends Record<string, unknown> {
   metadata?: Record<string, unknown>;
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
+  canvasKind?: string;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph?: boolean;
   selectedForExecution?: boolean;
-  onInspectNode?: (nodeId: string) => void;
+  onInspectNode?: (
+    nodeId: string,
+    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | null
+  ) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
@@ -107,6 +99,14 @@ const COLOR_CLASSES: Record<NodeBadge['color'], string> = {
   gray: 'bg-neutral-500 text-white',
 };
 
+const NODE_ROLE_PORT_TONES: Record<CoreNodeRole, CanvasNodePortTone> = {
+  input: 'source',
+  transform: 'model',
+  check: 'test',
+  output: 'output',
+  control: 'control',
+};
+
 function NodeBadgeOverlay({ badge }: Readonly<{ badge: NodeBadge }>) {
   const Icon = badge.icon;
   return (
@@ -128,7 +128,7 @@ function FallbackNodeRenderer({ node, overlayDecoration }: Readonly<NodeRenderer
   return (
     <div
       className={cn(
-        'min-w-[140px] rounded border border-dashed border-neutral-600 bg-neutral-900 px-3 py-2 text-xs text-neutral-300',
+        'min-w-35 rounded border border-dashed border-neutral-600 bg-neutral-900 px-3 py-2 text-xs text-neutral-300',
         overlayDecoration?.dimmed && 'opacity-30'
       )}
       {...(overlayDecoration?.borderColor
@@ -174,14 +174,6 @@ function buildCanonicalNode(
   };
 }
 
-const CONTEXT_MENU_ACTION_ICONS: Record<CanvasNodeContextMenuActionId, typeof Info> = {
-  'inspect-node': Info,
-  'duplicate-node': Copy,
-  'select-node-for-execution': MousePointer,
-  'deselect-node-from-execution': MousePointer,
-  'remove-node': Trash2,
-};
-
 function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const data = props.data as DbtNodeData;
   const { id, selected } = props;
@@ -203,10 +195,14 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     data.runtimeCapabilities
   );
   const badges = getNodeBadges(canonicalNode, badgeCtx, data.runtimeCapabilities);
-  const graphNodeCardStrategies = getGraphNodeCardStrategies(data.runtimeCapabilities);
+  const graphNodeCardStrategies = getCanvasGraphNodeCardStrategies(
+    data.canvasKind,
+    data.runtimeCapabilities
+  );
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;
+  const portTone = NODE_ROLE_PORT_TONES[role];
   const canMutateNodeCommands = data.canMutateGraph === true;
   const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
   const contextMenuModel = buildCanvasNodeContextMenuModel({
@@ -252,7 +248,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
     switch (actionId) {
       case 'inspect-node':
-        data.onInspectNode?.(id);
+        data.onInspectNode?.(id, null);
         return;
       case 'duplicate-node':
         data.onDuplicateNode?.(id);
@@ -268,82 +264,35 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <div
-          className={cn(styles.root, 'relative')}
-          onDragOver={handleSchemaResourceDragOver}
-          onDrop={handleSchemaResourceDrop}
-        >
-          {/* Target Handle (input) */}
-          {shouldShowTargetHandle && (
-            <Handle
-              type="target"
-              position={Position.Left}
-              className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
-            />
-          )}
-
-          <div className="relative">
-            <Renderer
-              node={canonicalNode}
-              selected={selected}
-              hovered={false}
-              overlayDecoration={data.overlayDecoration ?? null}
-              badges={badges}
-              graphNodeCardStrategies={graphNodeCardStrategies}
-              data={data}
-            />
-            {badges.map((badge, index) => (
-              <NodeBadgeOverlay
-                key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}
-                badge={badge}
-              />
-            ))}
-          </div>
-
-          {/* Source Handle (output) */}
-          {shouldShowSourceHandle && (
-            <Handle
-              type="source"
-              position={Position.Right}
-              className="!bg-gray-400 !w-3 !h-3 !border-2 !border-white"
-            />
-          )}
-        </div>
-      </ContextMenuTrigger>
-
-      <ContextMenuContent className="w-56 bg-slate-900 border-slate-600 text-slate-50">
-        <ContextMenuLabel className="truncate font-mono text-xs">
-          {contextMenuModel.target.nodeName}
-        </ContextMenuLabel>
-        {contextMenuModel.actionGroups.map((group, groupIndex) => (
-          <Fragment key={group.id}>
-            <ContextMenuSeparator className="bg-slate-600" />
-            {groupIndex > 0 ? (
-              <ContextMenuLabel className="text-[10px] uppercase tracking-wide text-slate-400">
-                {group.label}
-              </ContextMenuLabel>
-            ) : null}
-            {group.actions.map((action) => {
-              const Icon = CONTEXT_MENU_ACTION_ICONS[action.id];
-              return (
-                <ContextMenuItem
-                  key={action.id}
-                  variant={action.destructive ? 'destructive' : undefined}
-                  disabled={action.disabled}
-                  title={action.disabledReason}
-                  onSelect={() => handleContextMenuAction(action.id)}
-                >
-                  <Icon className="size-4" />
-                  {action.label}
-                </ContextMenuItem>
-              );
-            })}
-          </Fragment>
-        ))}
-      </ContextMenuContent>
-    </ContextMenu>
+    <CanvasNodeShell
+      contextMenuModel={contextMenuModel}
+      shouldShowSourceHandle={shouldShowSourceHandle}
+      shouldShowTargetHandle={shouldShowTargetHandle}
+      sourceHandleTone={portTone}
+      targetHandleTone={portTone}
+      onContextMenuAction={handleContextMenuAction}
+      onOpenWorkbench={
+        typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined
+      }
+      onDragOver={handleSchemaResourceDragOver}
+      onDrop={handleSchemaResourceDrop}
+    >
+      <Renderer
+        node={canonicalNode}
+        selected={selected}
+        hovered={false}
+        overlayDecoration={data.overlayDecoration ?? null}
+        badges={badges}
+        graphNodeCardStrategies={graphNodeCardStrategies}
+        data={data}
+      />
+      {badges.map((badge, index) => (
+        <NodeBadgeOverlay
+          key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}
+          badge={badge}
+        />
+      ))}
+    </CanvasNodeShell>
   );
 }
 

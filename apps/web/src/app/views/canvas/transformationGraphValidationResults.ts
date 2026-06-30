@@ -17,8 +17,8 @@ function buildDraftSignature(
 export function buildInvalidResult(
   summaryCode: Exclude<TransformationGraphValidationSummaryCode, 'valid'>,
   context: Pick<TransformationValidationContext, 'allNodes' | 'allEdges'>,
-  scopedNodeIds: string[],
-  scopedEdgeIds: string[] = []
+  scopedNodeIds: readonly string[],
+  scopedEdgeIds: readonly string[] = []
 ): TransformationGraphValidationResult {
   return {
     valid: false,
@@ -34,12 +34,7 @@ export function buildContextInvalidResult(
   context: TransformationValidationContext,
   summaryCode: Exclude<TransformationGraphValidationSummaryCode, 'valid'>
 ): TransformationGraphValidationResult {
-  return buildInvalidResult(
-    summaryCode,
-    context,
-    context.scopedNodeIds,
-    context.scopedEdgeIds
-  );
+  return buildInvalidResult(summaryCode, context, context.scopedNodeIds, context.scopedEdgeIds);
 }
 
 export function buildValidResult(

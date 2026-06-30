@@ -42,19 +42,11 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.routeNeedsCanvasTitle).toBe('Crear canvas en este workspace');
     expect(spanishCopy.routeNeedsCanvasTemplateLabel).toBe('Elige una plantilla de canvas');
     expect(spanishCopy.toolbarLayoutLabel).toBe('Disposicion');
-    expect(spanishCopy.toolbarRunLabel).toBe('Ejecutar');
+    expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Proyecto');
     expect(spanishCopy.draftSyncedLabel).toBe('Borrador sincronizado');
     expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
     expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');
-    expect([
-      spanishCopy.workbenchGraphTabLabel,
-      spanishCopy.workbenchLogsTabLabel,
-      spanishCopy.workbenchCodeTabLabel,
-      spanishCopy.workbenchLineageTabLabel,
-      spanishCopy.workbenchDiffTabLabel,
-      spanishCopy.workbenchArtifactsTabLabel,
-      spanishCopy.workbenchRunsTabLabel,
-    ]).toEqual(['Grafo', 'Log', 'Codigo', 'Linaje', 'Diferencias', 'Artefactos', 'Ejecuciones']);
+    expect(spanishCopy.newCanvasLabel).toBe('Nuevo canvas');
   });
 
   it('resolves Canvas Inspector authoring copy in English and Spanish', () => {
@@ -93,16 +85,16 @@ describe('canvas copy catalog', () => {
 
   it('formats transformation graph validation summaries from locale copy', () => {
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'en-US')).toBe(
-      'Plan requires a connected source -> sql_transform -> sink path.'
+      'Execution Preview requires a connected source -> sql_transform -> sink path.'
     );
     expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'en-US')).toBe(
-      'Plan requires one selected source -> sql_transform -> sink path.'
+      'Execution Preview requires one selected source -> sql_transform -> sink path.'
     );
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toBe(
-      'El plan requiere un path conectado source -> sql_transform -> sink.'
+      'El Execution Preview requiere un path conectado source -> sql_transform -> sink.'
     );
     expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'es-ES')).toBe(
-      'El plan requiere seleccionar un unico path source -> sql_transform -> sink.'
+      'El Execution Preview requiere seleccionar un unico path source -> sql_transform -> sink.'
     );
   });
 });

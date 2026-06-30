@@ -5,8 +5,8 @@ import { canvasViewCopy } from './copy';
 import {
   resolveCanvasDraftRecoveryBootstrapDetail,
   type CanvasDraftRecoveryReason,
-  type CanvasDraftToolbarState,
-} from './canvasDraftToolbarState';
+  type CanvasDraftStatusState,
+} from './canvasDraftStatusState';
 import type { CanvasRouteStartupBlockState } from './canvasRouteInteractionState';
 
 export type CanvasRouteState =
@@ -22,7 +22,7 @@ export type CanvasRouteState =
 export type CanvasDraftPresentationState = {
   routeState: CanvasRouteState;
   recoveryReason: CanvasDraftRecoveryReason;
-  draftToolbarState: CanvasDraftToolbarState;
+  draftStatusState: CanvasDraftStatusState;
   bootstrapStatus: 'pending' | 'complete' | 'failed' | 'blocked' | 'error';
   bootstrapDetail: string;
   canCompleteBootstrap: boolean;
@@ -33,18 +33,18 @@ type CanvasDraftPresentationStateArgs = {
   startupBlockState: CanvasRouteStartupBlockState | null;
   workbenchState: CanvasWorkbenchState;
   recoveryReason: CanvasDraftRecoveryReason;
-  draftToolbarState: CanvasDraftToolbarState;
+  draftStatusState: CanvasDraftStatusState;
 };
 
 type CanvasDraftPresentationWorkbenchArgs = Pick<
   CanvasDraftPresentationStateArgs,
-  'workbenchState' | 'recoveryReason' | 'draftToolbarState'
+  'workbenchState' | 'recoveryReason' | 'draftStatusState'
 >;
 
 function createCanvasDraftPresentationState({
   routeState,
   recoveryReason,
-  draftToolbarState,
+  draftStatusState,
   bootstrapStatus,
   bootstrapDetail,
   canCompleteBootstrap,
@@ -52,7 +52,7 @@ function createCanvasDraftPresentationState({
   return {
     routeState,
     recoveryReason,
-    draftToolbarState,
+    draftStatusState,
     bootstrapStatus,
     bootstrapDetail,
     canCompleteBootstrap,
@@ -62,13 +62,13 @@ function createCanvasDraftPresentationState({
 function deriveWorkbenchCanvasDraftPresentationState({
   workbenchState,
   recoveryReason,
-  draftToolbarState,
+  draftStatusState,
 }: CanvasDraftPresentationWorkbenchArgs): CanvasDraftPresentationState {
   if (workbenchState.kind === 'loading') {
     return createCanvasDraftPresentationState({
       routeState: 'loading_graph',
       recoveryReason,
-      draftToolbarState,
+      draftStatusState,
       bootstrapStatus: 'pending',
       bootstrapDetail: canvasViewCopy.loadingWorkspaceGraphDetail,
       canCompleteBootstrap: false,
@@ -79,7 +79,7 @@ function deriveWorkbenchCanvasDraftPresentationState({
     return createCanvasDraftPresentationState({
       routeState: 'error_graph',
       recoveryReason,
-      draftToolbarState,
+      draftStatusState,
       bootstrapStatus: 'failed',
       bootstrapDetail: workbenchState.message || canvasViewCopy.routeErrorFallbackMessage,
       canCompleteBootstrap: true,
@@ -90,7 +90,7 @@ function deriveWorkbenchCanvasDraftPresentationState({
     return createCanvasDraftPresentationState({
       routeState: 'recovery',
       recoveryReason,
-      draftToolbarState,
+      draftStatusState,
       bootstrapStatus: 'blocked',
       bootstrapDetail: resolveCanvasDraftRecoveryBootstrapDetail(recoveryReason),
       canCompleteBootstrap: false,
@@ -101,7 +101,7 @@ function deriveWorkbenchCanvasDraftPresentationState({
     return createCanvasDraftPresentationState({
       routeState: 'needs_canvas',
       recoveryReason,
-      draftToolbarState,
+      draftStatusState,
       bootstrapStatus: 'complete',
       bootstrapDetail: canvasViewCopy.needsCanvasReadyDetail,
       canCompleteBootstrap: true,
@@ -112,7 +112,7 @@ function deriveWorkbenchCanvasDraftPresentationState({
     return createCanvasDraftPresentationState({
       routeState: 'empty',
       recoveryReason,
-      draftToolbarState,
+      draftStatusState,
       bootstrapStatus: 'complete',
       bootstrapDetail: canvasViewCopy.emptyCanvasReadyDetail,
       canCompleteBootstrap: true,
@@ -122,7 +122,7 @@ function deriveWorkbenchCanvasDraftPresentationState({
   return createCanvasDraftPresentationState({
     routeState: 'ready',
     recoveryReason,
-    draftToolbarState,
+    draftStatusState,
     bootstrapStatus: 'complete',
     bootstrapDetail: canvasViewCopy.canvasReadyDetail,
     canCompleteBootstrap: true,
@@ -134,13 +134,13 @@ export function deriveCanvasDraftPresentationState({
   startupBlockState,
   workbenchState,
   recoveryReason,
-  draftToolbarState,
+  draftStatusState,
 }: CanvasDraftPresentationStateArgs): CanvasDraftPresentationState {
   if (isBackendCheckPending) {
     return createCanvasDraftPresentationState({
       routeState: 'loading_backend',
       recoveryReason,
-      draftToolbarState,
+      draftStatusState,
       bootstrapStatus: 'pending',
       bootstrapDetail: canvasViewCopy.checkingBackendReadinessDetail,
       canCompleteBootstrap: false,
@@ -151,7 +151,7 @@ export function deriveCanvasDraftPresentationState({
     return createCanvasDraftPresentationState({
       routeState: 'blocked_backend',
       recoveryReason,
-      draftToolbarState,
+      draftStatusState,
       bootstrapStatus: 'complete',
       bootstrapDetail: startupBlockState.message,
       canCompleteBootstrap: true,
@@ -161,7 +161,7 @@ export function deriveCanvasDraftPresentationState({
   return deriveWorkbenchCanvasDraftPresentationState({
     workbenchState,
     recoveryReason,
-    draftToolbarState,
+    draftStatusState,
   });
 }
 

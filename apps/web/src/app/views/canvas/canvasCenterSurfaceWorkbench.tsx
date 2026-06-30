@@ -103,12 +103,9 @@ function renderCanvasHostCycleWorkbenchSurface(
 
   return (
     <CanvasEmptyStateView
+      canvasTitle={cycleState.canvasTitle}
       title={cycleState.title}
       message={cycleState.message}
-      firstNodeLabel={cycleState.firstNodeLabel}
-      firstNodeHelper={cycleState.firstNodeHelper}
-      nodeKinds={cycleState.nodeKinds}
-      onCreateAuthoringNode={cycleState.onCreateAuthoringNode}
       emptyStateGuideVisible={args.emptyStateGuideVisible}
       onEmptyStateGuideVisibilityChange={args.onEmptyStateGuideVisibilityChange}
     />

@@ -52,7 +52,7 @@ export const PROTECTED_RUNTIME_PLAN_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
-    ...PROTECTED_RUNTIME_PLAN_RAIL.previewExecutablePlan,
+    ...PROTECTED_RUNTIME_PLAN_RAIL.previewExecutionPlan,
     kind: PROTECTED_RUNTIME_RAIL_KIND.command,
     coverage: [
       [

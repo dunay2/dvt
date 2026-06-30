@@ -34,6 +34,8 @@ describe('canvasNodeContextMenuModel', () => {
       expect.arrayContaining(['duplicate-node', 'select-node-for-execution', 'remove-node'])
     );
     expect(actionById(model, 'inspect-node')).toBeUndefined();
+    expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
+    expect(actionById(model, 'inspect-tests')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toMatchObject({
       intent: 'command',
       destructive: true,
@@ -41,7 +43,7 @@ describe('canvasNodeContextMenuModel', () => {
     });
   });
 
-  it('maps editable node posture to semantic context actions', () => {
+  it('maps editable node posture to only backed node context actions', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },
       selectedForExecution: false,
@@ -53,28 +55,43 @@ describe('canvasNodeContextMenuModel', () => {
     });
 
     expect(model.target.nodeId).toBe('source-orders');
-    expect(actionIds(model)).toEqual(
-      expect.arrayContaining([
-        'inspect-node',
-        'duplicate-node',
-        'select-node-for-execution',
-        'remove-node',
-      ])
-    );
+    expect(actionIds(model)).toEqual([
+      'inspect-node',
+      'select-node-for-execution',
+      'duplicate-node',
+      'remove-node',
+    ]);
     expect(actionById(model, 'inspect-node')).toMatchObject({
+      label: 'Open workbench',
       intent: 'read',
       disabled: false,
     });
+    expect(actionById(model, 'inspect-node')).not.toHaveProperty('workbenchTabId');
+    expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
+    expect(actionById(model, 'inspect-tests')).toBeUndefined();
+    expect(actionById(model, 'edit-sql')).toBeUndefined();
+    expect(actionById(model, 'preview-node')).toBeUndefined();
+    expect(actionById(model, 'run-from-node')).toBeUndefined();
+    expect(actionById(model, 'show-lineage')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toMatchObject({
+      label: 'Delete',
       intent: 'command',
       destructive: true,
       disabled: false,
     });
-    expect(actionById(model, 'inspect-node')?.label).toMatch(/\S/);
-    expect(actionById(model, 'remove-node')?.label).toMatch(/\S/);
+    expect(actionIds(model)).not.toEqual(
+      expect.arrayContaining([
+        'add-source',
+        'add-model',
+        'open-project',
+        'open-project-code',
+        'preview-execution-plan',
+        'canvas-settings',
+      ])
+    );
   });
 
-  it('keeps only inspection available when graph mutation is blocked', () => {
+  it('keeps execution selection available when graph mutation is blocked but planning is allowed', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
@@ -85,12 +102,39 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: true,
     });
 
-    expect(actionIds(model)).toEqual(['inspect-node']);
-    expect(actionById(model, 'inspect-node')).toMatchObject({
-      intent: 'read',
+    expect(actionIds(model)).toEqual(['inspect-node', 'select-node-for-execution']);
+    expect(actionById(model, 'inspect-node')).toMatchObject({ disabled: false });
+    expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
+    expect(actionById(model, 'inspect-tests')).toBeUndefined();
+    expect(actionById(model, 'edit-sql')).toBeUndefined();
+    expect(actionById(model, 'preview-node')).toBeUndefined();
+    expect(actionById(model, 'run-from-node')).toBeUndefined();
+    expect(actionById(model, 'show-lineage')).toBeUndefined();
+    expect(actionById(model, 'select-node-for-execution')).toMatchObject({
+      intent: 'command',
       disabled: false,
+      label: 'Select for execution',
     });
-    expect(actionById(model, 'select-node-for-execution')).toBeUndefined();
+    expect(actionById(model, 'duplicate-node')).toBeUndefined();
+    expect(actionById(model, 'remove-node')).toBeUndefined();
+  });
+
+  it('keeps modeler execution selection available when graph mutation is blocked', () => {
+    const model = buildCanvasNodeModelerActionModel({
+      target: { kind: 'node', nodeId: 'source-orders', nodeName: 'Orders Source' },
+      selectedForExecution: true,
+      canMutateGraph: false,
+      canDuplicateNode: true,
+      canToggleNodeSelection: true,
+      canRemoveNode: true,
+    });
+
+    expect(actionIds(model)).toEqual(['deselect-node-from-execution']);
+    expect(actionById(model, 'deselect-node-from-execution')).toMatchObject({
+      intent: 'command',
+      disabled: false,
+      label: 'Deselect for execution',
+    });
     expect(actionById(model, 'duplicate-node')).toBeUndefined();
     expect(actionById(model, 'remove-node')).toBeUndefined();
   });
@@ -129,10 +173,11 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'deselect-node-from-execution')).toMatchObject({
       intent: 'command',
       disabled: false,
+      label: 'Deselect for execution',
     });
   });
 
-  it('keeps a disabled properties action when the route has no inspector callback', () => {
+  it('does not add disabled workbench tab actions when the route has no inspector callback', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'sink-orders', nodeName: 'Orders Sink' },
       selectedForExecution: false,
@@ -143,10 +188,9 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: false,
     });
 
-    expect(actionIds(model)).toEqual(['inspect-node']);
-    expect(actionById(model, 'inspect-node')).toMatchObject({
-      disabled: true,
-    });
-    expect(actionById(model, 'inspect-node')?.disabledReason).toMatch(/\S/);
+    expect(actionIds(model)).toEqual([]);
+    expect(actionById(model, 'inspect-node')).toBeUndefined();
+    expect(actionById(model, 'inspect-inputs-outputs')).toBeUndefined();
+    expect(actionById(model, 'inspect-tests')).toBeUndefined();
   });
 });

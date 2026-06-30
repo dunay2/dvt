@@ -1,12 +1,13 @@
 /** Owned concern: adapt Canvas context gestures to governed menu models and command callbacks. */
 import type { Edge, ReactFlowProps, Node as FlowNode } from '@xyflow/react';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { MouseEvent as ReactMouseEvent, RefObject } from 'react';
+import { useCallback, useState } from 'react';
+import type { MouseEvent as ReactMouseEvent } from 'react';
 import { flushSync } from 'react-dom';
 
-import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
-import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import type { ContextMenuEvent } from './canvasContextMenuPresenter.types';
+import { resolveCanvasViewportContextMenuRequest } from './canvasContextMenuTargetPolicy';
 import {
+  buildCanvasAddNodeCatalogMenuModel,
   buildCanvasContextMenuModel,
   buildCanvasEdgeContextRemovalChange,
   type CanvasContextMenuCanvasAction,
@@ -15,106 +16,37 @@ import {
   type CanvasContextMenuModel,
   type CanvasContextMenuPosition,
 } from './canvasInteractionCommandSurface';
+import {
+  useCanvasContextMenuLifecycle,
+  useCanvasContextSurfaceContextMenu,
+} from './useCanvasContextMenuLifecycle';
+import type {
+  UseCanvasContextMenuPresenterArgs,
+  UseCanvasContextMenuPresenterResult,
+} from './canvasContextMenuPresenter.types';
 
-type UseCanvasContextMenuPresenterArgs = Readonly<{
-  canEditEdges: boolean;
-  canOpenSourceImport?: boolean;
-  canPreviewExecutionPlan?: boolean;
-  authoringNodeKinds: readonly NodeKindRegistration[];
-  screenToFlowPosition: (screenPosition: CanvasContextMenuPosition) => CanvasContextMenuPosition;
-  onCreateAuthoringNode: CreateCanvasAuthoringNode;
-  onEdgesChange: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgesChange']>;
-  onOpenSourceImport?: () => void;
-  onPreviewExecutionPlan?: () => void;
-}>;
-
-type ContextMenuEvent = Pick<
-  MouseEvent | ReactMouseEvent<HTMLDivElement>,
-  'clientX' | 'clientY' | 'preventDefault' | 'stopPropagation' | 'target'
->;
-
-type UseCanvasContextMenuPresenterResult = Readonly<{
-  model: CanvasContextMenuModel | null;
-  menuRef: RefObject<HTMLDivElement>;
-  contextSurfaceRef: RefObject<HTMLDivElement>;
-  closeContextMenu: () => void;
-  handleViewportContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void;
-  handlePaneContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onPaneContextMenu']>;
-  handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']>;
-  handleCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
-  handleCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
-  handleEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
-}>;
-
-function isCanvasViewportContextTarget(target: EventTarget | null): target is Element {
-  if (!(target instanceof Element)) {
-    return false;
-  }
-
-  return (
-    target.closest(
-      [
-        '[data-slot="canvas-context-menu"]',
-        '.react-flow__node',
-        '.react-flow__edge',
-        '.react-flow__controls',
-        '.react-flow__minimap',
-      ].join(',')
-    ) == null
-  );
-}
+export type { CanvasContextMenuPresenter } from './canvasContextMenuPresenter.types';
 
 export function useCanvasContextMenuPresenter({
   canEditEdges,
   canOpenSourceImport,
-  canPreviewExecutionPlan,
+  canOpenCanvasSettings,
   authoringNodeKinds,
   screenToFlowPosition,
   onCreateAuthoringNode,
   onEdgesChange,
   onOpenSourceImport,
-  onPreviewExecutionPlan,
+  onOpenCanvasSettings,
 }: UseCanvasContextMenuPresenterArgs): UseCanvasContextMenuPresenterResult {
   const [model, setModel] = useState<CanvasContextMenuModel | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
-  const contextSurfaceRef = useRef<HTMLDivElement>(null);
-
-  const closeContextMenu = useCallback(() => {
-    setModel(null);
-  }, []);
-
-  useEffect(() => {
-    if (model == null) {
-      return;
-    }
-
-    const handleDocumentPointerDown = (event: Event): void => {
-      const target = event.target;
-      if (target instanceof Node && menuRef.current?.contains(target)) {
-        return;
-      }
-
-      closeContextMenu();
-    };
-    const handleDocumentKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') {
-        closeContextMenu();
-      }
-    };
-
-    document.addEventListener('pointerdown', handleDocumentPointerDown, true);
-    document.addEventListener('keydown', handleDocumentKeyDown, true);
-
-    return () => {
-      document.removeEventListener('pointerdown', handleDocumentPointerDown, true);
-      document.removeEventListener('keydown', handleDocumentKeyDown, true);
-    };
-  }, [closeContextMenu, model]);
+  const { menuRef, contextSurfaceRef, markContextMenuOpened, closeContextMenu, handlePaneClick } =
+    useCanvasContextMenuLifecycle({ model, setModel });
 
   const openCanvasContextMenu = useCallback(
     (screenPosition: CanvasContextMenuPosition) => {
       const flowPosition = screenToFlowPosition(screenPosition);
 
+      markContextMenuOpened('pane', screenPosition);
       flushSync(() => {
         setModel(
           buildCanvasContextMenuModel({
@@ -124,8 +56,7 @@ export function useCanvasContextMenuPresenter({
               flowPosition,
             },
             canMutateGraph: canEditEdges,
-            canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
-            canPreviewExecutionPlan: Boolean(canPreviewExecutionPlan && onPreviewExecutionPlan),
+            canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
             authoringNodeKinds,
           })
         );
@@ -134,23 +65,23 @@ export function useCanvasContextMenuPresenter({
     [
       authoringNodeKinds,
       canEditEdges,
-      canOpenSourceImport,
-      canPreviewExecutionPlan,
-      onOpenSourceImport,
-      onPreviewExecutionPlan,
+      canOpenCanvasSettings,
+      markContextMenuOpened,
+      onOpenCanvasSettings,
       screenToFlowPosition,
     ]
   );
 
   const handleViewportContextMenuEvent = useCallback(
     (event: ContextMenuEvent) => {
-      if (!isCanvasViewportContextTarget(event.target)) {
+      const contextMenuPosition = resolveCanvasViewportContextMenuRequest(event);
+      if (contextMenuPosition == null) {
         return;
       }
 
       event.preventDefault();
       event.stopPropagation();
-      openCanvasContextMenu({ x: event.clientX, y: event.clientY });
+      openCanvasContextMenu(contextMenuPosition);
     },
     [openCanvasContextMenu]
   );
@@ -162,26 +93,10 @@ export function useCanvasContextMenuPresenter({
     [handleViewportContextMenuEvent]
   );
 
-  useLayoutEffect(() => {
-    const contextSurface = contextSurfaceRef.current;
-    if (contextSurface == null) {
-      return;
-    }
-
-    const handleSurfaceContextMenu = (event: MouseEvent): void => {
-      if (!(event.target instanceof Element) || !contextSurface.contains(event.target)) {
-        return;
-      }
-
-      handleViewportContextMenuEvent(event);
-    };
-
-    contextSurface.addEventListener('contextmenu', handleSurfaceContextMenu, true);
-
-    return () => {
-      contextSurface.removeEventListener('contextmenu', handleSurfaceContextMenu, true);
-    };
-  }, [handleViewportContextMenuEvent]);
+  useCanvasContextSurfaceContextMenu({
+    contextSurfaceRef,
+    onContextSurfaceContextMenu: handleViewportContextMenuEvent,
+  });
 
   const handlePaneContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onPaneContextMenu']> =
     useCallback(
@@ -196,6 +111,7 @@ export function useCanvasContextMenuPresenter({
     useCallback(
       (event, edge) => {
         event.preventDefault();
+        markContextMenuOpened('edge');
         flushSync(() => {
           setModel(
             buildCanvasContextMenuModel({
@@ -205,27 +121,42 @@ export function useCanvasContextMenuPresenter({
                 screenPosition: { x: event.clientX, y: event.clientY },
               },
               canMutateGraph: canEditEdges,
-              canOpenSourceImport: false,
-              canPreviewExecutionPlan: false,
               authoringNodeKinds,
             })
           );
         });
       },
-      [authoringNodeKinds, canEditEdges]
+      [authoringNodeKinds, canEditEdges, markContextMenuOpened]
     );
 
   const handleCanvasAction = useCallback(
     (action: CanvasContextMenuCanvasAction) => {
-      if (action.action === 'open-source-import') {
-        onOpenSourceImport?.();
-      } else if (action.action === 'preview-execution-plan') {
-        onPreviewExecutionPlan?.();
+      if (action.action === 'open-add-node-catalog') {
+        const catalogModel = buildCanvasAddNodeCatalogMenuModel({
+          sourceModel: model,
+          authoringNodeKinds,
+          canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+        });
+        if (catalogModel != null) {
+          setModel(catalogModel);
+          return;
+        }
+      } else if (action.action === 'open-source-import') {
+        onOpenSourceImport?.(model?.flowPosition);
+      } else if (action.action === 'open-canvas-settings') {
+        onOpenCanvasSettings?.();
       }
 
-      closeContextMenu();
+      closeContextMenu({ force: true });
     },
-    [closeContextMenu, onOpenSourceImport, onPreviewExecutionPlan]
+    [
+      authoringNodeKinds,
+      closeContextMenu,
+      model,
+      canOpenSourceImport,
+      onOpenCanvasSettings,
+      onOpenSourceImport,
+    ]
   );
 
   const handleCreateNodeAction = useCallback(
@@ -234,7 +165,7 @@ export function useCanvasContextMenuPresenter({
         onCreateAuthoringNode(action.registration, model.flowPosition);
       }
 
-      closeContextMenu();
+      closeContextMenu({ force: true });
     },
     [closeContextMenu, model?.flowPosition, onCreateAuthoringNode]
   );
@@ -245,7 +176,7 @@ export function useCanvasContextMenuPresenter({
         onEdgesChange([buildCanvasEdgeContextRemovalChange({ id: model.edgeId })]);
       }
 
-      closeContextMenu();
+      closeContextMenu({ force: true });
     },
     [closeContextMenu, model?.edgeId, onEdgesChange]
   );
@@ -255,6 +186,7 @@ export function useCanvasContextMenuPresenter({
     menuRef,
     contextSurfaceRef,
     closeContextMenu,
+    handlePaneClick,
     handleViewportContextMenu,
     handlePaneContextMenu,
     handleEdgeContextMenu,

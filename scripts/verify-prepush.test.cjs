@@ -11,6 +11,7 @@
     buildPrepushStamp,
     classifyPrepushScope,
     commandLabel,
+    computePrepushValidationFingerprint,
     isPrepushStampValid,
     main,
     parseArgs,
@@ -97,6 +98,7 @@
     const ids = stepIds(plan);
 
     assertIncludes(ids, 'verify-changed');
+    assertIncludes(ids, 'governance-db-import');
     assertIncludes(ids, 'planning-db-inventory-check');
     assertIncludes(ids, 'test-closeout-changed');
     assertIncludes(ids, 'test-verify-prepush');
@@ -172,6 +174,67 @@
       ),
       false
     );
+  });
+
+  test('prepush validation stamp can survive branch upstream changes for the same content', () => {
+    const changedFiles = ['scripts/planning-db-migrate.test.cjs'];
+    const stamp = buildPrepushStamp(changedFiles, {
+      full: false,
+      stateFingerprint: 'manual-main-upstream-state',
+      validationFingerprint: 'same-head-and-diff',
+    });
+    const expectedAfterBranchPush = buildPrepushStamp(changedFiles, {
+      full: false,
+      stateFingerprint: 'new-branch-upstream-state',
+      validationFingerprint: 'same-head-and-diff',
+    });
+    const expectedDifferentContent = buildPrepushStamp(changedFiles, {
+      full: false,
+      stateFingerprint: 'new-branch-upstream-state',
+      validationFingerprint: 'different-head-or-diff',
+    });
+
+    assert.equal(isPrepushStampValid(stamp, expectedAfterBranchPush), true);
+    assert.equal(isPrepushStampValid(stamp, expectedDifferentContent), false);
+  });
+
+  test('reusable prepush validation fingerprint excludes branch upstream refs', () => {
+    const commands = [];
+    const outputByCommand = new Map([
+      ['rev-parse --verify HEAD', 'head-a\n'],
+      ['rev-parse --verify origin/main', 'base-a\n'],
+      ['rev-parse --verify @{u}', 'upstream-a\n'],
+      ['diff --binary --diff-filter=ACMRD origin/main...HEAD', 'base-diff\n'],
+      ['diff --binary --diff-filter=ACMRD @{u}...HEAD', 'upstream-diff\n'],
+      ['diff --cached --binary --diff-filter=ACMRD', 'cached\n'],
+      ['diff --binary --diff-filter=ACMRD', 'worktree\n'],
+      ['ls-files --others --exclude-standard', ''],
+    ]);
+    const runGitText = (args) => {
+      const command = args.join(' ');
+      commands.push(command);
+      return outputByCommand.get(command) ?? '';
+    };
+
+    const first = computePrepushValidationFingerprint(['scripts/verify-prepush.cjs'], {
+      runGitText,
+    });
+    outputByCommand.set('rev-parse --verify @{u}', 'upstream-b\n');
+    outputByCommand.set('diff --binary --diff-filter=ACMRD @{u}...HEAD', 'branch-diff\n');
+    const second = computePrepushValidationFingerprint(['scripts/verify-prepush.cjs'], {
+      runGitText,
+    });
+    outputByCommand.set('diff --binary --diff-filter=ACMRD origin/main...HEAD', 'changed\n');
+    const changedBaseDiff = computePrepushValidationFingerprint(['scripts/verify-prepush.cjs'], {
+      runGitText,
+    });
+
+    assert.equal(first, second);
+    assert.notEqual(first, changedBaseDiff);
+    assert.ok(commands.includes('rev-parse --verify HEAD'));
+    assert.ok(commands.includes('rev-parse --verify origin/main'));
+    assert.ok(!commands.includes('rev-parse --verify @{u}'));
+    assert.ok(!commands.includes('diff --binary --diff-filter=ACMRD @{u}...HEAD'));
   });
 
   test('manual prepush reuses a matching validation stamp before rerunning changed checks', () => {

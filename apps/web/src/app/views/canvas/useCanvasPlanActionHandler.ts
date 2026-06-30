@@ -11,6 +11,7 @@ import type {
 } from './canvasExecutionActions.types';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import type { CanvasExecutionState } from './canvasExecutionState';
+import { validateTransformationGraph } from './transformationGraphValidation';
 
 type UseCanvasPlanActionHandlerArgs = Pick<
   UseCanvasExecutionActionsParams,
@@ -72,18 +73,30 @@ export function useCanvasPlanActionHandler({
       shellFeedback.error(flushedDraftGraph.message);
       return;
     }
+    const planCanonicalEdges = flushedDraftGraph?.canonicalEdges ?? canonicalEdges;
+    const planCanonicalNodes = flushedDraftGraph?.canonicalNodes ?? canonicalNodes;
+    const planWorkspaceNodeIds = flushedDraftGraph?.workspaceNodeIds ?? workspaceNodeIds;
+    const planTransformationValidation =
+      flushedDraftGraph?.ok === true
+        ? validateTransformationGraph({
+            nodes: planCanonicalNodes,
+            edges: planCanonicalEdges,
+            selectedNodeIds,
+            workspaceNodeIds: planWorkspaceNodeIds,
+          })
+        : transformationValidation;
 
     const result = await executeCanvasPlanAction({
       canPlan,
-      canonicalEdges: flushedDraftGraph?.canonicalEdges ?? canonicalEdges,
-      canonicalNodes: flushedDraftGraph?.canonicalNodes ?? canonicalNodes,
+      canonicalEdges: planCanonicalEdges,
+      canonicalNodes: planCanonicalNodes,
       executionStrategy,
       plansService,
       previewProvenanceConfig,
       selectedNodeIds,
       sessionContext,
-      transformationValidation,
-      workspaceNodeIds: flushedDraftGraph?.workspaceNodeIds ?? workspaceNodeIds,
+      transformationValidation: planTransformationValidation,
+      workspaceNodeIds: planWorkspaceNodeIds,
       workspaceFilesQuery,
       workspaceFileContentCommand,
     });

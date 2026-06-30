@@ -1,12 +1,15 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "DVT Plan Compatibility Matrix",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PlanCompatMatrix",
+  "description": "Adapter compatibility matrix for ExecutionPlan schema versions (ADR-0017).",
   "type": "object",
   "required": ["schema", "versions"],
+  "additionalProperties": false,
   "properties": {
     "schema": {
       "type": "string",
-      "const": "ExecutionPlan"
+      "enum": ["ExecutionPlan"],
+      "description": "The contract name this matrix covers."
     },
     "versions": {
       "type": "array",
@@ -14,22 +17,23 @@
       "items": {
         "type": "object",
         "required": ["version", "adapters"],
+        "additionalProperties": false,
         "properties": {
           "version": {
             "type": "string",
-            "pattern": "^v\\d+\\.\\d+$"
+            "pattern": "^[0-9]+\\.[0-9]+$",
+            "description": "Schema version in MAJOR.MINOR format."
           },
           "adapters": {
             "type": "object",
             "minProperties": 1,
             "additionalProperties": {
               "type": "boolean"
-            }
+            },
+            "description": "Map of adapter name to support flag (true = supported, false = not supported)."
           }
-        },
-        "additionalProperties": false
+        }
       }
     }
-  },
-  "additionalProperties": false
+  }
 }

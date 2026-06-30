@@ -67,6 +67,8 @@ export type WarehouseColumn = {
   name: string;
   type: string;
   nullable: boolean;
+  primaryKey?: boolean;
+  unique?: boolean;
 };
 
 export type WarehouseTable = {
@@ -90,6 +92,7 @@ export type ImportSourcesInput = {
 
 export type ImportSourcesResult = {
   success: true;
+  draftRevision?: string;
   sourcesCreated: number;
   tablesImported: number;
   yamlFiles: string[];

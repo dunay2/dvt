@@ -80,14 +80,21 @@ export function buildColumns(
   table: WarehouseTable,
   addTests: boolean
 ): readonly SourceYamlColumn[] {
-  return (table.columns ?? []).map(
-    (column): SourceYamlColumn => ({
+  return (table.columns ?? []).map((column): SourceYamlColumn => {
+    const tests = addTests
+      ? [
+          ...(!column.nullable || column.primaryKey === true ? ['not_null'] : []),
+          ...(column.primaryKey === true || column.unique === true ? ['unique'] : []),
+        ]
+      : [];
+
+    return {
       name: column.name,
       ...(column.type.length > 0 ? { dataType: column.type } : {}),
-      ...(addTests && !column.nullable ? { tests: ['not_null'] } : {}),
+      ...(tests.length > 0 ? { tests } : {}),
       metadata: {},
-    })
-  );
+    };
+  });
 }
 
 export function mergeColumns(

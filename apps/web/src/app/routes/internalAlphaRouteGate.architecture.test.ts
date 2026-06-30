@@ -292,7 +292,7 @@ describe('internal alpha route gate architecture', () => {
       expect.arrayContaining([
         'apps/web/src/app/services/session/protectedRouteSessionContext.test.ts',
         'apps/web/src/app/services/session/protectedRouteSessionContext.architecture.test.ts',
-        'apps/web/cypress/e2e/canvas/canvas-workbench-tabs.cy.ts',
+        'apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts',
         'docs/architecture/components/web/appshell/effective-workspace-context-component.md',
       ])
     );
@@ -342,7 +342,7 @@ describe('internal alpha route gate architecture', () => {
     );
   });
 
-  it('accepts Code workbench evidence only with scoped file queries and filesystem safety proof', () => {
+  it('accepts Code workbench evidence only with scoped file rails and retired Canvas route proof', () => {
     const codeStage = internalAlphaCombinedRouteFixture.stages.find(
       (stage) => stage.stage === 'Code workbench'
     );
@@ -366,8 +366,11 @@ describe('internal alpha route gate architecture', () => {
       ])
     );
     expect(codeWorkbenchCypress).toContain(
-      'Owned concern: prove Code workbench reads workspace files through scoped browser query rails'
+      'Owned concern: prove retired Canvas Code workbench routes redirect to Graph without file queries'
     );
+    expect(codeWorkbenchCypress).toContain("visitWithE2eWorkspaceSession('/canvas/code')");
+    expect(codeWorkbenchCypress).toContain("cy.location('pathname').should('eq', '/canvas')");
+    expect(codeWorkbenchCypress).toContain("getE2eApiCalls('/workspace/files', 'GET')");
     for (const proof of [
       'rejects path traversal before reading from the repository',
       'rejects unsupported workspace file types before reading content',
@@ -377,7 +380,7 @@ describe('internal alpha route gate architecture', () => {
     ]) {
       expect(workspaceFilesRoutesTest).toContain(proof);
     }
-    expect(codeStage?.happyPathProof).toMatch(/scoped|tree|preview|read-only|freshness/);
+    expect(codeStage?.happyPathProof).toMatch(/scoped|tree|preview|read-only|freshness|retired/);
     expect(codeStage?.failClosedProof).toMatch(
       /unauthorized|traversal|oversize|unsupported|not-found|unavailable/
     );
@@ -471,7 +474,7 @@ describe('internal alpha route gate architecture', () => {
       expect(stage.failClosedProof).toMatch(
         /blocked|denial|fails closed|not-ready|unauthorized|conflicted|unavailable/
       );
-      expect(stage.happyPathProof).toMatch(/visible|route-ready|context|readiness|ready/);
+      expect(stage.happyPathProof).toMatch(/visible|route-ready|context|readiness|ready|redirects/);
     }
   });
 
@@ -490,7 +493,8 @@ describe('internal alpha route gate architecture', () => {
       expect.arrayContaining([
         'docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md',
         'apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts',
-        'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx',
+        'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartGuards.test.tsx',
+        'apps/web/src/app/views/canvas/useCanvasExecutionActions.runStartSuccess.test.tsx',
         'apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts',
       ])
     );

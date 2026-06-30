@@ -5,13 +5,14 @@
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   clickButtonNatively,
-  clickPreviewExecutionPlanFromCanvasContextMenu,
+  clickPreviewExecutionPlanFromOperationalDrawer,
 } from '../../support/canvasExecutionSelection';
 import {
   hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
   readLiveRunEvents,
   readLiveRunSnapshot,
+  readLiveWorkspaceFile,
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
@@ -126,25 +127,22 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     waitForDraftSaveSettled();
     waitForPersistedDbtModelConfig();
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
-    cy.contains('Execution Plan Preview', { timeout: 30_000 }).should('be.visible');
-    cy.contains('Plan Metadata').should('be.visible');
+    clickPreviewExecutionPlanFromOperationalDrawer();
+    cy.contains('Execution Preview', { timeout: 30_000 }).should('be.visible');
+    cy.contains('Execution Preview identity').should('be.visible');
     cy.contains('Persistence Evidence').should('be.visible');
     cy.get('body').type('{esc}', { force: true });
-    cy.contains('Execution Plan Preview').should('not.exist');
+    cy.contains('Execution Preview').should('not.exist');
 
-    cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
-      cy.contains('button', /^(Code|Codigo)$/).click();
-    });
-    cy.location('pathname').should('eq', '/canvas/code');
-    cy.contains('dbt_project.yml', { timeout: 20_000 }).should('be.visible');
-    cy.contains('payments_model.sql').should('be.visible').click();
-    cy.contains("{{ config(materialized='table') }}", { timeout: 20_000 }).should('be.visible');
-    cy.contains("{{ source('finance_warehouse', 'payments_final') }}").should('be.visible');
+    readLiveWorkspaceFile('models/payments_model.sql').then((fileResponse) => {
+      expect(fileResponse.status).to.equal(200);
+      const content = String((fileResponse.body as { content?: unknown }).content ?? '');
 
-    cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
-      cy.contains('button', /^(Grafo|Graph)$/).click();
+      expect(content).to.contain("{{ config(materialized='table') }}");
+      expect(content).to.contain("{{ source('finance_warehouse', 'payments_final') }}");
     });
+
+    visitWithLiveWorkspaceSession('/canvas');
     cy.location('pathname').should('eq', '/canvas');
     clickCommandSlotNatively('canvas-toolbar-run-command');
 

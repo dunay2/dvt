@@ -7,21 +7,21 @@ export const canvasViewAuthoringCopyEs = {
   nodeKindUnavailableForCanvasMessage:
     'Este tipo de nodo no esta disponible para el canvas activo.',
   transformationConnectionOrderMessage:
-    'Las aristas del plan deben seguir source -> sql_transform -> sink.',
+    'Las aristas del Execution Preview deben seguir source -> sql_transform -> sink.',
   transformationConnectionEdgeCountMessage:
-    'El plan requiere exactamente 2 aristas: source -> sql_transform y sql_transform -> sink.',
+    'El Execution Preview requiere exactamente 2 aristas: source -> sql_transform y sql_transform -> sink.',
   transformationConnectionDuplicateMessage:
     'La dependencia ya existe en este draft de transformacion.',
   transformationRequiresThreeNodesMessage:
-    'El plan requiere exactamente 3 nodos: source, sql_transform y sink.',
+    'El Execution Preview requiere nodos source, sql_transform y sink.',
   transformationAmbiguousExecutablePathMessage:
-    'El plan requiere seleccionar un unico path source -> sql_transform -> sink.',
+    'El Execution Preview requiere seleccionar un unico path source -> sql_transform -> sink.',
   transformationRequiresExecutablePathMessage:
-    'El plan requiere un path conectado source -> sql_transform -> sink.',
+    'El Execution Preview requiere un path conectado source -> sql_transform -> sink.',
   transformationUnsupportedRolesMessage:
-    'El plan solo admite nodos input, transform y output en esta vertical.',
+    'El Execution Preview solo admite nodos input, transform y output en esta vertical.',
   transformationRequiresOneOfEachRoleMessage:
-    'El plan requiere exactamente 1 source, 1 sql_transform y 1 sink.',
+    'El Execution Preview requiere un source, un sql_transform y un sink.',
   transformationDraftValidMessage: 'El draft de transformacion es valido para preview.',
   connectionSelfNotAllowedMessage: 'No se permiten las autoconexiones.',
   connectionAlreadyExistsMessage: 'La conexion ya existe.',
@@ -72,6 +72,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtSourceTitle: 'Source DVT',
   inspectorDvtSqlTransformTitle: 'Transformacion SQL DVT',
   inspectorDvtSinkTitle: 'Sink DVT',
+  inspectorDvtDatabaseLabel: 'Base de datos',
   inspectorDvtSchemaLabel: 'Esquema',
   inspectorDvtTableLabel: 'Tabla',
   inspectorDvtAliasLabel: 'Alias',
@@ -83,6 +84,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDvtSqlLineSingularLabel: 'linea',
   inspectorDvtSqlLinePluralLabel: 'lineas',
   inspectorDvtDestinationTargetLabel: 'Destino de salida',
+  inspectorDvtPartitionStrategyLabel: 'Estrategia de particion',
   inspectorDvtMaterializationTableLabel: 'tabla',
   inspectorDvtMaterializationViewLabel: 'vista',
   inspectorDvtWriteModeReplaceLabel: 'reemplazar',

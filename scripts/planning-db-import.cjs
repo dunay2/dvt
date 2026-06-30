@@ -32,6 +32,7 @@ const {
 const {
   buildFrontendComponentReflectionSnapshot,
 } = require('./planning-db/frontend-component-inventory.cjs');
+const { buildCodeSymbolSnapshot } = require('./planning-db/code-symbol-inventory.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
@@ -66,6 +67,7 @@ const governanceImportDeleteTables = [
   'frontend_surface_component_links',
   'frontend_components',
   'frontend_mechanical_truth_surfaces',
+  'code_symbols',
   'risk_debt_items',
   'governance_component_files',
   'governance_component_file_shards',
@@ -1066,8 +1068,12 @@ function listChangedFiles(baseRef, headRef, runGitDiff = defaultRunGitDiff) {
     .map(toPosix);
 }
 
-function readTrackedDocumentPaths(gitPathspecs) {
-  const output = execFileSync('git', ['ls-files', '--', ...gitPathspecs], {
+function readTrackedDocumentPaths(gitPathspecs, options = {}) {
+  const runGit = options.execFileSync || execFileSync;
+  const fileExists =
+    options.fileExists ||
+    ((sourcePath) => fs.existsSync(path.join(repoRoot, ...sourcePath.split('/'))));
+  const output = runGit('git', ['ls-files', '--', ...gitPathspecs], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
@@ -1078,6 +1084,7 @@ function readTrackedDocumentPaths(gitPathspecs) {
         .map((value) => normalizeText(value).trim())
         .filter(Boolean)
         .map(toPosix)
+        .filter(fileExists)
     ),
   ].sort();
 }
@@ -2526,6 +2533,84 @@ async function insertGovernanceSnapshot(client, snapshot) {
   }
 }
 
+async function insertCodeSymbolSnapshot(client, snapshot) {
+  await client.query(`delete from ${schemaName}.code_symbols`);
+
+  await insertRows(
+    client,
+    'code_symbols',
+    [
+      'symbol_id',
+      'source_path',
+      'source_content_sha256',
+      'file_path',
+      'component_id',
+      'owning_unit',
+      'root_unit',
+      'domain_unit',
+      'symbol_name',
+      'symbol_kind',
+      'export_kind',
+      'signature',
+      'signature_sha256',
+      'start_line',
+      'end_line',
+      'body_sha256',
+      'normalized_body_length',
+      { name: 'import_refs', cast: 'jsonb' },
+      { name: 'metadata', cast: 'jsonb' },
+      { name: 'raw_symbol', cast: 'jsonb' },
+    ],
+    snapshot.symbols,
+    (symbol) => [
+      symbol.symbolId,
+      symbol.sourcePath,
+      symbol.sourceContentSha256,
+      symbol.filePath,
+      symbol.componentId,
+      symbol.owningUnit,
+      symbol.rootUnit,
+      symbol.domainUnit,
+      symbol.symbolName,
+      symbol.symbolKind,
+      symbol.exportKind,
+      symbol.signature,
+      symbol.signatureSha256,
+      symbol.startLine,
+      symbol.endLine,
+      symbol.bodySha256,
+      symbol.normalizedBodyLength,
+      toJson(symbol.importRefs),
+      toJson(symbol.metadata),
+      toJson(symbol.rawSymbol),
+    ]
+  );
+}
+
+async function refreshCodeSymbolMaterializedProjection(client) {
+  await client.query(
+    `refresh materialized view ${schemaName}.code_symbol_effective_inventory_projection`
+  );
+}
+
+async function refreshComponentTreeMaterializedProjection(client) {
+  await client.query(
+    `refresh materialized view ${schemaName}.component_engineering_component_tree_projection`
+  );
+}
+
+async function refreshComponentFileOwnershipMaterializedProjection(client) {
+  await client.query(
+    `refresh materialized view ${schemaName}.component_engineering_file_ownership_projection`
+  );
+}
+
+async function refreshComponentRuleEvaluationMaterializedProjection(client) {
+  await client.query(
+    `refresh materialized view ${schemaName}.component_engineering_rule_evaluation_projection`
+  );
+}
+
 async function insertRepositoryCommandSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.repository_commands`);
 
@@ -2618,6 +2703,134 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
   );
 }
 
+async function readLocalFeatureMechanizationRails(client) {
+  const result = await client.query(`
+    select
+      rail_id as "railId",
+      feature_id as "featureId",
+      mechanization_status as "mechanizationStatus",
+      rail_name as "railName",
+      normalized_rail_name as "normalizedRailName",
+      rail_type as "railType",
+      ddd_owner as "dddOwner",
+      rail_status as "railStatus",
+      symbol_refs as "symbolRefs",
+      implementation_refs as "implementationRefs",
+      documentation_refs as "documentationRefs",
+      governing_sources as "governingSources",
+      allowed_implementation_surfaces as "allowedImplementationSurfaces",
+      architecture_guards as "architectureGuards",
+      completion_gate as "completionGate",
+      source_path as "sourcePath",
+      source_content_sha256 as "sourceContentSha256",
+      raw_rail as "rawRail",
+      raw_manifest as "rawManifest",
+      revision,
+      created_by as "createdBy",
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+    from ${schemaName}.feature_mechanization_local_rails
+    order by rail_id
+  `);
+
+  return result.rows;
+}
+
+async function refreshLocalFeatureMechanizationRailSourceHashes(client) {
+  await client.query(`
+    update ${schemaName}.feature_mechanization_local_rails rail
+    set
+      source_content_sha256 = file_ref.content_hash,
+      updated_at = now()
+    from ${schemaName}.governance_files file_ref
+    where file_ref.path = rail.source_path
+      and rail.source_content_sha256 <> file_ref.content_hash
+  `);
+}
+
+async function restoreLocalFeatureMechanizationRails(client, rails) {
+  await insertRows(
+    client,
+    'feature_mechanization_local_rails',
+    [
+      'rail_id',
+      'feature_id',
+      'mechanization_status',
+      'rail_name',
+      'normalized_rail_name',
+      'rail_type',
+      'ddd_owner',
+      'rail_status',
+      { name: 'symbol_refs', cast: 'jsonb' },
+      { name: 'implementation_refs', cast: 'jsonb' },
+      { name: 'documentation_refs', cast: 'jsonb' },
+      { name: 'governing_sources', cast: 'jsonb' },
+      { name: 'allowed_implementation_surfaces', cast: 'jsonb' },
+      { name: 'architecture_guards', cast: 'jsonb' },
+      { name: 'completion_gate', cast: 'jsonb' },
+      'source_path',
+      'source_content_sha256',
+      { name: 'raw_rail', cast: 'jsonb' },
+      { name: 'raw_manifest', cast: 'jsonb' },
+      'revision',
+      'created_by',
+      { name: 'created_at', cast: 'timestamptz' },
+      { name: 'updated_at', cast: 'timestamptz' },
+    ],
+    rails,
+    (rail) => [
+      rail.railId,
+      rail.featureId,
+      rail.mechanizationStatus,
+      rail.railName,
+      rail.normalizedRailName,
+      rail.railType,
+      rail.dddOwner,
+      rail.railStatus,
+      toJson(rail.symbolRefs),
+      toJson(rail.implementationRefs),
+      toJson(rail.documentationRefs),
+      toJson(rail.governingSources),
+      toJson(rail.allowedImplementationSurfaces),
+      toJson(rail.architectureGuards),
+      toJson(rail.completionGate),
+      rail.sourcePath,
+      rail.sourceContentSha256,
+      toJson(rail.rawRail),
+      toJson(rail.rawManifest),
+      rail.revision,
+      rail.createdBy,
+      rail.createdAt,
+      rail.updatedAt,
+    ],
+    {
+      suffix: `on conflict (rail_id) do update set
+        feature_id = excluded.feature_id,
+        mechanization_status = excluded.mechanization_status,
+        rail_name = excluded.rail_name,
+        normalized_rail_name = excluded.normalized_rail_name,
+        rail_type = excluded.rail_type,
+        ddd_owner = excluded.ddd_owner,
+        rail_status = excluded.rail_status,
+        symbol_refs = excluded.symbol_refs,
+        implementation_refs = excluded.implementation_refs,
+        documentation_refs = excluded.documentation_refs,
+        governing_sources = excluded.governing_sources,
+        allowed_implementation_surfaces = excluded.allowed_implementation_surfaces,
+        architecture_guards = excluded.architecture_guards,
+        completion_gate = excluded.completion_gate,
+        source_path = excluded.source_path,
+        source_content_sha256 = excluded.source_content_sha256,
+        raw_rail = excluded.raw_rail,
+        raw_manifest = excluded.raw_manifest,
+        revision = greatest(${schemaName}.feature_mechanization_local_rails.revision, excluded.revision),
+        updated_at = now()`,
+    }
+  );
+
+  await refreshLocalFeatureMechanizationRailSourceHashes(client);
+}
+
 async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.frontend_mechanical_truth_surfaces`);
 
@@ -2660,6 +2873,357 @@ async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
       toJson(surface.rawSurface),
     ]
   );
+}
+
+async function reconcileDeprecatedLocalRailSources(client) {
+  await client.query(`
+    with stale_source_overrides(stale_source_path, current_source_path, declared_status) as (
+      values
+        (
+          'tools/planning-db/migrations/265_restore_canvas_source_import_dialog_symbols_after_post_import_reconcile.sql',
+          'tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql',
+          'retired'
+        )
+    ),
+    deprecated_local_rails as (
+      select
+        rail.rail_id,
+        coalesce(
+          override.current_source_path,
+          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
+          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
+        ) as current_source_path,
+        coalesce(
+          override.declared_status,
+          nullif(rail.raw_rail->>'status', ''),
+          nullif(rail.raw_manifest->>'status', ''),
+          rail.rail_status
+        ) as declared_status,
+        override.stale_source_path is not null as source_path_overridden,
+        source_file.path is null as source_path_missing,
+        exists (
+          select 1
+          from jsonb_array_elements_text(
+            coalesce(
+              rail.raw_rail->'deprecatedSourcePaths',
+              rail.raw_manifest->'deprecatedSourcePaths',
+              '[]'::jsonb
+            )
+          ) deprecated_source(path)
+          where deprecated_source.path = rail.source_path
+        ) as source_path_deprecated
+      from ${schemaName}.feature_mechanization_local_rails rail
+      left join stale_source_overrides override
+        on override.stale_source_path = rail.source_path
+      left join ${schemaName}.governance_files source_file
+        on source_file.path = rail.source_path
+      join ${schemaName}.governance_files current_file
+        on current_file.path = coalesce(
+          override.current_source_path,
+          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
+          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
+        )
+      where coalesce(
+          override.current_source_path,
+          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
+          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
+        ) is not null
+    )
+    update ${schemaName}.feature_mechanization_local_rails rail
+    set
+      mechanization_status = case
+        when deprecated_local_rails.declared_status = 'retired' then 'closed'
+        else rail.mechanization_status
+      end,
+      rail_status = case
+        when deprecated_local_rails.declared_status = 'retired' then 'retired'
+        else rail.rail_status
+      end,
+      source_path = deprecated_local_rails.current_source_path,
+      source_content_sha256 = coalesce(
+        (
+          select file_ref.content_hash
+          from ${schemaName}.governance_files file_ref
+          where file_ref.path = deprecated_local_rails.current_source_path
+        ),
+        rail.source_content_sha256
+      ),
+      raw_manifest = (
+        case
+          when deprecated_local_rails.declared_status = 'retired' then
+            coalesce(rail.raw_manifest, '{}'::jsonb) - 'featureId' - 'symbols'
+          else coalesce(rail.raw_manifest, '{}'::jsonb)
+        end
+      ) || jsonb_build_object(
+          'currentImplementationSourcePath',
+          deprecated_local_rails.current_source_path,
+          'sourcePathReconciledBy',
+          'planning-db-import-reconcile-deprecated-local-rail-sources'
+        ),
+      raw_rail = coalesce(rail.raw_rail, '{}'::jsonb) || jsonb_build_object(
+          'status',
+          deprecated_local_rails.declared_status,
+          'currentImplementationSourcePath',
+          deprecated_local_rails.current_source_path,
+          'sourcePathReconciledBy',
+          'planning-db-import-reconcile-deprecated-local-rail-sources'
+        ),
+      revision = rail.revision + 1,
+      updated_at = now()
+    from deprecated_local_rails
+    where rail.rail_id = deprecated_local_rails.rail_id
+      and rail.source_path <> deprecated_local_rails.current_source_path
+      and (
+        deprecated_local_rails.source_path_overridden
+        or
+        deprecated_local_rails.source_path_deprecated
+        or deprecated_local_rails.source_path_missing
+      )
+  `);
+}
+
+async function reconcileSupersededCanvasNodeWorkbenchPanel(client) {
+  const activePanelFiles = await client.query(`
+    select count(*)::int as file_count
+    from ${schemaName}.governance_files
+    where path in (
+      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
+      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
+    )
+  `);
+  const activePanelFileCount = Number(activePanelFiles.rows?.[0]?.file_count || 0);
+  if (activePanelFileCount >= 2) {
+    return;
+  }
+
+  await client.query(`
+    update architecture.design
+    set
+      status = 'superseded',
+      rationale = 'Superseded by PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-FINAL-RETIREMENT-GUARD-20260619 because the active filesystem has no CanvasNodeWorkbenchPanel source or test files.',
+      updated_at = now()
+    where design_id in (
+      'PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-POST-IMPORT-AUTHORITY-20260619',
+      'PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-PROFILE-REASSERTION-20260619',
+      'PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-EFFECTIVE-REACTIVATION-20260619',
+      'PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-REACTIVATION-20260619'
+    );
+
+    delete from ${schemaName}.feature_mechanization_local_rails
+    where rail_id = 'local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties'
+       or feature_id = 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619'
+       or source_path in (
+         'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
+         'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
+       );
+
+    delete from ${schemaName}.governance_component_local_ownership_patterns
+    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL'
+      and pattern in (
+        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
+        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
+      );
+
+    delete from ${schemaName}.governance_component_local_semantic_items
+    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
+
+    insert into ${schemaName}.governance_component_local_semantic_items (
+      component_id,
+      item_kind,
+      item_value,
+      item_order
+    )
+    values
+      (
+        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
+        'responsibility',
+        'Superseded audit-only Canvas node workbench panel; no tracked implementation files exist in this branch.',
+        0
+      ),
+      (
+        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
+        'reason_to_change',
+        'Only changes when a governed migration reintroduces real CanvasNodeWorkbenchPanel implementation files.',
+        0
+      ),
+      (
+        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
+        'governance_ref',
+        'tools/planning-db/migrations/237_final_canvas_node_workbench_panel_retirement_guard.sql',
+        0
+      ),
+      (
+        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
+        'fowler_signal',
+        'boundary_drift',
+        0
+      ),
+      (
+        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
+        'transition',
+        'Retirement remains in force until tracked CanvasNodeWorkbenchPanel source and test files exist.',
+        0
+      )
+    on conflict (component_id, item_kind, item_value) do update set
+      item_order = excluded.item_order;
+
+    update ${schemaName}.governance_component_local_definitions
+    set
+      status = 'superseded',
+      owned_concern = 'Superseded audit-only component. CanvasNodeWorkbenchPanel.tsx and CanvasNodeWorkbenchPanel.test.tsx are not tracked; active overlay presentation is owned by SYS-WEB-CANVAS-NODE-WORKBENCH-OVERLAY and SYS-WEB-CANVAS-INSPECTOR-PANEL.',
+      ddd_owner = 'CanvasNodeWorkbenchDuplicateResolution',
+      cq_rails = 'none - post-import retirement reconciliation',
+      source_path = 'tools/planning-db/migrations/237_final_canvas_node_workbench_panel_retirement_guard.sql',
+      source_content_sha256 = coalesce(
+        (
+          select file_ref.content_hash
+          from ${schemaName}.governance_files file_ref
+          where file_ref.path = 'tools/planning-db/migrations/237_final_canvas_node_workbench_panel_retirement_guard.sql'
+          limit 1
+        ),
+        source_content_sha256
+      ),
+      revision = greatest(revision, 1) + 1
+    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
+
+    update architecture.component
+    set
+      owner = 'CanvasNodeWorkbenchDuplicateResolution',
+      repo_path = '${schemaName}.governance_component_local_definitions#SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
+      public_contract = 'Deprecated audit-only component. CanvasNodeWorkbenchPanel.tsx is not tracked; active presentation uses SYS-WEB-CANVAS-NODE-WORKBENCH-OVERLAY and SYS-WEB-CANVAS-INSPECTOR-PANEL.',
+      status = 'deprecated',
+      maturity_score = null,
+      updated_at = now()
+    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
+
+    update architecture.component_responsibility
+    set
+      responsibility = 'Superseded audit-only component retained to document neutralized CanvasNodeWorkbenchPanel rehydrations.',
+      reason_to_change = 'A real implementation would require tracked CanvasNodeWorkbenchPanel source and test files plus governed ownership.',
+      ddd_owner = 'CanvasNodeWorkbenchDuplicateResolution',
+      status = 'implemented'
+    where responsibility_id = 'RESP-SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
+
+    update architecture.contract
+    set
+      contract_ref = '${schemaName}.governance_component_local_definitions#SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
+      compatibility = 'internal',
+      status = 'implemented',
+      validation_command = 'pnpm planning:db:query component-profile --component SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL --no-refresh --limit 80',
+      updated_at = now()
+    where owner_component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
+
+    delete from architecture.component_port
+    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
+
+    delete from architecture.component_relation
+    where relation_id in (
+      'REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-PANEL',
+      'REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL'
+    );
+
+    update architecture.component_test
+    set
+      test_path = 'scripts/planning-db-migrate.test.cjs',
+      test_kind = 'architecture',
+      coverage_level = 'boundary',
+      required = true,
+      validation_command = 'node --test scripts/planning-db-migrate.test.cjs'
+    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
+
+    update architecture.component_observability
+    set
+      signal_name = 'Neutralized Canvas node workbench panel retirement is observable through component-profile, files query absence, source-drift, and migration evidence.',
+      required = true,
+      status = 'implemented'
+    where observability_id in (
+      'OBS-SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL-COMPONENT-PROFILE',
+      'OBS-SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL-PHANTOM-RETIREMENT'
+    );
+
+    delete from ${schemaName}.governance_component_files
+    where path in (
+      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
+      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
+    );
+
+    delete from ${schemaName}.governance_files
+    where path in (
+      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
+      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
+      );
+  `);
+}
+
+async function reconcileSupersededCiPolicyValidationSplitComponents(client) {
+  const activePolicySplitFiles = await client.query(`
+    select count(*)::int as file_count
+    from ${schemaName}.governance_files
+    where path in (
+      'scripts/policy-validation-files.cjs',
+      'scripts/policy-validation-text.cjs'
+    )
+  `);
+  const activePolicySplitFileCount = Number(activePolicySplitFiles.rows?.[0]?.file_count || 0);
+  if (activePolicySplitFileCount > 0) {
+    return;
+  }
+
+  await client.query(`
+    with phantom_components(component_id, replacement_contract) as (
+      values
+        (
+          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
+          'Superseded phantom split: scripts/policy-validation-files.cjs does not exist. Policy validation file discovery is owned by the active repository policy validation component.'
+        ),
+        (
+          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT',
+          'Superseded phantom split: scripts/policy-validation-text.cjs does not exist. Policy validation text normalization is owned by the active repository policy validation component.'
+        )
+    )
+    update architecture.component component
+    set
+      status = 'deprecated',
+      repo_path = 'planning_query_store.governance_component_local_definitions#' || component.component_id,
+      public_contract = phantom_components.replacement_contract,
+      updated_at = now()
+    from phantom_components
+    where component.component_id = phantom_components.component_id;
+
+    with phantom_components(component_id, replacement_contract) as (
+      values
+        (
+          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
+          'Superseded phantom split: scripts/policy-validation-files.cjs does not exist. Policy validation file discovery is owned by the active repository policy validation component.'
+        ),
+        (
+          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT',
+          'Superseded phantom split: scripts/policy-validation-text.cjs does not exist. Policy validation text normalization is owned by the active repository policy validation component.'
+        )
+    )
+    update ${schemaName}.governance_component_local_definitions definition
+    set
+      status = 'superseded',
+      source_path = 'planning_query_store.governance_component_local_definitions#'
+        || definition.component_id,
+      source_content_sha256 =
+        md5(definition.component_id || ':policy-validation-phantom-superseded')
+        || md5(definition.component_id || ':planning-db-import'),
+      owned_concern = phantom_components.replacement_contract,
+      revision = greatest(definition.revision, 1) + 1
+    from phantom_components
+    where definition.component_id = phantom_components.component_id;
+
+    delete from ${schemaName}.governance_component_local_ownership_patterns
+    where component_id in (
+      'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
+      'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT'
+    )
+    and pattern in (
+      'scripts/policy-validation-files.cjs',
+      'scripts/policy-validation-text.cjs'
+    );
+  `);
 }
 
 async function insertFrontendComponentReflectionSnapshot(client, snapshot) {
@@ -3129,6 +3693,9 @@ async function importContent(options = {}) {
   const commandQueryRailSnapshot = includeGovernance
     ? buildCommandQueryRailSnapshot({ governanceSnapshot })
     : null;
+  const codeSymbolSnapshot = includeGovernance
+    ? buildCodeSymbolSnapshot({ governanceSnapshot })
+    : null;
   const frontendMechanicalTruthSnapshot = includeGovernance
     ? buildFrontendMechanicalTruthSnapshot()
     : null;
@@ -3160,6 +3727,9 @@ async function importContent(options = {}) {
 
   try {
     await runMigrations({ client, silent: true });
+    const localFeatureMechanizationRails = includeGovernance
+      ? await readLocalFeatureMechanizationRails(client)
+      : [];
     await beginImportTransaction(client);
     const planningTaskIds = includeGovernance
       ? mergePlanningTaskIds(
@@ -3178,6 +3748,11 @@ async function importContent(options = {}) {
     }
     if (includeGovernance) {
       await insertGovernanceSnapshot(client, governanceSnapshot);
+      await refreshComponentTreeMaterializedProjection(client);
+      await refreshComponentFileOwnershipMaterializedProjection(client);
+      await refreshComponentRuleEvaluationMaterializedProjection(client);
+      await insertCodeSymbolSnapshot(client, codeSymbolSnapshot);
+      await refreshCodeSymbolMaterializedProjection(client);
       await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
       await insertCommandQueryRailSnapshot(client, commandQueryRailSnapshot);
       await insertFrontendMechanicalTruthSnapshot(client, frontendMechanicalTruthSnapshot);
@@ -3189,6 +3764,10 @@ async function importContent(options = {}) {
         client,
         knowledgeIntakeRepositoryReferenceSnapshot
       );
+      await restoreLocalFeatureMechanizationRails(client, localFeatureMechanizationRails);
+      await reconcileDeprecatedLocalRailSources(client);
+      await reconcileSupersededCanvasNodeWorkbenchPanel(client);
+      await reconcileSupersededCiPolicyValidationSplitComponents(client);
     }
     await client.query('commit');
   } catch (error) {
@@ -3212,6 +3791,7 @@ async function importContent(options = {}) {
     riskDebtItems: governanceSnapshot?.riskDebtItems.length ?? 0,
     repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
     commandQueryRails: commandQueryRailSnapshot?.rails.length ?? 0,
+    codeSymbols: codeSymbolSnapshot?.symbols.length ?? 0,
     frontendMechanicalTruthSurfaces: frontendMechanicalTruthSnapshot?.surfaces.length ?? 0,
     frontendComponents: frontendComponentReflectionSnapshot?.components.length ?? 0,
     prReadinessChecks: prReadinessSnapshot ? 1 : 0,
@@ -3234,6 +3814,7 @@ async function importContent(options = {}) {
       `riskDebtItems=${result.riskDebtItems}`,
       `repositoryCommands=${result.repositoryCommands}`,
       `commandQueryRails=${result.commandQueryRails}`,
+      `codeSymbols=${result.codeSymbols}`,
       `frontendMechanicalTruthSurfaces=${result.frontendMechanicalTruthSurfaces}`,
       `frontendComponents=${result.frontendComponents}`,
       `prReadinessChecks=${result.prReadinessChecks}`,
@@ -3324,6 +3905,20 @@ function compareGovernanceAuxiliaryState(expected, actual) {
         'componentStatus',
         'reuseDecision',
         'frontendOwner',
+        'sourcePath',
+        'sourceContentSha256',
+      ],
+    }),
+    codeSymbols: compareImportRows(expected.codeSymbols, actual.codeSymbols, {
+      keyOf: (row) => row.symbolId,
+      compareFields: [
+        'symbolName',
+        'symbolKind',
+        'componentId',
+        'filePath',
+        'startLine',
+        'endLine',
+        'bodySha256',
         'sourcePath',
         'sourceContentSha256',
       ],
@@ -3430,6 +4025,9 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
     options.frontendMechanicalTruthSnapshot || buildFrontendMechanicalTruthSnapshot();
   const frontendComponentReflectionSnapshot =
     options.frontendComponentReflectionSnapshot || buildFrontendComponentReflectionSnapshot();
+  const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
+  const codeSymbolSnapshot =
+    options.codeSymbolSnapshot || buildCodeSymbolSnapshot({ governanceSnapshot });
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const docsDispositionSnapshot =
@@ -3437,7 +4035,6 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
     buildDocsDispositionSnapshot({
       planningTaskIds: planningSnapshot.tasks.map((task) => task.taskId),
     });
-  const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
   const knowledgeIntakeRepositoryReferenceSnapshot =
     options.knowledgeIntakeRepositoryReferenceSnapshot ||
     buildKnowledgeIntakeRepositoryReferenceSnapshot();
@@ -3477,6 +4074,18 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       frontendOwner: component.frontendOwner,
       sourcePath: component.sourcePath,
       sourceContentSha256: component.sourceContentSha256,
+    })),
+    codeSymbols: codeSymbolSnapshot.symbols.map((symbol) => ({
+      symbolId: symbol.symbolId,
+      symbolName: symbol.symbolName,
+      symbolKind: symbol.symbolKind,
+      componentId: symbol.componentId,
+      filePath: symbol.filePath,
+      startLine: symbol.startLine,
+      endLine: symbol.endLine,
+      bodySha256: symbol.bodySha256,
+      sourcePath: symbol.sourcePath,
+      sourceContentSha256: symbol.sourceContentSha256,
     })),
     prReadinessChecks: [
       {
@@ -3558,6 +4167,7 @@ async function readGovernanceAuxiliaryState(client) {
     riskDebtItems,
     frontendMechanicalTruthSurfaces,
     frontendComponents,
+    codeSymbols,
   ] = await Promise.all([
     client.query(`
       select
@@ -3687,6 +4297,21 @@ async function readGovernanceAuxiliaryState(client) {
       from ${schemaName}.frontend_components
       order by component_id
     `),
+    client.query(`
+      select
+        symbol_id as "symbolId",
+        symbol_name as "symbolName",
+        symbol_kind as "symbolKind",
+        component_id as "componentId",
+        file_path as "filePath",
+        start_line::int as "startLine",
+        end_line::int as "endLine",
+        body_sha256 as "bodySha256",
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.code_symbols
+      order by symbol_id
+    `),
   ]);
 
   return {
@@ -3701,6 +4326,7 @@ async function readGovernanceAuxiliaryState(client) {
     riskDebtItems: riskDebtItems.rows,
     frontendMechanicalTruthSurfaces: frontendMechanicalTruthSurfaces.rows,
     frontendComponents: frontendComponents.rows,
+    codeSymbols: codeSymbols.rows,
   };
 }
 
@@ -3798,6 +4424,11 @@ function compareGovernanceAuxiliarySourceState(expected, actual) {
     commandQueryRailSources: compareImportRows(
       expected.commandQueryRailSources,
       actual.commandQueryRailSources,
+      sourceHashComparison
+    ),
+    codeSymbolSources: compareImportRows(
+      expected.codeSymbolSources,
+      actual.codeSymbolSources,
       sourceHashComparison
     ),
     docDispositionDocuments: compareImportRows(
@@ -3923,6 +4554,9 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
   const commandQueryRailSnapshot =
     options.commandQueryRailSnapshot || buildCommandQueryRailSnapshot();
+  const governanceSnapshot = options.governanceSnapshot || buildGovernanceFileSnapshot();
+  const codeSymbolSnapshot =
+    options.codeSymbolSnapshot || buildCodeSymbolSnapshot({ governanceSnapshot });
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
   const markdownDocuments = options.markdownDocuments || listTrackedMarkdownDocuments();
   const knowledgeDocuments =
@@ -3937,6 +4571,10 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
     }),
     repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
     commandQueryRailSources: uniqueSourceHashRows(commandQueryRailSnapshot.rails),
+    codeSymbolSources: uniqueSourceHashRows(codeSymbolSnapshot.symbols, {
+      pathField: 'sourcePath',
+      hashField: 'sourceContentSha256',
+    }),
     docDispositionDocuments: documentSourceHashRows(markdownDocuments),
     knowledgeDocuments: options.knowledgeSnapshotDocuments
       ? uniqueSourceHashRows(options.knowledgeSnapshotDocuments, {
@@ -4029,6 +4667,7 @@ async function readGovernanceAuxiliarySourceState(client) {
     planningSources,
     repositoryCommandSources,
     commandQueryRailSources,
+    codeSymbolSources,
     prReadinessChecks,
     docDispositionDocuments,
     knowledgeDocuments,
@@ -4054,6 +4693,13 @@ async function readGovernanceAuxiliarySourceState(client) {
         source_path as "sourcePath",
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.command_query_rails
+      order by source_path
+    `),
+    client.query(`
+      select distinct
+        source_path as "sourcePath",
+        source_content_sha256 as "sourceContentSha256"
+      from ${schemaName}.code_symbols
       order by source_path
     `),
     client.query(`
@@ -4100,6 +4746,7 @@ async function readGovernanceAuxiliarySourceState(client) {
     planningSources: planningSources.rows,
     repositoryCommandSources: repositoryCommandSources.rows,
     commandQueryRailSources: commandQueryRailSources.rows,
+    codeSymbolSources: codeSymbolSources.rows,
     prReadinessChecks: prReadinessChecks.rows,
     docDispositionDocuments: docDispositionDocuments.rows,
     knowledgeDocuments: knowledgeDocuments.rows,
@@ -4280,6 +4927,7 @@ module.exports = {
   buildDocsDispositionSnapshot,
   buildGovernanceAuxiliaryExpectedState,
   buildGovernanceAuxiliarySourceExpectedState,
+  buildCodeSymbolSnapshot,
   buildGovernanceFileSnapshot,
   buildGovernanceGeneratedInputs,
   buildGovernanceSourceExpectedState,
@@ -4304,6 +4952,7 @@ module.exports = {
   governanceImportDeleteTables,
   importContent,
   insertGovernanceSnapshot,
+  insertCodeSymbolSnapshot,
   insertRows,
   mergePlanningTaskIds,
   insertDocsDispositionSnapshot,
@@ -4317,11 +4966,22 @@ module.exports = {
   listChangedFiles,
   normalizeText,
   parseArgs,
+  readTrackedDocumentPaths,
+  readLocalFeatureMechanizationRails,
   readLocalPlanningTaskIds,
   readGovernanceSourceState,
   readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,
   readYamlSource,
+  reconcileDeprecatedLocalRailSources,
+  reconcileSupersededCiPolicyValidationSplitComponents,
+  reconcileSupersededCanvasNodeWorkbenchPanel,
+  refreshCodeSymbolMaterializedProjection,
+  refreshComponentTreeMaterializedProjection,
+  refreshComponentFileOwnershipMaterializedProjection,
+  refreshComponentRuleEvaluationMaterializedProjection,
+  refreshLocalFeatureMechanizationRailSourceHashes,
+  restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,
 };

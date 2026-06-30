@@ -5,7 +5,7 @@ import {
   deriveCanvasDraftPresentationState,
   type CanvasDraftPresentationState,
 } from './canvasDraftPresentationModel';
-import { toCanvasDraftToolbarState } from './canvasDraftAccessPostureModel';
+import { toCanvasDraftStatusState } from './canvasDraftAccessPostureModel';
 import {
   resolveCanvasDraftTransportErrorState,
   type CanvasDraftTransportErrorState,
@@ -30,7 +30,6 @@ export type CanvasRouteViewState = {
   canCreateCanvasDocument: CanvasController['canCreateCanvasDocument'];
   draftSaveStatus: CanvasController['draftSaveStatus'];
   availableCanvasKinds: CanvasRouteInteractionState['availableCanvasKinds'];
-  canvasTabState: CanvasRouteInteractionState['canvasTabState'];
   effectiveUserPermissions: CanvasRouteInteractionState['effectiveUserPermissions'];
   readOnlyState: CanvasRouteInteractionState['readOnlyState'];
   presentationState: CanvasDraftPresentationState;
@@ -44,7 +43,7 @@ export function deriveCanvasRouteViewState(controller: CanvasController): Canvas
     startupBlockState: interactionState.startupBlockState,
     workbenchState: interactionState.effectiveWorkbenchState,
     recoveryReason: controller.draftRecoveryReason,
-    draftToolbarState: toCanvasDraftToolbarState(controller.draftAccessPosture),
+    draftStatusState: toCanvasDraftStatusState(controller.draftAccessPosture),
   });
 
   return {
@@ -59,7 +58,6 @@ export function deriveCanvasRouteViewState(controller: CanvasController): Canvas
     canCreateCanvasDocument: controller.canCreateCanvasDocument,
     draftSaveStatus: controller.draftSaveStatus,
     availableCanvasKinds: interactionState.availableCanvasKinds,
-    canvasTabState: interactionState.canvasTabState,
     effectiveUserPermissions: interactionState.effectiveUserPermissions,
     readOnlyState: interactionState.readOnlyState,
     presentationState,

@@ -1,5 +1,5 @@
 /** Owned concern: orchestrate the route-owned Inspector authoring surface for governed node details. */
-import { useEffect, useMemo, useState } from 'react';
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -23,6 +23,14 @@ type CanvasInspectorAuthoringSectionProps = Readonly<{
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   authoring: CanvasInspectorAuthoringContract;
+  section?: 'all' | 'general' | 'columns' | 'code' | 'sink';
+  draftController?: Readonly<{
+    draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
+    tagsText: string;
+    onDraftChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
+    onTagsTextChange: Dispatch<SetStateAction<string>>;
+    onResetDraft: () => void;
+  }>;
 }>;
 
 export function CanvasInspectorAuthoringSection({
@@ -30,21 +38,44 @@ export function CanvasInspectorAuthoringSection({
   nodes,
   edges,
   authoring,
+  section = 'all',
+  draftController,
 }: CanvasInspectorAuthoringSectionProps) {
-  const [draft, setDraft] = useState(() => createCanvasInspectorNodeDraft(node));
-  const [tagsText, setTagsText] = useState(() =>
+  const [localDraft, setLocalDraft] = useState(() => createCanvasInspectorNodeDraft(node));
+  const [localTagsText, setLocalTagsText] = useState(() =>
     createCanvasInspectorNodeDraft(node).tags.join(', ')
   );
+  const draft = draftController?.draft ?? localDraft;
+  const tagsText = draftController?.tagsText ?? localTagsText;
+  const setDraft = draftController?.onDraftChange ?? setLocalDraft;
+  const setTagsText = draftController?.onTagsTextChange ?? setLocalTagsText;
 
   useEffect(() => {
+    if (draftController != null) {
+      return;
+    }
+
     const nextDraft = createCanvasInspectorNodeDraft(node);
-    setDraft(nextDraft);
-    setTagsText(nextDraft.tags.join(', '));
-  }, [node.description, node.id, node.metadata, node.name, node.tags]);
+    setLocalDraft(nextDraft);
+    setLocalTagsText(nextDraft.tags.join(', '));
+  }, [draftController, node.description, node.id, node.metadata, node.name, node.tags]);
 
   const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft), [draft]);
   const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
   const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
+  const showGeneral = section === 'all' || section === 'general';
+  const showDvtAuthoring =
+    draft.dvt != null &&
+    (section === 'all' ||
+      (section === 'general' && draft.dvt.kind === 'source') ||
+      (section === 'columns' && draft.dvt.kind === 'sql_transform') ||
+      (section === 'code' && draft.dvt.kind === 'sql_transform') ||
+      (section === 'sink' && draft.dvt.kind === 'sink'));
+  const dvtAuthoringSection = section === 'sink' ? 'general' : section;
+
+  if (!showGeneral && !showDvtAuthoring) {
+    return null;
+  }
 
   return (
     <section
@@ -52,104 +83,115 @@ export function CanvasInspectorAuthoringSection({
       className={graphVisualClasses.contextPanelDetailsSection}
     >
       <div className="space-y-3">
-        <div>
-          <h3 className={graphVisualClasses.contextPanelSectionTitle}>
-            {canvasViewCopy.inspectorEditablePropertiesTitle}
-          </h3>
-          <p className={graphVisualClasses.inspectorBody}>
-            {canvasViewCopy.inspectorEditablePropertiesDescription}
-          </p>
-        </div>
+        {showGeneral ? (
+          <>
+            <div>
+              <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+                {canvasViewCopy.inspectorEditablePropertiesTitle}
+              </h3>
+              <p className={graphVisualClasses.inspectorBody}>
+                {canvasViewCopy.inspectorEditablePropertiesDescription}
+              </p>
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-node-name-${node.id}`}>
-            {canvasViewCopy.inspectorNodeNameLabel}
-          </Label>
-          <Input
-            id={`inspector-node-name-${node.id}`}
-            name="node-name"
-            value={draft.name}
+            <div className="space-y-2">
+              <Label htmlFor={`inspector-node-name-${node.id}`}>
+                {canvasViewCopy.inspectorNodeNameLabel}
+              </Label>
+              <Input
+                id={`inspector-node-name-${node.id}`}
+                name="node-name"
+                value={draft.name}
+                disabled={!authoring.canEditNode}
+                aria-invalid={errors.name ? 'true' : undefined}
+                onChange={(event) =>
+                  setDraft((currentDraft) => ({
+                    ...currentDraft,
+                    name: event.target.value,
+                  }))
+                }
+              />
+              {errors.name ? (
+                <p className={graphVisualClasses.inspectorErrorText}>
+                  {formatCanvasInspectorNodeDraftError(errors.name, canvasViewCopy)}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={`inspector-node-tags-${node.id}`}>
+                {canvasViewCopy.inspectorNodeTagsLabel}
+              </Label>
+              <Input
+                id={`inspector-node-tags-${node.id}`}
+                name="node-tags"
+                value={tagsText}
+                disabled={!authoring.canEditNode}
+                placeholder={canvasViewCopy.inspectorNodeTagsPlaceholder}
+                onChange={(event) => {
+                  const nextTagsText = event.target.value;
+                  setTagsText(nextTagsText);
+                  setDraft((currentDraft) => ({
+                    ...currentDraft,
+                    tags: Array.from(
+                      new Set(
+                        nextTagsText
+                          .split(',')
+                          .map((tag) => tag.trim())
+                          .filter((tag) => tag.length > 0)
+                      )
+                    ),
+                  }));
+                }}
+              />
+            </div>
+
+            <DbtAuthoringFields
+              node={node}
+              nodes={nodes}
+              edges={edges}
+              disabled={!authoring.canEditNode}
+              draft={draft}
+              errors={errors}
+              onChange={setDraft}
+            />
+          </>
+        ) : null}
+
+        {showDvtAuthoring ? (
+          <DvtAuthoringFields
+            node={node}
+            nodes={nodes}
+            edges={edges}
             disabled={!authoring.canEditNode}
-            aria-invalid={errors.name ? 'true' : undefined}
-            onChange={(event) =>
-              setDraft((currentDraft) => ({
-                ...currentDraft,
-                name: event.target.value,
-              }))
-            }
+            draft={draft}
+            errors={errors}
+            section={dvtAuthoringSection}
+            onChange={setDraft}
           />
-          {errors.name ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
-              {formatCanvasInspectorNodeDraftError(errors.name, canvasViewCopy)}
-            </p>
-          ) : null}
-        </div>
+        ) : null}
 
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-node-tags-${node.id}`}>
-            {canvasViewCopy.inspectorNodeTagsLabel}
-          </Label>
-          <Input
-            id={`inspector-node-tags-${node.id}`}
-            name="node-tags"
-            value={tagsText}
-            disabled={!authoring.canEditNode}
-            placeholder={canvasViewCopy.inspectorNodeTagsPlaceholder}
-            onChange={(event) => {
-              const nextTagsText = event.target.value;
-              setTagsText(nextTagsText);
-              setDraft((currentDraft) => ({
-                ...currentDraft,
-                tags: Array.from(
-                  new Set(
-                    nextTagsText
-                      .split(',')
-                      .map((tag) => tag.trim())
-                      .filter((tag) => tag.length > 0)
-                  )
-                ),
-              }));
-            }}
-          />
-        </div>
+        {showGeneral ? (
+          <div className="space-y-2">
+            <Label htmlFor={`inspector-node-description-${node.id}`}>
+              {canvasViewCopy.inspectorNodeDescriptionLabel}
+            </Label>
+            <Textarea
+              id={`inspector-node-description-${node.id}`}
+              name="node-description"
+              value={draft.description}
+              disabled={!authoring.canEditNode}
+              onChange={(event) =>
+                setDraft((currentDraft) => ({
+                  ...currentDraft,
+                  description: event.target.value,
+                }))
+              }
+            />
+          </div>
+        ) : null}
 
-        <DbtAuthoringFields
-          node={node}
-          nodes={nodes}
-          edges={edges}
-          disabled={!authoring.canEditNode}
-          draft={draft}
-          errors={errors}
-          onChange={setDraft}
-        />
-
-        <DvtAuthoringFields
-          node={node}
-          disabled={!authoring.canEditNode}
-          draft={draft}
-          errors={errors}
-          onChange={setDraft}
-        />
-
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-node-description-${node.id}`}>
-            {canvasViewCopy.inspectorNodeDescriptionLabel}
-          </Label>
-          <Textarea
-            id={`inspector-node-description-${node.id}`}
-            name="node-description"
-            value={draft.description}
-            disabled={!authoring.canEditNode}
-            onChange={(event) =>
-              setDraft((currentDraft) => ({
-                ...currentDraft,
-                description: event.target.value,
-              }))
-            }
-          />
-        </div>
-
-        {!authoring.canEditNode ? (
+        {!authoring.canEditNode && showGeneral ? (
           <p className={graphVisualClasses.inspectorBody}>
             {canvasViewCopy.inspectorNodeReadOnlyMessage}
           </p>
@@ -162,9 +204,14 @@ export function CanvasInspectorAuthoringSection({
               variant="ghost"
               size="sm"
               onClick={() => {
+                if (draftController != null) {
+                  draftController.onResetDraft();
+                  return;
+                }
+
                 const nextDraft = createCanvasInspectorNodeDraft(node);
-                setDraft(nextDraft);
-                setTagsText(nextDraft.tags.join(', '));
+                setLocalDraft(nextDraft);
+                setLocalTagsText(nextDraft.tags.join(', '));
               }}
             >
               {canvasViewCopy.inspectorCancelLabel}

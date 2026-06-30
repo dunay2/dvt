@@ -231,7 +231,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
+  - apps/web/src/app/components/inspector/NodePropertiesTabs.architecture.test.ts
   - apps/web/src/app/components/inspector/NodePropertiesTabs.tsx
+  - apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx
+  - apps/web/src/app/components/inspector/NodePropertySectionView.tsx
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts
   - apps/web/src/app/views/Canvas.test.controller.defaults.ts
@@ -284,6 +287,9 @@ domainObjects:
   - name: NodePropertiesTabs
     type: passive view component
     owner: Inspector passive properties
+  - name: NodePropertySectionView
+    type: passive section view component
+    owner: Inspector passive properties section presentation
 fowlerSignals:
   - Duplicate semantics
   - Hidden authority
@@ -344,6 +350,15 @@ redGreenCycles:
       - apps/web/src/app/components/inspector/NodePropertiesTabs.tsx
       - apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx
     greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx
+  - id: node-property-section-view
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/inspector/NodePropertySectionView.test.tsx
+    expectedFailure: NodePropertySectionView module does not exist.
+    patchSurfaces:
+      - apps/web/src/app/components/inspector/NodePropertySectionView.tsx
+      - apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx
+      - apps/web/src/app/components/inspector/NodePropertiesTabs.tsx
+      - apps/web/src/app/components/inspector/NodePropertiesTabs.architecture.test.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/inspector/NodePropertySectionView.test.tsx
 symbols:
   - { name: CONTEXT_MENU_ACTION_ICONS, path: apps/web/src/app/components/canvas/DbtNodeComponent.tsx, dddOwner: Node context-menu renderer icon map, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Presentation Model], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts] }
   - { name: CanvasNodeContextMenuAction, path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts, dddOwner: CanvasContextMenuReadModel, cqRails: [ResolveCanvasContextMenu], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts] }
@@ -394,8 +409,11 @@ symbols:
   - { name: readNumber, path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts, dddOwner: Canvas node properties metadata reader, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts] }
   - { name: readString, path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts, dddOwner: Canvas node properties metadata reader, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts] }
   - { name: readStringArray, path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts, dddOwner: Canvas node properties metadata reader, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Primitive obsession], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts] }
-  - { name: renderSectionBody, path: apps/web/src/app/components/inspector/NodePropertiesTabs.tsx, dddOwner: Inspector passive properties rendering, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }
-  - { name: sectionSlot, path: apps/web/src/app/components/inspector/NodePropertiesTabs.tsx, dddOwner: Inspector passive properties semantic slots, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Semantic Fitness Function], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }
+  - { name: NodePropertySectionView, path: apps/web/src/app/components/inspector/NodePropertySectionView.tsx, dddOwner: Inspector passive properties section presentation, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Extract Component], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx] }
+  - { name: NodePropertySectionViewProps, path: apps/web/src/app/components/inspector/NodePropertySectionView.tsx, dddOwner: Inspector passive properties section presentation DTO, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx] }
+  - { name: renderSectionBody, path: apps/web/src/app/components/inspector/NodePropertySectionView.tsx, dddOwner: Inspector passive properties rendering, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx] }
+  - { name: renderSectionCountBadge, path: apps/web/src/app/components/inspector/NodePropertySectionView.tsx, dddOwner: Inspector passive properties section presentation count badge, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx] }
+  - { name: sectionSlot, path: apps/web/src/app/components/inspector/NodePropertySectionView.tsx, dddOwner: Inspector passive properties semantic slots, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Semantic Fitness Function], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/components/inspector/NodePropertySectionView.test.tsx] }
   - { name: NodePropertiesTabs, path: apps/web/src/app/components/inspector/NodePropertiesTabs.tsx, dddOwner: Inspector passive properties, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Extract Component], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }
   - { name: NodePropertiesTabsProps, path: apps/web/src/app/components/inspector/NodePropertiesTabs.tsx, dddOwner: Inspector passive properties DTO, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Data clump], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }
   - { name: resolveActiveInspectorTab, path: apps/web/src/app/components/InspectorPanel.tsx, dddOwner: Inspector passive properties tab selection, cqRails: [GetWorkspaceGraphDraft, ImportWarehouseSources], fowlerSignals: [Replace Conditional with Query Method], architectureGuard: pnpm docs:feature-mechanization:implementation -- --feature CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604, cypressCoverage: Browser smoke on /canvas, unitTests: [apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx] }

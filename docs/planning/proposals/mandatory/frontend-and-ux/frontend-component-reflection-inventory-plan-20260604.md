@@ -114,6 +114,7 @@ governingSources:
 allowedImplementationSurfaces:
   - buzon/dvt_front_component_inventory_app_reflection_study_20260604.md
   - docs/architecture/components/web/frontend-component-inventory.md
+  - docs/architecture/components/web/artifacts/artifacts-monaco-readonly-viewer-component.md
   - docs/architecture/components/web/index.md
   - docs/guides/testing-and-ci-capabilities.md
   - docs/planning/proposals/mandatory/frontend-and-ux/frontend-component-reflection-inventory-plan-20260604.md

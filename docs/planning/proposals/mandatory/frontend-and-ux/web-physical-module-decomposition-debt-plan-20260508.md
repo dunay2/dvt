@@ -136,7 +136,7 @@ The debt is closed only when:
 ```feature-mechanization
 version: 1
 featureId: WEB-PHYSICAL-MODULE-DECOMPOSITION-DEBT-20260508
-mechanizationStatus: closed
+mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/web-physical-module-decomposition-debt-plan-20260508.md
 componentGuides:
@@ -155,12 +155,19 @@ governingSources:
   - docs/architecture/shared/cli.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/web-physical-module-decomposition-debt-plan-20260508.md
+  - docs/**/index.md
   - docs/planning/status/**
   - docs/.manifest.json
+  - packages/cli/validate-contracts.cjs
+  - scripts/planning-db-migrate.test.cjs
+  - tools/planning-db/migrations/253_runtime_cli_legacy_wrapper_canonicalization.sql
 forbiddenImplementationSurfaces:
   - apps/**
-  - packages/**
-  - scripts/**
+  - packages/@dvt/cli/**
+  - packages/@dvt/contracts/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/adapter-*/**
+  - tools/ci/**
   - specs/**
   - .github/**
 commandQueryRails:
@@ -173,6 +180,18 @@ commandQueryRails:
   - name: AssessCliPhysicalSurfaceDuplication
     type: query
     dddOwner: CliPhysicalSurfaceDebtLedger
+  - name: RunRuntimeCliValidation
+    type: command
+    dddOwner: RuntimeCliValidationPackage
+  - name: DetectCodeSymbolDuplicates
+    type: query
+    dddOwner: PlanningDbCodeSymbolReadModel
+  - name: ReadComponentProfile
+    type: query
+    dddOwner: PlanningDbComponentProfileReadModel
+  - name: CheckPlanningDbComponentIntegrity
+    type: query
+    dddOwner: PlanningDbComponentIntegrityReadModel
 domainObjects:
   - name: WebPhysicalModuleDebtLedger
     type: architecture debt ledger
@@ -185,11 +204,15 @@ fowlerSignals:
   - Shotgun surgery risk
   - Parallel inheritance hierarchy
   - Duplicate physical ownership
+  - Duplicate semantics
+  - Boundary drift
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation
-  - pnpm lint:md:changed
+  - node --test scripts/planning-db-migrate.test.cjs
+  - pnpm planning:db:query code-symbol-duplicates --path packages/cli/validate-contracts.cjs --no-refresh --limit 80
+  - pnpm planning:db:query component-profile --component SYS-RUNTIME-CLI-VALIDATION-LEGACY-LOOSE-PACKAGE --no-refresh
 cypressFlows:
-  - N/A - debt registration only
+  - N/A - CLI and Planning DB component-model reconciliation only
 completionGate:
   - pnpm docs:sync
   - pnpm governance:refresh
@@ -205,6 +228,15 @@ redGreenCycles:
       - docs/planning/status/**
       - docs/.manifest.json
     greenTest: pnpm docs:feature-mechanization:implementation
+  - id: runtime-cli-legacy-wrapper-canonicalization
+    redTest: pnpm planning:db:query code-symbol-duplicates --path packages/cli/validate-contracts.cjs --no-refresh --limit 80
+    expectedFailure: Legacy packages/cli validator appears as an active duplicate implementation of the @dvt CLI validator.
+    patchSurfaces:
+      - packages/cli/validate-contracts.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - tools/planning-db/migrations/253_runtime_cli_legacy_wrapper_canonicalization.sql
+      - docs/planning/proposals/mandatory/frontend-and-ux/web-physical-module-decomposition-debt-plan-20260508.md
+    greenTest: pnpm planning:db:query code-symbol-duplicates --path packages/cli/validate-contracts.cjs --no-refresh --limit 80
 symbols:
   - name: WebPhysicalModuleDecompositionDebtPlan
     path: docs/planning/proposals/mandatory/frontend-and-ux/web-physical-module-decomposition-debt-plan-20260508.md
@@ -213,14 +245,21 @@ symbols:
       - AssessWebPhysicalModuleLayout
       - RegisterWebModuleDecompositionDebt
       - AssessCliPhysicalSurfaceDuplication
+      - RunRuntimeCliValidation
+      - DetectCodeSymbolDuplicates
+      - ReadComponentProfile
+      - CheckPlanningDbComponentIntegrity
     fowlerSignals:
       - Large component
       - Shotgun surgery risk
       - Parallel inheritance hierarchy
       - Duplicate physical ownership
+      - Duplicate semantics
+      - Boundary drift
     architectureGuard: pnpm docs:feature-mechanization:implementation
-    cypressCoverage: N/A - debt registration only
+    cypressCoverage: N/A - CLI and Planning DB component-model reconciliation only
     unitTests:
+      - node --test scripts/planning-db-migrate.test.cjs
       - pnpm docs:feature-mechanization:implementation
-      - pnpm lint:md:changed
+      - pnpm planning:db:query code-symbol-duplicates --path packages/cli/validate-contracts.cjs --no-refresh --limit 80
 ```

@@ -53,7 +53,7 @@ test('Canvas Fowler remediation canonization has semantic ownership', () => {
   }
   assert.match(componentGuide, /ClassifyCanvasFowlerDisposition/);
   assert.match(componentGuide, /RecordCanvasFowlerCanon/);
-  assert.match(componentGuide, /VerifyCanvasWorkbenchVisualPosture/);
+  assert.match(componentGuide, /RenderCanvasContextualGraphSurface/);
 
   const userStories = readRepoFile(
     'docs/architecture/components/web/graph/canvas-fowler-canon-user-stories.md'

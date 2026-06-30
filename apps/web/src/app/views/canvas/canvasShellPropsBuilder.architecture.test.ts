@@ -15,13 +15,15 @@ describe('canvasShellPropsBuilder architecture', () => {
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellLayoutBuilder'");
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellPanelsBuilder'");
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellGraphBuilder'");
-    expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellToolbarBuilder'");
+    expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellChromeStateBuilder'");
+    expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain("'./canvasShellToolbarBuilder'");
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellGraphCommandsBuilder'");
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain("'./canvasShellChromeCommandsBuilder'");
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain('function buildCanvasShellLayoutArgs(');
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain('function buildCanvasShellPanelsArgs(');
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain('function buildCanvasShellGraphArgs(');
-    expect(SHELL_PROPS_BUILDER_SOURCE).toContain('function buildCanvasShellToolbarArgs(');
+    expect(SHELL_PROPS_BUILDER_SOURCE).toContain('function buildCanvasShellChromeStateArgs(');
+    expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain('function buildCanvasShellToolbarArgs(');
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain('function buildCanvasShellGraphCommandsArgs(');
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain('function buildCanvasShellChromeCommandsArgs(');
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain(
@@ -35,7 +37,7 @@ describe('canvasShellPropsBuilder architecture', () => {
       'graph: buildCanvasShellGraph(buildCanvasShellGraphArgs(args)),'
     );
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain(
-      'toolbar: buildCanvasShellToolbar(buildCanvasShellToolbarArgs(args)),'
+      'chromeState: buildCanvasShellChromeState(buildCanvasShellChromeStateArgs(args)),'
     );
     expect(SHELL_PROPS_BUILDER_SOURCE).toContain(
       'graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),'
@@ -49,6 +51,9 @@ describe('canvasShellPropsBuilder architecture', () => {
     );
     expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain('panels: buildCanvasShellPanels(args),');
     expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain('graph: buildCanvasShellGraph(args),');
+    expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain(
+      'toolbar: buildCanvasShellToolbar(buildCanvasShellToolbarArgs(args)),'
+    );
     expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain('toolbar: buildCanvasShellToolbar(args),');
     expect(SHELL_PROPS_BUILDER_SOURCE).not.toContain(
       'graphCommands: buildCanvasShellGraphCommands(args),'

@@ -115,6 +115,22 @@ test('parseArgs builds a feature mechanization rail record command', () => {
   assert.equal(command.expectedRevision, 0);
 });
 
+test('parseArgs accepts deprecated and retired feature mechanization rail statuses', () => {
+  const deprecatedCommand = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--rail-status', 'deprecated'],
+    })
+  );
+  const retiredCommand = parseArgs(
+    featureMechanizationRecordArgs({
+      extraArgs: ['--rail-status', 'retired'],
+    })
+  );
+
+  assert.equal(deprecatedCommand.railStatus, 'deprecated');
+  assert.equal(retiredCommand.railStatus, 'retired');
+});
+
 test('feature mechanization rail planner emits a local rail and audit row', () => {
   const now = new Date('2026-06-05T18:00:00.000Z');
   const command = parseArgs(

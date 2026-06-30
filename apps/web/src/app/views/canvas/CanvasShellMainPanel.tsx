@@ -1,18 +1,24 @@
-/** Owned concern: compose Canvas toolbar, viewport, and center-surface overlay inside the main shell panel. */
-import { ResizablePanel } from '../../components/ui/resizable';
+/** Owned concern: compose Canvas chrome state, viewport, and center-surface overlay inside the main shell panel. */
 import { CanvasGraphStatusOverlay } from './CanvasGraphStatusOverlay';
-import { CanvasInspectorPanel } from './CanvasInspectorPanel';
-import CanvasViewport from './CanvasViewport';
+import {
+  CanvasShellContextualWorkbenchSplit,
+  CanvasShellMainPanelFrame,
+  CanvasShellOverlayCenterSurfaceFrame,
+  CanvasShellReadOnlyBannerSlot,
+} from './CanvasShellMainPanelFrame';
+import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
+import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
+import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type {
   CanvasShellChromeCommands,
+  CanvasShellChromeState,
   CanvasShellGraph,
   CanvasShellGraphCommands,
   CanvasShellLayout,
   CanvasShellOpenDataRegistryCommand,
   CanvasShellPanels,
-  CanvasShellToolbar,
 } from './canvasShell.types';
 
 function resolveCanvasShellMainPanelDefaultSize(): number {
@@ -23,29 +29,40 @@ type CanvasShellMainPanelProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
   graph: CanvasShellGraph;
-  toolbar: CanvasShellToolbar;
+  chromeState: CanvasShellChromeState;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   onOpenSourceImport?: CanvasShellOpenDataRegistryCommand;
+  onOpenProjectExplorer?: () => void;
+  onOpenProjectCode?: () => void;
+  onOpenCanvasSettings?: () => void;
+  contextMenuPresenter: CanvasContextMenuPresenter;
 }>;
 
 function CanvasShellMenuContributionRegistrars({
   panels,
   graph,
-  toolbar,
+  chromeState,
   chromeCommands,
+  onOpenProjectExplorer,
+  onOpenProjectCode,
 }: Pick<
   CanvasShellMainPanelProps,
-  'panels' | 'graph' | 'toolbar' | 'chromeCommands'
+  | 'panels'
+  | 'graph'
+  | 'chromeState'
+  | 'chromeCommands'
+  | 'onOpenProjectExplorer'
+  | 'onOpenProjectCode'
 >): JSX.Element {
   return (
     <>
       <CanvasViewMenuContributionRegistrar
         canEditEdges={panels.userPermissions.canEditEdges}
-        canUseCostOverlay={toolbar.canUseCostOverlay}
-        exclusiveOverlayMode={toolbar.exclusiveOverlayMode}
-        impactOverlayEnabled={toolbar.impactOverlayEnabled}
-        columnLevelLineageEnabled={toolbar.columnLevelLineageEnabled}
+        canUseCostOverlay={chromeState.canUseCostOverlay}
+        exclusiveOverlayMode={chromeState.exclusiveOverlayMode}
+        impactOverlayEnabled={chromeState.impactOverlayEnabled}
+        columnLevelLineageEnabled={chromeState.columnLevelLineageEnabled}
         canvasGridVisible={graph.canvasGridVisible}
         canvasGridColor={graph.canvasGridColor}
         canvasSnapToGrid={graph.canvasSnapToGrid}
@@ -60,10 +77,15 @@ function CanvasShellMenuContributionRegistrars({
         onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
       />
       <CanvasWorkspaceMenuContributionRegistrar
-        canExportProjectSnapshot={toolbar.canExportProjectSnapshot}
-        canImportProjectSnapshot={toolbar.canImportProjectSnapshot}
+        activeCanvas={panels.activeCanvas}
+        canExportProjectSnapshot={chromeState.canExportProjectSnapshot}
+        canImportProjectSnapshot={chromeState.canImportProjectSnapshot}
+        canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
+        canOpenProjectCode={typeof onOpenProjectCode === 'function'}
         onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
         onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
+        onOpenProjectExplorer={onOpenProjectExplorer}
+        onOpenProjectCode={onOpenProjectCode}
       />
     </>
   );
@@ -75,16 +97,18 @@ function CanvasShellViewport({
   graph,
   graphCommands,
   onOpenSourceImport,
-  canPreviewExecutionPlan,
-  onPreviewExecutionPlan,
+  onOpenCanvasSettings,
+  contextMenuPresenter,
 }: Pick<
   CanvasShellMainPanelProps,
-  'layout' | 'panels' | 'graph' | 'graphCommands' | 'onOpenSourceImport'
-> &
-  Readonly<{
-    canPreviewExecutionPlan: boolean;
-    onPreviewExecutionPlan: CanvasShellChromeCommands['onPlan'];
-  }>): JSX.Element {
+  | 'layout'
+  | 'panels'
+  | 'graph'
+  | 'graphCommands'
+  | 'onOpenSourceImport'
+  | 'onOpenCanvasSettings'
+  | 'contextMenuPresenter'
+>): JSX.Element {
   const handleNodeClick: CanvasShellGraphCommands['onNodeClick'] = (event, node) => {
     graphCommands.onNodeClick(event, node);
   };
@@ -118,10 +142,17 @@ function CanvasShellViewport({
       onImportedNodeFocusComplete={graphCommands.onImportedNodeFocusComplete}
       canOpenSourceImport={typeof onOpenSourceImport === 'function'}
       onOpenSourceImport={
-        onOpenSourceImport == null ? undefined : () => onOpenSourceImport(undefined)
+        onOpenSourceImport == null
+          ? undefined
+          : (flowPosition) =>
+              onOpenSourceImport(
+                undefined,
+                flowPosition == null ? undefined : { canvasPosition: flowPosition }
+              )
       }
-      canPreviewExecutionPlan={canPreviewExecutionPlan}
-      onPreviewExecutionPlan={onPreviewExecutionPlan}
+      canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
+      onOpenCanvasSettings={onOpenCanvasSettings}
+      contextMenuPresenter={contextMenuPresenter}
     />
   );
 }
@@ -131,14 +162,19 @@ function CanvasShellMainSurface({
   panels,
   graph,
   graphCommands,
-  chromeCommands,
   onOpenSourceImport,
-  canPreviewExecutionPlan,
+  onOpenCanvasSettings,
+  contextMenuPresenter,
 }: Pick<
   CanvasShellMainPanelProps,
-  'layout' | 'panels' | 'graph' | 'graphCommands' | 'chromeCommands' | 'onOpenSourceImport'
-> &
-  Readonly<{ canPreviewExecutionPlan: boolean }>): JSX.Element {
+  | 'layout'
+  | 'panels'
+  | 'graph'
+  | 'graphCommands'
+  | 'onOpenSourceImport'
+  | 'onOpenCanvasSettings'
+  | 'contextMenuPresenter'
+>): JSX.Element {
   const viewport = (
     <CanvasShellViewport
       layout={layout}
@@ -146,30 +182,36 @@ function CanvasShellMainSurface({
       graph={graph}
       graphCommands={graphCommands}
       onOpenSourceImport={onOpenSourceImport}
-      canPreviewExecutionPlan={canPreviewExecutionPlan}
-      onPreviewExecutionPlan={chromeCommands.onPlan}
+      onOpenCanvasSettings={onOpenCanvasSettings}
+      contextMenuPresenter={contextMenuPresenter}
     />
   );
 
-  if (layout.centerSurface == null) {
-    if (layout.workbenchTabPanel != null) {
-      return <>{layout.workbenchTabPanel}</>;
-    }
+  const baseSurface =
+    layout.centerSurface == null ? (
+      viewport
+    ) : layout.centerSurfaceMode === 'replace' ? (
+      <>{layout.centerSurface}</>
+    ) : (
+      <CanvasShellOverlayCenterSurfaceFrame
+        viewport={viewport}
+        centerSurface={layout.centerSurface}
+      />
+    );
 
-    return viewport;
-  }
-
-  if (layout.centerSurfaceMode === 'replace') {
-    return <>{layout.centerSurface}</>;
+  if (layout.contextualWorkbench == null) {
+    return baseSurface;
   }
 
   return (
-    <div className="relative flex min-h-0 flex-1">
-      {viewport}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="pointer-events-auto h-full">{layout.centerSurface}</div>
-      </div>
-    </div>
+    <CanvasShellContextualWorkbenchSplit
+      baseSurface={baseSurface}
+      title={layout.contextualWorkbench.title}
+      description={layout.contextualWorkbench.description}
+      onClose={layout.contextualWorkbench.onClose}
+    >
+      {layout.contextualWorkbench.panel}
+    </CanvasShellContextualWorkbenchSplit>
   );
 }
 
@@ -178,32 +220,12 @@ function CanvasShellNodeWorkbenchOverlay({
   panels,
   chromeCommands,
 }: Pick<CanvasShellMainPanelProps, 'layout' | 'panels' | 'chromeCommands'>): JSX.Element | null {
-  const nodeWorkbenchPlacement = layout.surfaceStrategy?.nodeWorkbench.placement;
-
-  if (
-    nodeWorkbenchPlacement !== 'contextual-overlay' ||
-    layout.focusMode ||
-    !layout.inspectorPanelVisible ||
-    panels.inspectorNode == null
-  ) {
-    return null;
-  }
-
   return (
-    <div
-      data-slot="canvas-node-workbench-overlay"
-      className="absolute top-16 right-4 bottom-4 z-20 w-[min(28rem,calc(100%-2rem))] overflow-hidden rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] shadow-xl"
-    >
-      <CanvasInspectorPanel
-        node={panels.inspectorNode}
-        nodes={panels.inspectorGraphNodes}
-        edges={panels.inspectorGraphEdges}
-        activeRunId={panels.activeRunId}
-        registeredPlugins={panels.registeredPlugins}
-        onHide={chromeCommands.onHideInspector}
-        authoring={panels.inspectorAuthoring}
-      />
-    </div>
+    <CanvasNodeWorkbenchOverlay
+      layout={layout}
+      panels={panels}
+      onHide={chromeCommands.onHideInspector}
+    />
   );
 }
 
@@ -211,46 +233,52 @@ export function CanvasShellMainPanel({
   layout,
   panels,
   graph,
-  toolbar,
+  chromeState,
   graphCommands,
   chromeCommands,
   onOpenSourceImport,
+  onOpenProjectExplorer,
+  onOpenProjectCode,
+  onOpenCanvasSettings,
+  contextMenuPresenter,
 }: CanvasShellMainPanelProps): JSX.Element {
   const shouldShowGraphStatusOverlay =
     layout.centerSurface == null || layout.centerSurfaceMode === 'overlay';
 
   return (
-    <ResizablePanel defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
-      <div className="relative h-full flex flex-col bg-(--surface-panel)">
-        <CanvasShellMenuContributionRegistrars
-          panels={panels}
-          graph={graph}
-          toolbar={toolbar}
-          chromeCommands={chromeCommands}
+    <CanvasShellMainPanelFrame defaultSize={resolveCanvasShellMainPanelDefaultSize()}>
+      <CanvasShellMenuContributionRegistrars
+        panels={panels}
+        graph={graph}
+        chromeState={chromeState}
+        chromeCommands={chromeCommands}
+        onOpenProjectExplorer={onOpenProjectExplorer}
+        onOpenProjectCode={onOpenProjectCode}
+      />
+      {layout.readOnlyBanner ? (
+        <CanvasShellReadOnlyBannerSlot>{layout.readOnlyBanner}</CanvasShellReadOnlyBannerSlot>
+      ) : null}
+      <CanvasShellMainSurface
+        layout={layout}
+        panels={panels}
+        graph={graph}
+        graphCommands={graphCommands}
+        onOpenSourceImport={onOpenSourceImport}
+        onOpenCanvasSettings={onOpenCanvasSettings}
+        contextMenuPresenter={contextMenuPresenter}
+      />
+      {shouldShowGraphStatusOverlay ? (
+        <CanvasGraphStatusOverlay
+          activeCanvas={panels.activeCanvas}
+          draftStatusState={chromeState.draftStatusState}
+          onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
         />
-        {layout.readOnlyBanner ? <div className="shrink-0">{layout.readOnlyBanner}</div> : null}
-        <CanvasShellMainSurface
-          layout={layout}
-          panels={panels}
-          graph={graph}
-          graphCommands={graphCommands}
-          chromeCommands={chromeCommands}
-          onOpenSourceImport={onOpenSourceImport}
-          canPreviewExecutionPlan={panels.userPermissions.canPlan && toolbar.canPlanGraph}
-        />
-        {shouldShowGraphStatusOverlay ? (
-          <CanvasGraphStatusOverlay
-            activeCanvas={panels.activeCanvas}
-            draftToolbarState={toolbar.draftToolbarState}
-            onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
-          />
-        ) : null}
-        <CanvasShellNodeWorkbenchOverlay
-          layout={layout}
-          panels={panels}
-          chromeCommands={chromeCommands}
-        />
-      </div>
-    </ResizablePanel>
+      ) : null}
+      <CanvasShellNodeWorkbenchOverlay
+        layout={layout}
+        panels={panels}
+        chromeCommands={chromeCommands}
+      />
+    </CanvasShellMainPanelFrame>
   );
 }

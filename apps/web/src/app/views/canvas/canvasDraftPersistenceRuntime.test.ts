@@ -2,7 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { DraftAttemptRefs } from './canvasDraftLifecycle.types';
 import { runCanvasDraftAutosaveEffect } from './canvasDraftAutosaveScheduling';
-import { isStaleSaveResolution } from './canvasDraftPersistenceRuntime';
+import type { CanvasDraftSession } from './canvasDraftSession';
+import {
+  isStaleSaveResolution,
+  restoreEditingAfterSaveFailure,
+} from './canvasDraftPersistenceRuntime';
 
 function createDraftAttemptRefs(): DraftAttemptRefs {
   return {
@@ -71,5 +75,43 @@ describe('canvasDraftPersistenceRuntime', () => {
     expect(scheduledRetry).toBe(false);
     expect(refs.saveDebounceTimerRef.current).toBeNull();
     expect(setDraftSaveStatus).toHaveBeenLastCalledWith('failed');
+  });
+
+  it('clears stale saving markers when restoring editing after save failure', () => {
+    const refs = createDraftAttemptRefs();
+    let session: CanvasDraftSession = {
+      syncState: 'saving',
+      baseline: { record: null },
+      draftRevision: 'rev-imported',
+      workingSet: {
+        visibleNodeIds: ['node_1', 'node_imported'],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+      savingBaseRevision: 'rev-before-import',
+      savingWorkingSet: {
+        visibleNodeIds: ['node_1'],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const setDraftSession = vi.fn(
+      (updater: (currentSession: CanvasDraftSession) => CanvasDraftSession) => {
+        session = updater(session);
+      }
+    );
+    const setDraftSaveStatus = vi.fn();
+
+    restoreEditingAfterSaveFailure(
+      refs,
+      'draft-signature-after-import',
+      setDraftSession,
+      setDraftSaveStatus
+    );
+
+    expect(session.syncState).toBe('editing');
+    expect(session.savingBaseRevision).toBeUndefined();
+    expect(session.savingWorkingSet).toBeUndefined();
+    expect(setDraftSaveStatus).toHaveBeenCalledWith('failed');
   });
 });

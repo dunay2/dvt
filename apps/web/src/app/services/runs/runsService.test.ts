@@ -544,7 +544,7 @@ describe('runsService runtime contract', () => {
     }
   );
 
-  it('surfaces graph_source_selection_mismatch from protected start-run as explicit re-plan guidance', async () => {
+  it('surfaces graph_source_selection_mismatch from protected start-run as explicit preview guidance', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.postJson).mockRejectedValue(
       createApiError(422, '/runs/start', {
@@ -562,7 +562,7 @@ describe('runsService runtime contract', () => {
     const service = createRunsService(apiClient);
 
     await expect(service.startRun(createStartRunInput())).rejects.toThrow(
-      'Selected scope no longer matches the authoritative draft. Re-run Plan.'
+      'Selected scope no longer matches the authoritative draft. Preview execution plan again.'
     );
   });
 

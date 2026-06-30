@@ -51,6 +51,9 @@
 
   function safeRunGitText(args, options = {}) {
     try {
+      if (typeof options.runGitText === 'function') {
+        return options.runGitText(args, options);
+      }
       return runGitText(args, options);
     } catch {
       return '';
@@ -111,6 +114,28 @@
     return hash.digest('hex');
   }
 
+  function computePrepushValidationFingerprint(changedFiles, options = {}) {
+    const hash = crypto.createHash('sha256');
+    const baseRef = process.env.GIT_BASE || 'origin/main';
+    const parts = [
+      ['rev-parse', '--verify', 'HEAD'],
+      ['rev-parse', '--verify', baseRef],
+      ['diff', '--binary', '--diff-filter=ACMRD', `${baseRef}...HEAD`],
+      ['diff', '--cached', '--binary', '--diff-filter=ACMRD'],
+      ['diff', '--binary', '--diff-filter=ACMRD'],
+    ];
+
+    hash.update(JSON.stringify(changedFiles));
+    for (const args of parts) {
+      hash.update(`\n$ git ${args.join(' ')}\n`);
+      hash.update(safeRunGitText(args, options));
+    }
+    hash.update('\nuntracked\n');
+    hash.update(untrackedFileFingerprint(changedFiles, options));
+
+    return hash.digest('hex');
+  }
+
   function validationLevel(options = {}) {
     return options.full ? 'full' : 'default';
   }
@@ -126,15 +151,23 @@
       changedFiles: [...changedFiles],
       stateFingerprint:
         options.stateFingerprint || computePrepushStateFingerprint(changedFiles, options),
+      validationFingerprint:
+        options.validationFingerprint || computePrepushValidationFingerprint(changedFiles, options),
     };
   }
 
   function isPrepushStampValid(stamp, expected) {
+    const stateMatches = stamp?.stateFingerprint === expected.stateFingerprint;
+    const validationMatches =
+      stamp?.validationFingerprint &&
+      expected.validationFingerprint &&
+      stamp.validationFingerprint === expected.validationFingerprint;
+
     return (
       stamp &&
       stamp.version === STAMP_VERSION &&
       validationLevelSatisfies(stamp.validationLevel, expected.validationLevel) &&
-      stamp.stateFingerprint === expected.stateFingerprint &&
+      (stateMatches || validationMatches) &&
       JSON.stringify(stamp.changedFiles || []) === JSON.stringify(expected.changedFiles || [])
     );
   }
@@ -230,6 +263,7 @@
     buildPrepushStamp,
     classifyPrepushScope,
     commandLabel,
+    computePrepushValidationFingerprint,
     computePrepushStateFingerprint,
     executePrepushPlan,
     isPrepushStampValid,

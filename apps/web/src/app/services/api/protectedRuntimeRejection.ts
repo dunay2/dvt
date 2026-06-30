@@ -13,13 +13,13 @@ type HttpErrorEnvelope = {
 };
 
 const GRAPH_SOURCE_SELECTION_MISMATCH_MESSAGE =
-  'Selected scope no longer matches the authoritative draft. Re-run Plan.';
+  'Selected scope no longer matches the authoritative draft. Preview execution plan again.';
 const DEPENDENCY_GAP_MESSAGE =
-  'Selected closure is missing required upstream dependencies. Adjust the selection and re-run Plan.';
+  'Selected closure is missing required upstream dependencies. Adjust the selection and preview execution plan again.';
 const SELECTED_NODE_MISSING_MESSAGE =
-  'Selected nodes are no longer available in the authoritative draft. Refresh the canvas and re-run Plan.';
+  'Selected nodes are no longer available in the authoritative draft. Refresh the canvas and preview execution plan again.';
 const CYCLE_DETECTED_MESSAGE =
-  'Selected closure contains a cycle and cannot be executed. Remove the cycle and re-run Plan.';
+  'Selected closure contains a cycle and cannot be executed. Remove the cycle and preview execution plan again.';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value !== null && typeof value === 'object' && !Array.isArray(value)

@@ -3,7 +3,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   deriveCanvasDraftAccessPosture,
   isCanvasDraftPostureMutationBlocked,
-  toCanvasDraftToolbarState,
+  toCanvasDraftStatusState,
   type CanvasDraftAccessPosture,
 } from './canvasDraftAccessPostureModel';
 import type { CanvasDraftAuthTransportPosture } from './canvasDraftAuthTransportPosture';
@@ -17,11 +17,11 @@ import {
   type VisibleCanvasScope,
 } from './canvasDraftScope';
 import {
-  deriveCanvasDraftToolbarState,
+  deriveCanvasDraftStatusState,
   deriveDraftRecoveryReason,
   type CanvasDraftRecoveryReason,
-  type CanvasDraftToolbarState,
-} from './canvasDraftToolbarState';
+  type CanvasDraftStatusState,
+} from './canvasDraftStatusState';
 import type { CanvasDraftAccessMode, CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 
@@ -50,7 +50,7 @@ export type CanvasAuthoringState = {
   isStaleDraftConflict: boolean;
   hasDraftProjectionGap: boolean;
   draftRecoveryReason: CanvasDraftRecoveryReason;
-  draftToolbarState: CanvasDraftToolbarState;
+  draftStatusState: CanvasDraftStatusState;
   isDraftRecoveryBlocked: boolean;
   isDraftAccessBlocked: boolean;
   isDraftReadOnly: boolean;
@@ -73,7 +73,7 @@ type CanvasDraftRecoveryState = Pick<
   | 'isStaleDraftConflict'
   | 'hasDraftProjectionGap'
   | 'draftRecoveryReason'
-  | 'draftToolbarState'
+  | 'draftStatusState'
   | 'isDraftRecoveryBlocked'
 >;
 
@@ -141,7 +141,7 @@ function deriveCanvasDraftRecoveryState(args: {
     isStaleDraftConflict,
     hasDraftProjectionGap,
     draftRecoveryReason,
-    draftToolbarState: deriveCanvasDraftToolbarState({
+    draftStatusState: deriveCanvasDraftStatusState({
       draftSaveStatus,
       recoveryReason: draftRecoveryReason,
     }),
@@ -206,7 +206,7 @@ export function deriveCanvasAuthoringState({
     ...draftAccessState,
     ...draftRecoveryState,
     draftAccessPosture,
-    draftToolbarState: toCanvasDraftToolbarState(draftAccessPosture),
+    draftStatusState: toCanvasDraftStatusState(draftAccessPosture),
     canMutateGraph: canMutateCanvasGraph({
       canMutateGraphTransport,
       draftAccessPosture,

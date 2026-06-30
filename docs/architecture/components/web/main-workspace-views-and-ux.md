@@ -25,7 +25,7 @@ The current shell is composed from:
 - a `LeftNavigation` implementation that remains available for non-workbench
   global routes;
 - a central route outlet where the active product view renders;
-- an optional bottom console drawer;
+- an optional bottom Operational drawer;
 - focus mode, explorer visibility, and inspector visibility controls stored in
   the shell app store.
 
@@ -48,8 +48,8 @@ flowchart LR
   Nav --> Diff
   Nav --> Artifacts
 
-  Canvas --> Console["Console drawer"]
-  Runs --> Console
+  Canvas --> Operations["Operational drawer"]
+  Runs --> Operations
 ```
 
 ## Main Product Views

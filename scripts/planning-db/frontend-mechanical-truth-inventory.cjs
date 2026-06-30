@@ -1,9 +1,22 @@
-/** Owned concern: import and query frontend route capability truth as a DB-first read model. */
+/**
+ * Owned concern: import and query frontend route capability truth as a DB-first read model.
+ * Command/query rails: `ListFrontendMechanicalTruthSurfaces`.
+ */
 const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const { schemaName } = require('../planning-db-migrate.cjs');
+const {
+  countField,
+  headerIndexes,
+  isSeparatorRow,
+  markdownCells,
+  normalizeCell,
+  rowValue,
+} = require('./frontend-inventory-table.cjs');
+const { appendFilter } = require('./query-filter.cjs');
+const { parseLimit } = require('./query-limit.cjs');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const defaultInventoryPath =
@@ -27,14 +40,6 @@ function repoRelative(filePath) {
   return toPosix(path.relative(repoRoot, filePath));
 }
 
-function stripInlineCode(value) {
-  return String(value ?? '').replace(/`([^`]*)`/g, '$1');
-}
-
-function normalizeCell(value) {
-  return stripInlineCode(value).replace(/\s+/g, ' ').trim();
-}
-
 function normalizeFrontendMechanicalTruthList(value) {
   const normalized = normalizeCell(value);
   if (!normalized || /^(-|none|n\/a)$/i.test(normalized)) {
@@ -45,23 +50,6 @@ function normalizeFrontendMechanicalTruthList(value) {
     .split(';')
     .map((item) => normalizeCell(item))
     .filter((item) => item.length > 0 && !/^(-|none|n\/a)$/i.test(item));
-}
-
-function markdownCells(line) {
-  return line
-    .trim()
-    .replace(/^\|/, '')
-    .replace(/\|$/, '')
-    .split('|')
-    .map((cell) => cell.trim());
-}
-
-function isSeparatorRow(cells) {
-  return cells.every((cell) => /^:?-{3,}:?$/.test(cell.trim()));
-}
-
-function normalizeHeader(value) {
-  return normalizeCell(value).toLowerCase();
 }
 
 const requiredHeaders = [
@@ -79,23 +67,6 @@ const requiredHeaders = [
   'Evidence',
 ];
 
-function headerIndexes(cells) {
-  const byHeader = new Map(cells.map((cell, index) => [normalizeHeader(cell), index]));
-  const missing = requiredHeaders.filter((header) => !byHeader.has(normalizeHeader(header)));
-
-  if (missing.length > 0) {
-    return null;
-  }
-
-  return Object.fromEntries(
-    requiredHeaders.map((header) => [header, byHeader.get(normalizeHeader(header))])
-  );
-}
-
-function rowValue(cells, indexes, header) {
-  return normalizeCell(cells[indexes[header]]);
-}
-
 function parseInventoryTable(document) {
   const lines = document.content.split(/\r?\n/);
   const sourceContentSha256 = sha256(document.content);
@@ -112,7 +83,7 @@ function parseInventoryTable(document) {
 
     const cells = markdownCells(line);
     if (!indexes) {
-      indexes = headerIndexes(cells);
+      indexes = headerIndexes(cells, requiredHeaders);
       continue;
     }
 
@@ -174,16 +145,6 @@ function buildFrontendMechanicalTruthSnapshot(options = {}) {
   };
 }
 
-function countField(row, snakeName, camelName) {
-  const explicit = row[snakeName];
-  if (explicit !== undefined && explicit !== null) {
-    return Number(explicit);
-  }
-
-  const arrayValue = row[camelName];
-  return Array.isArray(arrayValue) ? arrayValue.length : 0;
-}
-
 function buildFrontendMechanicalTruthRows(rows) {
   return rows.map((row) => [
     row.surface_kind ?? row.surfaceKind,
@@ -198,28 +159,6 @@ function buildFrontendMechanicalTruthRows(rows) {
     countField(row, 'capability_gap_count', 'capabilityGaps'),
     row.source_path ?? row.sourcePath,
   ]);
-}
-
-function parseLimit(value, defaultLimit) {
-  if (value === undefined || value === null || value === '') {
-    return defaultLimit;
-  }
-
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-  }
-
-  return parsed;
-}
-
-function appendFilter(predicates, params, column, value) {
-  if (value === undefined || value === null || value === '') {
-    return;
-  }
-
-  params.push(value);
-  predicates.push(`${column} = $${params.length}`);
 }
 
 async function readFrontendMechanicalTruthRows(client, filters = {}, options = {}) {

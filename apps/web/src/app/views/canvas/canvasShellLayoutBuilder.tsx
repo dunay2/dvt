@@ -2,7 +2,6 @@
 import type { ReactNode } from 'react';
 
 import { CanvasReadOnlyBannerView } from './CanvasStateViews';
-import { CanvasPlaygroundTabStrip } from './CanvasPlaygroundTabStrip';
 import { renderCanvasCenterSurface } from './CanvasCenterSurface';
 import { CanvasRecoveryBanner } from './CanvasRecoveryBanner';
 import { resolveCanvasDraftAccessRecoveryCommand } from './canvasDraftAccessPostureModel';
@@ -52,30 +51,6 @@ function renderCanvasShellReadOnlyBanner(
   );
 }
 
-function renderCanvasShellHostTabStrip(
-  authoringCommands: CanvasShellLayoutBuilderArgs['authoringCommands'],
-  routePresentation: Pick<
-    CanvasShellLayoutBuilderArgs['routePresentation'],
-    'availableCanvasKinds' | 'canvasTabState' | 'effectiveUserPermissions'
-  >
-): ReactNode {
-  if (routePresentation.canvasTabState.tabs.length === 0) {
-    return null;
-  }
-
-  return (
-    <CanvasPlaygroundTabStrip
-      tabState={routePresentation.canvasTabState}
-      availableCanvasKinds={routePresentation.availableCanvasKinds}
-      canEditEdges={routePresentation.effectiveUserPermissions.canEditEdges}
-      variant="inline"
-      onCreateCanvasDocument={(command) => {
-        void authoringCommands.handleCreateCanvasDocument(command);
-      }}
-    />
-  );
-}
-
 export function buildCanvasShellLayout({
   authoringCommands,
   layoutState,
@@ -94,9 +69,7 @@ export function buildCanvasShellLayout({
     inspectorPanelVisible: layoutState.inspectorPanelVisible,
     canOpenSourceImport: layoutState.canOpenSourceImport,
     surfaceStrategy: layoutState.canvasSurfaceStrategy,
-    hostTabState: routePresentation.canvasTabState,
     centerSurfaceMode,
-    hostTabStrip: renderCanvasShellHostTabStrip(authoringCommands, routePresentation),
     centerSurface: renderCanvasCenterSurface({
       presentationState: routePresentation.presentationState,
       workspaceScope: routePresentation.workspaceScope,

@@ -3,8 +3,10 @@ const {
   assert,
   parseArgs,
   planComponentCreateOperation,
+  planComponentReparentOperation,
   validateComponentStatus,
   writePlannedComponentCreateOperation,
+  writePlannedComponentReparentOperation,
 } = require('./helpers.cjs');
 
 test('parseArgs builds a component create command with semantic metadata', () => {
@@ -66,6 +68,32 @@ test('parseArgs builds a component create command with semantic metadata', () =>
   assert.deepEqual(command.invariants, [
     'Every accepted admission decision has a governance rail.',
   ]);
+});
+
+test('parseArgs builds a component reparent command with audit source', () => {
+  const command = parseArgs([
+    'component',
+    'reparent',
+    '--component',
+    'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+    '--parent',
+    'SYS-WEB-APP-PLUGINS',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'codex',
+    '--expected-revision',
+    '1',
+    '--idempotency-key',
+    'codex-component-reparent-canvas-surface',
+  ]);
+
+  assert.equal(command.kind, 'component_reparent');
+  assert.equal(command.componentId, 'SYS-WEB-CANVAS-SURFACE-STRATEGY');
+  assert.equal(command.parentComponentId, 'SYS-WEB-APP-PLUGINS');
+  assert.equal(command.expectedRevision, 1);
 });
 
 test('component create planner emits a DB definition and audit row', () => {
@@ -151,6 +179,108 @@ test('component create planner emits a DB definition and audit row', () => {
   assert.equal(planned.audit.componentId, 'SYS-RUNTIME-ENGINE-ADMISSION');
 });
 
+test('component reparent planner emits imported component update and audit row', () => {
+  const now = new Date('2026-06-16T10:00:00.000Z');
+  const command = parseArgs([
+    'component',
+    'reparent',
+    '--component',
+    'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+    '--parent',
+    'SYS-WEB-APP-PLUGINS',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  const planned = planComponentReparentOperation({
+    command,
+    parentUnit: {
+      unit_id: 'SYS-WEB-APP-PLUGINS',
+      level: 'component',
+      root_unit: 'SYS-DVT',
+      domain_unit: 'SYS-WEB',
+    },
+    existingComponent: {
+      component_id: 'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+      parent_id: 'SYS-WEB-ROOT',
+      raw_component: { unitReferences: [{ id: 'SYS-WEB-CANVAS-SURFACE-STRATEGY' }] },
+    },
+    parentPathRows: [
+      { unit_id: 'SYS-DVT' },
+      { unit_id: 'SYS-WEB' },
+      { unit_id: 'SYS-WEB-ROOT' },
+      { unit_id: 'SYS-WEB-APP-PLUGINS' },
+    ],
+    latestOperation: { resulting_revision: 2 },
+    operationId: 'op-component-reparent',
+    now,
+  });
+
+  assert.equal(planned.definition.componentId, 'SYS-WEB-CANVAS-SURFACE-STRATEGY');
+  assert.equal(planned.definition.parentComponentId, 'SYS-WEB-APP-PLUGINS');
+  assert.deepEqual(planned.definition.unitPath, [
+    'SYS-DVT',
+    'SYS-WEB',
+    'SYS-WEB-ROOT',
+    'SYS-WEB-APP-PLUGINS',
+    'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+  ]);
+  assert.equal(planned.definition.rawComponent.parent, 'SYS-WEB-APP-PLUGINS');
+  assert.equal(planned.audit.operationType, 'component_reparent');
+  assert.equal(planned.audit.previousRevision, 2);
+  assert.equal(planned.audit.resultingRevision, 3);
+});
+
+test('component reparent planner rejects descendant parent cycles', () => {
+  const command = parseArgs([
+    'component',
+    'reparent',
+    '--component',
+    'SYS-WEB-APP-PLUGINS',
+    '--parent',
+    'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+
+  assert.throws(
+    () =>
+      planComponentReparentOperation({
+        command,
+        parentUnit: {
+          unit_id: 'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+          level: 'component',
+          root_unit: 'SYS-DVT',
+          domain_unit: 'SYS-WEB',
+        },
+        existingComponent: {
+          component_id: 'SYS-WEB-APP-PLUGINS',
+          parent_id: 'SYS-WEB-ROOT',
+          raw_component: { unitReferences: [{ id: 'SYS-WEB-APP-PLUGINS' }] },
+        },
+        parentPathRows: [
+          { unit_id: 'SYS-DVT' },
+          { unit_id: 'SYS-WEB' },
+          { unit_id: 'SYS-WEB-ROOT' },
+          { unit_id: 'SYS-WEB-APP-PLUGINS' },
+          { unit_id: 'SYS-WEB-CANVAS-SURFACE-STRATEGY' },
+        ],
+        latestOperation: { resulting_revision: 2 },
+        operationId: 'op-component-reparent-cycle',
+        now: new Date('2026-06-16T10:00:00.000Z'),
+      }),
+    /cannot be reparented under its own descendant SYS-WEB-CANVAS-SURFACE-STRATEGY/
+  );
+});
+
 test('component create writer stores component lists in relational tables', async () => {
   const now = new Date('2026-05-14T09:00:00.000Z');
   const command = parseArgs([
@@ -220,6 +350,114 @@ test('component create writer stores component lists in relational tables', asyn
   assert.ok(
     queries.some((query) => query.sql.includes('governance_component_local_semantic_items'))
   );
+});
+
+test('component reparent writer stores imported overlay and audit row', async () => {
+  const command = parseArgs([
+    'component',
+    'reparent',
+    '--component',
+    'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+    '--parent',
+    'SYS-WEB-APP-PLUGINS',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+  const planned = planComponentReparentOperation({
+    command,
+    parentUnit: { unit_id: 'SYS-WEB-APP-PLUGINS', level: 'component' },
+    existingComponent: {
+      component_id: 'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+      raw_component: {},
+    },
+    parentPathRows: [{ unit_id: 'SYS-WEB-ROOT' }, { unit_id: 'SYS-WEB-APP-PLUGINS' }],
+    latestOperation: null,
+    operationId: 'op-component-reparent',
+    now: new Date('2026-06-16T10:00:00.000Z'),
+  });
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [] };
+    },
+  };
+
+  await writePlannedComponentReparentOperation(client, planned);
+
+  assert.ok(
+    !queries.some((query) =>
+      query.sql.includes('update planning_query_store.governance_components')
+    )
+  );
+  const overlayUpsert = queries.find((query) =>
+    query.sql.includes('governance_component_reparent_overrides')
+  );
+  assert.ok(overlayUpsert);
+  assert.match(overlayUpsert.sql, /on conflict \(component_id\) do update/);
+  assert.deepEqual(JSON.parse(overlayUpsert.params[4]), [
+    'SYS-WEB-ROOT',
+    'SYS-WEB-APP-PLUGINS',
+    'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+  ]);
+  assert.ok(queries.some((query) => query.sql.includes('governance_component_local_operations')));
+});
+
+test('component reparent writer updates local definitions when the component is DB-authored', async () => {
+  const command = parseArgs([
+    'component',
+    'reparent',
+    '--component',
+    'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+    '--parent',
+    'SYS-WEB-APP-PLUGINS',
+    '--source-ref',
+    'docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md',
+    '--source-content-sha256',
+    'a'.repeat(64),
+    '--actor',
+    'codex',
+  ]);
+  const planned = planComponentReparentOperation({
+    command,
+    parentUnit: {
+      unit_id: 'SYS-WEB-APP-PLUGINS',
+      level: 'component',
+      root_unit: 'SYS-DVT',
+      domain_unit: 'SYS-WEB',
+    },
+    existingComponent: {
+      source_kind: 'local',
+      component_id: 'SYS-WEB-CANVAS-SURFACE-STRATEGY',
+      revision: 4,
+    },
+    parentPathRows: [{ unit_id: 'SYS-WEB-ROOT' }, { unit_id: 'SYS-WEB-APP-PLUGINS' }],
+    latestOperation: null,
+    operationId: 'op-component-reparent-local',
+    now: new Date('2026-06-16T10:00:00.000Z'),
+  });
+  const queries = [];
+  const client = {
+    async query(sql, params) {
+      queries.push({ sql, params });
+      return { rows: [] };
+    },
+  };
+
+  await writePlannedComponentReparentOperation(client, planned);
+
+  const update = queries.find((query) =>
+    query.sql.includes('update planning_query_store.governance_component_local_definitions')
+  );
+  assert.ok(update);
+  assert.equal(update.params[1], 'SYS-WEB-APP-PLUGINS');
+  assert.equal(update.params[2], 'SYS-DVT');
+  assert.equal(update.params[3], 'SYS-WEB');
+  assert.equal(update.params[6], 5);
 });
 
 test('component create planner rejects duplicate, missing parent, and weak semantics', () => {

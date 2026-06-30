@@ -8,7 +8,7 @@ import type { WorkspaceScope } from '../ports/sessionContext';
 import { DEFAULT_CANVAS_GRID_COLOR, DEFAULT_CANVAS_PALETTE_ID } from './canvas/canvasPalette';
 import { deriveCanvasDraftAccessPosture } from './canvas/canvasDraftAccessPostureModel';
 import type { CanvasDraftAuthTransportPosture } from './canvas/canvasDraftAuthTransportPosture';
-import type { CanvasDraftToolbarState } from './canvas/canvasDraftToolbarState';
+import type { CanvasDraftStatusState } from './canvas/canvasDraftStatusState';
 import type { CanvasController } from './Canvas.test.controller';
 
 type CanvasWorkbenchDefaultsDto = {
@@ -23,6 +23,8 @@ type CanvasWorkbenchDefaultsDto = {
   inspectorPanelVisible: CanvasController['inspectorPanelVisible'];
   canOpenSourceImport: CanvasController['canOpenSourceImport'];
   inspectorNode: CanvasController['inspectorNode'];
+  inspectorPreferredTabId: CanvasController['inspectorPreferredTabId'];
+  inspectorPreferredTabRequestId: CanvasController['inspectorPreferredTabRequestId'];
   inspectorNodeSelectedForExecution: CanvasController['inspectorNodeSelectedForExecution'];
   inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
   inspectorGraphEdges: CanvasController['inspectorGraphEdges'];
@@ -60,7 +62,7 @@ type CanvasDraftDefaultsDto = {
   draftFormatError: CanvasController['draftFormatError'];
   draftFormatMeta: CanvasController['draftFormatMeta'];
   draftRecoveryReason: CanvasController['draftRecoveryReason'];
-  draftToolbarState: CanvasController['draftToolbarState'];
+  draftStatusState: CanvasController['draftStatusState'];
   canExportProjectSnapshot: CanvasController['canExportProjectSnapshot'];
   canImportProjectSnapshot: CanvasController['canImportProjectSnapshot'];
   draftConflictRevision: CanvasController['draftConflictRevision'];
@@ -88,7 +90,7 @@ type CanvasControllerStateDefaults = CanvasWorkbenchDefaultsDto &
   CanvasDraftDefaultsDto &
   CanvasExecutionDefaultsDto;
 
-export function buildDefaultCanvasToolbarState(): CanvasDraftToolbarState {
+export function buildDefaultCanvasDraftStatusState(): CanvasDraftStatusState {
   return {
     label: 'Draft synced',
     tone: 'neutral',
@@ -136,6 +138,8 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     inspectorPanelVisible: true,
     canOpenSourceImport: true,
     inspectorNode: null,
+    inspectorPreferredTabId: null,
+    inspectorPreferredTabRequestId: 0,
     inspectorNodeSelectedForExecution: false,
     inspectorGraphNodes: [],
     inspectorGraphEdges: [],
@@ -154,9 +158,6 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
           title: 'Start dbt canvas',
           editableMessage:
             'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
-          firstNodeLabel: 'Add first dbt node',
-          firstNodeHelper:
-            'Choose a governed dbt resource kind to start modeling this workspace lineage graph.',
         },
         nodeKinds: DBT_NODE_KINDS,
       },
@@ -170,9 +171,6 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
           title: 'Start transformation canvas',
           editableMessage:
             'Start this transformation canvas by adding a governed source, SQL transform, or sink node.',
-          firstNodeLabel: 'Add first transformation node',
-          firstNodeHelper:
-            'Choose a governed transformation node kind to start this protected authoring flow.',
         },
         nodeKinds: DVT_AUTHORING_NODE_KINDS,
       },
@@ -227,7 +225,7 @@ function buildDefaultCanvasDraftState(): CanvasDraftDefaultsDto {
     draftFormatError: null,
     draftFormatMeta: null,
     draftRecoveryReason: null,
-    draftToolbarState: buildDefaultCanvasToolbarState(),
+    draftStatusState: buildDefaultCanvasDraftStatusState(),
     canExportProjectSnapshot: true,
     canImportProjectSnapshot: true,
     draftConflictRevision: null,
@@ -303,7 +301,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'setCanvasGridColor'
   | 'setCanvasSnapToGrid'
   | 'setCanvasEmptyStateGuideVisible'
-  | 'handlePlan'
+  | 'handlePreviewExecutionPlan'
   | 'handleStartRun'
   | 'reloadLatestDraft'
   | 'setPlanModalOpen'
@@ -347,7 +345,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     setCanvasGridColor: vi.fn(),
     setCanvasSnapToGrid: vi.fn(),
     setCanvasEmptyStateGuideVisible: vi.fn(),
-    handlePlan: vi.fn(),
+    handlePreviewExecutionPlan: vi.fn(),
     handleStartRun: vi.fn(),
     reloadLatestDraft: vi.fn(),
     setPlanModalOpen: vi.fn(),

@@ -34,7 +34,7 @@ test('listLocalChangedFiles excludes upstream-only base-vs-worktree changes', ()
     }
 
     if (args.join(' ') === 'ls-files --others --exclude-standard') {
-      return ['apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts'];
+      return ['apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx'];
     }
 
     return [];
@@ -48,7 +48,7 @@ test('listLocalChangedFiles excludes upstream-only base-vs-worktree changes', ()
     [
       'apps/web/src/app/routes.ts',
       'apps/web/src/app/views/Canvas.tsx',
-      'apps/web/src/app/views/canvas/canvasWorkbenchTabs.ts',
+      'apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx',
     ]
   );
   assert.ok(calls.includes('ls-files --others --exclude-standard'));
@@ -153,5 +153,40 @@ test('local changed-files gate has semantic component docs and shared rail consu
       /listLocalChangedFiles/,
       `${consumerPath} must consume the shared ListLocalChangedFiles query rail`
     );
+  }
+});
+
+test('local changed-files gate implementation surfaces name their canonical rails', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const repoRoot = path.resolve(__dirname, '..');
+  const railSources = [
+    [
+      ['Validate', 'Changed', 'Files'].join(''),
+      ['scripts/check-changed.cjs', 'scripts/verify-changed.cjs'],
+    ],
+    [
+      ['Select', 'Prepush', 'Typecheck', 'Scope'].join(''),
+      ['scripts/type-check-prepush.cjs', 'tools/ci/prepush-typecheck-scope.mjs'],
+    ],
+    [['Run', 'Changed', 'Slice', 'Verification'].join(''), ['scripts/verify-changed.cjs']],
+  ];
+
+  const ownSource = fs.readFileSync(__filename, 'utf8');
+  for (const [railName, sourcePaths] of railSources) {
+    assert.doesNotMatch(
+      ownSource,
+      new RegExp(`\\b${railName}\\b`),
+      'the guard test must not be indexed as a rail implementation surface'
+    );
+
+    for (const sourcePath of sourcePaths) {
+      const source = fs.readFileSync(path.join(repoRoot, sourcePath), 'utf8');
+      assert.match(
+        source,
+        new RegExp(`\\b${railName}\\b`),
+        `${sourcePath} must expose the ${railName} rail for Planning DB indexing`
+      );
+    }
   }
 });

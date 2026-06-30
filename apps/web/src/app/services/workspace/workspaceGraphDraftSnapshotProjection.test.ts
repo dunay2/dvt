@@ -33,6 +33,11 @@ describe('workspaceGraphDraftSnapshotProjection', () => {
       package: 'analytics_core',
       compiledSql: 'select order_id from raw.orders',
       columns: metadataColumns,
+      rowCount: 42_000,
+      byteSize: 1_204_000,
+      database: 'warehouse',
+      schema: 'public',
+      tableName: 'orders',
     };
 
     const snapshot = projectWorkspaceGraphAuthoringDraftSnapshot(protectedDraft);
@@ -42,6 +47,13 @@ describe('workspaceGraphDraftSnapshotProjection', () => {
       package: 'analytics_core',
       compiledSql: 'select order_id from raw.orders',
       columns: metadataColumns,
+      metadata: {
+        rowCount: 42_000,
+        byteSize: 1_204_000,
+        database: 'warehouse',
+        schema: 'public',
+        tableName: 'orders',
+      },
     });
     expect(transformSnapshotNode?.columns).not.toBe(metadataColumns);
   });

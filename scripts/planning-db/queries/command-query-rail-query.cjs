@@ -1,41 +1,15 @@
 /** Owned concern: expose command/query rail catalog read models for planning DB queries. */
+const { appendBooleanParamFilter, appendFilter } = require('../query-filter.cjs');
+const { parseLimit } = require('../query-limit.cjs');
+
 function createCommandQueryRailReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
+  const shared = deps.shared || require('../command-query-rail-shared.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
+  const { canonicalizeRailName } = shared;
 
   function flagLabel(value, label) {
     return value ? label : '-';
-  }
-
-  function parseLimit(value, defaultLimit) {
-    if (value === undefined || value === null || value === '') {
-      return defaultLimit;
-    }
-
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-    }
-
-    return parsed;
-  }
-
-  function appendFilter(predicates, params, column, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(value);
-    predicates.push(`${column} = $${params.length}`);
-  }
-
-  function appendBooleanFilter(predicates, params, column, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(Boolean(value));
-    predicates.push(`${column} = $${params.length}`);
   }
 
   function parseBooleanFilter(value, flagName) {
@@ -69,6 +43,7 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
 
   function normalizeCreationIntentForSearch(value) {
     return String(value ?? '')
+      .replace(/\bPreviewExecutablePlan\b/gi, canonicalizeRailName('PreviewExecutablePlan'))
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/\s+/g, ' ')
@@ -114,6 +89,15 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
   }
 
   function creationIntentAction(row) {
+    const railStatus = String(row.rail_status ?? row.railStatus ?? '').toLowerCase();
+    if (railStatus === 'retired') {
+      return 'retired-rail-do-not-reuse';
+    }
+
+    if (railStatus === 'deprecated') {
+      return 'deprecated-rail-do-not-reuse';
+    }
+
     if (row.is_duplicate ?? row.isDuplicate) {
       return 'resolve-duplicate-before-creating';
     }
@@ -186,8 +170,8 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
     appendFilter(predicates, params, 'rail_status', filters.status);
     appendFilter(predicates, params, 'ddd_owner', filters.owner);
     appendFilter(predicates, params, 'rail_name', filters.rail);
-    appendBooleanFilter(predicates, params, 'is_duplicate', filters.duplicates);
-    appendBooleanFilter(predicates, params, 'is_gap', filters.gaps);
+    appendBooleanParamFilter(predicates, params, 'is_duplicate', filters.duplicates);
+    appendBooleanParamFilter(predicates, params, 'is_gap', filters.gaps);
 
     const limit = parseLimit(filters.limit, 50);
     params.push(limit);
@@ -257,7 +241,11 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
      select *
      from ranked
      where intent_match_score > 0
-     order by intent_match_score desc, is_gap asc, is_duplicate asc, rail_name
+     order by (rail_status in ('deprecated', 'retired')) asc,
+       intent_match_score desc,
+       is_gap asc,
+       is_duplicate asc,
+       rail_name
      limit $${params.length}`,
       params
     );

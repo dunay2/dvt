@@ -1,0 +1,726 @@
+-- Promote the Canvas UX acceptance and test catalog from buzon/TAREA.TXT into
+-- Planning DB records. Markdown remains intake evidence; this table/view owns
+-- the queryable acceptance catalog for the Canvas-first backlog.
+
+insert into architecture.design (
+  design_id,
+  work_item_id,
+  title,
+  owner,
+  status,
+  rationale,
+  fowler_signal,
+  rail_ref,
+  approved_at
+)
+values (
+  'CANVAS-UXDB-ACCEPTANCE-CATALOG-20260626',
+  'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+  'Canvas UX DB-first acceptance catalog',
+  'Frontend / Planning DB',
+  'review',
+  'TAREA.TXT defines UX, DB-first, product, implementation and validation acceptance criteria. Those criteria must be Planning DB records before Canvas P0 UI slices can claim completion.',
+  'hidden_authority',
+  'ListCanvasUxdbSpecification',
+  now()
+)
+on conflict (design_id) do update set
+  status = excluded.status,
+  rationale = excluded.rationale,
+  fowler_signal = excluded.fowler_signal,
+  rail_ref = excluded.rail_ref,
+  updated_at = now();
+
+create table if not exists planning_query_store.canvas_uxdb_specification_records (
+  record_id text primary key,
+  record_type text not null,
+  record_title text not null,
+  canonical_task_id text not null,
+  component_id text not null,
+  rail_name text not null,
+  spec_state text not null,
+  legacy_posture text not null,
+  source_path text not null,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+insert into planning_query_store.canvas_uxdb_specification_records (
+  record_id,
+  record_type,
+  record_title,
+  canonical_task_id,
+  component_id,
+  rail_name,
+  spec_state,
+  legacy_posture,
+  source_path,
+  metadata
+)
+select
+  record_id,
+  record_type,
+  record_title,
+  canonical_task_id,
+  component_id,
+  rail_name,
+  spec_state,
+  legacy_posture,
+  source_path,
+  metadata
+from planning_query_store.canvas_uxdb_specification_query
+on conflict (record_id) do update set
+  record_type = excluded.record_type,
+  record_title = excluded.record_title,
+  canonical_task_id = excluded.canonical_task_id,
+  component_id = excluded.component_id,
+  rail_name = excluded.rail_name,
+  spec_state = excluded.spec_state,
+  legacy_posture = excluded.legacy_posture,
+  source_path = excluded.source_path,
+  metadata = excluded.metadata,
+  updated_at = now();
+
+with acceptance_records as (
+  select *
+  from (
+    values
+      (
+        'TEST-UX-001',
+        'test_requirement',
+        'Graph is base mode and does not appear as a tab',
+        'E-CANVAS-TOPBAR-MINIMAL-1',
+        'web.canvas.graph',
+        'RenderCanvasGraphBase',
+        'accepted',
+        'must-prove-graph-first',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'architecture', 'rule', 'UX-001')
+      ),
+      (
+        'TEST-UX-002',
+        'test_requirement',
+        'Main navigation does not expose Graph Code Log as peer tabs',
+        'E-CANVAS-TOPBAR-MINIMAL-1',
+        'web.component.canvas.CanvasShellChrome',
+        'RenderCanvasShellChrome',
+        'accepted',
+        'retires-global-view-tabs',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'architecture', 'rule', 'UX-002')
+      ),
+      (
+        'TEST-UX-003',
+        'test_requirement',
+        'Top bar has no fixed Source Insert Project or Plan buttons',
+        'E-CANVAS-TOPBAR-MINIMAL-1',
+        'web.component.canvas.CanvasShellChrome',
+        'RenderCanvasShellChrome',
+        'accepted',
+        'retires-episodic-topbar-actions',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'architecture', 'rule', 'UX-012')
+      ),
+      (
+        'TEST-UX-004',
+        'test_requirement',
+        'Canvas context menu opens on an empty canvas',
+        'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        'web.component.canvas.CanvasContextMenu',
+        'ResolveCanvasContextMenu',
+        'accepted',
+        'browser-proof-required',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'browser', 'rule', 'UX-007')
+      ),
+      (
+        'TEST-UX-005',
+        'test_requirement',
+        'Canvas context menu does not contain node actions',
+        'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        'web.component.canvas.CanvasContextMenu',
+        'ResolveCanvasContextMenu',
+        'accepted',
+        'separates-canvas-and-node-actions',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'architecture', 'rule', 'UX-009')
+      ),
+      (
+        'TEST-UX-006',
+        'test_requirement',
+        'Node context menu opens on a graph node',
+        'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        'web.component.canvas.CanvasNodeContextMenu',
+        'ResolveCanvasContextMenu',
+        'accepted',
+        'node-action-scope',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'component', 'rule', 'UX-008')
+      ),
+      (
+        'TEST-UX-007',
+        'test_requirement',
+        'Node context menu does not contain global canvas actions',
+        'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        'web.component.canvas.CanvasNodeContextMenu',
+        'ResolveCanvasContextMenu',
+        'accepted',
+        'separates-node-and-canvas-actions',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'architecture', 'rule', 'UX-009')
+      ),
+      (
+        'TEST-UX-008',
+        'test_requirement',
+        'Add Source opens as a contextual dialog',
+        'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1',
+        'web.component.canvas.SourceImportDialog',
+        'OpenCanvasAddSourceDialog',
+        'accepted',
+        'replaces-fixed-source-panel',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'browser', 'rule', 'UX-012')
+      ),
+      (
+        'TEST-UX-009',
+        'test_requirement',
+        'Add Source exposes Connections Browse Metadata and Selected sections',
+        'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1',
+        'web.component.canvas.SourceImportDialog',
+        'OpenCanvasAddSourceDialog',
+        'accepted',
+        'source-dialog-section-contract',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'component', 'rule', 'UX-012')
+      ),
+      (
+        'TEST-UX-010',
+        'test_requirement',
+        'Code opens contextually while the graph remains visible',
+        'E-CANVAS-SQL-CONTEXT-WORKBENCH-1',
+        'web.component.canvas.SqlContextWorkbench',
+        'OpenCanvasSqlContextWorkbench',
+        'accepted',
+        'retires-global-code-tab',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'browser', 'rule', 'UX-003')
+      ),
+      (
+        'TEST-UX-011',
+        'test_requirement',
+        'Log lives in the BottomOperationalDrawer',
+        'E-CANVAS-BOTTOM-DRAWER-OPS-1',
+        'web.component.shell.BottomOperationalDrawer',
+        'RenderBottomOperationalDrawer',
+        'accepted',
+        'retires-top-log-tab',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'component', 'rule', 'UX-004')
+      ),
+      (
+        'TEST-UX-012',
+        'test_requirement',
+        'Problems shows blocked execution readiness',
+        'E-CANVAS-BOTTOM-DRAWER-OPS-1',
+        'web.component.shell.ProblemsPanel',
+        'RenderBottomOperationalDrawer',
+        'accepted',
+        'readiness-details-live-in-problems',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'component', 'rule', 'UX-010')
+      ),
+      (
+        'TEST-UX-013',
+        'test_requirement',
+        'Plan is expressed as Preview execution plan',
+        'E-CANVAS-EXECUTION-PREVIEW-READINESS-1',
+        'web.component.canvas.ExecutionPreviewPanel',
+        'PreviewCanvasExecutionPlan',
+        'accepted',
+        'renames-ambiguous-plan',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'architecture', 'rule', 'UX-011')
+      ),
+      (
+        'TEST-UX-014',
+        'test_requirement',
+        'Draft synchronized appears in Log or as a discreet status',
+        'E-CANVAS-BOTTOM-DRAWER-OPS-1',
+        'web.component.shell.LogPanel',
+        'RenderBottomOperationalDrawer',
+        'accepted',
+        'sync-is-operational-event',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'component', 'rule', 'UX-004')
+      ),
+      (
+        'TEST-UX-015',
+        'test_requirement',
+        'Project Explorer opens only on demand',
+        'E-CANVAS-PROJECT-EXPLORER-CONTEXTUAL-1',
+        'web.component.canvas.ProjectExplorerDialog',
+        'OpenCanvasProjectExplorer',
+        'accepted',
+        'no-fixed-project-explorer',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'architecture', 'rule', 'UX-014')
+      ),
+      (
+        'TEST-UX-016',
+        'test_requirement',
+        'Node Workbench is contextual to the active node',
+        'E-CANVAS-NODE-WORKBENCH-1',
+        'web.component.canvas.NodeWorkbench',
+        'OpenCanvasNodeWorkbench',
+        'accepted',
+        'replaces-persistent-inspector',
+        'buzon/TAREA.TXT#11.2',
+        jsonb_build_object('level', 'component', 'rule', 'UX-015')
+      ),
+      (
+        'TEST-DB-001',
+        'test_requirement',
+        'UX rules exist in Planning DB',
+        'E-CANVAS-UXDB-SPEC-PERSISTENCE-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-rule-catalog',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-001')
+      ),
+      (
+        'TEST-DB-002',
+        'test_requirement',
+        'UI components exist in Planning DB',
+        'E-CANVAS-UXDB-SPEC-PERSISTENCE-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-component-catalog',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-004')
+      ),
+      (
+        'TEST-DB-003',
+        'test_requirement',
+        'CanvasContextMenu actions are persisted',
+        'E-CANVAS-UXDB-SPEC-PERSISTENCE-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-canvas-action-catalog',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-005')
+      ),
+      (
+        'TEST-DB-004',
+        'test_requirement',
+        'NodeContextMenu actions are persisted',
+        'E-CANVAS-UXDB-SPEC-PERSISTENCE-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-node-action-catalog',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-005')
+      ),
+      (
+        'TEST-DB-005',
+        'test_requirement',
+        'Commands exist in Planning DB',
+        'E-CANVAS-UXDB-SPEC-PERSISTENCE-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-command-rail-catalog',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-005')
+      ),
+      (
+        'TEST-DB-006',
+        'test_requirement',
+        'Queries exist in Planning DB',
+        'E-CANVAS-UXDB-SPEC-PERSISTENCE-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-query-rail-catalog',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-005')
+      ),
+      (
+        'TEST-DB-007',
+        'test_requirement',
+        'Acceptance criteria exist in Planning DB',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-acceptance-catalog',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-006')
+      ),
+      (
+        'TEST-DB-008',
+        'test_requirement',
+        'Tests are related to rules',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-test-rule-traceability',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-006')
+      ),
+      (
+        'TEST-DB-009',
+        'test_requirement',
+        'Markdown export is registered in doc_export posture',
+        'E-CANVAS-UXDB-EXPORT-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ExportCanvasUxdbManual',
+        'accepted',
+        'manual-is-export-not-source',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-008')
+      ),
+      (
+        'TEST-DB-010',
+        'test_requirement',
+        'Specification can be queried by scope component and rule',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-queryable-specification',
+        'buzon/TAREA.TXT#11.3',
+        jsonb_build_object('level', 'planning-db', 'rule', 'DB-010')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-01',
+        'acceptance_criterion',
+        'Graph is base mode',
+        'E-CANVAS-TOPBAR-MINIMAL-1',
+        'web.canvas.graph',
+        'RenderCanvasGraphBase',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Graph remains the permanent work surface.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-02',
+        'acceptance_criterion',
+        'Graph Code Log are not main navigation tabs',
+        'E-CANVAS-TOPBAR-MINIMAL-1',
+        'web.component.canvas.CanvasShellChrome',
+        'RenderCanvasShellChrome',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Code and Log are contextual surfaces.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-03',
+        'acceptance_criterion',
+        'No fixed left resource panel in base state',
+        'E-CANVAS-LEGACY-PALETTE-RETIRE-1',
+        'web.component.canvas.SourceImportDialog',
+        'OpenCanvasAddSourceDialog',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Sources open contextually.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-04',
+        'acceptance_criterion',
+        'No fixed right multipurpose panel in base state',
+        'E-CANVAS-NODE-WORKBENCH-1',
+        'web.component.canvas.NodeWorkbench',
+        'OpenCanvasNodeWorkbench',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Node details open contextually.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-05',
+        'acceptance_criterion',
+        'CanvasContextMenu and NodeContextMenu are separated',
+        'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        'web.component.canvas.CanvasContextMenu',
+        'ResolveCanvasContextMenu',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Canvas and node action scopes stay distinct.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-06',
+        'acceptance_criterion',
+        'Add Source is contextual',
+        'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1',
+        'web.component.canvas.SourceImportDialog',
+        'OpenCanvasAddSourceDialog',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Source browsing is not permanent chrome.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-07',
+        'acceptance_criterion',
+        'Code is contextual with graph visible',
+        'E-CANVAS-SQL-CONTEXT-WORKBENCH-1',
+        'web.component.canvas.SqlContextWorkbench',
+        'OpenCanvasSqlContextWorkbench',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'SQL editing preserves graph context.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-08',
+        'acceptance_criterion',
+        'Log Problems Runs Preview live below',
+        'E-CANVAS-BOTTOM-DRAWER-OPS-1',
+        'web.component.shell.BottomOperationalDrawer',
+        'RenderBottomOperationalDrawer',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Operational state uses the bottom drawer.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-09',
+        'acceptance_criterion',
+        'Execution readiness is not a top banner',
+        'E-CANVAS-EXECUTION-PREVIEW-READINESS-1',
+        'web.component.canvas.ExecutionPreviewPanel',
+        'PreviewCanvasExecutionPlan',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Readiness details route to Problems or Preview.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-10',
+        'acceptance_criterion',
+        'Plan is expressed as Preview execution plan',
+        'E-CANVAS-EXECUTION-PREVIEW-READINESS-1',
+        'web.component.canvas.ExecutionPreviewPanel',
+        'PreviewCanvasExecutionPlan',
+        'accepted',
+        'product-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Ambiguous Plan vocabulary is retired.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-11',
+        'acceptance_criterion',
+        'Specification components CQ tests and evidence are in Planning DB',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'db-first-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Planning DB is the reviewable source.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-12',
+        'acceptance_criterion',
+        'Markdown is export not primary specification',
+        'E-CANVAS-UXDB-EXPORT-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ExportCanvasUxdbManual',
+        'accepted',
+        'db-first-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Manuals are generated or registered exports.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-PRODUCT-13',
+        'acceptance_criterion',
+        'Closeout includes real paths evidence and limitations',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'closeout-acceptance',
+        'buzon/TAREA.TXT#16.1',
+        jsonb_build_object('requires', 'Evidence is concrete and queryable.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-IMPLEMENTATION-01',
+        'acceptance_criterion',
+        'The backlog can become implementation tasks',
+        'E-CANVAS-UXDB-TRACEABILITY-REVIEW-1',
+        'planning.component.canvas.CanvasUxdbTraceabilityReadModel',
+        'ListCanvasUxdbTraceability',
+        'accepted',
+        'implementation-acceptance',
+        'buzon/TAREA.TXT#16.2',
+        jsonb_build_object('requires', 'Each criterion maps to a canonical task.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-IMPLEMENTATION-02',
+        'acceptance_criterion',
+        'The backlog can become migrations',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'implementation-acceptance',
+        'buzon/TAREA.TXT#16.2',
+        jsonb_build_object('requires', 'Acceptance records are persisted by migration.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-IMPLEMENTATION-03',
+        'acceptance_criterion',
+        'The backlog can become seeders',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'implementation-acceptance',
+        'buzon/TAREA.TXT#16.2',
+        jsonb_build_object('requires', 'Records can be rehydrated from Planning DB.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-IMPLEMENTATION-04',
+        'acceptance_criterion',
+        'The backlog can become executable tests',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'implementation-acceptance',
+        'buzon/TAREA.TXT#16.2',
+        jsonb_build_object('requires', 'TEST-UX and TEST-DB records exist.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-IMPLEMENTATION-05',
+        'acceptance_criterion',
+        'The backlog can become a prompt for Codex',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'implementation-acceptance',
+        'buzon/TAREA.TXT#16.2',
+        jsonb_build_object('requires', 'DB rows preserve scope and acceptance language.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-VALIDATION-01',
+        'acceptance_criterion',
+        'Every rule has a code',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'validation-acceptance',
+        'buzon/TAREA.TXT#16.3',
+        jsonb_build_object('requires', 'UX and DB requirements have stable IDs.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-VALIDATION-02',
+        'acceptance_criterion',
+        'Every component can map to Planning DB',
+        'E-CANVAS-COMPONENT-REGISTRY-DRIFT-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'validation-acceptance',
+        'buzon/TAREA.TXT#16.3',
+        jsonb_build_object('requires', 'Component IDs are queryable.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-VALIDATION-03',
+        'acceptance_criterion',
+        'Every command and query can be registered',
+        'E-CANVAS-CQ-RAIL-DRIFT-GUARD-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'validation-acceptance',
+        'buzon/TAREA.TXT#16.3',
+        jsonb_build_object('requires', 'Rail names are queryable.')
+      ),
+      (
+        'ACCEPTANCE-CANVAS-VALIDATION-04',
+        'acceptance_criterion',
+        'Every test can be persisted',
+        'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1',
+        'planning.component.canvas.CanvasUxdbSpecificationReadModel',
+        'ListCanvasUxdbSpecification',
+        'accepted',
+        'validation-acceptance',
+        'buzon/TAREA.TXT#16.3',
+        jsonb_build_object('requires', 'Test requirements are DB records.')
+      )
+  ) as record(
+    record_id,
+    record_type,
+    record_title,
+    canonical_task_id,
+    component_id,
+    rail_name,
+    spec_state,
+    legacy_posture,
+    source_path,
+    metadata
+  )
+)
+insert into planning_query_store.canvas_uxdb_specification_records (
+  record_id,
+  record_type,
+  record_title,
+  canonical_task_id,
+  component_id,
+  rail_name,
+  spec_state,
+  legacy_posture,
+  source_path,
+  metadata
+)
+select
+  record_id,
+  record_type,
+  record_title,
+  canonical_task_id,
+  component_id,
+  rail_name,
+  spec_state,
+  legacy_posture,
+  source_path,
+  metadata
+from acceptance_records
+on conflict (record_id) do update set
+  record_type = excluded.record_type,
+  record_title = excluded.record_title,
+  canonical_task_id = excluded.canonical_task_id,
+  component_id = excluded.component_id,
+  rail_name = excluded.rail_name,
+  spec_state = excluded.spec_state,
+  legacy_posture = excluded.legacy_posture,
+  source_path = excluded.source_path,
+  metadata = excluded.metadata,
+  updated_at = now();
+
+create or replace view planning_query_store.canvas_uxdb_specification_query as
+select
+  record_id,
+  record_type,
+  record_title,
+  canonical_task_id,
+  component_id,
+  rail_name,
+  spec_state,
+  legacy_posture,
+  source_path,
+  metadata
+from planning_query_store.canvas_uxdb_specification_records;

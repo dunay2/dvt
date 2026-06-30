@@ -361,6 +361,9 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
     "steps.scope.outputs.feature_mechanization_relevant == 'true'"
   );
   assertWorkflowContains(prQualityGate, 'import-governance:');
+  assertWorkflowContains(prQualityGate, 'GIT_BASE:');
+  assertWorkflowContains(prQualityGate, "format('origin/{0}', github.base_ref)");
+  assertWorkflowContains(prQualityGate, 'GIT_HEAD: ${{ github.sha }}');
 });
 
 test('main full CI prepares DB-first planning projections before the full baseline', () => {

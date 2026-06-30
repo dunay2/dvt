@@ -160,19 +160,19 @@ Acceptance:
 
 ## Negative Scenarios
 
-| Scenario              | Expected behavior                                            | Guard                                       |
-| --------------------- | ------------------------------------------------------------ | ------------------------------------------- |
-| Duplicate create list | Explorer does not render `Add node`                          | `DbtExplorer.test.tsx`                      |
-| Shell leakage         | `CanvasShell` does not pass `authoringNodeKinds` to explorer | `CanvasShell.architecture.test.tsx`         |
-| Read-only drag        | Explorer rows render with `draggable=false`                  | `DbtExplorer.test.tsx`                      |
-| Hidden mutation       | Explorer has no `onCreateAuthoringNode` prop                 | `CanvasShell.architecture.test.tsx`         |
-| Stale import          | Empty explorer does not create synthetic resources           | future resource catalog test                |
-| Replacing canvas      | New canvas appends instead of replacing the current one      | `canvasCreateCanvasDocumentCommand.test.ts` |
-| Last canvas delete    | Delete is disabled when no fallback canvas exists            | `CanvasInspectorPanel.test.tsx`             |
-| Local-only lifecycle  | Canvas transitions update protected draft payloads           | `canvasProjectCanvasLifecycle.test.ts`      |
-| Ignored environment   | Plan/Run use the active canvas environment when selected     | `useCanvasExecutionActions.*.test.tsx`      |
-| Schema creates node   | Schema drag attaches metadata instead of creating a node     | `useCanvasGraphHandlers.nodeDrop.test.tsx`  |
-| Stale card metadata   | Viewport refreshes when only node metadata changes           | `useCanvasViewportGraphModel.test.tsx`      |
+| Scenario              | Expected behavior                                            | Guard                                           |
+| --------------------- | ------------------------------------------------------------ | ----------------------------------------------- |
+| Duplicate create list | Explorer does not render `Add node`                          | `DbtExplorer.test.tsx`                          |
+| Shell leakage         | `CanvasShell` does not pass `authoringNodeKinds` to explorer | `CanvasShell.architecture.test.tsx`             |
+| Read-only drag        | Explorer rows render with `draggable=false`                  | `DbtExplorer.test.tsx`                          |
+| Hidden mutation       | Explorer has no `onCreateAuthoringNode` prop                 | `CanvasShell.architecture.test.tsx`             |
+| Stale import          | Empty explorer does not create synthetic resources           | future resource catalog test                    |
+| Replacing canvas      | New canvas appends instead of replacing the current one      | `canvasCreateCanvasDocumentCommand.test.ts`     |
+| Last canvas delete    | Delete is disabled when no fallback canvas exists            | `CanvasInspectorPanel.test.tsx`                 |
+| Local-only lifecycle  | Canvas transitions update protected draft payloads           | `canvasProjectCanvasLifecycle.test.ts`          |
+| Ignored environment   | Plan/Run use the active canvas environment when selected     | `useCanvasExecutionActions.*.test.tsx`          |
+| Schema creates node   | Schema drag attaches metadata instead of creating a node     | `useCanvasGraphHandlers.nodeDrop.test.tsx`      |
+| Stale card metadata   | Viewport refreshes when only node metadata changes           | `useCanvasViewportGraphModel.nodeData.test.tsx` |
 
 ## Coverage Matrix
 
@@ -200,4 +200,4 @@ Acceptance:
   `canvasWorkspaceExplorerModel.test.ts`, `DbtExplorer.test.tsx`,
   `DbtNodeComponent.architecture.test.ts`,
   `useCanvasGraphHandlers.nodeDrop.test.tsx`,
-  `useCanvasViewportGraphModel.test.tsx`
+  `useCanvasViewportGraphModel.nodeData.test.tsx`

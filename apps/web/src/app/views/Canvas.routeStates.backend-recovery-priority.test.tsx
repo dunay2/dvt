@@ -178,7 +178,7 @@ describe('Canvas route backend and recovery priority', () => {
       backendReady: false,
       backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
       draftRecoveryReason: 'missing_remote',
-      draftToolbarState: {
+      draftStatusState: {
         label: 'Draft missing',
         tone: 'warning',
         showReloadAction: true,
@@ -203,7 +203,7 @@ describe('Canvas route backend and recovery priority', () => {
       backendReady: false,
       backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
       draftRecoveryReason: 'missing_remote',
-      draftToolbarState: {
+      draftStatusState: {
         label: 'Draft missing',
         tone: 'warning',
         showReloadAction: true,

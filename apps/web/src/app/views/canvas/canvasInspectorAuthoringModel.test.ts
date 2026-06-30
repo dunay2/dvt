@@ -67,6 +67,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: [],
       dvt: {
         kind: 'source',
+        database: '',
         schema: 'public',
         table: 'orders_source',
         alias: 'orders_source',
@@ -158,6 +159,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['authoring'],
       dvt: {
         kind: 'source',
+        database: '',
         schema: 'analytics',
         table: 'orders',
         alias: 'raw_orders',
@@ -172,6 +174,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['source', 'erp'],
       dvt: {
         kind: 'source',
+        database: 'analytics',
         schema: 'erp',
         table: 'orders',
         alias: 'warehouse_prod_analytics_erp',
@@ -187,6 +190,7 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['source', 'finance'],
       dvt: {
         kind: 'source' as const,
+        database: 'warehouse_prod',
         schema: 'warehouse_raw',
         table: 'orders_final',
         alias: 'orders_src',
@@ -201,9 +205,49 @@ describe('canvasInspectorAuthoringModel', () => {
       metadata: {
         ...node.metadata,
         config: {
+          database: 'warehouse_prod',
           schema: 'warehouse_raw',
           table: 'orders_final',
           alias: 'orders_src',
+        },
+      },
+    });
+  });
+
+  it('does not persist an empty DVT source database override', () => {
+    const node = buildDvtNode('dvt:source', {
+      config: {
+        owner: 'finance',
+        database: 'analytics_prod',
+        schema: 'raw',
+        table: 'orders',
+        alias: 'orders',
+      },
+    });
+    const draft = {
+      name: 'Orders source',
+      description: '',
+      tags: ['authoring'],
+      dvt: {
+        kind: 'source' as const,
+        database: '   ',
+        schema: 'raw',
+        table: 'orders',
+        alias: 'orders',
+      },
+    };
+
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual({
+      ...node,
+      name: 'Orders source',
+      description: undefined,
+      tags: ['authoring'],
+      metadata: {
+        config: {
+          owner: 'finance',
+          schema: 'raw',
+          table: 'orders',
+          alias: 'orders',
         },
       },
     });
@@ -221,10 +265,58 @@ describe('canvasInspectorAuthoringModel', () => {
       tags: ['published'],
       dvt: {
         kind: 'sink' as const,
+        database: 'analytics_prod',
         schema: 'marts',
         table: 'fct_orders',
         materialization: 'table',
         writeMode: 'replace',
+        partitionStrategy: 'daily_by_order_date',
+      },
+    };
+
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual({
+      ...node,
+      name: 'orders_sink',
+      description: undefined,
+      tags: ['published'],
+      metadata: {
+        config: {
+          owner: 'finance',
+          database: 'analytics_prod',
+          schema: 'marts',
+          table: 'fct_orders',
+          materialization: 'table',
+          writeMode: 'replace',
+          partitionStrategy: 'daily_by_order_date',
+        },
+      },
+    });
+  });
+
+  it('clears optional DVT target metadata when the inspector draft blanks it out', () => {
+    const node = buildDvtNode('dvt:sink', {
+      config: {
+        owner: 'finance',
+        database: 'analytics_prod',
+        schema: 'marts',
+        table: 'fct_orders',
+        materialization: 'table',
+        writeMode: 'replace',
+        partitionStrategy: 'daily_by_order_date',
+      },
+    });
+    const draft = {
+      name: 'orders_sink',
+      description: '',
+      tags: ['published'],
+      dvt: {
+        kind: 'sink' as const,
+        database: '   ',
+        schema: 'marts',
+        table: 'fct_orders',
+        materialization: 'table',
+        writeMode: 'replace',
+        partitionStrategy: '   ',
       },
     };
 
@@ -261,6 +353,7 @@ describe('canvasInspectorAuthoringModel', () => {
       dvt: {
         kind: 'sql_transform' as const,
         sql: 'select order_id from raw.orders',
+        selectedColumns: [],
       },
     };
 
@@ -273,6 +366,39 @@ describe('canvasInspectorAuthoringModel', () => {
           sql: 'select order_id from raw.orders',
         },
         sql: 'select order_id from raw.orders',
+      },
+    });
+  });
+
+  it('applies DVT SQL transform selected columns into metadata config', () => {
+    const node = buildDvtNode('dvt:sql_transform', {
+      config: {
+        dialect: 'postgres',
+        sql: 'select * from raw.orders',
+        selectedColumns: ['stale-source.legacy_id'],
+      },
+    });
+    const draft = {
+      name: 'Clean orders',
+      description: '',
+      tags: ['authoring'],
+      dvt: {
+        kind: 'sql_transform' as const,
+        sql: 'select order_id, customer from raw.orders',
+        selectedColumns: ['source-orders.order_id', 'source-orders.customer'],
+      },
+    };
+
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual({
+      ...node,
+      description: undefined,
+      metadata: {
+        config: {
+          dialect: 'postgres',
+          sql: 'select order_id, customer from raw.orders',
+          selectedColumns: ['source-orders.order_id', 'source-orders.customer'],
+        },
+        sql: 'select order_id, customer from raw.orders',
       },
     });
   });

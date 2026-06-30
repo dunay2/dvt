@@ -4,6 +4,10 @@
  */
 import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
+  clickCanvasContextMenuItem,
+  openCanvasContextMenuAt,
+} from '../../support/canvasExecutionSelection';
+import {
   assertLiveFirstAuthoringDraftScopeIsClean,
   resolveLiveFirstAuthoringWorkspaceSession,
   skipWhenFirstAuthoringLiveEnvIsMissing,
@@ -18,13 +22,11 @@ describe('Canvas first-authoring live protected runtime', () => {
       id: 'transformation',
       createButton: 'Transformation',
       emptyTitle: 'Start transformation canvas',
-      firstNodeLabel: 'Add first transformation node',
     },
     {
       id: 'dbt',
       createButton: 'dbt',
       emptyTitle: 'Start dbt canvas',
-      firstNodeLabel: 'Add first dbt node',
     },
   ] as const;
 
@@ -182,12 +184,11 @@ describe('Canvas first-authoring live protected runtime', () => {
       waitForDraftSaveSettled();
 
       cy.contains(variant.emptyTitle, { timeout: 20_000 }).should('be.visible');
-      cy.get('[data-slot="canvas-empty-state"]').within(() => {
-        cy.contains('button', variant.firstNodeLabel).should('be.enabled').click();
-      });
-      cy.contains('[data-slot="canvas-add-node-palette-option"]', /^Source$/)
-        .should('be.visible')
-        .click();
+      cy.get('[data-slot="canvas-empty-state"]').should('be.visible');
+      cy.contains('button', /^Add first /).should('not.exist');
+      openCanvasContextMenuAt(360, 260);
+      clickCanvasContextMenuItem('Add...');
+      clickCanvasContextMenuItem(variant.id === 'dbt' ? 'Add source' : 'Create source node');
       waitForDraftSaveSettled();
 
       cy.contains('.react-flow__node', 'Source 1', { timeout: 20_000 }).should('be.visible');

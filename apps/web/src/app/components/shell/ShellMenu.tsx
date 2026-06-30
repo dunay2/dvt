@@ -1,15 +1,26 @@
 /** Owned concern: render top-bar workspace navigation and view-control menus without owning route behavior. */
 import {
+  Activity,
   BriefcaseBusiness,
   Grid2X2,
   Maximize2,
   Minimize2,
   PanelRightClose,
   SlidersHorizontal,
-  TerminalSquare,
 } from 'lucide-react';
+import { HexColorInput, HexColorPicker } from 'react-colorful';
 import { NavLink } from 'react-router';
+import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
+import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
+import {
+  createCanvasPreviewStyle,
+  normalizeCanvasPaletteId,
+  type CanvasPaletteId,
+} from '../../views/canvas/canvasPalette';
+import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
+import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { Button } from '../ui/button';
+import type { ShellViewControlsReadModel } from './shellViewControlsModel';
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -22,19 +33,9 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '../ui/dropdown-menu';
-import { HexColorInput, HexColorPicker } from 'react-colorful';
-import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
-import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
-import {
-  createCanvasPreviewStyle,
-  normalizeCanvasPaletteId,
-  type CanvasPaletteId,
-} from '../../views/canvas/canvasPalette';
-import type { ShellNavigationModel } from '../../shell/shellNavigationModel';
-import type { ProjectIdentityBadge } from '../../shell/projectIdentityBadge';
 
 const GRID_OPTIONS = [
   { value: 10, label: '10px (Dense)' },
@@ -46,8 +47,9 @@ const GRID_OPTIONS = [
 
 type ShellMenuProps = {
   readonly kind: 'workspace' | 'view';
+  readonly viewControls: ShellViewControlsReadModel;
   readonly inspectorPanelVisible: boolean;
-  readonly consolePanelVisible: boolean;
+  readonly bottomDrawerVisible: boolean;
   readonly focusMode: boolean;
   readonly gridSize: number;
   readonly canvasPalette: CanvasPaletteId;
@@ -56,7 +58,7 @@ type ShellMenuProps = {
   readonly gitBranch: string;
   readonly gitSha: string;
   readonly toggleInspectorPanel: () => void;
-  readonly toggleConsolePanel: () => void;
+  readonly toggleBottomDrawer: () => void;
   readonly toggleFocusMode: () => void;
   readonly setGridSize: (size: number) => void;
   readonly setCanvasPalette: (palette: CanvasPaletteId) => void;
@@ -65,8 +67,9 @@ type ShellMenuProps = {
 
 export function ShellMenu({
   kind,
+  viewControls,
   inspectorPanelVisible,
-  consolePanelVisible,
+  bottomDrawerVisible,
   focusMode,
   gridSize,
   canvasPalette,
@@ -75,7 +78,7 @@ export function ShellMenu({
   gitBranch,
   gitSha,
   toggleInspectorPanel,
-  toggleConsolePanel,
+  toggleBottomDrawer,
   toggleFocusMode,
   setGridSize,
   setCanvasPalette,
@@ -128,44 +131,50 @@ export function ShellMenu({
             <DropdownMenuLabel>{copy.gitContext}</DropdownMenuLabel>
             <div
               data-slot="shell-menu-git-context"
-              className="px-2 pb-2 text-xs text-[var(--text-subtle)]"
+              className="px-2 pb-2 text-xs text-(--text-subtle)"
             >
               <span>{gitBranch}</span>
               <span className="px-1">@</span>
-              <code className="text-[var(--text-default)]">{gitSha}</code>
+              <code className="text-(--text-default)">{gitSha}</code>
             </div>
             <CanvasWorkspaceMenuControls />
           </>
         ) : (
           <>
             <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem
-              checked={inspectorPanelVisible}
-              onCheckedChange={toggleInspectorPanel}
-            >
-              <PanelRightClose className="mr-2 size-4" />
-              {copy.inspectorPanel}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={consolePanelVisible}
-              onCheckedChange={toggleConsolePanel}
-            >
-              <TerminalSquare className="mr-2 size-4" />
-              {copy.consolePanel}
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem checked={focusMode} onCheckedChange={toggleFocusMode}>
-              {focusMode ? (
-                <Minimize2 className="mr-2 size-4" />
-              ) : (
-                <Maximize2 className="mr-2 size-4" />
-              )}
-              {copy.focusMode}
-            </DropdownMenuCheckboxItem>
+            {viewControls.showInspectorPanelToggle ? (
+              <DropdownMenuCheckboxItem
+                checked={inspectorPanelVisible}
+                onCheckedChange={toggleInspectorPanel}
+              >
+                <PanelRightClose className="mr-2 size-4" />
+                {copy.inspectorPanel}
+              </DropdownMenuCheckboxItem>
+            ) : null}
+            {viewControls.showBottomDrawerToggle ? (
+              <DropdownMenuCheckboxItem
+                checked={bottomDrawerVisible}
+                onCheckedChange={toggleBottomDrawer}
+              >
+                <Activity className="mr-2 size-4" />
+                {copy.operationalDrawer}
+              </DropdownMenuCheckboxItem>
+            ) : null}
+            {viewControls.showFocusModeToggle ? (
+              <DropdownMenuCheckboxItem checked={focusMode} onCheckedChange={toggleFocusMode}>
+                {focusMode ? (
+                  <Minimize2 className="mr-2 size-4" />
+                ) : (
+                  <Maximize2 className="mr-2 size-4" />
+                )}
+                {copy.focusMode}
+              </DropdownMenuCheckboxItem>
+            ) : null}
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
                 <span
                   aria-hidden="true"
-                  className="mr-2 h-4 w-6 shrink-0 rounded-[4px] border border-white/10"
+                  className="mr-2 h-4 w-6 shrink-0 rounded-lg border border-white/10"
                   style={createCanvasPreviewStyle(resolvedCanvasPalette)}
                 />
                 {copy.canvasPalette}
@@ -204,7 +213,7 @@ export function ShellMenu({
                       color={resolvedCanvasPalette}
                       prefixed
                       aria-label="Set canvas background hex color"
-                      className="h-9 w-full rounded-md border border-white/10 bg-[var(--input-background)] px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                      className="h-9 w-full rounded-md border border-white/10 bg-input-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
                       onChange={handleCanvasPaletteChange}
                     />
                   </div>
@@ -228,7 +237,7 @@ export function ShellMenu({
             <DropdownMenuSeparator />
             <DropdownMenuLabel>{copy.viewOptions}</DropdownMenuLabel>
             <DropdownMenuItem onClick={() => setGridSize(20)}>{copy.resetGrid}</DropdownMenuItem>
-            <CanvasViewMenuControls />
+            {viewControls.showCanvasViewContributionControls ? <CanvasViewMenuControls /> : null}
           </>
         )}
       </DropdownMenuContent>

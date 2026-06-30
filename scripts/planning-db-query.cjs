@@ -24,6 +24,8 @@ const {
   buildFrontendMechanicalTruthRows,
   readFrontendMechanicalTruthRows,
 } = require('./planning-db/frontend-mechanical-truth-inventory.cjs');
+const { appendComponentPairFilter, appendFilter } = require('./planning-db/query-filter.cjs');
+const { parseLimit } = require('./planning-db/query-limit.cjs');
 const {
   buildFrontendComponentFileRows,
   buildFrontendComponentRailRows,
@@ -77,6 +79,22 @@ const {
   readComponentRoadmapRows,
 } = require('./planning-db/queries/component-roadmap-query.cjs');
 const {
+  buildCanvasUxdbSpecificationRows,
+  readCanvasUxdbSpecificationRows,
+} = require('./planning-db/queries/canvas-uxdb-specification-query.cjs');
+const {
+  buildCanvasUxdbTraceabilityRows,
+  readCanvasUxdbTraceabilityRows,
+} = require('./planning-db/queries/canvas-uxdb-traceability-query.cjs');
+const {
+  buildCanvasCqRailDriftRows,
+  readCanvasCqRailDriftRows,
+} = require('./planning-db/queries/canvas-cq-rail-drift-query.cjs');
+const {
+  buildCanvasComponentRegistryDriftRows,
+  readCanvasComponentRegistryDriftRows,
+} = require('./planning-db/queries/canvas-component-registry-drift-query.cjs');
+const {
   buildGovernanceRefreshRunRows,
   readGovernanceRefreshRunRows,
 } = require('./planning-db/queries/governance-refresh-run-query.cjs');
@@ -92,6 +110,24 @@ const {
   readArchitectureFitnessRows,
   readArchitecturePathMappingRows,
 } = require('./planning-db/queries/component-architecture-fitness-query.cjs');
+const {
+  buildComponentIntegrityRows,
+  readComponentIntegrityRows,
+} = require('./planning-db/queries/component-integrity-query.cjs');
+const {
+  buildRailVocabularyRows,
+  readRailVocabularyRows,
+} = require('./planning-db/queries/rail-vocabulary-query.cjs');
+const {
+  buildCodeSymbolDuplicateRows,
+  buildCodeSymbolRows,
+  buildGovernanceProblemRows,
+  buildSourceDriftRows,
+  readCodeSymbolDuplicateRows,
+  readCodeSymbolRows,
+  readGovernanceProblemRows,
+  readSourceDriftRows,
+} = require('./planning-db/queries/code-symbol-query.cjs');
 const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
 
 const architectureSchemaName = 'architecture';
@@ -116,6 +152,13 @@ const knownQueries = new Set([
   'drift',
   'commands',
   'command-query-rails',
+  'rail-vocabulary',
+  'rail-duplicates',
+  'code-symbols',
+  'code-symbol-duplicates',
+  'code-symbol-semantic-candidates',
+  'source-drift',
+  'governance-problem-dashboard',
   'ai-project-context',
   'creation-intent',
   'frontend-surfaces',
@@ -148,6 +191,11 @@ const knownQueries = new Set([
   'documentation-lifecycle',
   'documentation-panels',
   'component-roadmap',
+  'canvas-cq-rail-drift',
+  'canvas-component-registry-drift',
+  'canvas-uxdb-specification',
+  'canvas-uxdb-traceability',
+  'component-profile',
   'governance-refresh-runs',
   'mandatory-proposal-gaps',
   'db-surfaces',
@@ -158,6 +206,9 @@ const knownQueries = new Set([
   'component-rule-evaluations',
   'component-quality',
   'architecture-designs',
+  'component-integrity',
+  'component-validation',
+  'filesystem-coverage',
   'architecture-scopes',
   'architecture-components',
   'architecture-relations',
@@ -185,6 +236,11 @@ const governanceProjectionQueryNames = new Set([
   'debt',
   'drift',
   'command-query-rails',
+  'code-symbols',
+  'code-symbol-duplicates',
+  'code-symbol-semantic-candidates',
+  'source-drift',
+  'governance-problem-dashboard',
   'ai-project-context',
   'creation-intent',
   'frontend-surfaces',
@@ -215,6 +271,8 @@ const governanceProjectionQueryNames = new Set([
   'documentation-lifecycle',
   'documentation-panels',
   'mandatory-proposal-gaps',
+  'canvas-cq-rail-drift',
+  'canvas-component-registry-drift',
 ]);
 const taskIdCommonFilterQueryNames = new Set([
   'tasks',
@@ -222,6 +280,9 @@ const taskIdCommonFilterQueryNames = new Set([
   'next',
   'task-trace',
   'task-gaps',
+  'canvas-cq-rail-drift',
+  'canvas-uxdb-specification',
+  'canvas-uxdb-traceability',
   'focus',
   'real-work',
 ]);
@@ -241,6 +302,11 @@ const pathCommonFilterQueryNames = new Set([
   'documentation-panels',
   'component-roadmap',
   'mandatory-proposal-gaps',
+  'code-symbols',
+  'code-symbol-duplicates',
+  'code-symbol-semantic-candidates',
+  'source-drift',
+  'governance-problem-dashboard',
 ]);
 const componentCommonFilterQueryNames = new Set([
   'components',
@@ -254,11 +320,17 @@ const componentCommonFilterQueryNames = new Set([
   'documentation-panels',
   'component-tree',
   'component-roadmap',
+  'component-profile',
+  'component-integrity',
+  'component-validation',
+  'filesystem-coverage',
   'component-metadata',
   'component-drift',
   'component-rules',
   'component-rule-evaluations',
   'component-quality',
+  'canvas-cq-rail-drift',
+  'canvas-component-registry-drift',
   'architecture-components',
   'architecture-relations',
   'architecture-responsibilities',
@@ -275,6 +347,10 @@ const componentCommonFilterQueryNames = new Set([
   'architecture-dependency-classification',
   'architecture-fitness',
   'architecture-fitness-gaps',
+  'code-symbols',
+  'code-symbol-duplicates',
+  'code-symbol-semantic-candidates',
+  'governance-problem-dashboard',
 ]);
 
 function isHelpCommand(value) {
@@ -301,7 +377,21 @@ function buildPlanningDbQueryHelpText(queryName) {
 
   if (queryName) {
     const examples = [`  pnpm planning:db:query ${queryName} --limit 20`];
-    if (
+    const querySpecificOptions = [];
+    if (queryName === 'component-profile') {
+      examples.push(`  pnpm planning:db:query ${queryName} --component SYS-WEB-ROOT --limit 50`);
+    } else if (queryName === 'canvas-cq-rail-drift') {
+      querySpecificOptions.push('--rail <name>');
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state missing_canonical_rail --limit 20`,
+        `  pnpm planning:db:query ${queryName} --rail OpenCanvasAddSourceDialog --limit 20`
+      );
+    } else if (queryName === 'canvas-component-registry-drift') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --state unmapped_canvas_component_file --limit 20`,
+        `  pnpm planning:db:query ${queryName} --component web.component.canvas.CanvasViewport --limit 20`
+      );
+    } else if (
       taskIdCommonFilterQueryNames.has(queryName) ||
       pathCommonFilterQueryNames.has(queryName) ||
       componentCommonFilterQueryNames.has(queryName)
@@ -362,6 +452,16 @@ function buildPlanningDbQueryHelpText(queryName) {
         `  pnpm planning:db:query ${queryName} --gaps true --limit 20`,
         `  pnpm planning:db:query ${queryName} --component docs/architecture/components/web/index.md --limit 20`
       );
+    } else if (queryName === 'canvas-uxdb-specification') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --filter E-CANVAS-UXDB-SPEC-PERSISTENCE-1 --limit 20`,
+        `  pnpm planning:db:query ${queryName} --kind context_action --rail ResolveCanvasContextMenu --limit 20`
+      );
+    } else if (queryName === 'canvas-uxdb-traceability') {
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --filter E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1 --limit 20`,
+        `  pnpm planning:db:query ${queryName} --kind ux_rule --state not-started --limit 20`
+      );
     } else if (queryName === 'architecture-dependency-observations') {
       examples.push(
         `  pnpm planning:db:query ${queryName} --design design-21-component-architecture-fitness-dbfirst --limit 20`,
@@ -398,6 +498,9 @@ function buildPlanningDbQueryHelpText(queryName) {
       '',
       'Common filters:',
       `  ${commonOptions.join(', ')}`,
+      ...(querySpecificOptions.length > 0
+        ? ['', 'Query-specific filters:', `  ${querySpecificOptions.join(', ')}`]
+        : []),
       '',
       'Examples:',
       ...examples,
@@ -492,19 +595,6 @@ async function ensureFreshGovernanceProjection(queryName, options = {}) {
   }
 
   return result;
-}
-
-function parseLimit(value, defaultLimit) {
-  if (value === undefined || value === null || value === '') {
-    return defaultLimit;
-  }
-
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-  }
-
-  return parsed;
 }
 
 function parseCerSchemaVersion(value) {
@@ -757,8 +847,21 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'documentation-lifecycle' ||
         queryName === 'documentation-panels' ||
         queryName === 'component-roadmap' ||
+        queryName === 'canvas-cq-rail-drift' ||
+        queryName === 'canvas-component-registry-drift' ||
+        queryName === 'canvas-uxdb-specification' ||
+        queryName === 'canvas-uxdb-traceability' ||
         queryName === 'governance-refresh-runs' ||
-        queryName === 'db-surfaces'
+        queryName === 'db-surfaces' ||
+        queryName === 'component-integrity' ||
+        queryName === 'component-validation' ||
+        queryName === 'filesystem-coverage' ||
+        queryName === 'rail-vocabulary' ||
+        queryName === 'rail-duplicates' ||
+        queryName === 'architecture-path-mapping' ||
+        queryName === 'architecture-dependency-classification' ||
+        queryName === 'architecture-fitness' ||
+        queryName === 'architecture-fitness-gaps'
       ) {
         filters.state = value;
       } else {
@@ -776,6 +879,10 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     if (arg === '--kind') {
       filters.kind = value;
+      continue;
+    }
+    if (arg === '--severity') {
+      filters.severity = value;
       continue;
     }
     if (arg === '--prefix') {
@@ -1450,6 +1557,180 @@ function buildComponentEngineeringQualityRows(rows) {
   ]);
 }
 
+function normalizeListValue(value) {
+  if (value === undefined || value === null) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  return String(value)
+    .replace(/[{}]/g, '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function railProfileKind(railName) {
+  return /^(get|list|query|read|resolve|observe|check|browse|validate)/i.test(railName)
+    ? 'query'
+    : 'command';
+}
+
+function buildComponentProfileRows(profile) {
+  const componentId =
+    profile.component?.component_id ??
+    profile.component?.componentId ??
+    profile.filters?.component ??
+    '-';
+  const rows = [];
+
+  if (profile.component) {
+    rows.push([
+      'component',
+      componentId,
+      compactText(profile.component.name),
+      profile.component.component_level ?? profile.component.componentLevel ?? '-',
+      profile.component.parent_component_id ?? profile.component.parentComponentId ?? '-',
+      profile.component.governance_state ?? profile.component.governanceState ?? '-',
+      profile.component.ddd_owner ?? profile.component.dddOwner ?? '-',
+    ]);
+  }
+
+  for (const child of profile.children || []) {
+    rows.push([
+      'child',
+      child.component_id ?? child.componentId,
+      compactText(child.name),
+      child.component_level ?? child.componentLevel ?? '-',
+      child.governance_state ?? child.governanceState ?? '-',
+      child.direct_file_count ?? child.directFileCount ?? 0,
+      child.descendant_file_count ?? child.descendantFileCount ?? 0,
+    ]);
+  }
+
+  for (const file of profile.files || []) {
+    rows.push([
+      'file',
+      file.path,
+      file.component_unit ?? file.componentUnit ?? '-',
+      file.owning_unit ?? file.owningUnit ?? '-',
+      file.governance_state ?? file.governanceState ?? '-',
+    ]);
+  }
+
+  for (const railName of normalizeListValue(
+    profile.component?.cq_rails ?? profile.component?.cqRails
+  )) {
+    rows.push([railProfileKind(railName), railName, componentId, 'cq_rails']);
+  }
+
+  for (const io of profile.io || []) {
+    const section = io.io_kind === 'adapter' ? 'adapter' : io.io_kind === 'port' ? 'port' : 'io';
+    const metadata = io.metadata && typeof io.metadata === 'object' ? io.metadata : {};
+    rows.push([
+      section,
+      io.io_id ?? io.ioId,
+      compactText(io.io_name ?? io.ioName),
+      metadata.portKind ?? io.io_kind ?? io.ioKind ?? '-',
+      io.direction ?? '-',
+      io.contract_id ?? io.contractId ?? '-',
+      io.runtime ?? '-',
+    ]);
+  }
+
+  for (const architectureComponent of profile.architectureComponents || []) {
+    rows.push([
+      'architecture',
+      architectureComponent.component_id ?? architectureComponent.componentId,
+      architectureComponent.kind,
+      architectureComponent.layer,
+      architectureComponent.owner,
+      architectureComponent.repo_path ?? architectureComponent.repoPath ?? '-',
+      architectureComponent.status,
+    ]);
+  }
+
+  for (const responsibility of profile.responsibilities || []) {
+    rows.push([
+      'responsibility',
+      responsibility.responsibility_id ?? responsibility.responsibilityId,
+      compactText(responsibility.responsibility),
+      compactText(responsibility.reason_to_change ?? responsibility.reasonToChange),
+      responsibility.ddd_owner ?? responsibility.dddOwner ?? '-',
+    ]);
+  }
+
+  for (const relation of profile.relations || []) {
+    rows.push([
+      'relation',
+      relation.relation_id ?? relation.relationId,
+      relation.source_component_id ?? relation.sourceComponentId,
+      relation.target_component_id ?? relation.targetComponentId,
+      relation.relation_type ?? relation.relationType,
+      relation.status,
+    ]);
+  }
+
+  for (const contract of profile.contracts || []) {
+    rows.push([
+      'contract',
+      contract.contract_id ?? contract.contractId,
+      contract.contract_kind ?? contract.contractKind,
+      contract.contract_ref ?? contract.contractRef,
+      contract.status,
+    ]);
+  }
+
+  for (const testEvidence of profile.tests || []) {
+    rows.push([
+      'test',
+      testEvidence.test_id ?? testEvidence.testId,
+      testEvidence.test_path ?? testEvidence.testPath,
+      testEvidence.test_kind ?? testEvidence.testKind,
+      testEvidence.coverage_level ?? testEvidence.coverageLevel,
+      String(testEvidence.required ?? true),
+      testEvidence.validation_command ?? testEvidence.validationCommand ?? '-',
+    ]);
+  }
+
+  for (const observability of profile.observability || []) {
+    rows.push([
+      'observability',
+      observability.observability_id ?? observability.observabilityId,
+      observability.signal_name ?? observability.signalName,
+      observability.signal_kind ?? observability.signalKind,
+      String(observability.required ?? true),
+      observability.status ?? '-',
+    ]);
+  }
+
+  for (const design of profile.architectureDesigns || []) {
+    rows.push([
+      'architecture-basis',
+      design.design_id ?? design.designId,
+      design.work_item_id ?? design.workItemId,
+      compactText(design.design_title ?? design.designTitle ?? design.title),
+      design.scope_kind ?? design.scopeKind ?? '-',
+    ]);
+  }
+
+  for (const fowlerReference of profile.fowlerReferences || []) {
+    rows.push([
+      'fowler',
+      fowlerReference.document_path ?? fowlerReference.documentPath,
+      fowlerReference.reference_state ?? fowlerReference.referenceState ?? '-',
+      fowlerReference.relation_type ?? fowlerReference.relationType ?? '-',
+      fowlerReference.canonical_target_path ?? fowlerReference.canonicalTargetPath ?? '-',
+      fowlerReference.resolution_status ?? fowlerReference.resolutionStatus ?? '-',
+    ]);
+  }
+
+  return rows;
+}
+
 function buildArchitectureDesignRows(rows) {
   return rows.map((row) => [
     row.design_id ?? row.designId,
@@ -1512,6 +1793,7 @@ function buildArchitectureIoRows(rows) {
     row.component_id ?? row.componentId,
     row.io_id ?? row.ioId,
     row.io_kind ?? row.ioKind,
+    row.metadata?.portKind ?? row.io_kind ?? row.ioKind,
     row.io_name ?? row.ioName,
     row.direction ?? '-',
     row.contract_id ?? row.contractId ?? '-',
@@ -1552,6 +1834,29 @@ function buildArchitectureContractRows(rows) {
     row.compatibility ?? '-',
     row.status ?? '-',
     row.validation_command ?? row.validationCommand ?? '-',
+  ]);
+}
+
+function buildArchitectureTestRows(rows) {
+  return rows.map((row) => [
+    row.test_id ?? row.testId,
+    row.component_id ?? row.componentId,
+    row.test_path ?? row.testPath,
+    row.test_kind ?? row.testKind,
+    row.coverage_level ?? row.coverageLevel,
+    String(row.required ?? true),
+    row.validation_command ?? row.validationCommand ?? '-',
+  ]);
+}
+
+function buildArchitectureObservabilityRows(rows) {
+  return rows.map((row) => [
+    row.observability_id ?? row.observabilityId,
+    row.component_id ?? row.componentId,
+    row.signal_name ?? row.signalName,
+    row.signal_kind ?? row.signalKind,
+    String(row.required ?? true),
+    row.status ?? '-',
   ]);
 }
 
@@ -1670,15 +1975,6 @@ function buildMandatoryProposalGapRows(rows) {
 
 function buildComponentEngineeringRecordRows(rows) {
   return rows.map((row) => row.record ?? row.componentEngineeringRecord);
-}
-
-function appendFilter(predicates, params, column, value) {
-  if (value === undefined || value === null || value === '') {
-    return;
-  }
-
-  params.push(value);
-  predicates.push(`${column} = $${params.length}`);
 }
 
 function appendResolutionFilter(predicates, params, value) {
@@ -2318,6 +2614,33 @@ function architectureContractSelect() {
       created_at,
       updated_at
     from ${architectureSchemaName}.component_contract_query`;
+}
+
+function architectureTestSelect() {
+  return `
+    select
+      test_id,
+      component_id,
+      test_path,
+      test_kind,
+      coverage_level,
+      required,
+      validation_command,
+      created_at
+    from ${architectureSchemaName}.component_test`;
+}
+
+function architectureObservabilitySelect() {
+  return `
+    select
+      observability_id,
+      component_id,
+      signal_name,
+      signal_kind,
+      required,
+      status,
+      created_at
+    from ${architectureSchemaName}.component_observability`;
 }
 
 function architectureMaturitySelect() {
@@ -2989,12 +3312,122 @@ async function readGovernanceFileRows(client, filters = {}) {
   const result = await client.query(
     `${governanceFileSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by is_drift desc, leaf_component_id, file_path
+     order by is_drift desc, component_unit, path
      limit $${params.length}`,
     params
   );
 
   return result.rows;
+}
+
+async function readComponentProfileFileRows(client, filters = {}) {
+  const component = String(filters.component || '').trim();
+  if (!component) {
+    return [];
+  }
+
+  const limit = parseLimit(filters.limit, 50);
+  const result = await client.query(
+    `with recursive component_scope(component_id, scope_depth, visited) as (
+       select $1::text, 0::integer, array[$1::text]::text[]
+       union all
+       select
+        tree.component_id,
+        component_scope.scope_depth + 1,
+        component_scope.visited || tree.component_id
+       from ${componentEngineeringSchemaName}.component_tree_query tree
+       join component_scope on tree.parent_component_id = component_scope.component_id
+       where not tree.component_id = any(component_scope.visited)
+     )
+     select
+       ownership.file_path as path,
+       ownership.leaf_component_id as component_unit,
+       ownership.owning_unit,
+       ownership.root_unit,
+       ownership.domain_unit,
+       ownership.governance_state,
+       ownership.is_drift,
+       ownership.is_legacy,
+       ownership.ddd_owner,
+       ownership.cq_rails
+     from ${schemaName}.component_engineering_file_ownership_projection ownership
+     where ownership.leaf_component_id in (select component_id from component_scope)
+        or ownership.owning_unit in (select component_id from component_scope)
+     order by is_drift desc, component_unit, path
+     limit $2`,
+    [component, limit]
+  );
+
+  return result.rows;
+}
+
+async function readFrontendComponentProfileRows(client, filters = {}) {
+  const component = String(filters.component || '').trim();
+  if (!component) {
+    return null;
+  }
+
+  const limit = parseLimit(filters.limit, 50);
+  const componentRows = await readFrontendComponentRows(client, {
+    component,
+    limit: 1,
+  });
+  const frontendComponent = componentRows[0];
+  if (!frontendComponent) {
+    return null;
+  }
+
+  const [files, rails, architectureDesigns] = await Promise.all([
+    readFrontendComponentFileRows(client, { component, limit }),
+    readFrontendComponentRailRows(client, { component, limit }),
+    readArchitectureDesignScopeRows(client, {
+      component,
+      subjectKind: 'component',
+      limit,
+    }),
+  ]);
+  const railNames = rails
+    .map((rail) => rail.rail_name ?? rail.railName)
+    .filter(Boolean)
+    .join(';');
+
+  return {
+    filters: { component },
+    component: {
+      component_id: frontendComponent.component_id ?? frontendComponent.componentId,
+      name: frontendComponent.component_name ?? frontendComponent.componentName,
+      component_level: frontendComponent.component_kind ?? frontendComponent.componentKind,
+      parent_component_id: 'frontend-component-inventory',
+      governance_state: frontendComponent.component_status ?? frontendComponent.componentStatus,
+      ddd_owner:
+        frontendComponent.frontend_owner ??
+        frontendComponent.frontendOwner ??
+        frontendComponent.package_name ??
+        frontendComponent.packageName ??
+        '-',
+      cq_rails: railNames,
+    },
+    children: [],
+    files: files.map((file) => ({
+      path: file.file_path ?? file.filePath,
+      component_unit: file.component_id ?? file.componentId,
+      owning_unit: file.component_id ?? file.componentId,
+      governance_state:
+        file.component_status ??
+        file.componentStatus ??
+        frontendComponent.component_status ??
+        frontendComponent.componentStatus,
+    })),
+    architectureComponents: [],
+    responsibilities: [],
+    io: [],
+    relations: [],
+    contracts: [],
+    tests: [],
+    observability: [],
+    architectureDesigns,
+    fowlerReferences: [],
+  };
 }
 
 async function readGovernanceComponentRows(client, filters = {}) {
@@ -3107,6 +3540,51 @@ async function readComponentEngineeringComponentMetadataRows(client, filters = {
   return result.rows;
 }
 
+async function readComponentProfileRows(client, filters = {}) {
+  const component = String(filters.component || filters.filter || '').trim();
+  if (!component) {
+    throw new Error('component-profile requires --component <id>.');
+  }
+
+  const limit = parseLimit(filters.limit, 50);
+  const scopedFilters = { ...filters, component, limit };
+  const frontendProfile = await readFrontendComponentProfileRows(client, scopedFilters);
+  if (frontendProfile) {
+    return frontendProfile;
+  }
+
+  const componentRows = await readComponentEngineeringComponentTreeRows(client, {
+    ...scopedFilters,
+    limit: 1,
+  });
+
+  return {
+    filters: { component },
+    component: componentRows[0] || null,
+    children: await readComponentEngineeringComponentTreeRows(client, {
+      parentUnit: component,
+      limit,
+    }),
+    files: await readComponentProfileFileRows(client, scopedFilters),
+    architectureComponents: await readArchitectureComponentRows(client, scopedFilters),
+    responsibilities: await readArchitectureResponsibilityRows(client, scopedFilters),
+    io: await readArchitectureIoRows(client, scopedFilters),
+    relations: await readArchitectureRelationRows(client, scopedFilters),
+    contracts: await readArchitectureContractRows(client, scopedFilters),
+    tests: await readArchitectureTestRows(client, scopedFilters),
+    observability: await readArchitectureObservabilityRows(client, scopedFilters),
+    architectureDesigns: await readArchitectureDesignScopeRows(client, {
+      component,
+      subjectKind: 'component',
+      limit,
+    }),
+    fowlerReferences: await readFowlerAnalysisReferenceRows(client, {
+      component,
+      limit,
+    }),
+  };
+}
+
 async function readComponentEngineeringRuleCatalogRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -3181,17 +3659,6 @@ async function readComponentEngineeringQualityRows(client, filters = {}) {
   return result.rows;
 }
 
-function appendComponentEndpointFilter(predicates, params, value) {
-  if (value === undefined || value === null || value === '') {
-    return;
-  }
-
-  params.push(value);
-  predicates.push(
-    `(source_component_id = $${params.length} or target_component_id = $${params.length})`
-  );
-}
-
 async function readArchitectureDesignRows(client, filters = {}) {
   const params = [];
   const predicates = [];
@@ -3264,7 +3731,13 @@ async function readArchitectureRelationRows(client, filters = {}) {
   const params = [];
   const predicates = [];
   appendFilter(predicates, params, 'relation_id', filters.relation);
-  appendComponentEndpointFilter(predicates, params, filters.component);
+  appendComponentPairFilter(
+    predicates,
+    params,
+    filters.component,
+    'source_component_id',
+    'target_component_id'
+  );
   appendFilter(predicates, params, 'relation_type', filters.kind);
   appendFilter(predicates, params, 'status', filters.status);
 
@@ -3391,6 +3864,49 @@ async function readArchitectureContractRows(client, filters = {}) {
     `${architectureContractSelect()}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by component_id, contract_kind, contract_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureTestRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'test_id', filters.test);
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'test_kind', filters.kind);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureTestSelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, test_kind, test_id
+     limit $${params.length}`,
+    params
+  );
+
+  return result.rows;
+}
+
+async function readArchitectureObservabilityRows(client, filters = {}) {
+  const params = [];
+  const predicates = [];
+  appendFilter(predicates, params, 'observability_id', filters.observability);
+  appendFilter(predicates, params, 'component_id', filters.component);
+  appendFilter(predicates, params, 'signal_kind', filters.kind);
+  appendFilter(predicates, params, 'status', filters.state);
+
+  const limit = parseLimit(filters.limit, 50);
+  params.push(limit);
+
+  const result = await client.query(
+    `${architectureObservabilitySelect()}
+     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
+     order by component_id, signal_kind, observability_id
      limit $${params.length}`,
     params
   );
@@ -3802,6 +4318,67 @@ async function runQuery(options = {}) {
       return railRows;
     }
 
+    if (queryName === 'rail-vocabulary' || queryName === 'rail-duplicates') {
+      const filters =
+        queryName === 'rail-duplicates'
+          ? { ...(options.filters || {}), duplicates: true }
+          : options.filters || {};
+      const rows = await readRailVocabularyRows(client, filters);
+      const railRows = buildRailVocabularyRows(rows);
+      if (options.print !== false) {
+        printTaskRows(railRows);
+      }
+      return railRows;
+    }
+
+    if (queryName === 'code-symbols') {
+      const rows = await readCodeSymbolRows(client, options.filters || {});
+      const symbolRows = buildCodeSymbolRows(rows);
+      if (options.print !== false) {
+        printTaskRows(symbolRows);
+      }
+      return symbolRows;
+    }
+
+    if (queryName === 'code-symbol-duplicates') {
+      const rows = await readCodeSymbolDuplicateRows(client, options.filters || {});
+      const duplicateRows = buildCodeSymbolDuplicateRows(rows);
+      if (options.print !== false) {
+        printTaskRows(duplicateRows);
+      }
+      return duplicateRows;
+    }
+
+    if (queryName === 'code-symbol-semantic-candidates') {
+      const rows = await readCodeSymbolDuplicateRows(client, {
+        ...(options.filters || {}),
+        kind: 'semantic_duplicate_candidate',
+      });
+      const candidateRows = buildCodeSymbolDuplicateRows(rows);
+      if (options.print !== false) {
+        printTaskRows(candidateRows);
+      }
+      return candidateRows;
+    }
+
+    if (queryName === 'source-drift') {
+      const rows = await readSourceDriftRows(client, options.filters || {});
+      const driftRows = buildSourceDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
+    if (queryName === 'governance-problem-dashboard') {
+      const rows = await readGovernanceProblemRows(client, options.filters || {});
+      const problemRows = buildGovernanceProblemRows(rows);
+      if (options.print !== false) {
+        printTaskRows(problemRows);
+      }
+      return problemRows;
+    }
+
     if (queryName === 'ai-project-context') {
       const context = await readAiProjectContext(client, options.filters || {});
       if (options.print !== false) {
@@ -4102,6 +4679,42 @@ async function runQuery(options = {}) {
       return roadmapRows;
     }
 
+    if (queryName === 'canvas-cq-rail-drift') {
+      const rows = await readCanvasCqRailDriftRows(client, options.filters || {});
+      const driftRows = buildCanvasCqRailDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
+    if (queryName === 'canvas-component-registry-drift') {
+      const rows = await readCanvasComponentRegistryDriftRows(client, options.filters || {});
+      const driftRows = buildCanvasComponentRegistryDriftRows(rows);
+      if (options.print !== false) {
+        printTaskRows(driftRows);
+      }
+      return driftRows;
+    }
+
+    if (queryName === 'canvas-uxdb-specification') {
+      const rows = await readCanvasUxdbSpecificationRows(client, options.filters || {});
+      const specificationRows = buildCanvasUxdbSpecificationRows(rows);
+      if (options.print !== false) {
+        printTaskRows(specificationRows);
+      }
+      return specificationRows;
+    }
+
+    if (queryName === 'canvas-uxdb-traceability') {
+      const rows = await readCanvasUxdbTraceabilityRows(client, options.filters || {});
+      const traceabilityRows = buildCanvasUxdbTraceabilityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(traceabilityRows);
+      }
+      return traceabilityRows;
+    }
+
     if (queryName === 'governance-refresh-runs') {
       const rows = await readGovernanceRefreshRunRows(client, options.filters || {});
       const refreshRows = buildGovernanceRefreshRunRows(rows);
@@ -4202,6 +4815,32 @@ async function runQuery(options = {}) {
         printTaskRows(qualityRows);
       }
       return qualityRows;
+    }
+
+    if (queryName === 'component-profile') {
+      const profile = await readComponentProfileRows(client, options.filters || {});
+      const profileRows = buildComponentProfileRows(profile);
+      if (options.print !== false) {
+        printTaskRows(profileRows);
+      }
+      return profileRows;
+    }
+
+    if (
+      queryName === 'component-integrity' ||
+      queryName === 'component-validation' ||
+      queryName === 'filesystem-coverage'
+    ) {
+      const filters =
+        queryName === 'filesystem-coverage'
+          ? { ...(options.filters || {}), kind: 'filesystem_coverage' }
+          : options.filters || {};
+      const rows = await readComponentIntegrityRows(client, filters);
+      const integrityRows = buildComponentIntegrityRows(rows);
+      if (options.print !== false) {
+        printTaskRows(integrityRows);
+      }
+      return integrityRows;
     }
 
     if (queryName === 'architecture-designs') {
@@ -4486,6 +5125,7 @@ module.exports = {
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringQualityRows,
+  buildComponentProfileRows,
   buildComponentEngineeringRecordRows,
   buildComponentEngineeringRuleCatalogRows,
   buildComponentEngineeringRuleEvaluationRows,
@@ -4515,9 +5155,17 @@ module.exports = {
   buildArchitectureFlowStepRows,
   buildArchitectureIoRows,
   buildArchitectureMaturityRows,
+  buildArchitectureObservabilityRows,
   buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
   buildArchitectureResponsibilityRows,
+  buildArchitectureTestRows,
+  buildCodeSymbolDuplicateRows,
+  buildCodeSymbolRows,
+  buildComponentIntegrityRows,
+  buildGovernanceProblemRows,
+  buildRailVocabularyRows,
+  buildSourceDriftRows,
   buildHashDriftRows,
   buildPlanningDbQueryHelpText,
   buildComponentEngineeringComponentMetadataRows,
@@ -4526,6 +5174,10 @@ module.exports = {
   buildDocumentationLifecycleRows,
   buildDocumentationPanelRows,
   buildComponentRoadmapRows,
+  buildCanvasCqRailDriftRows,
+  buildCanvasComponentRegistryDriftRows,
+  buildCanvasUxdbSpecificationRows,
+  buildCanvasUxdbTraceabilityRows,
   buildMandatoryProposalGapRows,
   buildPlanningArtifactRows,
   buildPlanningDependencyRows,
@@ -4574,6 +5226,7 @@ module.exports = {
   readComponentEngineeringComponentMetadataRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
+  readComponentProfileRows,
   readArchitectureComponentRows,
   readArchitectureContractRows,
   readArchitectureDependencyClassificationRows,
@@ -4589,9 +5242,17 @@ module.exports = {
   readArchitectureFlowStepRows,
   readArchitectureIoRows,
   readArchitectureMaturityRows,
+  readArchitectureObservabilityRows,
   readArchitecturePathMappingRows,
   readArchitectureRelationRows,
   readArchitectureResponsibilityRows,
+  readArchitectureTestRows,
+  readCodeSymbolDuplicateRows,
+  readCodeSymbolRows,
+  readComponentIntegrityRows,
+  readGovernanceProblemRows,
+  readRailVocabularyRows,
+  readSourceDriftRows,
   readFocusRows,
   readRealWorkRows,
   readGovernanceComponentRows,
@@ -4613,6 +5274,10 @@ module.exports = {
   readDocumentationLifecycleRows,
   readDocumentationPanelRows,
   readComponentRoadmapRows,
+  readCanvasCqRailDriftRows,
+  readCanvasComponentRegistryDriftRows,
+  readCanvasUxdbSpecificationRows,
+  readCanvasUxdbTraceabilityRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readMandatoryProposalGapRows,
@@ -4650,4 +5315,5 @@ module.exports = {
   readTaskReferenceRows,
   resolveQueryName,
   runQuery,
+  usesGovernanceProjection,
 };

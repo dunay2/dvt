@@ -2,6 +2,8 @@
  * Owned concern: provide the governed Cypress interaction seam for Canvas
  * selection and native button clicks used by selected-closure proof lanes.
  */
+type CanvasMenuLabel = string | RegExp;
+
 export function clickButtonNatively(label: string): void {
   cy.contains('button', label)
     .should('be.enabled')
@@ -10,50 +12,90 @@ export function clickButtonNatively(label: string): void {
     });
 }
 
-export function openCanvasContextMenu(): void {
-  cy.get('body').type('{esc}', { force: true });
-  cy.get('[data-slot="canvas-viewport-context-surface"]', { timeout: 20_000 }).then(($surface) => {
-    const surface = $surface.get(0);
-    const rect = surface.getBoundingClientRect();
+export function getVisibleCanvasNode(nodeName: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  return cy
+    .get('.react-flow__node', { timeout: 20_000 })
+    .filter((_, element) => {
+      const text = element.textContent ?? '';
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
 
-    cy.wrap($surface).trigger('contextmenu', {
-      bubbles: true,
-      cancelable: true,
-      button: 2,
-      buttons: 2,
-      clientX: Math.round(rect.left + 96),
-      clientY: Math.round(rect.top + 220),
-      pageX: Math.round(window.scrollX + rect.left + 96),
-      pageY: Math.round(window.scrollY + rect.top + 220),
-      which: 3,
-      force: true,
-    });
+      return (
+        text.includes(nodeName) &&
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.visibility !== 'hidden' &&
+        style.display !== 'none' &&
+        style.opacity !== '0'
+      );
+    })
+    .should('have.length.greaterThan', 0)
+    .first();
+}
+
+export function openCanvasContextMenuAt(x = 96, y = 220): void {
+  cy.get('body').type('{esc}', { force: true });
+  cy.get('.react-flow__pane', { timeout: 20_000 }).should('be.visible').rightclick(x, y, {
+    force: true,
   });
   cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
 }
 
-export function clickPreviewExecutionPlanFromCanvasContextMenu(): void {
-  openCanvasContextMenu();
-  cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', 'Preview execution plan')
+export function clickCanvasContextMenuItem(label: CanvasMenuLabel): void {
+  cy.contains('[data-slot="canvas-context-menu"] [role="menuitem"]', label)
     .should('be.visible')
     .should('be.enabled')
-    .then(($button) => {
-      ($button.get(0) as HTMLButtonElement).click();
-    });
+    .click();
+}
+
+function revealOperationalDrawer(): void {
+  cy.get('body').then(($body) => {
+    if ($body.find('[data-slot="bottom-operational-drawer-tab"]').length > 0) {
+      return;
+    }
+
+    cy.get('[data-slot="shell-menu-trigger"]').should('be.visible').click();
+    cy.contains('[role="menuitemcheckbox"]', /^(Operations|Operaciones)$/)
+      .should('be.visible')
+      .then(($item) => {
+        if ($item.attr('aria-checked') !== 'true') {
+          cy.wrap($item).click();
+        }
+      });
+  });
+
+  cy.get('[data-slot="bottom-operational-drawer-tab"]', { timeout: 20_000 }).should('be.visible');
+}
+
+export function clickPreviewExecutionPlanFromOperationalDrawer(): void {
+  revealOperationalDrawer();
+  cy.contains('[data-slot="bottom-operational-drawer-tab"]', 'Preview')
+    .should('be.visible')
+    .click();
+  cy.contains('[data-slot="bottom-operational-drawer-preview"] button', 'Preview execution plan')
+    .should('be.visible')
+    .should('be.enabled')
+    .click();
 }
 
 export function expectPreviewExecutionPlanUnavailableFromCanvasContextMenu(): void {
-  openCanvasContextMenu();
+  openCanvasContextMenuAt();
   cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Preview execution plan');
+  cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Previsualizar plan');
   cy.get('body').type('{esc}', { force: true });
 }
 
 export function selectCanvasClosure(nodeNames: string[]): void {
   for (const nodeName of nodeNames) {
-    cy.contains('.react-flow__node', nodeName).rightclick();
-    cy.get('[role="menu"]').then(($menu) => {
+    getVisibleCanvasNode(nodeName).rightclick();
+    cy.get('[data-slot="canvas-node-context-menu"]').then(($menu) => {
+      if ($menu.text().includes('Select for execution')) {
+        cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Select for execution').click();
+        return;
+      }
+
       if ($menu.text().includes('Select node')) {
-        cy.contains('[role="menuitem"]', 'Select node').click();
+        cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Select node').click();
         return;
       }
 

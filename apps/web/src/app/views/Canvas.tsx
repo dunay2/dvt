@@ -1,7 +1,7 @@
 /**
  * Owned concern: route composition for the governed Canvas shell.
  */
-import { ReactFlowProvider } from '@xyflow/react';
+import { ReactFlowProvider, useReactFlow, type Edge, type Node } from '@xyflow/react';
 import { Navigate, useParams } from 'react-router';
 
 import CanvasModalHost from './canvas/CanvasModalHost';
@@ -15,6 +15,7 @@ import { useWarehouseSourceImportPort } from '../services/AppServicesContext';
 
 function CanvasContent(): JSX.Element {
   const params = useParams();
+  const reactFlow = useReactFlow<Node, Edge>();
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const controller = useCanvasController();
   const routeViewState = deriveCanvasRouteViewState(controller);
@@ -34,7 +35,13 @@ function CanvasContent(): JSX.Element {
 
   return (
     <>
-      <CanvasShell {...shellProps} warehouseSourceImport={warehouseSourceImport} />
+      <CanvasShell
+        {...shellProps}
+        warehouseSourceImport={warehouseSourceImport}
+        canvasContextScreenToFlowPosition={(screenPosition) =>
+          reactFlow.screenToFlowPosition(screenPosition)
+        }
+      />
       <CanvasModalHost {...modalHostProps} />
     </>
   );

@@ -5,7 +5,11 @@ import { Separator } from '../ui/separator';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { sourceImportWizardCopy as copy } from './copy';
-import { buildPreviewGroups } from './sourceImportWizardModel';
+import {
+  buildPreviewGroups,
+  buildSourceImportCatalogViewModel,
+  buildSourceImportTableViewModel,
+} from './sourceImportWizardModel';
 import type { TableInfo } from './types';
 
 interface ReviewStepProps {
@@ -26,12 +30,10 @@ export function ReviewStep({
   sourceImportOptionValues,
 }: ReviewStepProps) {
   const previewGroups = buildPreviewGroups(tables, groupingStrategy);
-  const formatTableName = (table: Pick<TableInfo, 'database' | 'schema' | 'table'>): string =>
-    `${table.database}.${table.schema}.${table.table}`;
-  const formatColumnCount = (table: Pick<TableInfo, 'columns'>): string => {
-    const columnCount = table.columns?.length ?? 0;
-    return `${columnCount} ${columnCount === 1 ? 'column' : 'columns'}`;
-  };
+  const catalogViewModel = buildSourceImportCatalogViewModel({
+    tables,
+    activeTableKey: null,
+  });
 
   return (
     <div className="space-y-4">
@@ -92,21 +94,40 @@ export function ReviewStep({
                 </div>
                 <div className="space-y-1 text-xs text-slate-400">
                   {groupTables.slice(0, 3).map((table) => (
-                    <div
+                    <ReviewSourceTableRow
                       key={`${table.database}.${table.schema}.${table.table}`}
-                      className="flex min-w-0 items-center justify-between gap-2"
-                    >
-                      <span className="truncate font-mono">{formatTableName(table)}</span>
-                      <span className="shrink-0">{formatColumnCount(table)}</span>
-                    </div>
+                      table={table}
+                    />
                   ))}
                   {groupTables.length > 3 ? <div>... and {groupTables.length - 3} more</div> : null}
                 </div>
               </div>
             ))}
+            {previewGroups.size === 0
+              ? catalogViewModel.selectedTables.map((table) => (
+                  <div
+                    key={table.canonicalName}
+                    className="flex min-w-0 items-center justify-between gap-2 rounded border border-slate-700 px-2 py-1"
+                  >
+                    <span className="truncate font-mono">{table.canonicalName}</span>
+                    <span className="shrink-0">{table.columnCountLabel}</span>
+                  </div>
+                ))
+              : null}
           </div>
         </ScrollArea>
       </Card>
+    </div>
+  );
+}
+
+function ReviewSourceTableRow({ table }: Readonly<{ table: TableInfo }>): JSX.Element {
+  const tableViewModel = buildSourceImportTableViewModel(table, 0);
+
+  return (
+    <div className="flex min-w-0 items-center justify-between gap-2">
+      <span className="truncate font-mono">{tableViewModel.canonicalName}</span>
+      <span className="shrink-0">{tableViewModel.columnCountLabel}</span>
     </div>
   );
 }
