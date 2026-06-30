@@ -10550,3 +10550,24 @@ test('tracked migrations reconcile Inspector visual token rail duplicate', () =>
   assert.match(duplicateMigration.sql, /rail_vocabulary_exact_duplicate_reconciled/);
   assert.doesNotMatch(duplicateMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register DBT transform cross-plugin port bridge', () => {
+  const migrations = readMigrationFiles();
+  const bridgeMigration = migrations.find(
+    (migration) => migration.fileName === '396_dbt_transform_cross_plugin_port_bridge.sql'
+  );
+
+  assert.ok(bridgeMigration);
+  assert.match(bridgeMigration.sql, /AuthorCanvasGraphEdge/);
+  assert.match(bridgeMigration.sql, /imported_target_rail/);
+  assert.match(bridgeMigration.sql, /existing_local_target_rail/);
+  assert.match(bridgeMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(bridgeMigration.sql, /dbtContributions\.transformPortBridge/);
+  assert.match(bridgeMigration.sql, /apps\/web\/src\/app\/plugins\/dbt\/dbtContributions\.ts/);
+  assert.match(
+    bridgeMigration.sql,
+    /apps\/web\/src\/app\/plugins\/contracts\/ConnectionRules\.test\.ts/
+  );
+  assert.match(bridgeMigration.sql, /on conflict \(rail_id\) do update/);
+  assert.doesNotMatch(bridgeMigration.sql, /truncate\s+/i);
+});

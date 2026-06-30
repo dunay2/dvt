@@ -54,6 +54,26 @@ describe('evaluateConnection', () => {
     expect(sourceToTransform).toEqual({ allowed: true });
   });
 
+  it('allows imported warehouse sources to feed dbt transform nodes', () => {
+    const pluginPortMap = getPluginPortMap();
+
+    const sourceToModel = evaluateConnection(
+      buildNode('dvt.warehouse-source', 'dvt:source', 'input'),
+      buildNode('dbt', 'dbt:model', 'transform'),
+      [],
+      pluginPortMap
+    );
+    const sourceToSnapshot = evaluateConnection(
+      buildNode('dvt.warehouse-source', 'dvt:source', 'input'),
+      buildNode('dbt', 'dbt:snapshot', 'transform'),
+      [],
+      pluginPortMap
+    );
+
+    expect(sourceToModel).toEqual({ allowed: true });
+    expect(sourceToSnapshot).toEqual({ allowed: true });
+  });
+
   it('keeps direct source -> sink blocked when no compatible bridge exists', () => {
     const pluginPortMap = getPluginPortMap();
 
