@@ -81,7 +81,10 @@ function CanvasViewportWithPresenter({
   const [nodeHealthPopoverModel, setNodeHealthPopoverModel] =
     useState<NodeHealthPopoverModel | null>(null);
   const resolvedCanvasPalette = normalizeCanvasPaletteId(props.canvasPalette);
-  const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, props.gridSize);
+  const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, props.gridSize, {
+    gridVisible: props.canvasGridVisible,
+    gridColor: props.canvasGridColor,
+  });
   const closeNodeFloatingToolbar = useCallback(() => {
     setNodeFloatingToolbarModel(null);
   }, []);
@@ -91,6 +94,7 @@ function CanvasViewportWithPresenter({
 
   const openNodeHealthPopover = useCallback(
     (nodeId: string, detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+      setNodeFloatingToolbarModel(null);
       setNodeHealthPopoverModel({
         nodeId,
         detail,
@@ -195,8 +199,6 @@ function CanvasViewportWithPresenter({
       edges={props.edges}
       nodeTypes={props.nodeTypes}
       gridSize={props.gridSize}
-      canvasGridVisible={props.canvasGridVisible}
-      canvasGridColor={props.canvasGridColor}
       canvasSnapToGrid={props.canvasSnapToGrid}
       viewport={props.viewport}
       onNodesChange={props.onNodesChange}

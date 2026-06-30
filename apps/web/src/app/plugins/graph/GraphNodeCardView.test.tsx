@@ -112,6 +112,26 @@ describe('GraphNodeCardView', () => {
     expect(container.textContent).toContain('42 MB/min');
   });
 
+  it('uses the textual status chip as the only card status indicator', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            status: { label: 'Warning', tone: 'warning' },
+          }}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="graph-node-status-chip"]')?.textContent).toBe(
+      'Warning'
+    );
+    expect(container.querySelectorAll('[data-slot="graph-node-status-chip"]')).toHaveLength(1);
+    expect(container.textContent?.match(/Warning/g)).toHaveLength(1);
+  });
+
   it('opens operational details from the rail without bubbling to the node card', () => {
     const onOpenOperationalDetails = vi.fn();
     const onCardClick = vi.fn();

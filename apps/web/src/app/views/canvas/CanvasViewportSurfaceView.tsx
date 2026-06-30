@@ -1,6 +1,5 @@
 /** Owned concern: render the Canvas React Flow surface from an already-resolved viewport model. */
 import {
-  Background,
   Controls,
   MiniMap,
   ReactFlow,
@@ -28,8 +27,6 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   edges: Edge[];
   nodeTypes: NodeTypes;
   gridSize: number;
-  canvasGridVisible: boolean;
-  canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
   viewport: { x: number; y: number; zoom: number } | null;
   onNodesChange: NonNullable<ReactFlowProps<Node, Edge>['onNodesChange']>;
@@ -65,8 +62,6 @@ function CanvasViewportReactFlowSurface({
   edges,
   nodeTypes,
   gridSize,
-  canvasGridVisible,
-  canvasGridColor,
   canvasSnapToGrid,
   viewport,
   onNodesChange,
@@ -184,7 +179,6 @@ function CanvasViewportReactFlowSurface({
         onEdgeContextMenu={handleEdgeContextMenu}
         className="bg-(--canvas-surface)"
       >
-        {canvasGridVisible ? <Background color={canvasGridColor} gap={gridSize} /> : null}
         <Controls />
         <MiniMap
           pannable

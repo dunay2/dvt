@@ -10269,3 +10269,123 @@ test('tracked migrations record Graph node card warning status review fix', () =
   assert.doesNotMatch(warningStatusMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(warningStatusMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations record Graph node card interaction hardening evidence', () => {
+  const migrations = readMigrationFiles();
+  const interactionHardeningMigration = migrations.find(
+    (migration) => migration.fileName === '382_graph_node_card_interaction_hardening.sql'
+  );
+
+  assert.ok(interactionHardeningMigration);
+  assert.match(
+    interactionHardeningMigration.sql,
+    /EV-CANVAS-NODE-FLOATING-TOOLBAR-HEALTH-POPOVER-EXCLUSION/
+  );
+  assert.match(
+    interactionHardeningMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-HEALTH-POPOVER-NODE-REMOVAL/
+  );
+  assert.match(interactionHardeningMigration.sql, /RenderCanvasNodeFloatingToolbar/);
+  assert.match(interactionHardeningMigration.sql, /OpenCanvasNodeHealthPopover/);
+  assert.match(interactionHardeningMigration.sql, /CloseCanvasNodeHealthPopover/);
+  assert.match(interactionHardeningMigration.sql, /CanvasViewport\.nodeFloatingToolbar\.test\.tsx/);
+  assert.match(interactionHardeningMigration.sql, /noOrphanedNodeSurfaces/);
+  assert.doesNotMatch(interactionHardeningMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(interactionHardeningMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations record Canvas graph visual surface single-grid evidence', () => {
+  const migrations = readMigrationFiles();
+  const singleGridMigration = migrations.find(
+    (migration) => migration.fileName === '383_canvas_graph_visual_surface_grid_evidence.sql'
+  );
+
+  assert.ok(singleGridMigration);
+  assert.match(singleGridMigration.sql, /EV-CANVAS-VIEWPORT-SINGLE-CSS-GRID-LAYER/);
+  assert.match(singleGridMigration.sql, /RenderCanvasContextualGraphSurface/);
+  assert.match(singleGridMigration.sql, /CanvasViewport\.test\.tsx/);
+  assert.match(singleGridMigration.sql, /noReactFlowBackgroundLayer/);
+  assert.match(singleGridMigration.sql, /--canvas-grid/);
+  assert.match(singleGridMigration.sql, /GraphNodeHealthPopoverView\.test\.tsx/);
+  assert.match(singleGridMigration.sql, /EV-CANVAS-GRAPH-NODE-HEALTH-POPOVER-VIEW/);
+  assert.doesNotMatch(singleGridMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(singleGridMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Graph node metric row component registration', () => {
+  const migrations = readMigrationFiles();
+  const metricRowMigration = migrations.find(
+    (migration) => migration.fileName === '384_graph_node_metric_row_component_registration.sql'
+  );
+
+  assert.ok(metricRowMigration);
+  assert.match(metricRowMigration.sql, /web\.component\.canvas\.GraphNodeMetricRow/);
+  assert.match(metricRowMigration.sql, /frontend_component_local_components/);
+  assert.match(metricRowMigration.sql, /GraphNodeMetricRow\.tsx/);
+  assert.match(metricRowMigration.sql, /EV-CANVAS-GRAPH-NODE-METRIC-ROW-PROJECTION/);
+  assert.match(metricRowMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(metricRowMigration.sql, /doesNotInventMetrics/);
+  assert.doesNotMatch(metricRowMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(metricRowMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations record Graph node card single status token contract', () => {
+  const migrations = readMigrationFiles();
+  const statusTokenMigration = migrations.find(
+    (migration) => migration.fileName === '385_graph_node_card_status_token_contract.sql'
+  );
+
+  assert.ok(statusTokenMigration);
+  assert.match(statusTokenMigration.sql, /EV-CANVAS-GRAPH-NODE-CARD-SINGLE-STATUS-INDICATOR/);
+  assert.match(statusTokenMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(statusTokenMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(statusTokenMigration.sql, /anonymousStatusDotRemoved/);
+  assert.match(statusTokenMigration.sql, /nodeCardSelected/);
+  assert.match(statusTokenMigration.sql, /nodeCardHovered/);
+  assert.match(statusTokenMigration.sql, /nodeCardDimmed/);
+  assert.match(statusTokenMigration.sql, /tokenizedTemplateChrome/);
+  assert.match(statusTokenMigration.sql, /nodeCardHeaderActions/);
+  assert.match(statusTokenMigration.sql, /columnsList/);
+  assert.match(statusTokenMigration.sql, /graphVisualTokens\.ts/);
+  assert.doesNotMatch(statusTokenMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(statusTokenMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile Graph node health popover host ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '386_graph_node_health_popover_host_ownership_reconcile.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.GraphNodeHealthPopover/);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(ownershipMigration.sql, /CanvasViewport\.tsx/);
+  assert.match(ownershipMigration.sql, /CanvasViewportSurfaceView\.tsx/);
+  assert.match(ownershipMigration.sql, /file_role in \('host-state', 'host-render'\)/);
+  assert.match(
+    ownershipMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-HEALTH-POPOVER-HOST-OWNERSHIP-RECONCILED/
+  );
+  assert.match(ownershipMigration.sql, /canvas-component-registry-drift/);
+  assert.match(ownershipMigration.sql, /duplicateFileOwnershipRemoved/);
+  assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations normalize Graph node card view file roles', () => {
+  const migrations = readMigrationFiles();
+  const roleMigration = migrations.find(
+    (migration) => migration.fileName === '387_graph_node_card_view_file_role_normalization.sql'
+  );
+
+  assert.ok(roleMigration);
+  assert.match(roleMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(roleMigration.sql, /GraphNodeCardView\.tsx/);
+  assert.match(roleMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(roleMigration.sql, /file_role = 'component'/);
+  assert.match(roleMigration.sql, /file_role = 'test'/);
+  assert.match(roleMigration.sql, /presentation-test/);
+  assert.match(roleMigration.sql, /EV-CANVAS-GRAPH-NODE-CARD-VIEW-FILE-ROLES-NORMALIZED/);
+  assert.doesNotMatch(roleMigration.sql, /truncate\s+/i);
+});
