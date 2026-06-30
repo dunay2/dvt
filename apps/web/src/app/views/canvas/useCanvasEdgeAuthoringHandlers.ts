@@ -13,6 +13,8 @@ import {
 import { toast } from 'sonner';
 
 import { getPluginPortMap } from '../../plugins/registry';
+import type { RuntimeCapabilities } from '../../plugins/registry';
+import type { CanonicalNode } from '../../types/canonical';
 import { proposeConnection } from './canvasConnectionAggregate';
 import type {
   CanvasEdgeAuthoringContracts,
@@ -43,6 +45,28 @@ type CanvasConnectionProposalContracts = {
   state: CanvasEdgeAuthoringState;
   policy: CanvasEdgeAuthoringPolicy;
 };
+
+function resolveVisibleDraftPluginPortMap(args: {
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  runtimeCapabilities?: RuntimeCapabilities;
+}) {
+  const runtimePortMap = getPluginPortMap(args.runtimeCapabilities);
+  const staticPortMap = getPluginPortMap();
+  const resolvedPortMap = new Map(runtimePortMap);
+
+  for (const node of args.canonicalNodesById.values()) {
+    if (resolvedPortMap.has(node.pluginId)) {
+      continue;
+    }
+
+    const visibleNodePortDescriptor = staticPortMap.get(node.pluginId);
+    if (visibleNodePortDescriptor != null) {
+      resolvedPortMap.set(node.pluginId, visibleNodePortDescriptor);
+    }
+  }
+
+  return resolvedPortMap;
+}
 
 function clearPendingConnection(
   pendingConnectionRef: PendingConnectionRef,
@@ -201,8 +225,12 @@ export function useCanvasEdgeAuthoringHandlers({
     edge: null,
   });
   const pluginPortMap = useMemo(
-    () => getPluginPortMap(policy.runtimeCapabilities),
-    [policy.runtimeCapabilities]
+    () =>
+      resolveVisibleDraftPluginPortMap({
+        canonicalNodesById: state.canonicalNodesById,
+        runtimeCapabilities: policy.runtimeCapabilities,
+      }),
+    [policy.runtimeCapabilities, state.canonicalNodesById]
   );
   const edgeCommandRunner = useCanvasEdgeCommandRunner({
     state,
