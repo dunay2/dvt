@@ -15,6 +15,7 @@ import {
   requireAuthoringNodeKind,
   type CanvasRouteHarness,
 } from './Canvas.test.support';
+import { useOperationalDrawerContributionStore } from '../components/shell/operationalDrawerContributionStore';
 
 type FirstCanvasCycleFixture = Readonly<{
   canvasKind: 'transformation' | 'dbt';
@@ -253,11 +254,13 @@ describe('Canvas route host-cycle persistence', () => {
       kindLabel: 'Transformation',
     });
 
-    const previewCommand = harness.container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-context-preview-execution-plan-command"]'
-    );
-    expect(previewCommand).not.toBeNull();
-    previewCommand?.click();
+    const operationalDrawerContribution =
+      useOperationalDrawerContributionStore.getState().contribution;
+    expect(operationalDrawerContribution?.preview).toMatchObject({
+      canPreview: true,
+      summary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    });
+    operationalDrawerContribution?.preview.onPreviewExecutionPlan();
     await harness.render();
 
     expect(handlePreviewExecutionPlan).toHaveBeenCalledTimes(1);
