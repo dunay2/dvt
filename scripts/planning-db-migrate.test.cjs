@@ -10269,3 +10269,27 @@ test('tracked migrations record Graph node card warning status review fix', () =
   assert.doesNotMatch(warningStatusMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(warningStatusMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations record Graph node card interaction hardening evidence', () => {
+  const migrations = readMigrationFiles();
+  const interactionHardeningMigration = migrations.find(
+    (migration) => migration.fileName === '382_graph_node_card_interaction_hardening.sql'
+  );
+
+  assert.ok(interactionHardeningMigration);
+  assert.match(
+    interactionHardeningMigration.sql,
+    /EV-CANVAS-NODE-FLOATING-TOOLBAR-HEALTH-POPOVER-EXCLUSION/
+  );
+  assert.match(
+    interactionHardeningMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-HEALTH-POPOVER-NODE-REMOVAL/
+  );
+  assert.match(interactionHardeningMigration.sql, /RenderCanvasNodeFloatingToolbar/);
+  assert.match(interactionHardeningMigration.sql, /OpenCanvasNodeHealthPopover/);
+  assert.match(interactionHardeningMigration.sql, /CloseCanvasNodeHealthPopover/);
+  assert.match(interactionHardeningMigration.sql, /CanvasViewport\.nodeFloatingToolbar\.test\.tsx/);
+  assert.match(interactionHardeningMigration.sql, /noOrphanedNodeSurfaces/);
+  assert.doesNotMatch(interactionHardeningMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(interactionHardeningMigration.sql, /truncate\s+/i);
+});

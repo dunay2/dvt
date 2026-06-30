@@ -147,6 +147,38 @@ describe('CanvasViewport node floating toolbar', () => {
     expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
   });
 
+  it('does not leave toolbar or health detail surfaces orphaned when node details open or disappear', async () => {
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'source_orders',
+          position: { x: 40, y: 80 },
+          data: { name: 'Orders source', selectedForExecution: false },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('source_orders', 320, 180);
+    expect(
+      document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')
+    ).not.toBeNull();
+
+    await openOperationalDetails('source_orders');
+
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="graph-node-health-popover"]')?.textContent
+    ).toContain('Source health');
+
+    await renderViewport({
+      nodesWithImpact: [] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
+  });
+
   async function clickNode(
     nodeId: string,
     eventInput:
@@ -201,6 +233,40 @@ describe('CanvasViewport node floating toolbar', () => {
         clientX,
         clientY,
       } as unknown as React.MouseEvent<Element>);
+    });
+  }
+
+  async function openOperationalDetails(nodeId: string): Promise<void> {
+    const node = (
+      xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact']
+    ).find((candidate) => candidate.id === nodeId);
+    expect(node).toBeDefined();
+
+    const onOpenOperationalDetails = node?.data.onOpenOperationalDetails as
+      | ((
+          detail: {
+            title: string;
+            rows: readonly { id: string; label: string; value: string }[];
+          },
+          anchorRect: DOMRect
+        ) => void)
+      | undefined;
+    expect(typeof onOpenOperationalDetails).toBe('function');
+
+    await act(async () => {
+      onOpenOperationalDetails?.(
+        {
+          title: 'Source health',
+          rows: [
+            { id: 'freshness', label: 'Freshness', value: '12 min' },
+            { id: 'size', label: 'Dataset size', value: '18.2 GB' },
+          ],
+        },
+        {
+          left: 320,
+          bottom: 260,
+        } as DOMRect
+      );
     });
   }
 

@@ -91,6 +91,7 @@ function CanvasViewportWithPresenter({
 
   const openNodeHealthPopover = useCallback(
     (nodeId: string, detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+      setNodeFloatingToolbarModel(null);
       setNodeHealthPopoverModel({
         nodeId,
         detail,
