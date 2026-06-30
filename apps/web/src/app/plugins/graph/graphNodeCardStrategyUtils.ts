@@ -171,6 +171,8 @@ export function resolveNodeCardStatus(
       return { label: 'Running', tone: 'info' };
     case 'failed':
       return { label: 'Failed', tone: 'danger' };
+    case 'warn':
+      return { label: 'Warning', tone: 'warning' };
     case 'skipped':
       return { label: 'Skipped', tone: 'warning' };
     default:

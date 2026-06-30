@@ -123,6 +123,26 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it('preserves canonical warning status when runtime status is not recorded', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:sql_transform',
+        pluginId: 'dvt',
+        name: 'customer_rollup',
+        status: 'warn',
+        metadata: {
+          database: 'warehouse',
+          schema: 'mart',
+          table: 'customer_rollup',
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.status).toEqual({ label: 'Warning', tone: 'warning' });
+  });
+
   it('uses a DBT card strategy for model context instead of DVT table ownership', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
