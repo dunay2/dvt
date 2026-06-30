@@ -10253,3 +10253,19 @@ test('tracked migrations register Graph node health popover ownership', () => {
   assert.match(healthPopoverMigration.sql, /noDataLookup/);
   assert.doesNotMatch(healthPopoverMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations record Graph node card warning status review fix', () => {
+  const migrations = readMigrationFiles();
+  const warningStatusMigration = migrations.find(
+    (migration) => migration.fileName === '381_graph_node_card_warning_status_review_fix.sql'
+  );
+
+  assert.ok(warningStatusMigration);
+  assert.match(warningStatusMigration.sql, /EV-GRAPH-NODE-CARD-WARNING-STATUS-PRESERVED/);
+  assert.match(warningStatusMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(warningStatusMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(warningStatusMigration.sql, /dab27cf21a/);
+  assert.match(warningStatusMigration.sql, /warning card chip/);
+  assert.doesNotMatch(warningStatusMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(warningStatusMigration.sql, /truncate\s+/i);
+});
