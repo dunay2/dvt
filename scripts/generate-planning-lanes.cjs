@@ -136,10 +136,10 @@ function normalizeVerificationSummary(spec) {
     status_model: raw.status_model || computed.status_model,
     done_rule: raw.done_rule || computed.done_rule,
     verified_on: raw.verified_on || raw.last_verified || computed.verified_on,
-    total_tasks: raw.total_tasks ?? computed.total_tasks,
-    total_effort_points: raw.total_effort_points ?? computed.total_effort_points,
-    completed_weighted_points: raw.completed_weighted_points ?? computed.completed_weighted_points,
-    lane_progress_pct: raw.lane_progress_pct ?? computed.lane_progress_pct,
+    total_tasks: computed.total_tasks,
+    total_effort_points: computed.total_effort_points,
+    completed_weighted_points: computed.completed_weighted_points,
+    lane_progress_pct: computed.lane_progress_pct,
     notes: raw.notes || computed.notes,
   };
 }

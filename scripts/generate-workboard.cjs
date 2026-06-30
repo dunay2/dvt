@@ -284,6 +284,10 @@ function summarizeLane(lane) {
   return {
     ...computed,
     ...lane.verification_summary,
+    total_tasks: computed.total_tasks,
+    total_effort_points: computed.total_effort_points,
+    completed_weighted_points: computed.completed_weighted_points,
+    lane_progress_pct: computed.lane_progress_pct,
     verified_on:
       lane.verification_summary.verified_on ||
       lane.verification_summary.last_verified ||
