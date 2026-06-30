@@ -33,6 +33,7 @@ describe('GraphNodeHealthPopoverView', () => {
         <GraphNodeHealthPopoverView
           detail={{
             title: 'Postgres · public health',
+            ariaLabel: 'Open Postgres · public health metrics',
             rows: [
               { id: 'freshness', label: 'Freshness', value: '12 min' },
               { id: 'size', label: 'Dataset size', value: '18.2 GB' },

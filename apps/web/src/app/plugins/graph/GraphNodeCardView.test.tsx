@@ -94,6 +94,7 @@ describe('GraphNodeCardView', () => {
             ],
             operationalDetail: {
               title: 'Postgres · public health',
+              ariaLabel: 'Open Postgres · public health metrics',
               rows: [
                 { id: 'freshness', label: 'Freshness', value: '12 min' },
                 { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
@@ -156,6 +157,7 @@ describe('GraphNodeCardView', () => {
               ],
               operationalDetail: {
                 title: 'Orders model health',
+                ariaLabel: 'Open Orders model health metrics',
                 rows: [
                   { id: 'freshness', label: 'Freshness', value: '12 min' },
                   { id: 'size', label: 'Size', value: '18.2 GB' },
@@ -172,7 +174,7 @@ describe('GraphNodeCardView', () => {
       '[data-slot="graph-node-operational-rail"]'
     );
     expect(rail).not.toBeNull();
-    expect(rail?.getAttribute('aria-label')).toBe('Open node operational details');
+    expect(rail?.getAttribute('aria-label')).toBe('Open Orders model health metrics');
     vi.spyOn(rail!, 'getBoundingClientRect').mockReturnValue(anchorRect);
 
     act(() => {
@@ -182,6 +184,7 @@ describe('GraphNodeCardView', () => {
     expect(onOpenOperationalDetails).toHaveBeenCalledWith(
       {
         title: 'Orders model health',
+        ariaLabel: 'Open Orders model health metrics',
         rows: [
           { id: 'freshness', label: 'Freshness', value: '12 min' },
           { id: 'size', label: 'Size', value: '18.2 GB' },

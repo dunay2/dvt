@@ -9,6 +9,7 @@ export type GraphNodeCardMetric = Readonly<{
 
 export type GraphNodeOperationalDetail = Readonly<{
   title: string;
+  ariaLabel: string;
   rows: readonly GraphNodeCardMetric[];
 }>;
 
