@@ -76,6 +76,7 @@ patch as (
         'fowlerSignals', jsonb_build_array('Explicit Policy', 'Published Interface'),
         'architectureGuard',
           'pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts',
+        'cypressCoverage', 'N/A - pure connection policy',
         'unitTests', jsonb_build_array('apps/web/src/app/plugins/contracts/ConnectionRules.test.ts'),
         'sourceKind', 'manifest_symbol'
       )
@@ -115,6 +116,17 @@ merged_symbols as (
   select coalesce(jsonb_agg(symbol order by symbol->>'path', symbol->>'name'), '[]'::jsonb) as value
   from (
     select symbol
+      || case
+        when symbol ? 'architectureGuard' then '{}'::jsonb
+        else jsonb_build_object(
+          'architectureGuard',
+          'pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts'
+        )
+      end
+      || case
+        when symbol ? 'cypressCoverage' then '{}'::jsonb
+        else jsonb_build_object('cypressCoverage', 'N/A - pure connection policy')
+      end as symbol
     from target_rail,
       jsonb_array_elements(coalesce(target_rail.raw_manifest->'symbols', '[]'::jsonb)) symbols(symbol)
     union all

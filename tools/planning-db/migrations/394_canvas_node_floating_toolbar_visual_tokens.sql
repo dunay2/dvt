@@ -143,6 +143,20 @@ set
         select distinct value
         from (
           select value
+            || case
+              when value ? 'architectureGuard' then '{}'::jsonb
+              else jsonb_build_object(
+                'architectureGuard',
+                'pnpm docs:feature-mechanization:implementation'
+              )
+            end
+            || case
+              when value ? 'cypressCoverage' then '{}'::jsonb
+              else jsonb_build_object(
+                'cypressCoverage',
+                'not_applicable:inherited_symbol_normalized_by_node_floating_toolbar_visual_tokens'
+              )
+            end
           from jsonb_array_elements(coalesce(raw_manifest->'symbols', '[]'::jsonb)) symbols(value)
           where value->>'name' <> 'getActionClassName'
           union all
