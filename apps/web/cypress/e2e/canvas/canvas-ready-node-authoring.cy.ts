@@ -179,6 +179,13 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'model_orders').as('ordersNode').should('be.visible').click();
+    cy.get('@ordersNode')
+      .find('[data-slot="graph-node-card"]')
+      .should('contain.text', 'Draft')
+      .and('contain.text', 'models/analytics/model_orders.sql')
+      .find('button[aria-label="Select for execution"]')
+      .should('be.visible')
+      .and('have.css', 'cursor', 'pointer');
     cy.get('[data-slot="canvas-node-floating-toolbar"]')
       .should('be.visible')
       .should(($toolbar) => {

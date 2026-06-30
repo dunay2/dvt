@@ -7,13 +7,17 @@ import type {
 } from '../graph/graphNodeCardStrategyContracts';
 import {
   arrayCount,
+  buildGraphNodeOperationalDetail,
   formatBytes,
   formatCompactNumber,
   metadataOf,
   numericValue,
+  pushOperationalMetric,
   pushMetric,
   pushRuntimeMetrics,
+  resolveNodeCardStatus,
   resolveColumnCount,
+  resolveRuntimeDurationLabel,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 
@@ -55,6 +59,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const relation = [database, schema, table].filter(Boolean).join('.');
   const relationSubtitle = relation.length > 0 ? relation : null;
   const metrics: GraphNodeCardMetric[] = [];
+  const operationalMetrics: GraphNodeCardMetric[] = [];
   const materialization = resolveDbtMaterialization(metadata);
   const rowCount = numericValue(metadata.rowCount) ?? numericValue(metadata.rows);
   const byteSize =
@@ -85,11 +90,48 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   pushMetric(metrics, 'columns', 'Columns', resolveColumnCount(metadata, data));
   pushRuntimeMetrics(metrics, metadata, data);
 
+  const lastRunAt = stringValue(metadata.lastRunAt) ?? stringValue(data.lastRunAt);
+  const durationLabel = resolveRuntimeDurationLabel(metadata, data);
+  if (lastRunAt || durationLabel) {
+    pushOperationalMetric(operationalMetrics, 'last-run', 'Last run', lastRunAt);
+    pushOperationalMetric(operationalMetrics, 'duration', 'Duration', durationLabel);
+    pushOperationalMetric(
+      operationalMetrics,
+      'rows',
+      'Rows',
+      rowCount == null ? null : formatCompactNumber(rowCount)
+    );
+  } else {
+    pushOperationalMetric(
+      operationalMetrics,
+      'rows',
+      'Rows',
+      rowCount == null ? null : formatCompactNumber(rowCount)
+    );
+    pushOperationalMetric(
+      operationalMetrics,
+      'size',
+      'Size',
+      byteSize == null ? null : formatBytes(byteSize)
+    );
+  }
+
+  const isSource = node.kind === 'dbt:source';
+
   return {
     title: node.name,
     subtitle: stringValue(metadata.package) ?? relationSubtitle ?? node.path ?? null,
+    path: node.path ?? relationSubtitle ?? null,
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
+    status: resolveNodeCardStatus(
+      node,
+      metadata,
+      data,
+      isSource ? { label: 'Ready', tone: 'success' } : { label: 'Draft', tone: 'warning' }
+    ),
     metrics,
+    operationalMetrics,
+    operationalDetail: buildGraphNodeOperationalDetail(node.name, operationalMetrics),
   };
 }
 

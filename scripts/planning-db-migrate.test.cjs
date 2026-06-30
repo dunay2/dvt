@@ -9553,6 +9553,26 @@ test('tracked migrations persist Canvas node port handle feature rail', () => {
   assert.doesNotMatch(portHandleFeatureRailMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node port handle visual affordance rail', () => {
+  const migrations = readMigrationFiles();
+  const portHandleVisualAffordanceMigration = migrations.find(
+    (migration) => migration.fileName === '380_canvas_node_port_handle_visual_affordance.sql'
+  );
+
+  assert.ok(portHandleVisualAffordanceMigration);
+  assert.match(portHandleVisualAffordanceMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /CanvasNodePortTone/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /NODE_ROLE_PORT_TONES/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /CanvasNodeShell\.module\.css/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /EV-CANVAS-NODE-PORT-HANDLE-TONE-CONTRACT/);
+  assert.match(portHandleVisualAffordanceMigration.sql, /source\/model data-tone values/);
+  assert.match(
+    portHandleVisualAffordanceMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.doesNotMatch(portHandleVisualAffordanceMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations move Canvas node shell styles out of DBT component CSS', () => {
   const migrations = readMigrationFiles();
   const shellCssBoundaryMigration = migrations.find(
@@ -10169,4 +10189,67 @@ test('tracked migrations extend Canvas add-node catalog with i18n Cypress eviden
   assert.match(i18nCypressMigration.sql, /canvas-preview-run-authoring\.cy\.ts/);
   assert.match(i18nCypressMigration.sql, /i18n_safe_user_flow/);
   assert.doesNotMatch(i18nCypressMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Graph node card operational surface ownership', () => {
+  const migrations = readMigrationFiles();
+  const operationalSurfaceMigration = migrations.find(
+    (migration) => migration.fileName === '377_canvas_graph_node_card_operational_surface.sql'
+  );
+
+  assert.ok(operationalSurfaceMigration);
+  assert.match(operationalSurfaceMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(operationalSurfaceMigration.sql, /GraphNodeStatusChip/);
+  assert.match(operationalSurfaceMigration.sql, /GraphNodeOperationalRail/);
+  assert.match(operationalSurfaceMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(operationalSurfaceMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(operationalSurfaceMigration.sql, /graphNodeCardStrategyContracts\.ts/);
+  assert.match(operationalSurfaceMigration.sql, /GraphNodeCardView\.tsx/);
+  assert.match(operationalSurfaceMigration.sql, /dbtGraphNodeCardStrategy\.ts/);
+  assert.match(operationalSurfaceMigration.sql, /dvtGraphNodeCardStrategy\.ts/);
+  assert.match(operationalSurfaceMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(operationalSurfaceMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(operationalSurfaceMigration.sql, /presentationOnlyTemplate/);
+  assert.match(operationalSurfaceMigration.sql, /noInventedMetrics/);
+  assert.doesNotMatch(operationalSurfaceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Graph node card presentation leaf components', () => {
+  const migrations = readMigrationFiles();
+  const leafComponentsMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '378_canvas_graph_node_card_presentation_leaf_components.sql'
+  );
+
+  assert.ok(leafComponentsMigration);
+  assert.match(leafComponentsMigration.sql, /GraphNodeStatusChip\.tsx/);
+  assert.match(leafComponentsMigration.sql, /GraphNodeMetricRow\.tsx/);
+  assert.match(leafComponentsMigration.sql, /GraphNodeTagList\.tsx/);
+  assert.match(leafComponentsMigration.sql, /GraphNodeOperationalRail\.tsx/);
+  assert.match(leafComponentsMigration.sql, /owned-leaf-component-files/);
+  assert.match(leafComponentsMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(leafComponentsMigration.sql, /EV-CANVAS-GRAPH-NODE-OPERATIONAL-RAIL-CLICK/);
+  assert.match(leafComponentsMigration.sql, /graphNodeCardPresentationLeaves/);
+  assert.doesNotMatch(leafComponentsMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Graph node health popover ownership', () => {
+  const migrations = readMigrationFiles();
+  const healthPopoverMigration = migrations.find(
+    (migration) => migration.fileName === '379_canvas_graph_node_health_popover.sql'
+  );
+
+  assert.ok(healthPopoverMigration);
+  assert.match(healthPopoverMigration.sql, /web\.component\.canvas\.GraphNodeHealthPopover/);
+  assert.match(healthPopoverMigration.sql, /GraphNodeHealthPopoverView\.tsx/);
+  assert.match(healthPopoverMigration.sql, /CanvasViewport\.nodeOperationalRail\.test\.tsx/);
+  assert.match(healthPopoverMigration.sql, /OpenCanvasNodeHealthPopover/);
+  assert.match(healthPopoverMigration.sql, /CloseCanvasNodeHealthPopover/);
+  assert.match(healthPopoverMigration.sql, /RenderCanvasNodeHealthPopover/);
+  assert.match(healthPopoverMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(healthPopoverMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(healthPopoverMigration.sql, /GraphNodeOperationalDetail/);
+  assert.match(healthPopoverMigration.sql, /buildGraphNodeOperationalDetail/);
+  assert.match(healthPopoverMigration.sql, /noDataLookup/);
+  assert.doesNotMatch(healthPopoverMigration.sql, /truncate\s+/i);
 });

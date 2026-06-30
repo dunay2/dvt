@@ -12,7 +12,11 @@ const BASE_PROPS = {
     title: 'Orders model',
     kindLabel: 'Model',
     subtitle: 'analytics',
+    path: 'models/marts/orders.sql',
+    status: { label: 'Draft', tone: 'warning' as const },
     metrics: [],
+    operationalMetrics: [],
+    operationalDetail: null,
   },
   typeLabel: 'Model',
   tags: [],
@@ -67,5 +71,98 @@ describe('GraphNodeCardView', () => {
     });
 
     expect(onPlay).toHaveBeenCalledOnce();
+  });
+
+  it('renders semantic status, path, tags, and operational rail from the read model', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            title: 'Postgres · public',
+            kindLabel: 'Source',
+            subtitle: 'warehouse.public.orders',
+            path: 'models/sources/src_public.yml',
+            status: { label: 'Ready', tone: 'success' },
+            metrics: [{ id: 'columns', label: 'Columns', value: '3' }],
+            operationalMetrics: [
+              { id: 'freshness', label: 'Freshness', value: '12 min' },
+              { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
+              { id: 'size', label: 'Size', value: '18.2 GB' },
+            ],
+            operationalDetail: {
+              title: 'Postgres · public health',
+              rows: [
+                { id: 'freshness', label: 'Freshness', value: '12 min' },
+                { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
+                { id: 'size', label: 'Size', value: '18.2 GB' },
+              ],
+            },
+          }}
+          tags={['postgres', 'public']}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('Postgres · public');
+    expect(container.textContent).toContain('Ready');
+    expect(container.textContent).toContain('models/sources/src_public.yml');
+    expect(container.textContent).toContain('postgres');
+    expect(container.textContent).toContain('Freshness');
+    expect(container.textContent).toContain('42 MB/min');
+  });
+
+  it('opens operational details from the rail without bubbling to the node card', () => {
+    const onOpenOperationalDetails = vi.fn();
+    const onCardClick = vi.fn();
+    const anchorRect = new DOMRect(20, 30, 120, 40);
+
+    act(() => {
+      root.render(
+        <div onClick={onCardClick}>
+          <GraphNodeCardView
+            {...BASE_PROPS}
+            cardModel={{
+              ...BASE_PROPS.cardModel,
+              operationalMetrics: [
+                { id: 'freshness', label: 'Freshness', value: '12 min' },
+                { id: 'size', label: 'Size', value: '18.2 GB' },
+              ],
+              operationalDetail: {
+                title: 'Orders model health',
+                rows: [
+                  { id: 'freshness', label: 'Freshness', value: '12 min' },
+                  { id: 'size', label: 'Size', value: '18.2 GB' },
+                ],
+              },
+            }}
+            onOpenOperationalDetails={onOpenOperationalDetails}
+          />
+        </div>
+      );
+    });
+
+    const rail = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-operational-rail"]'
+    );
+    expect(rail).not.toBeNull();
+    expect(rail?.getAttribute('aria-label')).toBe('Open node operational details');
+    vi.spyOn(rail!, 'getBoundingClientRect').mockReturnValue(anchorRect);
+
+    act(() => {
+      fireEvent.click(rail!);
+    });
+
+    expect(onOpenOperationalDetails).toHaveBeenCalledWith(
+      {
+        title: 'Orders model health',
+        rows: [
+          { id: 'freshness', label: 'Freshness', value: '12 min' },
+          { id: 'size', label: 'Size', value: '18.2 GB' },
+        ],
+      },
+      anchorRect
+    );
+    expect(onCardClick).not.toHaveBeenCalled();
   });
 });

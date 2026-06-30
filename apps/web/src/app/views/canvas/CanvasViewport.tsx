@@ -6,8 +6,9 @@ import {
   type NodeTypes,
   type ReactFlowProps,
 } from '@xyflow/react';
-import { useCallback, useRef, useState, type DragEventHandler } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEventHandler } from 'react';
 
+import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
@@ -62,6 +63,12 @@ type CanvasViewportWithPresenterProps = CanvasViewportProps &
     renderContextMenuView: boolean;
   }>;
 
+type NodeHealthPopoverModel = Readonly<{
+  nodeId: string;
+  detail: GraphNodeOperationalDetail;
+  position: { x: number; y: number };
+}>;
+
 function CanvasViewportWithPresenter({
   contextMenuPresenter,
   renderContextMenuView,
@@ -71,13 +78,73 @@ function CanvasViewportWithPresenter({
   const viewportRef = useRef<HTMLDivElement>(null);
   const [nodeFloatingToolbarModel, setNodeFloatingToolbarModel] =
     useState<CanvasNodeFloatingToolbarModel | null>(null);
+  const [nodeHealthPopoverModel, setNodeHealthPopoverModel] =
+    useState<NodeHealthPopoverModel | null>(null);
   const resolvedCanvasPalette = normalizeCanvasPaletteId(props.canvasPalette);
   const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, props.gridSize);
   const closeNodeFloatingToolbar = useCallback(() => {
     setNodeFloatingToolbarModel(null);
   }, []);
+  const closeNodeHealthPopover = useCallback(() => {
+    setNodeHealthPopoverModel(null);
+  }, []);
+
+  const openNodeHealthPopover = useCallback(
+    (nodeId: string, detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+      setNodeHealthPopoverModel({
+        nodeId,
+        detail,
+        position: {
+          x: Math.max(8, anchorRect.left),
+          y: Math.max(8, anchorRect.bottom + 8),
+        },
+      });
+    },
+    []
+  );
+
+  const nodesWithOperationalDetails = useMemo(
+    () =>
+      props.nodesWithImpact.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onOpenOperationalDetails: (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) =>
+            openNodeHealthPopover(node.id, detail, anchorRect),
+        },
+      })),
+    [openNodeHealthPopover, props.nodesWithImpact]
+  );
+
+  useEffect(() => {
+    if (nodeFloatingToolbarModel == null) {
+      return;
+    }
+
+    const toolbarOwnerStillExists = props.nodesWithImpact.some(
+      (node) => node.id === nodeFloatingToolbarModel.nodeId
+    );
+    if (!toolbarOwnerStillExists) {
+      setNodeFloatingToolbarModel(null);
+    }
+  }, [nodeFloatingToolbarModel, props.nodesWithImpact]);
+
+  useEffect(() => {
+    if (nodeHealthPopoverModel == null) {
+      return;
+    }
+
+    const popoverOwnerStillExists = props.nodesWithImpact.some(
+      (node) => node.id === nodeHealthPopoverModel.nodeId
+    );
+    if (!popoverOwnerStillExists) {
+      setNodeHealthPopoverModel(null);
+    }
+  }, [nodeHealthPopoverModel, props.nodesWithImpact]);
+
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
     (event, node) => {
+      closeNodeHealthPopover();
       const eventTarget = event.currentTarget as Element | undefined;
       const nodeRect =
         typeof eventTarget?.getBoundingClientRect === 'function'
@@ -106,7 +173,7 @@ function CanvasViewportWithPresenter({
       );
       props.onNodeClick(event, node);
     },
-    [props.onNodeClick]
+    [closeNodeHealthPopover, props.onNodeClick]
   );
 
   useCanvasViewportLifecycle({
@@ -124,7 +191,7 @@ function CanvasViewportWithPresenter({
       viewportRef={viewportRef}
       resolvedCanvasPalette={resolvedCanvasPalette}
       canEditEdges={props.canEditEdges}
-      nodesWithImpact={props.nodesWithImpact}
+      nodesWithImpact={nodesWithOperationalDetails}
       edges={props.edges}
       nodeTypes={props.nodeTypes}
       gridSize={props.gridSize}
@@ -147,6 +214,8 @@ function CanvasViewportWithPresenter({
       renderContextMenuView={renderContextMenuView}
       nodeFloatingToolbarModel={nodeFloatingToolbarModel}
       onCloseNodeFloatingToolbar={closeNodeFloatingToolbar}
+      nodeHealthPopoverModel={nodeHealthPopoverModel}
+      onCloseNodeHealthPopover={closeNodeHealthPopover}
     />
   );
 }

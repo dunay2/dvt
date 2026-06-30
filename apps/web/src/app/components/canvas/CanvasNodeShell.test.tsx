@@ -83,4 +83,27 @@ describe('CanvasNodeShell', () => {
 
     expect(ports.map((port) => port.getAttribute('data-port'))).toEqual(['target', 'source']);
   });
+
+  it('renders graph ports with caller-owned semantic tones', () => {
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <CanvasNodeShell
+            contextMenuModel={CONTEXT_MENU_MODEL}
+            shouldShowSourceHandle
+            shouldShowTargetHandle
+            sourceHandleTone="source"
+            targetHandleTone="model"
+            onContextMenuAction={vi.fn()}
+          >
+            <div>Orders model</div>
+          </CanvasNodeShell>
+        </ReactFlowProvider>
+      );
+    });
+
+    const ports = Array.from(container.querySelectorAll('[data-slot="canvas-node-port-handle"]'));
+
+    expect(ports.map((port) => port.getAttribute('data-tone'))).toEqual(['model', 'source']);
+  });
 });

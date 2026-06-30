@@ -1,6 +1,10 @@
 /** Owned concern: share pure graph card projection helpers across plugin strategies. */
 import type { CanonicalNode } from '../../types/canonical';
-import type { GraphNodeCardMetric } from './graphNodeCardStrategyContracts';
+import type {
+  GraphNodeCardMetric,
+  GraphNodeCardStatus,
+  GraphNodeOperationalDetail,
+} from './graphNodeCardStrategyContracts';
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -90,6 +94,88 @@ export function pushRuntimeMetrics(
     'Warnings',
     warningCount == null ? null : formatCompactNumber(warningCount)
   );
+}
+
+export function pushOperationalMetric(
+  metrics: GraphNodeCardMetric[],
+  id: string,
+  label: string,
+  value: string | number | null
+): void {
+  pushMetric(metrics, id, label, value);
+}
+
+export function buildGraphNodeOperationalDetail(
+  title: string,
+  metrics: readonly GraphNodeCardMetric[]
+): GraphNodeOperationalDetail | null {
+  if (metrics.length === 0) {
+    return null;
+  }
+
+  return {
+    title: `${title} health`,
+    rows: metrics,
+  };
+}
+
+export function resolveRuntimeDurationLabel(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown>
+): string | null {
+  const durationMs = numericValue(metadata.durationMs) ?? numericValue(data.durationMs);
+  return durationMs == null ? null : formatDurationMs(durationMs);
+}
+
+export function resolveRunStatusLabel(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown>
+): GraphNodeCardStatus | null {
+  const runStatus = stringValue(metadata.runStatus) ?? stringValue(data.runStatus);
+  if (!runStatus) {
+    return null;
+  }
+
+  switch (runStatus.toLowerCase()) {
+    case 'completed':
+    case 'success':
+    case 'succeeded':
+      return { label: 'Completed', tone: 'success' };
+    case 'running':
+      return { label: 'Running', tone: 'info' };
+    case 'failed':
+    case 'error':
+      return { label: 'Failed', tone: 'danger' };
+    case 'blocked':
+      return { label: 'Blocked', tone: 'danger' };
+    default:
+      return { label: runStatus, tone: 'neutral' };
+  }
+}
+
+export function resolveNodeCardStatus(
+  node: CanonicalNode,
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown>,
+  fallback: GraphNodeCardStatus = { label: 'Draft', tone: 'warning' }
+): GraphNodeCardStatus {
+  const runtimeStatus = resolveRunStatusLabel(metadata, data);
+  if (runtimeStatus) {
+    return runtimeStatus;
+  }
+
+  switch (node.status) {
+    case 'success':
+      return { label: 'Ready', tone: 'success' };
+    case 'running':
+      return { label: 'Running', tone: 'info' };
+    case 'failed':
+      return { label: 'Failed', tone: 'danger' };
+    case 'skipped':
+      return { label: 'Skipped', tone: 'warning' };
+    default:
+      return fallback;
+  }
 }
 
 export function pushMetric(

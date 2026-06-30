@@ -3,10 +3,16 @@ import { useState, type CSSProperties, type ReactElement } from 'react';
 import { ChevronDown, ChevronUp, Play, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-import { Badge } from '../../components/ui/badge';
 import { cn } from '../../components/ui/utils';
+import { GraphNodeMetricRow } from './GraphNodeMetricRow';
+import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
+import { GraphNodeStatusChip } from './GraphNodeStatusChip';
+import { GraphNodeTagList } from './GraphNodeTagList';
 import type { GraphNodeCardPlayAction } from './graphNodeCardActions';
-import type { GraphNodeCardReadModel } from './graphNodeCardStrategyContracts';
+import type {
+  GraphNodeCardReadModel,
+  GraphNodeOperationalDetail,
+} from './graphNodeCardStrategyContracts';
 import { graphVisualClasses } from './graphVisualTokens';
 
 export type GraphNodeCardColumn = Readonly<{
@@ -30,6 +36,7 @@ export type GraphNodeCardViewProps = Readonly<{
   dimmed: boolean;
   overlayStyle?: CSSProperties;
   playAction?: GraphNodeCardPlayAction | null;
+  onOpenOperationalDetails?: (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => void;
 }>;
 
 export function GraphNodeCardView({
@@ -48,8 +55,10 @@ export function GraphNodeCardView({
   dimmed,
   overlayStyle,
   playAction,
+  onOpenOperationalDetails,
 }: GraphNodeCardViewProps): ReactElement {
   const [columnsExpanded, setColumnsExpanded] = useState(false);
+  const operationalDetail = cardModel.operationalDetail;
 
   return (
     <div
@@ -64,100 +73,91 @@ export function GraphNodeCardView({
       )}
       {...(overlayStyle ? { style: overlayStyle } : {})}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-1.5">
-          {Icon && (
-            <Icon
-              size={12}
-              className="shrink-0 opacity-70"
-              {...(iconColor ? { style: { color: iconColor } as CSSProperties } : {})}
-            />
-          )}
-          <span className="truncate font-semibold leading-tight">{cardModel.title}</span>
+      <div className={graphVisualClasses.nodeCardBody}>
+        <div className={graphVisualClasses.nodeCardHeader}>
+          <div className={graphVisualClasses.nodeCardTitleRow}>
+            {Icon && (
+              <Icon
+                size={18}
+                className="shrink-0 opacity-80"
+                {...(iconColor ? { style: { color: iconColor } as CSSProperties } : {})}
+              />
+            )}
+            <span className={graphVisualClasses.nodeCardTitle}>{cardModel.title}</span>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <GraphNodeStatusChip status={cardModel.status} />
+            <div className={cn('size-2 rounded-full', statusDotClass)} />
+            {playAction ? (
+              <button
+                type="button"
+                aria-label={playAction.label}
+                title={playAction.label}
+                disabled={playAction.disabled}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  playAction.onPress();
+                }}
+                className={graphVisualClasses.nodeCardPlayButton}
+              >
+                <Play className="size-3.5 fill-current" />
+              </button>
+            ) : null}
+          </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1">
-          <div className={cn('size-2 rounded-full', statusDotClass)} />
-          {playAction ? (
+
+        <div className={graphVisualClasses.nodeCardKind}>{cardModel.kindLabel || typeLabel}</div>
+
+        <GraphNodeMetricRow metrics={cardModel.metrics} />
+
+        {(cardModel.path ?? cardModel.subtitle) && (
+          <div className={graphVisualClasses.nodeCardPath}>
+            {cardModel.path ?? cardModel.subtitle}
+          </div>
+        )}
+
+        <GraphNodeTagList tags={tags} />
+
+        {showColumns && (
+          <div className={graphVisualClasses.columnsShell}>
             <button
               type="button"
-              aria-label={playAction.label}
-              title={playAction.label}
-              disabled={playAction.disabled}
-              onClick={(event) => {
-                event.stopPropagation();
-                playAction.onPress();
-              }}
-              className="nodrag inline-flex size-5 items-center justify-center rounded border border-transparent text-slate-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={() => setColumnsExpanded((value) => !value)}
+              className={graphVisualClasses.columnsToggle}
             >
-              <Play className="size-3" />
-            </button>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="mt-2">
-        <Badge variant="secondary" className="px-1.5 py-0.5 text-[10px]">
-          {cardModel.kindLabel || typeLabel}
-        </Badge>
-      </div>
-
-      {cardModel.metrics.length > 0 && (
-        <div className={graphVisualClasses.metricText}>
-          {cardModel.metrics.map((metric) => (
-            <span key={metric.id} className="inline-flex items-baseline gap-1">
-              <span className="text-slate-400">{metric.label}</span>
-              <span title={metric.label} className="font-medium text-slate-200">
-                {metric.value}
+              <span className="flex items-center gap-1">
+                <Table className="size-3" />
+                Columns ({columns.length})
               </span>
-            </span>
-          ))}
-        </div>
-      )}
+              {columnsExpanded ? (
+                <ChevronUp className="size-3" />
+              ) : (
+                <ChevronDown className="size-3" />
+              )}
+            </button>
 
-      {cardModel.subtitle && (
-        <div className="mt-1 truncate text-[10px] opacity-50">{cardModel.subtitle}</div>
-      )}
-
-      {tags.length > 0 && (
-        <div className="mt-1 flex flex-wrap gap-0.5">
-          {tags.slice(0, 3).map((tag) => (
-            <span key={tag} className={graphVisualClasses.tag}>
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {showColumns && (
-        <div className={graphVisualClasses.columnsShell}>
-          <button
-            type="button"
-            onClick={() => setColumnsExpanded((value) => !value)}
-            className={graphVisualClasses.columnsToggle}
-          >
-            <span className="flex items-center gap-1">
-              <Table className="size-3" />
-              Columns ({columns.length})
-            </span>
-            {columnsExpanded ? (
-              <ChevronUp className="size-3" />
-            ) : (
-              <ChevronDown className="size-3" />
+            {columnsExpanded && (
+              <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
+                {columns.map((column) => (
+                  <div key={column.name} className={graphVisualClasses.columnRow}>
+                    <span className={graphVisualClasses.columnName}>{column.name}</span>
+                    <span className={graphVisualClasses.columnType}>{column.type}</span>
+                  </div>
+                ))}
+              </div>
             )}
-          </button>
+          </div>
+        )}
+      </div>
 
-          {columnsExpanded && (
-            <div className="mt-2 max-h-32 space-y-1 overflow-y-auto">
-              {columns.map((column) => (
-                <div key={column.name} className={graphVisualClasses.columnRow}>
-                  <span className={graphVisualClasses.columnName}>{column.name}</span>
-                  <span className={graphVisualClasses.columnType}>{column.type}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <GraphNodeOperationalRail
+        metrics={cardModel.operationalMetrics}
+        onOpen={
+          onOpenOperationalDetails == null || operationalDetail == null
+            ? undefined
+            : (anchorRect) => onOpenOperationalDetails(operationalDetail, anchorRect)
+        }
+      />
     </div>
   );
 }

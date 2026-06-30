@@ -4,7 +4,7 @@ import { type DragEventHandler, type ReactNode } from 'react';
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import { cn } from '../ui/utils';
 import { CanvasNodeContextMenuView } from './CanvasNodeContextMenuView';
-import { CanvasNodePortHandle } from './CanvasNodePortHandle';
+import { CanvasNodePortHandle, type CanvasNodePortTone } from './CanvasNodePortHandle';
 import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
@@ -16,6 +16,8 @@ type CanvasNodeShellProps = Readonly<{
   contextMenuModel: CanvasNodeContextMenuModel;
   shouldShowSourceHandle: boolean;
   shouldShowTargetHandle: boolean;
+  sourceHandleTone?: CanvasNodePortTone;
+  targetHandleTone?: CanvasNodePortTone;
   onContextMenuAction: (actionId: CanvasNodeContextMenuActionId) => void;
   onOpenWorkbench?: () => void;
   onDragOver?: DragEventHandler<HTMLDivElement>;
@@ -27,6 +29,8 @@ export function CanvasNodeShell({
   contextMenuModel,
   shouldShowSourceHandle,
   shouldShowTargetHandle,
+  sourceHandleTone = 'control',
+  targetHandleTone = 'control',
   onContextMenuAction,
   onOpenWorkbench,
   onDragOver,
@@ -41,11 +45,23 @@ export function CanvasNodeShell({
           onDragOver={onDragOver}
           onDrop={onDrop}
         >
-          {shouldShowTargetHandle && <CanvasNodePortHandle kind="target" />}
+          {shouldShowTargetHandle && (
+            <CanvasNodePortHandle
+              kind="target"
+              tone={targetHandleTone}
+              label="Connect incoming node port"
+            />
+          )}
 
           <div className="relative">{children}</div>
 
-          {shouldShowSourceHandle && <CanvasNodePortHandle kind="source" />}
+          {shouldShowSourceHandle && (
+            <CanvasNodePortHandle
+              kind="source"
+              tone={sourceHandleTone}
+              label="Connect outgoing node port"
+            />
+          )}
         </div>
       </ContextMenuTrigger>
 
