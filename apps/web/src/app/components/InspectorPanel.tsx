@@ -9,7 +9,10 @@ import type {
   InspectorPanelContribution,
 } from '../plugins/contracts/PluginManifest';
 import { getInspectorPanels } from '../plugins/registry';
-import { graphStatusDotClasses, graphVisualClasses } from '../plugins/graph/graphVisualTokens';
+import {
+  inspectorStatusDotClasses,
+  inspectorVisualClasses,
+} from './inspector/inspectorVisualTokens';
 import { Button } from './ui/button';
 import { ScrollArea } from './ui/scroll-area';
 import { cn } from './ui/utils';
@@ -68,7 +71,7 @@ export default function InspectorPanel({
 
   if (!node) {
     return (
-      <div className={graphVisualClasses.contextPanelRightShell}>
+      <div className={inspectorVisualClasses.contextPanelRightShell}>
         <PanelHeader title="Inspector" status={null} kind="" onHide={onHide} />
         {beforePanels ? (
           <ScrollArea className="flex-1">
@@ -76,7 +79,7 @@ export default function InspectorPanel({
           </ScrollArea>
         ) : (
           <div className="flex flex-1 items-center justify-center px-6">
-            <div className={graphVisualClasses.contextPanelEmptyText}>
+            <div className={inspectorVisualClasses.contextPanelEmptyText}>
               <p>Select a node to inspect.</p>
             </div>
           </div>
@@ -86,7 +89,7 @@ export default function InspectorPanel({
   }
 
   return (
-    <div className={graphVisualClasses.contextPanelRightShell}>
+    <div className={inspectorVisualClasses.contextPanelRightShell}>
       <PanelHeader title={node.name} status={node.status} kind={node.kind} onHide={onHide} />
       <ScrollArea className="flex-1">
         <div className="space-y-4 p-4">
@@ -120,22 +123,26 @@ type PanelHeaderProps = {
 };
 
 function PanelHeader({ title, status, kind, onHide }: PanelHeaderProps) {
-  const dotClass = status ? (graphStatusDotClasses[status] ?? graphStatusDotClasses.idle) : null;
+  const dotClass = status
+    ? (inspectorStatusDotClasses[status] ?? inspectorStatusDotClasses.idle)
+    : null;
 
   return (
-    <div className={graphVisualClasses.contextPanelHeaderRow}>
+    <div className={inspectorVisualClasses.contextPanelHeaderRow}>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           {dotClass && <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />}
-          <h2 className={cn('truncate', graphVisualClasses.contextPanelTitle)}>{title}</h2>
+          <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>{title}</h2>
         </div>
-        {kind && <p className={cn('font-mono', graphVisualClasses.contextPanelSubtitle)}>{kind}</p>}
+        {kind && (
+          <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>{kind}</p>
+        )}
       </div>
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        className={cn('shrink-0', graphVisualClasses.contextPanelIconButton)}
+        className={cn('shrink-0', inspectorVisualClasses.contextPanelIconButton)}
         onClick={onHide}
         aria-label="Hide inspector panel"
       >

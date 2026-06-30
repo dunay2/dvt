@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import {
@@ -80,16 +80,16 @@ export function CanvasInspectorAuthoringSection({
   return (
     <section
       data-slot="node-inspector-editable-section"
-      className={graphVisualClasses.contextPanelDetailsSection}
+      className={inspectorVisualClasses.contextPanelDetailsSection}
     >
       <div className="space-y-3">
         {showGeneral ? (
           <>
             <div>
-              <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+              <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
                 {canvasViewCopy.inspectorEditablePropertiesTitle}
               </h3>
-              <p className={graphVisualClasses.inspectorBody}>
+              <p className={inspectorVisualClasses.inspectorBody}>
                 {canvasViewCopy.inspectorEditablePropertiesDescription}
               </p>
             </div>
@@ -112,7 +112,7 @@ export function CanvasInspectorAuthoringSection({
                 }
               />
               {errors.name ? (
-                <p className={graphVisualClasses.inspectorErrorText}>
+                <p className={inspectorVisualClasses.inspectorErrorText}>
                   {formatCanvasInspectorNodeDraftError(errors.name, canvasViewCopy)}
                 </p>
               ) : null}
@@ -192,7 +192,7 @@ export function CanvasInspectorAuthoringSection({
         ) : null}
 
         {!authoring.canEditNode && showGeneral ? (
-          <p className={graphVisualClasses.inspectorBody}>
+          <p className={inspectorVisualClasses.inspectorBody}>
             {canvasViewCopy.inspectorNodeReadOnlyMessage}
           </p>
         ) : null}

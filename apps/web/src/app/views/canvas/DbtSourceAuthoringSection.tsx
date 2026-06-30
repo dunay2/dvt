@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
@@ -27,8 +27,8 @@ export function DbtSourceAuthoringSection({
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   return (
-    <div className={graphVisualClasses.inspectorDbtSection}>
-      <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+    <div className={inspectorVisualClasses.inspectorDbtSection}>
+      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDbtCardTitle}
       </h3>
 
@@ -52,7 +52,7 @@ export function DbtSourceAuthoringSection({
           }
         />
         {errors?.packageName ? (
-          <p className={graphVisualClasses.inspectorErrorText}>
+          <p className={inspectorVisualClasses.inspectorErrorText}>
             {formatCanvasInspectorNodeDraftError(errors.packageName, canvasViewCopy)}
           </p>
         ) : null}
@@ -79,7 +79,7 @@ export function DbtSourceAuthoringSection({
             }
           />
           {errors?.sourceName ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.sourceName, canvasViewCopy)}
             </p>
           ) : null}
@@ -104,7 +104,7 @@ export function DbtSourceAuthoringSection({
             }
           />
           {errors?.schemaName ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.schemaName, canvasViewCopy)}
             </p>
           ) : null}
@@ -129,7 +129,7 @@ export function DbtSourceAuthoringSection({
             }
           />
           {errors?.tableName ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.tableName, canvasViewCopy)}
             </p>
           ) : null}

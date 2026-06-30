@@ -1,6 +1,7 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useOperationalDrawerContributionStore } from '../components/shell/operationalDrawerContributionStore';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import { canvasViewCopy } from './canvas/copy';
 import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScenario';
@@ -15,7 +16,6 @@ import {
   requireAuthoringNodeKind,
   type CanvasRouteHarness,
 } from './Canvas.test.support';
-import { useOperationalDrawerContributionStore } from '../components/shell/operationalDrawerContributionStore';
 
 type FirstCanvasCycleFixture = Readonly<{
   canvasKind: 'transformation' | 'dbt';
@@ -256,11 +256,14 @@ describe('Canvas route host-cycle persistence', () => {
 
     const operationalDrawerContribution =
       useOperationalDrawerContributionStore.getState().contribution;
+    expect(operationalDrawerContribution?.source).toBe('canvas');
     expect(operationalDrawerContribution?.preview).toMatchObject({
       canPreview: true,
       summary: canvasViewCopy.planStatusPreviewRequiredMessage,
     });
-    operationalDrawerContribution?.preview.onPreviewExecutionPlan();
+    await act(async () => {
+      operationalDrawerContribution?.preview.onPreviewExecutionPlan();
+    });
     await harness.render();
 
     expect(handlePreviewExecutionPlan).toHaveBeenCalledTimes(1);

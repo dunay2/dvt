@@ -1,7 +1,7 @@
 /** Owned concern: render one node property section from the Inspector read model. */
 import type { ReactNode } from 'react';
 
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from './inspectorVisualTokens';
 import { Badge } from '../ui/badge';
 import { cn } from '../ui/utils';
 import type { NodePropertySection } from './nodePropertiesReadModel';
@@ -32,7 +32,7 @@ function renderSectionBody(
         data-slot={slots.code}
         className={cn(
           surface === 'workbench' ? 'max-h-80 overflow-auto p-3' : 'max-h-72 overflow-auto p-2',
-          graphVisualClasses.inspectorCodeBlock
+          inspectorVisualClasses.inspectorCodeBlock
         )}
       >
         {section.code}
@@ -96,7 +96,7 @@ function renderSectionBody(
                     )}
                   >
                     {row.cells[key] || (
-                      <span className={graphVisualClasses.inspectorSubtle}>-</span>
+                      <span className={inspectorVisualClasses.inspectorSubtle}>-</span>
                     )}
                   </td>
                 ))}
@@ -119,7 +119,7 @@ function renderSectionBody(
       >
         {section.rows.map((row) => (
           <div key={row.label} className="contents">
-            <dt className={graphVisualClasses.inspectorLabel}>{row.label}</dt>
+            <dt className={inspectorVisualClasses.inspectorLabel}>{row.label}</dt>
             <dd
               className={cn(
                 'min-w-0 break-words',
@@ -135,7 +135,7 @@ function renderSectionBody(
   }
 
   return (
-    <p className={graphVisualClasses.inspectorBody}>
+    <p className={inspectorVisualClasses.inspectorBody}>
       {section.emptyState ?? 'No properties are recorded for this section.'}
     </p>
   );
@@ -143,7 +143,7 @@ function renderSectionBody(
 
 function renderSectionCountBadge(section: NodePropertySection): JSX.Element | null {
   return section.tableRows.length > 0 ? (
-    <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
+    <Badge variant="secondary" className={inspectorVisualClasses.contextPanelTabBadge}>
       {section.tableRows.length}
     </Badge>
   ) : null;
@@ -159,7 +159,7 @@ export function NodePropertySectionView({
   return (
     <section data-slot={sectionSlot(section, slots)} className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <h3 className={graphVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
+        <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
         {showCountBadge ? renderSectionCountBadge(section) : null}
       </div>
       {renderSectionBody(section, slots, surface)}

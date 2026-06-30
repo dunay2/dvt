@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 
 import type { InspectorPanelContribution } from '../../plugins/contracts/PluginManifest';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from './inspectorVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
 import { Badge } from '../ui/badge';
 import {
@@ -66,7 +66,7 @@ function resolvePrimarySections({
 
 function renderTabBadge(section: NodePropertySection): JSX.Element | null {
   return section.tableRows.length > 0 ? (
-    <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
+    <Badge variant="secondary" className={inspectorVisualClasses.contextPanelTabBadge}>
       {section.tableRows.length}
     </Badge>
   ) : null;
@@ -137,13 +137,13 @@ export function NodePropertiesTabs({
       onValueChange={onActiveTabChange}
       className="gap-4"
     >
-      <TabsList data-slot={slots.list} className={graphVisualClasses.contextPanelFlatTabsList}>
+      <TabsList data-slot={slots.list} className={inspectorVisualClasses.contextPanelFlatTabsList}>
         {primarySections.map((section) => (
           <TabsTrigger
             key={section.id}
             value={section.id}
             data-slot={`${slots.tabPrefix}-${section.id}`}
-            className={graphVisualClasses.contextPanelFlatTabTrigger}
+            className={inspectorVisualClasses.contextPanelFlatTabTrigger}
           >
             {section.label}
             {renderTabBadge(section)}
@@ -156,7 +156,7 @@ export function NodePropertiesTabs({
                 type="button"
                 data-slot={slots.moreTrigger}
                 className={cn(
-                  graphVisualClasses.contextPanelFlatTabTrigger,
+                  inspectorVisualClasses.contextPanelFlatTabTrigger,
                   activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
                 )}
               >
@@ -175,7 +175,10 @@ export function NodePropertiesTabs({
                 >
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
                   {item.count > 0 ? (
-                    <Badge variant="secondary" className={graphVisualClasses.contextPanelTabBadge}>
+                    <Badge
+                      variant="secondary"
+                      className={inspectorVisualClasses.contextPanelTabBadge}
+                    >
                       {item.count}
                     </Badge>
                   ) : null}

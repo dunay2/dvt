@@ -11,7 +11,7 @@ import type {
   CanvasInspectorNodeDraftErrors,
 } from './canvasInspectorAuthoring.types';
 import { canvasViewCopy } from './copy';
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 
 export function DvtSourceAuthoringSection({
   node,
@@ -29,8 +29,8 @@ export function DvtSourceAuthoringSection({
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   return (
-    <div className={graphVisualClasses.inspectorDbtSection}>
-      <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+    <div className={inspectorVisualClasses.inspectorDbtSection}>
+      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtSourceTitle}
       </h3>
       <div className="mb-3 grid grid-cols-1 gap-2 rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
@@ -89,7 +89,7 @@ export function DvtSourceAuthoringSection({
             }
           />
           {errors?.schema ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.schema, canvasViewCopy)}
             </p>
           ) : null}
@@ -116,7 +116,7 @@ export function DvtSourceAuthoringSection({
             }
           />
           {errors?.table ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.table, canvasViewCopy)}
             </p>
           ) : null}
@@ -143,7 +143,7 @@ export function DvtSourceAuthoringSection({
             }
           />
           {errors?.alias ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.alias, canvasViewCopy)}
             </p>
           ) : null}

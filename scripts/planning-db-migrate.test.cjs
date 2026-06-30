@@ -10408,3 +10408,42 @@ test('tracked migrations reconcile Node workbench duplicate file ownership', () 
   assert.match(ownershipMigration.sql, /canvas-component-registry-drift/);
   assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register Inspector visual token ownership', () => {
+  const migrations = readMigrationFiles();
+  const tokenMigration = migrations.find(
+    (migration) => migration.fileName === '389_inspector_visual_tokens_component_boundary.sql'
+  );
+
+  assert.ok(tokenMigration);
+  assert.match(tokenMigration.sql, /web\.component\.canvas\.InspectorVisualTokens/);
+  assert.match(tokenMigration.sql, /inspectorVisualTokens\.ts/);
+  assert.match(tokenMigration.sql, /inspectorVisualClasses; inspectorStatusDotClasses/);
+  assert.match(tokenMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(tokenMigration.sql, /EV-CANVAS-INSPECTOR-VISUAL-TOKENS-BOUNDARY/);
+  assert.match(tokenMigration.sql, /graphVisualTokenConvergence\.architecture\.test\.ts/);
+  assert.match(tokenMigration.sql, /doesNotCreateNewBehavior/);
+  assert.doesNotMatch(tokenMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Inspector visual token feature mechanization symbols', () => {
+  const migrations = readMigrationFiles();
+  const symbolMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '390_inspector_visual_tokens_feature_mechanization_symbols.sql'
+  );
+
+  assert.ok(symbolMigration);
+  assert.match(symbolMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(symbolMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(symbolMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(symbolMigration.sql, /InspectorVisualTokens/);
+  assert.match(symbolMigration.sql, /inspectorVisualClasses/);
+  assert.match(symbolMigration.sql, /inspectorStatusDotClasses/);
+  assert.match(
+    symbolMigration.sql,
+    /apps\/web\/src\/app\/components\/inspector\/inspectorVisualTokens\.ts/
+  );
+  assert.match(symbolMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(symbolMigration.sql, /truncate\s+/i);
+});
