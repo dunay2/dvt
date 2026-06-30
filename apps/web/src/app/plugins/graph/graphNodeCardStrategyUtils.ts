@@ -115,6 +115,7 @@ export function buildGraphNodeOperationalDetail(
 
   return {
     title: `${title} health`,
+    ariaLabel: `Open ${title} health metrics`,
     rows: metrics,
   };
 }

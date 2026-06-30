@@ -6,6 +6,7 @@ import { graphVisualClasses } from './graphVisualTokens';
 
 export type GraphNodeOperationalRailProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
+  ariaLabel?: string;
   onOpen?: (anchorRect: DOMRect) => void;
 }>;
 
@@ -28,6 +29,7 @@ function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] 
 
 export function GraphNodeOperationalRail({
   metrics,
+  ariaLabel,
   onOpen,
 }: GraphNodeOperationalRailProps): ReactElement | null {
   if (metrics.length === 0) {
@@ -49,7 +51,7 @@ export function GraphNodeOperationalRail({
     <button
       type="button"
       data-slot="graph-node-operational-rail"
-      aria-label="Open node operational details"
+      aria-label={ariaLabel}
       className={graphVisualClasses.nodeCardOperationalRailButton}
       onClick={(event) => stopAndOpen(event, onOpen)}
       onKeyDown={(event) => {

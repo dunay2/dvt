@@ -10330,6 +10330,24 @@ test('tracked migrations register Node floating toolbar visual token ownership',
   assert.doesNotMatch(toolbarTokenMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node operational rail aria model ownership', () => {
+  const migrations = readMigrationFiles();
+  const railAriaMigration = migrations.find(
+    (migration) => migration.fileName === '395_graph_node_operational_rail_aria_model.sql'
+  );
+
+  assert.ok(railAriaMigration);
+  assert.match(railAriaMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(railAriaMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(railAriaMigration.sql, /GraphNodeOperationalDetail\.ariaLabel/);
+  assert.match(railAriaMigration.sql, /buildGraphNodeOperationalDetail/);
+  assert.match(railAriaMigration.sql, /GraphNodeOperationalRail\.tsx/);
+  assert.match(railAriaMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(railAriaMigration.sql, /noHardcodedPresentationCopy/);
+  assert.match(railAriaMigration.sql, /EV-CANVAS-GRAPH-NODE-OPERATIONAL-RAIL-ARIA-MODEL/);
+  assert.doesNotMatch(railAriaMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Canvas graph visual surface single-grid evidence', () => {
   const migrations = readMigrationFiles();
   const singleGridMigration = migrations.find(

@@ -155,6 +155,7 @@ export function GraphNodeCardView({
 
       <GraphNodeOperationalRail
         metrics={cardModel.operationalMetrics}
+        ariaLabel={operationalDetail?.ariaLabel}
         onOpen={
           onOpenOperationalDetails == null || operationalDetail == null
             ? undefined

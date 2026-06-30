@@ -51,6 +51,7 @@ describe('CanvasViewport node operational rail', () => {
 
     const detail: GraphNodeOperationalDetail = {
       title: 'Orders source health',
+      ariaLabel: 'Open Orders source health metrics',
       rows: [
         { id: 'freshness', label: 'Freshness', value: '12 min' },
         { id: 'size', label: 'Dataset size', value: '18.2 GB' },
