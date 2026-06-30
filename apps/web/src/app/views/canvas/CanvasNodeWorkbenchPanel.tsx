@@ -2,7 +2,10 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { getInspectorPanels } from '../../plugins/registry';
-import { graphStatusDotClasses, graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import {
+  inspectorStatusDotClasses,
+  inspectorVisualClasses,
+} from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
 import { ScrollArea } from '../../components/ui/scroll-area';
 import { cn } from '../../components/ui/utils';
@@ -74,7 +77,7 @@ export function CanvasNodeWorkbenchPanel({
       : resolveNodeWorkbenchPrimarySectionIds(primarySectionIds);
   const panelIds = panels.map((panel) => panel.id);
   const resolvedActiveTab = resolveActiveNodeWorkbenchTab({ activeTab, model, panelIds });
-  const dotClass = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
+  const dotClass = inspectorStatusDotClasses[node.status] ?? inspectorStatusDotClasses.idle;
   const preferredTabKey =
     preferredTabId == null ? null : `${node.id}:${preferredTabId}:${preferredTabRequestId}`;
   const resetAuthoringDraft = useCallback(() => {
@@ -124,13 +127,17 @@ export function CanvasNodeWorkbenchPanel({
 
   return (
     <div data-slot="canvas-node-workbench-panel" className="flex h-full min-h-0 flex-col">
-      <div className={graphVisualClasses.contextPanelHeaderRow}>
+      <div className={inspectorVisualClasses.contextPanelHeaderRow}>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
-            <h2 className={cn('truncate', graphVisualClasses.contextPanelTitle)}>{node.name}</h2>
+            <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
+              {node.name}
+            </h2>
           </div>
-          <p className={cn('font-mono', graphVisualClasses.contextPanelSubtitle)}>{node.kind}</p>
+          <p className={cn('font-mono', inspectorVisualClasses.contextPanelSubtitle)}>
+            {node.kind}
+          </p>
         </div>
         <Button type="button" variant="ghost" size="sm" onClick={onClose}>
           Close

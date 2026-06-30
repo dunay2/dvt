@@ -26,11 +26,8 @@ import type {
 import type { RunEvent as EngineRunEvent } from '../../types/engine';
 import type { InspectorPanelContribution, InspectorPanelProps } from '../contracts/PluginManifest';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
-import {
-  graphStatusBadgeClasses,
-  graphStatusRingClasses,
-  graphVisualClasses,
-} from '../graph/graphVisualTokens';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
+import { graphStatusBadgeClasses, graphStatusRingClasses } from '../graph/graphVisualTokens';
 import { buildGraphNodeCardPlayAction } from '../graph/graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
 import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
@@ -198,35 +195,35 @@ function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
 
   return (
     <div className="space-y-4">
-      <Card className={graphVisualClasses.inspectorCard}>
+      <Card className={inspectorVisualClasses.inspectorCard}>
         <div className="space-y-2 text-sm">
           {pkg && (
             <div className="flex justify-between">
-              <span className={graphVisualClasses.inspectorLabel}>Package</span>
+              <span className={inspectorVisualClasses.inspectorLabel}>Package</span>
               <span>{pkg}</span>
             </div>
           )}
           {node.path && (
             <div className="flex justify-between gap-4">
-              <span className={graphVisualClasses.inspectorLabelFixed}>Path</span>
+              <span className={inspectorVisualClasses.inspectorLabelFixed}>Path</span>
               <span className="truncate font-mono text-xs">{node.path}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className={graphVisualClasses.inspectorLabel}>Status</span>
+            <span className={inspectorVisualClasses.inspectorLabel}>Status</span>
             <Badge variant="outline" className={`capitalize ${statusClass}`}>
               {node.status}
             </Badge>
           </div>
           {node.lastDuration != null && (
             <div className="flex justify-between">
-              <span className={graphVisualClasses.inspectorLabel}>Last duration</span>
+              <span className={inspectorVisualClasses.inspectorLabel}>Last duration</span>
               <span>{node.lastDuration}s</span>
             </div>
           )}
           {node.lastCost != null && (
             <div className="flex justify-between">
-              <span className={graphVisualClasses.inspectorLabel}>Last cost</span>
+              <span className={inspectorVisualClasses.inspectorLabel}>Last cost</span>
               <span>${node.lastCost.toFixed(4)}</span>
             </div>
           )}
@@ -234,15 +231,15 @@ function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
       </Card>
 
       {node.description && (
-        <Card className={graphVisualClasses.inspectorCard}>
-          <h3 className={graphVisualClasses.inspectorTitle}>Description</h3>
-          <p className={graphVisualClasses.inspectorBody}>{node.description}</p>
+        <Card className={inspectorVisualClasses.inspectorCard}>
+          <h3 className={inspectorVisualClasses.inspectorTitle}>Description</h3>
+          <p className={inspectorVisualClasses.inspectorBody}>{node.description}</p>
         </Card>
       )}
 
       {(node.tags.length > 0 || tagsEditor) && (
-        <Card className={graphVisualClasses.inspectorCard}>
-          <h3 className={graphVisualClasses.inspectorTitle}>Tags</h3>
+        <Card className={inspectorVisualClasses.inspectorCard}>
+          <h3 className={inspectorVisualClasses.inspectorTitle}>Tags</h3>
           {tagsEditor ?? (
             <div className="flex flex-wrap gap-1">
               {node.tags.map((tag) => (
@@ -256,11 +253,11 @@ function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
       )}
 
       {deps.length > 0 && (
-        <Card className={graphVisualClasses.inspectorCard}>
-          <h3 className={graphVisualClasses.inspectorTitle}>Dependencies</h3>
+        <Card className={inspectorVisualClasses.inspectorCard}>
+          <h3 className={inspectorVisualClasses.inspectorTitle}>Dependencies</h3>
           <div className="space-y-0.5">
             {deps.map((dep) => (
-              <div key={dep} className={`font-mono ${graphVisualClasses.inspectorBody}`}>
+              <div key={dep} className={`font-mono ${inspectorVisualClasses.inspectorBody}`}>
                 -&gt; {dep}
               </div>
             ))}
@@ -275,9 +272,9 @@ function DbtSqlPanel({ node }: InspectorPanelProps) {
   const compiledSql = meta<string>(node, 'compiledSql');
 
   return (
-    <Card className={graphVisualClasses.inspectorCard}>
-      <h3 className={graphVisualClasses.inspectorTitle}>Compiled SQL</h3>
-      <pre className={graphVisualClasses.inspectorCodeBlock}>
+    <Card className={inspectorVisualClasses.inspectorCard}>
+      <h3 className={inspectorVisualClasses.inspectorTitle}>Compiled SQL</h3>
+      <pre className={inspectorVisualClasses.inspectorCodeBlock}>
         {compiledSql ?? 'No compiled SQL available'}
       </pre>
     </Card>
@@ -288,9 +285,11 @@ function DbtConfigPanel({ node }: InspectorPanelProps) {
   const config = meta<Record<string, unknown>>(node, 'config') ?? { materialized: 'table' };
 
   return (
-    <Card className={graphVisualClasses.inspectorCard}>
-      <h3 className={graphVisualClasses.inspectorTitle}>Config</h3>
-      <pre className={graphVisualClasses.inspectorCodeText}>{JSON.stringify(config, null, 2)}</pre>
+    <Card className={inspectorVisualClasses.inspectorCard}>
+      <h3 className={inspectorVisualClasses.inspectorTitle}>Config</h3>
+      <pre className={inspectorVisualClasses.inspectorCodeText}>
+        {JSON.stringify(config, null, 2)}
+      </pre>
     </Card>
   );
 }
@@ -299,19 +298,21 @@ function DbtColumnsPanel({ node }: InspectorPanelProps) {
   const columns = meta<ColumnMeta[]>(node, 'columns') ?? [];
 
   if (columns.length === 0) {
-    return <p className={graphVisualClasses.inspectorMuted}>No column metadata available.</p>;
+    return <p className={inspectorVisualClasses.inspectorMuted}>No column metadata available.</p>;
   }
 
   return (
     <div className="space-y-2">
       {columns.map((column) => (
-        <Card key={column.name} className={graphVisualClasses.inspectorCard}>
+        <Card key={column.name} className={inspectorVisualClasses.inspectorCard}>
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="font-mono text-sm">{column.name}</div>
-              <div className={`mt-0.5 ${graphVisualClasses.inspectorBody}`}>{column.type}</div>
+              <div className={`mt-0.5 ${inspectorVisualClasses.inspectorBody}`}>{column.type}</div>
               {column.description && (
-                <p className={`mt-1 ${graphVisualClasses.inspectorBody}`}>{column.description}</p>
+                <p className={`mt-1 ${inspectorVisualClasses.inspectorBody}`}>
+                  {column.description}
+                </p>
               )}
             </div>
             {column.nullable != null && (
@@ -358,7 +359,7 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
 
   if (isLoading || isLoadingList || (canLoadEvents && isLoadingEvents)) {
     return (
-      <div className={`flex items-center gap-2 ${graphVisualClasses.inspectorMuted}`}>
+      <div className={`flex items-center gap-2 ${inspectorVisualClasses.inspectorMuted}`}>
         <Loader2 className="size-4 animate-spin" />
         Loading run data...
       </div>
@@ -367,7 +368,7 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
 
   if (activeRunId && hasRunSnapshotLoaded && runSnapshot == null) {
     return (
-      <div className={graphVisualClasses.inspectorMutedBlock}>
+      <div className={inspectorVisualClasses.inspectorMutedBlock}>
         <p>No runtime snapshot exists for this run.</p>
       </div>
     );
@@ -375,7 +376,7 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
 
   if (isRunEventsError && historyRunId) {
     return (
-      <div className={graphVisualClasses.inspectorMutedBlock}>
+      <div className={inspectorVisualClasses.inspectorMutedBlock}>
         <p>Runtime event detail could not be loaded for this node.</p>
       </div>
     );
@@ -385,20 +386,20 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
     return (
       <div className="space-y-2">
         {nodeHistoryEntries.map((entry) => (
-          <Card key={entry.eventId} className={graphVisualClasses.inspectorCard}>
+          <Card key={entry.eventId} className={inspectorVisualClasses.inspectorCard}>
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h3 className={graphVisualClasses.inspectorTitle}>{entry.headline}</h3>
-                <p className={graphVisualClasses.inspectorSubtle}>{entry.emittedAtLabel}</p>
+                <h3 className={inspectorVisualClasses.inspectorTitle}>{entry.headline}</h3>
+                <p className={inspectorVisualClasses.inspectorSubtle}>{entry.emittedAtLabel}</p>
               </div>
               <Badge variant="outline" className="shrink-0 text-xs">
                 {entry.eventType}
               </Badge>
             </div>
             {entry.detail && (
-              <p className={`mt-2 ${graphVisualClasses.inspectorBody}`}>{entry.detail}</p>
+              <p className={`mt-2 ${inspectorVisualClasses.inspectorBody}`}>{entry.detail}</p>
             )}
-            <div className={`mt-2 flex flex-wrap gap-2 ${graphVisualClasses.inspectorSubtle}`}>
+            <div className={`mt-2 flex flex-wrap gap-2 ${inspectorVisualClasses.inspectorSubtle}`}>
               <span className="font-mono">seq {entry.runSeq}</span>
               {entry.stepId && <span className="font-mono">{entry.stepId}</span>}
             </div>
@@ -409,10 +410,10 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   }
 
   return (
-    <div className={graphVisualClasses.inspectorMutedBlock}>
+    <div className={inspectorVisualClasses.inspectorMutedBlock}>
       <p>No run history for this node.</p>
       {node.lastDuration != null && (
-        <p className={graphVisualClasses.inspectorBody}>
+        <p className={inspectorVisualClasses.inspectorBody}>
           Last recorded duration: <span className="font-mono">{node.lastDuration}s</span>
         </p>
       )}

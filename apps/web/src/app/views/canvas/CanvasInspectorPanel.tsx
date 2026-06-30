@@ -10,7 +10,7 @@ import {
   buildCanvasNodeModelerActionModel,
   type CanvasNodeModelerActionId,
 } from '../../components/canvas/canvasNodeContextMenuModel';
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
@@ -153,8 +153,8 @@ function CanvasInspectorModelerActions({
   return (
     <section data-slot="node-inspector-modeler-actions" className="border-b border-slate-800 pb-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className={graphVisualClasses.contextPanelSectionTitle}>Modeler actions</h3>
-        <span className={graphVisualClasses.inspectorSubtle}>Node command surface</span>
+        <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>Modeler actions</h3>
+        <span className={inspectorVisualClasses.inspectorSubtle}>Node command surface</span>
       </div>
       <div className="flex flex-wrap gap-2">
         {actionItems.map((action) => {
@@ -280,7 +280,7 @@ function CanvasInspectorOverviewTagsEditor({
       ) : null}
 
       {!authoring.canEditNode ? (
-        <p className={graphVisualClasses.inspectorBody}>
+        <p className={inspectorVisualClasses.inspectorBody}>
           Node tags are read-only for this workspace state.
         </p>
       ) : null}
@@ -346,8 +346,8 @@ function CanvasInspectorCanvasSection({
     >
       <div className="space-y-3">
         <div>
-          <h3 className={graphVisualClasses.contextPanelSectionTitle}>Canvas properties</h3>
-          <p className={graphVisualClasses.inspectorBody}>
+          <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>Canvas properties</h3>
+          <p className={inspectorVisualClasses.inspectorBody}>
             Worksheet identity and project execution context.
           </p>
         </div>
@@ -363,7 +363,7 @@ function CanvasInspectorCanvasSection({
             onChange={(event) => setTitle(event.target.value)}
           />
           {titleError ? (
-            <p className={graphVisualClasses.inspectorErrorText}>{titleError}</p>
+            <p className={inspectorVisualClasses.inspectorErrorText}>{titleError}</p>
           ) : null}
         </div>
 
@@ -375,7 +375,7 @@ function CanvasInspectorCanvasSection({
               name="canvas-environment"
               value={environmentId}
               disabled={!canvas.canEdit}
-              className={graphVisualClasses.inspectorSelectInput}
+              className={inspectorVisualClasses.inspectorSelectInput}
               onChange={(event) => setEnvironmentId(event.target.value)}
             >
               {environmentOptions.map((option) => (
@@ -385,23 +385,23 @@ function CanvasInspectorCanvasSection({
               ))}
             </select>
           ) : (
-            <p className={graphVisualClasses.inspectorBody}>
+            <p className={inspectorVisualClasses.inspectorBody}>
               No execution environments are configured for this workspace.
             </p>
           )}
         </div>
 
         <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
-          <span className={graphVisualClasses.inspectorLabel}>ID</span>
+          <span className={inspectorVisualClasses.inspectorLabel}>ID</span>
           <span className="truncate font-mono">{canvas.id}</span>
-          <span className={graphVisualClasses.inspectorLabel}>Kind</span>
+          <span className={inspectorVisualClasses.inspectorLabel}>Kind</span>
           <span className="truncate">{canvas.kind}</span>
-          <span className={graphVisualClasses.inspectorLabel}>Permission</span>
+          <span className={inspectorVisualClasses.inspectorLabel}>Permission</span>
           <span className="truncate">{canvas.defaultPermission ?? 'workspace default'}</span>
         </div>
 
         {!canvas.canEdit ? (
-          <p className={graphVisualClasses.inspectorBody}>
+          <p className={inspectorVisualClasses.inspectorBody}>
             Canvas properties are read-only for this workspace state.
           </p>
         ) : null}

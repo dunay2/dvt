@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DvtSinkAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
@@ -28,7 +28,7 @@ export function DvtSinkAuthoringSection({
   destinationTarget: string;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
-  const selectClassName = graphVisualClasses.inspectorSelectInput;
+  const selectClassName = inspectorVisualClasses.inspectorSelectInput;
   const materializationOptions = [
     { value: 'table', label: canvasViewCopy.inspectorDvtMaterializationTableLabel },
     { value: 'view', label: canvasViewCopy.inspectorDvtMaterializationViewLabel },
@@ -39,8 +39,8 @@ export function DvtSinkAuthoringSection({
   ] as const;
 
   return (
-    <div className={graphVisualClasses.inspectorDbtSection}>
-      <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+    <div className={inspectorVisualClasses.inspectorDbtSection}>
+      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDvtSinkTitle}
       </h3>
       <div className="mb-3 grid grid-cols-1 gap-2 rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
@@ -108,7 +108,7 @@ export function DvtSinkAuthoringSection({
             }
           />
           {errors?.schema ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.schema, canvasViewCopy)}
             </p>
           ) : null}
@@ -135,7 +135,7 @@ export function DvtSinkAuthoringSection({
             }
           />
           {errors?.table ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.table, canvasViewCopy)}
             </p>
           ) : null}
@@ -169,7 +169,7 @@ export function DvtSinkAuthoringSection({
             ))}
           </select>
           {errors?.materialization ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.materialization, canvasViewCopy)}
             </p>
           ) : null}
@@ -203,7 +203,7 @@ export function DvtSinkAuthoringSection({
             ))}
           </select>
           {errors?.writeMode ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.writeMode, canvasViewCopy)}
             </p>
           ) : null}

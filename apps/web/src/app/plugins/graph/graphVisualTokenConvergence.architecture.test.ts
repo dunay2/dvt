@@ -27,14 +27,29 @@ const DBT_NODE_RENDERER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../dbt/DbtNodeRenderer.tsx'
 );
-const INSPECTOR_PANEL_SOURCE = readArchitectureSiblingSource(
+const INSPECTOR_TOKEN_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
-  '../../components/InspectorPanel.tsx'
+  '../../components/inspector/inspectorVisualTokens.ts'
 );
-const CANVAS_INSPECTOR_AUTHORING_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  '../../views/canvas/CanvasInspectorAuthoringSection.tsx'
-);
+const INSPECTOR_CONSUMER_SOURCES = [
+  readArchitectureSiblingSource(import.meta.dirname, '../../components/InspectorPanel.tsx'),
+  readArchitectureSiblingSource(
+    import.meta.dirname,
+    '../../components/inspector/NodePropertiesTabs.tsx'
+  ),
+  readArchitectureSiblingSource(
+    import.meta.dirname,
+    '../../components/inspector/NodePropertySectionView.tsx'
+  ),
+  readArchitectureSiblingSource(
+    import.meta.dirname,
+    '../../views/canvas/CanvasNodeWorkbenchPanel.tsx'
+  ),
+  readArchitectureSiblingSource(
+    import.meta.dirname,
+    '../../views/canvas/CanvasInspectorAuthoringSection.tsx'
+  ),
+];
 const COMPONENT_GUIDE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../../../../../docs/architecture/components/web/graph/react-flow-visual-token-component.md'
@@ -51,19 +66,19 @@ const GRAPH_CONSUMER_SOURCES = [
   DBT_NODE_CATALOG_SOURCE,
   DVT_NODE_CATALOG_SOURCE,
   DBT_NODE_RENDERER_SOURCE,
-  INSPECTOR_PANEL_SOURCE,
-  CANVAS_INSPECTOR_AUTHORING_SOURCE,
 ];
 
 describe('React Flow visual token convergence architecture', () => {
   it('keeps graph visual values behind the graph token component', () => {
     expect(TOKEN_SOURCE).toContain('Owned concern: own React Flow graph visual tokens');
     expect(TOKEN_SOURCE).toContain('graphVisualClasses');
-    expect(TOKEN_SOURCE).toContain('graphStatusDotClasses');
     expect(TOKEN_SOURCE).toContain('graphStatusRingClasses');
     expect(TOKEN_SOURCE).toContain('graphNodeKindToneClasses');
     expect(TOKEN_SOURCE).toContain('graphFlowPalette');
     expect(TOKEN_SOURCE).toContain('resolveGraphNodeKindTone');
+    expect(TOKEN_SOURCE).not.toContain('inspectorCard');
+    expect(TOKEN_SOURCE).not.toContain('contextPanelRightShell');
+    expect(TOKEN_SOURCE).not.toContain('graphStatusDotClasses');
 
     for (const source of GRAPH_CONSUMER_SOURCES) {
       expect(source).toContain('graphVisualTokens');
@@ -92,6 +107,21 @@ describe('React Flow visual token convergence architecture', () => {
       'US-F24-GRAPH-TOKEN-03',
     ]) {
       expect(USER_STORIES).toContain(storyId);
+    }
+  });
+
+  it('keeps inspector and workbench visual tokens out of the graph token component', () => {
+    expect(INSPECTOR_TOKEN_SOURCE).toContain(
+      'Owned concern: own Inspector and node workbench visual tokens'
+    );
+    expect(INSPECTOR_TOKEN_SOURCE).toContain('inspectorVisualClasses');
+    expect(INSPECTOR_TOKEN_SOURCE).toContain('inspectorStatusDotClasses');
+
+    for (const source of INSPECTOR_CONSUMER_SOURCES) {
+      expect(source).toContain('inspectorVisualTokens');
+      expect(source).not.toContain('graphVisualClasses.inspector');
+      expect(source).not.toContain('graphVisualClasses.contextPanel');
+      expect(source).not.toContain('graphStatusDotClasses');
     }
   });
 });

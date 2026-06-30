@@ -4,7 +4,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { buildDvtTransformColumnOptions } from '../../components/inspector/dvtTransformColumnModel';
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DvtSqlTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
@@ -71,10 +71,10 @@ export function DvtSqlTransformAuthoringSection({
   };
 
   return (
-    <div className={graphVisualClasses.inspectorDbtSection}>
+    <div className={inspectorVisualClasses.inspectorDbtSection}>
       {showCode ? (
         <div className="space-y-3">
-          <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+          <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
             {canvasViewCopy.inspectorDvtSqlTransformTitle}
           </h3>
           <div className="rounded border border-[color:var(--border-default)] bg-[var(--surface-elevated)] p-3 text-xs">
@@ -110,7 +110,7 @@ export function DvtSqlTransformAuthoringSection({
               }
             />
             {errors?.sql ? (
-              <p className={graphVisualClasses.inspectorErrorText}>
+              <p className={inspectorVisualClasses.inspectorErrorText}>
                 {formatCanvasInspectorNodeDraftError(errors.sql, canvasViewCopy)}
               </p>
             ) : null}
@@ -120,9 +120,9 @@ export function DvtSqlTransformAuthoringSection({
       {showColumns ? (
         <div className={showCode ? 'mt-4 space-y-2' : 'space-y-2'}>
           <div className="flex items-center justify-between gap-3">
-            <h4 className={graphVisualClasses.contextPanelSectionTitle}>Input columns</h4>
+            <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>Input columns</h4>
             {columnOptions.length > 0 ? (
-              <span className={graphVisualClasses.inspectorSubtle}>
+              <span className={inspectorVisualClasses.inspectorSubtle}>
                 {draft.selectedColumns.length}/{columnOptions.length} selected
               </span>
             ) : null}
@@ -158,7 +158,7 @@ export function DvtSqlTransformAuthoringSection({
               ))}
             </div>
           ) : (
-            <p className={graphVisualClasses.inspectorBody}>
+            <p className={inspectorVisualClasses.inspectorBody}>
               Connect a source with recorded columns to choose transform inputs.
             </p>
           )}

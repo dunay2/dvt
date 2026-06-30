@@ -3,7 +3,7 @@ import type { Dispatch, SetStateAction } from 'react';
 
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { graphVisualClasses } from '../../plugins/graph/graphVisualTokens';
+import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
 import type { DbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
@@ -29,7 +29,7 @@ export function DbtModelAuthoringSection({
   projection: DbtAuthoringModelProjection;
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
-  const selectClassName = graphVisualClasses.inspectorSelectInput;
+  const selectClassName = inspectorVisualClasses.inspectorSelectInput;
   const materializedOptions = [
     { value: 'view', label: canvasViewCopy.inspectorDbtMaterializedViewLabel },
     { value: 'table', label: canvasViewCopy.inspectorDbtMaterializedTableLabel },
@@ -38,8 +38,8 @@ export function DbtModelAuthoringSection({
   ] as const;
 
   return (
-    <div className={graphVisualClasses.inspectorDbtSection}>
-      <h3 className={graphVisualClasses.contextPanelSectionTitle}>
+    <div className={inspectorVisualClasses.inspectorDbtSection}>
+      <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>
         {canvasViewCopy.inspectorDbtCardTitle}
       </h3>
 
@@ -63,7 +63,7 @@ export function DbtModelAuthoringSection({
           }
         />
         {errors?.packageName ? (
-          <p className={graphVisualClasses.inspectorErrorText}>
+          <p className={inspectorVisualClasses.inspectorErrorText}>
             {formatCanvasInspectorNodeDraftError(errors.packageName, canvasViewCopy)}
           </p>
         ) : null}
@@ -97,7 +97,7 @@ export function DbtModelAuthoringSection({
             ))}
           </select>
           {errors?.materialized ? (
-            <p className={graphVisualClasses.inspectorErrorText}>
+            <p className={inspectorVisualClasses.inspectorErrorText}>
               {formatCanvasInspectorNodeDraftError(errors.materialized, canvasViewCopy)}
             </p>
           ) : null}
@@ -129,7 +129,7 @@ export function DbtModelAuthoringSection({
               ))}
             </select>
           ) : (
-            <p className={graphVisualClasses.inspectorBody}>
+            <p className={inspectorVisualClasses.inspectorBody}>
               {canvasViewCopy.inspectorDbtNoConnectedOriginsMessage}
             </p>
           )}
@@ -147,7 +147,7 @@ export function DbtModelAuthoringSection({
               {projection.generatedModelSql}
             </pre>
           ) : (
-            <p className={graphVisualClasses.inspectorBody}>
+            <p className={inspectorVisualClasses.inspectorBody}>
               {canvasViewCopy.inspectorDbtGeneratedSqlUnavailableMessage}
             </p>
           )}
