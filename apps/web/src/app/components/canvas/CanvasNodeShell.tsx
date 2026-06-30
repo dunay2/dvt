@@ -47,6 +47,7 @@ export function CanvasNodeShell({
         >
           {shouldShowTargetHandle && (
             <CanvasNodePortHandle
+              id="target"
               kind="target"
               tone={targetHandleTone}
               label="Connect incoming node port"
@@ -57,6 +58,7 @@ export function CanvasNodeShell({
 
           {shouldShowSourceHandle && (
             <CanvasNodePortHandle
+              id="source"
               kind="source"
               tone={sourceHandleTone}
               label="Connect outgoing node port"
