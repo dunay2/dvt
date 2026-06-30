@@ -9573,6 +9573,24 @@ test('tracked migrations register Canvas node port handle visual affordance rail
   assert.doesNotMatch(portHandleVisualAffordanceMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node port handle stable id contract', () => {
+  const migrations = readMigrationFiles();
+  const portHandleStableIdsMigration = migrations.find(
+    (migration) => migration.fileName === '393_canvas_node_port_handle_stable_ids.sql'
+  );
+
+  assert.ok(portHandleStableIdsMigration);
+  assert.match(portHandleStableIdsMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(portHandleStableIdsMigration.sql, /stableHandleIdContract/);
+  assert.match(portHandleStableIdsMigration.sql, /EV-CANVAS-NODE-PORT-HANDLE-STABLE-ID-CONTRACT/);
+  assert.match(portHandleStableIdsMigration.sql, /target\/source data-handleid values/);
+  assert.match(
+    portHandleStableIdsMigration.sql,
+    /apps\/web\/src\/app\/components\/canvas\/CanvasNodeShell\.test\.tsx/
+  );
+  assert.doesNotMatch(portHandleStableIdsMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations move Canvas node shell styles out of DBT component CSS', () => {
   const migrations = readMigrationFiles();
   const shellCssBoundaryMigration = migrations.find(
