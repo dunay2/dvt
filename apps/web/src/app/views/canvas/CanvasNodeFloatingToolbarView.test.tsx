@@ -43,13 +43,14 @@ describe('CanvasNodeFloatingToolbarView', () => {
     const toolbar = document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]');
     expect(toolbar).not.toBeNull();
     expect(toolbar?.parentElement).toBe(document.body);
-    expect(toolbar?.classList.contains('fixed')).toBe(true);
+    expect(toolbar?.getAttribute('data-token-scope')).toBe('canvas-node-floating-toolbar');
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-x')).toBe('320px');
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-y')).toBe('160px');
 
     expect(button('Código')).not.toBeNull();
-    expect(button('Código')?.classList.contains('cursor-pointer')).toBe(true);
+    expect(button('Código')?.getAttribute('data-action-state')).toBe('available');
     expect(button('Congelar')?.getAttribute('aria-disabled')).toBe('true');
+    expect(button('Congelar')?.getAttribute('data-action-state')).toBe('unavailable');
     expect(button('Seleccionar para ejecución')).toBeNull();
     expect(button('Más acciones')?.getAttribute('aria-disabled')).toBe('true');
 

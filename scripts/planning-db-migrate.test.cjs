@@ -10312,6 +10312,24 @@ test('tracked migrations record Graph node card interaction hardening evidence',
   assert.doesNotMatch(interactionHardeningMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Node floating toolbar visual token ownership', () => {
+  const migrations = readMigrationFiles();
+  const toolbarTokenMigration = migrations.find(
+    (migration) => migration.fileName === '394_canvas_node_floating_toolbar_visual_tokens.sql'
+  );
+
+  assert.ok(toolbarTokenMigration);
+  assert.match(toolbarTokenMigration.sql, /web\.component\.canvas\.NodeFloatingToolbar/);
+  assert.match(toolbarTokenMigration.sql, /RenderCanvasNodeFloatingToolbar/);
+  assert.match(toolbarTokenMigration.sql, /canvasNodeFloatingToolbarTokens\.ts/);
+  assert.match(toolbarTokenMigration.sql, /canvasNodeFloatingToolbarClasses/);
+  assert.match(toolbarTokenMigration.sql, /resolveCanvasNodeFloatingToolbarActionClassName/);
+  assert.match(toolbarTokenMigration.sql, /EV-CANVAS-NODE-FLOATING-TOOLBAR-TOKENIZED-VIEW/);
+  assert.match(toolbarTokenMigration.sql, /data-token-scope and data-action-state/);
+  assert.match(toolbarTokenMigration.sql, /CanvasNodeFloatingToolbarView\.tsx#getActionClassName/);
+  assert.doesNotMatch(toolbarTokenMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Canvas graph visual surface single-grid evidence', () => {
   const migrations = readMigrationFiles();
   const singleGridMigration = migrations.find(

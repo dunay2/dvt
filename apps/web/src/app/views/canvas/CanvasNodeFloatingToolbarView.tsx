@@ -3,11 +3,12 @@ import { Code2, MoreHorizontal, Snowflake } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
-import { cn } from '../../components/ui/utils';
-import type {
-  CanvasNodeFloatingToolbarAction,
-  CanvasNodeFloatingToolbarModel,
-} from './canvasNodeFloatingToolbarModel';
+import type { CanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
+import {
+  canvasNodeFloatingToolbarClasses,
+  resolveCanvasNodeFloatingToolbarActionClassName,
+  resolveCanvasNodeFloatingToolbarActionState,
+} from './canvasNodeFloatingToolbarTokens';
 
 export type CanvasNodeFloatingToolbarViewProps = Readonly<{
   model: CanvasNodeFloatingToolbarModel;
@@ -19,28 +20,15 @@ const ACTION_ICON = {
   more: MoreHorizontal,
 } as const;
 
-function getActionClassName(action: CanvasNodeFloatingToolbarAction): string {
-  return cn(
-    'nodrag nopan inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm font-semibold transition',
-    'border border-transparent bg-white/0 text-slate-100 hover:border-white/20 hover:bg-white/10',
-    action.tone === 'success' && 'text-emerald-300 hover:text-emerald-200',
-    action.available && 'cursor-pointer',
-    !action.available && 'cursor-not-allowed opacity-45 hover:border-transparent hover:bg-white/0'
-  );
-}
-
 export function CanvasNodeFloatingToolbarView({
   model,
 }: CanvasNodeFloatingToolbarViewProps): ReactElement {
   return createPortal(
     <div
       data-slot="canvas-node-floating-toolbar"
+      data-token-scope="canvas-node-floating-toolbar"
       aria-label={`Acciones de nodo ${model.nodeName}`}
-      className={cn(
-        'fixed left-0 top-0 z-50 flex items-center gap-1 rounded-lg border border-white/12',
-        'bg-slate-950/95 px-1.5 py-1.5 shadow-2xl shadow-slate-950/40 backdrop-blur',
-        'translate-x-[var(--node-toolbar-x)] translate-y-[var(--node-toolbar-y)]'
-      )}
+      className={canvasNodeFloatingToolbarClasses.surface}
       style={
         {
           '--node-toolbar-x': `${model.position.x}px`,
@@ -59,7 +47,8 @@ export function CanvasNodeFloatingToolbarView({
             aria-disabled={action.available ? undefined : 'true'}
             title={action.available ? action.description : action.unavailableReason}
             data-tone={action.tone}
-            className={getActionClassName(action)}
+            data-action-state={resolveCanvasNodeFloatingToolbarActionState(action)}
+            className={resolveCanvasNodeFloatingToolbarActionClassName(action)}
             onClick={(event) => {
               event.stopPropagation();
               if (action.available) {
@@ -67,7 +56,7 @@ export function CanvasNodeFloatingToolbarView({
               }
             }}
           >
-            <Icon className="size-4" aria-hidden="true" />
+            <Icon className={canvasNodeFloatingToolbarClasses.icon} aria-hidden="true" />
             {action.id === 'more' ? null : <span>{action.label}</span>}
           </button>
         );
