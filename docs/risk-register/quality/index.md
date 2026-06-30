@@ -161,6 +161,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Temporal live status query could drift away from engine enrichment assumptions](R-20260401-TEMPORAL-LIVE-STATUS-QUERY.yaml)
 - [Temporal native cancellation cleanup can regress provider-status convergence](R-20260410-TEMPORAL-NATIVE-CANCEL-TERMINAL-CLEANUP.yaml)
 - [Temporal PlanRef runtime still lacks full cutover and scale proof](R-20260427-TEMPORAL-PLANREF-CONFIG-HARDENING.yaml)
+- [Temporal protobuf override can drift from upstream SDK resolution](R-20260630-TEMPORAL-PROTOBUF-OVERRIDE.yaml)
 - [Temporal runtime closure helper depends on PNPM JSON output shape](R-20260410-TEMPORAL-RUNTIME-CLOSURE-PNPM-JSON-COUPLING.yaml)
 - [Temporal SDK 1.16 upgrade could hide unsupported Nexus compatibility drift](R-20260413-TEMPORAL-SDK-1-16-COMPATIBILITY.yaml)
 - [Temporal SDK minor upgrades can drift from provider integration behavior](R-20260603-TEMPORAL-SDK-1-17-2-UPGRADE.yaml)

@@ -254,11 +254,15 @@ describe('Canvas route host-cycle persistence', () => {
       kindLabel: 'Transformation',
     });
 
-    const previewContribution = useOperationalDrawerContributionStore.getState().contribution;
-    expect(previewContribution?.source).toBe('canvas');
-    expect(previewContribution?.preview.canPreview).toBe(true);
+    const operationalDrawerContribution =
+      useOperationalDrawerContributionStore.getState().contribution;
+    expect(operationalDrawerContribution?.source).toBe('canvas');
+    expect(operationalDrawerContribution?.preview).toMatchObject({
+      canPreview: true,
+      summary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    });
     await act(async () => {
-      previewContribution?.preview.onPreviewExecutionPlan();
+      operationalDrawerContribution?.preview.onPreviewExecutionPlan();
     });
     await harness.render();
 
