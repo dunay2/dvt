@@ -11,6 +11,7 @@ const {
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
   buildCommandQueryRailSnapshot,
+  buildCodeSymbolSnapshot,
   buildFrontendComponentReflectionSnapshot,
   buildFrontendMechanicalTruthSnapshot,
   buildRepositoryCommandSnapshot,
@@ -28,7 +29,17 @@ const {
   mergePlanningTaskIds,
   normalizeText,
   parseArgs,
+  readTrackedDocumentPaths,
+  readLocalFeatureMechanizationRails,
   readLocalPlanningTaskIds,
+  reconcileDeprecatedLocalRailSources,
+  reconcileSupersededCiPolicyValidationSplitComponents,
+  reconcileSupersededCanvasNodeWorkbenchPanel,
+  refreshCodeSymbolMaterializedProjection,
+  refreshComponentTreeMaterializedProjection,
+  refreshComponentFileOwnershipMaterializedProjection,
+  refreshComponentRuleEvaluationMaterializedProjection,
+  restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,
 } = require('./planning-db-import.cjs');
@@ -120,6 +131,117 @@ test('frontend component reflection import behavior lives in a focused inventory
     frontendComponentReflectionComponent.buildFrontendComponentReflectionSnapshot,
     buildFrontendComponentReflectionSnapshot
   );
+});
+
+test('code symbol import behavior lives in a focused inventory component', () => {
+  const codeSymbolInventoryComponent = require('./planning-db/code-symbol-inventory.cjs');
+
+  assert.equal(codeSymbolInventoryComponent.buildCodeSymbolSnapshot, buildCodeSymbolSnapshot);
+});
+
+test('code symbol inventory ignores tracked files deleted in the worktree', () => {
+  const { listTrackedCodeFiles } = require('./planning-db/code-symbol-inventory.cjs');
+  const readPaths = [];
+
+  const files = listTrackedCodeFiles({
+    execFileSync: () =>
+      [
+        'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+        'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+        'docs/readme.md',
+      ].join('\n'),
+    fileExists: (sourcePath) =>
+      sourcePath !== 'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+    readFileSync: (sourcePath) => {
+      readPaths.push(sourcePath);
+      return 'export function sampleSymbol() { return true; }';
+    },
+  });
+
+  assert.deepEqual(
+    files.map((file) => file.path),
+    ['apps/web/src/app/views/canvas/CanvasContextMenuView.tsx']
+  );
+  assert.deepEqual(readPaths, ['apps/web/src/app/views/canvas/CanvasContextMenuView.tsx']);
+});
+
+test('tracked document path reader ignores files deleted in the worktree', () => {
+  const paths = readTrackedDocumentPaths(['**/*'], {
+    execFileSync: () =>
+      [
+        'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+        'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+        'docs/planning/index.md',
+      ].join('\n'),
+    fileExists: (sourcePath) =>
+      sourcePath !== 'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+  });
+
+  assert.deepEqual(paths, [
+    'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+    'docs/planning/index.md',
+  ]);
+});
+
+test('code symbol snapshot extracts owned functions and exact body duplicate hashes', () => {
+  const duplicateBody = [
+    '  if (value === undefined || value === null || value === "") {',
+    '    return fallback;',
+    '  }',
+    '  const parsed = Number(value);',
+    '  if (!Number.isInteger(parsed) || parsed <= 0) {',
+    '    throw new Error(`Invalid limit ${value}`);',
+    '  }',
+    '  return parsed;',
+  ].join('\n');
+  const sourceFiles = [
+    {
+      path: 'scripts/one.cjs',
+      content: `function parseLimit(value, fallback) {\n${duplicateBody}\n}\n`,
+    },
+    {
+      path: 'scripts/two.cjs',
+      content: `const readLimit = (value, fallback) => {\n${duplicateBody}\n};\n`,
+    },
+  ];
+
+  const snapshot = buildCodeSymbolSnapshot({
+    sourceFiles,
+    governanceSnapshot: {
+      files: [
+        {
+          path: 'scripts/one.cjs',
+          componentUnit: 'SYS-CI-TOOLS-PLANNING-DB',
+          owningUnit: 'SYS-CI-TOOLS-PLANNING-DB',
+          rootUnit: 'SYS-CI-GOVERNANCE-ROOT',
+          domainUnit: 'SYS-CI-TOOLS',
+        },
+        {
+          path: 'scripts/two.cjs',
+          componentUnit: 'SYS-CI-TOOLS-PLANNING-DB',
+          owningUnit: 'SYS-CI-TOOLS-PLANNING-DB',
+          rootUnit: 'SYS-CI-GOVERNANCE-ROOT',
+          domainUnit: 'SYS-CI-TOOLS',
+        },
+      ],
+    },
+  });
+
+  assert.equal(snapshot.symbols.length, 2);
+  assert.deepEqual(
+    snapshot.symbols.map((symbol) => [
+      symbol.symbolName,
+      symbol.symbolKind,
+      symbol.filePath,
+      symbol.componentId,
+      symbol.normalizedBodyLength > 100,
+    ]),
+    [
+      ['parseLimit', 'function', 'scripts/one.cjs', 'SYS-CI-TOOLS-PLANNING-DB', true],
+      ['readLimit', 'arrow_function', 'scripts/two.cjs', 'SYS-CI-TOOLS-PLANNING-DB', true],
+    ]
+  );
+  assert.equal(snapshot.symbols[0].bodySha256, snapshot.symbols[1].bodySha256);
 });
 
 const governanceFileSnapshotFixture = (() => {
@@ -361,6 +483,105 @@ test('command/query rail snapshot joins documented rails with source implementat
   assert.equal(archiveWidget.documentationRefs.length, 1);
 });
 
+test('command/query rail snapshot keeps canonical rail names when API aliases appear in notes', () => {
+  const referenceDocuments = [
+    {
+      path: 'docs/planning/proposals/mandatory/runtime-and-contracts/api.md',
+      content: [
+        '| Rail | Type | Owning DDD object | Notes |',
+        '| --- | --- | --- | --- |',
+        '| `SignalRun` | Command | Run command application service | Retires `ApiSignalRunCommand` |',
+        '| `RecoverRun` | Command | Run recovery application service | Retires `ApiRecoverRunCommand` |',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({
+    docs: [
+      {
+        path: 'docs/planning/proposals/mandatory/runtime-and-contracts/empty.md',
+        content: '',
+      },
+    ],
+    referenceDocuments,
+    sourceFiles: [],
+  });
+
+  assert.deepEqual(
+    snapshot.rails.map((rail) => rail.railName),
+    ['SignalRun', 'RecoverRun']
+  );
+  assert.equal(
+    snapshot.rails.some((rail) => /^Api/.test(rail.railName)),
+    false
+  );
+});
+
+test('command/query rail snapshot canonicalizes legacy execution preview manifest rails', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/frontend-and-ux/legacy-preview.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: LEGACY-PREVIEW-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: PreviewExecutablePlan',
+        '    type: command',
+        '    dddOwner: Protected runtime',
+        'symbols:',
+        '  - name: executeCanvasPlanAction',
+        '    path: apps/web/src/app/views/canvas/canvasPlanAction.ts',
+        '    dddOwner: CanvasExecutionPlanAction',
+        '    cqRails: [PreviewExecutablePlan]',
+        '```',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({ docs });
+
+  assert.deepEqual(
+    snapshot.rails.map((rail) => rail.railName),
+    ['PreviewExecutionPlan']
+  );
+  assert.equal(snapshot.rails[0].normalizedRailName, 'previewexecutionplan');
+  assert.deepEqual(snapshot.rails[0].symbolRefs, [
+    {
+      name: 'executeCanvasPlanAction',
+      path: 'apps/web/src/app/views/canvas/canvasPlanAction.ts',
+      dddOwner: 'CanvasExecutionPlanAction',
+      unitTests: [],
+    },
+  ]);
+});
+
+test('command/query rail catalog ignores tracked source files deleted in the worktree', () => {
+  const {
+    createCommandQueryRailCatalogComponent,
+  } = require('./planning-db/command-query-rail-catalog.cjs');
+  const catalog = createCommandQueryRailCatalogComponent({
+    childProcess: {
+      execFileSync: () =>
+        [
+          'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+          'apps/web/src/app/views/canvas/CanvasAddNodePalette.test.tsx',
+        ].join('\n'),
+    },
+    fs: {
+      existsSync: (sourcePath) => !sourcePath.includes('CanvasAddNodePalette.test.tsx'),
+      readFileSync: () => '',
+    },
+    path: require('node:path'),
+    repoRoot: 'C:/repo',
+  });
+
+  assert.deepEqual(catalog.readTrackedDocumentPaths(['apps/**']), [
+    'apps/web/src/app/views/canvas/CanvasContextMenuView.tsx',
+  ]);
+});
+
 test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {
   const calls = [];
   const logs = [];
@@ -448,6 +669,62 @@ test('planning DB import can silence importContent output for query-time refresh
       includeGovernance: true,
       silent: true,
     },
+  ]);
+});
+
+test('planning DB import refreshes the materialized code symbol duplicate projection', async () => {
+  const queries = [];
+
+  await refreshCodeSymbolMaterializedProjection({
+    query: async (sql) => {
+      queries.push(sql);
+    },
+  });
+
+  assert.deepEqual(queries, [
+    `refresh materialized view ${schemaName}.code_symbol_effective_inventory_projection`,
+  ]);
+});
+
+test('planning DB import refreshes the materialized component tree projection', async () => {
+  const queries = [];
+
+  await refreshComponentTreeMaterializedProjection({
+    query: async (sql) => {
+      queries.push(sql);
+    },
+  });
+
+  assert.deepEqual(queries, [
+    `refresh materialized view ${schemaName}.component_engineering_component_tree_projection`,
+  ]);
+});
+
+test('planning DB import refreshes the materialized component file ownership projection', async () => {
+  const queries = [];
+
+  await refreshComponentFileOwnershipMaterializedProjection({
+    query: async (sql) => {
+      queries.push(sql);
+    },
+  });
+
+  assert.deepEqual(queries, [
+    `refresh materialized view ${schemaName}.component_engineering_file_ownership_projection`,
+  ]);
+});
+
+test('planning DB import refreshes the materialized component rule evaluation projection', async () => {
+  const queries = [];
+
+  await refreshComponentRuleEvaluationMaterializedProjection({
+    query: async (sql) => {
+      queries.push(sql);
+    },
+  });
+
+  assert.deepEqual(queries, [
+    `refresh materialized view ${schemaName}.component_engineering_rule_evaluation_projection`,
   ]);
 });
 
@@ -1136,6 +1413,202 @@ test('frontend mechanical truth import reloads surface rows with JSONB metadata'
   assert.equal(insertQuery.params[5], JSON.stringify(['monitoring']));
 });
 
+test('planning DB import reconciles deprecated DB-local rail source paths after snapshot reload', async () => {
+  const queries = [];
+
+  await reconcileDeprecatedLocalRailSources({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+    },
+  });
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /feature_mechanization_local_rails/);
+  assert.match(queries[0].sql, /stale_source_overrides/);
+  assert.match(
+    queries[0].sql,
+    /265_restore_canvas_source_import_dialog_symbols_after_post_import_reconcile\.sql/
+  );
+  assert.match(
+    queries[0].sql,
+    /264_reconcile_post_import_canvas_source_import_dialog_feature_manifest\.sql/
+  );
+  assert.match(queries[0].sql, /deprecatedSourcePaths/);
+  assert.match(queries[0].sql, /currentImplementationSourcePath/);
+  assert.match(queries[0].sql, /source_path_overridden/);
+  assert.match(queries[0].sql, /source_path_missing/);
+  assert.match(queries[0].sql, /source_path_deprecated/);
+  assert.match(queries[0].sql, /governance_files source_file/);
+  assert.match(queries[0].sql, /governance_files current_file/);
+  assert.match(queries[0].sql, /mechanization_status = case/);
+  assert.match(queries[0].sql, /rail_status = case/);
+  assert.match(queries[0].sql, /- 'featureId' - 'symbols'/);
+  assert.match(queries[0].sql, /raw_rail = coalesce/);
+  assert.match(queries[0].sql, /planning-db-import-reconcile-deprecated-local-rail-sources/);
+  assert.match(queries[0].sql, /governance_files/);
+  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
+  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
+});
+
+test('planning DB import keeps Canvas node workbench panel authority when implementation files exist', async () => {
+  const queries = [];
+
+  await reconcileSupersededCanvasNodeWorkbenchPanel({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      return { rows: [{ file_count: 2 }] };
+    },
+  });
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /governance_files/);
+  assert.match(queries[0].sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
+  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
+});
+
+test('planning DB import reasserts superseded Canvas node workbench panel authority when files are absent', async () => {
+  const queries = [];
+
+  await reconcileSupersededCanvasNodeWorkbenchPanel({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      if (queries.length === 1) {
+        return { rows: [{ file_count: 0 }] };
+      }
+      return { rows: [] };
+    },
+  });
+
+  assert.equal(queries.length, 2);
+  const retirementQuery = queries[1];
+  assert.match(retirementQuery.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
+  assert.match(retirementQuery.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(retirementQuery.sql, /governance_component_local_definitions/);
+  assert.match(retirementQuery.sql, /architecture\.component/);
+  assert.match(retirementQuery.sql, /architecture\.component_port/);
+  assert.match(retirementQuery.sql, /architecture\.component_relation/);
+  assert.match(retirementQuery.sql, /governance_component_files/);
+  assert.match(retirementQuery.sql, /governance_files/);
+  assert.match(retirementQuery.sql, /status = 'deprecated'/);
+  assert.match(retirementQuery.sql, /status = 'superseded'/);
+  assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
+});
+
+test('planning DB import keeps active CI policy validation split components when files exist', async () => {
+  const queries = [];
+
+  await reconcileSupersededCiPolicyValidationSplitComponents({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      return { rows: [{ file_count: 2 }] };
+    },
+  });
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /policy-validation-files\.cjs/);
+  assert.match(queries[0].sql, /policy-validation-text\.cjs/);
+  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
+  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
+});
+
+test('planning DB import retires phantom CI policy validation split components when files are absent', async () => {
+  const queries = [];
+
+  await reconcileSupersededCiPolicyValidationSplitComponents({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      if (queries.length === 1) {
+        return { rows: [{ file_count: 0 }] };
+      }
+      return { rows: [] };
+    },
+  });
+
+  assert.equal(queries.length, 2);
+  const retirementQuery = queries[1];
+  assert.match(retirementQuery.sql, /SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES/);
+  assert.match(retirementQuery.sql, /SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT/);
+  assert.match(retirementQuery.sql, /status = 'deprecated'/);
+  assert.match(retirementQuery.sql, /status = 'superseded'/);
+  assert.match(retirementQuery.sql, /governance_component_local_definitions/);
+  assert.match(retirementQuery.sql, /governance_component_local_ownership_patterns/);
+  assert.match(retirementQuery.sql, /scripts\/policy-validation-files\.cjs/);
+  assert.match(retirementQuery.sql, /scripts\/policy-validation-text\.cjs/);
+  assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
+});
+
+test('planning DB import preserves DB-local feature mechanization rails during governance reload', async () => {
+  const queries = [];
+  const localRails = [
+    {
+      railId: 'local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties',
+      featureId: 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619',
+      mechanizationStatus: 'implemented',
+      railName: 'InspectCanvasNodeProperties',
+      normalizedRailName: 'inspectcanvasnodeproperties',
+      railType: 'query',
+      dddOwner: 'CanvasNodeWorkbenchPanel',
+      railStatus: 'implemented',
+      symbolRefs: [
+        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx#CanvasNodeWorkbenchPanel',
+      ],
+      implementationRefs: ['apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx'],
+      documentationRefs: ['buzon/TAREA.TXT'],
+      governingSources: ['docs/architecture/command-query-rail-governance.md'],
+      allowedImplementationSurfaces: ['apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx'],
+      architectureGuards: [
+        'apps/web/src/app/views/canvas/CanvasShellMainPanel.architecture.test.ts',
+      ],
+      completionGate: ['pnpm verify:prepush'],
+      sourcePath: 'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
+      sourceContentSha256: 'a'.repeat(64),
+      rawRail: { name: 'InspectCanvasNodeProperties' },
+      rawManifest: { featureId: 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619' },
+      revision: 3,
+      createdBy: 'codex',
+      createdAt: '2026-06-19T00:00:00.000Z',
+      updatedAt: '2026-06-19T00:00:00.000Z',
+    },
+  ];
+
+  const readRows = await readLocalFeatureMechanizationRails({
+    query: async (sql) => {
+      queries.push({ sql: String(sql), params: [] });
+      return { rows: localRails };
+    },
+  });
+  assert.equal(readRows[0].railId, localRails[0].railId);
+
+  await restoreLocalFeatureMechanizationRails(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql: String(sql), params });
+      },
+    },
+    localRails
+  );
+
+  const insertQuery = queries.find((query) =>
+    query.sql.includes(`insert into ${schemaName}.feature_mechanization_local_rails`)
+  );
+  assert.ok(insertQuery);
+  assert.match(insertQuery.sql, /on conflict \(rail_id\) do update set/);
+  assert.match(insertQuery.sql, /raw_manifest/);
+  assert.match(insertQuery.sql, /revision = greatest/);
+  assert.match(insertQuery.sql, /feature_mechanization_local_rails\.revision/);
+  assert.equal(insertQuery.params[0], localRails[0].railId);
+  assert.equal(insertQuery.params[1], localRails[0].featureId);
+
+  const hashRefreshQuery = queries.find((query) =>
+    query.sql.includes('update planning_query_store.feature_mechanization_local_rails rail')
+  );
+  assert.ok(hashRefreshQuery);
+  assert.match(hashRefreshQuery.sql, /governance_files file_ref/);
+  assert.doesNotMatch(insertQuery.sql, /delete\s+from/i);
+  assert.doesNotMatch(insertQuery.sql, /truncate\s+/i);
+});
+
 test('frontend component reflection import reloads normalized component rows', async () => {
   const queries = [];
 
@@ -1187,10 +1660,10 @@ test('frontend component reflection import reloads normalized component rows', a
       rails: [
         {
           componentId: 'web.component.canvas.CanvasToolbar',
-          railName: 'PreviewExecutablePlan',
+          railName: 'PreviewExecutionPlan',
           railKind: 'command',
           railStatus: 'implemented-api',
-          rawRail: { railName: 'PreviewExecutablePlan' },
+          rawRail: { railName: 'PreviewExecutionPlan' },
         },
       ],
       evidence: [
@@ -1247,7 +1720,7 @@ test('frontend component reflection import reloads normalized component rows', a
   ]);
   assert.deepEqual(railInsert.params.slice(0, 4), [
     'web.component.canvas.CanvasToolbar',
-    'PreviewExecutablePlan',
+    'PreviewExecutionPlan',
     'command',
     'implemented-api',
   ]);

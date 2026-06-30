@@ -42,7 +42,7 @@ describe('AppShellFrame', () => {
     await act(async () => {
       root.render(
         <AppShellFrame
-          bottomDrawer={<div data-testid="console-drawer">Console drawer</div>}
+          bottomDrawer={<div data-testid="bottom-operational-drawer">Operations drawer</div>}
           focusMode={false}
           healthBanner={<div data-testid="shell-banner">Shell banner</div>}
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
@@ -61,6 +61,8 @@ describe('AppShellFrame', () => {
     const main = container.querySelector('[data-slot="app-shell-main"]');
     const outlet = container.querySelector('[data-slot="app-shell-outlet"]');
     const bottomDrawer = container.querySelector('[data-slot="app-shell-bottom-drawer"]');
+    const panelGroup = container.querySelector('[data-slot="resizable-panel-group"]');
+    const panels = Array.from(container.querySelectorAll('[data-slot="resizable-panel"]'));
 
     expect(frame?.textContent).toContain('Top bar');
     expect(frame?.textContent).toContain('Shell banner');
@@ -72,15 +74,22 @@ describe('AppShellFrame', () => {
     expect(main?.parentElement).toBe(body);
     expect(outlet?.textContent).toContain('Route outlet');
     expect(outlet?.closest('[data-slot="app-shell-main"]')).toBe(main);
-    expect(bottomDrawer?.textContent).toContain('Console drawer');
+    expect(bottomDrawer?.textContent).toContain('Operations drawer');
     expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(main);
+    expect(panelGroup?.getAttribute('id')).toBe('app-shell-vertical-panels');
+    expect(panels.map((panel) => panel.getAttribute('id'))).toContain(
+      'app-shell-route-outlet-panel'
+    );
+    expect(panels.map((panel) => panel.getAttribute('id'))).toContain(
+      'app-shell-bottom-drawer-panel'
+    );
   });
 
   it('hides navigation and bottom drawer in focus mode while keeping top bar and outlet', async () => {
     await act(async () => {
       root.render(
         <AppShellFrame
-          bottomDrawer={<div>Console drawer</div>}
+          bottomDrawer={<div>Operations drawer</div>}
           focusMode
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}
@@ -108,7 +117,7 @@ describe('AppShellFrame', () => {
     await act(async () => {
       root.render(
         <AppShellFrame
-          bottomDrawer={<div>Console drawer</div>}
+          bottomDrawer={<div>Operations drawer</div>}
           focusMode={false}
           healthBanner={<div>Shell banner</div>}
           leftNavigation={<div>Left nav</div>}

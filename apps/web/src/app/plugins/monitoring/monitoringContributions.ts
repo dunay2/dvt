@@ -58,20 +58,6 @@ export const monitoringContributions: PluginContributions = {
     },
     {
       pluginId: MONITORING_PLUGIN_ID,
-      id: 'monitoring.runs.canvas',
-      component: React.lazy(() => import('../../views/runs/CanvasRunsTabView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'runs',
-        label: 'Runs',
-        icon: Activity,
-        order: 60,
-        scope: 'run',
-      },
-    },
-    {
-      pluginId: MONITORING_PLUGIN_ID,
       id: 'monitoring.run-detail',
       path: '/runs/:runId',
       // Same component - RunsView reads :runId from params internally

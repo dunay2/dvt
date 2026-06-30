@@ -8,7 +8,7 @@ import type { CanvasDraftPresentationState } from './canvasDraftPresentationMode
 const INITIAL_CANVAS_DRAFT_PRESENTATION_STATE: CanvasDraftPresentationState = {
   routeState: 'loading_graph',
   recoveryReason: null,
-  draftToolbarState: {
+  draftStatusState: {
     label: canvasViewCopy.draftSyncedLabel,
     tone: 'neutral',
     showReloadAction: false,
@@ -39,9 +39,9 @@ function arePresentationStatesEqual(
     left.bootstrapStatus === right.bootstrapStatus &&
     left.bootstrapDetail === right.bootstrapDetail &&
     left.canCompleteBootstrap === right.canCompleteBootstrap &&
-    left.draftToolbarState.label === right.draftToolbarState.label &&
-    left.draftToolbarState.tone === right.draftToolbarState.tone &&
-    left.draftToolbarState.showReloadAction === right.draftToolbarState.showReloadAction
+    left.draftStatusState.label === right.draftStatusState.label &&
+    left.draftStatusState.tone === right.draftStatusState.tone &&
+    left.draftStatusState.showReloadAction === right.draftStatusState.showReloadAction
   );
 }
 

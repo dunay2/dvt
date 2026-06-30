@@ -16,8 +16,8 @@ export function resetRootShellStores(): void {
     leftNavCollapsed: false,
     inspectorPanelWidth: 380,
     inspectorPanelVisible: false,
-    consolePanelHeight: 0,
-    consolePanelVisible: false,
+    bottomDrawerHeight: 0,
+    bottomDrawerVisible: false,
     focusMode: false,
     gridSize: 20,
     canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
@@ -33,10 +33,10 @@ export function setRootShellFocusMode(enabled: boolean): void {
   useUiLayoutStore.setState({ focusMode: enabled });
 }
 
-export function setRootShellConsoleDrawer(args: { visible: boolean; height: number }): void {
+export function setRootShellBottomDrawer(args: { visible: boolean; height: number }): void {
   useUiLayoutStore.setState({
-    consolePanelVisible: args.visible,
-    consolePanelHeight: args.height,
+    bottomDrawerVisible: args.visible,
+    bottomDrawerHeight: args.height,
   });
 }
 

@@ -8,7 +8,7 @@ type UseCanvasSelectionSyncArgs = {
   storeInspectorNodeId: string | null;
   uiScope: CanvasUiScope;
   setSelectedNodes: (nodeIds: string[]) => void;
-  setInspectorNode: (nodeId: string | null) => void;
+  setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 
 export function useCanvasSelectionSync({

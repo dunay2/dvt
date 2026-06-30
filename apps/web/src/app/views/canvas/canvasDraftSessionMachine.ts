@@ -32,6 +32,7 @@ function transition(
     workingSet,
     draftRevision: record?.revision ?? null,
     savingWorkingSet: undefined,
+    savingBaseRevision: undefined,
     localNodeCatalog,
   };
 }
@@ -72,6 +73,7 @@ function markSaving(session: CanvasDraftSession): CanvasDraftSession {
     ...session,
     syncState: 'saving',
     savingWorkingSet: session.workingSet,
+    savingBaseRevision: session.draftRevision,
   };
 }
 
@@ -101,6 +103,21 @@ function applySaveSuccess(
   session: CanvasDraftSession,
   record: CanvasAuthoringDraftRecord
 ): CanvasDraftSession {
+  const saveBaseWasSuperseded =
+    session.savingWorkingSet != null &&
+    session.savingBaseRevision !== undefined &&
+    session.savingBaseRevision !== session.draftRevision &&
+    record.revision !== session.draftRevision;
+
+  if (saveBaseWasSuperseded) {
+    return {
+      ...session,
+      syncState: 'editing',
+      savingWorkingSet: undefined,
+      savingBaseRevision: undefined,
+    };
+  }
+
   const persistedWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
   const hasEditsWhileSaving =
     session.savingWorkingSet != null &&
@@ -145,6 +162,26 @@ function reloadFromRemote(
   );
 }
 
+function adoptExternalRevision(
+  session: CanvasDraftSession,
+  draftRevision: string | undefined
+): CanvasDraftSession {
+  if (!draftRevision || session.draftRevision === draftRevision) {
+    return session;
+  }
+
+  return {
+    ...session,
+    draftRevision,
+    savingWorkingSet: undefined,
+    savingBaseRevision: undefined,
+    syncState:
+      session.syncState === 'conflict' || session.syncState === 'saving'
+        ? 'editing'
+        : session.syncState,
+  };
+}
+
 // Machine owns aggregate sync-state transitions over the draft session.
 export const canvasDraftSessionMachine = {
   createBootstrapping,
@@ -154,4 +191,5 @@ export const canvasDraftSessionMachine = {
   applyConflict,
   markRemoteDraftMissing,
   reloadFromRemote,
+  adoptExternalRevision,
 } as const;

@@ -11,6 +11,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
 
   const repoRoot = deps.repoRoot || path.resolve(__dirname, '..', '..');
   const {
+    canonicalizeRailName,
     cleanRailNameCandidate,
     extractSpecificRailNamesFromText,
     inferRailTypeFromName,
@@ -50,6 +51,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
           .map((value) => normalizeText(value).trim())
           .filter(Boolean)
           .map(toPosix)
+          .filter((sourcePath) => fs.existsSync(path.join(repoRoot, ...sourcePath.split('/'))))
       ),
     ].sort();
   }
@@ -94,7 +96,8 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
         const featureId = normalizeText(manifest.featureId);
         const mechanizationStatus = normalizeText(manifest.mechanizationStatus);
         for (const [index, rail] of normalizeArray(manifest.commandQueryRails).entries()) {
-          const railName = normalizeText(rail?.name).trim();
+          const rawRailName = normalizeText(rail?.name).trim();
+          const railName = canonicalizeRailName(rawRailName);
           const railType = normalizeRailName(rail?.type);
           const normalizedRailName = normalizeRailName(railName);
           if (!railName || !railType) {

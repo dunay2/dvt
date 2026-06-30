@@ -22,6 +22,15 @@ function createCommandQueryRailSharedComponent(deps = {}) {
     return normalizeText(value).trim().toLowerCase();
   }
 
+  function canonicalizeRailName(value) {
+    const railName = normalizeText(value).trim();
+    if (railName.toLowerCase() === 'previewexecutableplan') {
+      return 'PreviewExecutionPlan';
+    }
+
+    return railName;
+  }
+
   function normalizeRailStatus(value) {
     const status = normalizeText(value).trim();
     return status || 'declared';
@@ -74,7 +83,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
 
     return (
       /(Command|Query|Rail)$/.test(candidate) ||
-      /^(Accept|Archive|Cancel|Check|Claim|Compile|Create|Delete|Emit|Export|Get|Import|List|Persist|Preview|Read|Restore|Run|Save|Select|Start|Update|Validate)[A-Z]/.test(
+      /^(Accept|Archive|Cancel|Check|Claim|Compile|Create|Delete|Emit|Export|Get|Import|List|Persist|Preview|Read|Recover|Restore|Run|Save|Select|Signal|Start|Update|Validate)[A-Z]/.test(
         candidate
       )
     );
@@ -125,6 +134,7 @@ function createCommandQueryRailSharedComponent(deps = {}) {
   }
 
   return {
+    canonicalizeRailName,
     cleanRailNameCandidate,
     extractSpecificRailNamesFromText,
     inferRailTypeFromName,

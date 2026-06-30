@@ -1,65 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { buildNodePropertiesReadModel } from './nodePropertiesReadModel';
+import {
+  buildNodePropertiesReadModel,
+  type NodePropertiesReadModel,
+  type NodePropertySection,
+} from './nodePropertiesReadModel';
 
-function buildSourceNode(): CanonicalNode {
-  return {
-    id: 'src-orders',
-    name: 'Orders Source',
-    description: 'Imported source for analytics.raw.orders',
-    pluginId: 'dvt.warehouse-source',
-    kind: 'dvt:source',
-    role: 'input',
-    status: 'idle',
-    tags: ['source', 'raw'],
-    path: 'models/sources/src_orders.yml',
-    metadata: {
-      sourceName: 'warehouse_prod_analytics_raw',
-      database: 'analytics',
-      schema: 'raw',
-      tableName: 'orders',
-      owner: 'data-platform',
-      columns: [
-        {
-          name: 'order_id',
-          type: 'number',
-          nullable: false,
-          primaryKey: true,
-          description: 'Warehouse order identifier',
-        },
-        {
-          name: 'customer_id',
-          type: 'number',
-          nullable: false,
-        },
-      ],
-      indexes: [
-        {
-          name: 'idx_orders_customer',
-          type: 'btree',
-          columns: ['customer_id'],
-          unique: false,
-        },
-      ],
-      foreignKeys: [
-        {
-          name: 'fk_orders_customer',
-          localColumns: ['customer_id'],
-          referencedTable: 'customers',
-          referencedColumns: ['customer_id'],
-        },
-      ],
-      constraints: [
-        {
-          name: 'ck_orders_amount',
-          expression: 'amount >= 0',
-        },
-      ],
-      sql: 'select * from analytics.raw.orders',
-    },
-  };
-}
+const expectedSectionIds = [
+  'general',
+  'columns',
+  'inputs-outputs',
+  'tests',
+  'keys',
+  'indexes',
+  'foreign-keys',
+  'constraints',
+  'comments',
+  'code',
+  'summary',
+] as const;
 
 const downstreamNode: CanonicalNode = {
   id: 'transform-orders',
@@ -80,94 +40,135 @@ const graphEdges: readonly CanonicalEdge[] = [
   },
 ];
 
-function sectionById(
-  model: ReturnType<typeof buildNodePropertiesReadModel>,
-  id: string
-): ReturnType<typeof buildNodePropertiesReadModel>['sections'][number] {
+function buildSourceNode(overrides: Partial<CanonicalNode> = {}): CanonicalNode {
+  return {
+    id: 'src-orders',
+    name: 'Orders Source',
+    description: 'Imported source for analytics.raw.orders',
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source', 'raw'],
+    path: 'models/sources/src_orders.yml',
+    metadata: {
+      sourceName: 'warehouse_prod_analytics_raw',
+      database: 'analytics',
+      schema: 'raw',
+      tableName: 'orders',
+      rowCount: 1500,
+      byteSize: 4096000,
+      owner: 'data-platform',
+      sql: 'select * from analytics.raw.orders',
+      columns: [
+        {
+          name: 'order_id',
+          type: 'number',
+          nullable: false,
+          primaryKey: true,
+          description: 'Warehouse order identifier',
+        },
+        { name: 'customer_id', type: 'number', nullable: false },
+      ],
+      indexes: [{ name: 'idx_orders_customer', type: 'btree', columns: ['customer_id'] }],
+      foreignKeys: [
+        {
+          name: 'fk_orders_customer',
+          localColumns: ['customer_id'],
+          referencedTable: 'customers',
+          referencedColumns: ['customer_id'],
+        },
+      ],
+      constraints: [{ name: 'ck_orders_amount', expression: 'amount >= 0' }],
+    },
+    ...overrides,
+  };
+}
+
+function buildSourceModel(node = buildSourceNode()): NodePropertiesReadModel {
+  return buildNodePropertiesReadModel({
+    node,
+    nodes: [node, downstreamNode],
+    edges: graphEdges,
+  });
+}
+
+function sectionById(model: NodePropertiesReadModel, id: string): NodePropertySection {
   const section = model.sections.find((candidate) => candidate.id === id);
   expect(section, `missing section ${id}`).toBeDefined();
   return section!;
 }
 
-function rowValue(section: ReturnType<typeof sectionById>, label: string): string | undefined {
-  return section.rows.find((row) => row.label === label)?.value;
+function expectRows(section: NodePropertySection, expected: Record<string, string>): void {
+  for (const [label, value] of Object.entries(expected)) {
+    expect(section.rows.find((row) => row.label === label)?.value).toBe(value);
+  }
 }
 
-function tableRowById(
-  section: ReturnType<typeof sectionById>,
-  id: string
-): ReturnType<typeof sectionById>['tableRows'][number] | undefined {
-  return section.tableRows.find((row) => row.id === id);
+function expectTableCells(
+  section: NodePropertySection,
+  id: string,
+  expected: Record<string, string>
+): void {
+  expect(section.tableRows.find((row) => row.id === id)?.cells).toMatchObject(expected);
 }
 
 describe('nodePropertiesReadModel', () => {
-  it('projects source metadata into SQL-Developer-style property sections', () => {
-    const node = buildSourceNode();
-    const model = buildNodePropertiesReadModel({
-      node,
-      nodes: [node, downstreamNode],
-      edges: graphEdges,
+  it('projects source metadata into table-modeler sections', () => {
+    const model = buildSourceModel();
+
+    expect(model.sections.map((section) => section.id)).toEqual(
+      expect.arrayContaining([...expectedSectionIds])
+    );
+    expect(new Set(model.sections.map((section) => section.id)).size).toBe(
+      expectedSectionIds.length
+    );
+
+    expectRows(sectionById(model, 'general'), {
+      Schema: 'raw',
+      Table: 'orders',
+      Rows: '1,500',
+      Size: '3.9 MB',
+      Path: 'models/sources/src_orders.yml',
+    });
+    expectRows(sectionById(model, 'summary'), {
+      'Upstream nodes': '0',
+      'Downstream nodes': 'Clean Orders',
+      Tags: 'source, raw',
     });
 
-    const sectionIds = model.sections.map((section) => section.id);
-    expect(sectionIds).toEqual(
-      expect.arrayContaining([
-        'general',
-        'columns',
-        'keys',
-        'indexes',
-        'foreign-keys',
-        'constraints',
-        'comments',
-        'code',
-        'summary',
-      ])
-    );
-    expect(new Set(sectionIds).size).toBe(sectionIds.length);
-
-    const general = sectionById(model, 'general');
-    expect(rowValue(general, 'Schema')).toBe('raw');
-    expect(rowValue(general, 'Table')).toBe('orders');
-    expect(rowValue(general, 'Path')).toBe('models/sources/src_orders.yml');
-
-    const columns = sectionById(model, 'columns');
-    expect(tableRowById(columns, 'order_id')?.cells).toMatchObject({
+    expectTableCells(sectionById(model, 'columns'), 'order_id', {
       name: 'order_id',
       type: 'number',
       nullable: 'not null',
       key: 'PK',
       comment: 'Warehouse order identifier',
     });
-    expect(tableRowById(columns, 'customer_id')?.cells).toMatchObject({
+    expectTableCells(sectionById(model, 'columns'), 'customer_id', {
       name: 'customer_id',
       type: 'number',
       nullable: 'not null',
     });
-
-    const keys = sectionById(model, 'keys');
-    expect(tableRowById(keys, 'pk:order_id')?.cells).toMatchObject({
+    expectTableCells(sectionById(model, 'keys'), 'pk:order_id', {
       columns: 'order_id',
       type: 'primary',
     });
-
-    expect(tableRowById(sectionById(model, 'indexes'), 'idx_orders_customer')?.cells).toMatchObject(
-      {
-        columns: 'customer_id',
-        unique: 'no',
-      }
-    );
-    expect(
-      tableRowById(sectionById(model, 'foreign-keys'), 'fk_orders_customer')?.cells
-    ).toMatchObject({
+    expectTableCells(sectionById(model, 'indexes'), 'idx_orders_customer', {
+      columns: 'customer_id',
+      unique: 'no',
+    });
+    expectTableCells(sectionById(model, 'foreign-keys'), 'fk_orders_customer', {
       localColumns: 'customer_id',
       referencedTable: 'customers',
     });
-    expect(
-      tableRowById(sectionById(model, 'constraints'), 'ck_orders_amount')?.cells
-    ).toMatchObject({
+    expectTableCells(sectionById(model, 'constraints'), 'ck_orders_amount', {
       expression: 'amount >= 0',
     });
-
+    expectTableCells(sectionById(model, 'inputs-outputs'), 'output:edge-source-transform', {
+      direction: 'Output',
+      node: 'Clean Orders',
+      relation: 'lineage',
+    });
     expect(sectionById(model, 'code').code).toBe('select * from analytics.raw.orders');
   });
 
@@ -179,103 +180,482 @@ describe('nodePropertiesReadModel', () => {
     });
 
     expect(model.sections.map((section) => section.id)).toEqual(
-      expect.arrayContaining([
-        'general',
-        'columns',
-        'keys',
-        'indexes',
-        'foreign-keys',
-        'constraints',
-        'comments',
-        'code',
-        'summary',
-      ])
+      expect.arrayContaining([...expectedSectionIds])
     );
   });
 
-  it('renders explicit empty states instead of fabricated records', () => {
+  it.each(['columns', 'indexes', 'constraints', 'keys', 'foreign-keys', 'tests'] as const)(
+    'renders explicit empty state for %s instead of fabricated records',
+    (sectionId) => {
+      const model = buildNodePropertiesReadModel({
+        node: buildSourceNode({ metadata: { columns: [] } }),
+        nodes: [buildSourceNode()],
+        edges: [],
+      });
+      const section = sectionById(model, sectionId);
+
+      expect(section.tableRows).toEqual([]);
+      expect(section.emptyState).toMatch(/\S/);
+    }
+  );
+
+  it('projects dbt test target semantics without fabricating unavailable metadata', () => {
     const node: CanonicalNode = {
-      ...buildSourceNode(),
+      id: 'test-orders-order-id',
+      name: 'not_null_orders_order_id',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'idle',
+      tags: [],
       metadata: {
-        columns: [],
+        testTargetModel: 'orders',
+        testTargetColumn: 'order_id',
+        severity: 'error',
+        testType: 'not_null',
+      },
+    };
+
+    expectTableCells(
+      sectionById(buildNodePropertiesReadModel({ node, nodes: [node], edges: [] }), 'tests'),
+      `test:${node.id}`,
+      {
+        name: 'not_null_orders_order_id',
+        type: 'not_null',
+        target: 'orders.order_id',
+        column: 'order_id',
+        severity: 'error',
+      }
+    );
+  });
+
+  it('falls back to canonical dbt test run status and duration when metadata omits them', () => {
+    const node: CanonicalNode = {
+      id: 'test-orders-unique',
+      name: 'unique_orders_order_id',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'failed',
+      lastDuration: 2.5,
+      tags: [],
+      metadata: {
+        testTargetModel: 'orders',
+        testTargetColumn: 'order_id',
+        severity: 'error',
+        testType: 'unique',
+      },
+    };
+
+    expectTableCells(
+      sectionById(buildNodePropertiesReadModel({ node, nodes: [node], edges: [] }), 'tests'),
+      `test:${node.id}`,
+      {
+        lastRun: 'failed in 2.5s',
+      }
+    );
+  });
+
+  it('projects dbt model columns and column tests from manifest-style metadata maps', () => {
+    const node: CanonicalNode = {
+      id: 'model-orders',
+      name: 'fct_orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: ['mart'],
+      metadata: {
+        database: 'analytics',
+        schema: 'mart',
+        tableName: 'fct_orders',
+        columns: {
+          order_id: {
+            data_type: 'integer',
+            description: 'Primary order key',
+            tests: [
+              {
+                not_null: {
+                  severity: 'error',
+                  selectedForExecution: true,
+                  lastRunStatus: 'passed',
+                  lastRunDurationMs: 1234,
+                },
+              },
+              {
+                unique: {
+                  severity: 'error',
+                  selectedForExecution: false,
+                  lastRunStatus: 'failed',
+                },
+              },
+            ],
+          },
+          status: {
+            data_type: 'text',
+            description: 'Lifecycle status',
+            tests: [{ accepted_values: { values: ['created', 'paid'], severity: 'warn' } }],
+          },
+          customer_id: {
+            data_type: 'integer',
+            description: 'Customer foreign key',
+            tests: [
+              {
+                relationships: {
+                  arguments: {
+                    to: "ref('dim_customers')",
+                    field: 'customer_id',
+                  },
+                  severity: 'error',
+                },
+              },
+            ],
+          },
+        },
       },
     };
     const model = buildNodePropertiesReadModel({ node, nodes: [node], edges: [] });
 
-    for (const sectionId of ['columns', 'indexes', 'constraints'] as const) {
-      const section = sectionById(model, sectionId);
-      expect(section.tableRows).toEqual([]);
-      expect(section.emptyState).toMatch(/\S/);
-    }
-    expect(sectionById(model, 'keys').tableRows).toEqual([]);
-    expect(sectionById(model, 'foreign-keys').tableRows).toEqual([]);
+    expectTableCells(sectionById(model, 'columns'), 'order_id', {
+      name: 'order_id',
+      type: 'integer',
+      comment: 'Primary order key',
+    });
+    expectTableCells(sectionById(model, 'columns'), 'status', {
+      name: 'status',
+      type: 'text',
+      comment: 'Lifecycle status',
+    });
+    expectTableCells(sectionById(model, 'columns'), 'customer_id', {
+      name: 'customer_id',
+      type: 'integer',
+      comment: 'Customer foreign key',
+    });
+    expectTableCells(sectionById(model, 'tests'), 'test:model-orders:order_id:not_null', {
+      name: 'not_null(order_id)',
+      type: 'not_null',
+      target: 'fct_orders.order_id',
+      column: 'order_id',
+      severity: 'error',
+      assertion: 'Value is present',
+      selection: 'selected',
+      readinessImpact: 'blocks run',
+      lastRun: 'passed in 1.2s',
+    });
+    expectTableCells(sectionById(model, 'tests'), 'test:model-orders:order_id:unique', {
+      name: 'unique(order_id)',
+      type: 'unique',
+      target: 'fct_orders.order_id',
+      column: 'order_id',
+      severity: 'error',
+      assertion: 'Values are unique',
+      selection: 'not selected',
+      readinessImpact: 'blocks run',
+      lastRun: 'failed',
+    });
+    expectTableCells(sectionById(model, 'tests'), 'test:model-orders:status:accepted_values', {
+      name: 'accepted_values(status)',
+      type: 'accepted_values',
+      target: 'fct_orders.status',
+      column: 'status',
+      severity: 'warn',
+      expression: 'values: created, paid',
+      assertion: 'Value is one of created, paid',
+      readinessImpact: 'warning',
+    });
+    expectTableCells(sectionById(model, 'tests'), 'test:model-orders:customer_id:relationships', {
+      name: 'relationships(customer_id)',
+      type: 'relationships',
+      target: 'fct_orders.customer_id',
+      column: 'customer_id',
+      severity: 'error',
+      expression: "ref('dim_customers').customer_id",
+      assertion: "Value references ref('dim_customers').customer_id",
+      readinessImpact: 'blocks run',
+    });
   });
 
-  it('summarizes graph relationships without reading renderer state', () => {
+  it('projects connected downstream dbt test nodes for a selected model', () => {
+    const modelNode: CanonicalNode = {
+      id: 'model-orders',
+      name: 'fct_orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: {
+          order_id: { data_type: 'integer' },
+        },
+      },
+    };
+    const testNode: CanonicalNode = {
+      id: 'test-orders-order-id',
+      name: 'not_null_orders_order_id',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'failed',
+      lastDuration: 1.7,
+      tags: [],
+      metadata: {
+        testType: 'not_null',
+        testTargetColumn: 'order_id',
+        severity: 'error',
+        selectedForExecution: true,
+      },
+    };
+    const edge: CanonicalEdge = {
+      id: 'edge-model-test',
+      sourceId: modelNode.id,
+      targetId: testNode.id,
+      relation: 'validation',
+    };
+
     const model = buildNodePropertiesReadModel({
-      node: buildSourceNode(),
-      nodes: [buildSourceNode(), downstreamNode],
-      edges: graphEdges,
+      node: modelNode,
+      nodes: [modelNode, testNode],
+      edges: [edge],
     });
 
-    const summary = sectionById(model, 'summary');
-    expect(rowValue(summary, 'Upstream nodes')).toBe('0');
-    expect(rowValue(summary, 'Downstream nodes')).toBe('Clean Orders');
-    expect(rowValue(summary, 'Tags')).toBe('source, raw');
+    expectTableCells(sectionById(model, 'tests'), 'test:test-orders-order-id', {
+      name: 'not_null_orders_order_id',
+      type: 'not_null',
+      target: 'fct_orders.order_id',
+      column: 'order_id',
+      severity: 'error',
+      assertion: 'Value is present',
+      selection: 'selected',
+      readinessImpact: 'blocks run',
+      lastRun: 'failed in 1.7s',
+    });
   });
 
-  it('uses deterministic SQL precedence across compiled, metadata, and config SQL', () => {
-    const node = buildSourceNode();
+  it('does not infer connected dbt test type from unrelated metadata keys', () => {
+    const modelNode: CanonicalNode = {
+      id: 'model-orders',
+      name: 'fct_orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {},
+    };
+    const customTestNode: CanonicalNode = {
+      id: 'test-orders-custom',
+      name: 'accepted_values_orders_status',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        package: 'analytics',
+        dependencies: ['fct_orders'],
+        severity: 'warn',
+      },
+    };
+    const edge: CanonicalEdge = {
+      id: 'edge-model-custom-test',
+      sourceId: modelNode.id,
+      targetId: customTestNode.id,
+      relation: 'validation',
+    };
 
-    expect(
-      sectionById(
-        buildNodePropertiesReadModel({
-          node: {
-            ...node,
-            metadata: {
-              compiledSql: 'select compiled',
-              sql: 'select metadata',
-              config: { sql: 'select config' },
-            },
-          },
-          nodes: [node],
-          edges: [],
-        }),
-        'code'
-      ).code
-    ).toBe('select compiled');
+    const model = buildNodePropertiesReadModel({
+      node: modelNode,
+      nodes: [modelNode, customTestNode],
+      edges: [edge],
+    });
 
-    expect(
-      sectionById(
-        buildNodePropertiesReadModel({
-          node: {
-            ...node,
-            metadata: {
-              sql: 'select metadata',
-              config: { sql: 'select config' },
-            },
-          },
-          nodes: [node],
-          edges: [],
-        }),
-        'code'
-      ).code
-    ).toBe('select metadata');
+    expectTableCells(sectionById(model, 'tests'), 'test:test-orders-custom', {
+      name: 'accepted_values_orders_status',
+      type: '',
+      target: 'fct_orders',
+      severity: 'warn',
+      assertion: '',
+      readinessImpact: 'warning',
+      lastRun: 'idle',
+    });
+  });
 
-    expect(
-      sectionById(
-        buildNodePropertiesReadModel({
-          node: {
-            ...node,
-            metadata: {
-              config: { sql: 'select config' },
-            },
-          },
-          nodes: [node],
-          edges: [],
-        }),
-        'code'
-      ).code
-    ).toBe('select config');
+  it('projects DVT transform input columns with source and selection state', () => {
+    const source: CanonicalNode = {
+      id: 'source-orders',
+      name: 'Orders source',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer', nullable: false },
+          { name: 'customer', type: 'text', nullable: true },
+        ],
+      },
+    };
+    const transform: CanonicalNode = {
+      id: 'transform-orders',
+      name: 'Clean orders',
+      pluginId: 'dvt',
+      kind: 'dvt:sql_transform',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          selectedColumns: ['source-orders.order_id'],
+        },
+      },
+    };
+    const edge: CanonicalEdge = {
+      id: 'edge-source-transform',
+      sourceId: source.id,
+      targetId: transform.id,
+      relation: 'lineage',
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: transform,
+      nodes: [source, transform],
+      edges: [edge],
+    });
+
+    expectTableCells(sectionById(model, 'columns'), 'source-orders.order_id', {
+      name: 'order_id',
+      type: 'integer',
+      nullable: 'not null',
+      source: 'Orders source',
+      reference: 'source-orders.order_id',
+      selection: 'selected',
+    });
+    expectTableCells(sectionById(model, 'columns'), 'source-orders.customer', {
+      name: 'customer',
+      type: 'text',
+      nullable: 'nullable',
+      source: 'Orders source',
+      reference: 'source-orders.customer',
+      selection: 'available',
+    });
+  });
+
+  it('projects DVT sink target and write policy into a dedicated sink section', () => {
+    const sink: CanonicalNode = {
+      id: 'sink-orders',
+      name: 'Orders sink',
+      pluginId: 'dvt',
+      kind: 'dvt:sink',
+      role: 'output',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          database: 'analytics',
+          schema: 'mart',
+          table: 'fct_orders',
+          materialization: 'table',
+          writeMode: 'replace',
+          partitionStrategy: 'date_day',
+        },
+      },
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: sink,
+      nodes: [sink],
+      edges: [],
+    });
+
+    expectRows(sectionById(model, 'sink'), {
+      Destination: 'analytics.mart.fct_orders',
+      Database: 'analytics',
+      Schema: 'mart',
+      Table: 'fct_orders',
+      Materialization: 'table',
+      'Write mode': 'replace',
+      'Partition strategy': 'date_day',
+    });
+  });
+
+  it('projects dbt model input columns with source and selection state when catalog output is not recorded yet', () => {
+    const source: CanonicalNode = {
+      id: 'source-orders',
+      name: 'Orders source',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer', nullable: false },
+          { name: 'customer', type: 'text', nullable: true },
+        ],
+      },
+    };
+    const modelNode: CanonicalNode = {
+      id: 'model-orders',
+      name: 'Model orders',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        config: {
+          selectedColumns: ['source-orders.customer'],
+        },
+      },
+    };
+    const edge: CanonicalEdge = {
+      id: 'edge-source-model',
+      sourceId: source.id,
+      targetId: modelNode.id,
+      relation: 'lineage',
+    };
+
+    const model = buildNodePropertiesReadModel({
+      node: modelNode,
+      nodes: [source, modelNode],
+      edges: [edge],
+    });
+
+    expectTableCells(sectionById(model, 'columns'), 'source-orders.order_id', {
+      name: 'order_id',
+      type: 'integer',
+      nullable: 'not null',
+      source: 'Orders source',
+      reference: 'source-orders.order_id',
+      selection: 'available',
+    });
+    expectTableCells(sectionById(model, 'columns'), 'source-orders.customer', {
+      name: 'customer',
+      type: 'text',
+      nullable: 'nullable',
+      source: 'Orders source',
+      reference: 'source-orders.customer',
+      selection: 'selected',
+    });
+  });
+
+  it.each([
+    ['compiled SQL', { compiledSql: 'select compiled', sql: 'select metadata' }, 'select compiled'],
+    [
+      'metadata SQL',
+      { sql: 'select metadata', config: { sql: 'select config' } },
+      'select metadata',
+    ],
+    ['config SQL', { config: { sql: 'select config' } }, 'select config'],
+  ])('uses deterministic SQL precedence for %s', (_name, metadata, expectedCode) => {
+    const model = buildNodePropertiesReadModel({
+      node: buildSourceNode({ metadata }),
+      nodes: [buildSourceNode()],
+      edges: [],
+    });
+
+    expect(sectionById(model, 'code').code).toBe(expectedCode);
   });
 });

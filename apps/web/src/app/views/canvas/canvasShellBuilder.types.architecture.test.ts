@@ -25,6 +25,9 @@ describe('canvasShellBuilder.types architecture', () => {
       'export type CanvasShellGraphBuilderArgs = Readonly<{'
     );
     expect(SHELL_BUILDER_TYPES_SOURCE).toContain(
+      'export type CanvasShellChromeStateBuilderArgs = Readonly<{'
+    );
+    expect(SHELL_BUILDER_TYPES_SOURCE).not.toContain(
       'export type CanvasShellToolbarBuilderArgs = Readonly<{'
     );
     expect(SHELL_BUILDER_TYPES_SOURCE).toContain(

@@ -7,20 +7,22 @@ import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScen
 import {
   buildController,
   createCanvasRouteHarness,
-  expectActiveCanvasTab,
+  expectActiveCanvasShellIdentity,
   expectCanvasBootstrapState,
+  currentCanvasRouteState,
   mockedUseCanvasController,
   renderCanvasRouteWithController,
   requireAuthoringNodeKind,
   type CanvasRouteHarness,
 } from './Canvas.test.support';
+import { useOperationalDrawerContributionStore } from '../components/shell/operationalDrawerContributionStore';
 
 type FirstCanvasCycleFixture = Readonly<{
   canvasKind: 'transformation' | 'dbt';
   createLabel: string;
   title: string;
   emptyText: string;
-  firstNodeText: string;
+  retiredFirstNodeText: string;
   firstNodeKind: string;
 }>;
 
@@ -33,7 +35,7 @@ const FIRST_CANVAS_CYCLE_FIXTURES: Record<
     createLabel: 'Transformation',
     title: 'Transformation canvas',
     emptyText: 'Start transformation canvas',
-    firstNodeText: 'Add first transformation node',
+    retiredFirstNodeText: 'Add first transformation node',
     firstNodeKind: 'dvt:source',
   },
   dbt: {
@@ -41,7 +43,7 @@ const FIRST_CANVAS_CYCLE_FIXTURES: Record<
     createLabel: 'dbt',
     title: 'dbt canvas',
     emptyText: 'Start dbt canvas',
-    firstNodeText: 'Add first dbt node',
+    retiredFirstNodeText: 'Add first dbt node',
     firstNodeKind: 'dbt:source',
   },
 };
@@ -99,22 +101,16 @@ describe('Canvas route host-cycle persistence', () => {
     harness.cleanup();
   });
 
-  async function openFirstNodePalette(firstNodeLabel: string): Promise<void> {
-    const trigger = Array.from(harness.container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes(firstNodeLabel)
-    );
-    expect(trigger).toBeDefined();
-    await act(async () => {
-      trigger?.click();
-    });
-  }
+  function createFirstNodeFromViewport(kind: string): void {
+    const viewportProps = currentCanvasRouteState().viewportProps;
+    const createFromViewport = viewportProps?.onCreateAuthoringNode as
+      | ((registration: NodeKindRegistration) => void)
+      | undefined;
+    const registration = requireAuthoringNodeKind(kind);
 
-  function findPaletteOption(label: string): HTMLButtonElement | undefined {
-    return Array.from(
-      document.body.querySelectorAll<HTMLButtonElement>(
-        '[data-slot="canvas-add-node-palette-option"]'
-      )
-    ).find((button) => button.textContent?.includes(label));
+    expect(viewportProps?.authoringNodeKinds).toContain(registration);
+    expect(createFromViewport).toBeTypeOf('function');
+    createFromViewport?.(registration);
   }
 
   it.each(Object.values(FIRST_CANVAS_CYCLE_FIXTURES))(
@@ -138,7 +134,7 @@ describe('Canvas route host-cycle persistence', () => {
         title: fixture.title,
       });
       expect(harness.container.textContent).toContain(fixture.emptyText);
-      expect(harness.container.textContent).toContain(fixture.firstNodeText);
+      expect(harness.container.textContent).not.toContain(fixture.retiredFirstNodeText);
       expectCanvasBootstrapState({
         routeState: 'empty',
         bootstrapStatus: 'complete',
@@ -146,14 +142,12 @@ describe('Canvas route host-cycle persistence', () => {
         canCompleteBootstrap: true,
       });
 
-      await openFirstNodePalette(fixture.firstNodeText);
+      expect(
+        harness.container.querySelector('[data-slot="canvas-add-node-palette-trigger"]')
+      ).toBeNull();
+      expect(document.body.querySelector('[data-slot="canvas-add-node-palette"]')).toBeNull();
 
-      const sourceButton = findPaletteOption('Source');
-      expect(sourceButton).toBeDefined();
-
-      await act(async () => {
-        sourceButton?.click();
-      });
+      createFirstNodeFromViewport(fixture.firstNodeKind);
       await harness.render();
 
       expect(handleCreateAuthoringNode).toHaveBeenCalledWith(
@@ -178,7 +172,7 @@ describe('Canvas route host-cycle persistence', () => {
       buildCanvasHostCycleControllerState({ kind: 'needs_canvas' })
     );
 
-    const handlePlan = vi.fn(async () => {
+    const handlePreviewExecutionPlan = vi.fn(async () => {
       currentController = buildController({
         ...buildCanvasHostCycleControllerState({
           kind: 'graph_ready',
@@ -188,7 +182,7 @@ describe('Canvas route host-cycle persistence', () => {
         }),
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
-        handlePlan,
+        handlePreviewExecutionPlan,
         canStartRun: true,
         planStatusSummary: canvasViewCopy.planStatusPreviewReadyMessage,
         transformationValidation: {
@@ -210,7 +204,7 @@ describe('Canvas route host-cycle persistence', () => {
         }),
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
-        handlePlan,
+        handlePreviewExecutionPlan,
       });
     });
     const handleCreateAuthoringNode = vi.fn((registration: NodeKindRegistration) => {
@@ -223,7 +217,7 @@ describe('Canvas route host-cycle persistence', () => {
         }),
         handleCreateCanvasDocument,
         handleCreateAuthoringNode,
-        handlePlan,
+        handlePreviewExecutionPlan,
         planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
         transformationValidation: {
           valid: true,
@@ -240,7 +234,7 @@ describe('Canvas route host-cycle persistence', () => {
       ...buildCanvasHostCycleControllerState({ kind: 'needs_canvas' }),
       handleCreateCanvasDocument,
       handleCreateAuthoringNode,
-      handlePlan,
+      handlePreviewExecutionPlan,
     });
     mockedUseCanvasController.mockImplementation(() => currentController);
 
@@ -251,27 +245,26 @@ describe('Canvas route host-cycle persistence', () => {
       ?.click();
     await harness.render();
 
-    await openFirstNodePalette('Add first transformation node');
-    await act(async () => {
-      findPaletteOption('Source')?.click();
-    });
+    createFirstNodeFromViewport('dvt:source');
     await harness.render();
 
-    expectActiveCanvasTab({
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Transformation canvas',
       kindLabel: 'Transformation',
     });
 
-    const previewCommand = harness.container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-context-preview-execution-plan-command"]'
-    );
-    expect(previewCommand).not.toBeNull();
-    previewCommand?.click();
+    const operationalDrawerContribution =
+      useOperationalDrawerContributionStore.getState().contribution;
+    expect(operationalDrawerContribution?.preview).toMatchObject({
+      canPreview: true,
+      summary: canvasViewCopy.planStatusPreviewRequiredMessage,
+    });
+    operationalDrawerContribution?.preview.onPreviewExecutionPlan();
     await harness.render();
 
-    expect(handlePlan).toHaveBeenCalledTimes(1);
-    expectActiveCanvasTab({
+    expect(handlePreviewExecutionPlan).toHaveBeenCalledTimes(1);
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Transformation canvas',
       kindLabel: 'Transformation',
@@ -288,13 +281,13 @@ describe('Canvas route host-cycle persistence', () => {
       canvasAuthoringMode: 'transformation',
     });
 
-    expectActiveCanvasTab({
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Warehouse dbt',
       kindLabel: 'dbt',
     });
     expect(harness.container.textContent).toContain('Start dbt canvas');
-    expect(harness.container.textContent).toContain('Add first dbt node');
+    expect(harness.container.textContent).not.toContain('Add first dbt node');
     expect(harness.container.textContent).not.toContain('Create canvas');
     expect(harness.container.textContent).not.toContain('Start transformation canvas');
     expect(harness.container.querySelector('[data-slot="canvas-empty-state"]')).not.toBeNull();
@@ -318,7 +311,7 @@ describe('Canvas route host-cycle persistence', () => {
       canvasAuthoringMode: 'dbt',
     });
 
-    expectActiveCanvasTab({
+    expectActiveCanvasShellIdentity({
       container: harness.container,
       title: 'Transformation canvas',
       kindLabel: 'Transformation',

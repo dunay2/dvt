@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileCode2, FileText, GitCompare, GitGraph, LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard } from 'lucide-react';
 
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
 import type { PluginContributions } from '../registry';
@@ -50,7 +50,8 @@ export const dbtContributions: PluginContributions = {
   nodeRenderers,
   graphNodeCardStrategies: [dbtGraphNodeCardStrategy],
   inspectorPanels: dbtInspectorPanels,
-  // View placements define shell navigation and Canvas-scoped workbench tabs.
+  // View placements define shell navigation only. Canvas-scoped Code,
+  // Lineage, Diff, and Artifacts open from contextual workbench actions.
   views: [
     {
       pluginId: DBT_PLUGIN_ID,
@@ -66,62 +67,6 @@ export const dbtContributions: PluginContributions = {
         icon: LayoutDashboard,
         order: 10,
         level: 'core',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.lineage',
-      component: React.lazy(() => import('../../views/LineageView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'lineage',
-        label: 'Lineage',
-        icon: GitGraph,
-        order: 30,
-        scope: 'canvas',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.code',
-      component: React.lazy(() => import('../../views/CodeView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'code',
-        label: 'Code',
-        icon: FileCode2,
-        order: 20,
-        scope: 'workspace',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.diff',
-      component: React.lazy(() => import('../../views/DiffView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'diff',
-        label: 'Diff',
-        icon: GitCompare,
-        order: 40,
-        scope: 'canvas',
-      },
-    },
-    {
-      pluginId: DBT_PLUGIN_ID,
-      id: 'dbt.artifacts',
-      component: React.lazy(() => import('../../views/ArtifactsView')),
-      placement: {
-        kind: 'workbench-tab',
-        workbench: 'canvas',
-        tabId: 'artifacts',
-        label: 'Artifacts',
-        icon: FileText,
-        order: 50,
-        scope: 'run',
       },
     },
   ],
@@ -143,43 +88,8 @@ export const dbtContributions: PluginContributions = {
         title: 'Start dbt canvas',
         editableMessage:
           'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
-        firstNodeLabel: 'Add first dbt node',
-        firstNodeHelper:
-          'Choose a governed dbt resource kind to start modeling this workspace lineage graph.',
       },
       nodeKinds: DBT_NODE_KINDS,
-    },
-  ],
-  sourceImport: [
-    {
-      id: 'dbt.source-yaml',
-      pluginId: DBT_PLUGIN_ID,
-      sourceType: 'database',
-      artifactKind: 'dbt-source-yaml',
-      options: [
-        {
-          id: 'includeColumns',
-          label: 'Include Column Metadata',
-          description:
-            'Add column names and data types to YAML (stored under meta.warehouse_data_type).',
-          defaultEnabled: false,
-          order: 10,
-        },
-        {
-          id: 'addTests',
-          label: 'Add Generic Tests',
-          description: 'Automatically add not_null and unique tests for detected primary keys.',
-          defaultEnabled: false,
-          order: 20,
-        },
-        {
-          id: 'addFreshness',
-          label: 'Add Freshness Checks',
-          description: 'Add default freshness thresholds (warn_after: 24h, error_after: 48h).',
-          defaultEnabled: false,
-          order: 30,
-        },
-      ],
     },
   ],
   // Connection rules express dbt-local authoring policy; shell-level graph

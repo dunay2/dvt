@@ -1,4 +1,6 @@
-/** Owned concern: adapt Templates route command state into the execution-template workbench. */
+/** Owned concern: adapt Templates route command state into the execution-template workbench.
+ * Command/query rails: `SelectExecutionTemplateProfile`, `UpdateExecutionTemplateParameterValue`.
+ */
 import { useState } from 'react';
 
 import { createCompleteRouteBootstrapPresentation } from '../bootstrap/routeBootstrapContract';

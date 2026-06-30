@@ -47,7 +47,6 @@ export type CanvasShellLayoutBuilderArgs = Readonly<{
     | 'canCreateCanvasDocument'
     | 'draftSaveStatus'
     | 'availableCanvasKinds'
-    | 'canvasTabState'
     | 'effectiveUserPermissions'
     | 'readOnlyState'
   >;
@@ -57,6 +56,8 @@ export type CanvasShellPanelsBuilderArgs = Readonly<{
   panelState: Pick<
     CanvasRouteController,
     | 'inspectorNode'
+    | 'inspectorPreferredTabId'
+    | 'inspectorPreferredTabRequestId'
     | 'inspectorNodeSelectedForExecution'
     | 'inspectorGraphNodes'
     | 'inspectorGraphEdges'
@@ -94,8 +95,8 @@ export type CanvasShellGraphBuilderArgs = Readonly<{
   >;
 }>;
 
-export type CanvasShellToolbarBuilderArgs = Readonly<{
-  toolbarState: Pick<
+export type CanvasShellChromeStateBuilderArgs = Readonly<{
+  chromeStateSource: Pick<
     CanvasRouteController,
     | 'canvasAuthoringMode'
     | 'canPlanGraph'
@@ -151,7 +152,7 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'handleExportProjectSnapshot'
     | 'handleImportProjectSnapshotFile'
     | 'reloadLatestDraft'
-    | 'handlePlan'
+    | 'handlePreviewExecutionPlan'
     | 'handleStartRun'
   >;
 }>;

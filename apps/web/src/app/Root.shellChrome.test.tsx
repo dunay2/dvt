@@ -11,7 +11,7 @@ import {
 } from './Root.bootstrapRoute.test.support';
 import {
   resetRootShellStores,
-  setRootShellConsoleDrawer,
+  setRootShellBottomDrawer,
   setRootShellFocusMode,
   waitForShellBootstrapSurface,
 } from './Root.test.support';
@@ -109,8 +109,8 @@ describe('RootShell chrome', () => {
     }
   });
 
-  it('renders the bottom console drawer inside the app shell frame when enabled', async () => {
-    setRootShellConsoleDrawer({ visible: true, height: 160 });
+  it('renders the bottom operational drawer inside the app shell frame when enabled', async () => {
+    setRootShellBottomDrawer({ visible: true, height: 160 });
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability())
     );
@@ -120,12 +120,14 @@ describe('RootShell chrome', () => {
 
       const bottomDrawer = mounted.container.querySelector('[data-slot="app-shell-bottom-drawer"]');
       const appShellMain = mounted.container.querySelector('[data-slot="app-shell-main"]');
-      const consoleDrawer = mounted.container.querySelector('[data-slot="bottom-console-drawer"]');
+      const operationalDrawer = mounted.container.querySelector(
+        '[data-slot="bottom-operational-drawer"]'
+      );
 
       expect(bottomDrawer).not.toBeNull();
       expect(bottomDrawer?.closest('[data-slot="app-shell-main"]')).toBe(appShellMain);
-      expect(consoleDrawer).not.toBeNull();
-      expect(bottomDrawer?.textContent).toContain('Console');
+      expect(operationalDrawer).not.toBeNull();
+      expect(bottomDrawer?.textContent).toContain('Operations');
       expect(bottomDrawer?.textContent).toContain('Start a run to see live run events here.');
     } finally {
       await mounted.cleanup();

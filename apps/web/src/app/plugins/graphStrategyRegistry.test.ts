@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   findCanvasGraphStrategy,
   findCanvasSurfaceStrategy,
+  getCanvasGraphNodeCardStrategies,
   getCanvasRuntimeRegistrations,
   resolveCanvasGraphStrategy,
   resolveCanvasSurfaceStrategy,
@@ -45,6 +46,24 @@ describe('resolveCanvasGraphStrategy', () => {
     ).toEqual(['transformation']);
     expect(findCanvasGraphStrategy('dbt', capabilities)).toBeNull();
     expect(findCanvasSurfaceStrategy('dbt', capabilities)).toBeNull();
+  });
+
+  it('resolves graph node card strategies from the active canvas kind owner', () => {
+    expect(getCanvasGraphNodeCardStrategies('dbt').map((strategy) => strategy.id)).toEqual([
+      'dbt-card',
+    ]);
+    expect(
+      getCanvasGraphNodeCardStrategies('transformation').map((strategy) => strategy.id)
+    ).toEqual(['dvt-card']);
+  });
+
+  it('does not leak DBT card strategies into a DVT canvas when DBT is available', () => {
+    const strategyIds = getCanvasGraphNodeCardStrategies('transformation').map(
+      (strategy) => strategy.id
+    );
+
+    expect(strategyIds).toEqual(['dvt-card']);
+    expect(strategyIds).not.toContain('dbt-card');
   });
 
   it('defaults to transformation strategy when strategy id is missing', () => {
@@ -110,6 +129,7 @@ describe('resolveCanvasGraphStrategy', () => {
       'preview',
       'runs',
     ]);
+    expect(strategy.nodeWorkbench.openedFrom).toEqual(['node-context-menu', 'double-click']);
   });
 
   it('resolves transformation strategy when explicitly requested', () => {
@@ -143,6 +163,7 @@ describe('resolveCanvasGraphStrategy', () => {
 
     expect(strategy.id).toBe('dvt-transformation-contextual-canvas');
     expect(strategy.sourceImport.openedFrom).toEqual(['canvas-context-menu', 'command-palette']);
+    expect(strategy.nodeWorkbench.openedFrom).toEqual(['node-context-menu', 'double-click']);
     expect(strategy.nodeWorkbench.sections).toEqual([
       'properties',
       'columns',

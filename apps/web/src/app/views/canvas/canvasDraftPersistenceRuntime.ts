@@ -113,6 +113,8 @@ export function restoreEditingAfterSaveFailure(
       ? {
           ...currentSession,
           syncState: 'editing',
+          savingWorkingSet: undefined,
+          savingBaseRevision: undefined,
         }
       : currentSession
   );

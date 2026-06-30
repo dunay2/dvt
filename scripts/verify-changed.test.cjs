@@ -45,7 +45,16 @@ test('buildVerifyChangedPlan adds planning DB validation for planning query-stor
     'tools/planning-db/migrations/022_component_engineering_record_query.sql',
   ]);
 
+  assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:integrity:check').length, 1);
+  assert.ok(
+    labels.indexOf('pnpm governance:db:import') < labels.indexOf('pnpm planning:db:inventory:check')
+  );
+  assert.ok(
+    labels.indexOf('pnpm planning:db:inventory:check') <
+      labels.indexOf('pnpm planning:db:integrity:check')
+  );
   assert.equal(
     labels.filter((label) => label === 'node --test scripts/planning-db-query.test.cjs').length,
     1
@@ -69,7 +78,9 @@ test('buildVerifyChangedPlan routes migration-only changes to the migration suit
     'tools/planning-db/migrations/022_component_engineering_record_query.sql',
   ]);
 
+  assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:integrity:check').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
@@ -118,6 +129,22 @@ test('buildVerifyChangedPlan runs changed planning DB tests directly', () => {
     labels.filter(
       (label) => label === 'node --test scripts/planning-db-surface-inventory-check.test.cjs'
     ).length,
+    1
+  );
+  assert.ok(!labels.includes('pnpm test:planning:db'));
+});
+
+test('buildVerifyChangedPlan routes planning DB query shards to the canonical suite', () => {
+  const labels = labelsFor([
+    'scripts/planning-db-query-tests/feature-mechanization.test.cjs',
+    'scripts/planning-db-query-tests/fowler-analysis.test.cjs',
+    'scripts/planning-db-query-tests/governance-refresh.test.cjs',
+    'scripts/planning-db-query-tests/helpers.cjs',
+  ]);
+
+  assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
+  assert.equal(
+    labels.filter((label) => label === 'node --test scripts/planning-db-query.test.cjs').length,
     1
   );
   assert.ok(!labels.includes('pnpm test:planning:db'));

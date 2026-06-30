@@ -22,11 +22,12 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationConnectionOrderMessage: {
     key: 'canvas.transformation.connectionOrderMessage',
-    fallback: 'Plan edges must follow source -> sql_transform -> sink.',
+    fallback: 'Execution Preview edges must follow source -> sql_transform -> sink.',
   },
   transformationConnectionEdgeCountMessage: {
     key: 'canvas.transformation.connectionEdgeCountMessage',
-    fallback: 'Plan requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
+    fallback:
+      'Execution Preview requires exactly 2 edges: source -> sql_transform and sql_transform -> sink.',
   },
   transformationConnectionDuplicateMessage: {
     key: 'canvas.transformation.connectionDuplicateMessage',
@@ -34,23 +35,24 @@ export const canvasViewAuthoringCopyByKey = {
   },
   transformationRequiresThreeNodesMessage: {
     key: 'canvas.transformation.requiresThreeNodesMessage',
-    fallback: 'Plan requires exactly 3 nodes: source, sql_transform, and sink.',
+    fallback: 'Execution Preview requires source, sql_transform, and sink nodes.',
   },
   transformationAmbiguousExecutablePathMessage: {
     key: 'canvas.transformation.ambiguousExecutablePathMessage',
-    fallback: 'Plan requires one selected source -> sql_transform -> sink path.',
+    fallback: 'Execution Preview requires one selected source -> sql_transform -> sink path.',
   },
   transformationRequiresExecutablePathMessage: {
     key: 'canvas.transformation.requiresExecutablePathMessage',
-    fallback: 'Plan requires a connected source -> sql_transform -> sink path.',
+    fallback: 'Execution Preview requires a connected source -> sql_transform -> sink path.',
   },
   transformationUnsupportedRolesMessage: {
     key: 'canvas.transformation.unsupportedRolesMessage',
-    fallback: 'Plan supports only input, transform, and output nodes in this vertical.',
+    fallback:
+      'Execution Preview supports only input, transform, and output nodes in this vertical.',
   },
   transformationRequiresOneOfEachRoleMessage: {
     key: 'canvas.transformation.requiresOneOfEachRoleMessage',
-    fallback: 'Plan requires exactly 1 source, 1 sql_transform, and 1 sink.',
+    fallback: 'Execution Preview requires one source, one sql_transform, and one sink.',
   },
   transformationDraftValidMessage: {
     key: 'canvas.transformation.validMessage',
@@ -237,6 +239,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dvtSinkTitle',
     fallback: 'DVT sink',
   },
+  inspectorDvtDatabaseLabel: {
+    key: 'canvas.inspector.authoring.dvtDatabaseLabel',
+    fallback: 'Database',
+  },
   inspectorDvtSchemaLabel: {
     key: 'canvas.inspector.authoring.dvtSchemaLabel',
     fallback: 'Schema',
@@ -280,6 +286,10 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorDvtDestinationTargetLabel: {
     key: 'canvas.inspector.authoring.dvtDestinationTargetLabel',
     fallback: 'Destination target',
+  },
+  inspectorDvtPartitionStrategyLabel: {
+    key: 'canvas.inspector.authoring.dvtPartitionStrategyLabel',
+    fallback: 'Partition strategy',
   },
   inspectorDvtMaterializationTableLabel: {
     key: 'canvas.inspector.authoring.dvtMaterializationTableLabel',

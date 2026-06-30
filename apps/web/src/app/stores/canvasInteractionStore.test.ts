@@ -17,6 +17,8 @@ describe('useCanvasInteractionStore', () => {
       columnLevelLineageEnabled: false,
       canvasLayouts: {},
       inspectorNodeId: null,
+      inspectorPreferredTabId: null,
+      inspectorPreferredTabRequestId: 0,
     });
   });
 
@@ -54,5 +56,23 @@ describe('useCanvasInteractionStore', () => {
     const { useCanvasInteractionStore: freshStore } = await import('./canvasInteractionStore');
 
     expect(freshStore.getState()._hasHydrated).toBe(true);
+  });
+
+  it('keeps node workbench tab preference transient and clears it with inspector selection', () => {
+    useCanvasInteractionStore.getState().setInspectorNode('source-node', 'inputs-outputs');
+
+    expect(useCanvasInteractionStore.getState().inspectorNodeId).toBe('source-node');
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBe('inputs-outputs');
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(1);
+
+    useCanvasInteractionStore.getState().setInspectorNode('source-node', 'inputs-outputs');
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(2);
+
+    useCanvasInteractionStore.getState().setInspectorNode('model-node');
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabRequestId).toBe(2);
+
+    useCanvasInteractionStore.getState().setInspectorNode(null);
+    expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
   });
 });

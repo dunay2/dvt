@@ -2,10 +2,15 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { runPlanningDbQueryCli } = require('./planning-db-query-tests/helpers.cjs');
+require('./planning-db-query-tests/feature-mechanization.test.cjs');
+require('./planning-db-query-tests/fowler-analysis.test.cjs');
+require('./planning-db-query-tests/governance-refresh.test.cjs');
+require('./planning-db-query-tests/canvas-component-registry-drift.test.cjs');
 
 const {
   buildDocsDispositionRows,
+  buildComponentProfileRows,
   buildComponentEngineeringRecordRows,
   buildFeatureWorkRows,
   buildFocusRows,
@@ -13,15 +18,25 @@ const {
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentMetadataRows,
   buildComponentRoadmapRows,
+  buildCanvasUxdbSpecificationRows,
+  buildCanvasUxdbTraceabilityRows,
   buildArchitectureComponentRows,
   buildArchitectureDependencyClassificationRows,
   buildArchitectureDependencyObservationRows,
   buildArchitectureDesignRows,
+  buildComponentIntegrityRows,
   buildArchitectureFitnessGapRows,
   buildArchitectureFitnessRows,
-  buildGovernanceRefreshRunRows,
+  buildArchitectureIoRows,
   buildArchitecturePathMappingRows,
   buildArchitectureRelationRows,
+  buildArchitectureTestRows,
+  buildArchitectureObservabilityRows,
+  buildRailVocabularyRows,
+  buildCodeSymbolRows,
+  buildCodeSymbolDuplicateRows,
+  buildSourceDriftRows,
+  buildGovernanceProblemRows,
   readArchitectureFlowRows,
   buildComponentEngineeringComponentTreeRows,
   buildComponentEngineeringQualityRows,
@@ -42,19 +57,8 @@ const {
   buildFrontendComponentRailRows,
   buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
-  buildFeatureMechanizationComponentRows,
-  buildFeatureMechanizationFeatureRows,
-  buildFeatureMechanizationRailRows,
-  buildFeatureMechanizationSymbolRows,
-  buildFeatureMechanizationValidationRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
-  buildFowlerAnalysisRows,
-  buildFowlerAnalysisCanonicalCoverageRows,
-  buildFowlerAnalysisDuplicateRows,
-  buildFowlerAnalysisIntentRows,
-  buildFowlerAnalysisReferenceRows,
-  buildFowlerAnalysisRetirementRows,
   buildDocumentationPanelRows,
   buildDocumentationLifecycleRows,
   buildDbSurfaceRows,
@@ -85,35 +89,35 @@ const {
   readFrontendComponentRailRows,
   readFrontendComponentRows,
   readFrontendMechanicalTruthRows,
-  readFeatureMechanizationComponentRows,
-  readFeatureMechanizationFeatureRows,
-  readFeatureMechanizationRailRows,
-  readFeatureMechanizationSymbolRows,
-  readFeatureMechanizationValidationRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
-  readFowlerAnalysisRows,
-  readFowlerAnalysisCanonicalCoverageRows,
-  readFowlerAnalysisDuplicateRows,
-  readFowlerAnalysisIntentRows,
-  readFowlerAnalysisReferenceRows,
-  readFowlerAnalysisRetirementRows,
   readDocumentationPanelRows,
   readDocumentationLifecycleRows,
   readDbSurfaceRows,
   readDocsDispositionRows,
+  readComponentProfileRows,
   readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentMetadataRows,
   readComponentRoadmapRows,
+  readCanvasUxdbSpecificationRows,
+  readCanvasUxdbTraceabilityRows,
   readArchitectureComponentRows,
   readArchitectureDependencyClassificationRows,
   readArchitectureDependencyObservationRows,
   readArchitectureDesignRows,
+  readComponentIntegrityRows,
   readArchitectureFitnessGapRows,
   readArchitectureFitnessRows,
   readArchitecturePathMappingRows,
   readArchitectureRelationRows,
+  readArchitectureTestRows,
+  readArchitectureObservabilityRows,
+  readRailVocabularyRows,
+  readCodeSymbolRows,
+  readCodeSymbolDuplicateRows,
+  readSourceDriftRows,
+  readGovernanceProblemRows,
   readComponentEngineeringComponentTreeRows,
   readComponentEngineeringQualityRows,
   readComponentEngineeringRecordRows,
@@ -136,13 +140,6 @@ const {
   runQuery,
 } = require('./planning-db-query.cjs');
 
-function runPlanningDbQueryCli(args) {
-  return spawnSync(process.execPath, [path.join(__dirname, 'planning-db-query.cjs'), ...args], {
-    cwd: path.resolve(__dirname, '..'),
-    encoding: 'utf8',
-  });
-}
-
 test('planning DB query CLI prints root help without opening a DB connection', () => {
   const result = runPlanningDbQueryCli(['--help']);
 
@@ -150,6 +147,8 @@ test('planning DB query CLI prints root help without opening a DB connection', (
   assert.match(result.stdout, /Planning DB query CLI/);
   assert.match(result.stdout, /Usage:/);
   assert.match(result.stdout, /component-metadata/);
+  assert.match(result.stdout, /canvas-uxdb-specification/);
+  assert.match(result.stdout, /canvas-uxdb-traceability/);
   assert.match(result.stdout, /feature-mechanization/);
   assert.doesNotMatch(result.stderr, /Unknown planning DB query|Missing value/);
 });
@@ -164,16 +163,6 @@ test('planning DB query CLI prints per-query help before parsing flag values', (
   assert.doesNotMatch(result.stderr, /Missing value for --help/);
 });
 
-test('planning DB query CLI prints feature mechanization help without unsupported filter examples', () => {
-  const result = runPlanningDbQueryCli(['feature-mechanization-components', '--help']);
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /Planning DB query: feature-mechanization-components/);
-  assert.match(result.stdout, /--state implemented/);
-  assert.doesNotMatch(result.stdout, /--filter E-PROP-DISP-1/);
-  assert.doesNotMatch(result.stderr, /Unknown planning DB query|Missing value/);
-});
-
 test('planning DB read-model query components live under the queries directory', () => {
   const planningDbDir = path.join(__dirname, 'planning-db');
   const misplacedQueryComponents = fs
@@ -183,6 +172,158 @@ test('planning DB read-model query components live under the queries directory',
     .filter((name) => name.endsWith('-query.cjs'));
 
   assert.deepEqual(misplacedQueryComponents, []);
+});
+
+test('planning DB query limit parsing lives in one canonical helper', () => {
+  const queryLimitConsumers = [
+    'planning-db-query.cjs',
+    'planning-db/queries/canvas-component-registry-drift-query.cjs',
+    'planning-db/queries/canvas-cq-rail-drift-query.cjs',
+    'planning-db/frontend-component-inventory.cjs',
+    'planning-db/frontend-mechanical-truth-inventory.cjs',
+    'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/canvas-uxdb-specification-query.cjs',
+    'planning-db/queries/canvas-uxdb-traceability-query.cjs',
+    'planning-db/queries/command-query-rail-query.cjs',
+    'planning-db/queries/component-architecture-fitness-query.cjs',
+    'planning-db/queries/component-integrity-query.cjs',
+    'planning-db/queries/component-roadmap-query.cjs',
+    'planning-db/queries/documentation-lifecycle-query.cjs',
+    'planning-db/queries/documentation-panel-query.cjs',
+    'planning-db/queries/feature-mechanization-query.cjs',
+    'planning-db/queries/fowler-analysis-query.cjs',
+    'planning-db/queries/governance-refresh-run-query.cjs',
+    'planning-db/queries/knowledge-intake-retirement-query.cjs',
+    'planning-db/queries/rail-vocabulary-query.cjs',
+  ];
+  const duplicateParsers = queryLimitConsumers.filter((relativePath) => {
+    const content = fs.readFileSync(path.join(__dirname, relativePath), 'utf8');
+    return /function parseLimit\s*\(/.test(content);
+  });
+
+  assert.deepEqual(duplicateParsers, []);
+
+  const { parseLimit } = require('./planning-db/query-limit.cjs');
+  assert.equal(parseLimit(undefined, 50), 50);
+  assert.equal(parseLimit('', 50), 50);
+  assert.equal(parseLimit('7', 50), 7);
+  assert.throws(() => parseLimit('0', 50), /Invalid --limit "0"\. Expected a positive integer\./);
+});
+
+test('planning DB query filtering helpers live in one canonical helper', () => {
+  const queryFilterConsumers = [
+    'planning-db-query.cjs',
+    'planning-db/queries/canvas-component-registry-drift-query.cjs',
+    'planning-db/db-surface-inventory.cjs',
+    'planning-db/queries/canvas-cq-rail-drift-query.cjs',
+    'planning-db/frontend-component-inventory.cjs',
+    'planning-db/frontend-mechanical-truth-inventory.cjs',
+    'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/canvas-uxdb-specification-query.cjs',
+    'planning-db/queries/canvas-uxdb-traceability-query.cjs',
+    'planning-db/queries/command-query-rail-query.cjs',
+    'planning-db/queries/component-architecture-fitness-query.cjs',
+    'planning-db/queries/component-integrity-query.cjs',
+    'planning-db/queries/component-roadmap-query.cjs',
+    'planning-db/queries/documentation-lifecycle-query.cjs',
+    'planning-db/queries/documentation-panel-query.cjs',
+    'planning-db/queries/feature-mechanization-query.cjs',
+    'planning-db/queries/fowler-analysis-query.cjs',
+    'planning-db/queries/governance-refresh-run-query.cjs',
+    'planning-db/queries/knowledge-intake-retirement-query.cjs',
+    'planning-db/queries/rail-vocabulary-query.cjs',
+  ];
+  const duplicateFilters = queryFilterConsumers.filter((relativePath) => {
+    const content = fs.readFileSync(path.join(__dirname, relativePath), 'utf8');
+    return /function append(?:Boolean|Component|ComponentEndpoint)?Filter\s*\(/.test(content);
+  });
+
+  assert.deepEqual(duplicateFilters, []);
+
+  const {
+    appendBooleanFilter,
+    appendBooleanParamFilter,
+    appendComponentPairFilter,
+    appendFilter,
+  } = require('./planning-db/query-filter.cjs');
+  const predicates = [];
+  const params = [];
+
+  appendFilter(predicates, params, 'component_id', undefined);
+  appendFilter(predicates, params, 'component_id', '');
+  appendFilter(predicates, params, 'component_id', 'SYS-WEB-ROOT');
+  appendFilter(predicates, params, 'status', 'review');
+
+  assert.deepEqual(predicates, ['component_id = $1', 'status = $2']);
+  assert.deepEqual(params, ['SYS-WEB-ROOT', 'review']);
+
+  const literalBooleanPredicates = [];
+  appendBooleanFilter(literalBooleanPredicates, 'is_gap', undefined);
+  appendBooleanFilter(literalBooleanPredicates, 'is_gap', true);
+  appendBooleanFilter(literalBooleanPredicates, 'is_duplicate', false);
+
+  assert.deepEqual(literalBooleanPredicates, ['is_gap is true', 'is_duplicate is false']);
+
+  const parameterizedBooleanPredicates = [];
+  const parameterizedBooleanParams = [];
+  appendBooleanParamFilter(
+    parameterizedBooleanPredicates,
+    parameterizedBooleanParams,
+    'is_gap',
+    ''
+  );
+  appendBooleanParamFilter(
+    parameterizedBooleanPredicates,
+    parameterizedBooleanParams,
+    'is_gap',
+    true
+  );
+
+  assert.deepEqual(parameterizedBooleanPredicates, ['is_gap = $1']);
+  assert.deepEqual(parameterizedBooleanParams, [true]);
+
+  const componentPredicates = [];
+  const componentParams = [];
+  appendComponentPairFilter(
+    componentPredicates,
+    componentParams,
+    'SYS-WEB-ROOT',
+    'source_component_id',
+    'target_component_id'
+  );
+
+  assert.deepEqual(componentPredicates, ['(source_component_id = $1 or target_component_id = $1)']);
+  assert.deepEqual(componentParams, ['SYS-WEB-ROOT']);
+});
+
+test('planning DB query text formatting lives in one canonical helper', () => {
+  const queryFormatConsumers = [
+    'generate-db-surface-inventory.cjs',
+    'generate-knowledge-intake-literature.cjs',
+    'planning-db-surface-inventory-check.cjs',
+    'planning-db/db-surface-inventory.cjs',
+    'planning-db/queries/code-symbol-query.cjs',
+    'planning-db/queries/component-architecture-fitness-query.cjs',
+    'planning-db/queries/component-integrity-query.cjs',
+    'planning-db/queries/component-roadmap-query.cjs',
+    'planning-db/queries/documentation-panel-query.cjs',
+    'planning-db/queries/fowler-analysis-query.cjs',
+    'planning-db/queries/governance-refresh-run-query.cjs',
+    'planning-db/queries/rail-vocabulary-query.cjs',
+  ];
+  const duplicateFormatters = queryFormatConsumers.filter((relativePath) => {
+    const content = fs.readFileSync(path.join(__dirname, relativePath), 'utf8');
+    return /function textValue\s*\(/.test(content);
+  });
+
+  assert.deepEqual(duplicateFormatters, []);
+
+  const { textValue } = require('./planning-db/query-format.cjs');
+
+  assert.equal(textValue(undefined), '-');
+  assert.equal(textValue(null), '-');
+  assert.equal(textValue('  component  '), 'component');
+  assert.equal(textValue('   ', ''), '');
 });
 
 test('command/query rail query behavior lives in a focused read-model component', () => {
@@ -236,51 +377,6 @@ test('frontend component reflection query behavior lives in a focused read-model
   );
 });
 
-test('feature mechanization query behavior lives in a focused read-model component', () => {
-  const featureMechanizationQueryComponent = require('./planning-db/queries/feature-mechanization-query.cjs');
-
-  assert.equal(
-    featureMechanizationQueryComponent.buildFeatureMechanizationFeatureRows,
-    buildFeatureMechanizationFeatureRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.buildFeatureMechanizationComponentRows,
-    buildFeatureMechanizationComponentRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.buildFeatureMechanizationSymbolRows,
-    buildFeatureMechanizationSymbolRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.buildFeatureMechanizationRailRows,
-    buildFeatureMechanizationRailRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.buildFeatureMechanizationValidationRows,
-    buildFeatureMechanizationValidationRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.readFeatureMechanizationFeatureRows,
-    readFeatureMechanizationFeatureRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.readFeatureMechanizationComponentRows,
-    readFeatureMechanizationComponentRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.readFeatureMechanizationSymbolRows,
-    readFeatureMechanizationSymbolRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.readFeatureMechanizationRailRows,
-    readFeatureMechanizationRailRows
-  );
-  assert.equal(
-    featureMechanizationQueryComponent.readFeatureMechanizationValidationRows,
-    readFeatureMechanizationValidationRows
-  );
-});
-
 test('knowledge intake retirement query behavior lives in a focused read-model component', () => {
   const knowledgeIntakeRetirementComponent = require('./planning-db/queries/knowledge-intake-retirement-query.cjs');
 
@@ -304,50 +400,6 @@ test('knowledge intake retirement query behavior lives in a focused read-model c
   );
 });
 
-test('Fowler analysis query behavior lives in a focused read-model component', () => {
-  const fowlerAnalysisComponent = require('./planning-db/queries/fowler-analysis-query.cjs');
-
-  assert.equal(fowlerAnalysisComponent.buildFowlerAnalysisRows, buildFowlerAnalysisRows);
-  assert.equal(
-    fowlerAnalysisComponent.buildFowlerAnalysisReferenceRows,
-    buildFowlerAnalysisReferenceRows
-  );
-  assert.equal(
-    fowlerAnalysisComponent.buildFowlerAnalysisRetirementRows,
-    buildFowlerAnalysisRetirementRows
-  );
-  assert.equal(
-    fowlerAnalysisComponent.buildFowlerAnalysisCanonicalCoverageRows,
-    buildFowlerAnalysisCanonicalCoverageRows
-  );
-  assert.equal(
-    fowlerAnalysisComponent.buildFowlerAnalysisIntentRows,
-    buildFowlerAnalysisIntentRows
-  );
-  assert.equal(
-    fowlerAnalysisComponent.buildFowlerAnalysisDuplicateRows,
-    buildFowlerAnalysisDuplicateRows
-  );
-  assert.equal(fowlerAnalysisComponent.readFowlerAnalysisRows, readFowlerAnalysisRows);
-  assert.equal(
-    fowlerAnalysisComponent.readFowlerAnalysisReferenceRows,
-    readFowlerAnalysisReferenceRows
-  );
-  assert.equal(
-    fowlerAnalysisComponent.readFowlerAnalysisRetirementRows,
-    readFowlerAnalysisRetirementRows
-  );
-  assert.equal(
-    fowlerAnalysisComponent.readFowlerAnalysisCanonicalCoverageRows,
-    readFowlerAnalysisCanonicalCoverageRows
-  );
-  assert.equal(fowlerAnalysisComponent.readFowlerAnalysisIntentRows, readFowlerAnalysisIntentRows);
-  assert.equal(
-    fowlerAnalysisComponent.readFowlerAnalysisDuplicateRows,
-    readFowlerAnalysisDuplicateRows
-  );
-});
-
 test('DB surface inventory query behavior lives in a focused read-model component', () => {
   const dbSurfaceInventoryComponent = require('./planning-db/db-surface-inventory.cjs');
 
@@ -363,6 +415,32 @@ test('documentation panel query behavior lives in a focused read-model component
     buildDocumentationPanelRows
   );
   assert.equal(documentationPanelComponent.readDocumentationPanelRows, readDocumentationPanelRows);
+});
+
+test('Canvas UX DB-first traceability query behavior lives in a focused read-model component', () => {
+  const canvasTraceabilityComponent = require('./planning-db/queries/canvas-uxdb-traceability-query.cjs');
+
+  assert.equal(
+    canvasTraceabilityComponent.buildCanvasUxdbTraceabilityRows,
+    buildCanvasUxdbTraceabilityRows
+  );
+  assert.equal(
+    canvasTraceabilityComponent.readCanvasUxdbTraceabilityRows,
+    readCanvasUxdbTraceabilityRows
+  );
+});
+
+test('Canvas UX DB-first specification query behavior lives in a focused read-model component', () => {
+  const canvasSpecificationComponent = require('./planning-db/queries/canvas-uxdb-specification-query.cjs');
+
+  assert.equal(
+    canvasSpecificationComponent.buildCanvasUxdbSpecificationRows,
+    buildCanvasUxdbSpecificationRows
+  );
+  assert.equal(
+    canvasSpecificationComponent.readCanvasUxdbSpecificationRows,
+    readCanvasUxdbSpecificationRows
+  );
 });
 
 test('component architecture fitness query behavior lives in a focused read-model component', () => {
@@ -408,6 +486,236 @@ test('component architecture fitness query behavior lives in a focused read-mode
     architectureFitnessComponent.readArchitectureFitnessGapRows,
     readArchitectureFitnessGapRows
   );
+});
+
+test('component integrity query behavior lives in a focused read-model component', () => {
+  const componentIntegrityComponent = require('./planning-db/queries/component-integrity-query.cjs');
+
+  assert.equal(
+    componentIntegrityComponent.buildComponentIntegrityRows,
+    buildComponentIntegrityRows
+  );
+  assert.equal(componentIntegrityComponent.readComponentIntegrityRows, readComponentIntegrityRows);
+});
+
+test('rail vocabulary query behavior lives in a focused read-model component', () => {
+  const railVocabularyComponent = require('./planning-db/queries/rail-vocabulary-query.cjs');
+
+  assert.equal(railVocabularyComponent.buildRailVocabularyRows, buildRailVocabularyRows);
+  assert.equal(railVocabularyComponent.readRailVocabularyRows, readRailVocabularyRows);
+});
+
+test('code symbol duplicate query behavior lives in a focused read-model component', () => {
+  const codeSymbolComponent = require('./planning-db/queries/code-symbol-query.cjs');
+
+  assert.equal(codeSymbolComponent.buildCodeSymbolRows, buildCodeSymbolRows);
+  assert.equal(codeSymbolComponent.buildCodeSymbolDuplicateRows, buildCodeSymbolDuplicateRows);
+  assert.equal(codeSymbolComponent.buildSourceDriftRows, buildSourceDriftRows);
+  assert.equal(codeSymbolComponent.buildGovernanceProblemRows, buildGovernanceProblemRows);
+  assert.equal(codeSymbolComponent.readCodeSymbolRows, readCodeSymbolRows);
+  assert.equal(codeSymbolComponent.readCodeSymbolDuplicateRows, readCodeSymbolDuplicateRows);
+  assert.equal(codeSymbolComponent.readSourceDriftRows, readSourceDriftRows);
+  assert.equal(codeSymbolComponent.readGovernanceProblemRows, readGovernanceProblemRows);
+});
+
+test('buildComponentProfileRows groups component facts into operator sections', () => {
+  const rows = buildComponentProfileRows({
+    component: {
+      component_id: 'SYS-RUNTIME-ENGINE-CORE',
+      name: 'Runtime engine core',
+      component_level: 'component',
+      parent_component_id: 'SYS-RUNTIME-ROOT',
+      governance_state: 'coverage-required',
+      ddd_owner: 'Runtime / Engine',
+      cq_rails: ['StartRun', 'GetRunStatus'],
+    },
+    children: [
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-APPLICATION',
+        name: 'Runtime engine application services',
+        component_level: 'component',
+        governance_state: 'coverage-required',
+        direct_file_count: 6,
+        descendant_file_count: 6,
+      },
+    ],
+    files: [
+      {
+        path: 'packages/@dvt/engine/src/index.ts',
+        component_unit: 'SYS-RUNTIME-ENGINE-CORE',
+        owning_unit: 'SYS-RUNTIME-ENGINE-CORE',
+        governance_state: 'coverage-required',
+      },
+    ],
+    architectureComponents: [
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        kind: 'package',
+        layer: 'application',
+        owner: 'Runtime / Engine',
+        repo_path: 'packages/@dvt/engine',
+        public_contract: 'Execution engine package boundary.',
+        status: 'review',
+      },
+    ],
+    responsibilities: [
+      {
+        responsibility_id: 'RESP-ENGINE',
+        responsibility: 'Own engine lifecycle.',
+        reason_to_change: 'Runtime lifecycle changes.',
+        ddd_owner: 'Runtime / Engine',
+      },
+    ],
+    io: [
+      {
+        io_id: 'IO-ENGINE-PORT',
+        io_kind: 'port',
+        io_name: 'IWorkflowEngine',
+        direction: 'inbound',
+        contract_id: 'CONTRACT-ENGINE',
+        runtime: 'node',
+        metadata: { portKind: 'command' },
+      },
+      {
+        io_id: 'IO-ENGINE-ADAPTER',
+        io_kind: 'adapter',
+        io_name: 'TemporalProviderAdapter',
+        direction: 'outbound',
+        runtime: 'node',
+      },
+    ],
+    relations: [
+      {
+        relation_id: 'REL-ENGINE-CONTRACTS-DEPENDENCY',
+        source_component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        target_component_id: 'SYS-CONTRACTS-ROOT',
+        relation_type: 'depends_on',
+        status: 'proposed',
+      },
+    ],
+    contracts: [
+      {
+        contract_id: 'CONTRACT-ENGINE',
+        contract_kind: 'public-api',
+        contract_ref: 'docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md',
+        status: 'review',
+      },
+    ],
+    tests: [
+      {
+        test_id: 'TEST-ENGINE-LIFECYCLE',
+        test_path: 'packages/@dvt/engine/test/lifecycle.test.ts',
+        test_kind: 'integration',
+        coverage_level: 'behavior',
+        required: true,
+        validation_command: 'pnpm --filter @dvt/engine test',
+      },
+    ],
+    architectureDesigns: [
+      {
+        design_id: 'design-22-system-component-ownership-map',
+        work_item_id: 'COMPONENT-OWNERSHIP-MAP-20260611',
+        design_title: 'System component ownership map',
+        scope_kind: 'may_create',
+      },
+    ],
+    fowlerReferences: [
+      {
+        document_path: 'buzon/fowler.md',
+        reference_state: 'linked',
+        relation_type: 'analyzes',
+        canonical_target_path: 'docs/architecture/components/engine/index.md',
+        resolution_status: 'resolved',
+      },
+    ],
+  });
+
+  assert.deepEqual(rows, [
+    [
+      'component',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'Runtime engine core',
+      'component',
+      'SYS-RUNTIME-ROOT',
+      'coverage-required',
+      'Runtime / Engine',
+    ],
+    [
+      'child',
+      'SYS-RUNTIME-ENGINE-APPLICATION',
+      'Runtime engine application services',
+      'component',
+      'coverage-required',
+      6,
+      6,
+    ],
+    [
+      'file',
+      'packages/@dvt/engine/src/index.ts',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'coverage-required',
+    ],
+    ['command', 'StartRun', 'SYS-RUNTIME-ENGINE-CORE', 'cq_rails'],
+    ['query', 'GetRunStatus', 'SYS-RUNTIME-ENGINE-CORE', 'cq_rails'],
+    ['port', 'IO-ENGINE-PORT', 'IWorkflowEngine', 'command', 'inbound', 'CONTRACT-ENGINE', 'node'],
+    ['adapter', 'IO-ENGINE-ADAPTER', 'TemporalProviderAdapter', 'adapter', 'outbound', '-', 'node'],
+    [
+      'architecture',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'package',
+      'application',
+      'Runtime / Engine',
+      'packages/@dvt/engine',
+      'review',
+    ],
+    [
+      'responsibility',
+      'RESP-ENGINE',
+      'Own engine lifecycle.',
+      'Runtime lifecycle changes.',
+      'Runtime / Engine',
+    ],
+    [
+      'relation',
+      'REL-ENGINE-CONTRACTS-DEPENDENCY',
+      'SYS-RUNTIME-ENGINE-CORE',
+      'SYS-CONTRACTS-ROOT',
+      'depends_on',
+      'proposed',
+    ],
+    [
+      'contract',
+      'CONTRACT-ENGINE',
+      'public-api',
+      'docs/architecture/components/engine/contracts/engine/IWorkflowEngine.v1.md',
+      'review',
+    ],
+    [
+      'test',
+      'TEST-ENGINE-LIFECYCLE',
+      'packages/@dvt/engine/test/lifecycle.test.ts',
+      'integration',
+      'behavior',
+      'true',
+      'pnpm --filter @dvt/engine test',
+    ],
+    [
+      'architecture-basis',
+      'design-22-system-component-ownership-map',
+      'COMPONENT-OWNERSHIP-MAP-20260611',
+      'System component ownership map',
+      'may_create',
+    ],
+    [
+      'fowler',
+      'buzon/fowler.md',
+      'linked',
+      'analyzes',
+      'docs/architecture/components/engine/index.md',
+      'resolved',
+    ],
+  ]);
 });
 
 test('resolveQueryName defaults to summary and rejects unknown query names', () => {
@@ -472,6 +780,20 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('component-rules'), 'component-rules');
   assert.equal(resolveQueryName('component-rule-evaluations'), 'component-rule-evaluations');
   assert.equal(resolveQueryName('component-quality'), 'component-quality');
+  assert.equal(resolveQueryName('component-profile'), 'component-profile');
+  assert.equal(resolveQueryName('component-integrity'), 'component-integrity');
+  assert.equal(resolveQueryName('component-validation'), 'component-validation');
+  assert.equal(resolveQueryName('filesystem-coverage'), 'filesystem-coverage');
+  assert.equal(resolveQueryName('rail-vocabulary'), 'rail-vocabulary');
+  assert.equal(resolveQueryName('rail-duplicates'), 'rail-duplicates');
+  assert.equal(resolveQueryName('code-symbols'), 'code-symbols');
+  assert.equal(resolveQueryName('code-symbol-duplicates'), 'code-symbol-duplicates');
+  assert.equal(
+    resolveQueryName('code-symbol-semantic-candidates'),
+    'code-symbol-semantic-candidates'
+  );
+  assert.equal(resolveQueryName('source-drift'), 'source-drift');
+  assert.equal(resolveQueryName('governance-problem-dashboard'), 'governance-problem-dashboard');
   assert.equal(resolveQueryName('architecture-designs'), 'architecture-designs');
   assert.equal(resolveQueryName('architecture-components'), 'architecture-components');
   assert.equal(resolveQueryName('architecture-relations'), 'architecture-relations');
@@ -513,6 +835,62 @@ test('parseArgs parses DB surface inventory query filters', () => {
   assert.equal(command.filters.state, 'DB-first');
   assert.equal(command.filters.kind, 'db_command');
   assert.equal(command.filters.limit, 5);
+});
+
+test('parseArgs parses code symbol and source drift query filters', () => {
+  assert.deepEqual(parseArgs(['code-symbols', '--component', 'SYS-WEB-ROOT', '--limit', '5']), {
+    queryName: 'code-symbols',
+    filters: {
+      component: 'SYS-WEB-ROOT',
+      limit: 5,
+    },
+  });
+
+  assert.deepEqual(
+    parseArgs([
+      'code-symbol-duplicates',
+      '--kind',
+      'exact_body_duplicate',
+      '--severity',
+      'warning',
+    ]),
+    {
+      queryName: 'code-symbol-duplicates',
+      filters: {
+        kind: 'exact_body_duplicate',
+        severity: 'warning',
+      },
+    }
+  );
+
+  assert.deepEqual(parseArgs(['source-drift', '--path', 'buzon/TAREA.TXT', '--limit', '3']), {
+    queryName: 'source-drift',
+    filters: {
+      path: 'buzon/TAREA.TXT',
+      limit: 3,
+    },
+  });
+});
+
+test('parseArgs keeps architecture fitness state filters on the DB fitness state field', () => {
+  const command = parseArgs([
+    'architecture-fitness-gaps',
+    '--state',
+    'fail',
+    '--kind',
+    'undeclared_dependency',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'architecture-fitness-gaps',
+    filters: {
+      state: 'fail',
+      kind: 'undeclared_dependency',
+      limit: 5,
+    },
+  });
 });
 
 test('parseArgs parses task query filters for daily DB-first planning work', () => {
@@ -657,60 +1035,6 @@ test('parseArgs parses command/query rail catalog filters for DB-first gap and d
   });
 });
 
-test('parseArgs parses feature mechanization DB-first query filters', () => {
-  assert.deepEqual(parseArgs(['feature-mechanization', '--limit', '10']), {
-    queryName: 'feature-mechanization',
-    filters: {
-      limit: 10,
-    },
-  });
-
-  assert.deepEqual(
-    parseArgs(['feature-mechanization-components', '--state', 'implemented', '--limit', '10']),
-    {
-      queryName: 'feature-mechanization-components',
-      filters: {
-        state: 'implemented',
-        limit: 10,
-      },
-    }
-  );
-
-  assert.deepEqual(
-    parseArgs([
-      'feature-mechanization-symbols',
-      '--path',
-      'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
-      '--limit',
-      '10',
-    ]),
-    {
-      queryName: 'feature-mechanization-symbols',
-      filters: {
-        path: 'apps/web/src/app/views/canvas/CanvasToolbar.tsx',
-        limit: 10,
-      },
-    }
-  );
-
-  assert.deepEqual(
-    parseArgs(['feature-mechanization-rails', '--rail', 'ListFeatureMechanizationRails']),
-    {
-      queryName: 'feature-mechanization-rails',
-      filters: {
-        rail: 'ListFeatureMechanizationRails',
-      },
-    }
-  );
-
-  assert.deepEqual(parseArgs(['feature-mechanization-validations', '--kind', 'completion']), {
-    queryName: 'feature-mechanization-validations',
-    filters: {
-      kind: 'completion',
-    },
-  });
-});
-
 test('parseArgs parses AI project context format and discovery filters', () => {
   const command = parseArgs([
     'ai-project-context',
@@ -823,7 +1147,7 @@ test('parseArgs parses frontend component reflection filters for DB-first compon
       '--component',
       'web.component.canvas.CanvasToolbar',
       '--rail',
-      'PreviewExecutablePlan',
+      'PreviewExecutionPlan',
       '--kind',
       'command',
       '--status',
@@ -835,7 +1159,7 @@ test('parseArgs parses frontend component reflection filters for DB-first compon
       queryName: 'frontend-component-rails',
       filters: {
         component: 'web.component.canvas.CanvasToolbar',
-        rail: 'PreviewExecutablePlan',
+        rail: 'PreviewExecutionPlan',
         kind: 'command',
         status: 'implemented-api',
         limit: 4,
@@ -863,6 +1187,61 @@ test('parseArgs parses creation intent preflight filters for AI reuse checks', (
       limit: 5,
     },
   });
+});
+
+test('parseArgs parses component integrity and rail vocabulary validation filters', () => {
+  assert.deepEqual(
+    parseArgs([
+      'component-integrity',
+      '--component',
+      'SYS-WEB-ROOT',
+      '--kind',
+      'fitness_gap',
+      '--state',
+      'fail',
+      '--severity',
+      'error',
+      '--limit',
+      '5',
+    ]),
+    {
+      queryName: 'component-integrity',
+      filters: {
+        component: 'SYS-WEB-ROOT',
+        kind: 'fitness_gap',
+        state: 'fail',
+        severity: 'error',
+        limit: 5,
+      },
+    }
+  );
+
+  assert.deepEqual(
+    parseArgs([
+      'rail-vocabulary',
+      '--rail',
+      'ApiCreateWidget',
+      '--kind',
+      'surface_named_rail',
+      '--state',
+      'active',
+      '--limit',
+      '5',
+    ]),
+    {
+      queryName: 'rail-vocabulary',
+      filters: {
+        rail: 'ApiCreateWidget',
+        kind: 'surface_named_rail',
+        state: 'active',
+        limit: 5,
+      },
+    }
+  );
+
+  assert.equal(resolveQueryName('rail-duplicates'), 'rail-duplicates');
+  assert.equal(resolveQueryName('filesystem-coverage'), 'filesystem-coverage');
+  assert.equal(resolveQueryName('component-validation'), 'component-validation');
 });
 
 test('parseArgs requires an intent before querying creation preflight', () => {
@@ -931,6 +1310,19 @@ test('buildCreationIntentRows turns rail matches into AI pre-create guidance', (
         feature_id: 'WIDGET-FEATURE',
         source_path: 'docs/planning/proposals/mandatory/widget.md',
       },
+      {
+        rail_type: 'query',
+        rail_name: 'ResolveLegacyWidgets',
+        ddd_owner: 'LegacyWidgetReadModel',
+        rail_status: 'retired',
+        implementation_ref_count: 1,
+        documentation_ref_count: 1,
+        is_gap: false,
+        is_duplicate: false,
+        intent_match_score: 12,
+        feature_id: 'LEGACY-WIDGET-FEATURE',
+        source_path: 'docs/planning/proposals/mandatory/legacy-widget.md',
+      },
     ]),
     [
       [
@@ -957,6 +1349,18 @@ test('buildCreationIntentRows turns rail matches into AI pre-create guidance', (
         'WIDGET-FEATURE',
         'docs/planning/proposals/mandatory/widget.md',
       ],
+      [
+        'retired-rail-do-not-reuse',
+        'query',
+        'ResolveLegacyWidgets',
+        'LegacyWidgetReadModel',
+        'retired',
+        'implemented',
+        '-',
+        12,
+        'LEGACY-WIDGET-FEATURE',
+        'docs/planning/proposals/mandatory/legacy-widget.md',
+      ],
     ]
   );
 });
@@ -978,116 +1382,161 @@ test('buildCreationIntentRows explicitly reports when no existing rail matches',
   ]);
 });
 
-test('feature mechanization row builders expose DB-first operator views', () => {
+test('buildRailVocabularyRows shows canonical rail vocabulary findings', () => {
   assert.deepEqual(
-    buildFeatureMechanizationFeatureRows([
+    buildRailVocabularyRows([
       {
-        feature_id: 'FEATURE-ONE',
-        mechanization_status: 'implemented',
-        implementation_plan: 'docs/planning/example.md',
-        component_count: 2,
-        rail_count: 3,
-        symbol_count: 4,
-        validation_count: 5,
-        source_path: 'docs/planning/example.md',
-      },
-    ]),
-    [
-      [
-        'FEATURE-ONE',
-        'implemented',
-        'docs/planning/example.md',
-        2,
-        3,
-        4,
-        5,
-        'docs/planning/example.md',
-      ],
-    ]
-  );
-
-  assert.deepEqual(
-    buildFeatureMechanizationComponentRows([
-      {
-        feature_id: 'FEATURE-ONE',
-        mechanization_status: 'implemented',
-        component_ref: 'docs/architecture/components/web/example.md',
-        source_path: 'docs/planning/example.md',
-      },
-    ]),
-    [
-      [
-        'FEATURE-ONE',
-        'implemented',
-        'docs/architecture/components/web/example.md',
-        'docs/planning/example.md',
-      ],
-    ]
-  );
-
-  assert.deepEqual(
-    buildFeatureMechanizationSymbolRows([
-      {
-        feature_id: 'FEATURE-ONE',
-        symbol_name: 'readFeatureMechanizationFeatureRows',
-        symbol_path: 'scripts/planning-db/queries/feature-mechanization-query.cjs',
-        ddd_owner: 'Planning DB governance read model',
-        cq_rails: ['ListFeatureMechanizationFeatures'],
-        source_path: 'docs/planning/example.md',
-      },
-    ]),
-    [
-      [
-        'FEATURE-ONE',
-        'readFeatureMechanizationFeatureRows',
-        'scripts/planning-db/queries/feature-mechanization-query.cjs',
-        'Planning DB governance read model',
-        '["ListFeatureMechanizationFeatures"]',
-        'docs/planning/example.md',
-      ],
-    ]
-  );
-
-  assert.deepEqual(
-    buildFeatureMechanizationRailRows([
-      {
-        feature_id: 'FEATURE-ONE',
+        finding_kind: 'semantic_duplicate',
+        severity: 'error',
         rail_type: 'query',
-        rail_name: 'ListFeatureMechanizationFeatures',
-        ddd_owner: 'Planning DB governance read model',
+        rail_name: 'ApiListWidgetsQuery',
+        canonical_name: 'ListWidgets',
+        bounded_context: 'Planning DB',
+        ddd_owner: 'WidgetReadModel',
         rail_status: 'implemented',
-        rail_source: 'imported',
-        source_path: 'docs/planning/example.md',
+        vocabulary_state: 'active',
+        duplicate_count: 2,
+        action_hint: 'Choose one canonical rail name and deprecate aliases.',
+        source_path: 'docs/planning/proposals/mandatory/example.md',
       },
     ]),
     [
       [
-        'FEATURE-ONE',
+        'semantic_duplicate',
+        'error',
         'query',
-        'ListFeatureMechanizationFeatures',
-        'Planning DB governance read model',
+        'ApiListWidgetsQuery',
+        'ListWidgets',
+        'Planning DB',
+        'WidgetReadModel',
         'implemented',
-        'imported',
-        'docs/planning/example.md',
+        'active',
+        2,
+        'Choose one canonical rail name and deprecate aliases.',
+        'docs/planning/proposals/mandatory/example.md',
       ],
     ]
   );
+});
 
+test('buildCodeSymbolRows shows code symbols with component ownership', () => {
   assert.deepEqual(
-    buildFeatureMechanizationValidationRows([
+    buildCodeSymbolRows([
       {
-        feature_id: 'FEATURE-ONE',
-        validation_kind: 'completion',
-        validation_ref: 'node --test scripts/planning-db-query.test.cjs',
-        source_path: 'docs/planning/example.md',
+        symbol_id: 'sym-1',
+        symbol_name: 'parseLimit',
+        symbol_kind: 'function',
+        component_id: 'SYS-CI-TOOLS-PLANNING-DB',
+        file_path: 'scripts/planning-db-query.cjs',
+        start_line: 517,
+        end_line: 528,
+        body_sha256: 'abc123',
+        normalized_body_length: 226,
       },
     ]),
     [
       [
-        'FEATURE-ONE',
-        'completion',
-        'node --test scripts/planning-db-query.test.cjs',
-        'docs/planning/example.md',
+        'sym-1',
+        'parseLimit',
+        'function',
+        'SYS-CI-TOOLS-PLANNING-DB',
+        'scripts/planning-db-query.cjs',
+        517,
+        528,
+        'abc123',
+        226,
+      ],
+    ]
+  );
+});
+
+test('buildCodeSymbolDuplicateRows shows duplicate function findings', () => {
+  assert.deepEqual(
+    buildCodeSymbolDuplicateRows([
+      {
+        finding_kind: 'exact_body_duplicate',
+        severity: 'warning',
+        duplicate_key: 'body:abc123',
+        symbol_name: 'parseLimit',
+        component_id: 'SYS-CI-TOOLS-PLANNING-DB',
+        source_path: 'scripts/planning-db-query.cjs',
+        start_line: 517,
+        duplicate_count: 14,
+        action_hint:
+          'Extract one canonical helper or document why local duplication is intentional.',
+      },
+    ]),
+    [
+      [
+        'exact_body_duplicate',
+        'warning',
+        'body:abc123',
+        'parseLimit',
+        'SYS-CI-TOOLS-PLANNING-DB',
+        'scripts/planning-db-query.cjs',
+        517,
+        14,
+        'Extract one canonical helper or document why local duplication is intentional.',
+      ],
+    ]
+  );
+});
+
+test('buildSourceDriftRows shows governed references to missing tracked files', () => {
+  assert.deepEqual(
+    buildSourceDriftRows([
+      {
+        finding_kind: 'missing_source_file',
+        severity: 'error',
+        source_path: 'buzon/TAREA.TXT',
+        source_table: 'planning_query_store.command_query_rails',
+        reference_count: 2,
+        action_hint: 'Repoint the governed source or retire the stale row explicitly.',
+      },
+    ]),
+    [
+      [
+        'missing_source_file',
+        'error',
+        'buzon/TAREA.TXT',
+        'planning_query_store.command_query_rails',
+        2,
+        'Repoint the governed source or retire the stale row explicitly.',
+      ],
+    ]
+  );
+});
+
+test('buildComponentIntegrityRows shows component validation findings', () => {
+  assert.deepEqual(
+    buildComponentIntegrityRows([
+      {
+        finding_kind: 'fitness_gap',
+        severity: 'error',
+        component_id: 'SYS-WEB-ROOT',
+        component_name: 'Web root',
+        finding_state: 'fail',
+        path: 'apps/web/src/App.tsx',
+        related_component_id: 'SYS-WEB-APP-BOOTSTRAP',
+        relation_id: 'REL-AUTO-WEB-ROOT-WEB-APP-BOOTSTRAP',
+        evidence_count: 31,
+        action_hint: 'Record architecture.component_relation or refactor the dependency.',
+        source_view: 'architecture.component_fitness_gap_summary_query',
+      },
+    ]),
+    [
+      [
+        'fitness_gap',
+        'error',
+        'SYS-WEB-ROOT',
+        'Web root',
+        'fail',
+        'apps/web/src/App.tsx',
+        'SYS-WEB-APP-BOOTSTRAP',
+        'REL-AUTO-WEB-ROOT-WEB-APP-BOOTSTRAP',
+        31,
+        'Record architecture.component_relation or refactor the dependency.',
+        'architecture.component_fitness_gap_summary_query',
       ],
     ]
   );
@@ -1156,178 +1605,29 @@ test('buildDocumentationLifecycleRows shows lifecycle facts without prose parsin
   );
 });
 
-test('buildFowlerAnalysisRows shows DB-owned retirement and improvement facts', () => {
-  assert.deepEqual(
-    buildFowlerAnalysisRows([
-      {
-        work_state: 'pending_improvements',
-        document_class: 'intake',
-        retirement_allowed: false,
-        pending_improvement_count: 3,
-        open_action_count: 2,
-        inbound_reference_count: 1,
-        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-        subject_key: 'example',
-        title: 'Fowler Example',
-      },
-    ]),
+test('knowledge intake lifecycle query modules expose canonical rails', () => {
+  const railSources = [
     [
-      [
-        'pending_improvements',
-        'intake',
-        'false',
-        3,
-        2,
-        1,
-        'buzon/20260514-codex-fowler-example-analysis.md',
-        'example',
-        'Fowler Example',
-      ],
-    ]
-  );
-});
+      ['List', 'Knowledge', 'Intake', 'Retirement'].join(''),
+      'planning-db/queries/knowledge-intake-retirement-query.cjs',
+    ],
+    [
+      ['List', 'Documentation', 'Lifecycle', 'Facts'].join(''),
+      'planning-db/queries/documentation-lifecycle-query.cjs',
+    ],
+  ];
+  const ownSource = fs.readFileSync(__filename, 'utf8');
 
-test('buildFowlerAnalysisReferenceRows shows DB-owned live reference facts', () => {
-  assert.deepEqual(
-    buildFowlerAnalysisReferenceRows([
-      {
-        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-        reference_state: 'live',
-        relation_type: 'repository_path_reference',
-        reference_path: 'docs/planning/proposals/mandatory/example.md',
-        canonical_target_path: 'docs/architecture/components/example.md',
-        resolution_status: 'pending',
-        reference_component_id: 'SYS-DOCS-GOVERNANCE',
-        reference_file_role: 'proposal',
-        sample_text: 'buzon/20260514-codex-fowler-example-analysis.md',
-      },
-    ]),
-    [
-      [
-        'buzon/20260514-codex-fowler-example-analysis.md',
-        'live',
-        'repository_path_reference',
-        'docs/planning/proposals/mandatory/example.md',
-        'docs/architecture/components/example.md',
-        'pending',
-        'SYS-DOCS-GOVERNANCE',
-        'proposal',
-        'buzon/20260514-codex-fowler-example-analysis.md',
-      ],
-    ]
-  );
-});
+  for (const [railName, sourcePath] of railSources) {
+    assert.doesNotMatch(
+      ownSource,
+      new RegExp(`\\b${railName}\\b`),
+      'the query test must not be indexed as a rail implementation surface'
+    );
 
-test('buildFowlerAnalysisRetirementRows shows DB-owned retirement decisions', () => {
-  assert.deepEqual(
-    buildFowlerAnalysisRetirementRows([
-      {
-        retirement_state: 'blocked_by_references',
-        retirement_allowed: false,
-        unresolved_reference_count: 2,
-        open_improvement_count: 0,
-        canonical_target_path: 'docs/architecture/components/example.md',
-        disposition_status: 'accepted',
-        retirement_decision_status: 'not_approved',
-        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-        title: 'Fowler Example',
-      },
-    ]),
-    [
-      [
-        'blocked_by_references',
-        'false',
-        2,
-        0,
-        'docs/architecture/components/example.md',
-        'accepted',
-        'not_approved',
-        'buzon/20260514-codex-fowler-example-analysis.md',
-        'Fowler Example',
-      ],
-    ]
-  );
-});
-
-test('buildFowlerAnalysisCanonicalCoverageRows shows target coverage gaps', () => {
-  assert.deepEqual(
-    buildFowlerAnalysisCanonicalCoverageRows([
-      {
-        coverage_state: 'target_missing',
-        target_path: null,
-        target_status: null,
-        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-        subject_key: 'example',
-        title: 'Fowler Example',
-      },
-    ]),
-    [
-      [
-        'target_missing',
-        '-',
-        '-',
-        'buzon/20260514-codex-fowler-example-analysis.md',
-        'example',
-        'Fowler Example',
-      ],
-    ]
-  );
-});
-
-test('buildFowlerAnalysisIntentRows shows DB-owned intended work facts', () => {
-  assert.deepEqual(
-    buildFowlerAnalysisIntentRows([
-      {
-        intent_state: 'duplicate_open_intent',
-        is_duplicate_intent: true,
-        duplicate_document_count: 2,
-        duplicate_open_action_count: 3,
-        document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-        intent_key: 'normalize-component-catalog',
-        action_status: 'open',
-        summary: 'Normalize component catalog in Planning DB',
-      },
-    ]),
-    [
-      [
-        'duplicate_open_intent',
-        'true',
-        2,
-        3,
-        'buzon/20260514-codex-fowler-example-analysis.md',
-        'normalize-component-catalog',
-        'open',
-        'Normalize component catalog in Planning DB',
-      ],
-    ]
-  );
-});
-
-test('buildFowlerAnalysisDuplicateRows shows repeated work intentions', () => {
-  assert.deepEqual(
-    buildFowlerAnalysisDuplicateRows([
-      {
-        duplicate_state: 'open_duplicate',
-        duplicate_document_count: 2,
-        duplicate_open_action_count: 3,
-        canonical_target_path: 'docs/architecture/components/example.md',
-        intent_key: 'normalize-component-catalog',
-        sample_document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-        sample_summary: 'Normalize component catalog in Planning DB',
-      },
-    ]),
-    [
-      [
-        'open_duplicate',
-        2,
-        3,
-        'docs/architecture/components/example.md',
-        'normalize-component-catalog',
-        'buzon/20260514-codex-fowler-example-analysis.md',
-        'Normalize component catalog in Planning DB',
-      ],
-    ]
-  );
+    const source = fs.readFileSync(path.join(__dirname, sourcePath), 'utf8');
+    assert.match(source, new RegExp(`\\b${railName}\\b`));
+  }
 });
 
 test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
@@ -1858,59 +2158,6 @@ test('parseArgs parses architecture authority query filters', () => {
         layer: 'application',
       },
     }
-  );
-});
-
-test('parseArgs parses governance refresh run ledger filters', () => {
-  assert.deepEqual(
-    parseArgs([
-      'governance-refresh-runs',
-      '--run',
-      'refresh-run-1',
-      '--state',
-      'failed',
-      '--limit',
-      '5',
-    ]),
-    {
-      queryName: 'governance-refresh-runs',
-      filters: {
-        runId: 'refresh-run-1',
-        state: 'failed',
-        limit: 5,
-      },
-    }
-  );
-});
-
-test('buildGovernanceRefreshRunRows formats DB-first refresh ledger rows', () => {
-  assert.deepEqual(
-    buildGovernanceRefreshRunRows([
-      {
-        run_id: 'refresh-run-1',
-        run_state: 'passed',
-        actor: 'codex',
-        generation_passes: 2,
-        max_passes: 3,
-        stage_count: 21,
-        failed_stage_count: 0,
-        started_at: '2026-06-11T12:00:00.000Z',
-        completed_at: '2026-06-11T12:01:00.000Z',
-        error_summary: '',
-      },
-    ]),
-    [
-      [
-        'refresh-run-1',
-        'passed',
-        'codex',
-        'passes=2/3',
-        'stages=21 failed=0',
-        '2026-06-11T12:00:00.000Z',
-        '2026-06-11T12:01:00.000Z',
-        '',
-      ],
-    ]
   );
 });
 
@@ -2725,59 +2972,6 @@ test('readCommandQueryRailRows queries the DB command/query rail catalog view', 
   ]);
 });
 
-test('feature mechanization readers query DB-first manifest projections', async () => {
-  const captured = [];
-  const client = {
-    async query(sql, params) {
-      captured.push({ sql, params });
-      return { rows: [] };
-    },
-  };
-
-  await readFeatureMechanizationFeatureRows(client, {
-    state: 'implemented',
-    path: 'docs/planning/example.md',
-    limit: 5,
-  });
-  await readFeatureMechanizationComponentRows(client, { state: 'implemented', limit: 6 });
-  await readFeatureMechanizationSymbolRows(client, {
-    path: 'scripts/planning-db/queries/feature-mechanization-query.cjs',
-    limit: 7,
-  });
-  await readFeatureMechanizationRailRows(client, {
-    rail: 'ListFeatureMechanizationRails',
-    type: 'query',
-    limit: 8,
-  });
-  await readFeatureMechanizationValidationRows(client, { kind: 'completion', limit: 9 });
-
-  const sqlText = captured.map((entry) => entry.sql).join('\n');
-
-  assert.equal(captured.length, 5);
-  assert.match(sqlText, /from planning_query_store\.command_query_rail_manifest_query/);
-  assert.match(sqlText, /raw_manifest \? 'featureId'/);
-  assert.match(captured[0].sql, /manifest\.mechanization_status = \$1/);
-  assert.match(captured[0].sql, /manifest\.source_path = \$2/);
-  assert.deepEqual(captured[0].params, ['implemented', 'docs/planning/example.md', 5]);
-  assert.match(captured[1].sql, /jsonb_array_elements_text/);
-  assert.match(captured[1].sql, /componentGuides/);
-  assert.deepEqual(captured[1].params, ['implemented', 6]);
-  assert.match(captured[2].sql, /jsonb_array_elements/);
-  assert.match(captured[2].sql, /symbols/);
-  assert.match(captured[2].sql, /symbol_ref\.value->>'path' = \$1/);
-  assert.deepEqual(captured[2].params, [
-    'scripts/planning-db/queries/feature-mechanization-query.cjs',
-    7,
-  ]);
-  assert.match(captured[3].sql, /rail\.rail_type = \$1/);
-  assert.match(captured[3].sql, /rail\.rail_name = \$2/);
-  assert.match(captured[3].sql, /rail\.raw_manifest \? 'featureId'/);
-  assert.deepEqual(captured[3].params, ['query', 'ListFeatureMechanizationRails', 8]);
-  assert.match(captured[4].sql, /validation_rows\.validation_kind = \$1/);
-  assert.match(captured[4].sql, /completionGate/);
-  assert.deepEqual(captured[4].params, ['completion', 9]);
-});
-
 test('readCreationIntentRows queries existing rails from the DB-first rail catalog', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -2804,6 +2998,42 @@ test('readCreationIntentRows queries existing rails from the DB-first rail catal
     'i want to create listwidgets',
     ['listwidgets'],
     'query',
+    5,
+  ]);
+});
+
+test('readCreationIntentRows canonicalizes retired execution preview intent aliases', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCreationIntentRows(client, {
+    intent: 'PreviewExecutablePlan',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.command_query_rail_query/);
+  assert.deepEqual(captured.params, [
+    'PreviewExecutablePlan',
+    'previewexecutionplan',
+    ['previewexecutionplan'],
+    5,
+  ]);
+
+  await readCreationIntentRows(client, {
+    intent: 'previewexecutableplan',
+    limit: 5,
+  });
+
+  assert.deepEqual(captured.params, [
+    'previewexecutableplan',
+    'previewexecutionplan',
+    ['previewexecutionplan'],
     5,
   ]);
 });
@@ -2990,303 +3220,6 @@ test('readDocumentationLifecycleRows queries DB lifecycle facts with logical pre
   ]);
 });
 
-test('readFowlerAnalysisRows queries DB-first Fowler work facts with logical predicates', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readFowlerAnalysisRows(client, {
-    state: 'ready_to_retire',
-    type: 'fowler_analysis',
-    path: 'buzon/example.md',
-    subject: 'example',
-    gaps: false,
-    limit: 13,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_work_query/);
-  assert.match(captured.sql, /work_state = \$1/);
-  assert.match(captured.sql, /document_type = \$2/);
-  assert.match(captured.sql, /document_path = \$3/);
-  assert.match(captured.sql, /subject_key = \$4/);
-  assert.match(captured.sql, /is_pending_improvement is false/);
-  assert.match(captured.sql, /limit \$5/);
-  assert.deepEqual(captured.params, [
-    'ready_to_retire',
-    'fowler_analysis',
-    'buzon/example.md',
-    'example',
-    13,
-  ]);
-});
-
-test('parseArgs parses Fowler analysis DB-first subquery filters', () => {
-  assert.deepEqual(
-    parseArgs([
-      'fowler-analysis-references',
-      '--state',
-      'live',
-      '--path',
-      'buzon/example.md',
-      '--target',
-      'docs/architecture/components/example.md',
-      '--limit',
-      '7',
-    ]),
-    {
-      queryName: 'fowler-analysis-references',
-      filters: {
-        state: 'live',
-        path: 'buzon/example.md',
-        target: 'docs/architecture/components/example.md',
-        limit: 7,
-      },
-    }
-  );
-
-  assert.deepEqual(
-    parseArgs([
-      'fowler-analysis-retirement',
-      '--retirement-allowed',
-      'true',
-      '--target',
-      'docs/architecture/components/example.md',
-      '--limit',
-      '5',
-    ]),
-    {
-      queryName: 'fowler-analysis-retirement',
-      filters: {
-        retirementAllowed: true,
-        target: 'docs/architecture/components/example.md',
-        limit: 5,
-      },
-    }
-  );
-
-  assert.deepEqual(
-    parseArgs([
-      'fowler-analysis-coverage',
-      '--state',
-      'target_missing',
-      '--path',
-      'buzon/example.md',
-      '--limit',
-      '3',
-    ]),
-    {
-      queryName: 'fowler-analysis-coverage',
-      filters: {
-        state: 'target_missing',
-        path: 'buzon/example.md',
-        limit: 3,
-      },
-    }
-  );
-
-  assert.deepEqual(
-    parseArgs([
-      'fowler-analysis-intent',
-      '--duplicates',
-      'true',
-      '--state',
-      'duplicate_open_intent',
-      '--path',
-      'buzon/example.md',
-      '--target',
-      'docs/architecture/components/example.md',
-      '--limit',
-      '4',
-    ]),
-    {
-      queryName: 'fowler-analysis-intent',
-      filters: {
-        duplicates: true,
-        state: 'duplicate_open_intent',
-        path: 'buzon/example.md',
-        target: 'docs/architecture/components/example.md',
-        limit: 4,
-      },
-    }
-  );
-
-  assert.deepEqual(
-    parseArgs([
-      'fowler-analysis-duplicates',
-      '--state',
-      'open_duplicate',
-      '--target',
-      'docs/architecture/components/example.md',
-      '--limit',
-      '6',
-    ]),
-    {
-      queryName: 'fowler-analysis-duplicates',
-      filters: {
-        state: 'open_duplicate',
-        target: 'docs/architecture/components/example.md',
-        limit: 6,
-      },
-    }
-  );
-});
-
-test('readFowlerAnalysisReferenceRows queries DB-owned live references with filters', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readFowlerAnalysisReferenceRows(client, {
-    state: 'live',
-    path: 'buzon/example.md',
-    target: 'docs/architecture/components/example.md',
-    limit: 9,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_reference_query/);
-  assert.match(captured.sql, /reference_state = \$1/);
-  assert.match(captured.sql, /document_path = \$2/);
-  assert.match(captured.sql, /canonical_target_path = \$3/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, [
-    'live',
-    'buzon/example.md',
-    'docs/architecture/components/example.md',
-    9,
-  ]);
-});
-
-test('readFowlerAnalysisRetirementRows queries DB-owned retirement policy facts', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readFowlerAnalysisRetirementRows(client, {
-    state: 'ready_to_retire',
-    path: 'buzon/example.md',
-    target: 'docs/architecture/components/example.md',
-    retirementAllowed: false,
-    limit: 9,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_retirement_query/);
-  assert.match(captured.sql, /retirement_state = \$1/);
-  assert.match(captured.sql, /document_path = \$2/);
-  assert.match(captured.sql, /canonical_target_path = \$3/);
-  assert.match(captured.sql, /retirement_allowed is false/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, [
-    'ready_to_retire',
-    'buzon/example.md',
-    'docs/architecture/components/example.md',
-    9,
-  ]);
-});
-
-test('readFowlerAnalysisCanonicalCoverageRows queries DB-owned canonical coverage', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readFowlerAnalysisCanonicalCoverageRows(client, {
-    state: 'target_missing',
-    path: 'buzon/example.md',
-    target: 'docs/architecture/components/example.md',
-    limit: 9,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_canonical_coverage_query/);
-  assert.match(captured.sql, /coverage_state = \$1/);
-  assert.match(captured.sql, /document_path = \$2/);
-  assert.match(captured.sql, /target_path = \$3/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, [
-    'target_missing',
-    'buzon/example.md',
-    'docs/architecture/components/example.md',
-    9,
-  ]);
-});
-
-test('readFowlerAnalysisIntentRows queries DB-owned intended work with duplicate filters', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readFowlerAnalysisIntentRows(client, {
-    state: 'duplicate_open_intent',
-    path: 'buzon/example.md',
-    target: 'docs/architecture/components/example.md',
-    duplicates: true,
-    limit: 9,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_intended_work_query/);
-  assert.match(captured.sql, /intent_state = \$1/);
-  assert.match(captured.sql, /document_path = \$2/);
-  assert.match(captured.sql, /canonical_target_path = \$3/);
-  assert.match(captured.sql, /is_duplicate_intent is true/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, [
-    'duplicate_open_intent',
-    'buzon/example.md',
-    'docs/architecture/components/example.md',
-    9,
-  ]);
-});
-
-test('readFowlerAnalysisDuplicateRows queries repeated intentions with logical predicates', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readFowlerAnalysisDuplicateRows(client, {
-    state: 'open_duplicate',
-    target: 'docs/architecture/components/example.md',
-    limit: 7,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.fowler_analysis_duplicate_intent_query/);
-  assert.match(captured.sql, /duplicate_state = \$1/);
-  assert.match(captured.sql, /canonical_target_path = \$2/);
-  assert.match(captured.sql, /limit \$3/);
-  assert.deepEqual(captured.params, [
-    'open_duplicate',
-    'docs/architecture/components/example.md',
-    7,
-  ]);
-});
-
 test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
   const client = {
     async query() {
@@ -3447,258 +3380,6 @@ test('runQuery dispatches documentation-lifecycle through the DB-first lifecycle
       'docs/architecture/components/example.md',
       'example',
       'Example Component',
-    ],
-  ]);
-});
-
-test('runQuery dispatches fowler-analysis through the DB-first work queue', async () => {
-  const client = {
-    async query(sql) {
-      assert.match(sql, /fowler_analysis_work_query/);
-      return {
-        rows: [
-          {
-            work_state: 'ready_to_retire',
-            document_class: 'intake',
-            retirement_allowed: true,
-            pending_improvement_count: 0,
-            open_action_count: 0,
-            inbound_reference_count: 0,
-            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-            subject_key: 'example',
-            title: 'Fowler Example',
-          },
-        ],
-      };
-    },
-  };
-
-  const rows = await runQuery({
-    queryName: 'fowler-analysis',
-    filters: { state: 'ready_to_retire', limit: 5 },
-    client,
-    print: false,
-  });
-
-  assert.deepEqual(rows, [
-    [
-      'ready_to_retire',
-      'intake',
-      'true',
-      0,
-      0,
-      0,
-      'buzon/20260514-codex-fowler-example-analysis.md',
-      'example',
-      'Fowler Example',
-    ],
-  ]);
-});
-
-test('runQuery dispatches Fowler analysis references through the DB-first reference query', async () => {
-  const client = {
-    async query(sql) {
-      assert.match(sql, /fowler_analysis_reference_query/);
-      return {
-        rows: [
-          {
-            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-            reference_state: 'live',
-            relation_type: 'repository_path_reference',
-            reference_path: 'docs/planning/proposals/mandatory/example.md',
-            canonical_target_path: 'docs/architecture/components/example.md',
-            resolution_status: 'pending',
-            reference_component_id: 'SYS-DOCS-GOVERNANCE',
-            reference_file_role: 'proposal',
-            sample_text: 'buzon/20260514-codex-fowler-example-analysis.md',
-          },
-        ],
-      };
-    },
-  };
-
-  const rows = await runQuery({
-    queryName: 'fowler-analysis-references',
-    filters: { state: 'live', limit: 5 },
-    client,
-    print: false,
-  });
-
-  assert.deepEqual(rows, [
-    [
-      'buzon/20260514-codex-fowler-example-analysis.md',
-      'live',
-      'repository_path_reference',
-      'docs/planning/proposals/mandatory/example.md',
-      'docs/architecture/components/example.md',
-      'pending',
-      'SYS-DOCS-GOVERNANCE',
-      'proposal',
-      'buzon/20260514-codex-fowler-example-analysis.md',
-    ],
-  ]);
-});
-
-test('runQuery dispatches Fowler analysis retirement through the DB-first policy query', async () => {
-  const client = {
-    async query(sql) {
-      assert.match(sql, /fowler_analysis_retirement_query/);
-      return {
-        rows: [
-          {
-            retirement_state: 'ready_to_retire',
-            retirement_allowed: true,
-            unresolved_reference_count: 0,
-            open_improvement_count: 0,
-            canonical_target_path: 'docs/architecture/components/example.md',
-            disposition_status: 'accepted',
-            retirement_decision_status: 'approved',
-            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-            title: 'Fowler Example',
-          },
-        ],
-      };
-    },
-  };
-
-  const rows = await runQuery({
-    queryName: 'fowler-analysis-retirement',
-    filters: { retirementAllowed: true, limit: 5 },
-    client,
-    print: false,
-  });
-
-  assert.deepEqual(rows, [
-    [
-      'ready_to_retire',
-      'true',
-      0,
-      0,
-      'docs/architecture/components/example.md',
-      'accepted',
-      'approved',
-      'buzon/20260514-codex-fowler-example-analysis.md',
-      'Fowler Example',
-    ],
-  ]);
-});
-
-test('runQuery dispatches Fowler analysis coverage through the DB-first coverage query', async () => {
-  const client = {
-    async query(sql) {
-      assert.match(sql, /fowler_analysis_canonical_coverage_query/);
-      return {
-        rows: [
-          {
-            coverage_state: 'covered',
-            target_path: 'docs/architecture/components/example.md',
-            target_status: 'accepted',
-            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-            subject_key: 'example',
-            title: 'Fowler Example',
-          },
-        ],
-      };
-    },
-  };
-
-  const rows = await runQuery({
-    queryName: 'fowler-analysis-coverage',
-    filters: { state: 'covered', limit: 5 },
-    client,
-    print: false,
-  });
-
-  assert.deepEqual(rows, [
-    [
-      'covered',
-      'docs/architecture/components/example.md',
-      'accepted',
-      'buzon/20260514-codex-fowler-example-analysis.md',
-      'example',
-      'Fowler Example',
-    ],
-  ]);
-});
-
-test('runQuery dispatches Fowler analysis intent through the DB-first work queue rail', async () => {
-  const client = {
-    async query(sql) {
-      assert.match(sql, /fowler_analysis_intended_work_query/);
-      return {
-        rows: [
-          {
-            intent_state: 'duplicate_open_intent',
-            is_duplicate_intent: true,
-            duplicate_document_count: 2,
-            duplicate_open_action_count: 3,
-            document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-            intent_key: 'normalize-component-catalog',
-            action_status: 'open',
-            summary: 'Normalize component catalog in Planning DB',
-          },
-        ],
-      };
-    },
-  };
-
-  const rows = await runQuery({
-    queryName: 'fowler-analysis-intent',
-    filters: { duplicates: true, limit: 5 },
-    client,
-    print: false,
-  });
-
-  assert.deepEqual(rows, [
-    [
-      'duplicate_open_intent',
-      'true',
-      2,
-      3,
-      'buzon/20260514-codex-fowler-example-analysis.md',
-      'normalize-component-catalog',
-      'open',
-      'Normalize component catalog in Planning DB',
-    ],
-  ]);
-});
-
-test('runQuery dispatches Fowler analysis duplicate intent through the DB-first work queue rail', async () => {
-  const client = {
-    async query(sql) {
-      assert.match(sql, /fowler_analysis_duplicate_intent_query/);
-      return {
-        rows: [
-          {
-            duplicate_state: 'open_duplicate',
-            duplicate_document_count: 2,
-            duplicate_open_action_count: 3,
-            canonical_target_path: 'docs/architecture/components/example.md',
-            intent_key: 'normalize-component-catalog',
-            sample_document_path: 'buzon/20260514-codex-fowler-example-analysis.md',
-            sample_summary: 'Normalize component catalog in Planning DB',
-          },
-        ],
-      };
-    },
-  };
-
-  const rows = await runQuery({
-    queryName: 'fowler-analysis-duplicates',
-    filters: { state: 'open_duplicate', limit: 5 },
-    client,
-    print: false,
-  });
-
-  assert.deepEqual(rows, [
-    [
-      'open_duplicate',
-      2,
-      3,
-      'docs/architecture/components/example.md',
-      'normalize-component-catalog',
-      'buzon/20260514-codex-fowler-example-analysis.md',
-      'Normalize component catalog in Planning DB',
     ],
   ]);
 });
@@ -4118,28 +3799,6 @@ test('runQuery dispatches architecture-fitness-gaps through the DB-first summary
   ]);
 });
 
-test('runQuery dispatches governance-refresh-runs through the DB-first run ledger', async () => {
-  const calls = [];
-  const fakeClient = {
-    async connect() {},
-    async end() {},
-    async query(sql, params) {
-      calls.push({ sql, params });
-      return { rows: [] };
-    },
-  };
-
-  await runQuery({
-    queryName: 'governance-refresh-runs',
-    filters: { runId: 'refresh-run-1', state: 'passed', limit: 5 },
-    client: fakeClient,
-  });
-
-  assert.equal(calls.length, 1);
-  assert.match(calls[0].sql, /governance_refresh_run_query/);
-  assert.deepEqual(calls[0].params, ['refresh-run-1', 'passed', 5]);
-});
-
 test('readComponentRoadmapRows queries the DB-first component roadmap with gap filters', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -4336,7 +3995,7 @@ test('runQuery dispatches frontend component reflection through focused queries'
           rows: [
             {
               component_id: 'web.component.canvas.CanvasToolbar',
-              rail_name: 'PreviewExecutablePlan',
+              rail_name: 'PreviewExecutionPlan',
               rail_kind: 'command',
               rail_status: 'implemented-api',
             },
@@ -4404,7 +4063,7 @@ test('runQuery dispatches frontend component reflection through focused queries'
     ],
   ]);
   assert.deepEqual(railRows, [
-    ['web.component.canvas.CanvasToolbar', 'PreviewExecutablePlan', 'command', 'implemented-api'],
+    ['web.component.canvas.CanvasToolbar', 'PreviewExecutionPlan', 'command', 'implemented-api'],
   ]);
   assert.equal(calls.length, 3);
 });
@@ -5171,6 +4830,203 @@ test('readArchitectureDesignRows queries the DB architecture design authority vi
   ]);
 });
 
+test('readCanvasUxdbTraceabilityRows queries DB-owned TAREA traceability coverage', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCanvasUxdbTraceabilityRows(client, {
+    taskId: 'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+    kind: 'ux_rule',
+    state: 'ready',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.canvas_uxdb_traceability_query/);
+  assert.match(captured.sql, /canonical_task_id = \$1/);
+  assert.match(captured.sql, /criterion_kind = \$2/);
+  assert.match(captured.sql, /coverage_state = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1', 'ux_rule', 'ready', 5]);
+});
+
+test('buildCanvasUxdbTraceabilityRows formats canonical owner and duplicate state', () => {
+  assert.deepEqual(
+    buildCanvasUxdbTraceabilityRows([
+      {
+        criterion_code: 'UX-009',
+        criterion_kind: 'ux_rule',
+        canonical_task_id: 'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        task_status: 'queued',
+        coverage_state: 'ready',
+        duplicate_owner_count: 0,
+        duplicate_state: 'single-owner',
+        action_hint:
+          'Implement CanvasContextMenu and NodeContextMenu through separate governed rails.',
+      },
+    ]),
+    [
+      [
+        'UX-009',
+        'ux_rule',
+        'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+        'queued',
+        'ready',
+        'single-owner',
+        'Implement CanvasContextMenu and NodeContextMenu through separate governed rails.',
+      ],
+    ]
+  );
+});
+
+test('readCanvasUxdbSpecificationRows queries DB-owned TAREA specification records', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCanvasUxdbSpecificationRows(client, {
+    taskId: 'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+    recordType: 'context_action',
+    component: 'web.component.canvas.CanvasContextMenu',
+    rail: 'ResolveCanvasContextMenu',
+    state: 'accepted',
+    limit: 5,
+  });
+
+  assert.match(
+    captured.sql,
+    /from planning_query_store\.canvas_uxdb_canonical_specification_query/
+  );
+  assert.match(captured.sql, /canonical_task_id = \$1/);
+  assert.match(captured.sql, /record_type = \$2/);
+  assert.match(captured.sql, /component_id = \$3/);
+  assert.match(captured.sql, /rail_name = \$4/);
+  assert.match(captured.sql, /spec_state = \$5/);
+  assert.match(captured.sql, /limit \$6/);
+  assert.deepEqual(captured.params, [
+    'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
+    'context_action',
+    'web.component.canvas.CanvasContextMenu',
+    'ResolveCanvasContextMenu',
+    'accepted',
+    5,
+  ]);
+});
+
+test('buildCanvasUxdbSpecificationRows formats component, rail and legacy posture', () => {
+  assert.deepEqual(
+    buildCanvasUxdbSpecificationRows([
+      {
+        record_id: 'node-menu.open-workbench',
+        record_type: 'context_action',
+        record_title: 'Open node workbench',
+        canonical_task_id: 'E-CANVAS-NODE-WORKBENCH-1',
+        component_id: 'web.component.canvas.NodeWorkbench',
+        rail_name: 'OpenCanvasNodeWorkbench',
+        spec_state: 'accepted',
+        legacy_posture: 'replaces-direct-properties-inputs-tests-actions',
+      },
+    ]),
+    [
+      [
+        'node-menu.open-workbench',
+        'context_action',
+        'Open node workbench',
+        'E-CANVAS-NODE-WORKBENCH-1',
+        'web.component.canvas.NodeWorkbench',
+        'OpenCanvasNodeWorkbench',
+        'accepted',
+        'replaces-direct-properties-inputs-tests-actions',
+      ],
+    ]
+  );
+});
+
+test('readCanvasCqRailDriftRows compares Canvas UX rails with canonical rail catalog', async () => {
+  const {
+    buildCanvasCqRailDriftRows,
+    readCanvasCqRailDriftRows,
+  } = require('./planning-db/queries/canvas-cq-rail-drift-query.cjs');
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return {
+        rows: [
+          {
+            record_id: 'canvas-menu.add-source',
+            record_type: 'context_action',
+            component_id: 'web.component.canvas.CanvasContextMenu',
+            requested_rail_name: 'OpenCanvasAddSourceDialog',
+            canonical_rail_name: 'OpenCanvasSourceImportDialog',
+            rail_type: 'command',
+            drift_state: 'legacy_alias',
+            severity: 'warning',
+            action_hint:
+              'Use canonical rail OpenCanvasSourceImportDialog instead of alias OpenCanvasAddSourceDialog.',
+          },
+        ],
+      };
+    },
+  };
+
+  const rows = await readCanvasCqRailDriftRows(client, {
+    state: 'legacy_alias',
+    rail: 'OpenCanvasAddSourceDialog',
+    component: 'web.component.canvas.CanvasContextMenu',
+    taskId: 'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.canvas_cq_rail_drift_query/);
+  assert.match(captured.sql, /drift_state = \$1/);
+  assert.match(captured.sql, /requested_rail_name = \$2/);
+  assert.match(captured.sql, /component_id = \$3/);
+  assert.match(captured.sql, /canonical_task_id = \$4/);
+  assert.match(captured.sql, /limit \$5/);
+  assert.deepEqual(captured.params, [
+    'legacy_alias',
+    'OpenCanvasAddSourceDialog',
+    'web.component.canvas.CanvasContextMenu',
+    'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1',
+    5,
+  ]);
+  assert.deepEqual(buildCanvasCqRailDriftRows(rows), [
+    [
+      'warning',
+      'legacy_alias',
+      'canvas-menu.add-source',
+      'context_action',
+      'web.component.canvas.CanvasContextMenu',
+      'OpenCanvasAddSourceDialog',
+      'OpenCanvasSourceImportDialog',
+      'command',
+      'Use canonical rail OpenCanvasSourceImportDialog instead of alias OpenCanvasAddSourceDialog.',
+    ],
+  ]);
+});
+
+test('planning DB query CLI exposes Canvas CQ rail drift help', () => {
+  const result = runPlanningDbQueryCli(['canvas-cq-rail-drift', '--help']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /Planning DB query: canvas-cq-rail-drift/);
+  assert.match(result.stdout, /--component <id>/);
+  assert.match(result.stdout, /--rail <name>/);
+  assert.doesNotMatch(result.stderr, /Unknown planning DB query/);
+});
+
 test('readArchitectureComponentRows queries the DB architecture component view', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -5196,6 +5052,107 @@ test('readArchitectureComponentRows queries the DB architecture component view',
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-CORE', 'module', 'application', 5]);
 });
 
+test('readComponentProfileRows reads files through the component descendant tree', async () => {
+  const capturedSql = [];
+  const client = {
+    async query(sql) {
+      capturedSql.push(sql);
+      return { rows: [] };
+    },
+  };
+
+  await readComponentProfileRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-CORE',
+    limit: 5,
+  });
+
+  assert.match(
+    capturedSql.join('\n'),
+    /with recursive component_scope\(component_id, scope_depth, visited\) as/i
+  );
+  assert.match(capturedSql.join('\n'), /parent_component_id = component_scope\.component_id/);
+  assert.match(
+    capturedSql.join('\n'),
+    /from planning_query_store\.component_engineering_file_ownership_projection ownership/i
+  );
+  assert.match(
+    capturedSql.join('\n'),
+    /ownership\.leaf_component_id in \(select component_id from component_scope\)/
+  );
+  assert.doesNotMatch(capturedSql.join('\n'), /scoped_local_components as/i);
+  assert.doesNotMatch(capturedSql.join('\n'), /governance_component_local_metadata_query/i);
+  assert.doesNotMatch(capturedSql.join('\n'), /governance_component_local_ownership_patterns/i);
+  assert.doesNotMatch(capturedSql.join('\n'), /from component_engineering\.file_ownership_query/);
+  assert.match(capturedSql.join('\n'), /from architecture\.component_test/);
+  assert.match(capturedSql.join('\n'), /from architecture\.component_observability/);
+});
+
+test('readComponentProfileRows uses frontend inventory for frontend components', async () => {
+  const capturedSql = [];
+  const client = {
+    async query(sql) {
+      capturedSql.push(sql);
+      if (sql.includes('frontend_component_summary_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'web.component.canvas.SourceImportDialog',
+              component_name: 'SourceImportDialog',
+              component_kind: 'modal',
+              component_status: 'current',
+              frontend_owner: 'Canvas / Source import',
+              cq_rails: 'OpenCanvasSourceImportDialog;ImportWarehouseSources',
+            },
+          ],
+        };
+      }
+      if (sql.includes('frontend_component_file_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'web.component.canvas.SourceImportDialog',
+              file_path: 'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx',
+              file_role: 'component',
+              exported_symbol: 'CanvasSourceImportDialogHost',
+            },
+          ],
+        };
+      }
+      if (sql.includes('frontend_component_rail_query')) {
+        return {
+          rows: [
+            {
+              component_id: 'web.component.canvas.SourceImportDialog',
+              rail_name: 'OpenCanvasSourceImportDialog',
+              rail_kind: 'local-command',
+              rail_status: 'implemented-local',
+            },
+          ],
+        };
+      }
+      return { rows: [] };
+    },
+  };
+
+  const profile = await readComponentProfileRows(client, {
+    component: 'web.component.canvas.SourceImportDialog',
+    limit: 5,
+  });
+
+  assert.equal(profile.component.component_id, 'web.component.canvas.SourceImportDialog');
+  assert.equal(
+    profile.files[0].path,
+    'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx'
+  );
+  assert.equal(profile.component.cq_rails, 'OpenCanvasSourceImportDialog');
+  assert.match(
+    capturedSql.join('\n'),
+    /from planning_query_store\.frontend_component_summary_query/
+  );
+  assert.doesNotMatch(capturedSql.join('\n'), /component_tree_query/);
+  assert.doesNotMatch(capturedSql.join('\n'), /component_metadata_query/);
+});
+
 test('readArchitectureRelationRows queries the DB architecture relation graph view', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -5219,6 +5176,189 @@ test('readArchitectureRelationRows queries the DB architecture relation graph vi
   assert.match(captured.sql, /status = \$3/);
   assert.match(captured.sql, /limit \$4/);
   assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-APPLICATION', 'calls', 'declared', 5]);
+});
+
+test('readArchitectureTestRows queries DB-owned component test evidence', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureTestRows(client, {
+    component: 'SYS-RUNTIME-ENGINE-APPLICATION',
+    kind: 'integration',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_test/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /test_kind = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['SYS-RUNTIME-ENGINE-APPLICATION', 'integration', 5]);
+});
+
+test('buildArchitectureTestRows formats component test evidence', () => {
+  assert.deepEqual(
+    buildArchitectureTestRows([
+      {
+        test_id: 'TEST-ENGINE-LIFECYCLE',
+        component_id: 'SYS-RUNTIME-ENGINE-APPLICATION',
+        test_path: 'packages/@dvt/engine/test/lifecycle.test.ts',
+        test_kind: 'integration',
+        coverage_level: 'behavior',
+        required: true,
+        validation_command: 'pnpm --filter @dvt/engine test',
+      },
+    ]),
+    [
+      [
+        'TEST-ENGINE-LIFECYCLE',
+        'SYS-RUNTIME-ENGINE-APPLICATION',
+        'packages/@dvt/engine/test/lifecycle.test.ts',
+        'integration',
+        'behavior',
+        'true',
+        'pnpm --filter @dvt/engine test',
+      ],
+    ]
+  );
+});
+
+test('readArchitectureObservabilityRows queries DB-owned component observability evidence', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readArchitectureObservabilityRows(client, {
+    component: 'SYS-API-OPS-ROUTES',
+    kind: 'log',
+    state: 'implemented',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from architecture\.component_observability/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /signal_kind = \$2/);
+  assert.match(captured.sql, /status = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, ['SYS-API-OPS-ROUTES', 'log', 'implemented', 5]);
+});
+
+test('readCodeSymbolRows queries DB-owned code symbol inventory', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCodeSymbolRows(client, {
+    component: 'SYS-CI-TOOLS-PLANNING-DB',
+    path: 'scripts/planning-db-query.cjs',
+    kind: 'function',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.code_symbol_inventory_query/);
+  assert.match(captured.sql, /component_id = \$1/);
+  assert.match(captured.sql, /file_path = \$2/);
+  assert.match(captured.sql, /symbol_kind = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'SYS-CI-TOOLS-PLANNING-DB',
+    'scripts/planning-db-query.cjs',
+    'function',
+    5,
+  ]);
+});
+
+test('readCodeSymbolDuplicateRows queries DB-owned duplicate symbol findings', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCodeSymbolDuplicateRows(client, {
+    kind: 'exact_body_duplicate',
+    severity: 'warning',
+    component: 'SYS-CI-TOOLS-PLANNING-DB',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.code_symbol_problem_query/);
+  assert.match(captured.sql, /finding_kind = \$1/);
+  assert.match(captured.sql, /severity = \$2/);
+  assert.match(captured.sql, /component_id = \$3/);
+  assert.match(captured.sql, /limit \$4/);
+  assert.deepEqual(captured.params, [
+    'exact_body_duplicate',
+    'warning',
+    'SYS-CI-TOOLS-PLANNING-DB',
+    5,
+  ]);
+});
+
+test('readSourceDriftRows queries DB-owned governed source drift findings', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readSourceDriftRows(client, {
+    path: 'buzon/TAREA.TXT',
+    severity: 'error',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.governed_source_drift_query/);
+  assert.match(captured.sql, /source_path = \$1/);
+  assert.match(captured.sql, /severity = \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['buzon/TAREA.TXT', 'error', 5]);
+});
+
+test('buildArchitectureObservabilityRows formats component observability evidence', () => {
+  assert.deepEqual(
+    buildArchitectureObservabilityRows([
+      {
+        observability_id: 'OBS-API-OPS-ROUTES-READINESS-DB-PROBE-FAILED',
+        component_id: 'SYS-API-OPS-ROUTES',
+        signal_name: 'api.health.readiness.database_probe_failed',
+        signal_kind: 'log',
+        required: true,
+        status: 'implemented',
+      },
+    ]),
+    [
+      [
+        'OBS-API-OPS-ROUTES-READINESS-DB-PROBE-FAILED',
+        'SYS-API-OPS-ROUTES',
+        'api.health.readiness.database_probe_failed',
+        'log',
+        'true',
+        'implemented',
+      ],
+    ]
+  );
 });
 
 test('readArchitectureFlowRows filters component participation through entry, exit, and flow steps', async () => {
@@ -5292,6 +5432,51 @@ test('buildArchitecture rows expose Fowler-relevant authority columns', () => {
         'Architecture',
         'declared',
         75,
+      ],
+    ]
+  );
+
+  assert.deepEqual(
+    buildArchitectureIoRows([
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        io_id: 'PORT-ENGINE-START-RUN',
+        io_kind: 'port',
+        metadata: { portKind: 'command' },
+        io_name: 'StartRun',
+        direction: 'inbound',
+        contract_id: 'CONTRACT-ENGINE-START-RUN',
+        runtime: 'node',
+      },
+      {
+        component_id: 'SYS-RUNTIME-ENGINE-CORE',
+        io_id: 'ADAPTER-ENGINE-TEMPORAL',
+        io_kind: 'adapter',
+        io_name: 'TemporalProviderAdapter',
+        direction: 'outbound',
+        runtime: 'node',
+      },
+    ]),
+    [
+      [
+        'SYS-RUNTIME-ENGINE-CORE',
+        'PORT-ENGINE-START-RUN',
+        'port',
+        'command',
+        'StartRun',
+        'inbound',
+        'CONTRACT-ENGINE-START-RUN',
+        'node',
+      ],
+      [
+        'SYS-RUNTIME-ENGINE-CORE',
+        'ADAPTER-ENGINE-TEMPORAL',
+        'adapter',
+        'adapter',
+        'TemporalProviderAdapter',
+        'outbound',
+        '-',
+        'node',
       ],
     ]
   );

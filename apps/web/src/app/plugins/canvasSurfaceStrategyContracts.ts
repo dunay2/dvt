@@ -4,10 +4,24 @@ export type CanvasSurfaceLaunchPoint =
   | 'canvas-context-menu'
   | 'command-palette'
   | 'node-context-menu'
-  | 'double-click'
-  | 'selection';
+  | 'double-click';
 
 export type CanvasSurfacePlacement = 'contextual-modal' | 'contextual-overlay' | 'bottom-drawer';
+
+export type CanvasNodeWorkbenchSectionPolicyId =
+  | 'properties'
+  | 'metadata'
+  | 'columns'
+  | 'inputs'
+  | 'outputs'
+  | 'inputs-outputs'
+  | 'lineage'
+  | 'tests'
+  | 'sql'
+  | 'code'
+  | 'sink'
+  | 'preview'
+  | 'runs';
 
 export type CanvasGlobalNavigationPolicy = {
   workbenchTabs: 'retired';
@@ -25,11 +39,8 @@ export type CanvasSourceImportSurfacePolicy = {
 
 export type CanvasNodeWorkbenchSurfacePolicy = {
   placement: 'contextual-overlay';
-  openedFrom: readonly Extract<
-    CanvasSurfaceLaunchPoint,
-    'node-context-menu' | 'double-click' | 'selection'
-  >[];
-  sections: readonly string[];
+  openedFrom: readonly Extract<CanvasSurfaceLaunchPoint, 'node-context-menu' | 'double-click'>[];
+  sections: readonly CanvasNodeWorkbenchSectionPolicyId[];
 };
 
 export type CanvasOperationalDrawerSurfacePolicy = {

@@ -312,9 +312,27 @@ commands or queries are still needed for a mature end-to-end workflow.
 - Rule: the probe must be server-owned; the browser must never fake a
   successful login.
 
+## Templates Workbench Rails
+
+The detailed Templates component catalog remains canonical in
+`templates/execution-template-source-generation-component.md`. Frontend-wide
+inventory groups those route-local rails by concern:
+
+- Template catalog and preview projection:
+  - `ListExecutionTemplateProfiles`;
+  - `GenerateExecutionTemplatePreview`.
+- Template route-local commands:
+  - `SelectExecutionTemplateProfile`;
+  - `UpdateExecutionTemplateParameterValue`.
+
+These rails are intentionally `implemented-local`: they own built-in template
+profile selection, parameter state, validation, and deterministic generated
+source preview. They do not persist artifacts, execute providers, manage
+credentials, or define backend template contracts.
+
 ## Plan Rails
 
-### `PreviewExecutablePlan`
+### `PreviewExecutionPlan`
 
 - Type: command.
 - Status: `implemented-api`.
@@ -438,13 +456,10 @@ The detailed Canvas catalog remains canonical in
 `graph/canvas-workbench-command-query-catalog.md`. Frontend-wide inventory
 groups those rails by concern:
 
-- Shell/tab presentation queries and commands:
+- Shell and contextual Canvas presentation queries and commands:
   - `ListShellNavigationItems`;
-  - `ListCanvasWorkbenchTabs`;
-  - `ResolveCanvasWorkbenchContext`;
-  - `SelectCanvasWorkbenchTab`;
   - `RequestCanvasExecutionScope`;
-  - `OpenCanvasScopedRunTab`.
+  - `RenderCanvasContextualGraphSurface`.
 - Plugin placement:
   - `RegisterPluginViewPlacement`.
 - Layout and viewport:
@@ -478,10 +493,9 @@ groups those rails by concern:
   - `ExportProjectSnapshot`;
   - `ValidateProjectImport`;
   - `ImportProjectSnapshot`.
-- Governance and browser proof:
+- Governance:
   - `RecordCanvasFowlerCanon`;
-  - `ClassifyCanvasFowlerDisposition`;
-  - `VerifyCanvasWorkbenchVisualPosture`.
+  - `ClassifyCanvasFowlerDisposition`.
 
 ## Repetitions And Consolidation Opportunities
 

@@ -3,13 +3,20 @@ import { describe, expect, it } from 'vitest';
 import type { TableInfo } from './types';
 import {
   applySourceImportOptionDefaults,
+  buildWarehouseTableKey,
   buildPreviewGroups,
   buildSourceImportOptionValues,
+  canEnterSourceImportSection,
   canProceedForStep,
   getNextStep,
   getPreviousStep,
   getSelectedCount,
+  getSelectedTables,
   groupTablesBySchema,
+  resolveActiveTable,
+  resolveSectionForStep,
+  resolveStepForSection,
+  buildSourceImportCatalogViewModel,
 } from './sourceImportWizardModel';
 
 function buildTable(overrides?: Partial<TableInfo>): TableInfo {
@@ -34,6 +41,16 @@ describe('sourceImportWizardModel', () => {
       buildTable({ schema: 'MART', table: 'fct_sales' }),
     ]);
     expect(Object.keys(grouped)).toEqual(['ERP', 'MART']);
+  });
+
+  it('resolves canonical table keys and active table metadata targets', () => {
+    const orders = buildTable({ selected: true, table: 'ORDERS' });
+    const customers = buildTable({ table: 'CUSTOMERS' });
+
+    expect(buildWarehouseTableKey(orders)).toBe('RAW.ERP.ORDERS');
+    expect(getSelectedTables([orders, customers])).toEqual([orders]);
+    expect(resolveActiveTable([orders, customers], 'RAW.ERP.CUSTOMERS')).toEqual(customers);
+    expect(resolveActiveTable([orders, customers], null)).toEqual(orders);
   });
 
   it('builds preview groups from selected tables', () => {
@@ -89,7 +106,96 @@ describe('sourceImportWizardModel', () => {
   });
 
   it('navigates wizard steps in both directions', () => {
-    expect(getNextStep('sourceType')).toBe('connection');
-    expect(getPreviousStep('connection')).toBe('sourceType');
+    expect(getNextStep('connection')).toBe('selection');
+    expect(getPreviousStep('connection')).toBe('connection');
+    expect(getPreviousStep('selection')).toBe('connection');
+  });
+
+  it('maps contextual source-import sections to guarded workflow steps', () => {
+    expect(resolveSectionForStep('connection')).toBe('connections');
+    expect(resolveSectionForStep('selection')).toBe('browse');
+    expect(resolveSectionForStep('options')).toBe('metadata');
+    expect(resolveSectionForStep('review')).toBe('selected');
+    expect(resolveStepForSection('metadata')).toBe('options');
+    expect(canEnterSourceImportSection('connections', null, 0)).toBe(true);
+    expect(canEnterSourceImportSection('browse', null, 0)).toBe(false);
+    expect(canEnterSourceImportSection('browse', 'conn-1', 0)).toBe(true);
+    expect(canEnterSourceImportSection('metadata', 'conn-1', 0)).toBe(false);
+    expect(canEnterSourceImportSection('selected', 'conn-1', 1)).toBe(true);
+  });
+
+  it('projects a professional source catalog view model for browse, metadata, and selected surfaces', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({
+          schema: 'ERP',
+          table: 'ORDERS',
+          rowCount: 1500,
+          selected: true,
+          columns: [
+            { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true, unique: true },
+            { name: 'discount_code', type: 'TEXT', nullable: true },
+          ],
+        }),
+        buildTable({
+          schema: 'ERP',
+          table: 'CUSTOMERS',
+          rowCount: undefined,
+          selected: false,
+          columns: [{ name: 'customer_id', type: 'INTEGER', nullable: false }],
+        }),
+      ],
+      activeTableKey: 'RAW.ERP.ORDERS',
+    });
+
+    expect(viewModel.schemaGroups).toEqual([
+      expect.objectContaining({
+        schema: 'ERP',
+        tableCountLabel: '2 tables',
+        selected: false,
+        tables: [
+          expect.objectContaining({
+            canonicalName: 'RAW.ERP.ORDERS',
+            displayName: 'ORDERS',
+            accessibilityLabel: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 2 columns.',
+            rowCountLabel: '1,500 rows',
+            columnCountLabel: '2 columns',
+            columns: [
+              {
+                name: 'order_id',
+                type: 'INTEGER',
+                nullabilityLabel: 'Required',
+                constraintLabels: ['Primary key', 'Unique', 'Required'],
+              },
+              {
+                name: 'discount_code',
+                type: 'TEXT',
+                nullabilityLabel: 'Nullable',
+                constraintLabels: ['Nullable'],
+              },
+            ],
+          }),
+          expect.objectContaining({
+            canonicalName: 'RAW.ERP.CUSTOMERS',
+            accessibilityLabel: 'Select source table RAW.ERP.CUSTOMERS. Rows unknown. 1 column.',
+            rowCountLabel: 'Rows unknown',
+            columnCountLabel: '1 column',
+          }),
+        ],
+      }),
+    ]);
+    expect(viewModel.activeTable).toEqual(
+      expect.objectContaining({
+        canonicalName: 'RAW.ERP.ORDERS',
+        rowCountLabel: '1,500 rows',
+        columnCountLabel: '2 columns',
+      })
+    );
+    expect(viewModel.selectedTables).toEqual([
+      expect.objectContaining({
+        canonicalName: 'RAW.ERP.ORDERS',
+        columnCountLabel: '2 columns',
+      }),
+    ]);
   });
 });

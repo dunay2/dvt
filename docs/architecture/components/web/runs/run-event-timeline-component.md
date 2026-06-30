@@ -16,17 +16,17 @@ or artifact authority. Those remain snapshot and workspace concerns.
 
 ## Public API
 
-| API                               | Kind               | Owner                         | Contract                                                               |
-| --------------------------------- | ------------------ | ----------------------------- | ---------------------------------------------------------------------- |
-| `RUN_EVENT_LIVE_POLL_INTERVAL_MS` | constant           | Run event timeline model      | Shared polling interval for active event streams                       |
-| `isRunEventStreamLiveStatus`      | query helper       | Run event timeline model      | Returns `true` for `pending` and `running` run statuses only           |
-| `normalizeRunEventTimelinePage`   | query helper       | Run event timeline model      | Orders and deduplicates one event page while preserving `nextAfterSeq` |
-| `mergeRunEventTimelinePage`       | query helper       | Run event timeline model      | Merges a new page into existing timeline state by event identity       |
-| `buildRunEventPresentationModel`  | presentation model | Run event presentation model  | Maps a raw event into level, headline key, detail, and step identity   |
-| `resolveRunEventHeadline`         | copy resolver      | Run event presentation copy   | Resolves human-readable event headline copy                            |
-| `formatRunEventAsLogLine`         | terminal renderer  | Shell console event rendering | Formats shared event semantics as one terminal-style line              |
-| `XtermConsole`                    | terminal view      | Shell console event rendering | Renders formatted event lines as the xterm-backed shell companion      |
-| `RunEventTimelineTable`           | structured view    | Runs workspace timeline       | Renders shared event semantics as durable dense timeline rows          |
+| API                               | Kind               | Owner                        | Contract                                                               |
+| --------------------------------- | ------------------ | ---------------------------- | ---------------------------------------------------------------------- |
+| `RUN_EVENT_LIVE_POLL_INTERVAL_MS` | constant           | Run event timeline model     | Shared polling interval for active event streams                       |
+| `isRunEventStreamLiveStatus`      | query helper       | Run event timeline model     | Returns `true` for `pending` and `running` run statuses only           |
+| `normalizeRunEventTimelinePage`   | query helper       | Run event timeline model     | Orders and deduplicates one event page while preserving `nextAfterSeq` |
+| `mergeRunEventTimelinePage`       | query helper       | Run event timeline model     | Merges a new page into existing timeline state by event identity       |
+| `buildRunEventPresentationModel`  | presentation model | Run event presentation model | Maps a raw event into level, headline key, detail, and step identity   |
+| `resolveRunEventHeadline`         | copy resolver      | Run event presentation copy  | Resolves human-readable event headline copy                            |
+| `formatRunEventAsLogLine`         | terminal renderer  | Shell log event rendering    | Formats shared event semantics as one terminal-style line              |
+| `XtermConsole`                    | terminal view      | Shell log event rendering    | Renders formatted event lines as the xterm-backed shell companion      |
+| `RunEventTimelineTable`           | structured view    | Runs workspace timeline      | Renders shared event semantics as durable dense timeline rows          |
 
 ## Invariants
 
@@ -36,14 +36,14 @@ or artifact authority. Those remain snapshot and workspace concerns.
 4. `nextAfterSeq` is preserved when supplied by the adapter.
 5. Active event streams poll only while the run status is `pending` or
    `running`.
-6. The shell console keeps the last focused run as an observation cursor across
+6. The shell operational drawer keeps the last focused run as an observation cursor across
    Canvas and Runs list route navigation.
-7. Console lines and Runs timeline rows share event severity and headline
+7. Operational log lines and Runs timeline rows share event severity and headline
    semantics.
 8. Timeline events must not infer snapshot status, materialization evidence,
    failed step diagnostics, or authoring provenance.
 9. A detail route for a different `runId` clears the previous observed run
-   while its workspace is loading, missing, or errored, so the shell console does
+   while its workspace is loading, missing, or errored, so the shell operational drawer does
    not poll stale run evidence for the active route.
 
 ## Transitions
@@ -68,17 +68,17 @@ stateDiagram-v2
 ```mermaid
 flowchart TB
   Port["IRunsPort.listRunEvents"] --> Model["runEventTimelineModel"]
-  Store["useExecutionStore.currentRun"] --> ConsoleHook["useConsoleLogStream"]
-  Model --> ConsoleHook
+  Store["useExecutionStore.currentRun"] --> LiveLogHook["useConsoleLogStream"]
+  Model --> LiveLogHook
   Model --> Facade["RunWorkspaceFacade"]
 
-  Presentation["runEventPresentationModel"] --> ConsoleFormat["formatRunEventAsLogLine"]
+  Presentation["runEventPresentationModel"] --> LogFormat["formatRunEventAsLogLine"]
   Presentation --> Table["RunEventTimelineTable"]
-  Copy["runEventPresentationCopy"] --> ConsoleFormat
+  Copy["runEventPresentationCopy"] --> LogFormat
   Copy --> Table
 
-  ConsoleFormat --> Terminal["xterm-backed shell companion"]
-  ConsoleHook --> Drawer["BottomConsoleDrawer"]
+  LogFormat --> Terminal["xterm-backed shell companion"]
+  LiveLogHook --> Drawer["BottomOperationalDrawer"]
   Drawer --> Terminal
   Facade --> Workspace["RunWorkspaceStateView"]
   Table --> Workspace
@@ -86,15 +86,15 @@ flowchart TB
 
 ## Consumers
 
-| Consumer                | File                                                                                                                          | Responsibility                                           |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `RunWorkspaceFacade`    | [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)                                  | Builds durable snapshot-plus-timeline workspace state    |
-| `useConsoleLogStream`   | [useConsoleLogStream.ts](../../../../../apps/web/src/app/components/console/useConsoleLogStream.ts)                           | Mirrors the shell-observed run into the shell console    |
-| `XtermConsole`          | [XtermConsole.tsx](../../../../../apps/web/src/app/components/console/XtermConsole.tsx)                                       | Renders terminal-grade live companion lines              |
-| `RunEventTimelineTable` | [RunEventTimelineTable.tsx](../../../../../apps/web/src/app/views/runs/RunEventTimelineTable.tsx)                             | Renders dense event rows from shared event semantics     |
-| `BottomConsoleDrawer`   | [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)                                                         | Renders terminal companion state                         |
-| `RunWorkspaceStateView` | [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)                             | Renders durable run workspace using dense event rows     |
-| Architecture guard      | [runsDomainBoundary.architecture.test.ts](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts) | Validates semantic convergence, docs, and owned concerns |
+| Consumer                  | File                                                                                                                          | Responsibility                                           |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `RunWorkspaceFacade`      | [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)                                  | Builds durable snapshot-plus-timeline workspace state    |
+| `useConsoleLogStream`     | [useConsoleLogStream.ts](../../../../../apps/web/src/app/components/console/useConsoleLogStream.ts)                           | Mirrors the shell-observed run into the operational log  |
+| `XtermConsole`            | [XtermConsole.tsx](../../../../../apps/web/src/app/components/console/XtermConsole.tsx)                                       | Renders terminal-grade live companion lines              |
+| `RunEventTimelineTable`   | [RunEventTimelineTable.tsx](../../../../../apps/web/src/app/views/runs/RunEventTimelineTable.tsx)                             | Renders dense event rows from shared event semantics     |
+| `BottomOperationalDrawer` | [BottomOperationalDrawer.tsx](../../../../../apps/web/src/app/components/shell/BottomOperationalDrawer.tsx)                   | Renders operational drawer log state                     |
+| `RunWorkspaceStateView`   | [RunWorkspaceStateView.tsx](../../../../../apps/web/src/app/views/runs/RunWorkspaceStateView.tsx)                             | Renders durable run workspace using dense event rows     |
+| Architecture guard        | [runsDomainBoundary.architecture.test.ts](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts) | Validates semantic convergence, docs, and owned concerns |
 
 ## Mature-System Comparison
 

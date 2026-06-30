@@ -6,9 +6,28 @@ import type {
   IWarehouseConnectionProbe,
   InspectWarehouseConnectionResult,
   TestWarehouseConnectionResult,
+  WarehouseColumn,
   WarehouseConnectionCatalogEntry,
   WarehouseTable,
 } from '../../application/ports/warehouseSourceImport.js';
+
+type PostgresTableDiscoveryRow = {
+  readonly table_catalog: string;
+  readonly table_schema: string;
+  readonly table_name: string;
+  readonly row_count: number | string | null;
+};
+
+type PostgresColumnDiscoveryRow = {
+  readonly table_catalog: string;
+  readonly table_schema: string;
+  readonly table_name: string;
+  readonly column_name: string;
+  readonly data_type: string;
+  readonly is_nullable: 'YES' | 'NO';
+  readonly primary_key: boolean;
+  readonly unique_column: boolean;
+};
 
 export type WarehouseCredentialResolver = {
   resolveCredential(credentialRef: string): Promise<string | null>;
@@ -103,28 +122,51 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
     const client = new Client({ connectionString });
     try {
       await client.connect();
-      const result = await client.query<{
-        table_catalog: string;
-        table_schema: string;
-        table_name: string;
-      }>(
+      const result = await client.query<PostgresTableDiscoveryRow>(
         [
-          'select table_catalog, table_schema, table_name',
-          'from information_schema.tables',
-          "where table_schema not in ('pg_catalog', 'information_schema')",
-          "and table_type in ('BASE TABLE', 'VIEW')",
+          'select current_database() as table_catalog, namespace.nspname as table_schema, relation.relname as table_name,',
+          'case when relation.reltuples >= 0 then relation.reltuples::bigint else null end as row_count',
+          'from pg_class relation',
+          'join pg_namespace namespace on namespace.oid = relation.relnamespace',
+          "where namespace.nspname not in ('pg_catalog', 'information_schema')",
+          "and relation.relkind in ('r', 'p', 'v', 'm', 'f')",
           'order by table_catalog, table_schema, table_name',
           'limit 500',
         ].join(' ')
       );
+      const columnResult = await client.query<PostgresColumnDiscoveryRow>(
+        [
+          'select column_info.table_catalog, column_info.table_schema, column_info.table_name,',
+          'column_info.column_name, column_info.data_type, column_info.is_nullable,',
+          "coalesce(bool_or(constraints.constraint_type = 'PRIMARY KEY'), false) as primary_key,",
+          "coalesce(bool_or(constraints.constraint_type = 'UNIQUE'), false) as unique_column",
+          'from information_schema.columns column_info',
+          'left join information_schema.key_column_usage key_columns',
+          'on key_columns.table_catalog = column_info.table_catalog',
+          'and key_columns.table_schema = column_info.table_schema',
+          'and key_columns.table_name = column_info.table_name',
+          'and key_columns.column_name = column_info.column_name',
+          'left join information_schema.table_constraints constraints',
+          'on constraints.constraint_catalog = key_columns.constraint_catalog',
+          'and constraints.constraint_schema = key_columns.constraint_schema',
+          'and constraints.constraint_name = key_columns.constraint_name',
+          'and constraints.table_schema = column_info.table_schema',
+          'and constraints.table_name = column_info.table_name',
+          "where column_info.table_schema not in ('pg_catalog', 'information_schema')",
+          'group by column_info.table_catalog, column_info.table_schema, column_info.table_name,',
+          'column_info.ordinal_position, column_info.column_name, column_info.data_type, column_info.is_nullable',
+          'order by column_info.table_catalog, column_info.table_schema, column_info.table_name,',
+          'column_info.ordinal_position',
+          'limit 5000',
+        ].join(' ')
+      );
+      const columnsByTable = groupPostgresColumnsByTable(columnResult.rows);
 
       return {
         ok: true,
-        tables: result.rows.map((row) => ({
-          database: row.table_catalog,
-          schema: row.table_schema,
-          table: row.table_name,
-        })),
+        tables: result.rows.map((row) =>
+          toWarehouseTable(row, columnsByTable.get(postgresTableKey(row)) ?? [])
+        ),
       };
     } catch (error) {
       return {
@@ -166,6 +208,53 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
   private checkedAt(): string {
     return this.options.now().toISOString();
   }
+}
+
+function toWarehouseTable(
+  row: PostgresTableDiscoveryRow,
+  columns: readonly WarehouseColumn[]
+): WarehouseTable {
+  const rowCount = parseOptionalRowCount(row.row_count);
+  return {
+    database: row.table_catalog,
+    schema: row.table_schema,
+    table: row.table_name,
+    ...(rowCount !== undefined ? { rowCount } : {}),
+    ...(columns.length > 0 ? { columns } : {}),
+  };
+}
+
+function groupPostgresColumnsByTable(
+  rows: readonly PostgresColumnDiscoveryRow[]
+): ReadonlyMap<string, readonly WarehouseColumn[]> {
+  const columnsByTable = new Map<string, WarehouseColumn[]>();
+  for (const row of rows) {
+    const key = postgresTableKey(row);
+    const columns = columnsByTable.get(key) ?? [];
+    columns.push({
+      name: row.column_name,
+      type: row.data_type,
+      nullable: row.is_nullable === 'YES',
+      ...(row.primary_key ? { primaryKey: true } : {}),
+      ...(row.unique_column ? { unique: true } : {}),
+    });
+    columnsByTable.set(key, columns);
+  }
+  return columnsByTable;
+}
+
+function postgresTableKey(
+  row: Pick<PostgresTableDiscoveryRow, 'table_catalog' | 'table_schema' | 'table_name'>
+): string {
+  return `${row.table_catalog.toLowerCase()}.${row.table_schema.toLowerCase()}.${row.table_name.toLowerCase()}`;
+}
+
+function parseOptionalRowCount(value: number | string | null): number | undefined {
+  if (value === null) {
+    return undefined;
+  }
+  const parsed = typeof value === 'number' ? value : Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 }
 
 function classifyPostgresProbeFailure(error: unknown): 'invalid_credentials' | 'connection_failed' {

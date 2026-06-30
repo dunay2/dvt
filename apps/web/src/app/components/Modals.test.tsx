@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../types/plans';
-import { PlanPreviewModal } from './Modals';
+import { PlanPreviewModal, RePlanRequiredModal } from './Modals';
 
 describe('PlanPreviewModal', () => {
   let container: HTMLDivElement;
@@ -51,7 +51,7 @@ describe('PlanPreviewModal', () => {
           open={true}
           onClose={onClose}
           plan={mockExecutionPlan}
-          startRunMessage="Preview is stale. Re-run Plan before starting."
+          startRunMessage="Execution Preview is stale. Preview execution plan again before starting."
           onStartRun={onStartRun}
         />
       );
@@ -107,14 +107,62 @@ describe('PlanPreviewModal', () => {
     expect(modal?.className).toContain('sm:max-w-4xl');
 
     const bodyText = document.body.textContent ?? '';
+    expect(bodyText).toContain('Execution Preview identity');
+    expect(bodyText).toContain('Preview ID');
+    expect(bodyText).toContain('Preview Ref');
+    expect(bodyText).toContain('Preview record');
+    expect(bodyText).toContain('Canonical preview');
     expect(bodyText).toContain('Execution target');
     expect(bodyText).toContain('Not estimated');
     expect(bodyText).not.toContain('Est. Cost:$');
+    expect(bodyText).not.toContain('Plan identity');
+    expect(bodyText).not.toContain('Plan ID');
+    expect(bodyText).not.toContain('Plan Ref');
+    expect(bodyText).not.toContain('Plan record');
+    expect(bodyText).not.toContain('plan preview');
+    expect(bodyText).not.toContain('canonical plan');
 
     const longValues = Array.from(
       document.querySelectorAll('[data-testid="plan-preview-long-value"]')
     );
     expect(longValues.length).toBeGreaterThan(0);
     expect(longValues.every((value) => value.className.includes('break-all'))).toBe(true);
+  });
+});
+
+describe('RePlanRequiredModal', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('uses Execution Preview action copy instead of re-plan commands', async () => {
+    await act(async () => {
+      root.render(<RePlanRequiredModal open={true} onClose={vi.fn()} onRePlan={vi.fn()} />);
+    });
+
+    const bodyText = document.body.textContent ?? '';
+
+    expect(bodyText).toContain('Execution Preview Required');
+    expect(bodyText).toContain('Preview execution plan');
+    expect(bodyText).not.toContain('execution plan again before starting');
+    expect(bodyText).not.toContain('Re-Plan');
+    expect(bodyText).not.toContain('Create New Plan');
   });
 });

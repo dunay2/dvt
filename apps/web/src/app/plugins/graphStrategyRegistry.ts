@@ -1,6 +1,11 @@
 import type { CanvasGraphStrategy } from './graphStrategyContracts';
 import type { CanvasSurfaceStrategy } from './canvasSurfaceStrategyContracts';
-import { getAllCanvasRuntimeRegistrations, type RuntimeCapabilities } from './registry';
+import type { GraphNodeCardStrategy } from './graph/graphNodeCardStrategyContracts';
+import {
+  getAllCanvasRuntimeRegistrations,
+  getRuntimePlugins,
+  type RuntimeCapabilities,
+} from './registry';
 import type { CanvasRuntimeRegistration } from './nodeTypeContracts';
 
 const DEFAULT_STRATEGY_ID = 'transformation';
@@ -44,6 +49,20 @@ export function findCanvasSurfaceStrategy(
   capabilities?: RuntimeCapabilities
 ): CanvasSurfaceStrategy | null {
   return findCanvasRuntimeRegistration(strategyId, capabilities)?.surfaceStrategy ?? null;
+}
+
+export function getCanvasGraphNodeCardStrategies(
+  strategyId: unknown,
+  capabilities?: RuntimeCapabilities
+): GraphNodeCardStrategy[] {
+  const runtimeRegistration = findCanvasRuntimeRegistration(strategyId, capabilities);
+  if (runtimeRegistration == null) {
+    return [];
+  }
+
+  return getRuntimePlugins(capabilities)
+    .filter((plugin) => plugin.id === runtimeRegistration.pluginId)
+    .flatMap((plugin) => plugin.graphNodeCardStrategies ?? []);
 }
 
 export function resolveCanvasGraphStrategy(

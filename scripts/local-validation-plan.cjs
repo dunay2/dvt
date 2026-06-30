@@ -45,6 +45,8 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/governance-refresh.test.cjs': 'scripts/governance-refresh.test.cjs',
   'scripts/planning-db-check.cjs': 'scripts/planning-db-check.test.cjs',
   'scripts/planning-db-check.test.cjs': 'scripts/planning-db-check.test.cjs',
+  'scripts/planning-db-integrity-check.cjs': 'scripts/planning-db-integrity-check.test.cjs',
+  'scripts/planning-db-integrity-check.test.cjs': 'scripts/planning-db-integrity-check.test.cjs',
   'scripts/planning-db-export.cjs': 'scripts/planning-db-export.test.cjs',
   'scripts/planning-db-export.test.cjs': 'scripts/planning-db-export.test.cjs',
   'scripts/planning-db/frontend-component-inventory.cjs':
@@ -84,6 +86,14 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/planning-db-operate-tests/task-plan.test.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-query.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/feature-mechanization.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/fowler-analysis.test.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/governance-refresh.test.cjs':
+    'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db-query-tests/helpers.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db/queries/component-integrity-query.cjs': 'scripts/planning-db-query.test.cjs',
+  'scripts/planning-db/queries/rail-vocabulary-query.cjs': 'scripts/planning-db-query.test.cjs',
   'scripts/planning-db-run.cjs': 'scripts/planning-db-run.test.cjs',
   'scripts/planning-db-run.test.cjs': 'scripts/planning-db-run.test.cjs',
   'scripts/planning-db-surface-inventory-check.cjs':
@@ -132,7 +142,9 @@ const PREPUSH_GROUPS = Object.freeze({
     step('test-pr-closeout', 'pnpm', 'test:pr-closeout'),
   ]),
   planningDb: Object.freeze([
+    step('governance-db-import', 'pnpm', 'governance:db:import'),
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
+    step('planning-db-integrity-check', 'pnpm', 'planning:db:integrity:check'),
   ]),
   governanceGlobal: Object.freeze([
     step('docs-gov-generated-policy', 'pnpm', 'docs:gov:generated-policy'),
@@ -177,7 +189,9 @@ const PREPUSH_GROUPS = Object.freeze({
 const VERIFY_CHANGED_GROUPS = Object.freeze({
   web: Object.freeze([step('test-web-changed', 'pnpm', 'test:web:changed')]),
   planningDb: Object.freeze([
+    step('governance-db-import', 'pnpm', 'governance:db:import'),
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
+    step('planning-db-integrity-check', 'pnpm', 'planning:db:integrity:check'),
     step('test-planning-db-migrations', 'pnpm', 'test:planning:db:migrations'),
     step('test-planning-db', 'pnpm', 'test:planning:db'),
   ]),
@@ -337,6 +351,8 @@ function buildVerifyChangedPlan(files) {
   pushStepOnce(plan, VERIFY_CHANGED_BASE_STEPS[0]);
   if (hasPlanningDbChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[0]);
+    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
+    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
   pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(1, 9));
   if (hasWebChange(changedFiles)) {
@@ -349,10 +365,10 @@ function buildVerifyChangedPlan(files) {
     (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-migrate.test.cjs'
   );
   if (hasPlanningDbMigrationChange(changedFiles) && !runsMigrationTestDirectly) {
-    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
+    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[3]);
   }
   if (hasPlanningDbFullSuiteChange(changedFiles)) {
-    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
+    pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[4]);
   }
   if (hasDeveloperWorkflowVerifierChange(changedFiles)) {
     for (const filePath of changedFiles) {

@@ -261,6 +261,71 @@ describe('canvasDraftSession', () => {
     expect(session.baseline.record?.revision).toBe('rev-conflict');
   });
 
+  it('adopts an external command revision without keeping stale saving state', () => {
+    const session = canvasDraftSession.machine.adoptExternalRevision(
+      {
+        ...canvasDraftSession.machine.applyConflict(
+          canvasDraftSession.machine.bootstrap({
+            remoteDraft: null,
+            canonicalNodeIds: ['node_1'],
+            canonicalEdges: [],
+          }),
+          buildRemoteDraftRecord({ revision: 'rev-stale' })
+        ),
+        savingWorkingSet: {
+          visibleNodeIds: ['node_1'],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+      },
+      'rev-imported'
+    );
+
+    expect(session.syncState).toBe('editing');
+    expect(session.draftRevision).toBe('rev-imported');
+    expect(session.savingWorkingSet).toBeUndefined();
+  });
+
+  it('adopts an external revision as editing state while preserving the imported working set', () => {
+    const savingSession = canvasDraftSession.machine.markSaving(
+      canvasDraftSession.machine.bootstrap({
+        remoteDraft: buildRemoteDraftRecord({
+          revision: 'rev-before-import',
+          draft: buildAuthoringDraft({
+            canvas: {
+              kind: 'transformation',
+              title: 'Main canvas',
+            },
+            nodeIds: ['node_1'],
+            nodePositions: {
+              node_1: { x: 0, y: 0 },
+            },
+            edges: [],
+          }),
+        }),
+        canonicalNodeIds: ['node_1'],
+        canonicalEdges: [],
+      })
+    );
+    const importedSession = canvasDraftSession.workingSet.queueExplicitNodeIds(savingSession, [
+      'node_imported',
+    ]);
+    const adoptedSession = canvasDraftSession.machine.adoptExternalRevision(
+      importedSession,
+      'rev-imported'
+    );
+
+    expect(adoptedSession.syncState).toBe('editing');
+    expect(adoptedSession.draftRevision).toBe('rev-imported');
+    expect(adoptedSession.workingSet).toEqual({
+      visibleNodeIds: ['node_1'],
+      visibleEdges: [],
+      pendingExplicitNodeIds: ['node_imported'],
+    });
+    expect(adoptedSession.savingBaseRevision).toBeUndefined();
+    expect(adoptedSession.savingWorkingSet).toBeUndefined();
+  });
+
   it('promotes a successful save into the new editing baseline', () => {
     const session = canvasDraftSession.machine.applySaveSuccess(
       canvasDraftSession.machine.markSaving(

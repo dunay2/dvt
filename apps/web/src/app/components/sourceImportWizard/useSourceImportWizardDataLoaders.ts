@@ -3,6 +3,7 @@ import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
 import type { IWarehouseSourceImportPort, WarehouseTable } from '../../ports/workspace';
 import { sourceImportWizardCopy as copy } from './copy';
+import { buildWarehouseTableKey } from './sourceImportWizardModel';
 import type { SourceImportWizardState } from './types';
 
 interface LoaderParams {
@@ -53,10 +54,6 @@ interface TablesLoaderParams extends LoaderParams {
 
 const emptyInitiallySelectedTables: readonly WarehouseTable[] = [];
 
-function buildWarehouseTableKey(table: Pick<WarehouseTable, 'database' | 'schema' | 'table'>) {
-  return [table.database, table.schema, table.table].join('.');
-}
-
 export function useTablesLoader({
   open,
   selectedConnection,
@@ -75,18 +72,25 @@ export function useTablesLoader({
         const tables = await warehouseSourceImport.listWarehouseTables(selectedConnection);
         if (!cancelled) {
           const selectedTableKeys = new Set(initiallySelectedTables.map(buildWarehouseTableKey));
+          const tableInfos = tables.map((table) => ({
+            ...table,
+            selected: selectedTableKeys.has(buildWarehouseTableKey(table)),
+          }));
+          const selectedTable = tableInfos.find((table) => table.selected);
           setState((prev) => ({
             ...prev,
-            tables: tables.map((table) => ({
-              ...table,
-              selected: selectedTableKeys.has(buildWarehouseTableKey(table)),
-            })),
+            tables: tableInfos,
+            activeTableKey: selectedTable
+              ? buildWarehouseTableKey(selectedTable)
+              : tableInfos[0]
+                ? buildWarehouseTableKey(tableInfos[0])
+                : null,
           }));
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : copy.loadTablesError;
         if (!cancelled) {
-          setState((prev) => ({ ...prev, loadError: message, tables: [] }));
+          setState((prev) => ({ ...prev, loadError: message, tables: [], activeTableKey: null }));
         }
       } finally {
         if (!cancelled) {

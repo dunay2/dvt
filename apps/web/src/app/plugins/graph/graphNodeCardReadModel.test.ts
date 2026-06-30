@@ -41,11 +41,17 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
+    expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
     expect(model.subtitle).toBe('warehouse.public.orders');
+    expect(model.path).toBe('warehouse.public.orders');
     expect(model.metrics).toEqual([
       { id: 'rows', label: 'Rows', value: '18.2k' },
       { id: 'bytes', label: 'Size', value: '3.9 MB' },
       { id: 'columns', label: 'Columns', value: '2' },
+    ]);
+    expect(model.operationalMetrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '18.2k' },
+      { id: 'size', label: 'Size', value: '3.9 MB' },
     ]);
   });
 
@@ -71,6 +77,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
+    expect(model.status).toEqual({ label: 'Completed', tone: 'success' });
     expect(model.metrics).toEqual([
       { id: 'rows', label: 'Rows', value: '1.2k' },
       { id: 'bytes', label: 'Size', value: '2 KB' },
@@ -80,6 +87,60 @@ describe('buildGraphNodeCardReadModel', () => {
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'warnings', label: 'Warnings', value: '2' },
     ]);
+    expect(model.operationalMetrics).toEqual([
+      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z' },
+      { id: 'duration', label: 'Duration', value: '1m 15s' },
+      { id: 'rows', label: 'Rows', value: '1.2k' },
+    ]);
+  });
+
+  it('keeps DVT canonical runtime metrics on strategy-owned cards', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:sql_transform',
+        pluginId: 'dvt',
+        name: 'customer_rollup',
+        lastDuration: 75,
+        lastCost: 0.42,
+        metadata: {
+          database: 'warehouse',
+          schema: 'mart',
+          table: 'customer_rollup',
+          rowCount: 1210,
+          byteSize: 2048,
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.metrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '1.2k' },
+      { id: 'bytes', label: 'Size', value: '2 KB' },
+      { id: 'columns', label: 'Columns', value: '0' },
+      { id: 'duration', label: 'Duration', value: '1m 15s' },
+      { id: 'cost', label: 'Cost', value: '$0.42' },
+    ]);
+  });
+
+  it('preserves canonical warning status when runtime status is not recorded', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:sql_transform',
+        pluginId: 'dvt',
+        name: 'customer_rollup',
+        status: 'warn',
+        metadata: {
+          database: 'warehouse',
+          schema: 'mart',
+          table: 'customer_rollup',
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.status).toEqual({ label: 'Warning', tone: 'warning' });
   });
 
   it('uses a DBT card strategy for model context instead of DVT table ownership', () => {
@@ -102,11 +163,49 @@ describe('buildGraphNodeCardReadModel', () => {
       [dbtGraphNodeCardStrategy]
     );
 
+    expect(model.status).toEqual({ label: 'Draft', tone: 'warning' });
     expect(model.subtitle).toBe('analytics');
+    expect(model.path).toBe('models/marts/fct_orders.sql');
     expect(model.metrics).toEqual([
       { id: 'materialization', label: 'Mat.', value: 'incremental' },
       { id: 'dependencies', label: 'Deps', value: '2' },
       { id: 'columns', label: 'Columns', value: '1' },
+    ]);
+  });
+
+  it('adds DBT source operational metrics from recorded warehouse metadata', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dbt:source',
+        pluginId: 'dbt',
+        name: 'src_erp_orders',
+        metadata: {
+          database: 'RAW',
+          schema: 'ERP',
+          tableName: 'ORDERS',
+          rowCount: 1500,
+          byteSize: 4096000,
+          columns: [
+            { name: 'order_id', type: 'INTEGER' },
+            { name: 'discount_code', type: 'TEXT' },
+          ],
+        },
+      }),
+      {},
+      [dbtGraphNodeCardStrategy]
+    );
+
+    expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
+    expect(model.subtitle).toBe('RAW.ERP.ORDERS');
+    expect(model.path).toBe('RAW.ERP.ORDERS');
+    expect(model.metrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '1.5k' },
+      { id: 'bytes', label: 'Size', value: '3.9 MB' },
+      { id: 'columns', label: 'Columns', value: '2' },
+    ]);
+    expect(model.operationalMetrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '1.5k' },
+      { id: 'size', label: 'Size', value: '3.9 MB' },
     ]);
   });
 

@@ -372,6 +372,8 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
   ]);
   assert.equal(queryCalls.length, 2);
   assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
+  assert.match(queryCalls[1].sql, /planning_query_store\.feature_mechanization_local_rails/);
+  assert.match(queryCalls[1].sql, /partition by rail_id/);
   assert.doesNotMatch(queryCalls[1].sql, /distinct on/i);
   assert.deepEqual(result, [
     {
@@ -425,6 +427,7 @@ test('readFeatureMechanizationManifestsFromDb skips import when DB manifests are
 
   assert.deepEqual(importCalls, []);
   assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
+  assert.match(queryCalls[1].sql, /planning_query_store\.feature_mechanization_local_rails/);
   assert.equal(result.length, 1);
 });
 
@@ -612,18 +615,28 @@ test('validateFeatureImplementationManifests does not require symbol declaration
           allowedImplementationSurfaces: [
             ...validManifest.allowedImplementationSurfaces,
             'scripts/planning-db-operate-tests/feature-mechanization.test.cjs',
+            'scripts/planning-db-query-tests/helpers.cjs',
           ],
         },
       },
     ],
     {
-      changedFiles: ['scripts/planning-db-operate-tests/feature-mechanization.test.cjs'],
+      changedFiles: [
+        'scripts/planning-db-operate-tests/feature-mechanization.test.cjs',
+        'scripts/planning-db-query-tests/helpers.cjs',
+      ],
       addedLinesByPath: {
         'scripts/planning-db-operate-tests/feature-mechanization.test.cjs': [
           "const test = require('node:test');",
           "const assert = require('node:assert/strict');",
           'function featureMechanizationRecordArgs() {',
           '  return [];',
+          '}',
+        ],
+        'scripts/planning-db-query-tests/helpers.cjs': [
+          "const path = require('node:path');",
+          'function runPlanningDbQueryCli() {',
+          '  return null;',
           '}',
         ],
       },

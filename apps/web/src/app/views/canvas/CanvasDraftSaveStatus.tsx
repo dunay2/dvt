@@ -4,15 +4,15 @@ import { Button } from '../../components/ui/button';
 import { cn } from '../../components/ui/utils';
 import { canvasChromeClasses, resolveCanvasDraftStatusClassName } from './canvasChromeTokens';
 import { canvasViewCopy } from './copy';
-import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 
 type CanvasDraftSaveStatusProps = {
-  draftToolbarState: CanvasDraftToolbarState;
+  draftStatusState: CanvasDraftStatusState;
   onReloadLatestDraft: () => void;
 };
 
 export function CanvasDraftSaveStatus({
-  draftToolbarState,
+  draftStatusState,
   onReloadLatestDraft,
 }: CanvasDraftSaveStatusProps): JSX.Element {
   const statusBadge = (
@@ -21,14 +21,14 @@ export function CanvasDraftSaveStatus({
       variant="outline"
       className={cn(
         canvasChromeClasses.statusBadge,
-        resolveCanvasDraftStatusClassName(draftToolbarState.tone)
+        resolveCanvasDraftStatusClassName(draftStatusState.tone)
       )}
     >
-      {draftToolbarState.label}
+      {draftStatusState.label}
     </Badge>
   );
 
-  if (!draftToolbarState.showReloadAction) {
+  if (!draftStatusState.showReloadAction) {
     return statusBadge;
   }
 
@@ -37,7 +37,7 @@ export function CanvasDraftSaveStatus({
       {statusBadge}
       <Button
         type="button"
-        variant={draftToolbarState.tone === 'danger' ? 'destructive' : 'outline'}
+        variant={draftStatusState.tone === 'danger' ? 'destructive' : 'outline'}
         size="sm"
         onClick={onReloadLatestDraft}
         className="h-8 px-3 text-xs"

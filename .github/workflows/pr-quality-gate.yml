@@ -56,7 +56,7 @@ jobs:
       adapter_postgres_changed: ${{ steps.detect_changes.outputs.adapter_postgres_changed }}
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
 
@@ -119,6 +119,11 @@ jobs:
           steps.scope.outputs.feature_mechanization_relevant == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/prepare-planning-db
+        env:
+          GIT_BASE:
+            ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) ||
+            'origin/main' }}
+          GIT_HEAD: ${{ github.sha }}
         with:
           import-planning:
             ${{ steps.scope.outputs.lane_yaml_changed == 'true' && 'true' || 'false' }}
@@ -365,7 +370,7 @@ jobs:
        github.event.inputs.run_temporal_integration == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
 
@@ -415,7 +420,7 @@ jobs:
         postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
 
@@ -449,7 +454,7 @@ jobs:
        github.event.inputs.run_temporal_transformation_integration == 'true')
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
 

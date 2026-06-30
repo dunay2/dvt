@@ -34,8 +34,6 @@ function buildCanvasKinds(): readonly CanvasKindRegistration[] {
       emptyState: {
         title: 'Start dbt canvas',
         editableMessage: 'Start dbt modeling',
-        firstNodeLabel: 'Add first dbt node',
-        firstNodeHelper: 'Choose a dbt resource',
       },
       nodeKinds: [buildNodeKind('dbt:model', 'Model')],
     },
@@ -48,8 +46,6 @@ function buildCanvasKinds(): readonly CanvasKindRegistration[] {
       emptyState: {
         title: 'Start transformation canvas',
         editableMessage: 'Start transformation authoring',
-        firstNodeLabel: 'Add first transformation node',
-        firstNodeHelper: 'Choose a transformation node',
       },
       nodeKinds: [buildNodeKind('dvt:source', 'Source')],
     },
@@ -63,7 +59,7 @@ function buildArgs(
     presentationState: {
       routeState: 'needs_canvas',
       recoveryReason: null,
-      draftToolbarState: {
+      draftStatusState: {
         label: 'Draft synced',
         tone: 'neutral',
         showReloadAction: false,
@@ -158,10 +154,9 @@ describe('canvasHostCycleState', () => {
 
     expect(cycle).toEqual({
       kind: 'typed_empty',
+      canvasTitle: 'Main canvas',
       title: 'Start transformation canvas',
       message: 'Start transformation authoring',
-      firstNodeLabel: 'Add first transformation node',
-      firstNodeHelper: 'Choose a transformation node',
       nodeKinds: buildCanvasKinds()[1]?.nodeKinds,
       onCreateAuthoringNode,
     });
@@ -185,10 +180,9 @@ describe('canvasHostCycleState', () => {
 
     expect(cycle).toEqual({
       kind: 'typed_empty',
+      canvasTitle: 'Main canvas',
       title: 'Start transformation canvas',
       message: 'Start transformation authoring',
-      firstNodeLabel: 'Add first transformation node',
-      firstNodeHelper: 'Choose a transformation node',
       nodeKinds: buildCanvasKinds()[1]?.nodeKinds,
       onCreateAuthoringNode,
     });
@@ -211,10 +205,9 @@ describe('canvasHostCycleState', () => {
 
     expect(cycle).toEqual({
       kind: 'typed_empty',
+      canvasTitle: 'Main canvas',
       title: 'Start transformation canvas',
       message: 'Start transformation authoring',
-      firstNodeLabel: 'Add first transformation node',
-      firstNodeHelper: 'Choose a transformation node',
       nodeKinds: [],
       onCreateAuthoringNode: undefined,
     });
@@ -237,10 +230,9 @@ describe('canvasHostCycleState', () => {
 
     expect(cycle).toEqual({
       kind: 'typed_empty',
+      canvasTitle: 'dbt canvas',
       title: 'Start dbt canvas',
       message: canvasViewCopy.routeEmptyReadOnlyMessage,
-      firstNodeLabel: 'Add first dbt node',
-      firstNodeHelper: 'Choose a dbt resource',
       nodeKinds: [],
       onCreateAuthoringNode: undefined,
     });

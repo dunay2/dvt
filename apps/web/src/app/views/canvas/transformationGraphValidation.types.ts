@@ -43,26 +43,26 @@ export type TransformationGraphValidationResult = {
   valid: boolean;
   summaryCode: TransformationGraphValidationSummaryCode;
   draftSignature: string;
-  scopedNodeIds: string[];
-  scopedEdgeIds: string[];
+  scopedNodeIds: readonly string[];
+  scopedEdgeIds: readonly string[];
   nodeRolesById: Record<string, TransformationNodeRole>;
 };
 
 export type ValidateTransformationGraphArgs = {
-  nodes: CanonicalNode[];
-  edges: CanonicalEdge[];
-  selectedNodeIds?: string[];
-  workspaceNodeIds?: string[];
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+  selectedNodeIds?: readonly string[];
+  workspaceNodeIds?: readonly string[];
 };
 
 export type ScopedTransformationGraph = {
-  scopedNodes: CanonicalNode[];
-  scopedNodeIds: string[];
-  scopedEdges: CanonicalEdge[];
-  scopedEdgeIds: string[];
+  scopedNodes: readonly CanonicalNode[];
+  scopedNodeIds: readonly string[];
+  scopedEdges: readonly CanonicalEdge[];
+  scopedEdgeIds: readonly string[];
 };
 
 export type TransformationValidationContext = ScopedTransformationGraph & {
-  allNodes: CanonicalNode[];
-  allEdges: CanonicalEdge[];
+  allNodes: readonly CanonicalNode[];
+  allEdges: readonly CanonicalEdge[];
 };

@@ -36,7 +36,7 @@ describe('Canvas route draft recovery', () => {
     const reloadLatestDraft = vi.fn();
     await renderCanvasRouteWithController(harness, {
       draftRecoveryReason: 'missing_remote',
-      draftToolbarState: {
+      draftStatusState: {
         label: 'Draft missing',
         tone: 'warning',
         showReloadAction: true,
@@ -67,7 +67,7 @@ describe('Canvas route draft recovery', () => {
     const reloadLatestDraft = vi.fn();
     await renderCanvasRouteWithController(harness, {
       draftRecoveryReason: 'stale_conflict',
-      draftToolbarState: {
+      draftStatusState: {
         label: 'Stale version',
         tone: 'danger',
         showReloadAction: true,
@@ -94,7 +94,7 @@ describe('Canvas route draft recovery', () => {
     const reloadLatestDraft = vi.fn();
     await renderCanvasRouteWithController(harness, {
       draftRecoveryReason: 'projection_gap',
-      draftToolbarState: {
+      draftStatusState: {
         label: 'Projection gap',
         tone: 'warning',
         showReloadAction: true,
@@ -126,7 +126,7 @@ describe('Canvas route draft recovery', () => {
     await renderCanvasRouteWithController(harness, {
       graphErrorMessage: 'workspace graph unavailable',
       draftRecoveryReason: 'stale_conflict',
-      draftToolbarState: {
+      draftStatusState: {
         label: 'Stale version',
         tone: 'danger',
         showReloadAction: true,

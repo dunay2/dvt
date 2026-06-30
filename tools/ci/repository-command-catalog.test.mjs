@@ -145,6 +145,8 @@ test('classifies current command file paths without broad script-directory assum
     'runtime-capability'
   );
   assert.equal(classifyScriptFilePath('scripts/generate-contract-index.cjs').domain, 'contracts');
+  assert.equal(classifyScriptFilePath('scripts/policy-validation-files.cjs').domain, 'contracts');
+  assert.equal(classifyScriptFilePath('scripts/policy-validation-text.cjs').domain, 'contracts');
   assert.equal(
     classifyScriptFilePath('scripts/generate-governance-document-unit-map.cjs').domain,
     'docs-governance'
@@ -174,6 +176,14 @@ test('classifies current command file paths without broad script-directory assum
   assert.equal(classifyScriptFilePath('scripts/ai-preflight.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.cjs').domain, 'developer-workflow');
   assert.equal(classifyScriptFilePath('scripts/pr-closeout.test.cjs').domain, 'test-tooling');
+  assert.equal(
+    classifyScriptFilePath('scripts/planning-db-query-tests/helpers.cjs').domain,
+    'planning-db'
+  );
+  assert.equal(
+    classifyScriptFilePath('scripts/run-canvas-source-import-live-proof.cjs').domain,
+    'dev-local'
+  );
 });
 
 test('detects repository command files and excludes non-command metadata', () => {

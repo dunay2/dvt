@@ -122,7 +122,7 @@ tree.
 - Code route copy resolves through `resolveCodeViewCopy(locale)`; route,
   bootstrap, error, and Monaco surfaces must not own fixed-language strings.
 - Canvas preview provenance may persist generated graph artifacts through
-  `SaveWorkspaceFileContent` before calling `PreviewExecutablePlan`.
+  `SaveWorkspaceFileContent` before calling `PreviewExecutionPlan`.
 - Cypress must not seed `/workspace/files` by intercepting the route when proving
   the live happy path.
 

@@ -26,6 +26,9 @@ interface InspectorPanelProps {
   edges?: readonly CanonicalEdge[];
   activeRunId: string | null;
   registeredPlugins?: ReadonlySet<string>;
+  preferredTabId?: string | null;
+  preferredTabRequestId?: number;
+  panels?: readonly InspectorPanelContribution[];
   onHide: () => void;
   beforePanels?: ReactNode;
   tagsEditor?: ReactNode;
@@ -37,14 +40,31 @@ export default function InspectorPanel({
   edges = [],
   activeRunId,
   registeredPlugins = new Set(),
+  preferredTabId = null,
+  preferredTabRequestId = 0,
+  panels: panelOverrides,
   onHide,
   beforePanels,
   tagsEditor,
 }: Readonly<InspectorPanelProps>) {
-  const [activeTab, setActiveTab] = useState<string | undefined>(undefined);
+  const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
+  const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
 
   const ctx: InspectorContext = { activeRunId, registeredPlugins };
-  const panels = node ? getInspectorPanels(node, ctx) : [];
+  const panels = node ? (panelOverrides ?? getInspectorPanels(node, ctx)) : [];
+  const preferredTabKey =
+    node != null && preferredTabId != null
+      ? `${node.id}:${preferredTabId}:${preferredTabRequestId}`
+      : null;
+
+  useEffect(() => {
+    if (preferredTabKey == null || preferredTabKey === appliedPreferredTabKey) {
+      return;
+    }
+
+    setActiveTab(preferredTabId ?? undefined);
+    setAppliedPreferredTabKey(preferredTabKey);
+  }, [appliedPreferredTabKey, preferredTabId, preferredTabKey]);
 
   if (!node) {
     return (

@@ -1,14 +1,19 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { buildDbtTestRows } from './dbtTestRowsReadModel';
+import { buildTransformColumnOptions, readSelectedColumnRefs } from './dvtTransformColumnModel';
 
 export type NodePropertySectionId =
   | 'general'
   | 'columns'
+  | 'inputs-outputs'
+  | 'tests'
   | 'keys'
   | 'indexes'
   | 'foreign-keys'
   | 'constraints'
   | 'comments'
+  | 'sink'
   | 'code'
   | 'summary';
 
@@ -106,16 +111,12 @@ function addRow(rows: NodePropertyRow[], label: string, value: string | undefine
 }
 
 function readColumns(value: unknown): readonly InspectorColumn[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.flatMap((candidate): readonly InspectorColumn[] => {
+  const readColumn = (candidate: unknown, fallbackName?: string): readonly InspectorColumn[] => {
     if (!isRecord(candidate)) {
       return [];
     }
 
-    const name = readString(candidate.name);
+    const name = readString(candidate.name) ?? fallbackName;
     if (name == null) {
       return [];
     }
@@ -123,20 +124,44 @@ function readColumns(value: unknown): readonly InspectorColumn[] {
     return [
       {
         name,
-        type: readString(candidate.type) ?? 'unknown',
+        type: readFirstString(candidate.type, candidate.dataType, candidate.data_type) ?? 'unknown',
         nullable: readBoolean(candidate.nullable),
         primaryKey: readBoolean(candidate.primaryKey) ?? readBoolean(candidate.isPrimaryKey),
         defaultValue: readFirstString(candidate.default, candidate.defaultValue),
         comment: readFirstString(candidate.description, candidate.comment),
       },
     ];
-  });
+  };
+
+  if (Array.isArray(value)) {
+    return value.flatMap((candidate): readonly InspectorColumn[] => readColumn(candidate));
+  }
+
+  if (isRecord(value)) {
+    return Object.entries(value).flatMap(([key, candidate]): readonly InspectorColumn[] =>
+      readColumn(candidate, key)
+    );
+  }
+
+  return [];
 }
 
 function buildGeneralRows(
   node: CanonicalNode,
   metadata: Record<string, unknown>
 ): NodePropertyRow[] {
+  const formatBytes = (value: number): string => {
+    if (Math.abs(value) >= 1024 * 1024 * 1024) {
+      return `${(value / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
+    }
+    if (Math.abs(value) >= 1024 * 1024) {
+      return `${(value / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
+    }
+    if (Math.abs(value) >= 1024) {
+      return `${(value / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
+    }
+    return `${value} B`;
+  };
   const config = asRecord(metadata.config);
   const dbt = asRecord(metadata.dbt);
   const rows: NodePropertyRow[] = [];
@@ -171,7 +196,13 @@ function buildGeneralRows(
     addRow(rows, 'Rows', new Intl.NumberFormat('en-US').format(rowCount));
   }
 
-  addRow(rows, 'Size', readFirstString(metadata.size, metadata.sizeLabel));
+  const byteSize = readNumber(metadata.byteSize) ?? readNumber(metadata.bytes);
+  addRow(
+    rows,
+    'Size',
+    readFirstString(metadata.size, metadata.sizeLabel) ??
+      (byteSize == null ? undefined : formatBytes(byteSize))
+  );
 
   if (node.lastDuration != null) {
     addRow(rows, 'Duration', `${node.lastDuration}s`);
@@ -179,6 +210,45 @@ function buildGeneralRows(
   if (node.lastCost != null) {
     addRow(rows, 'Cost', `$${node.lastCost.toFixed(2)}`);
   }
+
+  return rows;
+}
+
+function buildSinkRows(node: CanonicalNode, metadata: Record<string, unknown>): NodePropertyRow[] {
+  if (node.kind !== 'dvt:sink') {
+    return [];
+  }
+
+  const config = asRecord(metadata.config);
+  const database = readFirstString(config.database, metadata.database);
+  const schema = readFirstString(config.schema, metadata.schema);
+  const table = readFirstString(config.table, metadata.tableName);
+  const rows: NodePropertyRow[] = [];
+
+  addRow(
+    rows,
+    'Destination',
+    [database, schema, table]
+      .flatMap((part): readonly string[] => {
+        const value = readString(part);
+        return value == null ? [] : [value];
+      })
+      .join('.')
+  );
+  addRow(rows, 'Database', database);
+  addRow(rows, 'Schema', schema);
+  addRow(rows, 'Table', table);
+  addRow(
+    rows,
+    'Materialization',
+    readFirstString(config.materialization, config.materialized, metadata.materialization)
+  );
+  addRow(rows, 'Write mode', readFirstString(config.writeMode, metadata.writeMode));
+  addRow(
+    rows,
+    'Partition strategy',
+    readFirstString(config.partitionStrategy, metadata.partitionStrategy)
+  );
 
   return rows;
 }
@@ -193,6 +263,37 @@ function buildColumnRows(columns: readonly InspectorColumn[]): readonly NodeProp
       key: column.primaryKey ? 'PK' : '',
       default: column.defaultValue ?? '',
       comment: column.comment ?? '',
+    },
+  }));
+}
+
+function buildTransformInputColumnRows({
+  node,
+  nodes,
+  edges,
+}: Readonly<{
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}>): readonly NodePropertyTableRow[] {
+  if (node.role !== 'transform') {
+    return [];
+  }
+
+  return buildTransformColumnOptions({
+    node,
+    nodes,
+    edges,
+    selectedColumnRefs: readSelectedColumnRefs(node.metadata),
+  }).map((option) => ({
+    id: option.columnRef,
+    cells: {
+      name: option.columnName,
+      type: option.dataType,
+      nullable: option.nullable === false ? 'not null' : option.nullable === true ? 'nullable' : '',
+      source: option.sourceNodeName,
+      reference: option.columnRef,
+      selection: option.selected ? 'selected' : 'available',
     },
   }));
 }
@@ -349,6 +450,45 @@ function buildSummaryRows(
   return rows;
 }
 
+function buildInputsOutputsRows(
+  node: CanonicalNode,
+  nodes: readonly CanonicalNode[],
+  edges: readonly CanonicalEdge[]
+): readonly NodePropertyTableRow[] {
+  const nodeById = new Map(nodes.map((candidate) => [candidate.id, candidate]));
+  const rows: NodePropertyTableRow[] = [];
+
+  for (const edge of edges) {
+    if (edge.targetId === node.id) {
+      const upstreamNode = nodeById.get(edge.sourceId);
+      rows.push({
+        id: `input:${edge.id}`,
+        cells: {
+          direction: 'Input',
+          node: upstreamNode?.name ?? edge.sourceId,
+          nodeId: edge.sourceId,
+          relation: edge.relation,
+        },
+      });
+    }
+
+    if (edge.sourceId === node.id) {
+      const downstreamNode = nodeById.get(edge.targetId);
+      rows.push({
+        id: `output:${edge.id}`,
+        cells: {
+          direction: 'Output',
+          node: downstreamNode?.name ?? edge.targetId,
+          nodeId: edge.targetId,
+          relation: edge.relation,
+        },
+      });
+    }
+  }
+
+  return rows;
+}
+
 function createSection({
   id,
   label,
@@ -382,10 +522,17 @@ export function buildNodePropertiesReadModel({
   const metadata = asRecord(node.metadata);
   const config = asRecord(metadata.config);
   const columns = readColumns(metadata.columns);
+  const columnRows =
+    columns.length > 0
+      ? buildColumnRows(columns)
+      : buildTransformInputColumnRows({ node, nodes, edges });
   const keyRows = buildKeyRows(metadata, columns);
   const indexRows = buildIndexRows(metadata);
   const foreignKeyRows = buildForeignKeyRows(metadata);
   const constraintRows = buildConstraintRows(metadata);
+  const inputsOutputsRows = buildInputsOutputsRows(node, nodes, edges);
+  const testRows = buildDbtTestRows({ node, metadata, nodes, edges });
+  const sinkRows = buildSinkRows(node, metadata);
   const code =
     readString(metadata.compiledSql) ?? readString(metadata.sql) ?? readString(config.sql);
 
@@ -401,8 +548,26 @@ export function buildNodePropertiesReadModel({
       createSection({
         id: 'columns',
         label: 'Columns',
-        tableRows: buildColumnRows(columns),
-        emptyState: columns.length === 0 ? 'No columns are recorded for this node.' : undefined,
+        tableRows: columnRows,
+        emptyState: columnRows.length === 0 ? 'No columns are recorded for this node.' : undefined,
+      }),
+      createSection({
+        id: 'inputs-outputs',
+        label: 'Inputs / Outputs',
+        tableRows: inputsOutputsRows,
+        emptyState:
+          inputsOutputsRows.length === 0
+            ? 'No graph inputs or outputs are recorded for this node.'
+            : undefined,
+      }),
+      createSection({
+        id: 'tests',
+        label: 'Tests',
+        tableRows: testRows,
+        emptyState:
+          testRows.length === 0
+            ? 'No dbt or data-quality tests are recorded for this node.'
+            : undefined,
       }),
       createSection({
         id: 'keys',
@@ -441,6 +606,19 @@ export function buildNodePropertiesReadModel({
             ? 'No comments are recorded for this node.'
             : undefined,
       }),
+      ...(node.kind === 'dvt:sink'
+        ? [
+            createSection({
+              id: 'sink',
+              label: 'Sink',
+              rows: sinkRows,
+              emptyState:
+                sinkRows.length === 0
+                  ? 'No sink target or write policy is recorded for this node.'
+                  : undefined,
+            }),
+          ]
+        : []),
       createSection({
         id: 'code',
         label: 'Code',

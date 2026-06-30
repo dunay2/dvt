@@ -72,11 +72,11 @@ export function useCanvasExecutionActions({
   executionEnvironmentId,
   shellFeedback,
   previewProvenanceConfig,
-  consolePanelVisible,
+  bottomDrawerVisible,
   currentPlan,
   setCurrentPlan,
-  setConsolePanelHeight,
-  toggleConsolePanel,
+  setBottomDrawerHeight,
+  toggleBottomDrawer,
   onRunStarted,
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const [planModalOpen, setPlanModalOpen] = useState(false);
@@ -111,7 +111,7 @@ export function useCanvasExecutionActions({
     setLastPlannedDraftSignature,
   });
 
-  const handlePlan = useCanvasPlanActionHandler({
+  const handlePreviewExecutionPlan = useCanvasPlanActionHandler({
     canPlan,
     canonicalEdges,
     canonicalNodes,
@@ -133,7 +133,7 @@ export function useCanvasExecutionActions({
 
   const handleStartRun = useCanvasRunStartHandler({
     canRun: canRun && executionStrategy != null && executionStrategy.kind !== 'not_executable',
-    consolePanelVisible,
+    bottomDrawerVisible,
     currentPlan,
     executableGraphFailureMessage,
     hasPersistedPlanForRun,
@@ -141,10 +141,10 @@ export function useCanvasExecutionActions({
     onRunStarted,
     runsService,
     sessionContext: executionSessionContext,
-    setConsolePanelHeight,
+    setBottomDrawerHeight,
     setPlanModalOpen,
     shellFeedback,
-    toggleConsolePanel,
+    toggleBottomDrawer,
   });
 
   return {
@@ -155,7 +155,7 @@ export function useCanvasExecutionActions({
     isCurrentPlanStale,
     planRunReadiness,
     planStatusSummary,
-    handlePlan,
+    handlePreviewExecutionPlan,
     handleStartRun,
   };
 }

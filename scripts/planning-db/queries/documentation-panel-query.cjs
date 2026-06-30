@@ -1,42 +1,11 @@
 /** Owned concern: expose DB-owned documentation and component panel facts. */
+const { appendBooleanFilter, appendFilter } = require('../query-filter.cjs');
+const { textValue } = require('../query-format.cjs');
+const { parseLimit } = require('../query-limit.cjs');
+
 function createDocumentationPanelReadModelComponent(deps = {}) {
   const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
-
-  function parseLimit(value, defaultLimit) {
-    if (value === undefined || value === null || value === '') {
-      return defaultLimit;
-    }
-
-    const parsed = Number(value);
-    if (!Number.isInteger(parsed) || parsed <= 0) {
-      throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-    }
-
-    return parsed;
-  }
-
-  function appendFilter(predicates, params, column, value) {
-    if (value === undefined || value === null || value === '') {
-      return;
-    }
-
-    params.push(value);
-    predicates.push(`${column} = $${params.length}`);
-  }
-
-  function appendBooleanFilter(predicates, column, value) {
-    if (value === undefined) {
-      return;
-    }
-
-    predicates.push(`${column} is ${value === true ? 'true' : 'false'}`);
-  }
-
-  function textValue(value, fallback = '-') {
-    const text = String(value ?? '').trim();
-    return text.length > 0 ? text : fallback;
-  }
 
   function buildDocumentationPanelRows(rows) {
     return rows.map((row) => [

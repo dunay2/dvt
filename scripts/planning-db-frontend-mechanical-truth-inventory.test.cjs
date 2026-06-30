@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const {
   buildFrontendMechanicalTruthRows,
@@ -129,6 +131,22 @@ test('frontend mechanical truth query applies state, path, owner, kind, and limi
   assert.match(calls[0].sql, /route_path = \$3/);
   assert.match(calls[0].sql, /frontend_owner = \$4/);
   assert.deepEqual(calls[0].params, ['route', 'operational-product', '/runs', 'Runs workbench', 5]);
+});
+
+test('frontend mechanical truth inventory exposes its canonical query rail', () => {
+  const railName = ['List', 'Frontend', 'Mechanical', 'Truth', 'Surfaces'].join('');
+  const source = fs.readFileSync(
+    path.join(__dirname, 'planning-db/frontend-mechanical-truth-inventory.cjs'),
+    'utf8'
+  );
+  const ownSource = fs.readFileSync(__filename, 'utf8');
+
+  assert.doesNotMatch(
+    ownSource,
+    new RegExp(`\\b${railName}\\b`),
+    'the inventory test must not be indexed as a rail implementation surface'
+  );
+  assert.match(source, new RegExp(`\\b${railName}\\b`));
 });
 
 test('real frontend mechanical truth inventory covers product, preview, and unsupported routes', () => {

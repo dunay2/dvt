@@ -58,14 +58,19 @@ export function useCanvasDraftInitialBootstrap({
     }
 
     lastFailedSignatureRef.current = null;
-    setDraftSession(
-      canvasDraftSession.machine.bootstrap({
+    setDraftSaveStatus('idle');
+
+    setDraftSession((currentSession) => {
+      if (currentSession.syncState !== 'bootstrapping') {
+        return currentSession;
+      }
+
+      return canvasDraftSession.machine.bootstrap({
         remoteDraft,
         canonicalNodeIds: canonicalSnapshot.canonicalNodeIds,
         canonicalEdges: canonicalSnapshot.canonicalEdges,
-      })
-    );
-    setDraftSaveStatus('idle');
+      });
+    });
   }, [
     canonicalSnapshot,
     draftSession.syncState,

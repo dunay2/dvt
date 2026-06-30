@@ -5,11 +5,11 @@ import {
   deriveCanvasDraftPresentationState,
   toRouteBootstrapPresentation,
 } from './canvasDraftPresentationModel';
-import { deriveCanvasDraftToolbarState } from './canvasDraftToolbarState';
+import { deriveCanvasDraftStatusState } from './canvasDraftStatusState';
 
 describe('canvasDraftPresentationModel', () => {
   it('publishes backend readiness failure as a routable blocked canvas posture after shell startup', () => {
-    const draftToolbarState = deriveCanvasDraftToolbarState({
+    const draftStatusState = deriveCanvasDraftStatusState({
       draftSaveStatus: 'saved',
       recoveryReason: 'missing_remote',
     });
@@ -24,7 +24,7 @@ describe('canvasDraftPresentationModel', () => {
         },
         workbenchState: { kind: 'ready' },
         recoveryReason: 'missing_remote',
-        draftToolbarState,
+        draftStatusState,
       })
     ).toMatchObject({
       routeState: 'blocked_backend',
@@ -35,7 +35,7 @@ describe('canvasDraftPresentationModel', () => {
   });
 
   it('publishes recovery posture as blocked bootstrap state', () => {
-    const draftToolbarState = deriveCanvasDraftToolbarState({
+    const draftStatusState = deriveCanvasDraftStatusState({
       draftSaveStatus: 'saved',
       recoveryReason: 'stale_conflict',
     });
@@ -46,7 +46,7 @@ describe('canvasDraftPresentationModel', () => {
         startupBlockState: null,
         workbenchState: { kind: 'ready' },
         recoveryReason: 'stale_conflict',
-        draftToolbarState,
+        draftStatusState,
       })
     ).toMatchObject({
       routeState: 'recovery',
@@ -57,7 +57,7 @@ describe('canvasDraftPresentationModel', () => {
   });
 
   it('publishes empty and ready posture as bootstrap-completable states', () => {
-    const draftToolbarState = deriveCanvasDraftToolbarState({
+    const draftStatusState = deriveCanvasDraftStatusState({
       draftSaveStatus: 'idle',
       recoveryReason: null,
     });
@@ -68,7 +68,7 @@ describe('canvasDraftPresentationModel', () => {
         startupBlockState: null,
         workbenchState: { kind: 'empty' },
         recoveryReason: null,
-        draftToolbarState,
+        draftStatusState,
       })
     ).toMatchObject({
       routeState: 'empty',
@@ -82,7 +82,7 @@ describe('canvasDraftPresentationModel', () => {
         startupBlockState: null,
         workbenchState: { kind: 'ready' },
         recoveryReason: null,
-        draftToolbarState,
+        draftStatusState,
       })
     ).toMatchObject({
       routeState: 'ready',
@@ -93,7 +93,7 @@ describe('canvasDraftPresentationModel', () => {
   });
 
   it('maps the canvas route presentation into the generic bootstrap contract', () => {
-    const draftToolbarState = deriveCanvasDraftToolbarState({
+    const draftStatusState = deriveCanvasDraftStatusState({
       draftSaveStatus: 'idle',
       recoveryReason: null,
     });
@@ -102,7 +102,7 @@ describe('canvasDraftPresentationModel', () => {
       startupBlockState: null,
       workbenchState: { kind: 'ready' },
       recoveryReason: null,
-      draftToolbarState,
+      draftStatusState,
     });
 
     expect(toRouteBootstrapPresentation(presentationState)).toEqual({

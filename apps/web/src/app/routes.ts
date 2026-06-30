@@ -27,7 +27,6 @@ import { useShellRuntime } from './shell/useShellRuntime';
 import AdminView from './views/AdminView';
 import LoginView from './views/LoginView';
 import PluginsView from './views/PluginsView';
-import { CANVAS_WORKBENCH_ROUTE_ID } from './views/canvas/canvasDraftPresentationStore';
 
 function normalizeChildPath(path: string): string {
   return path.startsWith('/') ? path.slice(1) : path;
@@ -162,23 +161,6 @@ export function createAppRoutes(): RouteObject[] {
       handle: routeHandle,
     };
   });
-  const canvasRouteView = routeViews.find((view) => view.id === 'dbt.canvas');
-  const canvasWorkbenchRoute =
-    canvasRouteView == null
-      ? []
-      : [
-          {
-            id: CANVAS_WORKBENCH_ROUTE_ID,
-            path: 'canvas/:workbenchTab',
-            element: createPluginRoute(
-              CANVAS_WORKBENCH_ROUTE_ID,
-              canvasRouteView.pluginId,
-              canvasRouteView.component,
-              requireViewRouteHandle(canvasRouteView)
-            ),
-            handle: requireViewRouteHandle(canvasRouteView),
-          } satisfies RouteObject,
-        ];
   const pluginRoutePaths = new Set(pluginRoutes.map((route) => route.path).filter(Boolean));
   const shellRoutes: RouteObject[] = [
     {
@@ -223,7 +205,11 @@ export function createAppRoutes(): RouteObject[] {
           element: createElement(DefaultCoreRouteRedirect),
         },
         ...pluginRoutes,
-        ...canvasWorkbenchRoute,
+        {
+          id: 'dbt.canvas.retired-workbench-redirect',
+          path: 'canvas/*',
+          element: createElement(Navigate, { to: '/canvas', replace: true }),
+        },
         ...shellRoutes,
       ],
     },

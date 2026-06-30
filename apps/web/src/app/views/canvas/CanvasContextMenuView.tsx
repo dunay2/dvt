@@ -3,10 +3,22 @@ import type { CSSProperties, RefObject } from 'react';
 
 import type {
   CanvasContextMenuCanvasAction,
+  CanvasContextMenuCatalogAction,
   CanvasContextMenuCreateNodeAction,
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';
+import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
+import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
+import {
+  CanvasContextMenuItem,
+  CanvasContextMenuSection,
+  CanvasContextMenuSurface,
+} from './CanvasContextMenuPrimitives';
+import {
+  buildCanvasContextMenuSections,
+  type CanvasContextMenuViewItem,
+} from './canvasContextMenuViewModel';
 
 type CanvasContextMenuViewProps = Readonly<{
   model: CanvasContextMenuModel | null;
@@ -31,83 +43,109 @@ export function CanvasContextMenuView({
     left: model.screenPosition.x,
     top: model.screenPosition.y,
   };
-  const addCanvasActions = model.canvasActions.filter(
-    (action) => action.action === 'open-source-import'
-  );
-  const canvasCommandActions = model.canvasActions.filter(
-    (action) => action.action !== 'open-source-import'
-  );
-  const shouldShowAddGroup = addCanvasActions.length > 0 || model.createNodeActions.length > 0;
+  const sections =
+    model.surface === 'add-node-catalog'
+      ? buildCanvasContextMenuSections(model)
+          .map((section) => ({
+            ...section,
+            items: section.items.filter((item) => item.kind === 'canvas'),
+          }))
+          .filter((section) => section.items.length > 0)
+      : buildCanvasContextMenuSections(model);
+  const catalogItems =
+    model.surface === 'add-node-catalog'
+      ? buildCanvasAddNodeCatalogItems({
+          actions: model.catalogActions,
+        })
+      : [];
 
   return (
-    <div
-      ref={menuRef}
-      role="menu"
-      data-slot="canvas-context-menu"
-      className="fixed z-50 min-w-52 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)] p-1 shadow-xl"
-      style={menuStyle}
-      onContextMenu={(event) => event.preventDefault()}
-    >
-      {shouldShowAddGroup ? (
-        <div data-slot="canvas-context-menu-add-group">
-          <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
-            Add
-          </div>
-          {addCanvasActions.map((action) => (
-            <button
-              key={action.action}
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-              onClick={() => onCanvasAction(action)}
-            >
-              {action.label}
-            </button>
-          ))}
-          {model.createNodeActions.map((action) => (
-            <button
-              key={action.registration.kind}
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-              onClick={() => onCreateNodeAction(action)}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
+    <CanvasContextMenuSurface menuRef={menuRef} style={menuStyle}>
+      {model.surface === 'add-node-catalog' ? (
+        <CanvasAddNodeCatalogView
+          items={catalogItems}
+          onSelectItem={(item) => {
+            const action = model.catalogActions.find((candidate) => {
+              const candidateId = `${candidate.action}:${candidate.registration.kind}`;
+              return candidateId === item.actionId;
+            });
+            if (action) {
+              selectCanvasCatalogAction({
+                action,
+                onCanvasAction,
+                onCreateNodeAction,
+              });
+            }
+          }}
+        />
       ) : null}
-
-      {canvasCommandActions.length > 0 ? (
-        <div data-slot="canvas-context-menu-canvas-group">
-          <div className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
-            Canvas
-          </div>
-          {canvasCommandActions.map((action) => (
-            <button
-              key={action.action}
-              type="button"
-              role="menuitem"
-              className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-              onClick={() => onCanvasAction(action)}
-            >
-              {action.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
-
-      {model.edgeActions.map((action) => (
-        <button
-          key={action.action}
-          type="button"
-          role="menuitem"
-          className="flex w-full items-center rounded px-2 py-2 text-left text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-          onClick={() => onEdgeAction(action)}
+      {sections.map((section) => (
+        <CanvasContextMenuSection
+          key={section.id}
+          dataSlot={`canvas-context-menu-${section.id}-group`}
+          title={section.title}
         >
-          {action.label}
-        </button>
+          {section.items.map((item) => (
+            <CanvasContextMenuItem
+              key={item.id}
+              label={item.label}
+              onSelect={() =>
+                selectCanvasContextMenuItem({
+                  item,
+                  onCanvasAction,
+                  onCreateNodeAction,
+                  onEdgeAction,
+                })
+              }
+            />
+          ))}
+        </CanvasContextMenuSection>
       ))}
-    </div>
+    </CanvasContextMenuSurface>
   );
+}
+
+function selectCanvasCatalogAction({
+  action,
+  onCanvasAction,
+  onCreateNodeAction,
+}: Readonly<{
+  action: CanvasContextMenuCatalogAction;
+  onCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
+  onCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
+}>): void {
+  if (action.action === 'create-node') {
+    onCreateNodeAction(action);
+    return;
+  }
+
+  onCanvasAction({ action: action.action, label: action.label });
+}
+
+function selectCanvasContextMenuItem({
+  item,
+  onCanvasAction,
+  onCreateNodeAction,
+  onEdgeAction,
+}: Readonly<{
+  item: CanvasContextMenuViewItem;
+  onCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
+  onCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
+  onEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
+}>): void {
+  if (item.kind === 'canvas') {
+    onCanvasAction(item.action);
+    return;
+  }
+
+  if (item.kind === 'catalog') {
+    selectCanvasCatalogAction({
+      action: item.action,
+      onCanvasAction,
+      onCreateNodeAction,
+    });
+    return;
+  }
+
+  onEdgeAction(item.action);
 }

@@ -36,7 +36,7 @@ export type BuildCanvasWorkbenchLogEntriesArgs = Readonly<{
     import('./canvasDraftPresentationModel').CanvasDraftPresentationState,
     'routeState' | 'bootstrapDetail'
   >;
-  draft: Pick<CanvasDraftAccessPosture, 'kind' | 'title' | 'message' | 'toolbarLabel'>;
+  draft: Pick<CanvasDraftAccessPosture, 'kind' | 'title' | 'message' | 'statusLabel'>;
   toolbar: Readonly<{
     planRunReadiness: Pick<PlanRunReadinessReadModel, 'status' | 'summary'>;
     canPlanGraph: boolean;
@@ -156,7 +156,7 @@ export function buildCanvasWorkbenchLogEntries({
     pushEntry({
       severity: draftSeverity,
       source: 'draft',
-      message: draft.message || draft.toolbarLabel || draft.title,
+      message: draft.message || draft.statusLabel || draft.title,
       detail: draft.kind,
     });
   }
@@ -174,7 +174,7 @@ export function buildCanvasWorkbenchLogEntries({
     pushEntry({
       severity: 'warning',
       source: 'permission',
-      message: 'Plan preview is unavailable for this workspace scope.',
+      message: 'Execution Preview is unavailable for this workspace scope.',
       detail: 'plan_unavailable',
     });
   }

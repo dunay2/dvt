@@ -87,6 +87,7 @@ allowedImplementationSurfaces:
   - docs/planning/reviews/architecture-and-governance/20260525-buzon-fowler-canonization-inventory.md
   - scripts/planning-db-query.cjs
   - scripts/planning-db-query.test.cjs
+  - scripts/planning-db-query-tests/fowler-analysis.test.cjs
   - scripts/planning-db-operate.cjs
   - scripts/planning-db-operate.test.cjs
   - scripts/planning-db-operate-tests/fowler-analysis.test.cjs

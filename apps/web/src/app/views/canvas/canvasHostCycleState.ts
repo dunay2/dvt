@@ -20,10 +20,9 @@ export type CanvasHostCycleState =
     }
   | {
       kind: 'typed_empty';
+      canvasTitle: string | null;
       title: string;
       message: string;
-      firstNodeLabel: string;
-      firstNodeHelper: string;
       nodeKinds: readonly NodeKindRegistration[];
       onCreateAuthoringNode: CreateAuthoringNodeCommand | undefined;
     }
@@ -135,6 +134,7 @@ export function deriveCanvasHostCycleState(
 
     return {
       kind: 'typed_empty',
+      canvasTitle: canvasDocument?.title ?? null,
       title: activeCanvasKind?.emptyState.title ?? canvasViewCopy.routeEmptyTitle,
       message: resolveTypedEmptyMessage({
         canEditEdges,
@@ -142,10 +142,6 @@ export function deriveCanvasHostCycleState(
         canvasDocument,
         availableCanvasKinds,
       }),
-      firstNodeLabel:
-        activeCanvasKind?.emptyState.firstNodeLabel ?? canvasViewCopy.routeEmptyFirstNodeLabel,
-      firstNodeHelper:
-        activeCanvasKind?.emptyState.firstNodeHelper ?? canvasViewCopy.routeEmptyFirstNodeHelper,
       nodeKinds: canCreateNode ? (activeCanvasKind?.nodeKinds ?? []) : [],
       onCreateAuthoringNode: canCreateNode ? onCreateAuthoringNode : undefined,
     };

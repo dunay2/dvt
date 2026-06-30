@@ -14,8 +14,7 @@ import type { CanvasSurfaceStrategy } from '../../plugins/canvasSurfaceStrategyC
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasPaletteId } from './canvasPalette';
 import type { CanvasRouteState } from './canvasDraftPresentationModel';
-import type { CanvasPlaygroundTabState } from './canvasPlaygroundTabState';
-import type { CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasDraftStatusState } from './canvasDraftStatusState';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { ProjectCanvasDocument, ProjectCanvasPatch } from './canvasProjectCanvasLifecycle';
@@ -23,6 +22,8 @@ import type { WorkspaceOption } from '../../services/config/workspaceConfig';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import type { CanvasSourceImportCompletionContext } from './canvasMutationHandlerContracts';
+import type { CanvasContextMenuPosition } from './canvasInteractionCommandSurface';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -41,14 +42,19 @@ export type CanvasShellLayout = {
   inspectorPanelVisible: boolean;
   canOpenSourceImport: boolean;
   surfaceStrategy: CanvasSurfaceStrategy | null;
-  hostTabState: CanvasPlaygroundTabState;
-  hostTabStrip?: React.ReactNode;
-  workbenchTabStrip?: React.ReactNode;
-  workbenchTabPanel?: React.ReactNode;
+  contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurfaceMode: 'replace' | 'overlay';
   centerSurface?: React.ReactNode;
   readOnlyBanner?: React.ReactNode;
 };
+
+export type CanvasShellContextualWorkbench = Readonly<{
+  id: 'project-code';
+  title: string;
+  description?: string;
+  panel: React.ReactNode;
+  onClose: () => void;
+}>;
 
 export type CanvasShellPanels = {
   authoringNodeKinds: readonly NodeKindRegistration[];
@@ -59,6 +65,8 @@ export type CanvasShellPanels = {
   canEditCanvas: boolean;
   canDeleteActiveCanvas: boolean;
   inspectorNode: CanonicalNode | null;
+  inspectorPreferredTabId: string | null;
+  inspectorPreferredTabRequestId: number;
   inspectorGraphNodes: readonly CanonicalNode[];
   inspectorGraphEdges: readonly CanonicalEdge[];
   inspectorAuthoring: CanvasInspectorAuthoringContract;
@@ -82,10 +90,10 @@ export type CanvasShellGraph = {
   viewport: CanvasViewport | null;
 };
 
-export type CanvasShellToolbar = {
+export type CanvasShellChromeState = {
   canvasAuthoringMode: CanvasGraphAuthoringMode;
   routeState: CanvasRouteState;
-  draftToolbarState: CanvasDraftToolbarState;
+  draftStatusState: CanvasDraftStatusState;
   canPlanGraph: boolean;
   canStartRun: boolean;
   canExportProjectSnapshot: boolean;
@@ -112,7 +120,10 @@ export type CanvasShellGraphCommands = {
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
   onCreateAuthoringNode: CreateCanvasAuthoringNode;
-  onSourceImportComplete: (result: ImportSourcesResult) => void;
+  onSourceImportComplete: (
+    result: ImportSourcesResult,
+    context?: CanvasSourceImportCompletionContext
+  ) => void;
   onImportedNodeFocusComplete: () => void;
 };
 
@@ -130,7 +141,7 @@ export type CanvasShellChromeCommands = {
   onExportProjectSnapshot: () => void;
   onImportProjectSnapshotFile: (file: File) => void;
   onReloadLatestDraft: () => void;
-  onPlan: () => void;
+  onPreviewExecutionPlan: () => void;
   onRun: () => void;
 };
 
@@ -144,13 +155,19 @@ export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
   graph: CanvasShellGraph;
-  toolbar: CanvasShellToolbar;
+  chromeState: CanvasShellChromeState;
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   canvasCommands: CanvasShellCanvasCommands;
   warehouseSourceImport?: IWarehouseSourceImportPort;
+  canvasContextScreenToFlowPosition?: (
+    screenPosition: CanvasContextMenuPosition
+  ) => CanvasContextMenuPosition;
 }>;
 
 export type CanvasShellOpenDataRegistryCommand = (
-  initialSelection?: SourceImportInitialSelection
+  initialSelection?: SourceImportInitialSelection,
+  placement?: CanvasShellSourceImportPlacement
 ) => void;
+
+export type CanvasShellSourceImportPlacement = CanvasSourceImportCompletionContext;

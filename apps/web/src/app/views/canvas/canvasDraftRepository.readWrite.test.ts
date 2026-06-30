@@ -154,6 +154,51 @@ describe('canvasDraftRepository read/write', () => {
     );
   });
 
+  it('preserves a first typed canvas draft when the saved draft has no nodes yet', async () => {
+    const authoringPort = buildAuthoringPort();
+    const repository = createCanvasDraftRepository(authoringPort);
+    const firstCanvasDraft = {
+      canvas: {
+        kind: 'transformation',
+        title: 'Transformation canvas',
+      },
+      nodeIds: [],
+      nodePositions: {},
+      nodes: [],
+      edges: [],
+    };
+
+    await expect(
+      repository.saveGraphDraft({
+        expectedRevision: null,
+        idempotencyKey: 'idem-first-canvas',
+        draft: firstCanvasDraft,
+      })
+    ).resolves.toEqual({
+      outcome: 'saved',
+      record: {
+        revision: 'rev-2',
+        savedAt: expect.any(String),
+        draft: firstCanvasDraft,
+      },
+      remoteDraftState: {
+        accessMode: 'writable',
+        capabilityReason: 'authorized',
+        formatError: null,
+        formatMeta: null,
+        record: {
+          revision: 'rev-2',
+          savedAt: expect.any(String),
+          draft: firstCanvasDraft,
+        },
+        semanticGraph: {
+          canonicalNodes: [],
+          canonicalEdges: [],
+        },
+      },
+    });
+  });
+
   it('fails closed when authoring denies writes for the current scope', async () => {
     await expectSaveGraphDraftToFailClosed(
       buildDeniedSaveResult(),

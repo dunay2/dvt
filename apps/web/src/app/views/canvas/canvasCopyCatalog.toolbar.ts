@@ -27,7 +27,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   toolbarWorkflowPlanRequiredLabel: {
     key: 'canvas.toolbar.workflow.planRequiredLabel',
-    fallback: 'Plan required',
+    fallback: 'Execution Preview required',
   },
   toolbarLayoutLabel: {
     key: 'canvas.toolbar.layoutLabel',
@@ -61,6 +61,126 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.canvasSettingsLabel',
     fallback: 'Canvas settings',
   },
+  canvasContextMenuAddLabel: {
+    key: 'canvas.contextMenu.addLabel',
+    fallback: 'Add...',
+  },
+  canvasContextMenuAddSourceLabel: {
+    key: 'canvas.contextMenu.addSourceLabel',
+    fallback: 'Add source',
+  },
+  canvasContextMenuAddModelLabel: {
+    key: 'canvas.contextMenu.addModelLabel',
+    fallback: 'Add model',
+  },
+  canvasContextMenuAddSeedLabel: {
+    key: 'canvas.contextMenu.addSeedLabel',
+    fallback: 'Add seed',
+  },
+  canvasContextMenuAddTransformationLabel: {
+    key: 'canvas.contextMenu.addTransformationLabel',
+    fallback: 'Add transformation',
+  },
+  canvasContextMenuAddTestLabel: {
+    key: 'canvas.contextMenu.addTestLabel',
+    fallback: 'Add test',
+  },
+  canvasContextMenuAddOutputLabel: {
+    key: 'canvas.contextMenu.addOutputLabel',
+    fallback: 'Add output',
+  },
+  canvasContextMenuAddMacroLabel: {
+    key: 'canvas.contextMenu.addMacroLabel',
+    fallback: 'Add macro',
+  },
+  canvasContextMenuAddNodeLabel: {
+    key: 'canvas.contextMenu.addNodeLabel',
+    fallback: 'Add',
+  },
+  canvasContextMenuCanvasSettingsLabel: {
+    key: 'canvas.contextMenu.canvasSettingsLabel',
+    fallback: 'Canvas settings',
+  },
+  canvasAddNodeCatalogTitle: {
+    key: 'canvas.addNodeCatalog.title',
+    fallback: 'Add component',
+  },
+  canvasAddNodeCatalogSearchLabel: {
+    key: 'canvas.addNodeCatalog.searchLabel',
+    fallback: 'Search components',
+  },
+  canvasAddNodeCatalogSearchPlaceholder: {
+    key: 'canvas.addNodeCatalog.searchPlaceholder',
+    fallback: 'Search source, model, transformation, test, output...',
+  },
+  canvasAddNodeCatalogEmptyMessage: {
+    key: 'canvas.addNodeCatalog.emptyMessage',
+    fallback: 'No matching components',
+  },
+  canvasAddNodeCatalogSourceCategoryLabel: {
+    key: 'canvas.addNodeCatalog.sourceCategoryLabel',
+    fallback: 'Sources',
+  },
+  canvasAddNodeCatalogModelCategoryLabel: {
+    key: 'canvas.addNodeCatalog.modelCategoryLabel',
+    fallback: 'Models',
+  },
+  canvasAddNodeCatalogSeedCategoryLabel: {
+    key: 'canvas.addNodeCatalog.seedCategoryLabel',
+    fallback: 'Seeds',
+  },
+  canvasAddNodeCatalogTransformationCategoryLabel: {
+    key: 'canvas.addNodeCatalog.transformationCategoryLabel',
+    fallback: 'Transformations',
+  },
+  canvasAddNodeCatalogTestCategoryLabel: {
+    key: 'canvas.addNodeCatalog.testCategoryLabel',
+    fallback: 'Tests',
+  },
+  canvasAddNodeCatalogOutputCategoryLabel: {
+    key: 'canvas.addNodeCatalog.outputCategoryLabel',
+    fallback: 'Outputs',
+  },
+  canvasAddNodeCatalogMacroCategoryLabel: {
+    key: 'canvas.addNodeCatalog.macroCategoryLabel',
+    fallback: 'Macros',
+  },
+  canvasAddNodeCatalogNodeCategoryLabel: {
+    key: 'canvas.addNodeCatalog.nodeCategoryLabel',
+    fallback: 'Components',
+  },
+  canvasAddNodeCatalogSourceDescription: {
+    key: 'canvas.addNodeCatalog.sourceDescription',
+    fallback: 'Attach a governed warehouse or dbt source to the graph.',
+  },
+  canvasAddNodeCatalogModelDescription: {
+    key: 'canvas.addNodeCatalog.modelDescription',
+    fallback: 'Create a modeled dataset that can receive inputs and feed downstream checks.',
+  },
+  canvasAddNodeCatalogSeedDescription: {
+    key: 'canvas.addNodeCatalog.seedDescription',
+    fallback: 'Add a static seed dataset managed by the project.',
+  },
+  canvasAddNodeCatalogTransformationDescription: {
+    key: 'canvas.addNodeCatalog.transformationDescription',
+    fallback: 'Add a SQL transformation between upstream sources and downstream outputs.',
+  },
+  canvasAddNodeCatalogTestDescription: {
+    key: 'canvas.addNodeCatalog.testDescription',
+    fallback: 'Add a validation node that explains what it checks and what it targets.',
+  },
+  canvasAddNodeCatalogOutputDescription: {
+    key: 'canvas.addNodeCatalog.outputDescription',
+    fallback: 'Declare the exact destination table, write mode, and publishing target.',
+  },
+  canvasAddNodeCatalogMacroDescription: {
+    key: 'canvas.addNodeCatalog.macroDescription',
+    fallback: 'Add a reusable project macro component.',
+  },
+  canvasAddNodeCatalogNodeDescription: {
+    key: 'canvas.addNodeCatalog.nodeDescription',
+    fallback: 'Add a registered Canvas component.',
+  },
   toolbarEmptyCanvasGuideLabel: {
     key: 'canvas.toolbar.emptyCanvasGuideLabel',
     fallback: 'Empty canvas guide',
@@ -77,26 +197,6 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.importSnapshotLabel',
     fallback: 'Import',
   },
-  toolbarInsertLabel: {
-    key: 'canvas.toolbar.insertLabel',
-    fallback: 'Insert',
-  },
-  toolbarPlanLabel: {
-    key: 'canvas.toolbar.planLabel',
-    fallback: 'Preview execution plan',
-  },
-  toolbarRunLabel: {
-    key: 'canvas.toolbar.runLabel',
-    fallback: 'Run',
-  },
-  addNodePaletteSearchLabel: {
-    key: 'canvas.addNodePalette.searchLabel',
-    fallback: 'Search node types',
-  },
-  addNodePaletteEmptyLabel: {
-    key: 'canvas.addNodePalette.emptyLabel',
-    fallback: 'No node types match this search.',
-  },
   projectSnapshotExportUnavailableMessage: {
     key: 'canvas.projectSnapshot.exportUnavailableMessage',
     fallback: 'Project snapshot export is available after the draft is saved.',
@@ -112,34 +212,6 @@ export const canvasViewToolbarCopyByKey = {
   newCanvasLabel: {
     key: 'canvas.toolbar.newCanvasLabel',
     fallback: 'New canvas',
-  },
-  workbenchGraphTabLabel: {
-    key: 'canvas.workbench.tabs.graphLabel',
-    fallback: 'Graph',
-  },
-  workbenchLogsTabLabel: {
-    key: 'canvas.workbench.tabs.logsLabel',
-    fallback: 'Log',
-  },
-  workbenchCodeTabLabel: {
-    key: 'canvas.workbench.tabs.codeLabel',
-    fallback: 'Code',
-  },
-  workbenchLineageTabLabel: {
-    key: 'canvas.workbench.tabs.lineageLabel',
-    fallback: 'Lineage',
-  },
-  workbenchDiffTabLabel: {
-    key: 'canvas.workbench.tabs.diffLabel',
-    fallback: 'Diff',
-  },
-  workbenchArtifactsTabLabel: {
-    key: 'canvas.workbench.tabs.artifactsLabel',
-    fallback: 'Artifacts',
-  },
-  workbenchRunsTabLabel: {
-    key: 'canvas.workbench.tabs.runsLabel',
-    fallback: 'Runs',
   },
   replaceCanvasTitle: {
     key: 'canvas.toolbar.replaceCanvasTitle',

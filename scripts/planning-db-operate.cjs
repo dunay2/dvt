@@ -12,6 +12,7 @@ const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
+const componentEngineeringSchemaName = 'component_engineering';
 const { runArchitectureFitnessScan } = require('./planning-db/architecture-fitness/scan.cjs');
 const {
   allowedDbSurfaceMigrationStates,
@@ -58,11 +59,13 @@ const allowedFeatureMechanizationRailTypes = new Set(['command', 'query']);
 const allowedFeatureMechanizationRailStatuses = new Set([
   'accepted',
   'declared',
+  'deprecated',
   'documented',
   'implemented',
   'missing',
   'planned',
   'proposed',
+  'retired',
   'unimplemented',
   'not-implemented',
 ]);
@@ -99,6 +102,7 @@ const allowedArchitectureScopeSubjectKinds = new Set([
   'component',
   'relation',
   'contract',
+  'port',
   'flow',
   'check',
   'path',
@@ -135,7 +139,14 @@ const allowedArchitectureComponentLayers = new Set([
   'contracts',
 ]);
 const allowedArchitectureComponentCriticalities = new Set(['low', 'medium', 'high', 'critical']);
-const allowedArchitectureRecordStatuses = new Set(['proposed', 'review']);
+const allowedArchitectureRecordStatuses = new Set([
+  'proposed',
+  'review',
+  'approved',
+  'implemented',
+  'deprecated',
+  'drift',
+]);
 const allowedArchitectureRelationTypes = new Set([
   'contains',
   'depends_on',
@@ -151,7 +162,71 @@ const allowedArchitectureRelationTypes = new Set([
 ]);
 const allowedArchitectureRelationDirections = new Set(['outbound', 'inbound', 'bidirectional']);
 const allowedArchitectureRelationSyncModes = new Set(['sync', 'async', 'batch', 'build_time']);
-const allowedArchitectureRelationRecordStatuses = new Set(['proposed']);
+const allowedArchitectureRelationRecordStatuses = new Set([
+  'proposed',
+  'approved',
+  'implemented',
+  'drift',
+]);
+const allowedArchitectureContractKinds = new Set([
+  'api',
+  'event',
+  'port',
+  'storage',
+  'type',
+  'workflow',
+  'dbt',
+]);
+const allowedArchitectureContractCompatibilities = new Set([
+  'breaking',
+  'additive',
+  'internal',
+  'none',
+]);
+const allowedArchitectureContractStatuses = new Set([
+  'proposed',
+  'approved',
+  'implemented',
+  'deprecated',
+]);
+const allowedArchitecturePortKinds = new Set([
+  'command',
+  'query',
+  'event',
+  'storage',
+  'api',
+  'ui-action',
+]);
+const allowedArchitecturePortDirections = new Set(['inbound', 'outbound']);
+const allowedArchitecturePortStatuses = new Set(['proposed', 'approved', 'implemented']);
+const allowedArchitectureTestKinds = new Set([
+  'unit',
+  'contract',
+  'integration',
+  'architecture',
+  'e2e',
+  'property',
+]);
+const allowedArchitectureTestCoverageLevels = new Set([
+  'smoke',
+  'behavior',
+  'negative',
+  'boundary',
+  'flow',
+]);
+const allowedArchitectureObservabilitySignalKinds = new Set([
+  'metric',
+  'log',
+  'trace',
+  'alert',
+  'dashboard',
+]);
+const allowedArchitectureObservabilityStatuses = new Set([
+  'proposed',
+  'implemented',
+  'missing',
+  'not_applicable',
+]);
 const allowedComponentStatuses = new Set([
   'canonical',
   'review',
@@ -196,6 +271,7 @@ const featureMechanizationListOptionKeys = new Set([
   'unit-test',
   'patch-surface',
 ]);
+const architectureListOptionKeys = new Set(['negative-test']);
 const operationHelp = Object.freeze({
   task: {
     operations: ['claim', 'release', 'update', 'create', 'delete', 'show'],
@@ -207,11 +283,12 @@ const operationHelp = Object.freeze({
     ],
   },
   component: {
-    operations: ['create'],
+    operations: ['create', 'reparent'],
     usage:
-      'pnpm planning:db:operate component create --component <SYS-ID> --parent <SYS-ID> --actor <actor>',
+      'pnpm planning:db:operate component <create|reparent> --component <SYS-ID> --parent <SYS-ID> --actor <actor>',
     details: [
       'CreateGovernanceComponent records DB-authored governance component ownership.',
+      'ReparentGovernanceComponent updates the imported governance component tree through an audited DB command rail.',
       'Required semantic fields include --name, --owned-concern, --owns or --children-required true, --ddd-owner, and --cq-rails.',
     ],
   },
@@ -251,6 +328,24 @@ const operationHelp = Object.freeze({
       'Requires --source, --target, --type, --direction, --sync-async, --failure-mode, --authorization-scope, --source-ref, and --source-content-sha256.',
     ],
   },
+  'architecture-contract': {
+    operations: ['record'],
+    usage:
+      'pnpm planning:db:operate architecture-contract record --design <DESIGN-ID> --contract <CONTRACT-ID> --actor <actor>',
+    details: [
+      'RecordArchitectureContract adds scoped contract authority for a component-owned API, event, port, storage, type, workflow, or dbt contract.',
+      'Requires --owner-component, --kind, --contract-ref, --compatibility, --status, --validation-command, --source-ref, and --source-content-sha256.',
+    ],
+  },
+  'architecture-port': {
+    operations: ['record'],
+    usage:
+      'pnpm planning:db:operate architecture-port record --design <DESIGN-ID> --port <PORT-ID> --component <SYS-ID> --actor <actor>',
+    details: [
+      'RecordArchitecturePort adds scoped command/query/event/storage/API/UI-action ports to an architecture component.',
+      'Requires --name, --kind, --direction, at least one --input-contract or --output-contract, at least one --negative-test, --source-ref, and --source-content-sha256.',
+    ],
+  },
   'architecture-fitness': {
     operations: ['scan'],
     usage:
@@ -258,6 +353,17 @@ const operationHelp = Object.freeze({
     details: [
       'RecordArchitectureFitnessScan records observed repository dependencies against a DB-first architecture design.',
       'Requires --root, --source-ref, --source-content-sha256, and an existing architecture design.',
+    ],
+  },
+  'architecture-evidence': {
+    operations: ['record-test', 'record-observability'],
+    usage:
+      'pnpm planning:db:operate architecture-evidence <record-test|record-observability> --design <DESIGN-ID> --component <SYS-ID> --actor <actor>',
+    details: [
+      'RecordArchitectureTestEvidence attaches required test evidence to a scoped architecture component.',
+      'Requires --test-path, --test-kind, --coverage-level, --validation-command, --source-ref, and --source-content-sha256.',
+      'RecordArchitectureObservabilityEvidence attaches observability evidence to a scoped architecture component.',
+      'Requires --observability, --signal-name, --signal-kind, --status, --source-ref, and --source-content-sha256.',
     ],
   },
   'docs-disposition': {
@@ -326,7 +432,7 @@ function isHelpFlag(value) {
 }
 
 function unknownOperationMessage() {
-  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-fitness", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", "governance-refresh", or "audit".';
+  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-contract", "architecture-port", "architecture-fitness", "architecture-evidence", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", "governance-refresh", or "audit".';
 }
 
 function buildPlanningDbOperateHelpText(resource, action) {
@@ -690,6 +796,28 @@ function validateArchitectureRelationId(value) {
   return normalized;
 }
 
+function validateArchitectureContractId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^CONTRACT-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --contract "${value}". Expected an uppercase CONTRACT-* architecture contract id.`
+    );
+  }
+
+  return normalized;
+}
+
+function validateArchitecturePortId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^PORT-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --port "${value}". Expected an uppercase PORT-* architecture port id.`
+    );
+  }
+
+  return normalized;
+}
+
 function validateArchitectureFitnessScanId(value) {
   const normalized = String(value || '').trim();
   if (!/^[A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*$/.test(normalized)) {
@@ -757,6 +885,54 @@ function validateArchitectureRelationRecordStatus(value) {
   return value;
 }
 
+function validateArchitectureTestKind(value) {
+  if (!allowedArchitectureTestKinds.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureTestEvidence stores test kinds accepted by architecture.component_test: ${[
+        ...allowedArchitectureTestKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureTestCoverageLevel(value) {
+  if (!allowedArchitectureTestCoverageLevels.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureTestEvidence stores coverage levels accepted by architecture.component_test: ${[
+        ...allowedArchitectureTestCoverageLevels,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureObservabilitySignalKind(value) {
+  if (!allowedArchitectureObservabilitySignalKinds.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureObservabilityEvidence stores signal kinds accepted by architecture.component_observability: ${[
+        ...allowedArchitectureObservabilitySignalKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureObservabilityStatus(value) {
+  if (!allowedArchitectureObservabilityStatuses.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureObservabilityEvidence stores statuses accepted by architecture.component_observability: ${[
+        ...allowedArchitectureObservabilityStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
 function validateArchitectureRelationType(value) {
   if (!allowedArchitectureRelationTypes.has(value)) {
     throw new Error(
@@ -786,6 +962,78 @@ function validateArchitectureRelationSyncMode(value) {
     throw new Error(
       `ARCH-COMPONENT-TAXONOMY-INVALID: invalid relation sync mode "${value}". Expected: ${[
         ...allowedArchitectureRelationSyncModes,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureContractKind(value) {
+  if (!allowedArchitectureContractKinds.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: invalid contract kind "${value}". Expected: ${[
+        ...allowedArchitectureContractKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureContractCompatibility(value) {
+  if (!allowedArchitectureContractCompatibilities.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: invalid contract compatibility "${value}". Expected: ${[
+        ...allowedArchitectureContractCompatibilities,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitectureContractStatus(value) {
+  if (!allowedArchitectureContractStatuses.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitectureContract stores statuses accepted by architecture.contract: ${[
+        ...allowedArchitectureContractStatuses,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitecturePortKind(value) {
+  if (!allowedArchitecturePortKinds.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: invalid port kind "${value}". Expected: ${[
+        ...allowedArchitecturePortKinds,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitecturePortDirection(value) {
+  if (!allowedArchitecturePortDirections.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: invalid port direction "${value}". Expected: ${[
+        ...allowedArchitecturePortDirections,
+      ].join(', ')}.`
+    );
+  }
+
+  return value;
+}
+
+function validateArchitecturePortStatus(value) {
+  if (!allowedArchitecturePortStatuses.has(value)) {
+    throw new Error(
+      `ARCH-COMPONENT-TAXONOMY-INVALID: RecordArchitecturePort stores statuses accepted by architecture.component_port: ${[
+        ...allowedArchitecturePortStatuses,
       ].join(', ')}.`
     );
   }
@@ -883,7 +1131,8 @@ function parseFlagOptions(args) {
     if (
       key === 'evidence' ||
       componentListOptionKeys.has(key) ||
-      featureMechanizationListOptionKeys.has(key)
+      featureMechanizationListOptionKeys.has(key) ||
+      architectureListOptionKeys.has(key)
     ) {
       options[camelKey] = options[camelKey] || [];
       options[camelKey].push(value);
@@ -1052,11 +1301,72 @@ function operationPayload(command) {
     };
   }
 
+  if (command.kind === 'architecture_contract_record') {
+    return {
+      designId: command.designId,
+      contractId: command.contractId,
+      contractKind: command.contractKind,
+      ownerComponentId: command.ownerComponentId,
+      contractRef: command.contractRef,
+      compatibility: command.compatibility,
+      status: command.status,
+      validationCommand: command.validationCommand,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
+  if (command.kind === 'architecture_port_record') {
+    return {
+      designId: command.designId,
+      portId: command.portId,
+      componentId: command.componentId,
+      portName: command.portName,
+      portKind: command.portKind,
+      direction: command.direction,
+      inputContractId: normalizeOptionalText(command.inputContractId),
+      outputContractId: normalizeOptionalText(command.outputContractId),
+      negativeTests: command.negativeTests || [],
+      status: command.status,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
   if (command.kind === 'architecture_fitness_scan') {
     return {
       designId: command.designId,
       scanId: command.scanId,
       root: command.root,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
+  if (command.kind === 'architecture_test_record') {
+    return {
+      designId: command.designId,
+      testId: command.testId,
+      componentId: command.componentId,
+      testPath: command.testPath,
+      testKind: command.testKind,
+      coverageLevel: command.coverageLevel,
+      required: command.required,
+      validationCommand: command.validationCommand,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
+    };
+  }
+
+  if (command.kind === 'architecture_observability_record') {
+    return {
+      designId: command.designId,
+      observabilityId: command.observabilityId,
+      componentId: command.componentId,
+      signalName: command.signalName,
+      signalKind: command.signalKind,
+      required: command.required,
+      status: command.status,
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -1084,6 +1394,15 @@ function operationPayload(command) {
       consumers: command.consumers || [],
       governance: command.governance || [],
       fowlerSignals: command.fowlerSignals || [],
+    };
+  }
+
+  if (command.kind === 'component_reparent') {
+    return {
+      componentId: command.componentId,
+      parentComponentId: command.parentComponentId,
+      sourceRef: command.sourceRef,
+      sourceContentSha256: command.sourceContentSha256,
     };
   }
 
@@ -1208,13 +1527,24 @@ function defaultIdempotencyKey(command) {
   if (
     command.kind === 'architecture_component_record' ||
     command.kind === 'architecture_relation_record' ||
-    command.kind === 'architecture_fitness_scan'
+    command.kind === 'architecture_contract_record' ||
+    command.kind === 'architecture_port_record' ||
+    command.kind === 'architecture_fitness_scan' ||
+    command.kind === 'architecture_test_record' ||
+    command.kind === 'architecture_observability_record'
   ) {
     return [
       command.kind,
       command.actor || 'anonymous',
       command.designId || 'no-design',
-      command.componentId || command.relationId || command.scanId || 'no-subject',
+      command.contractId ||
+        command.portId ||
+        command.componentId ||
+        command.relationId ||
+        command.scanId ||
+        command.testId ||
+        command.observabilityId ||
+        'no-subject',
       crypto
         .createHash('sha256')
         .update(canonicalJson(operationPayload(command)))
@@ -1810,13 +2140,40 @@ function validateComponentCreateCommand(command) {
   return command;
 }
 
+function validateComponentReparentCommand(command) {
+  if (command.componentId === command.parentComponentId) {
+    throw new Error(`Governance component ${command.componentId} cannot be its own parent.`);
+  }
+
+  return command;
+}
+
 function parseComponentCommand(action, args) {
-  if (action !== 'create') {
-    throw new Error(`Unknown component operation "${action}". Expected create.`);
+  if (action !== 'create' && action !== 'reparent') {
+    throw new Error(`Unknown component operation "${action}". Expected create or reparent.`);
   }
 
   const options = parseFlagOptions(args);
   const actor = requireOption(options, 'actor');
+  if (action === 'reparent') {
+    const command = {
+      kind: 'component_reparent',
+      componentId: validateComponentId(requireOption(options, 'component'), 'component'),
+      parentComponentId: validateComponentId(requireOption(options, 'parent'), 'parent'),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor,
+      expectedRevision: parseIntegerOption(options.expectedRevision, 'expected-revision'),
+      idempotencyKey: options.idempotencyKey,
+    };
+
+    validateComponentReparentCommand(command);
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
   const command = {
     kind: 'component_create',
     componentId: validateComponentId(requireOption(options, 'component'), 'component'),
@@ -1987,6 +2344,122 @@ function parseArchitectureRelationCommand(action, args) {
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
 
+function validateArchitectureContractRecordCommand(command) {
+  const requiredTextFields = [
+    ['contract', command.contractId],
+    ['owner-component', command.ownerComponentId],
+    ['contract-ref', command.contractRef],
+    ['validation-command', command.validationCommand],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`ARCH-CONTRACT-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  return command;
+}
+
+function parseArchitectureContractCommand(action, args) {
+  if (action !== 'record') {
+    throw new Error(`Unknown architecture-contract operation "${action}". Expected record.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const command = {
+    kind: 'architecture_contract_record',
+    designId: validateArchitectureDesignId(requireOption(options, 'design')),
+    contractId: validateArchitectureContractId(requireOption(options, 'contract')),
+    contractKind: validateArchitectureContractKind(requireOption(options, 'kind')),
+    ownerComponentId: validateArchitectureComponentId(
+      requireOption(options, 'ownerComponent'),
+      'owner-component'
+    ),
+    contractRef: requireOption(options, 'contractRef'),
+    compatibility: validateArchitectureContractCompatibility(
+      requireOption(options, 'compatibility')
+    ),
+    status: validateArchitectureContractStatus(options.status || 'proposed'),
+    validationCommand: requireOption(options, 'validationCommand'),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateArchitectureContractRecordCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
+function validateArchitecturePortRecordCommand(command) {
+  const requiredTextFields = [
+    ['port', command.portId],
+    ['component', command.componentId],
+    ['name', command.portName],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`ARCH-PORT-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  if (!command.inputContractId && !command.outputContractId) {
+    throw new Error(
+      'ARCH-PORT-CONTRACT-MISSING: RecordArchitecturePort requires --input-contract or --output-contract.'
+    );
+  }
+
+  if (!command.negativeTests || command.negativeTests.length === 0) {
+    throw new Error(
+      'ARCH-PORT-NEGATIVE-TESTS-MISSING: RecordArchitecturePort requires at least one --negative-test.'
+    );
+  }
+
+  return command;
+}
+
+function parseArchitecturePortCommand(action, args) {
+  if (action !== 'record') {
+    throw new Error(`Unknown architecture-port operation "${action}". Expected record.`);
+  }
+
+  const options = parseFlagOptions(args);
+  const inputContractId = options.inputContract
+    ? validateArchitectureContractId(options.inputContract)
+    : null;
+  const outputContractId = options.outputContract
+    ? validateArchitectureContractId(options.outputContract)
+    : null;
+  const command = {
+    kind: 'architecture_port_record',
+    designId: validateArchitectureDesignId(requireOption(options, 'design')),
+    portId: validateArchitecturePortId(requireOption(options, 'port')),
+    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    portName: requireOption(options, 'name'),
+    portKind: validateArchitecturePortKind(requireOption(options, 'kind')),
+    direction: validateArchitecturePortDirection(requireOption(options, 'direction')),
+    inputContractId,
+    outputContractId,
+    negativeTests: normalizeListOption(options.negativeTest),
+    status: validateArchitecturePortStatus(options.status || 'proposed'),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateArchitecturePortRecordCommand(command);
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
 function parseArchitectureFitnessCommand(action, args) {
   if (action !== 'scan') {
     throw new Error(`Unknown architecture-fitness operation "${action}". Expected scan.`);
@@ -2007,6 +2480,123 @@ function parseArchitectureFitnessCommand(action, args) {
     idempotencyKey: options.idempotencyKey,
   };
 
+  return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+}
+
+function validateArchitectureTestRecordCommand(command) {
+  const requiredTextFields = [
+    ['test', command.testId],
+    ['component', command.componentId],
+    ['test-path', command.testPath],
+    ['validation-command', command.validationCommand],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(`ARCH-TEST-EVIDENCE-SEMANTICS-MISSING: missing required --${field}.`);
+    }
+  }
+
+  return command;
+}
+
+function validateArchitectureObservabilityRecordCommand(command) {
+  const requiredTextFields = [
+    ['observability', command.observabilityId],
+    ['component', command.componentId],
+    ['signal-name', command.signalName],
+    ['signal-kind', command.signalKind],
+    ['status', command.status],
+    ['source-ref', command.sourceRef],
+  ];
+  for (const [field, value] of requiredTextFields) {
+    if (!normalizeOptionalText(value)) {
+      throw new Error(
+        `ARCH-OBSERVABILITY-EVIDENCE-SEMANTICS-MISSING: missing required --${field}.`
+      );
+    }
+  }
+
+  return command;
+}
+
+function validateArchitectureTestId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^TEST-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --test "${value}". Expected an uppercase TEST-* architecture test evidence id.`
+    );
+  }
+
+  return normalized;
+}
+
+function validateArchitectureObservabilityId(value) {
+  const normalized = String(value || '').trim();
+  if (!/^OBS-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      `Invalid --observability "${value}". Expected an uppercase OBS-* architecture observability evidence id.`
+    );
+  }
+
+  return normalized;
+}
+
+function parseArchitectureEvidenceCommand(action, args) {
+  const options = parseFlagOptions(args);
+
+  if (action === 'record-observability') {
+    const command = {
+      kind: 'architecture_observability_record',
+      designId: validateArchitectureDesignId(requireOption(options, 'design')),
+      observabilityId: validateArchitectureObservabilityId(requireOption(options, 'observability')),
+      componentId: validateArchitectureComponentId(
+        requireOption(options, 'component'),
+        'component'
+      ),
+      signalName: requireOption(options, 'signalName'),
+      signalKind: validateArchitectureObservabilitySignalKind(requireOption(options, 'signalKind')),
+      required: parseBooleanOption(options.required, 'required') ?? true,
+      status: validateArchitectureObservabilityStatus(requireOption(options, 'status')),
+      sourceRef: requireOption(options, 'sourceRef'),
+      sourceContentSha256: validateSha256(
+        requireOption(options, 'sourceContentSha256'),
+        'source-content-sha256'
+      ),
+      actor: requireOption(options, 'actor'),
+      idempotencyKey: options.idempotencyKey,
+    };
+
+    validateArchitectureObservabilityRecordCommand(command);
+    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
+  }
+
+  if (action !== 'record-test') {
+    throw new Error(
+      `Unknown architecture-evidence operation "${action}". Expected record-test or record-observability.`
+    );
+  }
+
+  const command = {
+    kind: 'architecture_test_record',
+    designId: validateArchitectureDesignId(requireOption(options, 'design')),
+    testId: validateArchitectureTestId(requireOption(options, 'test')),
+    componentId: validateArchitectureComponentId(requireOption(options, 'component'), 'component'),
+    testPath: requireOption(options, 'testPath'),
+    testKind: validateArchitectureTestKind(requireOption(options, 'testKind')),
+    coverageLevel: validateArchitectureTestCoverageLevel(requireOption(options, 'coverageLevel')),
+    required: parseBooleanOption(options.required, 'required') ?? true,
+    validationCommand: requireOption(options, 'validationCommand'),
+    sourceRef: requireOption(options, 'sourceRef'),
+    sourceContentSha256: validateSha256(
+      requireOption(options, 'sourceContentSha256'),
+      'source-content-sha256'
+    ),
+    actor: requireOption(options, 'actor'),
+    idempotencyKey: options.idempotencyKey,
+  };
+
+  validateArchitectureTestRecordCommand(command);
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
 
@@ -2327,12 +2917,38 @@ function parseArgs(args = process.argv.slice(2)) {
     return parseArchitectureRelationCommand(action, rest);
   }
 
+  if (resource === 'architecture-contract') {
+    if (!action) {
+      throw new Error('Missing architecture-contract operation. Expected record.');
+    }
+
+    return parseArchitectureContractCommand(action, rest);
+  }
+
+  if (resource === 'architecture-port') {
+    if (!action) {
+      throw new Error('Missing architecture-port operation. Expected record.');
+    }
+
+    return parseArchitecturePortCommand(action, rest);
+  }
+
   if (resource === 'architecture-fitness') {
     if (!action) {
       throw new Error('Missing architecture-fitness operation. Expected scan.');
     }
 
     return parseArchitectureFitnessCommand(action, rest);
+  }
+
+  if (resource === 'architecture-evidence') {
+    if (!action) {
+      throw new Error(
+        'Missing architecture-evidence operation. Expected record-test or record-observability.'
+      );
+    }
+
+    return parseArchitectureEvidenceCommand(action, rest);
   }
 
   if (resource === 'audit') {
@@ -2634,6 +3250,26 @@ function normalizeArchitectureRelation(row) {
   };
 }
 
+function normalizeArchitectureContract(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    contractId: row.contract_id ?? row.contractId,
+  };
+}
+
+function normalizeArchitecturePort(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    portId: row.port_id ?? row.portId,
+  };
+}
+
 function normalizeArchitectureDesignScope(row) {
   return {
     subjectKind: row.subject_kind ?? row.subjectKind,
@@ -2919,6 +3555,134 @@ function planArchitectureRelationRecordOperation({
   return { relation, audit };
 }
 
+function planArchitectureContractRecordOperation({
+  command,
+  design,
+  designScopes,
+  ownerComponent,
+  existingContract,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  const existing = normalizeArchitectureContract(existingContract);
+  const requiredScope = existing ? 'may_update' : 'may_create';
+  assertArchitectureDesignScope(
+    designScopes,
+    'contract',
+    command.contractId,
+    [requiredScope],
+    'ARCH-CONTRACT-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.ownerComponentId,
+    ['may_reference', 'may_create', 'may_update'],
+    'ARCH-CONTRACT-OWNER-SCOPE-MISSING'
+  );
+
+  if (!normalizeArchitectureComponent(ownerComponent)) {
+    throw new Error(`ARCH-CONTRACT-OWNER-MISSING: component ${command.ownerComponentId}`);
+  }
+
+  validateArchitectureContractRecordCommand(command);
+
+  const createdAt = toIso(now);
+  const contract = {
+    contractId: command.contractId,
+    contractKind: command.contractKind,
+    ownerComponentId: command.ownerComponentId,
+    contractRef: command.contractRef,
+    compatibility: command.compatibility,
+    status: command.status,
+    validationCommand: command.validationCommand,
+    createdAt,
+    updatedAt: createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { contract, audit };
+}
+
+function planArchitecturePortRecordOperation({
+  command,
+  design,
+  designScopes,
+  component,
+  inputContract,
+  outputContract,
+  existingPort,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  const existing = normalizeArchitecturePort(existingPort);
+  const requiredScope = existing ? 'may_update' : 'may_create';
+  assertArchitectureDesignScope(
+    designScopes,
+    'port',
+    command.portId,
+    [requiredScope],
+    'ARCH-PORT-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference', 'may_create', 'may_update'],
+    'ARCH-PORT-COMPONENT-SCOPE-MISSING'
+  );
+
+  if (command.inputContractId) {
+    assertArchitectureDesignScope(
+      designScopes,
+      'contract',
+      command.inputContractId,
+      ['may_reference', 'may_create', 'may_update'],
+      'ARCH-PORT-CONTRACT-SCOPE-MISSING'
+    );
+  }
+  if (command.outputContractId) {
+    assertArchitectureDesignScope(
+      designScopes,
+      'contract',
+      command.outputContractId,
+      ['may_reference', 'may_create', 'may_update'],
+      'ARCH-PORT-CONTRACT-SCOPE-MISSING'
+    );
+  }
+
+  if (!normalizeArchitectureComponent(component)) {
+    throw new Error(`ARCH-PORT-COMPONENT-MISSING: component ${command.componentId}`);
+  }
+  if (command.inputContractId && !normalizeArchitectureContract(inputContract)) {
+    throw new Error(`ARCH-PORT-CONTRACT-MISSING: input contract ${command.inputContractId}`);
+  }
+  if (command.outputContractId && !normalizeArchitectureContract(outputContract)) {
+    throw new Error(`ARCH-PORT-CONTRACT-MISSING: output contract ${command.outputContractId}`);
+  }
+
+  validateArchitecturePortRecordCommand(command);
+
+  const createdAt = toIso(now);
+  const port = {
+    portId: command.portId,
+    componentId: command.componentId,
+    portName: command.portName,
+    portKind: command.portKind,
+    direction: command.direction,
+    inputContractId: command.inputContractId,
+    outputContractId: command.outputContractId,
+    negativeTests: command.negativeTests,
+    status: command.status,
+    createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { port, audit };
+}
+
 function planArchitectureFitnessScanOperation({ command, design, scanResult, operationId, now }) {
   assertArchitectureDesignMayScan(design, command);
   if (!scanResult?.scan || scanResult.scan.scanId !== command.scanId) {
@@ -2958,6 +3722,103 @@ function planArchitectureFitnessScanOperation({ command, design, scanResult, ope
   const audit = architectureScopedAudit({ command, operationId, now });
 
   return { scan, observations, evaluations, audit };
+}
+
+function planArchitectureTestRecordOperation({
+  command,
+  design,
+  designScopes,
+  component,
+  existingTest,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  const requiredScope = existingTest ? 'may_update' : 'may_create';
+  assertArchitectureDesignScope(
+    designScopes,
+    'test',
+    command.testId,
+    [requiredScope],
+    'ARCH-TEST-EVIDENCE-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference'],
+    'ARCH-TEST-EVIDENCE-COMPONENT-SCOPE-MISSING'
+  );
+
+  if (!normalizeArchitectureComponent(component)) {
+    throw new Error(`ARCH-TEST-EVIDENCE-COMPONENT-MISSING: component ${command.componentId}`);
+  }
+
+  validateArchitectureTestRecordCommand(command);
+
+  const createdAt = toIso(now);
+  const testEvidence = {
+    testId: command.testId,
+    componentId: command.componentId,
+    testPath: command.testPath,
+    testKind: command.testKind,
+    coverageLevel: command.coverageLevel,
+    required: command.required,
+    validationCommand: command.validationCommand,
+    createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { testEvidence, audit };
+}
+
+function planArchitectureObservabilityRecordOperation({
+  command,
+  design,
+  designScopes,
+  component,
+  existingObservability,
+  operationId,
+  now,
+}) {
+  assertArchitectureDesignMayRecord(design, command);
+  const requiredScope = existingObservability ? 'may_update' : 'may_create';
+  assertArchitectureDesignScope(
+    designScopes,
+    'evidence',
+    command.observabilityId,
+    [requiredScope],
+    'ARCH-OBSERVABILITY-EVIDENCE-DESIGN-SCOPE-MISSING'
+  );
+  assertArchitectureDesignScope(
+    designScopes,
+    'component',
+    command.componentId,
+    ['may_reference'],
+    'ARCH-OBSERVABILITY-EVIDENCE-COMPONENT-SCOPE-MISSING'
+  );
+
+  if (!normalizeArchitectureComponent(component)) {
+    throw new Error(
+      `ARCH-OBSERVABILITY-EVIDENCE-COMPONENT-MISSING: component ${command.componentId}`
+    );
+  }
+
+  validateArchitectureObservabilityRecordCommand(command);
+
+  const createdAt = toIso(now);
+  const observability = {
+    observabilityId: command.observabilityId,
+    componentId: command.componentId,
+    signalName: command.signalName,
+    signalKind: command.signalKind,
+    required: command.required,
+    status: command.status,
+    createdAt,
+  };
+  const audit = architectureScopedAudit({ command, operationId, now });
+
+  return { observability, audit };
 }
 
 function planComponentCreateOperation({
@@ -3025,6 +3886,147 @@ function planComponentCreateOperation({
   };
 
   return { definition, ownershipPatterns, semanticItems, audit };
+}
+
+function normalizeImportedGovernanceComponent(row) {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    sourceKind: row.source_kind ?? row.sourceKind ?? 'imported',
+    componentId: row.component_id ?? row.componentId,
+    parentId: row.parent_id ?? row.parentId,
+    revision: row.revision === undefined || row.revision === null ? null : Number(row.revision),
+    sourcePath: row.source_path ?? row.sourcePath,
+    sourceContentSha256: row.source_content_sha256 ?? row.sourceContentSha256,
+    rawComponent: row.raw_component ?? row.rawComponent ?? {},
+  };
+}
+
+function normalizeOperationRevision(row) {
+  if (!row) {
+    return 0;
+  }
+
+  return Number(row.resulting_revision ?? row.resultingRevision ?? 0);
+}
+
+function normalizeUnitPathRows(rows) {
+  return (rows || []).map((row) => row.unit_id ?? row.unitId).filter(Boolean);
+}
+
+function reparentRawComponent(rawComponent, command, unitPath) {
+  const raw =
+    rawComponent && typeof rawComponent === 'object' && !Array.isArray(rawComponent)
+      ? { ...rawComponent }
+      : {};
+  raw.parent = command.parentComponentId;
+  raw.unitPath = unitPath;
+  raw.reparentedBy = {
+    operation: command.kind,
+    sourceRef: command.sourceRef,
+  };
+
+  if (Array.isArray(raw.unitReferences)) {
+    raw.unitReferences = raw.unitReferences.map((unit) =>
+      unit && unit.id === command.componentId
+        ? { ...unit, parent: command.parentComponentId }
+        : unit
+    );
+  }
+
+  return raw;
+}
+
+function planComponentReparentOperation({
+  command,
+  parentUnit,
+  existingComponent,
+  parentPathRows,
+  latestOperation,
+  operationId,
+  now,
+}) {
+  const component = normalizeImportedGovernanceComponent(existingComponent);
+  if (!component) {
+    throw new Error(
+      `Governance component ${command.componentId} is not present in the planning DB.`
+    );
+  }
+
+  const parent = normalizeGovernanceUnit(parentUnit);
+  if (!parent) {
+    throw new Error(
+      `Parent governance unit ${command.parentComponentId} was not imported into the planning DB.`
+    );
+  }
+  if (!allowedComponentParentLevels.has(parent.level)) {
+    throw new Error(
+      `Governance component ${command.componentId} cannot use ${parent.level} parent ${parent.unitId}.`
+    );
+  }
+
+  const previousRevision =
+    component.revision === null ? normalizeOperationRevision(latestOperation) : component.revision;
+  if (
+    command.expectedRevision !== null &&
+    command.expectedRevision !== undefined &&
+    previousRevision !== command.expectedRevision
+  ) {
+    throw new Error(
+      `Governance component ${command.componentId} expected revision ${command.expectedRevision}, but current revision is ${previousRevision}.`
+    );
+  }
+
+  validateComponentReparentCommand(command);
+
+  const parentPath = normalizeUnitPathRows(parentPathRows);
+  if (parentPath[parentPath.length - 1] !== command.parentComponentId) {
+    throw new Error(
+      `Parent governance unit ${command.parentComponentId} does not have a resolvable unit path.`
+    );
+  }
+  if (parentPath.includes(command.componentId)) {
+    throw new Error(
+      `Governance component ${command.componentId} cannot be reparented under its own descendant ${command.parentComponentId}.`
+    );
+  }
+
+  const unitPath = [...parentPath, command.componentId];
+  const resultingRevision = previousRevision + 1;
+  const createdAt = toIso(now);
+  const definition = {
+    sourceKind: component.sourceKind,
+    componentId: command.componentId,
+    parentComponentId: command.parentComponentId,
+    rootUnit: parent.rootUnit || parent.unitId,
+    domainUnit: parent.domainUnit || parent.rootUnit || parent.unitId,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    revision: resultingRevision,
+    unitPath,
+    rawComponent: reparentRawComponent(component.rawComponent, command, unitPath),
+  };
+  const audit = {
+    operationId,
+    idempotencyKey: command.idempotencyKey,
+    operationType: command.kind,
+    actor: command.actor,
+    componentId: command.componentId,
+    sourcePath: command.sourceRef,
+    sourceContentSha256: command.sourceContentSha256,
+    expectedRevision: command.expectedRevision ?? null,
+    previousRevision,
+    resultingRevision,
+    payload: {
+      ...operationPayload(command),
+      resultingDefinition: definition,
+    },
+    createdAt,
+  };
+
+  return { definition, audit };
 }
 
 function normalizeDbSurface(row) {
@@ -3787,6 +4789,50 @@ async function readArchitectureRelation(client, relationId) {
   return result.rows[0] || null;
 }
 
+async function readArchitectureContract(client, contractId) {
+  const result = await client.query(
+    `select *
+     from architecture.contract
+     where contract_id = $1`,
+    [contractId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readArchitecturePort(client, portId) {
+  const result = await client.query(
+    `select *
+     from architecture.component_port
+     where port_id = $1`,
+    [portId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readArchitectureTest(client, testId) {
+  const result = await client.query(
+    `select *
+     from architecture.component_test
+     where test_id = $1`,
+    [testId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readArchitectureObservability(client, observabilityId) {
+  const result = await client.query(
+    `select *
+     from architecture.component_observability
+     where observability_id = $1`,
+    [observabilityId]
+  );
+
+  return result.rows[0] || null;
+}
+
 async function readArchitectureComponents(client) {
   const result = await client.query(
     `select component_id, repo_path
@@ -3810,10 +4856,77 @@ async function readArchitectureRelations(client) {
 
 async function readGovernanceUnit(client, unitId) {
   const result = await client.query(
-    `select *
-     from ${schemaName}.governance_unit_query
-     where unit_id = $1`,
+    `select
+       component_id as unit_id,
+       name,
+       component_level as level,
+       parent_component_id as parent_id,
+       root_unit,
+       domain_unit,
+       status
+     from ${componentEngineeringSchemaName}.component_tree_query
+     where component_id = $1`,
     [unitId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readGovernanceUnitPath(client, unitId) {
+  const result = await client.query(
+    `with recursive unit_chain as (
+       select component_id as unit_id, parent_component_id as parent_id, 0 as depth
+       from ${componentEngineeringSchemaName}.component_tree_query
+       where component_id = $1
+       union all
+       select parent.component_id as unit_id, parent.parent_component_id as parent_id,
+              unit_chain.depth + 1
+       from ${componentEngineeringSchemaName}.component_tree_query parent
+       join unit_chain
+         on unit_chain.parent_id = parent.component_id
+       where unit_chain.depth < 64
+     )
+     select unit_id
+     from unit_chain
+     order by depth desc`,
+    [unitId]
+  );
+
+  return result.rows;
+}
+
+async function readImportedGovernanceComponent(client, componentId, lock = false) {
+  const result = await client.query(
+    `select 'imported'::text as source_kind, *
+     from ${schemaName}.governance_components
+     where component_id = $1
+     ${lock ? 'for update' : ''}`,
+    [componentId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readLocalGovernanceComponent(client, componentId, lock = false) {
+  const result = await client.query(
+    `select 'local'::text as source_kind, *
+     from ${schemaName}.governance_component_local_definitions
+     where component_id = $1
+     ${lock ? 'for update' : ''}`,
+    [componentId]
+  );
+
+  return result.rows[0] || null;
+}
+
+async function readLatestComponentOperation(client, componentId) {
+  const result = await client.query(
+    `select *
+     from ${schemaName}.governance_component_local_operations
+     where component_id = $1
+     order by created_at desc, resulting_revision desc
+     limit 1`,
+    [componentId]
   );
 
   return result.rows[0] || null;
@@ -4255,6 +5368,68 @@ async function writePlannedArchitectureRelationRecordOperation(client, planned) 
   await writeArchitectureScopedAudit(client, planned.audit);
 }
 
+async function writePlannedArchitectureContractRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.contract
+      (contract_id, contract_kind, owner_component_id, contract_ref,
+       compatibility, status, validation_command, created_at, updated_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+     on conflict (contract_id) do update set
+       contract_kind = excluded.contract_kind,
+       owner_component_id = excluded.owner_component_id,
+       contract_ref = excluded.contract_ref,
+       compatibility = excluded.compatibility,
+       status = excluded.status,
+       validation_command = excluded.validation_command,
+       updated_at = excluded.updated_at`,
+    [
+      planned.contract.contractId,
+      planned.contract.contractKind,
+      planned.contract.ownerComponentId,
+      planned.contract.contractRef,
+      planned.contract.compatibility,
+      planned.contract.status,
+      planned.contract.validationCommand,
+      planned.contract.createdAt,
+      planned.contract.updatedAt,
+    ]
+  );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitecturePortRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.component_port
+      (port_id, component_id, port_name, port_kind, direction,
+       input_contract_id, output_contract_id, negative_tests, status, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8::text[], $9, $10)
+     on conflict (port_id) do update set
+       component_id = excluded.component_id,
+       port_name = excluded.port_name,
+       port_kind = excluded.port_kind,
+       direction = excluded.direction,
+       input_contract_id = excluded.input_contract_id,
+       output_contract_id = excluded.output_contract_id,
+       negative_tests = excluded.negative_tests,
+       status = excluded.status`,
+    [
+      planned.port.portId,
+      planned.port.componentId,
+      planned.port.portName,
+      planned.port.portKind,
+      planned.port.direction,
+      planned.port.inputContractId,
+      planned.port.outputContractId,
+      planned.port.negativeTests,
+      planned.port.status,
+      planned.port.createdAt,
+    ]
+  );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
 async function writePlannedArchitectureFitnessScanOperation(client, planned) {
   await client.query(
     `insert into architecture.component_dependency_scan
@@ -4345,6 +5520,59 @@ async function writePlannedArchitectureFitnessScanOperation(client, planned) {
   await writeArchitectureScopedAudit(client, planned.audit);
 }
 
+async function writePlannedArchitectureTestRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.component_test
+      (test_id, component_id, test_path, test_kind, coverage_level,
+       required, validation_command, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8)
+     on conflict (test_id) do update set
+       component_id = excluded.component_id,
+       test_path = excluded.test_path,
+       test_kind = excluded.test_kind,
+       coverage_level = excluded.coverage_level,
+       required = excluded.required,
+       validation_command = excluded.validation_command`,
+    [
+      planned.testEvidence.testId,
+      planned.testEvidence.componentId,
+      planned.testEvidence.testPath,
+      planned.testEvidence.testKind,
+      planned.testEvidence.coverageLevel,
+      planned.testEvidence.required,
+      planned.testEvidence.validationCommand,
+      planned.testEvidence.createdAt,
+    ]
+  );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
+async function writePlannedArchitectureObservabilityRecordOperation(client, planned) {
+  await client.query(
+    `insert into architecture.component_observability
+      (observability_id, component_id, signal_name, signal_kind, required, status, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7)
+     on conflict (observability_id) do update set
+       component_id = excluded.component_id,
+       signal_name = excluded.signal_name,
+       signal_kind = excluded.signal_kind,
+       required = excluded.required,
+       status = excluded.status`,
+    [
+      planned.observability.observabilityId,
+      planned.observability.componentId,
+      planned.observability.signalName,
+      planned.observability.signalKind,
+      planned.observability.required,
+      planned.observability.status,
+      planned.observability.createdAt,
+    ]
+  );
+
+  await writeArchitectureScopedAudit(client, planned.audit);
+}
+
 async function writePlannedComponentCreateOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.governance_component_local_definitions
@@ -4391,6 +5619,83 @@ async function writePlannedComponentCreateOperation(client, planned) {
        on conflict (component_id, item_kind, item_value) do update set
          item_order = excluded.item_order`,
       [item.componentId, item.itemKind, item.itemValue, item.itemOrder]
+    );
+  }
+
+  await client.query(
+    `insert into ${schemaName}.governance_component_local_operations
+      (operation_id, idempotency_key, operation_type, actor, component_id, source_path,
+       source_content_sha256, expected_revision, previous_revision, resulting_revision,
+       payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12)`,
+    [
+      planned.audit.operationId,
+      planned.audit.idempotencyKey,
+      planned.audit.operationType,
+      planned.audit.actor,
+      planned.audit.componentId,
+      planned.audit.sourcePath,
+      planned.audit.sourceContentSha256,
+      planned.audit.expectedRevision,
+      planned.audit.previousRevision,
+      planned.audit.resultingRevision,
+      toJson(planned.audit.payload),
+      planned.audit.createdAt,
+    ]
+  );
+}
+
+async function writePlannedComponentReparentOperation(client, planned) {
+  if (planned.definition.sourceKind === 'local') {
+    await client.query(
+      `update ${schemaName}.governance_component_local_definitions
+       set parent_id = $2,
+           root_unit = $3,
+           domain_unit = $4,
+           source_path = $5,
+           source_content_sha256 = $6,
+           revision = $7
+       where component_id = $1`,
+      [
+        planned.definition.componentId,
+        planned.definition.parentComponentId,
+        planned.definition.rootUnit,
+        planned.definition.domainUnit,
+        planned.definition.sourcePath,
+        planned.definition.sourceContentSha256,
+        planned.definition.revision,
+      ]
+    );
+  } else {
+    await client.query(
+      `insert into ${schemaName}.governance_component_reparent_overrides
+        (component_id, parent_id, root_unit, domain_unit, unit_path, raw_component,
+         source_path, source_content_sha256, revision, updated_by, updated_at)
+       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8, $9, $10, $11)
+       on conflict (component_id) do update set
+         parent_id = excluded.parent_id,
+         root_unit = excluded.root_unit,
+         domain_unit = excluded.domain_unit,
+         unit_path = excluded.unit_path,
+         raw_component = excluded.raw_component,
+         source_path = excluded.source_path,
+         source_content_sha256 = excluded.source_content_sha256,
+         revision = excluded.revision,
+         updated_by = excluded.updated_by,
+         updated_at = excluded.updated_at`,
+      [
+        planned.definition.componentId,
+        planned.definition.parentComponentId,
+        planned.definition.rootUnit,
+        planned.definition.domainUnit,
+        toJson(planned.definition.unitPath),
+        toJson(planned.definition.rawComponent),
+        planned.definition.sourcePath,
+        planned.definition.sourceContentSha256,
+        planned.definition.revision,
+        planned.audit.actor,
+        planned.audit.createdAt,
+      ]
     );
   }
 
@@ -4944,6 +6249,108 @@ async function applyArchitectureRelationRecordOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureContractRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const ownerComponent = await readArchitectureComponent(client, command.ownerComponentId);
+    const existingContract = await readArchitectureContract(client, command.contractId);
+    const planned = planArchitectureContractRecordOperation({
+      command,
+      design,
+      designScopes,
+      ownerComponent,
+      existingContract,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureContractRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function applyArchitecturePortRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const component = await readArchitectureComponent(client, command.componentId);
+    const inputContract = command.inputContractId
+      ? await readArchitectureContract(client, command.inputContractId)
+      : null;
+    const outputContract = command.outputContractId
+      ? await readArchitectureContract(client, command.outputContractId)
+      : null;
+    const existingPort = await readArchitecturePort(client, command.portId);
+    const planned = planArchitecturePortRecordOperation({
+      command,
+      design,
+      designScopes,
+      component,
+      inputContract,
+      outputContract,
+      existingPort,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitecturePortRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyArchitectureFitnessScanOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -4996,6 +6403,103 @@ async function applyArchitectureFitnessScanOperation(command, options = {}) {
   }
 }
 
+async function applyArchitectureTestRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const component = await readArchitectureComponent(client, command.componentId);
+    const existingTest = await readArchitectureTest(client, command.testId);
+    const planned = planArchitectureTestRecordOperation({
+      command,
+      design,
+      designScopes,
+      component,
+      existingTest,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureTestRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function applyArchitectureObservabilityRecordOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertArchitectureScopedOperationIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const design = await readArchitectureDesign(client, command.designId);
+    const designScopes = await readArchitectureDesignScopes(client, command.designId);
+    const component = await readArchitectureComponent(client, command.componentId);
+    const existingObservability = await readArchitectureObservability(
+      client,
+      command.observabilityId
+    );
+    const planned = planArchitectureObservabilityRecordOperation({
+      command,
+      design,
+      designScopes,
+      component,
+      existingObservability,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedArchitectureObservabilityRecordOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
 async function applyComponentCreateOperation(command, options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
@@ -5027,6 +6531,55 @@ async function applyComponentCreateOperation(command, options = {}) {
     });
 
     await writePlannedComponentCreateOperation(client, planned);
+    await client.query('commit');
+    return { idempotent: false, ...planned };
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
+}
+
+async function applyComponentReparentOperation(command, options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await client.query('begin');
+
+    const existing = await readExistingComponentOperation(client, command.idempotencyKey);
+    if (existing) {
+      assertComponentIdempotentReplayMatches(existing, command);
+      await client.query('commit');
+      return { idempotent: true, audit: existing };
+    }
+
+    const parentUnit = await readGovernanceUnit(client, command.parentComponentId);
+    const parentPathRows = await readGovernanceUnitPath(client, command.parentComponentId);
+    const existingComponent =
+      (await readImportedGovernanceComponent(client, command.componentId, true)) ||
+      (await readLocalGovernanceComponent(client, command.componentId, true));
+    const latestOperation = await readLatestComponentOperation(client, command.componentId);
+    const planned = planComponentReparentOperation({
+      command,
+      parentUnit,
+      existingComponent,
+      parentPathRows,
+      latestOperation,
+      operationId: options.operationId || crypto.randomUUID(),
+      now: options.now || new Date(),
+    });
+
+    await writePlannedComponentReparentOperation(client, planned);
     await client.query('commit');
     return { idempotent: false, ...planned };
   } catch (error) {
@@ -5390,9 +6943,37 @@ function printOperationResult(result) {
     return;
   }
 
+  if (result.contract) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.contract.contractId} component=${result.contract.ownerComponentId}`
+    );
+    return;
+  }
+
+  if (result.port) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.port.portId} component=${result.port.componentId}`
+    );
+    return;
+  }
+
   if (result.scan) {
     console.log(
       `[planning:db:operate] ${result.audit.operationType} ${result.scan.scanId} observations=${result.observations.length} evaluations=${result.evaluations.length}`
+    );
+    return;
+  }
+
+  if (result.testEvidence) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.testEvidence.testId} component=${result.testEvidence.componentId}`
+    );
+    return;
+  }
+
+  if (result.observability) {
+    console.log(
+      `[planning:db:operate] ${result.audit.operationType} ${result.observability.observabilityId} component=${result.observability.componentId}`
     );
     return;
   }
@@ -5488,19 +7069,29 @@ async function main() {
           ? await applyArchitectureComponentRecordOperation(command)
           : command.kind === 'architecture_relation_record'
             ? await applyArchitectureRelationRecordOperation(command)
-            : command.kind === 'architecture_fitness_scan'
-              ? await applyArchitectureFitnessScanOperation(command)
-              : command.kind === 'component_create'
-                ? await applyComponentCreateOperation(command)
-                : command.kind === 'db_surface_upsert'
-                  ? await applyDbSurfaceUpsertOperation(command)
-                  : command.kind === 'feature_mechanization_rail_record'
-                    ? await applyFeatureMechanizationRailRecordOperation(command)
-                    : command.kind === 'governance_refresh_run_record'
-                      ? await applyGovernanceRefreshRunRecordOperation(command)
-                      : command.kind.startsWith('fowler_analysis_')
-                        ? await applyFowlerAnalysisOperation(command)
-                        : await applyTaskLocalOperation(command);
+            : command.kind === 'architecture_contract_record'
+              ? await applyArchitectureContractRecordOperation(command)
+              : command.kind === 'architecture_port_record'
+                ? await applyArchitecturePortRecordOperation(command)
+                : command.kind === 'architecture_fitness_scan'
+                  ? await applyArchitectureFitnessScanOperation(command)
+                  : command.kind === 'architecture_test_record'
+                    ? await applyArchitectureTestRecordOperation(command)
+                    : command.kind === 'architecture_observability_record'
+                      ? await applyArchitectureObservabilityRecordOperation(command)
+                      : command.kind === 'component_create'
+                        ? await applyComponentCreateOperation(command)
+                        : command.kind === 'component_reparent'
+                          ? await applyComponentReparentOperation(command)
+                          : command.kind === 'db_surface_upsert'
+                            ? await applyDbSurfaceUpsertOperation(command)
+                            : command.kind === 'feature_mechanization_rail_record'
+                              ? await applyFeatureMechanizationRailRecordOperation(command)
+                              : command.kind === 'governance_refresh_run_record'
+                                ? await applyGovernanceRefreshRunRecordOperation(command)
+                                : command.kind.startsWith('fowler_analysis_')
+                                  ? await applyFowlerAnalysisOperation(command)
+                                  : await applyTaskLocalOperation(command);
   printOperationResult(result);
 }
 
@@ -5513,10 +7104,15 @@ if (require.main === module) {
 
 module.exports = {
   applyArchitectureComponentRecordOperation,
+  applyArchitectureContractRecordOperation,
   applyArchitectureDesignCreateOperation,
   applyArchitectureFitnessScanOperation,
+  applyArchitecturePortRecordOperation,
+  applyArchitectureTestRecordOperation,
+  applyArchitectureObservabilityRecordOperation,
   applyArchitectureRelationRecordOperation,
   applyComponentCreateOperation,
+  applyComponentReparentOperation,
   applyDbSurfaceUpsertOperation,
   applyDocsResolutionOperation,
   applyFowlerAnalysisOperation,
@@ -5538,10 +7134,15 @@ module.exports = {
   materializeDocsResolutionCommand,
   parseArgs,
   planArchitectureComponentRecordOperation,
+  planArchitectureContractRecordOperation,
   planArchitectureDesignCreateOperation,
   planArchitectureFitnessScanOperation,
+  planArchitecturePortRecordOperation,
+  planArchitectureTestRecordOperation,
+  planArchitectureObservabilityRecordOperation,
   planArchitectureRelationRecordOperation,
   planComponentCreateOperation,
+  planComponentReparentOperation,
   planDbSurfaceUpsertOperation,
   planFeatureMechanizationRailRecordOperation,
   planFowlerAnalysisOperation,
@@ -5559,8 +7160,13 @@ module.exports = {
   validateTaskStatus,
   resolveOperateHelpRequest,
   writePlannedComponentCreateOperation,
+  writePlannedComponentReparentOperation,
   writePlannedDbSurfaceUpsertOperation,
+  writePlannedArchitectureContractRecordOperation,
   writePlannedArchitectureFitnessScanOperation,
+  writePlannedArchitecturePortRecordOperation,
+  writePlannedArchitectureTestRecordOperation,
+  writePlannedArchitectureObservabilityRecordOperation,
   writePlannedFeatureMechanizationRailRecordOperation,
   writePlannedFowlerAnalysisOperation,
   writePlannedGovernanceRefreshRunRecordOperation,

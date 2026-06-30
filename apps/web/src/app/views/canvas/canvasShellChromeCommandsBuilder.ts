@@ -27,8 +27,8 @@ export function buildCanvasShellChromeCommands({
       void chromeCommands.handleImportProjectSnapshotFile(file);
     },
     onReloadLatestDraft: chromeCommands.reloadLatestDraft,
-    onPlan: () => {
-      void chromeCommands.handlePlan();
+    onPreviewExecutionPlan: () => {
+      void chromeCommands.handlePreviewExecutionPlan();
     },
     onRun: () => {
       void chromeCommands.handleStartRun();

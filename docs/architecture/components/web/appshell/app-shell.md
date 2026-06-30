@@ -27,8 +27,8 @@ Primary code anchors:
 - [ShellAppMenu.tsx](../../../../../apps/web/src/app/components/shell/ShellAppMenu.tsx)
 - [appBuildMetadata.ts](../../../../../apps/web/src/app/components/shell/appBuildMetadata.ts)
 - [LeftNavigation.tsx](../../../../../apps/web/src/app/components/LeftNavigation.tsx)
-- [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx)
-- [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
+- [BottomOperationalDrawer.tsx](../../../../../apps/web/src/app/components/shell/BottomOperationalDrawer.tsx)
+- [bottomOperationalDrawerLogModel.ts](../../../../../apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.ts)
 
 `LeftNavigation.tsx` is a current implementation anchor, not the target Canvas
 workbench direction. `F-28` governs the next Canvas shell sequence and requires
@@ -46,7 +46,7 @@ flowchart TB
   Body --> Nav["LeftNavigation"]
   Body --> Main["Main content"]
   Main --> Outlet["Route outlet"]
-  Main --> Console["Console drawer"]
+  Main --> Operations["Operational drawer"]
 ```
 
 ## Shell Service Composition
@@ -144,7 +144,7 @@ flowchart TB
   Rail --> Link
 ```
 
-## Bottom Console Drawer Ownership
+## Bottom Operational Drawer Ownership
 
 The bottom drawer now follows the same separation rule as the rest of the shell:
 
@@ -157,7 +157,7 @@ Current state model:
 
 ```mermaid
 flowchart LR
-  Inputs["dataSourceMode + runId + isLoading + lines"] --> Model["buildBottomConsoleDrawerModel(...)"]
+  Inputs["dataSourceMode + runId + isLoading + lines"] --> Model["buildBottomOperationalDrawerLogModel(...)"]
   Model --> Idle["idle: empty-state guidance"]
   Model --> Loading["loading: run badge + loading copy"]
   Model --> Streaming["streaming: run badge + xterm-backed live companion"]
@@ -170,15 +170,15 @@ flowchart LR
   Events["GET /runs/:runId/events"] --> DrawerHook["useConsoleLogStream()"]
   Events --> RunsFacade["RunWorkspaceFacade"]
   Snapshot["GET /runs/:runId"] --> RunsFacade
-  DrawerHook --> Drawer["BottomConsoleDrawer"]
+  DrawerHook --> Drawer["BottomOperationalDrawer"]
   RunsFacade --> Runs["Runs workspace"]
 ```
 
 Boundary rules for these two surfaces:
 
-- `BottomConsoleDrawer` mirrors the currently active run as a shell-level
+- `BottomOperationalDrawer` mirrors the currently active run as a shell-level
   xterm-backed live companion;
-- `BottomConsoleDrawer` does not claim snapshot authority, failure-diagnostics authority, or full run-detail ownership;
+- `BottomOperationalDrawer` does not claim snapshot authority, failure-diagnostics authority, or full run-detail ownership;
 - `Runs` owns durable run monitoring through snapshot plus timeline composition;
 - `Runs` is the place where degraded timeline state, runtime snapshot truth, result evidence, and failure diagnostics are explained.
 
@@ -316,7 +316,7 @@ flowchart LR
 
 - some shell quick actions are placeholders and not yet connected to governed
   behavior;
-- the console drawer now has an explicit shell-owned content model, xterm-backed
+- the operational drawer now has an explicit shell-owned content model, xterm-backed
   live companion rendering, and typed idle, loading, and streaming states;
 - shared event presentation semantics align on ordering, dedupe, cursor,
   active-status polling, level, headline key, shared headline copy, detail, and
@@ -339,8 +339,8 @@ the extracted primitives honest and small.
 - `ShellHealthBanner`
   Current anchor: [ShellHealthBanner.tsx](../../../../../apps/web/src/app/components/ShellHealthBanner.tsx)
   Decision: keep and restyle through semantic tokens.
-- `BottomConsoleDrawer`
-  Current anchor: [Console.tsx](../../../../../apps/web/src/app/components/Console.tsx) plus [bottomConsoleDrawerModel.ts](../../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
+- `BottomOperationalDrawer`
+  Current anchor: [BottomOperationalDrawer.tsx](../../../../../apps/web/src/app/components/shell/BottomOperationalDrawer.tsx) plus [bottomOperationalDrawerLogModel.ts](../../../../../apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.ts)
   Decision: keep the drawer pattern, with a shell-owned state model and future log hardening.
 
 ## Shell Organization Rules
@@ -348,7 +348,7 @@ the extracted primitives honest and small.
 The shell layer should become explicit in code structure:
 
 - `components/ui`: low-level library primitives only;
-- `components/shell`: top bar, navigation rail, health banner, console drawer,
+- `components/shell`: top bar, navigation rail, health banner, operational drawer,
   and shell-only helpers;
 - `components/workbench`: route-level shared layout primitives used by multiple
   views;

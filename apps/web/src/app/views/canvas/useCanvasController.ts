@@ -94,7 +94,7 @@ export function useCanvasController() {
       canMutateGraph,
       canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
       canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
-      canReloadLatestDraft: authoringRuntime.draftToolbarState.showReloadAction,
+      canReloadLatestDraft: authoringRuntime.draftStatusState.showReloadAction,
     });
 
     return resolveCanvasRuntimePolicy({
@@ -107,7 +107,7 @@ export function useCanvasController() {
     });
   }, [
     activeCanvasGraphStrategyResolution,
-    authoringRuntime.draftToolbarState.showReloadAction,
+    authoringRuntime.draftStatusState.showReloadAction,
     canMutateGraph,
     draftAccessPosture,
     isDraftRecoveryBlocked,
@@ -151,6 +151,7 @@ export function useCanvasController() {
     showInspectorPanel: store.showInspectorPanel,
     setCurrentPlan: store.setCurrentPlan,
     onLayoutComplete: persistence.handleNodePositionsSave,
+    invalidateInFlightSaveAttempt: authoringRuntime.invalidateInFlightSaveAttempt,
   });
 
   const graphHandlers = useCanvasGraphHandlers({
@@ -203,11 +204,11 @@ export function useCanvasController() {
     executionEnvironmentId: draftReadModel?.record?.draft.canvas.environmentId,
     shellFeedback,
     previewProvenanceConfig: workspaceBootstrapConfig,
-    consolePanelVisible: store.consolePanelVisible,
+    bottomDrawerVisible: store.bottomDrawerVisible,
     currentPlan: store.currentPlan,
     setCurrentPlan: store.setCurrentPlan,
-    setConsolePanelHeight: store.setConsolePanelHeight,
-    toggleConsolePanel: store.toggleConsolePanel,
+    setBottomDrawerHeight: store.setBottomDrawerHeight,
+    toggleBottomDrawer: store.toggleBottomDrawer,
     onRunStarted: navigationActions.handleRunStarted,
   });
 
@@ -219,6 +220,7 @@ export function useCanvasController() {
       uiScope,
       overlayModel,
       graphHandlers,
+      activeCanvasKind: canvasAuthoringMode,
       runtimeCapabilities: capabilities,
       canMutateGraph: canMutateActiveCanvas,
       canSelectExecution,

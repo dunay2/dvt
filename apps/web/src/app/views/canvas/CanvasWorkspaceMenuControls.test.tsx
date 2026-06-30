@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CanvasWorkspaceMenuContributionRegistrar,
+  CanvasWorkspaceTopBarIdentity,
   CanvasWorkspaceMenuControls,
 } from './CanvasWorkspaceMenuControls';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
@@ -42,6 +43,8 @@ describe('CanvasWorkspaceMenuControls', () => {
   it('renders contributed project snapshot commands in the Workspace menu', async () => {
     const onExportProjectSnapshot = vi.fn();
     const onImportProjectSnapshotFile = vi.fn();
+    const onOpenProjectExplorer = vi.fn();
+    const onOpenProjectCode = vi.fn();
     const snapshotFile = new File(['{}'], 'project-snapshot.json', {
       type: 'application/json',
     });
@@ -54,8 +57,12 @@ describe('CanvasWorkspaceMenuControls', () => {
             <CanvasWorkspaceMenuContributionRegistrar
               canExportProjectSnapshot
               canImportProjectSnapshot
+              canOpenProjectExplorer
+              canOpenProjectCode
               onExportProjectSnapshot={onExportProjectSnapshot}
               onImportProjectSnapshotFile={onImportProjectSnapshotFile}
+              onOpenProjectExplorer={onOpenProjectExplorer}
+              onOpenProjectCode={onOpenProjectCode}
             />
             <CanvasWorkspaceMenuControls />
           </DropdownMenuContent>
@@ -72,6 +79,20 @@ describe('CanvasWorkspaceMenuControls', () => {
     expect(onExportProjectSnapshot).toHaveBeenCalledTimes(1);
 
     await act(async () => {
+      document.body
+        .querySelector<HTMLDivElement>('[data-slot="canvas-workspace-explore-project-command"]')
+        ?.click();
+    });
+    await act(async () => {
+      document.body
+        .querySelector<HTMLDivElement>('[data-slot="canvas-workspace-open-project-code-command"]')
+        ?.click();
+    });
+
+    expect(onOpenProjectExplorer).toHaveBeenCalledTimes(1);
+    expect(onOpenProjectCode).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
       fireEvent.change(
         document.body.querySelector<HTMLInputElement>(
           '[data-slot="canvas-workspace-import-input"]'
@@ -85,18 +106,58 @@ describe('CanvasWorkspaceMenuControls', () => {
     expect(onImportProjectSnapshotFile).toHaveBeenCalledWith(snapshotFile);
   });
 
+  it('renders the active canvas identity as minimal shell top-bar context', async () => {
+    await act(async () => {
+      root.render(
+        <>
+          <CanvasWorkspaceMenuContributionRegistrar
+            activeCanvas={{
+              id: 'warehouse-dbt',
+              kind: 'dbt',
+              title: 'Warehouse dbt',
+            }}
+            canExportProjectSnapshot
+            canImportProjectSnapshot
+            onExportProjectSnapshot={vi.fn()}
+            onImportProjectSnapshotFile={vi.fn()}
+          />
+          <CanvasWorkspaceTopBarIdentity />
+        </>
+      );
+    });
+
+    const activeCanvasIdentity = container.querySelector(
+      '[data-slot="shell-active-canvas-identity"]'
+    );
+
+    expect(activeCanvasIdentity).not.toBeNull();
+    expect(activeCanvasIdentity?.textContent).toContain('Warehouse dbt');
+    expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('warehouse-dbt');
+    expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('dbt');
+    expect(container.textContent).not.toContain('Export');
+    expect(container.textContent).not.toContain('Import');
+  });
+
   it('does not let a stale Workspace menu cleanup clear an active replacement contribution', async () => {
     const staleContribution = {
       canExportProjectSnapshot: false,
       canImportProjectSnapshot: false,
+      canOpenProjectExplorer: false,
+      canOpenProjectCode: false,
       onExportProjectSnapshot: vi.fn(),
       onImportProjectSnapshotFile: vi.fn(),
+      onOpenProjectExplorer: vi.fn(),
+      onOpenProjectCode: vi.fn(),
     };
     const activeContribution = {
       canExportProjectSnapshot: true,
       canImportProjectSnapshot: true,
+      canOpenProjectExplorer: true,
+      canOpenProjectCode: true,
       onExportProjectSnapshot: vi.fn(),
       onImportProjectSnapshotFile: vi.fn(),
+      onOpenProjectExplorer: vi.fn(),
+      onOpenProjectCode: vi.fn(),
     };
 
     const { registerCanvasWorkspaceMenuContribution, clearCanvasWorkspaceMenuContribution } =

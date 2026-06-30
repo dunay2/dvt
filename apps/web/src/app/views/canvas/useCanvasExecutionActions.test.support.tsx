@@ -48,9 +48,9 @@ type ExecutionActionsHookCommonProps = Readonly<{
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
-  consolePanelVisible: boolean;
-  setConsolePanelHeight: (height: number) => void;
-  toggleConsolePanel: () => void;
+  bottomDrawerVisible: boolean;
+  setBottomDrawerHeight: (height: number) => void;
+  toggleBottomDrawer: () => void;
 }>;
 
 type ControlledExecutionActionsHookHostProps = Readonly<
@@ -86,9 +86,9 @@ export type RenderExecutionActionsHarnessArgs = {
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan?: boolean;
   canRun?: boolean;
-  consolePanelVisible?: boolean;
-  setConsolePanelHeight?: (height: number) => void;
-  toggleConsolePanel?: () => void;
+  bottomDrawerVisible?: boolean;
+  setBottomDrawerHeight?: (height: number) => void;
+  toggleBottomDrawer?: () => void;
 };
 
 type ResolvedExecutionActionsHarnessArgs = Omit<
@@ -109,9 +109,9 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'flushDraftForExecution'
   | 'canPlan'
   | 'canRun'
-  | 'consolePanelVisible'
-  | 'setConsolePanelHeight'
-  | 'toggleConsolePanel'
+  | 'bottomDrawerVisible'
+  | 'setBottomDrawerHeight'
+  | 'toggleBottomDrawer'
 > & {
   currentPlan: PlanViewModel | null;
   initialPlan: PlanViewModel | null;
@@ -131,9 +131,9 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
   canRun: boolean;
-  consolePanelVisible: boolean;
-  setConsolePanelHeight: (height: number) => void;
-  toggleConsolePanel: () => void;
+  bottomDrawerVisible: boolean;
+  setBottomDrawerHeight: (height: number) => void;
+  toggleBottomDrawer: () => void;
 };
 
 export const DEFAULT_PREVIEW_PROVENANCE_CONFIG: PreviewProvenanceConfig = {
@@ -166,7 +166,7 @@ function ExecutionActionsHookView({
       <button
         type="button"
         onClick={() => {
-          void hook.handlePlan();
+          void hook.handlePreviewExecutionPlan();
         }}
       >
         plan
@@ -235,9 +235,9 @@ function resolveCommonHookProps(
       : { flushDraftForExecution: args.flushDraftForExecution }),
     canPlan: args.canPlan,
     canRun: args.canRun,
-    consolePanelVisible: args.consolePanelVisible,
-    setConsolePanelHeight: args.setConsolePanelHeight,
-    toggleConsolePanel: args.toggleConsolePanel,
+    bottomDrawerVisible: args.bottomDrawerVisible,
+    setBottomDrawerHeight: args.setBottomDrawerHeight,
+    toggleBottomDrawer: args.toggleBottomDrawer,
   };
 }
 
@@ -279,9 +279,9 @@ function resolveHarnessArgs(
     selectedNodeIds: args.selectedNodeIds ?? [],
     canPlan: args.canPlan ?? true,
     canRun: args.canRun ?? true,
-    consolePanelVisible: args.consolePanelVisible ?? false,
-    setConsolePanelHeight: args.setConsolePanelHeight ?? vi.fn<(height: number) => void>(),
-    toggleConsolePanel: args.toggleConsolePanel ?? vi.fn<() => void>(),
+    bottomDrawerVisible: args.bottomDrawerVisible ?? false,
+    setBottomDrawerHeight: args.setBottomDrawerHeight ?? vi.fn<(height: number) => void>(),
+    toggleBottomDrawer: args.toggleBottomDrawer ?? vi.fn<() => void>(),
   };
 }
 
@@ -490,8 +490,8 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   shellFeedback: ResolvedExecutionActionsHarnessArgs['shellFeedback'];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
-  setConsolePanelHeight: ResolvedExecutionActionsHarnessArgs['setConsolePanelHeight'];
-  toggleConsolePanel: ResolvedExecutionActionsHarnessArgs['toggleConsolePanel'];
+  setBottomDrawerHeight: ResolvedExecutionActionsHarnessArgs['setBottomDrawerHeight'];
+  toggleBottomDrawer: ResolvedExecutionActionsHarnessArgs['toggleBottomDrawer'];
   queryClient: QueryClient;
 } {
   let currentArgs = resolveHarnessArgs(initialArgs);
@@ -555,8 +555,8 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     shellFeedback: currentArgs.shellFeedback,
     workspaceFilesQuery: currentArgs.workspaceFilesQuery,
     workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
-    setConsolePanelHeight: currentArgs.setConsolePanelHeight,
-    toggleConsolePanel: currentArgs.toggleConsolePanel,
+    setBottomDrawerHeight: currentArgs.setBottomDrawerHeight,
+    toggleBottomDrawer: currentArgs.toggleBottomDrawer,
     queryClient,
   };
 }

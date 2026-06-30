@@ -1,5 +1,5 @@
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
-import { clickPreviewExecutionPlanFromCanvasContextMenu } from '../../support/canvasExecutionSelection';
+import { clickPreviewExecutionPlanFromOperationalDrawer } from '../../support/canvasExecutionSelection';
 import {
   getE2eApiCalls,
   getLastE2eApiCall,
@@ -13,7 +13,7 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
-describe('Canvas graph to Code and Artifacts project-source parity', () => {
+describe('Canvas graph to execution-preview source parity', () => {
   let savedWorkflowSource: string | null = null;
 
   beforeEach(() => {
@@ -256,7 +256,7 @@ describe('Canvas graph to Code and Artifacts project-source parity', () => {
     });
   });
 
-  it('shows the workflow source planned in Grafo as the same Code file and Artifacts preview', () => {
+  it('persists the workflow source used by the execution preview without requiring legacy workbench tabs', () => {
     cy.viewport(1500, 900);
 
     visitWithE2eWorkspaceSession('/canvas');
@@ -265,12 +265,12 @@ describe('Canvas graph to Code and Artifacts project-source parity', () => {
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
+    clickPreviewExecutionPlanFromOperationalDrawer();
     waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
     waitForE2eApiCall('/plans/preview', 'POST');
-    cy.contains('Execution Plan Preview').should('be.visible');
+    cy.contains('Execution Preview').should('be.visible');
     cy.get('body').type('{esc}', { force: true });
-    cy.contains('Execution Plan Preview').should('not.exist');
+    cy.contains('Execution Preview').should('not.exist');
     cy.wrap(null).should(() => {
       const saveCall = getLastE2eApiCall(
         '/workspace/files/pipelines%2Fsales_pipeline.yaml',
@@ -282,34 +282,19 @@ describe('Canvas graph to Code and Artifacts project-source parity', () => {
       );
     });
 
-    cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
-      cy.contains('button', /^(Code|Codigo)$/).click();
-    });
-    waitForE2eApiCall('/workspace/files', 'GET');
-    waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'GET');
-    cy.location('pathname').should('eq', '/canvas/code');
-    cy.contains('sales_pipeline.yaml').should('be.visible');
-    cy.contains('id: "model_orders"').should('be.visible');
-    cy.contains('entrypoint: "models/analytics/model_orders.sql"').should('be.visible');
+    cy.location('pathname').should('eq', '/canvas');
+    cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
     cy.wrap(null).should(() => {
       expect(savedWorkflowSource).to.contain('id: "src_orders"');
       expect(savedWorkflowSource).to.contain('id: "model_orders"');
       expect(savedWorkflowSource).to.contain('id: "orders_dashboard"');
       expect(savedWorkflowSource).to.contain('entrypoint: "models/analytics/model_orders.sql"');
     });
-
-    cy.get('[data-slot="canvas-workbench-tab-strip"]').within(() => {
-      cy.contains('button', /^(Artifacts|Artefactos)$/).click();
-    });
-    cy.location('pathname').should('eq', '/canvas/artifacts');
-    cy.contains('Workflow pipeline').should('exist');
-    cy.contains('pipelines/sales_pipeline.yaml').should('exist');
-    cy.contains('models/analytics/model_orders.sql').should('exist');
-    cy.contains('id: "model_orders"').should('exist');
     cy.wrap(null).should(() => {
+      expect(getE2eApiCalls('/workspace/files', 'GET')).to.have.length(0);
       expect(
         getE2eApiCalls('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'GET')
-      ).to.have.length.greaterThan(0);
+      ).to.have.length(0);
     });
   });
 });

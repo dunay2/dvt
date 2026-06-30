@@ -28,11 +28,12 @@ import type { InspectorPanelContribution, InspectorPanelProps } from '../contrac
 import type { NodeRendererProps } from '../contracts/NodeRendering';
 import {
   graphStatusBadgeClasses,
-  graphStatusDotClasses,
   graphStatusRingClasses,
   graphVisualClasses,
 } from '../graph/graphVisualTokens';
+import { buildGraphNodeCardPlayAction } from '../graph/graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from '../graph/graphNodeCardReadModel';
+import type { GraphNodeOperationalDetail } from '../graph/graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from '../graph/GraphNodeCardView';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
@@ -143,7 +144,6 @@ export function DbtNodeRenderer({
   const Icon: LucideIcon | undefined = kindMeta?.icon;
 
   const statusRing = graphStatusRingClasses[node.status] ?? '';
-  const statusDot = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
   const dimmed = overlayDecoration?.dimmed ?? false;
   const overlayProps = buildOverlayProps(
     overlayDecoration?.borderColor,
@@ -156,6 +156,8 @@ export function DbtNodeRenderer({
         ? data.type
         : (kindMeta?.label ?? node.kind);
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
+  const playAction = buildGraphNodeCardPlayAction({ nodeId: node.id, data });
+  const openOperationalDetails = data.onOpenOperationalDetails;
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -172,12 +174,19 @@ export function DbtNodeRenderer({
       icon={Icon}
       iconColor={kindMeta?.minimapColor}
       borderClass={kindMeta?.borderClass}
-      statusDotClass={statusDot}
       statusRingClass={statusRing}
       selected={selected}
       hovered={hovered}
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
+      playAction={playAction}
+      onOpenOperationalDetails={
+        typeof openOperationalDetails === 'function'
+          ? (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+              openOperationalDetails(detail, anchorRect);
+            }
+          : undefined
+      }
     />
   );
 }

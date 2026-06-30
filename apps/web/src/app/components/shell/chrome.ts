@@ -36,7 +36,7 @@ export const leftNavigationRailClasses = {
   caption: 'block max-w-full truncate text-left text-[11px] leading-none text-inherit',
 };
 
-export const bottomConsoleDrawerClasses = {
+export const bottomOperationalDrawerClasses = {
   drawer:
     'flex h-full flex-col border-t border-[color:var(--border-default)] bg-[var(--surface-shell)] text-[var(--text-default)]',
   header:
@@ -44,8 +44,12 @@ export const bottomConsoleDrawerClasses = {
   headerMain: 'flex items-center gap-2',
   titleIcon: 'size-4 text-[var(--text-subtle)]',
   title: 'text-sm font-medium text-[var(--text-strong)]',
+  runBadge: 'text-xs',
+  modeBadge: 'text-[10px] uppercase tracking-wide',
   closeButton: 'size-6 text-[var(--text-subtle)] hover:text-[var(--text-strong)]',
+  closeIcon: 'size-4',
   body: 'flex min-h-0 flex-1',
   bodyMessage:
     'flex h-full w-full items-center justify-center px-4 text-center text-sm text-[var(--text-subtle)]',
+  stream: 'h-full w-full',
 };

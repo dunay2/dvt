@@ -38,6 +38,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleToggleNodeSelection'
     | 'handleAttachSchemaToNode'
   >;
+  activeCanvasKind: string;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph: boolean;
   canSelectExecution: boolean;
@@ -52,6 +53,7 @@ export function useCanvasControllerReadModel({
   uiScope,
   overlayModel,
   graphHandlers,
+  activeCanvasKind,
   runtimeCapabilities,
   canMutateGraph,
   canSelectExecution,
@@ -97,6 +99,7 @@ export function useCanvasControllerReadModel({
         data: {
           ...node.data,
           activeRunId: overlayModel.activeRunId,
+          canvasKind: activeCanvasKind,
           runStatusByNodeId: overlayModel.runStatusByNodeId,
           overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
           runtimeCapabilities,
@@ -113,6 +116,7 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleAttachSchemaToNode,
       graphModel.edges,
       graphModel.nodes,
+      activeCanvasKind,
       impactOverlayEnabled,
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,

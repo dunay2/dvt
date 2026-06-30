@@ -18,6 +18,18 @@ const CANVAS_SHELL_MAIN_PANEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'CanvasShellMainPanel.tsx'
 );
+const CANVAS_SHELL_LAYOUT_BUILDER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasShellLayoutBuilder.tsx'
+);
+const CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasShellMainPanelFrame.tsx'
+);
+const CANVAS_CONTEXT_MENU_LAYER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasContextMenuLayer.tsx'
+);
 const CANVAS_ROUTE_SOURCE = readArchitectureSiblingSource(import.meta.dirname, '../Canvas.tsx');
 const CANVAS_SHELL_PROPS_BUILDER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -27,17 +39,13 @@ const CANVAS_SHELL_BUILDER_TYPES_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasShellBuilder.types.ts'
 );
-const CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasToolbarPrimaryControls.tsx'
-);
-const CANVAS_ADD_NODE_PALETTE_SOURCE = readArchitectureSiblingSource(
-  import.meta.dirname,
-  'CanvasAddNodePalette.tsx'
-);
 const CANVAS_WORKSPACE_EXPLORER_MODEL_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../../components/canvasWorkspaceExplorerModel.ts'
+);
+const LEGACY_CANVAS_ADD_NODE_PALETTE_PATH = resolve(
+  import.meta.dirname,
+  'CanvasAddNodePalette.tsx'
 );
 const SHELL_MENU_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -47,6 +55,13 @@ const LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH = resolve(
   import.meta.dirname,
   '../../components/WarehouseSourceExplorer.tsx'
 );
+const LEGACY_CANVAS_TOOLBAR_PATHS = [
+  'CanvasToolbar.tsx',
+  'CanvasToolbarPrimaryControls.tsx',
+  'CanvasToolbarDraftStatus.tsx',
+  'canvasToolbarViewModel.ts',
+].map((fileName) => resolve(import.meta.dirname, fileName));
+
 describe('CanvasShell architecture', () => {
   it('uses grouped semantic prop contracts instead of reaching into controller or service seams directly', () => {
     expect(CANVAS_SHELL_SOURCE).toContain(
@@ -59,9 +74,28 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellLayout');
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellPanels');
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellGraph');
-    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellToolbar');
+    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellChromeState');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('export type CanvasShellToolbar');
+    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('chromeState: CanvasShellChromeState;');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('toolbar: CanvasShell');
+    expect(CANVAS_SHELL_TYPES_SOURCE).toContain(
+      "import type { CanvasDraftStatusState } from './canvasDraftStatusState';"
+    );
+    expect(CANVAS_SHELL_TYPES_SOURCE).toContain('draftStatusState: CanvasDraftStatusState;');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('CanvasDraftToolbarState');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('draftToolbarState');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('chromeState: CanvasShellChromeState;');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('toolbar: CanvasShell');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
+      'draftStatusState={chromeState.draftStatusState}'
+    );
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('chromeState.draftToolbarState');
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellGraphCommands');
     expect(CANVAS_SHELL_TYPES_SOURCE).toContain('export type CanvasShellChromeCommands');
+    expect(CANVAS_SHELL_BUILDER_TYPES_SOURCE).toContain('CanvasShellChromeStateBuilderArgs');
+    expect(CANVAS_SHELL_BUILDER_TYPES_SOURCE).not.toContain('CanvasShellToolbarBuilderArgs');
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).toContain("from './canvasShellChromeStateBuilder'");
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).not.toContain('canvasShellToolbarBuilder');
     expect(CANVAS_SHELL_SOURCE).not.toContain('useCanvasController(');
     expect(CANVAS_SHELL_SOURCE).not.toContain('workspaceService');
     expect(CANVAS_SHELL_SOURCE).not.toContain('useQuery(');
@@ -69,6 +103,14 @@ describe('CanvasShell architecture', () => {
 
   it('keeps shell composition canvas-first without fixed side rails', () => {
     expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasShellMainPanel'");
+    expect(CANVAS_SHELL_SOURCE).toContain("'./CanvasContextMenuLayer'");
+    expect(CANVAS_SHELL_SOURCE).toContain('<CanvasContextMenuLayer');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('<CanvasContextMenuView');
+    expect(CANVAS_CONTEXT_MENU_LAYER_SOURCE).toContain(
+      'Owned concern: host the Canvas context-menu presentation layer for shell-owned presenters.'
+    );
+    expect(CANVAS_CONTEXT_MENU_LAYER_SOURCE).toContain('data-slot="canvas-context-menu-layer"');
+    expect(CANVAS_CONTEXT_MENU_LAYER_SOURCE).toContain('CanvasContextMenuView');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.hostTabStrip');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('layout.workbenchTabStrip');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasToolbar');
@@ -81,17 +123,37 @@ describe('CanvasShell architecture', () => {
     expect(CANVAS_SHELL_SOURCE).not.toContain('DbtExplorer');
     expect(CANVAS_SHELL_SOURCE).not.toContain('CanvasInspectorPanel');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasShellNodeWorkbenchOverlay');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('canvas-node-workbench-overlay');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasInspectorPanel');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainSurface(');
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('CanvasShellOverlayCenterSurfaceFrame');
+    expect(CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE).toContain('pointer-events-none h-full');
+    expect(CANVAS_SHELL_MAIN_PANEL_FRAME_SOURCE).not.toContain('pointer-events-auto h-full');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellViewport(');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('function CanvasShellMainPanel(');
-    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain(
-      'defaultSize={resolveCanvasShellMainPanelDefaultSize()}'
-    );
+    expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('resolveCanvasShellMainPanelDefaultSize()');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).toContain('onOpenSourceImport');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDvtFlowGuide');
     expect(CANVAS_SHELL_MAIN_PANEL_SOURCE).not.toContain('CanvasDbtFlowGuide');
+    expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('CanvasPlaygroundTabStrip');
+    expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('hostTabStrip:');
+    expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('hostTabState:');
+    expect(CANVAS_SHELL_LAYOUT_BUILDER_SOURCE).not.toContain('routePresentation.canvasTabState');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('hostTabStrip?:');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('workbenchTabStrip?:');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('CanvasPlaygroundTabState');
+    expect(CANVAS_SHELL_TYPES_SOURCE).not.toContain('hostTabState:');
+  });
+
+  it('names execution-preview commands by product intent instead of legacy plan chrome', () => {
+    for (const source of [
+      CANVAS_SHELL_SOURCE,
+      CANVAS_SHELL_TYPES_SOURCE,
+      CANVAS_SHELL_MAIN_PANEL_SOURCE,
+    ]) {
+      expect(source).toContain('onPreviewExecutionPlan');
+      expect(source).not.toMatch(/\bonPlan\b/);
+    }
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).toContain('handlePreviewExecutionPlan');
+    expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).not.toMatch(/\bhandlePlan\b/);
   });
 
   it('keeps retired workbench tab composition out of the Canvas route', () => {
@@ -135,16 +197,23 @@ describe('CanvasShell architecture', () => {
     );
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).toContain('userPermissions.canEditEdges');
     expect(CANVAS_SHELL_PANELS_BUILDER_SOURCE).not.toContain('getAllNodeKinds');
-    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).not.toContain('CanvasAddNodePalette');
-    expect(CANVAS_TOOLBAR_PRIMARY_CONTROLS_SOURCE).not.toContain(
-      'triggerDataSlot="canvas-toolbar-insert-command"'
-    );
-    expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('function selectOption(');
-    expect(CANVAS_ADD_NODE_PALETTE_SOURCE).toContain('onCreateAuthoringNode(option.registration');
+    expect(existsSync(LEGACY_CANVAS_ADD_NODE_PALETTE_PATH)).toBe(false);
+    expect(CANVAS_SHELL_SOURCE).not.toContain('CanvasAddNodePalette');
     expect(CANVAS_SHELL_SOURCE).not.toContain('nodeKinds={authoringNodeKinds}');
     expect(CANVAS_SHELL_SOURCE).not.toContain(
       'onCreateAuthoringNode={graphCommands.onCreateAuthoringNode}'
     );
+  });
+
+  it('keeps contextual source import hosted outside the shell composition state', () => {
+    expect(CANVAS_SHELL_SOURCE).toContain('CanvasSourceImportDialogHost');
+    expect(CANVAS_SHELL_SOURCE).toContain('useCanvasSourceImportDialogState');
+    expect(CANVAS_SHELL_SOURCE).not.toContain(
+      "import SourceImportWizard from '../../components/SourceImportWizard'"
+    );
+    expect(CANVAS_SHELL_SOURCE).not.toContain('const [dataRegistryOpen');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('const [dataRegistryInitialSelection');
+    expect(CANVAS_SHELL_SOURCE).not.toContain('const [dataRegistryPlacement');
   });
 
   it('does not expose a legacy fixed explorer panel from the global view menu', () => {
@@ -156,5 +225,11 @@ describe('CanvasShell architecture', () => {
 
   it('retires the legacy fixed warehouse source explorer component', () => {
     expect(existsSync(LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH)).toBe(false);
+  });
+
+  it('retires the unmounted legacy Canvas toolbar surface', () => {
+    for (const toolbarPath of LEGACY_CANVAS_TOOLBAR_PATHS) {
+      expect(existsSync(toolbarPath), toolbarPath).toBe(false);
+    }
   });
 });

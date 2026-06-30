@@ -25,19 +25,18 @@ persistence, or plugin contribution registration.
 - [Graph Frontend Architecture](./graph-frontend-architecture.md)
 - [Canvas Route Composition Component](./canvas-route-composition-component.md)
 - [Canvas Shell Component](./canvas-shell-component.md)
-- [Canvas Workbench Tabs Component](./canvas-workbench-tabs-component.md)
 - [Canvas Workbench Command Query Catalog](./canvas-workbench-command-query-catalog.md)
 - [F-12 Fowler mailbox analysis](../../../../../buzon/20260518-f12-fowler-canvas-legacy-retirement-analysis.md)
 
 ## Public API
 
-| API                                 | Owner                    | Responsibility                                     |
-| ----------------------------------- | ------------------------ | -------------------------------------------------- |
-| `Canvas.tsx`                        | Canvas route composition | Route-level controller, shell, and modal handoff.  |
-| `CanvasShell`                       | Canvas shell             | Passive three-panel graph workbench rendering.     |
-| `useCanvasController`               | Canvas route facade      | Route state, draft, runtime, and command facade.   |
-| `createCanvasGraphWorkbenchTab`     | Canvas workbench tabs    | Creates the canonical Graph tab read model.        |
-| `buildCanvasWorkbenchTabsReadModel` | Canvas workbench tabs    | Projects Graph and plugin-declared workbench tabs. |
+| API                            | Owner                    | Responsibility                                    |
+| ------------------------------ | ------------------------ | ------------------------------------------------- |
+| `Canvas.tsx`                   | Canvas route composition | Route-level controller, shell, and modal handoff. |
+| `CanvasShell`                  | Canvas shell             | Passive three-panel graph workbench rendering.    |
+| `useCanvasController`          | Canvas route facade      | Route state, draft, runtime, and command facade.  |
+| `CanvasViewport`               | Canvas graph viewport    | Renders the graph as the permanent work surface.  |
+| `resolveCanvasSurfaceStrategy` | Canvas surface strategy  | Selects DBT/DVT graph placement behavior.         |
 
 Retired API:
 
@@ -51,7 +50,7 @@ Retired API:
 - `Canvas.tsx` must delegate shell props to `buildCanvasShellProps`.
 - `CanvasShell` must render the active graph surface from grouped shell
   contracts, not a parallel retired renderer.
-- The default Graph tab factory is `createCanvasGraphWorkbenchTab`.
+- Active code must not reintroduce Graph as a route tab or legacy renderer.
 - Active code must not reintroduce `createGraphCanvasWorkbenchTab`.
 - Historical references under `docs/archive/**` are reference-only and do not
   reopen active architecture.
@@ -62,8 +61,7 @@ Retired API:
 stateDiagram-v2
     [*] --> RetiredGraphCanvasAbsent: source file removed
     RetiredGraphCanvasAbsent --> ActiveRouteStack: Canvas.tsx composes shell
-    ActiveRouteStack --> GraphTabProjected: createCanvasGraphWorkbenchTab
-    GraphTabProjected --> CanvasShellRendered: CanvasShell consumes grouped props
+    ActiveRouteStack --> CanvasShellRendered: CanvasShell consumes grouped props
     CanvasShellRendered --> PluginStrategyApplied: graph strategy resolves runtime behavior
 ```
 
@@ -75,24 +73,25 @@ flowchart LR
   Route --> Controller["useCanvasController"]
   Route --> Props["buildCanvasShellProps"]
   Props --> Shell["CanvasShell"]
-  Shell --> TabModel["CanvasWorkbenchTabsReadModel"]
-  TabModel --> GraphTab["createCanvasGraphWorkbenchTab"]
+  Shell --> Viewport["CanvasViewport"]
+  Viewport --> Strategy["Canvas surface strategy"]
   Controller --> Runtime["CanvasRuntimePolicy"]
-  Runtime --> Strategy["Plugin graph strategy"]
+  Runtime --> Strategy
 ```
 
 ## Consumers
 
 - `Canvas.tsx` consumes the active route-composition stack.
 - `CanvasShell` consumes grouped shell props.
-- `canvasWorkbenchTabs.ts` owns Graph tab projection.
-- `canvasWorkbenchTabs.architecture.test.ts` validates semantic retirement.
+- `CanvasShell.architecture.test.tsx` validates that retired tab presenters stay
+  out of the active shell.
 - `canvasRoutePosturePriority.architecture.test.ts` validates retired-file
   absence.
 
 ## Scenario Coverage
 
 - `US-CANVAS-LEGACY-001`: no active source file named `GraphCanvas.tsx`.
-- `US-CANVAS-LEGACY-002`: the Graph tab uses `createCanvasGraphWorkbenchTab`.
+- `US-CANVAS-LEGACY-002`: graph remains the default Canvas surface, not a
+  workbench tab.
 - `US-CANVAS-LEGACY-003`: docs name the active stack and retired boundary.
 - `US-CANVAS-LEGACY-004`: architecture tests fail if retired names return.

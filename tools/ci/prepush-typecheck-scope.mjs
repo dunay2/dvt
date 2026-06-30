@@ -1,5 +1,6 @@
 import { CI_GLOBAL_PATTERNS, computeWorkspaceMatrix, matchesAnyPattern } from './scope-config.mjs';
 
+/** Command/query rails: `SelectPrepushTypecheckScope`. */
 export const PREPUSH_TYPECHECK_COMMANDS = {
   affected: {
     command: 'pnpm',

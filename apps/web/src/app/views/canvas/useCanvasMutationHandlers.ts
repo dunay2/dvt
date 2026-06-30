@@ -24,6 +24,7 @@ export function useCanvasMutationHandlers({
   showInspectorPanel,
   setCurrentPlan,
   onLayoutComplete,
+  invalidateInFlightSaveAttempt,
 }: UseCanvasMutationHandlersArgs) {
   const mutationState: CanvasMutationState = {
     graphModel,
@@ -38,6 +39,7 @@ export function useCanvasMutationHandlers({
     showInspectorPanel,
     setCurrentPlan,
     onLayoutComplete,
+    invalidateInFlightSaveAttempt,
   };
   const mutationPolicy: CanvasMutationPolicy = {
     canMutateGraph,

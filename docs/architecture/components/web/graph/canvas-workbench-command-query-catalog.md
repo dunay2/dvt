@@ -24,10 +24,10 @@ product semantics.
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/architecture/components/web/graph/canvas-workbench-tabs-component.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
 - `docs/architecture/components/web/graph/canvas-project-snapshot-component.md`
 - `docs/architecture/components/web/graph/canvas-project-snapshot-user-stories.md`
+- `docs/architecture/components/web/appshell/canvas-workbench-screen-composition-component.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-fowler-remediation-plan-20260504.md`
 
 ## Bounded Context
@@ -37,8 +37,9 @@ Bounded context: Web Graph Canvas Workbench.
 DDD ownership rules:
 
 - Shell navigation owns global workbench destinations only.
-- Canvas workbench presentation owns Canvas-scoped tab placement and tab
-  selection.
+- Canvas graph presentation owns the contextual graph surface and operational
+  route-local projections; retired workbench-tab placement no longer defines
+  product navigation.
 - Plugin contribution registry owns static placement registration policy.
 - Canvas layout presentation owns viewport and node-coordinate projection.
 - Canvas viewport presentation owns route-local visual preferences such as grid
@@ -61,60 +62,47 @@ DDD ownership rules:
 
 ## C&Q Summary
 
-| Rail                                       | Type    | Status        | Bounded context               | DDD owner                                   |
-| ------------------------------------------ | ------- | ------------- | ----------------------------- | ------------------------------------------- |
-| `ListShellNavigationItems`                 | query   | accepted      | Web shell navigation          | `ShellNavigationReadModel`                  |
-| `ListCanvasWorkbenchTabs`                  | query   | accepted      | Canvas workbench presentation | `CanvasWorkbenchTabsReadModel`              |
-| `ListCanvasWorkbenchLogEntries`            | query   | accepted      | Canvas workbench presentation | `CanvasWorkbenchLogEntriesReadModel`        |
-| `ResolveCanvasWorkbenchContext`            | query   | accepted      | Canvas workbench presentation | `CanvasWorkbenchContext`                    |
-| `SelectCanvasWorkbenchTab`                 | command | accepted      | Canvas workbench presentation | `CanvasWorkbenchTabSelectionCommand`        |
-| `RequestCanvasExecutionScope`              | command | accepted      | Canvas workbench presentation | `CanvasExecutionScopeRequest`               |
-| `RegisterPluginViewPlacement`              | command | accepted      | Plugin contribution registry  | `PluginViewPlacementRegistration`           |
-| `OpenCanvasScopedRunTab`                   | command | accepted      | Canvas runtime workbench      | `CanvasScopedRunSelection`                  |
-| `PersistCanvasLayout`                      | command | accepted      | Canvas layout presentation    | `CanvasLayoutProjection`                    |
-| `GetCanvasLayout`                          | query   | accepted      | Canvas layout presentation    | `CanvasLayoutProjection`                    |
-| `ConfigureCanvasViewportPreferences`       | command | accepted      | Canvas viewport presentation  | `CanvasViewportPreferences`                 |
-| `ResolveCanvasContextMenu`                 | query   | accepted      | Canvas interaction surface    | `CanvasContextMenuModel`                    |
-| `CreateCanvasAuthoringNode`                | command | accepted      | Canvas workbench authoring    | `CanvasNodeAdmissionCommand`                |
-| `RemoveCanvasEdgeFromContext`              | command | accepted      | Canvas graph lifecycle        | `CanvasEdgeRemovalChange`                   |
-| `ConfigureCanvasDbtNode`                   | command | accepted      | Canvas workbench authoring    | `DbtNodeAuthoringMetadata`                  |
-| `ConfigureCanvasDvtNode`                   | command | accepted      | Canvas workbench authoring    | `DvtNodeAuthoringMetadata`                  |
-| `SelectDbtModelOrigin`                     | command | accepted      | Canvas workbench authoring    | `DbtSourceRelationshipSelection`            |
-| `SelectCanvasRuntimeTemplate`              | command | accepted      | Canvas document authoring     | `CanvasRuntimeTemplateSelection`            |
-| `ListProjectCanvases`                      | query   | accepted      | Project canvas lifecycle      | `ProjectCanvasCatalog`                      |
-| `CreateProjectCanvas`                      | command | accepted      | Project canvas lifecycle      | `ProjectCanvasLifecycle`                    |
-| `SelectProjectCanvas`                      | command | accepted      | Project canvas lifecycle      | `ProjectCanvasSelection`                    |
-| `RenameProjectCanvas`                      | command | accepted      | Project canvas lifecycle      | `ProjectCanvasIdentity`                     |
-| `UpdateCanvasProperties`                   | command | accepted      | Project canvas lifecycle      | `ProjectCanvasProperties`                   |
-| `DeleteProjectCanvas`                      | command | accepted      | Project canvas lifecycle      | `ProjectCanvasLifecycle`                    |
-| `ListProjectWorkspaceResources`            | query   | accepted      | Project workspace explorer    | `ProjectWorkspaceResourceCatalog`           |
-| `AttachProjectResourceToCanvasObject`      | command | accepted      | Canvas workbench authoring    | `CanvasResourceAttachmentPolicy`            |
-| `GenerateTransformationWorkspaceArtifacts` | command | accepted      | Project workspace I/O         | `TransformationWorkspaceArtifactProjection` |
-| `GenerateDbtWorkspaceArtifacts`            | command | accepted      | Project workspace I/O         | `DbtWorkspaceArtifactProjection`            |
-| `BuildDbtPlannerGraphSource`               | query   | accepted      | Canvas execution projection   | `DbtCanvasGraphSourceProjection`            |
-| `RecordCanvasFowlerCanon`                  | command | accepted      | Canvas governance             | `CanvasFowlerCanon`                         |
-| `ClassifyCanvasFowlerDisposition`          | query   | accepted      | Canvas governance             | `CanvasFowlerDisposition`                   |
-| `ExportProjectSnapshot`                    | query   | proposed      | Project workspace I/O         | `ProjectSnapshot`                           |
-| `ValidateProjectImport`                    | query   | proposed      | Project workspace I/O         | `ProjectSnapshotImportReadModel`            |
-| `ImportProjectSnapshot`                    | command | proposed      | Project workspace I/O         | `ProjectSnapshotImport`                     |
-| `VerifyCanvasWorkbenchVisualPosture`       | query   | proposed-test | Browser verification          | `CanvasWorkbenchVisualPostureReadModel`     |
-
-`VerifyCanvasWorkbenchVisualPosture` is a test-only query rail. It is not a
-runtime product API. It lets Cypress prove visible posture without embedding
-product semantics in ad hoc DOM assertions.
+| Rail                                       | Type    | Status   | Bounded context               | DDD owner                                   |
+| ------------------------------------------ | ------- | -------- | ----------------------------- | ------------------------------------------- |
+| `ListShellNavigationItems`                 | query   | accepted | Web shell navigation          | `ShellNavigationReadModel`                  |
+| `ListCanvasWorkbenchLogEntries`            | query   | accepted | Canvas workbench presentation | `CanvasWorkbenchLogEntriesReadModel`        |
+| `RequestCanvasExecutionScope`              | command | accepted | Canvas workbench presentation | `CanvasExecutionScopeRequest`               |
+| `RegisterPluginViewPlacement`              | command | accepted | Plugin contribution registry  | `PluginViewPlacementRegistration`           |
+| `PersistCanvasLayout`                      | command | accepted | Canvas layout presentation    | `CanvasLayoutProjection`                    |
+| `GetCanvasLayout`                          | query   | accepted | Canvas layout presentation    | `CanvasLayoutProjection`                    |
+| `ConfigureCanvasViewportPreferences`       | command | accepted | Canvas viewport presentation  | `CanvasViewportPreferences`                 |
+| `ResolveCanvasContextMenu`                 | query   | accepted | Canvas interaction surface    | `CanvasContextMenuModel`                    |
+| `CreateCanvasAuthoringNode`                | command | accepted | Canvas workbench authoring    | `CanvasNodeAdmissionCommand`                |
+| `RemoveCanvasEdgeFromContext`              | command | accepted | Canvas graph lifecycle        | `CanvasEdgeRemovalChange`                   |
+| `ConfigureCanvasDbtNode`                   | command | accepted | Canvas workbench authoring    | `DbtNodeAuthoringMetadata`                  |
+| `ConfigureCanvasDvtNode`                   | command | accepted | Canvas workbench authoring    | `DvtNodeAuthoringMetadata`                  |
+| `SelectDbtModelOrigin`                     | command | accepted | Canvas workbench authoring    | `DbtSourceRelationshipSelection`            |
+| `SelectCanvasRuntimeTemplate`              | command | accepted | Canvas document authoring     | `CanvasRuntimeTemplateSelection`            |
+| `ListProjectCanvases`                      | query   | accepted | Project canvas lifecycle      | `ProjectCanvasCatalog`                      |
+| `CreateProjectCanvas`                      | command | accepted | Project canvas lifecycle      | `ProjectCanvasLifecycle`                    |
+| `SelectProjectCanvas`                      | command | accepted | Project canvas lifecycle      | `ProjectCanvasSelection`                    |
+| `RenameProjectCanvas`                      | command | accepted | Project canvas lifecycle      | `ProjectCanvasIdentity`                     |
+| `UpdateCanvasProperties`                   | command | accepted | Project canvas lifecycle      | `ProjectCanvasProperties`                   |
+| `DeleteProjectCanvas`                      | command | accepted | Project canvas lifecycle      | `ProjectCanvasLifecycle`                    |
+| `ListProjectWorkspaceResources`            | query   | accepted | Project workspace explorer    | `ProjectWorkspaceResourceCatalog`           |
+| `AttachProjectResourceToCanvasObject`      | command | accepted | Canvas workbench authoring    | `CanvasResourceAttachmentPolicy`            |
+| `GenerateTransformationWorkspaceArtifacts` | command | accepted | Project workspace I/O         | `TransformationWorkspaceArtifactProjection` |
+| `GenerateDbtWorkspaceArtifacts`            | command | accepted | Project workspace I/O         | `DbtWorkspaceArtifactProjection`            |
+| `BuildDbtPlannerGraphSource`               | query   | accepted | Canvas execution projection   | `DbtCanvasGraphSourceProjection`            |
+| `RecordCanvasFowlerCanon`                  | command | accepted | Canvas governance             | `CanvasFowlerCanon`                         |
+| `ClassifyCanvasFowlerDisposition`          | query   | accepted | Canvas governance             | `CanvasFowlerDisposition`                   |
+| `ExportProjectSnapshot`                    | query   | proposed | Project workspace I/O         | `ProjectSnapshot`                           |
+| `ValidateProjectImport`                    | query   | proposed | Project workspace I/O         | `ProjectSnapshotImportReadModel`            |
+| `ImportProjectSnapshot`                    | command | proposed | Project workspace I/O         | `ProjectSnapshotImport`                     |
 
 ## Detailed Catalog
 
 | Rail                                       | Intent                                                                                                                                | Input value objects                                                                                                       | Output                                                                                | Application port                        | Adapter surface                                                                                                     | Scope and auth                                                                                                               | Negative tests                                                                                                                                                                                    |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ListShellNavigationItems`                 | Return global shell destinations.                                                                                                     | enabled runtime capabilities, plugin view placements                                                                      | `ShellNavigationReadModel`                                                            | Shell runtime query port                | `getShellNavigationViews(...)`, `buildShellNavigationModel(...)`                                                    | plugin availability only; no tenant data                                                                                     | workbench-tab placements cannot enter shell nav; disabled plugins omitted                                                                                                                         |
-| `ListCanvasWorkbenchTabs`                  | Return Canvas-local Graph/Code/Lineage/Diff/Artifacts/Runs tabs.                                                                      | runtime capabilities, `CanvasWorkbenchRouteState`, `CanvasWorkbenchContext`                                               | `CanvasWorkbenchTabsReadModel`                                                        | Canvas workbench tab query port         | `getCanvasWorkbenchTabViews(...)`, `buildCanvasWorkbenchTabsReadModel(...)`                                         | active Canvas route and enabled plugins                                                                                      | shell-nav placements ignored; duplicate tab IDs fail closed; unavailable context returns recovery                                                                                                 |
 | `ListCanvasWorkbenchLogEntries`            | Return route-local Canvas operational log entries for readiness, draft, plan/run, permission, and selection posture.                  | `CanvasDraftPresentationState`, `CanvasDraftAccessPosture`, `CanvasShellToolbar`, `CanvasShellPanels`, `CanvasShellGraph` | `CanvasWorkbenchLogEntriesReadModel`                                                  | Canvas workbench log query port         | `buildCanvasWorkbenchLogEntries(...)`, `CanvasWorkbenchLogPanel`                                                    | active Canvas route; no backend or protected-draft mutation                                                                  | empty or duplicate messages are omitted; user-visible blocking states remain warning/error entries; log tab cannot become shell navigation or fake historical event storage                       |
-| `ResolveCanvasWorkbenchContext`            | Determine whether Canvas tab views have usable Canvas context.                                                                        | route state, controller ready/unavailable state, canvas document state                                                    | `CanvasWorkbenchContext` or unavailable state                                         | Canvas route state query port           | `Canvas.tsx`, controller presentation model                                                                         | current tenant/project/environment comes from route/session context                                                          | missing Canvas context cannot synthesize fake tab data                                                                                                                                            |
-| `SelectCanvasWorkbenchTab`                 | Change active Canvas tab route.                                                                                                       | `CanvasWorkbenchTabId`, known tab read model                                                                              | route navigation command result                                                       | Canvas route command port               | `resolveCanvasWorkbenchTabSelectionCommand(...)`, React Router navigate                                             | only known Canvas tab IDs                                                                                                    | unknown tabs, disabled tabs, and unavailable tabs reject or recover to Graph                                                                                                                      |
 | `RequestCanvasExecutionScope`              | Focus scope controls from read-only Canvas.                                                                                           | `CanvasDraftAccessPosture`, shell scope controls                                                                          | focused scope control or no-op                                                        | Canvas route command seam               | `CanvasReadOnlyBannerView`, `focusWorkspaceScopeControls`                                                           | browser focus only; no graph/run mutation                                                                                    | plan/run stay disabled; absent controls do nothing                                                                                                                                                |
 | `RegisterPluginViewPlacement`              | Register one explicit visual placement for a plugin view.                                                                             | `ViewPlacement`, plugin contribution metadata                                                                             | accepted static placement or registration error                                       | Plugin registry composition port        | static plugin contribution modules                                                                                  | plugin enabled/available state                                                                                               | missing placement, duplicate tab ID, duplicate route ID, and invalid scope fail closed                                                                                                            |
-| `OpenCanvasScopedRunTab`                   | Open Runs as Canvas-local evidence, not global Runs navigation.                                                                       | Canvas route context, optional run selection                                                                              | Canvas Runs tab route state                                                           | Canvas workbench route command port     | `monitoringContributions.ts`, `CanvasRunsTabView.tsx`                                                               | active Canvas context; global Runs remains separate                                                                          | Canvas Runs cannot replace global Runs; run tab cannot masquerade as shell route                                                                                                                  |
 | `PersistCanvasLayout`                      | Persist route-local viewport or card coordinates.                                                                                     | layout key, node position map, viewport, hydration state                                                                  | updated `CanvasLayoutProjection`                                                      | Canvas layout command port              | `useCanvasLayoutPersistence(...)`, `canvasInteractionStore`                                                         | route-local browser persistence, no backend draft write                                                                      | pre-hydration writes queued; pending graph query blocks viewport persistence; stale React Flow arrays cannot overwrite dragged payload                                                            |
 | `GetCanvasLayout`                          | Restore route-local layout projection.                                                                                                | layout key, hydrated local store                                                                                          | `CanvasLayoutProjection`                                                              | Canvas layout query port                | `canvasInteractionStore` hydration, `useCanvasViewportGraphModel(...)`                                              | local browser persistence keyed by workspace                                                                                 | protected draft reload cannot overwrite existing local positions                                                                                                                                  |
 | `ConfigureCanvasViewportPreferences`       | Change grid visibility, grid color, snap-to-grid, and empty-guide visibility preferences.                                             | `CanvasViewportPreferences` value object                                                                                  | updated visual preference state                                                       | Canvas viewport preference command port | `uiLayoutStore`, `CanvasToolbar*`, `CanvasViewMenuControls`, `CanvasViewport`, `CanvasEmptyStateView`               | route-local UI preference; no protected draft authority                                                                      | invalid colors normalize; hidden grid and hidden empty guide do not disable dragging or node creation; snap changes coordinates only                                                              |
@@ -124,7 +112,7 @@ product semantics in ad hoc DOM assertions.
 | `ConfigureCanvasDbtNode`                   | Edit dbt card package, source, table, materialization, and plugin-owned model definition projection metadata.                         | selected `CanonicalNode`, `DbtNodeAuthoringMetadata`                                                                      | updated Canvas draft node override                                                    | Inspector authoring command seam        | `CanvasInspectorAuthoringSection`, `DbtAuthoringFields`, `canvasInspectorAuthoringModel`                            | current Canvas draft and active runtime policy                                                                               | blank required fields and unsupported materialization reject; read-only posture cannot apply; core Canvas cannot invent plugin-specific model-definition rules                                    |
 | `ConfigureCanvasDvtNode`                   | Edit DVT source binding, SQL transform text, and sink materialization metadata before preview.                                        | selected `CanonicalNode`, `DvtNodeAuthoringMetadata`                                                                      | updated Canvas draft node override                                                    | Inspector authoring command seam        | `CanvasInspectorAuthoringSection`, `DvtAuthoringFields`, `canvasInspectorAuthoringModel`, `canvasDvtAuthoringModel` | current Canvas draft and active runtime policy                                                                               | blank source/sink bindings and unsupported sink materialization or write mode reject; read-only posture cannot apply                                                                              |
 | `SelectDbtModelOrigin`                     | Select the dbt source/model relation that feeds a model card.                                                                         | selected model node, visible dbt nodes, visible dbt edges                                                                 | selected origin id or explicit blocker                                                | Inspector authoring command seam        | `canvasDbtAuthoringModel`, `CanvasInspectorAuthoringSection`                                                        | visible connected dbt graph only; no database catalog authority                                                              | missing or disconnected selected origin blocks generated artifacts and preview                                                                                                                    |
-| `SelectCanvasRuntimeTemplate`              | Choose SQL-first or dbt canvas runtime on start/replace.                                                                              | registered canvas kinds and selected template kind                                                                        | canvas-create command template input                                                  | Canvas document authoring command seam  | `CanvasPlaygroundHost`, `CanvasPlaygroundTabStrip`                                                                  | current workspace draft persistence authority                                                                                | unavailable templates reject; read-only disables replacement                                                                                                                                      |
+| `SelectCanvasRuntimeTemplate`              | Choose SQL-first or dbt canvas runtime on start/replace.                                                                              | registered canvas kinds and selected template kind                                                                        | canvas-create command template input                                                  | Canvas document authoring command seam  | `CanvasPlaygroundHost`, graph-first Canvas shell                                                                    | current workspace draft persistence authority                                                                                | unavailable templates reject; read-only disables replacement                                                                                                                                      |
 | `ListProjectCanvases`                      | Return every worksheet/canvas stored in the current project draft.                                                                    | protected draft canvas workspaces, active canvas id, registered runtime kinds                                             | `ProjectCanvasCatalog` rows with active marker                                        | Canvas lifecycle query seam             | `canvasProjectCanvasLifecycle`, `canvasWorkspaceExplorerModel`, Explorer                                            | current project draft; read-only query                                                                                       | missing draft returns empty catalog; duplicate ids reject; unknown active id rejects                                                                                                              |
 | `CreateProjectCanvas`                      | Add a new worksheet without deleting or replacing the current one.                                                                    | selected runtime template, current active graph payload, draft revision                                                   | saved draft with new active empty canvas                                              | Canvas lifecycle command seam           | `executeCreateCanvasDocumentCommand`, `saveGraphDraft(...)`                                                         | graph edit permission plus protected draft write permission                                                                  | read-only, stale revision, unavailable template, and duplicate generated id reject                                                                                                                |
 | `SelectProjectCanvas`                      | Switch active worksheet while preserving the current active graph.                                                                    | target canvas id, current active graph payload, draft revision                                                            | saved draft with selected active canvas                                               | Canvas lifecycle command seam           | `executeSelectCanvasDocumentCommand`, `saveGraphDraft(...)`                                                         | graph edit permission plus protected draft write permission                                                                  | missing target id, duplicate canvases, stale revision, and read-only reject                                                                                                                       |
@@ -141,16 +129,13 @@ product semantics in ad hoc DOM assertions.
 | `ExportProjectSnapshot`                    | Serialize persisted Canvas draft into a versioned snapshot file.                                                                      | persisted `CanvasAuthoringDraftRecord`, workspace scope, export timestamp                                                 | project snapshot file name and JSON payload                                           | Project snapshot query port             | `canvasProjectSnapshot.ts`, Canvas toolbar export action                                                            | current workspace scope; export reads persisted draft only                                                                   | missing persisted draft, malformed snapshot construction, unsupported draft schema                                                                                                                |
 | `ValidateProjectImport`                    | Validate a snapshot before it can become draft authority.                                                                             | uploaded file text or parsed unknown payload                                                                              | accepted snapshot read model or typed rejection reason                                | Project snapshot validation query port  | `canvasProjectSnapshot.ts`, Canvas toolbar import file action                                                       | current browser session only until import command is accepted                                                                | malformed JSON, unsupported format, version, invalid draft, canvas mismatch, missing project metadata                                                                                             |
 | `ImportProjectSnapshot`                    | Import a validated snapshot into the workspace draft.                                                                                 | validated `ProjectSnapshot`, draft revision, idempotency key                                                              | protected draft save receipt or conflict posture                                      | Canvas project snapshot import command  | `canvasProjectSnapshotImportCommand.ts`, `saveGraphDraft(...)`                                                      | current workspace scope and existing `SaveWorkspaceGraphDraft` auth                                                          | invalid file does not save; stale revision conflicts; read-only draft rejects through existing save rail                                                                                          |
-| `VerifyCanvasWorkbenchVisualPosture`       | Prove the rendered workbench tab posture in the browser.                                                                              | DOM rectangles for shell navigation compatibility surfaces, top bar, tab strip, tab icons, tab labels                     | `CanvasWorkbenchVisualPostureReadModel` assertion result                              | Cypress visual verification query       | `canvas-workbench-tabs.cy.ts`                                                                                       | e2e browser only                                                                                                             | tabs cannot live in fixed left navigation; labels cannot be truncated; tabs must be horizontal, controlled-icon, and inside Canvas outlet                                                         |
 
 ## Fowler / DDD Mapping
 
 | Fowler signal                                                                                                | Rail response                                                                                                                                                  | Pattern applied                          |
 | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Boundary drift: Canvas views appeared as global shell destinations.                                          | `ListShellNavigationItems` and `ListCanvasWorkbenchTabs` stay separate.                                                                                        | Presentation Model plus query split.     |
 | Responsibility overload: transient route messages were scattered across banners, toolbar copy, and toasts.   | `ListCanvasWorkbenchLogEntries` projects the current route posture into one reviewable Canvas log tab without taking write authority.                          | Presentation Model and Read Model.       |
 | Primitive obsession: one placement field represented several UI concepts.                                    | `RegisterPluginViewPlacement` uses `ViewPlacement` variants.                                                                                                   | Replace Type Code with Value Object.     |
-| Duplicate semantics: global Runs and Canvas Runs had one visual meaning.                                     | `OpenCanvasScopedRunTab` separates Canvas-scoped evidence from global Runs.                                                                                    | Intention-Revealing Interface.           |
 | Hidden authority: local layout could look like graph truth.                                                  | `PersistCanvasLayout` and `GetCanvasLayout` own projection only.                                                                                               | Policy Object and Projection.            |
 | Boundary drift: browser context menus, node gestures, and edge gestures could own graph intent.              | `ResolveCanvasContextMenu`, `CreateCanvasAuthoringNode`, `RemoveCanvasEdgeFromContext`, and existing node commands keep contextual actions behind named seams. | Presentation Model plus Command Gateway. |
 | Hidden authority: files could silently become graph truth.                                                   | `ValidateProjectImport` rejects unsupported or incoherent snapshots first.                                                                                     | Anti-corruption Layer.                   |
@@ -166,7 +151,6 @@ product semantics in ad hoc DOM assertions.
 | Hidden authority: visual DVT authoring nodes could look executable while no workspace SQL artifact existed.  | `GenerateTransformationWorkspaceArtifacts` projects authoring nodes into deterministic workspace artifacts before Plan.                                        | Projection plus Gateway.                 |
 | Responsibility overload: dbt sources/macros could become runtime steps or Canvas could own plugin semantics. | `BuildDbtPlannerGraphSource` projects only executable dbt node kinds and keeps plugin-specific definition policy outside generic Canvas.                       | Read Model Projection.                   |
 | Primitive obsession: snapshot JSON could become an unversioned blob.                                         | `ExportProjectSnapshot` emits a versioned `ProjectSnapshot` value object.                                                                                      | Replace Primitive with Object.           |
-| Documentation drift: tests proved routes but not visual posture.                                             | `VerifyCanvasWorkbenchVisualPosture` names the Cypress read model.                                                                                             | Semantic Fitness Function.               |
 | Review-as-queue drift: Fowler reviews looked actionable after closure.                                       | `RecordCanvasFowlerCanon` and `ClassifyCanvasFowlerDisposition` name owner.                                                                                    | Planning Aggregate plus Query Model.     |
 
 <!-- markdownlint-enable MD060 -->
@@ -178,10 +162,7 @@ flowchart TD
   Plugin["Plugin contribution"]
   Placement["RegisterPluginViewPlacement"]
   ShellQuery["ListShellNavigationItems"]
-  CanvasQuery["ListCanvasWorkbenchTabs"]
   LogQuery["ListCanvasWorkbenchLogEntries"]
-  CanvasContext["ResolveCanvasWorkbenchContext"]
-  SelectTab["SelectCanvasWorkbenchTab"]
   LayoutQuery["GetCanvasLayout"]
   LayoutCommand["PersistCanvasLayout"]
   Prefs["ConfigureCanvasViewportPreferences"]
@@ -198,7 +179,6 @@ flowchart TD
   ExportSnapshot["ExportProjectSnapshot"]
   ValidateImport["ValidateProjectImport"]
   ImportSnapshot["ImportProjectSnapshot"]
-  VisualProof["VerifyCanvasWorkbenchVisualPosture"]
   Shell["ShellNavigationCompatibilitySurface"]
   Canvas["Canvas route"]
   Viewport["CanvasViewport"]
@@ -207,13 +187,9 @@ flowchart TD
 
   Plugin --> Placement
   Placement --> ShellQuery
-  Placement --> CanvasQuery
   ShellQuery --> Shell
-  CanvasContext --> CanvasQuery
-  CanvasQuery --> Canvas
   Canvas --> LogQuery
   LogQuery --> Canvas
-  SelectTab --> Canvas
   LayoutQuery --> Viewport
   LayoutCommand --> Viewport
   Prefs --> Viewport
@@ -236,16 +212,14 @@ flowchart TD
   File --> ValidateImport
   ValidateImport --> ImportSnapshot
   ImportSnapshot --> Canvas
-  Canvas --> VisualProof
-  VisualProof --> Cypress
 ```
 
 ## Exhaustiveness Rule
 
 Every externally observable Canvas workbench behavior must map to one rail in
-this catalog before implementation. This includes route entries, workbench
-tabs, toolbar commands, plugin view placements, layout-preference controls, and
-browser verification workflows.
+this catalog before implementation. This includes route entries, toolbar
+commands, plugin view placements, layout-preference controls, contextual graph
+actions, and browser verification workflows.
 
 Route paths, React components, plugin manifest fields, Cypress helper names,
 and local store actions are implementation surfaces. They must not become
@@ -256,7 +230,6 @@ Runtime rails and test-only rails must stay explicit:
 - product behavior uses accepted runtime command/query rails;
 - project snapshot file behavior uses the proposed Project workspace I/O rails
   until the format is proven and promoted;
-- browser-only visual proof uses `VerifyCanvasWorkbenchVisualPosture`;
 - new backend persistence, adapter authority, protected draft behavior, or
   cross-context ownership requires a catalog update and an ADR check before
   implementation.

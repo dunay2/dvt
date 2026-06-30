@@ -497,7 +497,7 @@ describe('createPlansService', () => {
         rejectionReason: 'Selected closure is missing required upstream dependencies.',
       },
       expectedMessage:
-        'Selected closure is missing required upstream dependencies. Adjust the selection and re-run Plan.',
+        'Selected closure is missing required upstream dependencies. Adjust the selection and preview execution plan again.',
     },
     {
       description: 'selected_node_missing',
@@ -506,7 +506,7 @@ describe('createPlansService', () => {
         rejectionReason: 'Selected nodes are no longer available in the authoritative draft.',
       },
       expectedMessage:
-        'Selected nodes are no longer available in the authoritative draft. Refresh the canvas and re-run Plan.',
+        'Selected nodes are no longer available in the authoritative draft. Refresh the canvas and preview execution plan again.',
     },
     {
       description: 'cycle_detected',
@@ -515,7 +515,7 @@ describe('createPlansService', () => {
         rejectionReason: 'Selected closure contains a cycle and cannot be executed.',
       },
       expectedMessage:
-        'Selected closure contains a cycle and cannot be executed. Remove the cycle and re-run Plan.',
+        'Selected closure contains a cycle and cannot be executed. Remove the cycle and preview execution plan again.',
     },
     {
       description: 'graph_source_selection_mismatch',
@@ -524,7 +524,8 @@ describe('createPlansService', () => {
         rejectionReason:
           'graphSource nodes must match the planner-derived executable subgraph for the selection.',
       },
-      expectedMessage: 'Selected scope no longer matches the authoritative draft. Re-run Plan.',
+      expectedMessage:
+        'Selected scope no longer matches the authoritative draft. Preview execution plan again.',
     },
   ])(
     'surfaces protected preview rejection for $description',

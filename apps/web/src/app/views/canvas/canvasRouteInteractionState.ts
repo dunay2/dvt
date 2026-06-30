@@ -1,8 +1,4 @@
 import { getCanvasReadOnlyState, getCanvasWorkbenchState } from './canvasWorkbenchStateModel';
-import {
-  deriveCanvasPlaygroundTabState,
-  type CanvasPlaygroundTabState,
-} from './canvasPlaygroundTabState';
 import { findCanvasRuntimeRegistration } from '../../plugins/graphStrategyRegistry';
 import { canvasViewCopy } from './copy';
 import {
@@ -28,7 +24,6 @@ export type CanvasRouteInteractionState = {
   canvasDocuments: CanvasController['canvasDocuments'];
   activeCanvasId: CanvasController['activeCanvasId'];
   availableCanvasKinds: CanvasController['availableCanvasKinds'];
-  canvasTabState: CanvasPlaygroundTabState;
   effectiveUserPermissions: CanvasController['userPermissions'];
   readOnlyState: ReturnType<typeof getCanvasReadOnlyState>;
   workbenchErrorMessage: string | null;
@@ -150,10 +145,6 @@ export function deriveCanvasRouteInteractionState(
     canvasDocuments: controller.canvasDocuments,
     activeCanvasId: controller.activeCanvasId,
     availableCanvasKinds: controller.availableCanvasKinds,
-    canvasTabState: deriveCanvasPlaygroundTabState({
-      canvasDocument: controller.canvasDocument,
-      availableCanvasKinds: controller.availableCanvasKinds,
-    }),
     effectiveUserPermissions,
     readOnlyState,
     workbenchErrorMessage:

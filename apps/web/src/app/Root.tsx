@@ -7,11 +7,11 @@ import {
   usePlatformHealthSnapshotQuery,
 } from '../capabilities/platform-health';
 
-import BottomConsoleDrawer from './components/Console';
 import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
 import AppShellFrame from './components/shell/AppShellFrame';
+import BottomOperationalDrawer from './components/shell/BottomOperationalDrawer';
 import {
   createCapabilitiesFallbackBootstrapCommand,
   createCapabilitiesPendingBootstrapCommand,
@@ -48,8 +48,8 @@ type RootShellProps = {
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const location = useLocation();
   const focusMode = useUiLayoutStore((state) => state.focusMode);
-  const consolePanelHeight = useUiLayoutStore((state) => state.consolePanelHeight);
-  const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
+  const bottomDrawerHeight = useUiLayoutStore((state) => state.bottomDrawerHeight);
+  const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const setConnectionStatus = usePlatformConnectionStore((state) => state.setConnectionStatus);
   const capabilitiesQuery = useCapabilitiesQuery();
@@ -224,7 +224,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
 
   return (
     <AppShellFrame
-      bottomDrawer={<BottomConsoleDrawer />}
+      bottomDrawer={<BottomOperationalDrawer />}
       focusMode={focusMode}
       healthBanner={
         <ShellHealthBanner
@@ -240,7 +240,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       }
       leftNavigation={<LeftNavigation />}
       navigationDisposition={navigationDisposition}
-      showBottomDrawer={consolePanelVisible && consolePanelHeight > 0}
+      showBottomDrawer={bottomDrawerVisible && bottomDrawerHeight > 0}
       topBar={
         <TopAppBar
           connectionDetail={shellHealth.connectionDetail}

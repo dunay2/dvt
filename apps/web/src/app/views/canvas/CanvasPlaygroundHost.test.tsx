@@ -25,8 +25,6 @@ const canvasKinds: readonly CanvasKindRegistration[] = [
     emptyState: {
       title: 'Start dbt canvas',
       editableMessage: 'Start dbt modeling',
-      firstNodeLabel: 'Add first dbt node',
-      firstNodeHelper: 'Choose a dbt resource.',
     },
     nodeKinds: [],
   },
@@ -39,8 +37,6 @@ const canvasKinds: readonly CanvasKindRegistration[] = [
     emptyState: {
       title: 'Start transformation canvas',
       editableMessage: 'Start transformation authoring',
-      firstNodeLabel: 'Add first transformation node',
-      firstNodeHelper: 'Choose a transformation node.',
     },
     nodeKinds: [],
   },

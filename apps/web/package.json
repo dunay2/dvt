@@ -12,6 +12,7 @@
     "preview:e2e": "vite preview --host 0.0.0.0 --port 4173 --strictPort",
     "test:e2e": "pnpm build:e2e && start-server-and-test preview:e2e http://127.0.0.1:4173 \"node ./scripts/run-cypress-docker.mjs\"",
     "test:e2e:first-authoring:live": "node ../../scripts/run-canvas-first-authoring-live-proof.cjs",
+    "test:e2e:source-import:live": "node ../../scripts/run-canvas-source-import-live-proof.cjs",
     "test:e2e:selected-closure:live": "node ../../scripts/run-selected-closure-live-proof.cjs",
     "test:e2e:native": "node ../../tools/ci/run-web-cypress-native.mjs",
     "test:e2e:startup-route-readiness": "node ../../tools/ci/run-web-cypress-native.mjs --spec cypress/e2e/shell/startup-route-readiness.cy.ts",

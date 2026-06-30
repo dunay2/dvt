@@ -1,0 +1,26 @@
+/** Owned concern: render graph-node tags from already-selected display tags. */
+import type { ReactElement } from 'react';
+
+import { graphVisualClasses } from './graphVisualTokens';
+
+export type GraphNodeTagListProps = Readonly<{
+  tags: readonly string[];
+  limit?: number;
+}>;
+
+export function GraphNodeTagList({ tags, limit = 3 }: GraphNodeTagListProps): ReactElement | null {
+  const visibleTags = tags.slice(0, limit);
+  if (visibleTags.length === 0) {
+    return null;
+  }
+
+  return (
+    <div data-slot="graph-node-tag-list" className={graphVisualClasses.nodeCardTagList}>
+      {visibleTags.map((tag) => (
+        <span key={tag} className={graphVisualClasses.tag}>
+          {tag}
+        </span>
+      ))}
+    </div>
+  );
+}

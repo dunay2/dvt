@@ -14,7 +14,7 @@ const SOURCE_IMPORT_SECTIONS: readonly SourceImportSection[] = [
   {
     id: 'connections',
     label: 'Connections',
-    steps: ['sourceType', 'connection'],
+    steps: ['connection'],
   },
   {
     id: 'browse',
@@ -47,7 +47,7 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
   return (
     <div
       aria-label="Add source workflow sections"
-      className="mb-4 grid grid-cols-4 overflow-hidden rounded-md border border-[color:var(--border-default)] bg-[var(--surface-panel)]"
+      className="mb-4 grid grid-cols-4 overflow-hidden rounded-md border border-(--border-default) bg-(--surface-panel)"
     >
       {SOURCE_IMPORT_SECTIONS.map((section, index) => {
         const isActive = index === activeSectionIndex;
@@ -58,12 +58,12 @@ export function WizardProgress({ currentStep }: WizardProgressProps) {
             key={section.id}
             data-source-import-section={section.id}
             aria-current={isActive ? 'step' : undefined}
-            className={`border-r border-[color:var(--border-default)] px-3 py-2 text-center text-xs font-medium last:border-r-0 ${
+            className={`border-r border-(--border-default) px-3 py-2 text-center text-xs font-medium last:border-r-0 ${
               isActive
-                ? 'bg-[var(--surface-selected)] text-[var(--text-strong)]'
+                ? 'bg-(--surface-selected) text-(--text-strong)'
                 : isComplete
-                  ? 'text-[var(--text-strong)]'
-                  : 'text-[var(--text-muted)]'
+                  ? 'text-(--text-strong)'
+                  : 'text-(--text-muted)'
             }`}
           >
             {section.label}

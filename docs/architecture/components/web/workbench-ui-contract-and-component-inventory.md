@@ -63,7 +63,7 @@ flowchart TB
   Route --> Overlay["On-demand context surfaces"]
   Route --> Center["Primary surface"]
   Route --> Right["Optional right context panel"]
-  App --> Bottom["Optional bottom console drawer"]
+  App --> Bottom["Optional bottom operational drawer"]
 ```
 
 Layout rules:
@@ -146,7 +146,7 @@ These are the cross-route UI building blocks that should exist once and be reuse
 | `RouteToolbar`            | Standard route command bar                                                | Needed as explicit shared primitive |
 | `ContextPanel`            | Shared side-panel container with title, collapse, scroll, and actions     | Needed                              |
 | `PrimarySurfaceFrame`     | Shared main surface wrapper with route-level spacing and loading handling | Needed                              |
-| `BottomConsoleDrawer`     | Shared shell console surface                                              | Current, content model now explicit |
+| `BottomOperationalDrawer` | Shared shell operational drawer                                           | Current, content model now explicit |
 | `AppIcon`                 | Shared icon wrapper for size, stroke, color, and state                    | Needed                              |
 | `LoadingState`            | Standard loading treatment                                                | Current, seeded from `Runs`         |
 | `EmptyState`              | Standard empty treatment                                                  | Current, seeded from `Runs`         |
@@ -215,8 +215,8 @@ Shell-specific current fit:
   Current implementation: [LeftNavigation.tsx](../../../../apps/web/src/app/components/LeftNavigation.tsx) plus shell navigation model under `apps/web/src/app/shell/*`
   Reuse decision: reuse plugin-aware routing logic.
   Current gap: route badges and richer unavailable-state treatment still need a shared navigation state.
-- `BottomConsoleDrawer`
-  Current implementation: [AppShellFrame.tsx](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [Console.tsx](../../../../apps/web/src/app/components/Console.tsx) and [bottomConsoleDrawerModel.ts](../../../../apps/web/src/app/components/shell/bottomConsoleDrawerModel.ts)
+- `BottomOperationalDrawer`
+  Current implementation: [AppShellFrame.tsx](../../../../apps/web/src/app/components/shell/AppShellFrame.tsx) plus [BottomOperationalDrawer.tsx](../../../../apps/web/src/app/components/shell/BottomOperationalDrawer.tsx) and [bottomOperationalDrawerLogModel.ts](../../../../apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.ts)
   Reuse decision: reuse the layout pattern and explicit state model.
   Current gap: shared event presentation semantics plus headline copy now exist, but typed live-log states and the final structured-versus-terminal decision remain future work while durable run-detail authority stays with the Runs workspace.
 
@@ -247,7 +247,7 @@ To keep the implementation honest, current code falls into three buckets.
 
 - [`TopAppBar.tsx`](../../../../apps/web/src/app/components/TopAppBar.tsx) -> `ShellTopBar`
 - [`LeftNavigation.tsx`](../../../../apps/web/src/app/components/LeftNavigation.tsx) -> `LeftNavigationRail`
-- [`Console.tsx`](../../../../apps/web/src/app/components/Console.tsx) -> `BottomConsoleDrawer`
+- [`BottomOperationalDrawer.tsx`](../../../../apps/web/src/app/components/shell/BottomOperationalDrawer.tsx) -> `BottomOperationalDrawer`
 - [`CanvasToolbar.tsx`](../../../../apps/web/src/app/views/canvas/CanvasToolbar.tsx) -> base `RouteToolbar`
 - panel header patterns inside [`DbtExplorer.tsx`](../../../../apps/web/src/app/components/DbtExplorer.tsx) and [`InspectorPanel.tsx`](../../../../apps/web/src/app/components/InspectorPanel.tsx) -> base `ContextPanel`
 
@@ -269,7 +269,7 @@ Recommended direction:
 | Path                                      | Responsibility                                                                                      |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | `apps/web/src/app/components/ui/*`        | low-level shadcn/Radix primitives only                                                              |
-| `apps/web/src/app/components/shell/*`     | shell-only chrome such as top bar, nav rail, health banner, console drawer                          |
+| `apps/web/src/app/components/shell/*`     | shell-only chrome such as top bar, nav rail, health banner, operational drawer                      |
 | `apps/web/src/app/components/workbench/*` | cross-route primitives such as `RouteWorkbenchFrame`, `RouteToolbar`, `ContextPanel`, shared states |
 | `apps/web/src/app/components/icons/*`     | `AppIcon` and semantic icon registry                                                                |
 | `apps/web/src/app/views/<route>/*`        | route-specific composition and route-only panels                                                    |
@@ -291,8 +291,8 @@ That means the operator lands in:
 - shell top bar;
 - top menu and command palette access;
 - `Canvas` workbench as the default primary route;
-- Canvas workbench view strip;
-- optional bottom console drawer.
+- Canvas contextual graph surface;
+- optional bottom operational drawer.
 
 Main screen composition:
 
@@ -300,14 +300,14 @@ Main screen composition:
 | ------------- | ------------------------------------------------ | ------------------------------------------------------------ |
 | Shell top     | `ShellTopBar`                                    | shows compact context labels, health, menus, global controls |
 | Route top     | `CanvasToolbar` or `RouteToolbar` specialization | owns graph-local actions and toggles                         |
-| Route strip   | `CanvasWorkbenchTabs`                            | switches Canvas projections without global navigation        |
+| Route surface | `CanvasViewport` and contextual surfaces         | keep Graph primary and open source/code/preview on demand    |
 | Route overlay | `CanvasExplorerPanel`                            | optional, contextual, restorable, never a fixed nav rail     |
 | Route center  | `CanvasViewport`                                 | primary graph interaction surface                            |
 | Route right   | `CanvasInspectorPanel`                           | optional, selection-driven, restorable                       |
 | Route modal   | `PlanPreviewModal`                               | explicit plan review before run                              |
 | Route modal   | `ConfirmEdgeModal`                               | explicit graph mutation confirmation                         |
 | Route modal   | `SourceImportWizard`                             | source import flow                                           |
-| Shell bottom  | `BottomConsoleDrawer`                            | execution and supporting context, not main navigation        |
+| Shell bottom  | `BottomOperationalDrawer`                        | execution and supporting context, not main navigation        |
 
 ## Main Screen Behavior Rules
 
@@ -489,7 +489,7 @@ interaction model.
 4. `RouteWorkbenchFrame`
 5. `RouteToolbar`
 6. `ContextPanel`
-7. `BottomConsoleDrawer`
+7. `BottomOperationalDrawer`
 8. shared state components
 9. `AppIcon`
 

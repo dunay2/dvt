@@ -6,7 +6,7 @@ import type { IStartRunTargetAdapterRegistry } from '../../application/ports/ISt
 import type { IWorkspaceContextQuery } from '../../application/ports/workspaceContext.js';
 import { DEFAULT_START_RUN_TARGET_ADAPTER_REGISTRY } from '../../application/services/startRunTargetAdapterRegistry.js';
 
-import { extractBearerToken } from './authHeaders.js';
+import { authenticateHttpBearerRequest } from './httpBearerAuthentication.js';
 
 type WorkspaceContextRouteDeps = Readonly<{
   authenticator: IAuthenticator;
@@ -19,22 +19,10 @@ export async function workspaceContextRoute(
   reply: FastifyReply,
   deps: WorkspaceContextRouteDeps
 ): Promise<void> {
-  const authResult = await deps.authenticator.authenticateBearerToken(
-    extractBearerToken(request.headers.authorization)
-  );
-  if (!authResult.ok) {
-    reply.code(401).send({
-      error: {
-        type: 'unauthorized',
-        reason: 'authentication_failed',
-      },
-    });
-    return;
-  }
+  const principal = await authenticateHttpBearerRequest(request, reply, deps.authenticator);
+  if (principal === null) return;
 
-  const context = await deps.workspaceContextQuery.getEffectiveWorkspaceContext(
-    authResult.principal
-  );
+  const context = await deps.workspaceContextQuery.getEffectiveWorkspaceContext(principal);
   if (context === null) {
     reply.code(403).send({
       error: {

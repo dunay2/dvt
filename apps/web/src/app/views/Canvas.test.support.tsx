@@ -21,6 +21,7 @@ import {
   getCanvasDraftPresentationState,
   resetCanvasDraftPresentationState,
 } from './canvas/canvasDraftPresentationStore';
+import { useCanvasWorkspaceMenuContributionStore } from './canvas/canvasWorkspaceMenuContributionStore';
 import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContributionStore';
 import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
@@ -39,6 +40,9 @@ const canvasRouteState = vi.hoisted(() => ({
 
 vi.mock('@xyflow/react', () => ({
   ReactFlowProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useReactFlow: () => ({
+    screenToFlowPosition: (screenPosition: { x: number; y: number }) => screenPosition,
+  }),
 }));
 
 vi.mock('./canvas/useCanvasController', () => ({
@@ -82,7 +86,8 @@ vi.mock('./canvas/CanvasViewport', () => ({
 }));
 
 vi.mock('../components/Modals', () => ({
-  PlanPreviewModal: ({ open }: { open: boolean }) => (open ? <div>Plan preview modal</div> : null),
+  PlanPreviewModal: ({ open }: { open: boolean }) =>
+    open ? <div>Execution Preview modal</div> : null,
   ConfirmEdgeModal: ({ open }: { open: boolean }) => (open ? <div>Confirm edge modal</div> : null),
 }));
 
@@ -97,7 +102,7 @@ async function renderCanvasRoute(root: Root): Promise<void> {
     [
       {
         id: 'dbt.canvas',
-        path: '/canvas/:workbenchTab?',
+        path: '/canvas/*',
         handle: {
           routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
         },
@@ -132,6 +137,7 @@ export function createCanvasRouteHarness() {
   canvasRouteState.initialEntry = '/canvas';
   resetCanvasDraftPresentationState();
   resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
+  useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
 
   return {
     container,
@@ -145,6 +151,7 @@ export function createCanvasRouteHarness() {
       });
       resetCanvasDraftPresentationState();
       resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
+      useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
       container.remove();
     },
   };
@@ -316,21 +323,26 @@ export function expectPrimaryCanvasActionsBlocked(container: ParentNode): void {
   }
 }
 
-export function expectActiveCanvasTab(args: {
+export function expectActiveCanvasShellIdentity(args: {
   container: ParentNode;
   title: string;
   kindLabel: string;
 }): void {
   const { container, title, kindLabel } = args;
-  const activeCanvasIdentity = container.querySelector(
+  const graphOverlayIdentity = container.querySelector(
     '[data-slot="canvas-active-canvas-identity"]'
   );
   const tabStrip = container.querySelector('[data-slot="canvas-playground-tab-strip"]');
+  const contribution = useCanvasWorkspaceMenuContributionStore.getState().contribution;
 
   expect(tabStrip).toBeNull();
-  expect(activeCanvasIdentity).not.toBeNull();
-  expect(activeCanvasIdentity?.textContent).toContain(title);
-  expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe(kindLabel.toLowerCase());
+  expect(graphOverlayIdentity).toBeNull();
+  expect(contribution).toMatchObject({
+    activeCanvas: {
+      title,
+      kind: kindLabel.toLowerCase(),
+    },
+  });
 }
 
 export function requireAuthoringNodeKind(kind: string): NodeKindRegistration {

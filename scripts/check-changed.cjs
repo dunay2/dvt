@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-/** Owned concern: run changed-only lint and format checks from the local changed-file set. */
+/**
+ * Owned concern: run changed-only lint and format checks from the local changed-file set.
+ * Command/query rails: `ValidateChangedFiles`.
+ */
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');

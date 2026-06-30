@@ -6,7 +6,7 @@ import type {
 
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
 import type { CanvasDraftAccessMode } from './canvasDraftReadModel';
-import type { CanvasDraftRecoveryReason, CanvasDraftToolbarState } from './canvasDraftToolbarState';
+import type { CanvasDraftRecoveryReason, CanvasDraftStatusState } from './canvasDraftStatusState';
 import { canvasViewCopy } from './copy';
 
 import type { CanvasDraftAuthTransportPosture } from './canvasDraftAuthTransportPosture';
@@ -38,8 +38,8 @@ export type CanvasDraftAccessPosture = Readonly<{
   kind: CanvasDraftAccessPostureKind;
   title: string;
   message: string;
-  toolbarLabel: string;
-  toolbarTone: CanvasDraftToolbarState['tone'];
+  statusLabel: string;
+  statusTone: CanvasDraftStatusState['tone'];
   recoveryAction: CanvasDraftRecoveryAction;
   mutationBlocked: boolean;
   showReloadAction: boolean;
@@ -86,8 +86,8 @@ type CanvasDraftPostureFactoryArgs = Readonly<{
   kind: CanvasDraftAccessPostureKind;
   title: string;
   message: string;
-  toolbarLabel: string;
-  toolbarTone: CanvasDraftToolbarState['tone'];
+  statusLabel: string;
+  statusTone: CanvasDraftStatusState['tone'];
   recoveryAction: CanvasDraftRecoveryAction;
   mutationBlocked: boolean;
   showReloadAction?: boolean;
@@ -98,8 +98,8 @@ function createCanvasDraftAccessPosture({
   kind,
   title,
   message,
-  toolbarLabel,
-  toolbarTone,
+  statusLabel,
+  statusTone,
   recoveryAction,
   mutationBlocked,
   showReloadAction = false,
@@ -109,8 +109,8 @@ function createCanvasDraftAccessPosture({
     kind,
     title,
     message,
-    toolbarLabel,
-    toolbarTone,
+    statusLabel,
+    statusTone,
     recoveryAction,
     mutationBlocked,
     showReloadAction,
@@ -118,7 +118,7 @@ function createCanvasDraftAccessPosture({
   };
 }
 
-function resolveWritableDraftToolbarLabel(draftSaveStatus: DraftSaveStatus): string {
+function resolveWritableDraftStatusLabel(draftSaveStatus: DraftSaveStatus): string {
   switch (draftSaveStatus) {
     case 'saving':
       return canvasViewCopy.savingDraftLabel;
@@ -141,9 +141,9 @@ function resolveWritablePostureKind(
   return draftSaveStatus === 'saving' || draftSaveStatus === 'saved' ? draftSaveStatus : 'writable';
 }
 
-function resolveWritableToolbarTone(
+function resolveWritableDraftStatusTone(
   draftSaveStatus: DraftSaveStatus
-): CanvasDraftToolbarState['tone'] {
+): CanvasDraftStatusState['tone'] {
   return draftSaveStatus === 'failed' ? 'danger' : 'neutral';
 }
 
@@ -183,8 +183,8 @@ function deriveRecoveryDraftAccessPosture(
         kind: 'stale_conflict',
         title: canvasViewCopy.staleDraftTitle,
         message: canvasViewCopy.staleDraftMessage,
-        toolbarLabel: canvasViewCopy.staleVersionLabel,
-        toolbarTone: 'danger',
+        statusLabel: canvasViewCopy.staleVersionLabel,
+        statusTone: 'danger',
         recoveryAction: 'reload_latest_draft',
         mutationBlocked: true,
         showReloadAction: true,
@@ -194,8 +194,8 @@ function deriveRecoveryDraftAccessPosture(
         kind: 'missing_remote',
         title: canvasViewCopy.missingRemoteDraftTitle,
         message: canvasViewCopy.missingRemoteDraftMessage,
-        toolbarLabel: canvasViewCopy.draftMissingLabel,
-        toolbarTone: 'warning',
+        statusLabel: canvasViewCopy.draftMissingLabel,
+        statusTone: 'warning',
         recoveryAction: 'reload_latest_draft',
         mutationBlocked: true,
         showReloadAction: true,
@@ -205,8 +205,8 @@ function deriveRecoveryDraftAccessPosture(
         kind: 'projection_gap',
         title: canvasViewCopy.draftProjectionGapTitle,
         message: canvasViewCopy.draftProjectionGapMessage,
-        toolbarLabel: canvasViewCopy.projectionGapLabel,
-        toolbarTone: 'warning',
+        statusLabel: canvasViewCopy.projectionGapLabel,
+        statusTone: 'warning',
         recoveryAction: 'reload_latest_draft',
         mutationBlocked: true,
         showReloadAction: true,
@@ -234,8 +234,8 @@ export function deriveCanvasDraftAccessPosture({
       kind: 'unauthenticated',
       title: canvasViewCopy.draftSessionRequiredTitle,
       message: canvasViewCopy.draftSessionRequiredMessage,
-      toolbarLabel: canvasViewCopy.sessionRequiredDraftLabel,
-      toolbarTone: 'danger',
+      statusLabel: canvasViewCopy.sessionRequiredDraftLabel,
+      statusTone: 'danger',
       recoveryAction: 'refresh_session',
       mutationBlocked: true,
       isCenterSurfaceBlocking: true,
@@ -248,8 +248,8 @@ export function deriveCanvasDraftAccessPosture({
       kind: 'format_error',
       title: formatContent.title,
       message: formatContent.message,
-      toolbarLabel: canvasViewCopy.draftFormatBlockedLabel,
-      toolbarTone: 'danger',
+      statusLabel: canvasViewCopy.draftFormatBlockedLabel,
+      statusTone: 'danger',
       recoveryAction: 'escalate_format',
       mutationBlocked: true,
       isCenterSurfaceBlocking: true,
@@ -261,8 +261,8 @@ export function deriveCanvasDraftAccessPosture({
       kind: 'forbidden_scope',
       title: canvasViewCopy.draftForbiddenScopeTitle,
       message: canvasViewCopy.draftForbiddenScopeMessage,
-      toolbarLabel: canvasViewCopy.forbiddenScopeDraftLabel,
-      toolbarTone: 'danger',
+      statusLabel: canvasViewCopy.forbiddenScopeDraftLabel,
+      statusTone: 'danger',
       recoveryAction: 'change_scope',
       mutationBlocked: true,
       isCenterSurfaceBlocking: true,
@@ -274,8 +274,8 @@ export function deriveCanvasDraftAccessPosture({
       kind: 'read_only',
       title: canvasViewCopy.draftReadOnlyTitle,
       message: canvasViewCopy.draftReadOnlyMessage,
-      toolbarLabel: canvasViewCopy.readOnlyDraftLabel,
-      toolbarTone: 'warning',
+      statusLabel: canvasViewCopy.readOnlyDraftLabel,
+      statusTone: 'warning',
       recoveryAction: 'inspect_only',
       mutationBlocked: true,
     });
@@ -290,8 +290,8 @@ export function deriveCanvasDraftAccessPosture({
       kind: resolveWritablePostureKind(draftSaveStatus),
       title: canvasViewCopy.canvasReadyDetail,
       message: canvasViewCopy.canvasReadyDetail,
-      toolbarLabel: resolveWritableDraftToolbarLabel(draftSaveStatus),
-      toolbarTone: resolveWritableToolbarTone(draftSaveStatus),
+      statusLabel: resolveWritableDraftStatusLabel(draftSaveStatus),
+      statusTone: resolveWritableDraftStatusTone(draftSaveStatus),
       recoveryAction: 'none',
       mutationBlocked: false,
     });
@@ -301,8 +301,8 @@ export function deriveCanvasDraftAccessPosture({
     kind: 'unknown_pending',
     title: canvasViewCopy.routeLoadingTitle,
     message: canvasViewCopy.routeLoadingMessage,
-    toolbarLabel: canvasViewCopy.routeLoadingTitle,
-    toolbarTone: 'warning',
+    statusLabel: canvasViewCopy.routeLoadingTitle,
+    statusTone: 'warning',
     recoveryAction: 'wait',
     mutationBlocked: true,
   });
@@ -312,12 +312,12 @@ export function isCanvasDraftPostureMutationBlocked(posture: CanvasDraftAccessPo
   return posture.mutationBlocked;
 }
 
-export function toCanvasDraftToolbarState(
+export function toCanvasDraftStatusState(
   posture: CanvasDraftAccessPosture
-): CanvasDraftToolbarState {
+): CanvasDraftStatusState {
   return {
-    label: posture.toolbarLabel,
-    tone: posture.toolbarTone,
+    label: posture.statusLabel,
+    tone: posture.statusTone,
     showReloadAction: posture.showReloadAction,
   };
 }
@@ -413,7 +413,7 @@ export function applyCanvasDraftPostureToRuntimePolicyInput(args: {
   if (args.posture.kind === 'saving') {
     return {
       canMutateGraph: args.canMutateGraph,
-      canPlan: false,
+      canPlan: args.canPlan,
       canRun: false,
       canReloadLatestDraft: args.canReloadLatestDraft,
     };

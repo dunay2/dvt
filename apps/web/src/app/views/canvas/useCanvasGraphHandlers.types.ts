@@ -20,7 +20,7 @@ export type UseCanvasGraphHandlersResult = {
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   confirmEdgeCreation: () => void;
-  handleInspectNode: (nodeId: string) => void;
+  handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
   handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
   onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   handleAutoLayout: () => void;

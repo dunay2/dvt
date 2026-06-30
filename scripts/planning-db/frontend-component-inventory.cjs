@@ -4,6 +4,17 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { schemaName } = require('../planning-db-migrate.cjs');
+const {
+  countField,
+  headerIndexes,
+  isSeparatorRow,
+  markdownCells,
+  normalizeCell,
+  rawRow,
+  rowValue,
+} = require('./frontend-inventory-table.cjs');
+const { appendFilter } = require('./query-filter.cjs');
+const { parseLimit } = require('./query-limit.cjs');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
 const defaultInventoryPath = 'docs/architecture/components/web/frontend-component-inventory.md';
@@ -14,6 +25,7 @@ const validComponentKinds = new Set([
   'navigation',
   'health-banner',
   'console-drawer',
+  'operational-drawer',
   'route-workbench',
   'route-toolbar',
   'state-view',
@@ -129,14 +141,6 @@ function repoRelative(filePath) {
   return toPosix(path.relative(repoRoot, filePath));
 }
 
-function stripInlineCode(value) {
-  return String(value ?? '').replace(/`([^`]*)`/g, '$1');
-}
-
-function normalizeCell(value) {
-  return stripInlineCode(value).replace(/\s+/g, ' ').trim();
-}
-
 function normalizeOptional(value) {
   const normalized = normalizeCell(value);
   return normalized && !/^(-|none|n\/a)$/i.test(normalized) ? normalized : '';
@@ -152,45 +156,6 @@ function normalizeList(value) {
     .split(';')
     .map((item) => normalizeOptional(item))
     .filter(Boolean);
-}
-
-function markdownCells(line) {
-  return line
-    .trim()
-    .replace(/^\|/, '')
-    .replace(/\|$/, '')
-    .split('|')
-    .map((cell) => cell.trim());
-}
-
-function isSeparatorRow(cells) {
-  return cells.every((cell) => /^:?-{3,}:?$/.test(cell.trim()));
-}
-
-function normalizeHeader(value) {
-  return normalizeCell(value).toLowerCase();
-}
-
-function headerIndexes(cells, requiredHeaders) {
-  const byHeader = new Map(cells.map((cell, index) => [normalizeHeader(cell), index]));
-  const missing = requiredHeaders.filter((header) => !byHeader.has(normalizeHeader(header)));
-  if (missing.length > 0) {
-    return null;
-  }
-
-  return Object.fromEntries(
-    requiredHeaders.map((header) => [header, byHeader.get(normalizeHeader(header))])
-  );
-}
-
-function rowValue(cells, indexes, header) {
-  return normalizeCell(cells[indexes[header]]);
-}
-
-function rawRow(cells, indexes, headers) {
-  return Object.fromEntries(
-    headers.map((header) => [header, normalizeCell(cells[indexes[header]])])
-  );
 }
 
 function parseInteger(value) {
@@ -372,15 +337,6 @@ function buildFrontendComponentReflectionSnapshot(options = {}) {
   );
 }
 
-function countField(row, snakeName, camelName) {
-  const explicit = row[snakeName];
-  if (explicit !== undefined && explicit !== null) {
-    return Number(explicit);
-  }
-  const arrayValue = row[camelName];
-  return Array.isArray(arrayValue) ? arrayValue.length : 0;
-}
-
 function buildFrontendComponentRows(rows) {
   return rows.map((row) => [
     row.component_id ?? row.componentId,
@@ -414,25 +370,6 @@ function buildFrontendComponentRailRows(rows) {
   ]);
 }
 
-function parseLimit(value, defaultLimit) {
-  if (value === undefined || value === null || value === '') {
-    return defaultLimit;
-  }
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new Error(`Invalid --limit "${value}". Expected a positive integer.`);
-  }
-  return parsed;
-}
-
-function appendFilter(predicates, params, column, value) {
-  if (value === undefined || value === null || value === '') {
-    return;
-  }
-  params.push(value);
-  predicates.push(`${column} = $${params.length}`);
-}
-
 async function readFrontendComponentRows(client, filters = {}, options = {}) {
   const activeSchemaName = options.schemaName || schemaName;
   const params = [];
@@ -450,7 +387,7 @@ async function readFrontendComponentRows(client, filters = {}, options = {}) {
     params.push(filters.surface || filters.surfaceId);
     predicates.push(`component_id in (
       select component_id
-      from ${activeSchemaName}.frontend_surface_component_links
+      from ${activeSchemaName}.frontend_component_surface_link_query
       where surface_id = $${params.length}
     )`);
   }
@@ -465,6 +402,9 @@ async function readFrontendComponentRows(client, filters = {}, options = {}) {
        component_kind,
        component_status,
        reuse_decision,
+       frontend_owner,
+       responsibility,
+       package_name,
        surface_count,
        file_count,
        rail_count,

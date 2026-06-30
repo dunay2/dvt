@@ -136,9 +136,11 @@ const SCRIPT_FILE_RULES = [
     /^scripts\/validate-(contracts|executable-examples|glossary-usage|idempotency-vectors|references|rfc2119)\.cjs$/u,
     'contracts',
   ],
+  [/^scripts\/policy-validation-(files|text)\.cjs$/u, 'contracts'],
   [/^scripts\/planning-db-[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db\/(?:[\w-]+\/)*[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db-operate-tests\/[\w-]+\.cjs$/u, 'planning-db'],
+  [/^scripts\/planning-db-query-tests\/[\w-]+\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-db-(check|import|export)(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-generated-paths(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/governance-refresh(\.test)?\.cjs$/u, 'planning-db'],
@@ -160,7 +162,10 @@ const SCRIPT_FILE_RULES = [
     'ci-tooling',
   ],
   [/^scripts\/run-dev-stack(\.[\w-]+)?(\.test)?\.cjs$/u, 'dev-local'],
-  [/^scripts\/run-(canvas-first-authoring|selected-closure)-live-proof\.cjs$/u, 'dev-local'],
+  [
+    /^scripts\/run-(canvas-first-authoring|canvas-source-import|selected-closure)-live-proof\.cjs$/u,
+    'dev-local',
+  ],
   [
     /^scripts\/(enable-workflow\.sh|hygiene\.ps1|outbox-worker-canary-evidence\.ps1)$/u,
     'release-ops',

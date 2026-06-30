@@ -5,12 +5,15 @@ import { fireEvent, waitFor } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildShellNavigationModel } from '../shell/shellNavigationModel';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import type { OperationalDrawerContribution } from './shell/operationalDrawerContributionStore';
+import { useOperationalDrawerContributionStore } from './shell/operationalDrawerContributionStore';
+import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
 import { resolveShellTopBarCopy } from './shell/copy';
 import ShellTopBar from './TopAppBar';
@@ -46,15 +49,54 @@ describe('ShellTopBar workspace context', () => {
       availableTargetAdapters: ['temporal'],
     });
     useUiLayoutStore.setState({ focusMode: false });
+    useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+    useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
   });
 
   afterEach(() => {
     act(() => {
       root.unmount();
     });
+    useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+    useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
     container.remove();
     document.body.replaceChildren();
   });
+
+  function buildCanvasRunContribution(
+    overrides?: Partial<OperationalDrawerContribution>
+  ): OperationalDrawerContribution {
+    const onStartRun = vi.fn();
+
+    return {
+      source: 'canvas',
+      title: 'Canvas operations',
+      tabs: [
+        { id: 'log', label: 'Log', count: null },
+        { id: 'problems', label: 'Problems', count: 1 },
+        { id: 'runs', label: 'Runs', count: 1 },
+        { id: 'preview', label: 'Preview', count: 1 },
+      ],
+      problems: {
+        items: [],
+      },
+      runs: {
+        activeRunId: null,
+        canStartRun: false,
+        onStartRun,
+        status: 'blocked',
+        summary: 'Preview required before running.',
+      },
+      preview: {
+        status: 'blocked',
+        summary: 'Preview required before running.',
+        blockers: ['plan_integrity'],
+        canPreview: true,
+        onPreviewExecutionPlan: vi.fn(),
+      },
+      ...overrides,
+    };
+  }
 
   it('keeps workspace scope as read-only context in uncataloged global top-bar chrome', async () => {
     await act(async () => {
@@ -97,6 +139,10 @@ describe('ShellTopBar workspace context', () => {
       await waitFor(() => {
         expect(document.body.textContent).toContain('View options');
         expect(document.body.textContent).toContain('Panels');
+        expect(document.body.textContent).not.toContain(resolveShellTopBarCopy().inspectorPanel);
+        expect(document.body.textContent).not.toContain(
+          resolveShellTopBarCopy('es-ES').inspectorPanel
+        );
         expect(
           document.body.querySelectorAll('[data-slot="shell-menu-navigation-link"]')
         ).toHaveLength(0);
@@ -126,6 +172,105 @@ describe('ShellTopBar workspace context', () => {
       });
     }
   );
+
+  it('renders active Canvas identity as workbench context without restoring legacy top-bar canvas controls', async () => {
+    useCanvasWorkspaceMenuContributionStore.setState({
+      contribution: {
+        activeCanvas: {
+          id: 'transformation-canvas',
+          kind: 'transformation',
+          title: 'Transformation canvas',
+        },
+        canExportProjectSnapshot: true,
+        canImportProjectSnapshot: true,
+        onExportProjectSnapshot: () => undefined,
+        onImportProjectSnapshotFile: () => undefined,
+      },
+    });
+
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    const topBar = container.querySelector('[data-slot="shell-top-bar"]');
+    const activeCanvasIdentity = topBar?.querySelector(
+      '[data-slot="shell-active-canvas-identity"]'
+    );
+
+    expect(activeCanvasIdentity).not.toBeNull();
+    expect(activeCanvasIdentity?.textContent).toContain('Transformation canvas');
+    expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('transformation');
+    expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('transformation-canvas');
+    expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
+    expect(topBar?.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
+  });
+
+  it('renders Canvas run readiness as compact top-bar status without restoring Plan chrome', async () => {
+    useOperationalDrawerContributionStore.setState({
+      contribution: buildCanvasRunContribution(),
+    });
+
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    const topBar = container.querySelector('[data-slot="shell-top-bar"]');
+    const runStatus = topBar?.querySelector('[data-slot="shell-run-status-indicator"]');
+    const runCommand = topBar?.querySelector<HTMLButtonElement>('[data-slot="shell-run-command"]');
+
+    expect(runStatus).not.toBeNull();
+    expect(runStatus?.textContent).toContain('Preview required');
+    expect(runCommand).not.toBeNull();
+    expect(runCommand?.textContent).toBe('Run');
+    expect(runCommand?.disabled).toBe(true);
+    expect(topBar?.textContent).not.toContain('Plan');
+  });
+
+  it('routes the compact top-bar Run command through the Canvas operational contribution', async () => {
+    const onStartRun = vi.fn();
+    useOperationalDrawerContributionStore.setState({
+      contribution: buildCanvasRunContribution({
+        tabs: [
+          { id: 'log', label: 'Log', count: null },
+          { id: 'problems', label: 'Problems', count: 0 },
+          { id: 'runs', label: 'Runs', count: null },
+          { id: 'preview', label: 'Preview', count: null },
+        ],
+        runs: {
+          activeRunId: null,
+          canStartRun: true,
+          onStartRun,
+          status: 'ready',
+          summary: 'Run is ready after the current execution preview.',
+        },
+        preview: {
+          status: 'ready',
+          summary: 'Preview ready.',
+          blockers: [],
+          canPreview: true,
+          onPreviewExecutionPlan: vi.fn(),
+        },
+      }),
+    });
+
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    const topBar = container.querySelector('[data-slot="shell-top-bar"]');
+    const runCommand = topBar?.querySelector<HTMLButtonElement>('[data-slot="shell-run-command"]');
+
+    expect(
+      topBar?.querySelector('[data-slot="shell-run-status-indicator"]')?.textContent
+    ).toContain('Ready');
+    expect(runCommand?.disabled).toBe(false);
+
+    await act(async () => {
+      fireEvent.click(runCommand!);
+    });
+
+    expect(onStartRun).toHaveBeenCalledTimes(1);
+  });
 
   it('exposes workspace navigation when focus mode hides the global route rail', async () => {
     useUiLayoutStore.setState({ focusMode: true });

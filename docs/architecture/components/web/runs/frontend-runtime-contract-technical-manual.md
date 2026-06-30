@@ -108,14 +108,14 @@ flowchart LR
 | fetch run snapshot      | `GET /runs/:runId`        | API / Entry | status truth and detail truth        |
 | list run events         | `GET /runs/:runId/events` | API / Entry | ordered timeline feed for monitoring |
 
-## Runs Versus Bottom Console Drawer
+## Runs Versus Bottom Operational Drawer
 
 `GET /runs/:runId/events` now has two governed frontend consumers, but they do
 not own the same product responsibility:
 
 - `RunWorkspaceFacade` composes snapshot plus timeline into the durable
   run-detail workbench;
-- `useConsoleLogStream()` mirrors the active run as a shell-level live stream
+- `useConsoleLogStream()` mirrors the active run as a shell-level operational log stream
   companion;
 - only the Runs workspace combines timeline with snapshot authority;
 - the shell drawer must not present itself as the authoritative run-detail
@@ -128,14 +128,14 @@ flowchart LR
   Events["GET /runs/:runId/events"] --> DrawerHook["useConsoleLogStream()"]
   Events --> Facade["RunWorkspaceFacade.loadRunWorkspace(runId)"]
   Snapshot["GET /runs/:runId"] --> Facade
-  DrawerHook --> Drawer["BottomConsoleDrawer"]
+  DrawerHook --> Drawer["BottomOperationalDrawer"]
   Facade --> Runs["RunWorkspaceStateView"]
 ```
 
 Authority rules:
 
-1. `BottomConsoleDrawer` may show ordered live lines for the active run.
-2. `BottomConsoleDrawer` must not derive snapshot truth, failure diagnostics,
+1. `BottomOperationalDrawer` may show ordered live lines for the active run.
+2. `BottomOperationalDrawer` must not derive snapshot truth, failure diagnostics,
    or result evidence on its own.
 3. `RunWorkspaceStateView` owns snapshot truth and timeline degradation
    semantics for `/runs/:runId`.
@@ -189,14 +189,14 @@ workbench state primitives now own the repeated route-state chrome, while
 
 ## Shared Run Event Presentation Model
 
-The shell drawer and the Runs route now share one event-presentation seam
+The operational drawer log and the Runs route now share one event-presentation seam
 before they render their different surfaces:
 
 ```mermaid
 flowchart LR
   Event["RunEvent"] --> SharedModel["buildRunEventPresentationModel(event)"]
   SharedModel --> SharedCopy["resolveRunEventHeadline(...)"]
-  SharedCopy --> Drawer["formatRunEventAsLogLine(...)"]
+  SharedCopy --> DrawerLog["formatRunEventAsLogLine(...)"]
   SharedCopy --> Timeline["RunWorkspaceStateView timeline event card"]
 ```
 
@@ -212,7 +212,7 @@ F-10 adds a shared event timeline model before presentation:
 ```mermaid
 flowchart LR
   Query["listRunEvents(runId, afterSeq)"] --> Timeline["normalize/merge timeline"]
-  Timeline --> Console["terminal line stream"]
+  Timeline --> DrawerLog["terminal line stream"]
   Timeline --> Workspace["structured timeline rows"]
 ```
 
@@ -226,8 +226,8 @@ The shared copy resolver owns:
 
 It does not change authority:
 
-- `BottomConsoleDrawer` still renders a shell-level companion stream;
-- `BottomConsoleDrawer` still owns terminal-style log-line composition;
+- `BottomOperationalDrawer` still renders a shell-level operational companion stream;
+- `BottomOperationalDrawer` still owns terminal-style log-line composition for its Log tab;
 - `RunWorkspaceStateView` still owns durable timeline interpretation;
 - snapshot truth, failure diagnostics, and result evidence remain outside the
   shared event-presentation seam.

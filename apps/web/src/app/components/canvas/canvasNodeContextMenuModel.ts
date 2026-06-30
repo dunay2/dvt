@@ -13,7 +13,11 @@ export type CanvasNodeContextMenuActionId =
   | 'deselect-node-from-execution'
   | 'remove-node';
 
-export type CanvasNodeModelerActionId = Exclude<CanvasNodeContextMenuActionId, 'inspect-node'>;
+export type CanvasNodeModelerActionId =
+  | 'duplicate-node'
+  | 'select-node-for-execution'
+  | 'deselect-node-from-execution'
+  | 'remove-node';
 
 export type CanvasNodeContextMenuAction = Readonly<{
   id: CanvasNodeContextMenuActionId;
@@ -64,6 +68,19 @@ type BuildCanvasNodeModelerActionModelArgs = Omit<
   'canInspectNode'
 >;
 
+function buildOpenWorkbenchAction(canInspectNode: boolean): CanvasNodeContextMenuAction | null {
+  if (!canInspectNode) {
+    return null;
+  }
+
+  return {
+    id: 'inspect-node',
+    label: 'Open workbench',
+    intent: 'read',
+    disabled: false,
+  };
+}
+
 export function buildCanvasNodeModelerActionModel({
   target,
   selectedForExecution,
@@ -78,13 +95,13 @@ export function buildCanvasNodeModelerActionModel({
   if (canMutateGraph && canDuplicateNode) {
     editActions.push({
       id: 'duplicate-node',
-      label: 'Duplicate node',
+      label: 'Duplicate',
       intent: 'command',
       disabled: false,
     });
   }
 
-  if (canMutateGraph && canToggleNodeSelection) {
+  if (canToggleNodeSelection) {
     editActions.push({
       id: selectedForExecution ? 'deselect-node-from-execution' : 'select-node-for-execution',
       label: selectedForExecution ? 'Deselect for execution' : 'Select for execution',
@@ -108,7 +125,7 @@ export function buildCanvasNodeModelerActionModel({
       actions: [
         {
           id: 'remove-node',
-          label: 'Remove node',
+          label: 'Delete',
           intent: 'command',
           destructive: true,
           disabled: false,
@@ -132,28 +149,40 @@ export function buildCanvasNodeContextMenuModel({
   canToggleNodeSelection,
   canRemoveNode,
 }: BuildCanvasNodeContextMenuModelArgs): CanvasNodeContextMenuModel {
-  const groups: CanvasNodeContextMenuActionGroup[] = [
-    {
-      id: 'inspect',
-      label: 'Inspect',
-      actions: [
-        {
-          id: 'inspect-node',
-          label: 'Properties',
-          intent: 'read',
-          disabled: !canInspectNode,
-          ...(canInspectNode ? {} : { disabledReason: 'Inspector is unavailable for this node.' }),
-        },
-      ],
-    },
-  ];
+  const executionSelectionAction: CanvasNodeContextMenuAction | null = canToggleNodeSelection
+    ? {
+        id: selectedForExecution ? 'deselect-node-from-execution' : 'select-node-for-execution',
+        label: selectedForExecution ? 'Deselect for execution' : 'Select for execution',
+        intent: 'command',
+        disabled: false,
+      }
+    : null;
+  const workbenchAction = buildOpenWorkbenchAction(canInspectNode);
+  const groups: CanvasNodeContextMenuActionGroup[] = [];
+
+  if (workbenchAction != null) {
+    groups.push({
+      id: 'workbench',
+      label: 'Workbench',
+      actions: [workbenchAction],
+    });
+  }
+
+  if (executionSelectionAction != null) {
+    groups.push({
+      id: 'execute',
+      label: 'Execute',
+      actions: [executionSelectionAction],
+    });
+  }
+
   groups.push(
     ...buildCanvasNodeModelerActionModel({
       target,
       selectedForExecution,
       canMutateGraph,
       canDuplicateNode,
-      canToggleNodeSelection,
+      canToggleNodeSelection: false,
       canRemoveNode,
     }).actionGroups
   );

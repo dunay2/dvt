@@ -135,6 +135,7 @@ export class ImportWarehouseSourcesUseCase {
 
     return {
       success: true,
+      draftRevision: saveResult.revision,
       sourcesCreated: mutation.importedNodeIds.length,
       tablesImported: input.tables.length,
       yamlFiles: sourceYamlUpdates.map((update) => update.path),
@@ -249,6 +250,7 @@ function toSourceNode(
       tableName,
       database: table.database,
       schema: table.schema,
+      ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
       columns: includeColumns ? table.columns : undefined,
     },
   };

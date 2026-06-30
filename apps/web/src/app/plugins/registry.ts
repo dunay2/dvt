@@ -22,7 +22,6 @@ import type {
 import type { GraphNodeCardStrategy } from './graph/graphNodeCardStrategyContracts';
 import type {
   BottomDiagnosticsContribution,
-  CanvasWorkbenchTabPlacement,
   CommandPaletteContribution,
   InspectorContext,
   InspectorPanelContribution,
@@ -223,10 +222,6 @@ export type ShellNavigationViewContribution = RouteViewContribution & {
   placement: ShellNavigationPlacement;
 };
 
-export type CanvasWorkbenchTabViewContribution = ViewContribution & {
-  placement: CanvasWorkbenchTabPlacement;
-};
-
 function hasRouteRegistration(view: ViewContribution): view is RouteViewContribution {
   return typeof view.path === 'string' && view.handle != null;
 }
@@ -242,17 +237,6 @@ export function getShellNavigationViews(
     .filter(
       (view): view is ShellNavigationViewContribution =>
         hasRouteRegistration(view) && view.placement?.kind === 'shell-nav'
-    )
-    .sort((a, b) => a.placement.order - b.placement.order);
-}
-
-export function getCanvasWorkbenchTabViews(
-  capabilities?: RuntimeCapabilities
-): CanvasWorkbenchTabViewContribution[] {
-  return getAllViews(capabilities)
-    .filter(
-      (view): view is CanvasWorkbenchTabViewContribution =>
-        view.placement?.kind === 'workbench-tab' && view.placement.workbench === 'canvas'
     )
     .sort((a, b) => a.placement.order - b.placement.order);
 }

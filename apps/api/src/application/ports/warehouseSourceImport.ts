@@ -17,6 +17,8 @@ export type WarehouseColumn = {
   readonly name: string;
   readonly type: string;
   readonly nullable: boolean;
+  readonly primaryKey?: boolean;
+  readonly unique?: boolean;
 };
 
 export type WarehouseTable = {
@@ -107,6 +109,7 @@ export type ImportWarehouseSourcesInput = {
 
 export type ImportWarehouseSourcesResult = {
   readonly success: true;
+  readonly draftRevision: string;
   readonly sourcesCreated: number;
   readonly tablesImported: number;
   readonly yamlFiles: readonly string[];

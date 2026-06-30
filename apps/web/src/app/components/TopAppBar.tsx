@@ -7,14 +7,18 @@ import { resolveShellNavigationDisposition } from '../shell/shellNavigationDispo
 import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import { CanvasWorkspaceTopBarIdentity } from '../views/canvas/CanvasWorkspaceMenuControls';
 import { topAppBarClasses } from './shell/chrome';
 import { detectShellTopBarLocale, resolveShellTopBarCopy } from './shell/copy';
+import { useOperationalDrawerContributionStore } from './shell/operationalDrawerContributionStore';
 import { ShellAppMenu } from './shell/ShellAppMenu';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
 import { ShellGitRef } from './shell/ShellGitRef';
 import { ShellMenu } from './shell/ShellMenu';
 import { ShellProjectIdentityBadge } from './shell/ShellProjectIdentityBadge';
+import { ShellRunStatusIndicator } from './shell/ShellRunStatusIndicator';
 import { ShellWorkspaceContextMenu } from './shell/ShellWorkspaceContextMenu';
+import { resolveShellViewControls } from './shell/shellViewControlsModel';
 import type { ShellTopBarProps } from './shell/types';
 import { TooltipProvider } from './ui/tooltip';
 
@@ -35,18 +39,22 @@ export function ShellTopBar({
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
   const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
-  const consolePanelVisible = useUiLayoutStore((state) => state.consolePanelVisible);
+  const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
   const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
-  const toggleConsolePanel = useUiLayoutStore((state) => state.toggleConsolePanel);
+  const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
+  const operationalDrawerContribution = useOperationalDrawerContributionStore(
+    (state) => state.contribution
+  );
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
   const copy = resolveShellTopBarCopy(detectShellTopBarLocale());
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
   const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
   const exposeWorkspaceNavigationMenu = focusMode || navigationDisposition.railMode === 'hidden';
+  const shellViewControls = resolveShellViewControls(navigationDisposition);
   const projectIdentityBadge = buildProjectIdentityBadge({
     workspaceBootstrap,
     selectedTenant,
@@ -59,6 +67,8 @@ export function ShellTopBar({
     <TooltipProvider>
       <div data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
         <ShellAppMenu copy={copy} />
+
+        {isWorkbenchShell ? <CanvasWorkspaceTopBarIdentity /> : null}
 
         {!isWorkbenchShell && (
           <>
@@ -79,11 +89,13 @@ export function ShellTopBar({
           connectionDetail={connectionDetail}
           copy={copy}
         />
+        <ShellRunStatusIndicator contribution={operationalDrawerContribution} />
         {exposeWorkspaceNavigationMenu && (
           <ShellMenu
             kind="workspace"
+            viewControls={shellViewControls}
             inspectorPanelVisible={inspectorPanelVisible}
-            consolePanelVisible={consolePanelVisible}
+            bottomDrawerVisible={bottomDrawerVisible}
             focusMode={focusMode}
             gridSize={gridSize}
             canvasPalette={canvasPalette}
@@ -92,7 +104,7 @@ export function ShellTopBar({
             gitBranch={workspaceBootstrap.gitBranch}
             gitSha={workspaceBootstrap.gitSha}
             toggleInspectorPanel={toggleInspectorPanel}
-            toggleConsolePanel={toggleConsolePanel}
+            toggleBottomDrawer={toggleBottomDrawer}
             toggleFocusMode={toggleFocusMode}
             setGridSize={setGridSize}
             setCanvasPalette={setCanvasPalette}
@@ -101,8 +113,9 @@ export function ShellTopBar({
         )}
         <ShellMenu
           kind="view"
+          viewControls={shellViewControls}
           inspectorPanelVisible={inspectorPanelVisible}
-          consolePanelVisible={consolePanelVisible}
+          bottomDrawerVisible={bottomDrawerVisible}
           focusMode={focusMode}
           gridSize={gridSize}
           canvasPalette={canvasPalette}
@@ -111,7 +124,7 @@ export function ShellTopBar({
           gitBranch={workspaceBootstrap.gitBranch}
           gitSha={workspaceBootstrap.gitSha}
           toggleInspectorPanel={toggleInspectorPanel}
-          toggleConsolePanel={toggleConsolePanel}
+          toggleBottomDrawer={toggleBottomDrawer}
           toggleFocusMode={toggleFocusMode}
           setGridSize={setGridSize}
           setCanvasPalette={setCanvasPalette}
