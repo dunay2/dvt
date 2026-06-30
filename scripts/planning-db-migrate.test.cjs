@@ -10389,3 +10389,22 @@ test('tracked migrations normalize Graph node card view file roles', () => {
   assert.match(roleMigration.sql, /EV-CANVAS-GRAPH-NODE-CARD-VIEW-FILE-ROLES-NORMALIZED/);
   assert.doesNotMatch(roleMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile Node workbench duplicate file ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '388_node_workbench_duplicate_file_ownership_reconcile.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.NodeWorkbench/);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.CanvasNodeWorkbenchPanel/);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.CanvasSurfaceStrategy/);
+  assert.match(ownershipMigration.sql, /CanvasNodeWorkbenchPanel\.tsx/);
+  assert.match(ownershipMigration.sql, /canvasNodeWorkbenchSectionStrategy\.ts/);
+  assert.match(ownershipMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(ownershipMigration.sql, /EV-CANVAS-NODE-WORKBENCH-DUPLICATE-OWNERSHIP-RECONCILED/);
+  assert.match(ownershipMigration.sql, /canvas-component-registry-drift/);
+  assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
+});
