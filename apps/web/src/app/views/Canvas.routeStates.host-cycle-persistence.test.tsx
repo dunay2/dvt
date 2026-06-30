@@ -1,6 +1,7 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useOperationalDrawerContributionStore } from '../components/shell/operationalDrawerContributionStore';
 import type { NodeKindRegistration } from '../plugins/nodeTypeContracts';
 import { canvasViewCopy } from './canvas/copy';
 import { buildCanvasHostCycleControllerState } from './Canvas.test.hostCycleScenario';
@@ -253,11 +254,12 @@ describe('Canvas route host-cycle persistence', () => {
       kindLabel: 'Transformation',
     });
 
-    const previewCommand = harness.container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-context-preview-execution-plan-command"]'
-    );
-    expect(previewCommand).not.toBeNull();
-    previewCommand?.click();
+    const previewContribution = useOperationalDrawerContributionStore.getState().contribution;
+    expect(previewContribution?.source).toBe('canvas');
+    expect(previewContribution?.preview.canPreview).toBe(true);
+    await act(async () => {
+      previewContribution?.preview.onPreviewExecutionPlan();
+    });
     await harness.render();
 
     expect(handlePreviewExecutionPlan).toHaveBeenCalledTimes(1);
