@@ -9,6 +9,7 @@ const {
   buildWorkboard,
   parseArgs,
   resolveLaneSource,
+  summarizeLane,
 } = require('./generate-workboard.cjs');
 
 function writeLaneFixture(root, status = 'queued') {
@@ -225,6 +226,30 @@ test('resolveLaneSource fails closed when the reachable planning DB is stale', a
       ),
     /Planning DB is reachable but stale/
   );
+});
+
+test('summarizeLane derives numeric progress from effective tasks over stale lane summaries', () => {
+  const summary = summarizeLane({
+    lane_id: 'A',
+    title: 'Lane A',
+    verification_summary: {
+      total_tasks: 124,
+      total_effort_points: 369,
+      completed_weighted_points: 315.89,
+      lane_progress_pct: 86,
+      verified_on: '2026-05-07',
+    },
+    tasks: [
+      { task_id: 'A-1', status: 'done', effort_points: 3, progress_pct: 100 },
+      { task_id: 'A-2', status: 'done', effort_points: 2, progress_pct: 100 },
+    ],
+  });
+
+  assert.equal(summary.total_tasks, 2);
+  assert.equal(summary.total_effort_points, 5);
+  assert.equal(summary.completed_weighted_points, 5);
+  assert.equal(summary.lane_progress_pct, 100);
+  assert.equal(summary.verified_on, '2026-05-07');
 });
 
 test('workboard output names the active source of generated task state', () => {
