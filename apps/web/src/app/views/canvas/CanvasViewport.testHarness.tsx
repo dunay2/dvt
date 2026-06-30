@@ -22,11 +22,6 @@ type MockReactFlowProps = Readonly<{
 }> &
   Record<string, unknown>;
 
-type MockBackgroundProps = Readonly<{
-  color?: string;
-  gap: number;
-}>;
-
 type MockMiniMapProps = Readonly<{
   nodeColor: (node: { data?: unknown }) => string;
   pannable?: boolean;
@@ -44,14 +39,6 @@ vi.mock('@xyflow/react', () => {
   function MockReactFlow({ children, ...props }: MockReactFlowProps): JSX.Element {
     xyflowState.lastReactFlowProps = props;
     return <div data-testid="react-flow">{children}</div>;
-  }
-
-  function MockBackground({ color, gap }: MockBackgroundProps): JSX.Element {
-    return (
-      <div data-testid="background">
-        color:{color ?? 'none'}|gap:{gap}
-      </div>
-    );
   }
 
   function MockControls(): JSX.Element {
@@ -81,7 +68,6 @@ vi.mock('@xyflow/react', () => {
 
   return {
     ReactFlow: MockReactFlow,
-    Background: MockBackground,
     Controls: MockControls,
     MiniMap: MockMiniMap,
     useReactFlow: () => ({
@@ -131,8 +117,6 @@ export function buildCanvasViewportProps(
     onCreateAuthoringNode: vi.fn(),
     importedNodeFocusIds: [],
     onImportedNodeFocusComplete: vi.fn(),
-    canPreviewExecutionPlan: false,
-    onPreviewExecutionPlan: vi.fn(),
     canOpenCanvasSettings: false,
     onOpenCanvasSettings: vi.fn(),
     ...overrides,

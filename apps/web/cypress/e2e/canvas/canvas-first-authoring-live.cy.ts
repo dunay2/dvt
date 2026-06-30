@@ -187,6 +187,7 @@ describe('Canvas first-authoring live protected runtime', () => {
       cy.get('[data-slot="canvas-empty-state"]').should('be.visible');
       cy.contains('button', /^Add first /).should('not.exist');
       openCanvasContextMenuAt(360, 260);
+      clickCanvasContextMenuItem('Add...');
       clickCanvasContextMenuItem(variant.id === 'dbt' ? 'Add source' : 'Create source node');
       waitForDraftSaveSettled();
 

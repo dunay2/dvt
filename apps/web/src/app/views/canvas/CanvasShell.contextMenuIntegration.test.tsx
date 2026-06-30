@@ -9,8 +9,6 @@ import {
   getCanvasShellState,
   type CanvasShellPropsOverrides,
 } from './CanvasShell.testHarness';
-import { useUiLayoutStore } from '../../stores/uiLayoutStore';
-import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { CanvasShellProps } from './canvasShell.types';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 
@@ -103,9 +101,8 @@ describe('CanvasShell context menu integration', () => {
     expectMenuClosed();
   });
 
-  it('routes canvas validation to the operational drawer without previewing execution', async () => {
+  it('keeps validation and execution preview out of the background root menu', async () => {
     const onPreviewExecutionPlan = vi.fn();
-    useUiLayoutStore.setState({ bottomDrawerHeight: 0, bottomDrawerVisible: false });
 
     await renderShell({
       chromeCommands: { onPreviewExecutionPlan },
@@ -114,21 +111,20 @@ describe('CanvasShell context menu integration', () => {
     const presenter = getContextMenuPresenter();
 
     await act(async () => {
-      presenter.handleCanvasAction({
-        action: 'validate-graph',
-        label: 'Validate graph',
-      });
+      presenter.handlePaneContextMenu({
+        preventDefault: vi.fn(),
+        clientX: 520,
+        clientY: 360,
+      } as unknown as React.MouseEvent<Element>);
     });
 
+    const menuText = container.querySelector('[data-slot="canvas-context-menu"]')?.textContent;
+    expect(menuText).not.toContain('Validate graph');
+    expect(menuText).not.toContain('Preview execution plan');
     expect(onPreviewExecutionPlan).not.toHaveBeenCalled();
-    expect(useUiLayoutStore.getState()).toMatchObject({
-      bottomDrawerHeight: 160,
-      bottomDrawerVisible: true,
-    });
-    expect(useOperationalDrawerContributionStore.getState().activeTab).toBe('problems');
   });
 
-  it('keeps execution preview available from the canvas menu when readiness is blocked', async () => {
+  it('opens the add-node catalog from the rendered background menu item', async () => {
     const onPreviewExecutionPlan = vi.fn();
 
     await renderShell({
@@ -143,49 +139,22 @@ describe('CanvasShell context menu integration', () => {
         clientX: 520,
         clientY: 360,
       } as unknown as React.MouseEvent<Element>);
+    });
+
+    const addItem = findMenuItem('Add...');
+    expect(addItem).toBeDefined();
+
+    await act(async () => {
+      addItem?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
     expect(container.querySelector('[data-slot="canvas-context-menu"]')?.textContent).toContain(
-      'Preview execution plan'
+      'Add source'
     );
-
     expect(onPreviewExecutionPlan).not.toHaveBeenCalled();
   });
 
-  it('dispatches execution preview from the rendered canvas menu item', async () => {
-    const onPreviewExecutionPlan = vi.fn();
-
-    await renderShell({
-      chromeCommands: { onPreviewExecutionPlan },
-      chromeState: { canPlanGraph: false },
-    });
-    const presenter = getContextMenuPresenter();
-
-    await act(async () => {
-      presenter.handlePaneContextMenu({
-        preventDefault: vi.fn(),
-        clientX: 520,
-        clientY: 360,
-      } as unknown as React.MouseEvent<Element>);
-    });
-
-    const previewItem = Array.from(
-      container.querySelectorAll<HTMLButtonElement>(
-        '[data-slot="canvas-context-menu"] [role="menuitem"]'
-      )
-    ).find((element) => element.textContent === 'Preview execution plan');
-
-    expect(previewItem).toBeDefined();
-
-    await act(async () => {
-      previewItem?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    });
-
-    expect(onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
-    expectMenuClosed();
-  });
-
-  it('does not expose execution preview when route permissions block planning', async () => {
+  it('does not expose execution preview when route permissions allow planning', async () => {
     const onPreviewExecutionPlan = vi.fn();
 
     await renderShell({
@@ -212,13 +181,14 @@ describe('CanvasShell context menu integration', () => {
       'Preview execution plan'
     );
 
-    await act(async () => {
-      presenter.handleCanvasAction({
-        action: 'preview-execution-plan',
-        label: 'Preview execution plan',
-      });
-    });
-
-    expect(onPreviewExecutionPlan).toHaveBeenCalledTimes(1);
+    expect(onPreviewExecutionPlan).not.toHaveBeenCalled();
   });
+
+  function findMenuItem(label: string): HTMLButtonElement | undefined {
+    return Array.from(
+      container.querySelectorAll<HTMLButtonElement>(
+        '[data-slot="canvas-context-menu"] [role="menuitem"]'
+      )
+    ).find((element) => element.textContent === label);
+  }
 });

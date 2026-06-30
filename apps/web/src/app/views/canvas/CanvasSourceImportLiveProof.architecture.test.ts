@@ -35,6 +35,7 @@ describe('Canvas source import live proof architecture', () => {
     expect(cypressSpecSource).toContain('assertLiveFirstAuthoringDraftScopeIsClean');
     expect(cypressSpecSource).toContain('readLiveGraphDraft(');
     expect(cypressSpecSource).toContain('openCanvasContextMenuAt');
+    expect(cypressSpecSource).toContain("clickCanvasContextMenuItem('Add...')");
     expect(cypressSpecSource).toContain("clickCanvasContextMenuItem('Add source')");
     expect(cypressSpecSource).toContain('source-import-connection-option');
     expect(cypressSpecSource).toContain('data-source-import-table');

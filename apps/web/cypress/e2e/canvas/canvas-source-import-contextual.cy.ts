@@ -101,6 +101,7 @@ describe('Canvas contextual source import', () => {
 
     openCanvasContextMenuAt(520, 300);
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
+    clickCanvasContextMenuItem('Add...');
     clickCanvasContextMenuItem('Add source');
 
     cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');

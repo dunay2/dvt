@@ -3,8 +3,10 @@ import type { CSSProperties, ReactElement } from 'react';
 
 import { resolveNodeKindRegistration } from '../nodeTypeRegistry';
 import type { NodeRendererProps } from '../contracts/NodeRendering';
-import { graphStatusDotClasses, graphStatusRingClasses } from './graphVisualTokens';
+import { graphStatusRingClasses } from './graphVisualTokens';
+import { buildGraphNodeCardPlayAction } from './graphNodeCardActions';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
+import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
 import { GraphNodeCardView } from './GraphNodeCardView';
 
 type ColumnMeta = {
@@ -48,7 +50,6 @@ export function GraphNodeRenderer({
   const kindMeta = resolveNodeKindRegistration(node.kind);
 
   const statusRing = graphStatusRingClasses[node.status] ?? '';
-  const statusDot = graphStatusDotClasses[node.status] ?? graphStatusDotClasses.idle;
   const dimmed = overlayDecoration?.dimmed ?? false;
   const overlayProps = buildOverlayProps(
     overlayDecoration?.borderColor,
@@ -61,6 +62,8 @@ export function GraphNodeRenderer({
         ? data.type
         : kindMeta.label;
   const cardModel = buildGraphNodeCardReadModel(node, data, graphNodeCardStrategies);
+  const playAction = buildGraphNodeCardPlayAction({ nodeId: node.id, data });
+  const openOperationalDetails = data.onOpenOperationalDetails;
   const columns = resolveColumns(data, node.metadata);
   const showColumns =
     data.showColumns === true &&
@@ -77,12 +80,19 @@ export function GraphNodeRenderer({
       icon={kindMeta.icon}
       iconColor={kindMeta.minimapColor}
       borderClass={kindMeta.borderClass}
-      statusDotClass={statusDot}
       statusRingClass={statusRing}
       selected={selected}
       hovered={hovered}
       dimmed={dimmed}
       overlayStyle={overlayProps.style}
+      playAction={playAction}
+      onOpenOperationalDetails={
+        typeof openOperationalDetails === 'function'
+          ? (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+              openOperationalDetails(detail, anchorRect);
+            }
+          : undefined
+      }
     />
   );
 }

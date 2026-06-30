@@ -1,0 +1,66 @@
+// @vitest-environment jsdom
+
+import React, { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { buildCanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
+import { CanvasNodeFloatingToolbarView } from './CanvasNodeFloatingToolbarView';
+
+describe('CanvasNodeFloatingToolbarView', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('renders the node floating toolbar with code, freeze, and overflow actions', () => {
+    const onOpenCode = vi.fn();
+    const model = buildCanvasNodeFloatingToolbarModel({
+      nodeId: 'model_orders',
+      nodeName: 'Orders model',
+      position: { x: 320, y: 160 },
+      onOpenCode,
+    });
+
+    act(() => {
+      root.render(<CanvasNodeFloatingToolbarView model={model} />);
+    });
+
+    const toolbar = document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]');
+    expect(toolbar).not.toBeNull();
+    expect(toolbar?.parentElement).toBe(document.body);
+    expect(toolbar?.classList.contains('fixed')).toBe(true);
+    expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-x')).toBe('320px');
+    expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-y')).toBe('160px');
+
+    expect(button('Código')).not.toBeNull();
+    expect(button('Código')?.classList.contains('cursor-pointer')).toBe(true);
+    expect(button('Congelar')?.getAttribute('aria-disabled')).toBe('true');
+    expect(button('Seleccionar para ejecución')).toBeNull();
+    expect(button('Más acciones')?.getAttribute('aria-disabled')).toBe('true');
+
+    act(() => {
+      button('Código')?.click();
+    });
+
+    expect(onOpenCode).toHaveBeenCalledWith('model_orders');
+  });
+
+  function button(label: string): HTMLButtonElement | null {
+    return document.body.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+  }
+});

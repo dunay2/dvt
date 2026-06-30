@@ -4,7 +4,7 @@
  */
 import {
   clickButtonNatively,
-  clickPreviewExecutionPlanFromCanvasContextMenu,
+  clickPreviewExecutionPlanFromOperationalDrawer,
   getVisibleCanvasNode,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
@@ -79,6 +79,7 @@ function waitForCompletedLiveRun(
 
 function openSourceImportFromCanvas(): void {
   cy.get('.react-flow__pane', { timeout: 20_000 }).rightclick(140, 500);
+  cy.contains('[role="menuitem"]', 'Add...', { timeout: 20_000 }).click();
   cy.contains('[role="menuitem"]', 'Add source', { timeout: 20_000 }).click();
 }
 
@@ -125,7 +126,7 @@ describe('Canvas preview-run live protected runtime', () => {
 
     selectCanvasClosure(['Source 1', 'SQL transform 1', 'Sink 1']);
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
+    clickPreviewExecutionPlanFromOperationalDrawer();
 
     cy.contains('Execution Preview', { timeout: 20_000 }).should('be.visible');
     cy.contains('Execution Preview identity').should('be.visible');

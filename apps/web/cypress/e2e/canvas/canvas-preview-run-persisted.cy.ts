@@ -1,7 +1,7 @@
 import { canvasViewCopy } from '../../../src/app/views/canvas/canvasCopyCatalog';
 import {
   clickButtonNatively,
-  clickPreviewExecutionPlanFromCanvasContextMenu,
+  clickPreviewExecutionPlanFromOperationalDrawer,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { waitForSelectedClosurePreviewArtifacts } from '../../support/canvasPreviewArtifacts';
@@ -44,7 +44,7 @@ describe('Canvas preview-run persisted path', () => {
 
     selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
+    clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
@@ -84,7 +84,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
+    clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();
@@ -113,7 +113,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.get('[data-slot="shell-menu-navigation-link"][href="/canvas"]').should('be.visible').click();
     cy.location('pathname').should('eq', '/canvas');
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
+    clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(2);
@@ -153,7 +153,7 @@ describe('Canvas preview-run persisted path', () => {
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
 
-    clickPreviewExecutionPlanFromCanvasContextMenu();
+    clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();
     waitForE2eApiCall('/plans/preview', 'POST');
     assertPreviewPlanRequest();

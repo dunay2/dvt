@@ -57,7 +57,7 @@ describe('CanvasViewport', () => {
     expect(container.querySelectorAll('button')).toHaveLength(0);
     expect(viewportDataset?.canvasPalette).toBe(normalizedCanvasPalette);
     expect(viewportStyle.getPropertyValue('--canvas-surface')).toBe(expectedPaletteTokens.surface);
-    expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe(expectedPaletteTokens.grid);
+    expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe('#94a3b8');
     expect(viewportStyle.getPropertyValue('--canvas-grid-gap')).toBe('32px');
     expect(xyflowState.miniMapNodeColor).toBeTypeOf('function');
     expect(xyflowState.miniMapNodeColor?.({ data: { pluginKind: 'dbt:model' } })).toBe('#22c55e');
@@ -74,9 +74,7 @@ describe('CanvasViewport', () => {
       snapToGrid: false,
       snapGrid: [32, 32],
     });
-    expect(container.querySelector('[data-testid="background"]')?.textContent).toBe(
-      'color:#94a3b8|gap:32'
-    );
+    expect(container.querySelector('[data-testid="background"]')).toBeNull();
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
     expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
     expect(xyflowState.miniMapClassName).toBe('rounded-lg');
@@ -152,7 +150,7 @@ describe('CanvasViewport', () => {
     expect(container.textContent).toContain('Canvas settings');
   });
 
-  it('uses the governed grid preferences for background visibility, color, and snap policy', async () => {
+  it('uses one governed CSS grid layer for visibility, color, size, and snap policy', async () => {
     await renderViewport({
       gridSize: 16,
       canvasGridVisible: true,
@@ -160,9 +158,13 @@ describe('CanvasViewport', () => {
       canvasSnapToGrid: true,
     });
 
-    expect(container.querySelector('[data-testid="background"]')?.textContent).toBe(
-      'color:#f97316|gap:16'
-    );
+    const viewport = container.querySelector(
+      '[data-testid="canvas-viewport"]'
+    ) as HTMLDivElement | null;
+
+    expect(container.querySelector('[data-testid="background"]')).toBeNull();
+    expect(viewport?.style.getPropertyValue('--canvas-grid')).toBe('#f97316');
+    expect(viewport?.style.getPropertyValue('--canvas-grid-gap')).toBe('16px');
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       snapToGrid: true,
       snapGrid: [16, 16],
@@ -176,7 +178,12 @@ describe('CanvasViewport', () => {
       canvasSnapToGrid: true,
     });
 
+    const viewport = container.querySelector(
+      '[data-testid="canvas-viewport"]'
+    ) as HTMLDivElement | null;
+
     expect(container.querySelector('[data-testid="background"]')).toBeNull();
+    expect(viewport?.style.getPropertyValue('--canvas-grid')).toBe('transparent');
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       snapToGrid: true,
       nodesDraggable: true,

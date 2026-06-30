@@ -70,9 +70,14 @@ describe('CanvasViewport context menus', () => {
     expect(preventDefault).toHaveBeenCalledTimes(1);
     expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
 
-    const createButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Add source')
-    );
+    const addCatalogButton = findButton('Add...');
+    expect(addCatalogButton).toBeDefined();
+
+    await act(async () => {
+      addCatalogButton?.click();
+    });
+
+    const createButton = findButton('Add source');
     expect(createButton).toBeDefined();
 
     await act(async () => {
@@ -105,7 +110,8 @@ describe('CanvasViewport context menus', () => {
     });
 
     expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
-    expect(getMenuText()).toContain('Add source');
+    expect(getMenuText()).toContain('Add...');
+    expect(getMenuText()).not.toContain('Add source');
   });
 
   it('opens the governed context menu even when React Flow already prevented the native menu', async () => {
@@ -131,7 +137,8 @@ describe('CanvasViewport context menus', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(xyflowState.screenToFlowPosition).toHaveBeenCalledWith({ x: 480, y: 320 });
-    expect(getMenuText()).toContain('Add source');
+    expect(getMenuText()).toContain('Add...');
+    expect(getMenuText()).not.toContain('Add source');
   });
 
   it('keeps the background context menu open through a right-button document pointer event', async () => {
@@ -150,10 +157,11 @@ describe('CanvasViewport context menus', () => {
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
   });
 
-  it('keeps the Add source action clickable after the browser context-menu echo sequence', async () => {
+  it('keeps the Add catalog flow clickable after the browser context-menu echo sequence', async () => {
     const onOpenSourceImport = vi.fn();
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     await renderViewport({
-      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+      authoringNodeKinds: [sourceKind],
       canOpenSourceImport: true,
       onOpenSourceImport,
       onCreateAuthoringNode: vi.fn(),
@@ -195,9 +203,14 @@ describe('CanvasViewport context menus', () => {
       } as unknown as React.MouseEvent<Element>);
     });
 
-    const addSourceButton = Array.from(container.querySelectorAll('button')).find(
-      (button) => button.textContent?.trim() === 'Add source'
-    );
+    const addCatalogButton = findButton('Add...');
+    expect(addCatalogButton).toBeDefined();
+
+    await act(async () => {
+      addCatalogButton?.click();
+    });
+
+    const addSourceButton = findButton('Add source');
     expect(addSourceButton).toBeDefined();
 
     await act(async () => {
@@ -206,4 +219,10 @@ describe('CanvasViewport context menus', () => {
 
     expect(onOpenSourceImport).toHaveBeenCalledWith({ x: 580, y: 280 });
   });
+
+  function findButton(label: string): HTMLButtonElement | undefined {
+    return Array.from(container.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.textContent?.trim().startsWith(label) === true
+    );
+  }
 });

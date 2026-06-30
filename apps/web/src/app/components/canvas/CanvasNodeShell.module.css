@@ -4,8 +4,45 @@
 }
 
 .portHandle {
-  width: 0.75rem !important;
-  height: 0.75rem !important;
-  border: 2px solid #fff !important;
-  background: #9ca3af !important;
+  width: 1.75rem !important;
+  height: 1.75rem !important;
+  border: 0 !important;
+  background: transparent !important;
+  cursor: crosshair;
+  --node-port-ring: #94a3b8;
+  --node-port-fill: #111827;
+}
+
+.portHandle::before {
+  content: '';
+  position: absolute;
+  inset: 0.35rem;
+  border-radius: 9999px;
+  border: 2px solid var(--node-port-ring);
+  background: var(--node-port-fill);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--node-port-ring) 18%, transparent);
+}
+
+.portHandle:hover::before {
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--node-port-ring) 26%, transparent);
+}
+
+.portHandle[data-tone='source'] {
+  --node-port-ring: #a855f7;
+  --node-port-fill: #171225;
+}
+
+.portHandle[data-tone='model'] {
+  --node-port-ring: #3b82f6;
+  --node-port-fill: #0b1324;
+}
+
+.portHandle[data-tone='test'] {
+  --node-port-ring: #ef4444;
+  --node-port-fill: #1f1114;
+}
+
+.portHandle[data-tone='output'] {
+  --node-port-ring: #22c55e;
+  --node-port-fill: #0d1b13;
 }

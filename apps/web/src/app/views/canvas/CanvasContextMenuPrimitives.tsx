@@ -55,12 +55,14 @@ export function CanvasContextMenuSection({
 }
 
 type CanvasContextMenuItemProps = Readonly<{
-  label: string;
+  label: ReactNode;
+  title?: string;
   onSelect: () => void;
 }>;
 
 export function CanvasContextMenuItem({
   label,
+  title,
   onSelect,
 }: CanvasContextMenuItemProps): JSX.Element {
   return (
@@ -68,6 +70,7 @@ export function CanvasContextMenuItem({
       type="button"
       role="menuitem"
       className={CANVAS_CONTEXT_MENU_ITEM_CLASS_NAME}
+      title={title}
       onClick={onSelect}
     >
       {label}

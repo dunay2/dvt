@@ -3,12 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import {
+  buildCanvasAddNodeCatalogMenuModel,
   buildCanvasContextMenuModel,
   buildCanvasEdgeContextRemovalChange,
 } from './canvasInteractionCommandSurface';
 
 describe('canvasInteractionCommandSurface', () => {
-  it('offers spatial add commands for an editable background context menu', () => {
+  it('offers only the add catalog command for an editable background context menu', () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     const modelKind = buildTestNodeKind('dbt:model', 'Model');
     const model = buildCanvasContextMenuModel({
@@ -22,19 +23,17 @@ describe('canvasInteractionCommandSurface', () => {
     });
 
     expect(model).toMatchObject({
+      surface: 'root',
       kind: 'pane',
       screenPosition: { x: 480, y: 320 },
       flowPosition: { x: 720, y: 180 },
-      canvasActions: [],
-      createNodeActions: [
-        { action: 'create-node', label: 'Add source', registration: sourceKind },
-        { action: 'create-node', label: 'Add model', registration: modelKind },
-      ],
+      canvasActions: [{ action: 'open-add-node-catalog', label: 'Add...' }],
+      createNodeActions: [],
       edgeActions: [],
     });
   });
 
-  it('offers source import as a canvas action only when the editable source rail is available', () => {
+  it('keeps source import out of the background root menu', () => {
     const sourceKind = buildTestNodeKind('dbt:source', 'Source');
     const model = buildCanvasContextMenuModel({
       target: {
@@ -43,16 +42,78 @@ describe('canvasInteractionCommandSurface', () => {
         flowPosition: { x: 720, y: 180 },
       },
       canMutateGraph: true,
-      canOpenSourceImport: true,
       authoringNodeKinds: [sourceKind],
     });
 
-    expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
+    expect(model.canvasActions).toEqual([{ action: 'open-add-node-catalog', label: 'Add...' }]);
     expect(model.createNodeActions).toEqual([]);
   });
 
-  it('keeps source creation behind the source import rail to avoid duplicate canvas actions', () => {
+  it('projects categorized add-node catalog items separately from the root menu', () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const model = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: buildCanvasContextMenuModel({
+        target: {
+          kind: 'pane',
+          screenPosition: { x: 480, y: 320 },
+          flowPosition: { x: 720, y: 180 },
+        },
+        canMutateGraph: true,
+        authoringNodeKinds: [sourceKind],
+      }),
+      authoringNodeKinds: [sourceKind],
+    });
+
+    expect(model?.surface).toBe('add-node-catalog');
+    expect(model?.canvasActions).toEqual([]);
+    expect(model?.createNodeActions).toEqual([
+      { action: 'create-node', label: 'Add source', registration: sourceKind },
+    ]);
+  });
+
+  it('keeps source import as a categorized add-node catalog action when the source rail is available', () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    const modelKind = buildTestNodeKind('dbt:model', 'Model');
+    const model = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: buildCanvasContextMenuModel({
+        target: {
+          kind: 'pane',
+          screenPosition: { x: 480, y: 320 },
+          flowPosition: { x: 720, y: 180 },
+        },
+        canMutateGraph: true,
+        authoringNodeKinds: [sourceKind, modelKind],
+      }),
+      authoringNodeKinds: [sourceKind, modelKind],
+      canOpenSourceImport: true,
+    });
+
+    expect(model?.surface).toBe('add-node-catalog');
+    expect(model?.canvasActions).toEqual([]);
+    expect(model?.catalogActions).toEqual([
+      { action: 'open-source-import', label: 'Add source', registration: sourceKind },
+      { action: 'create-node', label: 'Add model', registration: modelKind },
+    ]);
+  });
+
+  it('does not build an add-node catalog from an edge context', () => {
+    const model = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: buildCanvasContextMenuModel({
+        target: {
+          kind: 'edge',
+          edgeId: 'edge-source-model',
+          screenPosition: { x: 480, y: 320 },
+        },
+        canMutateGraph: true,
+        authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+      }),
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+    });
+
+    expect(model).toBeNull();
+  });
+
+  it('does not expose validation or preview from the background root menu', () => {
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -60,15 +121,14 @@ describe('canvasInteractionCommandSurface', () => {
         flowPosition: { x: 720, y: 180 },
       },
       canMutateGraph: true,
-      canOpenSourceImport: true,
-      authoringNodeKinds: [sourceKind],
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     });
 
-    expect(model.canvasActions).toEqual([{ action: 'open-source-import', label: 'Add source' }]);
+    expect(model.canvasActions).toEqual([{ action: 'open-add-node-catalog', label: 'Add...' }]);
     expect(model.createNodeActions).toEqual([]);
   });
 
-  it('offers execution preview from the canvas menu independently from graph mutation', () => {
+  it('does not show add catalog when graph mutation is unavailable', () => {
     const model = buildCanvasContextMenuModel({
       target: {
         kind: 'pane',
@@ -76,15 +136,10 @@ describe('canvasInteractionCommandSurface', () => {
         flowPosition: { x: 720, y: 180 },
       },
       canMutateGraph: false,
-      canValidateGraph: true,
-      canPreviewExecutionPlan: true,
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     });
 
-    expect(model.canvasActions).toEqual([
-      { action: 'validate-graph', label: 'Validate graph' },
-      { action: 'preview-execution-plan', label: 'Preview execution plan' },
-    ]);
+    expect(model.canvasActions).toEqual([]);
     expect(model.createNodeActions).toEqual([]);
     expect(model.edgeActions).toEqual([]);
   });
@@ -98,8 +153,6 @@ describe('canvasInteractionCommandSurface', () => {
       },
       canMutateGraph: true,
       canOpenCanvasSettings: true,
-      canValidateGraph: true,
-      canPreviewExecutionPlan: true,
       authoringNodeKinds: [
         buildTestNodeKind('dvt:source', 'Source'),
         buildTestNodeKind('dvt:sql_transform', 'SQL transform'),
@@ -108,15 +161,10 @@ describe('canvasInteractionCommandSurface', () => {
     });
 
     expect(model.canvasActions).toEqual([
-      { action: 'validate-graph', label: 'Validate graph' },
-      { action: 'preview-execution-plan', label: 'Preview execution plan' },
+      { action: 'open-add-node-catalog', label: 'Add...' },
       { action: 'open-canvas-settings', label: 'Canvas settings' },
     ]);
-    expect(model.createNodeActions.map((action) => action.label)).toEqual([
-      'Add source',
-      'Add transformation',
-      'Add output',
-    ]);
+    expect(model.createNodeActions).toEqual([]);
     expect(JSON.stringify(model)).not.toContain('Edit SQL');
     expect(JSON.stringify(model)).not.toContain('Properties');
     expect(JSON.stringify(model)).not.toContain('Inputs');
@@ -144,23 +192,26 @@ describe('canvasInteractionCommandSurface', () => {
       allowsOutgoing: false,
     };
 
-    const model = buildCanvasContextMenuModel({
-      target: {
-        kind: 'pane',
-        screenPosition: { x: 480, y: 320 },
-        flowPosition: { x: 720, y: 180 },
-      },
-      canMutateGraph: true,
+    const model = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: buildCanvasContextMenuModel({
+        target: {
+          kind: 'pane',
+          screenPosition: { x: 480, y: 320 },
+          flowPosition: { x: 720, y: 180 },
+        },
+        canMutateGraph: true,
+        authoringNodeKinds: [modelKind, transformKind, testKind, outputKind],
+      }),
       authoringNodeKinds: [modelKind, transformKind, testKind, outputKind],
     });
 
-    expect(model.createNodeActions.map((action) => action.label)).toEqual([
+    expect(model?.createNodeActions.map((action) => action.label)).toEqual([
       'Add model',
       'Add transformation',
       'Add test',
       'Add output',
     ]);
-    expect(model.createNodeActions.map((action) => action.registration.kind)).toEqual([
+    expect(model?.createNodeActions.map((action) => action.registration.kind)).toEqual([
       'dbt:model',
       'dvt:sql_transform',
       'dbt:test',
@@ -197,7 +248,6 @@ describe('canvasInteractionCommandSurface', () => {
         flowPosition: { x: 720, y: 180 },
       },
       canMutateGraph: false,
-      canOpenSourceImport: true,
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
     });
 
