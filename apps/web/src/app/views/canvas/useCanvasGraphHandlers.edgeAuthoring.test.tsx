@@ -109,9 +109,9 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('rejects cross-plugin edges when a plugin is unavailable at runtime', async () => {
+  it('uses visible draft node ports when runtime capabilities omit a node plugin', async () => {
     evaluateGraphHandlerConnectionWith((source, target, _currentEdges, pluginPortMap) => {
-      if (pluginPortMap.has(source.pluginId)) {
+      if (pluginPortMap.has(source.pluginId) && pluginPortMap.has(target.pluginId)) {
         return { allowed: true };
       }
 
@@ -128,24 +128,24 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       canEditEdges: true,
       runtimeCapabilities: {
         plugins: {
-          dbt: { available: false, reason: 'disabled in test' },
+          'dvt.warehouse-source': { available: false, reason: 'source import disabled in test' },
         },
       },
       canonicalNodes: [
         {
-          id: 'dbt-source',
-          name: 'dbt-source',
-          pluginId: 'dbt',
-          kind: 'dbt:source',
+          id: 'warehouse-source',
+          name: 'warehouse-source',
+          pluginId: 'dvt.warehouse-source',
+          kind: 'dvt:source',
           role: 'input',
           status: 'idle',
           tags: [],
         },
         {
-          id: 'dvt-transform',
-          name: 'dvt-transform',
-          pluginId: 'dvt',
-          kind: 'dvt:sql_transform',
+          id: 'dbt-model',
+          name: 'dbt-model',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
           role: 'transform',
           status: 'idle',
           tags: [],
@@ -153,15 +153,20 @@ describe('useCanvasGraphHandlers edge authoring', () => {
       ],
       nodes: [
         {
-          id: 'dbt-source',
-          data: { name: 'dbt-source', pluginKind: 'dbt:source', role: 'input', status: 'idle' },
+          id: 'warehouse-source',
+          data: {
+            name: 'warehouse-source',
+            pluginKind: 'dvt:source',
+            role: 'input',
+            status: 'idle',
+          },
           position: { x: 0, y: 0 },
         },
         {
-          id: 'dvt-transform',
+          id: 'dbt-model',
           data: {
-            name: 'dvt-transform',
-            pluginKind: 'dvt:sql_transform',
+            name: 'dbt-model',
+            pluginKind: 'dbt:model',
             role: 'transform',
             status: 'idle',
           },
@@ -173,17 +178,22 @@ describe('useCanvasGraphHandlers edge authoring', () => {
 
     act(() => {
       harness.latest()?.onConnect({
-        source: 'dbt-source',
+        source: 'warehouse-source',
         sourceHandle: null,
-        target: 'dvt-transform',
+        target: 'dbt-model',
         targetHandle: null,
       });
     });
 
-    expect(toastState.error).toHaveBeenCalledWith(
-      'No compatible data port bridge between dbt (input) and dvt (transform).'
-    );
-    expect(harness.latest()?.confirmEdgeModal).toEqual({ open: false, edge: null });
+    expect(toastState.error).not.toHaveBeenCalled();
+    expect(harness.latest()?.confirmEdgeModal).toEqual({
+      open: true,
+      edge: {
+        source: 'warehouse-source',
+        target: 'dbt-model',
+        type: 'lineage',
+      },
+    });
 
     harness.cleanup();
   });
