@@ -41,6 +41,8 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
+    expect(model.title).toBe('Warehouse · public');
+    expect(model.technicalName).toBe('public.orders');
     expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
     expect(model.subtitle).toBe('warehouse.public.orders');
     expect(model.path).toBe('warehouse.public.orders');
@@ -195,6 +197,8 @@ describe('buildGraphNodeCardReadModel', () => {
       [dbtGraphNodeCardStrategy]
     );
 
+    expect(model.title).toBe('Raw · ERP');
+    expect(model.technicalName).toBe('src_erp_orders');
     expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
     expect(model.subtitle).toBe('RAW.ERP.ORDERS');
     expect(model.path).toBe('RAW.ERP.ORDERS');

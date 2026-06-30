@@ -81,7 +81,13 @@ export function GraphNodeCardView({
                 {...(iconColor ? { style: { color: iconColor } as CSSProperties } : {})}
               />
             )}
-            <span className={graphVisualClasses.nodeCardTitle}>{cardModel.title}</span>
+            <span
+              data-slot="graph-node-card-title"
+              className={graphVisualClasses.nodeCardTitle}
+              title={cardModel.technicalName ?? cardModel.title}
+            >
+              {cardModel.title}
+            </span>
           </div>
           <div className={graphVisualClasses.nodeCardHeaderActions}>
             <GraphNodeStatusChip status={cardModel.status} />

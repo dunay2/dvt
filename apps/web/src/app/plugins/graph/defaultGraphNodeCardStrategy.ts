@@ -13,6 +13,7 @@ import {
   resolveColumnCount,
   stringValue,
 } from './graphNodeCardStrategyUtils';
+import { buildGraphNodeTitlePresentation } from './graphNodeTitlePresentation';
 
 function buildDefaultCard(
   node: CanonicalNode,
@@ -20,6 +21,11 @@ function buildDefaultCard(
 ): GraphNodeCardReadModel {
   const metadata = metadataOf(node);
   const metrics: GraphNodeCardMetric[] = [];
+  const titlePresentation = buildGraphNodeTitlePresentation({
+    nodeName: node.name,
+    kind: node.kind,
+    metadata,
+  });
 
   pushMetric(
     metrics,
@@ -36,14 +42,15 @@ function buildDefaultCard(
   pushMetric(metrics, 'columns', 'Columns', resolveColumnCount(metadata, data));
 
   return {
-    title: node.name,
+    title: titlePresentation.title,
+    technicalName: titlePresentation.technicalName,
     subtitle: node.path ?? null,
     path: node.path ?? null,
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
     status: resolveNodeCardStatus(node, metadata, data),
     metrics,
     operationalMetrics: [],
-    operationalDetail: buildGraphNodeOperationalDetail(node.name, []),
+    operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, []),
   };
 }
 

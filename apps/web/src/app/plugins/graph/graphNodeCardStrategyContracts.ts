@@ -21,6 +21,7 @@ export type GraphNodeCardStatus = Readonly<{
 
 export type GraphNodeCardReadModel = Readonly<{
   title: string;
+  technicalName: string | null;
   subtitle: string | null;
   path: string | null;
   kindLabel: string;

@@ -10,6 +10,7 @@ import { GraphNodeCardView } from './GraphNodeCardView';
 const BASE_PROPS = {
   cardModel: {
     title: 'Orders model',
+    technicalName: 'orders_model',
     kindLabel: 'Model',
     subtitle: 'analytics',
     path: 'models/marts/orders.sql',
@@ -80,6 +81,7 @@ describe('GraphNodeCardView', () => {
           {...BASE_PROPS}
           cardModel={{
             title: 'Postgres · public',
+            technicalName: 'src_public_orders',
             kindLabel: 'Source',
             subtitle: 'warehouse.public.orders',
             path: 'models/sources/src_public.yml',
@@ -105,6 +107,10 @@ describe('GraphNodeCardView', () => {
     });
 
     expect(container.textContent).toContain('Postgres · public');
+    expect(container.textContent).not.toContain('src_public_orders');
+    expect(
+      container.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
+    ).toBe('src_public_orders');
     expect(container.textContent).toContain('Ready');
     expect(container.textContent).toContain('models/sources/src_public.yml');
     expect(container.textContent).toContain('postgres');
