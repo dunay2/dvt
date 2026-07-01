@@ -10444,6 +10444,33 @@ test('tracked migrations normalize Graph node card view file roles', () => {
   assert.doesNotMatch(roleMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Graph node card view presentation ownership', () => {
+  const migrations = readMigrationFiles();
+  const viewOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '420_graph_node_card_view_presentation_ownership.sql'
+  );
+
+  assert.ok(viewOwnershipMigration);
+  assert.match(viewOwnershipMigration.sql, /web\.component\.canvas\.GraphNodeCardView/);
+  assert.match(viewOwnershipMigration.sql, /frontend_component_local_components/);
+  assert.match(viewOwnershipMigration.sql, /frontend_component_local_files/);
+  assert.match(viewOwnershipMigration.sql, /frontend_component_validation_evidence/);
+  assert.match(viewOwnershipMigration.sql, /GraphNodeCardView\.tsx/);
+  assert.match(viewOwnershipMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(viewOwnershipMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(viewOwnershipMigration.sql, /GraphNodeStatusChip/);
+  assert.match(viewOwnershipMigration.sql, /GraphNodeMetricRow/);
+  assert.match(viewOwnershipMigration.sql, /GraphNodeTagList/);
+  assert.match(viewOwnershipMigration.sql, /GraphNodeOperationalRail/);
+  assert.match(viewOwnershipMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(viewOwnershipMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(
+    viewOwnershipMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.doesNotMatch(viewOwnershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Node workbench duplicate file ownership', () => {
   const migrations = readMigrationFiles();
   const ownershipMigration = migrations.find(
