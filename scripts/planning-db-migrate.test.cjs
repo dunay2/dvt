@@ -10697,6 +10697,25 @@ test('tracked migrations normalize Canvas node port hint symbol coverage', () =>
   assert.doesNotMatch(coverageMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node port handle keyboard focus hint', () => {
+  const migrations = readMigrationFiles();
+  const keyboardFocusMigration = migrations.find(
+    (migration) => migration.fileName === '455_canvas_node_port_handle_keyboard_focus.sql'
+  );
+
+  assert.ok(keyboardFocusMigration);
+  assert.match(keyboardFocusMigration.sql, /web\.component\.canvas\.CanvasNodePortHandle/);
+  assert.match(keyboardFocusMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(keyboardFocusMigration.sql, /CanvasNodePortHandle\.tsx/);
+  assert.match(keyboardFocusMigration.sql, /CanvasNodePortHandle\.test\.tsx/);
+  assert.match(keyboardFocusMigration.sql, /tabIndex/);
+  assert.match(keyboardFocusMigration.sql, /aria-describedby/);
+  assert.match(keyboardFocusMigration.sql, /doesNotOwnEdgeAdmission/);
+  assert.match(keyboardFocusMigration.sql, /EV-CANVAS-NODE-PORT-HANDLE-KEYBOARD-FOCUS-HINT/);
+  assert.doesNotMatch(keyboardFocusMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(keyboardFocusMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Canvas registry guard with extracted shell and port components', () => {
   const migrations = readMigrationFiles();
   const registryReconcileMigration = migrations.find(

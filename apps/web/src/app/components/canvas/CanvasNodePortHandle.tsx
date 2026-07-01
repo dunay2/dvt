@@ -56,6 +56,7 @@ export function CanvasNodePortHandle({
         data-port-compatibility={compatibility?.state}
         aria-label={label}
         aria-describedby={compatibilityHintId}
+        tabIndex={0}
         title={compatibility?.description}
         className={styles.portHandle}
       />

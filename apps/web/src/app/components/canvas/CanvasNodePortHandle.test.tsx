@@ -105,6 +105,7 @@ describe('CanvasNodePortHandle', () => {
 
     expect(handle).not.toBeNull();
     expect(hint).not.toBeNull();
+    expect(handle?.getAttribute('tabindex')).toBe('0');
     expect(hint?.textContent).toBe('Orders Model, Snapshot 1');
     expect(handle?.getAttribute('aria-describedby')).toBe(hint?.getAttribute('id'));
     expect(hint?.getAttribute('data-port')).toBe('source');
