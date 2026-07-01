@@ -28,6 +28,10 @@ export const canvasViewToolbarCopyEs = {
   canvasContextMenuCanvasSettingsLabel: 'Configuracion de canvas',
   canvasNodePortTargetLabel: 'Conectar puerto de entrada',
   canvasNodePortSourceLabel: 'Conectar puerto de salida',
+  canvasNodePortCompatibleWithPrefix: 'Compatible con',
+  canvasNodePortNoCompatibleNodesMessage: 'No hay nodos compatibles disponibles',
+  canvasNodePortBlockedMessage:
+    'Los nodos compatibles estan bloqueados por la politica actual del grafo',
   canvasAddNodeCatalogTitle: 'Anadir componente',
   canvasAddNodeCatalogSearchLabel: 'Buscar componentes',
   canvasAddNodeCatalogSearchPlaceholder: 'Buscar origen, modelo, transformacion, test, salida...',

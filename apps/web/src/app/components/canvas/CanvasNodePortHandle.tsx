@@ -5,12 +5,18 @@ import styles from './CanvasNodeShell.module.css';
 
 export type CanvasNodePortHandleKind = 'source' | 'target';
 export type CanvasNodePortTone = 'source' | 'model' | 'test' | 'output' | 'control';
+export type CanvasNodePortCompatibilityView = Readonly<{
+  state: 'available' | 'blocked' | 'unavailable';
+  compatibleNodeNames: readonly string[];
+  description: string;
+}>;
 
 type CanvasNodePortHandleProps = Readonly<{
   kind: CanvasNodePortHandleKind;
   id?: string;
   tone?: CanvasNodePortTone;
   label?: string;
+  compatibility?: CanvasNodePortCompatibilityView;
 }>;
 
 export function CanvasNodePortHandle({
@@ -18,6 +24,7 @@ export function CanvasNodePortHandle({
   id,
   tone = 'control',
   label,
+  compatibility,
 }: CanvasNodePortHandleProps): JSX.Element {
   return (
     <Handle
@@ -27,7 +34,9 @@ export function CanvasNodePortHandle({
       data-slot="canvas-node-port-handle"
       data-port={kind}
       data-tone={tone}
+      data-port-compatibility={compatibility?.state}
       aria-label={label}
+      title={compatibility?.description}
       className={styles.portHandle}
     />
   );

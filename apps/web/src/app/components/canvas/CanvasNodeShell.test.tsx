@@ -138,6 +138,46 @@ describe('CanvasNodeShell', () => {
     ]);
   });
 
+  it('renders graph ports with caller-owned compatibility state and descriptions', () => {
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <CanvasNodeShell
+            contextMenuModel={CONTEXT_MENU_MODEL}
+            shouldShowSourceHandle
+            shouldShowTargetHandle
+            sourcePortLabel="Outgoing port"
+            targetPortLabel="Incoming port"
+            sourcePortCompatibility={{
+              state: 'available',
+              compatibleNodeNames: ['Orders model'],
+              description: 'Compatible with Orders model',
+            }}
+            targetPortCompatibility={{
+              state: 'blocked',
+              compatibleNodeNames: [],
+              description: 'No compatible upstream nodes',
+            }}
+            onContextMenuAction={vi.fn()}
+          >
+            <div>Orders model</div>
+          </CanvasNodeShell>
+        </ReactFlowProvider>
+      );
+    });
+
+    const ports = Array.from(container.querySelectorAll('[data-slot="canvas-node-port-handle"]'));
+
+    expect(ports.map((port) => port.getAttribute('data-port-compatibility'))).toEqual([
+      'blocked',
+      'available',
+    ]);
+    expect(ports.map((port) => port.getAttribute('title'))).toEqual([
+      'No compatible upstream nodes',
+      'Compatible with Orders model',
+    ]);
+  });
+
   it('renders graph ports with stable React Flow handle ids', () => {
     act(() => {
       root.render(

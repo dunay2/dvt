@@ -21,7 +21,7 @@ import {
 } from '../canvasWorkspaceExplorerModel';
 import { cn } from '../ui/utils';
 import { CanvasNodeShell } from './CanvasNodeShell';
-import type { CanvasNodePortTone } from './CanvasNodePortHandle';
+import type { CanvasNodePortCompatibilityView, CanvasNodePortTone } from './CanvasNodePortHandle';
 import {
   buildCanvasNodeContextMenuModel,
   type CanvasNodeContextMenuActionId,
@@ -69,6 +69,10 @@ export interface DbtNodeData extends Record<string, unknown> {
   portLabels?: Readonly<{
     target: string;
     source: string;
+  }>;
+  portCompatibility?: Readonly<{
+    target: CanvasNodePortCompatibilityView;
+    source: CanvasNodePortCompatibilityView;
   }>;
 }
 
@@ -276,6 +280,8 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       targetHandleTone={portTone}
       sourcePortLabel={data.portLabels?.source}
       targetPortLabel={data.portLabels?.target}
+      sourcePortCompatibility={data.portCompatibility?.source}
+      targetPortCompatibility={data.portCompatibility?.target}
       onContextMenuAction={handleContextMenuAction}
       onOpenWorkbench={
         typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined

@@ -45,8 +45,16 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Proyecto');
     expect(canvasViewCopy.canvasNodePortTargetLabel).toBe('Connect incoming port');
     expect(canvasViewCopy.canvasNodePortSourceLabel).toBe('Connect outgoing port');
+    expect(canvasViewCopy.canvasNodePortCompatibleWithPrefix).toBe('Compatible with');
+    expect(canvasViewCopy.canvasNodePortBlockedMessage).toBe(
+      'Compatible nodes are blocked by the current graph policy'
+    );
     expect(spanishCopy.canvasNodePortTargetLabel).toBe('Conectar puerto de entrada');
     expect(spanishCopy.canvasNodePortSourceLabel).toBe('Conectar puerto de salida');
+    expect(spanishCopy.canvasNodePortCompatibleWithPrefix).toBe('Compatible con');
+    expect(spanishCopy.canvasNodePortNoCompatibleNodesMessage).toBe(
+      'No hay nodos compatibles disponibles'
+    );
     expect(spanishCopy.draftSyncedLabel).toBe('Borrador sincronizado');
     expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
     expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');

@@ -2,7 +2,9 @@
 import { useEdgesState, useNodesState, type Edge, type Node } from '@xyflow/react';
 import { useEffect, useMemo } from 'react';
 
+import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
+import { buildCanvasConnectionCompatibilityByNodeId } from './canvasConnectionCompatibilityPresenter';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProjection';
 
@@ -33,6 +35,7 @@ function projectViewportNodes(args: {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: PersistedNodePositions;
+  portCompatibilityByNodeId: ReturnType<typeof buildCanvasConnectionCompatibilityByNodeId>;
   fallbackNodesById?: ViewportNodeById;
 }): Node[] {
   const {
@@ -40,6 +43,7 @@ function projectViewportNodes(args: {
     canonicalNodesById,
     columnLevelLineageEnabled,
     persistedNodePositions,
+    portCompatibilityByNodeId,
     fallbackNodesById,
   } = args;
 
@@ -53,6 +57,7 @@ function projectViewportNodes(args: {
         canonicalNode,
         index,
         showColumns: columnLevelLineageEnabled,
+        portCompatibility: portCompatibilityByNodeId.get(canonicalNode.id),
         persistedPosition:
           liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
       });
@@ -138,6 +143,16 @@ function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean
   const tagsEqual =
     leftTags.length === rightTags.length &&
     leftTags.every((tag, index) => tag === rightTags[index]);
+  let portCompatibilityEqual = left.portCompatibility === right.portCompatibility;
+  if (!portCompatibilityEqual) {
+    try {
+      portCompatibilityEqual =
+        JSON.stringify(left.portCompatibility ?? null) ===
+        JSON.stringify(right.portCompatibility ?? null);
+    } catch {
+      portCompatibilityEqual = false;
+    }
+  }
 
   return (
     left.showColumns === right.showColumns &&
@@ -146,6 +161,7 @@ function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean
     left.path === right.path &&
     left.status === right.status &&
     tagsEqual &&
+    portCompatibilityEqual &&
     metadataEqual
   );
 }
@@ -158,6 +174,17 @@ export function useCanvasViewportGraphModel({
   columnLevelLineageEnabled,
   persistedNodePositions,
 }: UseCanvasViewportGraphModelArgs) {
+  const portCompatibilityByNodeId = useMemo(
+    () =>
+      buildCanvasConnectionCompatibilityByNodeId({
+        visibleNodeIds,
+        visibleEdges,
+        canonicalNodesById,
+        pluginPortMap: getPluginPortMap(),
+      }),
+    [canonicalNodesById, visibleEdges, visibleNodeIds]
+  );
+
   const initialNodes: Node[] = useMemo(
     () =>
       projectViewportNodes({
@@ -165,8 +192,15 @@ export function useCanvasViewportGraphModel({
         canonicalNodesById,
         columnLevelLineageEnabled,
         persistedNodePositions,
+        portCompatibilityByNodeId,
       }),
-    [canonicalNodesById, columnLevelLineageEnabled, persistedNodePositions, visibleNodeIds]
+    [
+      canonicalNodesById,
+      columnLevelLineageEnabled,
+      persistedNodePositions,
+      portCompatibilityByNodeId,
+      visibleNodeIds,
+    ]
   );
 
   const initialEdges: Edge[] = useMemo(
@@ -189,6 +223,7 @@ export function useCanvasViewportGraphModel({
         canonicalNodesById,
         columnLevelLineageEnabled,
         persistedNodePositions,
+        portCompatibilityByNodeId,
         fallbackNodesById: new Map(currentNodes.map((node) => [node.id, node])),
       });
 
@@ -198,6 +233,7 @@ export function useCanvasViewportGraphModel({
     canonicalNodesById,
     columnLevelLineageEnabled,
     persistedNodePositions,
+    portCompatibilityByNodeId,
     setNodes,
     visibleNodeIds,
   ]);
