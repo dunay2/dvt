@@ -157,15 +157,15 @@ export function GraphNodeCardView({
         )}
       </div>
 
-      <GraphNodeOperationalRail
-        metrics={cardModel.operationalMetrics}
-        ariaLabel={operationalDetail?.ariaLabel}
-        onOpen={
-          onOpenOperationalDetails == null || operationalDetail == null
-            ? undefined
-            : (anchorRect) => onOpenOperationalDetails(operationalDetail, anchorRect)
-        }
-      />
+      {onOpenOperationalDetails == null || operationalDetail == null ? (
+        <GraphNodeOperationalRail metrics={cardModel.operationalMetrics} />
+      ) : (
+        <GraphNodeOperationalRail
+          metrics={cardModel.operationalMetrics}
+          ariaLabel={operationalDetail.ariaLabel}
+          onOpen={(anchorRect) => onOpenOperationalDetails(operationalDetail, anchorRect)}
+        />
+      )}
     </div>
   );
 }

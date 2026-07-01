@@ -10348,6 +10348,69 @@ test('tracked migrations register Graph node operational rail aria model ownersh
   assert.doesNotMatch(railAriaMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node operational rail component test evidence', () => {
+  const migrations = readMigrationFiles();
+  const railTestMigration = migrations.find(
+    (migration) => migration.fileName === '429_graph_node_operational_rail_component_test.sql'
+  );
+
+  assert.ok(railTestMigration);
+  assert.match(railTestMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(railTestMigration.sql, /GraphNodeOperationalRail\.test\.tsx/);
+  assert.match(railTestMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(railTestMigration.sql, /EV-CANVAS-GRAPH-NODE-OPERATIONAL-RAIL-COMPONENT-TEST/);
+  assert.match(railTestMigration.sql, /GraphNodeOperationalRailInteractiveProps/);
+  assert.match(railTestMigration.sql, /GraphNodeOperationalRailStaticProps/);
+  assert.match(railTestMigration.sql, /Open source health metrics/);
+  assert.match(railTestMigration.sql, /suppliedAccessibleLabel/);
+  assert.match(railTestMigration.sql, /requiresSuppliedAriaLabel/);
+  assert.match(railTestMigration.sql, /keyboardOpen/);
+  assert.match(railTestMigration.sql, /stopPropagation/);
+  assert.match(railTestMigration.sql, /frontend_component_local_files/);
+  assert.match(railTestMigration.sql, /frontend_component_validation_evidence/);
+  assert.doesNotMatch(railTestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(railTestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Graph node operational rail base prop symbol', () => {
+  const migrations = readMigrationFiles();
+  const railBasePropsMigration = migrations.find(
+    (migration) => migration.fileName === '430_graph_node_operational_rail_base_props_symbol.sql'
+  );
+
+  assert.ok(railBasePropsMigration);
+  assert.match(railBasePropsMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(railBasePropsMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(railBasePropsMigration.sql, /GraphNodeOperationalRailBaseProps/);
+  assert.match(
+    railBasePropsMigration.sql,
+    /GraphNodeOperationalRail\.tsx#GraphNodeOperationalRailBaseProps/
+  );
+  assert.match(railBasePropsMigration.sql, /component-test:430/);
+  assert.doesNotMatch(railBasePropsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(railBasePropsMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Graph node operational rail contract prop symbols in manifest', () => {
+  const migrations = readMigrationFiles();
+  const railContractSymbolsMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '431_graph_node_operational_rail_contract_manifest_symbols.sql'
+  );
+
+  assert.ok(railContractSymbolsMigration);
+  assert.match(railContractSymbolsMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(railContractSymbolsMigration.sql, /raw_manifest/);
+  assert.match(railContractSymbolsMigration.sql, /symbols/);
+  assert.match(railContractSymbolsMigration.sql, /GraphNodeOperationalRailBaseProps/);
+  assert.match(railContractSymbolsMigration.sql, /GraphNodeOperationalRailInteractiveProps/);
+  assert.match(railContractSymbolsMigration.sql, /GraphNodeOperationalRailStaticProps/);
+  assert.match(railContractSymbolsMigration.sql, /presentation_contract/);
+  assert.match(railContractSymbolsMigration.sql, /requires_supplied_aria_label/);
+  assert.doesNotMatch(railContractSymbolsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(railContractSymbolsMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Canvas graph visual surface single-grid evidence', () => {
   const migrations = readMigrationFiles();
   const singleGridMigration = migrations.find(
