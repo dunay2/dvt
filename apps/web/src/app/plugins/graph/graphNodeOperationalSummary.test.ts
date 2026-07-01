@@ -45,6 +45,61 @@ describe('buildGraphNodeOperationalSummary', () => {
     expect(summary.detail?.rows).toBe(summary.metrics);
   });
 
+  it('projects source health metrics from recorded warehouse freshness data', () => {
+    const summary = buildGraphNodeOperationalSummary({
+      title: 'Postgres public',
+      metadata: {
+        freshnessMinutes: 12,
+        cadenceMinutes: 15,
+        throughputBytesPerMinute: 42 * 1024 * 1024,
+        datasetSizeBytes: 18.2 * 1024 * 1024 * 1024,
+        rowCount: 124_000_000,
+        schemaDriftStatus: 'ok',
+      },
+      data: {},
+      rowCount: 124_000_000,
+      byteSize: null,
+    });
+
+    expect(summary.metrics).toEqual([
+      { id: 'freshness', label: 'Freshness', value: '12 min' },
+      { id: 'cadence', label: 'Cadence', value: 'Every 15 min' },
+      { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
+      { id: 'size', label: 'Size', value: '18.2 GB' },
+    ]);
+    expect(summary.detail).toEqual({
+      title: 'Postgres public health',
+      ariaLabel: 'Open Postgres public health metrics',
+      rows: [
+        { id: 'freshness', label: 'Freshness', value: '12 min' },
+        { id: 'cadence', label: 'Cadence', value: 'Every 15 min' },
+        { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
+        { id: 'size', label: 'Size', value: '18.2 GB' },
+        { id: 'rows', label: 'Rows', value: '124M' },
+        { id: 'schema-drift', label: 'Schema drift', value: 'No drift detected' },
+      ],
+    });
+  });
+
+  it('projects detected schema drift without inventing missing source metrics', () => {
+    const summary = buildGraphNodeOperationalSummary({
+      title: 'Raw Orders',
+      metadata: {
+        schemaDriftStatus: 'detected',
+      },
+      data: {},
+      rowCount: null,
+      byteSize: null,
+    });
+
+    expect(summary.metrics).toEqual([]);
+    expect(summary.detail).toEqual({
+      title: 'Raw Orders health',
+      ariaLabel: 'Open Raw Orders health metrics',
+      rows: [{ id: 'schema-drift', label: 'Schema drift', value: 'Drift detected' }],
+    });
+  });
+
   it('does not invent placeholder metrics when operational data is absent', () => {
     const summary = buildGraphNodeOperationalSummary({
       title: 'Draft Transform',
