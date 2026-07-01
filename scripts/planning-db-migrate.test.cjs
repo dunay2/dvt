@@ -11131,6 +11131,34 @@ test('tracked migrations declare Graph node title presentation acronym helper sy
   assert.doesNotMatch(titleSymbolMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node title warehouse source identity', () => {
+  const migrations = readMigrationFiles();
+  const titleWarehouseSourceMigration = migrations.find(
+    (migration) => migration.fileName === '453_graph_node_title_warehouse_source_identity.sql'
+  );
+
+  assert.ok(titleWarehouseSourceMigration);
+  assert.match(
+    titleWarehouseSourceMigration.sql,
+    /web\.component\.canvas\.GraphNodeTitlePresentation/
+  );
+  assert.match(titleWarehouseSourceMigration.sql, /RenderCanvasGraphNodeTitlePresentation/);
+  assert.match(titleWarehouseSourceMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(titleWarehouseSourceMigration.sql, /dvt\.warehouse-source/);
+  assert.match(titleWarehouseSourceMigration.sql, /GraphNodeTitlePresentationInput\.pluginId/);
+  assert.match(titleWarehouseSourceMigration.sql, /warehouseSourceRelationPrecedence/);
+  assert.match(
+    titleWarehouseSourceMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-TITLE-PRESENTATION-WAREHOUSE-SOURCE-IDENTITY/
+  );
+  assert.match(titleWarehouseSourceMigration.sql, /dvtGraphNodeCardStrategy\.ts/);
+  assert.match(titleWarehouseSourceMigration.sql, /dbtGraphNodeCardStrategy\.ts/);
+  assert.match(titleWarehouseSourceMigration.sql, /defaultGraphNodeCardStrategy\.ts/);
+  assert.match(titleWarehouseSourceMigration.sql, /canvasConnectionCompatibilityPresenter\.ts/);
+  assert.match(titleWarehouseSourceMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(titleWarehouseSourceMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node health schema drift tone contract', () => {
   const migrations = readMigrationFiles();
   const driftToneMigration = migrations.find(

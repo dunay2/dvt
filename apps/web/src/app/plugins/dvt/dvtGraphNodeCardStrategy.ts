@@ -74,6 +74,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
+    pluginId: node.pluginId,
     kind: node.kind,
     metadata,
     data,

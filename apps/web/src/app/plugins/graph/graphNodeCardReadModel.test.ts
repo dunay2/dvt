@@ -78,7 +78,7 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.title).toBe('Erp Orders');
+    expect(model.title).toBe('Warehouse · erp');
     expect(model.technicalName).toBe('src_erp_orders');
     expect(model.subtitle).toBe('warehouse.erp.orders');
     expect(model.path).toBe('warehouse.erp.orders');

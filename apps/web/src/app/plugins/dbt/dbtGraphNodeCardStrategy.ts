@@ -92,6 +92,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const isSource = node.kind === 'dbt:source';
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
+    pluginId: node.pluginId,
     kind: node.kind,
     metadata,
     data,
