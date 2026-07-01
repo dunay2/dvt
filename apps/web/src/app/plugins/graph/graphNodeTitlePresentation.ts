@@ -3,6 +3,7 @@ import type { PluginNodeKind } from '../../types/canonical';
 
 export type GraphNodeTitlePresentationInput = Readonly<{
   nodeName: string;
+  pluginId?: string;
   kind: PluginNodeKind;
   metadata: Record<string, unknown>;
   data?: Record<string, unknown>;
@@ -43,6 +44,7 @@ function displayIdentifier(value: string, uppercaseHint?: string | null): string
 
 export function buildGraphNodeTitlePresentation({
   nodeName,
+  pluginId,
   kind,
   metadata,
   data = {},
@@ -89,6 +91,13 @@ export function buildGraphNodeTitlePresentation({
     stringValue(dbtData.table) ??
     stringValue(configData.tableName) ??
     stringValue(configData.table);
+
+  if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source' && database && schema) {
+    return {
+      title: `${titleCaseIdentifier(database)} · ${schema}`,
+      technicalName: nodeName,
+    };
+  }
 
   if ((kind === 'dbt:source' || kind === 'dvt:source') && sourceName && tableName) {
     return {

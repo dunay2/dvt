@@ -24,6 +24,7 @@ function buildDefaultCard(
   const metrics: GraphNodeCardMetric[] = [];
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
+    pluginId: node.pluginId,
     kind: node.kind,
     metadata,
     data,

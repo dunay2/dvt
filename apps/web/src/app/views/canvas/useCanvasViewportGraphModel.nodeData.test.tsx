@@ -37,13 +37,15 @@ describe('useCanvasViewportGraphModel node data', () => {
       const sourceData = sourceNode?.data as DbtNodeData | undefined;
       const modelData = modelNode?.data as DbtNodeData | undefined;
 
+      expect(sourceData?.pluginId).toBe('dvt.warehouse-source');
+      expect(sourceData?.pluginKind).toBe('dvt:source');
       expect(sourceData?.portCompatibility?.source).toMatchObject({
         state: 'available',
-        compatibleNodeNames: ['dbt-model'],
+        compatibleNodeNames: ['Dbt Model'],
       });
       expect(modelData?.portCompatibility?.target).toMatchObject({
         state: 'available',
-        compatibleNodeNames: ['warehouse-source'],
+        compatibleNodeNames: ['Warehouse Source'],
       });
     } finally {
       await mounted.cleanup();

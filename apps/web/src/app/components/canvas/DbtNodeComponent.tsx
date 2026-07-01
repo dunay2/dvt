@@ -38,6 +38,7 @@ import {
 export interface DbtNodeData extends Record<string, unknown> {
   name: string;
   type?: DbtNodeType | string;
+  pluginId?: string;
   pluginKind?: PluginNodeKind;
   role?: CoreNodeRole;
   typeLabel?: string;
@@ -155,7 +156,7 @@ function buildCanonicalNode(
   pluginKind: PluginNodeKind,
   role: CoreNodeRole
 ): CanonicalNode {
-  const pluginId = parsePluginNodeKind(pluginKind).pluginId;
+  const pluginId = data.pluginId ?? parsePluginNodeKind(pluginKind).pluginId;
   const metadata =
     typeof data.metadata === 'object' && data.metadata !== null ? { ...data.metadata } : {};
 

@@ -75,6 +75,7 @@ function createEmptyCompatibility(): MutableCompatibility {
 function resolveCompatibleNodeLabel(node: CanonicalNode): string {
   return buildGraphNodeTitlePresentation({
     nodeName: node.name,
+    pluginId: node.pluginId,
     kind: node.kind,
     metadata: node.metadata ?? {},
   }).title;

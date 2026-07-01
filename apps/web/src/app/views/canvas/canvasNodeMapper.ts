@@ -86,6 +86,7 @@ export function mapCanonicalNodeToCanvasNode({
     data: {
       name: canonicalNode.name,
       type: kindRegistration.label,
+      pluginId: canonicalNode.pluginId,
       pluginKind: canonicalNode.kind,
       role: canonicalNode.role,
       typeLabel: kindRegistration.label,
@@ -164,6 +165,7 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     data: {
       name: canonicalNode.name,
       type: typeLabelFromMetadata ?? kindRegistration.label,
+      pluginId: canonicalNode.pluginId,
       pluginKind: canonicalNode.kind,
       role: canonicalNode.role,
       typeLabel: kindRegistration.label,
