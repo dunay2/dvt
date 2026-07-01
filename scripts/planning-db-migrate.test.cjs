@@ -11166,6 +11166,29 @@ test('tracked migrations record CanvasViewport recorded column visibility projec
   assert.doesNotMatch(columnVisibilityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register CanvasViewport node surface lifecycle test ownership', () => {
+  const migrations = readMigrationFiles();
+  const lifecycleMigration = migrations.find(
+    (migration) => migration.fileName === '463_canvas_viewport_node_surface_lifecycle_tests.sql'
+  );
+
+  assert.ok(lifecycleMigration);
+  assert.match(lifecycleMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(lifecycleMigration.sql, /CanvasViewport\.nodeFloatingToolbar\.test\.tsx/);
+  assert.match(lifecycleMigration.sql, /CanvasViewport\.nodeOperationalRail\.test\.tsx/);
+  assert.match(lifecycleMigration.sql, /RenderCanvasContextualGraphSurface/);
+  assert.match(lifecycleMigration.sql, /web\.component\.canvas\.NodeFloatingToolbar/);
+  assert.match(lifecycleMigration.sql, /web\.component\.canvas\.GraphNodeHealthPopover/);
+  assert.match(lifecycleMigration.sql, /EV-CANVAS-VIEWPORT-NODE-FLOATING-TOOLBAR-LIFECYCLE/);
+  assert.match(lifecycleMigration.sql, /EV-CANVAS-VIEWPORT-NODE-HEALTH-POPOVER-LIFECYCLE/);
+  assert.match(lifecycleMigration.sql, /nodeSurfaceLifecycleTests/);
+  assert.match(lifecycleMigration.sql, /noOrphanedNodeSurfaces/);
+  assert.match(lifecycleMigration.sql, /hostOwnsLifecycle/);
+  assert.match(lifecycleMigration.sql, /leafComponentsOwnPresentation/);
+  assert.doesNotMatch(lifecycleMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(lifecycleMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(
