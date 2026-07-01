@@ -10470,6 +10470,36 @@ test('tracked migrations register Canvas node port handle component ownership', 
   assert.doesNotMatch(portHandleOwnershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node shell component ownership', () => {
+  const migrations = readMigrationFiles();
+  const shellOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '427_canvas_node_shell_component_ownership.sql'
+  );
+
+  assert.ok(shellOwnershipMigration);
+  assert.match(shellOwnershipMigration.sql, /web\.component\.canvas\.CanvasNodeShell/);
+  assert.match(shellOwnershipMigration.sql, /frontend_component_local_components/);
+  assert.match(shellOwnershipMigration.sql, /frontend_component_local_files/);
+  assert.match(shellOwnershipMigration.sql, /frontend_component_local_cq_rails/);
+  assert.match(shellOwnershipMigration.sql, /frontend_component_validation_evidence/);
+  assert.match(shellOwnershipMigration.sql, /RenderCanvasNodeShell/);
+  assert.match(shellOwnershipMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(shellOwnershipMigration.sql, /ShowCanvasNodeContextMenu/);
+  assert.match(shellOwnershipMigration.sql, /CanvasNodeShell\.tsx/);
+  assert.match(shellOwnershipMigration.sql, /CanvasNodeShell\.module\.css/);
+  assert.match(shellOwnershipMigration.sql, /CanvasNodeShell\.test\.tsx/);
+  assert.match(shellOwnershipMigration.sql, /CanvasNodeShell composes CanvasNodePortHandle/);
+  assert.match(shellOwnershipMigration.sql, /CanvasNodeShell delegates node menu presentation/);
+  assert.match(shellOwnershipMigration.sql, /EV-CANVAS-NODE-SHELL-COMPONENT-OWNERSHIP/);
+  assert.match(shellOwnershipMigration.sql, /hostTemplate/);
+  assert.match(shellOwnershipMigration.sql, /doesNotOwnPortRendering/);
+  assert.match(shellOwnershipMigration.sql, /doesNotOwnNodeMenuTemplate/);
+  assert.match(shellOwnershipMigration.sql, /doesNotOwnEdgeAdmission/);
+  assert.match(shellOwnershipMigration.sql, /AuthorCanvasGraphEdge/);
+  assert.doesNotMatch(shellOwnershipMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(shellOwnershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations normalize Graph node card view file roles', () => {
   const migrations = readMigrationFiles();
   const roleMigration = migrations.find(
