@@ -5,20 +5,18 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
+import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
   arrayCount,
-  buildGraphNodeOperationalDetail,
   formatBytes,
   formatCompactNumber,
   metadataOf,
   numericValue,
-  pushOperationalMetric,
   pushMetric,
   pushRuntimeMetrics,
   resolveNodeCardStatus,
   resolveColumnCount,
-  resolveRuntimeDurationLabel,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 
@@ -60,7 +58,6 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const relation = [database, schema, table].filter(Boolean).join('.');
   const relationSubtitle = relation.length > 0 ? relation : null;
   const metrics: GraphNodeCardMetric[] = [];
-  const operationalMetrics: GraphNodeCardMetric[] = [];
   const materialization = resolveDbtMaterialization(metadata);
   const rowCount = numericValue(metadata.rowCount) ?? numericValue(metadata.rows);
   const byteSize =
@@ -91,37 +88,18 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   pushMetric(metrics, 'columns', 'Columns', resolveColumnCount(metadata, data));
   pushRuntimeMetrics(metrics, metadata, data);
 
-  const lastRunAt = stringValue(metadata.lastRunAt) ?? stringValue(data.lastRunAt);
-  const durationLabel = resolveRuntimeDurationLabel(metadata, data);
-  if (lastRunAt || durationLabel) {
-    pushOperationalMetric(operationalMetrics, 'last-run', 'Last run', lastRunAt);
-    pushOperationalMetric(operationalMetrics, 'duration', 'Duration', durationLabel);
-    pushOperationalMetric(
-      operationalMetrics,
-      'rows',
-      'Rows',
-      rowCount == null ? null : formatCompactNumber(rowCount)
-    );
-  } else {
-    pushOperationalMetric(
-      operationalMetrics,
-      'rows',
-      'Rows',
-      rowCount == null ? null : formatCompactNumber(rowCount)
-    );
-    pushOperationalMetric(
-      operationalMetrics,
-      'size',
-      'Size',
-      byteSize == null ? null : formatBytes(byteSize)
-    );
-  }
-
   const isSource = node.kind === 'dbt:source';
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
     kind: node.kind,
     metadata,
+  });
+  const operationalSummary = buildGraphNodeOperationalSummary({
+    title: titlePresentation.title,
+    metadata,
+    data,
+    rowCount,
+    byteSize,
   });
 
   return {
@@ -137,8 +115,8 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
       isSource ? { label: 'Ready', tone: 'success' } : { label: 'Draft', tone: 'warning' }
     ),
     metrics,
-    operationalMetrics,
-    operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, operationalMetrics),
+    operationalMetrics: operationalSummary.metrics,
+    operationalDetail: operationalSummary.detail,
   };
 }
 

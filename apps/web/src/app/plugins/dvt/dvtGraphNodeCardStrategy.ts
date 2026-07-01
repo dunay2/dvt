@@ -5,19 +5,17 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
+import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
-  buildGraphNodeOperationalDetail,
   formatBytes,
   formatCompactNumber,
   metadataOf,
   numericValue,
-  pushOperationalMetric,
   pushMetric,
   pushRuntimeMetrics,
   resolveNodeCardStatus,
   resolveColumnCount,
-  resolveRuntimeDurationLabel,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 
@@ -64,7 +62,6 @@ function pushCanonicalCostMetric(
 function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): GraphNodeCardReadModel {
   const metadata = metadataOf(node);
   const metrics: GraphNodeCardMetric[] = [];
-  const operationalMetrics: GraphNodeCardMetric[] = [];
   const rowCount = numericValue(metadata.rowCount) ?? numericValue(data.rowCount);
   const byteSize =
     numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
@@ -84,31 +81,14 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   pushRuntimeMetrics(metrics, metadata, runtimeData);
   pushCanonicalCostMetric(metrics, node, metadata, data);
 
-  const lastRunAt = stringValue(metadata.lastRunAt) ?? stringValue(data.lastRunAt);
-  const durationLabel = resolveRuntimeDurationLabel(metadata, runtimeData);
-  if (lastRunAt || durationLabel) {
-    pushOperationalMetric(operationalMetrics, 'last-run', 'Last run', lastRunAt);
-    pushOperationalMetric(operationalMetrics, 'duration', 'Duration', durationLabel);
-    pushOperationalMetric(
-      operationalMetrics,
-      'rows',
-      'Rows',
-      rowCount == null ? null : formatCompactNumber(rowCount)
-    );
-  } else {
-    pushOperationalMetric(
-      operationalMetrics,
-      'rows',
-      'Rows',
-      rowCount == null ? null : formatCompactNumber(rowCount)
-    );
-    pushOperationalMetric(
-      operationalMetrics,
-      'size',
-      'Size',
-      byteSize == null ? null : formatBytes(byteSize)
-    );
-  }
+  const operationalSummary = buildGraphNodeOperationalSummary({
+    title: titlePresentation.title,
+    metadata,
+    data,
+    runtimeData,
+    rowCount,
+    byteSize,
+  });
 
   return {
     title: titlePresentation.title,
@@ -125,8 +105,8 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
         : { label: 'Draft', tone: 'warning' }
     ),
     metrics,
-    operationalMetrics,
-    operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, operationalMetrics),
+    operationalMetrics: operationalSummary.metrics,
+    operationalDetail: operationalSummary.detail,
   };
 }
 
