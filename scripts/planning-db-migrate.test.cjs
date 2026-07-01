@@ -11071,6 +11071,34 @@ test('tracked migrations split Canvas copy catalog and viewport projection out o
   assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split shared graph visual tokens out of GraphNodeCard ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) => migration.fileName === '459_graph_visual_tokens_component_ownership.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.GraphVisualTokens/);
+  assert.match(ownershipMigration.sql, /RenderCanvasGraphVisualTokens/);
+  assert.match(ownershipMigration.sql, /graphVisualTokens\.ts/);
+  assert.match(ownershipMigration.sql, /graphNodeCardSurfaceClasses/);
+  assert.match(ownershipMigration.sql, /graphFlowPalette/);
+  assert.match(ownershipMigration.sql, /EV-CANVAS-GRAPH-VISUAL-TOKENS-OWNERSHIP/);
+  assert.match(ownershipMigration.sql, /retiredForPresentationOwnership/);
+  assert.match(
+    ownershipMigration.sql,
+    /Graph visual tokens are a shared presentation token module, not GraphNodeCard behavior/
+  );
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.CanvasNodePortHandle/);
+  assert.match(ownershipMigration.sql, /apps\/web\/src\/styles\/theme\.css/);
+  assert.match(
+    ownershipMigration.sql,
+    /Port design tokens belong to the port handle rendering rail, not GraphNodeCard ownership/
+  );
+  assert.doesNotMatch(ownershipMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(
