@@ -1,5 +1,5 @@
 /** Owned concern: render graph-node operational metrics as an optional detail affordance. */
-import type { KeyboardEvent, MouseEvent, ReactElement } from 'react';
+import type { MouseEvent, ReactElement } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -50,10 +50,7 @@ export type GraphNodeOperationalRailProps =
   | GraphNodeOperationalRailStaticProps
   | GraphNodeOperationalRailInteractiveProps;
 
-function stopAndOpen(
-  event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
-  onOpen: (anchorRect: DOMRect) => void
-): void {
+function stopAndOpen(event: MouseEvent<HTMLElement>, onOpen: (anchorRect: DOMRect) => void): void {
   event.stopPropagation();
   onOpen(event.currentTarget.getBoundingClientRect());
 }
@@ -121,12 +118,6 @@ export function GraphNodeOperationalRail({
       aria-label={ariaLabel}
       className={graphNodeOperationalRailClasses.button}
       onClick={(event) => stopAndOpen(event, onOpen)}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          stopAndOpen(event, onOpen);
-        }
-      }}
     >
       {renderMetrics(metrics)}
     </button>

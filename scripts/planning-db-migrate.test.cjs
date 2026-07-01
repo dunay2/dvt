@@ -11550,6 +11550,29 @@ test('tracked migrations register Graph node operational rail tone token depende
   assert.doesNotMatch(metricToneTokenMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations record Graph node operational rail native keyboard activation', () => {
+  const migrations = readMigrationFiles();
+  const activationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '464_graph_node_operational_rail_native_keyboard_activation.sql'
+  );
+
+  assert.ok(activationMigration);
+  assert.match(activationMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(activationMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(activationMigration.sql, /GraphNodeOperationalRail\.tsx/);
+  assert.match(activationMigration.sql, /GraphNodeOperationalRail\.test\.tsx/);
+  assert.match(
+    activationMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-OPERATIONAL-RAIL-NATIVE-KEYBOARD-ACTIVATION/
+  );
+  assert.match(activationMigration.sql, /buttonOwnsKeyboardActivation/);
+  assert.match(activationMigration.sql, /preventsDuplicateOpen/);
+  assert.match(activationMigration.sql, /customKeydownOpener', false/);
+  assert.doesNotMatch(activationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(activationMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node tag accent tone contract', () => {
   const migrations = readMigrationFiles();
   const tagAccentMigration = migrations.find(

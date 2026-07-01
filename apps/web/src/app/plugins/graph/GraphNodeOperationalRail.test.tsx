@@ -109,7 +109,7 @@ describe('GraphNodeOperationalRail', () => {
     ).toBe('Open source health metrics');
   });
 
-  it('opens with the rail anchor on click and keyboard without bubbling to the card', () => {
+  it('opens with the rail anchor on click without bubbling to the card', () => {
     const onOpen = vi.fn();
     const onCardClick = vi.fn();
     const anchorRect = new DOMRect(12, 24, 120, 32);
@@ -135,15 +135,38 @@ describe('GraphNodeOperationalRail', () => {
     act(() => {
       fireEvent.click(rail!);
     });
-    act(() => {
-      fireEvent.keyDown(rail!, { key: 'Enter' });
-    });
-    act(() => {
-      fireEvent.keyDown(rail!, { key: ' ' });
-    });
 
-    expect(onOpen).toHaveBeenCalledTimes(3);
+    expect(onOpen).toHaveBeenCalledOnce();
     expect(onOpen).toHaveBeenLastCalledWith(anchorRect);
     expect(onCardClick).not.toHaveBeenCalled();
+  });
+
+  it('does not open twice for one native keyboard button activation', () => {
+    const onOpen = vi.fn();
+    const anchorRect = new DOMRect(12, 24, 120, 32);
+
+    act(() => {
+      root.render(
+        <GraphNodeOperationalRail
+          metrics={[{ id: 'freshness', label: 'Freshness', value: '12 min' }]}
+          ariaLabel="Open source health metrics"
+          onOpen={onOpen}
+        />
+      );
+    });
+
+    const rail = container.querySelector<HTMLButtonElement>(
+      'button[data-slot="graph-node-operational-rail"]'
+    );
+    expect(rail).not.toBeNull();
+    vi.spyOn(rail!, 'getBoundingClientRect').mockReturnValue(anchorRect);
+
+    act(() => {
+      fireEvent.keyDown(rail!, { key: 'Enter' });
+      fireEvent.click(rail!);
+    });
+
+    expect(onOpen).toHaveBeenCalledOnce();
+    expect(onOpen).toHaveBeenCalledWith(anchorRect);
   });
 });
