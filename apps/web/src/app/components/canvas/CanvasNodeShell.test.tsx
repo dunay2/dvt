@@ -204,9 +204,11 @@ describe('CanvasNodeShell', () => {
     const themeCss = readFileSync(themeCssPath, 'utf8');
 
     expect(componentCss).not.toMatch(/#[0-9a-fA-F]{3,8}/u);
+    expect(componentCss).toContain(".portHandle[data-tone='control']");
     expect(themeCss).toContain('--canvas-node-port-source-ring');
     expect(themeCss).toContain('--canvas-node-port-model-ring');
     expect(themeCss).toContain('--canvas-node-port-test-ring');
     expect(themeCss).toContain('--canvas-node-port-output-ring');
+    expect(themeCss).toContain('--canvas-node-port-control-ring');
   });
 });

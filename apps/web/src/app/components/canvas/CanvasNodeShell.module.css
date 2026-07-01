@@ -61,3 +61,8 @@
   --node-port-ring: var(--canvas-node-port-output-ring);
   --node-port-fill: var(--canvas-node-port-output-fill);
 }
+
+.portHandle[data-tone='control'] {
+  --node-port-ring: var(--canvas-node-port-control-ring);
+  --node-port-fill: var(--canvas-node-port-control-fill);
+}
