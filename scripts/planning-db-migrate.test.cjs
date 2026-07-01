@@ -11099,6 +11099,27 @@ test('tracked migrations split shared graph visual tokens out of GraphNodeCard o
   assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations move DBT node architecture evidence out of GraphNodeCard ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) => migration.fileName === '460_dbt_node_card_architecture_test_ownership.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.DbtNodeCard/);
+  assert.match(ownershipMigration.sql, /DbtNodeComponent\.architecture\.test\.ts/);
+  assert.match(ownershipMigration.sql, /RenderDbtCanvasNodeCard/);
+  assert.match(ownershipMigration.sql, /EV-CANVAS-DBT-NODE-CARD-ARCHITECTURE-OWNERSHIP/);
+  assert.match(ownershipMigration.sql, /retiredForPresentationOwnership/);
+  assert.match(ownershipMigration.sql, /it is not GraphNodeCard read-model ownership/);
+  assert.match(
+    ownershipMigration.sql,
+    /counting the same file as adapter and component double-counts ownership/
+  );
+  assert.doesNotMatch(ownershipMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(
