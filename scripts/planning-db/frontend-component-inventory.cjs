@@ -347,7 +347,7 @@ function buildFrontendComponentRows(rows) {
     countField(row, 'surface_count', 'surfaceIds'),
     countField(row, 'file_count', 'files'),
     countField(row, 'rail_count', 'rails'),
-    countField(row, 'evidence_count', 'evidence'),
+    countField(row, 'evidence_ref_count', 'evidence'),
     row.source_path ?? row.sourcePath,
   ]);
 }
@@ -408,7 +408,7 @@ async function readFrontendComponentRows(client, filters = {}, options = {}) {
        surface_count,
        file_count,
        rail_count,
-       evidence_count,
+       evidence_ref_count,
        source_path,
        source_content_sha256
      from ${activeSchemaName}.frontend_component_summary_query
