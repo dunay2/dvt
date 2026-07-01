@@ -5,6 +5,7 @@ export type GraphNodeCardMetric = Readonly<{
   id: string;
   label: string;
   value: string;
+  tone?: GraphNodeCardStatusTone;
 }>;
 
 export type GraphNodeOperationalDetail = Readonly<{

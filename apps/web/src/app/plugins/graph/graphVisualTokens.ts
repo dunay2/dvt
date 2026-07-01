@@ -52,6 +52,14 @@ export const graphNodeHealthPopoverClasses = {
   row: 'flex items-center justify-between gap-4',
   label: 'text-slate-400',
   value: 'text-right font-medium text-slate-100',
+  valueTone: {
+    neutral: 'text-slate-100',
+    info: 'text-blue-200',
+    success: 'text-green-300',
+    warning: 'text-amber-200',
+    danger: 'text-red-200',
+    running: 'text-sky-200',
+  },
 } as const;
 
 export const fallbackGraphNodeClasses = {

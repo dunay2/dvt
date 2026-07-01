@@ -1,6 +1,7 @@
 /** Owned concern: project graph node operational summary metrics from recorded data. */
 import type {
   GraphNodeCardMetric,
+  GraphNodeCardStatusTone,
   GraphNodeOperationalDetail,
 } from './graphNodeCardStrategyContracts';
 import {
@@ -90,10 +91,15 @@ function firstRuntimeStringValue(
   return null;
 }
 
-function resolveSchemaDriftLabel(
+type SchemaDriftProjection = Readonly<{
+  label: string;
+  tone: GraphNodeCardStatusTone;
+}>;
+
+function resolveSchemaDriftProjection(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>
-): string | null {
+): SchemaDriftProjection | null {
   const driftStatus =
     stringValue(metadata.schemaDriftStatus) ??
     stringValue(data.schemaDriftStatus) ??
@@ -109,15 +115,15 @@ function resolveSchemaDriftLabel(
     case 'none':
     case 'no-drift':
     case 'no_drift':
-      return 'No drift detected';
+      return { label: 'No drift detected', tone: 'success' };
     case 'detected':
     case 'drift':
     case 'drifted':
     case 'warning':
     case 'warn':
-      return 'Drift detected';
+      return { label: 'Drift detected', tone: 'warning' };
     default:
-      return driftStatus;
+      return { label: driftStatus, tone: 'neutral' };
   }
 }
 
@@ -147,7 +153,7 @@ function buildSourceHealthRows(
   ]);
   const datasetSizeBytes =
     firstNumericValue(metadata, data, ['datasetSizeBytes', 'sourceSizeBytes']) ?? byteSize;
-  const schemaDriftLabel = resolveSchemaDriftLabel(metadata, data);
+  const schemaDrift = resolveSchemaDriftProjection(metadata, data);
   const hasExplicitDatasetSize =
     firstNumericValue(metadata, data, ['datasetSizeBytes', 'sourceSizeBytes']) !== null;
   const hasSourceHealthSignal =
@@ -156,7 +162,7 @@ function buildSourceHealthRows(
     cadenceMinutes !== null ||
     throughputBytesPerMinute !== null ||
     hasExplicitDatasetSize ||
-    schemaDriftLabel !== null;
+    schemaDrift !== null;
   const railMetrics: GraphNodeCardMetric[] = [];
   const detailRows: GraphNodeCardMetric[] = [];
 
@@ -188,9 +194,15 @@ function buildSourceHealthRows(
     datasetSizeBytes == null ? null : formatBytes(datasetSizeBytes)
   );
 
-  const schemaDriftRailOnly = railMetrics.length === 0 && schemaDriftLabel !== null;
+  const schemaDriftRailOnly = railMetrics.length === 0 && schemaDrift !== null;
   if (schemaDriftRailOnly) {
-    pushOperationalMetric(railMetrics, 'schema-drift', 'Schema drift', schemaDriftLabel);
+    pushOperationalMetric(
+      railMetrics,
+      'schema-drift',
+      'Schema drift',
+      schemaDrift.label,
+      schemaDrift.tone
+    );
   }
 
   detailRows.push(...railMetrics);
@@ -201,7 +213,13 @@ function buildSourceHealthRows(
     rowCount == null ? null : formatCompactNumber(rowCount)
   );
   if (!schemaDriftRailOnly) {
-    pushOperationalMetric(detailRows, 'schema-drift', 'Schema drift', schemaDriftLabel);
+    pushOperationalMetric(
+      detailRows,
+      'schema-drift',
+      'Schema drift',
+      schemaDrift?.label ?? null,
+      schemaDrift?.tone
+    );
   }
 
   return { hasSourceHealthSignal, railMetrics, detailRows };

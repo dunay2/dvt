@@ -1,6 +1,7 @@
 /** Owned concern: render graph-node operational health details from a resolved detail model. */
 import type { CSSProperties, KeyboardEvent, ReactElement } from 'react';
 
+import { cn } from '../../components/ui/utils';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
 import { graphNodeHealthPopoverClasses } from './graphVisualTokens';
 
@@ -49,7 +50,16 @@ export function GraphNodeHealthPopoverView({
         {detail.rows.map((row) => (
           <div key={row.id} className={graphNodeHealthPopoverClasses.row}>
             <dt className={graphNodeHealthPopoverClasses.label}>{row.label}</dt>
-            <dd className={graphNodeHealthPopoverClasses.value}>{row.value}</dd>
+            <dd
+              data-slot="graph-node-health-popover-value"
+              {...(row.tone ? { 'data-tone': row.tone } : {})}
+              className={cn(
+                graphNodeHealthPopoverClasses.value,
+                row.tone ? graphNodeHealthPopoverClasses.valueTone[row.tone] : null
+              )}
+            >
+              {row.value}
+            </dd>
           </div>
         ))}
       </dl>
