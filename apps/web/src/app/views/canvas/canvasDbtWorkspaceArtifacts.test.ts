@@ -46,6 +46,49 @@ const sourceEdge: CanonicalEdge = {
 };
 
 describe('canvas dbt workspace artifacts', () => {
+  it('projects imported warehouse sources into dbt source artifacts for connected models', () => {
+    const warehouseSourceNode: CanonicalNode = {
+      id: 'warehouse-orders',
+      name: 'Imported Orders',
+      pluginId: 'dvt.warehouse-source',
+      kind: 'dvt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        sourceName: 'warehouse_prod_analytics_erp',
+        schema: 'erp',
+        tableName: 'orders',
+      },
+    };
+    const modelFromWarehouse: CanonicalNode = {
+      ...modelNode,
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'table',
+          selectedSourceId: 'warehouse-orders',
+        },
+      },
+    };
+
+    const result = buildDbtWorkspaceArtifacts({
+      nodes: [warehouseSourceNode, modelFromWarehouse],
+      edges: [{ ...sourceEdge, sourceId: 'warehouse-orders' }],
+      scopedNodeIds: ['warehouse-orders', 'model-orders'],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.artifacts[1]?.content).toContain(
+      "from {{ source('warehouse_prod_analytics_erp', 'orders') }}"
+    );
+    expect(result.artifacts[2]?.content).toContain('  - name: warehouse_prod_analytics_erp');
+    expect(result.artifacts[2]?.content).toContain('    schema: erp');
+    expect(result.artifacts[2]?.content).toContain('      - name: orders');
+  });
+
   it('generates deterministic dbt project files from the authored graph', () => {
     const result = buildDbtWorkspaceArtifacts({
       nodes: [sourceNode, modelNode],
