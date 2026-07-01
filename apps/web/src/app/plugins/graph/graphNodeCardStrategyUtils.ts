@@ -1,11 +1,17 @@
 /** Owned concern: share pure graph card projection helpers across plugin strategies. */
 import type { CanonicalNode } from '../../types/canonical';
 import type {
+  GraphNodeCardMetricIcon,
   GraphNodeCardMetric,
   GraphNodeCardStatus,
   GraphNodeCardStatusTone,
   GraphNodeOperationalDetail,
 } from './graphNodeCardStrategyContracts';
+
+type PushMetricOptions = Readonly<{
+  icon?: GraphNodeCardMetricIcon;
+  tone?: GraphNodeCardStatusTone;
+}>;
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -102,9 +108,9 @@ export function pushOperationalMetric(
   id: string,
   label: string,
   value: string | number | null,
-  tone?: GraphNodeCardStatusTone
+  options?: PushMetricOptions
 ): void {
-  pushMetric(metrics, id, label, value, tone);
+  pushMetric(metrics, id, label, value, options);
 }
 
 export function buildGraphNodeOperationalDetail(
@@ -188,14 +194,12 @@ export function pushMetric(
   id: string,
   label: string,
   value: string | number | null,
-  tone?: GraphNodeCardStatusTone
+  options?: PushMetricOptions
 ): void {
   if (value === null) {
     return;
   }
-  metrics.push(
-    tone == null ? { id, label, value: String(value) } : { id, label, value: String(value), tone }
-  );
+  metrics.push({ id, label, value: String(value), ...options });
 }
 
 export function resolveColumnCount(

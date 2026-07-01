@@ -40,7 +40,10 @@ export const graphNodeOperationalRailClasses = {
   root: 'grid grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55',
   button:
     'nodrag nopan grid w-full cursor-pointer grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55 text-left transition hover:bg-slate-800/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
-  metric: 'min-w-0 border-r border-slate-800/80 px-3 py-2 last:border-r-0',
+  metric: 'flex min-w-0 items-center gap-2 border-r border-slate-800/80 px-3 py-2 last:border-r-0',
+  icon: 'flex size-5 shrink-0 items-center justify-center rounded-full border border-slate-700/80 bg-slate-950/70 text-slate-400',
+  iconSvg: 'size-3',
+  metricText: 'min-w-0',
   label: 'block truncate text-[9px] uppercase tracking-wide text-slate-500',
   value: 'mt-0.5 block truncate text-[11px] font-medium text-slate-200',
 } as const;

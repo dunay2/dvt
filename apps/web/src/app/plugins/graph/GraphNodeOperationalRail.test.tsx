@@ -43,7 +43,9 @@ describe('GraphNodeOperationalRail', () => {
   it('renders static metrics without an interactive button when no opener exists', () => {
     act(() => {
       root.render(
-        <GraphNodeOperationalRail metrics={[{ id: 'size', label: 'Size', value: '18.2 GB' }]} />
+        <GraphNodeOperationalRail
+          metrics={[{ id: 'size', label: 'Size', value: '18.2 GB', icon: 'database' }]}
+        />
       );
     });
 
@@ -51,6 +53,16 @@ describe('GraphNodeOperationalRail', () => {
     expect(container.querySelector('[data-slot="graph-node-operational-rail"]')?.textContent).toBe(
       'Size18.2 GB'
     );
+    expect(
+      container
+        .querySelector('[data-slot="graph-node-operational-icon"]')
+        ?.getAttribute('data-icon')
+    ).toBe('database');
+    expect(
+      container
+        .querySelector('[data-slot="graph-node-operational-icon"]')
+        ?.getAttribute('aria-hidden')
+    ).toBe('true');
   });
 
   it('uses the supplied accessible label for interactive rails', () => {

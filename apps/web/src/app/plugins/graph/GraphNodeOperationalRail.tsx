@@ -1,8 +1,33 @@
 /** Owned concern: render graph-node operational metrics as an optional detail affordance. */
 import type { KeyboardEvent, MouseEvent, ReactElement } from 'react';
+import {
+  Activity,
+  AlertTriangle,
+  Clock,
+  Database,
+  DollarSign,
+  List,
+  RefreshCw,
+  Timer,
+  type LucideIcon,
+} from 'lucide-react';
 
-import type { GraphNodeCardMetric } from './graphNodeCardStrategyContracts';
+import type {
+  GraphNodeCardMetric,
+  GraphNodeCardMetricIcon,
+} from './graphNodeCardStrategyContracts';
 import { graphNodeOperationalRailClasses } from './graphVisualTokens';
+
+const metricIconByName: Record<GraphNodeCardMetricIcon, LucideIcon> = {
+  clock: Clock,
+  refresh: RefreshCw,
+  throughput: Activity,
+  database: Database,
+  timer: Timer,
+  rows: List,
+  cost: DollarSign,
+  drift: AlertTriangle,
+};
 
 type GraphNodeOperationalRailBaseProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
@@ -33,12 +58,28 @@ function stopAndOpen(
 }
 
 function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] {
-  return metrics.map((metric) => (
-    <span key={metric.id} className={graphNodeOperationalRailClasses.metric}>
-      <span className={graphNodeOperationalRailClasses.label}>{metric.label}</span>
-      <span className={graphNodeOperationalRailClasses.value}>{metric.value}</span>
-    </span>
-  ));
+  return metrics.map((metric) => {
+    const Icon = metric.icon == null ? null : metricIconByName[metric.icon];
+
+    return (
+      <span key={metric.id} className={graphNodeOperationalRailClasses.metric}>
+        {Icon == null ? null : (
+          <span
+            data-slot="graph-node-operational-icon"
+            data-icon={metric.icon}
+            aria-hidden="true"
+            className={graphNodeOperationalRailClasses.icon}
+          >
+            <Icon className={graphNodeOperationalRailClasses.iconSvg} aria-hidden="true" />
+          </span>
+        )}
+        <span className={graphNodeOperationalRailClasses.metricText}>
+          <span className={graphNodeOperationalRailClasses.label}>{metric.label}</span>
+          <span className={graphNodeOperationalRailClasses.value}>{metric.value}</span>
+        </span>
+      </span>
+    );
+  });
 }
 
 export function GraphNodeOperationalRail({
