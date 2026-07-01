@@ -10976,6 +10976,41 @@ test('tracked migrations declare Graph node card port compatibility label helper
   assert.doesNotMatch(compatibilityLabelSymbolMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations move Canvas connection compatibility ownership to edge authoring', () => {
+  const migrations = readMigrationFiles();
+  const compatibilityOwnershipMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '456_canvas_connection_compatibility_edge_authoring_ownership.sql'
+  );
+
+  assert.ok(compatibilityOwnershipMigration);
+  assert.match(compatibilityOwnershipMigration.sql, /SYS-WEB-CANVAS-NODE-EDGE-AUTHORING/);
+  assert.match(compatibilityOwnershipMigration.sql, /canvasConnectionCompatibilityPresenter\.ts/);
+  assert.match(
+    compatibilityOwnershipMigration.sql,
+    /canvasConnectionCompatibilityPresenter\.test\.ts/
+  );
+  assert.match(compatibilityOwnershipMigration.sql, /buildCanvasConnectionCompatibilityByNodeId/);
+  assert.match(compatibilityOwnershipMigration.sql, /AuthorCanvasGraphEdge/);
+  assert.match(compatibilityOwnershipMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(compatibilityOwnershipMigration.sql, /retiredForEdgeAuthoringOwnership/);
+  assert.match(compatibilityOwnershipMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(
+    compatibilityOwnershipMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_file_query/
+  );
+  assert.match(
+    compatibilityOwnershipMigration.sql,
+    /not coalesce\(\(file_ref\.raw_file ->> 'retiredForEdgeAuthoringOwnership'\)::boolean, false\)/
+  );
+  assert.match(
+    compatibilityOwnershipMigration.sql,
+    /EV-CANVAS-CONNECTION-COMPATIBILITY-EDGE-AUTHORING-OWNERSHIP/
+  );
+  assert.doesNotMatch(compatibilityOwnershipMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(compatibilityOwnershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(
