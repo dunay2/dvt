@@ -10383,6 +10383,35 @@ test('tracked migrations complete Graph node metric row component registration',
   assert.doesNotMatch(metricRowMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node leaf component rails', () => {
+  const migrations = readMigrationFiles();
+  const leafRailsMigration = migrations.find(
+    (migration) => migration.fileName === '428_graph_node_leaf_component_rails.sql'
+  );
+
+  assert.ok(leafRailsMigration);
+  assert.match(leafRailsMigration.sql, /web\.component\.canvas\.GraphNodeStatusChip/);
+  assert.match(leafRailsMigration.sql, /web\.component\.canvas\.GraphNodeTagList/);
+  assert.match(leafRailsMigration.sql, /web\.component\.canvas\.GraphNodeMetricRow/);
+  assert.match(leafRailsMigration.sql, /frontend_component_local_cq_rails/);
+  assert.match(leafRailsMigration.sql, /frontend_component_validation_evidence/);
+  assert.match(leafRailsMigration.sql, /RenderCanvasGraphNodeStatusChip/);
+  assert.match(leafRailsMigration.sql, /RenderCanvasGraphNodeTagList/);
+  assert.match(leafRailsMigration.sql, /RenderCanvasGraphNodeMetricRow/);
+  assert.match(leafRailsMigration.sql, /EV-CANVAS-GRAPH-NODE-STATUS-CHIP-LEAF-RAIL/);
+  assert.match(leafRailsMigration.sql, /EV-CANVAS-GRAPH-NODE-TAG-LIST-LEAF-RAIL/);
+  assert.match(leafRailsMigration.sql, /EV-CANVAS-GRAPH-NODE-METRIC-ROW-LEAF-RAIL/);
+  assert.match(leafRailsMigration.sql, /presentationOnly/);
+  assert.match(leafRailsMigration.sql, /doesNotProjectData/);
+  assert.match(leafRailsMigration.sql, /doesNotHandleNodeActions/);
+  assert.match(
+    leafRailsMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/GraphNodeCardView\.test\.tsx/
+  );
+  assert.doesNotMatch(leafRailsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(leafRailsMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node card single status token contract', () => {
   const migrations = readMigrationFiles();
   const statusTokenMigration = migrations.find(
