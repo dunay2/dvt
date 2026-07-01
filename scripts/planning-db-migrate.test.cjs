@@ -10525,6 +10525,28 @@ test('tracked migrations record Graph node card single status token contract', (
   assert.doesNotMatch(statusTokenMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations record Graph node running status tone contract', () => {
+  const migrations = readMigrationFiles();
+  const runningStatusToneMigration = migrations.find(
+    (migration) => migration.fileName === '434_graph_node_running_status_tone.sql'
+  );
+
+  assert.ok(runningStatusToneMigration);
+  assert.match(runningStatusToneMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(runningStatusToneMigration.sql, /web\.component\.canvas\.GraphNodeStatusChip/);
+  assert.match(runningStatusToneMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(runningStatusToneMigration.sql, /GraphNodeStatusChip\.test\.tsx/);
+  assert.match(runningStatusToneMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(runningStatusToneMigration.sql, /RenderCanvasGraphNodeStatusChip/);
+  assert.match(runningStatusToneMigration.sql, /EV-CANVAS-GRAPH-NODE-RUNNING-STATUS-TONE/);
+  assert.match(runningStatusToneMigration.sql, /EV-CANVAS-GRAPH-NODE-STATUS-CHIP-RUNNING-TONE/);
+  assert.match(runningStatusToneMigration.sql, /doesNotDowngradeRunningToInfo/);
+  assert.match(runningStatusToneMigration.sql, /doesNotUseGenericInfoForRunning/);
+  assert.match(runningStatusToneMigration.sql, /frontend_component_validation_evidence/);
+  assert.doesNotMatch(runningStatusToneMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(runningStatusToneMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Graph node health popover host ownership', () => {
   const migrations = readMigrationFiles();
   const ownershipMigration = migrations.find(

@@ -50,4 +50,15 @@ describe('GraphNodeStatusChip', () => {
     expect(chip?.className).toContain('text-amber-200');
     expect(chip?.textContent).toBe('Draft');
   });
+
+  it('uses a dedicated running tone token instead of the generic info token', () => {
+    act(() => {
+      root.render(<GraphNodeStatusChip status={{ label: 'Running', tone: 'running' }} />);
+    });
+
+    const chip = container.querySelector('[data-slot="graph-node-status-chip"]');
+    expect(chip?.className).toContain('text-sky-200');
+    expect(chip?.className).not.toContain('text-blue-200');
+    expect(chip?.textContent).toBe('Running');
+  });
 });
