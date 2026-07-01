@@ -11174,6 +11174,12 @@ test('tracked migrations register CanvasViewport node surface lifecycle test own
 
   assert.ok(lifecycleMigration);
   assert.match(lifecycleMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(
+    lifecycleMigration.sql,
+    /insert into planning_query_store\.frontend_component_local_components/
+  );
+  assert.match(lifecycleMigration.sql, /on conflict \(component_id\) do update set/);
+  assert.match(lifecycleMigration.sql, /Render the graph as the permanent base surface/);
   assert.match(lifecycleMigration.sql, /CanvasViewport\.nodeFloatingToolbar\.test\.tsx/);
   assert.match(lifecycleMigration.sql, /CanvasViewport\.nodeOperationalRail\.test\.tsx/);
   assert.match(lifecycleMigration.sql, /RenderCanvasContextualGraphSurface/);
@@ -11185,6 +11191,14 @@ test('tracked migrations register CanvasViewport node surface lifecycle test own
   assert.match(lifecycleMigration.sql, /noOrphanedNodeSurfaces/);
   assert.match(lifecycleMigration.sql, /hostOwnsLifecycle/);
   assert.match(lifecycleMigration.sql, /leafComponentsOwnPresentation/);
+  assert.ok(
+    lifecycleMigration.sql.indexOf(
+      'insert into planning_query_store.frontend_component_local_components'
+    ) <
+      lifecycleMigration.sql.indexOf(
+        'update planning_query_store.frontend_component_local_components'
+      )
+  );
   assert.doesNotMatch(lifecycleMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(lifecycleMigration.sql, /truncate\s+/i);
 });

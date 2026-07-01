@@ -2,6 +2,81 @@
 -- The same tests prove leaf component behavior, but CanvasViewport owns the
 -- host lifecycle that injects, opens, closes, and retires those surfaces.
 
+insert into planning_query_store.frontend_component_local_components (
+  component_id,
+  component_name,
+  component_kind,
+  component_status,
+  reuse_decision,
+  frontend_owner,
+  responsibility,
+  package_name,
+  route_scope,
+  plugin_scope,
+  capability_gaps,
+  evidence_refs,
+  raw_component,
+  source_path,
+  source_content_sha256
+)
+values (
+  'web.component.canvas.CanvasViewport',
+  'CanvasViewport',
+  'canvas-viewport',
+  'current',
+  'harden',
+  'Canvas workbench',
+  'Render the graph as the permanent base surface with React Flow controls and context host.',
+  '@dvt/web',
+  '/canvas',
+  'dbt; dvt',
+  jsonb_build_array('bottom operational drawer integration'),
+  jsonb_build_array(
+    'CanvasViewport.test.tsx',
+    'useCanvasViewportGraphModel.architecture.test.ts'
+  ),
+  jsonb_build_object(
+    'dbFirst', true,
+    'architecturalRole', 'viewport-host',
+    'rails', jsonb_build_array(
+      'RenderCanvasContextualGraphSurface',
+      'GetCanvasLayout'
+    ),
+    'hostedNodeSurfaces', jsonb_build_array(
+      'web.component.canvas.NodeFloatingToolbar',
+      'web.component.canvas.GraphNodeHealthPopover'
+    )
+  ),
+  'tools/planning-db/migrations/463_canvas_viewport_node_surface_lifecycle_tests.sql',
+  md5('component:CanvasViewport:local-overlay:463')
+)
+on conflict (component_id) do update set
+  component_name = excluded.component_name,
+  component_kind = excluded.component_kind,
+  component_status = excluded.component_status,
+  reuse_decision = excluded.reuse_decision,
+  frontend_owner = excluded.frontend_owner,
+  responsibility = excluded.responsibility,
+  package_name = excluded.package_name,
+  route_scope = excluded.route_scope,
+  plugin_scope = excluded.plugin_scope,
+  capability_gaps = excluded.capability_gaps,
+  evidence_refs = (
+    select jsonb_agg(distinct value order by value)
+    from (
+      select value
+      from jsonb_array_elements_text(coalesce(planning_query_store.frontend_component_local_components.evidence_refs, '[]'::jsonb)) refs(value)
+      union all
+      select value
+      from jsonb_array_elements_text(excluded.evidence_refs) refs(value)
+    ) merged_refs(value)
+  ),
+  raw_component = coalesce(planning_query_store.frontend_component_local_components.raw_component, '{}'::jsonb)
+    || excluded.raw_component,
+  source_path = excluded.source_path,
+  source_content_sha256 = excluded.source_content_sha256,
+  updated_at = now();
+
 insert into planning_query_store.frontend_component_local_files (
   component_id,
   file_path,
