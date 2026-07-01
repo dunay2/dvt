@@ -103,6 +103,35 @@ describe('CanvasViewport node operational rail', () => {
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
   });
 
+  it('closes the popover when the user clicks outside the canvas viewport', async () => {
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'source_orders',
+          position: { x: 40, y: 80 },
+          data: { name: 'Orders source', selectedForExecution: false },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await openOperationalDetails('source_orders');
+
+    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
+
+    const outsideTarget = document.createElement('button');
+    document.body.append(outsideTarget);
+    try {
+      await act(async () => {
+        fireEvent.pointerDown(outsideTarget);
+      });
+    } finally {
+      outsideTarget.remove();
+    }
+
+    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
+  });
+
   it('keeps the popover for its selected owner and closes it when selection changes nodes', async () => {
     await renderViewport({
       nodesWithImpact: [
