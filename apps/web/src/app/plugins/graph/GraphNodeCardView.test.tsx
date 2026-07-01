@@ -3,6 +3,7 @@
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { Database } from 'lucide-react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GraphNodeCardView } from './GraphNodeCardView';
@@ -142,6 +143,27 @@ describe('GraphNodeCardView', () => {
     ).toBe('source');
     expect(container.textContent).toContain('Freshness');
     expect(container.textContent).toContain('42 MB/min');
+  });
+
+  it('renders icon tone from the card model without inline colors', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          cardModel={{
+            ...BASE_PROPS.cardModel,
+            accentTone: 'source',
+          }}
+          icon={Database}
+        />
+      );
+    });
+
+    const icon = container.querySelector('[data-slot="graph-node-card-icon"]');
+
+    expect(icon?.getAttribute('data-tone')).toBe('source');
+    expect(icon?.getAttribute('style')).toBeNull();
+    expect(icon?.getAttribute('class')).toContain('text-purple');
   });
 
   it('uses the textual status chip as the only card status indicator', () => {

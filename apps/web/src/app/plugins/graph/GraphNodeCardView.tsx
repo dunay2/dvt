@@ -31,7 +31,6 @@ export type GraphNodeCardViewProps = Readonly<{
   columns: readonly GraphNodeCardColumn[];
   showColumns: boolean;
   icon?: LucideIcon;
-  iconColor?: string;
   borderClass?: string;
   statusRingClass?: string;
   selected: boolean;
@@ -49,7 +48,6 @@ export function GraphNodeCardView({
   columns,
   showColumns,
   icon: Icon,
-  iconColor,
   borderClass,
   statusRingClass,
   selected,
@@ -81,8 +79,12 @@ export function GraphNodeCardView({
             {Icon && (
               <Icon
                 size={18}
-                className={graphNodeCardLayoutClasses.icon}
-                {...(iconColor ? { style: { color: iconColor } as CSSProperties } : {})}
+                data-slot="graph-node-card-icon"
+                data-tone={cardModel.accentTone}
+                className={cn(
+                  graphNodeCardLayoutClasses.icon,
+                  graphNodeCardLayoutClasses.iconTone[cardModel.accentTone]
+                )}
               />
             )}
             <span

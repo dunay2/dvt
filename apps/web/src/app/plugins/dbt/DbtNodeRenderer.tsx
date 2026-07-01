@@ -169,7 +169,6 @@ export function DbtNodeRenderer({
       columns={columns}
       showColumns={showColumns}
       icon={Icon}
-      iconColor={kindMeta?.minimapColor}
       borderClass={kindMeta?.borderClass}
       statusRingClass={statusRing}
       selected={selected}
