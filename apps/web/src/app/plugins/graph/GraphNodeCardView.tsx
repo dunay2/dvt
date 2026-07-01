@@ -98,6 +98,7 @@ export function GraphNodeCardView({
             {playAction ? (
               <button
                 type="button"
+                data-slot="graph-node-card-play"
                 aria-label={playAction.label}
                 title={playAction.label}
                 disabled={playAction.disabled}

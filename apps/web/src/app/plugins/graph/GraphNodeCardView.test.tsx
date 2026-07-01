@@ -75,6 +75,26 @@ describe('GraphNodeCardView', () => {
     expect(onPlay).toHaveBeenCalledOnce();
   });
 
+  it('keeps the card play action green but visually secondary until hover or focus', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          playAction={{ label: 'Select for execution', onPress: vi.fn(), disabled: false }}
+        />
+      );
+    });
+
+    const card = container.querySelector('[data-slot="graph-node-card"]');
+    const button = container.querySelector('[data-slot="graph-node-card-play"]');
+
+    expect(card?.className).toContain('group');
+    expect(button?.className).toContain('text-green');
+    expect(button?.className).toContain('opacity-0');
+    expect(button?.className).toContain('group-hover:opacity-100');
+    expect(button?.className).toContain('focus-visible:opacity-100');
+  });
+
   it('renders semantic status, path, tags, and operational rail from the read model', () => {
     act(() => {
       root.render(
