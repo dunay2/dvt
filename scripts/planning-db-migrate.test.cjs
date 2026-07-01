@@ -11040,6 +11040,37 @@ test('tracked migrations keep frontend component summaries aligned with edge aut
   assert.doesNotMatch(summaryRetirementMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations split Canvas copy catalog and viewport projection out of GraphNodeCard ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '458_canvas_copy_catalog_and_viewport_projection_ownership.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.CanvasCopyCatalog/);
+  assert.match(ownershipMigration.sql, /ResolveCanvasViewCopy/);
+  assert.match(ownershipMigration.sql, /canvasCopyCatalog\.toolbar\.ts/);
+  assert.match(ownershipMigration.sql, /canvasCopyCatalog\.execution\.es\.ts/);
+  assert.match(ownershipMigration.sql, /canvasCopyFormatting\.ts/);
+  assert.match(ownershipMigration.sql, /EV-CANVAS-COPY-CATALOG-OWNERSHIP/);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(ownershipMigration.sql, /canvasNodeMapper\.ts/);
+  assert.match(ownershipMigration.sql, /useCanvasViewportGraphModel\.ts/);
+  assert.match(ownershipMigration.sql, /RenderCanvasContextualGraphSurface/);
+  assert.match(ownershipMigration.sql, /retiredForPresentationOwnership/);
+  assert.match(
+    ownershipMigration.sql,
+    /Canvas copy is shared locale infrastructure and is not GraphNodeCard presentation ownership/
+  );
+  assert.match(
+    ownershipMigration.sql,
+    /React Flow node projection belongs to the viewport graph model, not GraphNodeCard presentation/
+  );
+  assert.doesNotMatch(ownershipMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(
