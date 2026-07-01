@@ -10445,6 +10445,31 @@ test('tracked migrations record Graph node health popover outside dismiss eviden
   assert.doesNotMatch(outsideDismissMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node port handle component ownership', () => {
+  const migrations = readMigrationFiles();
+  const portHandleOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '426_canvas_node_port_handle_component_ownership.sql'
+  );
+
+  assert.ok(portHandleOwnershipMigration);
+  assert.match(portHandleOwnershipMigration.sql, /web\.component\.canvas\.CanvasNodePortHandle/);
+  assert.match(portHandleOwnershipMigration.sql, /frontend_component_local_components/);
+  assert.match(portHandleOwnershipMigration.sql, /frontend_component_local_files/);
+  assert.match(portHandleOwnershipMigration.sql, /frontend_component_local_cq_rails/);
+  assert.match(portHandleOwnershipMigration.sql, /frontend_component_validation_evidence/);
+  assert.match(portHandleOwnershipMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(portHandleOwnershipMigration.sql, /CanvasNodePortHandle\.tsx/);
+  assert.match(portHandleOwnershipMigration.sql, /CanvasNodeShell\.module\.css/);
+  assert.match(portHandleOwnershipMigration.sql, /CanvasNodeShell\.test\.tsx/);
+  assert.match(portHandleOwnershipMigration.sql, /CanvasNodeShell consumes CanvasNodePortHandle/);
+  assert.match(portHandleOwnershipMigration.sql, /EV-CANVAS-NODE-PORT-HANDLE-COMPONENT-OWNERSHIP/);
+  assert.match(portHandleOwnershipMigration.sql, /presentationOnly/);
+  assert.match(portHandleOwnershipMigration.sql, /doesNotOwnEdgeAdmission/);
+  assert.match(portHandleOwnershipMigration.sql, /AuthorCanvasGraphEdge/);
+  assert.doesNotMatch(portHandleOwnershipMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(portHandleOwnershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations normalize Graph node card view file roles', () => {
   const migrations = readMigrationFiles();
   const roleMigration = migrations.find(
