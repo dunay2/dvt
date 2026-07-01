@@ -123,7 +123,7 @@ export function GraphNodeCardView({
           </div>
         )}
 
-        <GraphNodeTagList tags={tags} />
+        <GraphNodeTagList tags={tags} tone={cardModel.accentTone} />
 
         {showColumns && (
           <div className={graphNodeColumnClasses.shell}>
