@@ -6,6 +6,7 @@ import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering
 import { createGraphFlowEdgeStyle, graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 type ColumnMeta = Array<{ name: string; type: string }>;
 type CanvasNodePosition = { x: number; y: number };
@@ -15,6 +16,7 @@ type MapCanonicalNodeToCanvasNodeArgs = {
   showColumns: boolean;
   overlayDecoration?: MergedNodeDecoration | null;
   persistedPosition?: CanvasNodePosition;
+  locale?: string;
 };
 
 function resolveColumns(value: unknown): ColumnMeta | undefined {
@@ -27,8 +29,10 @@ export function mapCanonicalNodeToCanvasNode({
   showColumns,
   overlayDecoration,
   persistedPosition,
+  locale,
 }: MapCanonicalNodeToCanvasNodeArgs): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
+  const copy = resolveCanvasViewCopy(locale);
 
   return {
     id: canonicalNode.id,
@@ -50,6 +54,10 @@ export function mapCanonicalNodeToCanvasNode({
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       columns: resolveColumns(canonicalNode.metadata?.columns),
       showColumns,
+      portLabels: {
+        target: copy.canvasNodePortTargetLabel,
+        source: copy.canvasNodePortSourceLabel,
+      },
     },
   };
 }
@@ -93,9 +101,11 @@ export function createCanvasEdgeFromConnection(connection: {
 export function mapDroppedCanonicalNodeToCanvasNode(
   canonicalNode: CanonicalNode,
   position: { x: number; y: number },
-  showColumns: boolean
+  showColumns: boolean,
+  locale?: string
 ): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
+  const copy = resolveCanvasViewCopy(locale);
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'
       ? canonicalNode.metadata.typeLabel
@@ -120,6 +130,10 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       columns: resolveColumns(canonicalNode.metadata?.columns),
       showColumns,
+      portLabels: {
+        target: copy.canvasNodePortTargetLabel,
+        source: copy.canvasNodePortSourceLabel,
+      },
     },
   };
 }

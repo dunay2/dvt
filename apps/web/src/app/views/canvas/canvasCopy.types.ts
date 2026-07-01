@@ -85,6 +85,8 @@ export type CanvasViewCopy = {
   readonly canvasContextMenuAddMacroLabel: string;
   readonly canvasContextMenuAddNodeLabel: string;
   readonly canvasContextMenuCanvasSettingsLabel: string;
+  readonly canvasNodePortTargetLabel: string;
+  readonly canvasNodePortSourceLabel: string;
   readonly canvasAddNodeCatalogTitle: string;
   readonly canvasAddNodeCatalogSearchLabel: string;
   readonly canvasAddNodeCatalogSearchPlaceholder: string;

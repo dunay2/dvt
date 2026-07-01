@@ -101,6 +101,14 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.contextMenu.canvasSettingsLabel',
     fallback: 'Canvas settings',
   },
+  canvasNodePortTargetLabel: {
+    key: 'canvas.nodePort.targetLabel',
+    fallback: 'Connect incoming port',
+  },
+  canvasNodePortSourceLabel: {
+    key: 'canvas.nodePort.sourceLabel',
+    fallback: 'Connect outgoing port',
+  },
   canvasAddNodeCatalogTitle: {
     key: 'canvas.addNodeCatalog.title',
     fallback: 'Add component',

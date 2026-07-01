@@ -26,6 +26,8 @@ export const canvasViewToolbarCopyEs = {
   canvasContextMenuAddMacroLabel: 'Anadir macro',
   canvasContextMenuAddNodeLabel: 'Anadir',
   canvasContextMenuCanvasSettingsLabel: 'Configuracion de canvas',
+  canvasNodePortTargetLabel: 'Conectar puerto de entrada',
+  canvasNodePortSourceLabel: 'Conectar puerto de salida',
   canvasAddNodeCatalogTitle: 'Anadir componente',
   canvasAddNodeCatalogSearchLabel: 'Buscar componentes',
   canvasAddNodeCatalogSearchPlaceholder: 'Buscar origen, modelo, transformacion, test, salida...',

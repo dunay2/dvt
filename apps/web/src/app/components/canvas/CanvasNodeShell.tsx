@@ -18,6 +18,8 @@ type CanvasNodeShellProps = Readonly<{
   shouldShowTargetHandle: boolean;
   sourceHandleTone?: CanvasNodePortTone;
   targetHandleTone?: CanvasNodePortTone;
+  sourcePortLabel?: string;
+  targetPortLabel?: string;
   onContextMenuAction: (actionId: CanvasNodeContextMenuActionId) => void;
   onOpenWorkbench?: () => void;
   onDragOver?: DragEventHandler<HTMLDivElement>;
@@ -31,6 +33,8 @@ export function CanvasNodeShell({
   shouldShowTargetHandle,
   sourceHandleTone = 'control',
   targetHandleTone = 'control',
+  sourcePortLabel,
+  targetPortLabel,
   onContextMenuAction,
   onOpenWorkbench,
   onDragOver,
@@ -50,7 +54,7 @@ export function CanvasNodeShell({
               id="target"
               kind="target"
               tone={targetHandleTone}
-              label="Connect incoming node port"
+              label={targetPortLabel}
             />
           )}
 
@@ -61,7 +65,7 @@ export function CanvasNodeShell({
               id="source"
               kind="source"
               tone={sourceHandleTone}
-              label="Connect outgoing node port"
+              label={sourcePortLabel}
             />
           )}
         </div>

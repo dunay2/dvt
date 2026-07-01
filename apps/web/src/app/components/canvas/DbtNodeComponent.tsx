@@ -66,6 +66,10 @@ export interface DbtNodeData extends Record<string, unknown> {
   onRemoveNode?: (nodeId: string) => void;
   onToggleNodeSelection?: (nodeId: string, shouldSelect: boolean) => void;
   onAttachSchemaToNode?: (nodeId: string, schemaName: string) => void;
+  portLabels?: Readonly<{
+    target: string;
+    source: string;
+  }>;
 }
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
@@ -270,6 +274,8 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       shouldShowTargetHandle={shouldShowTargetHandle}
       sourceHandleTone={portTone}
       targetHandleTone={portTone}
+      sourcePortLabel={data.portLabels?.source}
+      targetPortLabel={data.portLabels?.target}
       onContextMenuAction={handleContextMenuAction}
       onOpenWorkbench={
         typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined
