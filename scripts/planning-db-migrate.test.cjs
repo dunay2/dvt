@@ -11140,6 +11140,28 @@ test('tracked migrations record Graph node card professional width token contrac
   assert.doesNotMatch(widthMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations record CanvasViewport recorded column visibility projection', () => {
+  const migrations = readMigrationFiles();
+  const columnVisibilityMigration = migrations.find(
+    (migration) => migration.fileName === '462_canvas_viewport_recorded_columns_visibility.sql'
+  );
+
+  assert.ok(columnVisibilityMigration);
+  assert.match(columnVisibilityMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(columnVisibilityMigration.sql, /canvasNodeMapper\.ts/);
+  assert.match(columnVisibilityMigration.sql, /useCanvasViewportGraphModel\.nodeData\.test\.tsx/);
+  assert.match(columnVisibilityMigration.sql, /RenderCanvasContextualGraphSurface/);
+  assert.match(
+    columnVisibilityMigration.sql,
+    /EV-CANVAS-VIEWPORT-RECORDED-COLUMNS-VISIBLE-WITHOUT-LINEAGE/
+  );
+  assert.match(columnVisibilityMigration.sql, /recordedColumnsVisibleWithoutLineageOverlay/);
+  assert.match(columnVisibilityMigration.sql, /lineageOverlayDoesNotHideRecordedColumns/);
+  assert.match(columnVisibilityMigration.sql, /E-CANVAS-GRAPH-NODE-CARD-PROFESSIONAL-UX-1/);
+  assert.doesNotMatch(columnVisibilityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(columnVisibilityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(

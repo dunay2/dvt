@@ -78,6 +78,7 @@ export function mapCanonicalNodeToCanvasNode({
 }: MapCanonicalNodeToCanvasNodeArgs): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
   const copy = resolveCanvasViewCopy(locale);
+  const columns = resolveColumns(canonicalNode.metadata?.columns);
 
   return {
     id: canonicalNode.id,
@@ -98,8 +99,8 @@ export function mapCanonicalNodeToCanvasNode({
       overlayDecoration: overlayDecoration ?? null,
       tags: canonicalNode.tags,
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
-      columns: resolveColumns(canonicalNode.metadata?.columns),
-      showColumns,
+      columns,
+      showColumns: showColumns || (columns?.length ?? 0) > 0,
       portLabels: {
         target: copy.canvasNodePortTargetLabel,
         source: copy.canvasNodePortSourceLabel,
@@ -153,6 +154,7 @@ export function mapDroppedCanonicalNodeToCanvasNode(
 ): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
   const copy = resolveCanvasViewCopy(locale);
+  const columns = resolveColumns(canonicalNode.metadata?.columns);
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'
       ? canonicalNode.metadata.typeLabel
@@ -176,8 +178,8 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       lastCost: canonicalNode.lastCost,
       tags: canonicalNode.tags,
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
-      columns: resolveColumns(canonicalNode.metadata?.columns),
-      showColumns,
+      columns,
+      showColumns: showColumns || (columns?.length ?? 0) > 0,
       portLabels: {
         target: copy.canvasNodePortTargetLabel,
         source: copy.canvasNodePortSourceLabel,
