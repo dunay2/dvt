@@ -10,7 +10,7 @@ function actionIds(model: CanvasNodeFloatingToolbarModel): string[] {
 }
 
 describe('buildCanvasNodeFloatingToolbarModel', () => {
-  it('projects only operable left-click node toolbar actions', () => {
+  it('projects code and unavailable freeze posture for the left-click node toolbar', () => {
     const onOpenCode = vi.fn();
 
     const model = buildCanvasNodeFloatingToolbarModel({
@@ -25,13 +25,20 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
       nodeName: 'Orders model',
       position: { x: 240, y: 120 },
     });
-    expect(actionIds(model)).toEqual(['code']);
+    expect(actionIds(model)).toEqual(['code', 'freeze']);
     expect(model.actions).toEqual([
       expect.objectContaining({
         id: 'code',
         label: 'Código',
         description: 'Abrir edición contextual del nodo.',
         available: true,
+      }),
+      expect.objectContaining({
+        id: 'freeze',
+        label: 'Congelar',
+        description: 'Mantener estable la posición y edición del nodo.',
+        available: false,
+        unavailableReason: 'La política de congelado del nodo aún no está disponible.',
       }),
     ]);
 

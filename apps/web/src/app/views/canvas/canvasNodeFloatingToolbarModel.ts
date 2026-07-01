@@ -1,6 +1,6 @@
 /** Owned concern: derive the left-click node floating-toolbar model without mutating graph state. */
 
-export type CanvasNodeFloatingToolbarActionId = 'code';
+export type CanvasNodeFloatingToolbarActionId = 'code' | 'freeze';
 
 export type CanvasNodeFloatingToolbarActionTone = 'default' | 'success';
 
@@ -46,6 +46,14 @@ export function buildCanvasNodeFloatingToolbarModel({
       onSelect: () => {
         onOpenCode(nodeId);
       },
+    });
+    actions.push({
+      id: 'freeze',
+      label: 'Congelar',
+      description: 'Mantener estable la posición y edición del nodo.',
+      tone: 'default',
+      available: false,
+      unavailableReason: 'La política de congelado del nodo aún no está disponible.',
     });
   }
 

@@ -10802,6 +10802,28 @@ test('tracked migrations register Graph node card play affordance posture', () =
   assert.doesNotMatch(playAffordanceMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Node floating toolbar unavailable freeze posture', () => {
+  const migrations = readMigrationFiles();
+  const freezePostureMigration = migrations.find(
+    (migration) => migration.fileName === '446_node_floating_toolbar_freeze_posture.sql'
+  );
+
+  assert.ok(freezePostureMigration);
+  assert.match(freezePostureMigration.sql, /web\.component\.canvas\.NodeFloatingToolbar/);
+  assert.match(freezePostureMigration.sql, /RenderCanvasNodeFloatingToolbar/);
+  assert.match(freezePostureMigration.sql, /visibleUnavailableActions/);
+  assert.match(freezePostureMigration.sql, /freeze/);
+  assert.match(freezePostureMigration.sql, /Congelar/);
+  assert.match(freezePostureMigration.sql, /noFreezeCommandAdded/);
+  assert.match(
+    freezePostureMigration.sql,
+    /EV-CANVAS-NODE-FLOATING-TOOLBAR-FREEZE-UNAVAILABLE-POSTURE/
+  );
+  assert.match(freezePostureMigration.sql, /canvasNodeFloatingToolbarModel\.test\.ts/);
+  assert.match(freezePostureMigration.sql, /CanvasViewport\.nodeFloatingToolbar\.test\.tsx/);
+  assert.doesNotMatch(freezePostureMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(

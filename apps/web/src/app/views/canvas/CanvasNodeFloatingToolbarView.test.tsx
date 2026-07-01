@@ -27,7 +27,7 @@ describe('CanvasNodeFloatingToolbarView', () => {
     container.remove();
   });
 
-  it('renders only operable node floating toolbar actions', () => {
+  it('renders node floating toolbar actions with unavailable freeze posture', () => {
     const onOpenCode = vi.fn();
     const model = buildCanvasNodeFloatingToolbarModel({
       nodeId: 'model_orders',
@@ -49,7 +49,12 @@ describe('CanvasNodeFloatingToolbarView', () => {
 
     expect(button('Código')).not.toBeNull();
     expect(button('Código')?.getAttribute('data-action-state')).toBe('available');
-    expect(button('Congelar')).toBeNull();
+    expect(button('Congelar')).not.toBeNull();
+    expect(button('Congelar')?.getAttribute('data-action-state')).toBe('unavailable');
+    expect(button('Congelar')?.getAttribute('aria-disabled')).toBe('true');
+    expect(button('Congelar')?.getAttribute('title')).toBe(
+      'La política de congelado del nodo aún no está disponible.'
+    );
     expect(button('Seleccionar para ejecución')).toBeNull();
     expect(button('Más acciones')).toBeNull();
 
