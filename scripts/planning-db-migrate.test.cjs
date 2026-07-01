@@ -10655,6 +10655,38 @@ test('tracked migrations record Canvas node port control tone selector', () => {
   assert.doesNotMatch(controlToneMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Canvas registry guard with extracted shell and port components', () => {
+  const migrations = readMigrationFiles();
+  const registryReconcileMigration = migrations.find(
+    (migration) => migration.fileName === '442_canvas_registry_shell_port_owner_reconcile.sql'
+  );
+
+  assert.ok(registryReconcileMigration);
+  assert.match(
+    registryReconcileMigration.sql,
+    /create or replace view planning_query_store\.canvas_component_registry_drift_query/
+  );
+  assert.match(registryReconcileMigration.sql, /web\.component\.canvas\.CanvasNodeShell/);
+  assert.match(registryReconcileMigration.sql, /web\.component\.canvas\.CanvasNodePortHandle/);
+  assert.match(registryReconcileMigration.sql, /RenderCanvasNodeShell/);
+  assert.match(registryReconcileMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(registryReconcileMigration.sql, /EV-CANVAS-REGISTRY-SHELL-PORT-OWNER-RECONCILED/);
+  assert.match(
+    registryReconcileMigration.sql,
+    /pnpm planning:db:query canvas-component-registry-drift/
+  );
+  assert.doesNotMatch(
+    registryReconcileMigration.sql,
+    /CanvasNodeShell\.module\.css',\s*'node-card-style',\s*'web\.component\.canvas\.GraphNodeCard'/
+  );
+  assert.doesNotMatch(
+    registryReconcileMigration.sql,
+    /CanvasNodePortHandle\.tsx',\s*'node-card-port',\s*'web\.component\.canvas\.GraphNodeCard'/
+  );
+  assert.doesNotMatch(registryReconcileMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(registryReconcileMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Canvas node shell component ownership', () => {
   const migrations = readMigrationFiles();
   const shellOwnershipMigration = migrations.find(
