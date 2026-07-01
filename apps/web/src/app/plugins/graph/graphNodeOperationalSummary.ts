@@ -7,6 +7,7 @@ import {
   buildGraphNodeOperationalDetail,
   formatBytes,
   formatCompactNumber,
+  formatDurationMs,
   numericValue,
   pushOperationalMetric,
   resolveRuntimeDurationLabel,
@@ -51,6 +52,42 @@ function formatCadenceMinutes(value: number): string {
 
 function formatThroughputBytesPerMinute(value: number): string {
   return `${formatBytes(value)}/min`;
+}
+
+function formatCost(value: number): string {
+  return `$${value.toFixed(2)}`;
+}
+
+function firstRuntimeNumericValue(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown>,
+  runtimeData: Record<string, unknown>,
+  keys: readonly string[]
+): number | null {
+  for (const key of keys) {
+    const value =
+      numericValue(metadata[key]) ?? numericValue(data[key]) ?? numericValue(runtimeData[key]);
+    if (value !== null) {
+      return value;
+    }
+  }
+  return null;
+}
+
+function firstRuntimeStringValue(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown>,
+  runtimeData: Record<string, unknown>,
+  keys: readonly string[]
+): string | null {
+  for (const key of keys) {
+    const value =
+      stringValue(metadata[key]) ?? stringValue(data[key]) ?? stringValue(runtimeData[key]);
+    if (value !== null) {
+      return value;
+    }
+  }
+  return null;
 }
 
 function resolveSchemaDriftLabel(
@@ -163,6 +200,62 @@ function buildSourceHealthRows(
   return { hasSourceHealthSignal, railMetrics, detailRows };
 }
 
+function buildModelExecutionMetrics(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown>,
+  runtimeData: Record<string, unknown>,
+  rowCount: number | null
+): GraphNodeCardMetric[] {
+  const lastRunMinutesAgo = firstRuntimeNumericValue(metadata, data, runtimeData, [
+    'lastRunMinutesAgo',
+    'lastRunAgeMinutes',
+  ]);
+  const lastRunAt = firstRuntimeStringValue(metadata, data, runtimeData, ['lastRunAt']);
+  const durationSeconds = firstRuntimeNumericValue(metadata, data, runtimeData, [
+    'durationSeconds',
+  ]);
+  const durationLabel =
+    resolveRuntimeDurationLabel(metadata, runtimeData) ??
+    (durationSeconds == null ? null : formatDurationMs(durationSeconds * 1000));
+  const costUsd = firstRuntimeNumericValue(metadata, data, runtimeData, ['costUsd', 'cost']);
+  const costLabel =
+    costUsd == null ? firstRuntimeStringValue(metadata, data, runtimeData, ['costLabel']) : null;
+  const testStatus = firstRuntimeStringValue(metadata, data, runtimeData, [
+    'testStatus',
+    'testsStatus',
+  ]);
+  const hasModelExecutionSignal =
+    lastRunMinutesAgo !== null ||
+    lastRunAt !== null ||
+    durationLabel !== null ||
+    costUsd !== null ||
+    costLabel !== null ||
+    testStatus !== null;
+  const metrics: GraphNodeCardMetric[] = [];
+
+  if (!hasModelExecutionSignal) {
+    return metrics;
+  }
+
+  pushOperationalMetric(
+    metrics,
+    'last-run',
+    'Last run',
+    lastRunMinutesAgo == null ? lastRunAt : formatMinutes(lastRunMinutesAgo)
+  );
+  pushOperationalMetric(metrics, 'duration', 'Duration', durationLabel);
+  pushOperationalMetric(
+    metrics,
+    'rows',
+    'Rows',
+    rowCount == null ? null : formatCompactNumber(rowCount)
+  );
+  pushOperationalMetric(metrics, 'cost', 'Cost', costUsd == null ? costLabel : formatCost(costUsd));
+  pushOperationalMetric(metrics, 'tests', 'Tests', testStatus);
+
+  return metrics;
+}
+
 export function buildGraphNodeOperationalSummary({
   title,
   metadata,
@@ -172,9 +265,8 @@ export function buildGraphNodeOperationalSummary({
   byteSize,
 }: GraphNodeOperationalSummaryInput): GraphNodeOperationalSummary {
   const metrics: GraphNodeCardMetric[] = [];
-  const lastRunAt = stringValue(metadata.lastRunAt) ?? stringValue(data.lastRunAt);
-  const durationLabel = resolveRuntimeDurationLabel(metadata, runtimeData);
   const sourceHealth = buildSourceHealthRows(metadata, data, rowCount, byteSize);
+  const modelExecutionMetrics = buildModelExecutionMetrics(metadata, data, runtimeData, rowCount);
 
   if (sourceHealth.hasSourceHealthSignal) {
     return {
@@ -183,15 +275,8 @@ export function buildGraphNodeOperationalSummary({
     };
   }
 
-  if (lastRunAt || durationLabel) {
-    pushOperationalMetric(metrics, 'last-run', 'Last run', lastRunAt);
-    pushOperationalMetric(metrics, 'duration', 'Duration', durationLabel);
-    pushOperationalMetric(
-      metrics,
-      'rows',
-      'Rows',
-      rowCount == null ? null : formatCompactNumber(rowCount)
-    );
+  if (modelExecutionMetrics.length > 0) {
+    metrics.push(...modelExecutionMetrics);
   } else {
     pushOperationalMetric(
       metrics,

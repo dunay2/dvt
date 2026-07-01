@@ -130,4 +130,29 @@ describe('buildGraphNodeOperationalSummary', () => {
       { id: 'rows', label: 'Rows', value: '4.2k' },
     ]);
   });
+
+  it('projects model execution metrics from recorded run data', () => {
+    const summary = buildGraphNodeOperationalSummary({
+      title: 'Orders Model',
+      metadata: {
+        lastRunMinutesAgo: 8,
+        durationSeconds: 32,
+        rowCount: 2_100_000,
+        costUsd: 0.18,
+        testStatus: 'passed',
+      },
+      data: {},
+      rowCount: 2_100_000,
+      byteSize: null,
+    });
+
+    expect(summary.metrics).toEqual([
+      { id: 'last-run', label: 'Last run', value: '8 min' },
+      { id: 'duration', label: 'Duration', value: '32s' },
+      { id: 'rows', label: 'Rows', value: '2.1M' },
+      { id: 'cost', label: 'Cost', value: '$0.18' },
+      { id: 'tests', label: 'Tests', value: 'passed' },
+    ]);
+    expect(summary.detail?.rows).toBe(summary.metrics);
+  });
 });
