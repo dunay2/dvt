@@ -10475,6 +10475,34 @@ test('tracked migrations register Graph node leaf component rails', () => {
   assert.doesNotMatch(leafRailsMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register direct Graph node leaf component tests', () => {
+  const migrations = readMigrationFiles();
+  const leafDirectTestsMigration = migrations.find(
+    (migration) => migration.fileName === '432_graph_node_leaf_component_direct_tests.sql'
+  );
+
+  assert.ok(leafDirectTestsMigration);
+  assert.match(leafDirectTestsMigration.sql, /web\.component\.canvas\.GraphNodeStatusChip/);
+  assert.match(leafDirectTestsMigration.sql, /web\.component\.canvas\.GraphNodeTagList/);
+  assert.match(leafDirectTestsMigration.sql, /web\.component\.canvas\.GraphNodeMetricRow/);
+  assert.match(leafDirectTestsMigration.sql, /GraphNodeStatusChip\.test\.tsx/);
+  assert.match(leafDirectTestsMigration.sql, /GraphNodeTagList\.test\.tsx/);
+  assert.match(leafDirectTestsMigration.sql, /GraphNodeMetricRow\.test\.tsx/);
+  assert.match(leafDirectTestsMigration.sql, /RenderCanvasGraphNodeStatusChip/);
+  assert.match(leafDirectTestsMigration.sql, /RenderCanvasGraphNodeTagList/);
+  assert.match(leafDirectTestsMigration.sql, /RenderCanvasGraphNodeMetricRow/);
+  assert.match(leafDirectTestsMigration.sql, /EV-CANVAS-GRAPH-NODE-STATUS-CHIP-DIRECT-TEST/);
+  assert.match(leafDirectTestsMigration.sql, /EV-CANVAS-GRAPH-NODE-TAG-LIST-DIRECT-TEST/);
+  assert.match(leafDirectTestsMigration.sql, /EV-CANVAS-GRAPH-NODE-METRIC-ROW-DIRECT-TEST/);
+  assert.match(leafDirectTestsMigration.sql, /doesNotDeriveCardState/);
+  assert.match(leafDirectTestsMigration.sql, /doesNotChooseTagsFromMetadata/);
+  assert.match(leafDirectTestsMigration.sql, /doesNotInventMetrics/);
+  assert.match(leafDirectTestsMigration.sql, /frontend_component_local_files/);
+  assert.match(leafDirectTestsMigration.sql, /frontend_component_validation_evidence/);
+  assert.doesNotMatch(leafDirectTestsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(leafDirectTestsMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node card single status token contract', () => {
   const migrations = readMigrationFiles();
   const statusTokenMigration = migrations.find(
