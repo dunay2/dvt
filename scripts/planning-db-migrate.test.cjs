@@ -10492,6 +10492,24 @@ test('tracked migrations keep Graph node card view ownership import resistant', 
   assert.doesNotMatch(importOverlayMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node source last-refresh health metric', () => {
+  const migrations = readMigrationFiles();
+  const sourceRefreshMigration = migrations.find(
+    (migration) => migration.fileName === '422_graph_node_source_last_refresh_metric.sql'
+  );
+
+  assert.ok(sourceRefreshMigration);
+  assert.match(sourceRefreshMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(sourceRefreshMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(sourceRefreshMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(sourceRefreshMigration.sql, /lastRefreshAt or lastRefresh/);
+  assert.match(sourceRefreshMigration.sql, /last-refresh/);
+  assert.match(sourceRefreshMigration.sql, /EV-GRAPH-NODE-OPERATIONAL-SUMMARY-SOURCE-LAST-REFRESH/);
+  assert.match(sourceRefreshMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(sourceRefreshMigration.sql, /graphNodeOperationalSummary\.test\.ts/);
+  assert.doesNotMatch(sourceRefreshMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Node workbench duplicate file ownership', () => {
   const migrations = readMigrationFiles();
   const ownershipMigration = migrations.find(

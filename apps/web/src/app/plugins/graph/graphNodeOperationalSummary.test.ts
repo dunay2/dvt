@@ -50,6 +50,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       title: 'Postgres public',
       metadata: {
         freshnessMinutes: 12,
+        lastRefreshAt: '2026-06-28T10:15:00Z',
         cadenceMinutes: 15,
         throughputBytesPerMinute: 42 * 1024 * 1024,
         datasetSizeBytes: 18.2 * 1024 * 1024 * 1024,
@@ -63,6 +64,7 @@ describe('buildGraphNodeOperationalSummary', () => {
 
     expect(summary.metrics).toEqual([
       { id: 'freshness', label: 'Freshness', value: '12 min' },
+      { id: 'last-refresh', label: 'Last refresh', value: '2026-06-28T10:15:00Z' },
       { id: 'cadence', label: 'Cadence', value: 'Every 15 min' },
       { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
       { id: 'size', label: 'Size', value: '18.2 GB' },
@@ -72,6 +74,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       ariaLabel: 'Open Postgres public health metrics',
       rows: [
         { id: 'freshness', label: 'Freshness', value: '12 min' },
+        { id: 'last-refresh', label: 'Last refresh', value: '2026-06-28T10:15:00Z' },
         { id: 'cadence', label: 'Cadence', value: 'Every 15 min' },
         { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
         { id: 'size', label: 'Size', value: '18.2 GB' },
