@@ -4,11 +4,25 @@ import type { KeyboardEvent, MouseEvent, ReactElement } from 'react';
 import type { GraphNodeCardMetric } from './graphNodeCardStrategyContracts';
 import { graphNodeOperationalRailClasses } from './graphVisualTokens';
 
-export type GraphNodeOperationalRailProps = Readonly<{
+type GraphNodeOperationalRailBaseProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
-  ariaLabel?: string;
-  onOpen?: (anchorRect: DOMRect) => void;
 }>;
+
+type GraphNodeOperationalRailStaticProps = GraphNodeOperationalRailBaseProps &
+  Readonly<{
+    ariaLabel?: never;
+    onOpen?: undefined;
+  }>;
+
+type GraphNodeOperationalRailInteractiveProps = GraphNodeOperationalRailBaseProps &
+  Readonly<{
+    ariaLabel: string;
+    onOpen: (anchorRect: DOMRect) => void;
+  }>;
+
+export type GraphNodeOperationalRailProps =
+  | GraphNodeOperationalRailStaticProps
+  | GraphNodeOperationalRailInteractiveProps;
 
 function stopAndOpen(
   event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>,
