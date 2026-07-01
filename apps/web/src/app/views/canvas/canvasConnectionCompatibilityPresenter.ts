@@ -2,6 +2,7 @@
 import type { Edge } from '@xyflow/react';
 
 import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
+import { buildGraphNodeTitlePresentation } from '../../plugins/graph/graphNodeTitlePresentation';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { CanonicalNode } from '../../types/canonical';
 import { proposeConnection } from './canvasConnectionAggregate';
@@ -71,6 +72,14 @@ function createEmptyCompatibility(): MutableCompatibility {
   };
 }
 
+function resolveCompatibleNodeLabel(node: CanonicalNode): string {
+  return buildGraphNodeTitlePresentation({
+    nodeName: node.name,
+    kind: node.kind,
+    metadata: node.metadata ?? {},
+  }).title;
+}
+
 export function buildCanvasConnectionCompatibilityByNodeId({
   visibleNodeIds,
   visibleEdges,
@@ -124,8 +133,8 @@ export function buildCanvasConnectionCompatibilityByNodeId({
         continue;
       }
 
-      sourceCompatibility.sourceCompatibleNodeNames.push(targetNode.name);
-      targetCompatibility.targetCompatibleNodeNames.push(sourceNode.name);
+      sourceCompatibility.sourceCompatibleNodeNames.push(resolveCompatibleNodeLabel(targetNode));
+      targetCompatibility.targetCompatibleNodeNames.push(resolveCompatibleNodeLabel(sourceNode));
     }
   }
 

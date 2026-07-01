@@ -10870,6 +10870,51 @@ test('tracked migrations register Graph node card icon tone token dependency', (
   assert.doesNotMatch(iconToneMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node card port compatibility human labels', () => {
+  const migrations = readMigrationFiles();
+  const compatibilityLabelMigration = migrations.find(
+    (migration) => migration.fileName === '449_graph_node_card_port_compatibility_human_labels.sql'
+  );
+
+  assert.ok(compatibilityLabelMigration);
+  assert.match(compatibilityLabelMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(compatibilityLabelMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(compatibilityLabelMigration.sql, /buildCanvasConnectionCompatibilityByNodeId/);
+  assert.match(compatibilityLabelMigration.sql, /buildGraphNodeTitlePresentation/);
+  assert.match(compatibilityLabelMigration.sql, /Orders Model/);
+  assert.match(compatibilityLabelMigration.sql, /Postgres · public/);
+  assert.match(compatibilityLabelMigration.sql, /AuthorCanvasGraphEdge/);
+  assert.match(compatibilityLabelMigration.sql, /doesNotOwnEdgeAdmission/);
+  assert.match(
+    compatibilityLabelMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-CARD-PORT-COMPATIBILITY-HUMAN-LABELS/
+  );
+  assert.match(compatibilityLabelMigration.sql, /canvasConnectionCompatibilityPresenter\.test\.ts/);
+  assert.doesNotMatch(compatibilityLabelMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(compatibilityLabelMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Graph node card port compatibility label helper symbol', () => {
+  const migrations = readMigrationFiles();
+  const compatibilityLabelSymbolMigration = migrations.find(
+    (migration) => migration.fileName === '450_graph_node_card_port_compatibility_label_symbol.sql'
+  );
+
+  assert.ok(compatibilityLabelSymbolMigration);
+  assert.match(compatibilityLabelSymbolMigration.sql, /resolveCompatibleNodeLabel/);
+  assert.match(compatibilityLabelSymbolMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(compatibilityLabelSymbolMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(compatibilityLabelSymbolMigration.sql, /canvasConnectionCompatibilityPresenter\.ts/);
+  assert.match(
+    compatibilityLabelSymbolMigration.sql,
+    /canvasConnectionCompatibilityPresenter\.test\.ts/
+  );
+  assert.match(compatibilityLabelSymbolMigration.sql, /delegates_to_graph_node_title_presenter/);
+  assert.match(compatibilityLabelSymbolMigration.sql, /does_not_own_edge_admission/);
+  assert.doesNotMatch(compatibilityLabelSymbolMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(compatibilityLabelSymbolMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(
