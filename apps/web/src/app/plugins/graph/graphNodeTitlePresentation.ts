@@ -80,16 +80,16 @@ export function buildGraphNodeTitlePresentation({
     stringValue(configData.tableName) ??
     stringValue(configData.table);
 
-  if ((kind === 'dbt:source' || kind === 'dvt:source') && database && schema) {
+  if ((kind === 'dbt:source' || kind === 'dvt:source') && sourceName && tableName) {
     return {
-      title: `${titleCaseIdentifier(database)} · ${schema}`,
+      title: `${titleCaseIdentifier(sourceName)} ${titleCaseIdentifier(tableName)}`,
       technicalName: nodeName,
     };
   }
 
-  if (kind === 'dbt:source' && sourceName && tableName) {
+  if ((kind === 'dbt:source' || kind === 'dvt:source') && database && schema) {
     return {
-      title: `${titleCaseIdentifier(sourceName)} ${titleCaseIdentifier(tableName)}`,
+      title: `${titleCaseIdentifier(database)} · ${schema}`,
       technicalName: nodeName,
     };
   }

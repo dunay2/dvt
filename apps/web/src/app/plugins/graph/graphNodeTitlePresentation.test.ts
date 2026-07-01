@@ -74,6 +74,26 @@ describe('buildGraphNodeTitlePresentation', () => {
     });
   });
 
+  it('prefers explicit source table identity over schema identity for imported sources', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'src_erp_orders',
+        kind: 'dvt:source',
+        metadata: {
+          database: 'RAW',
+          schema: 'ERP',
+          config: {
+            sourceName: 'erp',
+            tableName: 'orders',
+          },
+        },
+      })
+    ).toEqual({
+      title: 'Erp Orders',
+      technicalName: 'src_erp_orders',
+    });
+  });
+
   it('keeps model names readable without inventing missing relation metadata', () => {
     expect(
       buildGraphNodeTitlePresentation({
