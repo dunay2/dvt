@@ -54,6 +54,14 @@ export const graphNodeOperationalRailClasses = {
   metricText: 'min-w-0',
   label: 'block truncate text-[9px] uppercase tracking-wide text-slate-500',
   value: 'mt-0.5 block truncate text-[11px] font-medium text-slate-200',
+  valueTone: {
+    neutral: 'text-slate-200',
+    info: 'text-blue-200',
+    success: 'text-green-300',
+    warning: 'text-amber-200',
+    danger: 'text-red-200',
+    running: 'text-sky-200',
+  },
 } as const;
 
 export const graphNodeHealthPopoverClasses = {

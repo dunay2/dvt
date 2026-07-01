@@ -65,6 +65,30 @@ describe('GraphNodeOperationalRail', () => {
     ).toBe('true');
   });
 
+  it('renders metric tones as stable presentation state', () => {
+    act(() => {
+      root.render(
+        <GraphNodeOperationalRail
+          metrics={[
+            {
+              id: 'schema-drift',
+              label: 'Schema drift',
+              value: 'Drift detected',
+              icon: 'drift',
+              tone: 'warning',
+            },
+          ]}
+        />
+      );
+    });
+
+    const metric = container.querySelector('[data-slot="graph-node-operational-metric"]');
+    const value = container.querySelector('[data-slot="graph-node-operational-value"]');
+
+    expect(metric?.getAttribute('data-tone')).toBe('warning');
+    expect(value?.className).toContain('text-amber');
+  });
+
   it('uses the supplied accessible label for interactive rails', () => {
     const onOpen = vi.fn();
 

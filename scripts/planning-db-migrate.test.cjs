@@ -11021,6 +11021,51 @@ test('tracked migrations register Graph node read model metric icon evidence', (
   assert.doesNotMatch(readModelMetricIconMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node operational metric tone rendering', () => {
+  const migrations = readMigrationFiles();
+  const metricToneMigration = migrations.find(
+    (migration) => migration.fileName === '443_graph_node_operational_metric_tone.sql'
+  );
+
+  assert.ok(metricToneMigration);
+  assert.match(metricToneMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(metricToneMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(metricToneMigration.sql, /GraphNodeCardMetric\.tone/);
+  assert.match(metricToneMigration.sql, /graphNodeOperationalRailClasses\.valueTone/);
+  assert.match(metricToneMigration.sql, /data-tone/);
+  assert.match(metricToneMigration.sql, /EV-CANVAS-GRAPH-NODE-OPERATIONAL-RAIL-METRIC-TONE-RENDER/);
+  assert.match(metricToneMigration.sql, /GraphNodeOperationalRail\.test\.tsx/);
+  assert.match(
+    metricToneMigration.sql,
+    /pnpm --filter @dvt\/web exec vitest run --config vitest\.presentation\.config\.ts src\/app\/plugins\/graph\/GraphNodeOperationalRail\.test\.tsx/
+  );
+  assert.match(metricToneMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(metricToneMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Graph node operational rail tone token dependency', () => {
+  const migrations = readMigrationFiles();
+  const metricToneTokenMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '444_graph_node_operational_rail_tone_token_dependency.sql'
+  );
+
+  assert.ok(metricToneTokenMigration);
+  assert.match(metricToneTokenMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(metricToneTokenMigration.sql, /graphVisualTokens\.ts/);
+  assert.match(metricToneTokenMigration.sql, /style-token/);
+  assert.match(metricToneTokenMigration.sql, /graphNodeOperationalRailClasses\.valueTone/);
+  assert.match(
+    metricToneTokenMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-OPERATIONAL-RAIL-TONE-TOKEN-OWNERSHIP/
+  );
+  assert.match(
+    metricToneTokenMigration.sql,
+    /frontend-component-files --component web\.component\.canvas\.GraphNodeOperationalRail/
+  );
+  assert.doesNotMatch(metricToneTokenMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node tag accent tone contract', () => {
   const migrations = readMigrationFiles();
   const tagAccentMigration = migrations.find(

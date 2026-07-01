@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
+import { cn } from '../../components/ui/utils';
 import type {
   GraphNodeCardMetric,
   GraphNodeCardMetricIcon,
@@ -60,9 +61,15 @@ function stopAndOpen(
 function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] {
   return metrics.map((metric) => {
     const Icon = metric.icon == null ? null : metricIconByName[metric.icon];
+    const tone = metric.tone ?? 'neutral';
 
     return (
-      <span key={metric.id} className={graphNodeOperationalRailClasses.metric}>
+      <span
+        key={metric.id}
+        data-slot="graph-node-operational-metric"
+        data-tone={tone}
+        className={graphNodeOperationalRailClasses.metric}
+      >
         {Icon == null ? null : (
           <span
             data-slot="graph-node-operational-icon"
@@ -75,7 +82,15 @@ function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] 
         )}
         <span className={graphNodeOperationalRailClasses.metricText}>
           <span className={graphNodeOperationalRailClasses.label}>{metric.label}</span>
-          <span className={graphNodeOperationalRailClasses.value}>{metric.value}</span>
+          <span
+            data-slot="graph-node-operational-value"
+            className={cn(
+              graphNodeOperationalRailClasses.value,
+              graphNodeOperationalRailClasses.valueTone[tone]
+            )}
+          >
+            {metric.value}
+          </span>
         </span>
       </span>
     );
