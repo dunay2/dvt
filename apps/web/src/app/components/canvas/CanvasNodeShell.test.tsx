@@ -2,6 +2,8 @@
 
 import { ReactFlowProvider } from '@xyflow/react';
 import { fireEvent } from '@testing-library/dom';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -13,6 +15,9 @@ const CONTEXT_MENU_MODEL: CanvasNodeContextMenuModel = {
   target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders model' },
   actionGroups: [],
 };
+
+const canvasNodeShellCssPath = resolve(import.meta.dirname, 'CanvasNodeShell.module.css');
+const themeCssPath = resolve(import.meta.dirname, '../../../styles/theme.css');
 
 describe('CanvasNodeShell', () => {
   let container: HTMLDivElement;
@@ -126,5 +131,16 @@ describe('CanvasNodeShell', () => {
     const ports = Array.from(container.querySelectorAll('[data-slot="canvas-node-port-handle"]'));
 
     expect(ports.map((port) => port.getAttribute('data-handleid'))).toEqual(['target', 'source']);
+  });
+
+  it('keeps graph port tone colors in global design tokens instead of component-local hex values', () => {
+    const componentCss = readFileSync(canvasNodeShellCssPath, 'utf8');
+    const themeCss = readFileSync(themeCssPath, 'utf8');
+
+    expect(componentCss).not.toMatch(/#[0-9a-fA-F]{3,8}/u);
+    expect(themeCss).toContain('--canvas-node-port-source-ring');
+    expect(themeCss).toContain('--canvas-node-port-model-ring');
+    expect(themeCss).toContain('--canvas-node-port-test-ring');
+    expect(themeCss).toContain('--canvas-node-port-output-ring');
   });
 });
