@@ -11011,6 +11011,35 @@ test('tracked migrations move Canvas connection compatibility ownership to edge 
   assert.doesNotMatch(compatibilityOwnershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations keep frontend component summaries aligned with edge authoring retirement', () => {
+  const migrations = readMigrationFiles();
+  const summaryRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '457_frontend_component_summary_edge_authoring_retirement.sql'
+  );
+
+  assert.ok(summaryRetirementMigration);
+  assert.match(
+    summaryRetirementMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.match(summaryRetirementMigration.sql, /file_counts as \(/);
+  assert.match(
+    summaryRetirementMigration.sql,
+    /not coalesce\(\(file_ref\.raw_file ->> 'retiredForContextActionCatalog'\)::boolean, false\)/
+  );
+  assert.match(
+    summaryRetirementMigration.sql,
+    /not coalesce\(\(file_ref\.raw_file ->> 'retiredForPresentationOwnership'\)::boolean, false\)/
+  );
+  assert.match(
+    summaryRetirementMigration.sql,
+    /not coalesce\(\(file_ref\.raw_file ->> 'retiredForEdgeAuthoringOwnership'\)::boolean, false\)/
+  );
+  assert.doesNotMatch(summaryRetirementMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(summaryRetirementMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(
