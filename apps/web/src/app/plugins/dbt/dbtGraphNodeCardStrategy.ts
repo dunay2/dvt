@@ -93,6 +93,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     nodeName: node.name,
     kind: node.kind,
     metadata,
+    data,
   });
   const operationalSummary = buildGraphNodeOperationalSummary({
     title: titlePresentation.title,
