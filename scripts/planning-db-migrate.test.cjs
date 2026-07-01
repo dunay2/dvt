@@ -10590,6 +10590,28 @@ test('tracked migrations register Canvas node port handle component ownership', 
   assert.doesNotMatch(portHandleOwnershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node port handle direct test evidence', () => {
+  const migrations = readMigrationFiles();
+  const portHandleDirectTestMigration = migrations.find(
+    (migration) => migration.fileName === '433_canvas_node_port_handle_direct_test.sql'
+  );
+
+  assert.ok(portHandleDirectTestMigration);
+  assert.match(portHandleDirectTestMigration.sql, /web\.component\.canvas\.CanvasNodePortHandle/);
+  assert.match(portHandleDirectTestMigration.sql, /CanvasNodePortHandle\.test\.tsx/);
+  assert.match(portHandleDirectTestMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(portHandleDirectTestMigration.sql, /EV-CANVAS-NODE-PORT-HANDLE-DIRECT-TEST/);
+  assert.match(portHandleDirectTestMigration.sql, /stableHandleId/);
+  assert.match(portHandleDirectTestMigration.sql, /callerOwnedAccessibleCopy/);
+  assert.match(portHandleDirectTestMigration.sql, /passiveCompatibilityHint/);
+  assert.match(portHandleDirectTestMigration.sql, /doesNotAuthorEdges/);
+  assert.match(portHandleDirectTestMigration.sql, /AuthorCanvasGraphEdge/);
+  assert.match(portHandleDirectTestMigration.sql, /frontend_component_local_files/);
+  assert.match(portHandleDirectTestMigration.sql, /frontend_component_validation_evidence/);
+  assert.doesNotMatch(portHandleDirectTestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(portHandleDirectTestMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Canvas node shell component ownership', () => {
   const migrations = readMigrationFiles();
   const shellOwnershipMigration = migrations.find(
