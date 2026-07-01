@@ -2,7 +2,7 @@
 import type { CSSProperties, KeyboardEvent, ReactElement } from 'react';
 
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
-import { graphVisualClasses } from './graphVisualTokens';
+import { graphNodeHealthPopoverClasses } from './graphVisualTokens';
 
 export type GraphNodeHealthPopoverViewProps = Readonly<{
   detail: GraphNodeOperationalDetail;
@@ -40,16 +40,16 @@ export function GraphNodeHealthPopoverView({
       role="dialog"
       aria-label={detail.title}
       tabIndex={-1}
-      className={graphVisualClasses.nodeHealthPopover}
+      className={graphNodeHealthPopoverClasses.root}
       style={buildPopoverStyle(position)}
       onKeyDown={handleKeyDown}
     >
-      <div className={graphVisualClasses.nodeHealthPopoverTitle}>{detail.title}</div>
-      <dl className={graphVisualClasses.nodeHealthPopoverRows}>
+      <div className={graphNodeHealthPopoverClasses.title}>{detail.title}</div>
+      <dl className={graphNodeHealthPopoverClasses.rows}>
         {detail.rows.map((row) => (
-          <div key={row.id} className={graphVisualClasses.nodeHealthPopoverRow}>
-            <dt className={graphVisualClasses.nodeHealthPopoverLabel}>{row.label}</dt>
-            <dd className={graphVisualClasses.nodeHealthPopoverValue}>{row.value}</dd>
+          <div key={row.id} className={graphNodeHealthPopoverClasses.row}>
+            <dt className={graphNodeHealthPopoverClasses.label}>{row.label}</dt>
+            <dd className={graphNodeHealthPopoverClasses.value}>{row.value}</dd>
           </div>
         ))}
       </dl>

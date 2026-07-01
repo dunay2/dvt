@@ -7,15 +7,15 @@
 // ---------------------------------------------------------------------------
 
 import type { NodeRendererProps } from './contracts/NodeRendering';
-import { graphVisualClasses } from './graph/graphVisualTokens';
+import { fallbackGraphNodeClasses } from './graph/graphVisualTokens';
 
 export function FallbackNodeRenderer({ node }: Readonly<NodeRendererProps>) {
   const kindLabel = node.kind.split(':')[1] ?? node.kind;
 
   return (
-    <div className={graphVisualClasses.fallbackNodeCard}>
-      <div className={graphVisualClasses.fallbackNodeTitle}>{node.name}</div>
-      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wide">{kindLabel}</div>
+    <div className={fallbackGraphNodeClasses.card}>
+      <div className={fallbackGraphNodeClasses.title}>{node.name}</div>
+      <div className={fallbackGraphNodeClasses.kind}>{kindLabel}</div>
     </div>
   );
 }

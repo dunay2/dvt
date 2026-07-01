@@ -1,7 +1,7 @@
 /** Owned concern: render graph-node tags from already-selected display tags. */
 import type { ReactElement } from 'react';
 
-import { graphVisualClasses } from './graphVisualTokens';
+import { graphNodeTagListClasses } from './graphVisualTokens';
 
 export type GraphNodeTagListProps = Readonly<{
   tags: readonly string[];
@@ -15,9 +15,9 @@ export function GraphNodeTagList({ tags, limit = 3 }: GraphNodeTagListProps): Re
   }
 
   return (
-    <div data-slot="graph-node-tag-list" className={graphVisualClasses.nodeCardTagList}>
+    <div data-slot="graph-node-tag-list" className={graphNodeTagListClasses.root}>
       {visibleTags.map((tag) => (
-        <span key={tag} className={graphVisualClasses.tag}>
+        <span key={tag} className={graphNodeTagListClasses.tag}>
           {tag}
         </span>
       ))}

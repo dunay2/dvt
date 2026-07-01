@@ -7,6 +7,30 @@ const GRAPH_RENDERER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'GraphNodeRenderer.tsx'
 );
+const GRAPH_CARD_VIEW_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeCardView.tsx'
+);
+const GRAPH_STATUS_CHIP_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeStatusChip.tsx'
+);
+const GRAPH_METRIC_ROW_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeMetricRow.tsx'
+);
+const GRAPH_TAG_LIST_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeTagList.tsx'
+);
+const GRAPH_OPERATIONAL_RAIL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeOperationalRail.tsx'
+);
+const GRAPH_HEALTH_POPOVER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'GraphNodeHealthPopoverView.tsx'
+);
 const FALLBACK_RENDERER_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   '../FallbackNodeRenderer.tsx'
@@ -67,11 +91,26 @@ const GRAPH_CONSUMER_SOURCES = [
   DVT_NODE_CATALOG_SOURCE,
   DBT_NODE_RENDERER_SOURCE,
 ];
+const GRAPH_CARD_PRESENTATION_SOURCES = [
+  GRAPH_CARD_VIEW_SOURCE,
+  GRAPH_STATUS_CHIP_SOURCE,
+  GRAPH_METRIC_ROW_SOURCE,
+  GRAPH_TAG_LIST_SOURCE,
+  GRAPH_OPERATIONAL_RAIL_SOURCE,
+  GRAPH_HEALTH_POPOVER_SOURCE,
+  FALLBACK_RENDERER_SOURCE,
+];
 
 describe('React Flow visual token convergence architecture', () => {
   it('keeps graph visual values behind the graph token component', () => {
     expect(TOKEN_SOURCE).toContain('Owned concern: own React Flow graph visual tokens');
-    expect(TOKEN_SOURCE).toContain('graphVisualClasses');
+    expect(TOKEN_SOURCE).toContain('graphNodeCardSurfaceClasses');
+    expect(TOKEN_SOURCE).toContain('graphNodeCardLayoutClasses');
+    expect(TOKEN_SOURCE).toContain('graphNodeMetricRowClasses');
+    expect(TOKEN_SOURCE).toContain('graphNodeTagListClasses');
+    expect(TOKEN_SOURCE).toContain('graphNodeOperationalRailClasses');
+    expect(TOKEN_SOURCE).toContain('graphNodeHealthPopoverClasses');
+    expect(TOKEN_SOURCE).toContain('fallbackGraphNodeClasses');
     expect(TOKEN_SOURCE).toContain('graphStatusRingClasses');
     expect(TOKEN_SOURCE).toContain('graphNodeKindToneClasses');
     expect(TOKEN_SOURCE).toContain('graphFlowPalette');
@@ -94,7 +133,8 @@ describe('React Flow visual token convergence architecture', () => {
       '## Transitions',
       '## Consumers',
       '```mermaid',
-      'graphVisualClasses',
+      'graphNodeCardSurfaceClasses',
+      'graphNodeOperationalRailClasses',
       'graphFlowPalette',
       'resolveGraphNodeKindTone',
     ]) {
@@ -122,6 +162,13 @@ describe('React Flow visual token convergence architecture', () => {
       expect(source).not.toContain('graphVisualClasses.inspector');
       expect(source).not.toContain('graphVisualClasses.contextPanel');
       expect(source).not.toContain('graphStatusDotClasses');
+    }
+  });
+
+  it('keeps graph card presentation components on responsibility-specific token groups', () => {
+    for (const source of GRAPH_CARD_PRESENTATION_SOURCES) {
+      expect(source).toContain('graphVisualTokens');
+      expect(source).not.toContain('graphVisualClasses');
     }
   });
 });

@@ -8,16 +8,20 @@ planning_type: architecture
 
 # React Flow Visual Token Component
 
-This component owns the operator-workbench visual tokens used by Canvas React
-Flow projection, generic plugin graph node rendering, and graph-adjacent context
-panel chrome.
+This component owns the React Flow graph visual tokens used by Canvas graph
+projection, generic plugin graph node rendering, and graph-node card chrome.
 
 ## Public API
 
-- `graphVisualClasses`: shared structural classes for graph node cards,
-  fallback cards, tags, metadata rows, column chrome, inspector cards, and
-  graph context-panel surfaces.
-- `graphStatusDotClasses`: status dot tone classes for node execution state.
+- `graphNodeCardSurfaceClasses`: outer card surface and state classes.
+- `graphNodeCardLayoutClasses`: graph-node card internal layout classes.
+- `graphNodeMetricRowClasses`: compact card metric row classes.
+- `graphNodeTagListClasses`: graph-node tag list classes.
+- `graphNodeOperationalRailClasses`: operational metric rail classes.
+- `graphNodeHealthPopoverClasses`: operational health popover classes.
+- `fallbackGraphNodeClasses`: fallback node renderer classes.
+- `graphNodeColumnClasses`: optional graph-node column list classes.
+- `graphNodeStatusChipClasses`: textual status chip classes.
 - `graphStatusRingClasses`: selected runtime status ring classes.
 - `graphStatusBadgeClasses`: inspector badge tone classes for plugin node
   runtime state.
@@ -31,9 +35,10 @@ panel chrome.
 
 - Canvas edge projection reads edge colors from `graphFlowPalette`.
 - Node-kind catalogs do not own hex minimap literals.
-- Generic graph renderers, plugin-owned dbt node renderer chrome, and Canvas
-  graph context panels do not own `slate-*`, `gray-*`, `neutral-*`, or hex
-  visual decisions.
+- Generic graph renderers and plugin-owned dbt node renderer chrome do not own
+  `slate-*`, `gray-*`, `neutral-*`, or hex visual decisions.
+- Graph-node card presentation components consume responsibility-specific token
+  groups instead of a shared catch-all class bag.
 - Plugin-specific behavior remains in plugin contracts; this component owns only
   presentation tokens.
 
@@ -45,12 +50,16 @@ flowchart LR
     Tone --> Minimap["React Flow minimap color"]
     Tone --> NodeBorder["Node border class"]
     CanvasMapper["Canvas node mapper"] --> EdgePalette["graphFlowPalette.edge"]
-    Renderer["Graph node renderer"] --> Classes["graphVisualClasses"]
-    DbtRenderer["dbt node renderer"] --> Classes
+    Card["GraphNodeCardView"] --> CardSurface["graphNodeCardSurfaceClasses"]
+    Card --> CardLayout["graphNodeCardLayoutClasses"]
+    Card --> Columns["graphNodeColumnClasses"]
+    Status["GraphNodeStatusChip"] --> StatusChip["graphNodeStatusChipClasses"]
+    Metrics["GraphNodeMetricRow"] --> MetricTokens["graphNodeMetricRowClasses"]
+    Tags["GraphNodeTagList"] --> TagTokens["graphNodeTagListClasses"]
+    Rail["GraphNodeOperationalRail"] --> RailTokens["graphNodeOperationalRailClasses"]
+    Health["GraphNodeHealthPopoverView"] --> HealthTokens["graphNodeHealthPopoverClasses"]
+    Fallback["FallbackNodeRenderer"] --> FallbackTokens["fallbackGraphNodeClasses"]
     DbtRenderer --> StatusBadge["graphStatusBadgeClasses"]
-    Explorer["dbt explorer"] --> Classes
-    Inspector["Canvas inspector"] --> Classes
-    Inspector --> StatusDot["graphStatusDotClasses"]
 ```
 
 ## Consumers
@@ -59,14 +68,18 @@ flowchart LR
 - `dvtNodeTypeCatalog.ts`
 - `canvasNodeMapper.ts`
 - `GraphNodeRenderer.tsx`
+- `GraphNodeCardView.tsx`
+- `GraphNodeStatusChip.tsx`
+- `GraphNodeMetricRow.tsx`
+- `GraphNodeTagList.tsx`
+- `GraphNodeOperationalRail.tsx`
+- `GraphNodeHealthPopoverView.tsx`
 - `FallbackNodeRenderer.tsx`
 - `DbtNodeRenderer.tsx`
-- `DbtExplorer.tsx`
-- `InspectorPanel.tsx`
-- `CanvasInspectorAuthoringSection.tsx`
 
 ## Drift Guard
 
 `graphVisualTokenConvergence.architecture.test.ts` rejects reintroduced local
 color-family or hex ownership in the graph renderer, fallback renderer, dbt
-node renderer, graph context panels, node-kind catalogs, and Canvas edge mapper.
+node renderer, graph-node card presentation components, node-kind catalogs, and
+Canvas edge mapper.

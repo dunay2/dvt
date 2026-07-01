@@ -2,7 +2,7 @@
 import type { ReactElement } from 'react';
 
 import type { GraphNodeCardMetric } from './graphNodeCardStrategyContracts';
-import { graphVisualClasses } from './graphVisualTokens';
+import { graphNodeMetricRowClasses } from './graphVisualTokens';
 
 export type GraphNodeMetricRowProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
@@ -14,11 +14,11 @@ export function GraphNodeMetricRow({ metrics }: GraphNodeMetricRowProps): ReactE
   }
 
   return (
-    <div data-slot="graph-node-metric-row" className={graphVisualClasses.nodeCardMetricRow}>
+    <div data-slot="graph-node-metric-row" className={graphNodeMetricRowClasses.root}>
       {metrics.map((metric) => (
-        <span key={metric.id} className={graphVisualClasses.nodeCardMetricItem}>
-          <span className={graphVisualClasses.nodeCardMetricLabel}>{metric.label}</span>
-          <span title={metric.label} className={graphVisualClasses.nodeCardMetricValue}>
+        <span key={metric.id} className={graphNodeMetricRowClasses.item}>
+          <span className={graphNodeMetricRowClasses.label}>{metric.label}</span>
+          <span title={metric.label} className={graphNodeMetricRowClasses.value}>
             {metric.value}
           </span>
         </span>
