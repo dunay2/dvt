@@ -27,7 +27,7 @@ describe('CanvasNodeFloatingToolbarView', () => {
     container.remove();
   });
 
-  it('renders the node floating toolbar with code, freeze, and overflow actions', () => {
+  it('renders only operable node floating toolbar actions', () => {
     const onOpenCode = vi.fn();
     const model = buildCanvasNodeFloatingToolbarModel({
       nodeId: 'model_orders',
@@ -49,10 +49,9 @@ describe('CanvasNodeFloatingToolbarView', () => {
 
     expect(button('Código')).not.toBeNull();
     expect(button('Código')?.getAttribute('data-action-state')).toBe('available');
-    expect(button('Congelar')?.getAttribute('aria-disabled')).toBe('true');
-    expect(button('Congelar')?.getAttribute('data-action-state')).toBe('unavailable');
+    expect(button('Congelar')).toBeNull();
     expect(button('Seleccionar para ejecución')).toBeNull();
-    expect(button('Más acciones')?.getAttribute('aria-disabled')).toBe('true');
+    expect(button('Más acciones')).toBeNull();
 
     act(() => {
       button('Código')?.click();

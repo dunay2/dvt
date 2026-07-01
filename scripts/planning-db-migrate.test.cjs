@@ -10510,6 +10510,41 @@ test('tracked migrations register Graph node source last-refresh health metric',
   assert.doesNotMatch(sourceRefreshMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Node floating toolbar operable action policy', () => {
+  const migrations = readMigrationFiles();
+  const toolbarActionsMigration = migrations.find(
+    (migration) => migration.fileName === '423_node_floating_toolbar_operable_actions.sql'
+  );
+
+  assert.ok(toolbarActionsMigration);
+  assert.match(toolbarActionsMigration.sql, /web\.component\.canvas\.NodeFloatingToolbar/);
+  assert.match(toolbarActionsMigration.sql, /RenderCanvasNodeFloatingToolbar/);
+  assert.match(toolbarActionsMigration.sql, /onlyOperableActions/);
+  assert.match(toolbarActionsMigration.sql, /omittedUntilRailExists/);
+  assert.match(
+    toolbarActionsMigration.sql,
+    /EV-CANVAS-NODE-FLOATING-TOOLBAR-OPERABLE-ACTIONS-ONLY/
+  );
+  assert.match(toolbarActionsMigration.sql, /canvasNodeFloatingToolbarModel\.test\.ts/);
+  assert.match(toolbarActionsMigration.sql, /CanvasViewport\.nodeFloatingToolbar\.test\.tsx/);
+  assert.doesNotMatch(toolbarActionsMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Node floating toolbar action id manifest', () => {
+  const migrations = readMigrationFiles();
+  const actionIdMigration = migrations.find(
+    (migration) => migration.fileName === '424_node_floating_toolbar_action_id_manifest.sql'
+  );
+
+  assert.ok(actionIdMigration);
+  assert.match(actionIdMigration.sql, /CanvasNodeFloatingToolbarActionId/);
+  assert.match(actionIdMigration.sql, /web\.component\.canvas\.NodeFloatingToolbar/);
+  assert.match(actionIdMigration.sql, /RenderCanvasNodeFloatingToolbar/);
+  assert.match(actionIdMigration.sql, /closed_operable_action_set/);
+  assert.match(actionIdMigration.sql, /canvasNodeFloatingToolbarModel\.test\.ts/);
+  assert.doesNotMatch(actionIdMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Node workbench duplicate file ownership', () => {
   const migrations = readMigrationFiles();
   const ownershipMigration = migrations.find(

@@ -177,19 +177,18 @@ function CanvasViewportWithPresenter({
           ? { x: Math.max(8, event.clientX - 8), y: Math.max(8, event.clientY - 52) }
           : { x: Math.max(8, nodeRect.left), y: Math.max(8, nodeRect.top - 52) };
 
-      setNodeFloatingToolbarModel(
-        buildCanvasNodeFloatingToolbarModel({
-          nodeId: node.id,
-          nodeName,
-          position: toolbarPosition,
-          onOpenCode:
-            typeof inspectNode === 'function'
-              ? (nodeId) => {
-                  inspectNode(nodeId, 'code');
-                }
-              : undefined,
-        })
-      );
+      const nextToolbarModel = buildCanvasNodeFloatingToolbarModel({
+        nodeId: node.id,
+        nodeName,
+        position: toolbarPosition,
+        onOpenCode:
+          typeof inspectNode === 'function'
+            ? (nodeId) => {
+                inspectNode(nodeId, 'code');
+              }
+            : undefined,
+      });
+      setNodeFloatingToolbarModel(nextToolbarModel.actions.length > 0 ? nextToolbarModel : null);
       props.onNodeClick(event, node);
     },
     [closeNodeHealthPopover, props.onNodeClick]
