@@ -31,6 +31,16 @@ function titleCaseIdentifier(value: string): string {
     .join(' ');
 }
 
+function displayIdentifier(value: string, uppercaseHint?: string | null): string {
+  const hint =
+    uppercaseHint &&
+    /^[A-Z0-9]{2,}$/u.test(uppercaseHint) &&
+    uppercaseHint.toLocaleLowerCase() === value.toLocaleLowerCase()
+      ? uppercaseHint
+      : null;
+  return hint ?? titleCaseIdentifier(value);
+}
+
 export function buildGraphNodeTitlePresentation({
   nodeName,
   kind,
@@ -82,7 +92,7 @@ export function buildGraphNodeTitlePresentation({
 
   if ((kind === 'dbt:source' || kind === 'dvt:source') && sourceName && tableName) {
     return {
-      title: `${titleCaseIdentifier(sourceName)} ${titleCaseIdentifier(tableName)}`,
+      title: `${displayIdentifier(sourceName, schema)} ${titleCaseIdentifier(tableName)}`,
       technicalName: nodeName,
     };
   }

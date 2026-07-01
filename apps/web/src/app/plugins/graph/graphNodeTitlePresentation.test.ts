@@ -89,7 +89,7 @@ describe('buildGraphNodeTitlePresentation', () => {
         },
       })
     ).toEqual({
-      title: 'Erp Orders',
+      title: 'ERP Orders',
       technicalName: 'src_erp_orders',
     });
   });

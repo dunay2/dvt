@@ -10867,6 +10867,42 @@ test('tracked migrations register Graph node title presentation ownership', () =
   assert.doesNotMatch(titleMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node title presentation rail and acronym hints', () => {
+  const migrations = readMigrationFiles();
+  const titleRailMigration = migrations.find(
+    (migration) => migration.fileName === '435_graph_node_title_presentation_rail_and_acronym.sql'
+  );
+
+  assert.ok(titleRailMigration);
+  assert.match(titleRailMigration.sql, /web\.component\.canvas\.GraphNodeTitlePresentation/);
+  assert.match(titleRailMigration.sql, /RenderCanvasGraphNodeTitlePresentation/);
+  assert.match(titleRailMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(titleRailMigration.sql, /frontend_component_local_cq_rails/);
+  assert.match(titleRailMigration.sql, /acronymHintPrecedence/);
+  assert.match(titleRailMigration.sql, /displayIdentifier/);
+  assert.match(titleRailMigration.sql, /EV-CANVAS-GRAPH-NODE-TITLE-PRESENTATION-ACRONYM-HINT/);
+  assert.match(titleRailMigration.sql, /graphNodeTitlePresentation\.test\.ts/);
+  assert.match(titleRailMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(titleRailMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Graph node title presentation acronym helper symbol', () => {
+  const migrations = readMigrationFiles();
+  const titleSymbolMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '436_graph_node_title_presentation_acronym_symbol_manifest.sql'
+  );
+
+  assert.ok(titleSymbolMigration);
+  assert.match(titleSymbolMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(titleSymbolMigration.sql, /GraphNodeTitlePresentation/);
+  assert.match(titleSymbolMigration.sql, /RenderCanvasGraphNodeTitlePresentation/);
+  assert.match(titleSymbolMigration.sql, /displayIdentifier/);
+  assert.match(titleSymbolMigration.sql, /acronym_hint_projection/);
+  assert.match(titleSymbolMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(titleSymbolMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Inspector visual token rail duplicate', () => {
   const migrations = readMigrationFiles();
   const duplicateMigration = migrations.find(
