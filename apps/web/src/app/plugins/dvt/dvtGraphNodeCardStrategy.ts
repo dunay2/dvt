@@ -16,6 +16,7 @@ import {
   pushRuntimeMetrics,
   resolveNodeCardStatus,
   resolveColumnCount,
+  isRecord,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 
@@ -23,9 +24,14 @@ function buildDvtSubtitle(
   metadata: Record<string, unknown>,
   fallback: string | undefined
 ): string | null {
-  const database = stringValue(metadata.database);
-  const schema = stringValue(metadata.schema);
-  const table = stringValue(metadata.table);
+  const config = isRecord(metadata.config) ? metadata.config : {};
+  const database = stringValue(metadata.database) ?? stringValue(config.database);
+  const schema = stringValue(metadata.schema) ?? stringValue(config.schema);
+  const table =
+    stringValue(metadata.table) ??
+    stringValue(metadata.tableName) ??
+    stringValue(config.table) ??
+    stringValue(config.tableName);
   const path = [database, schema, table].filter(Boolean).join('.');
   return path.length > 0 ? path : (fallback ?? null);
 }

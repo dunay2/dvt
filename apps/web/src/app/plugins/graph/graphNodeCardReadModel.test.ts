@@ -57,6 +57,32 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it('uses imported DVT source table metadata in the technical path', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:source',
+        pluginId: 'dvt.warehouse-source',
+        name: 'src_erp_orders',
+        metadata: {
+          database: 'warehouse',
+          schema: 'erp',
+          config: {
+            sourceName: 'erp',
+            tableName: 'orders',
+          },
+          rowCount: 42,
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.title).toBe('Erp Orders');
+    expect(model.technicalName).toBe('src_erp_orders');
+    expect(model.subtitle).toBe('warehouse.erp.orders');
+    expect(model.path).toBe('warehouse.erp.orders');
+  });
+
   it('adds DVT runtime metrics only from recorded metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
