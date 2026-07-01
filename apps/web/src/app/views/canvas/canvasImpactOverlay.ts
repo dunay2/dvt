@@ -64,6 +64,10 @@ function getImpactSets(
   return { upstream, downstream };
 }
 
+function shouldShowColumns(node: Node, columnLevelLineageEnabled: boolean): boolean {
+  return columnLevelLineageEnabled || node.data?.showColumns === true;
+}
+
 export function buildNodesWithImpact({
   nodes,
   edges,
@@ -82,7 +86,7 @@ export function buildNodesWithImpact({
         ...node.data,
         selectedForExecution: selectedNodeIdSet.has(node.id),
         canMutateGraph,
-        showColumns: columnLevelLineageEnabled,
+        showColumns: shouldShowColumns(node, columnLevelLineageEnabled),
         onInspectNode: handlers.onInspectNode,
         onDuplicateNode: handlers.onDuplicateNode,
         onRemoveNode: handlers.onRemoveNode,
@@ -110,7 +114,7 @@ export function buildNodesWithImpact({
         : downstream.has(node.id)
           ? 'downstream'
           : 'none',
-      showColumns: columnLevelLineageEnabled,
+      showColumns: shouldShowColumns(node, columnLevelLineageEnabled),
       onInspectNode: handlers.onInspectNode,
       onDuplicateNode: handlers.onDuplicateNode,
       onRemoveNode: handlers.onRemoveNode,

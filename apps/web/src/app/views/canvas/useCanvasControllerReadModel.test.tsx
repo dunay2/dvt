@@ -12,10 +12,12 @@ type ReadModelArgs = Parameters<typeof useCanvasControllerReadModel>[0];
 type ReadModelState = ReturnType<typeof useCanvasControllerReadModel>;
 type ReadModelNodeData = {
   canvasKind?: unknown;
+  columns?: unknown;
   onDuplicateNode?: unknown;
   onRemoveNode?: unknown;
   onAttachSchemaToNode?: unknown;
   onToggleNodeSelection?: unknown;
+  showColumns?: unknown;
 };
 
 const testNode = {
@@ -160,6 +162,46 @@ describe('useCanvasControllerReadModel', () => {
       const nodeData = readProjectedNodeData(mounted.readState());
 
       expect(nodeData?.canvasKind).toBe('transformation');
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('preserves recorded column visibility through impact decoration when lineage overlay is off', async () => {
+    const columns = [
+      { name: 'order_id', type: 'integer' },
+      { name: 'customer_id', type: 'text' },
+    ];
+    const sourceNode = {
+      ...testNode,
+      metadata: { columns },
+    } satisfies CanonicalNode;
+    const graphNode = mapCanonicalNodeToCanvasNode({
+      canonicalNode: sourceNode,
+      index: 0,
+      showColumns: false,
+    });
+    const args = {
+      ...buildReadModelArgs(),
+      graphModel: {
+        nodes: [graphNode],
+        edges: [],
+        canonicalNodesById: new Map([[sourceNode.id, sourceNode]]),
+      },
+      visibleScope: {
+        canonicalNodes: [sourceNode],
+        canonicalEdges: [],
+      },
+      columnLevelLineageEnabled: false,
+      impactOverlayEnabled: false,
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      const nodeData = readProjectedNodeData(mounted.readState());
+
+      expect(nodeData?.columns).toEqual(columns);
+      expect(nodeData?.showColumns).toBe(true);
     } finally {
       await mounted.cleanup();
     }

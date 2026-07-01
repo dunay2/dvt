@@ -151,6 +151,41 @@ describe('useCanvasViewportGraphModel node data', () => {
     }
   });
 
+  it('keeps recorded columns visible on node cards independent of column-lineage overlay posture', async () => {
+    const mounted = await renderViewportGraphModel(
+      buildViewportGraphModelArgs({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        draftSemanticGraph: {
+          canonicalNodes: [
+            {
+              ...buildCanonicalNode('source-node', 'dvt:source', 'input'),
+              metadata: {
+                columns: [
+                  { name: 'order_id', type: 'integer' },
+                  { name: 'customer_id', type: 'text' },
+                ],
+              },
+            },
+          ],
+          canonicalEdges: [],
+        },
+      })
+    );
+
+    try {
+      const nodeData = mounted.readState()?.nodes[0]?.data as DbtNodeData | undefined;
+
+      expect(nodeData?.columns).toEqual([
+        { name: 'order_id', type: 'integer' },
+        { name: 'customer_id', type: 'text' },
+      ]);
+      expect(nodeData?.showColumns).toBe(true);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('refreshes projected node tags when canonical tags change', async () => {
     const mounted = await renderViewportGraphModel(
       buildViewportGraphModelArgs({
