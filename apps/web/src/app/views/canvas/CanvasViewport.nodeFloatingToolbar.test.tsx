@@ -48,7 +48,8 @@ describe('CanvasViewport node floating toolbar', () => {
     await clickNode('model_orders', 420, 240);
 
     expect(toolbarText()).toContain('Código');
-    expect(toolbarText()).toContain('Congelar');
+    expect(toolbarText()).not.toContain('Congelar');
+    expect(toolbarText()).not.toContain('Más acciones');
     expect(toolbarText()).not.toContain('Seleccionar para ejecución');
     expect(toolbarButton('Seleccionar para ejecución')).toBeNull();
 
@@ -64,12 +65,14 @@ describe('CanvasViewport node floating toolbar', () => {
   });
 
   it('aligns the node floating toolbar with the node card instead of the click point', async () => {
+    const onInspectNode = vi.fn();
+
     await renderViewport({
       nodesWithImpact: [
         {
           id: 'model_orders',
           position: { x: 160, y: 90 },
-          data: { name: 'Orders model' },
+          data: { name: 'Orders model', onInspectNode },
           type: 'dbtNode',
         },
       ] as CanvasViewportProps['nodesWithImpact'],
@@ -89,7 +92,26 @@ describe('CanvasViewport node floating toolbar', () => {
     expect(toolbar?.style.getPropertyValue('--node-toolbar-y')).toBe('128px');
   });
 
+  it('does not render an empty toolbar when the clicked node has no operable actions', async () => {
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'model_orders',
+          position: { x: 160, y: 90 },
+          data: { name: 'Orders model' },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('model_orders', 420, 240);
+
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+  });
+
   it('closes the node floating toolbar before opening the background context menu', async () => {
+    const onInspectNode = vi.fn();
+
     await renderViewport({
       canOpenCanvasSettings: true,
       onOpenCanvasSettings: vi.fn(),
@@ -97,7 +119,7 @@ describe('CanvasViewport node floating toolbar', () => {
         {
           id: 'source_orders',
           position: { x: 40, y: 80 },
-          data: { name: 'Orders source', selectedForExecution: false },
+          data: { name: 'Orders source', selectedForExecution: false, onInspectNode },
           type: 'dbtNode',
         },
       ] as CanvasViewportProps['nodesWithImpact'],
@@ -124,12 +146,14 @@ describe('CanvasViewport node floating toolbar', () => {
   });
 
   it('closes the node floating toolbar when its owning node is removed', async () => {
+    const onInspectNode = vi.fn();
+
     await renderViewport({
       nodesWithImpact: [
         {
           id: 'source_orders',
           position: { x: 40, y: 80 },
-          data: { name: 'Orders source', selectedForExecution: false },
+          data: { name: 'Orders source', selectedForExecution: false, onInspectNode },
           type: 'dbtNode',
         },
       ] as CanvasViewportProps['nodesWithImpact'],
@@ -148,12 +172,14 @@ describe('CanvasViewport node floating toolbar', () => {
   });
 
   it('does not leave toolbar or health detail surfaces orphaned when node details open or disappear', async () => {
+    const onInspectNode = vi.fn();
+
     await renderViewport({
       nodesWithImpact: [
         {
           id: 'source_orders',
           position: { x: 40, y: 80 },
-          data: { name: 'Orders source', selectedForExecution: false },
+          data: { name: 'Orders source', selectedForExecution: false, onInspectNode },
           type: 'dbtNode',
         },
       ] as CanvasViewportProps['nodesWithImpact'],
