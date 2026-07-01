@@ -11120,6 +11120,26 @@ test('tracked migrations move DBT node architecture evidence out of GraphNodeCar
   assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations record Graph node card professional width token contract', () => {
+  const migrations = readMigrationFiles();
+  const widthMigration = migrations.find(
+    (migration) => migration.fileName === '461_graph_node_card_professional_width_contract.sql'
+  );
+
+  assert.ok(widthMigration);
+  assert.match(widthMigration.sql, /web\.component\.canvas\.GraphNodeCardView/);
+  assert.match(widthMigration.sql, /web\.component\.canvas\.GraphVisualTokens/);
+  assert.match(widthMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(widthMigration.sql, /EV-CANVAS-GRAPH-NODE-CARD-PROFESSIONAL-WIDTH/);
+  assert.match(widthMigration.sql, /graphNodeCardSurfaceClasses\.root/);
+  assert.match(widthMigration.sql, /w-\[24rem\]/);
+  assert.match(widthMigration.sql, /min-w-\[24rem\]/);
+  assert.match(widthMigration.sql, /min-w-\[220px\]/);
+  assert.match(widthMigration.sql, /presentationOnly/);
+  assert.doesNotMatch(widthMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(widthMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(

@@ -96,6 +96,18 @@ describe('GraphNodeCardView', () => {
     expect(button?.className).toContain('focus-visible:opacity-100');
   });
 
+  it('uses a stable professional card width from graph visual tokens', () => {
+    act(() => {
+      root.render(<GraphNodeCardView {...BASE_PROPS} />);
+    });
+
+    const card = container.querySelector('[data-slot="graph-node-card"]');
+
+    expect(card?.className).toContain('w-[24rem]');
+    expect(card?.className).toContain('min-w-[24rem]');
+    expect(card?.className).not.toContain('min-w-[220px]');
+  });
+
   it('renders semantic status, path, tags, and operational rail from the read model', () => {
     act(() => {
       root.render(
