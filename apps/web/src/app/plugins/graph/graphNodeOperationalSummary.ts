@@ -217,7 +217,11 @@ function buildModelExecutionMetrics(
   const durationLabel =
     resolveRuntimeDurationLabel(metadata, runtimeData) ??
     (durationSeconds == null ? null : formatDurationMs(durationSeconds * 1000));
-  const costUsd = firstRuntimeNumericValue(metadata, data, runtimeData, ['costUsd', 'cost']);
+  const costUsd = firstRuntimeNumericValue(metadata, data, runtimeData, [
+    'costUsd',
+    'cost',
+    'lastCost',
+  ]);
   const costLabel =
     costUsd == null ? firstRuntimeStringValue(metadata, data, runtimeData, ['costLabel']) : null;
   const testStatus = firstRuntimeStringValue(metadata, data, runtimeData, [

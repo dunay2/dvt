@@ -155,4 +155,24 @@ describe('buildGraphNodeOperationalSummary', () => {
     ]);
     expect(summary.detail?.rows).toBe(summary.metrics);
   });
+
+  it('projects model execution cost from the canonical lastCost field', () => {
+    const summary = buildGraphNodeOperationalSummary({
+      title: 'Orders Model',
+      metadata: {
+        durationSeconds: 32,
+      },
+      data: {
+        lastCost: 0.42,
+      },
+      rowCount: 2_100_000,
+      byteSize: null,
+    });
+
+    expect(summary.metrics).toEqual([
+      { id: 'duration', label: 'Duration', value: '32s' },
+      { id: 'rows', label: 'Rows', value: '2.1M' },
+      { id: 'cost', label: 'Cost', value: '$0.42' },
+    ]);
+  });
 });
