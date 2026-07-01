@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 import type { PluginNodeKind } from '../../types/canonical';
 
 export const graphNodeCardSurfaceClasses = {
-  root: 'min-w-[220px] overflow-hidden rounded-md border bg-slate-950/95 text-xs text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
+  root: 'group min-w-[220px] overflow-hidden rounded-md border bg-slate-950/95 text-xs text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
   selected: 'ring-2 ring-white/40',
   hovered: 'ring-1 ring-white/20',
   dimmed: 'opacity-30',
@@ -20,7 +20,7 @@ export const graphNodeCardLayoutClasses = {
   kind: 'mt-2 text-xs font-medium text-blue-300',
   path: 'mt-1 truncate text-[11px] text-slate-500',
   playButton:
-    'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-green-400/30 bg-green-500/15 text-green-300 transition hover:border-green-300/70 hover:bg-green-500/25 hover:text-green-100 disabled:cursor-not-allowed disabled:opacity-40',
+    'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-green-400/30 bg-green-500/15 text-green-300 opacity-0 transition hover:border-green-300/70 hover:bg-green-500/25 hover:text-green-100 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40',
   playIcon: 'size-3.5 fill-current',
 } as const;
 

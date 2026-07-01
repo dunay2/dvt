@@ -10782,6 +10782,26 @@ test('tracked migrations keep Graph node card view ownership import resistant', 
   assert.doesNotMatch(importOverlayMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node card play affordance posture', () => {
+  const migrations = readMigrationFiles();
+  const playAffordanceMigration = migrations.find(
+    (migration) => migration.fileName === '445_graph_node_card_play_affordance.sql'
+  );
+
+  assert.ok(playAffordanceMigration);
+  assert.match(playAffordanceMigration.sql, /web\.component\.canvas\.GraphNodeCardView/);
+  assert.match(playAffordanceMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(playAffordanceMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(playAffordanceMigration.sql, /graph-node-card-play/);
+  assert.match(playAffordanceMigration.sql, /secondary-until-hover-or-focus/);
+  assert.match(playAffordanceMigration.sql, /doesNotCreateRunCommand/);
+  assert.match(playAffordanceMigration.sql, /EV-CANVAS-GRAPH-NODE-CARD-PLAY-AFFORDANCE/);
+  assert.match(playAffordanceMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(playAffordanceMigration.sql, /graphVisualTokens\.ts/);
+  assert.doesNotMatch(playAffordanceMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(playAffordanceMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(
