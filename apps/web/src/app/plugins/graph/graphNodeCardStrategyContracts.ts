@@ -5,8 +5,19 @@ export type GraphNodeCardMetric = Readonly<{
   id: string;
   label: string;
   value: string;
+  icon?: GraphNodeCardMetricIcon;
   tone?: GraphNodeCardStatusTone;
 }>;
+
+export type GraphNodeCardMetricIcon =
+  | 'clock'
+  | 'refresh'
+  | 'throughput'
+  | 'database'
+  | 'timer'
+  | 'rows'
+  | 'cost'
+  | 'drift';
 
 export type GraphNodeOperationalDetail = Readonly<{
   title: string;

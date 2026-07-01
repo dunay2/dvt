@@ -18,9 +18,9 @@ describe('buildGraphNodeOperationalSummary', () => {
     });
 
     expect(summary.metrics).toEqual([
-      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z' },
-      { id: 'duration', label: 'Duration', value: '1m 15s' },
-      { id: 'rows', label: 'Rows', value: '1.2k' },
+      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z', icon: 'clock' },
+      { id: 'duration', label: 'Duration', value: '1m 15s', icon: 'timer' },
+      { id: 'rows', label: 'Rows', value: '1.2k', icon: 'rows' },
     ]);
     expect(summary.detail).toEqual({
       title: 'Orders Model health',
@@ -39,8 +39,8 @@ describe('buildGraphNodeOperationalSummary', () => {
     });
 
     expect(summary.metrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '18.2k' },
-      { id: 'size', label: 'Size', value: '3.9 MB' },
+      { id: 'rows', label: 'Rows', value: '18.2k', icon: 'rows' },
+      { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
     ]);
     expect(summary.detail?.rows).toBe(summary.metrics);
   });
@@ -63,27 +63,38 @@ describe('buildGraphNodeOperationalSummary', () => {
     });
 
     expect(summary.metrics).toEqual([
-      { id: 'freshness', label: 'Freshness', value: '12 min' },
-      { id: 'last-refresh', label: 'Last refresh', value: '2026-06-28T10:15:00Z' },
-      { id: 'cadence', label: 'Cadence', value: 'Every 15 min' },
-      { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
-      { id: 'size', label: 'Size', value: '18.2 GB' },
+      { id: 'freshness', label: 'Freshness', value: '12 min', icon: 'clock' },
+      {
+        id: 'last-refresh',
+        label: 'Last refresh',
+        value: '2026-06-28T10:15:00Z',
+        icon: 'refresh',
+      },
+      { id: 'cadence', label: 'Cadence', value: 'Every 15 min', icon: 'refresh' },
+      { id: 'throughput', label: 'Throughput', value: '42 MB/min', icon: 'throughput' },
+      { id: 'size', label: 'Size', value: '18.2 GB', icon: 'database' },
     ]);
     expect(summary.detail).toEqual({
       title: 'Postgres public health',
       ariaLabel: 'Open Postgres public health metrics',
       rows: [
-        { id: 'freshness', label: 'Freshness', value: '12 min' },
-        { id: 'last-refresh', label: 'Last refresh', value: '2026-06-28T10:15:00Z' },
-        { id: 'cadence', label: 'Cadence', value: 'Every 15 min' },
-        { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
-        { id: 'size', label: 'Size', value: '18.2 GB' },
-        { id: 'rows', label: 'Rows', value: '124M' },
+        { id: 'freshness', label: 'Freshness', value: '12 min', icon: 'clock' },
+        {
+          id: 'last-refresh',
+          label: 'Last refresh',
+          value: '2026-06-28T10:15:00Z',
+          icon: 'refresh',
+        },
+        { id: 'cadence', label: 'Cadence', value: 'Every 15 min', icon: 'refresh' },
+        { id: 'throughput', label: 'Throughput', value: '42 MB/min', icon: 'throughput' },
+        { id: 'size', label: 'Size', value: '18.2 GB', icon: 'database' },
+        { id: 'rows', label: 'Rows', value: '124M', icon: 'rows' },
         {
           id: 'schema-drift',
           label: 'Schema drift',
           value: 'No drift detected',
           tone: 'success',
+          icon: 'drift',
         },
       ],
     });
@@ -101,13 +112,25 @@ describe('buildGraphNodeOperationalSummary', () => {
     });
 
     expect(summary.metrics).toEqual([
-      { id: 'schema-drift', label: 'Schema drift', value: 'Drift detected', tone: 'warning' },
+      {
+        id: 'schema-drift',
+        label: 'Schema drift',
+        value: 'Drift detected',
+        tone: 'warning',
+        icon: 'drift',
+      },
     ]);
     expect(summary.detail).toEqual({
       title: 'Raw Orders health',
       ariaLabel: 'Open Raw Orders health metrics',
       rows: [
-        { id: 'schema-drift', label: 'Schema drift', value: 'Drift detected', tone: 'warning' },
+        {
+          id: 'schema-drift',
+          label: 'Schema drift',
+          value: 'Drift detected',
+          tone: 'warning',
+          icon: 'drift',
+        },
       ],
     });
   });
@@ -136,8 +159,8 @@ describe('buildGraphNodeOperationalSummary', () => {
     });
 
     expect(summary.metrics).toEqual([
-      { id: 'duration', label: 'Duration', value: '1m 15s' },
-      { id: 'rows', label: 'Rows', value: '4.2k' },
+      { id: 'duration', label: 'Duration', value: '1m 15s', icon: 'timer' },
+      { id: 'rows', label: 'Rows', value: '4.2k', icon: 'rows' },
     ]);
   });
 
@@ -157,10 +180,10 @@ describe('buildGraphNodeOperationalSummary', () => {
     });
 
     expect(summary.metrics).toEqual([
-      { id: 'last-run', label: 'Last run', value: '8 min' },
-      { id: 'duration', label: 'Duration', value: '32s' },
-      { id: 'rows', label: 'Rows', value: '2.1M' },
-      { id: 'cost', label: 'Cost', value: '$0.18' },
+      { id: 'last-run', label: 'Last run', value: '8 min', icon: 'clock' },
+      { id: 'duration', label: 'Duration', value: '32s', icon: 'timer' },
+      { id: 'rows', label: 'Rows', value: '2.1M', icon: 'rows' },
+      { id: 'cost', label: 'Cost', value: '$0.18', icon: 'cost' },
       { id: 'tests', label: 'Tests', value: 'passed' },
     ]);
     expect(summary.detail?.rows).toBe(summary.metrics);
@@ -180,9 +203,9 @@ describe('buildGraphNodeOperationalSummary', () => {
     });
 
     expect(summary.metrics).toEqual([
-      { id: 'duration', label: 'Duration', value: '32s' },
-      { id: 'rows', label: 'Rows', value: '2.1M' },
-      { id: 'cost', label: 'Cost', value: '$0.42' },
+      { id: 'duration', label: 'Duration', value: '32s', icon: 'timer' },
+      { id: 'rows', label: 'Rows', value: '2.1M', icon: 'rows' },
+      { id: 'cost', label: 'Cost', value: '$0.42', icon: 'cost' },
     ]);
   });
 });

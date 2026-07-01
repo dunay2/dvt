@@ -170,14 +170,18 @@ function buildSourceHealthRows(
     railMetrics,
     'freshness',
     'Freshness',
-    freshnessMinutes == null ? null : formatMinutes(freshnessMinutes)
+    freshnessMinutes == null ? null : formatMinutes(freshnessMinutes),
+    { icon: 'clock' }
   );
-  pushOperationalMetric(railMetrics, 'last-refresh', 'Last refresh', lastRefreshAt);
+  pushOperationalMetric(railMetrics, 'last-refresh', 'Last refresh', lastRefreshAt, {
+    icon: 'refresh',
+  });
   pushOperationalMetric(
     railMetrics,
     'cadence',
     'Cadence',
-    cadenceMinutes == null ? null : formatCadenceMinutes(cadenceMinutes)
+    cadenceMinutes == null ? null : formatCadenceMinutes(cadenceMinutes),
+    { icon: 'refresh' }
   );
   pushOperationalMetric(
     railMetrics,
@@ -185,24 +189,23 @@ function buildSourceHealthRows(
     'Throughput',
     throughputBytesPerMinute == null
       ? null
-      : formatThroughputBytesPerMinute(throughputBytesPerMinute)
+      : formatThroughputBytesPerMinute(throughputBytesPerMinute),
+    { icon: 'throughput' }
   );
   pushOperationalMetric(
     railMetrics,
     'size',
     'Size',
-    datasetSizeBytes == null ? null : formatBytes(datasetSizeBytes)
+    datasetSizeBytes == null ? null : formatBytes(datasetSizeBytes),
+    { icon: 'database' }
   );
 
   const schemaDriftRailOnly = railMetrics.length === 0 && schemaDrift !== null;
   if (schemaDriftRailOnly) {
-    pushOperationalMetric(
-      railMetrics,
-      'schema-drift',
-      'Schema drift',
-      schemaDrift.label,
-      schemaDrift.tone
-    );
+    pushOperationalMetric(railMetrics, 'schema-drift', 'Schema drift', schemaDrift.label, {
+      icon: 'drift',
+      tone: schemaDrift.tone,
+    });
   }
 
   detailRows.push(...railMetrics);
@@ -210,7 +213,8 @@ function buildSourceHealthRows(
     detailRows,
     'rows',
     'Rows',
-    rowCount == null ? null : formatCompactNumber(rowCount)
+    rowCount == null ? null : formatCompactNumber(rowCount),
+    { icon: 'rows' }
   );
   if (!schemaDriftRailOnly) {
     pushOperationalMetric(
@@ -218,7 +222,7 @@ function buildSourceHealthRows(
       'schema-drift',
       'Schema drift',
       schemaDrift?.label ?? null,
-      schemaDrift?.tone
+      schemaDrift == null ? undefined : { icon: 'drift', tone: schemaDrift.tone }
     );
   }
 
@@ -270,16 +274,26 @@ function buildModelExecutionMetrics(
     metrics,
     'last-run',
     'Last run',
-    lastRunMinutesAgo == null ? lastRunAt : formatMinutes(lastRunMinutesAgo)
+    lastRunMinutesAgo == null ? lastRunAt : formatMinutes(lastRunMinutesAgo),
+    { icon: 'clock' }
   );
-  pushOperationalMetric(metrics, 'duration', 'Duration', durationLabel);
+  pushOperationalMetric(metrics, 'duration', 'Duration', durationLabel, { icon: 'timer' });
   pushOperationalMetric(
     metrics,
     'rows',
     'Rows',
-    rowCount == null ? null : formatCompactNumber(rowCount)
+    rowCount == null ? null : formatCompactNumber(rowCount),
+    { icon: 'rows' }
   );
-  pushOperationalMetric(metrics, 'cost', 'Cost', costUsd == null ? costLabel : formatCost(costUsd));
+  pushOperationalMetric(
+    metrics,
+    'cost',
+    'Cost',
+    costUsd == null ? costLabel : formatCost(costUsd),
+    {
+      icon: 'cost',
+    }
+  );
   pushOperationalMetric(metrics, 'tests', 'Tests', testStatus);
 
   return metrics;
@@ -311,9 +325,18 @@ export function buildGraphNodeOperationalSummary({
       metrics,
       'rows',
       'Rows',
-      rowCount == null ? null : formatCompactNumber(rowCount)
+      rowCount == null ? null : formatCompactNumber(rowCount),
+      { icon: 'rows' }
     );
-    pushOperationalMetric(metrics, 'size', 'Size', byteSize == null ? null : formatBytes(byteSize));
+    pushOperationalMetric(
+      metrics,
+      'size',
+      'Size',
+      byteSize == null ? null : formatBytes(byteSize),
+      {
+        icon: 'database',
+      }
+    );
   }
 
   return {

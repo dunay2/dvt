@@ -52,8 +52,8 @@ describe('buildGraphNodeCardReadModel', () => {
       { id: 'columns', label: 'Columns', value: '2' },
     ]);
     expect(model.operationalMetrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '18.2k' },
-      { id: 'size', label: 'Size', value: '3.9 MB' },
+      { id: 'rows', label: 'Rows', value: '18.2k', icon: 'rows' },
+      { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
     ]);
   });
 
@@ -116,9 +116,9 @@ describe('buildGraphNodeCardReadModel', () => {
       { id: 'warnings', label: 'Warnings', value: '2' },
     ]);
     expect(model.operationalMetrics).toEqual([
-      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z' },
-      { id: 'duration', label: 'Duration', value: '1m 15s' },
-      { id: 'rows', label: 'Rows', value: '1.2k' },
+      { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z', icon: 'clock' },
+      { id: 'duration', label: 'Duration', value: '1m 15s', icon: 'timer' },
+      { id: 'rows', label: 'Rows', value: '1.2k', icon: 'rows' },
     ]);
   });
 
@@ -274,8 +274,8 @@ describe('buildGraphNodeCardReadModel', () => {
       { id: 'columns', label: 'Columns', value: '2' },
     ]);
     expect(model.operationalMetrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '1.5k' },
-      { id: 'size', label: 'Size', value: '3.9 MB' },
+      { id: 'rows', label: 'Rows', value: '1.5k', icon: 'rows' },
+      { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
     ]);
   });
 
@@ -298,11 +298,21 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.operationalMetrics).toEqual([
-      { id: 'last-refresh', label: 'Last refresh', value: '2026-06-28T10:15:00Z' },
+      {
+        id: 'last-refresh',
+        label: 'Last refresh',
+        value: '2026-06-28T10:15:00Z',
+        icon: 'refresh',
+      },
     ]);
     expect(model.operationalDetail?.rows).toEqual([
-      { id: 'last-refresh', label: 'Last refresh', value: '2026-06-28T10:15:00Z' },
-      { id: 'rows', label: 'Rows', value: '124M' },
+      {
+        id: 'last-refresh',
+        label: 'Last refresh',
+        value: '2026-06-28T10:15:00Z',
+        icon: 'refresh',
+      },
+      { id: 'rows', label: 'Rows', value: '124M', icon: 'rows' },
     ]);
   });
 

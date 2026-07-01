@@ -10924,6 +10924,50 @@ test('tracked migrations record Graph node health schema drift tone contract', (
   assert.doesNotMatch(driftToneMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node operational metric icon contract', () => {
+  const migrations = readMigrationFiles();
+  const metricIconMigration = migrations.find(
+    (migration) => migration.fileName === '438_graph_node_operational_metric_icons.sql'
+  );
+
+  assert.ok(metricIconMigration);
+  assert.match(metricIconMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(metricIconMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(metricIconMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(metricIconMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(metricIconMigration.sql, /GraphNodeCardMetricIcon/);
+  assert.match(metricIconMigration.sql, /PushMetricOptions/);
+  assert.match(metricIconMigration.sql, /metricIconByName/);
+  assert.match(metricIconMigration.sql, /EV-CANVAS-GRAPH-NODE-OPERATIONAL-METRIC-ICON-PROJECTION/);
+  assert.match(metricIconMigration.sql, /EV-CANVAS-GRAPH-NODE-OPERATIONAL-RAIL-METRIC-ICON-RENDER/);
+  assert.match(metricIconMigration.sql, /GraphNodeOperationalRail\.test\.tsx/);
+  assert.match(metricIconMigration.sql, /graphNodeOperationalSummary\.test\.ts/);
+  assert.match(metricIconMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(metricIconMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Graph node read model metric icon evidence', () => {
+  const migrations = readMigrationFiles();
+  const readModelMetricIconMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '439_graph_node_operational_metric_icon_read_model_evidence.sql'
+  );
+
+  assert.ok(readModelMetricIconMigration);
+  assert.match(readModelMetricIconMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(readModelMetricIconMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(
+    readModelMetricIconMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-READ-MODEL-METRIC-ICON-PROPAGATION/
+  );
+  assert.match(readModelMetricIconMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(
+    readModelMetricIconMigration.sql,
+    /pnpm --filter @dvt\/web exec vitest run --config vitest\.unit\.config\.ts src\/app\/plugins\/graph\/graphNodeCardReadModel\.test\.ts/
+  );
+  assert.doesNotMatch(readModelMetricIconMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Inspector visual token rail duplicate', () => {
   const migrations = readMigrationFiles();
   const duplicateMigration = migrations.find(
