@@ -23,7 +23,14 @@ function node(
 
 describe('canvasConnectionCompatibilityPresenter', () => {
   it('projects compatible outgoing and incoming node names from the governed edge rail', () => {
-    const source = node('warehouse-source', 'dvt:source', 'input', 'dvt.warehouse-source');
+    const source = {
+      ...node('warehouse-source', 'dvt:source', 'input', 'dvt.warehouse-source'),
+      metadata: {
+        database: 'postgres',
+        schema: 'public',
+        table: 'orders',
+      },
+    };
     const model = node('orders-model', 'dbt:model', 'transform', 'dbt');
     const sink = node('warehouse-sink', 'dvt:sink', 'output', 'dvt');
     const canonicalNodesById = new Map([
@@ -41,11 +48,11 @@ describe('canvasConnectionCompatibilityPresenter', () => {
 
     expect(compatibilityByNodeId.get(source.id)?.source).toEqual({
       state: 'available',
-      compatibleNodeNames: ['orders-model'],
+      compatibleNodeNames: ['Orders Model'],
     });
     expect(compatibilityByNodeId.get(model.id)?.target).toEqual({
       state: 'available',
-      compatibleNodeNames: ['warehouse-source'],
+      compatibleNodeNames: ['Postgres · public'],
     });
     expect(compatibilityByNodeId.get(sink.id)?.source).toEqual({
       state: 'unavailable',
