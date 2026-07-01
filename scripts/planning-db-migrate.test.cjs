@@ -11149,6 +11149,8 @@ test('tracked migrations record CanvasViewport recorded column visibility projec
   assert.ok(columnVisibilityMigration);
   assert.match(columnVisibilityMigration.sql, /web\.component\.canvas\.CanvasViewport/);
   assert.match(columnVisibilityMigration.sql, /canvasNodeMapper\.ts/);
+  assert.match(columnVisibilityMigration.sql, /canvasImpactOverlay\.ts/);
+  assert.match(columnVisibilityMigration.sql, /useCanvasControllerReadModel\.test\.tsx/);
   assert.match(columnVisibilityMigration.sql, /useCanvasViewportGraphModel\.nodeData\.test\.tsx/);
   assert.match(columnVisibilityMigration.sql, /RenderCanvasContextualGraphSurface/);
   assert.match(
@@ -11156,8 +11158,10 @@ test('tracked migrations record CanvasViewport recorded column visibility projec
     /EV-CANVAS-VIEWPORT-RECORDED-COLUMNS-VISIBLE-WITHOUT-LINEAGE/
   );
   assert.match(columnVisibilityMigration.sql, /recordedColumnsVisibleWithoutLineageOverlay/);
+  assert.match(columnVisibilityMigration.sql, /preservesRecordedColumnVisibility/);
+  assert.match(columnVisibilityMigration.sql, /shouldShowColumns/);
   assert.match(columnVisibilityMigration.sql, /lineageOverlayDoesNotHideRecordedColumns/);
-  assert.match(columnVisibilityMigration.sql, /E-CANVAS-GRAPH-NODE-CARD-PROFESSIONAL-UX-1/);
+  assert.match(columnVisibilityMigration.sql, /E-CANVAS-UXDB-COMPONENT-SLICES-1/);
   assert.doesNotMatch(columnVisibilityMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(columnVisibilityMigration.sql, /truncate\s+/i);
 });
