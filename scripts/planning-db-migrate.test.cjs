@@ -11159,6 +11159,41 @@ test('tracked migrations register Graph node title warehouse source identity', (
   assert.doesNotMatch(titleWarehouseSourceMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node title plugin identity render path', () => {
+  const migrations = readMigrationFiles();
+  const pluginIdentityRenderPathMigration = migrations.find(
+    (migration) => migration.fileName === '454_graph_node_title_plugin_identity_render_path.sql'
+  );
+
+  assert.ok(pluginIdentityRenderPathMigration);
+  assert.match(
+    pluginIdentityRenderPathMigration.sql,
+    /web\.component\.canvas\.GraphNodeTitlePresentation/
+  );
+  assert.match(pluginIdentityRenderPathMigration.sql, /web\.component\.canvas\.GraphNodeCard/);
+  assert.match(pluginIdentityRenderPathMigration.sql, /web\.component\.canvas\.DbtNodeCard/);
+  assert.match(pluginIdentityRenderPathMigration.sql, /RenderCanvasGraphNodeTitlePresentation/);
+  assert.match(pluginIdentityRenderPathMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(pluginIdentityRenderPathMigration.sql, /dvt\.warehouse-source/);
+  assert.match(pluginIdentityRenderPathMigration.sql, /DbtNodeData\.pluginId/);
+  assert.match(pluginIdentityRenderPathMigration.sql, /canvasNodeMapper\.ts/);
+  assert.match(pluginIdentityRenderPathMigration.sql, /canvasNodeMapper\.test\.ts/);
+  assert.match(pluginIdentityRenderPathMigration.sql, /DbtNodeComponent\.tsx/);
+  assert.match(
+    pluginIdentityRenderPathMigration.sql,
+    /useCanvasViewportGraphModel\.nodeData\.test\.tsx/
+  );
+  assert.match(
+    pluginIdentityRenderPathMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-PLUGIN-IDENTITY-MAPPER-PROJECTION/
+  );
+  assert.match(
+    pluginIdentityRenderPathMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-TITLE-PRESENTATION-PLUGIN-ID-RENDER-PATH/
+  );
+  assert.doesNotMatch(pluginIdentityRenderPathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node health schema drift tone contract', () => {
   const migrations = readMigrationFiles();
   const driftToneMigration = migrations.find(

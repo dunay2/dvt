@@ -30,4 +30,18 @@ describe('canvasNodeMapper', () => {
       source: 'Conectar puerto de salida',
     });
   });
+
+  it('preserves specialized source plugin identity in React Flow node data', () => {
+    const mappedNode = mapCanonicalNodeToCanvasNode({
+      canonicalNode: {
+        ...buildCanonicalNode(),
+        pluginId: 'dvt.warehouse-source',
+      },
+      index: 0,
+      showColumns: false,
+    });
+
+    expect(mappedNode.data.pluginId).toBe('dvt.warehouse-source');
+    expect(mappedNode.data.pluginKind).toBe('dvt:source');
+  });
 });
