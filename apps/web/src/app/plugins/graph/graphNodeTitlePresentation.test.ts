@@ -37,6 +37,25 @@ describe('buildGraphNodeTitlePresentation', () => {
     });
   });
 
+  it('humanizes dbt source names from nested dbt metadata', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'source.raw.orders',
+        kind: 'dbt:source',
+        metadata: {
+          dbt: {
+            sourceName: 'raw',
+            tableName: 'orders',
+          },
+        },
+        data: {},
+      })
+    ).toEqual({
+      title: 'Raw Orders',
+      technicalName: 'source.raw.orders',
+    });
+  });
+
   it('uses relation metadata from node data when canonical metadata is absent', () => {
     expect(
       buildGraphNodeTitlePresentation({
