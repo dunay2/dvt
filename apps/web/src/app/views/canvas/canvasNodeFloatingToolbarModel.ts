@@ -1,6 +1,6 @@
 /** Owned concern: derive the left-click node floating-toolbar model without mutating graph state. */
 
-export type CanvasNodeFloatingToolbarActionId = 'code' | 'freeze';
+export type CanvasNodeFloatingToolbarActionId = 'code' | 'freeze' | 'more';
 
 export type CanvasNodeFloatingToolbarActionTone = 'default' | 'success';
 
@@ -26,6 +26,7 @@ export type BuildCanvasNodeFloatingToolbarModelArgs = Readonly<{
   nodeName: string;
   position: Readonly<{ x: number; y: number }>;
   onOpenCode?: (nodeId: string) => void;
+  onOpenMore?: (nodeId: string) => void;
 }>;
 
 export function buildCanvasNodeFloatingToolbarModel({
@@ -33,6 +34,7 @@ export function buildCanvasNodeFloatingToolbarModel({
   nodeName,
   position,
   onOpenCode,
+  onOpenMore,
 }: BuildCanvasNodeFloatingToolbarModelArgs): CanvasNodeFloatingToolbarModel {
   const actions: CanvasNodeFloatingToolbarAction[] = [];
 
@@ -54,6 +56,19 @@ export function buildCanvasNodeFloatingToolbarModel({
       tone: 'default',
       available: false,
       unavailableReason: 'La política de congelado del nodo aún no está disponible.',
+    });
+  }
+
+  if (typeof onOpenMore === 'function') {
+    actions.push({
+      id: 'more',
+      label: 'Más acciones',
+      description: 'Abrir las acciones contextuales gobernadas del nodo.',
+      tone: 'default',
+      available: true,
+      onSelect: () => {
+        onOpenMore(nodeId);
+      },
     });
   }
 

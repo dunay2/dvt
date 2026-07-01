@@ -10,14 +10,16 @@ function actionIds(model: CanvasNodeFloatingToolbarModel): string[] {
 }
 
 describe('buildCanvasNodeFloatingToolbarModel', () => {
-  it('projects code and unavailable freeze posture for the left-click node toolbar', () => {
+  it('projects code, unavailable freeze posture, and governed more launcher for the left-click node toolbar', () => {
     const onOpenCode = vi.fn();
+    const onOpenMore = vi.fn();
 
     const model = buildCanvasNodeFloatingToolbarModel({
       nodeId: 'model_orders',
       nodeName: 'Orders model',
       position: { x: 240, y: 120 },
       onOpenCode,
+      onOpenMore,
     });
 
     expect(model).toMatchObject({
@@ -25,7 +27,7 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
       nodeName: 'Orders model',
       position: { x: 240, y: 120 },
     });
-    expect(actionIds(model)).toEqual(['code', 'freeze']);
+    expect(actionIds(model)).toEqual(['code', 'freeze', 'more']);
     expect(model.actions).toEqual([
       expect.objectContaining({
         id: 'code',
@@ -40,11 +42,19 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
         available: false,
         unavailableReason: 'La política de congelado del nodo aún no está disponible.',
       }),
+      expect.objectContaining({
+        id: 'more',
+        label: 'Más acciones',
+        description: 'Abrir las acciones contextuales gobernadas del nodo.',
+        available: true,
+      }),
     ]);
 
     model.actions.find((action) => action.id === 'code')?.onSelect?.();
+    model.actions.find((action) => action.id === 'more')?.onSelect?.();
 
     expect(onOpenCode).toHaveBeenCalledWith('model_orders');
+    expect(onOpenMore).toHaveBeenCalledWith('model_orders');
   });
 
   it('does not project dead actions when their owning callback is absent', () => {

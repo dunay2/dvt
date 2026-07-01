@@ -10824,6 +10824,30 @@ test('tracked migrations register Node floating toolbar unavailable freeze postu
   assert.doesNotMatch(freezePostureMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Node floating toolbar More as node context-menu launcher', () => {
+  const migrations = readMigrationFiles();
+  const moreLauncherMigration = migrations.find(
+    (migration) => migration.fileName === '447_node_floating_toolbar_more_context_menu_launcher.sql'
+  );
+
+  assert.ok(moreLauncherMigration);
+  assert.match(moreLauncherMigration.sql, /web\.component\.canvas\.NodeFloatingToolbar/);
+  assert.match(moreLauncherMigration.sql, /web\.component\.canvas\.CanvasNodeContextMenu/);
+  assert.match(moreLauncherMigration.sql, /RenderCanvasNodeFloatingToolbar/);
+  assert.match(moreLauncherMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(moreLauncherMigration.sql, /Más acciones/);
+  assert.match(moreLauncherMigration.sql, /MoreHorizontal/);
+  assert.match(moreLauncherMigration.sql, /doesNotOwnNodeMenuActions/);
+  assert.match(
+    moreLauncherMigration.sql,
+    /EV-CANVAS-NODE-FLOATING-TOOLBAR-MORE-CONTEXT-MENU-LAUNCHER/
+  );
+  assert.match(moreLauncherMigration.sql, /canvasNodeFloatingToolbarModel\.test\.ts/);
+  assert.match(moreLauncherMigration.sql, /CanvasViewport\.nodeFloatingToolbar\.test\.tsx/);
+  assert.doesNotMatch(moreLauncherMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(moreLauncherMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(

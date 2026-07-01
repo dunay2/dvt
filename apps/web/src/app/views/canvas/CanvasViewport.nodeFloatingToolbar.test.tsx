@@ -45,13 +45,17 @@ describe('CanvasViewport node floating toolbar', () => {
       ] as CanvasViewportProps['nodesWithImpact'],
     });
 
-    await clickNode('model_orders', 420, 240);
+    await clickNode('model_orders', {
+      clientX: 420,
+      clientY: 240,
+      nodeElement: document.createElement('div'),
+    });
 
     expect(toolbarText()).toContain('Código');
     expect(toolbarText()).toContain('Congelar');
     expect(toolbarButton('Congelar')?.getAttribute('data-action-state')).toBe('unavailable');
     expect(toolbarButton('Congelar')?.getAttribute('aria-disabled')).toBe('true');
-    expect(toolbarText()).not.toContain('Más acciones');
+    expect(toolbarButton('Más acciones')).not.toBeNull();
     expect(toolbarText()).not.toContain('Seleccionar para ejecución');
     expect(toolbarButton('Seleccionar para ejecución')).toBeNull();
 
@@ -92,6 +96,40 @@ describe('CanvasViewport node floating toolbar', () => {
 
     expect(toolbar?.style.getPropertyValue('--node-toolbar-x')).toBe('320px');
     expect(toolbar?.style.getPropertyValue('--node-toolbar-y')).toBe('128px');
+  });
+
+  it('delegates More to the governed node context-menu gesture for the clicked card', async () => {
+    const nodeElement = document.createElement('div');
+    const dispatchEvent = vi.spyOn(nodeElement, 'dispatchEvent');
+
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'model_orders',
+          position: { x: 160, y: 90 },
+          data: { name: 'Orders model', onInspectNode: vi.fn() },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('model_orders', {
+      clientX: 640,
+      clientY: 320,
+      nodeElement,
+      nodeRect: { left: 320, top: 180, width: 180, height: 72 },
+    });
+
+    await act(async () => {
+      toolbarButton('Más acciones')?.click();
+    });
+
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
+    const dispatchedEvent = dispatchEvent.mock.calls[0]?.[0];
+    expect(dispatchedEvent).toBeInstanceOf(MouseEvent);
+    expect((dispatchedEvent as MouseEvent).type).toBe('contextmenu');
+    expect((dispatchedEvent as MouseEvent).clientX).toBe(320);
+    expect((dispatchedEvent as MouseEvent).clientY).toBe(180);
   });
 
   it('does not render an empty toolbar when the clicked node has no operable actions', async () => {
@@ -214,6 +252,7 @@ describe('CanvasViewport node floating toolbar', () => {
       | {
           clientX: number;
           clientY: number;
+          nodeElement?: Element;
           nodeRect?: { left: number; top: number; width: number; height: number };
         },
     legacyClientY?: number
@@ -222,6 +261,19 @@ describe('CanvasViewport node floating toolbar', () => {
       typeof eventInput === 'number'
         ? { clientX: eventInput, clientY: legacyClientY ?? 0 }
         : eventInput;
+    const resolvedNodeElement =
+      clickEvent.nodeElement ??
+      (clickEvent.nodeRect == null ? undefined : document.createElement('div'));
+    if (resolvedNodeElement != null && clickEvent.nodeRect != null) {
+      vi.spyOn(resolvedNodeElement, 'getBoundingClientRect').mockReturnValue({
+        ...clickEvent.nodeRect,
+        x: clickEvent.nodeRect.left,
+        y: clickEvent.nodeRect.top,
+        right: clickEvent.nodeRect.left + clickEvent.nodeRect.width,
+        bottom: clickEvent.nodeRect.top + clickEvent.nodeRect.height,
+        toJSON: () => ({}),
+      } as DOMRect);
+    }
     const onNodeClick = xyflowState.lastReactFlowProps?.onNodeClick as
       | ((
           event: React.MouseEvent<Element>,
@@ -238,12 +290,8 @@ describe('CanvasViewport node floating toolbar', () => {
         {
           clientX: clickEvent.clientX,
           clientY: clickEvent.clientY,
-          currentTarget:
-            clickEvent.nodeRect == null
-              ? undefined
-              : {
-                  getBoundingClientRect: () => clickEvent.nodeRect,
-                },
+          target: resolvedNodeElement,
+          currentTarget: resolvedNodeElement,
           stopPropagation: vi.fn(),
         } as unknown as React.MouseEvent<Element>,
         node as CanvasViewportProps['nodesWithImpact'][number]
