@@ -10471,6 +10471,27 @@ test('tracked migrations split Graph node card view presentation ownership', () 
   assert.doesNotMatch(viewOwnershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations keep Graph node card view ownership import resistant', () => {
+  const migrations = readMigrationFiles();
+  const importOverlayMigration = migrations.find(
+    (migration) => migration.fileName === '421_graph_node_card_view_import_overlay.sql'
+  );
+
+  assert.ok(importOverlayMigration);
+  assert.match(importOverlayMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(importOverlayMigration.sql, /GraphNodeCardView\.tsx/);
+  assert.match(importOverlayMigration.sql, /retiredForPresentationOwnership/);
+  assert.match(
+    importOverlayMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_file_query/
+  );
+  assert.match(importOverlayMigration.sql, /frontend_component_local_files local_file/);
+  assert.match(importOverlayMigration.sql, /frontend_component_files imported/);
+  assert.match(importOverlayMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(importOverlayMigration.sql, /GraphNodeCardView/);
+  assert.doesNotMatch(importOverlayMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Node workbench duplicate file ownership', () => {
   const migrations = readMigrationFiles();
   const ownershipMigration = migrations.find(
