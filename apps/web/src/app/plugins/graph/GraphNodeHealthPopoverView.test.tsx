@@ -37,6 +37,12 @@ describe('GraphNodeHealthPopoverView', () => {
             rows: [
               { id: 'freshness', label: 'Freshness', value: '12 min' },
               { id: 'size', label: 'Dataset size', value: '18.2 GB' },
+              {
+                id: 'schema-drift',
+                label: 'Schema drift',
+                value: 'No drift detected',
+                tone: 'success',
+              },
             ],
           }}
           position={{ x: 120, y: 220 }}
@@ -52,6 +58,10 @@ describe('GraphNodeHealthPopoverView', () => {
     expect(container.textContent).toContain('Postgres · public health');
     expect(container.textContent).toContain('Freshness');
     expect(container.textContent).toContain('18.2 GB');
+    expect(
+      container.querySelector('[data-slot="graph-node-health-popover-value"][data-tone="success"]')
+        ?.textContent
+    ).toBe('No drift detected');
 
     act(() => {
       fireEvent.keyDown(popover!, { key: 'Escape' });

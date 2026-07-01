@@ -10903,6 +10903,27 @@ test('tracked migrations declare Graph node title presentation acronym helper sy
   assert.doesNotMatch(titleSymbolMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations record Graph node health schema drift tone contract', () => {
+  const migrations = readMigrationFiles();
+  const driftToneMigration = migrations.find(
+    (migration) => migration.fileName === '437_graph_node_health_schema_drift_tone.sql'
+  );
+
+  assert.ok(driftToneMigration);
+  assert.match(driftToneMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(driftToneMigration.sql, /web\.component\.canvas\.GraphNodeHealthPopover/);
+  assert.match(driftToneMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(driftToneMigration.sql, /RenderCanvasNodeHealthPopover/);
+  assert.match(driftToneMigration.sql, /SchemaDriftProjection/);
+  assert.match(driftToneMigration.sql, /resolveSchemaDriftProjection/);
+  assert.match(driftToneMigration.sql, /EV-CANVAS-GRAPH-NODE-SCHEMA-DRIFT-TONE-PROJECTION/);
+  assert.match(driftToneMigration.sql, /EV-CANVAS-GRAPH-NODE-HEALTH-POPOVER-SCHEMA-DRIFT-TONE/);
+  assert.match(driftToneMigration.sql, /graphNodeOperationalSummary\.test\.ts/);
+  assert.match(driftToneMigration.sql, /GraphNodeHealthPopoverView\.test\.tsx/);
+  assert.match(driftToneMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(driftToneMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Inspector visual token rail duplicate', () => {
   const migrations = readMigrationFiles();
   const duplicateMigration = migrations.find(

@@ -79,7 +79,12 @@ describe('buildGraphNodeOperationalSummary', () => {
         { id: 'throughput', label: 'Throughput', value: '42 MB/min' },
         { id: 'size', label: 'Size', value: '18.2 GB' },
         { id: 'rows', label: 'Rows', value: '124M' },
-        { id: 'schema-drift', label: 'Schema drift', value: 'No drift detected' },
+        {
+          id: 'schema-drift',
+          label: 'Schema drift',
+          value: 'No drift detected',
+          tone: 'success',
+        },
       ],
     });
   });
@@ -96,12 +101,14 @@ describe('buildGraphNodeOperationalSummary', () => {
     });
 
     expect(summary.metrics).toEqual([
-      { id: 'schema-drift', label: 'Schema drift', value: 'Drift detected' },
+      { id: 'schema-drift', label: 'Schema drift', value: 'Drift detected', tone: 'warning' },
     ]);
     expect(summary.detail).toEqual({
       title: 'Raw Orders health',
       ariaLabel: 'Open Raw Orders health metrics',
-      rows: [{ id: 'schema-drift', label: 'Schema drift', value: 'Drift detected' }],
+      rows: [
+        { id: 'schema-drift', label: 'Schema drift', value: 'Drift detected', tone: 'warning' },
+      ],
     });
   });
 

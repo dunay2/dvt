@@ -3,6 +3,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import type {
   GraphNodeCardMetric,
   GraphNodeCardStatus,
+  GraphNodeCardStatusTone,
   GraphNodeOperationalDetail,
 } from './graphNodeCardStrategyContracts';
 
@@ -100,9 +101,10 @@ export function pushOperationalMetric(
   metrics: GraphNodeCardMetric[],
   id: string,
   label: string,
-  value: string | number | null
+  value: string | number | null,
+  tone?: GraphNodeCardStatusTone
 ): void {
-  pushMetric(metrics, id, label, value);
+  pushMetric(metrics, id, label, value, tone);
 }
 
 export function buildGraphNodeOperationalDetail(
@@ -185,12 +187,15 @@ export function pushMetric(
   metrics: GraphNodeCardMetric[],
   id: string,
   label: string,
-  value: string | number | null
+  value: string | number | null,
+  tone?: GraphNodeCardStatusTone
 ): void {
   if (value === null) {
     return;
   }
-  metrics.push({ id, label, value: String(value) });
+  metrics.push(
+    tone == null ? { id, label, value: String(value) } : { id, label, value: String(value), tone }
+  );
 }
 
 export function resolveColumnCount(
