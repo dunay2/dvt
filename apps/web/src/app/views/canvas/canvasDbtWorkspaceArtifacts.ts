@@ -1,6 +1,7 @@
 /** Owned concern: project authored dbt canvas state into deterministic workspace files. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 
 export type DbtWorkspaceArtifact = Readonly<{
   path: string;
@@ -69,6 +70,55 @@ function resolveIncomingNodes(args: {
     .filter((node): node is CanonicalNode => node !== undefined);
 }
 
+function isDbtSourceOrigin(node: CanonicalNode): boolean {
+  return node.pluginId === 'dbt' && node.kind === 'dbt:source';
+}
+
+function isDvtWarehouseSourceOrigin(node: CanonicalNode): boolean {
+  return node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source';
+}
+
+function isDbtModelOrigin(node: CanonicalNode): boolean {
+  return node.pluginId === 'dbt' && node.kind === 'dbt:model';
+}
+
+function buildDbtSourceOriginProjection(
+  origin: CanonicalNode
+):
+  | Readonly<{ ok: true; originSql: string; source: DbtSourceProjection }>
+  | Readonly<{ ok: false; message: string }> {
+  if (isDbtSourceOrigin(origin)) {
+    const sourceMetadata = createDbtNodeAuthoringMetadata(origin);
+    return {
+      ok: true,
+      originSql: `{{ source('${sourceMetadata.sourceName}', '${sourceMetadata.tableName}') }}`,
+      source: {
+        sourceName: sourceMetadata.sourceName,
+        schemaName: sourceMetadata.schemaName,
+        tableName: sourceMetadata.tableName,
+      },
+    };
+  }
+
+  const sourceMetadata = createDvtNodeAuthoringMetadata(origin);
+  if (sourceMetadata?.kind !== 'source') {
+    return {
+      ok: false,
+      message: `DBT source origin "${origin.name}" does not expose warehouse source metadata.`,
+    };
+  }
+
+  return {
+    ok: true,
+    originSql: `{{ source('${sourceMetadata.alias}', '${sourceMetadata.table}') }}`,
+    source: {
+      sourceName: sourceMetadata.alias,
+      schemaName: sourceMetadata.schema,
+      tableName: sourceMetadata.table,
+    },
+  };
+}
+
 function resolveModelOrigin(args: {
   modelNode: CanonicalNode;
   nodes: readonly CanonicalNode[];
@@ -88,8 +138,9 @@ function resolveModelOrigin(args: {
       : undefined;
   const origin =
     selectedOrigin ??
-    incomingNodes.find((node) => node.pluginId === 'dbt' && node.kind === 'dbt:source') ??
-    incomingNodes.find((node) => node.pluginId === 'dbt' && node.kind === 'dbt:model');
+    incomingNodes.find(isDbtSourceOrigin) ??
+    incomingNodes.find(isDvtWarehouseSourceOrigin) ??
+    incomingNodes.find(isDbtModelOrigin);
 
   if (origin == null) {
     return {
@@ -98,20 +149,11 @@ function resolveModelOrigin(args: {
     };
   }
 
-  if (origin.pluginId === 'dbt' && origin.kind === 'dbt:source') {
-    const sourceMetadata = createDbtNodeAuthoringMetadata(origin);
-    return {
-      ok: true,
-      originSql: `{{ source('${sourceMetadata.sourceName}', '${sourceMetadata.tableName}') }}`,
-      source: {
-        sourceName: sourceMetadata.sourceName,
-        schemaName: sourceMetadata.schemaName,
-        tableName: sourceMetadata.tableName,
-      },
-    };
+  if (isDbtSourceOrigin(origin) || isDvtWarehouseSourceOrigin(origin)) {
+    return buildDbtSourceOriginProjection(origin);
   }
 
-  if (origin.pluginId === 'dbt' && origin.kind === 'dbt:model') {
+  if (isDbtModelOrigin(origin)) {
     return {
       ok: true,
       originSql: `{{ ref('${normalizeIdentifier(origin.name, origin.id)}') }}`,

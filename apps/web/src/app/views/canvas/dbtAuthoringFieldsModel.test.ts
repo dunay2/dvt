@@ -26,6 +26,23 @@ function buildDbtSourceNode(id: string, name: string, sourceName: string): Canon
   };
 }
 
+function buildWarehouseSourceNode(id: string, name: string): CanonicalNode {
+  return {
+    id,
+    name,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+    metadata: {
+      sourceName: 'warehouse_prod_analytics_erp',
+      schema: 'erp',
+      tableName: 'orders',
+    },
+  };
+}
+
 function buildDbtModelNode(id = 'model-orders', name = 'Orders Model'): CanonicalNode {
   return {
     id,
@@ -71,6 +88,36 @@ describe('dbtAuthoringFieldsModel', () => {
     ]);
     expect(projection.selectedOriginId).toBe('source-a');
     expect(projection.generatedModelSql).toBe("select *\nfrom {{ source('raw', 'orders') }}");
+  });
+
+  it('projects connected warehouse-source origins as dbt source candidates', () => {
+    const source = buildWarehouseSourceNode('warehouse-orders', 'Imported Orders');
+    const model = buildDbtModelNode();
+
+    const projection = buildDbtAuthoringModelProjection({
+      node: model,
+      nodes: [source, model],
+      edges: [
+        {
+          id: 'edge-warehouse-model',
+          sourceId: source.id,
+          targetId: model.id,
+          relation: 'lineage',
+        },
+      ],
+      selectedOriginId: '',
+      kindLabels: {
+        'dbt:source': 'Source',
+        'dbt:model': 'Model',
+      },
+    });
+
+    expect(projection.originOptions).toEqual([
+      { value: 'warehouse-orders', label: 'Imported Orders (Source)' },
+    ]);
+    expect(projection.generatedModelSql).toBe(
+      "select *\nfrom {{ source('warehouse_prod_analytics_erp', 'orders') }}"
+    );
   });
 
   it('generates ref SQL from connected dbt model origins without React presentation state', () => {

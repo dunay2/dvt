@@ -1,8 +1,9 @@
 /** Owned concern: derive dbt Inspector authoring presentation state from Canvas graph inputs. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
 
-export type DbtOriginNode = CanonicalNode & Readonly<{ kind: 'dbt:source' | 'dbt:model' }>;
+export type DbtOriginNode = CanonicalNode;
 
 export type DbtOriginOption = Readonly<{
   value: string;
@@ -15,11 +16,51 @@ export type DbtAuthoringModelProjection = Readonly<{
   generatedModelSql: string | null;
 }>;
 
+function isDbtSourceOrigin(candidate: CanonicalNode | undefined): candidate is CanonicalNode {
+  return candidate?.pluginId === 'dbt' && candidate.kind === 'dbt:source';
+}
+
+function isWarehouseSourceOrigin(candidate: CanonicalNode | undefined): candidate is CanonicalNode {
+  return candidate?.pluginId === 'dvt.warehouse-source' && candidate.kind === 'dvt:source';
+}
+
+function isDbtModelOrigin(candidate: CanonicalNode | undefined): candidate is CanonicalNode {
+  return candidate?.pluginId === 'dbt' && candidate.kind === 'dbt:model';
+}
+
 function isDbtOriginNode(candidate: CanonicalNode | undefined): candidate is DbtOriginNode {
   return (
-    candidate?.pluginId === 'dbt' &&
-    (candidate.kind === 'dbt:source' || candidate.kind === 'dbt:model')
+    isDbtSourceOrigin(candidate) ||
+    isWarehouseSourceOrigin(candidate) ||
+    isDbtModelOrigin(candidate)
   );
+}
+
+function formatOriginKindLabel(
+  candidate: DbtOriginNode,
+  kindLabels: Readonly<Record<'dbt:source' | 'dbt:model', string>>
+): string {
+  return isDbtModelOrigin(candidate) ? kindLabels['dbt:model'] : kindLabels['dbt:source'];
+}
+
+function buildSourceSql(origin: CanonicalNode): string | null {
+  if (isDbtSourceOrigin(origin)) {
+    const sourceMetadata = createDbtNodeAuthoringMetadata(origin);
+    return `{{ source('${sourceMetadata.sourceName}', '${sourceMetadata.tableName}') }}`;
+  }
+
+  if (isWarehouseSourceOrigin(origin)) {
+    const sourceMetadata = createDvtNodeAuthoringMetadata(origin);
+    return sourceMetadata?.kind === 'source'
+      ? `{{ source('${sourceMetadata.alias}', '${sourceMetadata.table}') }}`
+      : null;
+  }
+
+  return null;
+}
+
+function isSourceOrigin(candidate: CanonicalNode): boolean {
+  return isDbtSourceOrigin(candidate) || isWarehouseSourceOrigin(candidate);
 }
 
 export function buildDbtOriginOptions(args: {
@@ -35,7 +76,7 @@ export function buildDbtOriginOptions(args: {
     .filter(isDbtOriginNode)
     .map((candidate) => ({
       value: candidate.id,
-      label: `${candidate.name} (${args.kindLabels[candidate.kind]})`,
+      label: `${candidate.name} (${formatOriginKindLabel(candidate, args.kindLabels)})`,
     }));
 }
 
@@ -64,7 +105,7 @@ export function resolveDbtModelOrigin(args: {
 
   return (
     incomingOrigins.find((candidate) => candidate.id === args.selectedOriginId) ??
-    incomingOrigins.find((candidate) => candidate.kind === 'dbt:source') ??
+    incomingOrigins.find(isSourceOrigin) ??
     incomingOrigins[0] ??
     null
   );
@@ -81,12 +122,9 @@ export function buildGeneratedDbtModelSqlPreview(args: {
     return null;
   }
 
-  if (origin.kind === 'dbt:source') {
-    const sourceMetadata = createDbtNodeAuthoringMetadata(origin);
-    return [
-      'select *',
-      `from {{ source('${sourceMetadata.sourceName}', '${sourceMetadata.tableName}') }}`,
-    ].join('\n');
+  const sourceSql = buildSourceSql(origin);
+  if (sourceSql !== null) {
+    return ['select *', `from ${sourceSql}`].join('\n');
   }
 
   return ['select *', `from {{ ref('${normalizeDbtIdentifier(origin.name, origin.id)}') }}`].join(
