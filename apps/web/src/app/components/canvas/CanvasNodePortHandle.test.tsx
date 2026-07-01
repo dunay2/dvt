@@ -80,4 +80,34 @@ describe('CanvasNodePortHandle', () => {
     expect(handle?.getAttribute('data-port-compatibility')).toBe('blocked');
     expect(handle?.getAttribute('title')).toBe('Connect a source or model before this transform.');
   });
+
+  it('renders human compatible node labels as an accessible visual hint', () => {
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <CanvasNodePortHandle
+            kind="source"
+            id="source-output"
+            tone="source"
+            label="Connect source output"
+            compatibility={{
+              state: 'available',
+              compatibleNodeNames: ['Orders Model', 'Snapshot 1'],
+              description: 'Compatible with Orders Model, Snapshot 1.',
+            }}
+          />
+        </ReactFlowProvider>
+      );
+    });
+
+    const handle = container.querySelector('[data-slot="canvas-node-port-handle"]');
+    const hint = container.querySelector('[data-slot="canvas-node-port-compatibility-hint"]');
+
+    expect(handle).not.toBeNull();
+    expect(hint).not.toBeNull();
+    expect(hint?.textContent).toBe('Orders Model, Snapshot 1');
+    expect(handle?.getAttribute('aria-describedby')).toBe(hint?.getAttribute('id'));
+    expect(hint?.getAttribute('data-port')).toBe('source');
+    expect(hint?.getAttribute('data-port-compatibility')).toBe('available');
+  });
 });

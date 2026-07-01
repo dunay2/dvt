@@ -10655,6 +10655,48 @@ test('tracked migrations record Canvas node port control tone selector', () => {
   assert.doesNotMatch(controlToneMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Canvas node port compatibility visual hint', () => {
+  const migrations = readMigrationFiles();
+  const compatibilityHintMigration = migrations.find(
+    (migration) => migration.fileName === '451_canvas_node_port_compatibility_hint.sql'
+  );
+
+  assert.ok(compatibilityHintMigration);
+  assert.match(compatibilityHintMigration.sql, /web\.component\.canvas\.CanvasNodePortHandle/);
+  assert.match(compatibilityHintMigration.sql, /web\.component\.canvas\.CanvasNodeShell/);
+  assert.match(compatibilityHintMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(compatibilityHintMigration.sql, /CanvasNodePortHandle\.tsx/);
+  assert.match(compatibilityHintMigration.sql, /CanvasNodePortHandle\.test\.tsx/);
+  assert.match(compatibilityHintMigration.sql, /CanvasNodeShell\.module\.css/);
+  assert.match(compatibilityHintMigration.sql, /canvas-node-port-compatibility-hint/);
+  assert.match(compatibilityHintMigration.sql, /resolveCompatibilityHintText/);
+  assert.match(compatibilityHintMigration.sql, /EV-CANVAS-NODE-PORT-COMPATIBILITY-HINT/);
+  assert.match(compatibilityHintMigration.sql, /Orders Model/);
+  assert.match(compatibilityHintMigration.sql, /Snapshot 1/);
+  assert.match(compatibilityHintMigration.sql, /ariaDescribedBy/);
+  assert.match(compatibilityHintMigration.sql, /doesNotOwnEdgeAdmission/);
+  assert.match(compatibilityHintMigration.sql, /AuthorCanvasGraphEdge/);
+  assert.doesNotMatch(compatibilityHintMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(compatibilityHintMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations normalize Canvas node port hint symbol coverage', () => {
+  const migrations = readMigrationFiles();
+  const coverageMigration = migrations.find(
+    (migration) => migration.fileName === '452_canvas_node_port_hint_symbol_coverage.sql'
+  );
+
+  assert.ok(coverageMigration);
+  assert.match(coverageMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(coverageMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(coverageMigration.sql, /CanvasNodePortHandle\.tsx/);
+  assert.match(coverageMigration.sql, /cypressCoverage/);
+  assert.match(coverageMigration.sql, /not_applicable:component_test_modularization/);
+  assert.match(coverageMigration.sql, /452_canvas_node_port_hint_symbol_coverage\.sql/);
+  assert.doesNotMatch(coverageMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(coverageMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Canvas registry guard with extracted shell and port components', () => {
   const migrations = readMigrationFiles();
   const registryReconcileMigration = migrations.find(

@@ -27,6 +27,54 @@
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--node-port-ring) 26%, transparent);
 }
 
+.portCompatibilityHint {
+  position: absolute;
+  top: 50%;
+  z-index: 6;
+  max-width: 14rem;
+  transform: translateY(-50%);
+  border: 1px solid color-mix(in srgb, var(--node-port-ring) 34%, transparent);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--surface-overlay) 92%, transparent);
+  box-shadow: 0 18px 32px color-mix(in srgb, var(--surface-shell) 62%, transparent);
+  color: var(--text-default);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0.35rem 0.5rem;
+  pointer-events: none;
+  text-overflow: ellipsis;
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+  white-space: nowrap;
+}
+
+.portCompatibilityHint[data-port='source'] {
+  left: calc(100% + 0.5rem);
+}
+
+.portCompatibilityHint[data-port='target'] {
+  right: calc(100% + 0.5rem);
+}
+
+.portHandle:hover + .portCompatibilityHint,
+.portHandle:focus-visible + .portCompatibilityHint {
+  opacity: 1;
+}
+
+.portHandle:hover + .portCompatibilityHint[data-port='source'],
+.portHandle:focus-visible + .portCompatibilityHint[data-port='source'] {
+  transform: translate(0.2rem, -50%);
+}
+
+.portHandle:hover + .portCompatibilityHint[data-port='target'],
+.portHandle:focus-visible + .portCompatibilityHint[data-port='target'] {
+  transform: translate(-0.2rem, -50%);
+}
+
 .portHandle[data-port-compatibility='available']::before {
   box-shadow:
     0 0 0 4px color-mix(in srgb, var(--node-port-ring) 24%, transparent),
