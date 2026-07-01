@@ -18,6 +18,7 @@ import {
   resolveNodeCardAccentTone,
   resolveNodeCardStatus,
   resolveColumnCount,
+  resolveGraphNodeRelationPath,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 
@@ -38,26 +39,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     typeof dbt === 'object' && dbt !== null && !Array.isArray(dbt)
       ? (dbt as Record<string, unknown>)
       : {};
-  const config = metadata.config;
-  const configRecord =
-    typeof config === 'object' && config !== null && !Array.isArray(config)
-      ? (config as Record<string, unknown>)
-      : {};
-  const database =
-    stringValue(metadata.database) ??
-    stringValue(configRecord.database) ??
-    stringValue(dbtRecord.databaseName);
-  const schema =
-    stringValue(metadata.schema) ??
-    stringValue(configRecord.schema) ??
-    stringValue(dbtRecord.schemaName);
-  const table =
-    stringValue(metadata.table) ??
-    stringValue(metadata.tableName) ??
-    stringValue(configRecord.table) ??
-    stringValue(dbtRecord.tableName);
-  const relation = [database, schema, table].filter(Boolean).join('.');
-  const relationSubtitle = relation.length > 0 ? relation : null;
+  const relationPath = resolveGraphNodeRelationPath(metadata, data);
   const metrics: GraphNodeCardMetric[] = [];
   const materialization = resolveDbtMaterialization(metadata);
   const rowCount = numericValue(metadata.rowCount) ?? numericValue(metadata.rows);
@@ -108,8 +90,8 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   return {
     title: titlePresentation.title,
     technicalName: titlePresentation.technicalName,
-    subtitle: stringValue(metadata.package) ?? relationSubtitle ?? node.path ?? null,
-    path: node.path ?? relationSubtitle ?? null,
+    subtitle: stringValue(metadata.package) ?? relationPath ?? node.path ?? null,
+    path: node.path ?? relationPath ?? null,
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
     accentTone: resolveNodeCardAccentTone(node),
     status: resolveNodeCardStatus(
