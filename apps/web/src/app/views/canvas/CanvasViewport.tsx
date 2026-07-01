@@ -146,6 +146,21 @@ function CanvasViewportWithPresenter({
     }
   }, [nodeHealthPopoverModel, props.nodesWithImpact]);
 
+  useEffect(() => {
+    if (nodeHealthPopoverModel == null) {
+      return;
+    }
+
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        setNodeHealthPopoverModel(null);
+      }
+    };
+
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [nodeHealthPopoverModel]);
+
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
     (event, node) => {
       closeNodeHealthPopover();
