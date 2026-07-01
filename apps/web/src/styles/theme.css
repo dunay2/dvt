@@ -80,6 +80,16 @@
   --canvas-panel-toggle-hover: rgba(27, 40, 61, 0.98);
   --canvas-panel-toggle-border: #31445f;
   --canvas-panel-toggle-foreground: #f8fafc;
+  --canvas-node-port-control-ring: #94a3b8;
+  --canvas-node-port-control-fill: #111827;
+  --canvas-node-port-source-ring: #a855f7;
+  --canvas-node-port-source-fill: #171225;
+  --canvas-node-port-model-ring: #3b82f6;
+  --canvas-node-port-model-fill: #0b1324;
+  --canvas-node-port-test-ring: #ef4444;
+  --canvas-node-port-test-fill: #1f1114;
+  --canvas-node-port-output-ring: #22c55e;
+  --canvas-node-port-output-fill: #0d1b13;
 }
 
 .dark {
