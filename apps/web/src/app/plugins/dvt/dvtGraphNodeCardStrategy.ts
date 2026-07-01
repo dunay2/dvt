@@ -17,24 +17,16 @@ import {
   resolveNodeCardAccentTone,
   resolveNodeCardStatus,
   resolveColumnCount,
-  isRecord,
+  resolveGraphNodeRelationPath,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
 
 function buildDvtSubtitle(
   metadata: Record<string, unknown>,
+  data: Record<string, unknown>,
   fallback: string | undefined
 ): string | null {
-  const config = isRecord(metadata.config) ? metadata.config : {};
-  const database = stringValue(metadata.database) ?? stringValue(config.database);
-  const schema = stringValue(metadata.schema) ?? stringValue(config.schema);
-  const table =
-    stringValue(metadata.table) ??
-    stringValue(metadata.tableName) ??
-    stringValue(config.table) ??
-    stringValue(config.tableName);
-  const path = [database, schema, table].filter(Boolean).join('.');
-  return path.length > 0 ? path : (fallback ?? null);
+  return resolveGraphNodeRelationPath(metadata, data) ?? fallback ?? null;
 }
 
 function resolveCanonicalDurationMs(
@@ -102,8 +94,8 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   return {
     title: titlePresentation.title,
     technicalName: titlePresentation.technicalName,
-    subtitle: buildDvtSubtitle(metadata, node.path),
-    path: buildDvtSubtitle(metadata, node.path),
+    subtitle: buildDvtSubtitle(metadata, data, node.path),
+    path: buildDvtSubtitle(metadata, data, node.path),
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
     accentTone: resolveNodeCardAccentTone(node),
     status: resolveNodeCardStatus(

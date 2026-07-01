@@ -1,5 +1,10 @@
 /** Owned concern: project canonical graph node identity into human-readable card titles. */
 import type { PluginNodeKind } from '../../types/canonical';
+import {
+  recordValue,
+  resolveGraphNodeRelationParts,
+  stringValue,
+} from './graphNodeCardStrategyUtils';
 
 export type GraphNodeTitlePresentationInput = Readonly<{
   nodeName: string;
@@ -13,16 +18,6 @@ export type GraphNodeTitlePresentation = Readonly<{
   title: string;
   technicalName: string | null;
 }>;
-
-function stringValue(value: unknown): string | null {
-  return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
-}
-
-function recordValue(value: unknown): Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-}
 
 function titleCaseIdentifier(value: string): string {
   return value
@@ -53,24 +48,7 @@ export function buildGraphNodeTitlePresentation({
   const configMetadata = recordValue(metadata.config);
   const dbtData = recordValue(data.dbt);
   const configData = recordValue(data.config);
-  const database =
-    stringValue(metadata.database) ??
-    stringValue(configMetadata.database) ??
-    stringValue(dbtMetadata.database) ??
-    stringValue(dbtMetadata.databaseName) ??
-    stringValue(data.database) ??
-    stringValue(configData.database) ??
-    stringValue(dbtData.database) ??
-    stringValue(dbtData.databaseName);
-  const schema =
-    stringValue(metadata.schema) ??
-    stringValue(configMetadata.schema) ??
-    stringValue(dbtMetadata.schema) ??
-    stringValue(dbtMetadata.schemaName) ??
-    stringValue(data.schema) ??
-    stringValue(configData.schema) ??
-    stringValue(dbtData.schema) ??
-    stringValue(dbtData.schemaName);
+  const { database, schema, table: tableName } = resolveGraphNodeRelationParts(metadata, data);
   const sourceName =
     stringValue(metadata.sourceName) ??
     stringValue(dbtMetadata.sourceName) ??
@@ -78,20 +56,6 @@ export function buildGraphNodeTitlePresentation({
     stringValue(data.sourceName) ??
     stringValue(dbtData.sourceName) ??
     stringValue(configData.sourceName);
-  const tableName =
-    stringValue(metadata.tableName) ??
-    stringValue(metadata.table) ??
-    stringValue(dbtMetadata.tableName) ??
-    stringValue(dbtMetadata.table) ??
-    stringValue(configMetadata.tableName) ??
-    stringValue(configMetadata.table) ??
-    stringValue(data.tableName) ??
-    stringValue(data.table) ??
-    stringValue(dbtData.tableName) ??
-    stringValue(dbtData.table) ??
-    stringValue(configData.tableName) ??
-    stringValue(configData.table);
-
   if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source' && database && schema) {
     return {
       title: `${titleCaseIdentifier(database)} · ${schema}`,

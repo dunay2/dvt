@@ -283,6 +283,29 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it('uses the same DBT relation projection for title and path metadata', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dbt:source',
+        pluginId: 'dbt',
+        name: 'src_erp_orders',
+        metadata: {
+          database: 'RAW',
+          schema: 'ERP',
+          config: {
+            tableName: 'ORDERS',
+          },
+        },
+      }),
+      {},
+      [dbtGraphNodeCardStrategy]
+    );
+
+    expect(model.title).toBe('Raw · ERP');
+    expect(model.subtitle).toBe('RAW.ERP.ORDERS');
+    expect(model.path).toBe('RAW.ERP.ORDERS');
+  });
+
   it('uses recorded source refresh timestamps as source health evidence', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({

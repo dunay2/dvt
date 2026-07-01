@@ -22,6 +22,10 @@ export function metadataOf(node: CanonicalNode): Record<string, unknown> {
   return isRecord(node.metadata) ? node.metadata : {};
 }
 
+export function recordValue(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value : {};
+}
+
 export function stringValue(value: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : null;
 }
@@ -102,6 +106,65 @@ export function pushRuntimeMetrics(
     'Warnings',
     warningCount == null ? null : formatCompactNumber(warningCount)
   );
+}
+
+type GraphNodeRelationParts = Readonly<{
+  database: string | null;
+  schema: string | null;
+  table: string | null;
+}>;
+
+export function resolveGraphNodeRelationParts(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown> = {}
+): GraphNodeRelationParts {
+  const configMetadata = recordValue(metadata.config);
+  const dbtMetadata = recordValue(metadata.dbt);
+  const configData = recordValue(data.config);
+  const dbtData = recordValue(data.dbt);
+
+  return {
+    database:
+      stringValue(metadata.database) ??
+      stringValue(configMetadata.database) ??
+      stringValue(dbtMetadata.database) ??
+      stringValue(dbtMetadata.databaseName) ??
+      stringValue(data.database) ??
+      stringValue(configData.database) ??
+      stringValue(dbtData.database) ??
+      stringValue(dbtData.databaseName),
+    schema:
+      stringValue(metadata.schema) ??
+      stringValue(configMetadata.schema) ??
+      stringValue(dbtMetadata.schema) ??
+      stringValue(dbtMetadata.schemaName) ??
+      stringValue(data.schema) ??
+      stringValue(configData.schema) ??
+      stringValue(dbtData.schema) ??
+      stringValue(dbtData.schemaName),
+    table:
+      stringValue(metadata.tableName) ??
+      stringValue(metadata.table) ??
+      stringValue(configMetadata.tableName) ??
+      stringValue(configMetadata.table) ??
+      stringValue(dbtMetadata.tableName) ??
+      stringValue(dbtMetadata.table) ??
+      stringValue(data.tableName) ??
+      stringValue(data.table) ??
+      stringValue(configData.tableName) ??
+      stringValue(configData.table) ??
+      stringValue(dbtData.tableName) ??
+      stringValue(dbtData.table),
+  };
+}
+
+export function resolveGraphNodeRelationPath(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown> = {}
+): string | null {
+  const { database, schema, table } = resolveGraphNodeRelationParts(metadata, data);
+  const relation = [database, schema, table].filter(Boolean).join('.');
+  return relation.length > 0 ? relation : null;
 }
 
 export function pushOperationalMetric(

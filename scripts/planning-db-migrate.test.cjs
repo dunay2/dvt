@@ -11573,6 +11573,84 @@ test('tracked migrations record Graph node operational rail native keyboard acti
   assert.doesNotMatch(activationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations record Graph node card relation projection convergence', () => {
+  const migrations = readMigrationFiles();
+  const relationProjectionMigration = migrations.find(
+    (migration) => migration.fileName === '465_graph_node_card_relation_projection_convergence.sql'
+  );
+
+  assert.ok(relationProjectionMigration);
+  assert.match(relationProjectionMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(
+    relationProjectionMigration.sql,
+    /web\.component\.canvas\.GraphNodeTitlePresentation/
+  );
+  assert.match(relationProjectionMigration.sql, /ProjectGraphNodeCardReadModel/);
+  assert.match(relationProjectionMigration.sql, /RenderCanvasGraphNodeTitlePresentation/);
+  assert.match(relationProjectionMigration.sql, /graphNodeCardStrategyUtils\.ts/);
+  assert.match(relationProjectionMigration.sql, /resolveGraphNodeRelationParts/);
+  assert.match(relationProjectionMigration.sql, /resolveGraphNodeRelationPath/);
+  assert.match(relationProjectionMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(relationProjectionMigration.sql, /graphNodeTitlePresentation\.test\.ts/);
+  assert.match(
+    relationProjectionMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-CARD-RELATION-PROJECTION-CONVERGENCE/
+  );
+  assert.match(relationProjectionMigration.sql, /expected RAW\.ERP\.ORDERS but received RAW\.ERP/);
+  assert.doesNotMatch(relationProjectionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(relationProjectionMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Graph node card relation projection symbol manifest', () => {
+  const migrations = readMigrationFiles();
+  const symbolManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '470_graph_node_card_relation_projection_symbol_manifest.sql'
+  );
+
+  assert.ok(symbolManifestMigration);
+  assert.match(symbolManifestMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(symbolManifestMigration.sql, /raw_manifest/);
+  assert.match(symbolManifestMigration.sql, /\{symbols\}/);
+  assert.match(symbolManifestMigration.sql, /symbol_refs/);
+  assert.match(symbolManifestMigration.sql, /GraphNodeRelationParts/);
+  assert.match(symbolManifestMigration.sql, /recordValue/);
+  assert.match(symbolManifestMigration.sql, /resolveGraphNodeRelationParts/);
+  assert.match(symbolManifestMigration.sql, /resolveGraphNodeRelationPath/);
+  assert.match(symbolManifestMigration.sql, /ProjectGraphNodeCardReadModel/);
+  assert.match(symbolManifestMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(symbolManifestMigration.sql, /RenderCanvasGraphNodeTitlePresentation/);
+  assert.match(symbolManifestMigration.sql, /architectureGuard/);
+  assert.match(symbolManifestMigration.sql, /cypressCoverage/);
+  assert.match(symbolManifestMigration.sql, /graphNodeCardReadModel\.architecture\.test\.ts/);
+  assert.match(symbolManifestMigration.sql, /canvas-ready-node-authoring\.cy\.ts/);
+  assert.match(symbolManifestMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(symbolManifestMigration.sql, /graphNodeTitlePresentation\.test\.ts/);
+  assert.doesNotMatch(symbolManifestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(symbolManifestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations deduplicate Graph node card relation projection symbols', () => {
+  const migrations = readMigrationFiles();
+  const symbolDedupeMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '471_graph_node_card_relation_projection_symbol_dedupe.sql'
+  );
+
+  assert.ok(symbolDedupeMigration);
+  assert.match(symbolDedupeMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(symbolDedupeMigration.sql, /jsonb_array_elements/);
+  assert.match(symbolDedupeMigration.sql, /distinct on/);
+  assert.match(symbolDedupeMigration.sql, /symbol_refs/);
+  assert.match(symbolDedupeMigration.sql, /GraphNodeRelationParts/);
+  assert.match(symbolDedupeMigration.sql, /recordValue/);
+  assert.match(symbolDedupeMigration.sql, /resolveGraphNodeRelationParts/);
+  assert.match(symbolDedupeMigration.sql, /resolveGraphNodeRelationPath/);
+  assert.match(symbolDedupeMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.doesNotMatch(symbolDedupeMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(symbolDedupeMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node tag accent tone contract', () => {
   const migrations = readMigrationFiles();
   const tagAccentMigration = migrations.find(
