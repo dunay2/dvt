@@ -109,6 +109,18 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.nodePort.sourceLabel',
     fallback: 'Connect outgoing port',
   },
+  canvasNodePortCompatibleWithPrefix: {
+    key: 'canvas.nodePort.compatibleWithPrefix',
+    fallback: 'Compatible with',
+  },
+  canvasNodePortNoCompatibleNodesMessage: {
+    key: 'canvas.nodePort.noCompatibleNodesMessage',
+    fallback: 'No compatible nodes available',
+  },
+  canvasNodePortBlockedMessage: {
+    key: 'canvas.nodePort.blockedMessage',
+    fallback: 'Compatible nodes are blocked by the current graph policy',
+  },
   canvasAddNodeCatalogTitle: {
     key: 'canvas.addNodeCatalog.title',
     fallback: 'Add component',

@@ -27,6 +27,21 @@
   box-shadow: 0 0 0 6px color-mix(in srgb, var(--node-port-ring) 26%, transparent);
 }
 
+.portHandle[data-port-compatibility='available']::before {
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--node-port-ring) 24%, transparent),
+    0 0 18px color-mix(in srgb, var(--node-port-ring) 38%, transparent);
+}
+
+.portHandle[data-port-compatibility='blocked']::before {
+  opacity: 0.72;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--status-warning) 20%, transparent);
+}
+
+.portHandle[data-port-compatibility='unavailable']::before {
+  opacity: 0.48;
+}
+
 .portHandle[data-tone='source'] {
   --node-port-ring: var(--canvas-node-port-source-ring);
   --node-port-fill: var(--canvas-node-port-source-fill);

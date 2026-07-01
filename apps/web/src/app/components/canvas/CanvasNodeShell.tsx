@@ -4,7 +4,11 @@ import { type DragEventHandler, type ReactNode } from 'react';
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import { cn } from '../ui/utils';
 import { CanvasNodeContextMenuView } from './CanvasNodeContextMenuView';
-import { CanvasNodePortHandle, type CanvasNodePortTone } from './CanvasNodePortHandle';
+import {
+  CanvasNodePortHandle,
+  type CanvasNodePortCompatibilityView,
+  type CanvasNodePortTone,
+} from './CanvasNodePortHandle';
 import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
@@ -20,6 +24,8 @@ type CanvasNodeShellProps = Readonly<{
   targetHandleTone?: CanvasNodePortTone;
   sourcePortLabel?: string;
   targetPortLabel?: string;
+  sourcePortCompatibility?: CanvasNodePortCompatibilityView;
+  targetPortCompatibility?: CanvasNodePortCompatibilityView;
   onContextMenuAction: (actionId: CanvasNodeContextMenuActionId) => void;
   onOpenWorkbench?: () => void;
   onDragOver?: DragEventHandler<HTMLDivElement>;
@@ -35,6 +41,8 @@ export function CanvasNodeShell({
   targetHandleTone = 'control',
   sourcePortLabel,
   targetPortLabel,
+  sourcePortCompatibility,
+  targetPortCompatibility,
   onContextMenuAction,
   onOpenWorkbench,
   onDragOver,
@@ -55,6 +63,7 @@ export function CanvasNodeShell({
               kind="target"
               tone={targetHandleTone}
               label={targetPortLabel}
+              compatibility={targetPortCompatibility}
             />
           )}
 
@@ -66,6 +75,7 @@ export function CanvasNodeShell({
               kind="source"
               tone={sourceHandleTone}
               label={sourcePortLabel}
+              compatibility={sourcePortCompatibility}
             />
           )}
         </div>

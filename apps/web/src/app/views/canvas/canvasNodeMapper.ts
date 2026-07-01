@@ -5,8 +5,11 @@ import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { MergedNodeDecoration } from '../../plugins/contracts/NodeRendering';
 import { createGraphFlowEdgeStyle, graphFlowPalette } from '../../plugins/graph/graphVisualTokens';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasNodePortCompatibilityView } from '../../components/canvas/CanvasNodePortHandle';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import type { CanvasNodePortCompatibilityByDirection } from './canvasConnectionCompatibilityPresenter';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import type { CanvasViewCopy } from './canvasCopy.types';
 
 type ColumnMeta = Array<{ name: string; type: string }>;
 type CanvasNodePosition = { x: number; y: number };
@@ -16,11 +19,52 @@ type MapCanonicalNodeToCanvasNodeArgs = {
   showColumns: boolean;
   overlayDecoration?: MergedNodeDecoration | null;
   persistedPosition?: CanvasNodePosition;
+  portCompatibility?: CanvasNodePortCompatibilityByDirection;
   locale?: string;
 };
 
 function resolveColumns(value: unknown): ColumnMeta | undefined {
   return Array.isArray(value) ? (value as ColumnMeta) : undefined;
+}
+
+function formatCompatibleNodeNames(compatibleNodeNames: readonly string[]): string {
+  return compatibleNodeNames.join(', ');
+}
+
+function toPortCompatibilityView(
+  compatibility: CanvasNodePortCompatibilityByDirection['source'],
+  copy: CanvasViewCopy
+): CanvasNodePortCompatibilityView {
+  if (compatibility.state === 'available') {
+    return {
+      ...compatibility,
+      description: `${copy.canvasNodePortCompatibleWithPrefix} ${formatCompatibleNodeNames(
+        compatibility.compatibleNodeNames
+      )}`,
+    };
+  }
+
+  return {
+    ...compatibility,
+    description:
+      compatibility.state === 'blocked'
+        ? copy.canvasNodePortBlockedMessage
+        : copy.canvasNodePortNoCompatibleNodesMessage,
+  };
+}
+
+function toPortCompatibilityViewModel(
+  compatibility: CanvasNodePortCompatibilityByDirection | undefined,
+  copy: CanvasViewCopy
+): DbtNodeData['portCompatibility'] {
+  if (compatibility == null) {
+    return undefined;
+  }
+
+  return {
+    source: toPortCompatibilityView(compatibility.source, copy),
+    target: toPortCompatibilityView(compatibility.target, copy),
+  };
 }
 
 export function mapCanonicalNodeToCanvasNode({
@@ -29,6 +73,7 @@ export function mapCanonicalNodeToCanvasNode({
   showColumns,
   overlayDecoration,
   persistedPosition,
+  portCompatibility,
   locale,
 }: MapCanonicalNodeToCanvasNodeArgs): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
@@ -58,6 +103,7 @@ export function mapCanonicalNodeToCanvasNode({
         target: copy.canvasNodePortTargetLabel,
         source: copy.canvasNodePortSourceLabel,
       },
+      portCompatibility: toPortCompatibilityViewModel(portCompatibility, copy),
     },
   };
 }
