@@ -239,6 +239,33 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it('uses recorded source refresh timestamps as source health evidence', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:source',
+        pluginId: 'dvt',
+        name: 'public.orders',
+        metadata: {
+          database: 'warehouse',
+          schema: 'public',
+          table: 'orders',
+          lastRefreshAt: '2026-06-28T10:15:00Z',
+          rowCount: 124000000,
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.operationalMetrics).toEqual([
+      { id: 'last-refresh', label: 'Last refresh', value: '2026-06-28T10:15:00Z' },
+    ]);
+    expect(model.operationalDetail?.rows).toEqual([
+      { id: 'last-refresh', label: 'Last refresh', value: '2026-06-28T10:15:00Z' },
+      { id: 'rows', label: 'Rows', value: '124M' },
+    ]);
+  });
+
   it('adds DBT test target and severity metrics from recorded metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({

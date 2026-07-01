@@ -135,6 +135,11 @@ function buildSourceHealthRows(
     'freshnessMinutes',
     'freshnessAgeMinutes',
   ]);
+  const lastRefreshAt =
+    stringValue(metadata.lastRefreshAt) ??
+    stringValue(data.lastRefreshAt) ??
+    stringValue(metadata.lastRefresh) ??
+    stringValue(data.lastRefresh);
   const cadenceMinutes = firstNumericValue(metadata, data, ['cadenceMinutes', 'scheduleMinutes']);
   const throughputBytesPerMinute = firstNumericValue(metadata, data, [
     'throughputBytesPerMinute',
@@ -147,6 +152,7 @@ function buildSourceHealthRows(
     firstNumericValue(metadata, data, ['datasetSizeBytes', 'sourceSizeBytes']) !== null;
   const hasSourceHealthSignal =
     freshnessMinutes !== null ||
+    lastRefreshAt !== null ||
     cadenceMinutes !== null ||
     throughputBytesPerMinute !== null ||
     hasExplicitDatasetSize ||
@@ -160,6 +166,7 @@ function buildSourceHealthRows(
     'Freshness',
     freshnessMinutes == null ? null : formatMinutes(freshnessMinutes)
   );
+  pushOperationalMetric(railMetrics, 'last-refresh', 'Last refresh', lastRefreshAt);
   pushOperationalMetric(
     railMetrics,
     'cadence',
