@@ -144,6 +144,11 @@ function buildSourceHealthRows(
     datasetSizeBytes == null ? null : formatBytes(datasetSizeBytes)
   );
 
+  const schemaDriftRailOnly = railMetrics.length === 0 && schemaDriftLabel !== null;
+  if (schemaDriftRailOnly) {
+    pushOperationalMetric(railMetrics, 'schema-drift', 'Schema drift', schemaDriftLabel);
+  }
+
   detailRows.push(...railMetrics);
   pushOperationalMetric(
     detailRows,
@@ -151,7 +156,9 @@ function buildSourceHealthRows(
     'Rows',
     rowCount == null ? null : formatCompactNumber(rowCount)
   );
-  pushOperationalMetric(detailRows, 'schema-drift', 'Schema drift', schemaDriftLabel);
+  if (!schemaDriftRailOnly) {
+    pushOperationalMetric(detailRows, 'schema-drift', 'Schema drift', schemaDriftLabel);
+  }
 
   return { hasSourceHealthSignal, railMetrics, detailRows };
 }

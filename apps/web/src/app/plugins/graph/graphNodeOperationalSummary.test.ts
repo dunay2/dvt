@@ -92,7 +92,9 @@ describe('buildGraphNodeOperationalSummary', () => {
       byteSize: null,
     });
 
-    expect(summary.metrics).toEqual([]);
+    expect(summary.metrics).toEqual([
+      { id: 'schema-drift', label: 'Schema drift', value: 'Drift detected' },
+    ]);
     expect(summary.detail).toEqual({
       title: 'Raw Orders health',
       ariaLabel: 'Open Raw Orders health metrics',
