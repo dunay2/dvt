@@ -34,6 +34,14 @@ export const graphNodeMetricRowClasses = {
 export const graphNodeTagListClasses = {
   root: 'mt-3 flex flex-wrap gap-1.5',
   tag: 'rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] text-slate-300',
+  tone: {
+    source: 'border-purple-400/35 bg-purple-500/10 text-purple-200',
+    model: 'border-blue-400/35 bg-blue-500/10 text-blue-200',
+    test: 'border-red-400/35 bg-red-500/10 text-red-200',
+    output: 'border-pink-400/35 bg-pink-500/10 text-pink-200',
+    control: 'border-slate-500/45 bg-slate-800/70 text-slate-200',
+    unknown: 'border-slate-700 bg-slate-900 text-slate-300',
+  },
 } as const;
 
 export const graphNodeOperationalRailClasses = {

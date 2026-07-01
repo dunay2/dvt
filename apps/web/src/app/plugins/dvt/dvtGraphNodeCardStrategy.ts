@@ -14,6 +14,7 @@ import {
   numericValue,
   pushMetric,
   pushRuntimeMetrics,
+  resolveNodeCardAccentTone,
   resolveNodeCardStatus,
   resolveColumnCount,
   isRecord,
@@ -103,6 +104,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     subtitle: buildDvtSubtitle(metadata, node.path),
     path: buildDvtSubtitle(metadata, node.path),
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
+    accentTone: resolveNodeCardAccentTone(node),
     status: resolveNodeCardStatus(
       node,
       metadata,

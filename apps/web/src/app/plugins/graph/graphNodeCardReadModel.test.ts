@@ -42,6 +42,7 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.title).toBe('Warehouse · public');
+    expect(model.accentTone).toBe('source');
     expect(model.technicalName).toBe('public.orders');
     expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
     expect(model.subtitle).toBe('warehouse.public.orders');
@@ -106,6 +107,7 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.status).toEqual({ label: 'Completed', tone: 'success' });
+    expect(model.accentTone).toBe('model');
     expect(model.metrics).toEqual([
       { id: 'rows', label: 'Rows', value: '1.2k' },
       { id: 'bytes', label: 'Size', value: '2 KB' },
@@ -232,6 +234,7 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.status).toEqual({ label: 'Draft', tone: 'warning' });
+    expect(model.accentTone).toBe('model');
     expect(model.subtitle).toBe('analytics');
     expect(model.path).toBe('models/marts/fct_orders.sql');
     expect(model.metrics).toEqual([
@@ -264,6 +267,7 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.title).toBe('Raw · ERP');
+    expect(model.accentTone).toBe('source');
     expect(model.technicalName).toBe('src_erp_orders');
     expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
     expect(model.subtitle).toBe('RAW.ERP.ORDERS');
@@ -342,5 +346,6 @@ describe('buildGraphNodeCardReadModel', () => {
       { id: 'duration', label: 'Duration', value: '9s' },
       { id: 'warnings', label: 'Warnings', value: '1' },
     ]);
+    expect(model.accentTone).toBe('test');
   });
 });

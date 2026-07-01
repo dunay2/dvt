@@ -56,4 +56,18 @@ describe('GraphNodeTagList', () => {
 
     expect(container.textContent).toBe('model');
   });
+
+  it('renders the supplied accent tone without deriving it from tag text', () => {
+    act(() => {
+      root.render(<GraphNodeTagList tags={['public', 'source']} tone="source" />);
+    });
+
+    const list = container.querySelector('[data-slot="graph-node-tag-list"]');
+    const tags = container.querySelectorAll('[data-slot="graph-node-tag"]');
+
+    expect(list?.getAttribute('data-tone')).toBe('source');
+    expect(tags).toHaveLength(2);
+    expect(tags[0]?.getAttribute('data-tone')).toBe('source');
+    expect(tags[1]?.getAttribute('data-tone')).toBe('source');
+  });
 });

@@ -19,6 +19,14 @@ export type GraphNodeCardMetricIcon =
   | 'cost'
   | 'drift';
 
+export type GraphNodeCardAccentTone =
+  | 'source'
+  | 'model'
+  | 'test'
+  | 'output'
+  | 'control'
+  | 'unknown';
+
 export type GraphNodeOperationalDetail = Readonly<{
   title: string;
   ariaLabel: string;
@@ -44,6 +52,7 @@ export type GraphNodeCardReadModel = Readonly<{
   subtitle: string | null;
   path: string | null;
   kindLabel: string;
+  accentTone: GraphNodeCardAccentTone;
   status: GraphNodeCardStatus;
   metrics: readonly GraphNodeCardMetric[];
   operationalMetrics: readonly GraphNodeCardMetric[];

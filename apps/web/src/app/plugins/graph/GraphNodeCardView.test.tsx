@@ -18,6 +18,7 @@ const BASE_PROPS = {
     metrics: [],
     operationalMetrics: [],
     operationalDetail: null,
+    accentTone: 'model' as const,
   },
   typeLabel: 'Model',
   tags: [],
@@ -101,6 +102,7 @@ describe('GraphNodeCardView', () => {
                 { id: 'size', label: 'Size', value: '18.2 GB' },
               ],
             },
+            accentTone: 'source',
           }}
           tags={['postgres', 'public']}
         />
@@ -115,6 +117,9 @@ describe('GraphNodeCardView', () => {
     expect(container.textContent).toContain('Ready');
     expect(container.textContent).toContain('models/sources/src_public.yml');
     expect(container.textContent).toContain('postgres');
+    expect(
+      container.querySelector('[data-slot="graph-node-tag-list"]')?.getAttribute('data-tone')
+    ).toBe('source');
     expect(container.textContent).toContain('Freshness');
     expect(container.textContent).toContain('42 MB/min');
   });

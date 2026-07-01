@@ -10968,6 +10968,27 @@ test('tracked migrations register Graph node read model metric icon evidence', (
   assert.doesNotMatch(readModelMetricIconMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node tag accent tone contract', () => {
+  const migrations = readMigrationFiles();
+  const tagAccentMigration = migrations.find(
+    (migration) => migration.fileName === '440_graph_node_tag_accent_tone_contract.sql'
+  );
+
+  assert.ok(tagAccentMigration);
+  assert.match(tagAccentMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(tagAccentMigration.sql, /web\.component\.canvas\.GraphNodeTagList/);
+  assert.match(tagAccentMigration.sql, /GraphNodeCardAccentTone/);
+  assert.match(tagAccentMigration.sql, /resolveNodeCardAccentTone/);
+  assert.match(tagAccentMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(tagAccentMigration.sql, /RenderCanvasGraphNodeTagList/);
+  assert.match(tagAccentMigration.sql, /EV-CANVAS-GRAPH-NODE-TAG-ACCENT-TONE-PROJECTION/);
+  assert.match(tagAccentMigration.sql, /EV-CANVAS-GRAPH-NODE-TAG-LIST-ACCENT-TONE-RENDER/);
+  assert.match(tagAccentMigration.sql, /GraphNodeTagList\.test\.tsx/);
+  assert.match(tagAccentMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(tagAccentMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(tagAccentMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Inspector visual token rail duplicate', () => {
   const migrations = readMigrationFiles();
   const duplicateMigration = migrations.find(

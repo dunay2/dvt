@@ -15,6 +15,7 @@ import {
   numericValue,
   pushMetric,
   pushRuntimeMetrics,
+  resolveNodeCardAccentTone,
   resolveNodeCardStatus,
   resolveColumnCount,
   stringValue,
@@ -109,6 +110,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     subtitle: stringValue(metadata.package) ?? relationSubtitle ?? node.path ?? null,
     path: node.path ?? relationSubtitle ?? null,
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
+    accentTone: resolveNodeCardAccentTone(node),
     status: resolveNodeCardStatus(
       node,
       metadata,

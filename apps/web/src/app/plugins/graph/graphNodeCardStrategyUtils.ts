@@ -1,8 +1,9 @@
 /** Owned concern: share pure graph card projection helpers across plugin strategies. */
 import type { CanonicalNode } from '../../types/canonical';
 import type {
-  GraphNodeCardMetricIcon,
+  GraphNodeCardAccentTone,
   GraphNodeCardMetric,
+  GraphNodeCardMetricIcon,
   GraphNodeCardStatus,
   GraphNodeCardStatusTone,
   GraphNodeOperationalDetail,
@@ -186,6 +187,43 @@ export function resolveNodeCardStatus(
       return { label: 'Skipped', tone: 'warning' };
     default:
       return fallback;
+  }
+}
+
+export function resolveNodeCardAccentTone(node: CanonicalNode): GraphNodeCardAccentTone {
+  if (node.kind.includes(':source')) {
+    return 'source';
+  }
+  if (node.kind.includes(':test')) {
+    return 'test';
+  }
+  if (node.kind.includes(':exposure') || node.kind.includes(':sink')) {
+    return 'output';
+  }
+  if (node.kind.includes(':macro')) {
+    return 'control';
+  }
+  if (
+    node.kind.includes(':model') ||
+    node.kind.includes(':snapshot') ||
+    node.kind.includes(':seed') ||
+    node.kind.includes(':sql_transform')
+  ) {
+    return 'model';
+  }
+  switch (node.role) {
+    case 'input':
+      return 'source';
+    case 'check':
+      return 'test';
+    case 'output':
+      return 'output';
+    case 'control':
+      return 'control';
+    case 'transform':
+      return 'model';
+    default:
+      return 'unknown';
   }
 }
 
