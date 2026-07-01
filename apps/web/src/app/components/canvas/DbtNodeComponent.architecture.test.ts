@@ -71,6 +71,8 @@ describe('DbtNodeComponent architecture', () => {
     expect(canvasNodeShellSource).toContain('CanvasNodePortHandle');
     expect(canvasNodeShellSource).toContain('ContextMenuTrigger');
     expect(canvasNodeShellSource).toContain('CanvasNodeContextMenuView');
+    expect(canvasNodeShellSource).not.toContain('Connect incoming node port');
+    expect(canvasNodeShellSource).not.toContain('Connect outgoing node port');
     expect(canvasNodeShellSource).not.toContain('ContextMenuContent');
     expect(canvasNodePortHandleSource).toContain("from '@xyflow/react'");
     expect(canvasNodePortHandleSource).toContain('data-slot="canvas-node-port-handle"');

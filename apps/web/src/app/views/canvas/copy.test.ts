@@ -43,6 +43,10 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.routeNeedsCanvasTemplateLabel).toBe('Elige una plantilla de canvas');
     expect(spanishCopy.toolbarLayoutLabel).toBe('Disposicion');
     expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Proyecto');
+    expect(canvasViewCopy.canvasNodePortTargetLabel).toBe('Connect incoming port');
+    expect(canvasViewCopy.canvasNodePortSourceLabel).toBe('Connect outgoing port');
+    expect(spanishCopy.canvasNodePortTargetLabel).toBe('Conectar puerto de entrada');
+    expect(spanishCopy.canvasNodePortSourceLabel).toBe('Conectar puerto de salida');
     expect(spanishCopy.draftSyncedLabel).toBe('Borrador sincronizado');
     expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
     expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');

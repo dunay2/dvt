@@ -112,6 +112,32 @@ describe('CanvasNodeShell', () => {
     expect(ports.map((port) => port.getAttribute('data-tone'))).toEqual(['model', 'source']);
   });
 
+  it('renders graph ports with caller-owned accessible labels', () => {
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <CanvasNodeShell
+            contextMenuModel={CONTEXT_MENU_MODEL}
+            shouldShowSourceHandle
+            shouldShowTargetHandle
+            sourcePortLabel="Localized outgoing port"
+            targetPortLabel="Localized incoming port"
+            onContextMenuAction={vi.fn()}
+          >
+            <div>Orders model</div>
+          </CanvasNodeShell>
+        </ReactFlowProvider>
+      );
+    });
+
+    const ports = Array.from(container.querySelectorAll('[data-slot="canvas-node-port-handle"]'));
+
+    expect(ports.map((port) => port.getAttribute('aria-label'))).toEqual([
+      'Localized incoming port',
+      'Localized outgoing port',
+    ]);
+  });
+
   it('renders graph ports with stable React Flow handle ids', () => {
     act(() => {
       root.render(
