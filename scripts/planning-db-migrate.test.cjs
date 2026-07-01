@@ -10848,6 +10848,28 @@ test('tracked migrations register Node floating toolbar More as node context-men
   assert.doesNotMatch(moreLauncherMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node card icon tone token dependency', () => {
+  const migrations = readMigrationFiles();
+  const iconToneMigration = migrations.find(
+    (migration) => migration.fileName === '448_graph_node_card_icon_tone_token_dependency.sql'
+  );
+
+  assert.ok(iconToneMigration);
+  assert.match(iconToneMigration.sql, /web\.component\.canvas\.GraphNodeCardView/);
+  assert.match(iconToneMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(iconToneMigration.sql, /GraphNodeCardReadModel\.accentTone/);
+  assert.match(iconToneMigration.sql, /graphNodeCardLayoutClasses\.iconTone/);
+  assert.match(iconToneMigration.sql, /graph-node-card-icon/);
+  assert.match(iconToneMigration.sql, /noInlineIconColor/);
+  assert.match(iconToneMigration.sql, /EV-CANVAS-GRAPH-NODE-CARD-ICON-TONE-TOKEN-OWNERSHIP/);
+  assert.match(iconToneMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(iconToneMigration.sql, /GraphNodeRenderer\.tsx/);
+  assert.match(iconToneMigration.sql, /DbtNodeRenderer\.tsx/);
+  assert.match(iconToneMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.doesNotMatch(iconToneMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(iconToneMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node source last-refresh health metric', () => {
   const migrations = readMigrationFiles();
   const sourceRefreshMigration = migrations.find(

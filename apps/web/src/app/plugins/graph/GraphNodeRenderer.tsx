@@ -78,7 +78,6 @@ export function GraphNodeRenderer({
       columns={columns}
       showColumns={showColumns}
       icon={kindMeta.icon}
-      iconColor={kindMeta.minimapColor}
       borderClass={kindMeta.borderClass}
       statusRingClass={statusRing}
       selected={selected}

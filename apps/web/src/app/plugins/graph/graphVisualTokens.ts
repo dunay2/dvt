@@ -22,6 +22,14 @@ export const graphNodeCardLayoutClasses = {
   playButton:
     'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-green-400/30 bg-green-500/15 text-green-300 opacity-0 transition hover:border-green-300/70 hover:bg-green-500/25 hover:text-green-100 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40',
   playIcon: 'size-3.5 fill-current',
+  iconTone: {
+    source: 'text-purple-300',
+    model: 'text-blue-300',
+    test: 'text-red-300',
+    output: 'text-pink-300',
+    control: 'text-slate-300',
+    unknown: 'text-slate-400',
+  },
 } as const;
 
 export const graphNodeMetricRowClasses = {
