@@ -4014,6 +4014,7 @@ test('runQuery dispatches frontend component reflection through focused queries'
             file_count: 3,
             rail_count: 2,
             evidence_count: 2,
+            evidence_ref_count: 3,
             source_path: 'docs/architecture/components/web/frontend-component-inventory.md',
           },
         ],
@@ -4050,7 +4051,7 @@ test('runQuery dispatches frontend component reflection through focused queries'
       1,
       3,
       2,
-      2,
+      3,
       'docs/architecture/components/web/frontend-component-inventory.md',
     ],
   ]);
