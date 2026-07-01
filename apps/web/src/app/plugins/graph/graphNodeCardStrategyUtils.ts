@@ -143,7 +143,7 @@ export function resolveRunStatusLabel(
     case 'succeeded':
       return { label: 'Completed', tone: 'success' };
     case 'running':
-      return { label: 'Running', tone: 'info' };
+      return { label: 'Running', tone: 'running' };
     case 'failed':
     case 'error':
       return { label: 'Failed', tone: 'danger' };
@@ -169,7 +169,7 @@ export function resolveNodeCardStatus(
     case 'success':
       return { label: 'Ready', tone: 'success' };
     case 'running':
-      return { label: 'Running', tone: 'info' };
+      return { label: 'Running', tone: 'running' };
     case 'failed':
       return { label: 'Failed', tone: 'danger' };
     case 'warn':

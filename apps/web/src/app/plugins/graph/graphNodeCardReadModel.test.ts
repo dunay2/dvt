@@ -171,6 +171,46 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.status).toEqual({ label: 'Warning', tone: 'warning' });
   });
 
+  it('preserves running status as a first-class card tone', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:sql_transform',
+        pluginId: 'dvt',
+        name: 'customer_rollup',
+        status: 'running',
+        metadata: {
+          database: 'warehouse',
+          schema: 'mart',
+          table: 'customer_rollup',
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.status).toEqual({ label: 'Running', tone: 'running' });
+  });
+
+  it('projects recorded running runtime status as a first-class card tone', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:sql_transform',
+        pluginId: 'dvt',
+        name: 'customer_rollup',
+        metadata: {
+          database: 'warehouse',
+          schema: 'mart',
+          table: 'customer_rollup',
+          runStatus: 'running',
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.status).toEqual({ label: 'Running', tone: 'running' });
+  });
+
   it('uses a DBT card strategy for model context instead of DVT table ownership', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({

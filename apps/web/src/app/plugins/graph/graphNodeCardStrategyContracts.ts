@@ -13,7 +13,13 @@ export type GraphNodeOperationalDetail = Readonly<{
   rows: readonly GraphNodeCardMetric[];
 }>;
 
-export type GraphNodeCardStatusTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
+export type GraphNodeCardStatusTone =
+  | 'neutral'
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'running';
 
 export type GraphNodeCardStatus = Readonly<{
   label: string;

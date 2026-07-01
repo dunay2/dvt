@@ -79,6 +79,7 @@ export const graphNodeStatusChipClasses = {
   success: 'border-green-400/40 bg-green-500/15 text-green-300',
   warning: 'border-amber-400/40 bg-amber-500/15 text-amber-200',
   danger: 'border-red-400/50 bg-red-500/15 text-red-200',
+  running: 'border-sky-400/45 bg-sky-500/15 text-sky-200',
 } as const;
 
 export const graphStatusRingClasses: Record<string, string> = {
