@@ -2,7 +2,7 @@
 import type { KeyboardEvent, MouseEvent, ReactElement } from 'react';
 
 import type { GraphNodeCardMetric } from './graphNodeCardStrategyContracts';
-import { graphVisualClasses } from './graphVisualTokens';
+import { graphNodeOperationalRailClasses } from './graphVisualTokens';
 
 export type GraphNodeOperationalRailProps = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
@@ -20,9 +20,9 @@ function stopAndOpen(
 
 function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] {
   return metrics.map((metric) => (
-    <span key={metric.id} className={graphVisualClasses.nodeCardOperationalMetric}>
-      <span className={graphVisualClasses.nodeCardOperationalLabel}>{metric.label}</span>
-      <span className={graphVisualClasses.nodeCardOperationalValue}>{metric.value}</span>
+    <span key={metric.id} className={graphNodeOperationalRailClasses.metric}>
+      <span className={graphNodeOperationalRailClasses.label}>{metric.label}</span>
+      <span className={graphNodeOperationalRailClasses.value}>{metric.value}</span>
     </span>
   ));
 }
@@ -38,10 +38,7 @@ export function GraphNodeOperationalRail({
 
   if (onOpen == null) {
     return (
-      <div
-        data-slot="graph-node-operational-rail"
-        className={graphVisualClasses.nodeCardOperationalRail}
-      >
+      <div data-slot="graph-node-operational-rail" className={graphNodeOperationalRailClasses.root}>
         {renderMetrics(metrics)}
       </div>
     );
@@ -52,7 +49,7 @@ export function GraphNodeOperationalRail({
       type="button"
       data-slot="graph-node-operational-rail"
       aria-label={ariaLabel}
-      className={graphVisualClasses.nodeCardOperationalRailButton}
+      className={graphNodeOperationalRailClasses.button}
       onClick={(event) => stopAndOpen(event, onOpen)}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {

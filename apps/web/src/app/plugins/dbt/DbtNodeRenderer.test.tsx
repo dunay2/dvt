@@ -188,7 +188,10 @@ describe('DbtNodeRenderer history panel', () => {
       );
     });
 
-    expect(document.body.textContent).toContain('fct_orders');
+    expect(document.body.textContent).toContain('Fct Orders Model');
+    expect(
+      document.querySelector('[data-slot="graph-node-card-title"]')?.getAttribute('title')
+    ).toBe('fct_orders');
     expect(document.body.textContent).toContain('analytics');
     expect(document.body.textContent).toContain('Mat.');
     expect(document.body.textContent).toContain('Deps');

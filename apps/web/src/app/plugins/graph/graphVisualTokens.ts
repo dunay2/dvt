@@ -3,60 +3,77 @@ import type { CSSProperties } from 'react';
 
 import type { PluginNodeKind } from '../../types/canonical';
 
-export const graphVisualClasses = {
-  nodeCard:
-    'min-w-[220px] overflow-hidden rounded-md border bg-slate-950/95 text-xs text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
-  nodeCardSelected: 'ring-2 ring-white/40',
-  nodeCardHovered: 'ring-1 ring-white/20',
-  nodeCardDimmed: 'opacity-30',
-  nodeCardBody: 'px-4 pb-3 pt-3',
-  nodeCardHeader: 'flex items-start justify-between gap-3',
-  nodeCardTitleRow: 'flex min-w-0 flex-1 items-center gap-2',
-  nodeCardIcon: 'shrink-0 opacity-80',
-  nodeCardTitle: 'truncate text-sm font-semibold leading-tight text-slate-50',
-  nodeCardHeaderActions: 'flex shrink-0 items-center gap-2',
-  nodeCardKind: 'mt-2 text-xs font-medium text-blue-300',
-  nodeCardPath: 'mt-1 truncate text-[11px] text-slate-500',
-  nodeCardStatus: 'rounded-full border px-2 py-0.5 text-[10px] font-medium',
-  nodeCardPlayButton:
+export const graphNodeCardSurfaceClasses = {
+  root: 'min-w-[220px] overflow-hidden rounded-md border bg-slate-950/95 text-xs text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
+  selected: 'ring-2 ring-white/40',
+  hovered: 'ring-1 ring-white/20',
+  dimmed: 'opacity-30',
+} as const;
+
+export const graphNodeCardLayoutClasses = {
+  body: 'px-4 pb-3 pt-3',
+  header: 'flex items-start justify-between gap-3',
+  titleRow: 'flex min-w-0 flex-1 items-center gap-2',
+  icon: 'shrink-0 opacity-80',
+  title: 'truncate text-sm font-semibold leading-tight text-slate-50',
+  headerActions: 'flex shrink-0 items-center gap-2',
+  kind: 'mt-2 text-xs font-medium text-blue-300',
+  path: 'mt-1 truncate text-[11px] text-slate-500',
+  playButton:
     'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-green-400/30 bg-green-500/15 text-green-300 transition hover:border-green-300/70 hover:bg-green-500/25 hover:text-green-100 disabled:cursor-not-allowed disabled:opacity-40',
-  nodeCardPlayIcon: 'size-3.5 fill-current',
-  nodeCardMetricRow: 'mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-300',
-  nodeCardMetricItem: 'inline-flex items-baseline gap-1',
-  nodeCardMetricLabel: 'text-slate-500',
-  nodeCardMetricValue: 'font-medium text-slate-200',
-  nodeCardTagList: 'mt-3 flex flex-wrap gap-1.5',
-  nodeCardOperationalRail:
-    'grid grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55',
-  nodeCardOperationalRailButton:
-    'nodrag nopan grid w-full cursor-pointer grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55 text-left transition hover:bg-slate-800/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
-  nodeCardOperationalMetric: 'min-w-0 border-r border-slate-800/80 px-3 py-2 last:border-r-0',
-  nodeCardOperationalLabel: 'block truncate text-[9px] uppercase tracking-wide text-slate-500',
-  nodeCardOperationalValue: 'mt-0.5 block truncate text-[11px] font-medium text-slate-200',
-  nodeHealthPopover:
-    'absolute z-40 w-72 rounded-md border border-slate-700 bg-slate-950/95 p-3 text-xs text-slate-100 shadow-2xl shadow-slate-950/40 outline-none',
-  nodeHealthPopoverTitle: 'text-sm font-semibold text-slate-50',
-  nodeHealthPopoverRows: 'mt-3 space-y-2',
-  nodeHealthPopoverRow: 'flex items-center justify-between gap-4',
-  nodeHealthPopoverLabel: 'text-slate-400',
-  nodeHealthPopoverValue: 'text-right font-medium text-slate-100',
-  fallbackNodeCard:
-    'min-w-[140px] rounded-md border-2 border-dashed border-slate-500 bg-slate-900/60 px-3 py-2 text-xs text-slate-400',
-  fallbackNodeTitle: 'truncate font-semibold text-slate-300',
-  metricText: 'mt-2 flex gap-2 text-[10px] text-slate-300',
+  playIcon: 'size-3.5 fill-current',
+} as const;
+
+export const graphNodeMetricRowClasses = {
+  root: 'mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-300',
+  item: 'inline-flex items-baseline gap-1',
+  label: 'text-slate-500',
+  value: 'font-medium text-slate-200',
+} as const;
+
+export const graphNodeTagListClasses = {
+  root: 'mt-3 flex flex-wrap gap-1.5',
   tag: 'rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] text-slate-300',
-  columnsShell: 'mt-2 border-t border-slate-700 pt-2',
-  columnsToggle:
+} as const;
+
+export const graphNodeOperationalRailClasses = {
+  root: 'grid grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55',
+  button:
+    'nodrag nopan grid w-full cursor-pointer grid-cols-[repeat(auto-fit,minmax(4.75rem,1fr))] border-t border-slate-800/90 bg-slate-900/55 text-left transition hover:bg-slate-800/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400',
+  metric: 'min-w-0 border-r border-slate-800/80 px-3 py-2 last:border-r-0',
+  label: 'block truncate text-[9px] uppercase tracking-wide text-slate-500',
+  value: 'mt-0.5 block truncate text-[11px] font-medium text-slate-200',
+} as const;
+
+export const graphNodeHealthPopoverClasses = {
+  root: 'absolute z-40 w-72 rounded-md border border-slate-700 bg-slate-950/95 p-3 text-xs text-slate-100 shadow-2xl shadow-slate-950/40 outline-none',
+  title: 'text-sm font-semibold text-slate-50',
+  rows: 'mt-3 space-y-2',
+  row: 'flex items-center justify-between gap-4',
+  label: 'text-slate-400',
+  value: 'text-right font-medium text-slate-100',
+} as const;
+
+export const fallbackGraphNodeClasses = {
+  card: 'min-w-[140px] rounded-md border-2 border-dashed border-slate-500 bg-slate-900/60 px-3 py-2 text-xs text-slate-400',
+  title: 'truncate font-semibold text-slate-300',
+  kind: 'mt-0.5 font-mono text-[10px] uppercase tracking-wide',
+} as const;
+
+export const graphNodeColumnClasses = {
+  shell: 'mt-2 border-t border-slate-700 pt-2',
+  toggle:
     'flex w-full items-center justify-between text-xs text-slate-300 transition-colors hover:text-white',
-  columnsToggleLabel: 'flex items-center gap-1',
-  columnsToggleIcon: 'size-3',
-  columnsList: 'mt-2 max-h-32 space-y-1 overflow-y-auto',
-  columnRow: 'flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-[10px]',
-  columnName: 'truncate font-mono text-white',
-  columnType: 'ml-2 shrink-0 text-slate-400',
+  toggleLabel: 'flex items-center gap-1',
+  toggleIcon: 'size-3',
+  list: 'mt-2 max-h-32 space-y-1 overflow-y-auto',
+  row: 'flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-[10px]',
+  name: 'truncate font-mono text-white',
+  type: 'ml-2 shrink-0 text-slate-400',
 } as const;
 
 export const graphNodeStatusChipClasses = {
+  base: 'rounded-full border px-2 py-0.5 text-[10px] font-medium',
   neutral: 'border-slate-500/50 bg-slate-800/70 text-slate-200',
   info: 'border-blue-400/40 bg-blue-500/15 text-blue-200',
   success: 'border-green-400/40 bg-green-500/15 text-green-300',

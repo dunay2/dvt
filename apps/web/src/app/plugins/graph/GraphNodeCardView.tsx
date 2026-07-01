@@ -13,7 +13,11 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeOperationalDetail,
 } from './graphNodeCardStrategyContracts';
-import { graphVisualClasses } from './graphVisualTokens';
+import {
+  graphNodeCardLayoutClasses,
+  graphNodeCardSurfaceClasses,
+  graphNodeColumnClasses,
+} from './graphVisualTokens';
 
 export type GraphNodeCardColumn = Readonly<{
   name: string;
@@ -62,34 +66,34 @@ export function GraphNodeCardView({
     <div
       data-slot="graph-node-card"
       className={cn(
-        graphVisualClasses.nodeCard,
+        graphNodeCardSurfaceClasses.root,
         borderClass,
-        selected && graphVisualClasses.nodeCardSelected,
-        hovered && !selected && graphVisualClasses.nodeCardHovered,
+        selected && graphNodeCardSurfaceClasses.selected,
+        hovered && !selected && graphNodeCardSurfaceClasses.hovered,
         statusRingClass,
-        dimmed && graphVisualClasses.nodeCardDimmed
+        dimmed && graphNodeCardSurfaceClasses.dimmed
       )}
       {...(overlayStyle ? { style: overlayStyle } : {})}
     >
-      <div className={graphVisualClasses.nodeCardBody}>
-        <div className={graphVisualClasses.nodeCardHeader}>
-          <div className={graphVisualClasses.nodeCardTitleRow}>
+      <div className={graphNodeCardLayoutClasses.body}>
+        <div className={graphNodeCardLayoutClasses.header}>
+          <div className={graphNodeCardLayoutClasses.titleRow}>
             {Icon && (
               <Icon
                 size={18}
-                className={graphVisualClasses.nodeCardIcon}
+                className={graphNodeCardLayoutClasses.icon}
                 {...(iconColor ? { style: { color: iconColor } as CSSProperties } : {})}
               />
             )}
             <span
               data-slot="graph-node-card-title"
-              className={graphVisualClasses.nodeCardTitle}
+              className={graphNodeCardLayoutClasses.title}
               title={cardModel.technicalName ?? cardModel.title}
             >
               {cardModel.title}
             </span>
           </div>
-          <div className={graphVisualClasses.nodeCardHeaderActions}>
+          <div className={graphNodeCardLayoutClasses.headerActions}>
             <GraphNodeStatusChip status={cardModel.status} />
             {playAction ? (
               <button
@@ -101,20 +105,20 @@ export function GraphNodeCardView({
                   event.stopPropagation();
                   playAction.onPress();
                 }}
-                className={graphVisualClasses.nodeCardPlayButton}
+                className={graphNodeCardLayoutClasses.playButton}
               >
-                <Play className={graphVisualClasses.nodeCardPlayIcon} />
+                <Play className={graphNodeCardLayoutClasses.playIcon} />
               </button>
             ) : null}
           </div>
         </div>
 
-        <div className={graphVisualClasses.nodeCardKind}>{cardModel.kindLabel || typeLabel}</div>
+        <div className={graphNodeCardLayoutClasses.kind}>{cardModel.kindLabel || typeLabel}</div>
 
         <GraphNodeMetricRow metrics={cardModel.metrics} />
 
         {(cardModel.path ?? cardModel.subtitle) && (
-          <div className={graphVisualClasses.nodeCardPath}>
+          <div className={graphNodeCardLayoutClasses.path}>
             {cardModel.path ?? cardModel.subtitle}
           </div>
         )}
@@ -122,29 +126,29 @@ export function GraphNodeCardView({
         <GraphNodeTagList tags={tags} />
 
         {showColumns && (
-          <div className={graphVisualClasses.columnsShell}>
+          <div className={graphNodeColumnClasses.shell}>
             <button
               type="button"
               onClick={() => setColumnsExpanded((value) => !value)}
-              className={graphVisualClasses.columnsToggle}
+              className={graphNodeColumnClasses.toggle}
             >
-              <span className={graphVisualClasses.columnsToggleLabel}>
-                <Table className={graphVisualClasses.columnsToggleIcon} />
+              <span className={graphNodeColumnClasses.toggleLabel}>
+                <Table className={graphNodeColumnClasses.toggleIcon} />
                 Columns ({columns.length})
               </span>
               {columnsExpanded ? (
-                <ChevronUp className={graphVisualClasses.columnsToggleIcon} />
+                <ChevronUp className={graphNodeColumnClasses.toggleIcon} />
               ) : (
-                <ChevronDown className={graphVisualClasses.columnsToggleIcon} />
+                <ChevronDown className={graphNodeColumnClasses.toggleIcon} />
               )}
             </button>
 
             {columnsExpanded && (
-              <div className={graphVisualClasses.columnsList}>
+              <div className={graphNodeColumnClasses.list}>
                 {columns.map((column) => (
-                  <div key={column.name} className={graphVisualClasses.columnRow}>
-                    <span className={graphVisualClasses.columnName}>{column.name}</span>
-                    <span className={graphVisualClasses.columnType}>{column.type}</span>
+                  <div key={column.name} className={graphNodeColumnClasses.row}>
+                    <span className={graphNodeColumnClasses.name}>{column.name}</span>
+                    <span className={graphNodeColumnClasses.type}>{column.type}</span>
                   </div>
                 ))}
               </div>

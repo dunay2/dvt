@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 
 import { cn } from '../../components/ui/utils';
 import type { GraphNodeCardStatus } from './graphNodeCardStrategyContracts';
-import { graphNodeStatusChipClasses, graphVisualClasses } from './graphVisualTokens';
+import { graphNodeStatusChipClasses } from './graphVisualTokens';
 
 export type GraphNodeStatusChipProps = Readonly<{
   status: GraphNodeCardStatus;
@@ -13,7 +13,7 @@ export function GraphNodeStatusChip({ status }: GraphNodeStatusChipProps): React
   return (
     <span
       data-slot="graph-node-status-chip"
-      className={cn(graphVisualClasses.nodeCardStatus, graphNodeStatusChipClasses[status.tone])}
+      className={cn(graphNodeStatusChipClasses.base, graphNodeStatusChipClasses[status.tone])}
     >
       {status.label}
     </span>
