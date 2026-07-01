@@ -10427,6 +10427,24 @@ test('tracked migrations reconcile Graph node health popover host ownership', ()
   assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations record Graph node health popover outside dismiss evidence', () => {
+  const migrations = readMigrationFiles();
+  const outsideDismissMigration = migrations.find(
+    (migration) => migration.fileName === '425_graph_node_health_popover_outside_dismiss.sql'
+  );
+
+  assert.ok(outsideDismissMigration);
+  assert.match(outsideDismissMigration.sql, /web\.component\.canvas\.GraphNodeHealthPopover/);
+  assert.match(outsideDismissMigration.sql, /web\.component\.canvas\.CanvasViewport/);
+  assert.match(outsideDismissMigration.sql, /CloseCanvasNodeHealthPopover/);
+  assert.match(outsideDismissMigration.sql, /EV-CANVAS-GRAPH-NODE-HEALTH-POPOVER-OUTSIDE-DISMISS/);
+  assert.match(outsideDismissMigration.sql, /outsidePointerDismissal/);
+  assert.match(outsideDismissMigration.sql, /CanvasViewport\.nodeOperationalRail\.test\.tsx/);
+  assert.match(outsideDismissMigration.sql, /leafPresentationOwnershipUnchanged/);
+  assert.doesNotMatch(outsideDismissMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(outsideDismissMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations normalize Graph node card view file roles', () => {
   const migrations = readMigrationFiles();
   const roleMigration = migrations.find(

@@ -151,14 +151,29 @@ function CanvasViewportWithPresenter({
       return;
     }
 
+    const closeOnOutsidePointerDown = (event: PointerEvent): void => {
+      const viewportElement = viewportRef.current;
+      const eventTarget = event.target;
+      if (
+        viewportElement != null &&
+        eventTarget instanceof globalThis.Node &&
+        !viewportElement.contains(eventTarget)
+      ) {
+        setNodeHealthPopoverModel(null);
+      }
+    };
     const closeOnEscape = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
         setNodeHealthPopoverModel(null);
       }
     };
 
+    document.addEventListener('pointerdown', closeOnOutsidePointerDown, true);
     document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointerDown, true);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
   }, [nodeHealthPopoverModel]);
 
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
