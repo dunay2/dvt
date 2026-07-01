@@ -179,7 +179,12 @@ function CanvasViewportWithPresenter({
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
     (event, node) => {
       closeNodeHealthPopover();
-      const eventTarget = event.currentTarget as Element | undefined;
+      const eventTarget = event.currentTarget instanceof Element ? event.currentTarget : null;
+      const clickedTarget = event.target instanceof Element ? event.target : null;
+      const contextMenuTrigger =
+        clickedTarget?.closest('[data-slot="context-menu-trigger"]') ??
+        eventTarget?.querySelector('[data-slot="context-menu-trigger"]') ??
+        eventTarget;
       const nodeRect =
         typeof eventTarget?.getBoundingClientRect === 'function'
           ? eventTarget.getBoundingClientRect()
@@ -202,6 +207,20 @@ function CanvasViewportWithPresenter({
                 inspectNode(nodeId, 'code');
               }
             : undefined,
+        onOpenMore:
+          contextMenuTrigger == null
+            ? undefined
+            : () => {
+                contextMenuTrigger.dispatchEvent(
+                  new MouseEvent('contextmenu', {
+                    bubbles: true,
+                    cancelable: true,
+                    button: 2,
+                    clientX: toolbarPosition.x,
+                    clientY: nodeRect?.top ?? toolbarPosition.y + 52,
+                  })
+                );
+              },
       });
       setNodeFloatingToolbarModel(nextToolbarModel.actions.length > 0 ? nextToolbarModel : null);
       props.onNodeClick(event, node);
