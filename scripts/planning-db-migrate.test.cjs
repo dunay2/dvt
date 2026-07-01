@@ -10863,6 +10863,28 @@ test('tracked migrations register Graph node card play affordance posture', () =
   assert.doesNotMatch(playAffordanceMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations expose Graph node card view child composition as relations', () => {
+  const migrations = readMigrationFiles();
+  const compositionMigration = migrations.find(
+    (migration) => migration.fileName === '472_graph_node_card_view_composition_relations.sql'
+  );
+
+  assert.ok(compositionMigration);
+  assert.match(compositionMigration.sql, /architecture\.component_relation/);
+  assert.match(compositionMigration.sql, /REL-GRAPH-NODE-CARD-VIEW-COMPOSES-STATUS-CHIP/);
+  assert.match(compositionMigration.sql, /REL-GRAPH-NODE-CARD-VIEW-COMPOSES-METRIC-ROW/);
+  assert.match(compositionMigration.sql, /REL-GRAPH-NODE-CARD-VIEW-COMPOSES-TAG-LIST/);
+  assert.match(compositionMigration.sql, /REL-GRAPH-NODE-CARD-VIEW-COMPOSES-OPERATIONAL-RAIL/);
+  assert.match(compositionMigration.sql, /web\.component\.canvas\.GraphNodeCardView/);
+  assert.match(compositionMigration.sql, /web\.component\.canvas\.GraphNodeStatusChip/);
+  assert.match(compositionMigration.sql, /web\.component\.canvas\.GraphNodeMetricRow/);
+  assert.match(compositionMigration.sql, /web\.component\.canvas\.GraphNodeTagList/);
+  assert.match(compositionMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(compositionMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(compositionMigration.sql, /architecture-relations/);
+  assert.doesNotMatch(compositionMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Node floating toolbar unavailable freeze posture', () => {
   const migrations = readMigrationFiles();
   const freezePostureMigration = migrations.find(
