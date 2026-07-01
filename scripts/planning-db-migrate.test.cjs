@@ -10634,6 +10634,27 @@ test('tracked migrations register Canvas node port handle direct test evidence',
   assert.doesNotMatch(portHandleDirectTestMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations record Canvas node port control tone selector', () => {
+  const migrations = readMigrationFiles();
+  const controlToneMigration = migrations.find(
+    (migration) => migration.fileName === '441_canvas_node_port_control_tone_selector.sql'
+  );
+
+  assert.ok(controlToneMigration);
+  assert.match(controlToneMigration.sql, /web\.component\.canvas\.CanvasNodeShell/);
+  assert.match(controlToneMigration.sql, /web\.component\.canvas\.CanvasNodePortHandle/);
+  assert.match(controlToneMigration.sql, /RenderCanvasNodePortHandle/);
+  assert.match(controlToneMigration.sql, /CanvasNodeShell\.module\.css/);
+  assert.match(controlToneMigration.sql, /CanvasNodeShell\.test\.tsx/);
+  assert.match(controlToneMigration.sql, /EV-CANVAS-NODE-PORT-CONTROL-TONE-SELECTOR/);
+  assert.match(controlToneMigration.sql, /data-tone=''control''/);
+  assert.match(controlToneMigration.sql, /--canvas-node-port-control-ring/);
+  assert.match(controlToneMigration.sql, /--canvas-node-port-control-fill/);
+  assert.match(controlToneMigration.sql, /pnpm --filter @dvt\/web exec vitest run/);
+  assert.doesNotMatch(controlToneMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(controlToneMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Canvas node shell component ownership', () => {
   const migrations = readMigrationFiles();
   const shellOwnershipMigration = migrations.find(
