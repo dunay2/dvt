@@ -1,5 +1,5 @@
 /** Owned concern: render the node floating toolbar from an already-derived presentation model. */
-import { Code2 } from 'lucide-react';
+import { Code2, Snowflake } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -16,6 +16,7 @@ export type CanvasNodeFloatingToolbarViewProps = Readonly<{
 
 const ACTION_ICON = {
   code: Code2,
+  freeze: Snowflake,
 } as const;
 
 export function CanvasNodeFloatingToolbarView({

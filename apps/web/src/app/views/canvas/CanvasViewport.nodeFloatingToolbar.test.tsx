@@ -48,7 +48,9 @@ describe('CanvasViewport node floating toolbar', () => {
     await clickNode('model_orders', 420, 240);
 
     expect(toolbarText()).toContain('Código');
-    expect(toolbarText()).not.toContain('Congelar');
+    expect(toolbarText()).toContain('Congelar');
+    expect(toolbarButton('Congelar')?.getAttribute('data-action-state')).toBe('unavailable');
+    expect(toolbarButton('Congelar')?.getAttribute('aria-disabled')).toBe('true');
     expect(toolbarText()).not.toContain('Más acciones');
     expect(toolbarText()).not.toContain('Seleccionar para ejecución');
     expect(toolbarButton('Seleccionar para ejecución')).toBeNull();
