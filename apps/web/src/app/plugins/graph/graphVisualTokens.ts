@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 import type { PluginNodeKind } from '../../types/canonical';
 
 export const graphNodeCardSurfaceClasses = {
-  root: 'group min-w-[220px] overflow-hidden rounded-md border bg-slate-950/95 text-xs text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
+  root: 'group w-[24rem] min-w-[24rem] max-w-[24rem] overflow-hidden rounded-md border bg-slate-950/95 text-xs text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
   selected: 'ring-2 ring-white/40',
   hovered: 'ring-1 ring-white/20',
   dimmed: 'opacity-30',
