@@ -25,6 +25,7 @@ function buildDefaultCard(
     nodeName: node.name,
     kind: node.kind,
     metadata,
+    data,
   });
 
   pushMetric(

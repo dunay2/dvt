@@ -69,6 +69,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     nodeName: node.name,
     kind: node.kind,
     metadata,
+    data,
   });
   const runtimeData = {
     ...data,

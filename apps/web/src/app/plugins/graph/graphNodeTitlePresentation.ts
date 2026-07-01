@@ -5,6 +5,7 @@ export type GraphNodeTitlePresentationInput = Readonly<{
   nodeName: string;
   kind: PluginNodeKind;
   metadata: Record<string, unknown>;
+  data?: Record<string, unknown>;
 }>;
 
 export type GraphNodeTitlePresentation = Readonly<{
@@ -28,13 +29,27 @@ export function buildGraphNodeTitlePresentation({
   nodeName,
   kind,
   metadata,
+  data = {},
 }: GraphNodeTitlePresentationInput): GraphNodeTitlePresentation {
-  const database = stringValue(metadata.database);
-  const schema = stringValue(metadata.schema);
+  const database = stringValue(metadata.database) ?? stringValue(data.database);
+  const schema = stringValue(metadata.schema) ?? stringValue(data.schema);
+  const sourceName = stringValue(metadata.sourceName) ?? stringValue(data.sourceName);
+  const tableName =
+    stringValue(metadata.tableName) ??
+    stringValue(metadata.table) ??
+    stringValue(data.tableName) ??
+    stringValue(data.table);
 
   if ((kind === 'dbt:source' || kind === 'dvt:source') && database && schema) {
     return {
       title: `${titleCaseIdentifier(database)} · ${schema}`,
+      technicalName: nodeName,
+    };
+  }
+
+  if (kind === 'dbt:source' && sourceName && tableName) {
+    return {
+      title: `${titleCaseIdentifier(sourceName)} ${titleCaseIdentifier(tableName)}`,
       technicalName: nodeName,
     };
   }

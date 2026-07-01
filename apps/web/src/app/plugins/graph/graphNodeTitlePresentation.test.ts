@@ -20,12 +20,48 @@ describe('buildGraphNodeTitlePresentation', () => {
     });
   });
 
+  it('humanizes dbt source names from source and table metadata', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'source.raw.orders',
+        kind: 'dbt:source',
+        metadata: {
+          sourceName: 'raw',
+          tableName: 'orders',
+        },
+        data: {},
+      })
+    ).toEqual({
+      title: 'Raw Orders',
+      technicalName: 'source.raw.orders',
+    });
+  });
+
+  it('uses relation metadata from node data when canonical metadata is absent', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'postgres_public_orders',
+        kind: 'dvt:source',
+        metadata: {},
+        data: {
+          database: 'postgres',
+          schema: 'public',
+          table: 'orders',
+        },
+      })
+    ).toEqual({
+      title: 'Postgres · public',
+      technicalName: 'postgres_public_orders',
+    });
+  });
+
   it('keeps model names readable without inventing missing relation metadata', () => {
     expect(
       buildGraphNodeTitlePresentation({
         nodeName: 'orders_model',
         kind: 'dbt:model',
         metadata: {},
+        data: {},
       })
     ).toEqual({
       title: 'Orders Model',
