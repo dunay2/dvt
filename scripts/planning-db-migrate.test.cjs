@@ -10965,6 +10965,28 @@ test('tracked migrations move Graph node card node-actions copy into the read mo
   assert.doesNotMatch(nodeActionsCopyMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node card copy tokens under the render rail', () => {
+  const migrations = readMigrationFiles();
+  const copyTokensMigration = migrations.find(
+    (migration) => migration.fileName === '499_graph_node_card_copy_tokens.sql'
+  );
+
+  assert.ok(copyTokensMigration);
+  assert.match(copyTokensMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(copyTokensMigration.sql, /graphNodeCardCopyTokens\.ts/);
+  assert.match(copyTokensMigration.sql, /graphNodeCardCopyTokens\.nodeActionsLabel/);
+  assert.match(copyTokensMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(copyTokensMigration.sql, /sharedCopyToken/);
+  assert.match(copyTokensMigration.sql, /graphNodeCardReadModel\.architecture\.test\.ts/);
+  assert.match(copyTokensMigration.sql, /cypressCoverage/);
+  assert.doesNotMatch(
+    copyTokensMigration.sql,
+    /insert into planning_query_store\.command_query_rails/i
+  );
+  assert.doesNotMatch(copyTokensMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(copyTokensMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Node floating toolbar unavailable freeze posture', () => {
   const migrations = readMigrationFiles();
   const freezePostureMigration = migrations.find(

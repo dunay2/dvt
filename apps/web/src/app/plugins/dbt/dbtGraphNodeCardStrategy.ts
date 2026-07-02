@@ -5,6 +5,7 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from '../graph/graphNodeCardStrategyContracts';
+import { graphNodeCardCopyTokens } from '../graph/graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
@@ -103,7 +104,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metrics,
     operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
-    nodeActionsLabel: 'Más acciones del nodo',
+    nodeActionsLabel: graphNodeCardCopyTokens.nodeActionsLabel,
   };
 }
 

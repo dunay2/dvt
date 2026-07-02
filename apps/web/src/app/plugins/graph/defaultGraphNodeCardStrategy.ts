@@ -5,6 +5,7 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeCardStrategy,
 } from './graphNodeCardStrategyContracts';
+import { graphNodeCardCopyTokens } from './graphNodeCardCopyTokens';
 import {
   buildGraphNodeOperationalDetail,
   metadataOf,
@@ -55,7 +56,7 @@ function buildDefaultCard(
     metrics,
     operationalMetrics: [],
     operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, []),
-    nodeActionsLabel: 'Más acciones del nodo',
+    nodeActionsLabel: graphNodeCardCopyTokens.nodeActionsLabel,
   };
 }
 

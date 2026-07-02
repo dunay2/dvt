@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import { readArchitectureSiblingSource } from '../../views/architecture.test.support';
@@ -74,6 +77,23 @@ describe('Graph node card strategy architecture', () => {
 
     expect(DEFAULT_STRATEGY_SOURCE).toContain("id: 'default-card'");
     expect(DEFAULT_STRATEGY_SOURCE).toContain('matches: () => true');
+  });
+
+  it('keeps shared graph card copy in component-owned tokens instead of strategy literals', () => {
+    const copyTokensPath = path.resolve(import.meta.dirname, 'graphNodeCardCopyTokens.ts');
+
+    expect(existsSync(copyTokensPath), 'graphNodeCardCopyTokens.ts must exist').toBe(true);
+
+    const copyTokensSource = readFileSync(copyTokensPath, 'utf8');
+
+    expect(copyTokensSource).toContain('graphNodeCardCopyTokens');
+    expect(copyTokensSource).toContain('nodeActionsLabel');
+
+    for (const source of [DEFAULT_STRATEGY_SOURCE, DBT_STRATEGY_SOURCE, DVT_STRATEGY_SOURCE]) {
+      expect(source).toContain('graphNodeCardCopyTokens.nodeActionsLabel');
+      expect(source).not.toContain("'Más acciones del nodo'");
+      expect(source).not.toContain('"Más acciones del nodo"');
+    }
   });
 
   it('keeps graph card markup in a shared presentational view', () => {
