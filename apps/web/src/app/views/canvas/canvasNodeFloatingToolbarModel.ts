@@ -25,7 +25,9 @@ export type BuildCanvasNodeFloatingToolbarModelArgs = Readonly<{
   nodeId: string;
   nodeName: string;
   position: Readonly<{ x: number; y: number }>;
+  frozen?: boolean;
   onOpenCode?: (nodeId: string) => void;
+  onToggleFreeze?: (nodeId: string) => void;
   onOpenMore?: (nodeId: string) => void;
 }>;
 
@@ -33,7 +35,9 @@ export function buildCanvasNodeFloatingToolbarModel({
   nodeId,
   nodeName,
   position,
+  frozen = false,
   onOpenCode,
+  onToggleFreeze,
   onOpenMore,
 }: BuildCanvasNodeFloatingToolbarModelArgs): CanvasNodeFloatingToolbarModel {
   const actions: CanvasNodeFloatingToolbarAction[] = [];
@@ -49,13 +53,20 @@ export function buildCanvasNodeFloatingToolbarModel({
         onOpenCode(nodeId);
       },
     });
+  }
+
+  if (typeof onToggleFreeze === 'function') {
     actions.push({
       id: 'freeze',
-      label: 'Congelar',
-      description: 'Mantener estable la posición y edición del nodo.',
+      label: frozen ? 'Descongelar' : 'Congelar',
+      description: frozen
+        ? 'Permitir de nuevo el movimiento del nodo.'
+        : 'Mantener estable la posición y edición del nodo.',
       tone: 'default',
-      available: false,
-      unavailableReason: 'La política de congelado del nodo aún no está disponible.',
+      available: true,
+      onSelect: () => {
+        onToggleFreeze(nodeId);
+      },
     });
   }
 

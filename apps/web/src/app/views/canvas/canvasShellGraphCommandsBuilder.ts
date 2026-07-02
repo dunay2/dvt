@@ -19,6 +19,7 @@ export function buildCanvasShellGraphCommands({
     onViewportChange: graphCommands.handleViewportChange,
     onDrop: graphCommands.handleDrop,
     onDragOver: graphCommands.handleDragOver,
+    onToggleFrozenNode: graphCommands.handleToggleFrozenNode,
     onCreateAuthoringNode: graphCommands.handleCreateAuthoringNode,
     onSourceImportComplete: graphCommands.handleSourceImportComplete,
     onImportedNodeFocusComplete: graphCommands.handleImportedNodeFocusComplete,

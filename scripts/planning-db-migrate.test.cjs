@@ -11334,6 +11334,63 @@ test('tracked migrations register Node floating toolbar action id manifest', () 
   assert.doesNotMatch(actionIdMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Node floating toolbar freeze command', () => {
+  const migrations = readMigrationFiles();
+  const freezeCommandMigration = migrations.find(
+    (migration) => migration.fileName === '483_node_floating_toolbar_freeze_command.sql'
+  );
+
+  assert.ok(freezeCommandMigration);
+  assert.match(freezeCommandMigration.sql, /web\.component\.canvas\.NodeFloatingToolbar/);
+  assert.match(freezeCommandMigration.sql, /ToggleCanvasNodeFreeze/);
+  assert.match(freezeCommandMigration.sql, /RenderCanvasNodeFloatingToolbar/);
+  assert.match(freezeCommandMigration.sql, /freeze-node/);
+  assert.match(freezeCommandMigration.sql, /implemented-local/);
+  assert.match(freezeCommandMigration.sql, /workspace-local-canvas-interaction/);
+  assert.match(freezeCommandMigration.sql, /frozenNodeIds/);
+  assert.match(freezeCommandMigration.sql, /draggable=false/);
+  assert.match(freezeCommandMigration.sql, /EV-CANVAS-NODE-FLOATING-TOOLBAR-FREEZE-COMMAND/);
+  assert.match(freezeCommandMigration.sql, /canvasInteractionStore\.test\.ts/);
+  assert.match(freezeCommandMigration.sql, /canvasNodeFloatingToolbarModel\.test\.ts/);
+  assert.match(freezeCommandMigration.sql, /CanvasViewport\.nodeFloatingToolbar\.test\.tsx/);
+  assert.match(freezeCommandMigration.sql, /useCanvasViewportGraphModel\.layout\.test\.tsx/);
+  assert.doesNotMatch(freezeCommandMigration.sql, /noFreezeCommandAdded/);
+  assert.doesNotMatch(freezeCommandMigration.sql, /visibleUnavailableActions/);
+  assert.doesNotMatch(freezeCommandMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Node floating toolbar freeze feature symbols', () => {
+  const migrations = readMigrationFiles();
+  const freezeSymbolMigration = migrations.find(
+    (migration) => migration.fileName === '484_node_floating_toolbar_freeze_feature_symbols.sql'
+  );
+
+  assert.ok(freezeSymbolMigration);
+  assert.match(freezeSymbolMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(freezeSymbolMigration.sql, /ToggleCanvasNodeFreeze/);
+  assert.match(freezeSymbolMigration.sql, /buildWorkspaceCanvasLayout/);
+  assert.match(freezeSymbolMigration.sql, /toggleFrozenNodeId/);
+  assert.match(freezeSymbolMigration.sql, /EMPTY_FROZEN_NODE_IDS/);
+  assert.match(freezeSymbolMigration.sql, /canvasInteractionStore\.ts/);
+  assert.match(freezeSymbolMigration.sql, /useCanvasStoreFacade\.ts/);
+  assert.doesNotMatch(freezeSymbolMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations expose Node floating toolbar freeze symbols at manifest top level', () => {
+  const migrations = readMigrationFiles();
+  const freezeTopLevelSymbolsMigration = migrations.find(
+    (migration) => migration.fileName === '485_node_floating_toolbar_freeze_top_level_symbols.sql'
+  );
+
+  assert.ok(freezeTopLevelSymbolsMigration);
+  assert.match(freezeTopLevelSymbolsMigration.sql, /raw_manifest->'symbols'/);
+  assert.match(freezeTopLevelSymbolsMigration.sql, /buildWorkspaceCanvasLayout/);
+  assert.match(freezeTopLevelSymbolsMigration.sql, /toggleFrozenNodeId/);
+  assert.match(freezeTopLevelSymbolsMigration.sql, /EMPTY_FROZEN_NODE_IDS/);
+  assert.match(freezeTopLevelSymbolsMigration.sql, /ToggleCanvasNodeFreeze/);
+  assert.doesNotMatch(freezeTopLevelSymbolsMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Node workbench duplicate file ownership', () => {
   const migrations = readMigrationFiles();
   const ownershipMigration = migrations.find(

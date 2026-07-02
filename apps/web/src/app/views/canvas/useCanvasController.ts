@@ -55,6 +55,7 @@ export function useCanvasController() {
     workspaceLayoutKey: store.workspaceLayoutKey,
     columnLevelLineageEnabled: store.columnLevelLineageEnabled,
     persistedNodePositions: store.persistedNodePositions,
+    frozenNodeIds: store.frozenNodeIds,
     selectedNodeIds: store.selectedNodeIds,
     inspectorNodeId: store.inspectorNodeId,
     canPersistGraphDraftTransport: store.userPermissions.canPersistGraphDraft,

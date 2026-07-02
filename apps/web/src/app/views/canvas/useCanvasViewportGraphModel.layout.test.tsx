@@ -50,4 +50,78 @@ describe('useCanvasViewportGraphModel layout', () => {
       await mounted.cleanup();
     }
   });
+
+  it('marks frozen viewport nodes as non-draggable without changing their position', async () => {
+    const args = {
+      ...buildViewportGraphModelArgs({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        draftSemanticGraph: {
+          canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+          canonicalEdges: [],
+        },
+        persistedNodePositions: {
+          'source-node': { x: 40, y: 140 },
+        },
+      }),
+      frozenNodeIds: new Set(['source-node']),
+    } satisfies Parameters<typeof renderViewportGraphModel>[0] & {
+      frozenNodeIds: ReadonlySet<string>;
+    };
+    const mounted = await renderViewportGraphModel(args);
+
+    try {
+      expect(mounted.readState()?.nodes[0]).toMatchObject({
+        id: 'source-node',
+        position: { x: 40, y: 140 },
+        draggable: false,
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('reconciles draggable state when a mounted node is frozen or unfrozen', async () => {
+    const baseArgs = buildViewportGraphModelArgs({
+      visibleNodeIds: ['source-node'],
+      visibleEdges: [],
+      draftSemanticGraph: {
+        canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+        canonicalEdges: [],
+      },
+      persistedNodePositions: {
+        'source-node': { x: 40, y: 140 },
+      },
+    });
+    const mounted = await renderViewportGraphModel(baseArgs);
+
+    try {
+      expect(mounted.readState()?.nodes[0]).toMatchObject({
+        id: 'source-node',
+        draggable: true,
+      });
+
+      await mounted.rerender({
+        ...baseArgs,
+        frozenNodeIds: new Set(['source-node']),
+      });
+
+      expect(mounted.readState()?.nodes[0]).toMatchObject({
+        id: 'source-node',
+        draggable: false,
+      });
+
+      await mounted.rerender({
+        ...baseArgs,
+        frozenNodeIds: new Set(),
+      });
+
+      expect(mounted.readState()?.nodes[0]).toMatchObject({
+        id: 'source-node',
+        draggable: true,
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
 });

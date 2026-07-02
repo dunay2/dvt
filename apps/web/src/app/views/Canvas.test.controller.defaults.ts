@@ -51,6 +51,7 @@ type CanvasWorkbenchDefaultsDto = {
   canvasSnapToGrid: CanvasController['canvasSnapToGrid'];
   canvasEmptyStateGuideVisible: CanvasController['canvasEmptyStateGuideVisible'];
   viewport: CanvasController['viewport'];
+  frozenNodeIds: CanvasController['frozenNodeIds'];
 };
 
 type CanvasDraftDefaultsDto = {
@@ -203,6 +204,7 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     canvasSnapToGrid: false,
     canvasEmptyStateGuideVisible: true,
     viewport: null,
+    frozenNodeIds: new Set(),
   } satisfies CanvasWorkbenchDefaultsDto;
 }
 
@@ -288,6 +290,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'applyInspectorNodeDraft'
   | 'handleDuplicateNode'
   | 'handleToggleNodeSelection'
+  | 'handleToggleFrozenNode'
   | 'handleRemoveNode'
   | 'handleSourceImportComplete'
   | 'handleImportedNodeFocusComplete'
@@ -331,6 +334,7 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     applyInspectorNodeDraft: vi.fn(),
     handleDuplicateNode: vi.fn(),
     handleToggleNodeSelection: vi.fn(),
+    handleToggleFrozenNode: vi.fn(),
     handleRemoveNode: vi.fn(),
     handleSourceImportComplete: vi.fn(),
     importedNodeFocusIds: [],

@@ -28,6 +28,7 @@ export type UseCanvasAuthoringRuntimeArgs = {
   workspaceLayoutKey: string;
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: CanvasNodePositions;
+  frozenNodeIds: ReadonlySet<string>;
   selectedNodeIds: string[];
   inspectorNodeId: string | null;
   canPersistGraphDraftTransport: boolean;
@@ -43,6 +44,7 @@ export type UseCanvasAuthoringRuntimeDraftFlowArgs = Pick<
   | 'workspaceLayoutKey'
   | 'columnLevelLineageEnabled'
   | 'persistedNodePositions'
+  | 'frozenNodeIds'
   | 'workspaceScope'
   | 'previewProvenanceConfig'
   | 'setCanvasNodePositions'

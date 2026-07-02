@@ -29,8 +29,10 @@ describe('CanvasViewport node floating toolbar', () => {
 
   it('opens the node floating toolbar on left-click and closes it on pane click', async () => {
     const onInspectNode = vi.fn();
+    const onToggleFrozenNode = vi.fn();
 
     await renderViewport({
+      onToggleFrozenNode,
       nodesWithImpact: [
         {
           id: 'model_orders',
@@ -53,8 +55,8 @@ describe('CanvasViewport node floating toolbar', () => {
 
     expect(toolbarText()).toContain('Código');
     expect(toolbarText()).toContain('Congelar');
-    expect(toolbarButton('Congelar')?.getAttribute('data-action-state')).toBe('unavailable');
-    expect(toolbarButton('Congelar')?.getAttribute('aria-disabled')).toBe('true');
+    expect(toolbarButton('Congelar')?.getAttribute('data-action-state')).toBe('available');
+    expect(toolbarButton('Congelar')?.getAttribute('aria-disabled')).toBeNull();
     expect(toolbarButton('Más acciones')).not.toBeNull();
     expect(toolbarText()).not.toContain('Seleccionar para ejecución');
     expect(toolbarButton('Seleccionar para ejecución')).toBeNull();
@@ -65,9 +67,42 @@ describe('CanvasViewport node floating toolbar', () => {
 
     expect(onInspectNode).toHaveBeenCalledWith('model_orders', 'code');
 
+    await act(async () => {
+      toolbarButton('Congelar')?.click();
+    });
+
+    expect(onToggleFrozenNode).toHaveBeenCalledWith('model_orders');
+
     await paneClick(440, 260);
 
     expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+  });
+
+  it('shows an unfreeze action when the clicked node is already frozen', async () => {
+    await renderViewport({
+      frozenNodeIds: new Set(['model_orders']),
+      onToggleFrozenNode: vi.fn(),
+      nodesWithImpact: [
+        {
+          id: 'model_orders',
+          position: { x: 160, y: 90 },
+          data: {
+            name: 'Orders model',
+            onInspectNode: vi.fn(),
+          },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('model_orders', {
+      clientX: 420,
+      clientY: 240,
+      nodeElement: document.createElement('div'),
+    });
+
+    expect(toolbarButton('Descongelar')).not.toBeNull();
+    expect(toolbarButton('Congelar')).toBeNull();
   });
 
   it('aligns the node floating toolbar with the node card instead of the click point', async () => {

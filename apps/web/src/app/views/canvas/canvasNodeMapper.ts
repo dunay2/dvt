@@ -20,6 +20,7 @@ type MapCanonicalNodeToCanvasNodeArgs = {
   overlayDecoration?: MergedNodeDecoration | null;
   persistedPosition?: CanvasNodePosition;
   portCompatibility?: CanvasNodePortCompatibilityByDirection;
+  frozen?: boolean;
   locale?: string;
 };
 
@@ -74,6 +75,7 @@ export function mapCanonicalNodeToCanvasNode({
   overlayDecoration,
   persistedPosition,
   portCompatibility,
+  frozen = false,
   locale,
 }: MapCanonicalNodeToCanvasNodeArgs): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
@@ -84,6 +86,7 @@ export function mapCanonicalNodeToCanvasNode({
     id: canonicalNode.id,
     type: 'dbtNode',
     position: persistedPosition ?? { x: (index % 3) * 250, y: Math.floor(index / 3) * 150 },
+    draggable: !frozen,
     data: {
       name: canonicalNode.name,
       type: kindRegistration.label,
