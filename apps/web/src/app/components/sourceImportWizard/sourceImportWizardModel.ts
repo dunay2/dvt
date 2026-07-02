@@ -15,6 +15,7 @@ export type SourceImportTableViewModel = Readonly<{
   displayName: string;
   accessibilityLabel: string;
   rowCountLabel: string;
+  byteSizeLabel: string | null;
   columnCountLabel: string;
   selected: boolean;
   columns: readonly SourceImportColumnViewModel[];
@@ -66,6 +67,22 @@ export function formatSourceImportColumnCount(columnCount: number): string {
   return `${columnCount} ${columnCount === 1 ? 'column' : 'columns'}`;
 }
 
+export function formatSourceImportByteSize(byteSize: number | undefined): string | null {
+  if (byteSize == null) {
+    return null;
+  }
+  if (byteSize >= 1024 * 1024 * 1024) {
+    return `${(byteSize / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
+  }
+  if (byteSize >= 1024 * 1024) {
+    return `${(byteSize / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
+  }
+  if (byteSize >= 1024) {
+    return `${(byteSize / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
+  }
+  return `${byteSize} B`;
+}
+
 export function formatSourceImportTableCount(tableCount: number): string {
   return `${tableCount} ${tableCount === 1 ? 'table' : 'tables'}`;
 }
@@ -80,14 +97,19 @@ export function buildSourceImportTableViewModel(
 ): SourceImportTableViewModel {
   const canonicalName = buildWarehouseTableKey(table);
   const rowCountLabel = formatSourceImportRowCount(table.rowCount);
+  const byteSizeLabel = formatSourceImportByteSize(table.byteSize);
   const columnCountLabel = formatSourceImportColumnCount(table.columns?.length ?? 0);
+  const accessibilityMetrics = [rowCountLabel, byteSizeLabel, columnCountLabel]
+    .filter((label): label is string => label != null)
+    .join('. ');
 
   return {
     index,
     canonicalName,
     displayName: table.table,
-    accessibilityLabel: `Select source table ${canonicalName}. ${rowCountLabel}. ${columnCountLabel}.`,
+    accessibilityLabel: `Select source table ${canonicalName}. ${accessibilityMetrics}.`,
     rowCountLabel,
+    byteSizeLabel,
     columnCountLabel,
     selected: table.selected,
     columns:

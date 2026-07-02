@@ -71,6 +71,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
           schema: 'erp',
           table: 'orders',
           rowCount: 128,
+          byteSize: 4096000,
           columns: [{ name: 'id', type: 'integer', nullable: false }],
         },
       ],
@@ -94,6 +95,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
         schema: 'erp',
         table: 'orders',
         rowCount: 128,
+        byteSize: 4096000,
         columns: [{ name: 'id', type: 'integer', nullable: false }],
       },
     ]);
@@ -114,6 +116,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
                 schema: 'erp',
                 table: 'orders',
                 rowCount: 128,
+                byteSize: 4096000,
                 columns: [{ name: 'id', type: 'integer', nullable: false }],
               },
             ],
@@ -136,6 +139,7 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
         schema: 'erp',
         table: 'orders',
         rowCount: 128,
+        byteSize: 4096000,
         columns: [{ name: 'id', type: 'integer', nullable: false }],
       },
     ]);

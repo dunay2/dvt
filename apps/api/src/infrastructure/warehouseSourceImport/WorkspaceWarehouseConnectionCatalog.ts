@@ -30,6 +30,7 @@ export const WarehouseTableCatalogSchema = z.object({
   schema: z.string().min(1),
   table: z.string().min(1),
   rowCount: z.number().nonnegative().optional(),
+  byteSize: z.number().nonnegative().optional(),
   columns: z.array(WarehouseColumnCatalogSchema).optional(),
 });
 
@@ -138,6 +139,7 @@ export async function resolveWorkspaceWarehouseCatalog(
             schema: table.schema,
             table: table.table,
             ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
+            ...(table.byteSize !== undefined ? { byteSize: table.byteSize } : {}),
             ...(table.columns !== undefined
               ? {
                   columns: table.columns.map((column) => ({

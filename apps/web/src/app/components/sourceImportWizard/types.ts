@@ -27,6 +27,7 @@ export interface TableInfo {
   schema: string;
   table: string;
   rowCount?: number;
+  byteSize?: number;
   columns?: WarehouseTable['columns'];
   selected: boolean;
 }

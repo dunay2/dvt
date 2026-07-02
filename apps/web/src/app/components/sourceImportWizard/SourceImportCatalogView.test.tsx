@@ -49,6 +49,7 @@ describe('SourceImportCatalogView', () => {
         buildTable({
           table: 'ORDERS',
           rowCount: 1500,
+          byteSize: 4096000,
           columns: [
             { name: 'order_id', type: 'INTEGER', nullable: false },
             { name: 'discount_code', type: 'TEXT', nullable: true },
@@ -72,6 +73,7 @@ describe('SourceImportCatalogView', () => {
     expect(container.textContent).toContain('1 table');
     expect(container.textContent).toContain('RAW.ERP.ORDERS');
     expect(container.textContent).toContain('1,500 rows');
+    expect(container.textContent).toContain('3.9 MB');
     expect(container.textContent).toContain('2 columns');
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('Required');
@@ -79,7 +81,7 @@ describe('SourceImportCatalogView', () => {
     expect(container.textContent).toContain('Nullable');
 
     const tableAction = getByRole(container, 'button', {
-      name: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 2 columns.',
+      name: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 2 columns.',
     });
 
     await act(async () => {

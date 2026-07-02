@@ -46,6 +46,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'ERP',
       table: 'ORDERS',
       rowCount: 125000,
+      byteSize: 18_200_000,
       columns: [
         { name: 'order_id', type: 'INTEGER', nullable: false },
         { name: 'customer_id', type: 'INTEGER', nullable: false },
@@ -58,6 +59,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'ERP',
       table: 'CUSTOMERS',
       rowCount: 45000,
+      byteSize: 8_700_000,
       columns: [
         { name: 'customer_id', type: 'INTEGER', nullable: false },
         { name: 'customer_name', type: 'VARCHAR', nullable: false },
@@ -69,6 +71,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'ERP',
       table: 'PRODUCTS',
       rowCount: 3500,
+      byteSize: 1_100_000,
       columns: [
         { name: 'product_id', type: 'INTEGER', nullable: false },
         { name: 'product_name', type: 'VARCHAR', nullable: false },
@@ -80,6 +83,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'CRM',
       table: 'CONTACTS',
       rowCount: 89000,
+      byteSize: 12_400_000,
       columns: [
         { name: 'contact_id', type: 'INTEGER', nullable: false },
         { name: 'account_id', type: 'INTEGER', nullable: false },
@@ -91,6 +95,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'CRM',
       table: 'ACTIVITIES',
       rowCount: 230000,
+      byteSize: 42_000_000,
       columns: [
         { name: 'activity_id', type: 'INTEGER', nullable: false },
         { name: 'contact_id', type: 'INTEGER', nullable: false },
@@ -102,6 +107,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'MARKETING',
       table: 'CAMPAIGNS',
       rowCount: 1200,
+      byteSize: 640_000,
       columns: [
         { name: 'campaign_id', type: 'INTEGER', nullable: false },
         { name: 'campaign_name', type: 'VARCHAR', nullable: false },
@@ -113,6 +119,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'MARKETING',
       table: 'EVENTS',
       rowCount: 45000,
+      byteSize: 6_800_000,
       columns: [
         { name: 'event_id', type: 'INTEGER', nullable: false },
         { name: 'campaign_id', type: 'INTEGER', nullable: false },
@@ -126,6 +133,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'public',
       table: 'sessions',
       rowCount: 920000,
+      byteSize: 128_000_000,
       columns: [
         { name: 'session_id', type: 'STRING', nullable: false },
         { name: 'user_id', type: 'STRING', nullable: true },
@@ -138,6 +146,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       schema: 'sandbox',
       table: 'sample_orders',
       rowCount: 3000,
+      byteSize: 920_000,
       columns: [
         { name: 'id', type: 'INTEGER', nullable: false },
         { name: 'amount', type: 'DECIMAL', nullable: false },
@@ -278,6 +287,22 @@ function createImportedSourceNode(
     status: 'idle',
     description: `Imported source for ${table.database}.${table.schema}.${table.table}`,
     dependencies: [],
+    metadata: {
+      database: table.database,
+      schema: table.schema,
+      tableName: tableLower,
+      ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
+      ...(table.byteSize !== undefined ? { byteSize: table.byteSize } : {}),
+      ...(includeColumns && table.columns
+        ? {
+            columns: table.columns.map((column) => ({
+              name: column.name,
+              type: column.type,
+              nullable: column.nullable,
+            })),
+          }
+        : {}),
+    },
     columns: includeColumns
       ? table.columns?.map((column) => ({
           name: column.name,

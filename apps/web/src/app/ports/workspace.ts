@@ -76,6 +76,7 @@ export type WarehouseTable = {
   schema: string;
   table: string;
   rowCount?: number;
+  byteSize?: number;
   columns?: WarehouseColumn[];
 };
 

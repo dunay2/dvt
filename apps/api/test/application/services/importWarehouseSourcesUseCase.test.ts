@@ -30,6 +30,7 @@ const catalogEntry: WarehouseConnectionCatalogEntry = {
       schema: 'erp',
       table: 'orders',
       rowCount: 42000,
+      byteSize: 18432000,
       columns: [
         { name: 'order_id', type: 'integer', nullable: false },
         { name: 'customer_id', type: 'integer', nullable: false },
@@ -129,6 +130,7 @@ describe('ImportWarehouseSourcesUseCase', () => {
                 schema: 'erp',
                 tableName: 'orders',
                 rowCount: 42000,
+                byteSize: 18432000,
                 columns: [
                   { name: 'order_id', type: 'integer', nullable: false },
                   { name: 'customer_id', type: 'integer', nullable: false },

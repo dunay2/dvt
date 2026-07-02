@@ -131,6 +131,7 @@ describe('sourceImportWizardModel', () => {
           schema: 'ERP',
           table: 'ORDERS',
           rowCount: 1500,
+          byteSize: 4096000,
           selected: true,
           columns: [
             { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true, unique: true },
@@ -157,8 +158,10 @@ describe('sourceImportWizardModel', () => {
           expect.objectContaining({
             canonicalName: 'RAW.ERP.ORDERS',
             displayName: 'ORDERS',
-            accessibilityLabel: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 2 columns.',
+            accessibilityLabel:
+              'Select source table RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 2 columns.',
             rowCountLabel: '1,500 rows',
+            byteSizeLabel: '3.9 MB',
             columnCountLabel: '2 columns',
             columns: [
               {
@@ -188,6 +191,7 @@ describe('sourceImportWizardModel', () => {
       expect.objectContaining({
         canonicalName: 'RAW.ERP.ORDERS',
         rowCountLabel: '1,500 rows',
+        byteSizeLabel: '3.9 MB',
         columnCountLabel: '2 columns',
       })
     );
