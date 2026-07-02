@@ -14,6 +14,7 @@ export type SourceImportTableViewModel = Readonly<{
   canonicalName: string;
   displayName: string;
   accessibilityLabel: string;
+  inspectionAccessibilityLabel: string;
   rowCountLabel: string;
   byteSizeLabel: string | null;
   columnCountLabel: string;
@@ -28,10 +29,23 @@ export type SourceImportSchemaGroupViewModel = Readonly<{
   tables: readonly SourceImportTableViewModel[];
 }>;
 
+export type SourceImportDatabaseGroupViewModel = Readonly<{
+  database: string;
+  schemaCountLabel: string;
+  tableCountLabel: string;
+  selected: boolean;
+  schemaGroups: readonly SourceImportSchemaGroupViewModel[];
+}>;
+
 export type SourceImportCatalogViewModel = Readonly<{
+  databaseGroups: readonly SourceImportDatabaseGroupViewModel[];
   schemaGroups: readonly SourceImportSchemaGroupViewModel[];
   activeTable: SourceImportTableViewModel | null;
   selectedTables: readonly SourceImportTableViewModel[];
+  totalTableCount: number;
+  visibleTableCount: number;
+  selectedTableCount: number;
+  resultCountLabel: string;
 }>;
 
 export const SOURCE_IMPORT_SECTIONS: readonly {
@@ -87,6 +101,33 @@ export function formatSourceImportTableCount(tableCount: number): string {
   return `${tableCount} ${tableCount === 1 ? 'table' : 'tables'}`;
 }
 
+export function formatSourceImportSchemaCount(schemaCount: number): string {
+  return `${schemaCount} ${schemaCount === 1 ? 'schema' : 'schemas'}`;
+}
+
+function normalizeCatalogSearchValue(value: string | null | undefined): string {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase();
+}
+
+function tableMatchesSourceImportSearch(table: TableInfo, normalizedSearchQuery: string): boolean {
+  if (normalizedSearchQuery.length === 0) {
+    return true;
+  }
+
+  const searchableValues = [
+    table.database,
+    table.schema,
+    table.table,
+    ...(table.columns?.flatMap((column) => [column.name, column.type]) ?? []),
+  ];
+
+  return searchableValues.some((value) =>
+    normalizeCatalogSearchValue(value).includes(normalizedSearchQuery)
+  );
+}
+
 export function formatSourceImportNullability(nullable: boolean): 'Nullable' | 'Required' {
   return nullable ? 'Nullable' : 'Required';
 }
@@ -108,6 +149,7 @@ export function buildSourceImportTableViewModel(
     canonicalName,
     displayName: table.table,
     accessibilityLabel: `Select source table ${canonicalName}. ${accessibilityMetrics}.`,
+    inspectionAccessibilityLabel: `Inspect source table ${canonicalName} metadata. ${accessibilityMetrics}.`,
     rowCountLabel,
     byteSizeLabel,
     columnCountLabel,
@@ -134,19 +176,33 @@ export function buildSourceImportTableViewModel(
 export function buildSourceImportCatalogViewModel({
   tables,
   activeTableKey,
+  searchQuery,
 }: Readonly<{
   tables: readonly TableInfo[];
   activeTableKey: string | null;
+  searchQuery?: string;
 }>): SourceImportCatalogViewModel {
-  const tableViewModels = tables.map((table, index) =>
+  const normalizedSearchQuery = normalizeCatalogSearchValue(searchQuery);
+  const allTableViewModels = tables.map((table, index) =>
     buildSourceImportTableViewModel(table, index)
   );
-  const schemaGroups = new Map<string, SourceImportTableViewModel[]>();
+  const visibleTableEntries = tables
+    .map((table, index) => ({ table, viewModel: allTableViewModels[index]! }))
+    .filter(({ table }) => tableMatchesSourceImportSearch(table, normalizedSearchQuery));
+  const tableViewModels = visibleTableEntries.map(({ viewModel }) => viewModel);
+  const schemaGroupsByName = new Map<string, SourceImportTableViewModel[]>();
+  const databaseGroupsByName = new Map<string, Map<string, SourceImportTableViewModel[]>>();
 
-  tables.forEach((table, index) => {
-    const group = schemaGroups.get(table.schema) ?? [];
-    group.push(tableViewModels[index]!);
-    schemaGroups.set(table.schema, group);
+  visibleTableEntries.forEach(({ table, viewModel }) => {
+    const schemaGroup = schemaGroupsByName.get(table.schema) ?? [];
+    schemaGroup.push(viewModel);
+    schemaGroupsByName.set(table.schema, schemaGroup);
+
+    const databaseSchemas = databaseGroupsByName.get(table.database) ?? new Map();
+    const databaseSchemaGroup = databaseSchemas.get(table.schema) ?? [];
+    databaseSchemaGroup.push(viewModel);
+    databaseSchemas.set(table.schema, databaseSchemaGroup);
+    databaseGroupsByName.set(table.database, databaseSchemas);
   });
 
   const activeTable =
@@ -156,16 +212,50 @@ export function buildSourceImportCatalogViewModel({
     tableViewModels.find((table) => table.selected) ??
     tableViewModels[0] ??
     null;
+  const schemaGroups = Array.from(schemaGroupsByName.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([schema, groupTables]) => buildSourceImportSchemaGroup(schema, groupTables));
+  const databaseGroups = Array.from(databaseGroupsByName.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([database, databaseSchemaGroups]) => {
+      const databaseSchemas = Array.from(databaseSchemaGroups.entries())
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([schema, groupTables]) => buildSourceImportSchemaGroup(schema, groupTables));
+      const databaseTables = databaseSchemas.flatMap((schemaGroup) => schemaGroup.tables);
+
+      return {
+        database,
+        schemaCountLabel: formatSourceImportSchemaCount(databaseSchemas.length),
+        tableCountLabel: formatSourceImportTableCount(databaseTables.length),
+        selected: databaseTables.length > 0 && databaseTables.every((table) => table.selected),
+        schemaGroups: databaseSchemas,
+      };
+    });
 
   return {
-    schemaGroups: Array.from(schemaGroups.entries()).map(([schema, groupTables]) => ({
-      schema,
-      tableCountLabel: formatSourceImportTableCount(groupTables.length),
-      selected: groupTables.length > 0 && groupTables.every((table) => table.selected),
-      tables: groupTables,
-    })),
+    databaseGroups,
+    schemaGroups,
     activeTable,
     selectedTables: tableViewModels.filter((table) => table.selected),
+    totalTableCount: allTableViewModels.length,
+    visibleTableCount: tableViewModels.length,
+    selectedTableCount: allTableViewModels.filter((table) => table.selected).length,
+    resultCountLabel:
+      tableViewModels.length === allTableViewModels.length
+        ? `${formatSourceImportTableCount(allTableViewModels.length)} available`
+        : `Showing ${tableViewModels.length} of ${allTableViewModels.length} tables`,
+  };
+}
+
+function buildSourceImportSchemaGroup(
+  schema: string,
+  groupTables: readonly SourceImportTableViewModel[]
+): SourceImportSchemaGroupViewModel {
+  return {
+    schema,
+    tableCountLabel: formatSourceImportTableCount(groupTables.length),
+    selected: groupTables.length > 0 && groupTables.every((table) => table.selected),
+    tables: groupTables,
   };
 }
 
@@ -238,13 +328,17 @@ export function resolveStepForSection(section: SourceImportSection): WizardStep 
 export function canEnterSourceImportSection(
   section: SourceImportSection,
   selectedConnection: string | null,
-  selectedCount: number
+  selectedCount: number,
+  hasActiveTable = selectedCount > 0
 ): boolean {
   if (section === 'connections') {
     return true;
   }
   if (section === 'browse') {
     return selectedConnection != null;
+  }
+  if (section === 'metadata') {
+    return selectedConnection != null && hasActiveTable;
   }
 
   return selectedConnection != null && selectedCount > 0;

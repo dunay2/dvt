@@ -1,8 +1,9 @@
 import { CheckCircle2, Database, Loader2, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import type { WarehouseConnection } from '../../ports/workspace';
+import type { TestWarehouseConnectionResult, WarehouseConnection } from '../../ports/workspace';
 import { Badge } from '../ui/badge';
+import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { sourceImportWizardCopy as copy } from './copy';
 
@@ -10,8 +11,11 @@ interface ConnectionStepProps {
   connections: WarehouseConnection[];
   selectedConnection: string | null;
   isLoadingConnections: boolean;
+  isTestingConnection: boolean;
+  connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: string | null;
   onSelectConnection: (connectionId: string) => void;
+  onTestConnection: () => void;
 }
 
 function filterConnections(
@@ -47,8 +51,11 @@ export function ConnectionStep({
   connections,
   selectedConnection,
   isLoadingConnections,
+  isTestingConnection,
+  connectionTestResult,
   loadError,
   onSelectConnection,
+  onTestConnection,
 }: ConnectionStepProps) {
   const [searchValue, setSearchValue] = useState('');
   const visibleConnections = useMemo(
@@ -80,8 +87,19 @@ export function ConnectionStep({
           <>
             <div className="rounded-lg border border-slate-700 bg-slate-950/40 p-3">
               <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-300">
-                <span>{formatConnectionCatalogSummary(connections.length)}</span>
-                <span>{copy.connection.catalogSource}</span>
+                <div className="min-w-0">
+                  <div>{formatConnectionCatalogSummary(connections.length)}</div>
+                  <div className="truncate text-slate-500">{copy.connection.catalogSource}</div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!selectedConnection || isTestingConnection}
+                  onClick={onTestConnection}
+                >
+                  {isTestingConnection ? copy.connection.testingAction : copy.connection.testAction}
+                </Button>
               </div>
               <label className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950 px-3 py-2">
                 <Search className="size-4 shrink-0 text-slate-400" />
@@ -96,6 +114,27 @@ export function ConnectionStep({
                 />
               </label>
             </div>
+
+            {connectionTestResult ? (
+              <Card
+                className={
+                  connectionTestResult.status === 'passed'
+                    ? 'border-emerald-700 bg-emerald-950/30 p-3 text-sm text-emerald-100'
+                    : 'border-red-700 bg-red-950/30 p-3 text-sm text-red-100'
+                }
+              >
+                <div className="font-medium">
+                  {connectionTestResult.status === 'passed'
+                    ? copy.connection.testPassed
+                    : copy.connection.testFailed}
+                </div>
+                <div className="mt-1 text-xs opacity-85">
+                  {connectionTestResult.status === 'passed'
+                    ? `${connectionTestResult.tableCount} ${copy.connection.reachableTables}`
+                    : connectionTestResult.message}
+                </div>
+              </Card>
+            ) : null}
 
             {connections.length === 0 ? (
               <Card className="border-slate-700 bg-slate-950/40 p-4 text-sm text-slate-300">

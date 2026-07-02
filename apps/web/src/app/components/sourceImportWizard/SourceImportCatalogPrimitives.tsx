@@ -10,11 +10,18 @@ import type { SourceImportTableViewModel } from './sourceImportWizardModel';
 export const sourceImportCatalogClassNames = {
   emptyState: 'border-slate-600 p-4 text-sm text-slate-300',
   schemaGroups: 'space-y-4',
+  databaseGroup: 'space-y-3',
+  databaseHeader:
+    'rounded border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100',
+  databaseHeaderContent: 'flex items-center justify-between gap-3',
+  databaseTitle: 'font-mono font-medium',
+  databaseMetrics: 'flex flex-wrap justify-end gap-2 text-xs text-slate-400',
   schemaHeader: 'mb-2 flex items-center gap-2',
   schemaTitle: 'text-sm font-medium',
   schemaTableList: 'ml-6 space-y-1',
   tableCard:
     'cursor-pointer rounded border border-slate-700 bg-slate-950/30 p-3 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
+  selectedTableCard: 'border-sky-400 bg-sky-950/30 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]',
   tableHeader: 'flex items-start justify-between gap-3',
   tableIdentity: 'flex min-w-0 items-start gap-2',
   tableIcon: 'mt-0.5 size-4 shrink-0 text-slate-300',
@@ -37,8 +44,16 @@ type SourceImportSchemaHeaderProps = Readonly<{
   onToggle: () => void;
 }>;
 
+type SourceImportDatabaseHeaderProps = Readonly<{
+  database: string;
+  schemaCountLabel: string;
+  tableCountLabel: string;
+  selected: boolean;
+}>;
+
 type SourceImportTableCardProps = Readonly<{
   table: SourceImportTableViewModel;
+  onActivate: () => void;
   onToggle: () => void;
 }>;
 
@@ -52,6 +67,32 @@ export function SourceImportSchemaGroups({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <div className={sourceImportCatalogClassNames.schemaGroups}>{children}</div>;
+}
+
+export function SourceImportDatabaseGroup({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return <div className={sourceImportCatalogClassNames.databaseGroup}>{children}</div>;
+}
+
+export function SourceImportDatabaseHeader({
+  database,
+  schemaCountLabel,
+  tableCountLabel,
+  selected,
+}: SourceImportDatabaseHeaderProps): JSX.Element {
+  return (
+    <div className={sourceImportCatalogClassNames.databaseHeader}>
+      <div className={sourceImportCatalogClassNames.databaseHeaderContent}>
+        <span className={sourceImportCatalogClassNames.databaseTitle}>{database}</span>
+        <span className={sourceImportCatalogClassNames.databaseMetrics}>
+          <Badge variant="secondary">{schemaCountLabel}</Badge>
+          <Badge variant="secondary">{tableCountLabel}</Badge>
+          {selected ? <Badge variant="outline">All selected</Badge> : null}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export function SourceImportSchemaHeader({
@@ -116,20 +157,25 @@ export function SourceImportColumnPreviewList({
 
 export function SourceImportTableCard({
   table,
+  onActivate,
   onToggle,
 }: SourceImportTableCardProps): JSX.Element {
+  const tableCardClassName = table.selected
+    ? `${sourceImportCatalogClassNames.tableCard} ${sourceImportCatalogClassNames.selectedTableCard}`
+    : sourceImportCatalogClassNames.tableCard;
+
   return (
     <div
       role="button"
       tabIndex={0}
-      aria-label={table.accessibilityLabel}
+      aria-label={table.inspectionAccessibilityLabel}
       data-source-import-table={table.canonicalName}
-      className={sourceImportCatalogClassNames.tableCard}
-      onClick={onToggle}
+      className={tableCardClassName}
+      onClick={onActivate}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          onToggle();
+          onActivate();
         }
       }}
     >
@@ -137,6 +183,7 @@ export function SourceImportTableCard({
         <div className={sourceImportCatalogClassNames.tableIdentity}>
           <Checkbox
             aria-label={table.accessibilityLabel}
+            data-source-import-table-select={table.canonicalName}
             checked={table.selected}
             onClick={(event) => {
               event.stopPropagation();
@@ -152,6 +199,7 @@ export function SourceImportTableCard({
           </div>
         </div>
         <div className={sourceImportCatalogClassNames.tableMetrics}>
+          {table.selected ? <Badge variant="outline">Selected</Badge> : null}
           <div>{table.rowCountLabel}</div>
           {table.byteSizeLabel == null ? null : <div>{table.byteSizeLabel}</div>}
           <div>{table.columnCountLabel}</div>

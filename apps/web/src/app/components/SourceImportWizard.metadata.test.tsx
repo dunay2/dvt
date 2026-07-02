@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import React, { act } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -177,14 +178,130 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('Sandbox warehouse');
 
     await act(async () => {
-      search?.focus();
       if (search) {
-        search.value = 'prod';
+        fireEvent.change(search, { target: { value: 'prod' } });
       }
-      search?.dispatchEvent(new InputEvent('input', { bubbles: true, data: 'prod' }));
     });
 
     expect(document.body.textContent).toContain('Production warehouse');
     expect(document.body.textContent).not.toContain('Sandbox warehouse');
+  });
+
+  it('searches source tables by column metadata and keeps the active metadata visible while browsing', async () => {
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseTables: async () => [
+          buildWarehouseTable({
+            table: 'ORDERS',
+            rowCount: 1500,
+            columns: [
+              { name: 'order_id', type: 'INTEGER', nullable: false },
+              { name: 'customer_id', type: 'INTEGER', nullable: false },
+            ],
+          }),
+          buildWarehouseTable({
+            table: 'CUSTOMERS',
+            rowCount: 45000,
+            byteSize: 7340032,
+            columns: [
+              { name: 'customer_id', type: 'INTEGER', nullable: false },
+              { name: 'email', type: 'VARCHAR', nullable: true, unique: true },
+            ],
+          }),
+        ],
+      }),
+    });
+
+    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickTab('Browse');
+
+    const search = document.querySelector<HTMLInputElement>(
+      '[data-slot="source-import-table-search"]'
+    );
+
+    expect(search).not.toBeNull();
+    expect(document.body.textContent).toContain('2 tables available');
+    expect(document.body.textContent).toContain('Source metadata');
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+
+    await act(async () => {
+      if (search) {
+        fireEvent.change(search, { target: { value: 'email' } });
+      }
+    });
+
+    expect(document.body.textContent).toContain('Showing 1 of 2 tables');
+    expect(document.body.textContent).toContain('CUSTOMERS');
+    expect(document.body.textContent).not.toContain('ORDERS');
+    expect(document.body.textContent).toContain('RAW.ERP.CUSTOMERS');
+    expect(document.body.textContent).toContain('45,000 rows');
+    expect(document.body.textContent).toContain('7 MB');
+    expect(document.body.textContent).toContain('email');
+    expect(document.body.textContent).toContain('VARCHAR');
+    expect(document.body.textContent).toContain('Unique');
+  });
+
+  it('keeps a selected-source basket visible while browsing before import', async () => {
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseTables: async () => [
+          buildWarehouseTable({
+            database: 'RAW',
+            schema: 'ERP',
+            table: 'ORDERS',
+            rowCount: 1500,
+            columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+          }),
+          buildWarehouseTable({
+            database: 'RAW',
+            schema: 'CRM',
+            table: 'CUSTOMERS',
+            rowCount: 45000,
+            columns: [{ name: 'email', type: 'VARCHAR', nullable: true }],
+          }),
+        ],
+      }),
+    });
+
+    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickTab('Browse');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+
+    expect(document.body.textContent).toContain('Selected sources');
+    expect(document.body.textContent).toContain('1 selected');
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain('1,500 rows');
+    expect(document.body.textContent).toContain('1 column');
+  });
+
+  it('lets users remove selected sources from the basket without losing active metadata', async () => {
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseTables: async () => [
+          buildWarehouseTable({
+            database: 'RAW',
+            schema: 'ERP',
+            table: 'ORDERS',
+            rowCount: 1500,
+            columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+          }),
+        ],
+      }),
+    });
+
+    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickTab('Browse');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+
+    expect(document.body.textContent).toContain('Selected: 1');
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain('order_id');
+
+    await harness.clickButtonByLabel('Remove RAW.ERP.ORDERS');
+
+    expect(document.body.textContent).toContain('Selected: 0');
+    expect(document.body.textContent).toContain('No source tables selected yet.');
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain('order_id');
   });
 });

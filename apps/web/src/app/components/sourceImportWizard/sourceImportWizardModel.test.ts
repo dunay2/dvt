@@ -121,6 +121,7 @@ describe('sourceImportWizardModel', () => {
     expect(canEnterSourceImportSection('browse', null, 0)).toBe(false);
     expect(canEnterSourceImportSection('browse', 'conn-1', 0)).toBe(true);
     expect(canEnterSourceImportSection('metadata', 'conn-1', 0)).toBe(false);
+    expect(canEnterSourceImportSection('metadata', 'conn-1', 0, true)).toBe(true);
     expect(canEnterSourceImportSection('selected', 'conn-1', 1)).toBe(true);
   });
 
@@ -128,6 +129,7 @@ describe('sourceImportWizardModel', () => {
     const viewModel = buildSourceImportCatalogViewModel({
       tables: [
         buildTable({
+          database: 'RAW',
           schema: 'ERP',
           table: 'ORDERS',
           rowCount: 1500,
@@ -139,6 +141,7 @@ describe('sourceImportWizardModel', () => {
           ],
         }),
         buildTable({
+          database: 'RAW',
           schema: 'ERP',
           table: 'CUSTOMERS',
           rowCount: undefined,
@@ -149,6 +152,20 @@ describe('sourceImportWizardModel', () => {
       activeTableKey: 'RAW.ERP.ORDERS',
     });
 
+    expect(viewModel.databaseGroups).toEqual([
+      expect.objectContaining({
+        database: 'RAW',
+        schemaCountLabel: '1 schema',
+        tableCountLabel: '2 tables',
+        selected: false,
+        schemaGroups: [
+          expect.objectContaining({
+            schema: 'ERP',
+            tableCountLabel: '2 tables',
+          }),
+        ],
+      }),
+    ]);
     expect(viewModel.schemaGroups).toEqual([
       expect.objectContaining({
         schema: 'ERP',
@@ -199,6 +216,104 @@ describe('sourceImportWizardModel', () => {
       expect.objectContaining({
         canonicalName: 'RAW.ERP.ORDERS',
         columnCountLabel: '2 columns',
+      }),
+    ]);
+  });
+
+  it('filters the source catalog by schema, table, column, and type without losing selected totals', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({
+          schema: 'ERP',
+          table: 'ORDERS',
+          selected: true,
+          columns: [
+            { name: 'order_id', type: 'INTEGER', nullable: false },
+            { name: 'customer_id', type: 'INTEGER', nullable: false },
+          ],
+        }),
+        buildTable({
+          schema: 'CRM',
+          table: 'CUSTOMERS',
+          selected: true,
+          columns: [
+            { name: 'customer_id', type: 'INTEGER', nullable: false },
+            { name: 'email', type: 'VARCHAR', nullable: true },
+          ],
+        }),
+        buildTable({
+          schema: 'OPS',
+          table: 'SHIPMENTS',
+          selected: false,
+          columns: [{ name: 'tracking_code', type: 'TEXT', nullable: false }],
+        }),
+      ],
+      activeTableKey: 'RAW.ERP.ORDERS',
+      searchQuery: 'email',
+    });
+
+    expect(viewModel.totalTableCount).toBe(3);
+    expect(viewModel.visibleTableCount).toBe(1);
+    expect(viewModel.selectedTableCount).toBe(2);
+    expect(viewModel.resultCountLabel).toBe('Showing 1 of 3 tables');
+    expect(viewModel.schemaGroups).toEqual([
+      expect.objectContaining({
+        schema: 'CRM',
+        tableCountLabel: '1 table',
+        tables: [
+          expect.objectContaining({
+            canonicalName: 'RAW.CRM.CUSTOMERS',
+          }),
+        ],
+      }),
+    ]);
+    expect(viewModel.activeTable).toEqual(
+      expect.objectContaining({
+        canonicalName: 'RAW.CRM.CUSTOMERS',
+      })
+    );
+  });
+
+  it('groups visible source catalog entries by database and schema for categorized browsing', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS', selected: true }),
+        buildTable({ database: 'RAW', schema: 'CRM', table: 'CUSTOMERS', selected: false }),
+        buildTable({ database: 'MART', schema: 'FINANCE', table: 'REVENUE', selected: true }),
+      ],
+      activeTableKey: null,
+    });
+
+    expect(viewModel.databaseGroups).toEqual([
+      expect.objectContaining({
+        database: 'MART',
+        schemaCountLabel: '1 schema',
+        tableCountLabel: '1 table',
+        selected: true,
+        schemaGroups: [
+          expect.objectContaining({
+            schema: 'FINANCE',
+            tableCountLabel: '1 table',
+            selected: true,
+            tables: [expect.objectContaining({ canonicalName: 'MART.FINANCE.REVENUE' })],
+          }),
+        ],
+      }),
+      expect.objectContaining({
+        database: 'RAW',
+        schemaCountLabel: '2 schemas',
+        tableCountLabel: '2 tables',
+        selected: false,
+        schemaGroups: [
+          expect.objectContaining({
+            schema: 'CRM',
+            tables: [expect.objectContaining({ canonicalName: 'RAW.CRM.CUSTOMERS' })],
+          }),
+          expect.objectContaining({
+            schema: 'ERP',
+            tables: [expect.objectContaining({ canonicalName: 'RAW.ERP.ORDERS' })],
+          }),
+        ],
       }),
     ]);
   });

@@ -165,6 +165,11 @@ export function createSourceImportWizardHarness() {
       button.textContent?.includes(text)
     );
 
+  const findButtonByLabel = (label: string): HTMLButtonElement | undefined =>
+    Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.getAttribute('aria-label') === label
+    );
+
   const findConnectionOption = (text: string): HTMLButtonElement | undefined =>
     Array.from(
       document.querySelectorAll<HTMLButtonElement>('[data-slot="source-import-connection-option"]')
@@ -174,6 +179,11 @@ export function createSourceImportWizardHarness() {
     Array.from(document.querySelectorAll<HTMLDivElement>('div.cursor-pointer')).find((node) =>
       node.textContent?.includes(text)
     );
+
+  const findTableSelectionCheckbox = (canonicalName: string): HTMLButtonElement | undefined =>
+    document.querySelector<HTMLButtonElement>(
+      `[data-source-import-table-select="${canonicalName}"]`
+    ) ?? undefined;
 
   async function clickTab(name: string): Promise<void> {
     const tab = requireElement(findTab(name), `EXPECTED_TAB:${name}`);
@@ -189,6 +199,16 @@ export function createSourceImportWizardHarness() {
     });
   }
 
+  async function clickTableSelectionCheckbox(canonicalName: string): Promise<void> {
+    const checkbox = requireElement(
+      findTableSelectionCheckbox(canonicalName),
+      `EXPECTED_TABLE_SELECTION:${canonicalName}`
+    );
+    await act(async () => {
+      checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  }
+
   async function clickConnectionOption(text: string): Promise<void> {
     const button = requireElement(findConnectionOption(text), `EXPECTED_CONNECTION_OPTION:${text}`);
     await act(async () => {
@@ -198,6 +218,13 @@ export function createSourceImportWizardHarness() {
 
   async function clickButtonContaining(text: string): Promise<void> {
     const button = requireElement(findButtonContaining(text), `EXPECTED_BUTTON:${text}`);
+    await act(async () => {
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  }
+
+  async function clickButtonByLabel(label: string): Promise<void> {
+    const button = requireElement(findButtonByLabel(label), `EXPECTED_BUTTON_LABEL:${label}`);
     await act(async () => {
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
@@ -218,11 +245,14 @@ export function createSourceImportWizardHarness() {
     findNextButton,
     findTab,
     findButtonContaining,
+    findButtonByLabel,
     findConnectionOption,
     clickTab,
     clickConnectionOption,
     clickClickableDivByText,
+    clickTableSelectionCheckbox,
     clickButtonContaining,
+    clickButtonByLabel,
     cleanup,
   };
 }

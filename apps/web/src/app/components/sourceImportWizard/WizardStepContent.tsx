@@ -20,8 +20,13 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             connections={state.connections}
             selectedConnection={state.selectedConnection}
             isLoadingConnections={state.isLoadingConnections}
+            isTestingConnection={state.isTestingConnection}
+            connectionTestResult={state.connectionTestResult}
             loadError={state.loadError}
             onSelectConnection={controller.setSelectedConnection}
+            onTestConnection={() => {
+              void controller.handleTestConnection();
+            }}
           />
         </div>
       );
@@ -31,8 +36,12 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
           <SelectionStep
             tables={state.tables}
             selectedCount={controller.selectedCount}
+            activeTableKey={state.activeTableKey}
+            tableSearchQuery={state.tableSearchQuery}
             isLoadingTables={state.isLoadingTables}
             loadError={state.loadError}
+            onTableSearchQueryChange={controller.setTableSearchQuery}
+            onActivateTable={controller.activateTable}
             onToggleSchema={controller.toggleSchema}
             onToggleTable={controller.toggleTable}
           />
@@ -62,6 +71,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             }
             sourceImportOptions={controller.sourceImportOptions}
             sourceImportOptionValues={controller.sourceImportOptionValues}
+            onRemoveTable={controller.toggleTable}
           />
         </div>
       );

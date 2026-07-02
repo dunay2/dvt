@@ -82,10 +82,24 @@ describe('Canvas source import live clean proof', () => {
     cy.contains('[data-slot="source-import-connection-option"]', 'Local Postgres proof', {
       timeout: 20_000,
     }).click();
+    cy.contains('[role="dialog"] button', 'Test connection').should('be.enabled').click();
+    cy.contains('[role="dialog"]', 'Connection passed', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[role="dialog"]', 'tables reachable').should('be.visible');
 
     cy.contains('[role="tab"]', 'Browse').click();
+    cy.get('[data-slot="source-import-table-search"]', { timeout: 20_000 })
+      .should('be.visible')
+      .clear()
+      .type('order_id');
+    cy.contains('[role="dialog"]', 'Source metadata').should('be.visible');
+    cy.contains('[role="dialog"]', 'dvt', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[role="dialog"]', 'public').should('be.visible');
+    cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-source-import-table="dvt.public.source_1"]', { timeout: 20_000 }).click();
+    cy.get('[data-source-import-table-select="dvt.public.source_1"]', { timeout: 20_000 }).click();
     cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
+    cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
+    cy.contains('[role="dialog"]', 'dvt.public.source_1').should('be.visible');
 
     cy.contains('[role="tab"]', 'Metadata').click();
     cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
@@ -100,7 +114,11 @@ describe('Canvas source import live clean proof', () => {
     cy.contains('[role="dialog"]', '[file] models/sources/src_public.yml').should('be.visible');
     cy.contains('[role="dialog"] button', 'Done').click();
 
-    cy.contains('.react-flow__node', 'source_1', { timeout: 20_000 }).should('be.visible');
+    cy.contains('.react-flow__node', 'Postgres', { timeout: 20_000 })
+      .should('be.visible')
+      .and('contain.text', 'public')
+      .and('contain.text', 'Columns')
+      .and('contain.text', 'models/sources/src_public.yml');
     cy.contains('Stale version').should('not.exist');
 
     readLiveWorkspaceFile('models/sources/src_public.yml', session).then((sourceYamlResponse) => {

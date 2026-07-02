@@ -286,6 +286,14 @@ const taskIdCommonFilterQueryNames = new Set([
   'focus',
   'real-work',
 ]);
+const featureIdCommonFilterQueryNames = new Set([
+  'feature-mechanization',
+  'feature-mechanization-components',
+  'feature-mechanization-symbols',
+  'feature-mechanization-rails',
+  'feature-mechanization-validations',
+]);
+const railCommonFilterQueryNames = new Set(['command-query-rails']);
 const pathCommonFilterQueryNames = new Set([
   'files',
   'frontend-component-files',
@@ -364,7 +372,7 @@ function isHelpFlag(value) {
 function buildPlanningDbQueryHelpText(queryName) {
   const sortedQueries = [...knownQueries].sort();
   const commonOptions = [
-    '--filter <value> (task id, path, or component where supported)',
+    '--filter <value> (task id, path, component, rail, or feature id where supported)',
     '--limit <n>',
     '--component <id>',
     '--state <state>',
@@ -393,10 +401,14 @@ function buildPlanningDbQueryHelpText(queryName) {
       );
     } else if (
       taskIdCommonFilterQueryNames.has(queryName) ||
+      railCommonFilterQueryNames.has(queryName) ||
       pathCommonFilterQueryNames.has(queryName) ||
       componentCommonFilterQueryNames.has(queryName)
     ) {
-      examples.push(`  pnpm planning:db:query ${queryName} --filter E-PROP-DISP-1 --limit 20`);
+      const filterExample = railCommonFilterQueryNames.has(queryName)
+        ? 'RenderSourceImportCatalogView'
+        : 'E-PROP-DISP-1';
+      examples.push(`  pnpm planning:db:query ${queryName} --filter ${filterExample} --limit 20`);
     } else if (queryName === 'feature-mechanization-components') {
       examples.push(`  pnpm planning:db:query ${queryName} --state implemented --limit 20`);
     } else if (queryName === 'feature-mechanization-symbols') {
@@ -618,6 +630,16 @@ function parseOutputFormat(value) {
 function applyCommonFilter(filters, queryName, value) {
   if (taskIdCommonFilterQueryNames.has(queryName)) {
     filters.taskId = value;
+    return;
+  }
+
+  if (featureIdCommonFilterQueryNames.has(queryName)) {
+    filters.featureId = value;
+    return;
+  }
+
+  if (railCommonFilterQueryNames.has(queryName)) {
+    filters.rail = value;
     return;
   }
 

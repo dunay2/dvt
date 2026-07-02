@@ -80,6 +80,16 @@ test('parseArgs parses feature mechanization DB-first query filters', () => {
   });
 
   assert.deepEqual(
+    parseArgs(['feature-mechanization', '--filter', 'E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1']),
+    {
+      queryName: 'feature-mechanization',
+      filters: {
+        featureId: 'E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1',
+      },
+    }
+  );
+
+  assert.deepEqual(
     parseArgs(['feature-mechanization-components', '--state', 'implemented', '--limit', '10']),
     {
       queryName: 'feature-mechanization-components',
@@ -250,6 +260,7 @@ test('feature mechanization readers query DB-first manifest projections', async 
   };
 
   await readFeatureMechanizationFeatureRows(client, {
+    featureId: 'FEATURE-ONE',
     state: 'implemented',
     path: 'docs/planning/example.md',
     limit: 5,
@@ -272,9 +283,15 @@ test('feature mechanization readers query DB-first manifest projections', async 
   assert.match(sqlText, /from planning_query_store\.command_query_rail_manifest_query/);
   assert.match(sqlText, /distinct on \(rail\.rail_id\)/);
   assert.match(sqlText, /raw_manifest \? 'featureId'/);
-  assert.match(captured[0].sql, /manifest\.mechanization_status = \$1/);
-  assert.match(captured[0].sql, /manifest\.source_path = \$2/);
-  assert.deepEqual(captured[0].params, ['implemented', 'docs/planning/example.md', 5]);
+  assert.match(captured[0].sql, /manifest\.feature_id = \$1/);
+  assert.match(captured[0].sql, /manifest\.mechanization_status = \$2/);
+  assert.match(captured[0].sql, /manifest\.source_path = \$3/);
+  assert.deepEqual(captured[0].params, [
+    'FEATURE-ONE',
+    'implemented',
+    'docs/planning/example.md',
+    5,
+  ]);
   assert.match(captured[1].sql, /jsonb_array_elements_text/);
   assert.match(captured[1].sql, /componentGuides/);
   assert.deepEqual(captured[1].params, ['implemented', 6]);

@@ -117,6 +117,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
   async function readFeatureMechanizationFeatureRows(client, filters = {}) {
     const params = [];
     const predicates = [];
+    appendFilter(predicates, params, 'manifest.feature_id', filters.featureId);
     appendFilter(predicates, params, 'manifest.mechanization_status', filters.state);
     appendFilter(predicates, params, 'manifest.source_path', filters.path);
 
@@ -188,6 +189,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
   async function readFeatureMechanizationComponentRows(client, filters = {}) {
     const params = [];
     const predicates = [];
+    appendFilter(predicates, params, 'manifest.feature_id', filters.featureId);
     appendFilter(predicates, params, 'manifest.mechanization_status', filters.state);
     appendFilter(predicates, params, 'manifest.source_path', filters.path);
 
@@ -220,6 +222,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
     const params = [];
     const manifestPredicates = [];
     const symbolPredicates = [];
+    appendFilter(manifestPredicates, params, 'manifest.feature_id', filters.featureId);
     appendFilter(manifestPredicates, params, 'manifest.mechanization_status', filters.state);
     if (filters.path) {
       params.push(filters.path);
@@ -265,6 +268,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
   async function readFeatureMechanizationRailRows(client, filters = {}) {
     const params = [];
     const predicates = [];
+    appendFilter(predicates, params, 'rail.feature_id', filters.featureId);
     appendFilter(predicates, params, 'rail.mechanization_status', filters.state);
     appendFilter(predicates, params, 'rail.rail_type', filters.type);
     appendFilter(predicates, params, 'rail.rail_name', filters.rail);
@@ -297,6 +301,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
   async function readFeatureMechanizationValidationRows(client, filters = {}) {
     const params = [];
     const predicates = [];
+    appendFilter(predicates, params, 'validation_rows.feature_id', filters.featureId);
     appendFilter(predicates, params, 'validation_rows.mechanization_status', filters.state);
     appendFilter(predicates, params, 'validation_rows.validation_kind', filters.kind);
 

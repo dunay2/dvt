@@ -52,9 +52,12 @@ const initialState: SourceImportWizardState = {
   isProcessing: false,
   isLoadingConnections: false,
   isLoadingTables: false,
+  isTestingConnection: false,
+  connectionTestResult: null,
   loadError: null,
   importResult: null,
   activeTableKey: null,
+  tableSearchQuery: '',
 };
 
 function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
@@ -93,6 +96,7 @@ export function useSourceImportWizard({
       selectedConnection: initialSelection.connectionId,
       tables: [],
       activeTableKey: null,
+      tableSearchQuery: '',
       loadError: null,
       importResult: null,
     }));
@@ -129,7 +133,14 @@ export function useSourceImportWizard({
   const setCurrentStep = (currentStep: WizardStep) =>
     setState((prev) => ({ ...prev, currentStep }));
   const setCurrentSection = (section: SourceImportSection) => {
-    if (!canEnterSourceImportSection(section, state.selectedConnection, selectedCount)) {
+    if (
+      !canEnterSourceImportSection(
+        section,
+        state.selectedConnection,
+        selectedCount,
+        activeTable != null
+      )
+    ) {
       return;
     }
 
@@ -141,6 +152,9 @@ export function useSourceImportWizard({
       selectedConnection,
       tables: selectedConnection === prev.selectedConnection ? prev.tables : [],
       activeTableKey: selectedConnection === prev.selectedConnection ? prev.activeTableKey : null,
+      tableSearchQuery: selectedConnection === prev.selectedConnection ? prev.tableSearchQuery : '',
+      connectionTestResult:
+        selectedConnection === prev.selectedConnection ? prev.connectionTestResult : null,
       importResult: null,
     }));
   const setGroupingStrategy = (groupingStrategy: 'schema' | 'database' | 'custom') =>
@@ -152,6 +166,8 @@ export function useSourceImportWizard({
     setState((prev) => ({ ...prev, addFreshness }));
   const setSourceImportOption = (optionId: SourceImportOptionId, value: boolean) =>
     setState((prev) => ({ ...prev, [optionId]: value }));
+  const setTableSearchQuery = (tableSearchQuery: string) =>
+    setState((prev) => ({ ...prev, tableSearchQuery }));
 
   const handleNext = () => {
     if (state.currentStep === 'connection' && !state.selectedConnection) {
@@ -166,6 +182,32 @@ export function useSourceImportWizard({
   };
 
   const handleBack = () => setCurrentStep(getPreviousStep(state.currentStep));
+
+  const handleTestConnection = async () => {
+    if (!state.selectedConnection) {
+      setState((prev) => ({ ...prev, loadError: copy.selectConnectionError }));
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      isTestingConnection: true,
+      connectionTestResult: null,
+      loadError: null,
+    }));
+    try {
+      const connectionTestResult = await warehouseSourceImport.testWarehouseConnection(
+        state.selectedConnection
+      );
+      setState((prev) => ({ ...prev, connectionTestResult }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : copy.connection.testError;
+      setState((prev) => ({ ...prev, loadError: message }));
+      toast.error(message);
+    } finally {
+      setState((prev) => ({ ...prev, isTestingConnection: false }));
+    }
+  };
 
   const handleImport = async () => {
     if (!state.selectedConnection) {
@@ -225,6 +267,13 @@ export function useSourceImportWizard({
     }));
   };
 
+  const activateTable = (index: number) => {
+    setState((prev) => ({
+      ...prev,
+      activeTableKey: prev.tables[index] ? buildWarehouseTableKey(prev.tables[index]) : null,
+    }));
+  };
+
   const toggleSchema = (schema: string) => {
     setState((prev) => {
       const schemaTables = prev.tables.filter((table) => table.schema === schema);
@@ -255,7 +304,12 @@ export function useSourceImportWizard({
     canProceed,
     canImport,
     canEnterSection: (section: SourceImportSection) =>
-      canEnterSourceImportSection(section, state.selectedConnection, selectedCount),
+      canEnterSourceImportSection(
+        section,
+        state.selectedConnection,
+        selectedCount,
+        activeTable != null
+      ),
     setCurrentSection,
     setSelectedConnection,
     setGroupingStrategy,
@@ -263,10 +317,13 @@ export function useSourceImportWizard({
     setAddTests,
     setAddFreshness,
     setSourceImportOption,
+    setTableSearchQuery,
     handleNext,
     handleBack,
+    handleTestConnection,
     handleImport,
     handleComplete,
+    activateTable,
     toggleTable,
     toggleSchema,
   };
