@@ -274,6 +274,47 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('1 column');
   });
 
+  it('preserves selected table byte size in the import command payload', async () => {
+    const importSources = vi.fn(buildWarehouseSourceImportPort().importSources);
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        importSources,
+        listWarehouseTables: async () => [
+          buildWarehouseTable({
+            database: 'RAW',
+            schema: 'ERP',
+            table: 'ORDERS',
+            rowCount: 1500,
+            byteSize: 7340032,
+            columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+          }),
+        ],
+      }),
+    });
+
+    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickTab('Browse');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+    await harness.clickTab('Selected');
+    await harness.clickButtonContaining('Attach sources to canvas');
+
+    expect(importSources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connectionId: 'conn-1',
+        tables: [
+          expect.objectContaining({
+            database: 'RAW',
+            schema: 'ERP',
+            table: 'ORDERS',
+            rowCount: 1500,
+            byteSize: 7340032,
+          }),
+        ],
+      })
+    );
+  });
+
   it('lets users remove selected sources from the basket without losing active metadata', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({

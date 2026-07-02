@@ -11656,6 +11656,24 @@ test('tracked migrations register source import byte-size metadata flow', () => 
   assert.doesNotMatch(byteSizeMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register source import byte-size command payload mapper', () => {
+  const migrations = readMigrationFiles();
+  const payloadMapperMigration = migrations.find(
+    (migration) => migration.fileName === '500_source_import_byte_size_payload_mapper.sql'
+  );
+
+  assert.ok(payloadMapperMigration);
+  assert.match(payloadMapperMigration.sql, /E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1/);
+  assert.match(payloadMapperMigration.sql, /ImportWarehouseSources/);
+  assert.match(payloadMapperMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(payloadMapperMigration.sql, /useSourceImportWizard/);
+  assert.match(payloadMapperMigration.sql, /SourceImportWizard\.metadata\.test\.tsx/);
+  assert.match(payloadMapperMigration.sql, /SOURCE-IMPORT-BYTE-SIZE-WEB-PAYLOAD-001/);
+  assert.match(payloadMapperMigration.sql, /EV-SOURCE-IMPORT-BYTE-SIZE-PAYLOAD-MAPPER/);
+  assert.doesNotMatch(payloadMapperMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(payloadMapperMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node title plugin identity render path', () => {
   const migrations = readMigrationFiles();
   const pluginIdentityRenderPathMigration = migrations.find(
