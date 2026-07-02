@@ -66,6 +66,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             }
             sourceImportOptions={controller.sourceImportOptions}
             sourceImportOptionValues={controller.sourceImportOptionValues}
+            onRemoveTable={controller.toggleTable}
           />
         </div>
       );

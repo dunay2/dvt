@@ -97,7 +97,10 @@ export function SelectionStep({
           </div>
           <div className="space-y-4">
             <SourceImportActiveTableMetadata activeTable={activeBrowseTable} />
-            <SourceImportSelectionBasket selectedTables={catalogViewModel.selectedTables} />
+            <SourceImportSelectionBasket
+              selectedTables={catalogViewModel.selectedTables}
+              onRemoveTable={onToggleTable}
+            />
           </div>
         </div>
       )}

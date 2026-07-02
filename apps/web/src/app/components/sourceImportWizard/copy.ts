@@ -52,6 +52,12 @@ export const sourceImportWizardCopy = {
     description: 'Review the selected source objects before attaching them to the canvas.',
     previewTitle: 'Canvas attachment preview',
   },
+  selectionBasket: {
+    title: 'Selected sources',
+    empty: 'No source tables selected yet.',
+    selected: 'selected',
+    remove: 'Remove',
+  },
   result: {
     title: 'Sources attached',
     description: 'Your selected tables have been attached to the workspace graph.',

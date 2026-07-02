@@ -5,6 +5,7 @@ import { Separator } from '../ui/separator';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { sourceImportWizardCopy as copy } from './copy';
+import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
   buildPreviewGroups,
   buildSourceImportCatalogViewModel,
@@ -19,6 +20,7 @@ interface ReviewStepProps {
   selectedConnectionName: string;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
+  onRemoveTable: (tableIndex: number) => void;
 }
 
 export function ReviewStep({
@@ -28,6 +30,7 @@ export function ReviewStep({
   selectedConnectionName,
   sourceImportOptions,
   sourceImportOptionValues,
+  onRemoveTable,
 }: ReviewStepProps) {
   const previewGroups = buildPreviewGroups(tables, groupingStrategy);
   const catalogViewModel = buildSourceImportCatalogViewModel({
@@ -117,6 +120,11 @@ export function ReviewStep({
           </div>
         </ScrollArea>
       </Card>
+
+      <SourceImportSelectionBasket
+        selectedTables={catalogViewModel.selectedTables}
+        onRemoveTable={onRemoveTable}
+      />
     </div>
   );
 }

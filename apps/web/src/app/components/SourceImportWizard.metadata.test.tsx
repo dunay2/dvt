@@ -273,4 +273,35 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('1,500 rows');
     expect(document.body.textContent).toContain('1 column');
   });
+
+  it('lets users remove selected sources from the basket without losing active metadata', async () => {
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseTables: async () => [
+          buildWarehouseTable({
+            database: 'RAW',
+            schema: 'ERP',
+            table: 'ORDERS',
+            rowCount: 1500,
+            columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+          }),
+        ],
+      }),
+    });
+
+    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickTab('Browse');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+
+    expect(document.body.textContent).toContain('Selected: 1');
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain('order_id');
+
+    await harness.clickButtonByLabel('Remove RAW.ERP.ORDERS');
+
+    expect(document.body.textContent).toContain('Selected: 0');
+    expect(document.body.textContent).toContain('No source tables selected yet.');
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain('order_id');
+  });
 });

@@ -165,6 +165,11 @@ export function createSourceImportWizardHarness() {
       button.textContent?.includes(text)
     );
 
+  const findButtonByLabel = (label: string): HTMLButtonElement | undefined =>
+    Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find(
+      (button) => button.getAttribute('aria-label') === label
+    );
+
   const findConnectionOption = (text: string): HTMLButtonElement | undefined =>
     Array.from(
       document.querySelectorAll<HTMLButtonElement>('[data-slot="source-import-connection-option"]')
@@ -218,6 +223,13 @@ export function createSourceImportWizardHarness() {
     });
   }
 
+  async function clickButtonByLabel(label: string): Promise<void> {
+    const button = requireElement(findButtonByLabel(label), `EXPECTED_BUTTON_LABEL:${label}`);
+    await act(async () => {
+      button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  }
+
   function cleanup(): void {
     act(() => {
       root.unmount();
@@ -233,12 +245,14 @@ export function createSourceImportWizardHarness() {
     findNextButton,
     findTab,
     findButtonContaining,
+    findButtonByLabel,
     findConnectionOption,
     clickTab,
     clickConnectionOption,
     clickClickableDivByText,
     clickTableSelectionCheckbox,
     clickButtonContaining,
+    clickButtonByLabel,
     cleanup,
   };
 }
