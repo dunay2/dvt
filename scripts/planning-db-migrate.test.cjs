@@ -10882,7 +10882,36 @@ test('tracked migrations expose Graph node card view child composition as relati
   assert.match(compositionMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
   assert.match(compositionMigration.sql, /RenderCanvasGraphNodeCard/);
   assert.match(compositionMigration.sql, /architecture-relations/);
+  assert.doesNotMatch(compositionMigration.sql, /maturity_score\s*=/i);
   assert.doesNotMatch(compositionMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Graph node card view component maturity evidence', () => {
+  const migrations = readMigrationFiles();
+  const maturityMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '473_graph_node_card_view_composition_maturity_evidence.sql'
+  );
+
+  assert.ok(maturityMigration);
+  assert.match(maturityMigration.sql, /architecture\.component_responsibility/);
+  assert.match(maturityMigration.sql, /architecture\.component_test/);
+  assert.match(maturityMigration.sql, /architecture\.component_observability/);
+  assert.match(maturityMigration.sql, /maturity_score = null/);
+  assert.match(maturityMigration.sql, /RESP-GRAPH-NODE-CARD-VIEW/);
+  assert.match(maturityMigration.sql, /RESP-GRAPH-NODE-STATUS-CHIP/);
+  assert.match(maturityMigration.sql, /RESP-GRAPH-NODE-METRIC-ROW/);
+  assert.match(maturityMigration.sql, /RESP-GRAPH-NODE-TAG-LIST/);
+  assert.match(maturityMigration.sql, /RESP-GRAPH-NODE-OPERATIONAL-RAIL/);
+  assert.match(maturityMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(maturityMigration.sql, /GraphNodeStatusChip\.test\.tsx/);
+  assert.match(maturityMigration.sql, /GraphNodeMetricRow\.test\.tsx/);
+  assert.match(maturityMigration.sql, /GraphNodeTagList\.test\.tsx/);
+  assert.match(maturityMigration.sql, /GraphNodeOperationalRail\.test\.tsx/);
+  assert.match(maturityMigration.sql, /architecture-maturity/);
+  assert.match(maturityMigration.sql, /component-integrity/);
+  assert.match(maturityMigration.sql, /component-profile/);
+  assert.doesNotMatch(maturityMigration.sql, /truncate\s+/i);
 });
 
 test('tracked migrations register Node floating toolbar unavailable freeze posture', () => {

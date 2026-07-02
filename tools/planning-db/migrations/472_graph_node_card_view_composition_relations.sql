@@ -12,8 +12,7 @@ insert into architecture.component (
   public_contract,
   runtime,
   criticality,
-  status,
-  maturity_score
+  status
 )
 values
   (
@@ -26,8 +25,7 @@ values
     'RenderCanvasGraphNodeCard',
     'react',
     'high',
-    'implemented',
-    0.82
+    'implemented'
   ),
   (
     'web.component.canvas.GraphNodeStatusChip',
@@ -39,8 +37,7 @@ values
     'RenderCanvasGraphNodeCard',
     'react',
     'medium',
-    'implemented',
-    0.82
+    'implemented'
   ),
   (
     'web.component.canvas.GraphNodeMetricRow',
@@ -52,8 +49,7 @@ values
     'RenderCanvasGraphNodeCard',
     'react',
     'medium',
-    'implemented',
-    0.82
+    'implemented'
   ),
   (
     'web.component.canvas.GraphNodeTagList',
@@ -65,8 +61,7 @@ values
     'RenderCanvasGraphNodeCard',
     'react',
     'medium',
-    'implemented',
-    0.82
+    'implemented'
   ),
   (
     'web.component.canvas.GraphNodeOperationalRail',
@@ -78,8 +73,7 @@ values
     'RenderCanvasGraphNodeCard',
     'react',
     'high',
-    'implemented',
-    0.82
+    'implemented'
   )
 on conflict (component_id) do update set
   name = excluded.name,
@@ -91,7 +85,6 @@ on conflict (component_id) do update set
   runtime = excluded.runtime,
   criticality = excluded.criticality,
   status = excluded.status,
-  maturity_score = excluded.maturity_score,
   updated_at = now();
 
 insert into architecture.component_relation (
