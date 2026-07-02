@@ -10914,6 +10914,33 @@ test('tracked migrations complete Graph node card view component maturity eviden
   assert.doesNotMatch(maturityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node card node-actions launcher delegation', () => {
+  const migrations = readMigrationFiles();
+  const nodeActionsMigration = migrations.find(
+    (migration) => migration.fileName === '474_graph_node_card_node_actions_launcher.sql'
+  );
+
+  assert.ok(nodeActionsMigration);
+  assert.match(nodeActionsMigration.sql, /web\.component\.canvas\.GraphNodeCardView/);
+  assert.match(nodeActionsMigration.sql, /graph-node-card-actions/);
+  assert.match(nodeActionsMigration.sql, /MoreHorizontal/);
+  assert.match(nodeActionsMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(nodeActionsMigration.sql, /ResolveCanvasContextMenu/);
+  assert.match(nodeActionsMigration.sql, /ShowCanvasNodeContextMenu/);
+  assert.match(nodeActionsMigration.sql, /web\.component\.canvas\.CanvasNodeContextMenu/);
+  assert.match(nodeActionsMigration.sql, /doesNotRenderParallelNodeActionMenu/);
+  assert.match(nodeActionsMigration.sql, /openGovernedNodeActions/);
+  assert.match(nodeActionsMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(nodeActionsMigration.sql, /\{symbols\}/);
+  assert.match(nodeActionsMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(nodeActionsMigration.sql, /graphVisualTokens\.ts/);
+  assert.doesNotMatch(
+    nodeActionsMigration.sql,
+    /insert into planning_query_store\.command_query_rails/i
+  );
+  assert.doesNotMatch(nodeActionsMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Node floating toolbar unavailable freeze posture', () => {
   const migrations = readMigrationFiles();
   const freezePostureMigration = migrations.find(

@@ -1,6 +1,11 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
-import { useState, type CSSProperties, type ReactElement } from 'react';
-import { ChevronDown, ChevronUp, Play, Table } from 'lucide-react';
+import {
+  useState,
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  type ReactElement,
+} from 'react';
+import { ChevronDown, ChevronUp, MoreHorizontal, Play, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../components/ui/utils';
@@ -40,6 +45,25 @@ export type GraphNodeCardViewProps = Readonly<{
   playAction?: GraphNodeCardPlayAction | null;
   onOpenOperationalDetails?: (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => void;
 }>;
+
+function openGovernedNodeActions(event: ReactMouseEvent<HTMLButtonElement>): void {
+  event.preventDefault();
+  event.stopPropagation();
+
+  const trigger = event.currentTarget;
+  const rect = trigger.getBoundingClientRect();
+  const MouseEventConstructor =
+    trigger.ownerDocument.defaultView?.MouseEvent ?? globalThis.MouseEvent;
+  trigger.dispatchEvent(
+    new MouseEventConstructor('contextmenu', {
+      bubbles: true,
+      cancelable: true,
+      button: 2,
+      clientX: Math.max(8, rect.left),
+      clientY: Math.max(8, rect.bottom),
+    })
+  );
+}
 
 export function GraphNodeCardView({
   cardModel,
@@ -113,6 +137,16 @@ export function GraphNodeCardView({
                 <Play className={graphNodeCardLayoutClasses.playIcon} />
               </button>
             ) : null}
+            <button
+              type="button"
+              data-slot="graph-node-card-actions"
+              aria-label="Más acciones del nodo"
+              title="Más acciones del nodo"
+              onClick={openGovernedNodeActions}
+              className={graphNodeCardLayoutClasses.actionsButton}
+            >
+              <MoreHorizontal className={graphNodeCardLayoutClasses.actionsIcon} />
+            </button>
           </div>
         </div>
 

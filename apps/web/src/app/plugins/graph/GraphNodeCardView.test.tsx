@@ -96,6 +96,36 @@ describe('GraphNodeCardView', () => {
     expect(button?.className).toContain('focus-visible:opacity-100');
   });
 
+  it('opens governed node actions from the card action button without selecting the card', () => {
+    const onCardClick = vi.fn();
+    const onContextMenu = vi.fn((event: React.MouseEvent<HTMLDivElement>) =>
+      event.preventDefault()
+    );
+
+    act(() => {
+      root.render(
+        <div onClick={onCardClick} onContextMenu={onContextMenu}>
+          <GraphNodeCardView {...BASE_PROPS} />
+        </div>
+      );
+    });
+
+    const button = container.querySelector<HTMLButtonElement>(
+      '[data-slot="graph-node-card-actions"]'
+    );
+
+    expect(button).not.toBeNull();
+    expect(button?.getAttribute('aria-label')).toBe('Más acciones del nodo');
+    expect(button?.className).toContain('cursor-pointer');
+
+    act(() => {
+      fireEvent.click(button!);
+    });
+
+    expect(onContextMenu).toHaveBeenCalledOnce();
+    expect(onCardClick).not.toHaveBeenCalled();
+  });
+
   it('uses a stable professional card width from graph visual tokens', () => {
     act(() => {
       root.render(<GraphNodeCardView {...BASE_PROPS} />);
