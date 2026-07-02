@@ -3,7 +3,7 @@ import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
 import { sourceImportWizardCopy as copy } from './copy';
-import { buildSourceImportTableViewModel } from './sourceImportWizardModel';
+import { buildSourceImportTableViewModel } from './sourceImportCatalogModel';
 import type { TableInfo } from './types';
 
 type SourceImportActiveTableMetadataProps = Readonly<{

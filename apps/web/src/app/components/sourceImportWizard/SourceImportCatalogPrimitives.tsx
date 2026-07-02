@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
-import type { SourceImportTableViewModel } from './sourceImportWizardModel';
+import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
 
 export const sourceImportCatalogClassNames = {
   emptyState: 'border-slate-600 p-4 text-sm text-slate-300',

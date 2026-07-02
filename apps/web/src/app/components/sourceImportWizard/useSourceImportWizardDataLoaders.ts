@@ -3,7 +3,7 @@ import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
 import type { IWarehouseSourceImportPort, WarehouseTable } from '../../ports/workspace';
 import { sourceImportWizardCopy as copy } from './copy';
-import { buildWarehouseTableKey } from './sourceImportWizardModel';
+import { buildWarehouseTableKey } from './sourceImportCatalogModel';
 import type { SourceImportWizardState } from './types';
 
 interface LoaderParams {

@@ -7,7 +7,7 @@ import {
   SourceImportSchemaTableList,
   SourceImportTableCard,
 } from './SourceImportCatalogPrimitives';
-import type { SourceImportCatalogViewModel } from './sourceImportWizardModel';
+import type { SourceImportCatalogViewModel } from './sourceImportCatalogModel';
 
 type SourceImportCatalogViewProps = Readonly<{
   catalog: SourceImportCatalogViewModel;

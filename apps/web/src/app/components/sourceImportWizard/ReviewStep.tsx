@@ -7,10 +7,10 @@ import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { sourceImportWizardCopy as copy } from './copy';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
-  buildPreviewGroups,
   buildSourceImportCatalogViewModel,
   buildSourceImportTableViewModel,
-} from './sourceImportWizardModel';
+} from './sourceImportCatalogModel';
+import { buildPreviewGroups } from './sourceImportWizardModel';
 import type { TableInfo } from './types';
 
 interface ReviewStepProps {

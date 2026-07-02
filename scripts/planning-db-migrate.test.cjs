@@ -12314,3 +12314,60 @@ test('tracked migrations register source import destination posture copy evidenc
   assert.match(destinationPostureMigration.sql, /DVT Sink node/);
   assert.doesNotMatch(destinationPostureMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile source import catalog model ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) => migration.fileName === '505_source_import_catalog_model_ownership.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /sourceImportCatalogModel\.ts/);
+  assert.match(ownershipMigration.sql, /sourceImportCatalogModel\.test\.ts/);
+  assert.match(ownershipMigration.sql, /retiredForSourceImportCatalogOwnership/);
+  assert.match(ownershipMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(ownershipMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
+  assert.match(
+    ownershipMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_file_query/
+  );
+  assert.match(
+    ownershipMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare source import catalog model feature symbols', () => {
+  const migrations = readMigrationFiles();
+  const symbolMigration = migrations.find(
+    (migration) => migration.fileName === '506_source_import_catalog_model_feature_symbols.sql'
+  );
+
+  assert.ok(symbolMigration);
+  assert.match(symbolMigration.sql, /sourceImportCatalogModel\.ts#SourceImportCatalogViewModel/);
+  assert.match(
+    symbolMigration.sql,
+    /sourceImportCatalogModel\.ts#buildSourceImportCatalogViewModel/
+  );
+  assert.match(symbolMigration.sql, /sourceImportCatalogModel\.ts#tableMatchesSourceImportSearch/);
+  assert.match(symbolMigration.sql, /E-CANVAS-ADD-SOURCE-CATALOG-CATEGORIES-1/);
+  assert.match(symbolMigration.sql, /E-CANVAS-ADD-SOURCE-INSPECT-SELECT-1/);
+  assert.match(symbolMigration.sql, /RenderSourceImportCatalogView/);
+  assert.doesNotMatch(symbolMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations attach source import catalog model symbols to Cypress coverage', () => {
+  const migrations = readMigrationFiles();
+  const coverageMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '507_source_import_catalog_model_symbol_cypress_coverage.sql'
+  );
+
+  assert.ok(coverageMigration);
+  assert.match(coverageMigration.sql, /cypressCoverage/);
+  assert.match(coverageMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(coverageMigration.sql, /E-CANVAS-ADD-SOURCE-CATALOG-CATEGORIES-1/);
+  assert.match(coverageMigration.sql, /E-CANVAS-ADD-SOURCE-INSPECT-SELECT-1/);
+  assert.doesNotMatch(coverageMigration.sql, /truncate\s+/i);
+});
