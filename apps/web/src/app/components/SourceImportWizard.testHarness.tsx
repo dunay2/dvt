@@ -170,6 +170,12 @@ export function createSourceImportWizardHarness() {
       (button) => button.getAttribute('aria-label') === label
     );
 
+  const findInputByLabel = (label: string): HTMLInputElement | undefined =>
+    document.querySelector<HTMLInputElement>(`input[aria-label="${label}"]`) ?? undefined;
+
+  const findSelectByLabel = (label: string): HTMLSelectElement | undefined =>
+    document.querySelector<HTMLSelectElement>(`select[aria-label="${label}"]`) ?? undefined;
+
   const findConnectionOption = (text: string): HTMLButtonElement | undefined =>
     Array.from(
       document.querySelectorAll<HTMLButtonElement>('[data-slot="source-import-connection-option"]')
@@ -230,6 +236,24 @@ export function createSourceImportWizardHarness() {
     });
   }
 
+  async function fillInputByLabel(label: string, value: string): Promise<void> {
+    const input = requireElement(findInputByLabel(label), `EXPECTED_INPUT_LABEL:${label}`);
+    await act(async () => {
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  async function selectByLabel(label: string, value: string): Promise<void> {
+    const select = requireElement(findSelectByLabel(label), `EXPECTED_SELECT_LABEL:${label}`);
+    await act(async () => {
+      select.value = value;
+      select.dispatchEvent(new Event('input', { bubbles: true }));
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
   function cleanup(): void {
     act(() => {
       root.unmount();
@@ -253,6 +277,8 @@ export function createSourceImportWizardHarness() {
     clickTableSelectionCheckbox,
     clickButtonContaining,
     clickButtonByLabel,
+    fillInputByLabel,
+    selectByLabel,
     cleanup,
   };
 }

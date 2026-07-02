@@ -1,4 +1,5 @@
 import type {
+  CreateWarehouseConnectionInput,
   ImportSourcesResult,
   TestWarehouseConnectionResult,
   WarehouseConnection,
@@ -37,6 +38,8 @@ export interface SourceImportWizardState {
   currentStep: WizardStep;
   connections: WarehouseConnection[];
   selectedConnection: string | null;
+  createConnectionFormOpen: boolean;
+  createConnectionForm: CreateWarehouseConnectionInput;
   tables: TableInfo[];
   groupingStrategy: 'schema' | 'database' | 'custom';
   includeColumns: boolean;
@@ -45,9 +48,11 @@ export interface SourceImportWizardState {
   isProcessing: boolean;
   isLoadingConnections: boolean;
   isLoadingTables: boolean;
+  isCreatingConnection: boolean;
   isTestingConnection: boolean;
   connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: string | null;
+  createConnectionError: string | null;
   importResult: ImportSourcesResult | null;
   activeTableKey: string | null;
   tableSearchQuery: string;

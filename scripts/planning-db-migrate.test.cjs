@@ -12240,3 +12240,60 @@ test('tracked migrations register DBT transform cross-plugin port bridge', () =>
   assert.match(bridgeMigration.sql, /on conflict \(rail_id\) do update/);
   assert.doesNotMatch(bridgeMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register source import create connection flow', () => {
+  const migrations = readMigrationFiles();
+  const createConnectionMigration = migrations.find(
+    (migration) => migration.fileName === '501_source_import_create_connection_flow.sql'
+  );
+
+  assert.ok(createConnectionMigration);
+  assert.match(createConnectionMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(createConnectionMigration.sql, /CreateWarehouseConnection/);
+  assert.match(createConnectionMigration.sql, /WarehouseConnectionCreateForm\.tsx/);
+  assert.match(
+    createConnectionMigration.sql,
+    /IWarehouseSourceImportPort\.createWarehouseConnection/
+  );
+  assert.match(createConnectionMigration.sql, /POST \/workspace\/warehouse\/connections/);
+  assert.match(
+    createConnectionMigration.sql,
+    /missing required command fields do not invoke the port/
+  );
+  assert.match(createConnectionMigration.sql, /EV-SOURCE-IMPORT-CREATE-CONNECTION-PRESENTATION/);
+  assert.doesNotMatch(createConnectionMigration.sql, /raw_secret_capture.*false/i);
+  assert.doesNotMatch(createConnectionMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete source import create connection manifest', () => {
+  const migrations = readMigrationFiles();
+  const manifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '502_source_import_create_connection_manifest_completion.sql'
+  );
+
+  assert.ok(manifestMigration);
+  assert.match(manifestMigration.sql, /WarehouseConnectionCreateFormProps/);
+  assert.match(manifestMigration.sql, /warehouseConnectionTypes/);
+  assert.match(manifestMigration.sql, /normalizeCreateConnectionInput/);
+  assert.match(manifestMigration.sql, /isCreateConnectionInputComplete/);
+  assert.match(manifestMigration.sql, /upsertWarehouseConnection/);
+  assert.match(manifestMigration.sql, /cypressCoverage/);
+  assert.match(manifestMigration.sql, /completionGate/);
+  assert.doesNotMatch(manifestMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep source import create connection governance canonical', () => {
+  const migrations = readMigrationFiles();
+  const governanceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '503_source_import_create_connection_canonical_governance.sql'
+  );
+
+  assert.ok(governanceMigration);
+  assert.match(governanceMigration.sql, /governance-document-rule-inventory\.md/);
+  assert.match(governanceMigration.sql, /command-query-rail-governance\.md/);
+  assert.match(governanceMigration.sql, /fowler-opportunity-planning-governance\.md/);
+  assert.doesNotMatch(governanceMigration.sql, /buzon\//);
+  assert.doesNotMatch(governanceMigration.sql, /truncate\s+/i);
+});

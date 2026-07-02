@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import type {
+  CreateWarehouseConnectionInput,
   ImportSourcesResult,
   IWarehouseSourceImportPort,
   WarehouseConnection,
@@ -44,6 +45,13 @@ const initialState: SourceImportWizardState = {
   currentStep: 'connection',
   connections: [],
   selectedConnection: null,
+  createConnectionFormOpen: false,
+  createConnectionForm: {
+    name: '',
+    type: 'postgres',
+    database: '',
+    credentialRef: '',
+  },
   tables: [],
   groupingStrategy: 'schema',
   includeColumns: false,
@@ -52,9 +60,11 @@ const initialState: SourceImportWizardState = {
   isProcessing: false,
   isLoadingConnections: false,
   isLoadingTables: false,
+  isCreatingConnection: false,
   isTestingConnection: false,
   connectionTestResult: null,
   loadError: null,
+  createConnectionError: null,
   importResult: null,
   activeTableKey: null,
   tableSearchQuery: '',
@@ -62,6 +72,33 @@ const initialState: SourceImportWizardState = {
 
 function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
   return (result.importedNodeIds?.length ?? 0) > 0;
+}
+
+function normalizeCreateConnectionInput(
+  input: CreateWarehouseConnectionInput
+): CreateWarehouseConnectionInput {
+  return {
+    name: input.name.trim(),
+    type: input.type,
+    database: input.database.trim(),
+    credentialRef: input.credentialRef.trim(),
+  };
+}
+
+function isCreateConnectionInputComplete(input: CreateWarehouseConnectionInput): boolean {
+  return input.name.length > 0 && input.database.length > 0 && input.credentialRef.length > 0;
+}
+
+function upsertWarehouseConnection(
+  connections: readonly WarehouseConnection[],
+  nextConnection: WarehouseConnection
+): WarehouseConnection[] {
+  const replaced = connections.map((connection) =>
+    connection.id === nextConnection.id ? nextConnection : connection
+  );
+  return replaced.some((connection) => connection.id === nextConnection.id)
+    ? replaced
+    : [...connections, nextConnection];
 }
 
 export function useSourceImportWizard({
@@ -94,6 +131,8 @@ export function useSourceImportWizard({
       ...prev,
       currentStep: 'selection',
       selectedConnection: initialSelection.connectionId,
+      createConnectionFormOpen: false,
+      createConnectionError: null,
       tables: [],
       activeTableKey: null,
       tableSearchQuery: '',
@@ -150,6 +189,7 @@ export function useSourceImportWizard({
     setState((prev) => ({
       ...prev,
       selectedConnection,
+      createConnectionError: null,
       tables: selectedConnection === prev.selectedConnection ? prev.tables : [],
       activeTableKey: selectedConnection === prev.selectedConnection ? prev.activeTableKey : null,
       tableSearchQuery: selectedConnection === prev.selectedConnection ? prev.tableSearchQuery : '',
@@ -168,6 +208,31 @@ export function useSourceImportWizard({
     setState((prev) => ({ ...prev, [optionId]: value }));
   const setTableSearchQuery = (tableSearchQuery: string) =>
     setState((prev) => ({ ...prev, tableSearchQuery }));
+  const openCreateConnectionForm = () =>
+    setState((prev) => ({
+      ...prev,
+      createConnectionFormOpen: true,
+      createConnectionError: null,
+      loadError: null,
+    }));
+  const cancelCreateConnectionForm = () =>
+    setState((prev) => ({
+      ...prev,
+      createConnectionFormOpen: false,
+      createConnectionError: null,
+    }));
+  const setCreateConnectionFormField = <Field extends keyof CreateWarehouseConnectionInput>(
+    field: Field,
+    value: CreateWarehouseConnectionInput[Field]
+  ) =>
+    setState((prev) => ({
+      ...prev,
+      createConnectionForm: {
+        ...prev.createConnectionForm,
+        [field]: value,
+      },
+      createConnectionError: null,
+    }));
 
   const handleNext = () => {
     if (state.currentStep === 'connection' && !state.selectedConnection) {
@@ -206,6 +271,47 @@ export function useSourceImportWizard({
       toast.error(message);
     } finally {
       setState((prev) => ({ ...prev, isTestingConnection: false }));
+    }
+  };
+
+  const handleCreateConnection = async () => {
+    const input = normalizeCreateConnectionInput(state.createConnectionForm);
+    if (!isCreateConnectionInputComplete(input)) {
+      setState((prev) => ({
+        ...prev,
+        createConnectionError: copy.connection.createValidationError,
+      }));
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      isCreatingConnection: true,
+      createConnectionError: null,
+      loadError: null,
+      connectionTestResult: null,
+    }));
+    try {
+      const connection = await warehouseSourceImport.createWarehouseConnection(input);
+      setState((prev) => ({
+        ...prev,
+        connections: upsertWarehouseConnection(prev.connections, connection),
+        selectedConnection: connection.id,
+        createConnectionFormOpen: false,
+        createConnectionForm: initialWizardState.createConnectionForm,
+        tables: [],
+        activeTableKey: null,
+        tableSearchQuery: '',
+        connectionTestResult: null,
+        importResult: null,
+      }));
+      toast.success(copy.connection.createSuccess);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : copy.connection.createError;
+      setState((prev) => ({ ...prev, createConnectionError: message }));
+      toast.error(message);
+    } finally {
+      setState((prev) => ({ ...prev, isCreatingConnection: false }));
     }
   };
 
@@ -313,6 +419,9 @@ export function useSourceImportWizard({
       ),
     setCurrentSection,
     setSelectedConnection,
+    openCreateConnectionForm,
+    cancelCreateConnectionForm,
+    setCreateConnectionFormField,
     setGroupingStrategy,
     setIncludeColumns,
     setAddTests,
@@ -321,6 +430,7 @@ export function useSourceImportWizard({
     setTableSearchQuery,
     handleNext,
     handleBack,
+    handleCreateConnection,
     handleTestConnection,
     handleImport,
     handleComplete,
