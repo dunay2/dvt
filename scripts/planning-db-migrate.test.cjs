@@ -12371,3 +12371,26 @@ test('tracked migrations attach source import catalog model symbols to Cypress c
   assert.match(coverageMigration.sql, /E-CANVAS-ADD-SOURCE-INSPECT-SELECT-1/);
   assert.doesNotMatch(coverageMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile source import catalog model symbols across feature rails', () => {
+  const migrations = readMigrationFiles();
+  const reconcileMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '508_source_import_catalog_model_feature_symbol_reconcile.sql'
+  );
+
+  assert.ok(reconcileMigration);
+  assert.match(reconcileMigration.sql, /E-CANVAS-ADD-SOURCE-CATALOG-SEARCH-1/);
+  assert.match(reconcileMigration.sql, /E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1/);
+  assert.match(reconcileMigration.sql, /E-CANVAS-ADD-SOURCE-CATALOG-CATEGORIES-1/);
+  assert.match(reconcileMigration.sql, /E-CANVAS-ADD-SOURCE-INSPECT-SELECT-1/);
+  assert.match(reconcileMigration.sql, /sourceImportCatalogModel\.ts/);
+  assert.match(reconcileMigration.sql, /buildSourceImportCatalogViewModel/);
+  assert.match(reconcileMigration.sql, /normalizeCatalogSearchValue/);
+  assert.match(reconcileMigration.sql, /tableMatchesSourceImportSearch/);
+  assert.match(reconcileMigration.sql, /formatSourceImportByteSize/);
+  assert.match(reconcileMigration.sql, /sourceImportCatalogModel\.test\.ts/);
+  assert.match(reconcileMigration.sql, /SourceImportCatalogView\.architecture\.test\.ts/);
+  assert.match(reconcileMigration.sql, /cypressCoverage/);
+  assert.doesNotMatch(reconcileMigration.sql, /truncate\s+/i);
+});
