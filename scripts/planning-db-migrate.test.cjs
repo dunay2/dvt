@@ -11803,6 +11803,55 @@ test('tracked migrations register Graph node column section feature mechanizatio
   assert.doesNotMatch(columnSectionMechanizationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Graph node component ownership drift', () => {
+  const migrations = readMigrationFiles();
+  const driftMigration = migrations.find(
+    (migration) => migration.fileName === '481_graph_node_component_ownership_drift_reconcile.sql'
+  );
+
+  assert.ok(driftMigration);
+  assert.match(driftMigration.sql, /web\.component\.canvas\.GraphNodeOperationalRail/);
+  assert.match(driftMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(driftMigration.sql, /web\.component\.canvas\.GraphNodeOperationalSummary/);
+  assert.match(driftMigration.sql, /insert into architecture\.component/);
+  assert.match(driftMigration.sql, /ProjectGraphNodeCardReadModel/);
+  assert.match(driftMigration.sql, /graphNodeCardStrategyContracts\.ts/);
+  assert.match(driftMigration.sql, /graphNodeCardStrategyUtils\.ts/);
+  assert.match(driftMigration.sql, /graphNodeOperationalSummary\.ts/);
+  assert.match(driftMigration.sql, /graphNodeOperationalSummary\.test\.ts/);
+  assert.match(driftMigration.sql, /REL-GRAPH-NODE-OPERATIONAL-RAIL-CONSUMES-CARD-CONTRACTS/);
+  assert.match(driftMigration.sql, /REL-GRAPH-NODE-CARD-STRATEGY-USES-OPERATIONAL-SUMMARY/);
+  assert.match(driftMigration.sql, /EV-CANVAS-GRAPH-NODE-COMPONENT-OWNERSHIP-DRIFT-RECONCILE/);
+  assert.match(
+    driftMigration.sql,
+    /component-profile --component web\.component\.canvas\.GraphNodeOperationalRail/
+  );
+  assert.match(
+    driftMigration.sql,
+    /component-profile --component web\.component\.canvas\.GraphNodeCardStrategy/
+  );
+  assert.doesNotMatch(driftMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Graph node card strategy maturity evidence', () => {
+  const migrations = readMigrationFiles();
+  const maturityMigration = migrations.find(
+    (migration) => migration.fileName === '482_graph_node_card_strategy_maturity.sql'
+  );
+
+  assert.ok(maturityMigration);
+  assert.match(maturityMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(maturityMigration.sql, /RESP-GRAPH-NODE-CARD-STRATEGY/);
+  assert.match(maturityMigration.sql, /TEST-GRAPH-NODE-CARD-STRATEGY-READ-MODEL/);
+  assert.match(maturityMigration.sql, /OBS-GRAPH-NODE-CARD-STRATEGY-COMPONENT-PROFILE/);
+  assert.match(maturityMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(
+    maturityMigration.sql,
+    /component-integrity --component web\.component\.canvas\.GraphNodeCardStrategy/
+  );
+  assert.doesNotMatch(maturityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node card relation projection convergence', () => {
   const migrations = readMigrationFiles();
   const relationProjectionMigration = migrations.find(
