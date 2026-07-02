@@ -12297,3 +12297,20 @@ test('tracked migrations keep source import create connection governance canonic
   assert.doesNotMatch(governanceMigration.sql, /buzon\//);
   assert.doesNotMatch(governanceMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register source import destination posture copy evidence', () => {
+  const migrations = readMigrationFiles();
+  const destinationPostureMigration = migrations.find(
+    (migration) => migration.fileName === '504_source_import_destination_posture_copy.sql'
+  );
+
+  assert.ok(destinationPostureMigration);
+  assert.match(destinationPostureMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(destinationPostureMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(
+    destinationPostureMigration.sql,
+    /sourceImportWizardCopy\.selection\.destinationPosture/
+  );
+  assert.match(destinationPostureMigration.sql, /DVT Sink node/);
+  assert.doesNotMatch(destinationPostureMigration.sql, /truncate\s+/i);
+});

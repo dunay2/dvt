@@ -106,7 +106,10 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('Required');
     expect(document.body.textContent).toContain('email');
     expect(document.body.textContent).toContain('Nullable');
-    expect(document.body.textContent).toContain('Destination is configured on a DVT Sink node');
+    expect(document.body.textContent).toContain(
+      'Output target is selected on a DVT Sink node after sources are attached.'
+    );
+    expect(document.body.textContent).toContain('Choose database, schema, table, and write mode');
   });
 
   it('does not carry explorer preselection into a different warehouse connection', async () => {

@@ -56,8 +56,7 @@ export function SelectionStep({
           {copy.selection.descriptionPrefix} {selectedCount}
         </p>
         <div className="rounded border border-amber-800/70 bg-amber-950/20 px-3 py-2 text-xs text-amber-100/80">
-          Destination is configured on a DVT Sink node after origin registration; choose the output
-          target template from Insert and verify schema/table in the inspector.
+          {copy.selection.destinationPosture}
         </div>
       </div>
 
