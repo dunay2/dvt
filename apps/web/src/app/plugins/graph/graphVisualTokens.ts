@@ -22,6 +22,9 @@ export const graphNodeCardLayoutClasses = {
   playButton:
     'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-green-400/30 bg-green-500/15 text-green-300 opacity-0 transition hover:border-green-300/70 hover:bg-green-500/25 hover:text-green-100 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-40',
   playIcon: 'size-3.5 fill-current',
+  actionsButton:
+    'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-slate-700/70 bg-slate-900/80 text-slate-400 transition hover:border-slate-500 hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300',
+  actionsIcon: 'size-4',
   iconTone: {
     source: 'text-purple-300',
     model: 'text-blue-300',
