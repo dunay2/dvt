@@ -1,5 +1,6 @@
 import type {
   ImportSourcesResult,
+  TestWarehouseConnectionResult,
   WarehouseConnection,
   WarehouseTable,
 } from '../../ports/workspace';
@@ -44,6 +45,8 @@ export interface SourceImportWizardState {
   isProcessing: boolean;
   isLoadingConnections: boolean;
   isLoadingTables: boolean;
+  isTestingConnection: boolean;
+  connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: string | null;
   importResult: ImportSourcesResult | null;
   activeTableKey: string | null;

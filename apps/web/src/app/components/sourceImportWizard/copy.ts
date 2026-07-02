@@ -19,6 +19,12 @@ export const sourceImportWizardCopy = {
     empty: 'No governed database connections found.',
     emptyHint: 'Add database connections to the workspace catalog before importing sources.',
     noMatches: 'No governed connections match the current search.',
+    testAction: 'Test connection',
+    testingAction: 'Testing...',
+    testPassed: 'Connection passed',
+    testFailed: 'Connection failed',
+    testError: 'Failed to test warehouse connection.',
+    reachableTables: 'tables reachable',
   },
   selection: {
     title: 'Browse source tables',

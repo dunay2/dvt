@@ -82,6 +82,9 @@ describe('Canvas source import live clean proof', () => {
     cy.contains('[data-slot="source-import-connection-option"]', 'Local Postgres proof', {
       timeout: 20_000,
     }).click();
+    cy.contains('[role="dialog"] button', 'Test connection').should('be.enabled').click();
+    cy.contains('[role="dialog"]', 'Connection passed', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[role="dialog"]', 'tables reachable').should('be.visible');
 
     cy.contains('[role="tab"]', 'Browse').click();
     cy.get('[data-slot="source-import-table-search"]', { timeout: 20_000 })

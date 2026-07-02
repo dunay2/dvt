@@ -238,6 +238,7 @@ function buildLiveProofApiEnv({
     HOST: API_BIND_HOST,
     PORT: String(DEFAULT_API_PORT),
     DATABASE_URL: databaseUrl,
+    DVT_LOCAL_POSTGRES_WAREHOUSE_URL: databaseUrl,
     DVT_PG_SCHEMA: liveProofSchema,
     DVT_READYZ_ENABLED: 'true',
     DVT_VERSION_ENABLED: 'true',

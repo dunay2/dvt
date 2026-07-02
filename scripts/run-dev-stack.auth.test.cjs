@@ -57,6 +57,8 @@ test('local protected-runtime tenant actions include workspace authoring, files,
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:diff:view'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:plugins:view'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-import:view'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-connection:create'));
+  assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-connection:test'));
   assert.ok(LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS.includes('workspace:source-import:import'));
 });
 
@@ -118,6 +120,8 @@ test('startLocalProtectedRuntimeAuth publishes tenant actions for frontend permi
     assert.ok(scopes.includes('workspace:diff:view'));
     assert.ok(scopes.includes('workspace:plugins:view'));
     assert.ok(scopes.includes('workspace:source-import:view'));
+    assert.ok(scopes.includes('workspace:source-connection:create'));
+    assert.ok(scopes.includes('workspace:source-connection:test'));
     assert.ok(scopes.includes('workspace:source-import:import'));
   } finally {
     await bootstrap.close();

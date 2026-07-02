@@ -53,6 +53,27 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('ORDERS');
   });
 
+  it('tests the selected warehouse connection before browsing source tables', async () => {
+    const testWarehouseConnection = vi.fn(async (connectionId: string) => ({
+      connectionId,
+      status: 'passed' as const,
+      checkedAt: '2026-06-08T00:00:00.000Z',
+      tableCount: 12,
+    }));
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({ testWarehouseConnection }),
+    });
+
+    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickButtonContaining('Test connection');
+    await harness.flushPendingWork();
+
+    expect(testWarehouseConnection).toHaveBeenCalledWith('conn-1');
+    expect(document.body.textContent).toContain('Connection passed');
+    expect(document.body.textContent).toContain('12 tables reachable');
+  });
+
   it('completes import flow, applies imported sources immediately, and renders a passive result step', async () => {
     const onComplete = vi.fn();
     const onClose = vi.fn();
@@ -61,7 +82,7 @@ describe('SourceImportWizard', () => {
 
     await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
-    await harness.clickClickableDivByText('ORDERS');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 
@@ -109,7 +130,7 @@ describe('SourceImportWizard', () => {
 
     await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
-    await harness.clickClickableDivByText('ORDERS');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 

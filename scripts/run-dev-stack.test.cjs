@@ -73,6 +73,7 @@ test('buildApiEnv injects readiness flags and local postgres defaults for the co
   assert.equal(apiEnv.DVT_READYZ_ENABLED, 'true');
   assert.equal(apiEnv.DVT_DB_READY_ENABLED, 'true');
   assert.equal(apiEnv.DATABASE_URL, defaultPgUrl);
+  assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, defaultPgUrl);
   assert.equal(apiEnv.TEMPORAL_ADDRESS, '127.0.0.1:7233');
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.TEMPORAL_TASK_QUEUE, 'dvt-temporal');
@@ -97,6 +98,7 @@ test('buildApiEnv leaves database unset when postgres bootstrap is explicitly sk
   assert.equal(apiEnv.DVT_READYZ_ENABLED, 'true');
   assert.equal(apiEnv.DVT_DB_READY_ENABLED, undefined);
   assert.equal(apiEnv.DATABASE_URL, undefined);
+  assert.equal(apiEnv.DVT_LOCAL_POSTGRES_WAREHOUSE_URL, undefined);
   assert.equal(apiEnv.TEMPORAL_ADDRESS, undefined);
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, undefined);
 });
@@ -330,6 +332,7 @@ test('buildLocalWarehouseConnectionCatalog advertises the seeded local source ta
   const catalog = JSON.parse(buildLocalWarehouseConnectionCatalog());
 
   assert.equal(catalog.connections[0].id, 'local-postgres');
+  assert.equal(catalog.connections[0].credentialRef, 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL');
   assert.deepEqual(
     catalog.connections[0].tables.map((table) => `${table.schema}.${table.table}`),
     ['public.source_1', 'raw.orders']

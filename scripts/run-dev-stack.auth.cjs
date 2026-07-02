@@ -32,6 +32,8 @@ const LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS = Object.freeze([
   'workspace:diff:view',
   'workspace:plugins:view',
   'workspace:source-import:view',
+  'workspace:source-connection:create',
+  'workspace:source-connection:test',
   'workspace:source-import:import',
 ]);
 

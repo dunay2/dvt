@@ -20,8 +20,13 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             connections={state.connections}
             selectedConnection={state.selectedConnection}
             isLoadingConnections={state.isLoadingConnections}
+            isTestingConnection={state.isTestingConnection}
+            connectionTestResult={state.connectionTestResult}
             loadError={state.loadError}
             onSelectConnection={controller.setSelectedConnection}
+            onTestConnection={() => {
+              void controller.handleTestConnection();
+            }}
           />
         </div>
       );

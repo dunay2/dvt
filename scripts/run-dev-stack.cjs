@@ -131,6 +131,7 @@ function buildApiEnv(options, env = process.env) {
       ? {}
       : {
           DATABASE_URL: databaseUrl,
+          DVT_LOCAL_POSTGRES_WAREHOUSE_URL: databaseUrl,
           DVT_DB_READY_ENABLED: 'true',
         }),
   };
@@ -223,6 +224,7 @@ function buildLocalWarehouseConnectionCatalog() {
           name: 'Local Postgres proof',
           type: 'postgres',
           database: 'dvt',
+          credentialRef: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
           tables: [
             {
               database: 'dvt',
