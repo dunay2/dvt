@@ -123,6 +123,7 @@ function viewportEdgeEqual(left: Edge, right: Edge): boolean {
 function viewportNodeEqual(left: Node, right: Node): boolean {
   return (
     left.id === right.id &&
+    left.draggable === right.draggable &&
     viewportNodePositionEqual(left, right) &&
     viewportNodeDataEqual(left.data, right.data)
   );
