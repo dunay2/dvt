@@ -74,6 +74,77 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('12 tables reachable');
   });
 
+  it('creates a governed warehouse connection before browsing source tables', async () => {
+    const createWarehouseConnection = vi.fn(async () => ({
+      id: 'local-postgres-proof',
+      name: 'Local Postgres proof',
+      type: 'postgres' as const,
+      database: 'dvt',
+    }));
+    const listWarehouseTables = vi.fn(async () => [
+      {
+        database: 'dvt',
+        schema: 'public',
+        table: 'orders',
+        rowCount: 42,
+      },
+    ]);
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [],
+        createWarehouseConnection,
+        listWarehouseTables,
+      }),
+    });
+
+    await harness.clickButtonContaining('New connection');
+    await harness.fillInputByLabel('Connection name', 'Local Postgres proof');
+    await harness.selectByLabel('Connection type', 'postgres');
+    await harness.fillInputByLabel('Database', 'dvt');
+    await harness.fillInputByLabel('Credential reference', 'env:DVT_LOCAL_POSTGRES_URL');
+    await harness.clickButtonContaining('Create connection');
+    await harness.flushPendingWork();
+
+    expect(createWarehouseConnection).toHaveBeenCalledWith({
+      name: 'Local Postgres proof',
+      type: 'postgres',
+      database: 'dvt',
+      credentialRef: 'env:DVT_LOCAL_POSTGRES_URL',
+    });
+    expect(document.body.textContent).toContain('Local Postgres proof');
+    expect(document.body.textContent).toContain('postgres - dvt');
+
+    await harness.clickTab('Browse');
+    await harness.flushPendingWork();
+
+    expect(listWarehouseTables).toHaveBeenCalledWith('local-postgres-proof');
+    expect(document.body.textContent).toContain('dvt.public.orders');
+  });
+
+  it('does not create a warehouse connection when required command fields are missing', async () => {
+    const createWarehouseConnection = vi.fn(
+      buildWarehouseSourceImportPort().createWarehouseConnection
+    );
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [],
+        createWarehouseConnection,
+      }),
+    });
+
+    await harness.clickButtonContaining('New connection');
+    await harness.fillInputByLabel('Connection name', 'Incomplete connection');
+    await harness.clickButtonContaining('Create connection');
+    await harness.flushPendingWork();
+
+    expect(createWarehouseConnection).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain(
+      'Name, database, and credential reference are required.'
+    );
+  });
+
   it('completes import flow, applies imported sources immediately, and renders a passive result step', async () => {
     const onComplete = vi.fn();
     const onClose = vi.fn();

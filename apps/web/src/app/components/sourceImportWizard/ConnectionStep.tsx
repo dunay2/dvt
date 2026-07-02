@@ -1,20 +1,36 @@
 import { CheckCircle2, Database, Loader2, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import type { TestWarehouseConnectionResult, WarehouseConnection } from '../../ports/workspace';
+import type {
+  CreateWarehouseConnectionInput,
+  TestWarehouseConnectionResult,
+  WarehouseConnection,
+} from '../../ports/workspace';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { sourceImportWizardCopy as copy } from './copy';
+import { WarehouseConnectionCreateForm } from './WarehouseConnectionCreateForm';
 
 interface ConnectionStepProps {
   connections: WarehouseConnection[];
   selectedConnection: string | null;
+  createConnectionFormOpen: boolean;
+  createConnectionForm: CreateWarehouseConnectionInput;
   isLoadingConnections: boolean;
+  isCreatingConnection: boolean;
   isTestingConnection: boolean;
   connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: string | null;
+  createConnectionError: string | null;
   onSelectConnection: (connectionId: string) => void;
+  onOpenCreateConnectionForm: () => void;
+  onCancelCreateConnectionForm: () => void;
+  onCreateConnectionFormChange: <Field extends keyof CreateWarehouseConnectionInput>(
+    field: Field,
+    value: CreateWarehouseConnectionInput[Field]
+  ) => void;
+  onCreateConnection: () => void;
   onTestConnection: () => void;
 }
 
@@ -50,11 +66,19 @@ function formatConnectionCatalogSummary(connectionCount: number): string {
 export function ConnectionStep({
   connections,
   selectedConnection,
+  createConnectionFormOpen,
+  createConnectionForm,
   isLoadingConnections,
+  isCreatingConnection,
   isTestingConnection,
   connectionTestResult,
   loadError,
+  createConnectionError,
   onSelectConnection,
+  onOpenCreateConnectionForm,
+  onCancelCreateConnectionForm,
+  onCreateConnectionFormChange,
+  onCreateConnection,
   onTestConnection,
 }: ConnectionStepProps) {
   const [searchValue, setSearchValue] = useState('');
@@ -91,15 +115,28 @@ export function ConnectionStep({
                   <div>{formatConnectionCatalogSummary(connections.length)}</div>
                   <div className="truncate text-slate-500">{copy.connection.catalogSource}</div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={!selectedConnection || isTestingConnection}
-                  onClick={onTestConnection}
-                >
-                  {isTestingConnection ? copy.connection.testingAction : copy.connection.testAction}
-                </Button>
+                <div className="flex shrink-0 gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isCreatingConnection}
+                    onClick={onOpenCreateConnectionForm}
+                  >
+                    {copy.connection.createAction}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!selectedConnection || isTestingConnection}
+                    onClick={onTestConnection}
+                  >
+                    {isTestingConnection
+                      ? copy.connection.testingAction
+                      : copy.connection.testAction}
+                  </Button>
+                </div>
               </div>
               <label className="flex items-center gap-2 rounded-md border border-slate-700 bg-slate-950 px-3 py-2">
                 <Search className="size-4 shrink-0 text-slate-400" />
@@ -114,6 +151,17 @@ export function ConnectionStep({
                 />
               </label>
             </div>
+
+            {createConnectionFormOpen ? (
+              <WarehouseConnectionCreateForm
+                form={createConnectionForm}
+                isCreating={isCreatingConnection}
+                error={createConnectionError}
+                onFieldChange={onCreateConnectionFormChange}
+                onCancel={onCancelCreateConnectionForm}
+                onSubmit={onCreateConnection}
+              />
+            ) : null}
 
             {connectionTestResult ? (
               <Card

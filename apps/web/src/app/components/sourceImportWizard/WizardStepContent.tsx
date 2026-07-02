@@ -19,11 +19,21 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
           <ConnectionStep
             connections={state.connections}
             selectedConnection={state.selectedConnection}
+            createConnectionFormOpen={state.createConnectionFormOpen}
+            createConnectionForm={state.createConnectionForm}
             isLoadingConnections={state.isLoadingConnections}
+            isCreatingConnection={state.isCreatingConnection}
             isTestingConnection={state.isTestingConnection}
             connectionTestResult={state.connectionTestResult}
             loadError={state.loadError}
+            createConnectionError={state.createConnectionError}
             onSelectConnection={controller.setSelectedConnection}
+            onOpenCreateConnectionForm={controller.openCreateConnectionForm}
+            onCancelCreateConnectionForm={controller.cancelCreateConnectionForm}
+            onCreateConnectionFormChange={controller.setCreateConnectionFormField}
+            onCreateConnection={() => {
+              void controller.handleCreateConnection();
+            }}
             onTestConnection={() => {
               void controller.handleTestConnection();
             }}
