@@ -123,6 +123,8 @@ describe('ImportWarehouseSourcesUseCase', () => {
             expect.objectContaining({
               id: 'src_warehouse_prod_analytics_erp_orders',
               metadata: expect.objectContaining({
+                connectionName: 'Production warehouse',
+                connectionType: 'postgres',
                 database: 'analytics',
                 schema: 'erp',
                 tableName: 'orders',

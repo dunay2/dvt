@@ -14,6 +14,7 @@ import type {
   ImportWarehouseSourcesInput,
   ImportWarehouseSourcesResult,
   SourceImportGrouping,
+  WarehouseConnection,
   WarehouseTable,
 } from '../ports/warehouseSourceImport.js';
 import {
@@ -53,6 +54,7 @@ export class ImportWarehouseSourcesUseCase {
       );
     }
 
+    const connection = await this.catalog.getConnection(input.connectionId);
     const catalogTables = await this.catalog.listTables(input.connectionId);
     const authoritativeTables: WarehouseTable[] = [];
     for (const selectedTable of input.tables) {
@@ -109,6 +111,7 @@ export class ImportWarehouseSourcesUseCase {
         ...input,
         tables: authoritativeTables,
       },
+      connection,
       sourceYamlBindings
     );
     const requestHash = createHash('sha256')
@@ -170,6 +173,7 @@ export class ImportWarehouseSourcesUseCase {
 function appendImportedSourceNodes(
   draft: WorkspaceGraphAuthoringDraft,
   input: ImportWarehouseSourcesInput,
+  connection: WarehouseConnection,
   sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>
 ): {
   readonly draft: WorkspaceGraphAuthoringDraft;
@@ -194,6 +198,7 @@ function appendImportedSourceNodes(
     importedNodes.push(
       toSourceNode(
         table,
+        connection,
         input.groupingStrategy,
         input.includeColumns,
         sourceYamlBindings.get(toSourceTableKey(table))
@@ -228,6 +233,7 @@ function appendImportedSourceNodes(
 
 function toSourceNode(
   table: WarehouseTable,
+  connection: WarehouseConnection,
   groupingStrategy: SourceImportGrouping,
   includeColumns: boolean,
   sourceYamlBinding: WarehouseSourceYamlBinding | undefined
@@ -248,6 +254,8 @@ function toSourceNode(
     metadata: {
       sourceName: sourceYamlBinding?.sourceName ?? schema,
       tableName,
+      connectionName: connection.name,
+      connectionType: connection.type,
       database: table.database,
       schema: table.schema,
       ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
