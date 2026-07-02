@@ -11697,6 +11697,64 @@ test('tracked migrations complete Graph node operational summary maturity eviden
   assert.doesNotMatch(operationalSummaryMaturityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Graph node card visual token ownership', () => {
+  const migrations = readMigrationFiles();
+  const visualTokenOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '477_graph_node_card_visual_token_ownership_reconcile.sql'
+  );
+
+  assert.ok(visualTokenOwnershipMigration);
+  assert.match(visualTokenOwnershipMigration.sql, /web\.component\.canvas\.GraphVisualTokens/);
+  assert.match(visualTokenOwnershipMigration.sql, /web\.component\.canvas\.GraphNodeCardView/);
+  assert.match(visualTokenOwnershipMigration.sql, /graphVisualTokens\.ts/);
+  assert.match(
+    visualTokenOwnershipMigration.sql,
+    /REL-GRAPH-NODE-CARD-VIEW-USES-GRAPH-VISUAL-TOKENS/
+  );
+  assert.match(visualTokenOwnershipMigration.sql, /RenderCanvasGraphVisualTokens/);
+  assert.match(visualTokenOwnershipMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(
+    visualTokenOwnershipMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.match(
+    visualTokenOwnershipMigration.sql,
+    /GraphNodeCardView no longer owns graphVisualTokens\.ts/
+  );
+  assert.doesNotMatch(visualTokenOwnershipMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Graph visual token consumer maturity evidence', () => {
+  const migrations = readMigrationFiles();
+  const visualTokenMaturityMigration = migrations.find(
+    (migration) => migration.fileName === '478_graph_visual_tokens_consumer_maturity.sql'
+  );
+
+  assert.ok(visualTokenMaturityMigration);
+  assert.match(visualTokenMaturityMigration.sql, /web\.component\.canvas\.GraphVisualTokens/);
+  assert.match(
+    visualTokenMaturityMigration.sql,
+    /web\.component\.canvas\.GraphNodeOperationalRail/
+  );
+  assert.match(visualTokenMaturityMigration.sql, /graphVisualTokens\.ts/);
+  assert.match(
+    visualTokenMaturityMigration.sql,
+    /REL-GRAPH-NODE-OPERATIONAL-RAIL-USES-GRAPH-VISUAL-TOKENS/
+  );
+  assert.match(visualTokenMaturityMigration.sql, /RESP-GRAPH-VISUAL-TOKENS/);
+  assert.match(visualTokenMaturityMigration.sql, /TEST-GRAPH-VISUAL-TOKENS/);
+  assert.match(visualTokenMaturityMigration.sql, /OBS-GRAPH-VISUAL-TOKENS-COMPONENT-PROFILE/);
+  assert.match(
+    visualTokenMaturityMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.match(
+    visualTokenMaturityMigration.sql,
+    /GraphNodeOperationalRail no longer owns graphVisualTokens\.ts/
+  );
+  assert.doesNotMatch(visualTokenMaturityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node card relation projection convergence', () => {
   const migrations = readMigrationFiles();
   const relationProjectionMigration = migrations.find(
