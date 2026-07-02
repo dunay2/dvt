@@ -34,6 +34,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
             table_schema: 'public',
             table_name: 'orders',
             row_count: '128',
+            byte_size: '4096000',
           },
         ],
       })
@@ -84,6 +85,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
           schema: 'public',
           table: 'orders',
           rowCount: 128,
+          byteSize: 4096000,
           columns: [
             {
               name: 'order_id',
@@ -102,6 +104,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
       ],
     });
     expect(pgMock.query).toHaveBeenCalledTimes(2);
+    expect(pgMock.query.mock.calls[0]?.[0]).toContain('pg_total_relation_size(relation.oid)');
     expect(pgMock.end).toHaveBeenCalledTimes(1);
   });
 });

@@ -153,6 +153,7 @@ export function SourceImportTableCard({
         </div>
         <div className={sourceImportCatalogClassNames.tableMetrics}>
           <div>{table.rowCountLabel}</div>
+          {table.byteSizeLabel == null ? null : <div>{table.byteSizeLabel}</div>}
           <div>{table.columnCountLabel}</div>
         </div>
       </div>

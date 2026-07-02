@@ -16,6 +16,7 @@ type PostgresTableDiscoveryRow = {
   readonly table_schema: string;
   readonly table_name: string;
   readonly row_count: number | string | null;
+  readonly byte_size: number | string | null;
 };
 
 type PostgresColumnDiscoveryRow = {
@@ -125,7 +126,8 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
       const result = await client.query<PostgresTableDiscoveryRow>(
         [
           'select current_database() as table_catalog, namespace.nspname as table_schema, relation.relname as table_name,',
-          'case when relation.reltuples >= 0 then relation.reltuples::bigint else null end as row_count',
+          'case when relation.reltuples >= 0 then relation.reltuples::bigint else null end as row_count,',
+          "case when relation.relkind in ('r', 'p', 'm') then pg_total_relation_size(relation.oid)::bigint else null end as byte_size",
           'from pg_class relation',
           'join pg_namespace namespace on namespace.oid = relation.relnamespace',
           "where namespace.nspname not in ('pg_catalog', 'information_schema')",
@@ -215,11 +217,13 @@ function toWarehouseTable(
   columns: readonly WarehouseColumn[]
 ): WarehouseTable {
   const rowCount = parseOptionalRowCount(row.row_count);
+  const byteSize = parseOptionalByteSize(row.byte_size);
   return {
     database: row.table_catalog,
     schema: row.table_schema,
     table: row.table_name,
     ...(rowCount !== undefined ? { rowCount } : {}),
+    ...(byteSize !== undefined ? { byteSize } : {}),
     ...(columns.length > 0 ? { columns } : {}),
   };
 }
@@ -250,6 +254,14 @@ function postgresTableKey(
 }
 
 function parseOptionalRowCount(value: number | string | null): number | undefined {
+  return parseOptionalNonNegativeInteger(value);
+}
+
+function parseOptionalByteSize(value: number | string | null): number | undefined {
+  return parseOptionalNonNegativeInteger(value);
+}
+
+function parseOptionalNonNegativeInteger(value: number | string | null): number | undefined {
   if (value === null) {
     return undefined;
   }

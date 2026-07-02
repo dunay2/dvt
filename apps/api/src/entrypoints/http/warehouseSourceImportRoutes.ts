@@ -378,7 +378,7 @@ function parseTables(input: readonly unknown[]): RouteParseResult<readonly Wareh
     if (!isRecord(item)) {
       return invalidBody();
     }
-    const { database, schema, table, rowCount, columns } = item;
+    const { database, schema, table, rowCount, byteSize, columns } = item;
     if (typeof database !== 'string' || typeof schema !== 'string' || typeof table !== 'string') {
       return invalidBody();
     }
@@ -386,6 +386,9 @@ function parseTables(input: readonly unknown[]): RouteParseResult<readonly Wareh
     let parsed: WarehouseTable = { database, schema, table };
     if (typeof rowCount === 'number') {
       parsed = { ...parsed, rowCount };
+    }
+    if (typeof byteSize === 'number') {
+      parsed = { ...parsed, byteSize };
     }
     if (Array.isArray(columns)) {
       const parsedColumns = parseColumns(columns);

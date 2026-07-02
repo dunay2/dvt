@@ -27,6 +27,7 @@ export type WarehouseTable = {
   readonly schema: string;
   readonly table: string;
   readonly rowCount?: number;
+  readonly byteSize?: number;
   readonly columns?: readonly WarehouseColumn[];
 };
 

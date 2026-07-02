@@ -259,6 +259,7 @@ function toSourceNode(
       database: table.database,
       schema: table.schema,
       ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
+      ...(table.byteSize !== undefined ? { byteSize: table.byteSize } : {}),
       columns: includeColumns ? table.columns : undefined,
     },
   };

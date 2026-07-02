@@ -11587,6 +11587,29 @@ test('tracked migrations register Graph node title warehouse source connection i
   assert.doesNotMatch(titleConnectionIdentityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register source import byte-size metadata flow', () => {
+  const migrations = readMigrationFiles();
+  const byteSizeMigration = migrations.find(
+    (migration) => migration.fileName === '487_source_import_byte_size_metadata_flow.sql'
+  );
+
+  assert.ok(byteSizeMigration);
+  assert.match(byteSizeMigration.sql, /E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1/);
+  assert.match(byteSizeMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(byteSizeMigration.sql, /ImportWarehouseSources/);
+  assert.match(byteSizeMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(byteSizeMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(byteSizeMigration.sql, /WarehouseTable\.byteSize/);
+  assert.match(byteSizeMigration.sql, /PostgresTableDiscoveryRow\.byte_size/);
+  assert.match(byteSizeMigration.sql, /parseOptionalByteSize/);
+  assert.match(byteSizeMigration.sql, /formatSourceImportByteSize/);
+  assert.match(byteSizeMigration.sql, /SourceImportCatalogPrimitives\.tsx/);
+  assert.match(byteSizeMigration.sql, /workspacePortDoubles\.ts/);
+  assert.match(byteSizeMigration.sql, /EV-SOURCE-IMPORT-CATALOG-BYTE-SIZE-LABEL/);
+  assert.doesNotMatch(byteSizeMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(byteSizeMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node title plugin identity render path', () => {
   const migrations = readMigrationFiles();
   const pluginIdentityRenderPathMigration = migrations.find(
