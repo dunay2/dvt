@@ -1,14 +1,10 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
-import {
-  useState,
-  type CSSProperties,
-  type MouseEvent as ReactMouseEvent,
-  type ReactElement,
-} from 'react';
-import { ChevronDown, ChevronUp, MoreHorizontal, Play, Table } from 'lucide-react';
+import { type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactElement } from 'react';
+import { MoreHorizontal, Play } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { cn } from '../../components/ui/utils';
+import { GraphNodeColumnSection, type GraphNodeColumn } from './GraphNodeColumnSection';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeStatusChip } from './GraphNodeStatusChip';
@@ -18,16 +14,9 @@ import type {
   GraphNodeCardReadModel,
   GraphNodeOperationalDetail,
 } from './graphNodeCardStrategyContracts';
-import {
-  graphNodeCardLayoutClasses,
-  graphNodeCardSurfaceClasses,
-  graphNodeColumnClasses,
-} from './graphVisualTokens';
+import { graphNodeCardLayoutClasses, graphNodeCardSurfaceClasses } from './graphVisualTokens';
 
-export type GraphNodeCardColumn = Readonly<{
-  name: string;
-  type: string;
-}>;
+export type GraphNodeCardColumn = GraphNodeColumn;
 
 export type GraphNodeCardViewProps = Readonly<{
   cardModel: GraphNodeCardReadModel;
@@ -81,7 +70,6 @@ export function GraphNodeCardView({
   playAction,
   onOpenOperationalDetails,
 }: GraphNodeCardViewProps): ReactElement {
-  const [columnsExpanded, setColumnsExpanded] = useState(false);
   const operationalDetail = cardModel.operationalDetail;
 
   return (
@@ -162,36 +150,7 @@ export function GraphNodeCardView({
 
         <GraphNodeTagList tags={tags} tone={cardModel.accentTone} />
 
-        {showColumns && (
-          <div className={graphNodeColumnClasses.shell}>
-            <button
-              type="button"
-              onClick={() => setColumnsExpanded((value) => !value)}
-              className={graphNodeColumnClasses.toggle}
-            >
-              <span className={graphNodeColumnClasses.toggleLabel}>
-                <Table className={graphNodeColumnClasses.toggleIcon} />
-                Columns ({columns.length})
-              </span>
-              {columnsExpanded ? (
-                <ChevronUp className={graphNodeColumnClasses.toggleIcon} />
-              ) : (
-                <ChevronDown className={graphNodeColumnClasses.toggleIcon} />
-              )}
-            </button>
-
-            {columnsExpanded && (
-              <div className={graphNodeColumnClasses.list}>
-                {columns.map((column) => (
-                  <div key={column.name} className={graphNodeColumnClasses.row}>
-                    <span className={graphNodeColumnClasses.name}>{column.name}</span>
-                    <span className={graphNodeColumnClasses.type}>{column.type}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        {showColumns && <GraphNodeColumnSection columns={columns} />}
       </div>
 
       {onOpenOperationalDetails == null || operationalDetail == null ? (

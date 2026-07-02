@@ -11755,6 +11755,54 @@ test('tracked migrations complete Graph visual token consumer maturity evidence'
   assert.doesNotMatch(visualTokenMaturityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node column section ownership', () => {
+  const migrations = readMigrationFiles();
+  const columnSectionMigration = migrations.find(
+    (migration) => migration.fileName === '479_graph_node_column_section_component.sql'
+  );
+
+  assert.ok(columnSectionMigration);
+  assert.match(columnSectionMigration.sql, /web\.component\.canvas\.GraphNodeColumnSection/);
+  assert.match(columnSectionMigration.sql, /web\.component\.canvas\.GraphNodeCardView/);
+  assert.match(columnSectionMigration.sql, /GraphNodeColumnSection\.tsx/);
+  assert.match(columnSectionMigration.sql, /GraphNodeColumnSection\.test\.tsx/);
+  assert.match(columnSectionMigration.sql, /'table'/);
+  assert.match(columnSectionMigration.sql, /'ui-view'/);
+  assert.match(columnSectionMigration.sql, /RenderCanvasGraphNodeColumnSection/);
+  assert.match(columnSectionMigration.sql, /REL-GRAPH-NODE-CARD-VIEW-COMPOSES-COLUMN-SECTION/);
+  assert.match(columnSectionMigration.sql, /RESP-GRAPH-NODE-COLUMN-SECTION/);
+  assert.match(columnSectionMigration.sql, /TEST-GRAPH-NODE-COLUMN-SECTION/);
+  assert.match(columnSectionMigration.sql, /OBS-GRAPH-NODE-COLUMN-SECTION-COMPONENT-PROFILE/);
+  assert.doesNotMatch(columnSectionMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register Graph node column section feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const columnSectionMechanizationMigration = migrations.find(
+    (migration) => migration.fileName === '480_graph_node_column_section_feature_mechanization.sql'
+  );
+
+  assert.ok(columnSectionMechanizationMigration);
+  assert.match(columnSectionMechanizationMigration.sql, /RenderCanvasGraphNodeColumnSection/);
+  assert.match(columnSectionMechanizationMigration.sql, /GraphNodeCardColumn/);
+  assert.match(columnSectionMechanizationMigration.sql, /GraphNodeColumn'/);
+  assert.match(columnSectionMechanizationMigration.sql, /GraphNodeColumnSection'/);
+  assert.match(columnSectionMechanizationMigration.sql, /GraphNodeColumnSectionProps/);
+  assert.match(
+    columnSectionMechanizationMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/GraphNodeColumnSection\.tsx/
+  );
+  assert.match(
+    columnSectionMechanizationMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/GraphNodeColumnSection\.test\.tsx/
+  );
+  assert.match(
+    columnSectionMechanizationMigration.sql,
+    /pnpm docs:feature-mechanization:implementation/
+  );
+  assert.doesNotMatch(columnSectionMechanizationMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node card relation projection convergence', () => {
   const migrations = readMigrationFiles();
   const relationProjectionMigration = migrations.find(
