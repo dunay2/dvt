@@ -21,6 +21,7 @@ interface SelectionStepProps {
   isLoadingTables: boolean;
   loadError: string | null;
   onTableSearchQueryChange: (query: string) => void;
+  onActivateTable: (index: number) => void;
   onToggleSchema: (schema: string) => void;
   onToggleTable: (index: number) => void;
 }
@@ -33,6 +34,7 @@ export function SelectionStep({
   isLoadingTables,
   loadError,
   onTableSearchQueryChange,
+  onActivateTable,
   onToggleSchema,
   onToggleTable,
 }: SelectionStepProps) {
@@ -87,6 +89,7 @@ export function SelectionStep({
               <SourceImportCatalogView
                 catalog={catalogViewModel}
                 emptyLabel={copy.selection.empty}
+                onActivateTable={onActivateTable}
                 onToggleSchema={onToggleSchema}
                 onToggleTable={onToggleTable}
               />

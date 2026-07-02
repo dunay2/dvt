@@ -175,6 +175,11 @@ export function createSourceImportWizardHarness() {
       node.textContent?.includes(text)
     );
 
+  const findTableSelectionCheckbox = (canonicalName: string): HTMLButtonElement | undefined =>
+    document.querySelector<HTMLButtonElement>(
+      `[data-source-import-table-select="${canonicalName}"]`
+    ) ?? undefined;
+
   async function clickTab(name: string): Promise<void> {
     const tab = requireElement(findTab(name), `EXPECTED_TAB:${name}`);
     await act(async () => {
@@ -186,6 +191,16 @@ export function createSourceImportWizardHarness() {
     const node = requireElement(findClickableDivByText(text), `EXPECTED_CLICKABLE_DIV:${text}`);
     await act(async () => {
       node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  }
+
+  async function clickTableSelectionCheckbox(canonicalName: string): Promise<void> {
+    const checkbox = requireElement(
+      findTableSelectionCheckbox(canonicalName),
+      `EXPECTED_TABLE_SELECTION:${canonicalName}`
+    );
+    await act(async () => {
+      checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
   }
 
@@ -222,6 +237,7 @@ export function createSourceImportWizardHarness() {
     clickTab,
     clickConnectionOption,
     clickClickableDivByText,
+    clickTableSelectionCheckbox,
     clickButtonContaining,
     cleanup,
   };

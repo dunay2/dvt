@@ -14,6 +14,7 @@ export type SourceImportTableViewModel = Readonly<{
   canonicalName: string;
   displayName: string;
   accessibilityLabel: string;
+  inspectionAccessibilityLabel: string;
   rowCountLabel: string;
   byteSizeLabel: string | null;
   columnCountLabel: string;
@@ -148,6 +149,7 @@ export function buildSourceImportTableViewModel(
     canonicalName,
     displayName: table.table,
     accessibilityLabel: `Select source table ${canonicalName}. ${accessibilityMetrics}.`,
+    inspectionAccessibilityLabel: `Inspect source table ${canonicalName} metadata. ${accessibilityMetrics}.`,
     rowCountLabel,
     byteSizeLabel,
     columnCountLabel,
@@ -326,13 +328,17 @@ export function resolveStepForSection(section: SourceImportSection): WizardStep 
 export function canEnterSourceImportSection(
   section: SourceImportSection,
   selectedConnection: string | null,
-  selectedCount: number
+  selectedCount: number,
+  hasActiveTable = selectedCount > 0
 ): boolean {
   if (section === 'connections') {
     return true;
   }
   if (section === 'browse') {
     return selectedConnection != null;
+  }
+  if (section === 'metadata') {
+    return selectedConnection != null && hasActiveTable;
   }
 
   return selectedConnection != null && selectedCount > 0;

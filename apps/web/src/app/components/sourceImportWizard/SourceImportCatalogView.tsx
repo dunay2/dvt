@@ -12,6 +12,7 @@ import type { SourceImportCatalogViewModel } from './sourceImportWizardModel';
 type SourceImportCatalogViewProps = Readonly<{
   catalog: SourceImportCatalogViewModel;
   emptyLabel: string;
+  onActivateTable: (index: number) => void;
   onToggleSchema: (schema: string) => void;
   onToggleTable: (index: number) => void;
 }>;
@@ -19,6 +20,7 @@ type SourceImportCatalogViewProps = Readonly<{
 export function SourceImportCatalogView({
   catalog,
   emptyLabel,
+  onActivateTable,
   onToggleSchema,
   onToggleTable,
 }: SourceImportCatalogViewProps): JSX.Element {
@@ -49,6 +51,7 @@ export function SourceImportCatalogView({
                   <SourceImportTableCard
                     key={table.canonicalName}
                     table={table}
+                    onActivate={() => onActivateTable(table.index)}
                     onToggle={() => onToggleTable(table.index)}
                   />
                 ))}

@@ -53,6 +53,7 @@ type SourceImportDatabaseHeaderProps = Readonly<{
 
 type SourceImportTableCardProps = Readonly<{
   table: SourceImportTableViewModel;
+  onActivate: () => void;
   onToggle: () => void;
 }>;
 
@@ -156,6 +157,7 @@ export function SourceImportColumnPreviewList({
 
 export function SourceImportTableCard({
   table,
+  onActivate,
   onToggle,
 }: SourceImportTableCardProps): JSX.Element {
   const tableCardClassName = table.selected
@@ -166,14 +168,14 @@ export function SourceImportTableCard({
     <div
       role="button"
       tabIndex={0}
-      aria-label={table.accessibilityLabel}
+      aria-label={table.inspectionAccessibilityLabel}
       data-source-import-table={table.canonicalName}
       className={tableCardClassName}
-      onClick={onToggle}
+      onClick={onActivate}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          onToggle();
+          onActivate();
         }
       }}
     >
@@ -181,6 +183,7 @@ export function SourceImportTableCard({
         <div className={sourceImportCatalogClassNames.tableIdentity}>
           <Checkbox
             aria-label={table.accessibilityLabel}
+            data-source-import-table-select={table.canonicalName}
             checked={table.selected}
             onClick={(event) => {
               event.stopPropagation();

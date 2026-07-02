@@ -131,7 +131,14 @@ export function useSourceImportWizard({
   const setCurrentStep = (currentStep: WizardStep) =>
     setState((prev) => ({ ...prev, currentStep }));
   const setCurrentSection = (section: SourceImportSection) => {
-    if (!canEnterSourceImportSection(section, state.selectedConnection, selectedCount)) {
+    if (
+      !canEnterSourceImportSection(
+        section,
+        state.selectedConnection,
+        selectedCount,
+        activeTable != null
+      )
+    ) {
       return;
     }
 
@@ -230,6 +237,13 @@ export function useSourceImportWizard({
     }));
   };
 
+  const activateTable = (index: number) => {
+    setState((prev) => ({
+      ...prev,
+      activeTableKey: prev.tables[index] ? buildWarehouseTableKey(prev.tables[index]) : null,
+    }));
+  };
+
   const toggleSchema = (schema: string) => {
     setState((prev) => {
       const schemaTables = prev.tables.filter((table) => table.schema === schema);
@@ -260,7 +274,12 @@ export function useSourceImportWizard({
     canProceed,
     canImport,
     canEnterSection: (section: SourceImportSection) =>
-      canEnterSourceImportSection(section, state.selectedConnection, selectedCount),
+      canEnterSourceImportSection(
+        section,
+        state.selectedConnection,
+        selectedCount,
+        activeTable != null
+      ),
     setCurrentSection,
     setSelectedConnection,
     setGroupingStrategy,
@@ -273,6 +292,7 @@ export function useSourceImportWizard({
     handleBack,
     handleImport,
     handleComplete,
+    activateTable,
     toggleTable,
     toggleSchema,
   };

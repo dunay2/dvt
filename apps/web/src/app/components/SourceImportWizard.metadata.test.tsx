@@ -265,7 +265,7 @@ describe('SourceImportWizard metadata exploration', () => {
 
     await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
-    await harness.clickClickableDivByText('ORDERS');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
 
     expect(document.body.textContent).toContain('Selected sources');
     expect(document.body.textContent).toContain('1 selected');

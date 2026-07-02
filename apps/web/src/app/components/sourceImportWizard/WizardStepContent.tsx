@@ -36,6 +36,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             isLoadingTables={state.isLoadingTables}
             loadError={state.loadError}
             onTableSearchQueryChange={controller.setTableSearchQuery}
+            onActivateTable={controller.activateTable}
             onToggleSchema={controller.toggleSchema}
             onToggleTable={controller.toggleTable}
           />

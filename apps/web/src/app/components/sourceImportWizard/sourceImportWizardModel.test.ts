@@ -121,6 +121,7 @@ describe('sourceImportWizardModel', () => {
     expect(canEnterSourceImportSection('browse', null, 0)).toBe(false);
     expect(canEnterSourceImportSection('browse', 'conn-1', 0)).toBe(true);
     expect(canEnterSourceImportSection('metadata', 'conn-1', 0)).toBe(false);
+    expect(canEnterSourceImportSection('metadata', 'conn-1', 0, true)).toBe(true);
     expect(canEnterSourceImportSection('selected', 'conn-1', 1)).toBe(true);
   });
 
