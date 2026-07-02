@@ -57,6 +57,7 @@ export type GraphNodeCardReadModel = Readonly<{
   metrics: readonly GraphNodeCardMetric[];
   operationalMetrics: readonly GraphNodeCardMetric[];
   operationalDetail: GraphNodeOperationalDetail | null;
+  nodeActionsLabel: string;
 }>;
 
 export type GraphNodeCardStrategy = Readonly<{

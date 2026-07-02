@@ -20,6 +20,7 @@ const BASE_PROPS = {
     operationalMetrics: [],
     operationalDetail: null,
     accentTone: 'model' as const,
+    nodeActionsLabel: 'Open node menu',
   },
   typeLabel: 'Model',
   tags: [],
@@ -115,7 +116,7 @@ describe('GraphNodeCardView', () => {
     );
 
     expect(button).not.toBeNull();
-    expect(button?.getAttribute('aria-label')).toBe('Más acciones del nodo');
+    expect(button?.getAttribute('aria-label')).toBe('Open node menu');
     expect(button?.className).toContain('cursor-pointer');
 
     act(() => {
@@ -166,6 +167,7 @@ describe('GraphNodeCardView', () => {
               ],
             },
             accentTone: 'source',
+            nodeActionsLabel: 'Open node menu',
           }}
           tags={['postgres', 'public']}
         />

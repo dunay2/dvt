@@ -55,6 +55,7 @@ function buildDefaultCard(
     metrics,
     operationalMetrics: [],
     operationalDetail: buildGraphNodeOperationalDetail(titlePresentation.title, []),
+    nodeActionsLabel: 'Más acciones del nodo',
   };
 }
 
