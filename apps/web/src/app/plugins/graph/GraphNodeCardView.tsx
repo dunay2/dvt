@@ -128,8 +128,8 @@ export function GraphNodeCardView({
             <button
               type="button"
               data-slot="graph-node-card-actions"
-              aria-label="Más acciones del nodo"
-              title="Más acciones del nodo"
+              aria-label={cardModel.nodeActionsLabel}
+              title={cardModel.nodeActionsLabel}
               onClick={openGovernedNodeActions}
               className={graphNodeCardLayoutClasses.actionsButton}
             >

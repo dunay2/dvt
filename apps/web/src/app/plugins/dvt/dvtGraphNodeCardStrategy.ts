@@ -109,6 +109,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metrics,
     operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
+    nodeActionsLabel: 'Más acciones del nodo',
   };
 }
 

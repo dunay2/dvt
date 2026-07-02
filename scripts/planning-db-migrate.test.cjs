@@ -10941,6 +10941,30 @@ test('tracked migrations register Graph node card node-actions launcher delegati
   assert.doesNotMatch(nodeActionsMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations move Graph node card node-actions copy into the read model', () => {
+  const migrations = readMigrationFiles();
+  const nodeActionsCopyMigration = migrations.find(
+    (migration) => migration.fileName === '498_graph_node_card_node_actions_label_read_model.sql'
+  );
+
+  assert.ok(nodeActionsCopyMigration);
+  assert.match(nodeActionsCopyMigration.sql, /GraphNodeCardReadModel\.nodeActionsLabel/);
+  assert.match(nodeActionsCopyMigration.sql, /graphNodeCardStrategyContracts\.ts/);
+  assert.match(nodeActionsCopyMigration.sql, /defaultGraphNodeCardStrategy\.ts/);
+  assert.match(nodeActionsCopyMigration.sql, /dbtGraphNodeCardStrategy\.ts/);
+  assert.match(nodeActionsCopyMigration.sql, /dvtGraphNodeCardStrategy\.ts/);
+  assert.match(nodeActionsCopyMigration.sql, /GraphNodeCardView\.test\.tsx/);
+  assert.match(nodeActionsCopyMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(nodeActionsCopyMigration.sql, /suppliedCopyContract/);
+  assert.match(nodeActionsCopyMigration.sql, /cypressCoverage/);
+  assert.match(nodeActionsCopyMigration.sql, /\{symbols\}/);
+  assert.doesNotMatch(
+    nodeActionsCopyMigration.sql,
+    /insert into planning_query_store\.command_query_rails/i
+  );
+  assert.doesNotMatch(nodeActionsCopyMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Node floating toolbar unavailable freeze posture', () => {
   const migrations = readMigrationFiles();
   const freezePostureMigration = migrations.find(
