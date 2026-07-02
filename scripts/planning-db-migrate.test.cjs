@@ -11680,6 +11680,23 @@ test('tracked migrations promote Graph node operational summary to query compone
   assert.doesNotMatch(operationalSummaryOwnershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations complete Graph node operational summary maturity evidence', () => {
+  const migrations = readMigrationFiles();
+  const operationalSummaryMaturityMigration = migrations.find(
+    (migration) => migration.fileName === '476_graph_node_operational_summary_maturity_evidence.sql'
+  );
+
+  assert.ok(operationalSummaryMaturityMigration);
+  assert.match(operationalSummaryMaturityMigration.sql, /RESP-GRAPH-NODE-OPERATIONAL-SUMMARY/);
+  assert.match(operationalSummaryMaturityMigration.sql, /TEST-GRAPH-NODE-OPERATIONAL-SUMMARY/);
+  assert.match(
+    operationalSummaryMaturityMigration.sql,
+    /OBS-GRAPH-NODE-OPERATIONAL-SUMMARY-COMPONENT-PROFILE/
+  );
+  assert.match(operationalSummaryMaturityMigration.sql, /graphNodeOperationalSummary\.test\.ts/);
+  assert.doesNotMatch(operationalSummaryMaturityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node card relation projection convergence', () => {
   const migrations = readMigrationFiles();
   const relationProjectionMigration = migrations.find(
