@@ -11960,6 +11960,62 @@ test('tracked migrations reconcile Graph node component ownership drift', () => 
   assert.doesNotMatch(driftMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Graph node health popover contract ownership drift', () => {
+  const migrations = readMigrationFiles();
+  const healthPopoverDriftMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '496_graph_node_health_popover_contract_ownership_reconcile.sql'
+  );
+
+  assert.ok(healthPopoverDriftMigration);
+  assert.match(healthPopoverDriftMigration.sql, /web\.component\.canvas\.GraphNodeHealthPopover/);
+  assert.match(healthPopoverDriftMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(healthPopoverDriftMigration.sql, /graphNodeCardStrategyContracts\.ts/);
+  assert.match(
+    healthPopoverDriftMigration.sql,
+    /delete from planning_query_store\.frontend_component_local_files/
+  );
+  assert.match(
+    healthPopoverDriftMigration.sql,
+    /delete from planning_query_store\.frontend_component_files/
+  );
+  assert.match(
+    healthPopoverDriftMigration.sql,
+    /REL-GRAPH-NODE-HEALTH-POPOVER-CONSUMES-CARD-CONTRACTS/
+  );
+  assert.match(
+    healthPopoverDriftMigration.sql,
+    /GraphNodeHealthPopover consumes GraphNodeOperationalDetail/
+  );
+  assert.match(
+    healthPopoverDriftMigration.sql,
+    /component-profile --component web\.component\.canvas\.GraphNodeHealthPopover/
+  );
+  assert.doesNotMatch(healthPopoverDriftMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete Graph node health popover architecture maturity evidence', () => {
+  const migrations = readMigrationFiles();
+  const healthPopoverMaturityMigration = migrations.find(
+    (migration) => migration.fileName === '497_graph_node_health_popover_maturity_evidence.sql'
+  );
+
+  assert.ok(healthPopoverMaturityMigration);
+  assert.match(healthPopoverMaturityMigration.sql, /RESP-GRAPH-NODE-HEALTH-POPOVER/);
+  assert.match(healthPopoverMaturityMigration.sql, /TEST-GRAPH-NODE-HEALTH-POPOVER/);
+  assert.match(
+    healthPopoverMaturityMigration.sql,
+    /OBS-GRAPH-NODE-HEALTH-POPOVER-COMPONENT-PROFILE/
+  );
+  assert.match(healthPopoverMaturityMigration.sql, /GraphNodeHealthPopoverView\.test\.tsx/);
+  assert.match(
+    healthPopoverMaturityMigration.sql,
+    /component-profile --component web\.component\.canvas\.GraphNodeHealthPopover/
+  );
+  assert.doesNotMatch(healthPopoverMaturityMigration.sql, /graphNodeCardStrategyContracts\.ts/);
+  assert.doesNotMatch(healthPopoverMaturityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations complete Graph node card strategy maturity evidence', () => {
   const migrations = readMigrationFiles();
   const maturityMigration = migrations.find(
