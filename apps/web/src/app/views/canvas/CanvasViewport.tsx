@@ -46,6 +46,8 @@ type CanvasViewportProps = {
   readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
   readonly onDrop: DragEventHandler<HTMLDivElement>;
   readonly onDragOver: DragEventHandler<HTMLDivElement>;
+  readonly frozenNodeIds?: ReadonlySet<string>;
+  readonly onToggleFrozenNode?: (nodeId: string) => void;
   readonly authoringNodeKinds: readonly NodeKindRegistration[];
   readonly onCreateAuthoringNode: CreateCanvasAuthoringNode;
   readonly importedNodeFocusIds: string[];
@@ -201,12 +203,14 @@ function CanvasViewportWithPresenter({
         nodeId: node.id,
         nodeName,
         position: toolbarPosition,
+        frozen: props.frozenNodeIds?.has(node.id) ?? false,
         onOpenCode:
           typeof inspectNode === 'function'
             ? (nodeId) => {
                 inspectNode(nodeId, 'code');
               }
             : undefined,
+        onToggleFreeze: props.onToggleFrozenNode,
         onOpenMore:
           contextMenuTrigger == null
             ? undefined
@@ -225,7 +229,7 @@ function CanvasViewportWithPresenter({
       setNodeFloatingToolbarModel(nextToolbarModel.actions.length > 0 ? nextToolbarModel : null);
       props.onNodeClick(event, node);
     },
-    [closeNodeHealthPopover, props.onNodeClick]
+    [closeNodeHealthPopover, props.frozenNodeIds, props.onNodeClick, props.onToggleFrozenNode]
   );
 
   useCanvasViewportLifecycle({

@@ -115,6 +115,7 @@ function buildCanvasShellGraphArgs({
       canvasSnapToGrid: controller.canvasSnapToGrid,
       canvasEmptyStateGuideVisible: controller.canvasEmptyStateGuideVisible,
       viewport: controller.viewport,
+      frozenNodeIds: controller.frozenNodeIds,
     },
   };
 }
@@ -160,6 +161,7 @@ function buildCanvasShellGraphCommandsArgs({
       handleViewportChange: controller.handleViewportChange,
       handleDrop: controller.handleDrop,
       handleDragOver: controller.handleDragOver,
+      handleToggleFrozenNode: controller.handleToggleFrozenNode,
       handleCreateAuthoringNode: controller.handleCreateAuthoringNode,
       handleSourceImportComplete: controller.handleSourceImportComplete,
       handleImportedNodeFocusComplete: controller.handleImportedNodeFocusComplete,

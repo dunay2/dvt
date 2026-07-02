@@ -18,5 +18,6 @@ export function buildCanvasShellGraph({
     canvasSnapToGrid: graphState.canvasSnapToGrid,
     canvasEmptyStateGuideVisible: graphState.canvasEmptyStateGuideVisible,
     viewport: graphState.viewport,
+    frozenNodeIds: graphState.frozenNodeIds,
   };
 }

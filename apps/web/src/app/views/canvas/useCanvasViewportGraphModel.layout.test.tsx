@@ -50,4 +50,34 @@ describe('useCanvasViewportGraphModel layout', () => {
       await mounted.cleanup();
     }
   });
+
+  it('marks frozen viewport nodes as non-draggable without changing their position', async () => {
+    const args = {
+      ...buildViewportGraphModelArgs({
+        visibleNodeIds: ['source-node'],
+        visibleEdges: [],
+        draftSemanticGraph: {
+          canonicalNodes: [buildCanonicalNode('source-node', 'dvt:source', 'input')],
+          canonicalEdges: [],
+        },
+        persistedNodePositions: {
+          'source-node': { x: 40, y: 140 },
+        },
+      }),
+      frozenNodeIds: new Set(['source-node']),
+    } satisfies Parameters<typeof renderViewportGraphModel>[0] & {
+      frozenNodeIds: ReadonlySet<string>;
+    };
+    const mounted = await renderViewportGraphModel(args);
+
+    try {
+      expect(mounted.readState()?.nodes[0]).toMatchObject({
+        id: 'source-node',
+        position: { x: 40, y: 140 },
+        draggable: false,
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
 });

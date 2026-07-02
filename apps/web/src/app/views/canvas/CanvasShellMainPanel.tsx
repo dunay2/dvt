@@ -125,6 +125,8 @@ function CanvasShellViewport({
       canvasGridColor={graph.canvasGridColor}
       canvasSnapToGrid={graph.canvasSnapToGrid}
       viewport={graph.viewport}
+      frozenNodeIds={graph.frozenNodeIds}
+      onToggleFrozenNode={graphCommands.onToggleFrozenNode}
       onNodesChange={graphCommands.onNodesChange}
       onNodeDrag={graphCommands.onNodeDrag}
       onNodeDragStop={graphCommands.onNodeDragStop}

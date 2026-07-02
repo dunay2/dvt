@@ -12,6 +12,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
   workspaceLayoutKey,
   columnLevelLineageEnabled,
   persistedNodePositions,
+  frozenNodeIds,
   canPersistDraftTransport,
   workspaceScope,
   previewProvenanceConfig,
@@ -38,6 +39,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
     localCanonicalNodes,
     columnLevelLineageEnabled,
     persistedNodePositions,
+    frozenNodeIds,
   });
   const lifecycle = useCanvasDraftLifecycle({
     baseline: {

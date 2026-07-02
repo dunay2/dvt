@@ -130,6 +130,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       canvasSnapToGrid: false,
       canvasEmptyStateGuideVisible: true,
       viewport: null,
+      frozenNodeIds: new Set(),
       ...overrides?.graph,
     },
     chromeState: {
@@ -168,6 +169,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onViewportChange: vi.fn(),
       onDrop: vi.fn(),
       onDragOver: vi.fn(),
+      onToggleFrozenNode: vi.fn(),
       onCreateAuthoringNode: vi.fn(),
       onSourceImportComplete: vi.fn(),
       onImportedNodeFocusComplete: vi.fn(),

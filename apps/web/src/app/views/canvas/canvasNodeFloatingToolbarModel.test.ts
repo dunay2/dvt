@@ -10,17 +10,24 @@ function actionIds(model: CanvasNodeFloatingToolbarModel): string[] {
 }
 
 describe('buildCanvasNodeFloatingToolbarModel', () => {
-  it('projects code, unavailable freeze posture, and governed more launcher for the left-click node toolbar', () => {
+  it('projects code, operable freeze, and governed more launcher for the left-click node toolbar', () => {
     const onOpenCode = vi.fn();
     const onOpenMore = vi.fn();
-
-    const model = buildCanvasNodeFloatingToolbarModel({
+    const onToggleFreeze = vi.fn();
+    const input = {
       nodeId: 'model_orders',
       nodeName: 'Orders model',
       position: { x: 240, y: 120 },
+      frozen: false,
       onOpenCode,
       onOpenMore,
-    });
+      onToggleFreeze,
+    } satisfies Parameters<typeof buildCanvasNodeFloatingToolbarModel>[0] & {
+      frozen: boolean;
+      onToggleFreeze: (nodeId: string) => void;
+    };
+
+    const model = buildCanvasNodeFloatingToolbarModel(input);
 
     expect(model).toMatchObject({
       nodeId: 'model_orders',
@@ -39,8 +46,7 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
         id: 'freeze',
         label: 'Congelar',
         description: 'Mantener estable la posición y edición del nodo.',
-        available: false,
-        unavailableReason: 'La política de congelado del nodo aún no está disponible.',
+        available: true,
       }),
       expect.objectContaining({
         id: 'more',
@@ -51,10 +57,41 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
     ]);
 
     model.actions.find((action) => action.id === 'code')?.onSelect?.();
+    model.actions.find((action) => action.id === 'freeze')?.onSelect?.();
     model.actions.find((action) => action.id === 'more')?.onSelect?.();
 
     expect(onOpenCode).toHaveBeenCalledWith('model_orders');
+    expect(onToggleFreeze).toHaveBeenCalledWith('model_orders');
     expect(onOpenMore).toHaveBeenCalledWith('model_orders');
+  });
+
+  it('projects an operable unfreeze action when the selected node is frozen', () => {
+    const onToggleFreeze = vi.fn();
+    const input = {
+      nodeId: 'model_orders',
+      nodeName: 'Orders model',
+      position: { x: 240, y: 120 },
+      frozen: true,
+      onToggleFreeze,
+    } satisfies Parameters<typeof buildCanvasNodeFloatingToolbarModel>[0] & {
+      frozen: boolean;
+      onToggleFreeze: (nodeId: string) => void;
+    };
+
+    const model = buildCanvasNodeFloatingToolbarModel(input);
+    const freezeAction = model.actions.find((action) => action.id === 'freeze');
+
+    expect(freezeAction).toEqual(
+      expect.objectContaining({
+        label: 'Descongelar',
+        description: 'Permitir de nuevo el movimiento del nodo.',
+        available: true,
+      })
+    );
+
+    freezeAction?.onSelect?.();
+
+    expect(onToggleFreeze).toHaveBeenCalledWith('model_orders');
   });
 
   it('does not project dead actions when their owning callback is absent', () => {

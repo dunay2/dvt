@@ -17,6 +17,7 @@ type UseCanvasAuthoringProjectionArgs = {
   localCanonicalNodes: readonly CanonicalNode[];
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: Record<string, { x: number; y: number }>;
+  frozenNodeIds: ReadonlySet<string>;
 };
 
 function buildAuthoringReconcileSnapshot(args: {
@@ -51,6 +52,7 @@ export function useCanvasAuthoringProjection({
   localCanonicalNodes,
   columnLevelLineageEnabled,
   persistedNodePositions,
+  frozenNodeIds,
 }: UseCanvasAuthoringProjectionArgs) {
   const authoringGraphProjection = useMemo(
     () =>
@@ -69,6 +71,7 @@ export function useCanvasAuthoringProjection({
     canonicalEdgeIdBySignature: authoringGraphProjection.canonicalEdgeIdBySignature,
     columnLevelLineageEnabled,
     persistedNodePositions,
+    frozenNodeIds,
   });
   const canonicalSnapshot = useMemo(
     () =>

@@ -75,4 +75,35 @@ describe('useCanvasInteractionStore', () => {
     useCanvasInteractionStore.getState().setInspectorNode(null);
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
   });
+
+  it('toggles frozen canvas nodes per workspace without changing node positions', () => {
+    type FrozenCanvasInteractionState = ReturnType<typeof useCanvasInteractionStore.getState> & {
+      toggleFrozenCanvasNode: (workspaceKey: string, nodeId: string) => void;
+    };
+
+    useCanvasInteractionStore.getState().setCanvasNodePositions(WORKSPACE_KEY, {
+      source_node: { x: 40, y: 140 },
+    });
+
+    const state = useCanvasInteractionStore.getState() as FrozenCanvasInteractionState;
+    state.toggleFrozenCanvasNode(WORKSPACE_KEY, 'source_node');
+
+    expect(useCanvasInteractionStore.getState().canvasLayouts[WORKSPACE_KEY]).toEqual({
+      viewport: null,
+      nodePositions: {
+        source_node: { x: 40, y: 140 },
+      },
+      frozenNodeIds: ['source_node'],
+    });
+
+    state.toggleFrozenCanvasNode(WORKSPACE_KEY, 'source_node');
+
+    expect(useCanvasInteractionStore.getState().canvasLayouts[WORKSPACE_KEY]).toEqual({
+      viewport: null,
+      nodePositions: {
+        source_node: { x: 40, y: 140 },
+      },
+      frozenNodeIds: [],
+    });
+  });
 });

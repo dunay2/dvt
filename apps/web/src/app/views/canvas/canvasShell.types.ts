@@ -88,6 +88,7 @@ export type CanvasShellGraph = {
   canvasSnapToGrid: boolean;
   canvasEmptyStateGuideVisible: boolean;
   viewport: CanvasViewport | null;
+  frozenNodeIds: ReadonlySet<string>;
 };
 
 export type CanvasShellChromeState = {
@@ -119,6 +120,7 @@ export type CanvasShellGraphCommands = {
   onViewportChange: (viewport: CanvasViewport) => void;
   onDrop: React.DragEventHandler<HTMLDivElement>;
   onDragOver: React.DragEventHandler<HTMLDivElement>;
+  onToggleFrozenNode: (nodeId: string) => void;
   onCreateAuthoringNode: CreateCanvasAuthoringNode;
   onSourceImportComplete: (
     result: ImportSourcesResult,

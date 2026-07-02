@@ -15,6 +15,7 @@ type UseCanvasViewportGraphModelArgs = {
   canonicalEdgeIdBySignature: ReadonlyMap<string, string>;
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: Record<string, { x: number; y: number }>;
+  frozenNodeIds?: ReadonlySet<string>;
 };
 
 type VisibleViewportEdge = UseCanvasViewportGraphModelArgs['visibleEdges'][number];
@@ -35,6 +36,7 @@ function projectViewportNodes(args: {
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: PersistedNodePositions;
+  frozenNodeIds: ReadonlySet<string>;
   portCompatibilityByNodeId: ReturnType<typeof buildCanvasConnectionCompatibilityByNodeId>;
   fallbackNodesById?: ViewportNodeById;
 }): Node[] {
@@ -43,6 +45,7 @@ function projectViewportNodes(args: {
     canonicalNodesById,
     columnLevelLineageEnabled,
     persistedNodePositions,
+    frozenNodeIds,
     portCompatibilityByNodeId,
     fallbackNodesById,
   } = args;
@@ -58,6 +61,7 @@ function projectViewportNodes(args: {
         index,
         showColumns: columnLevelLineageEnabled,
         portCompatibility: portCompatibilityByNodeId.get(canonicalNode.id),
+        frozen: frozenNodeIds.has(canonicalNode.id),
         persistedPosition:
           liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
       });
@@ -173,6 +177,7 @@ export function useCanvasViewportGraphModel({
   canonicalEdgeIdBySignature,
   columnLevelLineageEnabled,
   persistedNodePositions,
+  frozenNodeIds = new Set(),
 }: UseCanvasViewportGraphModelArgs) {
   const portCompatibilityByNodeId = useMemo(
     () =>
@@ -192,12 +197,14 @@ export function useCanvasViewportGraphModel({
         canonicalNodesById,
         columnLevelLineageEnabled,
         persistedNodePositions,
+        frozenNodeIds,
         portCompatibilityByNodeId,
       }),
     [
       canonicalNodesById,
       columnLevelLineageEnabled,
       persistedNodePositions,
+      frozenNodeIds,
       portCompatibilityByNodeId,
       visibleNodeIds,
     ]
@@ -223,6 +230,7 @@ export function useCanvasViewportGraphModel({
         canonicalNodesById,
         columnLevelLineageEnabled,
         persistedNodePositions,
+        frozenNodeIds,
         portCompatibilityByNodeId,
         fallbackNodesById: new Map(currentNodes.map((node) => [node.id, node])),
       });
@@ -233,6 +241,7 @@ export function useCanvasViewportGraphModel({
     canonicalNodesById,
     columnLevelLineageEnabled,
     persistedNodePositions,
+    frozenNodeIds,
     portCompatibilityByNodeId,
     setNodes,
     visibleNodeIds,

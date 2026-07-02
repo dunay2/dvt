@@ -15,9 +15,21 @@ type CanvasViewportState = CanvasPosition & {
 type WorkspaceCanvasLayout = {
   viewport: CanvasViewportState | null;
   nodePositions: Record<string, CanvasPosition>;
+  frozenNodeIds?: string[];
 };
 
 const EMPTY_NODE_POSITIONS: Record<string, CanvasPosition> = {};
+
+function buildWorkspaceCanvasLayout(args: {
+  viewport: CanvasViewportState | null;
+  nodePositions: Record<string, CanvasPosition>;
+  frozenNodeIds?: string[];
+}): WorkspaceCanvasLayout {
+  const { viewport, nodePositions, frozenNodeIds } = args;
+  return frozenNodeIds === undefined
+    ? { viewport, nodePositions }
+    : { viewport, nodePositions, frozenNodeIds };
+}
 
 function areCanvasNodePositionsEqual(
   left: Record<string, CanvasPosition>,
@@ -37,6 +49,12 @@ function areCanvasNodePositionsEqual(
   });
 }
 
+function toggleFrozenNodeId(currentNodeIds: readonly string[], nodeId: string): string[] {
+  return currentNodeIds.includes(nodeId)
+    ? currentNodeIds.filter((currentNodeId) => currentNodeId !== nodeId)
+    : [...currentNodeIds, nodeId].sort();
+}
+
 interface CanvasInteractionState {
   _hasHydrated: boolean;
   selectedNodes: string[];
@@ -52,6 +70,7 @@ interface CanvasInteractionState {
   toggleColumnLevelLineage: () => void;
   setCanvasViewport: (workspaceKey: string, viewport: CanvasViewportState | null) => void;
   setCanvasNodePositions: (workspaceKey: string, positions: Record<string, CanvasPosition>) => void;
+  toggleFrozenCanvasNode: (workspaceKey: string, nodeId: string) => void;
   setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 }
 
@@ -114,10 +133,11 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
         set((state) => ({
           canvasLayouts: {
             ...state.canvasLayouts,
-            [workspaceKey]: {
+            [workspaceKey]: buildWorkspaceCanvasLayout({
               viewport,
               nodePositions: state.canvasLayouts[workspaceKey]?.nodePositions ?? {},
-            },
+              frozenNodeIds: state.canvasLayouts[workspaceKey]?.frozenNodeIds,
+            }),
           },
         })),
       setCanvasNodePositions: (workspaceKey, positions) =>
@@ -132,9 +152,26 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
           return {
             canvasLayouts: {
               ...state.canvasLayouts,
-              [workspaceKey]: {
+              [workspaceKey]: buildWorkspaceCanvasLayout({
                 viewport: currentLayout?.viewport ?? null,
                 nodePositions: positions,
+                frozenNodeIds: currentLayout?.frozenNodeIds,
+              }),
+            },
+          };
+        }),
+      toggleFrozenCanvasNode: (workspaceKey, nodeId) =>
+        set((state) => {
+          const currentLayout = state.canvasLayouts[workspaceKey];
+          const currentFrozenNodeIds = currentLayout?.frozenNodeIds ?? [];
+
+          return {
+            canvasLayouts: {
+              ...state.canvasLayouts,
+              [workspaceKey]: {
+                viewport: currentLayout?.viewport ?? null,
+                nodePositions: currentLayout?.nodePositions ?? EMPTY_NODE_POSITIONS,
+                frozenNodeIds: toggleFrozenNodeId(currentFrozenNodeIds, nodeId),
               },
             },
           };

@@ -1,5 +1,5 @@
 /** Owned concern: compose Canvas route stores without becoming a replacement aggregate store. */
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAuthorizationStore, type UserPermissions } from '../../stores/authorizationStore';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import { useExecutionStore } from '../../stores/executionStore';
@@ -8,6 +8,7 @@ import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { CanvasPaletteId } from './canvasPalette';
 
 const EMPTY_PERSISTED_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
+const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
 
 type CanvasStoreFacade = {
   _hasHydrated: boolean;
@@ -48,6 +49,9 @@ type CanvasStoreFacade = {
   setCanvasNodePositions: ReturnType<
     typeof useCanvasInteractionStore.getState
   >['setCanvasNodePositions'];
+  toggleFrozenCanvasNode: ReturnType<
+    typeof useCanvasInteractionStore.getState
+  >['toggleFrozenCanvasNode'];
 };
 
 export type CanvasStoreView = CanvasStoreFacade & {
@@ -55,6 +59,7 @@ export type CanvasStoreView = CanvasStoreFacade & {
   workspaceLayoutKey: string;
   persistedViewport: { x: number; y: number; zoom: number } | null;
   persistedNodePositions: Record<string, { x: number; y: number }>;
+  frozenNodeIds: ReadonlySet<string>;
   hideInspectorPanel: () => void;
   showInspectorPanel: () => void;
   toggleInspectorPanel: () => void;
@@ -112,9 +117,12 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const canvasLayouts = useCanvasInteractionStore((state) => state.canvasLayouts);
   const setCanvasViewport = useCanvasInteractionStore((state) => state.setCanvasViewport);
   const setCanvasNodePositions = useCanvasInteractionStore((state) => state.setCanvasNodePositions);
+  const toggleFrozenCanvasNode = useCanvasInteractionStore((state) => state.toggleFrozenCanvasNode);
 
   const workspaceLayoutKey = `${selectedTenant}::${selectedProject}::${selectedEnvironment}`;
   const workspaceCanvasLayout = canvasLayouts[workspaceLayoutKey];
+  const frozenNodeIdsSource = workspaceCanvasLayout?.frozenNodeIds ?? EMPTY_FROZEN_NODE_IDS;
+  const frozenNodeIds = useMemo(() => new Set(frozenNodeIdsSource), [frozenNodeIdsSource]);
 
   const hideInspectorPanel = useCallback(() => {
     if (inspectorPanelVisible) {
@@ -165,10 +173,12 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     canvasLayouts,
     setCanvasViewport,
     setCanvasNodePositions,
+    toggleFrozenCanvasNode,
     selectedNodeIds: selectedNodes,
     workspaceLayoutKey,
     persistedViewport: workspaceCanvasLayout?.viewport ?? null,
     persistedNodePositions: workspaceCanvasLayout?.nodePositions ?? EMPTY_PERSISTED_NODE_POSITIONS,
+    frozenNodeIds,
     hideInspectorPanel,
     showInspectorPanel,
     toggleInspectorPanel,

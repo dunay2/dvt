@@ -92,6 +92,7 @@ export type CanvasShellGraphBuilderArgs = Readonly<{
     | 'canvasSnapToGrid'
     | 'canvasEmptyStateGuideVisible'
     | 'viewport'
+    | 'frozenNodeIds'
   >;
 }>;
 
@@ -128,6 +129,7 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
     | 'handleViewportChange'
     | 'handleDrop'
     | 'handleDragOver'
+    | 'handleToggleFrozenNode'
     | 'handleCreateAuthoringNode'
     | 'handleSourceImportComplete'
     | 'handleImportedNodeFocusComplete'

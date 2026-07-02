@@ -136,6 +136,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     canvasSnapToGrid: store.canvasSnapToGrid,
     canvasEmptyStateGuideVisible: store.canvasEmptyStateGuideVisible,
     viewport: store.persistedViewport,
+    frozenNodeIds: store.frozenNodeIds,
     canEditInspectorNode: runtimePolicy.commands.canEditInspectorNode,
     applyInspectorNodeDraft: args.inspectorCommands.applyInspectorNodeDraft,
   };
@@ -163,6 +164,8 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     handleNodeDragStop: persistence.handleNodeDragStop,
     handleDrop: graphHandlers.handleDrop,
     handleDragOver: graphHandlers.handleDragOver,
+    handleToggleFrozenNode: (nodeId: string) =>
+      store.toggleFrozenCanvasNode(store.workspaceLayoutKey, nodeId),
     handleCreateAuthoringNode: graphHandlers.handleCreateAuthoringNode,
     handleDuplicateNode: graphHandlers.handleDuplicateNode,
     handleToggleNodeSelection: graphHandlers.handleToggleNodeSelection,
