@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildWarehouseTableKey,
   buildSourceImportCatalogViewModel,
+  type SourceImportCatalogCopy,
 } from './sourceImportCatalogModel';
+import { sourceImportWizardCopy } from './copy';
 import type { TableInfo } from './types';
 
 function buildTable(overrides?: Partial<TableInfo>): TableInfo {
@@ -17,6 +19,9 @@ function buildTable(overrides?: Partial<TableInfo>): TableInfo {
 }
 
 describe('sourceImportCatalogModel', () => {
+  const catalogCopy = sourceImportWizardCopy.catalog;
+  const numberFormatter = new Intl.NumberFormat('en-US');
+
   it('resolves canonical warehouse table keys', () => {
     expect(buildWarehouseTableKey(buildTable({ table: 'ORDERS' }))).toBe('RAW.ERP.ORDERS');
   });
@@ -46,6 +51,8 @@ describe('sourceImportCatalogModel', () => {
         }),
       ],
       activeTableKey: 'RAW.ERP.ORDERS',
+      copy: catalogCopy,
+      numberFormatter,
     });
 
     expect(viewModel.databaseGroups).toEqual([
@@ -146,6 +153,8 @@ describe('sourceImportCatalogModel', () => {
       ],
       activeTableKey: 'RAW.ERP.ORDERS',
       searchQuery: 'email',
+      copy: catalogCopy,
+      numberFormatter,
     });
 
     expect(viewModel.totalTableCount).toBe(3);
@@ -178,6 +187,8 @@ describe('sourceImportCatalogModel', () => {
         buildTable({ database: 'MART', schema: 'FINANCE', table: 'REVENUE', selected: true }),
       ],
       activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter,
     });
 
     expect(viewModel.databaseGroups).toEqual([
@@ -212,5 +223,64 @@ describe('sourceImportCatalogModel', () => {
         ],
       }),
     ]);
+  });
+
+  it('projects labels and number formatting from injected catalog copy instead of model literals', () => {
+    const localizedCopy: SourceImportCatalogCopy = {
+      selectSourceTable: 'Seleccionar tabla origen',
+      inspectSourceTableMetadata: 'Inspeccionar tabla origen',
+      metadata: 'metadata',
+      rowsUnknown: 'Filas desconocidas',
+      rowSingular: 'fila',
+      rowPlural: 'filas',
+      columnSingular: 'columna',
+      columnPlural: 'columnas',
+      tableSingular: 'tabla',
+      tablePlural: 'tablas',
+      schemaSingular: 'esquema',
+      schemaPlural: 'esquemas',
+      nullable: 'Nullable',
+      required: 'Obligatoria',
+      primaryKey: 'Clave primaria',
+      unique: 'Unica',
+      available: 'disponibles',
+      showing: 'Mostrando',
+      of: 'de',
+    };
+
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({
+          table: 'ORDERS',
+          rowCount: 1500,
+          selected: false,
+          columns: [{ name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true }],
+        }),
+        buildTable({
+          table: 'CUSTOMERS',
+          selected: false,
+          columns: [{ name: 'email', type: 'TEXT', nullable: true }],
+        }),
+      ],
+      activeTableKey: null,
+      searchQuery: 'email',
+      copy: localizedCopy,
+      numberFormatter: new Intl.NumberFormat('es-ES'),
+    });
+
+    expect(viewModel.totalTableCount).toBe(2);
+    expect(viewModel.visibleTableCount).toBe(1);
+    expect(viewModel.resultCountLabel).toBe('Mostrando 1 de 2 tablas');
+    expect(viewModel.databaseGroups[0]?.schemaCountLabel).toBe('1 esquema');
+    expect(viewModel.databaseGroups[0]?.tableCountLabel).toBe('1 tabla');
+    expect(viewModel.activeTable).toEqual(
+      expect.objectContaining({
+        canonicalName: 'RAW.ERP.CUSTOMERS',
+        accessibilityLabel:
+          'Seleccionar tabla origen RAW.ERP.CUSTOMERS. Filas desconocidas. 1 columna.',
+        inspectionAccessibilityLabel:
+          'Inspeccionar tabla origen RAW.ERP.CUSTOMERS metadata. Filas desconocidas. 1 columna.',
+      })
+    );
   });
 });

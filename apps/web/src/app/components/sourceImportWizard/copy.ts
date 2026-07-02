@@ -80,6 +80,27 @@ export const sourceImportWizardCopy = {
     selected: 'selected',
     remove: 'Remove',
   },
+  catalog: {
+    selectSourceTable: 'Select source table',
+    inspectSourceTableMetadata: 'Inspect source table',
+    metadata: 'metadata',
+    rowsUnknown: 'Rows unknown',
+    rowSingular: 'row',
+    rowPlural: 'rows',
+    columnSingular: 'column',
+    columnPlural: 'columns',
+    tableSingular: 'table',
+    tablePlural: 'tables',
+    schemaSingular: 'schema',
+    schemaPlural: 'schemas',
+    nullable: 'Nullable',
+    required: 'Required',
+    primaryKey: 'Primary key',
+    unique: 'Unique',
+    available: 'available',
+    showing: 'Showing',
+    of: 'of',
+  },
   result: {
     title: 'Sources attached',
     description: 'Your selected tables have been attached to the workspace graph.',
@@ -93,3 +114,5 @@ export const sourceImportWizardCopy = {
       'Canvas stayed unchanged because the selected registry entries already existed in the workspace graph.',
   },
 } as const;
+
+export const sourceImportCatalogNumberFormatter = new Intl.NumberFormat('en-US');

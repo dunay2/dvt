@@ -2,7 +2,7 @@
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
-import { sourceImportWizardCopy as copy } from './copy';
+import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
 import { buildSourceImportTableViewModel } from './sourceImportCatalogModel';
 import type { TableInfo } from './types';
 
@@ -13,7 +13,14 @@ type SourceImportActiveTableMetadataProps = Readonly<{
 export function SourceImportActiveTableMetadata({
   activeTable,
 }: SourceImportActiveTableMetadataProps): JSX.Element {
-  const activeTableViewModel = activeTable ? buildSourceImportTableViewModel(activeTable, 0) : null;
+  const activeTableViewModel = activeTable
+    ? buildSourceImportTableViewModel(
+        activeTable,
+        0,
+        copy.catalog,
+        sourceImportCatalogNumberFormatter
+      )
+    : null;
   const tableName = activeTableViewModel?.canonicalName ?? copy.metadata.noTableSelected;
 
   return (

@@ -3,7 +3,7 @@ import type { TableInfo } from './types';
 export type SourceImportColumnViewModel = Readonly<{
   name: string;
   type: string;
-  nullabilityLabel: 'Nullable' | 'Required';
+  nullabilityLabel: string;
   constraintLabels: readonly string[];
 }>;
 
@@ -46,26 +46,58 @@ export type SourceImportCatalogViewModel = Readonly<{
   resultCountLabel: string;
 }>;
 
+export type SourceImportCatalogCopy = Readonly<{
+  selectSourceTable: string;
+  inspectSourceTableMetadata: string;
+  metadata: string;
+  rowsUnknown: string;
+  rowSingular: string;
+  rowPlural: string;
+  columnSingular: string;
+  columnPlural: string;
+  tableSingular: string;
+  tablePlural: string;
+  schemaSingular: string;
+  schemaPlural: string;
+  nullable: string;
+  required: string;
+  primaryKey: string;
+  unique: string;
+  available: string;
+  showing: string;
+  of: string;
+}>;
+
 export function buildWarehouseTableKey(
   table: Pick<TableInfo, 'database' | 'schema' | 'table'>
 ): string {
   return [table.database, table.schema, table.table].join('.');
 }
 
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat('en-US').format(value);
+function formatNumber(value: number, numberFormatter: Intl.NumberFormat): string {
+  return numberFormatter.format(value);
 }
 
-export function formatSourceImportRowCount(rowCount: number | undefined): string {
+export function formatSourceImportRowCount(
+  rowCount: number | undefined,
+  copy: SourceImportCatalogCopy,
+  numberFormatter: Intl.NumberFormat
+): string {
   if (rowCount == null) {
-    return 'Rows unknown';
+    return copy.rowsUnknown;
   }
 
-  return `${formatNumber(rowCount)} rows`;
+  const suffix = rowCount === 1 ? copy.rowSingular : copy.rowPlural;
+  return `${formatNumber(rowCount, numberFormatter)} ${suffix}`;
 }
 
-export function formatSourceImportColumnCount(columnCount: number): string {
-  return `${columnCount} ${columnCount === 1 ? 'column' : 'columns'}`;
+export function formatSourceImportColumnCount(
+  columnCount: number,
+  copy: SourceImportCatalogCopy,
+  numberFormatter: Intl.NumberFormat
+): string {
+  const suffix = columnCount === 1 ? copy.columnSingular : copy.columnPlural;
+  return `${formatNumber(columnCount, numberFormatter)} ${suffix}`;
 }
 
 export function formatSourceImportByteSize(byteSize: number | undefined): string | null {
@@ -84,12 +116,22 @@ export function formatSourceImportByteSize(byteSize: number | undefined): string
   return `${byteSize} B`;
 }
 
-export function formatSourceImportTableCount(tableCount: number): string {
-  return `${tableCount} ${tableCount === 1 ? 'table' : 'tables'}`;
+export function formatSourceImportTableCount(
+  tableCount: number,
+  copy: SourceImportCatalogCopy,
+  numberFormatter: Intl.NumberFormat
+): string {
+  const suffix = tableCount === 1 ? copy.tableSingular : copy.tablePlural;
+  return `${formatNumber(tableCount, numberFormatter)} ${suffix}`;
 }
 
-export function formatSourceImportSchemaCount(schemaCount: number): string {
-  return `${schemaCount} ${schemaCount === 1 ? 'schema' : 'schemas'}`;
+export function formatSourceImportSchemaCount(
+  schemaCount: number,
+  copy: SourceImportCatalogCopy,
+  numberFormatter: Intl.NumberFormat
+): string {
+  const suffix = schemaCount === 1 ? copy.schemaSingular : copy.schemaPlural;
+  return `${formatNumber(schemaCount, numberFormatter)} ${suffix}`;
 }
 
 function normalizeCatalogSearchValue(value: string | null | undefined): string {
@@ -115,18 +157,27 @@ function tableMatchesSourceImportSearch(table: TableInfo, normalizedSearchQuery:
   );
 }
 
-export function formatSourceImportNullability(nullable: boolean): 'Nullable' | 'Required' {
-  return nullable ? 'Nullable' : 'Required';
+export function formatSourceImportNullability(
+  nullable: boolean,
+  copy: SourceImportCatalogCopy
+): string {
+  return nullable ? copy.nullable : copy.required;
 }
 
 export function buildSourceImportTableViewModel(
   table: TableInfo,
-  index: number
+  index: number,
+  copy: SourceImportCatalogCopy,
+  numberFormatter: Intl.NumberFormat
 ): SourceImportTableViewModel {
   const canonicalName = buildWarehouseTableKey(table);
-  const rowCountLabel = formatSourceImportRowCount(table.rowCount);
+  const rowCountLabel = formatSourceImportRowCount(table.rowCount, copy, numberFormatter);
   const byteSizeLabel = formatSourceImportByteSize(table.byteSize);
-  const columnCountLabel = formatSourceImportColumnCount(table.columns?.length ?? 0);
+  const columnCountLabel = formatSourceImportColumnCount(
+    table.columns?.length ?? 0,
+    copy,
+    numberFormatter
+  );
   const accessibilityMetrics = [rowCountLabel, byteSizeLabel, columnCountLabel]
     .filter((label): label is string => label != null)
     .join('. ');
@@ -135,18 +186,18 @@ export function buildSourceImportTableViewModel(
     index,
     canonicalName,
     displayName: table.table,
-    accessibilityLabel: `Select source table ${canonicalName}. ${accessibilityMetrics}.`,
-    inspectionAccessibilityLabel: `Inspect source table ${canonicalName} metadata. ${accessibilityMetrics}.`,
+    accessibilityLabel: `${copy.selectSourceTable} ${canonicalName}. ${accessibilityMetrics}.`,
+    inspectionAccessibilityLabel: `${copy.inspectSourceTableMetadata} ${canonicalName} ${copy.metadata}. ${accessibilityMetrics}.`,
     rowCountLabel,
     byteSizeLabel,
     columnCountLabel,
     selected: table.selected,
     columns:
       table.columns?.map((column) => {
-        const nullabilityLabel = formatSourceImportNullability(column.nullable);
+        const nullabilityLabel = formatSourceImportNullability(column.nullable, copy);
         const constraintLabels = [
-          ...(column.primaryKey === true ? ['Primary key'] : []),
-          ...(column.unique === true ? ['Unique'] : []),
+          ...(column.primaryKey === true ? [copy.primaryKey] : []),
+          ...(column.unique === true ? [copy.unique] : []),
           nullabilityLabel,
         ];
 
@@ -164,14 +215,18 @@ export function buildSourceImportCatalogViewModel({
   tables,
   activeTableKey,
   searchQuery,
+  copy,
+  numberFormatter = new Intl.NumberFormat(),
 }: Readonly<{
   tables: readonly TableInfo[];
   activeTableKey: string | null;
   searchQuery?: string;
+  copy: SourceImportCatalogCopy;
+  numberFormatter?: Intl.NumberFormat;
 }>): SourceImportCatalogViewModel {
   const normalizedSearchQuery = normalizeCatalogSearchValue(searchQuery);
   const allTableViewModels = tables.map((table, index) =>
-    buildSourceImportTableViewModel(table, index)
+    buildSourceImportTableViewModel(table, index, copy, numberFormatter)
   );
   const visibleTableEntries = tables
     .map((table, index) => ({ table, viewModel: allTableViewModels[index]! }))
@@ -201,19 +256,27 @@ export function buildSourceImportCatalogViewModel({
     null;
   const schemaGroups = Array.from(schemaGroupsByName.entries())
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([schema, groupTables]) => buildSourceImportSchemaGroup(schema, groupTables));
+    .map(([schema, groupTables]) =>
+      buildSourceImportSchemaGroup(schema, groupTables, copy, numberFormatter)
+    );
   const databaseGroups = Array.from(databaseGroupsByName.entries())
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([database, databaseSchemaGroups]) => {
       const databaseSchemas = Array.from(databaseSchemaGroups.entries())
         .sort(([left], [right]) => left.localeCompare(right))
-        .map(([schema, groupTables]) => buildSourceImportSchemaGroup(schema, groupTables));
+        .map(([schema, groupTables]) =>
+          buildSourceImportSchemaGroup(schema, groupTables, copy, numberFormatter)
+        );
       const databaseTables = databaseSchemas.flatMap((schemaGroup) => schemaGroup.tables);
 
       return {
         database,
-        schemaCountLabel: formatSourceImportSchemaCount(databaseSchemas.length),
-        tableCountLabel: formatSourceImportTableCount(databaseTables.length),
+        schemaCountLabel: formatSourceImportSchemaCount(
+          databaseSchemas.length,
+          copy,
+          numberFormatter
+        ),
+        tableCountLabel: formatSourceImportTableCount(databaseTables.length, copy, numberFormatter),
         selected: databaseTables.length > 0 && databaseTables.every((table) => table.selected),
         schemaGroups: databaseSchemas,
       };
@@ -229,18 +292,27 @@ export function buildSourceImportCatalogViewModel({
     selectedTableCount: allTableViewModels.filter((table) => table.selected).length,
     resultCountLabel:
       tableViewModels.length === allTableViewModels.length
-        ? `${formatSourceImportTableCount(allTableViewModels.length)} available`
-        : `Showing ${tableViewModels.length} of ${allTableViewModels.length} tables`,
+        ? `${formatSourceImportTableCount(
+            allTableViewModels.length,
+            copy,
+            numberFormatter
+          )} ${copy.available}`
+        : `${copy.showing} ${formatNumber(tableViewModels.length, numberFormatter)} ${copy.of} ${formatNumber(
+            allTableViewModels.length,
+            numberFormatter
+          )} ${copy.tablePlural}`,
   };
 }
 
 function buildSourceImportSchemaGroup(
   schema: string,
-  groupTables: readonly SourceImportTableViewModel[]
+  groupTables: readonly SourceImportTableViewModel[],
+  copy: SourceImportCatalogCopy,
+  numberFormatter: Intl.NumberFormat
 ): SourceImportSchemaGroupViewModel {
   return {
     schema,
-    tableCountLabel: formatSourceImportTableCount(groupTables.length),
+    tableCountLabel: formatSourceImportTableCount(groupTables.length, copy, numberFormatter),
     selected: groupTables.length > 0 && groupTables.every((table) => table.selected),
     tables: groupTables,
   };
