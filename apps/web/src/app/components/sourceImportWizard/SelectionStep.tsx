@@ -6,6 +6,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { sourceImportWizardCopy as copy } from './copy';
 import { SourceImportActiveTableMetadata } from './SourceImportActiveTableMetadata';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
+import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
   buildWarehouseTableKey,
   buildSourceImportCatalogViewModel,
@@ -91,7 +92,10 @@ export function SelectionStep({
               />
             </ScrollArea>
           </div>
-          <SourceImportActiveTableMetadata activeTable={activeBrowseTable} />
+          <div className="space-y-4">
+            <SourceImportActiveTableMetadata activeTable={activeBrowseTable} />
+            <SourceImportSelectionBasket selectedTables={catalogViewModel.selectedTables} />
+          </div>
         </div>
       )}
     </div>

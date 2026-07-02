@@ -240,4 +240,37 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('VARCHAR');
     expect(document.body.textContent).toContain('Unique');
   });
+
+  it('keeps a selected-source basket visible while browsing before import', async () => {
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseTables: async () => [
+          buildWarehouseTable({
+            database: 'RAW',
+            schema: 'ERP',
+            table: 'ORDERS',
+            rowCount: 1500,
+            columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+          }),
+          buildWarehouseTable({
+            database: 'RAW',
+            schema: 'CRM',
+            table: 'CUSTOMERS',
+            rowCount: 45000,
+            columns: [{ name: 'email', type: 'VARCHAR', nullable: true }],
+          }),
+        ],
+      }),
+    });
+
+    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickTab('Browse');
+    await harness.clickClickableDivByText('ORDERS');
+
+    expect(document.body.textContent).toContain('Selected sources');
+    expect(document.body.textContent).toContain('1 selected');
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain('1,500 rows');
+    expect(document.body.textContent).toContain('1 column');
+  });
 });

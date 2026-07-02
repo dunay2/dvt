@@ -70,6 +70,7 @@ describe('SourceImportCatalogView', () => {
     });
 
     expect(container.textContent).toContain('ERP');
+    expect(container.textContent).toContain('RAW');
     expect(container.textContent).toContain('1 table');
     expect(container.textContent).toContain('RAW.ERP.ORDERS');
     expect(container.textContent).toContain('1,500 rows');
@@ -91,5 +92,42 @@ describe('SourceImportCatalogView', () => {
 
     expect(onToggleSchema).toHaveBeenCalledWith('ERP');
     expect(onToggleTable).toHaveBeenCalledWith(0);
+  });
+
+  it('renders database categories above schema groups without changing table selection behavior', async () => {
+    const onToggleSchema = vi.fn();
+    const onToggleTable = vi.fn();
+    const catalog = buildSourceImportCatalogViewModel({
+      activeTableKey: null,
+      tables: [
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+        buildTable({ database: 'RAW', schema: 'CRM', table: 'CUSTOMERS' }),
+        buildTable({ database: 'MART', schema: 'FINANCE', table: 'REVENUE' }),
+      ],
+    });
+
+    await act(async () => {
+      root.render(
+        <SourceImportCatalogView
+          catalog={catalog}
+          emptyLabel="No source tables"
+          onToggleSchema={onToggleSchema}
+          onToggleTable={onToggleTable}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('MART');
+    expect(container.textContent).toContain('RAW');
+    expect(container.textContent).toContain('2 schemas');
+    expect(container.textContent).toContain('FINANCE');
+    expect(container.textContent).toContain('ERP');
+    expect(container.textContent).toContain('CRM');
+
+    await act(async () => {
+      fireEvent.click(container.querySelector('[data-source-import-schema="CRM"]')!);
+    });
+
+    expect(onToggleSchema).toHaveBeenCalledWith('CRM');
   });
 });

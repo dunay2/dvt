@@ -89,9 +89,13 @@ describe('Canvas source import live clean proof', () => {
       .clear()
       .type('order_id');
     cy.contains('[role="dialog"]', 'Source metadata').should('be.visible');
+    cy.contains('[role="dialog"]', 'dvt', { timeout: 20_000 }).should('be.visible');
+    cy.contains('[role="dialog"]', 'public').should('be.visible');
     cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-source-import-table="dvt.public.source_1"]', { timeout: 20_000 }).click();
     cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
+    cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
+    cy.contains('[role="dialog"]', 'dvt.public.source_1').should('be.visible');
 
     cy.contains('[role="tab"]', 'Metadata').click();
     cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');

@@ -1,5 +1,7 @@
 import {
   SourceImportCatalogEmptyState,
+  SourceImportDatabaseGroup,
+  SourceImportDatabaseHeader,
   SourceImportSchemaGroups,
   SourceImportSchemaHeader,
   SourceImportSchemaTableList,
@@ -20,30 +22,40 @@ export function SourceImportCatalogView({
   onToggleSchema,
   onToggleTable,
 }: SourceImportCatalogViewProps): JSX.Element {
-  if (catalog.schemaGroups.length === 0) {
+  if (catalog.databaseGroups.length === 0) {
     return <SourceImportCatalogEmptyState>{emptyLabel}</SourceImportCatalogEmptyState>;
   }
 
   return (
     <SourceImportSchemaGroups>
-      {catalog.schemaGroups.map((schemaGroup) => (
-        <div key={schemaGroup.schema}>
-          <SourceImportSchemaHeader
-            schema={schemaGroup.schema}
-            selected={schemaGroup.selected}
-            tableCountLabel={schemaGroup.tableCountLabel}
-            onToggle={() => onToggleSchema(schemaGroup.schema)}
+      {catalog.databaseGroups.map((databaseGroup) => (
+        <SourceImportDatabaseGroup key={databaseGroup.database}>
+          <SourceImportDatabaseHeader
+            database={databaseGroup.database}
+            schemaCountLabel={databaseGroup.schemaCountLabel}
+            tableCountLabel={databaseGroup.tableCountLabel}
+            selected={databaseGroup.selected}
           />
-          <SourceImportSchemaTableList>
-            {schemaGroup.tables.map((table) => (
-              <SourceImportTableCard
-                key={table.canonicalName}
-                table={table}
-                onToggle={() => onToggleTable(table.index)}
+          {databaseGroup.schemaGroups.map((schemaGroup) => (
+            <div key={`${databaseGroup.database}.${schemaGroup.schema}`}>
+              <SourceImportSchemaHeader
+                schema={schemaGroup.schema}
+                selected={schemaGroup.selected}
+                tableCountLabel={schemaGroup.tableCountLabel}
+                onToggle={() => onToggleSchema(schemaGroup.schema)}
               />
-            ))}
-          </SourceImportSchemaTableList>
-        </div>
+              <SourceImportSchemaTableList>
+                {schemaGroup.tables.map((table) => (
+                  <SourceImportTableCard
+                    key={table.canonicalName}
+                    table={table}
+                    onToggle={() => onToggleTable(table.index)}
+                  />
+                ))}
+              </SourceImportSchemaTableList>
+            </div>
+          ))}
+        </SourceImportDatabaseGroup>
       ))}
     </SourceImportSchemaGroups>
   );

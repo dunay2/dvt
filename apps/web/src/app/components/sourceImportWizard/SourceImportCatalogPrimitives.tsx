@@ -10,6 +10,12 @@ import type { SourceImportTableViewModel } from './sourceImportWizardModel';
 export const sourceImportCatalogClassNames = {
   emptyState: 'border-slate-600 p-4 text-sm text-slate-300',
   schemaGroups: 'space-y-4',
+  databaseGroup: 'space-y-3',
+  databaseHeader:
+    'rounded border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100',
+  databaseHeaderContent: 'flex items-center justify-between gap-3',
+  databaseTitle: 'font-mono font-medium',
+  databaseMetrics: 'flex flex-wrap justify-end gap-2 text-xs text-slate-400',
   schemaHeader: 'mb-2 flex items-center gap-2',
   schemaTitle: 'text-sm font-medium',
   schemaTableList: 'ml-6 space-y-1',
@@ -38,6 +44,13 @@ type SourceImportSchemaHeaderProps = Readonly<{
   onToggle: () => void;
 }>;
 
+type SourceImportDatabaseHeaderProps = Readonly<{
+  database: string;
+  schemaCountLabel: string;
+  tableCountLabel: string;
+  selected: boolean;
+}>;
+
 type SourceImportTableCardProps = Readonly<{
   table: SourceImportTableViewModel;
   onToggle: () => void;
@@ -53,6 +66,32 @@ export function SourceImportSchemaGroups({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <div className={sourceImportCatalogClassNames.schemaGroups}>{children}</div>;
+}
+
+export function SourceImportDatabaseGroup({
+  children,
+}: Readonly<{ children: ReactNode }>): JSX.Element {
+  return <div className={sourceImportCatalogClassNames.databaseGroup}>{children}</div>;
+}
+
+export function SourceImportDatabaseHeader({
+  database,
+  schemaCountLabel,
+  tableCountLabel,
+  selected,
+}: SourceImportDatabaseHeaderProps): JSX.Element {
+  return (
+    <div className={sourceImportCatalogClassNames.databaseHeader}>
+      <div className={sourceImportCatalogClassNames.databaseHeaderContent}>
+        <span className={sourceImportCatalogClassNames.databaseTitle}>{database}</span>
+        <span className={sourceImportCatalogClassNames.databaseMetrics}>
+          <Badge variant="secondary">{schemaCountLabel}</Badge>
+          <Badge variant="secondary">{tableCountLabel}</Badge>
+          {selected ? <Badge variant="outline">All selected</Badge> : null}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export function SourceImportSchemaHeader({
