@@ -43,6 +43,8 @@ export const sourceImportWizardCopy = {
   selection: {
     title: 'Browse source tables',
     descriptionPrefix: 'Choose tables to attach as source nodes. Selected:',
+    destinationPosture:
+      'Output target is selected on a DVT Sink node after sources are attached. Choose database, schema, table, and write mode there before preview or run.',
     loading: 'Loading tables...',
     empty: 'No tables available for this connection.',
     searchLabel: 'Search source catalog',
