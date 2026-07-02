@@ -225,6 +225,7 @@ export function useSourceImportWizard({
             schema: table.schema,
             table: table.table,
             rowCount: table.rowCount,
+            byteSize: table.byteSize,
             columns: table.columns,
           })),
         groupingStrategy: state.groupingStrategy,
