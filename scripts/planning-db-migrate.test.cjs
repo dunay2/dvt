@@ -11651,6 +11651,35 @@ test('tracked migrations record Graph node operational rail native keyboard acti
   assert.doesNotMatch(activationMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations promote Graph node operational summary to query component ownership', () => {
+  const migrations = readMigrationFiles();
+  const operationalSummaryOwnershipMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '475_graph_node_operational_summary_component_ownership.sql'
+  );
+
+  assert.ok(operationalSummaryOwnershipMigration);
+  assert.match(
+    operationalSummaryOwnershipMigration.sql,
+    /web\.component\.canvas\.GraphNodeOperationalSummary/
+  );
+  assert.match(operationalSummaryOwnershipMigration.sql, /query-view/);
+  assert.match(operationalSummaryOwnershipMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(operationalSummaryOwnershipMigration.sql, /graphNodeOperationalSummary\.ts/);
+  assert.match(operationalSummaryOwnershipMigration.sql, /graphNodeOperationalSummary\.test\.ts/);
+  assert.match(
+    operationalSummaryOwnershipMigration.sql,
+    /EV-CANVAS-GRAPH-NODE-OPERATIONAL-SUMMARY-COMPONENT/
+  );
+  assert.match(
+    operationalSummaryOwnershipMigration.sql,
+    /REL-GRAPH-NODE-OPERATIONAL-RAIL-READS-OPERATIONAL-SUMMARY/
+  );
+  assert.match(operationalSummaryOwnershipMigration.sql, /consumedBy/);
+  assert.match(operationalSummaryOwnershipMigration.sql, /doesNotInventMetrics/);
+  assert.doesNotMatch(operationalSummaryOwnershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations record Graph node card relation projection convergence', () => {
   const migrations = readMigrationFiles();
   const relationProjectionMigration = migrations.find(
