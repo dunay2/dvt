@@ -10,9 +10,9 @@ import type {
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { sourceImportWizardCopy as copy } from './copy';
+import { buildWarehouseTableKey } from './sourceImportCatalogModel';
 import {
   applySourceImportOptionDefaults,
-  buildWarehouseTableKey,
   buildSourceImportOptionValues,
   canEnterSourceImportSection,
   canProceedForStep,

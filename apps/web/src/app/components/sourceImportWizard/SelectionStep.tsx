@@ -10,7 +10,7 @@ import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
   buildWarehouseTableKey,
   buildSourceImportCatalogViewModel,
-} from './sourceImportWizardModel';
+} from './sourceImportCatalogModel';
 import type { TableInfo } from './types';
 
 interface SelectionStepProps {

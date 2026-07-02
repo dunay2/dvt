@@ -3,7 +3,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { sourceImportWizardCopy as copy } from './copy';
-import type { SourceImportTableViewModel } from './sourceImportWizardModel';
+import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
 
 const selectionBasketClassNames = {
   card: 'border-slate-700 bg-slate-950/40 p-3',

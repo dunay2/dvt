@@ -5,7 +5,7 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildSourceImportCatalogViewModel } from './sourceImportWizardModel';
+import { buildSourceImportCatalogViewModel } from './sourceImportCatalogModel';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import type { TableInfo } from './types';
 
