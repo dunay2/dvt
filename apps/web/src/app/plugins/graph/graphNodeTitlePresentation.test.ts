@@ -113,6 +113,27 @@ describe('buildGraphNodeTitlePresentation', () => {
     });
   });
 
+  it('uses the recorded warehouse connection type for imported source titles', () => {
+    expect(
+      buildGraphNodeTitlePresentation({
+        nodeName: 'src_local_postgres_dvt_public_source_1',
+        pluginId: 'dvt.warehouse-source',
+        kind: 'dvt:source',
+        metadata: {
+          connectionName: 'Local Postgres proof',
+          connectionType: 'postgres',
+          database: 'dvt',
+          schema: 'public',
+          sourceName: 'local_postgres_dvt_public',
+          tableName: 'source_1',
+        },
+      })
+    ).toEqual({
+      title: 'Postgres · public',
+      technicalName: 'src_local_postgres_dvt_public_source_1',
+    });
+  });
+
   it('keeps model names readable without inventing missing relation metadata', () => {
     expect(
       buildGraphNodeTitlePresentation({

@@ -49,6 +49,7 @@ export function buildGraphNodeTitlePresentation({
   const dbtData = recordValue(data.dbt);
   const configData = recordValue(data.config);
   const { database, schema, table: tableName } = resolveGraphNodeRelationParts(metadata, data);
+  const connectionType = stringValue(metadata.connectionType) ?? stringValue(data.connectionType);
   const sourceName =
     stringValue(metadata.sourceName) ??
     stringValue(dbtMetadata.sourceName) ??
@@ -58,7 +59,7 @@ export function buildGraphNodeTitlePresentation({
     stringValue(configData.sourceName);
   if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source' && database && schema) {
     return {
-      title: `${titleCaseIdentifier(database)} · ${schema}`,
+      title: `${titleCaseIdentifier(connectionType ?? database)} · ${schema}`,
       technicalName: nodeName,
     };
   }

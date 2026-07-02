@@ -11540,6 +11540,53 @@ test('tracked migrations register Graph node title warehouse source identity', (
   assert.doesNotMatch(titleWarehouseSourceMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Graph node title warehouse source connection identity', () => {
+  const migrations = readMigrationFiles();
+  const titleConnectionIdentityMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '486_warehouse_source_connection_identity_title_projection.sql'
+  );
+
+  assert.ok(titleConnectionIdentityMigration);
+  assert.match(
+    titleConnectionIdentityMigration.sql,
+    /SYS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES/
+  );
+  assert.match(
+    titleConnectionIdentityMigration.sql,
+    /web\.component\.canvas\.GraphNodeTitlePresentation/
+  );
+  assert.match(titleConnectionIdentityMigration.sql, /ImportWarehouseSources/);
+  assert.match(titleConnectionIdentityMigration.sql, /RenderCanvasGraphNodeTitlePresentation/);
+  assert.match(titleConnectionIdentityMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(titleConnectionIdentityMigration.sql, /connectionTypePrecedence/);
+  assert.match(titleConnectionIdentityMigration.sql, /WarehouseConnection/);
+  assert.match(titleConnectionIdentityMigration.sql, /ImportWarehouseSourcesUseCase\.execute/);
+  assert.match(titleConnectionIdentityMigration.sql, /toSourceNode/);
+  assert.match(titleConnectionIdentityMigration.sql, /buildGraphNodeTitlePresentation/);
+  assert.match(
+    titleConnectionIdentityMigration.sql,
+    /apps\/api\/src\/application\/services\/importWarehouseSourcesUseCase\.ts/
+  );
+  assert.match(
+    titleConnectionIdentityMigration.sql,
+    /apps\/api\/test\/application\/services\/importWarehouseSourcesUseCase\.test\.ts/
+  );
+  assert.match(
+    titleConnectionIdentityMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeTitlePresentation\.ts/
+  );
+  assert.match(
+    titleConnectionIdentityMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeTitlePresentation\.test\.ts/
+  );
+  assert.match(
+    titleConnectionIdentityMigration.sql,
+    /pnpm docs:feature-mechanization:implementation/
+  );
+  assert.doesNotMatch(titleConnectionIdentityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Graph node title plugin identity render path', () => {
   const migrations = readMigrationFiles();
   const pluginIdentityRenderPathMigration = migrations.find(
