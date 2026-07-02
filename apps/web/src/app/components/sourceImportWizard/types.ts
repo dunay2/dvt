@@ -47,4 +47,5 @@ export interface SourceImportWizardState {
   loadError: string | null;
   importResult: ImportSourcesResult | null;
   activeTableKey: string | null;
+  tableSearchQuery: string;
 }

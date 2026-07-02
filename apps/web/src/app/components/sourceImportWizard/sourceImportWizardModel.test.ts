@@ -202,4 +202,58 @@ describe('sourceImportWizardModel', () => {
       }),
     ]);
   });
+
+  it('filters the source catalog by schema, table, column, and type without losing selected totals', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({
+          schema: 'ERP',
+          table: 'ORDERS',
+          selected: true,
+          columns: [
+            { name: 'order_id', type: 'INTEGER', nullable: false },
+            { name: 'customer_id', type: 'INTEGER', nullable: false },
+          ],
+        }),
+        buildTable({
+          schema: 'CRM',
+          table: 'CUSTOMERS',
+          selected: true,
+          columns: [
+            { name: 'customer_id', type: 'INTEGER', nullable: false },
+            { name: 'email', type: 'VARCHAR', nullable: true },
+          ],
+        }),
+        buildTable({
+          schema: 'OPS',
+          table: 'SHIPMENTS',
+          selected: false,
+          columns: [{ name: 'tracking_code', type: 'TEXT', nullable: false }],
+        }),
+      ],
+      activeTableKey: 'RAW.ERP.ORDERS',
+      searchQuery: 'email',
+    });
+
+    expect(viewModel.totalTableCount).toBe(3);
+    expect(viewModel.visibleTableCount).toBe(1);
+    expect(viewModel.selectedTableCount).toBe(2);
+    expect(viewModel.resultCountLabel).toBe('Showing 1 of 3 tables');
+    expect(viewModel.schemaGroups).toEqual([
+      expect.objectContaining({
+        schema: 'CRM',
+        tableCountLabel: '1 table',
+        tables: [
+          expect.objectContaining({
+            canonicalName: 'RAW.CRM.CUSTOMERS',
+          }),
+        ],
+      }),
+    ]);
+    expect(viewModel.activeTable).toEqual(
+      expect.objectContaining({
+        canonicalName: 'RAW.CRM.CUSTOMERS',
+      })
+    );
+  });
 });

@@ -32,6 +32,10 @@ export type SourceImportCatalogViewModel = Readonly<{
   schemaGroups: readonly SourceImportSchemaGroupViewModel[];
   activeTable: SourceImportTableViewModel | null;
   selectedTables: readonly SourceImportTableViewModel[];
+  totalTableCount: number;
+  visibleTableCount: number;
+  selectedTableCount: number;
+  resultCountLabel: string;
 }>;
 
 export const SOURCE_IMPORT_SECTIONS: readonly {
@@ -87,6 +91,29 @@ export function formatSourceImportTableCount(tableCount: number): string {
   return `${tableCount} ${tableCount === 1 ? 'table' : 'tables'}`;
 }
 
+function normalizeCatalogSearchValue(value: string | null | undefined): string {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase();
+}
+
+function tableMatchesSourceImportSearch(table: TableInfo, normalizedSearchQuery: string): boolean {
+  if (normalizedSearchQuery.length === 0) {
+    return true;
+  }
+
+  const searchableValues = [
+    table.database,
+    table.schema,
+    table.table,
+    ...(table.columns?.flatMap((column) => [column.name, column.type]) ?? []),
+  ];
+
+  return searchableValues.some((value) =>
+    normalizeCatalogSearchValue(value).includes(normalizedSearchQuery)
+  );
+}
+
 export function formatSourceImportNullability(nullable: boolean): 'Nullable' | 'Required' {
   return nullable ? 'Nullable' : 'Required';
 }
@@ -134,18 +161,25 @@ export function buildSourceImportTableViewModel(
 export function buildSourceImportCatalogViewModel({
   tables,
   activeTableKey,
+  searchQuery,
 }: Readonly<{
   tables: readonly TableInfo[];
   activeTableKey: string | null;
+  searchQuery?: string;
 }>): SourceImportCatalogViewModel {
-  const tableViewModels = tables.map((table, index) =>
+  const normalizedSearchQuery = normalizeCatalogSearchValue(searchQuery);
+  const allTableViewModels = tables.map((table, index) =>
     buildSourceImportTableViewModel(table, index)
   );
+  const visibleTableEntries = tables
+    .map((table, index) => ({ table, viewModel: allTableViewModels[index]! }))
+    .filter(({ table }) => tableMatchesSourceImportSearch(table, normalizedSearchQuery));
+  const tableViewModels = visibleTableEntries.map(({ viewModel }) => viewModel);
   const schemaGroups = new Map<string, SourceImportTableViewModel[]>();
 
-  tables.forEach((table, index) => {
+  visibleTableEntries.forEach(({ table, viewModel }) => {
     const group = schemaGroups.get(table.schema) ?? [];
-    group.push(tableViewModels[index]!);
+    group.push(viewModel);
     schemaGroups.set(table.schema, group);
   });
 
@@ -166,6 +200,13 @@ export function buildSourceImportCatalogViewModel({
     })),
     activeTable,
     selectedTables: tableViewModels.filter((table) => table.selected),
+    totalTableCount: allTableViewModels.length,
+    visibleTableCount: tableViewModels.length,
+    selectedTableCount: allTableViewModels.filter((table) => table.selected).length,
+    resultCountLabel:
+      tableViewModels.length === allTableViewModels.length
+        ? `${formatSourceImportTableCount(allTableViewModels.length)} available`
+        : `Showing ${tableViewModels.length} of ${allTableViewModels.length} tables`,
   };
 }
 

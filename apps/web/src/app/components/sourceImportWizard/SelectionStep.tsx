@@ -1,17 +1,25 @@
 import { Loader2 } from 'lucide-react';
 
 import { Card } from '../ui/card';
+import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { sourceImportWizardCopy as copy } from './copy';
+import { SourceImportActiveTableMetadata } from './SourceImportActiveTableMetadata';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
-import { buildSourceImportCatalogViewModel } from './sourceImportWizardModel';
+import {
+  buildWarehouseTableKey,
+  buildSourceImportCatalogViewModel,
+} from './sourceImportWizardModel';
 import type { TableInfo } from './types';
 
 interface SelectionStepProps {
   tables: TableInfo[];
   selectedCount: number;
+  activeTableKey: string | null;
+  tableSearchQuery: string;
   isLoadingTables: boolean;
   loadError: string | null;
+  onTableSearchQueryChange: (query: string) => void;
   onToggleSchema: (schema: string) => void;
   onToggleTable: (index: number) => void;
 }
@@ -19,15 +27,23 @@ interface SelectionStepProps {
 export function SelectionStep({
   tables,
   selectedCount,
+  activeTableKey,
+  tableSearchQuery,
   isLoadingTables,
   loadError,
+  onTableSearchQueryChange,
   onToggleSchema,
   onToggleTable,
 }: SelectionStepProps) {
   const catalogViewModel = buildSourceImportCatalogViewModel({
     tables,
-    activeTableKey: null,
+    activeTableKey,
+    searchQuery: tableSearchQuery,
   });
+  const activeBrowseTable =
+    tables.find(
+      (table) => buildWarehouseTableKey(table) === catalogViewModel.activeTable?.canonicalName
+    ) ?? null;
 
   return (
     <div className="space-y-4">
@@ -52,14 +68,31 @@ export function SelectionStep({
           {copy.selection.loading}
         </Card>
       ) : (
-        <ScrollArea className="h-96">
-          <SourceImportCatalogView
-            catalog={catalogViewModel}
-            emptyLabel={copy.selection.empty}
-            onToggleSchema={onToggleSchema}
-            onToggleTable={onToggleTable}
-          />
-        </ScrollArea>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+          <div className="space-y-3">
+            <div className="grid gap-2">
+              <label className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                {copy.selection.searchLabel}
+              </label>
+              <Input
+                data-slot="source-import-table-search"
+                value={tableSearchQuery}
+                placeholder={copy.selection.searchPlaceholder}
+                onChange={(event) => onTableSearchQueryChange(event.target.value)}
+              />
+              <div className="text-xs text-slate-400">{catalogViewModel.resultCountLabel}</div>
+            </div>
+            <ScrollArea className="h-96">
+              <SourceImportCatalogView
+                catalog={catalogViewModel}
+                emptyLabel={copy.selection.empty}
+                onToggleSchema={onToggleSchema}
+                onToggleTable={onToggleTable}
+              />
+            </ScrollArea>
+          </div>
+          <SourceImportActiveTableMetadata activeTable={activeBrowseTable} />
+        </div>
       )}
     </div>
   );

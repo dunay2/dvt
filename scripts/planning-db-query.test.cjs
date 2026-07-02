@@ -163,6 +163,20 @@ test('planning DB query CLI prints per-query help before parsing flag values', (
   assert.doesNotMatch(result.stderr, /Missing value for --help/);
 });
 
+test('planning DB query CLI documents command/query rail common filter', () => {
+  const result = runPlanningDbQueryCli(['command-query-rails', '--help']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(
+    result.stdout,
+    /--filter <value> \(task id, path, component, rail, or feature id where supported\)/
+  );
+  assert.match(
+    result.stdout,
+    /pnpm planning:db:query command-query-rails --filter RenderSourceImportCatalogView --limit 20/
+  );
+});
+
 test('planning DB read-model query components live under the queries directory', () => {
   const planningDbDir = path.join(__dirname, 'planning-db');
   const misplacedQueryComponents = fs
@@ -1030,6 +1044,24 @@ test('parseArgs parses command/query rail catalog filters for DB-first gap and d
       owner: 'WidgetReadModel',
       duplicates: true,
       gaps: true,
+      limit: 5,
+    },
+  });
+});
+
+test('parseArgs maps command/query rail common filter to rail name', () => {
+  const command = parseArgs([
+    'command-query-rails',
+    '--filter',
+    'RenderSourceImportCatalogView',
+    '--limit',
+    '5',
+  ]);
+
+  assert.deepEqual(command, {
+    queryName: 'command-query-rails',
+    filters: {
+      rail: 'RenderSourceImportCatalogView',
       limit: 5,
     },
   });

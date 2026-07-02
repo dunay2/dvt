@@ -55,6 +55,7 @@ const initialState: SourceImportWizardState = {
   loadError: null,
   importResult: null,
   activeTableKey: null,
+  tableSearchQuery: '',
 };
 
 function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
@@ -93,6 +94,7 @@ export function useSourceImportWizard({
       selectedConnection: initialSelection.connectionId,
       tables: [],
       activeTableKey: null,
+      tableSearchQuery: '',
       loadError: null,
       importResult: null,
     }));
@@ -141,6 +143,7 @@ export function useSourceImportWizard({
       selectedConnection,
       tables: selectedConnection === prev.selectedConnection ? prev.tables : [],
       activeTableKey: selectedConnection === prev.selectedConnection ? prev.activeTableKey : null,
+      tableSearchQuery: selectedConnection === prev.selectedConnection ? prev.tableSearchQuery : '',
       importResult: null,
     }));
   const setGroupingStrategy = (groupingStrategy: 'schema' | 'database' | 'custom') =>
@@ -152,6 +155,8 @@ export function useSourceImportWizard({
     setState((prev) => ({ ...prev, addFreshness }));
   const setSourceImportOption = (optionId: SourceImportOptionId, value: boolean) =>
     setState((prev) => ({ ...prev, [optionId]: value }));
+  const setTableSearchQuery = (tableSearchQuery: string) =>
+    setState((prev) => ({ ...prev, tableSearchQuery }));
 
   const handleNext = () => {
     if (state.currentStep === 'connection' && !state.selectedConnection) {
@@ -263,6 +268,7 @@ export function useSourceImportWizard({
     setAddTests,
     setAddFreshness,
     setSourceImportOption,
+    setTableSearchQuery,
     handleNext,
     handleBack,
     handleImport,

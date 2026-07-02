@@ -15,6 +15,7 @@ export const sourceImportCatalogClassNames = {
   schemaTableList: 'ml-6 space-y-1',
   tableCard:
     'cursor-pointer rounded border border-slate-700 bg-slate-950/30 p-3 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
+  selectedTableCard: 'border-sky-400 bg-sky-950/30 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]',
   tableHeader: 'flex items-start justify-between gap-3',
   tableIdentity: 'flex min-w-0 items-start gap-2',
   tableIcon: 'mt-0.5 size-4 shrink-0 text-slate-300',
@@ -118,13 +119,17 @@ export function SourceImportTableCard({
   table,
   onToggle,
 }: SourceImportTableCardProps): JSX.Element {
+  const tableCardClassName = table.selected
+    ? `${sourceImportCatalogClassNames.tableCard} ${sourceImportCatalogClassNames.selectedTableCard}`
+    : sourceImportCatalogClassNames.tableCard;
+
   return (
     <div
       role="button"
       tabIndex={0}
       aria-label={table.accessibilityLabel}
       data-source-import-table={table.canonicalName}
-      className={sourceImportCatalogClassNames.tableCard}
+      className={tableCardClassName}
       onClick={onToggle}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -152,6 +157,7 @@ export function SourceImportTableCard({
           </div>
         </div>
         <div className={sourceImportCatalogClassNames.tableMetrics}>
+          {table.selected ? <Badge variant="outline">Selected</Badge> : null}
           <div>{table.rowCountLabel}</div>
           {table.byteSizeLabel == null ? null : <div>{table.byteSizeLabel}</div>}
           <div>{table.columnCountLabel}</div>
