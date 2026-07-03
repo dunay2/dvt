@@ -93,6 +93,7 @@ export const sourceImportWizardCopy = {
   },
   catalog: {
     selectSourceTable: 'Select source table',
+    selectSourceDatabase: 'Select source database',
     inspectSourceTableMetadata: 'Inspect source table',
     metadata: 'metadata',
     rowsUnknown: 'Rows unknown',
@@ -104,6 +105,7 @@ export const sourceImportWizardCopy = {
     tablePlural: 'tables',
     schemaSingular: 'schema',
     schemaPlural: 'schemas',
+    allSelected: 'All selected',
     nullable: 'Nullable',
     required: 'Required',
     primaryKey: 'Primary key',

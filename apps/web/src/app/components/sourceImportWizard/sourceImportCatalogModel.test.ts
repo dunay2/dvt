@@ -228,6 +228,7 @@ describe('sourceImportCatalogModel', () => {
   it('projects labels and number formatting from injected catalog copy instead of model literals', () => {
     const localizedCopy: SourceImportCatalogCopy = {
       selectSourceTable: 'Seleccionar tabla origen',
+      selectSourceDatabase: 'Seleccionar base origen',
       inspectSourceTableMetadata: 'Inspeccionar tabla origen',
       metadata: 'metadata',
       rowsUnknown: 'Filas desconocidas',
@@ -239,6 +240,7 @@ describe('sourceImportCatalogModel', () => {
       tablePlural: 'tablas',
       schemaSingular: 'esquema',
       schemaPlural: 'esquemas',
+      allSelected: 'Todo seleccionado',
       nullable: 'Nullable',
       required: 'Obligatoria',
       primaryKey: 'Clave primaria',

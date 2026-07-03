@@ -191,6 +191,10 @@ export function createSourceImportWizardHarness() {
       `[data-source-import-table-select="${canonicalName}"]`
     ) ?? undefined;
 
+  const findDatabaseSelection = (database: string): HTMLDivElement | undefined =>
+    document.querySelector<HTMLDivElement>(`[data-source-import-database="${database}"]`) ??
+    undefined;
+
   async function clickTab(name: string): Promise<void> {
     const tab = requireElement(findTab(name), `EXPECTED_TAB:${name}`);
     await act(async () => {
@@ -212,6 +216,16 @@ export function createSourceImportWizardHarness() {
     );
     await act(async () => {
       checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  }
+
+  async function clickDatabaseSelection(database: string): Promise<void> {
+    const databaseSelection = requireElement(
+      findDatabaseSelection(database),
+      `EXPECTED_DATABASE_SELECTION:${database}`
+    );
+    await act(async () => {
+      databaseSelection.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
   }
 
@@ -274,6 +288,7 @@ export function createSourceImportWizardHarness() {
     clickTab,
     clickConnectionOption,
     clickClickableDivByText,
+    clickDatabaseSelection,
     clickTableSelectionCheckbox,
     clickButtonContaining,
     clickButtonByLabel,

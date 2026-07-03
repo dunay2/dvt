@@ -23,11 +23,13 @@ import {
   resolveActiveTable,
   resolveSectionForStep,
   resolveStepForSection,
+  toggleSourceImportDatabaseSelection,
   toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
 import type {
   SourceImportInitialSelection,
+  SourceImportDatabaseIdentity,
   SourceImportSchemaIdentity,
   SourceImportSection,
   SourceImportWizardState,
@@ -395,6 +397,18 @@ export function useSourceImportWizard({
     });
   };
 
+  const toggleDatabase = (database: SourceImportDatabaseIdentity) => {
+    setState((prev) => {
+      const databaseSelection = toggleSourceImportDatabaseSelection(prev.tables, database);
+
+      return {
+        ...prev,
+        tables: databaseSelection.tables,
+        activeTableKey: databaseSelection.activeTableKey,
+      };
+    });
+  };
+
   const canProceed = canProceedForStep(state.currentStep, state.selectedConnection, selectedCount);
   const canImport = state.selectedConnection != null && selectedCount > 0 && !state.isProcessing;
 
@@ -435,6 +449,7 @@ export function useSourceImportWizard({
     handleComplete,
     activateTable,
     toggleTable,
+    toggleDatabase,
     toggleSchema,
   };
 }

@@ -12468,6 +12468,29 @@ test('tracked migrations register source import schema identity selection', () =
   assert.doesNotMatch(identityMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register source import database category selection', () => {
+  const migrations = readMigrationFiles();
+  const identityMigration = migrations.find(
+    (migration) => migration.fileName === '517_source_import_database_category_selection.sql'
+  );
+
+  assert.ok(identityMigration);
+  assert.match(identityMigration.sql, /SourceImportDatabaseIdentity/);
+  assert.match(identityMigration.sql, /toggleSourceImportDatabaseSelection/);
+  assert.match(identityMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(identityMigration.sql, /database value object/);
+  assert.match(identityMigration.sql, /EV-SOURCE-IMPORT-DATABASE-CATEGORY-MODEL/);
+  assert.match(identityMigration.sql, /EV-SOURCE-IMPORT-DATABASE-CATEGORY-PRESENTATION/);
+  assert.match(identityMigration.sql, /EV-SOURCE-IMPORT-DATABASE-CATEGORY-WIZARD/);
+  assert.match(identityMigration.sql, /architectureGuard/);
+  assert.match(identityMigration.sql, /cypressCoverage/);
+  assert.match(identityMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(identityMigration.sql, /not \(value \? 'cypressCoverage'\)/);
+  assert.match(identityMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(identityMigration.sql, /frontend_component_local_files/);
+  assert.doesNotMatch(identityMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations complete source import schema identity symbol evidence', () => {
   const migrations = readMigrationFiles();
   const evidenceMigration = migrations.find(

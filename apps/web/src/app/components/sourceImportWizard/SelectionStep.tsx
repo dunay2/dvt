@@ -11,7 +11,7 @@ import {
   buildWarehouseTableKey,
   buildSourceImportCatalogViewModel,
 } from './sourceImportCatalogModel';
-import type { SourceImportSchemaIdentity, TableInfo } from './types';
+import type { SourceImportDatabaseIdentity, SourceImportSchemaIdentity, TableInfo } from './types';
 
 interface SelectionStepProps {
   tables: TableInfo[];
@@ -22,6 +22,7 @@ interface SelectionStepProps {
   loadError: string | null;
   onTableSearchQueryChange: (query: string) => void;
   onActivateTable: (index: number) => void;
+  onToggleDatabase: (database: SourceImportDatabaseIdentity) => void;
   onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
   onToggleTable: (index: number) => void;
 }
@@ -35,6 +36,7 @@ export function SelectionStep({
   loadError,
   onTableSearchQueryChange,
   onActivateTable,
+  onToggleDatabase,
   onToggleSchema,
   onToggleTable,
 }: SelectionStepProps) {
@@ -91,6 +93,7 @@ export function SelectionStep({
                 catalog={catalogViewModel}
                 emptyLabel={copy.selection.empty}
                 onActivateTable={onActivateTable}
+                onToggleDatabase={onToggleDatabase}
                 onToggleSchema={onToggleSchema}
                 onToggleTable={onToggleTable}
               />

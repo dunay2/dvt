@@ -68,6 +68,7 @@ describe('SourceImportCatalogView', () => {
         <SourceImportCatalogView
           catalog={catalog}
           emptyLabel="No source tables"
+          onToggleDatabase={vi.fn()}
           onToggleSchema={onToggleSchema}
           onToggleTable={onToggleTable}
           onActivateTable={onActivateTable}
@@ -106,6 +107,7 @@ describe('SourceImportCatalogView', () => {
   });
 
   it('renders database categories above schema groups without changing table selection behavior', async () => {
+    const onToggleDatabase = vi.fn();
     const onToggleSchema = vi.fn();
     const onToggleTable = vi.fn();
     const onActivateTable = vi.fn();
@@ -126,6 +128,7 @@ describe('SourceImportCatalogView', () => {
           catalog={catalog}
           emptyLabel="No source tables"
           onToggleSchema={onToggleSchema}
+          onToggleDatabase={onToggleDatabase}
           onToggleTable={onToggleTable}
           onActivateTable={onActivateTable}
         />
@@ -140,9 +143,11 @@ describe('SourceImportCatalogView', () => {
     expect(container.textContent).toContain('CRM');
 
     await act(async () => {
+      fireEvent.click(container.querySelector('[data-source-import-database="RAW"]')!);
       fireEvent.click(container.querySelector('[data-source-import-schema="RAW.CRM"]')!);
     });
 
+    expect(onToggleDatabase).toHaveBeenCalledWith({ database: 'RAW' });
     expect(onToggleSchema).toHaveBeenCalledWith({ database: 'RAW', schema: 'CRM' });
   });
 
@@ -165,6 +170,7 @@ describe('SourceImportCatalogView', () => {
         <SourceImportCatalogView
           catalog={catalog}
           emptyLabel="No source tables"
+          onToggleDatabase={vi.fn()}
           onToggleSchema={onToggleSchema}
           onToggleTable={onToggleTable}
           onActivateTable={onActivateTable}
@@ -207,6 +213,7 @@ describe('SourceImportCatalogView', () => {
         <SourceImportCatalogView
           catalog={catalog}
           emptyLabel="No source tables"
+          onToggleDatabase={vi.fn()}
           onToggleSchema={onToggleSchema}
           onToggleTable={onToggleTable}
           onActivateTable={onActivateTable}

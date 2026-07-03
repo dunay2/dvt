@@ -6,6 +6,7 @@ import {
   buildWarehouseSourceImportPort,
   createSourceImportWizardHarness,
 } from './SourceImportWizard.testHarness';
+import type { ImportSourcesInput } from '../ports/workspace';
 
 describe('SourceImportWizard', () => {
   let harness: ReturnType<typeof createSourceImportWizardHarness>;
@@ -175,6 +176,48 @@ describe('SourceImportWizard', () => {
 
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('selects all visible source tables in a database category before attaching sources', async () => {
+    const importSources = vi.fn(async (input: ImportSourcesInput) => ({
+      success: true as const,
+      sourcesCreated: input.tables.length,
+      tablesImported: input.tables.length,
+      yamlFiles: ['models/sources/raw.yml'],
+      importedNodeIds: input.tables.map((table) => `src_${table.schema}_${table.table}`),
+      grouping: 'database' as const,
+      options: {
+        includeColumns: input.includeColumns,
+        addTests: input.addTests,
+        addFreshness: input.addFreshness,
+      },
+    }));
+
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseTables: async () => [
+          { database: 'RAW', schema: 'ERP', table: 'ORDERS', rowCount: 100 },
+          { database: 'RAW', schema: 'CRM', table: 'CUSTOMERS', rowCount: 50 },
+          { database: 'MART', schema: 'ERP', table: 'ORDERS', rowCount: 10 },
+        ],
+        importSources,
+      }),
+    });
+
+    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickTab('Browse');
+    await harness.clickDatabaseSelection('RAW');
+    await harness.clickTab('Selected');
+    await harness.clickButtonContaining('Attach sources to canvas');
+
+    expect(importSources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tables: [
+          expect.objectContaining({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+          expect.objectContaining({ database: 'RAW', schema: 'CRM', table: 'CUSTOMERS' }),
+        ],
+      })
+    );
   });
 
   it('surfaces a no-op result when the selected sources already exist and does not fire the canvas handoff', async () => {

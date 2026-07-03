@@ -39,6 +39,10 @@ export type SourceImportSchemaIdentity = Readonly<{
   schema: string;
 }>;
 
+export type SourceImportDatabaseIdentity = Readonly<{
+  database: string;
+}>;
+
 export interface SourceImportWizardState {
   currentStep: WizardStep;
   connections: WarehouseConnection[];
