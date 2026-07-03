@@ -34,9 +34,9 @@ export const mockWorkspacePortCapabilities = {
 } as const;
 
 const mockConnections: WarehouseConnection[] = [
-  { id: 'conn-1', name: 'Production Warehouse', type: 'snowflake', database: 'RAW' },
-  { id: 'conn-2', name: 'Analytics DB', type: 'bigquery', database: 'analytics' },
-  { id: 'conn-3', name: 'Dev Redshift', type: 'redshift', database: 'dev' },
+  { id: 'conn-1', name: 'Production Postgres', type: 'postgres', database: 'RAW' },
+  { id: 'conn-2', name: 'Analytics Postgres', type: 'postgres', database: 'analytics' },
+  { id: 'conn-3', name: 'Dev Postgres', type: 'postgres', database: 'dev' },
 ];
 
 const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {

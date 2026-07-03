@@ -38,7 +38,7 @@ describe('SourceImportWizard metadata exploration', () => {
       }),
     });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
     await harness.clickClickableDivByText('ORDERS');
     await harness.clickTab('Metadata');
@@ -124,14 +124,14 @@ describe('SourceImportWizard metadata exploration', () => {
         listWarehouseConnections: async () => [
           {
             id: 'conn-1',
-            name: 'Snowflake PROD',
-            type: 'snowflake',
+            name: 'Local Postgres proof',
+            type: 'postgres',
             database: 'RAW',
           },
           {
             id: 'conn-2',
-            name: 'Snowflake QA',
-            type: 'snowflake',
+            name: 'QA Postgres proof',
+            type: 'postgres',
             database: 'RAW',
           },
         ],
@@ -143,7 +143,7 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('Selected: 1');
 
     await harness.clickTab('Connections');
-    await harness.clickConnectionOption('Snowflake QA');
+    await harness.clickConnectionOption('QA Postgres proof');
     await harness.clickTab('Browse');
     await harness.flushPendingWork();
 
@@ -215,7 +215,7 @@ describe('SourceImportWizard metadata exploration', () => {
       }),
     });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
 
     const search = document.querySelector<HTMLInputElement>(
@@ -266,7 +266,7 @@ describe('SourceImportWizard metadata exploration', () => {
       }),
     });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
     await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
 
@@ -296,7 +296,7 @@ describe('SourceImportWizard metadata exploration', () => {
       }),
     });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
     await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
     await harness.clickTab('Selected');
@@ -333,7 +333,7 @@ describe('SourceImportWizard metadata exploration', () => {
       }),
     });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
     await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
 

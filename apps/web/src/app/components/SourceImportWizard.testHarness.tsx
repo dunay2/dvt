@@ -44,9 +44,9 @@ export function buildWarehouseSourceImportPort(
     listWarehouseConnections: async () => [
       {
         id: 'conn-1',
-        name: 'Snowflake PROD',
-        type: 'snowflake',
-        database: 'RAW',
+        name: 'Local Postgres proof',
+        type: 'postgres',
+        database: 'dvt',
       },
     ],
     listWarehouseTables: async () => [
