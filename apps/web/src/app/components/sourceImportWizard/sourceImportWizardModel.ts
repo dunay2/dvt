@@ -2,6 +2,7 @@ import { WIZARD_STEPS } from './constants';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { buildWarehouseTableKey } from './sourceImportCatalogModel';
 import type {
+  SourceImportDatabaseIdentity,
   SourceImportSchemaIdentity,
   SourceImportSection,
   TableInfo,
@@ -50,6 +51,22 @@ export function toggleSourceImportSchemaSelection(
         : table
     ),
     activeTableKey: firstSchemaTable ? buildWarehouseTableKey(firstSchemaTable) : null,
+  };
+}
+
+export function toggleSourceImportDatabaseSelection(
+  tables: readonly TableInfo[],
+  databaseIdentity: SourceImportDatabaseIdentity
+): Readonly<{ tables: TableInfo[]; activeTableKey: string | null }> {
+  const databaseTables = tables.filter((table) => table.database === databaseIdentity.database);
+  const allSelected = databaseTables.length > 0 && databaseTables.every((table) => table.selected);
+  const firstDatabaseTable = databaseTables[0];
+
+  return {
+    tables: tables.map((table) =>
+      table.database === databaseIdentity.database ? { ...table, selected: !allSelected } : table
+    ),
+    activeTableKey: firstDatabaseTable ? buildWarehouseTableKey(firstDatabaseTable) : null,
   };
 }
 

@@ -14,6 +14,7 @@ export const sourceImportCatalogClassNames = {
   databaseHeader:
     'rounded border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100',
   databaseHeaderContent: 'flex items-center justify-between gap-3',
+  databaseIdentity: 'flex min-w-0 items-center gap-2',
   databaseTitle: 'font-mono font-medium',
   databaseMetrics: 'flex flex-wrap justify-end gap-2 text-xs text-slate-400',
   schemaHeader: 'mb-2 flex items-center gap-2',
@@ -47,9 +48,12 @@ type SourceImportSchemaHeaderProps = Readonly<{
 
 type SourceImportDatabaseHeaderProps = Readonly<{
   database: string;
+  accessibilityLabel: string;
   schemaCountLabel: string;
   tableCountLabel: string;
   selected: boolean;
+  selectedLabel: string | null;
+  onToggle: () => void;
 }>;
 
 type SourceImportTableCardProps = Readonly<{
@@ -78,18 +82,37 @@ export function SourceImportDatabaseGroup({
 
 export function SourceImportDatabaseHeader({
   database,
+  accessibilityLabel,
   schemaCountLabel,
   tableCountLabel,
   selected,
+  selectedLabel,
+  onToggle,
 }: SourceImportDatabaseHeaderProps): JSX.Element {
   return (
-    <div className={sourceImportCatalogClassNames.databaseHeader}>
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={accessibilityLabel}
+      data-source-import-database={database}
+      className={sourceImportCatalogClassNames.databaseHeader}
+      onClick={onToggle}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onToggle();
+        }
+      }}
+    >
       <div className={sourceImportCatalogClassNames.databaseHeaderContent}>
-        <span className={sourceImportCatalogClassNames.databaseTitle}>{database}</span>
+        <span className={sourceImportCatalogClassNames.databaseIdentity}>
+          <Checkbox checked={selected} />
+          <span className={sourceImportCatalogClassNames.databaseTitle}>{database}</span>
+        </span>
         <span className={sourceImportCatalogClassNames.databaseMetrics}>
           <Badge variant="secondary">{schemaCountLabel}</Badge>
           <Badge variant="secondary">{tableCountLabel}</Badge>
-          {selected ? <Badge variant="outline">All selected</Badge> : null}
+          {selectedLabel ? <Badge variant="outline">{selectedLabel}</Badge> : null}
         </span>
       </div>
     </div>

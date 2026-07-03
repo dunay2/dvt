@@ -11,12 +11,13 @@ import {
   buildSourceImportSchemaKey,
   type SourceImportCatalogViewModel,
 } from './sourceImportCatalogModel';
-import type { SourceImportSchemaIdentity } from './types';
+import type { SourceImportDatabaseIdentity, SourceImportSchemaIdentity } from './types';
 
 type SourceImportCatalogViewProps = Readonly<{
   catalog: SourceImportCatalogViewModel;
   emptyLabel: string;
   onActivateTable: (index: number) => void;
+  onToggleDatabase: (database: SourceImportDatabaseIdentity) => void;
   onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
   onToggleTable: (index: number) => void;
 }>;
@@ -25,6 +26,7 @@ export function SourceImportCatalogView({
   catalog,
   emptyLabel,
   onActivateTable,
+  onToggleDatabase,
   onToggleSchema,
   onToggleTable,
 }: SourceImportCatalogViewProps): JSX.Element {
@@ -38,9 +40,12 @@ export function SourceImportCatalogView({
         <SourceImportDatabaseGroup key={databaseGroup.database}>
           <SourceImportDatabaseHeader
             database={databaseGroup.database}
+            accessibilityLabel={databaseGroup.accessibilityLabel}
             schemaCountLabel={databaseGroup.schemaCountLabel}
             tableCountLabel={databaseGroup.tableCountLabel}
             selected={databaseGroup.selected}
+            selectedLabel={databaseGroup.selectedLabel}
+            onToggle={() => onToggleDatabase({ database: databaseGroup.database })}
           />
           {databaseGroup.schemaGroups.map((schemaGroup) => (
             <div key={`${databaseGroup.database}.${schemaGroup.schema}`}>

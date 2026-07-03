@@ -29,8 +29,10 @@ export type SourceImportSchemaGroupViewModel = Readonly<{
 
 export type SourceImportDatabaseGroupViewModel = Readonly<{
   database: string;
+  accessibilityLabel: string;
   schemaCountLabel: string;
   tableCountLabel: string;
+  selectedLabel: string | null;
   selected: boolean;
   schemaGroups: readonly SourceImportSchemaGroupViewModel[];
 }>;
@@ -48,6 +50,7 @@ export type SourceImportCatalogViewModel = Readonly<{
 
 export type SourceImportCatalogCopy = Readonly<{
   selectSourceTable: string;
+  selectSourceDatabase: string;
   inspectSourceTableMetadata: string;
   metadata: string;
   rowsUnknown: string;
@@ -59,6 +62,7 @@ export type SourceImportCatalogCopy = Readonly<{
   tablePlural: string;
   schemaSingular: string;
   schemaPlural: string;
+  allSelected: string;
   nullable: string;
   required: string;
   primaryKey: string;
@@ -275,6 +279,11 @@ export function buildSourceImportCatalogViewModel({
 
       return {
         database,
+        accessibilityLabel: `${copy.selectSourceDatabase} ${database}. ${formatSourceImportSchemaCount(
+          databaseSchemas.length,
+          copy,
+          numberFormatter
+        )}. ${formatSourceImportTableCount(databaseTables.length, copy, numberFormatter)}.`,
         schemaCountLabel: formatSourceImportSchemaCount(
           databaseSchemas.length,
           copy,
@@ -282,6 +291,10 @@ export function buildSourceImportCatalogViewModel({
         ),
         tableCountLabel: formatSourceImportTableCount(databaseTables.length, copy, numberFormatter),
         selected: databaseTables.length > 0 && databaseTables.every((table) => table.selected),
+        selectedLabel:
+          databaseTables.length > 0 && databaseTables.every((table) => table.selected)
+            ? copy.allSelected
+            : null,
         schemaGroups: databaseSchemas,
       };
     });

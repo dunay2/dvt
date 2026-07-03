@@ -15,6 +15,7 @@ import {
   resolveActiveTable,
   resolveSectionForStep,
   resolveStepForSection,
+  toggleSourceImportDatabaseSelection,
   toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
 
@@ -57,6 +58,57 @@ describe('sourceImportWizardModel', () => {
       expect.objectContaining({ database: 'RAW', schema: 'PUBLIC', selected: false }),
       expect.objectContaining({ database: 'MART', schema: 'PUBLIC', selected: true }),
       expect.objectContaining({ database: 'MART', schema: 'FINANCE', selected: false }),
+    ]);
+  });
+
+  it('toggles all tables in the selected database without affecting another database', () => {
+    const result = toggleSourceImportDatabaseSelection(
+      [
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+        buildTable({ database: 'RAW', schema: 'CRM', table: 'CUSTOMERS' }),
+        buildTable({ database: 'MART', schema: 'ERP', table: 'ORDERS' }),
+      ],
+      { database: 'RAW' }
+    );
+
+    expect(result.activeTableKey).toBe('RAW.ERP.ORDERS');
+    expect(result.tables).toEqual([
+      expect.objectContaining({ database: 'RAW', schema: 'ERP', table: 'ORDERS', selected: true }),
+      expect.objectContaining({
+        database: 'RAW',
+        schema: 'CRM',
+        table: 'CUSTOMERS',
+        selected: true,
+      }),
+      expect.objectContaining({
+        database: 'MART',
+        schema: 'ERP',
+        table: 'ORDERS',
+        selected: false,
+      }),
+    ]);
+
+    const deselected = toggleSourceImportDatabaseSelection(result.tables, { database: 'RAW' });
+
+    expect(deselected.tables).toEqual([
+      expect.objectContaining({
+        database: 'RAW',
+        schema: 'ERP',
+        table: 'ORDERS',
+        selected: false,
+      }),
+      expect.objectContaining({
+        database: 'RAW',
+        schema: 'CRM',
+        table: 'CUSTOMERS',
+        selected: false,
+      }),
+      expect.objectContaining({
+        database: 'MART',
+        schema: 'ERP',
+        table: 'ORDERS',
+        selected: false,
+      }),
     ]);
   });
 
