@@ -15,11 +15,8 @@ interface WarehouseConnectionCreateFormProps {
   onSubmit: () => void;
 }
 
-const warehouseConnectionTypes: readonly CreateWarehouseConnectionInput['type'][] = [
+const supportedWarehouseConnectionTypes: readonly CreateWarehouseConnectionInput['type'][] = [
   'postgres',
-  'snowflake',
-  'bigquery',
-  'redshift',
 ];
 
 export function WarehouseConnectionCreateForm({
@@ -87,7 +84,7 @@ export function WarehouseConnectionCreateForm({
                 )
               }
             >
-              {warehouseConnectionTypes.map((type) => (
+              {supportedWarehouseConnectionTypes.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>

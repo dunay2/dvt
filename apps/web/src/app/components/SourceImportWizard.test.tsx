@@ -31,7 +31,10 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('Selected');
     expect(document.body.textContent).not.toContain('DataObject Registry');
     expect(document.body.textContent).toContain('Choose database connection');
-    expect(document.body.textContent).toContain('Snowflake PROD');
+    expect(document.body.textContent).toContain('Local Postgres proof');
+    expect(document.body.textContent).not.toContain('Snowflake PROD');
+    expect(document.body.textContent).not.toContain('BigQuery');
+    expect(document.body.textContent).not.toContain('Redshift');
     expect(document.body.textContent).not.toContain('File');
     expect(document.body.textContent).not.toContain('API');
     expect(document.body.textContent).not.toContain('Stream');
@@ -42,12 +45,12 @@ describe('SourceImportWizard', () => {
     expect(harness.findTab('Browse')?.disabled).toBe(true);
     expect(harness.findTab('Metadata')?.disabled).toBe(true);
     expect(harness.findTab('Selected')?.disabled).toBe(true);
-    const connectionOption = harness.findConnectionOption('Snowflake PROD');
+    const connectionOption = harness.findConnectionOption('Local Postgres proof');
 
     expect(connectionOption).toBeDefined();
     expect(connectionOption?.tagName).toBe('BUTTON');
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
 
     expect(document.body.textContent).toContain('Browse source tables');
@@ -66,7 +69,7 @@ describe('SourceImportWizard', () => {
       warehouseSourceImport: buildWarehouseSourceImportPort({ testWarehouseConnection }),
     });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickButtonContaining('Test connection');
     await harness.flushPendingWork();
 
@@ -123,6 +126,23 @@ describe('SourceImportWizard', () => {
     expect(document.body.textContent).toContain('dvt.public.orders');
   });
 
+  it('offers only currently supported warehouse adapters when creating a connection', async () => {
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listWarehouseConnections: async () => [],
+      }),
+    });
+
+    await harness.clickButtonContaining('New connection');
+
+    const typeSelect = document.querySelector<HTMLSelectElement>(
+      'select[aria-label="Connection type"]'
+    );
+    const options = Array.from(typeSelect?.options ?? []).map((option) => option.value);
+
+    expect(options).toEqual(['postgres']);
+  });
+
   it('does not create a warehouse connection when required command fields are missing', async () => {
     const createWarehouseConnection = vi.fn(
       buildWarehouseSourceImportPort().createWarehouseConnection
@@ -152,7 +172,7 @@ describe('SourceImportWizard', () => {
 
     await harness.renderWizard({ onClose, onComplete });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
     await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
     await harness.clickTab('Selected');
@@ -204,7 +224,7 @@ describe('SourceImportWizard', () => {
       }),
     });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
     await harness.clickDatabaseSelection('RAW');
     await harness.clickTab('Selected');
@@ -242,7 +262,7 @@ describe('SourceImportWizard', () => {
       }),
     });
 
-    await harness.clickConnectionOption('Snowflake PROD');
+    await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
     await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
     await harness.clickTab('Selected');
