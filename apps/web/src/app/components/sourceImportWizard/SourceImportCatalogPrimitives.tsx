@@ -39,6 +39,7 @@ export const sourceImportCatalogClassNames = {
 
 type SourceImportSchemaHeaderProps = Readonly<{
   schema: string;
+  schemaIdentityKey: string;
   selected: boolean;
   tableCountLabel: string;
   onToggle: () => void;
@@ -97,6 +98,7 @@ export function SourceImportDatabaseHeader({
 
 export function SourceImportSchemaHeader({
   schema,
+  schemaIdentityKey,
   selected,
   tableCountLabel,
   onToggle,
@@ -105,7 +107,7 @@ export function SourceImportSchemaHeader({
     <div
       role="button"
       tabIndex={0}
-      data-source-import-schema={schema}
+      data-source-import-schema={schemaIdentityKey}
       className={sourceImportCatalogClassNames.schemaHeader}
       onClick={onToggle}
       onKeyDown={(event) => {

@@ -12448,3 +12448,40 @@ test('tracked migrations backfill source import catalog copy symbol Cypress cove
   assert.match(coverageMigration.sql, /feature_mechanization_local_rails/);
   assert.doesNotMatch(coverageMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register source import schema identity selection', () => {
+  const migrations = readMigrationFiles();
+  const identityMigration = migrations.find(
+    (migration) => migration.fileName === '512_source_import_schema_identity_selection.sql'
+  );
+
+  assert.ok(identityMigration);
+  assert.match(identityMigration.sql, /SourceImportSchemaIdentity/);
+  assert.match(identityMigration.sql, /buildSourceImportSchemaKey/);
+  assert.match(identityMigration.sql, /toggleSourceImportSchemaSelection/);
+  assert.match(identityMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(identityMigration.sql, /database\/schema identity/);
+  assert.match(identityMigration.sql, /EV-SOURCE-IMPORT-SCHEMA-IDENTITY-MODEL/);
+  assert.match(identityMigration.sql, /EV-SOURCE-IMPORT-SCHEMA-IDENTITY-PRESENTATION/);
+  assert.match(identityMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(identityMigration.sql, /frontend_component_local_files/);
+  assert.doesNotMatch(identityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete source import schema identity symbol evidence', () => {
+  const migrations = readMigrationFiles();
+  const evidenceMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '513_source_import_schema_identity_evidence_completion.sql'
+  );
+
+  assert.ok(evidenceMigration);
+  assert.match(evidenceMigration.sql, /SourceImportSchemaIdentity/);
+  assert.match(evidenceMigration.sql, /buildSourceImportSchemaKey/);
+  assert.match(evidenceMigration.sql, /toggleSourceImportSchemaSelection/);
+  assert.match(evidenceMigration.sql, /architectureGuard/);
+  assert.match(evidenceMigration.sql, /cypressCoverage/);
+  assert.match(evidenceMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(evidenceMigration.sql, /feature_mechanization_local_rails/);
+  assert.doesNotMatch(evidenceMigration.sql, /truncate\s+/i);
+});

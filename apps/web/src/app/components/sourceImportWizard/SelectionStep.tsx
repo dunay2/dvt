@@ -11,7 +11,7 @@ import {
   buildWarehouseTableKey,
   buildSourceImportCatalogViewModel,
 } from './sourceImportCatalogModel';
-import type { TableInfo } from './types';
+import type { SourceImportSchemaIdentity, TableInfo } from './types';
 
 interface SelectionStepProps {
   tables: TableInfo[];
@@ -22,7 +22,7 @@ interface SelectionStepProps {
   loadError: string | null;
   onTableSearchQueryChange: (query: string) => void;
   onActivateTable: (index: number) => void;
-  onToggleSchema: (schema: string) => void;
+  onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
   onToggleTable: (index: number) => void;
 }
 

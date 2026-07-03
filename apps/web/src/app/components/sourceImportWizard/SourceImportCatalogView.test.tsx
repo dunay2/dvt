@@ -95,12 +95,12 @@ describe('SourceImportCatalogView', () => {
     });
 
     await act(async () => {
-      fireEvent.click(container.querySelector('[data-source-import-schema="ERP"]')!);
+      fireEvent.click(container.querySelector('[data-source-import-schema="RAW.ERP"]')!);
       fireEvent.keyDown(inspectAction, { key: 'Enter' });
       fireEvent.click(selectAction);
     });
 
-    expect(onToggleSchema).toHaveBeenCalledWith('ERP');
+    expect(onToggleSchema).toHaveBeenCalledWith({ database: 'RAW', schema: 'ERP' });
     expect(onActivateTable).toHaveBeenCalledWith(0);
     expect(onToggleTable).toHaveBeenCalledWith(0);
   });
@@ -140,10 +140,49 @@ describe('SourceImportCatalogView', () => {
     expect(container.textContent).toContain('CRM');
 
     await act(async () => {
-      fireEvent.click(container.querySelector('[data-source-import-schema="CRM"]')!);
+      fireEvent.click(container.querySelector('[data-source-import-schema="RAW.CRM"]')!);
     });
 
-    expect(onToggleSchema).toHaveBeenCalledWith('CRM');
+    expect(onToggleSchema).toHaveBeenCalledWith({ database: 'RAW', schema: 'CRM' });
+  });
+
+  it('delegates schema selection with database scope when schemas share the same name', async () => {
+    const onToggleSchema = vi.fn();
+    const onToggleTable = vi.fn();
+    const onActivateTable = vi.fn();
+    const catalog = buildSourceImportCatalogViewModel({
+      activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter: sourceImportCatalogNumberFormatter,
+      tables: [
+        buildTable({ database: 'RAW', schema: 'PUBLIC', table: 'ORDERS' }),
+        buildTable({ database: 'MART', schema: 'PUBLIC', table: 'CUSTOMERS' }),
+      ],
+    });
+
+    await act(async () => {
+      root.render(
+        <SourceImportCatalogView
+          catalog={catalog}
+          emptyLabel="No source tables"
+          onToggleSchema={onToggleSchema}
+          onToggleTable={onToggleTable}
+          onActivateTable={onActivateTable}
+        />
+      );
+    });
+
+    const martPublic = container.querySelector('[data-source-import-schema="MART.PUBLIC"]');
+    expect(martPublic).not.toBeNull();
+
+    await act(async () => {
+      fireEvent.click(martPublic!);
+    });
+
+    expect(onToggleSchema).toHaveBeenCalledWith({
+      database: 'MART',
+      schema: 'PUBLIC',
+    });
   });
 
   it('keeps table inspection separate from source selection', async () => {

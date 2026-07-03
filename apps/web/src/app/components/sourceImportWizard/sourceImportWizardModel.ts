@@ -1,7 +1,12 @@
 import { WIZARD_STEPS } from './constants';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { buildWarehouseTableKey } from './sourceImportCatalogModel';
-import type { SourceImportSection, TableInfo, WizardStep } from './types';
+import type {
+  SourceImportSchemaIdentity,
+  SourceImportSection,
+  TableInfo,
+  WizardStep,
+} from './types';
 
 export const SOURCE_IMPORT_SECTIONS: readonly {
   id: SourceImportSection;
@@ -26,6 +31,26 @@ export function groupTablesBySchema(tables: TableInfo[]): Record<string, TableIn
     acc[table.schema]?.push(table);
     return acc;
   }, {});
+}
+
+export function toggleSourceImportSchemaSelection(
+  tables: readonly TableInfo[],
+  schemaIdentity: SourceImportSchemaIdentity
+): Readonly<{ tables: TableInfo[]; activeTableKey: string | null }> {
+  const schemaTables = tables.filter(
+    (table) => table.database === schemaIdentity.database && table.schema === schemaIdentity.schema
+  );
+  const allSelected = schemaTables.length > 0 && schemaTables.every((table) => table.selected);
+  const firstSchemaTable = schemaTables[0];
+
+  return {
+    tables: tables.map((table) =>
+      table.database === schemaIdentity.database && table.schema === schemaIdentity.schema
+        ? { ...table, selected: !allSelected }
+        : table
+    ),
+    activeTableKey: firstSchemaTable ? buildWarehouseTableKey(firstSchemaTable) : null,
+  };
 }
 
 export function buildPreviewGroups(

@@ -15,6 +15,7 @@ import {
   resolveActiveTable,
   resolveSectionForStep,
   resolveStepForSection,
+  toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
 
 function buildTable(overrides?: Partial<TableInfo>): TableInfo {
@@ -39,6 +40,24 @@ describe('sourceImportWizardModel', () => {
       buildTable({ schema: 'MART', table: 'fct_sales' }),
     ]);
     expect(Object.keys(grouped)).toEqual(['ERP', 'MART']);
+  });
+
+  it('toggles only the selected database and schema scope when schema names repeat', () => {
+    const result = toggleSourceImportSchemaSelection(
+      [
+        buildTable({ database: 'RAW', schema: 'PUBLIC', table: 'ORDERS' }),
+        buildTable({ database: 'MART', schema: 'PUBLIC', table: 'CUSTOMERS' }),
+        buildTable({ database: 'MART', schema: 'FINANCE', table: 'REVENUE' }),
+      ],
+      { database: 'MART', schema: 'PUBLIC' }
+    );
+
+    expect(result.activeTableKey).toBe('MART.PUBLIC.CUSTOMERS');
+    expect(result.tables).toEqual([
+      expect.objectContaining({ database: 'RAW', schema: 'PUBLIC', selected: false }),
+      expect.objectContaining({ database: 'MART', schema: 'PUBLIC', selected: true }),
+      expect.objectContaining({ database: 'MART', schema: 'FINANCE', selected: false }),
+    ]);
   });
 
   it('resolves active table metadata targets', () => {

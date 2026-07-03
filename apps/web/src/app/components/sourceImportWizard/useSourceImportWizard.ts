@@ -23,10 +23,12 @@ import {
   resolveActiveTable,
   resolveSectionForStep,
   resolveStepForSection,
+  toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
 import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
 import type {
   SourceImportInitialSelection,
+  SourceImportSchemaIdentity,
   SourceImportSection,
   SourceImportWizardState,
   WizardStep,
@@ -381,17 +383,14 @@ export function useSourceImportWizard({
     }));
   };
 
-  const toggleSchema = (schema: string) => {
+  const toggleSchema = (schema: SourceImportSchemaIdentity) => {
     setState((prev) => {
-      const schemaTables = prev.tables.filter((table) => table.schema === schema);
-      const allSelected = schemaTables.every((table) => table.selected);
-      const firstSchemaTable = schemaTables[0];
+      const schemaSelection = toggleSourceImportSchemaSelection(prev.tables, schema);
+
       return {
         ...prev,
-        tables: prev.tables.map((table) =>
-          table.schema === schema ? { ...table, selected: !allSelected } : table
-        ),
-        activeTableKey: firstSchemaTable ? buildWarehouseTableKey(firstSchemaTable) : null,
+        tables: schemaSelection.tables,
+        activeTableKey: schemaSelection.activeTableKey,
       };
     });
   };
