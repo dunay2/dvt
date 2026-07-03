@@ -34,6 +34,11 @@ export interface TableInfo {
   selected: boolean;
 }
 
+export type SourceImportSchemaIdentity = Readonly<{
+  database: string;
+  schema: string;
+}>;
+
 export interface SourceImportWizardState {
   currentStep: WizardStep;
   connections: WarehouseConnection[];

@@ -7,13 +7,17 @@ import {
   SourceImportSchemaTableList,
   SourceImportTableCard,
 } from './SourceImportCatalogPrimitives';
-import type { SourceImportCatalogViewModel } from './sourceImportCatalogModel';
+import {
+  buildSourceImportSchemaKey,
+  type SourceImportCatalogViewModel,
+} from './sourceImportCatalogModel';
+import type { SourceImportSchemaIdentity } from './types';
 
 type SourceImportCatalogViewProps = Readonly<{
   catalog: SourceImportCatalogViewModel;
   emptyLabel: string;
   onActivateTable: (index: number) => void;
-  onToggleSchema: (schema: string) => void;
+  onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
   onToggleTable: (index: number) => void;
 }>;
 
@@ -42,9 +46,18 @@ export function SourceImportCatalogView({
             <div key={`${databaseGroup.database}.${schemaGroup.schema}`}>
               <SourceImportSchemaHeader
                 schema={schemaGroup.schema}
+                schemaIdentityKey={buildSourceImportSchemaKey({
+                  database: databaseGroup.database,
+                  schema: schemaGroup.schema,
+                })}
                 selected={schemaGroup.selected}
                 tableCountLabel={schemaGroup.tableCountLabel}
-                onToggle={() => onToggleSchema(schemaGroup.schema)}
+                onToggle={() =>
+                  onToggleSchema({
+                    database: databaseGroup.database,
+                    schema: schemaGroup.schema,
+                  })
+                }
               />
               <SourceImportSchemaTableList>
                 {schemaGroup.tables.map((table) => (

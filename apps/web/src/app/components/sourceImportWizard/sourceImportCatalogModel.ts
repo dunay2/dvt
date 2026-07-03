@@ -1,4 +1,4 @@
-import type { TableInfo } from './types';
+import type { SourceImportSchemaIdentity, TableInfo } from './types';
 
 export type SourceImportColumnViewModel = Readonly<{
   name: string;
@@ -72,6 +72,10 @@ export function buildWarehouseTableKey(
   table: Pick<TableInfo, 'database' | 'schema' | 'table'>
 ): string {
   return [table.database, table.schema, table.table].join('.');
+}
+
+export function buildSourceImportSchemaKey(schema: SourceImportSchemaIdentity): string {
+  return [schema.database, schema.schema].join('.');
 }
 
 function formatNumber(value: number, numberFormatter: Intl.NumberFormat): string {
