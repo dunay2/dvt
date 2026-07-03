@@ -24,6 +24,20 @@ const SOURCE_IMPORT_SECTION_TABS_PATH = resolve(
 const SOURCE_IMPORT_SECTION_TABS_SOURCE = existsSync(SOURCE_IMPORT_SECTION_TABS_PATH)
   ? readFileSync(SOURCE_IMPORT_SECTION_TABS_PATH, 'utf8')
   : '';
+const SOURCE_IMPORT_REVIEW_STEP_PATH = resolve(
+  COMPONENT_ROOT,
+  'sourceImportWizard',
+  'ReviewStep.tsx'
+);
+const SOURCE_IMPORT_REVIEW_STEP_SOURCE = readFileSync(SOURCE_IMPORT_REVIEW_STEP_PATH, 'utf8');
+const SOURCE_IMPORT_REVIEW_VIEW_PATH = resolve(
+  COMPONENT_ROOT,
+  'sourceImportWizard',
+  'SourceImportReviewView.tsx'
+);
+const SOURCE_IMPORT_REVIEW_VIEW_SOURCE = existsSync(SOURCE_IMPORT_REVIEW_VIEW_PATH)
+  ? readFileSync(SOURCE_IMPORT_REVIEW_VIEW_PATH, 'utf8')
+  : '';
 
 describe('SourceImportWizard architecture', () => {
   it('keeps the Add Source modal frame in presentation primitives', () => {
@@ -54,5 +68,21 @@ describe('SourceImportWizard architecture', () => {
     );
     expect(SOURCE_IMPORT_SECTION_TABS_SOURCE).not.toContain('className="mb-4 grid');
     expect(SOURCE_IMPORT_SECTION_TABS_SOURCE).not.toContain('className="border-r');
+  });
+
+  it('keeps selected-source review presentation in a dedicated template', () => {
+    expect(existsSync(SOURCE_IMPORT_REVIEW_VIEW_PATH)).toBe(true);
+    expect(SOURCE_IMPORT_REVIEW_STEP_SOURCE).toContain("from './SourceImportReviewView'");
+    expect(SOURCE_IMPORT_REVIEW_STEP_SOURCE).toContain('SourceImportReviewView');
+    expect(SOURCE_IMPORT_REVIEW_STEP_SOURCE).not.toContain("from '../ui/card'");
+    expect(SOURCE_IMPORT_REVIEW_STEP_SOURCE).not.toContain("from '../ui/scroll-area'");
+    expect(SOURCE_IMPORT_REVIEW_STEP_SOURCE).not.toContain("from '../ui/separator'");
+    expect(SOURCE_IMPORT_REVIEW_STEP_SOURCE).not.toContain('Destination is configured');
+    expect(SOURCE_IMPORT_REVIEW_STEP_SOURCE).not.toContain('Tables Selected');
+
+    expect(SOURCE_IMPORT_REVIEW_VIEW_SOURCE).toContain('sourceImportReviewViewClassNames');
+    expect(SOURCE_IMPORT_REVIEW_VIEW_SOURCE).toContain('SourceImportReviewSummaryCard');
+    expect(SOURCE_IMPORT_REVIEW_VIEW_SOURCE).toContain('SourceImportAttachmentPreview');
+    expect(SOURCE_IMPORT_REVIEW_VIEW_SOURCE).toContain('SourceImportSelectionBasket');
   });
 });

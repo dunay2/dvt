@@ -126,6 +126,7 @@ export function configureCanvasHarnessHookAndProjectionMocks(
     target: edge.targetId,
   }));
   mocks.getAllOverlays.mockReturnValue([{ id: 'impact' }]);
+  mocks.getPluginPortMap.mockReturnValue(new Map());
   mocks.getAllCanvasKinds.mockReturnValue([
     {
       kind: 'dbt',
