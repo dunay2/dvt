@@ -4,7 +4,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { sourceImportWizardCopy as copy } from './copy';
+import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
   buildSourceImportCatalogViewModel,
@@ -36,6 +36,8 @@ export function ReviewStep({
   const catalogViewModel = buildSourceImportCatalogViewModel({
     tables,
     activeTableKey: null,
+    copy: copy.catalog,
+    numberFormatter: sourceImportCatalogNumberFormatter,
   });
 
   return (
@@ -130,7 +132,12 @@ export function ReviewStep({
 }
 
 function ReviewSourceTableRow({ table }: Readonly<{ table: TableInfo }>): JSX.Element {
-  const tableViewModel = buildSourceImportTableViewModel(table, 0);
+  const tableViewModel = buildSourceImportTableViewModel(
+    table,
+    0,
+    copy.catalog,
+    sourceImportCatalogNumberFormatter
+  );
 
   return (
     <div className="flex min-w-0 items-center justify-between gap-2">

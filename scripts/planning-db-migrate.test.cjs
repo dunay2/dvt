@@ -12394,3 +12394,57 @@ test('tracked migrations reconcile source import catalog model symbols across fe
   assert.match(reconcileMigration.sql, /cypressCoverage/);
   assert.doesNotMatch(reconcileMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register source import catalog copy token contract', () => {
+  const migrations = readMigrationFiles();
+  const copyTokenMigration = migrations.find(
+    (migration) => migration.fileName === '509_source_import_catalog_copy_token_contract.sql'
+  );
+
+  assert.ok(copyTokenMigration);
+  assert.match(copyTokenMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
+  assert.match(copyTokenMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(copyTokenMigration.sql, /SourceImportCatalogCopy/);
+  assert.match(copyTokenMigration.sql, /sourceImportCatalogNumberFormatter/);
+  assert.match(copyTokenMigration.sql, /sourceImportWizardCopy\.catalog/);
+  assert.match(copyTokenMigration.sql, /sourceImportCatalogModel\.test\.ts/);
+  assert.match(copyTokenMigration.sql, /SourceImportCatalogView\.test\.tsx/);
+  assert.match(copyTokenMigration.sql, /E-CANVAS-ADD-SOURCE-CATALOG-SEARCH-1/);
+  assert.match(copyTokenMigration.sql, /E-CANVAS-ADD-SOURCE-INSPECT-SELECT-1/);
+  assert.doesNotMatch(copyTokenMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations expose source import catalog copy symbols to feature mechanization', () => {
+  const migrations = readMigrationFiles();
+  const copySymbolMigration = migrations.find(
+    (migration) => migration.fileName === '510_source_import_catalog_copy_feature_symbols.sql'
+  );
+
+  assert.ok(copySymbolMigration);
+  assert.match(copySymbolMigration.sql, /sourceImportWizardCopy\.catalog/);
+  assert.match(copySymbolMigration.sql, /sourceImportCatalogNumberFormatter/);
+  assert.match(copySymbolMigration.sql, /SourceImportCatalogCopy/);
+  assert.match(copySymbolMigration.sql, /raw_manifest\s*=\s*jsonb_set/);
+  assert.match(copySymbolMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(copySymbolMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(copySymbolMigration.sql, /E-CANVAS-ADD-SOURCE-CATALOG-SEARCH-1/);
+  assert.match(copySymbolMigration.sql, /E-CANVAS-ADD-SOURCE-INSPECT-SELECT-1/);
+  assert.doesNotMatch(copySymbolMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations backfill source import catalog copy symbol Cypress coverage', () => {
+  const migrations = readMigrationFiles();
+  const coverageMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '511_source_import_catalog_copy_symbol_cypress_coverage.sql'
+  );
+
+  assert.ok(coverageMigration);
+  assert.match(coverageMigration.sql, /sourceImportWizardCopy\.catalog/);
+  assert.match(coverageMigration.sql, /sourceImportCatalogNumberFormatter/);
+  assert.match(coverageMigration.sql, /SourceImportCatalogCopy/);
+  assert.match(coverageMigration.sql, /cypressCoverage/);
+  assert.match(coverageMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(coverageMigration.sql, /feature_mechanization_local_rails/);
+  assert.doesNotMatch(coverageMigration.sql, /truncate\s+/i);
+});

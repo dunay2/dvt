@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
-import { sourceImportWizardCopy as copy } from './copy';
+import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
 import { SourceImportActiveTableMetadata } from './SourceImportActiveTableMetadata';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
@@ -42,6 +42,8 @@ export function SelectionStep({
     tables,
     activeTableKey,
     searchQuery: tableSearchQuery,
+    copy: copy.catalog,
+    numberFormatter: sourceImportCatalogNumberFormatter,
   });
   const activeBrowseTable =
     tables.find(

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildSourceImportCatalogViewModel } from './sourceImportCatalogModel';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
+import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy } from './copy';
 import type { TableInfo } from './types';
 
 function buildTable(overrides?: Partial<TableInfo>): TableInfo {
@@ -21,6 +22,7 @@ function buildTable(overrides?: Partial<TableInfo>): TableInfo {
 }
 
 describe('SourceImportCatalogView', () => {
+  const catalogCopy = sourceImportWizardCopy.catalog;
   let container: HTMLDivElement;
   let root: Root;
 
@@ -46,6 +48,8 @@ describe('SourceImportCatalogView', () => {
     const onActivateTable = vi.fn();
     const catalog = buildSourceImportCatalogViewModel({
       activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter: sourceImportCatalogNumberFormatter,
       tables: [
         buildTable({
           table: 'ORDERS',
@@ -107,6 +111,8 @@ describe('SourceImportCatalogView', () => {
     const onActivateTable = vi.fn();
     const catalog = buildSourceImportCatalogViewModel({
       activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter: sourceImportCatalogNumberFormatter,
       tables: [
         buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
         buildTable({ database: 'RAW', schema: 'CRM', table: 'CUSTOMERS' }),
@@ -146,6 +152,8 @@ describe('SourceImportCatalogView', () => {
     const onActivateTable = vi.fn();
     const catalog = buildSourceImportCatalogViewModel({
       activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter: sourceImportCatalogNumberFormatter,
       tables: [
         buildTable({
           table: 'ORDERS',
