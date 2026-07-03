@@ -34,6 +34,7 @@ const mocks = vi.hoisted(() => ({
   getAllOverlays: vi.fn(),
   getAllCanvasKinds: vi.fn(),
   getRegisteredPluginIds: vi.fn(),
+  getPluginPortMap: vi.fn(),
   getSourceImportContributions: vi.fn(),
   buildNodesWithImpact: vi.fn(),
   useCanvasExecutionActions: vi.fn(),
@@ -129,6 +130,7 @@ vi.mock('../../plugins/registry', () => ({
   getAllOverlays: mocks.getAllOverlays,
   getAllCanvasKinds: mocks.getAllCanvasKinds,
   getRegisteredPluginIds: mocks.getRegisteredPluginIds,
+  getPluginPortMap: mocks.getPluginPortMap,
   getSourceImportContributions: mocks.getSourceImportContributions,
 }));
 vi.mock('./useCanvasExecutionActions', () => ({

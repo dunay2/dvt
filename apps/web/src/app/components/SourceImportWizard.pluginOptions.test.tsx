@@ -27,7 +27,7 @@ describe('SourceImportWizard plugin options', () => {
 
     await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
-    await harness.clickClickableDivByText('ORDERS');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 
@@ -86,7 +86,7 @@ describe('SourceImportWizard plugin options', () => {
 
     await harness.clickConnectionOption('Snowflake PROD');
     await harness.clickTab('Browse');
-    await harness.clickClickableDivByText('ORDERS');
+    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
     await harness.clickTab('Metadata');
     await harness.clickButtonContaining('Attach sources to canvas');
 

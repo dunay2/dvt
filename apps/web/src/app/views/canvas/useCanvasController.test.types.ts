@@ -83,6 +83,7 @@ export type CanvasHarnessMocks = {
   getAllOverlays: MockFn;
   getAllCanvasKinds: MockFn;
   getRegisteredPluginIds: MockFn;
+  getPluginPortMap: MockFn;
   getSourceImportContributions: MockFn;
   buildNodesWithImpact: MockFn;
   useCanvasExecutionActions: MockFn;
