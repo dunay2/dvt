@@ -73,6 +73,17 @@ export const sourceImportWizardCopy = {
     title: 'Selected sources',
     description: 'Review the selected source objects before attaching them to the canvas.',
     previewTitle: 'Canvas attachment preview',
+    connectionLabel: 'Connection:',
+    tablesSelectedLabel: 'Tables selected:',
+    dataObjectGroupsLabel: 'Data object groups:',
+    groupingStrategyLabel: 'Grouping strategy:',
+    enabledLabel: 'Yes',
+    disabledLabel: 'No',
+    destinationPosture:
+      'Destination is configured on a DVT Sink node after origin registration; verify the output target before previewing or running the graph.',
+    dataObjectGroupPrefix: 'data-object-group',
+    moreTablesPrefix: '... and',
+    moreTablesSuffix: 'more',
   },
   selectionBasket: {
     title: 'Selected sources',
