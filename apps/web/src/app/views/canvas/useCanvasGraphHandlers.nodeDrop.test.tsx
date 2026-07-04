@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node } from '@xyflow/react';
 
 import { canvasViewCopy } from './copy';
+import { applyStateUpdater } from './canvasCreateCanvasDocumentCommand.test.support';
 import {
-  applyStateUpdater,
   buildCanonicalNode,
   buildDraftSession,
   renderGraphHandlersHook,

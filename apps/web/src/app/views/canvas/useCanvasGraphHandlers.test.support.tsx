@@ -1,4 +1,4 @@
-import React, { act, type SetStateAction } from 'react';
+import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { toast } from 'sonner';
 import { vi } from 'vitest';
@@ -51,10 +51,6 @@ export const toastState = toast as unknown as {
   success: ReturnType<typeof vi.fn>;
   info: ReturnType<typeof vi.fn>;
 };
-
-export function applyStateUpdater<T>(updater: SetStateAction<T>, current: T): T {
-  return typeof updater === 'function' ? (updater as (value: T) => T)(current) : updater;
-}
 
 type LatestHook = ReturnType<typeof useCanvasGraphHandlers> | null;
 
