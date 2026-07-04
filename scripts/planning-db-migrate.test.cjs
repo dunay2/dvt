@@ -11504,6 +11504,68 @@ test('tracked migrations reconcile Node workbench duplicate file ownership', () 
   assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Node properties tabs as an owned presentation component', () => {
+  const migrations = readMigrationFiles();
+  const tabsMigration = migrations.find(
+    (migration) => migration.fileName === '526_node_properties_tabs_component_ownership.sql'
+  );
+
+  assert.ok(tabsMigration);
+  assert.match(tabsMigration.sql, /web\.component\.canvas\.NodePropertiesTabs/);
+  assert.match(tabsMigration.sql, /web\.component\.canvas\.NodeWorkbench/);
+  assert.match(tabsMigration.sql, /RenderNodePropertiesTabs/);
+  assert.match(tabsMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(tabsMigration.sql, /NodePropertySectionView\.tsx/);
+  assert.match(tabsMigration.sql, /NodePropertiesTabs\.architecture\.test\.ts/);
+  assert.match(tabsMigration.sql, /EV-CANVAS-NODE-PROPERTIES-TABS-PRESENTATION-SRP/);
+  assert.match(tabsMigration.sql, /presentationOnly/);
+  assert.doesNotMatch(tabsMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile imported Node properties tabs ownership', () => {
+  const migrations = readMigrationFiles();
+  const reconcileMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '527_node_properties_tabs_imported_ownership_reconcile.sql'
+  );
+
+  assert.ok(reconcileMigration);
+  assert.match(
+    reconcileMigration.sql,
+    /delete from planning_query_store\.frontend_component_files/i
+  );
+  assert.match(reconcileMigration.sql, /web\.component\.canvas\.NodeWorkbench/);
+  assert.match(reconcileMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(reconcileMigration.sql, /NodePropertySectionView\.tsx/);
+  assert.match(
+    reconcileMigration.sql,
+    /EV-CANVAS-NODE-WORKBENCH-NODE-PROPERTIES-TABS-IMPORTED-OWNERSHIP-RECONCILED/
+  );
+  assert.doesNotMatch(reconcileMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep Node properties tabs ownership import resistant', () => {
+  const migrations = readMigrationFiles();
+  const importResistantMigration = migrations.find(
+    (migration) => migration.fileName === '528_node_properties_tabs_import_resistant_tombstone.sql'
+  );
+
+  assert.ok(importResistantMigration);
+  assert.match(
+    importResistantMigration.sql,
+    /insert into planning_query_store\.frontend_component_local_files/i
+  );
+  assert.match(importResistantMigration.sql, /web\.component\.canvas\.NodeWorkbench/);
+  assert.match(importResistantMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(importResistantMigration.sql, /NodePropertySectionView\.tsx/);
+  assert.match(importResistantMigration.sql, /retiredForPresentationOwnership/);
+  assert.match(
+    importResistantMigration.sql,
+    /EV-CANVAS-NODE-WORKBENCH-NODE-PROPERTIES-TABS-IMPORT-RESISTANT/
+  );
+  assert.doesNotMatch(importResistantMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Inspector visual token ownership', () => {
   const migrations = readMigrationFiles();
   const tokenMigration = migrations.find(
