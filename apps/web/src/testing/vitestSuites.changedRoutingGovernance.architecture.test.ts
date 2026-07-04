@@ -19,11 +19,11 @@ describe('web Vitest governance-test routing', () => {
       resolveWebVitestChangedSuitePlan([
         'apps/web/vitest.suites.ts',
         'apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx',
-        'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx',
       ])
     ).toMatchObject({
       commands: [
-        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx',
         GOVERNANCE_TEST_COMMAND,
       ],
       requiresDependencies: false,

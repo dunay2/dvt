@@ -55,6 +55,19 @@ const LEGACY_WAREHOUSE_SOURCE_EXPLORER_PATH = resolve(
   import.meta.dirname,
   '../../components/WarehouseSourceExplorer.tsx'
 );
+const LEGACY_FIXED_INSPECTOR_PATHS = [
+  'CanvasInspectorPanel.tsx',
+  'CanvasInspectorPanel.authoring.test.tsx',
+  'CanvasInspectorPanel.canvasProperties.test.tsx',
+  'CanvasInspectorPanel.metadata.test.tsx',
+  'CanvasInspectorPanel.modelerActions.test.tsx',
+  'CanvasInspectorPanel.pluginTabs.test.tsx',
+  'CanvasInspectorPanel.test.support.tsx',
+  'CanvasInspectorPanel.test.tsx',
+].map((fileName) => resolve(import.meta.dirname, fileName));
+const LEGACY_PASSIVE_INSPECTOR_PATHS = ['InspectorPanel.tsx', 'InspectorPanel.test.tsx'].map(
+  (fileName) => resolve(import.meta.dirname, '../../components', fileName)
+);
 const LEGACY_CANVAS_TOOLBAR_PATHS = [
   'CanvasToolbar.tsx',
   'CanvasToolbarPrimaryControls.tsx',
@@ -144,12 +157,15 @@ describe('CanvasShell architecture', () => {
   });
 
   it('names execution-preview commands by product intent instead of legacy plan chrome', () => {
+    for (const source of [CANVAS_SHELL_SOURCE, CANVAS_SHELL_TYPES_SOURCE]) {
+      expect(source).toContain('onPreviewExecutionPlan');
+    }
+
     for (const source of [
       CANVAS_SHELL_SOURCE,
       CANVAS_SHELL_TYPES_SOURCE,
       CANVAS_SHELL_MAIN_PANEL_SOURCE,
     ]) {
-      expect(source).toContain('onPreviewExecutionPlan');
       expect(source).not.toMatch(/\bonPlan\b/);
     }
     expect(CANVAS_SHELL_PROPS_BUILDER_SOURCE).toContain('handlePreviewExecutionPlan');
@@ -230,6 +246,15 @@ describe('CanvasShell architecture', () => {
   it('retires the unmounted legacy Canvas toolbar surface', () => {
     for (const toolbarPath of LEGACY_CANVAS_TOOLBAR_PATHS) {
       expect(existsSync(toolbarPath), toolbarPath).toBe(false);
+    }
+  });
+
+  it('retires fixed inspector files after the contextual NodeWorkbench becomes the owner', () => {
+    for (const inspectorPath of [
+      ...LEGACY_FIXED_INSPECTOR_PATHS,
+      ...LEGACY_PASSIVE_INSPECTOR_PATHS,
+    ]) {
+      expect(existsSync(inspectorPath), inspectorPath).toBe(false);
     }
   });
 });

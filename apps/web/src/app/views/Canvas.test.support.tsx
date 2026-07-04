@@ -33,7 +33,6 @@ export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration
 })!;
 
 const canvasRouteState = vi.hoisted(() => ({
-  inspectorProps: null as null | Record<string, unknown>,
   viewportProps: null as null | Record<string, unknown>,
   initialEntry: '/canvas',
 }));
@@ -47,18 +46,6 @@ vi.mock('@xyflow/react', () => ({
 
 vi.mock('./canvas/useCanvasController', () => ({
   useCanvasController: vi.fn(),
-}));
-
-vi.mock('../components/InspectorPanel', () => ({
-  default: (props: Record<string, unknown>) => {
-    canvasRouteState.inspectorProps = props;
-    return (
-      <div data-slot="canvas-inspector-panel">
-        Inspector
-        {props.beforePanels as React.ReactNode}
-      </div>
-    );
-  },
 }));
 
 vi.mock('../components/SourceImportWizard', () => ({
@@ -132,7 +119,6 @@ export function createCanvasRouteHarness() {
   ).IS_REACT_ACT_ENVIRONMENT = true;
 
   mockedUseCanvasController.mockReset();
-  canvasRouteState.inspectorProps = null;
   canvasRouteState.viewportProps = null;
   canvasRouteState.initialEntry = '/canvas';
   resetCanvasDraftPresentationState();

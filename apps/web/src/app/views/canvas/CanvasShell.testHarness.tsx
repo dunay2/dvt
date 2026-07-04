@@ -27,10 +27,6 @@ const shellState = vi.hoisted(() => ({
   sourceImportWizardProps: null as null | Record<string, unknown>,
 }));
 
-vi.mock('../../components/InspectorPanel', () => ({
-  default: () => <div data-testid="inspector-panel" />,
-}));
-
 vi.mock('../../components/SourceImportWizard', () => ({
   default: (props: Record<string, unknown>) => {
     shellState.sourceImportWizardProps = props;

@@ -56,7 +56,6 @@ const INSPECTOR_TOKEN_SOURCE = readArchitectureSiblingSource(
   '../../components/inspector/inspectorVisualTokens.ts'
 );
 const INSPECTOR_CONSUMER_SOURCES = [
-  readArchitectureSiblingSource(import.meta.dirname, '../../components/InspectorPanel.tsx'),
   readArchitectureSiblingSource(
     import.meta.dirname,
     '../../components/inspector/NodePropertiesTabs.tsx'
