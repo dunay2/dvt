@@ -4,6 +4,7 @@
  */
 import {
   clickCanvasContextMenuItem,
+  clickPreviewExecutionPlanFromOperationalDrawer,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import {
@@ -54,6 +55,171 @@ function waitForLiveDraftSaved(
   });
 }
 
+function waitForLiveDraftEdgeSaved(
+  session: ReturnType<typeof resolveLiveFirstAuthoringWorkspaceSession>,
+  remainingAttempts = 30
+): Cypress.Chainable<void> {
+  return readLiveGraphDraft(session).then((draftResponse) => {
+    expect(draftResponse.status).to.equal(200);
+    expect(draftResponse.body).to.have.nested.property('record.draft.edges');
+
+    const edges = (
+      draftResponse.body as {
+        record: { draft: { edges: Array<{ sourceId: string; targetId: string }> } };
+      }
+    ).record.draft.edges;
+
+    if (edges.length > 0) {
+      return;
+    }
+
+    if (remainingAttempts <= 0) {
+      const summary = JSON.stringify({
+        edgeCount: edges.length,
+        edges,
+        nodeIds: (
+          draftResponse.body as {
+            record: { draft: { nodeIds?: string[] } };
+          }
+        ).record.draft.nodeIds,
+      });
+      throw new Error(
+        `Timed out waiting for the live graph draft edge to be persisted: ${summary}`
+      );
+    }
+
+    return cy.wait(500).then(() => waitForLiveDraftEdgeSaved(session, remainingAttempts - 1));
+  });
+}
+
+type DragPoint = Readonly<{ x: number; y: number }>;
+
+function buildMouseDragEvent(
+  point: DragPoint,
+  buttons: number,
+  view: Cypress.AUTWindow
+): MouseEventInit {
+  return {
+    bubbles: true,
+    button: 0,
+    buttons,
+    cancelable: true,
+    clientX: point.x,
+    clientY: point.y,
+    screenX: point.x,
+    screenY: point.y,
+    view,
+  };
+}
+
+function dispatchMouseDragEvent(
+  target: EventTarget,
+  view: Cypress.AUTWindow,
+  type: 'mousedown' | 'mousemove' | 'mouseup',
+  point: DragPoint,
+  buttons: number
+): void {
+  target.dispatchEvent(new view.MouseEvent(type, buildMouseDragEvent(point, buttons, view)));
+}
+
+function readHandleCenter(handle: HTMLElement): DragPoint {
+  const rect = handle.getBoundingClientRect();
+  return {
+    x: rect.left + rect.width / 2,
+    y: rect.top + rect.height / 2,
+  };
+}
+
+function getVisibleCanvasNodeByCardTitle(nodeName: string): Cypress.Chainable<JQuery<HTMLElement>> {
+  return cy
+    .get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+    .filter((_, element) => {
+      const text = element.textContent ?? '';
+      const rect = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+
+      return (
+        text.includes(nodeName) &&
+        rect.width > 0 &&
+        rect.height > 0 &&
+        style.visibility !== 'hidden' &&
+        style.display !== 'none' &&
+        style.opacity !== '0'
+      );
+    })
+    .should('have.length.greaterThan', 0)
+    .first()
+    .closest('.react-flow__node')
+    .should('be.visible');
+}
+
+function findNodePort(
+  nodeName: string,
+  port: 'source' | 'target'
+): Cypress.Chainable<JQuery<HTMLElement>> {
+  return getVisibleCanvasNodeByCardTitle(nodeName)
+    .find(`[data-slot="canvas-node-port-handle"][data-port="${port}"]`)
+    .should('be.visible');
+}
+
+function connectCanvasNodes(sourceName: string, targetName: string): void {
+  findNodePort(sourceName, 'source').then(($sourceHandle) => {
+    findNodePort(targetName, 'target').then(($targetHandle) => {
+      const sourcePoint = readHandleCenter($sourceHandle[0]!);
+      const targetPoint = readHandleCenter($targetHandle[0]!);
+      const middlePoint = {
+        x: (sourcePoint.x + targetPoint.x) / 2,
+        y: (sourcePoint.y + targetPoint.y) / 2,
+      };
+
+      cy.window().then((window) => {
+        dispatchMouseDragEvent($sourceHandle[0]!, window, 'mousedown', sourcePoint, 1);
+        dispatchMouseDragEvent(window.document, window, 'mousemove', middlePoint, 1);
+        dispatchMouseDragEvent(window.document, window, 'mousemove', targetPoint, 1);
+        dispatchMouseDragEvent(window.document, window, 'mouseup', targetPoint, 0);
+      });
+    });
+  });
+}
+
+function importLocalPostgresSource(): void {
+  cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
+  cy.contains('[data-slot="source-import-connection-option"]', 'Local Postgres proof', {
+    timeout: 20_000,
+  }).click();
+  cy.contains('[role="dialog"] button', 'Test connection').should('be.enabled').click();
+  cy.contains('[role="dialog"]', 'Connection passed', { timeout: 20_000 }).should('be.visible');
+  cy.contains('[role="dialog"]', 'tables reachable').should('be.visible');
+
+  cy.contains('[role="tab"]', 'Browse').click();
+  cy.get('[data-slot="source-import-table-search"]', { timeout: 20_000 })
+    .should('be.visible')
+    .clear()
+    .type('order_id');
+  cy.contains('[role="dialog"]', 'Source metadata').should('be.visible');
+  cy.contains('[role="dialog"]', 'dvt', { timeout: 20_000 }).should('be.visible');
+  cy.contains('[role="dialog"]', 'public').should('be.visible');
+  cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
+  cy.get('[data-source-import-table="dvt.public.source_1"]', { timeout: 20_000 }).click();
+  cy.get('[data-source-import-table-select="dvt.public.source_1"]', { timeout: 20_000 }).click();
+  cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
+  cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
+  cy.contains('[role="dialog"]', 'dvt.public.source_1').should('be.visible');
+
+  cy.contains('[role="tab"]', 'Metadata').click();
+  cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
+  cy.contains('[role="dialog"]', 'customer').should('be.visible');
+  cy.contains('[role="dialog"]', 'amount').should('be.visible');
+
+  cy.contains('[role="tab"]', 'Selected').click();
+  cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
+  cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
+
+  cy.contains('[role="dialog"]', 'Sources attached', { timeout: 30_000 }).should('be.visible');
+  cy.contains('[role="dialog"]', '[file] models/sources/src_public.yml').should('be.visible');
+  cy.contains('[role="dialog"] button', 'Done').click();
+}
+
 describe('Canvas source import live clean proof', () => {
   beforeEach(function () {
     if (skipWhenFirstAuthoringLiveEnvIsMissing(this)) {
@@ -61,7 +227,7 @@ describe('Canvas source import live clean proof', () => {
     }
   });
 
-  it('attaches a warehouse source from the canvas context menu and writes the source artifact', () => {
+  it('imports a warehouse source, connects it to a dbt model, and previews without draft seeding', () => {
     const session = resolveLiveFirstAuthoringWorkspaceSession('dbt');
 
     assertLiveFirstAuthoringDraftScopeIsClean('dbt');
@@ -77,42 +243,7 @@ describe('Canvas source import live clean proof', () => {
     openCanvasContextMenuAt(420, 280);
     clickCanvasContextMenuItem('Add...');
     clickCanvasContextMenuItem('Add source');
-
-    cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
-    cy.contains('[data-slot="source-import-connection-option"]', 'Local Postgres proof', {
-      timeout: 20_000,
-    }).click();
-    cy.contains('[role="dialog"] button', 'Test connection').should('be.enabled').click();
-    cy.contains('[role="dialog"]', 'Connection passed', { timeout: 20_000 }).should('be.visible');
-    cy.contains('[role="dialog"]', 'tables reachable').should('be.visible');
-
-    cy.contains('[role="tab"]', 'Browse').click();
-    cy.get('[data-slot="source-import-table-search"]', { timeout: 20_000 })
-      .should('be.visible')
-      .clear()
-      .type('order_id');
-    cy.contains('[role="dialog"]', 'Source metadata').should('be.visible');
-    cy.contains('[role="dialog"]', 'dvt', { timeout: 20_000 }).should('be.visible');
-    cy.contains('[role="dialog"]', 'public').should('be.visible');
-    cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-source-import-table="dvt.public.source_1"]', { timeout: 20_000 }).click();
-    cy.get('[data-source-import-table-select="dvt.public.source_1"]', { timeout: 20_000 }).click();
-    cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
-    cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
-    cy.contains('[role="dialog"]', 'dvt.public.source_1').should('be.visible');
-
-    cy.contains('[role="tab"]', 'Metadata').click();
-    cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
-    cy.contains('[role="dialog"]', 'customer').should('be.visible');
-    cy.contains('[role="dialog"]', 'amount').should('be.visible');
-
-    cy.contains('[role="tab"]', 'Selected').click();
-    cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
-    cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
-
-    cy.contains('[role="dialog"]', 'Sources attached', { timeout: 30_000 }).should('be.visible');
-    cy.contains('[role="dialog"]', '[file] models/sources/src_public.yml').should('be.visible');
-    cy.contains('[role="dialog"] button', 'Done').click();
+    importLocalPostgresSource();
 
     cy.contains('.react-flow__node', 'Postgres', { timeout: 20_000 })
       .should('be.visible')
@@ -126,10 +257,38 @@ describe('Canvas source import live clean proof', () => {
       const content = (sourceYamlResponse.body as { content: string }).content;
 
       expect(content).to.contain('schema: public');
+      expect(content).to.contain('name: local_postgres_dvt_public');
       expect(content).to.contain('name: source_1');
       expect(content).to.contain('order_id');
       expect(content).to.contain('customer');
       expect(content).to.contain('amount');
+    });
+
+    openCanvasContextMenuAt(740, 280);
+    clickCanvasContextMenuItem('Add...');
+    clickCanvasContextMenuItem('Add model');
+    cy.contains('.react-flow__node', 'Model 1', { timeout: 20_000 }).should('be.visible');
+
+    connectCanvasNodes('Postgres', 'Model 1');
+    cy.contains('[role="alertdialog"]', 'Confirm Dependency', { timeout: 20_000 }).should(
+      'be.visible'
+    );
+    cy.contains('[role="alertdialog"] button', 'Confirm').should('be.enabled').click();
+    cy.contains('Dependency added', { timeout: 20_000 }).should('be.visible');
+    waitForLiveDraftEdgeSaved(session);
+    cy.get('.react-flow__edge', { timeout: 20_000 }).should('have.length.greaterThan', 0);
+
+    clickPreviewExecutionPlanFromOperationalDrawer();
+    cy.contains('Execution Preview', { timeout: 30_000 }).should('be.visible');
+    cy.contains('Execution Preview identity').should('be.visible');
+    cy.contains('Persistence evidence').scrollIntoView().should('be.visible');
+
+    readLiveWorkspaceFile('models/model_1.sql', session).then((modelSqlResponse) => {
+      expect(modelSqlResponse.status).to.equal(200);
+      const content = (modelSqlResponse.body as { content: string }).content;
+
+      expect(content).to.contain("{{ config(materialized='view') }}");
+      expect(content).to.contain("{{ source('local_postgres_dvt_public', 'source_1') }}");
     });
   });
 });

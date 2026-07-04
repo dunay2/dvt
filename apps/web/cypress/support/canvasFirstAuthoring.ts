@@ -281,6 +281,35 @@ function pollLiveDraftNodePosition(args: {
   });
 }
 
+function pollLiveDraftRecord(args: {
+  variant: FirstAuthoringVariant;
+  attemptsRemaining: number;
+}): Cypress.Chainable<void> {
+  const session = resolveLiveFirstAuthoringWorkspaceSession(args.variant);
+
+  return cy.request(buildDraftReadRequest(session)).then((response) => {
+    const body = response.body as WorkspaceGraphDraftReadBody;
+    if (response.status === 200 && body.kind === 'ok' && body.record?.draft != null) {
+      return;
+    }
+
+    if (args.attemptsRemaining <= 0) {
+      throw new Error(
+        `Timed out waiting for persisted first-authoring draft in ${
+          session.projectId
+        }. Last draft read: ${summarizeDraftReadResponse(response)}`
+      );
+    }
+
+    return cy.wait(250).then(() =>
+      pollLiveDraftRecord({
+        ...args,
+        attemptsRemaining: args.attemptsRemaining - 1,
+      })
+    );
+  });
+}
+
 function pollLiveCanvasLayoutNodePosition(args: {
   variant: FirstAuthoringVariant;
   nodeId: string;
@@ -316,6 +345,15 @@ function pollLiveCanvasLayoutNodePosition(args: {
         attemptsRemaining: args.attemptsRemaining - 1,
       })
     );
+  });
+}
+
+export function waitForLiveFirstAuthoringDraftRecord(
+  variant: FirstAuthoringVariant
+): Cypress.Chainable<void> {
+  return pollLiveDraftRecord({
+    variant,
+    attemptsRemaining: 80,
   });
 }
 

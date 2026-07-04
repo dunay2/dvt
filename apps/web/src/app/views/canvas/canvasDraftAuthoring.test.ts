@@ -114,6 +114,76 @@ describe('canvasDraftAuthoring', () => {
     ]);
   });
 
+  it('marks imported warehouse source edges to dbt executable nodes as reference-only', () => {
+    const result = buildCanvasAuthoringDraft({
+      canvas: {
+        kind: 'dbt',
+        title: 'dbt canvas',
+      },
+      nodeIds: ['warehouse-source', 'model-orders', 'snapshot-orders'],
+      nodePositions: {
+        'warehouse-source': { x: 0, y: 0 },
+        'model-orders': { x: 240, y: 0 },
+        'snapshot-orders': { x: 240, y: 160 },
+      },
+      visibleEdges: [
+        { sourceId: 'warehouse-source', targetId: 'model-orders' },
+        { sourceId: 'warehouse-source', targetId: 'snapshot-orders' },
+      ],
+      canonicalNodes: [
+        {
+          id: 'warehouse-source',
+          name: 'Local Postgres source',
+          pluginId: 'dvt.warehouse-source',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+        {
+          id: 'model-orders',
+          name: 'Orders Model',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+        {
+          id: 'snapshot-orders',
+          name: 'Orders Snapshot',
+          pluginId: 'dbt',
+          kind: 'dbt:snapshot',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      canonicalEdges: [],
+    });
+
+    expect(result.edges).toEqual([
+      {
+        id: 'draft_edge_warehouse-source_model-orders',
+        sourceId: 'warehouse-source',
+        targetId: 'model-orders',
+        relation: 'lineage',
+        metadata: {
+          executionDependency: false,
+        },
+      },
+      {
+        id: 'draft_edge_warehouse-source_snapshot-orders',
+        sourceId: 'warehouse-source',
+        targetId: 'snapshot-orders',
+        relation: 'lineage',
+        metadata: {
+          executionDependency: false,
+        },
+      },
+    ]);
+  });
+
   it('keeps the persistence signature stable for layout-only position changes', () => {
     const draft = buildSaveInput().draft;
     const layoutOnlyDraft = {

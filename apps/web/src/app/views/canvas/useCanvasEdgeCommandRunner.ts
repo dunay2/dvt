@@ -8,6 +8,7 @@ import type { PluginPortMap } from '../../plugins/contracts/ConnectionRules';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasConnectionRejection } from './canvasConnectionAggregate';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import {
   resolveCanvasEdgeConfirmationTransaction,
   resolveCanvasEdgeReconnectTransaction,
@@ -58,10 +59,7 @@ export type CanvasEdgeCommandRunner = {
 };
 
 function applyAcceptedEdgeTransaction(args: {
-  transaction: Extract<
-    CanvasEdgeAdmissionTransaction,
-    { outcome: 'confirmed' | 'reconnected' }
-  >;
+  transaction: Extract<CanvasEdgeAdmissionTransaction, { outcome: 'confirmed' | 'reconnected' }>;
   latestEdgesRef: MutableRefObject<Edge[]>;
   latestDraftSessionRef: MutableRefObject<CanvasDraftSession>;
   setEdges: Dispatch<SetStateAction<Edge[]>>;
@@ -70,7 +68,14 @@ function applyAcceptedEdgeTransaction(args: {
   args.latestEdgesRef.current = args.transaction.edges;
   args.latestDraftSessionRef.current = args.transaction.draftSession;
   args.setEdges(args.transaction.edges);
-  args.setDraftSession(args.transaction.draftSession);
+  args.setDraftSession((currentDraftSession) => {
+    const nextDraftSession = canvasGraphLifecycle.edge.replaceVisible(
+      currentDraftSession,
+      args.transaction.edges
+    );
+    args.latestDraftSessionRef.current = nextDraftSession;
+    return nextDraftSession;
+  });
 }
 
 export function useCanvasEdgeCommandRunner({

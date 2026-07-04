@@ -13,7 +13,7 @@ const {
   rawRow,
   rowValue,
 } = require('./frontend-inventory-table.cjs');
-const { appendFilter } = require('./query-filter.cjs');
+const { appendFilter, appendTextSearchFilter } = require('./query-filter.cjs');
 const { parseLimit } = require('./query-limit.cjs');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
@@ -383,6 +383,12 @@ async function readFrontendComponentRows(client, filters = {}, options = {}) {
     filters.state || filters.status || filters.componentStatus
   );
   appendFilter(predicates, params, 'frontend_owner', filters.owner || filters.frontendOwner);
+  appendTextSearchFilter(
+    predicates,
+    params,
+    ['component_id', 'component_name', 'responsibility', 'frontend_owner', 'source_path'],
+    filters.search
+  );
   if (filters.surface || filters.surfaceId) {
     params.push(filters.surface || filters.surfaceId);
     predicates.push(`component_id in (

@@ -1,7 +1,14 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { Node } from '@xyflow/react';
+import { Box } from 'lucide-react';
 import type { ImportSourcesResult } from '../../ports/workspace';
+import { buildProtectedDraftRecord } from '../../services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
+import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import type { CanonicalNode } from '../../types/canonical';
+import type { CanvasDraftSession } from './canvasDraftSession';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import {
   buildRemoteDraftRecord,
   clearHarnessRemoteDraftRecord,
@@ -13,6 +20,49 @@ import { setupCanvasControllerHarness } from './useCanvasController.test.harness
 
 describe('useCanvasController source import contract', () => {
   let harness: ReturnType<typeof setupCanvasControllerHarness>;
+  const importedWarehouseSourceNode: CanonicalNode = {
+    id: 'src_local_postgres_dvt_public_source_1',
+    name: 'src_local_postgres_dvt_public_source_1',
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input',
+    status: 'idle',
+    tags: ['source', 'public'],
+    metadata: {
+      config: {
+        database: 'dvt',
+        schema: 'public',
+        table: 'source_1',
+      },
+    },
+  };
+  const localDbtModelNode: CanonicalNode = {
+    id: 'dbt-model-1',
+    name: 'Model 1',
+    pluginId: 'dbt',
+    kind: 'dbt:model',
+    role: 'transform',
+    status: 'idle',
+    tags: ['authoring'],
+    path: 'models/model_1.sql',
+    metadata: {
+      config: {
+        sql: 'select * from {{ source("public", "source_1") }}',
+      },
+    },
+  };
+  const dbtModelRegistration: NodeKindRegistration = {
+    pluginId: 'dbt',
+    kind: 'dbt:model',
+    label: 'Model',
+    role: 'transform',
+    icon: Box,
+    borderClass: 'border-blue-500',
+    minimapColor: '#3b82f6',
+    allowsIncoming: true,
+    allowsOutgoing: true,
+    supportsColumns: true,
+  };
 
   beforeEach(async () => {
     harness = await createHarnessWithDraft(
@@ -185,5 +235,124 @@ describe('useCanvasController source import contract', () => {
     expect(storeActions.showInspectorPanel).not.toHaveBeenCalled();
     expect(harness.state.queryClient.invalidateQueries).not.toHaveBeenCalled();
     expect(harness.getLatestResult()?.importedNodeFocusIds).toEqual([]);
+  });
+
+  it('autosaves locally authored model edges after adopting an imported source revision', async () => {
+    harness.cleanup();
+    harness = setupCanvasControllerHarness();
+    const importedRecord = buildProtectedDraftRecord(
+      {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'dev',
+      },
+      {
+        revision: 'rev-imported',
+        updatedAt: '2026-04-16T00:00:00Z',
+        draft: {
+          canvas: { kind: 'dbt', title: 'dbt canvas' },
+          nodeIds: [importedWarehouseSourceNode.id],
+          nodePositions: {
+            [importedWarehouseSourceNode.id]: { x: 160, y: 120 },
+          },
+          nodes: [importedWarehouseSourceNode],
+          edges: [],
+        },
+      }
+    );
+    setHarnessRemoteDraftRecord(harness, importedRecord);
+    harness.state.canonicalNodes = [importedWarehouseSourceNode];
+    harness.state.canonicalEdges = [];
+    harness.state.graphData = {
+      nodes: [{ id: importedWarehouseSourceNode.id }],
+      edges: [],
+    };
+    harness.mocks.useCanvasGraphHandlers.mockImplementation((params) => ({
+      ...harness.state.graphHandlersResult,
+      handleCreateAuthoringNode: vi.fn(() => {
+        params.setNodes((existingNodes: Node[]) => [
+          ...existingNodes,
+          {
+            id: localDbtModelNode.id,
+            type: 'dbtNode',
+            position: { x: 420, y: 120 },
+            data: {
+              name: localDbtModelNode.name,
+              pluginKind: localDbtModelNode.kind,
+              role: localDbtModelNode.role,
+              status: localDbtModelNode.status,
+            },
+          },
+        ]);
+        params.setDraftSession((currentSession: CanvasDraftSession) =>
+          canvasGraphLifecycle.node.admitExplicit(currentSession, localDbtModelNode)
+        );
+      }),
+      confirmEdgeCreation: vi.fn(() => {
+        params.setEdges([
+          {
+            id: `edge-${importedWarehouseSourceNode.id}-${localDbtModelNode.id}`,
+            source: importedWarehouseSourceNode.id,
+            target: localDbtModelNode.id,
+            type: 'lineage',
+          },
+        ]);
+        params.setDraftSession((currentSession: CanvasDraftSession) =>
+          canvasGraphLifecycle.edge.replaceVisible(currentSession, [
+            {
+              id: `edge-${importedWarehouseSourceNode.id}-${localDbtModelNode.id}`,
+              source: importedWarehouseSourceNode.id,
+              target: localDbtModelNode.id,
+              type: 'lineage',
+            },
+          ])
+        );
+      }),
+    }));
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    await act(async () => {
+      harness.getLatestResult()?.handleSourceImportComplete({
+        success: true,
+        sourcesCreated: 1,
+        tablesImported: 1,
+        yamlFiles: ['models/sources/src_public.yml'],
+        importedNodeIds: [importedWarehouseSourceNode.id],
+        grouping: 'schema',
+        draftRevision: 'rev-imported',
+        options: {
+          includeColumns: true,
+          addTests: false,
+          addFreshness: false,
+        },
+      });
+    });
+
+    await act(async () => {
+      harness.getLatestResult()?.handleCreateAuthoringNode(dbtModelRegistration);
+      harness.getLatestResult()?.confirmEdgeCreation();
+    });
+    await harness.renderProbe();
+    await waitForAutosaveDebounce();
+    await harness.renderProbe();
+
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        expectedRevision: 'rev-imported',
+        draft: expect.objectContaining({
+          nodeIds: [importedWarehouseSourceNode.id, localDbtModelNode.id],
+          edges: [
+            expect.objectContaining({
+              sourceId: importedWarehouseSourceNode.id,
+              targetId: localDbtModelNode.id,
+            }),
+          ],
+        }),
+      })
+    );
   });
 });

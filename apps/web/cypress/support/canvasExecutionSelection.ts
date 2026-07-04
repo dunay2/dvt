@@ -75,7 +75,9 @@ export function clickPreviewExecutionPlanFromOperationalDrawer(): void {
   cy.contains('[data-slot="bottom-operational-drawer-preview"] button', 'Preview execution plan')
     .should('be.visible')
     .should('be.enabled')
-    .click();
+    .then(($button) => {
+      ($button.get(0) as HTMLButtonElement).click();
+    });
 }
 
 export function expectPreviewExecutionPlanUnavailableFromCanvasContextMenu(): void {

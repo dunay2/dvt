@@ -19,17 +19,17 @@ const transformationCanvas: CanvasFirstAuthoringCanvas = {
 const dbtCanvas: CanvasFirstAuthoringCanvas = { kind: 'dbt', title: 'dbt canvas' };
 const sqlCanvas: CanvasFirstAuthoringCanvas = { kind: 'sql', title: 'SQL canvas' };
 const transformationNode: CanvasFirstAuthoringNode = {
-  id: 'dvt-source-1',
-  kind: 'dvt:source',
-  name: 'Source 1',
+  id: 'dvt-sql-transform-1',
+  kind: 'dvt:sql_transform',
+  name: 'SQL transform 1',
 };
 const dbtNode: CanvasFirstAuthoringNode = {
-  id: 'dbt-source-1',
-  kind: 'dbt:source',
-  name: 'Source 1',
+  id: 'dbt-model-1',
+  kind: 'dbt:model',
+  name: 'Model 1',
 };
 const persistedLayout = {
-  nodeId: 'dvt-source-1',
+  nodeId: 'dvt-sql-transform-1',
   position: { x: 320, y: 180 },
 };
 
@@ -75,7 +75,7 @@ function persistedTransformationInput(
 
 function restoredDraft(
   canvas: CanvasFirstAuthoringCanvas | null,
-  nodeIds: readonly string[] = ['dvt-source-1'],
+  nodeIds: readonly string[] = ['dvt-sql-transform-1'],
   position = persistedLayout.position
 ): NonNullable<CanvasFirstAuthoringLiveProofInput['restoredDraft']> {
   return {
@@ -204,7 +204,7 @@ describe('canvasFirstAuthoringLiveProof', () => {
     [
       'reloaded layout omits the persisted node coordinate',
       persistedTransformationInput({
-        restoredDraft: restoredDraft(transformationCanvas, ['dvt-source-1'], { x: 1, y: 2 }),
+        restoredDraft: restoredDraft(transformationCanvas, ['dvt-sql-transform-1'], { x: 1, y: 2 }),
       }),
       { reason: 'restored_layout_missing', blockedQuery: 'GetCanvasLayout' },
     ],

@@ -77,13 +77,18 @@ export function buildCurrentDraftPayload(
   canonicalNodes: readonly CanonicalNode[],
   canonicalEdges: readonly CanonicalEdge[]
 ): WorkspaceGraphAuthoringDraft {
+  const canonicalNodeIds = new Set(canonicalNodes.map((node) => node.id));
+  const localCanonicalNodes = Object.values(draftSession.localNodeCatalog ?? {}).filter(
+    (node) => !canonicalNodeIds.has(node.id)
+  );
+  const draftCanonicalNodes = [...canonicalNodes, ...localCanonicalNodes];
   const currentNodePositions = Object.fromEntries(
     graphNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
   );
   const visibleNodeIds = draftSession.workingSet.visibleNodeIds.filter(
     (nodeId) => currentNodePositions[nodeId] != null
   );
-  const knownCanonicalNodeIds = new Set(canonicalNodes.map((node) => node.id));
+  const knownCanonicalNodeIds = new Set(draftCanonicalNodes.map((node) => node.id));
   const buildableNodeIds = visibleNodeIds.filter((nodeId) => knownCanonicalNodeIds.has(nodeId));
   const visibleNodeIdSet = new Set(buildableNodeIds);
   const nodePositions: Record<string, { x: number; y: number }> = {};
@@ -112,7 +117,7 @@ export function buildCurrentDraftPayload(
     visibleEdges: draftSession.workingSet.visibleEdges.filter(
       (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
     ),
-    canonicalNodes,
+    canonicalNodes: draftCanonicalNodes,
     canonicalEdges,
   });
 

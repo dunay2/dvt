@@ -332,6 +332,7 @@ class CanvasSourceImportLiveProofRunner {
           DVT_READYZ_ENABLED: 'true',
           DVT_VERSION_ENABLED: 'true',
           DVT_DB_READY_ENABLED: 'true',
+          DVT_TEMPORAL_DBT_ENABLED: 'true',
           TEMPORAL_ADDRESS: processContext.temporalEnv.connection.options.address,
           TEMPORAL_NAMESPACE: processContext.temporalEnv.namespace,
           TEMPORAL_TASK_QUEUE: 'dvt-temporal',

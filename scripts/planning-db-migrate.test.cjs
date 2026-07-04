@@ -6019,6 +6019,36 @@ test('tracked migrations register Canvas source import live proof feature mechan
   assert.doesNotMatch(sourceImportLiveProofMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Source Import live proof feature symbols', () => {
+  const migrations = readMigrationFiles();
+  const symbolReconcileMigration = migrations.find(
+    (migration) => migration.fileName === '524_source_import_live_proof_symbol_reconcile.sql'
+  );
+
+  assert.ok(symbolReconcileMigration);
+  assert.match(symbolReconcileMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(symbolReconcileMigration.sql, /waitForPersistedWarehousePaymentsConfig/);
+  assert.match(symbolReconcileMigration.sql, /connectCanvasNodes/);
+  assert.match(symbolReconcileMigration.sql, /waitForLiveDraftEdgeSaved/);
+  assert.match(symbolReconcileMigration.sql, /E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1/);
+  assert.match(symbolReconcileMigration.sql, /CanvasContextMenuViewport/);
+  assert.match(symbolReconcileMigration.sql, /resolveCanvasContextMenuSurfaceStyle/);
+  assert.match(symbolReconcileMigration.sql, /E-CANVAS-WORKFLOW-E2E-USABILITY-20260601/);
+  assert.match(symbolReconcileMigration.sql, /mergeRemoteWorkingSetWithLocalAuthoring/);
+  assert.match(symbolReconcileMigration.sql, /TF-E2-M-C/);
+  assert.match(symbolReconcileMigration.sql, /waitForLiveFirstAuthoringDraftRecord/);
+  assert.match(
+    symbolReconcileMigration.sql,
+    /PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612/
+  );
+  assert.match(symbolReconcileMigration.sql, /appendTextSearchFilter/);
+  assert.match(symbolReconcileMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(symbolReconcileMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(symbolReconcileMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(symbolReconcileMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(symbolReconcileMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Source Import Postgres metadata probe feature mechanization', () => {
   const migrations = readMigrationFiles();
   const metadataProbeMigration = migrations.find(

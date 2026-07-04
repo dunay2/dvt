@@ -43,7 +43,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     harness.cleanup();
   });
 
-  it('applies an edge confirmation command without updater side effects', async () => {
+  it('preserves concurrent draft-session state when confirming an edge', async () => {
     const setEdges = vi.fn();
     const setDraftSession = vi.fn();
     const draftSession = buildDraftSession();
@@ -70,8 +70,23 @@ describe('useCanvasGraphHandlers edge authoring', () => {
     expect(typeof nextEdges).not.toBe('function');
     expect(nextEdges).toHaveLength(1);
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
-    expect(typeof nextDraftSession).not.toBe('function');
+    const updateDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof updateDraftSession).toBe('function');
+    const concurrentDraftSession = {
+      ...draftSession,
+      workingSet: {
+        visibleNodeIds: ['source-node', 'sink-node', 'imported-source'],
+        visibleEdges: [],
+        pendingExplicitNodeIds: ['imported-source'],
+      },
+    };
+    const nextDraftSession = updateDraftSession(concurrentDraftSession);
+    expect(nextDraftSession.workingSet.visibleNodeIds).toEqual([
+      'source-node',
+      'sink-node',
+      'imported-source',
+    ]);
+    expect(nextDraftSession.workingSet.pendingExplicitNodeIds).toEqual(['imported-source']);
     expect(nextDraftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source-node', targetId: 'sink-node' },
     ]);
@@ -194,6 +209,100 @@ describe('useCanvasGraphHandlers edge authoring', () => {
         type: 'lineage',
       },
     });
+
+    harness.cleanup();
+  });
+
+  it('confirms warehouse-source to dbt model edges into draft visible-edge truth', async () => {
+    const setEdges = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      setEdges,
+      setDraftSession,
+      draftSession: {
+        ...buildDraftSession(),
+        workingSet: {
+          visibleNodeIds: ['warehouse-source', 'dbt-model'],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+      },
+      runtimeCapabilities: {
+        plugins: {
+          'dvt.warehouse-source': { available: false, reason: 'source import disabled in test' },
+        },
+      },
+      canonicalNodes: [
+        {
+          id: 'warehouse-source',
+          name: 'warehouse-source',
+          pluginId: 'dvt.warehouse-source',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+        {
+          id: 'dbt-model',
+          name: 'dbt-model',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      nodes: [
+        {
+          id: 'warehouse-source',
+          data: {
+            name: 'warehouse-source',
+            pluginKind: 'dvt:source',
+            role: 'input',
+            status: 'idle',
+          },
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: 'dbt-model',
+          data: {
+            name: 'dbt-model',
+            pluginKind: 'dbt:model',
+            role: 'transform',
+            status: 'idle',
+          },
+          position: { x: 220, y: 0 },
+        },
+      ],
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.onConnect({
+        source: 'warehouse-source',
+        sourceHandle: null,
+        target: 'dbt-model',
+        targetHandle: null,
+      });
+      harness.latest()?.confirmEdgeCreation();
+    });
+
+    expect(setEdges).toHaveBeenCalledTimes(1);
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    const updateDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof updateDraftSession).toBe('function');
+    const nextDraftSession = updateDraftSession({
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: ['warehouse-source', 'dbt-model'],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    });
+    expect(nextDraftSession.workingSet.visibleEdges).toEqual([
+      { sourceId: 'warehouse-source', targetId: 'dbt-model' },
+    ]);
 
     harness.cleanup();
   });

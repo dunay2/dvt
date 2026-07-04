@@ -11,6 +11,17 @@ function appendFilter(predicates, params, column, value) {
   predicates.push(`${column} = $${params.length}`);
 }
 
+function appendTextSearchFilter(predicates, params, columns, value) {
+  if (isEmptyFilterValue(value)) {
+    return;
+  }
+
+  params.push(`%${value}%`);
+  predicates.push(
+    `(${columns.map((column) => `lower(${column}) like lower($${params.length})`).join(' or ')})`
+  );
+}
+
 function appendBooleanFilter(predicates, column, value) {
   if (value === undefined) {
     return;
@@ -42,4 +53,5 @@ module.exports = {
   appendBooleanParamFilter,
   appendComponentPairFilter,
   appendFilter,
+  appendTextSearchFilter,
 };
