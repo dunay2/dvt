@@ -3,6 +3,7 @@ import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 import { canvasDraftSession } from './canvasDraftSession';
+import type { CanonicalNode } from '../../types/canonical';
 
 function buildRemoteDraftRecord(
   overrides?: Partial<CanvasAuthoringDraftRecord>
@@ -373,6 +374,151 @@ describe('canvasDraftSession', () => {
       pendingExplicitNodeIds: ['node_local'],
     });
     expect(session.savingWorkingSet).toBeUndefined();
+  });
+
+  it('preserves local node catalog entries created while a save request is in flight', () => {
+    const localModelNode: CanonicalNode = {
+      id: 'node_local',
+      name: 'Model 1',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: ['authoring'],
+    };
+    const savingSession = canvasDraftSession.machine.markSaving(
+      canvasDraftSession.machine.bootstrap({
+        remoteDraft: null,
+        canonicalNodeIds: ['node_1'],
+        canonicalEdges: [],
+      })
+    );
+    const editedWhileSavingSession = canvasDraftSession.workingSet.addExplicitNode(
+      savingSession,
+      localModelNode
+    );
+
+    const session = canvasDraftSession.machine.applySaveSuccess(
+      editedWhileSavingSession,
+      buildRemoteDraftRecord({ revision: 'rev-saved' })
+    );
+
+    expect(session.syncState).toBe('editing');
+    expect(session.draftRevision).toBe('rev-saved');
+    expect(session.workingSet.visibleNodeIds).toEqual(['node_1', 'node_local']);
+    expect(session.localNodeCatalog).toEqual({
+      node_local: localModelNode,
+    });
+    expect(session.savingWorkingSet).toBeUndefined();
+  });
+
+  it('preserves dirty local authoring when a remote source-import revision reloads', () => {
+    const sourceImportDraft = buildAuthoringDraft({
+      canvas: {
+        kind: 'dbt',
+        title: 'dbt canvas',
+      },
+      nodeIds: ['warehouse_source'],
+      nodePositions: {
+        warehouse_source: { x: 120, y: 80 },
+      },
+      edges: [],
+    });
+    const localModelNode: CanonicalNode = {
+      id: 'dbt_model_1',
+      name: 'Model 1',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: ['authoring'],
+    };
+    const dirtySession = canvasDraftSession.workingSet.replaceEdges(
+      canvasDraftSession.workingSet.upsertNode(
+        canvasDraftSession.machine.bootstrap({
+          remoteDraft: buildRemoteDraftRecord({
+            revision: 'rev-imported-source',
+            draft: sourceImportDraft,
+          }),
+          canonicalNodeIds: ['warehouse_source'],
+          canonicalEdges: [],
+        }),
+        localModelNode
+      ),
+      [{ sourceId: 'warehouse_source', targetId: 'dbt_model_1' }]
+    );
+
+    const reloadedSession = canvasDraftSession.machine.reloadFromRemote(
+      dirtySession,
+      buildRemoteDraftRecord({
+        revision: 'rev-imported-source-refetched',
+        draft: sourceImportDraft,
+      })
+    );
+
+    expect(reloadedSession.draftRevision).toBe('rev-imported-source-refetched');
+    expect(reloadedSession.baseline.record?.revision).toBe('rev-imported-source-refetched');
+    expect(reloadedSession.workingSet.visibleNodeIds).toEqual(['warehouse_source', 'dbt_model_1']);
+    expect(reloadedSession.workingSet.visibleEdges).toEqual([
+      { sourceId: 'warehouse_source', targetId: 'dbt_model_1' },
+    ]);
+    expect(reloadedSession.localNodeCatalog).toEqual({
+      dbt_model_1: localModelNode,
+    });
+  });
+
+  it('preserves local removals while accepting remote additions during reload', () => {
+    const baselineDraft = buildAuthoringDraft({
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+      nodeIds: ['node_1', 'node_2'],
+      nodePositions: {
+        node_1: { x: 0, y: 0 },
+        node_2: { x: 100, y: 0 },
+      },
+      edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+    });
+    const dirtySession = canvasDraftSession.workingSet.removeNode(
+      canvasDraftSession.machine.bootstrap({
+        remoteDraft: buildRemoteDraftRecord({
+          revision: 'rev-before-reload',
+          draft: baselineDraft,
+        }),
+        canonicalNodeIds: ['node_1', 'node_2'],
+        canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      }),
+      'node_2'
+    );
+
+    const reloadedSession = canvasDraftSession.machine.reloadFromRemote(
+      dirtySession,
+      buildRemoteDraftRecord({
+        revision: 'rev-after-reload',
+        draft: buildAuthoringDraft({
+          canvas: {
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
+          nodeIds: ['node_1', 'node_2', 'node_3'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+            node_2: { x: 100, y: 0 },
+            node_3: { x: 200, y: 0 },
+          },
+          edges: [
+            { sourceId: 'node_1', targetId: 'node_2' },
+            { sourceId: 'node_1', targetId: 'node_3' },
+          ],
+        }),
+      })
+    );
+
+    expect(reloadedSession.workingSet.visibleNodeIds).toEqual(['node_1', 'node_3']);
+    expect(reloadedSession.workingSet.visibleEdges).toEqual([
+      { sourceId: 'node_1', targetId: 'node_3' },
+    ]);
   });
 
   it('transitions to missing_remote when the persisted draft disappears', () => {

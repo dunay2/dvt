@@ -1,5 +1,9 @@
 /** Owned concern: expose command/query rail catalog read models for planning DB queries. */
-const { appendBooleanParamFilter, appendFilter } = require('../query-filter.cjs');
+const {
+  appendBooleanParamFilter,
+  appendFilter,
+  appendTextSearchFilter,
+} = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createCommandQueryRailReadModelComponent(deps = {}) {
@@ -170,6 +174,12 @@ function createCommandQueryRailReadModelComponent(deps = {}) {
     appendFilter(predicates, params, 'rail_status', filters.status);
     appendFilter(predicates, params, 'ddd_owner', filters.owner);
     appendFilter(predicates, params, 'rail_name', filters.rail);
+    appendTextSearchFilter(
+      predicates,
+      params,
+      ['rail_name', 'ddd_owner', 'feature_id', 'source_path'],
+      filters.search
+    );
     appendBooleanParamFilter(predicates, params, 'is_duplicate', filters.duplicates);
     appendBooleanParamFilter(predicates, params, 'is_gap', filters.gaps);
 

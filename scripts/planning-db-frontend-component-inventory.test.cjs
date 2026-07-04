@@ -235,6 +235,31 @@ test('frontend component reflection query applies component, kind, state, owner,
   ]);
 });
 
+test('frontend component reflection query applies broad search for DB-first component discovery', async () => {
+  const calls = [];
+  const client = {
+    async query(sql, params) {
+      calls.push({ sql, params });
+      return { rows: [] };
+    },
+  };
+
+  await readFrontendComponentRows(client, {
+    search: 'SourceImport',
+    limit: 5,
+  });
+
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].sql, /from planning_query_store\.frontend_component_summary_query/);
+  assert.match(calls[0].sql, /lower\(component_id\) like lower\(\$1\)/);
+  assert.match(calls[0].sql, /lower\(component_name\) like lower\(\$1\)/);
+  assert.match(calls[0].sql, /lower\(responsibility\) like lower\(\$1\)/);
+  assert.match(calls[0].sql, /lower\(frontend_owner\) like lower\(\$1\)/);
+  assert.match(calls[0].sql, /lower\(source_path\) like lower\(\$1\)/);
+  assert.match(calls[0].sql, /limit \$2/);
+  assert.deepEqual(calls[0].params, ['%SourceImport%', 5]);
+});
+
 test('frontend component reflection file and rail queries apply focused filters', async () => {
   const calls = [];
   const client = {

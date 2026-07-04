@@ -31,6 +31,7 @@ describe('Canvas source import live proof architecture', () => {
     );
     expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
     expect(liveRunnerSource).toContain('canvas-source-import-live-clean.cy.ts');
+    expect(liveRunnerSource).toContain("DVT_TEMPORAL_DBT_ENABLED: 'true'");
 
     expect(cypressSpecSource).toContain('assertLiveFirstAuthoringDraftScopeIsClean');
     expect(cypressSpecSource).toContain('readLiveGraphDraft(');

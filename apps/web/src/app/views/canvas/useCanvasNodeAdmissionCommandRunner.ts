@@ -7,6 +7,7 @@ import type { Node } from '@xyflow/react';
 import type { CanonicalNode } from '../../types/canonical';
 import { canvasViewCopy } from './copy';
 import type { CanvasDraftSession } from './canvasDraftSession';
+import { canvasGraphLifecycle } from './canvasGraphLifecycle';
 import {
   resolveCanvasNodeAdmissionTransaction,
   type CanvasNodeAdmissionTransaction,
@@ -84,7 +85,14 @@ export function useCanvasNodeAdmissionCommandRunner({
           latestNodesRef.current = transaction.nodes;
           latestDraftSessionRef.current = transaction.draftSession;
           setNodes(transaction.nodes);
-          setDraftSession(transaction.draftSession);
+          setDraftSession((currentDraftSession) => {
+            const nextDraftSession = canvasGraphLifecycle.node.admitExplicit(
+              currentDraftSession,
+              transaction.canonicalNode
+            );
+            latestDraftSessionRef.current = nextDraftSession;
+            return nextDraftSession;
+          });
           onAdded?.(transaction.canonicalNode);
           return transaction;
       }

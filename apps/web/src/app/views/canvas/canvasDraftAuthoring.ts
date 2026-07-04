@@ -85,14 +85,18 @@ function isDbtReferenceOnlyEdge(args: {
   targetNode: CanonicalNode | undefined;
 }): boolean {
   const { sourceNode, targetNode } = args;
-  if (sourceNode?.pluginId !== 'dbt' || targetNode?.pluginId !== 'dbt') {
+  if (sourceNode == null || targetNode?.pluginId !== 'dbt') {
     return false;
   }
 
-  return (
-    targetNode.kind === 'dbt:model' &&
-    (sourceNode.kind === 'dbt:source' || sourceNode.kind === 'dbt:macro')
-  );
+  const targetConsumesReference =
+    targetNode.kind === 'dbt:model' || targetNode.kind === 'dbt:snapshot';
+  const sourceProvidesReference =
+    (sourceNode.pluginId === 'dbt' &&
+      (sourceNode.kind === 'dbt:source' || sourceNode.kind === 'dbt:macro')) ||
+    (sourceNode.pluginId === 'dvt.warehouse-source' && sourceNode.kind === 'dvt:source');
+
+  return targetConsumesReference && sourceProvidesReference;
 }
 
 function resolveAuthoringEdgeMetadata(args: {

@@ -2,7 +2,6 @@
  * Owned concern: prove the dbt authoring, generated Code, and Start Run path
  * against the live protected runtime without API stubs.
  */
-import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
@@ -16,24 +15,6 @@ import {
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
-
-function waitForDraftSaveSettled(): void {
-  cy.window({ log: false }).then((window) => {
-    const copy = resolveCanvasViewCopy(
-      window.navigator.language || window.document.documentElement.lang
-    );
-
-    cy.get('[data-slot="canvas-draft-save-status"]', { timeout: 20_000 }).should(($status) => {
-      const text = $status.text();
-
-      expect(text).not.to.contain(copy.savingDraftLabel);
-      expect(
-        [copy.draftSavedLabel, copy.draftSyncedLabel].some((label) => text.includes(label)),
-        text
-      ).to.equal(true);
-    });
-  });
-}
 
 function selectNodeForInspector(nodeName: string): void {
   cy.contains('.react-flow__node', nodeName, { timeout: 20_000 }).should('be.visible').click();
@@ -52,6 +33,40 @@ function clickCommandSlotNatively(slot: string): void {
     .then(($button) => {
       ($button.get(0) as HTMLButtonElement).click();
     });
+}
+
+function waitForPersistedWarehousePaymentsConfig(attempt = 0): Cypress.Chainable<void> {
+  return readLiveGraphDraft().then((response) => {
+    expect(response.status).to.equal(200);
+    const nodes = (
+      response.body as {
+        record?: {
+          draft?: {
+            nodes?: Array<{ id: string; metadata?: Record<string, unknown> }>;
+          };
+        };
+      }
+    ).record?.draft?.nodes;
+    const source = nodes?.find((node) => node.id === 'warehouse_payments');
+    const metadata = source?.metadata?.dbt as
+      | { packageName?: string; sourceName?: string; schema?: string; tableName?: string }
+      | undefined;
+
+    if (
+      metadata?.packageName === 'finance analytics' &&
+      metadata.sourceName === 'finance warehouse' &&
+      metadata.schema === 'warehouse raw' &&
+      metadata.tableName === 'payments final'
+    ) {
+      return;
+    }
+
+    if (attempt >= 30) {
+      throw new Error('Timed out waiting for persisted warehouse payments source configuration.');
+    }
+
+    return cy.wait(250).then(() => waitForPersistedWarehousePaymentsConfig(attempt + 1));
+  });
 }
 
 function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
@@ -116,7 +131,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     replaceInput('dbt-schema', 'warehouse raw');
     replaceInput('dbt-table', 'payments final');
     clickButtonNatively('Apply');
-    waitForDraftSaveSettled();
+    waitForPersistedWarehousePaymentsConfig();
 
     selectNodeForInspector('orders_model');
     replaceInput('node-name', 'payments model');
@@ -124,13 +139,12 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
     cy.get('select[name="dbt-origin"]').should('be.enabled').select('warehouse_payments');
     clickButtonNatively('Apply');
-    waitForDraftSaveSettled();
     waitForPersistedDbtModelConfig();
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.contains('Execution Preview', { timeout: 30_000 }).should('be.visible');
     cy.contains('Execution Preview identity').should('be.visible');
-    cy.contains('Persistence Evidence').should('be.visible');
+    cy.contains('Persistence evidence').scrollIntoView().should('be.visible');
     cy.get('body').type('{esc}', { force: true });
     cy.contains('Execution Preview').should('not.exist');
 

@@ -15,6 +15,29 @@ import {
 } from './useCanvasGraphHandlers.test.support';
 import { requireAuthoringNodeKind } from './useCanvasGraphHandlers.nodeAuthoring.test.support';
 
+type DraftSession = ReturnType<typeof buildDraftSession>;
+type DraftSessionUpdate = DraftSession | ((currentSession: DraftSession) => DraftSession);
+
+function applyDraftSessionUpdate(
+  update: DraftSessionUpdate | undefined,
+  currentSession: DraftSession
+): DraftSession {
+  if (!update) {
+    throw new Error('Expected a draft session update');
+  }
+  return typeof update === 'function' ? update(currentSession) : update;
+}
+
+function applyDraftSessionUpdates(
+  updates: readonly [DraftSessionUpdate][],
+  initialSession: DraftSession
+): DraftSession {
+  return updates.reduce(
+    (currentSession, [update]) => applyDraftSessionUpdate(update, currentSession),
+    initialSession
+  );
+}
+
 describe('useCanvasGraphHandlers catalog node creation', () => {
   beforeEach(() => {
     resetGraphHandlersTestDoubles();
@@ -89,13 +112,67 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
       }),
     ]);
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
-    expect(typeof nextDraftSession).not.toBe('function');
+    const nextDraftSession = applyDraftSessionUpdate(
+      setDraftSession.mock.calls[0]?.[0],
+      draftSession
+    );
     expect(nextDraftSession.workingSet.visibleNodeIds).toContain('dvt-sql-transform-1');
     expect(nextDraftSession.localNodeCatalog?.['dvt-sql-transform-1']).toEqual(
       expect.objectContaining({
         id: 'dvt-sql-transform-1',
         kind: 'dvt:sql_transform',
+        role: 'transform',
+      })
+    );
+
+    harness.cleanup();
+  });
+
+  it('preserves concurrent imported-source draft state when creating an authoring node', async () => {
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      nodes: [],
+      draftSession: {
+        ...buildDraftSession(),
+        workingSet: {
+          visibleNodeIds: [],
+          visibleEdges: [],
+          pendingExplicitNodeIds: [],
+        },
+      },
+      setNodes: vi.fn(),
+      setDraftSession,
+    });
+    await harness.render();
+
+    act(() => {
+      harness.latest()?.handleCreateAuthoringNode(requireAuthoringNodeKind('dbt:model'));
+    });
+
+    expect(setDraftSession).toHaveBeenCalledTimes(1);
+    const updateDraftSession = setDraftSession.mock.calls[0]?.[0];
+    expect(typeof updateDraftSession).toBe('function');
+    const concurrentImportedSourceSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: ['src_local_postgres_dvt_public_source_1'],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
+    const nextDraftSession = applyDraftSessionUpdate(
+      updateDraftSession,
+      concurrentImportedSourceSession
+    );
+    expect(nextDraftSession.workingSet.visibleNodeIds).toEqual([
+      'src_local_postgres_dvt_public_source_1',
+      'dbt-model-1',
+    ]);
+    expect(nextDraftSession.localNodeCatalog?.['dbt-model-1']).toEqual(
+      expect.objectContaining({
+        id: 'dbt-model-1',
+        kind: 'dbt:model',
         role: 'transform',
       })
     );
@@ -137,7 +214,10 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
         });
     });
 
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
+    const nextDraftSession = applyDraftSessionUpdate(
+      setDraftSession.mock.calls[0]?.[0],
+      buildDraftSession()
+    );
     expect(nextDraftSession.localNodeCatalog?.['dvt-sql-transform-1']).toEqual(
       expect.objectContaining({
         id: 'dvt-sql-transform-1',
@@ -190,7 +270,10 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
       });
     });
 
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
+    const nextDraftSession = applyDraftSessionUpdate(
+      setDraftSession.mock.calls[0]?.[0],
+      buildDraftSession()
+    );
     expect(nextDraftSession.localNodeCatalog?.['dvt-sink-1']).toEqual(
       expect.objectContaining({
         id: 'dvt-sink-1',
@@ -219,17 +302,18 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
       currentNodes = nextNodes;
     });
     const setDraftSession = vi.fn();
+    const initialDraftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
     const harness = renderGraphHandlersHook({
       canEditEdges: true,
       nodes: [],
-      draftSession: {
-        ...buildDraftSession(),
-        workingSet: {
-          visibleNodeIds: [],
-          visibleEdges: [],
-          pendingExplicitNodeIds: [],
-        },
-      },
+      draftSession: initialDraftSession,
       setNodes,
       setDraftSession,
     });
@@ -259,8 +343,10 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
       { id: 'dvt-sink-1', position: { x: 980, y: 80 } },
     ]);
     expect(setDraftSession).toHaveBeenCalledTimes(authoringRequests.length);
-    const latestDraftSession = setDraftSession.mock.calls.at(-1)?.[0];
-    expect(typeof latestDraftSession).not.toBe('function');
+    const latestDraftSession = applyDraftSessionUpdates(
+      setDraftSession.mock.calls as [DraftSessionUpdate][],
+      initialDraftSession
+    );
     expect(latestDraftSession.workingSet.visibleNodeIds).toEqual([
       'dvt-source-1',
       'dbt-model-1',
@@ -285,17 +371,18 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
       currentNodes = nextNodes;
     });
     const setDraftSession = vi.fn();
+    const initialDraftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: [],
+        visibleEdges: [],
+        pendingExplicitNodeIds: [],
+      },
+    };
     const harness = renderGraphHandlersHook({
       canEditEdges: true,
       nodes: [],
-      draftSession: {
-        ...buildDraftSession(),
-        workingSet: {
-          visibleNodeIds: [],
-          visibleEdges: [],
-          pendingExplicitNodeIds: [],
-        },
-      },
+      draftSession: initialDraftSession,
       setNodes,
       setDraftSession,
     });
@@ -309,8 +396,10 @@ describe('useCanvasGraphHandlers catalog node creation', () => {
     expect(setNodes).toHaveBeenCalledTimes(2);
     expect(currentNodes.map((node) => node.id)).toEqual(['dvt-source-1', 'dvt-source-2']);
     expect(setDraftSession).toHaveBeenCalledTimes(2);
-    const latestDraftSession = setDraftSession.mock.calls.at(-1)?.[0];
-    expect(typeof latestDraftSession).not.toBe('function');
+    const latestDraftSession = applyDraftSessionUpdates(
+      setDraftSession.mock.calls as [DraftSessionUpdate][],
+      initialDraftSession
+    );
     expect(latestDraftSession.workingSet.visibleNodeIds).toEqual(['dvt-source-1', 'dvt-source-2']);
 
     harness.cleanup();

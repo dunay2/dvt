@@ -228,12 +228,13 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(cypressHelperSource).toContain('workspace_graph_draft_not_found');
     expect(cypressHelperSource).toContain('dvt-web-canvas-interaction');
     expect(cypressHelperSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
-    expect(cypressSpecSource).toContain('dragSourceNodeFromCardBody');
+    expect(cypressSpecSource).toContain('dragFirstAuthoringNodeFromCardBody');
     expect(cypressSpecSource).toContain('skipWhenFirstAuthoringLiveEnvIsMissing');
     expect(cypressSpecSource).not.toContain('this.skip()');
     expect(cypressSpecSource).toContain('waitForLiveFirstAuthoringLayoutPositionChange');
     expect(cypressSpecSource).not.toContain('waitForLiveFirstAuthoringDraftNodePositionChange');
-    expect(cypressSpecSource).toContain('Source 1');
+    expect(cypressSpecSource).toContain('/sql transform 1/i');
+    expect(cypressSpecSource).toContain('Model 1');
     expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
     expect(liveRunnerSource).toContain('VITE_PROJECT_OPTIONS');
     expect(liveRunnerSource).toContain('canvas-first-authoring-live.cy.ts');

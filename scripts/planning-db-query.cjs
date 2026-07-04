@@ -639,12 +639,17 @@ function applyCommonFilter(filters, queryName, value) {
   }
 
   if (railCommonFilterQueryNames.has(queryName)) {
-    filters.rail = value;
+    filters.search = value;
     return;
   }
 
   if (pathCommonFilterQueryNames.has(queryName)) {
     filters.path = value;
+    return;
+  }
+
+  if (queryName === 'frontend-components') {
+    filters.search = value;
     return;
   }
 

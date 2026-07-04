@@ -1049,19 +1049,13 @@ test('parseArgs parses command/query rail catalog filters for DB-first gap and d
   });
 });
 
-test('parseArgs maps command/query rail common filter to rail name', () => {
-  const command = parseArgs([
-    'command-query-rails',
-    '--filter',
-    'RenderSourceImportCatalogView',
-    '--limit',
-    '5',
-  ]);
+test('parseArgs maps command/query rail common filter to broad rail search', () => {
+  const command = parseArgs(['command-query-rails', '--filter', 'Warehouse', '--limit', '5']);
 
   assert.deepEqual(command, {
     queryName: 'command-query-rails',
     filters: {
-      rail: 'RenderSourceImportCatalogView',
+      search: 'Warehouse',
       limit: 5,
     },
   });
@@ -1121,6 +1115,14 @@ test('parseArgs parses frontend mechanical truth filters for DB-first screen ins
 });
 
 test('parseArgs parses frontend component reflection filters for DB-first component inspection', () => {
+  assert.deepEqual(parseArgs(['frontend-components', '--filter', 'SourceImport', '--limit', '5']), {
+    queryName: 'frontend-components',
+    filters: {
+      search: 'SourceImport',
+      limit: 5,
+    },
+  });
+
   assert.deepEqual(
     parseArgs([
       'frontend-components',
@@ -3002,6 +3004,30 @@ test('readCommandQueryRailRows queries the DB command/query rail catalog view', 
     true,
     5,
   ]);
+});
+
+test('readCommandQueryRailRows filters command/query rails by broad search text', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCommandQueryRailRows(client, {
+    search: 'Warehouse',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.command_query_rail_query/);
+  assert.match(captured.sql, /lower\(rail_name\) like lower\(\$1\)/);
+  assert.match(captured.sql, /lower\(ddd_owner\) like lower\(\$1\)/);
+  assert.match(captured.sql, /lower\(feature_id\) like lower\(\$1\)/);
+  assert.match(captured.sql, /lower\(source_path\) like lower\(\$1\)/);
+  assert.match(captured.sql, /limit \$2/);
+  assert.deepEqual(captured.params, ['%Warehouse%', 5]);
 });
 
 test('readCreationIntentRows queries existing rails from the DB-first rail catalog', async () => {

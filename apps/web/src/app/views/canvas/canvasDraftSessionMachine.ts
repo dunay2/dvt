@@ -89,13 +89,14 @@ function transitionWithRecord(
   session: CanvasDraftSession,
   nextSyncState: Exclude<CanvasDraftSyncState, 'bootstrapping' | 'saving' | 'missing_remote'>,
   record: CanvasAuthoringDraftRecord,
-  workingSet?: CanvasDraftWorkingSet
+  workingSet?: CanvasDraftWorkingSet,
+  localNodeCatalog?: Record<string, CanonicalNode>
 ): CanvasDraftSession {
   return transition(session, {
     nextSyncState,
     record,
     workingSet,
-    localNodeCatalog: undefined,
+    localNodeCatalog: normalizeLocalNodeCatalog(localNodeCatalog),
   });
 }
 
@@ -127,7 +128,8 @@ function applySaveSuccess(
     session,
     'editing',
     record,
-    hasEditsWhileSaving ? session.workingSet : persistedWorkingSet
+    hasEditsWhileSaving ? session.workingSet : persistedWorkingSet,
+    hasEditsWhileSaving ? session.localNodeCatalog : undefined
   );
 }
 
@@ -154,11 +156,21 @@ function reloadFromRemote(
   session: CanvasDraftSession,
   record: CanvasAuthoringDraftRecord
 ): CanvasDraftSession {
+  const remoteWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
+  if (!hasDirtyLocalAuthoring(session)) {
+    return transitionWithRecord(session, 'editing', record, remoteWorkingSet);
+  }
+
   return transitionWithRecord(
     session,
     'editing',
     record,
-    canvasDraftSessionWorkingSet.buildFromDraft(record.draft)
+    mergeRemoteWorkingSetWithLocalAuthoring(
+      remoteWorkingSet,
+      session.workingSet,
+      readBaselineWorkingSet(session)
+    ),
+    session.localNodeCatalog
   );
 }
 
@@ -180,6 +192,78 @@ function adoptExternalRevision(
         ? 'editing'
         : session.syncState,
   };
+}
+
+function hasDirtyLocalAuthoring(session: CanvasDraftSession): boolean {
+  if (session.localNodeCatalog != null && Object.keys(session.localNodeCatalog).length > 0) {
+    return true;
+  }
+
+  const baselineRecord = session.baseline.record;
+  if (baselineRecord == null) {
+    return !canvasDraftSessionWorkingSet.equals(session.workingSet, EMPTY_WORKING_SET);
+  }
+
+  return !canvasDraftSessionWorkingSet.equals(
+    session.workingSet,
+    canvasDraftSessionWorkingSet.buildFromDraft(baselineRecord.draft)
+  );
+}
+
+function mergeRemoteWorkingSetWithLocalAuthoring(
+  remoteWorkingSet: CanvasDraftWorkingSet,
+  localWorkingSet: CanvasDraftWorkingSet,
+  baselineWorkingSet: CanvasDraftWorkingSet
+): CanvasDraftWorkingSet {
+  const baselineNodeIds = new Set(baselineWorkingSet.visibleNodeIds);
+  const remoteAddedNodeIds = remoteWorkingSet.visibleNodeIds.filter(
+    (nodeId) => !baselineNodeIds.has(nodeId)
+  );
+  const visibleNodeIds = [...new Set([...localWorkingSet.visibleNodeIds, ...remoteAddedNodeIds])];
+  const visibleNodeIdSet = new Set(visibleNodeIds);
+  const baselineEdgeSignatures = new Set(baselineWorkingSet.visibleEdges.map(draftEdgeSignature));
+  const remoteAddedEdges = remoteWorkingSet.visibleEdges.filter(
+    (edge) => !baselineEdgeSignatures.has(draftEdgeSignature(edge))
+  );
+  const visibleEdges = dedupeDraftEdges(
+    [...localWorkingSet.visibleEdges, ...remoteAddedEdges].filter(
+      (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
+    )
+  );
+  const pendingExplicitNodeIds = [
+    ...new Set(
+      localWorkingSet.pendingExplicitNodeIds.filter((nodeId) => !visibleNodeIdSet.has(nodeId))
+    ),
+  ];
+
+  return {
+    visibleNodeIds,
+    visibleEdges,
+    pendingExplicitNodeIds,
+  };
+}
+
+function readBaselineWorkingSet(session: CanvasDraftSession): CanvasDraftWorkingSet {
+  return session.baseline.record == null
+    ? EMPTY_WORKING_SET
+    : canvasDraftSessionWorkingSet.buildFromDraft(session.baseline.record.draft);
+}
+
+function draftEdgeSignature(edge: CanvasDraftWorkingSet['visibleEdges'][number]): string {
+  return `${edge.sourceId}::${edge.targetId}`;
+}
+
+function dedupeDraftEdges(edges: readonly CanvasDraftWorkingSet['visibleEdges'][number][]) {
+  const seen = new Set<string>();
+  return edges.filter((edge) => {
+    const signature = draftEdgeSignature(edge);
+    if (seen.has(signature)) {
+      return false;
+    }
+
+    seen.add(signature);
+    return true;
+  });
 }
 
 // Machine owns aggregate sync-state transitions over the draft session.

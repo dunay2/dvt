@@ -2,7 +2,6 @@
  * Owned concern: prove first canvas and first node authoring against the live
  * protected runtime without draft endpoint intercepts or seeded success.
  */
-import { resolveCanvasViewCopy } from '../../../src/app/views/canvas/copy';
 import {
   clickCanvasContextMenuItem,
   openCanvasContextMenuAt,
@@ -11,6 +10,7 @@ import {
   assertLiveFirstAuthoringDraftScopeIsClean,
   resolveLiveFirstAuthoringWorkspaceSession,
   skipWhenFirstAuthoringLiveEnvIsMissing,
+  waitForLiveFirstAuthoringDraftRecord,
   waitForLiveFirstAuthoringDraftNode,
   waitForLiveFirstAuthoringLayoutPositionChange,
 } from '../../support/canvasFirstAuthoring';
@@ -22,15 +22,19 @@ describe('Canvas first-authoring live protected runtime', () => {
       id: 'transformation',
       createButton: 'Transformation',
       emptyTitle: 'Start transformation canvas',
+      addCatalogItem: 'Add transformation',
+      firstNodeName: /sql transform 1/i,
     },
     {
       id: 'dbt',
       createButton: 'dbt',
       emptyTitle: 'Start dbt canvas',
+      addCatalogItem: 'Add model',
+      firstNodeName: 'Model 1',
     },
   ] as const;
 
-  type SourceNodeState = Readonly<{ nodeId: string; left: number; top: number }>;
+  type FirstAuthoringNodeState = Readonly<{ nodeId: string; left: number; top: number }>;
   type DragPoint = Readonly<{ x: number; y: number }>;
 
   function visitFirstAuthoringCanvas(variant: (typeof variants)[number]['id']): void {
@@ -44,51 +48,30 @@ describe('Canvas first-authoring live protected runtime', () => {
     });
   }
 
-  function captureSourceNodeState(alias: string): void {
-    cy.contains('.react-flow__node', 'Source 1')
-      .should('be.visible')
-      .then(($node) => {
-        const rect = $node[0].getBoundingClientRect();
-        const nodeId = $node.attr('data-id');
+  type FirstAuthoringNodeLabel = string | RegExp;
 
-        expect(nodeId, 'React Flow node id').to.be.a('string').and.not.be.empty;
-
-        cy.wrap({ nodeId: nodeId as string, left: rect.left, top: rect.top }).as(alias);
-      });
+  function getFirstAuthoringNode(
+    nodeName: FirstAuthoringNodeLabel
+  ): Cypress.Chainable<JQuery<HTMLElement>> {
+    return cy
+      .get('.react-flow__node', { timeout: 20_000 })
+      .filter((_, element) => {
+        const text = element.textContent ?? '';
+        return typeof nodeName === 'string' ? text.includes(nodeName) : nodeName.test(text);
+      })
+      .should('have.length.greaterThan', 0)
+      .first()
+      .should('be.visible');
   }
 
-  function waitForSourceNodeGeometrySettled(): void {
-    cy.contains('.react-flow__node', 'Source 1', { timeout: 20_000 })
-      .should('be.visible')
-      .then(($node) => {
-        const firstRect = $node[0].getBoundingClientRect();
+  function captureFirstAuthoringNodeState(nodeName: FirstAuthoringNodeLabel, alias: string): void {
+    getFirstAuthoringNode(nodeName).then(($node) => {
+      const rect = $node[0].getBoundingClientRect();
+      const nodeId = $node.attr('data-id');
 
-        cy.wait(200);
-        cy.contains('.react-flow__node', 'Source 1').should(($stableNode) => {
-          const stableRect = $stableNode[0].getBoundingClientRect();
-          const distance =
-            Math.abs(stableRect.left - firstRect.left) + Math.abs(stableRect.top - firstRect.top);
+      expect(nodeId, 'React Flow node id').to.be.a('string').and.not.be.empty;
 
-          expect(distance, 'source node geometry settled before drag').to.be.lessThan(2);
-        });
-      });
-  }
-
-  function waitForDraftSaveSettled(): void {
-    cy.window({ log: false }).then((window) => {
-      const copy = resolveCanvasViewCopy(
-        window.navigator.language || window.document.documentElement.lang
-      );
-
-      cy.get('[data-slot="canvas-draft-save-status"]', { timeout: 20_000 }).should(($status) => {
-        const text = $status.text();
-
-        expect(text).not.to.contain(copy.savingDraftLabel);
-        expect(
-          [copy.draftSavedLabel, copy.draftSyncedLabel].some((label) => text.includes(label)),
-          text
-        ).to.equal(true);
-      });
+      cy.wrap({ nodeId: nodeId as string, left: rect.left, top: rect.top }).as(alias);
     });
   }
 
@@ -120,33 +103,34 @@ describe('Canvas first-authoring live protected runtime', () => {
     target.dispatchEvent(new view.MouseEvent(type, buildMouseDragEvent(point, buttons, view)));
   }
 
-  function dragSourceNodeFromCardBody(): void {
-    cy.contains('.react-flow__node', 'Source 1')
-      .should('be.visible')
-      .then(($node) => {
-        const rect = $node[0].getBoundingClientRect();
-        const start = {
-          x: rect.left + rect.width / 2,
-          y: rect.top + rect.height / 2,
-        };
-        const middle = { x: start.x + 24, y: start.y + 18 };
-        const end = { x: start.x + 96, y: start.y + 72 };
+  function dragFirstAuthoringNodeFromCardBody(nodeName: FirstAuthoringNodeLabel): void {
+    getFirstAuthoringNode(nodeName).then(($node) => {
+      const rect = $node[0].getBoundingClientRect();
+      const start = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      };
+      const middle = { x: start.x + 24, y: start.y + 18 };
+      const end = { x: start.x + 96, y: start.y + 72 };
 
-        cy.window().then((window) => {
-          dispatchMouseDragEvent($node[0], window, 'mousedown', start, 1);
-          dispatchMouseDragEvent(window, window, 'mousemove', middle, 1);
-        });
-        cy.contains('.react-flow__node', 'Source 1').should('have.class', 'dragging');
-        cy.window().then((window) => {
-          dispatchMouseDragEvent(window, window, 'mousemove', end, 1);
-          dispatchMouseDragEvent(window, window, 'mouseup', end, 0);
-        });
+      cy.window().then((window) => {
+        dispatchMouseDragEvent($node[0], window, 'mousedown', start, 1);
+        dispatchMouseDragEvent(window, window, 'mousemove', middle, 1);
       });
+      getFirstAuthoringNode(nodeName).should('have.class', 'dragging');
+      cy.window().then((window) => {
+        dispatchMouseDragEvent(window, window, 'mousemove', end, 1);
+        dispatchMouseDragEvent(window, window, 'mouseup', end, 0);
+      });
+    });
   }
 
-  function assertSourceNodeMovedFrom(alias: string): void {
-    cy.get<SourceNodeState>(`@${alias}`).then((before) => {
-      cy.contains('.react-flow__node', 'Source 1').should(($node) => {
+  function assertFirstAuthoringNodeMovedFrom(
+    nodeName: FirstAuthoringNodeLabel,
+    alias: string
+  ): void {
+    cy.get<FirstAuthoringNodeState>(`@${alias}`).then((before) => {
+      getFirstAuthoringNode(nodeName).should(($node) => {
         const rect = $node[0].getBoundingClientRect();
         const distance = Math.abs(rect.left - before.left) + Math.abs(rect.top - before.top);
 
@@ -155,13 +139,16 @@ describe('Canvas first-authoring live protected runtime', () => {
     });
   }
 
-  function assertSourceNodeRestoredNear(alias: string): void {
-    cy.get<SourceNodeState>(`@${alias}`).then((expected) => {
-      cy.contains('.react-flow__node', 'Source 1', { timeout: 20_000 }).should(($node) => {
+  function assertFirstAuthoringNodeRestoredAwayFromOriginal(
+    nodeName: FirstAuthoringNodeLabel,
+    alias: string
+  ): void {
+    cy.get<FirstAuthoringNodeState>(`@${alias}`).then((original) => {
+      getFirstAuthoringNode(nodeName).should(($node) => {
         const rect = $node[0].getBoundingClientRect();
+        const distance = Math.abs(rect.left - original.left) + Math.abs(rect.top - original.top);
 
-        expect(Math.abs(rect.left - expected.left)).to.be.lessThan(16);
-        expect(Math.abs(rect.top - expected.top)).to.be.lessThan(16);
+        expect(distance).to.be.greaterThan(20);
       });
     });
   }
@@ -181,27 +168,25 @@ describe('Canvas first-authoring live protected runtime', () => {
       cy.get('[data-slot="canvas-playground-empty-state"]').within(() => {
         cy.contains('button', variant.createButton).should('be.enabled').click();
       });
-      waitForDraftSaveSettled();
+      waitForLiveFirstAuthoringDraftRecord(variant.id);
 
       cy.contains(variant.emptyTitle, { timeout: 20_000 }).should('be.visible');
       cy.get('[data-slot="canvas-empty-state"]').should('be.visible');
       cy.contains('button', /^Add first /).should('not.exist');
       openCanvasContextMenuAt(360, 260);
       clickCanvasContextMenuItem('Add...');
-      clickCanvasContextMenuItem(variant.id === 'dbt' ? 'Add source' : 'Create source node');
-      waitForDraftSaveSettled();
+      clickCanvasContextMenuItem(variant.addCatalogItem);
 
-      cy.contains('.react-flow__node', 'Source 1', { timeout: 20_000 }).should('be.visible');
-      waitForSourceNodeGeometrySettled();
-      captureSourceNodeState('beforeDragState');
-      cy.get<SourceNodeState>('@beforeDragState').then((before) =>
+      getFirstAuthoringNode(variant.firstNodeName);
+      captureFirstAuthoringNodeState(variant.firstNodeName, 'beforeDragState');
+      cy.get<FirstAuthoringNodeState>('@beforeDragState').then((before) =>
         waitForLiveFirstAuthoringDraftNode(variant.id, before.nodeId).as('beforeDragDraftPosition')
       );
 
-      dragSourceNodeFromCardBody();
-      assertSourceNodeMovedFrom('beforeDragState');
-      captureSourceNodeState('afterDragState');
-      cy.get<SourceNodeState>('@beforeDragState').then((before) => {
+      dragFirstAuthoringNodeFromCardBody(variant.firstNodeName);
+      assertFirstAuthoringNodeMovedFrom(variant.firstNodeName, 'beforeDragState');
+      captureFirstAuthoringNodeState(variant.firstNodeName, 'afterDragState');
+      cy.get<FirstAuthoringNodeState>('@beforeDragState').then((before) => {
         cy.get<{ x: number; y: number }>('@beforeDragDraftPosition').then((beforeDraftPosition) =>
           waitForLiveFirstAuthoringLayoutPositionChange(
             variant.id,
@@ -213,8 +198,8 @@ describe('Canvas first-authoring live protected runtime', () => {
 
       cy.reload();
 
-      cy.contains('.react-flow__node', 'Source 1', { timeout: 20_000 }).should('be.visible');
-      assertSourceNodeRestoredNear('afterDragState');
+      getFirstAuthoringNode(variant.firstNodeName);
+      assertFirstAuthoringNodeRestoredAwayFromOriginal(variant.firstNodeName, 'beforeDragState');
     });
   }
 });

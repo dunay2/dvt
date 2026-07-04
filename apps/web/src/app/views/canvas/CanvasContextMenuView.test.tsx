@@ -9,7 +9,10 @@ import {
   buildCanvasAddNodeCatalogMenuModel,
   buildCanvasContextMenuModel,
 } from './canvasInteractionCommandSurface';
-import { CanvasContextMenuView } from './CanvasContextMenuView';
+import {
+  CanvasContextMenuView,
+  resolveCanvasContextMenuSurfaceStyle,
+} from './CanvasContextMenuView';
 
 describe('CanvasContextMenuView', () => {
   let container: HTMLDivElement;
@@ -219,6 +222,22 @@ describe('CanvasContextMenuView', () => {
     });
     expect(onCanvasAction).not.toHaveBeenCalled();
     expect(onCreateNodeAction).not.toHaveBeenCalled();
+  });
+
+  it('keeps the menu surface inside the visible viewport near canvas edges', () => {
+    expect(
+      resolveCanvasContextMenuSurfaceStyle(
+        { x: 1000, y: 700 },
+        {
+          width: 1024,
+          height: 720,
+        }
+      )
+    ).toEqual({
+      left: 724,
+      top: 548,
+      maxHeight: 'calc(100vh - 560px)',
+    });
   });
 
   async function clickMenuItem(label: string): Promise<void> {

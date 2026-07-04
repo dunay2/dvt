@@ -7,6 +7,7 @@ import type {
   CanvasContextMenuCreateNodeAction,
   CanvasContextMenuEdgeAction,
   CanvasContextMenuModel,
+  CanvasContextMenuPosition,
 } from './canvasInteractionCommandSurface';
 import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
 import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
@@ -28,6 +29,53 @@ type CanvasContextMenuViewProps = Readonly<{
   onEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
 }>;
 
+const CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX = 12;
+const CANVAS_CONTEXT_MENU_SURFACE_WIDTH_PX = 288;
+const CANVAS_CONTEXT_MENU_MIN_VISIBLE_HEIGHT_PX = 160;
+
+type CanvasContextMenuViewport = Readonly<{
+  width: number;
+  height: number;
+}>;
+
+function resolveBrowserViewport(): CanvasContextMenuViewport {
+  if (typeof window === 'undefined') {
+    return {
+      width: CANVAS_CONTEXT_MENU_SURFACE_WIDTH_PX + CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX * 2,
+      height:
+        CANVAS_CONTEXT_MENU_MIN_VISIBLE_HEIGHT_PX + CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX * 2,
+    };
+  }
+
+  return {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+}
+
+export function resolveCanvasContextMenuSurfaceStyle(
+  screenPosition: CanvasContextMenuPosition,
+  viewport: CanvasContextMenuViewport = resolveBrowserViewport()
+): CSSProperties {
+  const maxLeft =
+    viewport.width - CANVAS_CONTEXT_MENU_SURFACE_WIDTH_PX - CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX;
+  const maxTop =
+    viewport.height -
+    CANVAS_CONTEXT_MENU_MIN_VISIBLE_HEIGHT_PX -
+    CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX;
+  const left = Math.max(
+    CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX,
+    Math.min(screenPosition.x, maxLeft)
+  );
+  const top = Math.max(CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX, Math.min(screenPosition.y, maxTop));
+
+  return {
+    left,
+    top,
+    maxHeight: `calc(100vh - ${top + CANVAS_CONTEXT_MENU_VIEWPORT_GUTTER_PX}px)`,
+  };
+}
+
 export function CanvasContextMenuView({
   model,
   menuRef,
@@ -39,10 +87,7 @@ export function CanvasContextMenuView({
     return null;
   }
 
-  const menuStyle: CSSProperties = {
-    left: model.screenPosition.x,
-    top: model.screenPosition.y,
-  };
+  const menuStyle = resolveCanvasContextMenuSurfaceStyle(model.screenPosition);
   const sections =
     model.surface === 'add-node-catalog'
       ? buildCanvasContextMenuSections(model)
