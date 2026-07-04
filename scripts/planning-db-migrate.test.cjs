@@ -11544,6 +11544,28 @@ test('tracked migrations reconcile imported Node properties tabs ownership', () 
   assert.doesNotMatch(reconcileMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations keep Node properties tabs ownership import resistant', () => {
+  const migrations = readMigrationFiles();
+  const importResistantMigration = migrations.find(
+    (migration) => migration.fileName === '528_node_properties_tabs_import_resistant_tombstone.sql'
+  );
+
+  assert.ok(importResistantMigration);
+  assert.match(
+    importResistantMigration.sql,
+    /insert into planning_query_store\.frontend_component_local_files/i
+  );
+  assert.match(importResistantMigration.sql, /web\.component\.canvas\.NodeWorkbench/);
+  assert.match(importResistantMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(importResistantMigration.sql, /NodePropertySectionView\.tsx/);
+  assert.match(importResistantMigration.sql, /retiredForPresentationOwnership/);
+  assert.match(
+    importResistantMigration.sql,
+    /EV-CANVAS-NODE-WORKBENCH-NODE-PROPERTIES-TABS-IMPORT-RESISTANT/
+  );
+  assert.doesNotMatch(importResistantMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Inspector visual token ownership', () => {
   const migrations = readMigrationFiles();
   const tokenMigration = migrations.find(
