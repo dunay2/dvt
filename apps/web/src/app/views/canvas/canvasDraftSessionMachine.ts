@@ -165,7 +165,11 @@ function reloadFromRemote(
     session,
     'editing',
     record,
-    mergeRemoteWorkingSetWithLocalAuthoring(remoteWorkingSet, session.workingSet),
+    mergeRemoteWorkingSetWithLocalAuthoring(
+      remoteWorkingSet,
+      session.workingSet,
+      readBaselineWorkingSet(session)
+    ),
     session.localNodeCatalog
   );
 }
@@ -208,14 +212,21 @@ function hasDirtyLocalAuthoring(session: CanvasDraftSession): boolean {
 
 function mergeRemoteWorkingSetWithLocalAuthoring(
   remoteWorkingSet: CanvasDraftWorkingSet,
-  localWorkingSet: CanvasDraftWorkingSet
+  localWorkingSet: CanvasDraftWorkingSet,
+  baselineWorkingSet: CanvasDraftWorkingSet
 ): CanvasDraftWorkingSet {
-  const visibleNodeIds = [
-    ...new Set([...remoteWorkingSet.visibleNodeIds, ...localWorkingSet.visibleNodeIds]),
-  ];
+  const baselineNodeIds = new Set(baselineWorkingSet.visibleNodeIds);
+  const remoteAddedNodeIds = remoteWorkingSet.visibleNodeIds.filter(
+    (nodeId) => !baselineNodeIds.has(nodeId)
+  );
+  const visibleNodeIds = [...new Set([...localWorkingSet.visibleNodeIds, ...remoteAddedNodeIds])];
   const visibleNodeIdSet = new Set(visibleNodeIds);
+  const baselineEdgeSignatures = new Set(baselineWorkingSet.visibleEdges.map(draftEdgeSignature));
+  const remoteAddedEdges = remoteWorkingSet.visibleEdges.filter(
+    (edge) => !baselineEdgeSignatures.has(draftEdgeSignature(edge))
+  );
   const visibleEdges = dedupeDraftEdges(
-    [...remoteWorkingSet.visibleEdges, ...localWorkingSet.visibleEdges].filter(
+    [...localWorkingSet.visibleEdges, ...remoteAddedEdges].filter(
       (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
     )
   );
@@ -232,10 +243,20 @@ function mergeRemoteWorkingSetWithLocalAuthoring(
   };
 }
 
+function readBaselineWorkingSet(session: CanvasDraftSession): CanvasDraftWorkingSet {
+  return session.baseline.record == null
+    ? EMPTY_WORKING_SET
+    : canvasDraftSessionWorkingSet.buildFromDraft(session.baseline.record.draft);
+}
+
+function draftEdgeSignature(edge: CanvasDraftWorkingSet['visibleEdges'][number]): string {
+  return `${edge.sourceId}::${edge.targetId}`;
+}
+
 function dedupeDraftEdges(edges: readonly CanvasDraftWorkingSet['visibleEdges'][number][]) {
   const seen = new Set<string>();
   return edges.filter((edge) => {
-    const signature = `${edge.sourceId}::${edge.targetId}`;
+    const signature = draftEdgeSignature(edge);
     if (seen.has(signature)) {
       return false;
     }

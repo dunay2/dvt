@@ -467,6 +467,60 @@ describe('canvasDraftSession', () => {
     });
   });
 
+  it('preserves local removals while accepting remote additions during reload', () => {
+    const baselineDraft = buildAuthoringDraft({
+      canvas: {
+        kind: 'transformation',
+        title: 'Main canvas',
+      },
+      nodeIds: ['node_1', 'node_2'],
+      nodePositions: {
+        node_1: { x: 0, y: 0 },
+        node_2: { x: 100, y: 0 },
+      },
+      edges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+    });
+    const dirtySession = canvasDraftSession.workingSet.removeNode(
+      canvasDraftSession.machine.bootstrap({
+        remoteDraft: buildRemoteDraftRecord({
+          revision: 'rev-before-reload',
+          draft: baselineDraft,
+        }),
+        canonicalNodeIds: ['node_1', 'node_2'],
+        canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+      }),
+      'node_2'
+    );
+
+    const reloadedSession = canvasDraftSession.machine.reloadFromRemote(
+      dirtySession,
+      buildRemoteDraftRecord({
+        revision: 'rev-after-reload',
+        draft: buildAuthoringDraft({
+          canvas: {
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
+          nodeIds: ['node_1', 'node_2', 'node_3'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+            node_2: { x: 100, y: 0 },
+            node_3: { x: 200, y: 0 },
+          },
+          edges: [
+            { sourceId: 'node_1', targetId: 'node_2' },
+            { sourceId: 'node_1', targetId: 'node_3' },
+          ],
+        }),
+      })
+    );
+
+    expect(reloadedSession.workingSet.visibleNodeIds).toEqual(['node_1', 'node_3']);
+    expect(reloadedSession.workingSet.visibleEdges).toEqual([
+      { sourceId: 'node_1', targetId: 'node_3' },
+    ]);
+  });
+
   it('transitions to missing_remote when the persisted draft disappears', () => {
     const session = canvasDraftSession.machine.markRemoteDraftMissing(
       canvasDraftSession.machine.reloadFromRemote(

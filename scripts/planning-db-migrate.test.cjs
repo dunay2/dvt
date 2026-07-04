@@ -6049,6 +6049,24 @@ test('tracked migrations reconcile Source Import live proof feature symbols', ()
   assert.doesNotMatch(symbolReconcileMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations reconcile Canvas draft reload local removal preservation symbols', () => {
+  const migrations = readMigrationFiles();
+  const reloadRemovalMigration = migrations.find(
+    (migration) => migration.fileName === '525_canvas_draft_reload_removal_preservation_symbols.sql'
+  );
+
+  assert.ok(reloadRemovalMigration);
+  assert.match(reloadRemovalMigration.sql, /E-CANVAS-WORKFLOW-E2E-USABILITY-20260601/);
+  assert.match(reloadRemovalMigration.sql, /AdoptExternalCanvasDraftRevision/);
+  assert.match(reloadRemovalMigration.sql, /draftEdgeSignature/);
+  assert.match(reloadRemovalMigration.sql, /readBaselineWorkingSet/);
+  assert.match(reloadRemovalMigration.sql, /local_removal_preservation/);
+  assert.match(reloadRemovalMigration.sql, /feature_mechanization_local_rails/);
+  assert.match(reloadRemovalMigration.sql, /canvasDraftSession\.test\.ts/);
+  assert.doesNotMatch(reloadRemovalMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(reloadRemovalMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Source Import Postgres metadata probe feature mechanization', () => {
   const migrations = readMigrationFiles();
   const metadataProbeMigration = migrations.find(
