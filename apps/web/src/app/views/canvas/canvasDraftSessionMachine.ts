@@ -157,6 +157,9 @@ function reloadFromRemote(
   record: CanvasAuthoringDraftRecord
 ): CanvasDraftSession {
   const remoteWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
+  if (session.syncState === 'missing_remote') {
+    return transitionWithRecord(session, 'editing', record, remoteWorkingSet);
+  }
   if (!hasDirtyLocalAuthoring(session)) {
     return transitionWithRecord(session, 'editing', record, remoteWorkingSet);
   }

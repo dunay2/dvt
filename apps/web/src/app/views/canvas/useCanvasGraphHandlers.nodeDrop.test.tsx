@@ -7,6 +7,7 @@ import type { Node } from '@xyflow/react';
 
 import { canvasViewCopy } from './copy';
 import {
+  applyStateUpdater,
   buildCanonicalNode,
   buildDraftSession,
   renderGraphHandlersHook,
@@ -78,8 +79,10 @@ describe('useCanvasGraphHandlers node drop', () => {
     expect(typeof setNodes.mock.calls[0]?.[0]).not.toBe('function');
     expect(currentNodes.map((node: { id: string }) => node.id)).toContain('transform-node');
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
-    expect(typeof nextDraftSession).not.toBe('function');
+    const nextDraftSession = applyStateUpdater(
+      setDraftSession.mock.calls[0]?.[0],
+      buildDraftSession()
+    );
     expect(nextDraftSession.workingSet.visibleNodeIds).toContain('transform-node');
     expect(nextDraftSession.localNodeCatalog?.['transform-node']).toEqual(
       expect.objectContaining({ id: 'transform-node' })
@@ -129,8 +132,10 @@ describe('useCanvasGraphHandlers node drop', () => {
     expect(setNodes).toHaveBeenCalledTimes(2);
     expect(currentNodes.map((node) => node.id)).toEqual(['drop-source', 'drop-transform']);
     expect(setDraftSession).toHaveBeenCalledTimes(2);
-    const latestDraftSession = setDraftSession.mock.calls.at(-1)?.[0];
-    expect(typeof latestDraftSession).not.toBe('function');
+    const latestDraftSession = setDraftSession.mock.calls.reduce(
+      (currentDraftSession, [updater]) => applyStateUpdater(updater, currentDraftSession),
+      draftSession
+    );
     expect(latestDraftSession.workingSet.visibleNodeIds).toEqual(['drop-source', 'drop-transform']);
     expect(latestDraftSession.localNodeCatalog?.['drop-source']).toEqual(
       expect.objectContaining({ id: 'drop-source' })
