@@ -58,7 +58,10 @@ const DVT_SINK_SECTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'DvtSinkAuthoringSection.tsx'
 );
-const PANEL_SOURCE = readArchitectureSiblingSource(import.meta.dirname, 'CanvasInspectorPanel.tsx');
+const NODE_WORKBENCH_PANEL_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasNodeWorkbenchPanel.tsx'
+);
 
 describe('canvas inspector authoring component architecture', () => {
   it('keeps DTO, model, command, hook, and route-owned view seams explicitly separated', () => {
@@ -118,11 +121,11 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DVT_SQL_SECTION_SOURCE).toContain('name="dvt-transform-sql"');
     expect(DVT_FIELDS_SOURCE).not.toContain('workspaceService');
 
-    expect(PANEL_SOURCE).toContain(
-      'Owned concern: compose the passive Inspector view with the route-owned Inspector authoring surface.'
+    expect(NODE_WORKBENCH_PANEL_SOURCE).toContain(
+      'Owned concern: render the Canvas-owned contextual node workbench panel.'
     );
-    expect(PANEL_SOURCE).toContain('CanvasInspectorAuthoringSection');
-    expect(PANEL_SOURCE).toContain('InspectorPanel');
+    expect(NODE_WORKBENCH_PANEL_SOURCE).toContain('CanvasInspectorAuthoringSection');
+    expect(NODE_WORKBENCH_PANEL_SOURCE).not.toContain("from '../../components/InspectorPanel'");
   });
 
   it('keeps Inspector authoring visible copy behind the Canvas i18n catalog', () => {

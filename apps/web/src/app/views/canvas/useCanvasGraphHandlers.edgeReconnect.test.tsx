@@ -4,6 +4,7 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { canvasViewCopy } from './copy';
+import { applyStateUpdater } from './canvasCreateCanvasDocumentCommand.test.support';
 import {
   buildCanonicalNode,
   buildDraftSession,
@@ -25,6 +26,14 @@ describe('useCanvasGraphHandlers edge reconnect', () => {
   it('reconnects an existing edge through the canonical draft aggregate without replacing its identity', async () => {
     const setEdges = vi.fn();
     const setDraftSession = vi.fn();
+    const draftSession = {
+      ...buildDraftSession(),
+      workingSet: {
+        visibleNodeIds: ['source-node', 'transform-node', 'sink-node'],
+        visibleEdges: [{ sourceId: 'source-node', targetId: 'sink-node' }],
+        pendingExplicitNodeIds: [],
+      },
+    };
     const harness = renderGraphHandlersHook({
       canEditEdges: true,
       canonicalNodes: [
@@ -55,14 +64,7 @@ describe('useCanvasGraphHandlers edge reconnect', () => {
         },
       ],
       edges: [{ id: 'edge-1', source: 'source-node', target: 'sink-node' }],
-      draftSession: {
-        ...buildDraftSession(),
-        workingSet: {
-          visibleNodeIds: ['source-node', 'transform-node', 'sink-node'],
-          visibleEdges: [{ sourceId: 'source-node', targetId: 'sink-node' }],
-          pendingExplicitNodeIds: [],
-        },
-      },
+      draftSession,
       setEdges,
       setDraftSession,
     });
@@ -73,7 +75,12 @@ describe('useCanvasGraphHandlers edge reconnect', () => {
         harness.latest() as unknown as {
           onReconnect?: (
             oldEdge: { id: string; source: string; target: string },
-            newConnection: { source: string; target: string; sourceHandle: null; targetHandle: null }
+            newConnection: {
+              source: string;
+              target: string;
+              sourceHandle: null;
+              targetHandle: null;
+            }
           ) => void;
         }
       ).onReconnect?.(
@@ -100,8 +107,7 @@ describe('useCanvasGraphHandlers edge reconnect', () => {
       },
     ]);
     expect(setDraftSession).toHaveBeenCalledTimes(1);
-    const nextDraftSession = setDraftSession.mock.calls[0]?.[0];
-    expect(typeof nextDraftSession).not.toBe('function');
+    const nextDraftSession = applyStateUpdater(setDraftSession.mock.calls[0]?.[0], draftSession);
     expect(nextDraftSession.workingSet.visibleEdges).toEqual([
       { sourceId: 'source-node', targetId: 'transform-node' },
     ]);
@@ -122,7 +128,12 @@ describe('useCanvasGraphHandlers edge reconnect', () => {
         harness.latest() as unknown as {
           onReconnect?: (
             oldEdge: { id: string; source: string; target: string },
-            newConnection: { source: string; target: string; sourceHandle: null; targetHandle: null }
+            newConnection: {
+              source: string;
+              target: string;
+              sourceHandle: null;
+              targetHandle: null;
+            }
           ) => void;
         }
       ).onReconnect?.(

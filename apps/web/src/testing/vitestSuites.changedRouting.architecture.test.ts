@@ -65,7 +65,7 @@ describe('web Vitest changed-file routing', () => {
     expect(
       resolveWebVitestChangedSuitePlan([
         'apps/web/src/app/views/canvas/CanvasInspectorAuthoringSection.tsx',
-        'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx',
         'apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts',
         'apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts',
         'apps/web/src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts',
@@ -73,7 +73,7 @@ describe('web Vitest changed-file routing', () => {
     ).toMatchObject({
       commands: [
         'pnpm exec vitest run --config vitest.canvas-unit.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts',
-        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx',
         'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/views/canvas/canvasInspectorAuthoringComponent.architecture.test.ts',
       ],
       requiresDependencies: false,
@@ -82,15 +82,14 @@ describe('web Vitest changed-file routing', () => {
 
     expect(
       resolveWebVitestChangedSuitePlan([
-        'apps/web/src/app/components/InspectorPanel.tsx',
         'apps/web/src/app/components/canvas/DbtNodeComponent.tsx',
         'apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts',
         'apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts',
         'apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts',
         'apps/web/src/app/components/inspector/NodePropertiesTabs.tsx',
+        'apps/web/src/app/components/inspector/NodePropertiesTabs.sectionContent.test.tsx',
         'apps/web/src/app/components/inspector/nodePropertiesReadModel.ts',
         'apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts',
-        'apps/web/src/app/views/canvas/CanvasInspectorPanel.test.tsx',
       ])
     ).toMatchObject({
       commands: [
@@ -99,7 +98,7 @@ describe('web Vitest changed-file routing', () => {
           'src/app/components/canvas/canvasNodeContextMenuModel.test.ts',
           'src/app/components/inspector/nodePropertiesReadModel.test.ts',
         ].join(' '),
-        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/views/canvas/CanvasInspectorPanel.test.tsx',
+        'pnpm exec vitest run --config vitest.canvas-presentation.config.ts src/app/components/inspector/NodePropertiesTabs.sectionContent.test.tsx',
         'pnpm exec vitest run --config vitest.canvas-architecture.config.ts src/app/components/canvas/DbtNodeComponent.architecture.test.ts',
       ],
       requiresDependencies: false,
@@ -185,13 +184,13 @@ describe('web Vitest changed-file routing', () => {
 
   it('keeps exact changed-test routing aligned with runnable suite include globs', () => {
     const plan = resolveWebVitestChangedSuitePlan([
-      'apps/web/src/app/components/InspectorPanel.test.tsx',
+      'apps/web/src/app/components/inspector/NodePropertiesTabs.sectionContent.test.tsx',
     ]);
 
     expect(plan.commandPlan).toEqual([
       {
         config: 'vitest.canvas-presentation.config.ts',
-        filePaths: ['src/app/components/InspectorPanel.test.tsx'],
+        filePaths: ['src/app/components/inspector/NodePropertiesTabs.sectionContent.test.tsx'],
         kind: 'vitest-files',
       },
     ]);

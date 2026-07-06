@@ -11566,6 +11566,73 @@ test('tracked migrations keep Node properties tabs ownership import resistant', 
   assert.doesNotMatch(importResistantMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations retire fixed inspector files after contextual NodeWorkbench ownership', () => {
+  const migrations = readMigrationFiles();
+  const retirementMigration = migrations.find(
+    (migration) => migration.fileName === '529_node_workbench_fixed_inspector_retirement.sql'
+  );
+
+  assert.ok(retirementMigration);
+  assert.match(retirementMigration.sql, /retiredForPresentationOwnership/);
+  assert.match(retirementMigration.sql, /CanvasInspectorPanel\.tsx/);
+  assert.match(retirementMigration.sql, /InspectorPanel\.tsx/);
+  assert.match(retirementMigration.sql, /EV-CANVAS-NODE-WORKBENCH-FIXED-INSPECTOR-FILES-RETIRED/);
+  assert.doesNotMatch(retirementMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile generic fixed inspector test retirement', () => {
+  const migrations = readMigrationFiles();
+  const reconciliationMigration = migrations.find(
+    (migration) => migration.fileName === '530_node_workbench_generic_inspector_test_retirement.sql'
+  );
+
+  assert.ok(reconciliationMigration);
+  assert.match(reconciliationMigration.sql, /CanvasInspectorPanel\.test\.tsx/);
+  assert.match(reconciliationMigration.sql, /CanvasNodeWorkbenchPanel\.test\.tsx/);
+  assert.match(reconciliationMigration.sql, /retiredForPresentationOwnership/);
+  assert.match(
+    reconciliationMigration.sql,
+    /EV-CANVAS-NODE-WORKBENCH-GENERIC-INSPECTOR-TEST-RETIRED/
+  );
+  assert.doesNotMatch(reconciliationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations retire fixed inspector architecture paths', () => {
+  const migrations = readMigrationFiles();
+  const architecturePathMigration = migrations.find(
+    (migration) => migration.fileName === '531_node_workbench_architecture_path_retirement.sql'
+  );
+
+  assert.ok(architecturePathMigration);
+  assert.match(architecturePathMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH/);
+  assert.match(architecturePathMigration.sql, /SYS-WEB-CANVAS-INSPECTOR-PANEL/);
+  assert.match(architecturePathMigration.sql, /apps\/web\/src\/app\/views\/canvas/);
+  assert.match(architecturePathMigration.sql, /status = 'deprecated'/);
+  assert.match(architecturePathMigration.sql, /status = 'drift'/);
+  assert.match(architecturePathMigration.sql, /CanvasNodeWorkbenchPanel\.test\.tsx/);
+  assert.doesNotMatch(architecturePathMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep NodeWorkbench aggregate on a unique repo path', () => {
+  const migrations = readMigrationFiles();
+  const aggregatePathMigration = migrations.find(
+    (migration) => migration.fileName === '532_node_workbench_aggregate_repo_path.sql'
+  );
+
+  assert.ok(aggregatePathMigration);
+  assert.match(aggregatePathMigration.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH/);
+  assert.match(
+    aggregatePathMigration.sql,
+    /docs\/architecture\/components\/web\/graph\/canvas-inspector-authoring-component\.md/
+  );
+  assert.match(aggregatePathMigration.sql, /avoid duplicate_repo_path drift/);
+  assert.doesNotMatch(
+    aggregatePathMigration.sql,
+    /repo_path = 'apps\/web\/src\/app\/views\/canvas'/
+  );
+  assert.doesNotMatch(aggregatePathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register Inspector visual token ownership', () => {
   const migrations = readMigrationFiles();
   const tokenMigration = migrations.find(

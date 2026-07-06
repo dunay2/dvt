@@ -561,4 +561,59 @@ describe('canvasDraftSession', () => {
       }),
     });
   });
+
+  it('adopts a reappeared persisted draft instead of merging remembered missing-remote nodes', () => {
+    const missingRemoteSession = canvasDraftSession.machine.markRemoteDraftMissing(
+      canvasDraftSession.machine.reloadFromRemote(
+        canvasDraftSession.machine.createBootstrapping(),
+        buildRemoteDraftRecord({
+          draft: buildAuthoringDraft({
+            canvas: {
+              kind: 'transformation',
+              title: 'Main canvas',
+            },
+            nodeIds: ['node_1'],
+            nodePositions: {
+              node_1: { x: 0, y: 0 },
+            },
+            edges: [],
+          }),
+        })
+      ),
+      {
+        node_1: {
+          id: 'node_1',
+          name: 'orders',
+          pluginId: 'dvt',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+      }
+    );
+
+    const reloadedSession = canvasDraftSession.machine.reloadFromRemote(
+      missingRemoteSession,
+      buildRemoteDraftRecord({
+        revision: 'rev-restored',
+        draft: buildAuthoringDraft({
+          canvas: {
+            kind: 'transformation',
+            title: 'Main canvas',
+          },
+          nodeIds: ['node_2'],
+          nodePositions: {
+            node_2: { x: 220, y: 120 },
+          },
+          edges: [],
+        }),
+      })
+    );
+
+    expect(reloadedSession.syncState).toBe('editing');
+    expect(reloadedSession.draftRevision).toBe('rev-restored');
+    expect(reloadedSession.workingSet.visibleNodeIds).toEqual(['node_2']);
+    expect(reloadedSession.localNodeCatalog).toBeUndefined();
+  });
 });

@@ -58,7 +58,6 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
     include: [
       'src/app/views/Canvas*.{test,spec}.tsx',
       'src/app/views/canvas/**/*.{test,spec}.{ts,tsx}',
-      'src/app/components/InspectorPanel.{test,spec}.tsx',
       'src/app/components/canvas/**/*.{test,spec}.{ts,tsx}',
       'src/app/components/inspector/**/*.{test,spec}.{ts,tsx}',
     ],
@@ -81,7 +80,6 @@ export const WEB_VITEST_SUITES: Record<WebVitestSuiteName, WebVitestSuiteDefinit
     include: [
       'src/app/views/Canvas*.{test,spec}.tsx',
       'src/app/views/canvas/**/*.{test,spec}.tsx',
-      'src/app/components/InspectorPanel.{test,spec}.tsx',
       'src/app/components/canvas/**/*.{test,spec}.tsx',
       'src/app/components/inspector/**/*.{test,spec}.tsx',
     ],
@@ -504,9 +502,7 @@ function isCanvasFocusPath(filePath: string): boolean {
     /^src\/app\/views\/Canvas.*\.(?:test|spec)\.tsx$/.test(filePath) ||
     filePath.startsWith('src/app/views/canvas/') ||
     filePath.startsWith('src/app/components/canvas/') ||
-    filePath.startsWith('src/app/components/inspector/') ||
-    filePath === 'src/app/components/InspectorPanel.tsx' ||
-    /^src\/app\/components\/InspectorPanel\.(?:test|spec)\.tsx$/.test(filePath)
+    filePath.startsWith('src/app/components/inspector/')
   );
 }
 
