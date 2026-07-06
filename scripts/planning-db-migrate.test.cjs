@@ -6049,6 +6049,29 @@ test('tracked migrations reconcile Source Import live proof feature symbols', ()
   assert.doesNotMatch(symbolReconcileMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register Source Import live proof runner Temporal bootstrap coverage', () => {
+  const migrations = readMigrationFiles();
+  const temporalBootstrapMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '533_source_import_live_proof_temporal_bootstrap_coverage.sql'
+  );
+
+  assert.ok(temporalBootstrapMigration);
+  assert.match(temporalBootstrapMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(temporalBootstrapMigration.sql, /run-canvas-source-import-live-proof\.test\.cjs/);
+  assert.match(temporalBootstrapMigration.sql, /buildTemporalTimeSkippingOptions/);
+  assert.match(temporalBootstrapMigration.sql, /createTemporalEnvironment/);
+  assert.match(temporalBootstrapMigration.sql, /DVT_TEMPORAL_TEST_SERVER_PATH/);
+  assert.match(
+    temporalBootstrapMigration.sql,
+    /node --test scripts\/run-canvas-source-import-live-proof\.test\.cjs/
+  );
+  assert.match(temporalBootstrapMigration.sql, /pnpm docs:feature-mechanization:implementation/);
+  assert.match(temporalBootstrapMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(temporalBootstrapMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(temporalBootstrapMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Canvas draft reload local removal preservation symbols', () => {
   const migrations = readMigrationFiles();
   const reloadRemovalMigration = migrations.find(
