@@ -2,7 +2,7 @@ import type { SourceImportOptionContribution, SourceImportOptionId } from '../..
 import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
 import { SourceImportReviewView } from './SourceImportReviewView';
 import { buildSourceImportCatalogViewModel } from './sourceImportCatalogModel';
-import { buildPreviewGroups } from './sourceImportWizardModel';
+import { buildSourceImportReviewPreviewGroups } from './sourceImportReviewModel';
 import type { TableInfo } from './types';
 
 interface ReviewStepProps {
@@ -24,10 +24,15 @@ export function ReviewStep({
   sourceImportOptionValues,
   onRemoveTable,
 }: ReviewStepProps) {
-  const previewGroups = buildPreviewGroups(tables, groupingStrategy);
   const catalogViewModel = buildSourceImportCatalogViewModel({
     tables,
     activeTableKey: null,
+    copy: copy.catalog,
+    numberFormatter: sourceImportCatalogNumberFormatter,
+  });
+  const previewGroups = buildSourceImportReviewPreviewGroups({
+    tables,
+    groupingStrategy,
     copy: copy.catalog,
     numberFormatter: sourceImportCatalogNumberFormatter,
   });
@@ -35,7 +40,7 @@ export function ReviewStep({
   return (
     <SourceImportReviewView
       selectedTables={catalogViewModel.selectedTables}
-      previewGroups={Array.from(previewGroups.entries())}
+      previewGroups={previewGroups}
       selectedCount={selectedCount}
       groupingStrategy={groupingStrategy}
       selectedConnectionName={selectedConnectionName}

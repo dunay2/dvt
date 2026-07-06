@@ -12649,6 +12649,57 @@ test('tracked migrations backfill source import catalog copy symbol Cypress cove
   assert.doesNotMatch(coverageMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register source import review preview metrics', () => {
+  const migrations = readMigrationFiles();
+  const reviewMigration = migrations.find(
+    (migration) => migration.fileName === '534_source_import_review_preview_metrics.sql'
+  );
+
+  assert.ok(reviewMigration);
+  assert.match(reviewMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(reviewMigration.sql, /ImportWarehouseSources/);
+  assert.match(reviewMigration.sql, /sourceImportReviewModel\.ts/);
+  assert.match(reviewMigration.sql, /sourceImportReviewModel\.test\.ts/);
+  assert.match(reviewMigration.sql, /SourceImportReviewView\.test\.tsx/);
+  assert.match(reviewMigration.sql, /SourceImportReviewPreviewGroupViewModel/);
+  assert.match(reviewMigration.sql, /buildSourceImportReviewPreviewGroups/);
+  assert.match(reviewMigration.sql, /EV-SOURCE-IMPORT-REVIEW-PREVIEW-METRICS-MODEL/);
+  assert.match(reviewMigration.sql, /EV-SOURCE-IMPORT-REVIEW-PREVIEW-METRICS-VIEW/);
+  assert.match(reviewMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.doesNotMatch(reviewMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations attach source import review live metrics evidence', () => {
+  const migrations = readMigrationFiles();
+  const liveEvidenceMigration = migrations.find(
+    (migration) => migration.fileName === '535_source_import_review_live_metrics_evidence.sql'
+  );
+
+  assert.ok(liveEvidenceMigration);
+  assert.match(liveEvidenceMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(liveEvidenceMigration.sql, /ImportWarehouseSources/);
+  assert.match(liveEvidenceMigration.sql, /EV-SOURCE-IMPORT-REVIEW-PREVIEW-METRICS-LIVE/);
+  assert.match(liveEvidenceMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(liveEvidenceMigration.sql, /importLocalPostgresSource/);
+  assert.match(liveEvidenceMigration.sql, /data-source-import-review-table/);
+  assert.doesNotMatch(liveEvidenceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations complete source import review metrics user stories', () => {
+  const migrations = readMigrationFiles();
+  const completionMigration = migrations.find(
+    (migration) => migration.fileName === '536_source_import_review_metrics_manifest_completion.sql'
+  );
+
+  assert.ok(completionMigration);
+  assert.match(completionMigration.sql, /E-CANVAS-SOURCE-IMPORT-CATALOG-UX-1/);
+  assert.match(completionMigration.sql, /ImportWarehouseSources/);
+  assert.match(completionMigration.sql, /userStories/);
+  assert.match(completionMigration.sql, /selected warehouse sources with row and column metrics/);
+  assert.match(completionMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.doesNotMatch(completionMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register source import schema identity selection', () => {
   const migrations = readMigrationFiles();
   const identityMigration = migrations.find(
