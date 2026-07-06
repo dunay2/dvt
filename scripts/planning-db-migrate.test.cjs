@@ -12649,6 +12649,23 @@ test('tracked migrations backfill source import catalog copy symbol Cypress cove
   assert.doesNotMatch(coverageMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register source import active metadata stable selectors', () => {
+  const migrations = readMigrationFiles();
+  const metadataMigration = migrations.find(
+    (migration) => migration.fileName === '538_source_import_active_metadata_stable_selectors.sql'
+  );
+
+  assert.ok(metadataMigration);
+  assert.match(metadataMigration.sql, /SourceImportActiveTableMetadata\.tsx/);
+  assert.match(metadataMigration.sql, /SourceImportActiveTableMetadata\.test\.tsx/);
+  assert.match(metadataMigration.sql, /sourceImportActiveMetadataClassNames/);
+  assert.match(metadataMigration.sql, /data-source-import-active-table/);
+  assert.match(metadataMigration.sql, /data-source-import-metadata-column/);
+  assert.match(metadataMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(metadataMigration.sql, /E-CANVAS-ADD-SOURCE-INSPECT-SELECT-1/);
+  assert.doesNotMatch(metadataMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register source import schema identity selection', () => {
   const migrations = readMigrationFiles();
   const identityMigration = migrations.find(

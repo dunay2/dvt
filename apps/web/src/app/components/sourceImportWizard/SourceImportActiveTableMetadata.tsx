@@ -10,6 +10,25 @@ type SourceImportActiveTableMetadataProps = Readonly<{
   activeTable: TableInfo | null;
 }>;
 
+export const sourceImportActiveMetadataClassNames = {
+  root: 'space-y-3',
+  title: 'mb-2 text-lg font-medium',
+  description: 'text-sm text-slate-300',
+  card: 'border-slate-600 p-4',
+  summary: 'mb-3 flex flex-wrap items-start justify-between gap-3',
+  identity: 'min-w-0',
+  tableName: 'font-mono text-sm text-slate-100',
+  metrics: 'mt-1 text-xs text-slate-400',
+  columnList: 'space-y-2',
+  columnRow:
+    'grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2',
+  columnIdentity: 'min-w-0',
+  columnName: 'truncate font-mono text-xs text-slate-100',
+  constraintList: 'mt-1 flex flex-wrap gap-1',
+  columnType: 'font-mono text-[11px] text-slate-300',
+  unavailable: 'rounded border border-slate-800 bg-slate-950/40 p-3 text-sm text-slate-300',
+} as const;
+
 export function SourceImportActiveTableMetadata({
   activeTable,
 }: SourceImportActiveTableMetadataProps): JSX.Element {
@@ -24,17 +43,22 @@ export function SourceImportActiveTableMetadata({
   const tableName = activeTableViewModel?.canonicalName ?? copy.metadata.noTableSelected;
 
   return (
-    <div className="space-y-3">
+    <div className={sourceImportActiveMetadataClassNames.root}>
       <div>
-        <h3 className="mb-2 text-lg font-medium">{copy.metadata.title}</h3>
-        <p className="text-sm text-slate-300">{copy.metadata.description}</p>
+        <h3 className={sourceImportActiveMetadataClassNames.title}>{copy.metadata.title}</h3>
+        <p className={sourceImportActiveMetadataClassNames.description}>
+          {copy.metadata.description}
+        </p>
       </div>
 
-      <Card className="border-slate-600 p-4">
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="font-mono text-sm text-slate-100">{tableName}</div>
-            <div className="mt-1 text-xs text-slate-400">
+      <Card
+        className={sourceImportActiveMetadataClassNames.card}
+        data-source-import-active-table={activeTableViewModel?.canonicalName}
+      >
+        <div className={sourceImportActiveMetadataClassNames.summary}>
+          <div className={sourceImportActiveMetadataClassNames.identity}>
+            <div className={sourceImportActiveMetadataClassNames.tableName}>{tableName}</div>
+            <div className={sourceImportActiveMetadataClassNames.metrics}>
               {activeTableViewModel?.rowCountLabel ?? copy.metadata.rowsUnknown} /{' '}
               {activeTableViewModel?.byteSizeLabel ?? copy.metadata.sizeUnknown} /{' '}
               {activeTableViewModel?.columnCountLabel ?? copy.metadata.noColumns}
@@ -47,15 +71,18 @@ export function SourceImportActiveTableMetadata({
 
         {activeTableViewModel && activeTableViewModel.columns.length > 0 ? (
           <ScrollArea className="h-64">
-            <div className="space-y-2">
+            <div className={sourceImportActiveMetadataClassNames.columnList}>
               {activeTableViewModel.columns.map((column) => (
                 <div
                   key={`${tableName}.${column.name}`}
-                  className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2"
+                  className={sourceImportActiveMetadataClassNames.columnRow}
+                  data-source-import-metadata-column={`${tableName}.${column.name}`}
                 >
-                  <div className="min-w-0">
-                    <div className="truncate font-mono text-xs text-slate-100">{column.name}</div>
-                    <div className="mt-1 flex flex-wrap gap-1">
+                  <div className={sourceImportActiveMetadataClassNames.columnIdentity}>
+                    <div className={sourceImportActiveMetadataClassNames.columnName}>
+                      {column.name}
+                    </div>
+                    <div className={sourceImportActiveMetadataClassNames.constraintList}>
                       {column.constraintLabels.map((label) => (
                         <Badge key={`${column.name}.${label}`} variant="outline">
                           {label}
@@ -63,13 +90,15 @@ export function SourceImportActiveTableMetadata({
                       ))}
                     </div>
                   </div>
-                  <span className="font-mono text-[11px] text-slate-300">{column.type}</span>
+                  <span className={sourceImportActiveMetadataClassNames.columnType}>
+                    {column.type}
+                  </span>
                 </div>
               ))}
             </div>
           </ScrollArea>
         ) : (
-          <div className="rounded border border-slate-800 bg-slate-950/40 p-3 text-sm text-slate-300">
+          <div className={sourceImportActiveMetadataClassNames.unavailable}>
             {copy.metadata.columnsUnavailable}
           </div>
         )}
