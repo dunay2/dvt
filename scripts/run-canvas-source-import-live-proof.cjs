@@ -160,6 +160,50 @@ class CanvasSourceImportLiveProofRunner {
     return import(pathToFileURL(temporalTestingEntry).href);
   }
 
+  buildTemporalTimeSkippingOptions() {
+    const temporalServerPath = String(this.env.DVT_TEMPORAL_TEST_SERVER_PATH ?? '').trim();
+
+    if (temporalServerPath.length === 0) {
+      return undefined;
+    }
+
+    return {
+      server: {
+        executable: {
+          type: 'existing-path',
+          path: temporalServerPath,
+        },
+      },
+    };
+  }
+
+  buildTemporalEnvironmentStartError(error) {
+    const originalMessage = error instanceof Error ? error.message : String(error);
+    const configuredPath = String(this.env.DVT_TEMPORAL_TEST_SERVER_PATH ?? '').trim();
+    const configuredPathDetail =
+      configuredPath.length > 0
+        ? `Configured DVT_TEMPORAL_TEST_SERVER_PATH: ${configuredPath}.`
+        : 'Set DVT_TEMPORAL_TEST_SERVER_PATH to a local temporal-test-server binary to run this proof without network access.';
+
+    return new Error(
+      `Failed to start the Temporal test server for the Source Import live proof. ${configuredPathDetail} Original error: ${originalMessage}`
+    );
+  }
+
+  async createTemporalEnvironment(TestWorkflowEnvironment) {
+    const timeSkippingOptions = this.buildTemporalTimeSkippingOptions();
+
+    try {
+      if (timeSkippingOptions) {
+        return await TestWorkflowEnvironment.createTimeSkipping(timeSkippingOptions);
+      }
+
+      return await TestWorkflowEnvironment.createTimeSkipping();
+    } catch (error) {
+      throw this.buildTemporalEnvironmentStartError(error);
+    }
+  }
+
   async terminateProcess(processHandle) {
     if (processHandle.child.killed || processHandle.child.exitCode !== null) {
       return;
@@ -313,7 +357,7 @@ class CanvasSourceImportLiveProofRunner {
       await seedLocalPostgresProofData(defaultPgUrl);
       seedLocalWorkspaceWarehouseCatalog(workspaceFilesRoot);
 
-      processContext.temporalEnv = await TestWorkflowEnvironment.createTimeSkipping();
+      processContext.temporalEnv = await this.createTemporalEnvironment(TestWorkflowEnvironment);
       processContext.localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
         env: this.env,
         host: this.localAuthHost,
