@@ -12700,6 +12700,32 @@ test('tracked migrations complete source import review metrics user stories', ()
   assert.doesNotMatch(completionMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations retire source import review metrics duplicate command rail', () => {
+  const migrations = readMigrationFiles();
+  const retirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName ===
+      '537_source_import_review_metrics_command_rail_reference_retirement.sql'
+  );
+
+  assert.ok(retirementMigration);
+  assert.match(retirementMigration.sql, /E-CANVAS-SOURCE-IMPORT-CATALOG-UX-1/);
+  assert.match(
+    retirementMigration.sql,
+    /local#E-CANVAS-SOURCE-IMPORT-CATALOG-UX-1#command#importwarehousesources/
+  );
+  assert.match(retirementMigration.sql, /ImportWarehouseSources/);
+  assert.match(retirementMigration.sql, /rail_status = 'retired'/);
+  assert.match(retirementMigration.sql, /retiredAsRailDeclaration/);
+  assert.match(retirementMigration.sql, /referenced-existing-rail/);
+  assert.match(
+    retirementMigration.sql,
+    /api\.component\.warehouseSourceImport\.ImportWarehouseSourcesUseCase/
+  );
+  assert.doesNotMatch(retirementMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(retirementMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register source import schema identity selection', () => {
   const migrations = readMigrationFiles();
   const identityMigration = migrations.find(
