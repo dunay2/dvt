@@ -160,6 +160,10 @@ describe('Canvas contextual source import', () => {
     cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
     cy.contains('Connection:').parent().should('contain.text', 'Local Postgres proof');
     cy.contains('Tables selected:').parent().should('contain.text', '1');
+    cy.contains('[role="dialog"]', 'Registry file: models/sources/src_erp.yml').should(
+      'be.visible'
+    );
+    cy.get('[data-source-import-registry-path="models/sources/src_erp.yml"]').should('be.visible');
     cy.contains('[role="dialog"]', 'RAW.ERP.ORDERS').should('be.visible');
     cy.contains('[role="dialog"]', 'order_id').should('be.visible');
     cy.contains('[role="dialog"]', 'INTEGER').should('be.visible');
