@@ -15,7 +15,16 @@ const selectionBasketClassNames = {
   itemHeader: 'flex items-start justify-between gap-3',
   itemName: 'truncate font-mono text-xs text-slate-100',
   itemMeta: 'mt-1 flex flex-wrap gap-1 text-[11px] text-slate-400',
+  columnList: 'mt-2 flex flex-wrap gap-1',
+  columnBadge:
+    'max-w-full justify-start gap-1 border-slate-700 bg-slate-900/70 font-mono text-[11px] text-slate-200',
+  columnName: 'truncate',
+  columnType: 'text-slate-400',
+  columnEmpty: 'mt-2 text-xs text-slate-500',
+  columnOverflow: 'text-[11px] text-slate-500',
 } as const;
+
+const selectedSourceColumnPreviewLimit = 4;
 
 type SourceImportSelectionBasketProps = Readonly<{
   selectedTables: readonly SourceImportTableViewModel[];
@@ -59,10 +68,49 @@ export function SourceImportSelectionBasket({
                 {table.byteSizeLabel == null ? null : <span>{table.byteSizeLabel}</span>}
                 <span>{table.columnCountLabel}</span>
               </div>
+              <SourceImportSelectedColumnPreview table={table} />
             </div>
           ))}
         </div>
       )}
     </Card>
+  );
+}
+
+function SourceImportSelectedColumnPreview({
+  table,
+}: Readonly<{ table: SourceImportTableViewModel }>): JSX.Element {
+  if (table.columns.length === 0) {
+    return (
+      <p className={selectionBasketClassNames.columnEmpty}>{copy.selectionBasket.noColumns}</p>
+    );
+  }
+
+  const visibleColumns = table.columns.slice(0, selectedSourceColumnPreviewLimit);
+  const overflowColumnCount = table.columns.length - visibleColumns.length;
+
+  return (
+    <div className={selectionBasketClassNames.columnList}>
+      {visibleColumns.map((column) => (
+        <Badge
+          key={column.name}
+          variant="outline"
+          className={selectionBasketClassNames.columnBadge}
+          data-source-import-selected-column={`${table.canonicalName}.${column.name}`}
+        >
+          <span className={selectionBasketClassNames.columnName}>{column.name}</span>
+          <span className={selectionBasketClassNames.columnType}>{column.type}</span>
+          {column.constraintLabels.map((constraint) => (
+            <span key={constraint}>{constraint}</span>
+          ))}
+        </Badge>
+      ))}
+      {overflowColumnCount > 0 ? (
+        <span className={selectionBasketClassNames.columnOverflow}>
+          {copy.selectionBasket.moreColumnsPrefix} {overflowColumnCount}{' '}
+          {copy.selectionBasket.moreColumnsSuffix}
+        </span>
+      ) : null}
+    </div>
   );
 }
