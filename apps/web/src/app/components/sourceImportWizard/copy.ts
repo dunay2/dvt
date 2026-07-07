@@ -119,6 +119,12 @@ export const sourceImportWizardCopy = {
     available: 'available',
     showing: 'Showing',
     of: 'of',
+    filterAll: 'All',
+    filterSelected: 'Selected',
+    filterWithColumns: 'With columns',
+    filterWithSize: 'With size',
+    filterListLabel: 'Source catalog filters',
+    filterAccessibilityPrefix: 'Filter source catalog by',
   },
   result: {
     title: 'Sources attached',

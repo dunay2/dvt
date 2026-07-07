@@ -179,6 +179,65 @@ describe('sourceImportCatalogModel', () => {
     );
   });
 
+  it('filters the source catalog by governed metadata category without changing selection totals', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({
+          table: 'ORDERS',
+          selected: true,
+          rowCount: 1500,
+          byteSize: 4096000,
+          columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+        }),
+        buildTable({
+          table: 'CUSTOMERS',
+          selected: false,
+          rowCount: undefined,
+          columns: [{ name: 'customer_id', type: 'INTEGER', nullable: false }],
+        }),
+        buildTable({
+          table: 'SHIPMENTS',
+          selected: false,
+          rowCount: undefined,
+          columns: [],
+        }),
+      ],
+      activeTableKey: null,
+      filterId: 'withColumns',
+      copy: catalogCopy,
+      numberFormatter,
+    });
+
+    expect(viewModel.totalTableCount).toBe(3);
+    expect(viewModel.visibleTableCount).toBe(2);
+    expect(viewModel.selectedTableCount).toBe(1);
+    expect(viewModel.categoryFilters).toEqual([
+      expect.objectContaining({ id: 'all', label: 'All', countLabel: '3', active: false }),
+      expect.objectContaining({
+        id: 'selected',
+        label: 'Selected',
+        countLabel: '1',
+        active: false,
+      }),
+      expect.objectContaining({
+        id: 'withColumns',
+        label: 'With columns',
+        countLabel: '2',
+        active: true,
+      }),
+      expect.objectContaining({
+        id: 'withSize',
+        label: 'With size',
+        countLabel: '1',
+        active: false,
+      }),
+    ]);
+    expect(viewModel.databaseGroups[0]?.schemaGroups[0]?.tables).toEqual([
+      expect.objectContaining({ canonicalName: 'RAW.ERP.ORDERS' }),
+      expect.objectContaining({ canonicalName: 'RAW.ERP.CUSTOMERS' }),
+    ]);
+  });
+
   it('groups visible source catalog entries by database and schema for categorized browsing', () => {
     const viewModel = buildSourceImportCatalogViewModel({
       tables: [
@@ -248,6 +307,12 @@ describe('sourceImportCatalogModel', () => {
       available: 'disponibles',
       showing: 'Mostrando',
       of: 'de',
+      filterAll: 'Todas',
+      filterSelected: 'Seleccionadas',
+      filterWithColumns: 'Con columnas',
+      filterWithSize: 'Con tamano',
+      filterListLabel: 'Filtros del catalogo origen',
+      filterAccessibilityPrefix: 'Filtrar catalogo origen por',
     };
 
     const viewModel = buildSourceImportCatalogViewModel({

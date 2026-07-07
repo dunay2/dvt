@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
@@ -10,6 +11,7 @@ import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
   buildWarehouseTableKey,
   buildSourceImportCatalogViewModel,
+  type SourceImportCatalogFilterId,
 } from './sourceImportCatalogModel';
 import type { SourceImportDatabaseIdentity, SourceImportSchemaIdentity, TableInfo } from './types';
 
@@ -40,10 +42,12 @@ export function SelectionStep({
   onToggleSchema,
   onToggleTable,
 }: SelectionStepProps) {
+  const [catalogFilterId, setCatalogFilterId] = useState<SourceImportCatalogFilterId>('all');
   const catalogViewModel = buildSourceImportCatalogViewModel({
     tables,
     activeTableKey,
     searchQuery: tableSearchQuery,
+    filterId: catalogFilterId,
     copy: copy.catalog,
     numberFormatter: sourceImportCatalogNumberFormatter,
   });
@@ -93,6 +97,7 @@ export function SelectionStep({
                 catalog={catalogViewModel}
                 emptyLabel={copy.selection.empty}
                 onActivateTable={onActivateTable}
+                onSelectFilter={setCatalogFilterId}
                 onToggleDatabase={onToggleDatabase}
                 onToggleSchema={onToggleSchema}
                 onToggleTable={onToggleTable}

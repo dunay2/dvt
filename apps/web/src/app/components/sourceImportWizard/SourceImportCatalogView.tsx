@@ -1,4 +1,5 @@
 import {
+  SourceImportCatalogFilterList,
   SourceImportCatalogEmptyState,
   SourceImportDatabaseGroup,
   SourceImportDatabaseHeader,
@@ -9,6 +10,7 @@ import {
 } from './SourceImportCatalogPrimitives';
 import {
   buildSourceImportSchemaKey,
+  type SourceImportCatalogFilterId,
   type SourceImportCatalogViewModel,
 } from './sourceImportCatalogModel';
 import type { SourceImportDatabaseIdentity, SourceImportSchemaIdentity } from './types';
@@ -17,6 +19,7 @@ type SourceImportCatalogViewProps = Readonly<{
   catalog: SourceImportCatalogViewModel;
   emptyLabel: string;
   onActivateTable: (index: number) => void;
+  onSelectFilter: (filterId: SourceImportCatalogFilterId) => void;
   onToggleDatabase: (database: SourceImportDatabaseIdentity) => void;
   onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
   onToggleTable: (index: number) => void;
@@ -26,16 +29,31 @@ export function SourceImportCatalogView({
   catalog,
   emptyLabel,
   onActivateTable,
+  onSelectFilter,
   onToggleDatabase,
   onToggleSchema,
   onToggleTable,
 }: SourceImportCatalogViewProps): JSX.Element {
+  const filterList = (
+    <SourceImportCatalogFilterList
+      label={catalog.filterListLabel}
+      filters={catalog.categoryFilters}
+      onSelectFilter={onSelectFilter}
+    />
+  );
+
   if (catalog.databaseGroups.length === 0) {
-    return <SourceImportCatalogEmptyState>{emptyLabel}</SourceImportCatalogEmptyState>;
+    return (
+      <SourceImportSchemaGroups>
+        {filterList}
+        <SourceImportCatalogEmptyState>{emptyLabel}</SourceImportCatalogEmptyState>
+      </SourceImportSchemaGroups>
+    );
   }
 
   return (
     <SourceImportSchemaGroups>
+      {filterList}
       {catalog.databaseGroups.map((databaseGroup) => (
         <SourceImportDatabaseGroup key={databaseGroup.database}>
           <SourceImportDatabaseHeader
