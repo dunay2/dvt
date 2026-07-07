@@ -48,6 +48,21 @@ export function clickCanvasContextMenuItem(label: CanvasMenuLabel): void {
     .click();
 }
 
+export function clickCanvasContextMenuAction(action: string): void {
+  cy.get(`[data-slot="canvas-context-menu"] [data-menu-action="${action}"]`)
+    .should('be.visible')
+    .should('be.enabled')
+    .click();
+}
+
+export function clickCanvasAddCatalogAction(action: string, registrationKind?: string): void {
+  const selector = registrationKind
+    ? `[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="${action}"][data-registration-kind="${registrationKind}"]`
+    : `[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="${action}"]`;
+
+  cy.get(selector).should('be.visible').should('be.enabled').click();
+}
+
 function revealOperationalDrawer(): void {
   cy.get('body').then(($body) => {
     if ($body.find('[data-slot="bottom-operational-drawer-tab"]').length > 0) {

@@ -19,6 +19,7 @@ type CanvasRuntimeApiOptions = {
   emptyCanvas?: boolean;
   title?: string;
   skipDraftRead?: boolean;
+  sourceImportAvailable?: boolean;
 };
 
 type PlanRejectedCause =
@@ -245,13 +246,18 @@ export function stubRunWorkspaceApis(runId = 'run_e2e_1'): void {
 }
 
 export function stubCanvasRuntimeApis(options: CanvasRuntimeApiOptions = {}): void {
+  const plugins: Record<string, { available: boolean; reason?: string }> = {
+    dbt: { available: true },
+    dvt: { available: true },
+  };
+  if (options.sourceImportAvailable === true) {
+    plugins['dvt.warehouse-source'] = { available: true };
+  }
+
   stubE2eJsonApi('GET', '/capabilities', {
     apiVersion: '1.0.0',
     minFrontendVersion: '0.0.1',
-    plugins: {
-      dbt: { available: true },
-      dvt: { available: true },
-    },
+    plugins,
   });
   stubE2eJsonApi('GET', '/workspace/context', {
     effectiveWorkspace: E2E_WORKSPACE_SESSION,

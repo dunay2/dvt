@@ -69,6 +69,34 @@ describe('CanvasAddNodeCatalogView', () => {
     );
   });
 
+  it('exposes stable semantic attributes for source-import catalog actions', async () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+
+    await act(async () => {
+      root.render(
+        <CanvasAddNodeCatalogView
+          items={buildCanvasAddNodeCatalogItems({
+            actions: [
+              {
+                action: 'open-source-import',
+                label: 'Add source',
+                registration: sourceKind,
+              },
+            ],
+          })}
+          onSelectItem={vi.fn()}
+        />
+      );
+    });
+
+    const sourceImportAction = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="open-source-import"][data-registration-kind="dvt:source"]'
+    );
+
+    expect(sourceImportAction).not.toBeNull();
+    expect(sourceImportAction?.textContent).toContain('Add source');
+  });
+
   async function renderCatalog(onSelectItem = vi.fn()): Promise<void> {
     const items = buildCanvasAddNodeCatalogItems({
       authoringNodeKinds: [

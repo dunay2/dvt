@@ -58,6 +58,10 @@ export function CanvasAddNodeCatalogView({
           {visibleItems.map((item) => (
             <CanvasContextMenuItem
               key={item.id}
+              dataSlot="canvas-context-menu-add-catalog-item"
+              dataMenuItemKind="catalog"
+              dataMenuAction={resolveCanvasAddNodeCatalogActionId(item)}
+              dataRegistrationKind={item.registration.kind}
               label={
                 <span>
                   <span>{item.actionLabel}</span>
@@ -75,4 +79,8 @@ export function CanvasAddNodeCatalogView({
       )}
     </>
   );
+}
+
+function resolveCanvasAddNodeCatalogActionId(item: CanvasAddNodeCatalogItem): string {
+  return item.actionId.split(':')[0] ?? item.actionId;
 }

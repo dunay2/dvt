@@ -57,18 +57,30 @@ export function CanvasContextMenuSection({
 type CanvasContextMenuItemProps = Readonly<{
   label: ReactNode;
   title?: string;
+  dataSlot?: string;
+  dataMenuItemKind?: string;
+  dataMenuAction?: string;
+  dataRegistrationKind?: string;
   onSelect: () => void;
 }>;
 
 export function CanvasContextMenuItem({
   label,
   title,
+  dataSlot = 'canvas-context-menu-item',
+  dataMenuItemKind,
+  dataMenuAction,
+  dataRegistrationKind,
   onSelect,
 }: CanvasContextMenuItemProps): JSX.Element {
   return (
     <button
       type="button"
       role="menuitem"
+      data-slot={dataSlot}
+      data-menu-item-kind={dataMenuItemKind}
+      data-menu-action={dataMenuAction}
+      data-registration-kind={dataRegistrationKind}
       className={CANVAS_CONTEXT_MENU_ITEM_CLASS_NAME}
       title={title}
       onClick={onSelect}

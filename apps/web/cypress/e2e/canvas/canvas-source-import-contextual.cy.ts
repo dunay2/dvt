@@ -3,7 +3,8 @@ import {
   stubCanvasDraftSave,
 } from '../../support/canvasDraftAuthoring';
 import {
-  clickCanvasContextMenuItem,
+  clickCanvasAddCatalogAction,
+  clickCanvasContextMenuAction,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import {
@@ -88,6 +89,7 @@ describe('Canvas contextual source import', () => {
       emptyCanvas: true,
       title: 'Warehouse dbt',
       skipDraftRead: true,
+      sourceImportAvailable: true,
     });
     stubWarehouseSourceImportApis();
     stubCanvasDraftSave();
@@ -101,8 +103,8 @@ describe('Canvas contextual source import', () => {
 
     openCanvasContextMenuAt(520, 300);
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
-    clickCanvasContextMenuItem('Add...');
-    clickCanvasContextMenuItem('Add source');
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
 
     cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
     cy.contains('[role="dialog"]', 'Explore governed connections').should('be.visible');
@@ -113,9 +115,14 @@ describe('Canvas contextual source import', () => {
     cy.contains('[role="tab"]', 'Browse').click();
     waitForE2eApiCall(/\/workspace\/warehouse\/connections\/[^/]+\/tables/, 'GET');
     cy.get('[data-source-import-table="RAW.ERP.ORDERS"]')
+      .scrollIntoView()
       .should('be.visible')
       .and('have.attr', 'role', 'button')
-      .and('have.attr', 'aria-label', 'Select source table RAW.ERP.ORDERS. 1,500 rows. 2 columns.')
+      .and(
+        'have.attr',
+        'aria-label',
+        'Inspect source table RAW.ERP.ORDERS metadata. 1,500 rows. 2 columns.'
+      )
       .and('contain.text', 'RAW.ERP.ORDERS')
       .and('contain.text', '1,500 rows')
       .and('contain.text', '2 columns')
@@ -123,6 +130,13 @@ describe('Canvas contextual source import', () => {
       .and('contain.text', 'Required')
       .and('contain.text', 'discount_code')
       .and('contain.text', 'Nullable')
+      .click();
+    cy.get('[data-source-import-table-select="RAW.ERP.ORDERS"]')
+      .should(
+        'have.attr',
+        'aria-label',
+        'Select source table RAW.ERP.ORDERS. 1,500 rows. 2 columns.'
+      )
       .click();
 
     cy.contains('[role="tab"]', 'Metadata').click();
@@ -134,7 +148,7 @@ describe('Canvas contextual source import', () => {
     cy.contains('[role="tab"]', 'Selected').click();
     cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
     cy.contains('Connection:').parent().should('contain.text', 'Local Postgres proof');
-    cy.contains('Tables Selected:').parent().should('contain.text', '1');
+    cy.contains('Tables selected:').parent().should('contain.text', '1');
     cy.contains('[role="dialog"]', 'RAW.ERP.ORDERS').should('be.visible');
 
     cy.contains('button', 'Attach sources to canvas').click();
@@ -166,7 +180,7 @@ describe('Canvas contextual source import', () => {
     });
     cy.contains('[role="dialog"] button', 'Done').click();
 
-    cy.contains('.react-flow__node', 'src_erp_orders', { timeout: 20_000 })
+    cy.contains('.react-flow__node', 'Raw Orders', { timeout: 20_000 })
       .should('be.visible')
       .and('contain.text', 'Rows')
       .and('contain.text', '1.5k')
@@ -175,7 +189,7 @@ describe('Canvas contextual source import', () => {
       .and('contain.text', 'Columns')
       .and('contain.text', '2');
 
-    cy.contains('[data-slot="graph-node-card"]', 'src_erp_orders').rightclick({ force: true });
+    cy.contains('[data-slot="graph-node-card"]', 'Raw Orders').rightclick({ force: true });
     cy.contains('[role="menuitem"]', 'Open workbench').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 20_000 })
       .should('be.visible')

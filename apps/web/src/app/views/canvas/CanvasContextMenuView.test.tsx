@@ -80,6 +80,11 @@ describe('CanvasContextMenuView', () => {
     expect(container.querySelector('[data-slot="canvas-context-menu"]')).not.toBeNull();
     expect(menuButtonLabels('canvas-context-menu-add-group')).toEqual(['Add...']);
     expect(menuButtonLabels('canvas-context-menu-canvas-group')).toEqual(['Canvas settings']);
+    expect(
+      container.querySelector(
+        '[data-slot="canvas-context-menu-item"][data-menu-item-kind="canvas"][data-menu-action="open-add-node-catalog"]'
+      )?.textContent
+    ).toContain('Add...');
     expect(container.textContent).not.toContain('Add source');
     expect(container.textContent).not.toContain('Validate graph');
     expect(container.textContent).not.toContain('Preview execution plan');
@@ -178,6 +183,11 @@ describe('CanvasContextMenuView', () => {
 
     expect(container.textContent).toContain('Add source');
     expect(container.textContent).toContain('Sources');
+    expect(
+      container.querySelector(
+        '[data-slot="canvas-context-menu-add-catalog-item"][data-menu-item-kind="catalog"][data-menu-action="open-source-import"]'
+      )?.textContent
+    ).toContain('Add source');
 
     await clickMenuItem('Add source');
 
