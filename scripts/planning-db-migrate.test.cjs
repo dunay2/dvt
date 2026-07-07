@@ -12666,6 +12666,25 @@ test('tracked migrations register source import active metadata stable selectors
   assert.doesNotMatch(metadataMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register source import selection basket column review', () => {
+  const migrations = readMigrationFiles();
+  const basketMigration = migrations.find(
+    (migration) => migration.fileName === '541_source_import_selection_basket_column_review.sql'
+  );
+
+  assert.ok(basketMigration);
+  assert.match(basketMigration.sql, /SourceImportSelectionBasket\.tsx/);
+  assert.match(basketMigration.sql, /SourceImportSelectionBasket\.test\.tsx/);
+  assert.match(basketMigration.sql, /selectedSourceColumnPreviewLimit/);
+  assert.match(basketMigration.sql, /SourceImportSelectedColumnPreview/);
+  assert.match(basketMigration.sql, /sourceImportWizardCopy\.selectionBasket/);
+  assert.match(basketMigration.sql, /data-source-import-selected-column/);
+  assert.match(basketMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(basketMigration.sql, /E-CANVAS-ADD-SOURCE-BASKET-REMOVE-1/);
+  assert.match(basketMigration.sql, /canvas-source-import-contextual\.cy\.ts/);
+  assert.doesNotMatch(basketMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register source import schema identity selection', () => {
   const migrations = readMigrationFiles();
   const identityMigration = migrations.find(

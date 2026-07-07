@@ -96,6 +96,9 @@ export const sourceImportWizardCopy = {
     empty: 'No source tables selected yet.',
     selected: 'selected',
     remove: 'Remove',
+    noColumns: 'Column metadata is not recorded for this selected source.',
+    moreColumnsPrefix: 'and',
+    moreColumnsSuffix: 'more columns',
   },
   catalog: {
     selectSourceTable: 'Select source table',

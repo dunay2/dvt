@@ -161,6 +161,12 @@ describe('Canvas contextual source import', () => {
     cy.contains('Connection:').parent().should('contain.text', 'Local Postgres proof');
     cy.contains('Tables selected:').parent().should('contain.text', '1');
     cy.contains('[role="dialog"]', 'RAW.ERP.ORDERS').should('be.visible');
+    cy.contains('[role="dialog"]', 'order_id').should('be.visible');
+    cy.contains('[role="dialog"]', 'INTEGER').should('be.visible');
+    cy.contains('[role="dialog"]', 'Required').should('be.visible');
+    cy.contains('[role="dialog"]', 'discount_code').should('be.visible');
+    cy.contains('[role="dialog"]', 'TEXT').should('be.visible');
+    cy.contains('[role="dialog"]', 'Nullable').should('be.visible');
 
     cy.contains('button', 'Attach sources to canvas').click();
     waitForE2eApiCall('/workspace/sources/import', 'POST');
