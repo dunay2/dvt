@@ -7,6 +7,7 @@ const CATALOG_VIEW_PATH = resolve(import.meta.dirname, 'SourceImportCatalogView.
 const CATALOG_PRIMITIVES_PATH = resolve(import.meta.dirname, 'SourceImportCatalogPrimitives.tsx');
 const CATALOG_MODEL_PATH = resolve(import.meta.dirname, 'sourceImportCatalogModel.ts');
 const WIZARD_MODEL_PATH = resolve(import.meta.dirname, 'sourceImportWizardModel.ts');
+const WIZARD_FRAME_PATH = resolve(import.meta.dirname, 'SourceImportWizardFrame.tsx');
 
 describe('SourceImportCatalogView architecture', () => {
   it('delegates Add Source catalog presentation to component primitives', () => {
@@ -35,5 +36,15 @@ describe('SourceImportCatalogView architecture', () => {
     expect(wizardModel).not.toContain('SourceImportCatalogViewModel');
     expect(wizardModel).not.toContain('buildSourceImportCatalogViewModel');
     expect(wizardModel).not.toContain('formatSourceImportByteSize');
+  });
+
+  it('keeps wizard footer commands in the governed copy catalog', () => {
+    const source = readFileSync(WIZARD_FRAME_PATH, 'utf8');
+
+    expect(source).toContain('copy.footer');
+    expect(source).not.toContain('>Done<');
+    expect(source).not.toContain('>Cancel<');
+    expect(source).not.toContain('Attaching...');
+    expect(source).not.toContain('Attach sources to canvas');
   });
 });

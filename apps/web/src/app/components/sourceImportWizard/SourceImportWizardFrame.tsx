@@ -34,7 +34,7 @@ export function SourceImportWizardFooter({
   if (isResultStep) {
     return (
       <Button onClick={onDone} className="w-full">
-        Done
+        {copy.footer.doneAction}
       </Button>
     );
   }
@@ -42,18 +42,18 @@ export function SourceImportWizardFooter({
   return (
     <div className="flex w-full justify-end gap-2">
       <Button variant="outline" onClick={onClose}>
-        Cancel
+        {copy.footer.cancelAction}
       </Button>
       <Button onClick={onImport} disabled={!canImport}>
         {isProcessing ? (
           <>
             <Loader2 className="mr-2 size-4 animate-spin" />
-            Attaching...
+            {copy.footer.attachingAction}
           </>
         ) : (
           <>
             <CheckCircle2 className="mr-2 size-4" />
-            Attach sources to canvas
+            {copy.footer.attachAction}
           </>
         )}
       </Button>
@@ -101,7 +101,9 @@ export function SourceImportWizardFrame({
 
         {isResultStep ? null : <div className="shrink-0">{sections}</div>}
 
-        <ScrollArea className="-mx-6 min-h-0 flex-1 px-6">{children}</ScrollArea>
+        <ScrollArea className="-mx-6 min-h-0 flex-1 px-6">
+          <div className="pb-4">{children}</div>
+        </ScrollArea>
 
         <DialogFooter className="mt-4 shrink-0">
           <SourceImportWizardFooter

@@ -2,6 +2,12 @@ export const sourceImportWizardCopy = {
   title: 'Add source',
   description:
     'Explore governed connections, choose source tables, inspect metadata, and attach selected origins to the canvas.',
+  footer: {
+    doneAction: 'Done',
+    cancelAction: 'Cancel',
+    attachingAction: 'Attaching...',
+    attachAction: 'Attach sources to canvas',
+  },
   selectConnectionError: 'Please select a connection',
   selectAtLeastOneTableError: 'Please select at least one table',
   loadConnectionsError: 'Failed to load warehouse connections.',

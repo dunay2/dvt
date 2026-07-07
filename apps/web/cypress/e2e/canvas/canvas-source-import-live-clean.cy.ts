@@ -3,7 +3,8 @@
  * without draft endpoint intercepts or seeded draft success.
  */
 import {
-  clickCanvasContextMenuItem,
+  clickCanvasAddCatalogAction,
+  clickCanvasContextMenuAction,
   clickPreviewExecutionPlanFromOperationalDrawer,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
@@ -241,8 +242,8 @@ describe('Canvas source import live clean proof', () => {
     cy.contains('Start dbt canvas', { timeout: 20_000 }).should('be.visible');
     waitForLiveDraftSaved(session);
     openCanvasContextMenuAt(420, 280);
-    clickCanvasContextMenuItem('Add...');
-    clickCanvasContextMenuItem('Add source');
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
     importLocalPostgresSource();
 
     cy.contains('.react-flow__node', 'Postgres', { timeout: 20_000 })
@@ -265,8 +266,8 @@ describe('Canvas source import live clean proof', () => {
     });
 
     openCanvasContextMenuAt(740, 280);
-    clickCanvasContextMenuItem('Add...');
-    clickCanvasContextMenuItem('Add model');
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('create-node', 'dbt:model');
     cy.contains('.react-flow__node', 'Model 1', { timeout: 20_000 }).should('be.visible');
 
     connectCanvasNodes('Postgres', 'Model 1');

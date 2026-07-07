@@ -134,6 +134,8 @@ export function CanvasContextMenuView({
             <CanvasContextMenuItem
               key={item.id}
               label={item.label}
+              dataMenuItemKind={item.kind}
+              dataMenuAction={item.action.action}
               onSelect={() =>
                 selectCanvasContextMenuItem({
                   item,
