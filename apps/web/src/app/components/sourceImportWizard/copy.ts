@@ -85,6 +85,7 @@ export const sourceImportWizardCopy = {
     groupingStrategyLabel: 'Grouping strategy:',
     enabledLabel: 'Yes',
     disabledLabel: 'No',
+    registryFileLabel: 'Registry file',
     destinationPosture:
       'Destination is configured on a DVT Sink node after origin registration; verify the output target before previewing or running the graph.',
     dataObjectGroupPrefix: 'data-object-group',

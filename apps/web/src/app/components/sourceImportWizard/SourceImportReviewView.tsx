@@ -29,6 +29,7 @@ export const sourceImportReviewViewClassNames = {
   previewList: 'space-y-2',
   group: 'rounded border border-slate-600 p-3',
   groupHeader: 'mb-2 flex items-center justify-between',
+  registryPath: 'text-xs text-slate-300',
   groupCode: 'text-sm text-blue-400',
   tableList: 'space-y-1 text-xs text-slate-400',
   tableRow: 'flex min-w-0 items-center justify-between gap-2',
@@ -173,11 +174,20 @@ export function SourceImportAttachmentPreview({
       <ScrollArea className={sourceImportReviewViewClassNames.previewScroll}>
         <div className={sourceImportReviewViewClassNames.previewList}>
           {previewGroups.map(([key, groupTables]) => (
-            <div key={key} className={sourceImportReviewViewClassNames.group}>
+            <div
+              key={key}
+              className={sourceImportReviewViewClassNames.group}
+              data-source-import-registry-path={key}
+            >
               <div className={sourceImportReviewViewClassNames.groupHeader}>
-                <code className={sourceImportReviewViewClassNames.groupCode}>
-                  {copy.review.dataObjectGroupPrefix}: {key.toLowerCase()}
-                </code>
+                <div>
+                  <div className={sourceImportReviewViewClassNames.groupCode}>
+                    {copy.review.dataObjectGroupPrefix}
+                  </div>
+                  <code className={sourceImportReviewViewClassNames.registryPath}>
+                    {copy.review.registryFileLabel}: {key}
+                  </code>
+                </div>
                 <Badge variant="secondary" className="text-xs">
                   {formatReviewTableCount(groupTables.length)}
                 </Badge>

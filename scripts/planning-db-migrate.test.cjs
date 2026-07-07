@@ -12685,6 +12685,29 @@ test('tracked migrations register source import selection basket column review',
   assert.doesNotMatch(basketMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register source import review registry path', () => {
+  const migrations = readMigrationFiles();
+  const registryPathMigration = migrations.find(
+    (migration) => migration.fileName === '542_source_import_review_registry_path.sql'
+  );
+
+  assert.ok(registryPathMigration);
+  assert.match(registryPathMigration.sql, /SourceImportReviewView\.tsx/);
+  assert.match(registryPathMigration.sql, /SourceImportReviewView\.test\.tsx/);
+  assert.match(registryPathMigration.sql, /sourceImportWizardModel\.ts/);
+  assert.match(registryPathMigration.sql, /buildSourceImportRegistryPath/);
+  assert.match(registryPathMigration.sql, /sourceImportWizardCopy\.review\.registryFileLabel/);
+  assert.match(registryPathMigration.sql, /data-source-import-registry-path/);
+  assert.match(registryPathMigration.sql, /models\/sources\/src_erp\.yml/);
+  assert.match(registryPathMigration.sql, /E-CANVAS-ADD-SOURCE-REVIEW-TEMPLATE-1/);
+  assert.match(
+    registryPathMigration.sql,
+    /api\.component\.warehouseSourceImport\.ImportWarehouseSourcesUseCase/
+  );
+  assert.match(registryPathMigration.sql, /canvas-source-import-contextual\.cy\.ts/);
+  assert.doesNotMatch(registryPathMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations register source import schema identity selection', () => {
   const migrations = readMigrationFiles();
   const identityMigration = migrations.find(

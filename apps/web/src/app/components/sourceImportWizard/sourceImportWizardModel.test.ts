@@ -4,6 +4,7 @@ import type { TableInfo } from './types';
 import {
   applySourceImportOptionDefaults,
   buildPreviewGroups,
+  buildSourceImportRegistryPath,
   buildSourceImportOptionValues,
   canEnterSourceImportSection,
   canProceedForStep,
@@ -131,7 +132,23 @@ describe('sourceImportWizardModel', () => {
       'schema'
     );
     expect(groups.size).toBe(1);
-    expect(groups.get('ERP')?.length).toBe(2);
+    expect(groups.get('models/sources/src_erp.yml')?.length).toBe(2);
+  });
+
+  it('resolves governed source registry paths with the same grouping posture as import', () => {
+    expect(
+      buildSourceImportRegistryPath(
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+        'schema'
+      )
+    ).toBe('models/sources/src_erp.yml');
+
+    expect(
+      buildSourceImportRegistryPath(
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+        'database'
+      )
+    ).toBe('models/sources/src_raw.yml');
   });
 
   it('applies plugin-declared source import option defaults through the model', () => {

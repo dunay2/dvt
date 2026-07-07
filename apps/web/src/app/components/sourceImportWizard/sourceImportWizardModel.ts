@@ -77,13 +77,22 @@ export function buildPreviewGroups(
   const selectedTables = tables.filter((table) => table.selected);
   const groups = new Map<string, TableInfo[]>();
   selectedTables.forEach((table) => {
-    const key = groupingStrategy === 'schema' ? table.schema : table.database;
+    const key = buildSourceImportRegistryPath(table, groupingStrategy);
     if (!groups.has(key)) {
       groups.set(key, []);
     }
     groups.get(key)?.push(table);
   });
   return groups;
+}
+
+export function buildSourceImportRegistryPath(
+  table: Pick<TableInfo, 'database' | 'schema'>,
+  groupingStrategy: 'schema' | 'database' | 'custom'
+): string {
+  const groupKey =
+    groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
+  return `models/sources/src_${groupKey}.yml`;
 }
 
 export function getSelectedTables(tables: readonly TableInfo[]): readonly TableInfo[] {
