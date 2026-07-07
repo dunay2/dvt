@@ -43,6 +43,13 @@ function stubWarehouseSourceImportApis(): void {
         { name: 'discount_code', type: 'TEXT', nullable: true },
       ],
     },
+    {
+      database: 'RAW',
+      schema: 'CRM',
+      table: 'CUSTOMERS',
+      rowCount: 400,
+      columns: [],
+    },
   ]);
   stubE2eApi('GET', '/workspace/graph/draft', ({ url }) => {
     expect(Object.fromEntries(url.searchParams.entries())).to.deep.include({
@@ -114,6 +121,10 @@ describe('Canvas contextual source import', () => {
 
     cy.contains('[role="tab"]', 'Browse').click();
     waitForE2eApiCall(/\/workspace\/warehouse\/connections\/[^/]+\/tables/, 'GET');
+    cy.contains('button', 'All').should('be.visible').and('contain.text', '2');
+    cy.contains('button', 'With columns').should('be.visible').and('contain.text', '1').click();
+    cy.contains('[role="dialog"]', 'Showing 1 of 2 tables').should('be.visible');
+    cy.get('[data-source-import-table="RAW.CRM.CUSTOMERS"]').should('not.exist');
     cy.get('[data-source-import-table="RAW.ERP.ORDERS"]')
       .scrollIntoView()
       .should('be.visible')

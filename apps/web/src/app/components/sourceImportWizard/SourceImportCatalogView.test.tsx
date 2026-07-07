@@ -72,6 +72,7 @@ describe('SourceImportCatalogView', () => {
           onToggleSchema={onToggleSchema}
           onToggleTable={onToggleTable}
           onActivateTable={onActivateTable}
+          onSelectFilter={vi.fn()}
         />
       );
     });
@@ -108,6 +109,7 @@ describe('SourceImportCatalogView', () => {
 
   it('renders database categories above schema groups without changing table selection behavior', async () => {
     const onToggleDatabase = vi.fn();
+    const onSelectFilter = vi.fn();
     const onToggleSchema = vi.fn();
     const onToggleTable = vi.fn();
     const onActivateTable = vi.fn();
@@ -131,10 +133,13 @@ describe('SourceImportCatalogView', () => {
           onToggleDatabase={onToggleDatabase}
           onToggleTable={onToggleTable}
           onActivateTable={onActivateTable}
+          onSelectFilter={onSelectFilter}
         />
       );
     });
 
+    expect(container.textContent).toContain('All');
+    expect(container.textContent).toContain('With columns');
     expect(container.textContent).toContain('MART');
     expect(container.textContent).toContain('RAW');
     expect(container.textContent).toContain('2 schemas');
@@ -143,12 +148,53 @@ describe('SourceImportCatalogView', () => {
     expect(container.textContent).toContain('CRM');
 
     await act(async () => {
+      fireEvent.click(
+        getByRole(container, 'button', { name: 'Filter source catalog by All. 3 tables.' })
+      );
       fireEvent.click(container.querySelector('[data-source-import-database="RAW"]')!);
       fireEvent.click(container.querySelector('[data-source-import-schema="RAW.CRM"]')!);
     });
 
+    expect(onSelectFilter).toHaveBeenCalledWith('all');
     expect(onToggleDatabase).toHaveBeenCalledWith({ database: 'RAW' });
     expect(onToggleSchema).toHaveBeenCalledWith({ database: 'RAW', schema: 'CRM' });
+  });
+
+  it('keeps catalog filters available when the active filter has no table matches', async () => {
+    const onSelectFilter = vi.fn();
+    const catalog = buildSourceImportCatalogViewModel({
+      activeTableKey: null,
+      copy: catalogCopy,
+      filterId: 'selected',
+      numberFormatter: sourceImportCatalogNumberFormatter,
+      tables: [buildTable({ table: 'ORDERS', selected: false })],
+    });
+
+    await act(async () => {
+      root.render(
+        <SourceImportCatalogView
+          catalog={catalog}
+          emptyLabel="No source tables"
+          onToggleDatabase={vi.fn()}
+          onToggleSchema={vi.fn()}
+          onToggleTable={vi.fn()}
+          onActivateTable={vi.fn()}
+          onSelectFilter={onSelectFilter}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('No source tables');
+    expect(container.textContent).toContain('All');
+    expect(container.textContent).toContain('Selected');
+
+    await act(async () => {
+      fireEvent.click(
+        getByRole(container, 'button', { name: 'Filter source catalog by All. 1 table.' })
+      );
+    });
+
+    expect(onSelectFilter).toHaveBeenCalledWith('all');
   });
 
   it('delegates schema selection with database scope when schemas share the same name', async () => {
@@ -174,6 +220,7 @@ describe('SourceImportCatalogView', () => {
           onToggleSchema={onToggleSchema}
           onToggleTable={onToggleTable}
           onActivateTable={onActivateTable}
+          onSelectFilter={vi.fn()}
         />
       );
     });
@@ -217,6 +264,7 @@ describe('SourceImportCatalogView', () => {
           onToggleSchema={onToggleSchema}
           onToggleTable={onToggleTable}
           onActivateTable={onActivateTable}
+          onSelectFilter={vi.fn()}
         />
       );
     });

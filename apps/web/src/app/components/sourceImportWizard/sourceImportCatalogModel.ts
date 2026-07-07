@@ -17,7 +17,19 @@ export type SourceImportTableViewModel = Readonly<{
   byteSizeLabel: string | null;
   columnCountLabel: string;
   selected: boolean;
+  selectedLabel: string;
   columns: readonly SourceImportColumnViewModel[];
+}>;
+
+export type SourceImportCatalogFilterId = 'all' | 'selected' | 'withColumns' | 'withSize';
+
+export type SourceImportCatalogFilterViewModel = Readonly<{
+  id: SourceImportCatalogFilterId;
+  label: string;
+  countLabel: string;
+  active: boolean;
+  disabled: boolean;
+  accessibilityLabel: string;
 }>;
 
 export type SourceImportSchemaGroupViewModel = Readonly<{
@@ -46,6 +58,9 @@ export type SourceImportCatalogViewModel = Readonly<{
   visibleTableCount: number;
   selectedTableCount: number;
   resultCountLabel: string;
+  activeFilterId: SourceImportCatalogFilterId;
+  filterListLabel: string;
+  categoryFilters: readonly SourceImportCatalogFilterViewModel[];
 }>;
 
 export type SourceImportCatalogCopy = Readonly<{
@@ -70,6 +85,12 @@ export type SourceImportCatalogCopy = Readonly<{
   available: string;
   showing: string;
   of: string;
+  filterAll: string;
+  filterSelected: string;
+  filterWithColumns: string;
+  filterWithSize: string;
+  filterListLabel: string;
+  filterAccessibilityPrefix: string;
 }>;
 
 export function buildWarehouseTableKey(
@@ -165,6 +186,63 @@ function tableMatchesSourceImportSearch(table: TableInfo, normalizedSearchQuery:
   );
 }
 
+function tableMatchesSourceImportFilter(
+  table: TableInfo,
+  filterId: SourceImportCatalogFilterId
+): boolean {
+  switch (filterId) {
+    case 'selected':
+      return table.selected;
+    case 'withColumns':
+      return (table.columns?.length ?? 0) > 0;
+    case 'withSize':
+      return table.byteSize != null;
+    case 'all':
+      return true;
+    default:
+      return true;
+  }
+}
+
+function buildSourceImportCatalogFilters({
+  searchableTables,
+  activeFilterId,
+  copy,
+  numberFormatter,
+}: Readonly<{
+  searchableTables: readonly TableInfo[];
+  activeFilterId: SourceImportCatalogFilterId;
+  copy: SourceImportCatalogCopy;
+  numberFormatter: Intl.NumberFormat;
+}>): readonly SourceImportCatalogFilterViewModel[] {
+  const filterDefinitions: readonly Readonly<{
+    id: SourceImportCatalogFilterId;
+    label: string;
+  }>[] = [
+    { id: 'all', label: copy.filterAll },
+    { id: 'selected', label: copy.filterSelected },
+    { id: 'withColumns', label: copy.filterWithColumns },
+    { id: 'withSize', label: copy.filterWithSize },
+  ];
+
+  return filterDefinitions.map((filter) => {
+    const count = searchableTables.filter((table) =>
+      tableMatchesSourceImportFilter(table, filter.id)
+    ).length;
+    const countLabel = formatNumber(count, numberFormatter);
+    const tableCountLabel = formatSourceImportTableCount(count, copy, numberFormatter);
+
+    return {
+      id: filter.id,
+      label: filter.label,
+      countLabel,
+      active: filter.id === activeFilterId,
+      disabled: count === 0,
+      accessibilityLabel: `${copy.filterAccessibilityPrefix} ${filter.label}. ${tableCountLabel}.`,
+    };
+  });
+}
+
 export function formatSourceImportNullability(
   nullable: boolean,
   copy: SourceImportCatalogCopy
@@ -200,6 +278,7 @@ export function buildSourceImportTableViewModel(
     byteSizeLabel,
     columnCountLabel,
     selected: table.selected,
+    selectedLabel: copy.filterSelected,
     columns:
       table.columns?.map((column) => {
         const nullabilityLabel = formatSourceImportNullability(column.nullable, copy);
@@ -223,12 +302,14 @@ export function buildSourceImportCatalogViewModel({
   tables,
   activeTableKey,
   searchQuery,
+  filterId = 'all',
   copy,
   numberFormatter = new Intl.NumberFormat(),
 }: Readonly<{
   tables: readonly TableInfo[];
   activeTableKey: string | null;
   searchQuery?: string;
+  filterId?: SourceImportCatalogFilterId;
   copy: SourceImportCatalogCopy;
   numberFormatter?: Intl.NumberFormat;
 }>): SourceImportCatalogViewModel {
@@ -236,9 +317,12 @@ export function buildSourceImportCatalogViewModel({
   const allTableViewModels = tables.map((table, index) =>
     buildSourceImportTableViewModel(table, index, copy, numberFormatter)
   );
-  const visibleTableEntries = tables
+  const searchableTableEntries = tables
     .map((table, index) => ({ table, viewModel: allTableViewModels[index]! }))
     .filter(({ table }) => tableMatchesSourceImportSearch(table, normalizedSearchQuery));
+  const visibleTableEntries = searchableTableEntries.filter(({ table }) =>
+    tableMatchesSourceImportFilter(table, filterId)
+  );
   const tableViewModels = visibleTableEntries.map(({ viewModel }) => viewModel);
   const schemaGroupsByName = new Map<string, SourceImportTableViewModel[]>();
   const databaseGroupsByName = new Map<string, Map<string, SourceImportTableViewModel[]>>();
@@ -318,6 +402,14 @@ export function buildSourceImportCatalogViewModel({
             allTableViewModels.length,
             numberFormatter
           )} ${copy.tablePlural}`,
+    activeFilterId: filterId,
+    filterListLabel: copy.filterListLabel,
+    categoryFilters: buildSourceImportCatalogFilters({
+      searchableTables: searchableTableEntries.map(({ table }) => table),
+      activeFilterId: filterId,
+      copy,
+      numberFormatter,
+    }),
   };
 }
 

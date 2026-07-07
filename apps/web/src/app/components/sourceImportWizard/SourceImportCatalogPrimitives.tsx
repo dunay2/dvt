@@ -5,7 +5,11 @@ import type { ReactNode } from 'react';
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
-import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
+import type {
+  SourceImportCatalogFilterId,
+  SourceImportCatalogFilterViewModel,
+  SourceImportTableViewModel,
+} from './sourceImportCatalogModel';
 
 export const sourceImportCatalogClassNames = {
   emptyState: 'border-slate-600 p-4 text-sm text-slate-300',
@@ -17,6 +21,11 @@ export const sourceImportCatalogClassNames = {
   databaseIdentity: 'flex min-w-0 items-center gap-2',
   databaseTitle: 'font-mono font-medium',
   databaseMetrics: 'flex flex-wrap justify-end gap-2 text-xs text-slate-400',
+  filterList: 'flex flex-wrap gap-2',
+  filterButton:
+    'rounded border border-slate-700 bg-slate-950/50 px-2.5 py-1 text-xs text-slate-300 transition hover:border-sky-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-40',
+  activeFilterButton: 'border-sky-400 bg-sky-950/40 text-sky-100',
+  filterCount: 'ml-1 text-slate-500',
   schemaHeader: 'mb-2 flex items-center gap-2',
   schemaTitle: 'text-sm font-medium',
   schemaTableList: 'ml-6 space-y-1',
@@ -62,6 +71,12 @@ type SourceImportTableCardProps = Readonly<{
   onToggle: () => void;
 }>;
 
+type SourceImportCatalogFilterListProps = Readonly<{
+  label: string;
+  filters: readonly SourceImportCatalogFilterViewModel[];
+  onSelectFilter: (filterId: SourceImportCatalogFilterId) => void;
+}>;
+
 export function SourceImportCatalogEmptyState({
   children,
 }: Readonly<{ children: string }>): JSX.Element {
@@ -78,6 +93,38 @@ export function SourceImportDatabaseGroup({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
   return <div className={sourceImportCatalogClassNames.databaseGroup}>{children}</div>;
+}
+
+export function SourceImportCatalogFilterList({
+  label,
+  filters,
+  onSelectFilter,
+}: SourceImportCatalogFilterListProps): JSX.Element {
+  return (
+    <div className={sourceImportCatalogClassNames.filterList} aria-label={label}>
+      {filters.map((filter) => {
+        const className = filter.active
+          ? `${sourceImportCatalogClassNames.filterButton} ${sourceImportCatalogClassNames.activeFilterButton}`
+          : sourceImportCatalogClassNames.filterButton;
+
+        return (
+          <button
+            key={filter.id}
+            type="button"
+            aria-label={filter.accessibilityLabel}
+            aria-pressed={filter.active}
+            data-source-import-catalog-filter={filter.id}
+            className={className}
+            disabled={filter.disabled}
+            onClick={() => onSelectFilter(filter.id)}
+          >
+            {filter.label}
+            <span className={sourceImportCatalogClassNames.filterCount}>{filter.countLabel}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 export function SourceImportDatabaseHeader({
@@ -224,7 +271,7 @@ export function SourceImportTableCard({
           </div>
         </div>
         <div className={sourceImportCatalogClassNames.tableMetrics}>
-          {table.selected ? <Badge variant="outline">Selected</Badge> : null}
+          {table.selected ? <Badge variant="outline">{table.selectedLabel}</Badge> : null}
           <div>{table.rowCountLabel}</div>
           {table.byteSizeLabel == null ? null : <div>{table.byteSizeLabel}</div>}
           <div>{table.columnCountLabel}</div>
