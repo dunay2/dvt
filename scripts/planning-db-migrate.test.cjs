@@ -13459,8 +13459,12 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   const schemaScopeMigration = migrations.find(
     (migration) => migration.fileName === '574_source_import_catalog_accessible_schema_scope.sql'
   );
+  const schemaIdentityMigration = migrations.find(
+    (migration) => migration.fileName === '575_source_import_catalog_schema_identity_keys.sql'
+  );
 
   assert.ok(schemaScopeMigration);
+  assert.ok(schemaIdentityMigration);
   assert.match(schemaScopeMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
   assert.match(schemaScopeMigration.sql, /RenderSourceImportCatalogView/);
   assert.match(schemaScopeMigration.sql, /schemaScopeInvariant/);
@@ -13476,4 +13480,12 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   assert.match(schemaScopeMigration.sql, /E-CANVAS-ADD-SOURCE-CATALOG-CATEGORIES-1/);
   assert.doesNotMatch(schemaScopeMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(schemaScopeMigration.sql, /truncate\s+/i);
+  assert.match(schemaIdentityMigration.sql, /schemaDomIdentityInvariant/);
+  assert.match(schemaIdentityMigration.sql, /structured \[database, schema\] token/);
+  assert.match(schemaIdentityMigration.sql, /schemaAccessibilityInvariant/);
+  assert.match(schemaIdentityMigration.sql, /buildSourceImportSchemaKey/);
+  assert.match(schemaIdentityMigration.sql, /EV-WEB-SOURCE-IMPORT-CATALOG-SCHEMA-IDENTITY-KEYS/);
+  assert.match(schemaIdentityMigration.sql, /RAW\.PROD\/PUBLIC and RAW\/PROD\.PUBLIC/);
+  assert.doesNotMatch(schemaIdentityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(schemaIdentityMigration.sql, /truncate\s+/i);
 });

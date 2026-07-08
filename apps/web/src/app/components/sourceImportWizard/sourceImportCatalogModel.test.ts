@@ -302,12 +302,12 @@ describe('sourceImportCatalogModel', () => {
     expect(viewModel.schemaGroups).toEqual([
       expect.objectContaining({
         schema: 'PUBLIC',
-        accessibilityLabel: 'Select source schema MART.PUBLIC. 1 table.',
+        accessibilityLabel: 'Select source schema PUBLIC. Select source database MART. 1 table.',
         tables: [expect.objectContaining({ canonicalName: 'MART.PUBLIC.ORDERS' })],
       }),
       expect.objectContaining({
         schema: 'PUBLIC',
-        accessibilityLabel: 'Select source schema RAW.PUBLIC. 1 table.',
+        accessibilityLabel: 'Select source schema PUBLIC. Select source database RAW. 1 table.',
         tables: [expect.objectContaining({ canonicalName: 'RAW.PUBLIC.ORDERS' })],
       }),
     ]);
@@ -337,12 +337,14 @@ describe('sourceImportCatalogModel', () => {
     expect(viewModel.schemaGroups).toEqual([
       expect.objectContaining({
         schema: 'PROD.PUBLIC',
-        accessibilityLabel: 'Select source schema RAW.PROD.PUBLIC. 1 table.',
+        accessibilityLabel:
+          'Select source schema PROD.PUBLIC. Select source database RAW. 1 table.',
         tables: [expect.objectContaining({ canonicalName: 'RAW.PROD.PUBLIC.CUSTOMERS' })],
       }),
       expect.objectContaining({
         schema: 'PUBLIC',
-        accessibilityLabel: 'Select source schema RAW.PROD.PUBLIC. 1 table.',
+        accessibilityLabel:
+          'Select source schema PUBLIC. Select source database RAW.PROD. 1 table.',
         tables: [expect.objectContaining({ canonicalName: 'RAW.PROD.PUBLIC.ORDERS' })],
       }),
     ]);
