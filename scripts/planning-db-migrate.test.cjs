@@ -12955,3 +12955,43 @@ test('tracked migrations declare source import live Cypress helper symbols', () 
   assert.doesNotMatch(helperSymbolsMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(helperSymbolsMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register source import review preview metrics', () => {
+  const migrations = readMigrationFiles();
+  const reviewMetricsMigration = migrations.find(
+    (migration) => migration.fileName === '553_source_import_review_preview_metrics.sql'
+  );
+
+  assert.ok(reviewMetricsMigration);
+  assert.match(reviewMetricsMigration.sql, /E-CANVAS-ADD-SOURCE-REVIEW-TEMPLATE-1/);
+  assert.match(reviewMetricsMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(reviewMetricsMigration.sql, /ImportWarehouseSources/);
+  assert.match(reviewMetricsMigration.sql, /sourceImportReviewModel\.ts/);
+  assert.match(reviewMetricsMigration.sql, /buildSourceImportReviewPreviewGroups/);
+  assert.match(reviewMetricsMigration.sql, /SourceImportReviewView\.tsx/);
+  assert.match(reviewMetricsMigration.sql, /data-source-import-review-table/);
+  assert.match(reviewMetricsMigration.sql, /rowCountLabel/);
+  assert.match(reviewMetricsMigration.sql, /byteSizeLabel/);
+  assert.match(reviewMetricsMigration.sql, /columnCountLabel/);
+  assert.match(reviewMetricsMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(reviewMetricsMigration.sql, /EV-SOURCE-IMPORT-REVIEW-METRICS-LIVE-E2E/);
+  assert.doesNotMatch(reviewMetricsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(reviewMetricsMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare source import review preview group type symbol', () => {
+  const migrations = readMigrationFiles();
+  const reviewTypeSymbolMigration = migrations.find(
+    (migration) => migration.fileName === '554_source_import_review_preview_group_type_symbol.sql'
+  );
+
+  assert.ok(reviewTypeSymbolMigration);
+  assert.match(reviewTypeSymbolMigration.sql, /E-CANVAS-ADD-SOURCE-REVIEW-TEMPLATE-1/);
+  assert.match(reviewTypeSymbolMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(reviewTypeSymbolMigration.sql, /SourceImportReviewPreviewGroupViewModel/);
+  assert.match(reviewTypeSymbolMigration.sql, /sourceImportReviewModel\.ts/);
+  assert.match(reviewTypeSymbolMigration.sql, /ImportWarehouseSources/);
+  assert.match(reviewTypeSymbolMigration.sql, /review_read_model_contract/);
+  assert.doesNotMatch(reviewTypeSymbolMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(reviewTypeSymbolMigration.sql, /truncate\s+/i);
+});
