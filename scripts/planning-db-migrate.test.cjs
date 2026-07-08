@@ -8747,6 +8747,31 @@ test('tracked migrations scope Source Import no-stub evidence to executable Sour
   assert.doesNotMatch(evidenceScopeMigration.sql, /apps\/api\/src'|apps\/web\/src\/app'/);
 });
 
+test('tracked migrations complete Source Import component family ownership', () => {
+  const migrations = readMigrationFiles();
+  const familyOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '571_source_import_component_family_ownership.sql'
+  );
+
+  assert.ok(familyOwnershipMigration);
+  assert.match(familyOwnershipMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(familyOwnershipMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
+  assert.match(familyOwnershipMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD-STEPS/);
+  assert.match(familyOwnershipMigration.sql, /SourceImportWizard\.architecture\.test\.tsx/);
+  assert.match(familyOwnershipMigration.sql, /SourceImportWizard\.pluginOptions\.test\.tsx/);
+  assert.match(familyOwnershipMigration.sql, /SourceImportWizard\.testHarness\.tsx/);
+  assert.match(familyOwnershipMigration.sql, /SourceImportSectionTabs\.test\.tsx/);
+  assert.match(familyOwnershipMigration.sql, /constants\.ts/);
+  assert.match(familyOwnershipMigration.sql, /WizardStep/);
+  assert.match(familyOwnershipMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(familyOwnershipMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(familyOwnershipMigration.sql, /ImportWarehouseSources/);
+  assert.match(familyOwnershipMigration.sql, /EV-SOURCE-IMPORT-COMPONENT-FAMILY-OWNERSHIP/);
+  assert.match(familyOwnershipMigration.sql, /frontend-component-files --component/);
+  assert.doesNotMatch(familyOwnershipMigration.sql, /frontend-component-inventory\.md/);
+  assert.doesNotMatch(familyOwnershipMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reassert Canvas source import symbols after post-import reconciliation', () => {
   const migrations = readMigrationFiles();
   const symbolRestoreMigration = migrations.find(
