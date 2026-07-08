@@ -13453,3 +13453,27 @@ test('tracked migrations register source import atomic draft-file evidence', () 
   assert.doesNotMatch(userStoryMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(userStoryMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations harden source import catalog schema-scope accessibility', () => {
+  const migrations = readMigrationFiles();
+  const schemaScopeMigration = migrations.find(
+    (migration) => migration.fileName === '574_source_import_catalog_accessible_schema_scope.sql'
+  );
+
+  assert.ok(schemaScopeMigration);
+  assert.match(schemaScopeMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
+  assert.match(schemaScopeMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(schemaScopeMigration.sql, /schemaScopeInvariant/);
+  assert.match(schemaScopeMigration.sql, /schemaGroupKeyInvariant/);
+  assert.match(schemaScopeMigration.sql, /structured database and schema identity/);
+  assert.match(schemaScopeMigration.sql, /collision-free nested map/);
+  assert.match(schemaScopeMigration.sql, /must not use a dot-joined database\.schema string/);
+  assert.match(schemaScopeMigration.sql, /SourceImportSchemaHeader/);
+  assert.match(schemaScopeMigration.sql, /SourceImportCatalogCopy\.selectSourceSchema/);
+  assert.match(schemaScopeMigration.sql, /groupTablesBySchema/);
+  assert.match(schemaScopeMigration.sql, /buildPreviewGroups/);
+  assert.match(schemaScopeMigration.sql, /EV-WEB-SOURCE-IMPORT-CATALOG-SCHEMA-SCOPE-A11Y/);
+  assert.match(schemaScopeMigration.sql, /E-CANVAS-ADD-SOURCE-CATALOG-CATEGORIES-1/);
+  assert.doesNotMatch(schemaScopeMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(schemaScopeMigration.sql, /truncate\s+/i);
+});

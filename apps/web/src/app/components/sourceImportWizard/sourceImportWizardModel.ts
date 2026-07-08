@@ -24,16 +24,6 @@ export function getSelectedCount(tables: TableInfo[]): number {
   return tables.filter((table) => table.selected).length;
 }
 
-export function groupTablesBySchema(tables: TableInfo[]): Record<string, TableInfo[]> {
-  return tables.reduce<Record<string, TableInfo[]>>((acc, table) => {
-    if (!acc[table.schema]) {
-      acc[table.schema] = [];
-    }
-    acc[table.schema]?.push(table);
-    return acc;
-  }, {});
-}
-
 export function toggleSourceImportSchemaSelection(
   tables: readonly TableInfo[],
   schemaIdentity: SourceImportSchemaIdentity
@@ -68,22 +58,6 @@ export function toggleSourceImportDatabaseSelection(
     ),
     activeTableKey: firstDatabaseTable ? buildWarehouseTableKey(firstDatabaseTable) : null,
   };
-}
-
-export function buildPreviewGroups(
-  tables: TableInfo[],
-  groupingStrategy: 'schema' | 'database' | 'custom'
-): Map<string, TableInfo[]> {
-  const selectedTables = tables.filter((table) => table.selected);
-  const groups = new Map<string, TableInfo[]>();
-  selectedTables.forEach((table) => {
-    const key = buildSourceImportRegistryPath(table, groupingStrategy);
-    if (!groups.has(key)) {
-      groups.set(key, []);
-    }
-    groups.get(key)?.push(table);
-  });
-  return groups;
 }
 
 export function buildSourceImportRegistryPath(

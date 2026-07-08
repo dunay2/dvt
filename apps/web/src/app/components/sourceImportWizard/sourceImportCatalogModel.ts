@@ -34,6 +34,7 @@ export type SourceImportCatalogFilterViewModel = Readonly<{
 
 export type SourceImportSchemaGroupViewModel = Readonly<{
   schema: string;
+  accessibilityLabel: string;
   tableCountLabel: string;
   selected: boolean;
   tables: readonly SourceImportTableViewModel[];
@@ -66,6 +67,7 @@ export type SourceImportCatalogViewModel = Readonly<{
 export type SourceImportCatalogCopy = Readonly<{
   selectSourceTable: string;
   selectSourceDatabase: string;
+  selectSourceSchema: string;
   inspectSourceTableMetadata: string;
   metadata: string;
   rowsUnknown: string;
@@ -324,14 +326,9 @@ export function buildSourceImportCatalogViewModel({
     tableMatchesSourceImportFilter(table, filterId)
   );
   const tableViewModels = visibleTableEntries.map(({ viewModel }) => viewModel);
-  const schemaGroupsByName = new Map<string, SourceImportTableViewModel[]>();
   const databaseGroupsByName = new Map<string, Map<string, SourceImportTableViewModel[]>>();
 
   visibleTableEntries.forEach(({ table, viewModel }) => {
-    const schemaGroup = schemaGroupsByName.get(table.schema) ?? [];
-    schemaGroup.push(viewModel);
-    schemaGroupsByName.set(table.schema, schemaGroup);
-
     const databaseSchemas = databaseGroupsByName.get(table.database) ?? new Map();
     const databaseSchemaGroup = databaseSchemas.get(table.schema) ?? [];
     databaseSchemaGroup.push(viewModel);
@@ -346,10 +343,20 @@ export function buildSourceImportCatalogViewModel({
     tableViewModels.find((table) => table.selected) ??
     tableViewModels[0] ??
     null;
-  const schemaGroups = Array.from(schemaGroupsByName.entries())
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([schema, groupTables]) =>
-      buildSourceImportSchemaGroup(schema, groupTables, copy, numberFormatter)
+  const schemaGroups = Array.from(databaseGroupsByName.entries())
+    .flatMap(([database, databaseSchemaGroups]) =>
+      Array.from(databaseSchemaGroups.entries()).map(([schema, groupTables]) => ({
+        database,
+        schema,
+        groupTables,
+      }))
+    )
+    .sort(
+      (left, right) =>
+        left.database.localeCompare(right.database) || left.schema.localeCompare(right.schema)
+    )
+    .map(({ database, schema, groupTables }) =>
+      buildSourceImportSchemaGroup(database, schema, groupTables, copy, numberFormatter)
     );
   const databaseGroups = Array.from(databaseGroupsByName.entries())
     .sort(([left], [right]) => left.localeCompare(right))
@@ -357,7 +364,7 @@ export function buildSourceImportCatalogViewModel({
       const databaseSchemas = Array.from(databaseSchemaGroups.entries())
         .sort(([left], [right]) => left.localeCompare(right))
         .map(([schema, groupTables]) =>
-          buildSourceImportSchemaGroup(schema, groupTables, copy, numberFormatter)
+          buildSourceImportSchemaGroup(database, schema, groupTables, copy, numberFormatter)
         );
       const databaseTables = databaseSchemas.flatMap((schemaGroup) => schemaGroup.tables);
 
@@ -414,6 +421,7 @@ export function buildSourceImportCatalogViewModel({
 }
 
 function buildSourceImportSchemaGroup(
+  database: string,
   schema: string,
   groupTables: readonly SourceImportTableViewModel[],
   copy: SourceImportCatalogCopy,
@@ -421,6 +429,11 @@ function buildSourceImportSchemaGroup(
 ): SourceImportSchemaGroupViewModel {
   return {
     schema,
+    accessibilityLabel: `${copy.selectSourceSchema} ${database}.${schema}. ${formatSourceImportTableCount(
+      groupTables.length,
+      copy,
+      numberFormatter
+    )}.`,
     tableCountLabel: formatSourceImportTableCount(groupTables.length, copy, numberFormatter),
     selected: groupTables.length > 0 && groupTables.every((table) => table.selected),
     tables: groupTables,

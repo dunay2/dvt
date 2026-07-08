@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import type { TableInfo } from './types';
 import {
   applySourceImportOptionDefaults,
-  buildPreviewGroups,
   buildSourceImportRegistryPath,
   buildSourceImportOptionValues,
   canEnterSourceImportSection,
@@ -12,7 +11,6 @@ import {
   getPreviousStep,
   getSelectedCount,
   getSelectedTables,
-  groupTablesBySchema,
   resolveActiveTable,
   resolveSectionForStep,
   resolveStepForSection,
@@ -34,14 +32,6 @@ describe('sourceImportWizardModel', () => {
   it('counts selected tables', () => {
     const tables = [buildTable({ selected: true }), buildTable({ table: 'CUSTOMERS' })];
     expect(getSelectedCount(tables)).toBe(1);
-  });
-
-  it('groups tables by schema', () => {
-    const grouped = groupTablesBySchema([
-      buildTable({ schema: 'ERP' }),
-      buildTable({ schema: 'MART', table: 'fct_sales' }),
-    ]);
-    expect(Object.keys(grouped)).toEqual(['ERP', 'MART']);
   });
 
   it('toggles only the selected database and schema scope when schema names repeat', () => {
@@ -120,19 +110,6 @@ describe('sourceImportWizardModel', () => {
     expect(getSelectedTables([orders, customers])).toEqual([orders]);
     expect(resolveActiveTable([orders, customers], 'RAW.ERP.CUSTOMERS')).toEqual(customers);
     expect(resolveActiveTable([orders, customers], null)).toEqual(orders);
-  });
-
-  it('builds preview groups from selected tables', () => {
-    const groups = buildPreviewGroups(
-      [
-        buildTable({ selected: true, schema: 'ERP', table: 'ORDERS' }),
-        buildTable({ selected: true, schema: 'ERP', table: 'CUSTOMERS' }),
-        buildTable({ selected: false, schema: 'MART', table: 'fct_sales' }),
-      ],
-      'schema'
-    );
-    expect(groups.size).toBe(1);
-    expect(groups.get('models/sources/src_erp.yml')?.length).toBe(2);
   });
 
   it('resolves governed source registry paths with the same grouping posture as import', () => {

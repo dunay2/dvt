@@ -96,8 +96,12 @@ describe('SourceImportCatalogView', () => {
       name: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 2 columns.',
     });
 
+    const schemaSelectAction = getByRole(container, 'button', {
+      name: 'Select source schema RAW.ERP. 1 table.',
+    });
+
     await act(async () => {
-      fireEvent.click(container.querySelector('[data-source-import-schema="RAW.ERP"]')!);
+      fireEvent.click(schemaSelectAction);
       fireEvent.keyDown(inspectAction, { key: 'Enter' });
       fireEvent.click(selectAction);
     });
