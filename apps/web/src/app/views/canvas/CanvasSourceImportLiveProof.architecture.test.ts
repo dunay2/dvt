@@ -7,7 +7,11 @@ import { describe, expect, it } from 'vitest';
 import { readRepoFile, repoFileExists } from './canvasStartupAndDraftRecovery.architecture.support';
 
 const CYPRESS_SPEC_PATH = 'apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts';
+const RETIRED_STUBBED_CYPRESS_SPEC_PATH =
+  'apps/web/cypress/e2e/canvas/canvas-source-import-contextual.cy.ts';
 const LIVE_RUNNER_PATH = 'scripts/run-canvas-source-import-live-proof.cjs';
+const FRONTEND_COMPONENT_INVENTORY_PATH =
+  'docs/architecture/components/web/frontend-component-inventory.md';
 
 function readPackageScripts(path: string): Record<string, string> {
   return (JSON.parse(readRepoFile(path)) as { scripts: Record<string, string> }).scripts;
@@ -16,10 +20,12 @@ function readPackageScripts(path: string): Record<string, string> {
 describe('Canvas source import live proof architecture', () => {
   it('proves Add Source through the live protected runtime without draft stubs', () => {
     expect(repoFileExists(CYPRESS_SPEC_PATH)).toBe(true);
+    expect(repoFileExists(RETIRED_STUBBED_CYPRESS_SPEC_PATH)).toBe(false);
     expect(repoFileExists(LIVE_RUNNER_PATH)).toBe(true);
 
     const cypressSpecSource = readRepoFile(CYPRESS_SPEC_PATH);
     const liveRunnerSource = readRepoFile(LIVE_RUNNER_PATH);
+    const frontendComponentInventory = readRepoFile(FRONTEND_COMPONENT_INVENTORY_PATH);
     const rootScripts = readPackageScripts('package.json');
     const webScripts = readPackageScripts('apps/web/package.json');
 
@@ -29,6 +35,8 @@ describe('Canvas source import live proof architecture', () => {
     expect(webScripts['test:e2e:source-import:live']).toBe(
       'node ../../scripts/run-canvas-source-import-live-proof.cjs'
     );
+    expect(frontendComponentInventory).toContain(CYPRESS_SPEC_PATH);
+    expect(frontendComponentInventory).not.toContain(RETIRED_STUBBED_CYPRESS_SPEC_PATH);
     expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
     expect(liveRunnerSource).toContain('canvas-source-import-live-clean.cy.ts');
     expect(liveRunnerSource).toContain("DVT_TEMPORAL_DBT_ENABLED: 'true'");
