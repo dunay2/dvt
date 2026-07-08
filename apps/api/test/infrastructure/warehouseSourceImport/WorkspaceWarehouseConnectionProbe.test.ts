@@ -105,6 +105,7 @@ describe('WorkspaceWarehouseConnectionProbe', () => {
     });
     expect(pgMock.query).toHaveBeenCalledTimes(2);
     expect(pgMock.query.mock.calls[0]?.[0]).toContain('pg_total_relation_size(relation.oid)');
+    expect(pgMock.query.mock.calls[0]?.[0]).toContain('pg_stat_get_live_tuples(relation.oid)');
     expect(pgMock.end).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,5 +1,5 @@
 import { CheckCircle2, Database, Loader2, Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   CreateWarehouseConnectionInput,
@@ -82,10 +82,24 @@ export function ConnectionStep({
   onTestConnection,
 }: ConnectionStepProps) {
   const [searchValue, setSearchValue] = useState('');
+  const selectedConnectionOptionRef = useRef<HTMLButtonElement | null>(null);
   const visibleConnections = useMemo(
     () => filterConnections(connections, searchValue),
     [connections, searchValue]
   );
+
+  useEffect(() => {
+    const selectedOption = selectedConnectionOptionRef.current;
+    if (
+      !selectedConnection ||
+      !selectedOption ||
+      typeof selectedOption.scrollIntoView !== 'function'
+    ) {
+      return;
+    }
+
+    selectedOption.scrollIntoView({ block: 'center', inline: 'nearest' });
+  }, [selectedConnection]);
 
   return (
     <div className="space-y-4">
@@ -194,38 +208,43 @@ export function ConnectionStep({
                 {copy.connection.noMatches}
               </Card>
             ) : (
-              visibleConnections.map((connection) => (
-                <button
-                  type="button"
-                  key={connection.id}
-                  data-slot="source-import-connection-option"
-                  aria-pressed={selectedConnection === connection.id}
-                  className={`flex w-full flex-col gap-6 rounded-xl border bg-card p-4 text-left text-card-foreground transition-all ${
-                    selectedConnection === connection.id
-                      ? 'border-blue-500 bg-blue-900/20'
-                      : 'border-slate-600 hover:border-gray-600'
-                  }`}
-                  onClick={() => onSelectConnection(connection.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <Database className="size-5 shrink-0 text-blue-400" />
-                      <div className="min-w-0">
-                        <div className="truncate font-medium">{connection.name}</div>
-                        <div className="text-xs text-slate-300">
-                          {connection.type} - {connection.database}
-                        </div>
-                        <div className="mt-1 truncate text-[11px] text-slate-500">
-                          {connection.id}
+              visibleConnections.map((connection) => {
+                const isSelected = selectedConnection === connection.id;
+
+                return (
+                  <button
+                    type="button"
+                    key={connection.id}
+                    ref={isSelected ? selectedConnectionOptionRef : undefined}
+                    data-slot="source-import-connection-option"
+                    aria-pressed={isSelected}
+                    className={`flex w-full flex-col gap-6 rounded-xl border bg-card p-4 text-left text-card-foreground transition-all ${
+                      isSelected
+                        ? 'border-blue-500 bg-blue-900/20'
+                        : 'border-slate-600 hover:border-gray-600'
+                    }`}
+                    onClick={() => onSelectConnection(connection.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Database className="size-5 shrink-0 text-blue-400" />
+                        <div className="min-w-0">
+                          <div className="truncate font-medium">{connection.name}</div>
+                          <div className="text-xs text-slate-300">
+                            {connection.type} - {connection.database}
+                          </div>
+                          <div className="mt-1 truncate text-[11px] text-slate-500">
+                            {connection.id}
+                          </div>
                         </div>
                       </div>
+                      {isSelected ? (
+                        <CheckCircle2 className="size-5 shrink-0 text-blue-400" />
+                      ) : null}
                     </div>
-                    {selectedConnection === connection.id ? (
-                      <CheckCircle2 className="size-5 shrink-0 text-blue-400" />
-                    ) : null}
-                  </div>
-                </button>
-              ))
+                  </button>
+                );
+              })
             )}
           </>
         )}

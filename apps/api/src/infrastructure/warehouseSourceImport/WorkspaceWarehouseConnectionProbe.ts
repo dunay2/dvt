@@ -126,7 +126,7 @@ export class WorkspaceWarehouseConnectionProbe implements IWarehouseConnectionPr
       const result = await client.query<PostgresTableDiscoveryRow>(
         [
           'select current_database() as table_catalog, namespace.nspname as table_schema, relation.relname as table_name,',
-          'case when relation.reltuples >= 0 then relation.reltuples::bigint else null end as row_count,',
+          "case when relation.reltuples >= 0 then relation.reltuples::bigint when relation.relkind in ('r', 'p', 'm') then pg_stat_get_live_tuples(relation.oid)::bigint else null end as row_count,",
           "case when relation.relkind in ('r', 'p', 'm') then pg_total_relation_size(relation.oid)::bigint else null end as byte_size",
           'from pg_class relation',
           'join pg_namespace namespace on namespace.oid = relation.relnamespace',

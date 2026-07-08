@@ -79,6 +79,8 @@ describe('SourceImportWizard', () => {
   });
 
   it('creates a governed warehouse connection before browsing source tables', async () => {
+    const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
     const createWarehouseConnection = vi.fn(async () => ({
       id: 'local-postgres-proof',
       name: 'Local Postgres proof',
@@ -94,36 +96,51 @@ describe('SourceImportWizard', () => {
       },
     ]);
 
-    await harness.renderWizard({
-      warehouseSourceImport: buildWarehouseSourceImportPort({
-        listWarehouseConnections: async () => [],
-        createWarehouseConnection,
-        listWarehouseTables,
-      }),
-    });
+    HTMLElement.prototype.scrollIntoView =
+      scrollIntoView as unknown as typeof HTMLElement.prototype.scrollIntoView;
 
-    await harness.clickButtonContaining('New connection');
-    await harness.fillInputByLabel('Connection name', 'Local Postgres proof');
-    await harness.selectByLabel('Connection type', 'postgres');
-    await harness.fillInputByLabel('Database', 'dvt');
-    await harness.fillInputByLabel('Credential reference', 'env:DVT_LOCAL_POSTGRES_URL');
-    await harness.clickButtonContaining('Create connection');
-    await harness.flushPendingWork();
+    try {
+      await harness.renderWizard({
+        warehouseSourceImport: buildWarehouseSourceImportPort({
+          listWarehouseConnections: async () => [],
+          createWarehouseConnection,
+          listWarehouseTables,
+        }),
+      });
 
-    expect(createWarehouseConnection).toHaveBeenCalledWith({
-      name: 'Local Postgres proof',
-      type: 'postgres',
-      database: 'dvt',
-      credentialRef: 'env:DVT_LOCAL_POSTGRES_URL',
-    });
-    expect(document.body.textContent).toContain('Local Postgres proof');
-    expect(document.body.textContent).toContain('postgres - dvt');
+      await harness.clickButtonContaining('New connection');
+      await harness.fillInputByLabel('Connection name', 'Local Postgres proof');
+      await harness.selectByLabel('Connection type', 'postgres');
+      await harness.fillInputByLabel('Database', 'dvt');
+      await harness.fillInputByLabel(
+        'Credential reference',
+        'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL'
+      );
+      await harness.clickButtonContaining('Create connection');
+      await harness.flushPendingWork();
 
-    await harness.clickTab('Browse');
-    await harness.flushPendingWork();
+      expect(createWarehouseConnection).toHaveBeenCalledWith({
+        name: 'Local Postgres proof',
+        type: 'postgres',
+        database: 'dvt',
+        credentialRef: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
+      });
+      expect(document.body.textContent).toContain('Local Postgres proof');
+      expect(document.body.textContent).toContain('postgres - dvt');
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'center', inline: 'nearest' });
 
-    expect(listWarehouseTables).toHaveBeenCalledWith('local-postgres-proof');
-    expect(document.body.textContent).toContain('dvt.public.orders');
+      await harness.clickTab('Browse');
+      await harness.flushPendingWork();
+
+      expect(listWarehouseTables).toHaveBeenCalledWith('local-postgres-proof');
+      expect(document.body.textContent).toContain('dvt.public.orders');
+    } finally {
+      if (originalScrollIntoView) {
+        HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
+      } else {
+        Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+      }
+    }
   });
 
   it('offers only currently supported warehouse adapters when creating a connection', async () => {
@@ -141,6 +158,11 @@ describe('SourceImportWizard', () => {
     const options = Array.from(typeSelect?.options ?? []).map((option) => option.value);
 
     expect(options).toEqual(['postgres']);
+    expect(
+      document.querySelector<HTMLInputElement>(
+        '[data-slot="source-import-create-connection-credential-ref"]'
+      )?.placeholder
+    ).toBe('env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL');
   });
 
   it('does not create a warehouse connection when required command fields are missing', async () => {

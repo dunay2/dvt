@@ -95,6 +95,19 @@ function waitForLiveDraftEdgeSaved(
 
 type DragPoint = Readonly<{ x: number; y: number }>;
 
+function toStableYamlIdentifierPart(part: string): string {
+  const normalized = part
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return normalized.length > 0 ? normalized : 'unnamed';
+}
+
+function expectedLivePostgresSourceName(): string {
+  const runId = String(Cypress.env('firstAuthoringRunId') ?? 'source-import-live');
+  return [`live-postgres-${runId}`, 'dvt', 'public'].map(toStableYamlIdentifierPart).join('_');
+}
+
 function buildMouseDragEvent(
   point: DragPoint,
   buttons: number,
@@ -183,11 +196,33 @@ function connectCanvasNodes(sourceName: string, targetName: string): void {
   });
 }
 
+function createLivePostgresConnection(): string {
+  const runId = String(Cypress.env('firstAuthoringRunId') ?? 'source-import-live');
+  const connectionName = `Live Postgres ${runId}`;
+
+  cy.contains('[role="dialog"] button', 'New connection').should('be.enabled').click();
+  cy.get('[data-slot="source-import-create-connection-name"]')
+    .should('be.visible')
+    .clear()
+    .type(connectionName);
+  cy.get('[data-slot="source-import-create-connection-type"]').select('postgres');
+  cy.get('[data-slot="source-import-create-connection-database"]').clear().type('dvt');
+  cy.get('[data-slot="source-import-create-connection-credential-ref"]')
+    .clear()
+    .type('env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL');
+  cy.contains('[role="dialog"] button', 'Create connection').should('be.enabled').click();
+  cy.contains('[data-slot="source-import-connection-option"]', connectionName, {
+    timeout: 30_000,
+  })
+    .should('be.visible')
+    .and('have.attr', 'aria-pressed', 'true');
+
+  return connectionName;
+}
+
 function importLocalPostgresSource(): void {
   cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
-  cy.contains('[data-slot="source-import-connection-option"]', 'Local Postgres proof', {
-    timeout: 20_000,
-  }).click();
+  createLivePostgresConnection();
   cy.contains('[role="dialog"] button', 'Test connection').should('be.enabled').click();
   cy.contains('[role="dialog"]', 'Connection passed', { timeout: 20_000 }).should('be.visible');
   cy.contains('[role="dialog"]', 'tables reachable').should('be.visible');
@@ -196,14 +231,18 @@ function importLocalPostgresSource(): void {
   cy.get('[data-slot="source-import-table-search"]', { timeout: 20_000 })
     .should('be.visible')
     .clear()
-    .type('order_id');
+    .type('source_1');
   cy.contains('[role="dialog"]', 'Source metadata').should('be.visible');
   cy.contains('[role="dialog"]', 'dvt', { timeout: 20_000 }).should('be.visible');
   cy.contains('[role="dialog"]', 'public').should('be.visible');
-  cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
-  cy.contains('[role="dialog"]', '3 rows').should('be.visible');
-  cy.contains('[role="dialog"]', '3.9 MB').should('be.visible');
-  cy.get('[data-source-import-table="dvt.public.source_1"]', { timeout: 20_000 }).click();
+  cy.get('[data-source-import-table="dvt.public.source_1"]', { timeout: 20_000 })
+    .should('be.visible')
+    .within(() => {
+      cy.contains('order_id').should('be.visible');
+      cy.contains('3 rows').should('be.visible');
+      cy.contains('32 KB').should('be.visible');
+    })
+    .click();
   cy.get('[data-source-import-table-select="dvt.public.source_1"]', { timeout: 20_000 }).click();
   cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
   cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
@@ -212,7 +251,7 @@ function importLocalPostgresSource(): void {
   cy.contains('[role="tab"]', 'Metadata').click();
   cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
   cy.contains('[role="dialog"]', '3 rows').should('be.visible');
-  cy.contains('[role="dialog"]', '3.9 MB').should('be.visible');
+  cy.contains('[role="dialog"]', '32 KB').should('be.visible');
   cy.contains('[role="dialog"]', 'customer').should('be.visible');
   cy.contains('[role="dialog"]', 'amount').should('be.visible');
 
@@ -234,6 +273,7 @@ describe('Canvas source import live clean proof', () => {
 
   it('imports a warehouse source, connects it to a dbt model, and previews without draft seeding', () => {
     const session = resolveLiveFirstAuthoringWorkspaceSession('dbt');
+    const expectedSourceName = expectedLivePostgresSourceName();
 
     assertLiveFirstAuthoringDraftScopeIsClean('dbt');
     visitCleanDbtCanvas();
@@ -257,7 +297,7 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', 'Rows')
       .and('contain.text', '3')
       .and('contain.text', 'Size')
-      .and('contain.text', '3.9 MB')
+      .and('contain.text', '32 KB')
       .and('contain.text', 'models/sources/src_public.yml');
     cy.contains('Stale version').should('not.exist');
 
@@ -266,7 +306,7 @@ describe('Canvas source import live clean proof', () => {
       const content = (sourceYamlResponse.body as { content: string }).content;
 
       expect(content).to.contain('schema: public');
-      expect(content).to.contain('name: local_postgres_dvt_public');
+      expect(content).to.contain(`name: ${expectedSourceName}`);
       expect(content).to.contain('name: source_1');
       expect(content).to.contain('order_id');
       expect(content).to.contain('customer');
@@ -297,7 +337,7 @@ describe('Canvas source import live clean proof', () => {
       const content = (modelSqlResponse.body as { content: string }).content;
 
       expect(content).to.contain("{{ config(materialized='view') }}");
-      expect(content).to.contain("{{ source('local_postgres_dvt_public', 'source_1') }}");
+      expect(content).to.contain(`{{ source('${expectedSourceName}', 'source_1') }}`);
     });
   });
 });
