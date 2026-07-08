@@ -13101,3 +13101,28 @@ test('tracked migrations reconcile source import shared wizard ownership drift',
   );
   assert.doesNotMatch(sharedOwnershipMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations expose source import live proof files through DB ownership', () => {
+  const migrations = readMigrationFiles();
+  const liveProofOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '559_source_import_live_proof_db_first_ownership.sql'
+  );
+
+  assert.ok(liveProofOwnershipMigration);
+  assert.match(liveProofOwnershipMigration.sql, /frontend_component_local_files/);
+  assert.match(liveProofOwnershipMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(liveProofOwnershipMigration.sql, /run-canvas-source-import-live-proof\.cjs/);
+  assert.match(
+    liveProofOwnershipMigration.sql,
+    /CanvasSourceImportLiveProof\.architecture\.test\.ts/
+  );
+  assert.match(liveProofOwnershipMigration.sql, /EV-SOURCE-IMPORT-LIVE-PROOF-DB-FIRST-OWNERSHIP/);
+  assert.match(liveProofOwnershipMigration.sql, /AttachWarehouseSourceFromCanvasContext/);
+  assert.match(liveProofOwnershipMigration.sql, /pnpm planning:db:query frontend-component-files/);
+  assert.match(
+    liveProofOwnershipMigration.sql,
+    /component-integrity --component web\.component\.canvas\.SourceImportDialog/
+  );
+  assert.doesNotMatch(liveProofOwnershipMigration.sql, /frontend-component-inventory\.md/);
+  assert.doesNotMatch(liveProofOwnershipMigration.sql, /truncate\s+/i);
+});

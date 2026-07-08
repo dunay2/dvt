@@ -10,8 +10,8 @@ const CYPRESS_SPEC_PATH = 'apps/web/cypress/e2e/canvas/canvas-source-import-live
 const RETIRED_STUBBED_CYPRESS_SPEC_PATH =
   'apps/web/cypress/e2e/canvas/canvas-source-import-contextual.cy.ts';
 const LIVE_RUNNER_PATH = 'scripts/run-canvas-source-import-live-proof.cjs';
-const FRONTEND_COMPONENT_INVENTORY_PATH =
-  'docs/architecture/components/web/frontend-component-inventory.md';
+const LIVE_PROOF_DB_OWNERSHIP_MIGRATION_PATH =
+  'tools/planning-db/migrations/559_source_import_live_proof_db_first_ownership.sql';
 
 function readPackageScripts(path: string): Record<string, string> {
   return (JSON.parse(readRepoFile(path)) as { scripts: Record<string, string> }).scripts;
@@ -25,7 +25,7 @@ describe('Canvas source import live proof architecture', () => {
 
     const cypressSpecSource = readRepoFile(CYPRESS_SPEC_PATH);
     const liveRunnerSource = readRepoFile(LIVE_RUNNER_PATH);
-    const frontendComponentInventory = readRepoFile(FRONTEND_COMPONENT_INVENTORY_PATH);
+    const liveProofDbOwnershipMigration = readRepoFile(LIVE_PROOF_DB_OWNERSHIP_MIGRATION_PATH);
     const rootScripts = readPackageScripts('package.json');
     const webScripts = readPackageScripts('apps/web/package.json');
 
@@ -35,8 +35,18 @@ describe('Canvas source import live proof architecture', () => {
     expect(webScripts['test:e2e:source-import:live']).toBe(
       'node ../../scripts/run-canvas-source-import-live-proof.cjs'
     );
-    expect(frontendComponentInventory).toContain(CYPRESS_SPEC_PATH);
-    expect(frontendComponentInventory).not.toContain(RETIRED_STUBBED_CYPRESS_SPEC_PATH);
+    expect(liveProofDbOwnershipMigration).toContain('frontend_component_local_files');
+    expect(liveProofDbOwnershipMigration).toContain('web.component.canvas.SourceImportDialog');
+    expect(liveProofDbOwnershipMigration).toContain(CYPRESS_SPEC_PATH);
+    expect(liveProofDbOwnershipMigration).toContain(LIVE_RUNNER_PATH);
+    expect(liveProofDbOwnershipMigration).toContain(
+      'apps/web/src/app/views/canvas/CanvasSourceImportLiveProof.architecture.test.ts'
+    );
+    expect(liveProofDbOwnershipMigration).toContain(
+      'EV-SOURCE-IMPORT-LIVE-PROOF-DB-FIRST-OWNERSHIP'
+    );
+    expect(liveProofDbOwnershipMigration).not.toContain('frontend-component-inventory.md');
+    expect(liveProofDbOwnershipMigration).not.toContain(RETIRED_STUBBED_CYPRESS_SPEC_PATH);
     expect(liveRunnerSource).toContain('CYPRESS_requireLiveProtectedRuntime=1');
     expect(liveRunnerSource).toContain('canvas-source-import-live-clean.cy.ts');
     expect(liveRunnerSource).toContain("DVT_TEMPORAL_DBT_ENABLED: 'true'");
