@@ -13069,3 +13069,35 @@ test('tracked migrations deduplicate source import wizard step file ownership', 
   assert.match(ownershipDedupMigration.sql, /EV-SOURCE-IMPORT-WIZARD-STEP-FILE-OWNERSHIP-DEDUP/);
   assert.doesNotMatch(ownershipDedupMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile source import shared wizard ownership drift', () => {
+  const migrations = readMigrationFiles();
+  const sharedOwnershipMigration = migrations.find(
+    (migration) => migration.fileName === '558_source_import_shared_wizard_ownership_drift.sql'
+  );
+
+  assert.ok(sharedOwnershipMigration);
+  assert.match(sharedOwnershipMigration.sql, /retiredForSourceImportSharedOwnership/);
+  assert.match(
+    sharedOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/copy\.ts/
+  );
+  assert.match(
+    sharedOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/ReviewStep\.tsx/
+  );
+  assert.match(
+    sharedOwnershipMigration.sql,
+    /apps\/web\/src\/app\/components\/sourceImportWizard\/useSourceImportWizard\.ts/
+  );
+  assert.match(sharedOwnershipMigration.sql, /EV-SOURCE-IMPORT-SHARED-WIZARD-OWNERSHIP-DEDUP/);
+  assert.match(
+    sharedOwnershipMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_file_query/
+  );
+  assert.match(
+    sharedOwnershipMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.doesNotMatch(sharedOwnershipMigration.sql, /truncate\s+/i);
+});
