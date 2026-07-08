@@ -288,10 +288,36 @@ describe('sourceImportCatalogModel', () => {
     ]);
   });
 
+  it('keeps same-named schemas scoped by database for accessible categorized browsing', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({ database: 'RAW', schema: 'PUBLIC', table: 'ORDERS', selected: false }),
+        buildTable({ database: 'MART', schema: 'PUBLIC', table: 'ORDERS', selected: false }),
+      ],
+      activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter,
+    });
+
+    expect(viewModel.schemaGroups).toEqual([
+      expect.objectContaining({
+        schema: 'PUBLIC',
+        accessibilityLabel: 'Select source schema MART.PUBLIC. 1 table.',
+        tables: [expect.objectContaining({ canonicalName: 'MART.PUBLIC.ORDERS' })],
+      }),
+      expect.objectContaining({
+        schema: 'PUBLIC',
+        accessibilityLabel: 'Select source schema RAW.PUBLIC. 1 table.',
+        tables: [expect.objectContaining({ canonicalName: 'RAW.PUBLIC.ORDERS' })],
+      }),
+    ]);
+  });
+
   it('projects labels and number formatting from injected catalog copy instead of model literals', () => {
     const localizedCopy: SourceImportCatalogCopy = {
       selectSourceTable: 'Seleccionar tabla origen',
       selectSourceDatabase: 'Seleccionar base origen',
+      selectSourceSchema: 'Seleccionar esquema origen',
       inspectSourceTableMetadata: 'Inspeccionar tabla origen',
       metadata: 'metadata',
       rowsUnknown: 'Filas desconocidas',

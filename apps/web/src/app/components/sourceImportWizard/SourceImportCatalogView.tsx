@@ -69,6 +69,7 @@ export function SourceImportCatalogView({
             <div key={`${databaseGroup.database}.${schemaGroup.schema}`}>
               <SourceImportSchemaHeader
                 schema={schemaGroup.schema}
+                accessibilityLabel={schemaGroup.accessibilityLabel}
                 schemaIdentityKey={buildSourceImportSchemaKey({
                   database: databaseGroup.database,
                   schema: schemaGroup.schema,
