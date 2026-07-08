@@ -151,6 +151,21 @@ describe('sourceImportWizardModel', () => {
     ).toBe('models/sources/src_raw.yml');
   });
 
+  it('normalizes governed source registry paths from warehouse identifiers', () => {
+    const table = buildTable({
+      database: 'Raw Lake',
+      schema: 'Sales/ERP Ops',
+      table: 'Orders',
+    });
+
+    expect(buildSourceImportRegistryPath(table, 'schema')).toBe(
+      'models/sources/src_sales_erp_ops.yml'
+    );
+    expect(buildSourceImportRegistryPath(table, 'database')).toBe(
+      'models/sources/src_raw_lake.yml'
+    );
+  });
+
   it('applies plugin-declared source import option defaults through the model', () => {
     const state = applySourceImportOptionDefaults(
       {

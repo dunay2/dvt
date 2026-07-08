@@ -8,6 +8,10 @@ import {
   mockRoles,
 } from './fixtures/mockDbtData';
 import type { DbtNode } from '../app/types/dbt';
+import {
+  buildSourceImportRegistryPath,
+  toStableSourceImportIdentifierPart,
+} from '../app/components/sourceImportWizard/sourceImportWizardModel';
 import type {
   FileContent,
   ImportSourcesInput,
@@ -260,13 +264,13 @@ function createDefaultWorkspaceFileTree(): WorkspaceFileEntry[] {
 }
 
 function toSourceNodeId(table: WarehouseTable): string {
-  return `src_${table.schema.toLowerCase()}_${table.table.toLowerCase()}`;
+  return `src_${toStableSourceImportIdentifierPart(table.schema)}_${toStableSourceImportIdentifierPart(
+    table.table
+  )}`;
 }
 
 function buildYamlFileName(table: WarehouseTable, groupingStrategy: SourceImportGrouping): string {
-  const groupKey =
-    groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
-  return `models/sources/src_${groupKey}.yml`;
+  return buildSourceImportRegistryPath(table, groupingStrategy);
 }
 
 function createImportedSourceNode(

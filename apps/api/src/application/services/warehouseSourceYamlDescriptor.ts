@@ -1,4 +1,6 @@
 /** Owned concern: define dbt source YAML naming and path policy. */
+import { createHash } from 'node:crypto';
+
 import type { SourceImportGrouping, WarehouseTable } from '../ports/warehouseSourceImport.js';
 
 import type { WarehouseSourceYamlArtifactDescriptor } from './warehouseSourceYamlTypes.js';
@@ -7,9 +9,9 @@ export const DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR: WarehouseSourceYamlArtifactDes
   pluginId: 'dbt',
   artifactKind: 'dbt-source-yaml',
   pathForTable: (table, groupingStrategy) => {
-    const groupKey =
-      groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
-    return `models/sources/src_${groupKey}.yml`;
+    return buildWarehouseSourceYamlPathFromPart(
+      toStableYamlIdentifierPart(groupingValue(table, groupingStrategy))
+    );
   },
   sourceNameForTable: (table) =>
     (table.connectionId ? [table.connectionId, table.database, table.schema] : [table.schema])
@@ -42,8 +44,30 @@ export function groupTablesForYaml(
   groupingStrategy: SourceImportGrouping
 ): ReadonlyMap<string, readonly WarehouseTable[]> {
   const grouped = new Map<string, WarehouseTable[]>();
+  const rawValuesByStablePart = new Map<string, Set<string>>();
+
   for (const table of tables) {
-    const path = buildWarehouseSourceYamlPath(table, groupingStrategy);
+    const value = groupingValue(table, groupingStrategy);
+    const stablePart = toStableYamlIdentifierPart(value);
+    const rawValues = rawValuesByStablePart.get(stablePart) ?? new Set<string>();
+    rawValues.add(value.toLowerCase());
+    rawValuesByStablePart.set(stablePart, rawValues);
+  }
+
+  const collidingStableParts = new Set(
+    Array.from(rawValuesByStablePart.entries())
+      .filter(([, rawValues]) => rawValues.size > 1)
+      .map(([stablePart]) => stablePart)
+  );
+
+  for (const table of tables) {
+    const value = groupingValue(table, groupingStrategy);
+    const stablePart = toStableYamlIdentifierPart(value);
+    const path = buildWarehouseSourceYamlPathFromPart(
+      collidingStableParts.has(stablePart)
+        ? toCollisionResistantYamlIdentifierPart(value)
+        : stablePart
+    );
     const group = grouped.get(path) ?? [];
     group.push(table);
     grouped.set(path, group);
@@ -52,8 +76,30 @@ export function groupTablesForYaml(
 }
 
 export function toStableYamlIdentifierPart(part: string): string {
-  return part
+  const normalized = part
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
+  return normalized.length > 0 ? normalized : 'unnamed';
+}
+
+export function toCollisionResistantYamlIdentifierPart(part: string): string {
+  const stablePart = toStableYamlIdentifierPart(part);
+  const canonicalInput = part.trim().toLowerCase();
+  if (canonicalInput === stablePart) {
+    return stablePart;
+  }
+  const hash = createHash('sha256')
+    .update(canonicalInput.length > 0 ? canonicalInput : part)
+    .digest('hex')
+    .slice(0, 8);
+  return `${stablePart}_${hash}`;
+}
+
+function groupingValue(table: WarehouseTable, groupingStrategy: SourceImportGrouping): string {
+  return groupingStrategy === 'database' ? table.database : table.schema;
+}
+
+function buildWarehouseSourceYamlPathFromPart(groupPart: string): string {
+  return `models/sources/src_${groupPart}.yml`;
 }
