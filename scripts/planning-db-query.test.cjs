@@ -5209,6 +5209,8 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
               component_status: 'current',
               frontend_owner: 'Canvas / Source import',
               cq_rails: 'OpenCanvasSourceImportDialog;ImportWarehouseSources',
+              source_path:
+                'tools/planning-db/migrations/569_source_import_dialog_dbfirst_component_source.sql',
             },
           ],
         };
@@ -5247,6 +5249,10 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
   });
 
   assert.equal(profile.component.component_id, 'web.component.canvas.SourceImportDialog');
+  assert.equal(
+    profile.component.parent_component_id,
+    'tools/planning-db/migrations/569_source_import_dialog_dbfirst_component_source.sql'
+  );
   assert.equal(
     profile.files[0].path,
     'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx'

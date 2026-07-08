@@ -8705,6 +8705,48 @@ test('tracked migrations keep Canvas source import component files fresh-DB safe
   assert.match(sourceDialogHostMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
 });
 
+test('tracked migrations make Canvas source import dialog component DB-first', () => {
+  const migrations = readMigrationFiles();
+  const dbFirstMigration = migrations.find(
+    (migration) => migration.fileName === '569_source_import_dialog_dbfirst_component_source.sql'
+  );
+
+  assert.ok(dbFirstMigration);
+  assert.match(dbFirstMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(dbFirstMigration.sql, /frontend_component_local_components/);
+  assert.match(
+    dbFirstMigration.sql,
+    /source_path\s*=\s*excluded\.source_path|source_path,\s*source_content_sha256/s
+  );
+  assert.match(
+    dbFirstMigration.sql,
+    /tools\/planning-db\/migrations\/569_source_import_dialog_dbfirst_component_source\.sql/
+  );
+  assert.match(dbFirstMigration.sql, /OpenCanvasSourceImportDialog/);
+  assert.match(dbFirstMigration.sql, /ImportWarehouseSources/);
+  assert.doesNotMatch(
+    dbFirstMigration.sql,
+    /source_path\s*=\s*'docs\/architecture\/components\/web\/frontend-component-inventory\.md'/
+  );
+});
+
+test('tracked migrations scope Source Import no-stub evidence to executable Source Import surfaces', () => {
+  const migrations = readMigrationFiles();
+  const evidenceScopeMigration = migrations.find(
+    (migration) => migration.fileName === '570_source_import_dialog_no_stub_evidence_scope.sql'
+  );
+
+  assert.ok(evidenceScopeMigration);
+  assert.match(evidenceScopeMigration.sql, /EV-WEB-CANVAS-SOURCE-IMPORT-DIALOG-NO-STUB-SCAN/);
+  assert.match(evidenceScopeMigration.sql, /importWarehouseSourcesUseCase\.ts/);
+  assert.match(evidenceScopeMigration.sql, /warehouseSourceImportRoutes\.ts/);
+  assert.match(
+    evidenceScopeMigration.sql,
+    /excludedTerms', jsonb_build_array\(\s*'placeholder'\s*\)/
+  );
+  assert.doesNotMatch(evidenceScopeMigration.sql, /apps\/api\/src'|apps\/web\/src\/app'/);
+});
+
 test('tracked migrations reassert Canvas source import symbols after post-import reconciliation', () => {
   const migrations = readMigrationFiles();
   const symbolRestoreMigration = migrations.find(
