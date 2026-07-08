@@ -14,7 +14,8 @@ code_refs:
   - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
   - packages/@dvt/adapter-postgres/src/PostgresStateStoreAdapter.ts
   - apps/api/src/app.ts
-  - apps/api/src/application/services/notImplementedStartRunUseCase.ts
+  - apps/api/src/application/services/engineStartRunUseCase.ts
+  - apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
 evidence:
   tests:
     - pnpm --filter @dvt/engine test
@@ -52,7 +53,7 @@ This is an assessment snapshot, not a gap-closure declaration.
 | -------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Minimal execution core                             | Present                       | Implemented across `@dvt/engine`, `@dvt/adapter-temporal`, and `@dvt/adapter-postgres`                          |
 | Provider-backed execution path                     | Present at package level      | `WorkflowEngine`, `TemporalAdapter`, and `PostgresStateStoreAdapter` exist and are tested as package components |
-| Product vertical `POST /runs/start` -> real engine | Not closed                    | API route is still wired to `NotImplementedStartRunUseCase`                                                     |
+| Product vertical `POST /runs/start` -> real engine | Not closed in this snapshot   | 2026-07-07 maintenance note: the throw-only `NotImplementedStartRunUseCase` file has since been retired.        |
 | ExecutionPlan ownership at API boundary            | Not exposed directly          | The runtime start path is `PlanRef`-driven, not `ExecutionPlan`-driven                                          |
 | Outbox publication path                            | Present and actively hardened | Standalone outbox worker slice exists, but it is an operational slice, not the main API start-run vertical      |
 
@@ -102,9 +103,14 @@ trust and plan-fetch semantics into the engine core.
 The repository is not blocked by lack of core primitives. It is blocked by lack
 of end-to-end wiring in the product-facing path.
 
-Today the main blocker is explicit:
+Today the main blocker in this 2026-03-11 assessment was explicit: the API
+start-run path still depended on a throw-only `NotImplementedStartRunUseCase`
+placeholder.
 
-- [apps/api/src/application/services/notImplementedStartRunUseCase.ts](../../../apps/api/src/application/services/notImplementedStartRunUseCase.ts)
+2026-07-07 maintenance note: that placeholder source file has been removed.
+Current protected runtime composition is represented by
+`EngineStartRunUseCase`, `PlannerBackedStartRunUseCase`, and
+`BackpressureAwareStartRunUseCase`.
 
 That means the main runtime route can authenticate and authorize, but it still
 does not dispatch into a real `WorkflowEngine` composition root.
@@ -160,10 +166,11 @@ This should remain the operating rule until a deliberate ADR changes it.
 
 ## Recommended Follow-up
 
-The next useful step is not another architectural redesign. The next useful
-step is to close the missing vertical wiring:
+The next useful step is not another architectural redesign. In the original
+2026-03-11 assessment, the next useful step was to close the missing vertical
+wiring:
 
-1. replace `NotImplementedStartRunUseCase` with a real engine-backed use case;
+1. keep the real engine-backed start-run use-case composition verified;
 2. create a clear API composition root for `WorkflowEngine + TemporalAdapter +
 PostgresStateStoreAdapter + intent store + observability + authorizer`;
 3. verify the full `startRun` vertical with an end-to-end acceptance path;

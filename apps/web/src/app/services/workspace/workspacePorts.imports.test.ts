@@ -66,6 +66,37 @@ describe('workspace ports source import', () => {
     ]);
   });
 
+  it('uses stable source import identifiers in the mock workspace graph', async () => {
+    const ports = createMockWorkspacePorts();
+
+    const result = await ports.warehouseSourceImport.importSources({
+      connectionId: 'conn-1',
+      tables: [
+        {
+          database: 'Raw Lake',
+          schema: 'Sales/ERP Ops',
+          table: 'Open Orders',
+          rowCount: 1200,
+          columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+        },
+      ],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
+
+    const graph = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
+    const importedNode = graph.nodes.find((node) => node.id === 'src_sales_erp_ops_open_orders');
+
+    expect(result.yamlFiles).toEqual(['models/sources/src_sales_erp_ops.yml']);
+    expect(result.importedNodeIds).toEqual(['src_sales_erp_ops_open_orders']);
+    expect(importedNode).toMatchObject({
+      id: 'src_sales_erp_ops_open_orders',
+      path: 'models/sources/src_sales_erp_ops.yml',
+    });
+  });
+
   it('isolates graph mutations between default mock service instances', async () => {
     const firstPorts = createMockWorkspacePorts();
     const secondPorts = createMockWorkspacePorts();

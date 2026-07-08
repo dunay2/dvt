@@ -35,6 +35,7 @@ import {
   buildWarehouseSourceYamlBindings,
   buildWarehouseSourceYamlPath,
   buildWarehouseSourceYamlUpdates,
+  toStableYamlIdentifierPart,
   type WarehouseSourceYamlBinding,
   type WarehouseSourceYamlUpdate,
 } from './warehouseSourceYaml.js';
@@ -294,13 +295,10 @@ function sameTable(left: WarehouseTable, right: WarehouseTable): boolean {
 function toSourceNodeId(table: WarehouseTable): string {
   return [
     'src',
-    table.connectionId
-      ?.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '_')
-      .replace(/^_+|_+$/g, ''),
-    table.database.toLowerCase(),
-    table.schema.toLowerCase(),
-    table.table.toLowerCase(),
+    table.connectionId ? toStableYamlIdentifierPart(table.connectionId) : undefined,
+    toStableYamlIdentifierPart(table.database),
+    toStableYamlIdentifierPart(table.schema),
+    toStableYamlIdentifierPart(table.table),
   ]
     .filter((part): part is string => typeof part === 'string' && part.length > 0)
     .join('_');

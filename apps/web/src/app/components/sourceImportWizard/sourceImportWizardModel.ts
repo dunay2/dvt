@@ -91,8 +91,18 @@ export function buildSourceImportRegistryPath(
   groupingStrategy: 'schema' | 'database' | 'custom'
 ): string {
   const groupKey =
-    groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
+    groupingStrategy === 'database'
+      ? toStableSourceImportIdentifierPart(table.database)
+      : toStableSourceImportIdentifierPart(table.schema);
   return `models/sources/src_${groupKey}.yml`;
+}
+
+export function toStableSourceImportIdentifierPart(part: string): string {
+  const normalized = part
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return normalized.length > 0 ? normalized : 'unnamed';
 }
 
 export function getSelectedTables(tables: readonly TableInfo[]): readonly TableInfo[] {

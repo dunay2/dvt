@@ -36,6 +36,30 @@ describe('warehouse source YAML builder', () => {
     ).toBe('models/sources/src_analytics.yml');
   });
 
+  it('normalizes dbt source artifact paths from warehouse identifiers', () => {
+    expect(
+      buildWarehouseSourceYamlPath(
+        {
+          database: 'Raw Lake',
+          schema: 'Sales/ERP Ops',
+          table: 'Orders',
+        },
+        'schema'
+      )
+    ).toBe('models/sources/src_sales_erp_ops.yml');
+
+    expect(
+      buildWarehouseSourceYamlPath(
+        {
+          database: 'Raw Lake',
+          schema: 'Sales/ERP Ops',
+          table: 'Orders',
+        },
+        'database'
+      )
+    ).toBe('models/sources/src_raw_lake.yml');
+  });
+
   it('rejects malformed existing YAML instead of rewriting it as an empty source file', () => {
     expect(() => readExistingSourceDocument('version: 2\nsources:\n  - name: [')).toThrow(
       InvalidWarehouseSourceYamlError

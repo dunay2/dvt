@@ -8,7 +8,9 @@ export const DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR: WarehouseSourceYamlArtifactDes
   artifactKind: 'dbt-source-yaml',
   pathForTable: (table, groupingStrategy) => {
     const groupKey =
-      groupingStrategy === 'database' ? table.database.toLowerCase() : table.schema.toLowerCase();
+      groupingStrategy === 'database'
+        ? toStableYamlIdentifierPart(table.database)
+        : toStableYamlIdentifierPart(table.schema);
     return `models/sources/src_${groupKey}.yml`;
   },
   sourceNameForTable: (table) =>
@@ -52,8 +54,9 @@ export function groupTablesForYaml(
 }
 
 export function toStableYamlIdentifierPart(part: string): string {
-  return part
+  const normalized = part
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
+  return normalized.length > 0 ? normalized : 'unnamed';
 }

@@ -142,4 +142,63 @@ describe('ImportWarehouseSourcesUseCase', () => {
       })
     );
   });
+
+  it('persists normalized source node ids and yaml paths for non-slug warehouse names', async () => {
+    const draftStore = createDraftStore();
+    const catalog: IWarehouseConnectionCatalog = {
+      ...createCatalog(),
+      listTables: vi.fn(async () => [
+        {
+          database: 'Raw Lake',
+          schema: 'Sales/ERP Ops',
+          table: 'Open Orders',
+          rowCount: 1200,
+        },
+      ]),
+      getConnection: vi.fn(async () => ({
+        ...catalogEntry,
+        tables: [
+          {
+            database: 'Raw Lake',
+            schema: 'Sales/ERP Ops',
+            table: 'Open Orders',
+            rowCount: 1200,
+          },
+        ],
+      })),
+    };
+    const useCase = new ImportWarehouseSourcesUseCase(
+      catalog,
+      draftStore,
+      createWorkspaceFiles(),
+      () => new Date('2026-06-26T00:00:00.000Z')
+    );
+
+    const result = await useCase.execute({
+      scope,
+      connectionId: catalogEntry.id,
+      tables: [{ database: 'Raw Lake', schema: 'Sales/ERP Ops', table: 'Open Orders' }],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
+
+    expect(result.yamlFiles).toEqual(['models/sources/src_sales_erp_ops.yml']);
+    expect(result.importedNodeIds).toEqual([
+      'src_warehouse_prod_raw_lake_sales_erp_ops_open_orders',
+    ]);
+    expect(draftStore.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        draft: expect.objectContaining({
+          nodes: [
+            expect.objectContaining({
+              id: 'src_warehouse_prod_raw_lake_sales_erp_ops_open_orders',
+              path: 'models/sources/src_sales_erp_ops.yml',
+            }),
+          ],
+        }),
+      })
+    );
+  });
 });
