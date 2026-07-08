@@ -313,6 +313,41 @@ describe('sourceImportCatalogModel', () => {
     ]);
   });
 
+  it('does not merge schema groups when database and schema names contain dots', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({
+          database: 'RAW.PROD',
+          schema: 'PUBLIC',
+          table: 'ORDERS',
+          selected: false,
+        }),
+        buildTable({
+          database: 'RAW',
+          schema: 'PROD.PUBLIC',
+          table: 'CUSTOMERS',
+          selected: false,
+        }),
+      ],
+      activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter,
+    });
+
+    expect(viewModel.schemaGroups).toEqual([
+      expect.objectContaining({
+        schema: 'PROD.PUBLIC',
+        accessibilityLabel: 'Select source schema RAW.PROD.PUBLIC. 1 table.',
+        tables: [expect.objectContaining({ canonicalName: 'RAW.PROD.PUBLIC.CUSTOMERS' })],
+      }),
+      expect.objectContaining({
+        schema: 'PUBLIC',
+        accessibilityLabel: 'Select source schema RAW.PROD.PUBLIC. 1 table.',
+        tables: [expect.objectContaining({ canonicalName: 'RAW.PROD.PUBLIC.ORDERS' })],
+      }),
+    ]);
+  });
+
   it('projects labels and number formatting from injected catalog copy instead of model literals', () => {
     const localizedCopy: SourceImportCatalogCopy = {
       selectSourceTable: 'Seleccionar tabla origen',

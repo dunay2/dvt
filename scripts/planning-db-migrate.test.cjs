@@ -13464,7 +13464,10 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   assert.match(schemaScopeMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
   assert.match(schemaScopeMigration.sql, /RenderSourceImportCatalogView/);
   assert.match(schemaScopeMigration.sql, /schemaScopeInvariant/);
-  assert.match(schemaScopeMigration.sql, /database\.schema/);
+  assert.match(schemaScopeMigration.sql, /schemaGroupKeyInvariant/);
+  assert.match(schemaScopeMigration.sql, /structured database and schema identity/);
+  assert.match(schemaScopeMigration.sql, /collision-free nested map/);
+  assert.match(schemaScopeMigration.sql, /must not use a dot-joined database\.schema string/);
   assert.match(schemaScopeMigration.sql, /SourceImportSchemaHeader/);
   assert.match(schemaScopeMigration.sql, /SourceImportCatalogCopy\.selectSourceSchema/);
   assert.match(schemaScopeMigration.sql, /groupTablesBySchema/);

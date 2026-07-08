@@ -326,22 +326,9 @@ export function buildSourceImportCatalogViewModel({
     tableMatchesSourceImportFilter(table, filterId)
   );
   const tableViewModels = visibleTableEntries.map(({ viewModel }) => viewModel);
-  const schemaGroupsByKey = new Map<
-    string,
-    Readonly<{ database: string; schema: string; tables: SourceImportTableViewModel[] }>
-  >();
   const databaseGroupsByName = new Map<string, Map<string, SourceImportTableViewModel[]>>();
 
   visibleTableEntries.forEach(({ table, viewModel }) => {
-    const schemaKey = [table.database, table.schema].join('.');
-    const schemaGroup = schemaGroupsByKey.get(schemaKey) ?? {
-      database: table.database,
-      schema: table.schema,
-      tables: [],
-    };
-    schemaGroup.tables.push(viewModel);
-    schemaGroupsByKey.set(schemaKey, schemaGroup);
-
     const databaseSchemas = databaseGroupsByName.get(table.database) ?? new Map();
     const databaseSchemaGroup = databaseSchemas.get(table.schema) ?? [];
     databaseSchemaGroup.push(viewModel);
@@ -356,18 +343,20 @@ export function buildSourceImportCatalogViewModel({
     tableViewModels.find((table) => table.selected) ??
     tableViewModels[0] ??
     null;
-  const schemaGroups = Array.from(schemaGroupsByKey.values())
-    .sort((left, right) =>
-      [left.database, left.schema].join('.').localeCompare([right.database, right.schema].join('.'))
+  const schemaGroups = Array.from(databaseGroupsByName.entries())
+    .flatMap(([database, databaseSchemaGroups]) =>
+      Array.from(databaseSchemaGroups.entries()).map(([schema, groupTables]) => ({
+        database,
+        schema,
+        groupTables,
+      }))
     )
-    .map((schemaGroup) =>
-      buildSourceImportSchemaGroup(
-        schemaGroup.database,
-        schemaGroup.schema,
-        schemaGroup.tables,
-        copy,
-        numberFormatter
-      )
+    .sort(
+      (left, right) =>
+        left.database.localeCompare(right.database) || left.schema.localeCompare(right.schema)
+    )
+    .map(({ database, schema, groupTables }) =>
+      buildSourceImportSchemaGroup(database, schema, groupTables, copy, numberFormatter)
     );
   const databaseGroups = Array.from(databaseGroupsByName.entries())
     .sort(([left], [right]) => left.localeCompare(right))

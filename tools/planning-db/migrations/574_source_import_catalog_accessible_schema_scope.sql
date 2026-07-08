@@ -15,7 +15,8 @@ set
   ),
   raw_component = coalesce(raw_component, '{}'::jsonb)
     || jsonb_build_object(
-      'schemaScopeInvariant', 'Schema category actions are keyed and labelled by database.schema; same-named schemas from different databases must not be merged.',
+      'schemaScopeInvariant', 'Schema category actions are grouped by the structured database and schema identity; same-named schemas from different databases and dotted identifiers must not be merged.',
+      'schemaGroupKeyInvariant', 'The catalog read model must not use a dot-joined database.schema string as the semantic grouping key.',
       'deadSymbolsRetired', jsonb_build_array(
         'groupTablesBySchema',
         'buildPreviewGroups'
@@ -44,7 +45,8 @@ values
     jsonb_build_object(
       'role', 'Build the Source Import catalog read model with database-scoped schema groups and accessible category labels.',
       'rail', 'RenderSourceImportCatalogView',
-      'schemaScopeInvariant', 'database.schema'
+      'schemaScopeInvariant', 'structured database and schema identity',
+      'schemaGroupKeyInvariant', 'collision-free nested map'
     ),
     'tools/planning-db/migrations/574_source_import_catalog_accessible_schema_scope.sql',
     md5('sourceImportCatalogModel.ts:accessible-schema-scope:574')
@@ -104,7 +106,7 @@ values (
   'passing',
   jsonb_build_object(
     'redFailure', 'sourceImportCatalogModel merged same-named schemas across databases and SourceImportSchemaHeader lacked an explicit database.schema accessible name.',
-    'greenBehavior', 'Source Import catalog schema groups are database-scoped and the schema action is discoverable by role/name.',
+    'greenBehavior', 'Source Import catalog schema groups are database-scoped, collision-free for dotted identifiers and the schema action is discoverable by role/name.',
     'retiredDeadSymbols', jsonb_build_array(
       'groupTablesBySchema',
       'buildPreviewGroups'
@@ -139,7 +141,8 @@ set
   ),
   raw_manifest = coalesce(rails.raw_manifest, '{}'::jsonb)
     || jsonb_build_object(
-      'schemaScopeInvariant', 'database.schema',
+      'schemaScopeInvariant', 'structured database and schema identity',
+      'schemaGroupKeyInvariant', 'collision-free nested map',
       'deadSymbolsRetired', jsonb_build_array(
         'groupTablesBySchema',
         'buildPreviewGroups'
