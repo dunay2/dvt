@@ -104,6 +104,11 @@ export class ImportWarehouseSourcesUseCase {
       }
       throw error;
     }
+
+    for (const update of sourceYamlUpdates) {
+      await this.workspaceFiles.saveFileContent(update.path, update.content);
+    }
+
     const mutation = appendImportedSourceNodes(
       draft,
       {
@@ -129,10 +134,6 @@ export class ImportWarehouseSourcesUseCase {
     });
     if (saveResult.kind !== 'saved') {
       throw new WarehouseSourceImportDraftConflictError();
-    }
-
-    for (const update of sourceYamlUpdates) {
-      await this.workspaceFiles.saveFileContent(update.path, update.content);
     }
 
     return {

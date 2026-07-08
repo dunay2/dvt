@@ -153,6 +153,40 @@ describe('ImportWarehouseSourcesUseCase', () => {
     );
   });
 
+  it('does not accept the draft mutation when source YAML persistence fails', async () => {
+    const draftStore = createDraftStore();
+    const workspaceFiles: IWorkspaceFileRepository = {
+      ...createWorkspaceFiles(),
+      saveFileContent: vi.fn(async () => {
+        throw new Error('workspace file write failed');
+      }),
+    };
+    const useCase = new ImportWarehouseSourcesUseCase(
+      createCatalog(),
+      draftStore,
+      workspaceFiles,
+      () => new Date('2026-06-26T00:00:00.000Z')
+    );
+
+    await expect(
+      useCase.execute({
+        scope,
+        connectionId: catalogEntry.id,
+        tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        groupingStrategy: 'schema',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      })
+    ).rejects.toThrow('workspace file write failed');
+
+    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
+      'models/sources/src_erp.yml',
+      expect.stringContaining('name: orders')
+    );
+    expect(draftStore.save).not.toHaveBeenCalled();
+  });
+
   it('persists normalized source node ids and yaml paths for non-slug warehouse names', async () => {
     const draftStore = createDraftStore();
     const catalog: IWarehouseConnectionCatalog = {
