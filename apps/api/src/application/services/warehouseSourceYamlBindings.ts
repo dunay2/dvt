@@ -10,6 +10,7 @@ import { readExistingSourceDocument } from './warehouseSourceYamlDocument.js';
 import {
   buildCanonicalSourceName,
   isRetiredSourceNameForTable,
+  sourceOwnerIdentity,
   sourceTableIdentity,
   tableIdentity,
 } from './warehouseSourceYamlIdentity.js';
@@ -24,6 +25,7 @@ export function buildWarehouseSourceYamlBindings(
 ): ReadonlyMap<string, WarehouseSourceYamlBinding> {
   const tablesByPath = groupTablesForYaml(input.tables, input.groupingStrategy);
   const bindings = new Map<string, WarehouseSourceYamlBinding>();
+  const sourceOwnersByDefaultName = buildDefaultSourceNameOwnerIndex(input.tables);
 
   for (const [path, tables] of tablesByPath.entries()) {
     const existingDocument = readExistingSourceDocument(input.existingFiles.get(path));
@@ -34,7 +36,15 @@ export function buildWarehouseSourceYamlBindings(
       const existingSourceName = findExistingSourceNameForTable(existingDocument, table);
       const collidesAcrossDatabases =
         (databasesBySourceTable.get(sourceTableIdentity(table))?.size ?? 0) > 1;
-      const canonicalSourceName = buildCanonicalSourceName(table, collidesAcrossDatabases);
+      const collidesAcrossDefaultSourceName =
+        (sourceOwnersByDefaultName.get(
+          DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table)
+        )?.size ?? 0) > 1;
+      const canonicalSourceName = buildCanonicalSourceName(
+        table,
+        collidesAcrossDatabases,
+        collidesAcrossDefaultSourceName
+      );
       const reusableExistingSourceName =
         existingSourceName !== undefined &&
         !isRetiredSourceNameForTable(existingSourceName, table, canonicalSourceName)
@@ -49,6 +59,19 @@ export function buildWarehouseSourceYamlBindings(
   }
 
   return bindings;
+}
+
+function buildDefaultSourceNameOwnerIndex(
+  tables: readonly WarehouseTable[]
+): ReadonlyMap<string, ReadonlySet<string>> {
+  const ownersByDefaultName = new Map<string, Set<string>>();
+  for (const table of tables) {
+    const defaultName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+    const owners = ownersByDefaultName.get(defaultName) ?? new Set<string>();
+    owners.add(sourceOwnerIdentity(table));
+    ownersByDefaultName.set(defaultName, owners);
+  }
+  return ownersByDefaultName;
 }
 
 export function buildSourceTableDatabaseIndex(

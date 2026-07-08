@@ -35,6 +35,8 @@ import {
   buildWarehouseSourceYamlBindings,
   buildWarehouseSourceYamlPath,
   buildWarehouseSourceYamlUpdates,
+  groupTablesForYaml,
+  toCollisionResistantYamlIdentifierPart,
   toStableYamlIdentifierPart,
   type WarehouseSourceYamlBinding,
   type WarehouseSourceYamlUpdate,
@@ -74,11 +76,7 @@ export class ImportWarehouseSourcesUseCase {
         ? createInitialDraft(input.scope.environmentId)
         : WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload);
     const yamlFiles = Array.from(
-      new Set(
-        authoritativeTables.map((table) =>
-          buildWarehouseSourceYamlPath(table, input.groupingStrategy)
-        )
-      )
+      groupTablesForYaml(authoritativeTables, input.groupingStrategy).keys()
     );
     const existingSourceFiles = await this.readExistingSourceFiles(yamlFiles);
     let sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>;
@@ -189,8 +187,13 @@ function appendImportedSourceNodes(
 
   for (const table of input.tables) {
     const nodeId = toSourceNodeId(table);
-    yamlFiles.add(buildWarehouseSourceYamlPath(table, input.groupingStrategy));
-    if (existingIds.has(nodeId)) {
+    const candidateNodeIds = toSourceNodeIdCandidates(table);
+    yamlFiles.add(
+      sourceYamlBindings.get(toSourceTableKey(table))?.path ??
+        buildWarehouseSourceYamlPath(table, input.groupingStrategy)
+    );
+    if (candidateNodeIds.some((candidateNodeId) => existingIds.has(candidateNodeId))) {
+      existingIds.add(nodeId);
       continue;
     }
 
@@ -296,9 +299,43 @@ function toSourceNodeId(table: WarehouseTable): string {
   return [
     'src',
     table.connectionId ? toStableYamlIdentifierPart(table.connectionId) : undefined,
+    toCollisionResistantYamlIdentifierPart(table.database),
+    toCollisionResistantYamlIdentifierPart(table.schema),
+    toCollisionResistantYamlIdentifierPart(table.table),
+  ]
+    .filter((part): part is string => typeof part === 'string' && part.length > 0)
+    .join('_');
+}
+
+function toSourceNodeIdCandidates(table: WarehouseTable): readonly string[] {
+  return Array.from(
+    new Set([
+      toSourceNodeId(table),
+      toRetiredStableSourceNodeId(table),
+      toRetiredRawSourceNodeId(table),
+    ])
+  );
+}
+
+function toRetiredStableSourceNodeId(table: WarehouseTable): string {
+  return [
+    'src',
+    table.connectionId ? toStableYamlIdentifierPart(table.connectionId) : undefined,
     toStableYamlIdentifierPart(table.database),
     toStableYamlIdentifierPart(table.schema),
     toStableYamlIdentifierPart(table.table),
+  ]
+    .filter((part): part is string => typeof part === 'string' && part.length > 0)
+    .join('_');
+}
+
+function toRetiredRawSourceNodeId(table: WarehouseTable): string {
+  return [
+    'src',
+    table.connectionId ? toStableYamlIdentifierPart(table.connectionId) : undefined,
+    table.database.toLowerCase(),
+    table.schema.toLowerCase(),
+    table.table.toLowerCase(),
   ]
     .filter((part): part is string => typeof part === 'string' && part.length > 0)
     .join('_');

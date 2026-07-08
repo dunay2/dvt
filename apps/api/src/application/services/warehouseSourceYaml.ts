@@ -23,6 +23,7 @@ export {
   DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR,
   buildWarehouseSourceYamlPath,
   groupTablesForYaml,
+  toCollisionResistantYamlIdentifierPart,
   toStableYamlIdentifierPart,
 } from './warehouseSourceYamlDescriptor.js';
 export {

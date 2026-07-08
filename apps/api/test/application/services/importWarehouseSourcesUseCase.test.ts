@@ -62,7 +62,7 @@ function createCatalog(): IWarehouseConnectionCatalog {
   };
 }
 
-function createDraftStore(): IWorkspaceGraphDraftStore {
+function createDraftStore(storedDraft?: unknown): IWorkspaceGraphDraftStore {
   const save = vi.fn(
     async (): Promise<WorkspaceGraphDraftSaveStoreResult> => ({
       kind: 'saved',
@@ -76,7 +76,17 @@ function createDraftStore(): IWorkspaceGraphDraftStore {
   return {
     migrate: vi.fn(async () => undefined),
     close: vi.fn(async () => undefined),
-    read: vi.fn(async () => null),
+    read: vi.fn(async () =>
+      storedDraft === undefined
+        ? null
+        : {
+            scope,
+            schemaVersion: 'workspace-graph-draft.v1',
+            revision: 'rev-1',
+            draftPayload: storedDraft,
+            updatedAt: '2026-06-26T00:00:00.000Z',
+          }
+    ),
     save,
   };
 }
@@ -185,18 +195,136 @@ describe('ImportWarehouseSourcesUseCase', () => {
     });
 
     expect(result.yamlFiles).toEqual(['models/sources/src_sales_erp_ops.yml']);
-    expect(result.importedNodeIds).toEqual([
-      'src_warehouse_prod_raw_lake_sales_erp_ops_open_orders',
-    ]);
+    expect(result.importedNodeIds[0]).toMatch(
+      /^src_warehouse_prod_raw_lake_[a-f0-9]{8}_sales_erp_ops_[a-f0-9]{8}_open_orders_[a-f0-9]{8}$/
+    );
     expect(draftStore.save).toHaveBeenCalledWith(
       expect.objectContaining({
         draft: expect.objectContaining({
           nodes: [
             expect.objectContaining({
-              id: 'src_warehouse_prod_raw_lake_sales_erp_ops_open_orders',
+              id: result.importedNodeIds[0],
               path: 'models/sources/src_sales_erp_ops.yml',
             }),
           ],
+        }),
+      })
+    );
+  });
+
+  it('keeps source imports idempotent when the draft still contains a retired raw-lower source id', async () => {
+    const retiredNodeId = 'src_warehouse_prod_raw lake_sales/erp ops_open orders';
+    const draftStore = createDraftStore({
+      canvas: {
+        id: 'default',
+        kind: 'canvas',
+        title: 'Canvas',
+        environmentId: scope.environmentId,
+      },
+      activeCanvasId: 'default',
+      nodeIds: [retiredNodeId],
+      nodePositions: { [retiredNodeId]: { x: 80, y: 120 } },
+      nodes: [
+        {
+          id: retiredNodeId,
+          name: retiredNodeId,
+          pluginId: 'dvt.warehouse-source',
+          kind: 'dvt:source',
+          role: 'input',
+          status: 'idle',
+          tags: ['source', 'sales/erp ops'],
+          path: 'models/sources/src_sales_erp_ops.yml',
+          description: 'Imported source for Raw Lake.Sales/ERP Ops.Open Orders',
+          metadata: {
+            sourceName: 'sales_erp_ops',
+            tableName: 'open orders',
+            connectionName: 'Production warehouse',
+            connectionType: 'postgres',
+            database: 'Raw Lake',
+            schema: 'Sales/ERP Ops',
+          },
+        },
+      ],
+      edges: [],
+      canvases: [
+        {
+          canvas: {
+            id: 'default',
+            kind: 'canvas',
+            title: 'Canvas',
+            environmentId: scope.environmentId,
+          },
+          nodeIds: [retiredNodeId],
+          nodePositions: { [retiredNodeId]: { x: 80, y: 120 } },
+          nodes: [
+            {
+              id: retiredNodeId,
+              name: retiredNodeId,
+              pluginId: 'dvt.warehouse-source',
+              kind: 'dvt:source',
+              role: 'input',
+              status: 'idle',
+              tags: ['source', 'sales/erp ops'],
+              path: 'models/sources/src_sales_erp_ops.yml',
+              description: 'Imported source for Raw Lake.Sales/ERP Ops.Open Orders',
+              metadata: {
+                sourceName: 'sales_erp_ops',
+                tableName: 'open orders',
+                connectionName: 'Production warehouse',
+                connectionType: 'postgres',
+                database: 'Raw Lake',
+                schema: 'Sales/ERP Ops',
+              },
+            },
+          ],
+          edges: [],
+        },
+      ],
+    });
+    const catalog: IWarehouseConnectionCatalog = {
+      ...createCatalog(),
+      listTables: vi.fn(async () => [
+        {
+          database: 'Raw Lake',
+          schema: 'Sales/ERP Ops',
+          table: 'Open Orders',
+        },
+      ]),
+      getConnection: vi.fn(async () => ({
+        ...catalogEntry,
+        tables: [
+          {
+            database: 'Raw Lake',
+            schema: 'Sales/ERP Ops',
+            table: 'Open Orders',
+          },
+        ],
+      })),
+    };
+    const useCase = new ImportWarehouseSourcesUseCase(
+      catalog,
+      draftStore,
+      createWorkspaceFiles(),
+      () => new Date('2026-06-26T00:00:00.000Z')
+    );
+
+    const result = await useCase.execute({
+      scope,
+      connectionId: catalogEntry.id,
+      tables: [{ database: 'Raw Lake', schema: 'Sales/ERP Ops', table: 'Open Orders' }],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
+
+    expect(result.sourcesCreated).toBe(0);
+    expect(result.importedNodeIds).toEqual([]);
+    expect(draftStore.save).toHaveBeenCalledWith(
+      expect.objectContaining({
+        draft: expect.objectContaining({
+          nodeIds: [retiredNodeId],
+          nodes: [expect.objectContaining({ id: retiredNodeId })],
         }),
       })
     );

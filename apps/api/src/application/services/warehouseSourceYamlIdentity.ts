@@ -3,6 +3,7 @@ import type { WarehouseTable } from '../ports/warehouseSourceImport.js';
 
 import {
   DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR,
+  toCollisionResistantYamlIdentifierPart,
   toStableYamlIdentifierPart,
 } from './warehouseSourceYamlDescriptor.js';
 
@@ -23,10 +24,33 @@ export function sourceTableIdentity(table: WarehouseTable): string {
   ]);
 }
 
+export function sourceOwnerIdentity(table: WarehouseTable): string {
+  return JSON.stringify([
+    table.connectionId?.toLowerCase() ?? '',
+    table.database.toLowerCase(),
+    table.schema.toLowerCase(),
+  ]);
+}
+
 export function buildCanonicalSourceName(
   table: WarehouseTable,
-  collidesAcrossDatabases: boolean
+  collidesAcrossDatabases: boolean,
+  collidesAcrossDefaultSourceName = false
 ): string {
+  if (collidesAcrossDefaultSourceName) {
+    return (
+      table.connectionId
+        ? [
+            toStableYamlIdentifierPart(table.connectionId),
+            toCollisionResistantYamlIdentifierPart(table.database),
+            toCollisionResistantYamlIdentifierPart(table.schema),
+          ]
+        : [
+            toCollisionResistantYamlIdentifierPart(table.database),
+            toCollisionResistantYamlIdentifierPart(table.schema),
+          ]
+    ).join('_');
+  }
   if (!collidesAcrossDatabases) {
     return DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
   }
@@ -47,8 +71,15 @@ export function isRetiredSourceNameForTable(
   if (sourceName === canonicalSourceName) {
     return false;
   }
-  return (
-    sourceName === toStableYamlIdentifierPart(table.schema) ||
-    sourceName === [table.database, table.schema].map(toStableYamlIdentifierPart).join('_')
-  );
+  return new Set(
+    [
+      toStableYamlIdentifierPart(table.schema),
+      [table.database, table.schema].map(toStableYamlIdentifierPart).join('_'),
+      table.connectionId
+        ? [table.connectionId, table.database, table.schema]
+            .map(toStableYamlIdentifierPart)
+            .join('_')
+        : undefined,
+    ].filter((name): name is string => typeof name === 'string' && name.length > 0)
+  ).has(sourceName);
 }

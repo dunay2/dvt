@@ -5,6 +5,7 @@ import {
   InvalidWarehouseSourceYamlError,
   buildWarehouseSourceYamlPath,
   buildWarehouseSourceYamlUpdates,
+  groupTablesForYaml,
   readExistingSourceDocument,
 } from '../../../src/application/services/warehouseSourceYaml.js';
 
@@ -58,6 +59,46 @@ describe('warehouse source YAML builder', () => {
         'database'
       )
     ).toBe('models/sources/src_raw_lake.yml');
+  });
+
+  it('disambiguates path groups and source names when warehouse identifiers share the same slug', () => {
+    const tables = [
+      {
+        connectionId: 'warehouse-prod',
+        database: 'Raw Lake',
+        schema: 'Sales/ERP Ops',
+        table: 'Open Orders',
+      },
+      {
+        connectionId: 'warehouse-prod',
+        database: 'Raw Lake',
+        schema: 'Sales ERP Ops',
+        table: 'Open Orders',
+      },
+    ];
+
+    expect(Array.from(groupTablesForYaml(tables, 'schema').keys())).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^models\/sources\/src_sales_erp_ops_[a-f0-9]{8}\.yml$/),
+      ])
+    );
+    expect(new Set(groupTablesForYaml(tables, 'schema').keys()).size).toBe(2);
+
+    const updates = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map(),
+      groupingStrategy: 'schema',
+      includeColumns: false,
+      addTests: false,
+      addFreshness: false,
+      tables,
+    });
+
+    const rendered = updates.map((update) => update.content).join('\n');
+    expect(
+      new Set(
+        rendered.match(/name: warehouse_prod_raw_lake_[a-f0-9]{8}_sales_erp_ops_[a-f0-9]{8}/g)
+      )
+    ).toHaveProperty('size', 2);
   });
 
   it('rejects malformed existing YAML instead of rewriting it as an empty source file', () => {
