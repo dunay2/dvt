@@ -257,6 +257,11 @@ function importLocalPostgresSource(): void {
 
   cy.contains('[role="tab"]', 'Selected').click();
   cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
+  cy.get('[data-source-import-review-table="dvt.public.source_1"]', { timeout: 20_000 })
+    .should('be.visible')
+    .and('contain.text', '3 rows')
+    .and('contain.text', '32 KB')
+    .and('contain.text', '3 columns');
   cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
 
   cy.contains('[role="dialog"]', 'Sources attached', { timeout: 30_000 }).should('be.visible');

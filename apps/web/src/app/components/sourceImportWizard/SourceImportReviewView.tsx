@@ -5,13 +5,10 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Separator } from '../ui/separator';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
+import { sourceImportWizardCopy as copy } from './copy';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
-import {
-  buildSourceImportTableViewModel,
-  type SourceImportTableViewModel,
-} from './sourceImportCatalogModel';
-import type { TableInfo } from './types';
+import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
+import type { SourceImportReviewPreviewGroupViewModel } from './sourceImportReviewModel';
 
 export const sourceImportReviewViewClassNames = {
   root: 'space-y-4',
@@ -34,14 +31,14 @@ export const sourceImportReviewViewClassNames = {
   tableList: 'space-y-1 text-xs text-slate-400',
   tableRow: 'flex min-w-0 items-center justify-between gap-2',
   tableName: 'truncate font-mono',
-  tableMeta: 'shrink-0',
+  tableMeta: 'flex shrink-0 flex-wrap justify-end gap-2 text-right',
   selectedTable:
     'flex min-w-0 items-center justify-between gap-2 rounded border border-slate-700 px-2 py-1',
 } as const;
 
 type SourceImportReviewViewProps = Readonly<{
   selectedTables: readonly SourceImportTableViewModel[];
-  previewGroups: ReadonlyArray<readonly [string, readonly TableInfo[]]>;
+  previewGroups: readonly SourceImportReviewPreviewGroupViewModel[];
   selectedCount: number;
   groupingStrategy: 'schema' | 'database' | 'custom';
   selectedConnectionName: string;
@@ -158,7 +155,7 @@ function SourceImportReviewSummaryRow({
 
 type SourceImportAttachmentPreviewProps = Readonly<{
   selectedTables: readonly SourceImportTableViewModel[];
-  previewGroups: ReadonlyArray<readonly [string, readonly TableInfo[]]>;
+  previewGroups: readonly SourceImportReviewPreviewGroupViewModel[];
 }>;
 
 export function SourceImportAttachmentPreview({
@@ -173,11 +170,11 @@ export function SourceImportAttachmentPreview({
       </div>
       <ScrollArea className={sourceImportReviewViewClassNames.previewScroll}>
         <div className={sourceImportReviewViewClassNames.previewList}>
-          {previewGroups.map(([key, groupTables]) => (
+          {previewGroups.map((group) => (
             <div
-              key={key}
+              key={group.registryPath}
               className={sourceImportReviewViewClassNames.group}
-              data-source-import-registry-path={key}
+              data-source-import-registry-path={group.registryPath}
             >
               <div className={sourceImportReviewViewClassNames.groupHeader}>
                 <div>
@@ -185,23 +182,20 @@ export function SourceImportAttachmentPreview({
                     {copy.review.dataObjectGroupPrefix}
                   </div>
                   <code className={sourceImportReviewViewClassNames.registryPath}>
-                    {copy.review.registryFileLabel}: {key}
+                    {copy.review.registryFileLabel}: {group.registryPath}
                   </code>
                 </div>
                 <Badge variant="secondary" className="text-xs">
-                  {formatReviewTableCount(groupTables.length)}
+                  {group.tableCountLabel}
                 </Badge>
               </div>
               <div className={sourceImportReviewViewClassNames.tableList}>
-                {groupTables.slice(0, 3).map((table) => (
-                  <SourceImportReviewSourceTableRow
-                    key={`${table.database}.${table.schema}.${table.table}`}
-                    table={table}
-                  />
+                {group.tables.slice(0, 3).map((table) => (
+                  <SourceImportReviewSourceTableRow key={table.canonicalName} table={table} />
                 ))}
-                {groupTables.length > 3 ? (
+                {group.tables.length > 3 ? (
                   <div>
-                    {copy.review.moreTablesPrefix} {groupTables.length - 3}{' '}
+                    {copy.review.moreTablesPrefix} {group.tables.length - 3}{' '}
                     {copy.review.moreTablesSuffix}
                   </div>
                 ) : null}
@@ -229,27 +223,20 @@ export function SourceImportAttachmentPreview({
   );
 }
 
-function SourceImportReviewSourceTableRow({ table }: Readonly<{ table: TableInfo }>): JSX.Element {
-  const tableViewModel = buildSourceImportTableViewModel(
-    table,
-    0,
-    copy.catalog,
-    sourceImportCatalogNumberFormatter
-  );
-
+function SourceImportReviewSourceTableRow({
+  table,
+}: Readonly<{ table: SourceImportTableViewModel }>): JSX.Element {
   return (
-    <div className={sourceImportReviewViewClassNames.tableRow}>
-      <span className={sourceImportReviewViewClassNames.tableName}>
-        {tableViewModel.canonicalName}
-      </span>
+    <div
+      className={sourceImportReviewViewClassNames.tableRow}
+      data-source-import-review-table={table.canonicalName}
+    >
+      <span className={sourceImportReviewViewClassNames.tableName}>{table.canonicalName}</span>
       <span className={sourceImportReviewViewClassNames.tableMeta}>
-        {tableViewModel.columnCountLabel}
+        <span>{table.rowCountLabel}</span>
+        {table.byteSizeLabel == null ? null : <span>{table.byteSizeLabel}</span>}
+        <span>{table.columnCountLabel}</span>
       </span>
     </div>
   );
-}
-
-function formatReviewTableCount(tableCount: number): string {
-  const suffix = tableCount === 1 ? copy.catalog.tableSingular : copy.catalog.tablePlural;
-  return `${tableCount} ${suffix}`;
 }

@@ -8,7 +8,7 @@ import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy } from './co
 import { SourceImportReviewView } from './SourceImportReviewView';
 import { buildSourceImportTableViewModel } from './sourceImportCatalogModel';
 import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
-import { buildPreviewGroups } from './sourceImportWizardModel';
+import { buildSourceImportReviewPreviewGroups } from './sourceImportReviewModel';
 import type { TableInfo } from './types';
 
 function buildTable(overrides?: Partial<TableInfo>): TableInfo {
@@ -63,7 +63,12 @@ describe('SourceImportReviewView', () => {
       root.render(
         <SourceImportReviewView
           selectedTables={selectedTables.map((table, index) => buildSelectedTable(table, index))}
-          previewGroups={Array.from(buildPreviewGroups(selectedTables, 'schema').entries())}
+          previewGroups={buildSourceImportReviewPreviewGroups({
+            tables: selectedTables,
+            groupingStrategy: 'schema',
+            copy: sourceImportWizardCopy.catalog,
+            numberFormatter: sourceImportCatalogNumberFormatter,
+          })}
           selectedCount={2}
           groupingStrategy="schema"
           selectedConnectionName="Local warehouse"
@@ -82,6 +87,12 @@ describe('SourceImportReviewView', () => {
     expect(container.textContent).toContain('2');
     expect(container.textContent).toContain(sourceImportWizardCopy.review.registryFileLabel);
     expect(container.textContent).toContain('models/sources/src_erp.yml');
+    expect(container.textContent).toContain('1,500 rows');
+    expect(container.textContent).toContain('3.9 MB');
+    expect(container.textContent).toContain('1 column');
+    expect(
+      container.querySelector('[data-source-import-review-table="RAW.ERP.ORDERS"]')
+    ).not.toBeNull();
     expect(
       container.querySelector('[data-source-import-registry-path="models/sources/src_erp.yml"]')
     ).not.toBeNull();
