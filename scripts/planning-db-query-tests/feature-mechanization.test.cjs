@@ -298,6 +298,10 @@ test('feature mechanization readers query DB-first manifest projections', async 
   assert.match(captured[2].sql, /jsonb_array_elements/);
   assert.match(captured[2].sql, /symbols/);
   assert.match(captured[2].sql, /filtered_manifests as/);
+  assert.match(
+    captured[2].sql,
+    /distinct on \(symbol_rows\.feature_id, symbol_path, symbol_name\)/
+  );
   assert.match(captured[2].sql, /manifest\.raw_manifest @> jsonb_build_object/);
   assert.match(captured[2].sql, /symbol_ref\.value->>'path' = \$1/);
   assert.deepEqual(captured[2].params, [

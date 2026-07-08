@@ -244,20 +244,41 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
        select *
        from manifests manifest
        ${manifestPredicates.length > 0 ? `where ${manifestPredicates.join(' and ')}` : ''}
+     ),
+     symbol_rows as (
+       select
+         manifest.feature_id,
+         symbol_ref.value->>'name' as symbol_name,
+         symbol_ref.value->>'path' as symbol_path,
+         symbol_ref.value->>'dddOwner' as ddd_owner,
+         ${jsonArray("symbol_ref.value->'cqRails'")} as cq_rails,
+         manifest.source_path
+       from filtered_manifests manifest
+       cross join lateral jsonb_array_elements(${jsonArray(
+         "manifest.raw_manifest->'symbols'"
+       )}) as symbol_ref(value)
+       ${symbolPredicates.length > 0 ? `where ${symbolPredicates.join(' and ')}` : ''}
+     ),
+     deduplicated_symbol_rows as (
+       select distinct on (symbol_rows.feature_id, symbol_path, symbol_name)
+         symbol_rows.feature_id,
+         symbol_rows.symbol_name,
+         symbol_rows.symbol_path,
+         symbol_rows.ddd_owner,
+         symbol_rows.cq_rails,
+         symbol_rows.source_path
+       from symbol_rows
+       order by symbol_rows.feature_id, symbol_path, symbol_name, source_path
      )
      select
-       manifest.feature_id,
-       symbol_ref.value->>'name' as symbol_name,
-       symbol_ref.value->>'path' as symbol_path,
-       symbol_ref.value->>'dddOwner' as ddd_owner,
-       ${jsonArray("symbol_ref.value->'cqRails'")} as cq_rails,
-       manifest.source_path
-     from filtered_manifests manifest
-     cross join lateral jsonb_array_elements(${jsonArray(
-       "manifest.raw_manifest->'symbols'"
-     )}) as symbol_ref(value)
-     ${symbolPredicates.length > 0 ? `where ${symbolPredicates.join(' and ')}` : ''}
-     order by manifest.feature_id, symbol_path, symbol_name, manifest.source_path
+       symbol_rows.feature_id,
+       symbol_rows.symbol_name,
+       symbol_rows.symbol_path,
+       symbol_rows.ddd_owner,
+       symbol_rows.cq_rails,
+       symbol_rows.source_path
+     from deduplicated_symbol_rows symbol_rows
+     order by symbol_rows.feature_id, symbol_path, symbol_name, source_path
      limit $${params.length}`,
       params
     );
