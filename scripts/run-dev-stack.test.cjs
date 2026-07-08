@@ -337,6 +337,10 @@ test('buildLocalWarehouseConnectionCatalog advertises the seeded local source ta
     catalog.connections[0].tables.map((table) => `${table.schema}.${table.table}`),
     ['public.source_1', 'raw.orders']
   );
+  assert.deepEqual(
+    catalog.connections[0].tables.map((table) => table.byteSize),
+    [4096000, 4096000]
+  );
 });
 
 test('resolveTemporalCliExecutable prefers an explicit operator-provided CLI path', () => {

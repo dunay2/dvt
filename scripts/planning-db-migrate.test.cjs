@@ -12767,3 +12767,91 @@ test('tracked migrations complete source import schema identity symbol evidence'
   assert.match(evidenceMigration.sql, /feature_mechanization_local_rails/);
   assert.doesNotMatch(evidenceMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register source import live proof byte-size seed alignment', () => {
+  const migrations = readMigrationFiles();
+  const liveProofSeedMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '545_source_import_live_proof_byte_size_seed_alignment.sql'
+  );
+
+  assert.ok(liveProofSeedMigration);
+  assert.match(liveProofSeedMigration.sql, /E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1/);
+  assert.match(liveProofSeedMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(liveProofSeedMigration.sql, /buildLocalWarehouseConnectionCatalog/);
+  assert.match(liveProofSeedMigration.sql, /byteSize:\s*4096000/);
+  assert.match(liveProofSeedMigration.sql, /3\.9 MB/);
+  assert.match(liveProofSeedMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(liveProofSeedMigration.sql, /run-dev-stack\.test\.cjs/);
+  assert.match(liveProofSeedMigration.sql, /EV-SOURCE-IMPORT-LIVE-PROOF-BYTE-SIZE-SEED/);
+  assert.match(liveProofSeedMigration.sql, /frontend_component_validation_evidence/);
+  assert.match(liveProofSeedMigration.sql, /feature_mechanization_local_rails/);
+  assert.doesNotMatch(liveProofSeedMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(liveProofSeedMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register source import graph card strategy sharing', () => {
+  const migrations = readMigrationFiles();
+  const cardStrategyMigration = migrations.find(
+    (migration) => migration.fileName === '546_source_import_graph_card_strategy_sharing.sql'
+  );
+
+  assert.ok(cardStrategyMigration);
+  assert.match(cardStrategyMigration.sql, /E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1/);
+  assert.match(cardStrategyMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(cardStrategyMigration.sql, /SYS-WEB-PLUGINS-CORE/);
+  assert.match(cardStrategyMigration.sql, /SYS-WEB-PLUGINS-DVT/);
+  assert.match(cardStrategyMigration.sql, /web\.component\.canvas\.GraphNodeCardStrategy/);
+  assert.match(cardStrategyMigration.sql, /graphStrategyRegistry\.ts/);
+  assert.match(cardStrategyMigration.sql, /dvtContributions\.ts/);
+  assert.match(cardStrategyMigration.sql, /dvt\.warehouse-source/);
+  assert.match(cardStrategyMigration.sql, /graphNodeCardStrategies/);
+  assert.match(cardStrategyMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(cardStrategyMigration.sql, /EV-SOURCE-IMPORT-GRAPH-CARD-STRATEGY-SHARING/);
+  assert.doesNotMatch(cardStrategyMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(cardStrategyMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register source import graph card artifact path projection', () => {
+  const migrations = readMigrationFiles();
+  const artifactPathMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '547_source_import_graph_card_artifact_path_projection.sql'
+  );
+
+  assert.ok(artifactPathMigration);
+  assert.match(artifactPathMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(artifactPathMigration.sql, /E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1/);
+  assert.match(artifactPathMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(artifactPathMigration.sql, /ResolveGraphNodeCardReadModel/);
+  assert.match(artifactPathMigration.sql, /dvtGraphNodeCardStrategy\.ts/);
+  assert.match(artifactPathMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(artifactPathMigration.sql, /models\/sources\/src_public\.yml/);
+  assert.match(artifactPathMigration.sql, /EV-SOURCE-IMPORT-GRAPH-CARD-ARTIFACT-PATH/);
+  assert.doesNotMatch(artifactPathMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(artifactPathMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile source import graph card feature mechanization surfaces', () => {
+  const migrations = readMigrationFiles();
+  const mechanizationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '548_source_import_graph_card_feature_mechanization_reconcile.sql'
+  );
+
+  assert.ok(mechanizationMigration);
+  assert.match(mechanizationMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(mechanizationMigration.sql, /E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1/);
+  assert.match(mechanizationMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(
+    mechanizationMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graphStrategyRegistry\.ts/
+  );
+  assert.match(mechanizationMigration.sql, /buildDvtArtifactPath/);
+  assert.match(mechanizationMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(mechanizationMigration.sql, /ResolveGraphNodeCardReadModel/);
+  assert.match(mechanizationMigration.sql, /graphNodeCardReadModel\.test\.ts/);
+  assert.match(mechanizationMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.doesNotMatch(mechanizationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(mechanizationMigration.sql, /truncate\s+/i);
+});

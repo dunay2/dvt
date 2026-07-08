@@ -65,6 +65,7 @@ describe('buildGraphNodeCardReadModel', () => {
         kind: 'dvt:source',
         pluginId: 'dvt.warehouse-source',
         name: 'src_erp_orders',
+        path: 'models/sources/src_erp.yml',
         metadata: {
           database: 'warehouse',
           schema: 'erp',
@@ -82,7 +83,7 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.title).toBe('Warehouse · erp');
     expect(model.technicalName).toBe('src_erp_orders');
     expect(model.subtitle).toBe('warehouse.erp.orders');
-    expect(model.path).toBe('warehouse.erp.orders');
+    expect(model.path).toBe('models/sources/src_erp.yml');
   });
 
   it('adds DVT runtime metrics only from recorded metadata', () => {

@@ -60,9 +60,23 @@ export function getCanvasGraphNodeCardStrategies(
     return [];
   }
 
-  return getRuntimePlugins(capabilities)
-    .filter((plugin) => plugin.id === runtimeRegistration.pluginId)
+  const strategies = getRuntimePlugins(capabilities)
+    .filter(
+      (plugin) =>
+        plugin.id === runtimeRegistration.pluginId ||
+        ((plugin.sourceImport?.length ?? 0) > 0 &&
+          (plugin.graphNodeCardStrategies?.length ?? 0) > 0)
+    )
     .flatMap((plugin) => plugin.graphNodeCardStrategies ?? []);
+  const uniqueStrategies = new Map<string, GraphNodeCardStrategy>();
+
+  for (const strategy of strategies) {
+    if (!uniqueStrategies.has(strategy.id)) {
+      uniqueStrategies.set(strategy.id, strategy);
+    }
+  }
+
+  return [...uniqueStrategies.values()];
 }
 
 export function resolveCanvasGraphStrategy(

@@ -30,6 +30,14 @@ function buildDvtSubtitle(
   return resolveGraphNodeRelationPath(metadata, data) ?? fallback ?? null;
 }
 
+function buildDvtArtifactPath(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown>,
+  fallback: string | undefined
+): string | null {
+  return fallback ?? resolveGraphNodeRelationPath(metadata, data) ?? null;
+}
+
 function resolveCanonicalDurationMs(
   node: CanonicalNode,
   metadata: Record<string, unknown>,
@@ -96,7 +104,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     title: titlePresentation.title,
     technicalName: titlePresentation.technicalName,
     subtitle: buildDvtSubtitle(metadata, data, node.path),
-    path: buildDvtSubtitle(metadata, data, node.path),
+    path: buildDvtArtifactPath(metadata, data, node.path),
     kindLabel: stringValue(data.typeLabel) ?? node.kind,
     accentTone: resolveNodeCardAccentTone(node),
     status: resolveNodeCardStatus(

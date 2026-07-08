@@ -98,6 +98,7 @@ export const dvtWarehouseSourceContributions: PluginContributions = {
   displayName: 'DVT Warehouse Source',
   version: '1.0.0',
   capabilities: ['canvas.render'],
+  graphNodeCardStrategies: [dvtGraphNodeCardStrategy],
   sourceImport: [
     {
       id: 'dvt.warehouse-source.import',
