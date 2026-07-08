@@ -3424,7 +3424,10 @@ async function readFrontendComponentProfileRows(client, filters = {}) {
       component_id: frontendComponent.component_id ?? frontendComponent.componentId,
       name: frontendComponent.component_name ?? frontendComponent.componentName,
       component_level: frontendComponent.component_kind ?? frontendComponent.componentKind,
-      parent_component_id: 'frontend-component-inventory',
+      parent_component_id:
+        frontendComponent.source_path ??
+        frontendComponent.sourcePath ??
+        'frontend-component-inventory',
       governance_state: frontendComponent.component_status ?? frontendComponent.componentStatus,
       ddd_owner:
         frontendComponent.frontend_owner ??
