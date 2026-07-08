@@ -12855,3 +12855,103 @@ test('tracked migrations reconcile source import graph card feature mechanizatio
   assert.doesNotMatch(mechanizationMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(mechanizationMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations prove source import creates a live warehouse connection', () => {
+  const migrations = readMigrationFiles();
+  const liveConnectionMigration = migrations.find(
+    (migration) => migration.fileName === '549_source_import_create_connection_live_proof.sql'
+  );
+
+  assert.ok(liveConnectionMigration);
+  assert.match(liveConnectionMigration.sql, /E-CANVAS-ADD-SOURCE-CREATE-CONNECTION-1/);
+  assert.match(liveConnectionMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(liveConnectionMigration.sql, /CreateWarehouseConnection/);
+  assert.match(liveConnectionMigration.sql, /TestWarehouseConnection/);
+  assert.match(liveConnectionMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(liveConnectionMigration.sql, /ImportWarehouseSources/);
+  assert.match(liveConnectionMigration.sql, /RenderCanvasGraphNodeCard/);
+  assert.match(liveConnectionMigration.sql, /source-import-create-connection-name/);
+  assert.match(liveConnectionMigration.sql, /source-import-create-connection-type/);
+  assert.match(liveConnectionMigration.sql, /source-import-create-connection-database/);
+  assert.match(liveConnectionMigration.sql, /source-import-create-connection-credential-ref/);
+  assert.match(liveConnectionMigration.sql, /env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL/);
+  assert.match(liveConnectionMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(liveConnectionMigration.sql, /SourceImportWizard\.test\.tsx/);
+  assert.match(liveConnectionMigration.sql, /EV-SOURCE-IMPORT-CREATE-CONNECTION-LIVE-PROOF/);
+  assert.doesNotMatch(
+    liveConnectionMigration.sql,
+    /preselecting Local Postgres proof as the only browser evidence.*false/i
+  );
+  assert.doesNotMatch(liveConnectionMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(liveConnectionMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep created source import connection visible', () => {
+  const migrations = readMigrationFiles();
+  const visibilityMigration = migrations.find(
+    (migration) => migration.fileName === '550_source_import_selected_connection_visibility.sql'
+  );
+
+  assert.ok(visibilityMigration);
+  assert.match(visibilityMigration.sql, /E-CANVAS-ADD-SOURCE-CREATE-CONNECTION-1/);
+  assert.match(visibilityMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(visibilityMigration.sql, /ConnectionStep\.tsx/);
+  assert.match(visibilityMigration.sql, /CreateWarehouseConnection/);
+  assert.match(visibilityMigration.sql, /TestWarehouseConnection/);
+  assert.match(visibilityMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(visibilityMigration.sql, /source-import-connection-option/);
+  assert.match(visibilityMigration.sql, /scrollIntoView with block center/);
+  assert.match(visibilityMigration.sql, /EV-SOURCE-IMPORT-CREATED-CONNECTION-VISIBLE/);
+  assert.match(visibilityMigration.sql, /SourceImportWizard\.test\.tsx/);
+  assert.match(visibilityMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.doesNotMatch(visibilityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(visibilityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations preserve live Postgres source import row metrics', () => {
+  const migrations = readMigrationFiles();
+  const liveTupleMigration = migrations.find(
+    (migration) => migration.fileName === '551_source_import_postgres_live_tuple_fallback.sql'
+  );
+
+  assert.ok(liveTupleMigration);
+  assert.match(liveTupleMigration.sql, /E-CANVAS-SOURCE-IMPORT-METADATA-PROBE-1/);
+  assert.match(liveTupleMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(liveTupleMigration.sql, /WorkspaceWarehouseConnectionProbe/);
+  assert.match(liveTupleMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(liveTupleMigration.sql, /pg_stat_get_live_tuples/);
+  assert.match(liveTupleMigration.sql, /reltuples remains -1/);
+  assert.match(liveTupleMigration.sql, /Rows unknown/);
+  assert.match(liveTupleMigration.sql, /WorkspaceWarehouseConnectionProbe\.test\.ts/);
+  assert.match(liveTupleMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.doesNotMatch(liveTupleMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(liveTupleMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare source import live Cypress helper symbols', () => {
+  const migrations = readMigrationFiles();
+  const helperSymbolsMigration = migrations.find(
+    (migration) => migration.fileName === '552_source_import_live_cypress_helper_symbols.sql'
+  );
+
+  assert.ok(helperSymbolsMigration);
+  assert.match(helperSymbolsMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
+  assert.match(helperSymbolsMigration.sql, /toStableYamlIdentifierPart/);
+  assert.match(helperSymbolsMigration.sql, /expectedLivePostgresSourceName/);
+  assert.match(helperSymbolsMigration.sql, /createLivePostgresConnection/);
+  assert.match(helperSymbolsMigration.sql, /AttachWarehouseSourceFromCanvasContext/);
+  assert.match(helperSymbolsMigration.sql, /CreateWarehouseConnection/);
+  assert.match(helperSymbolsMigration.sql, /TestWarehouseConnection/);
+  assert.match(helperSymbolsMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(helperSymbolsMigration.sql, /ImportWarehouseSources/);
+  assert.match(
+    helperSymbolsMigration.sql,
+    /apps\/web\/cypress\/e2e\/canvas\/canvas-source-import-live-clean\.cy\.ts/
+  );
+  assert.match(
+    helperSymbolsMigration.sql,
+    /apps\/web\/src\/app\/components\/SourceImportWizard\.test\.tsx/
+  );
+  assert.doesNotMatch(helperSymbolsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(helperSymbolsMigration.sql, /truncate\s+/i);
+});

@@ -52,6 +52,7 @@ export function WarehouseConnectionCreateForm({
             {copy.connection.createNameLabel}
           </span>
           <input
+            data-slot="source-import-create-connection-name"
             aria-label={copy.connection.createNameLabel}
             value={form.name}
             disabled={isCreating}
@@ -67,6 +68,7 @@ export function WarehouseConnectionCreateForm({
               {copy.connection.createTypeLabel}
             </span>
             <select
+              data-slot="source-import-create-connection-type"
               aria-label={copy.connection.createTypeLabel}
               value={form.type}
               disabled={isCreating}
@@ -97,6 +99,7 @@ export function WarehouseConnectionCreateForm({
               {copy.connection.createDatabaseLabel}
             </span>
             <input
+              data-slot="source-import-create-connection-database"
               aria-label={copy.connection.createDatabaseLabel}
               value={form.database}
               disabled={isCreating}
@@ -112,10 +115,11 @@ export function WarehouseConnectionCreateForm({
             {copy.connection.createCredentialRefLabel}
           </span>
           <input
+            data-slot="source-import-create-connection-credential-ref"
             aria-label={copy.connection.createCredentialRefLabel}
             value={form.credentialRef}
             disabled={isCreating}
-            placeholder="env:DVT_LOCAL_POSTGRES_URL"
+            placeholder="env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL"
             className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-500"
             onInput={(event) => onFieldChange('credentialRef', event.currentTarget.value)}
             onChange={(event) => onFieldChange('credentialRef', event.currentTarget.value)}
