@@ -13409,3 +13409,47 @@ test('tracked migrations retire obsolete generic SourceImport rail aliases', () 
   assert.doesNotMatch(aliasLocalOverrideManifestCleanupMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(aliasLocalOverrideManifestCleanupMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register source import atomic draft-file evidence', () => {
+  const migrations = readMigrationFiles();
+  const atomicityMigration = migrations.find(
+    (migration) => migration.fileName === '572_source_import_atomic_draft_files.sql'
+  );
+  const userStoryMigration = migrations.find(
+    (migration) => migration.fileName === '573_source_import_atomic_draft_files_user_story.sql'
+  );
+
+  assert.ok(atomicityMigration);
+  assert.ok(userStoryMigration);
+  assert.match(atomicityMigration.sql, /ImportWarehouseSourcesUseCase\.execute/);
+  assert.match(atomicityMigration.sql, /SOURCE-IMPORT-ATOMICITY-001/);
+  assert.match(
+    atomicityMigration.sql,
+    /source_yaml_persistence_must_succeed_before_graph_draft_acceptance/
+  );
+  assert.match(
+    atomicityMigration.sql,
+    /does not accept the draft mutation when source YAML persistence fails/
+  );
+  assert.match(
+    atomicityMigration.sql,
+    /api\.component\.warehouseSourceImport\.ImportWarehouseSourcesUseCase/
+  );
+  assert.match(
+    atomicityMigration.sql,
+    /apps\/api\/test\/application\/services\/importWarehouseSourcesUseCase\.test\.ts/
+  );
+  assert.match(userStoryMigration.sql, /userStories/);
+  assert.match(
+    userStoryMigration.sql,
+    /Source import graph commits are atomic with source YAML persistence/
+  );
+  assert.match(
+    userStoryMigration.sql,
+    /local#E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1#command#importwarehousesources/
+  );
+  assert.doesNotMatch(atomicityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(atomicityMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(userStoryMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(userStoryMigration.sql, /truncate\s+/i);
+});
