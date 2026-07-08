@@ -22,6 +22,47 @@ function appendTextSearchFilter(predicates, params, columns, value) {
   );
 }
 
+function normalizeCompactTextSearchValue(value) {
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function compactTextSearchColumnExpression(column) {
+  return `regexp_replace(lower(coalesce(${column}, '')), '[^a-z0-9]', '', 'g')`;
+}
+
+function appendCompactTextSearchFilter(predicates, params, columns, value, options = {}) {
+  if (isEmptyFilterValue(value)) {
+    return;
+  }
+
+  const normalizedColumns = options.normalizedColumns || [];
+  const compactColumns = options.compactColumns || columns;
+  const compactValue = normalizeCompactTextSearchValue(value);
+
+  params.push(`%${value}%`);
+  const rawParam = params.length;
+  const rawPredicates = columns.map((column) => `lower(${column}) like lower($${rawParam})`);
+  const compactPredicates = [];
+
+  if (compactValue.length > 0) {
+    params.push(`%${compactValue}%`);
+    const compactParam = params.length;
+    compactPredicates.push(
+      ...normalizedColumns.map((column) => `${column} like $${compactParam}`),
+      ...compactColumns.map(
+        (column) => `${compactTextSearchColumnExpression(column)} like $${compactParam}`
+      )
+    );
+  }
+
+  predicates.push(`(${rawPredicates.concat(compactPredicates).join(' or ')})`);
+}
+
 function appendBooleanFilter(predicates, column, value) {
   if (value === undefined) {
     return;
@@ -51,7 +92,9 @@ function appendComponentPairFilter(predicates, params, value, leftColumn, rightC
 module.exports = {
   appendBooleanFilter,
   appendBooleanParamFilter,
+  appendCompactTextSearchFilter,
   appendComponentPairFilter,
   appendFilter,
   appendTextSearchFilter,
+  normalizeCompactTextSearchValue,
 };
