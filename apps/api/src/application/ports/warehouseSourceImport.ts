@@ -11,7 +11,9 @@
  */
 import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphDraftScope } from '@dvt/contracts';
 
-export type WarehouseConnectionType = 'snowflake' | 'bigquery' | 'redshift' | 'postgres';
+export const SUPPORTED_WAREHOUSE_CONNECTION_TYPES = ['postgres'] as const;
+
+export type WarehouseConnectionType = (typeof SUPPORTED_WAREHOUSE_CONNECTION_TYPES)[number];
 
 export type WarehouseColumn = {
   readonly name: string;

@@ -187,7 +187,7 @@ function buildApp(
     {
       id: 'warehouse-prod',
       name: 'Production warehouse',
-      type: 'snowflake',
+      type: 'postgres',
       database: 'analytics',
       tables: [
         {
@@ -480,7 +480,7 @@ describe('warehouseSourceImportRoutes', () => {
       {
         id: 'warehouse-prod',
         name: 'Production warehouse',
-        type: 'snowflake',
+        type: 'postgres',
         database: 'analytics',
       },
     ]);
@@ -614,14 +614,14 @@ describe('warehouseSourceImportRoutes', () => {
         {
           id: 'warehouse-prod',
           name: 'Production warehouse',
-          type: 'snowflake',
+          type: 'postgres',
           database: 'analytics',
           tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
         },
         {
           id: 'warehouse-sandbox',
           name: 'Sandbox warehouse',
-          type: 'snowflake',
+          type: 'postgres',
           database: 'analytics',
           tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
         },
@@ -672,7 +672,7 @@ describe('warehouseSourceImportRoutes', () => {
         {
           id: 'warehouse-prod',
           name: 'Production warehouse',
-          type: 'snowflake',
+          type: 'postgres',
           database: 'analytics',
           tables: [
             {
@@ -728,7 +728,7 @@ describe('warehouseSourceImportRoutes', () => {
         {
           id: 'warehouse-prod',
           name: 'Production warehouse',
-          type: 'snowflake',
+          type: 'postgres',
           database: 'analytics',
           tables: [
             {

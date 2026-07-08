@@ -263,7 +263,7 @@ describe('workspace ports api warehouse source import', () => {
           {
             id: 'warehouse-prod',
             name: 'Production warehouse',
-            type: 'snowflake',
+            type: 'postgres',
             database: 'analytics',
           },
         ] as TResponse,
@@ -273,7 +273,7 @@ describe('workspace ports api warehouse source import', () => {
       {
         id: 'warehouse-prod',
         name: 'Production warehouse',
-        type: 'snowflake',
+        type: 'postgres',
         database: 'analytics',
       },
     ]);

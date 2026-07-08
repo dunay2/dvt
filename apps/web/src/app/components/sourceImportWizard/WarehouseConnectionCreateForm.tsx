@@ -1,4 +1,7 @@
-import type { CreateWarehouseConnectionInput } from '../../ports/workspace';
+import {
+  SUPPORTED_WAREHOUSE_CONNECTION_TYPES,
+  type CreateWarehouseConnectionInput,
+} from '../../ports/workspace';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { sourceImportWizardCopy as copy } from './copy';
@@ -14,10 +17,6 @@ interface WarehouseConnectionCreateFormProps {
   onCancel: () => void;
   onSubmit: () => void;
 }
-
-const supportedWarehouseConnectionTypes: readonly CreateWarehouseConnectionInput['type'][] = [
-  'postgres',
-];
 
 export function WarehouseConnectionCreateForm({
   form,
@@ -86,7 +85,7 @@ export function WarehouseConnectionCreateForm({
                 )
               }
             >
-              {supportedWarehouseConnectionTypes.map((type) => (
+              {SUPPORTED_WAREHOUSE_CONNECTION_TYPES.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>

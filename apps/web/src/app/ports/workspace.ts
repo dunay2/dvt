@@ -34,10 +34,14 @@ export type WorkspaceGraphSnapshot = {
   edges: DbtEdge[];
 };
 
+export const SUPPORTED_WAREHOUSE_CONNECTION_TYPES = ['postgres'] as const;
+
+export type WarehouseConnectionType = (typeof SUPPORTED_WAREHOUSE_CONNECTION_TYPES)[number];
+
 export type WarehouseConnection = {
   id: string;
   name: string;
-  type: 'snowflake' | 'bigquery' | 'redshift' | 'postgres';
+  type: WarehouseConnectionType;
   database: string;
 };
 

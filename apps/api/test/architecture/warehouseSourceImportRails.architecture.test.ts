@@ -10,6 +10,21 @@ function read(relativePath: string): string {
 }
 
 describe('warehouse source import command/query rails architecture', () => {
+  it('keeps warehouse provider creation scoped to the supported provider catalog', () => {
+    const port = read('apps/api/src/application/ports/warehouseSourceImport.ts');
+    const routeModule = read('apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts');
+
+    expect(port).toContain('SUPPORTED_WAREHOUSE_CONNECTION_TYPES');
+    expect(port).toContain("['postgres'] as const");
+    expect(port).not.toContain(
+      "export type WarehouseConnectionType = 'snowflake' | 'bigquery' | 'redshift' | 'postgres'"
+    );
+    expect(routeModule).toContain('SUPPORTED_WAREHOUSE_CONNECTION_TYPES');
+    expect(routeModule).not.toContain("input === 'snowflake'");
+    expect(routeModule).not.toContain("input === 'bigquery'");
+    expect(routeModule).not.toContain("input === 'redshift'");
+  });
+
   it('catalogs the protected warehouse source import rails before route registration', () => {
     const vocabulary = read('apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts');
     const rails = read(

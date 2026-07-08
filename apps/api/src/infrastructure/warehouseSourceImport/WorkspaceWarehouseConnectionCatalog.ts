@@ -10,6 +10,7 @@ import type {
 } from '../../application/ports/warehouseSourceImport.js';
 import {
   DuplicateWarehouseConnectionError,
+  SUPPORTED_WAREHOUSE_CONNECTION_TYPES,
   WarehouseConnectionNotFoundError,
 } from '../../application/ports/warehouseSourceImport.js';
 import type { IWorkspaceFileRepository } from '../../application/ports/workspaceFiles.js';
@@ -37,7 +38,7 @@ export const WarehouseTableCatalogSchema = z.object({
 export const WarehouseConnectionCatalogSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
-  type: z.enum(['snowflake', 'bigquery', 'redshift', 'postgres']),
+  type: z.enum(SUPPORTED_WAREHOUSE_CONNECTION_TYPES),
   database: z.string().min(1),
   credentialRef: z.string().min(1).optional(),
   tables: z.array(WarehouseTableCatalogSchema),
