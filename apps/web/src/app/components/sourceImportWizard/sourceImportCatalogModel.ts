@@ -387,7 +387,7 @@ export function buildSourceImportCatalogViewModel({
     databaseGroups,
     schemaGroups,
     activeTable,
-    selectedTables: tableViewModels.filter((table) => table.selected),
+    selectedTables: allTableViewModels.filter((table) => table.selected),
     totalTableCount: allTableViewModels.length,
     visibleTableCount: tableViewModels.length,
     selectedTableCount: allTableViewModels.filter((table) => table.selected).length,

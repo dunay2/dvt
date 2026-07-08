@@ -160,6 +160,10 @@ describe('sourceImportCatalogModel', () => {
     expect(viewModel.totalTableCount).toBe(3);
     expect(viewModel.visibleTableCount).toBe(1);
     expect(viewModel.selectedTableCount).toBe(2);
+    expect(viewModel.selectedTables).toEqual([
+      expect.objectContaining({ canonicalName: 'RAW.ERP.ORDERS' }),
+      expect.objectContaining({ canonicalName: 'RAW.CRM.CUSTOMERS' }),
+    ]);
     expect(viewModel.resultCountLabel).toBe('Showing 1 of 3 tables');
     expect(viewModel.schemaGroups).toEqual([
       expect.objectContaining({
