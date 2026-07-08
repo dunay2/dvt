@@ -13176,3 +13176,169 @@ test('tracked migrations reconcile source import supported provider catalog', ()
   assert.doesNotMatch(providerCatalogMigration.sql, /supportedWarehouseConnectionTypes/);
   assert.doesNotMatch(providerCatalogMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations retire obsolete generic SourceImport rail aliases', () => {
+  const migrations = readMigrationFiles();
+  const aliasRetirementMigration = migrations.find(
+    (migration) => migration.fileName === '563_retire_source_import_generic_alias_rails.sql'
+  );
+  const importedAliasRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '564_retire_imported_source_import_generic_alias_rails.sql'
+  );
+  const documentedAliasRetirementMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '565_retire_documented_source_import_generic_alias_rails.sql'
+  );
+  const documentedAliasLocalOverrideMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '566_retire_documented_source_import_alias_local_overrides.sql'
+  );
+  const providerDebtAliasLocalOverrideMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '567_retire_provider_debt_source_import_alias_local_overrides.sql'
+  );
+  const aliasLocalOverrideManifestCleanupMigration = migrations.find(
+    (migration) => migration.fileName === '568_clean_source_import_alias_override_raw_manifests.sql'
+  );
+
+  assert.ok(aliasRetirementMigration);
+  assert.ok(importedAliasRetirementMigration);
+  assert.ok(documentedAliasRetirementMigration);
+  assert.ok(documentedAliasLocalOverrideMigration);
+  assert.ok(providerDebtAliasLocalOverrideMigration);
+  assert.ok(aliasLocalOverrideManifestCleanupMigration);
+  assert.match(aliasRetirementMigration.sql, /SOURCE-IMPORT-PROVIDER-EXTENSIBILITY-DEBT/);
+  assert.match(aliasRetirementMigration.sql, /ListSourceImportConnections/);
+  assert.match(aliasRetirementMigration.sql, /ListSourceImportObjects/);
+  assert.match(aliasRetirementMigration.sql, /ImportSourceObjects/);
+  assert.match(aliasRetirementMigration.sql, /CheckSourceImportProviderExtensibility/);
+  assert.match(aliasRetirementMigration.sql, /ListWarehouseConnections/);
+  assert.match(aliasRetirementMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(aliasRetirementMigration.sql, /ImportWarehouseSources/);
+  assert.match(aliasRetirementMigration.sql, /CreateWarehouseConnection/);
+  assert.match(aliasRetirementMigration.sql, /rail_status = 'retired'/);
+  assert.match(aliasRetirementMigration.sql, /Generic SourceImport rail alias superseded/);
+  assert.match(
+    aliasRetirementMigration.sql,
+    /retiredBy', '563_retire_source_import_generic_alias_rails'/
+  );
+  assert.match(importedAliasRetirementMigration.sql, /planning_query_store\.command_query_rails/);
+  assert.match(importedAliasRetirementMigration.sql, /ListSourceImportConnections/);
+  assert.match(importedAliasRetirementMigration.sql, /ListSourceImportObjects/);
+  assert.match(importedAliasRetirementMigration.sql, /ImportSourceObjects/);
+  assert.match(importedAliasRetirementMigration.sql, /CheckSourceImportProviderExtensibility/);
+  assert.match(importedAliasRetirementMigration.sql, /ListWarehouseConnections/);
+  assert.match(importedAliasRetirementMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(importedAliasRetirementMigration.sql, /ImportWarehouseSources/);
+  assert.match(importedAliasRetirementMigration.sql, /CreateWarehouseConnection/);
+  assert.match(importedAliasRetirementMigration.sql, /rail_status = 'retired'/);
+  assert.match(
+    importedAliasRetirementMigration.sql,
+    /Imported generic SourceImport rail alias superseded/
+  );
+  assert.match(
+    importedAliasRetirementMigration.sql,
+    /retiredBy', '564_retire_imported_source_import_generic_alias_rails'/
+  );
+  assert.match(documentedAliasRetirementMigration.sql, /planning_query_store\.command_query_rails/);
+  assert.match(
+    documentedAliasRetirementMigration.sql,
+    /source-import-provider-extensibility-debt-plan-20260503\.md/
+  );
+  assert.match(documentedAliasRetirementMigration.sql, /ListSourceImportConnections/);
+  assert.match(documentedAliasRetirementMigration.sql, /ListSourceImportObjects/);
+  assert.match(documentedAliasRetirementMigration.sql, /ImportSourceObjects/);
+  assert.match(documentedAliasRetirementMigration.sql, /CheckSourceImportProviderExtensibility/);
+  assert.match(documentedAliasRetirementMigration.sql, /ListWarehouseConnections/);
+  assert.match(documentedAliasRetirementMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(documentedAliasRetirementMigration.sql, /ImportWarehouseSources/);
+  assert.match(documentedAliasRetirementMigration.sql, /CreateWarehouseConnection/);
+  assert.match(documentedAliasRetirementMigration.sql, /rail_status = 'retired'/);
+  assert.match(
+    documentedAliasRetirementMigration.sql,
+    /Documented generic SourceImport alias superseded/
+  );
+  assert.match(
+    documentedAliasRetirementMigration.sql,
+    /retiredBy', '565_retire_documented_source_import_generic_alias_rails'/
+  );
+  assert.match(
+    documentedAliasLocalOverrideMigration.sql,
+    /planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(documentedAliasLocalOverrideMigration.sql, /DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /ListSourceImportConnections/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /ListSourceImportObjects/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /ImportSourceObjects/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /CheckSourceImportProviderExtensibility/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /ListWarehouseConnections/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /ImportWarehouseSources/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /CreateWarehouseConnection/);
+  assert.match(documentedAliasLocalOverrideMigration.sql, /'retired'/);
+  assert.match(
+    documentedAliasLocalOverrideMigration.sql,
+    /Documented generic SourceImport alias local override/
+  );
+  assert.match(
+    documentedAliasLocalOverrideMigration.sql,
+    /retiredBy', '566_retire_documented_source_import_alias_local_overrides'/
+  );
+  assert.match(
+    providerDebtAliasLocalOverrideMigration.sql,
+    /planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    providerDebtAliasLocalOverrideMigration.sql,
+    /SOURCE-IMPORT-PROVIDER-EXTENSIBILITY-DEBT/
+  );
+  assert.match(providerDebtAliasLocalOverrideMigration.sql, /ListSourceImportConnections/);
+  assert.match(providerDebtAliasLocalOverrideMigration.sql, /ListSourceImportObjects/);
+  assert.match(providerDebtAliasLocalOverrideMigration.sql, /ImportSourceObjects/);
+  assert.match(
+    providerDebtAliasLocalOverrideMigration.sql,
+    /CheckSourceImportProviderExtensibility/
+  );
+  assert.match(providerDebtAliasLocalOverrideMigration.sql, /ListWarehouseConnections/);
+  assert.match(providerDebtAliasLocalOverrideMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(providerDebtAliasLocalOverrideMigration.sql, /ImportWarehouseSources/);
+  assert.match(providerDebtAliasLocalOverrideMigration.sql, /CreateWarehouseConnection/);
+  assert.match(providerDebtAliasLocalOverrideMigration.sql, /'retired'/);
+  assert.match(
+    providerDebtAliasLocalOverrideMigration.sql,
+    /Provider debt generic SourceImport alias local override/
+  );
+  assert.match(
+    providerDebtAliasLocalOverrideMigration.sql,
+    /retiredBy', '567_retire_provider_debt_source_import_alias_local_overrides'/
+  );
+  assert.match(
+    aliasLocalOverrideManifestCleanupMigration.sql,
+    /planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(
+    aliasLocalOverrideManifestCleanupMigration.sql,
+    /raw_manifest = raw_manifest - 'featureId'/
+  );
+  assert.match(
+    aliasLocalOverrideManifestCleanupMigration.sql,
+    /566_retire_documented_source_import_alias_local_overrides/
+  );
+  assert.match(
+    aliasLocalOverrideManifestCleanupMigration.sql,
+    /567_retire_provider_debt_source_import_alias_local_overrides/
+  );
+  assert.doesNotMatch(aliasRetirementMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(aliasRetirementMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(importedAliasRetirementMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(importedAliasRetirementMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(documentedAliasRetirementMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(documentedAliasRetirementMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(documentedAliasLocalOverrideMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(documentedAliasLocalOverrideMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(providerDebtAliasLocalOverrideMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(providerDebtAliasLocalOverrideMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(aliasLocalOverrideManifestCleanupMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(aliasLocalOverrideManifestCleanupMigration.sql, /truncate\s+/i);
+});
