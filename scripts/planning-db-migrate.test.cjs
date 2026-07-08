@@ -12995,3 +12995,26 @@ test('tracked migrations declare source import review preview group type symbol'
   assert.doesNotMatch(reviewTypeSymbolMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(reviewTypeSymbolMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations expose source import wizard steps as a frontend component', () => {
+  const migrations = readMigrationFiles();
+  const wizardStepsComponentMigration = migrations.find(
+    (migration) => migration.fileName === '555_source_import_wizard_steps_frontend_component.sql'
+  );
+
+  assert.ok(wizardStepsComponentMigration);
+  assert.match(wizardStepsComponentMigration.sql, /frontend_component_local_components/);
+  assert.match(wizardStepsComponentMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD-STEPS/);
+  assert.match(wizardStepsComponentMigration.sql, /SourceImportWizardSteps/);
+  assert.match(wizardStepsComponentMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(wizardStepsComponentMigration.sql, /SourceImportReviewView\.tsx/);
+  assert.match(wizardStepsComponentMigration.sql, /sourceImportReviewModel\.ts/);
+  assert.match(wizardStepsComponentMigration.sql, /ImportWarehouseSources/);
+  assert.match(wizardStepsComponentMigration.sql, /EV-SOURCE-IMPORT-WIZARD-STEPS-COMPONENT-QUERY/);
+  assert.match(
+    wizardStepsComponentMigration.sql,
+    /frontend-component-files --component SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD-STEPS/
+  );
+  assert.doesNotMatch(wizardStepsComponentMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(wizardStepsComponentMigration.sql, /truncate\s+/i);
+});
