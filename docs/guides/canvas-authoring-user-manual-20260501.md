@@ -167,8 +167,9 @@ seleccionado.
   demuestra columnas ni metadata de warehouse.
 - Abrir Add Source:
   `Canvas context menu > Add source`. Evidencia E2E:
-  `apps/web/cypress/e2e/canvas/canvas-source-import-contextual.cy.ts`. Limite:
-  no demuestra todavia seleccion profesional de destino final.
+  `apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts`. Cubre
+  runtime protegido, conexion warehouse real, metadata, seleccion, attach al
+  canvas, conexion source-model y preview sin stubs de draft.
 - Importar/exportar snapshot:
   `Proyecto > Exportar` o `Importar`. Evidencia:
   `10-project-snapshot-menu.png`. Limite: es snapshot, no flujo de conexion,
