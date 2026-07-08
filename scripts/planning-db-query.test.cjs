@@ -257,8 +257,10 @@ test('planning DB query filtering helpers live in one canonical helper', () => {
   const {
     appendBooleanFilter,
     appendBooleanParamFilter,
+    appendCompactTextSearchFilter,
     appendComponentPairFilter,
     appendFilter,
+    normalizeCompactTextSearchValue,
   } = require('./planning-db/query-filter.cjs');
   const predicates = [];
   const params = [];
@@ -308,6 +310,25 @@ test('planning DB query filtering helpers live in one canonical helper', () => {
 
   assert.deepEqual(componentPredicates, ['(source_component_id = $1 or target_component_id = $1)']);
   assert.deepEqual(componentParams, ['SYS-WEB-ROOT']);
+
+  const compactSearchPredicates = [];
+  const compactSearchParams = [];
+  appendCompactTextSearchFilter(
+    compactSearchPredicates,
+    compactSearchParams,
+    ['rail_name', 'ddd_owner'],
+    'Source Import',
+    {
+      normalizedColumns: ['normalized_rail_name'],
+      compactColumns: ['ddd_owner'],
+    }
+  );
+
+  assert.equal(normalizeCompactTextSearchValue('Source Import'), 'sourceimport');
+  assert.deepEqual(compactSearchPredicates, [
+    "(lower(rail_name) like lower($1) or lower(ddd_owner) like lower($1) or normalized_rail_name like $2 or regexp_replace(lower(coalesce(ddd_owner, '')), '[^a-z0-9]', '', 'g') like $2)",
+  ]);
+  assert.deepEqual(compactSearchParams, ['%Source Import%', '%sourceimport%']);
 });
 
 test('planning DB query text formatting lives in one canonical helper', () => {
@@ -3026,8 +3047,35 @@ test('readCommandQueryRailRows filters command/query rails by broad search text'
   assert.match(captured.sql, /lower\(ddd_owner\) like lower\(\$1\)/);
   assert.match(captured.sql, /lower\(feature_id\) like lower\(\$1\)/);
   assert.match(captured.sql, /lower\(source_path\) like lower\(\$1\)/);
-  assert.match(captured.sql, /limit \$2/);
-  assert.deepEqual(captured.params, ['%Warehouse%', 5]);
+  assert.match(captured.sql, /normalized_rail_name like \$2/);
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['%Warehouse%', '%warehouse%', 5]);
+});
+
+test('readCommandQueryRailRows normalizes spaced rail filters for camel-case DB-first terms', async () => {
+  const captured = { sql: '', params: null };
+  const client = {
+    async query(sql, params) {
+      captured.sql = sql;
+      captured.params = params;
+      return { rows: [] };
+    },
+  };
+
+  await readCommandQueryRailRows(client, {
+    search: 'Source Import',
+    limit: 5,
+  });
+
+  assert.match(captured.sql, /from planning_query_store\.command_query_rail_query/);
+  assert.match(captured.sql, /lower\(rail_name\) like lower\(\$1\)/);
+  assert.match(captured.sql, /normalized_rail_name like \$2/);
+  assert.match(
+    captured.sql,
+    /regexp_replace\(lower\(coalesce\(ddd_owner, ''\)\), '\[\^a-z0-9\]', '', 'g'\) like \$2/
+  );
+  assert.match(captured.sql, /limit \$3/);
+  assert.deepEqual(captured.params, ['%Source Import%', '%sourceimport%', 5]);
 });
 
 test('readCreationIntentRows queries existing rails from the DB-first rail catalog', async () => {
