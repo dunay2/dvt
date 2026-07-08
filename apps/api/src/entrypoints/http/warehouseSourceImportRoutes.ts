@@ -9,6 +9,7 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import {
   InvalidWarehouseSourceImportRequestError,
   DuplicateWarehouseConnectionError,
+  SUPPORTED_WAREHOUSE_CONNECTION_TYPES,
   WarehouseConnectionTestFailedError,
   WarehouseConnectionNotFoundError,
   WarehouseSourceImportDraftConflictError,
@@ -308,18 +309,10 @@ function hasForbiddenSecretField(body: CreateWarehouseConnectionBody | undefined
 
 function parseWarehouseConnectionType(input: unknown): RouteParseResult<WarehouseConnectionType> {
   if (
-    input === 'snowflake' ||
-    input === 'bigquery' ||
-    input === 'redshift' ||
-    input === 'postgres'
+    typeof input === 'string' &&
+    SUPPORTED_WAREHOUSE_CONNECTION_TYPES.includes(input as WarehouseConnectionType)
   ) {
-    if (input !== 'postgres') {
-      return {
-        ok: false,
-        issue: badRequestIssue(HTTP_ERROR_REASON.unsupportedWarehouseAdapter, { target: 'type' }),
-      };
-    }
-    return { ok: true, value: input };
+    return { ok: true, value: input as WarehouseConnectionType };
   }
 
   return {

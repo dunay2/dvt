@@ -38,8 +38,33 @@ const SOURCE_IMPORT_REVIEW_VIEW_PATH = resolve(
 const SOURCE_IMPORT_REVIEW_VIEW_SOURCE = existsSync(SOURCE_IMPORT_REVIEW_VIEW_PATH)
   ? readFileSync(SOURCE_IMPORT_REVIEW_VIEW_PATH, 'utf8')
   : '';
+const SOURCE_IMPORT_CONNECTION_FORM_PATH = resolve(
+  COMPONENT_ROOT,
+  'sourceImportWizard',
+  'WarehouseConnectionCreateForm.tsx'
+);
+const SOURCE_IMPORT_CONNECTION_FORM_SOURCE = readFileSync(
+  SOURCE_IMPORT_CONNECTION_FORM_PATH,
+  'utf8'
+);
+const WORKSPACE_PORT_SOURCE = readFileSync(
+  resolve(COMPONENT_ROOT, '..', 'ports', 'workspace.ts'),
+  'utf8'
+);
 
 describe('SourceImportWizard architecture', () => {
+  it('drives create-connection provider options from the supported provider catalog', () => {
+    expect(WORKSPACE_PORT_SOURCE).toContain('SUPPORTED_WAREHOUSE_CONNECTION_TYPES');
+    expect(WORKSPACE_PORT_SOURCE).toContain("['postgres'] as const");
+    expect(WORKSPACE_PORT_SOURCE).not.toContain(
+      "type: 'snowflake' | 'bigquery' | 'redshift' | 'postgres'"
+    );
+    expect(SOURCE_IMPORT_CONNECTION_FORM_SOURCE).toContain('SUPPORTED_WAREHOUSE_CONNECTION_TYPES');
+    expect(SOURCE_IMPORT_CONNECTION_FORM_SOURCE).not.toContain(
+      'const supportedWarehouseConnectionTypes'
+    );
+  });
+
   it('keeps the Add Source modal frame in presentation primitives', () => {
     expect(existsSync(SOURCE_IMPORT_WIZARD_FRAME_PATH)).toBe(true);
     expect(SOURCE_IMPORT_WIZARD_SOURCE).toContain(

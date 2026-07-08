@@ -13126,3 +13126,53 @@ test('tracked migrations expose source import live proof files through DB owners
   assert.doesNotMatch(liveProofOwnershipMigration.sql, /frontend-component-inventory\.md/);
   assert.doesNotMatch(liveProofOwnershipMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile source import supported provider catalog', () => {
+  const migrations = readMigrationFiles();
+  const providerCatalogMigration = migrations.find(
+    (migration) => migration.fileName === '560_source_import_supported_provider_catalog.sql'
+  );
+  const providerTypeSymbolMigration = migrations.find(
+    (migration) => migration.fileName === '561_source_import_provider_type_symbol_refs.sql'
+  );
+  const providerManifestSymbolMigration = migrations.find(
+    (migration) => migration.fileName === '562_source_import_provider_catalog_manifest_symbols.sql'
+  );
+
+  assert.ok(providerCatalogMigration);
+  assert.ok(providerTypeSymbolMigration);
+  assert.ok(providerManifestSymbolMigration);
+  assert.match(providerCatalogMigration.sql, /SUPPORTED_WAREHOUSE_CONNECTION_TYPES/);
+  assert.match(
+    providerCatalogMigration.sql,
+    /WorkspaceWarehouseConnectionCatalog\.ts#WarehouseConnectionCatalogSchema/
+  );
+  assert.match(providerCatalogMigration.sql, /CreateWarehouseConnection/);
+  assert.match(providerCatalogMigration.sql, /E-SOURCE-IMPORT-PROVIDER-CATALOG-1/);
+  assert.match(providerCatalogMigration.sql, /EV-SOURCE-IMPORT-SUPPORTED-PROVIDER-CATALOG/);
+  assert.match(providerCatalogMigration.sql, /closedUnsupportedVendorUnionRetired/);
+  assert.match(
+    providerTypeSymbolMigration.sql,
+    /apps\/api\/src\/application\/ports\/warehouseSourceImport\.ts#WarehouseConnectionType/
+  );
+  assert.match(
+    providerTypeSymbolMigration.sql,
+    /apps\/web\/src\/app\/ports\/workspace\.ts#WarehouseConnectionType/
+  );
+  assert.match(
+    providerManifestSymbolMigration.sql,
+    /'name', 'SUPPORTED_WAREHOUSE_CONNECTION_TYPES'/
+  );
+  assert.match(providerManifestSymbolMigration.sql, /'name', 'WarehouseConnectionType'/);
+  assert.match(
+    providerManifestSymbolMigration.sql,
+    /'path', 'apps\/api\/src\/application\/ports\/warehouseSourceImport\.ts'/
+  );
+  assert.match(
+    providerManifestSymbolMigration.sql,
+    /'path', 'apps\/web\/src\/app\/ports\/workspace\.ts'/
+  );
+  assert.doesNotMatch(providerCatalogMigration.sql, /reservedContractTypes/);
+  assert.doesNotMatch(providerCatalogMigration.sql, /supportedWarehouseConnectionTypes/);
+  assert.doesNotMatch(providerCatalogMigration.sql, /truncate\s+/i);
+});

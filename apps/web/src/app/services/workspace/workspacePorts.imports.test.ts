@@ -163,7 +163,7 @@ describe('workspace ports source import', () => {
           {
             id: 'warehouse-prod',
             name: 'Production warehouse',
-            type: 'snowflake',
+            type: 'postgres',
             database: 'analytics',
           },
         ] as TResponse,
