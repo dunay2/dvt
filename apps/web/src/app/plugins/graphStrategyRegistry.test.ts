@@ -51,6 +51,7 @@ describe('resolveCanvasGraphStrategy', () => {
   it('resolves graph node card strategies from the active canvas kind owner', () => {
     expect(getCanvasGraphNodeCardStrategies('dbt').map((strategy) => strategy.id)).toEqual([
       'dbt-card',
+      'dvt-card',
     ]);
     expect(
       getCanvasGraphNodeCardStrategies('transformation').map((strategy) => strategy.id)

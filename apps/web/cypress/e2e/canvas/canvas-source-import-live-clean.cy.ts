@@ -201,6 +201,8 @@ function importLocalPostgresSource(): void {
   cy.contains('[role="dialog"]', 'dvt', { timeout: 20_000 }).should('be.visible');
   cy.contains('[role="dialog"]', 'public').should('be.visible');
   cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
+  cy.contains('[role="dialog"]', '3 rows').should('be.visible');
+  cy.contains('[role="dialog"]', '3.9 MB').should('be.visible');
   cy.get('[data-source-import-table="dvt.public.source_1"]', { timeout: 20_000 }).click();
   cy.get('[data-source-import-table-select="dvt.public.source_1"]', { timeout: 20_000 }).click();
   cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
@@ -209,6 +211,8 @@ function importLocalPostgresSource(): void {
 
   cy.contains('[role="tab"]', 'Metadata').click();
   cy.contains('[role="dialog"]', 'order_id', { timeout: 20_000 }).should('be.visible');
+  cy.contains('[role="dialog"]', '3 rows').should('be.visible');
+  cy.contains('[role="dialog"]', '3.9 MB').should('be.visible');
   cy.contains('[role="dialog"]', 'customer').should('be.visible');
   cy.contains('[role="dialog"]', 'amount').should('be.visible');
 
@@ -250,6 +254,10 @@ describe('Canvas source import live clean proof', () => {
       .should('be.visible')
       .and('contain.text', 'public')
       .and('contain.text', 'Columns')
+      .and('contain.text', 'Rows')
+      .and('contain.text', '3')
+      .and('contain.text', 'Size')
+      .and('contain.text', '3.9 MB')
       .and('contain.text', 'models/sources/src_public.yml');
     cy.contains('Stale version').should('not.exist');
 

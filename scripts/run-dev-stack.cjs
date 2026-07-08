@@ -231,6 +231,7 @@ function buildLocalWarehouseConnectionCatalog() {
               schema: 'public',
               table: 'source_1',
               rowCount: 3,
+              byteSize: 4096000,
               columns: [
                 { name: 'order_id', type: 'integer', nullable: false },
                 { name: 'customer', type: 'text', nullable: false },
@@ -242,6 +243,7 @@ function buildLocalWarehouseConnectionCatalog() {
               schema: 'raw',
               table: 'orders',
               rowCount: 3,
+              byteSize: 4096000,
               columns: [
                 { name: 'order_id', type: 'integer', nullable: false },
                 { name: 'customer', type: 'text', nullable: false },
