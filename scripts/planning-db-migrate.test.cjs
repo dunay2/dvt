@@ -13010,11 +13010,17 @@ test('tracked migrations expose source import wizard steps as a frontend compone
   assert.match(wizardStepsComponentMigration.sql, /SourceImportReviewView\.tsx/);
   assert.match(wizardStepsComponentMigration.sql, /sourceImportReviewModel\.ts/);
   assert.match(wizardStepsComponentMigration.sql, /ImportWarehouseSources/);
+  assert.match(
+    wizardStepsComponentMigration.sql,
+    /where feature_id = 'E-CANVAS-ADD-SOURCE-REVIEW-TEMPLATE-1'/
+  );
+  assert.match(wizardStepsComponentMigration.sql, /and rail_name = 'ImportWarehouseSources'/);
   assert.match(wizardStepsComponentMigration.sql, /EV-SOURCE-IMPORT-WIZARD-STEPS-COMPONENT-QUERY/);
   assert.match(
     wizardStepsComponentMigration.sql,
     /frontend-component-files --component SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD-STEPS/
   );
+  assert.doesNotMatch(wizardStepsComponentMigration.sql, /E-CANVAS-ADD-SOURCE-LIVE-FLOW-1/);
   assert.doesNotMatch(wizardStepsComponentMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(wizardStepsComponentMigration.sql, /truncate\s+/i);
 });

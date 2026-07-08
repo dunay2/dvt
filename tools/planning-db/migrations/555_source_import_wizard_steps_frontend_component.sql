@@ -274,10 +274,8 @@ on conflict (component_id, evidence_id) do update set
 with target_rails as (
   select *
   from planning_query_store.feature_mechanization_local_rails
-  where feature_id in (
-    'E-CANVAS-ADD-SOURCE-REVIEW-TEMPLATE-1',
-    'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1'
-  )
+  where feature_id = 'E-CANVAS-ADD-SOURCE-REVIEW-TEMPLATE-1'
+    and rail_name = 'ImportWarehouseSources'
 ),
 implementation_refs(ref) as (
   values
