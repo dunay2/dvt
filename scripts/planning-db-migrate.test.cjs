@@ -13045,3 +13045,27 @@ test('tracked migrations expose source import wizard steps as a frontend compone
   assert.doesNotMatch(wizardStepsComponentMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(wizardStepsComponentMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations deduplicate source import wizard step file ownership', () => {
+  const migrations = readMigrationFiles();
+  const ownershipDedupMigration = migrations.find(
+    (migration) => migration.fileName === '557_source_import_wizard_step_file_ownership_dedup.sql'
+  );
+
+  assert.ok(ownershipDedupMigration);
+  assert.match(ownershipDedupMigration.sql, /retiredForSourceImportStepOwnership/);
+  assert.match(ownershipDedupMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(ownershipDedupMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD-STEPS/);
+  assert.match(ownershipDedupMigration.sql, /WarehouseConnectionCreateForm\.tsx/);
+  assert.match(ownershipDedupMigration.sql, /and file_role = 'presentation'/);
+  assert.match(
+    ownershipDedupMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_file_query/
+  );
+  assert.match(
+    ownershipDedupMigration.sql,
+    /create or replace view planning_query_store\.frontend_component_summary_query/
+  );
+  assert.match(ownershipDedupMigration.sql, /EV-SOURCE-IMPORT-WIZARD-STEP-FILE-OWNERSHIP-DEDUP/);
+  assert.doesNotMatch(ownershipDedupMigration.sql, /truncate\s+/i);
+});
