@@ -6072,6 +6072,27 @@ test('tracked migrations register Source Import live proof runner Temporal boots
   assert.doesNotMatch(temporalBootstrapMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register compact Planning DB query filter symbols', () => {
+  const migrations = readMigrationFiles();
+  const compactFilterMigration = migrations.find(
+    (migration) => migration.fileName === '556_planning_db_query_compact_filter_symbols.sql'
+  );
+
+  assert.ok(compactFilterMigration);
+  assert.match(
+    compactFilterMigration.sql,
+    /PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612/
+  );
+  assert.match(compactFilterMigration.sql, /ApplyPlanningDbQueryTextSearchFilter/);
+  assert.match(compactFilterMigration.sql, /appendCompactTextSearchFilter/);
+  assert.match(compactFilterMigration.sql, /compactTextSearchColumnExpression/);
+  assert.match(compactFilterMigration.sql, /normalizeCompactTextSearchValue/);
+  assert.match(compactFilterMigration.sql, /planning-db-command-query-rail-spaced-filter/);
+  assert.match(compactFilterMigration.sql, /scripts\/planning-db-query\.test\.cjs/);
+  assert.doesNotMatch(compactFilterMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(compactFilterMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations reconcile Canvas draft reload local removal preservation symbols', () => {
   const migrations = readMigrationFiles();
   const reloadRemovalMigration = migrations.find(
