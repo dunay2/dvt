@@ -1,7 +1,7 @@
 ---
 title: ED-20260311 - Execution core assessment and vertical closure status
 status: Final
-date: 2026-03-11T00:00:00.000Z
+date: 2026-03-11
 owners: Architecture / Engine
 arc_level: ARC-2
 breaking: false
