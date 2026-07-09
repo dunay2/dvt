@@ -608,6 +608,40 @@ describe('warehouseSourceImportRoutes', () => {
     );
   });
 
+  it('rejects impossible client-supplied source metadata before import', async () => {
+    const { app, draftStore, workspaceFiles } = buildApp();
+    const impossibleMetrics = [{ rowCount: -1 }, { byteSize: -1 }] as const;
+
+    for (const metrics of impossibleMetrics) {
+      const response = await app.inject({
+        method: 'POST',
+        url: `/workspace/sources/import?${SCOPE_QUERY}`,
+        payload: {
+          connectionId: 'warehouse-prod',
+          tables: [
+            {
+              database: 'analytics',
+              schema: 'erp',
+              table: 'orders',
+              ...metrics,
+            },
+          ],
+          groupingStrategy: 'schema',
+          includeColumns: true,
+          addTests: false,
+          addFreshness: false,
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.json()).toEqual({
+        error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
+      });
+    }
+    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
+    expect(draftStore.save).not.toHaveBeenCalled();
+  });
+
   it('scopes imported source identity by connection when warehouse objects share physical names', async () => {
     const { app, draftStore, workspaceFiles } = buildApp({
       catalogEntries: [

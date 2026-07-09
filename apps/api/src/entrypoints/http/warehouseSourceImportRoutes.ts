@@ -378,10 +378,16 @@ function parseTables(input: readonly unknown[]): RouteParseResult<readonly Wareh
     }
 
     let parsed: WarehouseTable = { database, schema, table };
-    if (typeof rowCount === 'number') {
+    if (rowCount !== undefined) {
+      if (!isNonNegativeFiniteNumber(rowCount)) {
+        return invalidBody();
+      }
       parsed = { ...parsed, rowCount };
     }
-    if (typeof byteSize === 'number') {
+    if (byteSize !== undefined) {
+      if (!isNonNegativeFiniteNumber(byteSize)) {
+        return invalidBody();
+      }
       parsed = { ...parsed, byteSize };
     }
     if (Array.isArray(columns)) {
@@ -414,6 +420,10 @@ function parseColumns(input: readonly unknown[]): RouteParseResult<readonly Ware
     });
   }
   return { ok: true, value: columns };
+}
+
+function isNonNegativeFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
 }
 
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
