@@ -13599,3 +13599,35 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   assert.doesNotMatch(groupingStrategySymbolsMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(groupingStrategySymbolsMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register source import list connections DB-first rail', () => {
+  const migrations = readMigrationFiles();
+  const httpMetadataValidationMigration = migrations.find(
+    (migration) => migration.fileName === '582_source_import_http_metadata_validation.sql'
+  );
+  const listConnectionsRailMigration = migrations.find(
+    (migration) => migration.fileName === '583_source_import_list_connections_dbfirst_rail.sql'
+  );
+
+  assert.ok(httpMetadataValidationMigration);
+  assert.ok(listConnectionsRailMigration);
+  assert.match(httpMetadataValidationMigration.sql, /isNonNegativeFiniteNumber/);
+  assert.match(httpMetadataValidationMigration.sql, /ImportWarehouseSources/);
+  assert.match(httpMetadataValidationMigration.sql, /warehouseSourceImportRoutes\.test\.ts/);
+  assert.match(listConnectionsRailMigration.sql, /ListWarehouseConnections/);
+  assert.match(listConnectionsRailMigration.sql, /web\.component\.canvas\.SourceImportDialog/);
+  assert.match(
+    listConnectionsRailMigration.sql,
+    /IWarehouseSourceImportPort\.listWarehouseConnections/
+  );
+  assert.match(listConnectionsRailMigration.sql, /GET \/workspace\/warehouse\/connections/);
+  assert.match(listConnectionsRailMigration.sql, /useConnectionsLoader/);
+  assert.match(listConnectionsRailMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(listConnectionsRailMigration.sql, /pnpm test:web:e2e:source-import:live/);
+  assert.match(
+    listConnectionsRailMigration.sql,
+    /supersedesSourcePath', 'docs\/architecture\/components\/web\/frontend-component-inventory\.md'/
+  );
+  assert.doesNotMatch(listConnectionsRailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(listConnectionsRailMigration.sql, /truncate\s+/i);
+});
