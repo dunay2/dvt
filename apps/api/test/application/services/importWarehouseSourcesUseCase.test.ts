@@ -65,10 +65,12 @@ function createCatalog(): IWarehouseConnectionCatalog {
 
 function createDraftStore(
   storedDraft?: unknown,
-  saveResult?: WorkspaceGraphDraftSaveStoreResult
+  saveResult?: WorkspaceGraphDraftSaveStoreResult,
+  onSave?: () => void | Promise<void>
 ): IWorkspaceGraphDraftStore {
-  const save = vi.fn(
-    async (): Promise<WorkspaceGraphDraftSaveStoreResult> =>
+  const save = vi.fn(async (): Promise<WorkspaceGraphDraftSaveStoreResult> => {
+    await onSave?.();
+    return (
       saveResult ?? {
         kind: 'saved',
         schemaVersion: 'workspace-graph-draft.v1',
@@ -76,7 +78,8 @@ function createDraftStore(
         updatedAt: '2026-06-26T00:00:00.000Z',
         deduplicated: false,
       }
-  );
+    );
+  });
 
   return {
     migrate: vi.fn(async () => undefined),
@@ -96,20 +99,45 @@ function createDraftStore(
   };
 }
 
-function createWorkspaceFiles(): IWorkspaceFileRepository {
+type WorkspaceFileTestDouble = IWorkspaceFileRepository & {
+  readonly readSavedFile: (path: string) => string | undefined;
+  readonly writeSavedFile: (path: string, content: string) => void;
+};
+
+function createWorkspaceFiles(initialFiles: Record<string, string> = {}): WorkspaceFileTestDouble {
+  const files = new Map(Object.entries(initialFiles));
   return {
     listFiles: vi.fn(async () => []),
     getFileContent: vi.fn(async (path: string) => {
+      const content = files.get(path);
+      if (content !== undefined) {
+        return {
+          path,
+          name: path.split('/').at(-1) ?? path,
+          language: 'yaml',
+          content,
+          lastModified: '2026-06-26T00:00:00.000Z',
+        };
+      }
       throw new WorkspaceFileNotFoundError(path);
     }),
-    saveFileContent: vi.fn(async (path: string, content: string) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'yaml',
-      content,
-      lastModified: '2026-06-26T00:00:00.000Z',
-    })),
-    deleteFileContent: vi.fn(async () => undefined),
+    saveFileContent: vi.fn(async (path: string, content: string) => {
+      files.set(path, content);
+      return {
+        path,
+        name: path.split('/').at(-1) ?? path,
+        language: 'yaml',
+        content,
+        lastModified: '2026-06-26T00:00:00.000Z',
+      };
+    }),
+    deleteFileContent: vi.fn(async (path: string) => {
+      files.delete(path);
+    }),
+    readSavedFile: (path: string) => files.get(path),
+    writeSavedFile: (path: string, content: string) => {
+      files.set(path, content);
+    },
   };
 }
 
@@ -226,6 +254,52 @@ describe('ImportWarehouseSourcesUseCase', () => {
       expect.stringContaining('name: orders')
     );
     expect(workspaceFiles.deleteFileContent).toHaveBeenCalledWith('models/sources/src_erp.yml');
+  });
+
+  it('does not roll back source YAML replaced by a concurrent winning import', async () => {
+    const sourceYamlPath = 'models/sources/src_erp.yml';
+    const concurrentWinnerContent = [
+      'version: 2',
+      'sources:',
+      '  - name: src_erp',
+      '    tables:',
+      '      - name: orders_from_winner',
+      '',
+    ].join('\n');
+    const workspaceFiles = createWorkspaceFiles();
+    const draftStore = createDraftStore(
+      undefined,
+      {
+        kind: 'conflict',
+        currentRevision: 'rev-3',
+        storedSchemaVersion: 'workspace-graph-draft.v1',
+        updatedAt: '2026-06-26T00:00:01.000Z',
+      },
+      () => {
+        workspaceFiles.writeSavedFile(sourceYamlPath, concurrentWinnerContent);
+      }
+    );
+    const useCase = new ImportWarehouseSourcesUseCase(
+      createCatalog(),
+      draftStore,
+      workspaceFiles,
+      () => new Date('2026-06-26T00:00:00.000Z')
+    );
+
+    await expect(
+      useCase.execute({
+        scope,
+        connectionId: catalogEntry.id,
+        tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        groupingStrategy: 'schema',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      })
+    ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
+
+    expect(workspaceFiles.deleteFileContent).not.toHaveBeenCalled();
+    expect(workspaceFiles.readSavedFile(sourceYamlPath)).toBe(concurrentWinnerContent);
   });
 
   it('persists normalized source node ids and yaml paths for non-slug warehouse names', async () => {
