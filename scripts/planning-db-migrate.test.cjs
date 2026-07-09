@@ -13698,3 +13698,23 @@ test('tracked migrations register source import list connections DB-first rail',
   assert.doesNotMatch(listConnectionsRailMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(listConnectionsRailMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register draggable ordered canvas node workbench evidence', () => {
+  const migrations = readMigrationFiles();
+  const workbenchMigration = migrations.find(
+    (migration) => migration.fileName === '587_canvas_node_workbench_draggable_ordered_manifest.sql'
+  );
+
+  assert.ok(workbenchMigration);
+  assert.match(workbenchMigration.sql, /web\.component\.canvas\.CanvasNodeWorkbenchPanel/);
+  assert.match(workbenchMigration.sql, /draggableOverlay/);
+  assert.match(workbenchMigration.sql, /presentationOrderInvariant/);
+  assert.match(workbenchMigration.sql, /duplicateRowPolicy/);
+  assert.match(workbenchMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(workbenchMigration.sql, /NodePropertySectionView\.tsx/);
+  assert.match(workbenchMigration.sql, /CanvasNodeWorkbenchOverlay\.test\.tsx/);
+  assert.match(workbenchMigration.sql, /EV-WEB-CANVAS-NODE-WORKBENCH-DRAGGABLE-OVERLAY/);
+  assert.match(workbenchMigration.sql, /EV-WEB-CANVAS-NODE-WORKBENCH-SHARED-PRESENTATION/);
+  assert.doesNotMatch(workbenchMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(workbenchMigration.sql, /truncate\s+/i);
+});

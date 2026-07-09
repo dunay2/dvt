@@ -11,6 +11,7 @@ export type NodePropertySectionViewProps = Readonly<{
   slots: Readonly<{ sectionPrefix: string; code: string }>;
   surface?: 'inspector' | 'workbench';
   showCountBadge?: boolean;
+  childrenPlacement?: 'before-body' | 'after-body';
   children?: ReactNode;
 }>;
 
@@ -154,20 +155,24 @@ export function NodePropertySectionView({
   slots,
   surface = 'inspector',
   showCountBadge = false,
+  childrenPlacement = 'after-body',
   children,
 }: NodePropertySectionViewProps): JSX.Element {
+  const childrenSlot = children ? (
+    <div data-slot={`${slots.sectionPrefix}-editable-properties`} className="space-y-3 pt-1">
+      {children}
+    </div>
+  ) : null;
+
   return (
     <section data-slot={sectionSlot(section, slots)} className="space-y-3">
       <div className="flex items-center justify-between gap-3">
         <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
         {showCountBadge ? renderSectionCountBadge(section) : null}
       </div>
+      {childrenPlacement === 'before-body' ? childrenSlot : null}
       {renderSectionBody(section, slots, surface)}
-      {children ? (
-        <div data-slot={`${slots.sectionPrefix}-editable-properties`} className="space-y-3 pt-1">
-          {children}
-        </div>
-      ) : null}
+      {childrenPlacement === 'after-body' ? childrenSlot : null}
     </section>
   );
 }

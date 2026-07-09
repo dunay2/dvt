@@ -2,6 +2,7 @@
 
 /** Owned concern: prove contextual NodeWorkbench overlay gating outside CanvasShell tests. */
 import React, { act } from 'react';
+import { fireEvent } from '@testing-library/dom';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,7 +17,12 @@ const workbenchState = vi.hoisted(() => ({
 vi.mock('./CanvasNodeWorkbenchPanel', () => ({
   CanvasNodeWorkbenchPanel: (props: Record<string, unknown>) => {
     workbenchState.props = props;
-    return <div data-testid="canvas-node-workbench-panel" />;
+    const dragHandleProps = props.dragHandleProps as Record<string, unknown> | undefined;
+    return (
+      <div data-testid="canvas-node-workbench-panel">
+        <div data-testid="canvas-node-workbench-drag-handle" {...dragHandleProps} />
+      </div>
+    );
   },
 }));
 
@@ -97,6 +103,44 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       preferredTabRequestId: 7,
       primarySectionIds: dvtCanvasSurfaceStrategy.nodeWorkbench.sections,
     });
+  });
+
+  it('moves the contextual workbench from the panel header drag handle', () => {
+    renderOverlay(root);
+
+    const overlay = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-overlay"]'
+    );
+    const dragHandle = container.querySelector<HTMLElement>(
+      '[data-testid="canvas-node-workbench-drag-handle"]'
+    );
+
+    expect(overlay).not.toBeNull();
+    expect(dragHandle).not.toBeNull();
+
+    const initialLeft = Number.parseFloat(overlay!.style.left);
+    const initialTop = Number.parseFloat(overlay!.style.top);
+
+    expect(Number.isFinite(initialLeft)).toBe(true);
+    expect(Number.isFinite(initialTop)).toBe(true);
+
+    act(() => {
+      fireEvent.pointerDown(dragHandle!, {
+        pointerId: 1,
+        button: 0,
+        clientX: 100,
+        clientY: 80,
+      });
+      fireEvent.pointerMove(overlay!, {
+        pointerId: 1,
+        clientX: 148,
+        clientY: 112,
+      });
+      fireEvent.pointerUp(overlay!, { pointerId: 1 });
+    });
+
+    expect(Number.parseFloat(overlay!.style.left)).toBe(initialLeft + 48);
+    expect(Number.parseFloat(overlay!.style.top)).toBe(initialTop + 32);
   });
 
   it('does not mount node workbench chrome when the surface strategy is unavailable', () => {

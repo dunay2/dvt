@@ -286,6 +286,36 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).not.toBeNull();
   });
 
+  it('orders editable identity before readonly facts without repeating source target rows', () => {
+    renderPanel(root, 'general');
+
+    const generalSection = container.querySelector(
+      '[data-slot="canvas-node-workbench-general-section"]'
+    );
+    const editableName = generalSection?.querySelector('input[name="node-name"]');
+    const firstReadonlyLabel = generalSection?.querySelector('dt');
+    const readonlyLabels = Array.from(generalSection?.querySelectorAll('dt') ?? []).map((label) =>
+      label.textContent?.trim()
+    );
+
+    expect(generalSection).not.toBeNull();
+    expect(editableName).not.toBeNull();
+    expect(firstReadonlyLabel).not.toBeNull();
+    expect(
+      Boolean(
+        editableName!.compareDocumentPosition(firstReadonlyLabel!) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+      )
+    ).toBe(true);
+    expect(readonlyLabels).not.toContain('Name');
+    expect(readonlyLabels).not.toContain('Database');
+    expect(readonlyLabels).not.toContain('Schema');
+    expect(readonlyLabels).not.toContain('Table');
+    expect(readonlyLabels).not.toContain('Source');
+    expect(generalSection?.textContent).toContain('Node ID');
+    expect(generalSection?.textContent).toContain('Rows');
+  });
+
   it('renders DVT transform column selection inside the Columns tab', () => {
     const onApplyNodeDraft = vi.fn();
 
