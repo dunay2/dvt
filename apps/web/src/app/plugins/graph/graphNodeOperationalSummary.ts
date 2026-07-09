@@ -56,6 +56,17 @@ function formatThroughputBytesPerMinute(value: number): string {
   return `${formatBytes(value)}/min`;
 }
 
+function formatExactBytes(value: number): string {
+  return `${new Intl.NumberFormat('en-US').format(Math.round(value))} B`;
+}
+
+function formatAverageBytes(value: number): string {
+  if (Math.abs(value) < 1024) {
+    return `${value.toFixed(1).replace(/\.0$/, '')} B`;
+  }
+  return formatBytes(value);
+}
+
 function formatCost(value: number): string {
   return `$${value.toFixed(2)}`;
 }
@@ -218,6 +229,7 @@ function buildSourceHealthRows(
   }
 
   detailRows.push(...railMetrics);
+  pushByteLevelDetailRows(detailRows, rowCount, datasetSizeBytes);
   pushOperationalMetric(
     detailRows,
     'rows',
@@ -245,6 +257,37 @@ function buildSourceHealthRows(
   }
 
   return { hasSourceHealthSignal, railMetrics, detailRows };
+}
+
+function pushByteLevelDetailRows(
+  detailRows: GraphNodeCardMetric[],
+  rowCount: number | null,
+  byteSize: number | null
+): void {
+  pushOperationalMetric(
+    detailRows,
+    'dataset-size',
+    'Dataset size',
+    byteSize == null ? null : formatBytes(byteSize),
+    { icon: 'database' }
+  );
+  pushOperationalMetric(
+    detailRows,
+    'bytes',
+    'Bytes',
+    byteSize == null ? null : formatExactBytes(byteSize),
+    { icon: 'database' }
+  );
+
+  const averageRowSize =
+    rowCount == null || rowCount <= 0 || byteSize == null ? null : byteSize / rowCount;
+  pushOperationalMetric(
+    detailRows,
+    'avg-row-size',
+    'Avg row size',
+    averageRowSize == null ? null : formatAverageBytes(averageRowSize),
+    { icon: 'throughput' }
+  );
 }
 
 function buildAdditionalOperationalDetail(
@@ -351,7 +394,8 @@ export function buildGraphNodeOperationalSummary({
     };
   }
 
-  if (modelExecutionMetrics.length > 0) {
+  const hasModelExecutionMetrics = modelExecutionMetrics.length > 0;
+  if (hasModelExecutionMetrics) {
     metrics.push(...modelExecutionMetrics);
   } else {
     pushOperationalMetric(
@@ -379,8 +423,13 @@ export function buildGraphNodeOperationalSummary({
     );
   }
 
+  const staticDetailRows: GraphNodeCardMetric[] = [];
+  if (!hasModelExecutionMetrics) {
+    pushByteLevelDetailRows(staticDetailRows, rowCount, byteSize);
+  }
+
   return {
     metrics,
-    detail: null,
+    detail: buildGraphNodeOperationalDetail(title, staticDetailRows),
   };
 }

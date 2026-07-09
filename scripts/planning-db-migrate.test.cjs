@@ -13768,3 +13768,48 @@ test('tracked migrations record Graph node operational summary no duplicate deta
   assert.doesNotMatch(noDuplicateDetailMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(noDuplicateDetailMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations preserve Graph node byte-level health detail policy', () => {
+  const migrations = readMigrationFiles();
+  const byteDetailMigration = migrations.find(
+    (migration) => migration.fileName === '590_graph_node_operational_summary_byte_detail.sql'
+  );
+
+  assert.ok(byteDetailMigration);
+  assert.match(byteDetailMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(byteDetailMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(byteDetailMigration.sql, /byteLevelDetailPolicy/);
+  assert.match(byteDetailMigration.sql, /pushByteLevelDetailRows/);
+  assert.match(byteDetailMigration.sql, /formatExactBytes/);
+  assert.match(byteDetailMigration.sql, /formatAverageBytes/);
+  assert.match(byteDetailMigration.sql, /EV-GRAPH-NODE-OPERATIONAL-SUMMARY-BYTE-DETAIL/);
+  assert.match(byteDetailMigration.sql, /rowColumnOnlyStaysNonInteractive/);
+  assert.match(byteDetailMigration.sql, /byteSizeCreatesComplementaryDetail/);
+  assert.match(
+    byteDetailMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeCardReadModel\.test\.ts/
+  );
+  assert.doesNotMatch(byteDetailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(byteDetailMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Graph node byte formatter feature symbols', () => {
+  const migrations = readMigrationFiles();
+  const byteFormatterSymbolsMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '591_graph_node_operational_summary_byte_formatter_symbols.sql'
+  );
+
+  assert.ok(byteFormatterSymbolsMigration);
+  assert.match(byteFormatterSymbolsMigration.sql, /raw_manifest/);
+  assert.match(byteFormatterSymbolsMigration.sql, /formatExactBytes/);
+  assert.match(byteFormatterSymbolsMigration.sql, /formatAverageBytes/);
+  assert.match(byteFormatterSymbolsMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(byteFormatterSymbolsMigration.sql, /symbol_refs/);
+  assert.match(
+    byteFormatterSymbolsMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeOperationalSummary\.test\.ts/
+  );
+  assert.doesNotMatch(byteFormatterSymbolsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(byteFormatterSymbolsMigration.sql, /truncate\s+/i);
+});

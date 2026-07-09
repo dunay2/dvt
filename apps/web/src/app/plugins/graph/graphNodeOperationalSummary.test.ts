@@ -26,7 +26,7 @@ describe('buildGraphNodeOperationalSummary', () => {
     expect(summary.detail).toBeNull();
   });
 
-  it('keeps static row and size metrics non-interactive when no operational detail is recorded', () => {
+  it('keeps static row and size metrics interactive when byte-level detail is recorded', () => {
     const summary = buildGraphNodeOperationalSummary({
       title: 'Postgres public',
       metadata: { rowCount: 18240, byteSize: 4096000 },
@@ -40,6 +40,31 @@ describe('buildGraphNodeOperationalSummary', () => {
       { id: 'rows', label: 'Rows', value: '18.2k', icon: 'rows' },
       { id: 'columns', label: 'Columns', value: '2', icon: 'columns' },
       { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
+    ]);
+    expect(summary.detail).toEqual({
+      title: 'Postgres public health',
+      ariaLabel: 'Open Postgres public health metrics',
+      rows: [
+        { id: 'dataset-size', label: 'Dataset size', value: '3.9 MB', icon: 'database' },
+        { id: 'bytes', label: 'Bytes', value: '4,096,000 B', icon: 'database' },
+        { id: 'avg-row-size', label: 'Avg row size', value: '224.6 B', icon: 'throughput' },
+      ],
+    });
+  });
+
+  it('keeps row and column-only static metrics non-interactive when byte detail is unavailable', () => {
+    const summary = buildGraphNodeOperationalSummary({
+      title: 'Postgres public',
+      metadata: { rowCount: 18240 },
+      data: {},
+      rowCount: 18240,
+      byteSize: null,
+      columnCount: 2,
+    });
+
+    expect(summary.metrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '18.2k', icon: 'rows' },
+      { id: 'columns', label: 'Columns', value: '2', icon: 'columns' },
     ]);
     expect(summary.detail).toBeNull();
   });
@@ -88,6 +113,9 @@ describe('buildGraphNodeOperationalSummary', () => {
         { id: 'cadence', label: 'Cadence', value: 'Every 15 min', icon: 'refresh' },
         { id: 'throughput', label: 'Throughput', value: '42 MB/min', icon: 'throughput' },
         { id: 'size', label: 'Size', value: '18.2 GB', icon: 'database' },
+        { id: 'dataset-size', label: 'Dataset size', value: '18.2 GB', icon: 'database' },
+        { id: 'bytes', label: 'Bytes', value: '19,542,101,197 B', icon: 'database' },
+        { id: 'avg-row-size', label: 'Avg row size', value: '157.6 B', icon: 'throughput' },
         { id: 'rows', label: 'Rows', value: '124M', icon: 'rows' },
         {
           id: 'schema-drift',

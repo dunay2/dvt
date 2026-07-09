@@ -90,6 +90,42 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.operationalDetail).toBeNull();
   });
 
+  it('keeps imported source health details useful when byte-level metadata is recorded', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:source',
+        pluginId: 'dvt.warehouse-source',
+        name: 'src_local_postgres_dvt_public_source_1',
+        path: 'models/sources/src_public.yml',
+        metadata: {
+          database: 'dvt',
+          schema: 'public',
+          tableName: 'source_1',
+          rowCount: 1500,
+          byteSize: 4096000,
+          columns: [
+            { name: 'order_id', type: 'integer' },
+            { name: 'customer', type: 'text' },
+            { name: 'amount', type: 'numeric' },
+          ],
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.operationalMetrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '1.5k', icon: 'rows' },
+      { id: 'columns', label: 'Columns', value: '3', icon: 'columns' },
+      { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
+    ]);
+    expect(model.operationalDetail?.rows).toEqual([
+      { id: 'dataset-size', label: 'Dataset size', value: '3.9 MB', icon: 'database' },
+      { id: 'bytes', label: 'Bytes', value: '4,096,000 B', icon: 'database' },
+      { id: 'avg-row-size', label: 'Avg row size', value: '2.7 KB', icon: 'throughput' },
+    ]);
+  });
+
   it('uses imported DVT source table metadata in the technical path', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
