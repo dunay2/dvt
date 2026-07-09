@@ -23,6 +23,9 @@ assertion.
 | `.github/workflows/release.yml`                  | Release governance  | Runs Release Please through the repository-owned manifest/config so development releases stay on the pre-1.0 line. |
 | `release-please-config.json`                     | Release governance  | Owns Release Please title/version behavior instead of relying on action defaults.                                  |
 | `.release-please-manifest.json`                  | Release governance  | Owns the current release base version used by Release Please manifest mode.                                        |
+| `CHANGELOG.md`                                   | Release governance  | Generated Release Please artifact; it is not hand-authored documentation and is ignored by changed-markdown lint.  |
+| `.markdownlintignore`                            | Markdown governance | Records generated Markdown artifacts that changed-file markdownlint must not lint as hand-authored prose.          |
+| `scripts/lint-markdown-changed.cjs`              | Markdown governance | Computes the changed Markdown read model after applying repository ignore policy before invoking markdownlint.     |
 | `tools/ci/workflow-pattern-parity.test.mjs`      | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters.       |
 | `tools/ci/ci-delivery-governance-canon.test.mjs` | CI governance tests | Canonical absorption guard for the local component guide, user stories, and mandatory proposal state.              |
 | `docs/guides/testing-and-ci-capabilities.md`     | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                       |
@@ -33,6 +36,7 @@ Command/query rail:
 | ------------------------------------- | ------- | ------------------------------ | ------------------------------------------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ValidateCiDeliveryGovernanceCanon`   | query   | Repository delivery governance | `CiDeliveryGovernanceCanon` read model     | `pnpm test:ci-tools` and `CI tool contracts` workflow lane | Fails when the plan claims an absorbed gate is still open, or when component docs lose public API, invariants, transitions, consumers, diagrams, or user stories. |
 | `ConfigureReleasePleasePreMajorState` | command | Repository release governance  | `ReleasePleasePreMajorState` policy object | `.github/workflows/release.yml` and Release Please action  | Fails when Release Please falls back to default `1.0.0` behavior or opens a PR title that violates the semantic PR title gate.                                    |
+| `LintChangedMarkdownFiles`            | query   | Repository Markdown governance | `ChangedMarkdownFileSet` read model        | `scripts/lint-markdown-changed.cjs` and `verify:prepush`   | Fails when generated Markdown artifacts are passed explicitly to markdownlint despite repository ignore policy.                                                   |
 
 ## Invariants
 
@@ -50,6 +54,9 @@ Command/query rail:
 6. Release Please MUST run from the repository-owned config and manifest while
    DVT is in pre-1.0 product development. Action defaults are not the release
    source of truth.
+7. Generated Release Please changelog entries MUST NOT block changed-file
+   markdownlint when their generated formatting differs from the repository's
+   hand-authored Markdown style rules.
 
 ## Transitions
 
