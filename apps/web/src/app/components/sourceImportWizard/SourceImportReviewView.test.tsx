@@ -97,4 +97,50 @@ describe('SourceImportReviewView', () => {
       container.querySelector('[data-source-import-registry-path="models/sources/src_erp.yml"]')
     ).not.toBeNull();
   });
+
+  it('keeps review automation selectors separate from display names when identifiers contain dots', async () => {
+    const selectedTables = [
+      buildTable({ database: 'RAW.PROD', schema: 'PUBLIC', table: 'ORDERS' }),
+      buildTable({ database: 'RAW', schema: 'PROD.PUBLIC', table: 'ORDERS' }),
+    ];
+    const selectedTableViewModels = selectedTables.map((table, index) =>
+      buildSelectedTable(table, index)
+    );
+
+    await act(async () => {
+      root.render(
+        <SourceImportReviewView
+          selectedTables={selectedTableViewModels}
+          previewGroups={buildSourceImportReviewPreviewGroups({
+            tables: selectedTables,
+            groupingStrategy: 'database',
+            copy: sourceImportWizardCopy.catalog,
+            numberFormatter: sourceImportCatalogNumberFormatter,
+          })}
+          selectedCount={2}
+          groupingStrategy="database"
+          selectedConnectionName="Local warehouse"
+          sourceImportOptions={[]}
+          sourceImportOptionValues={{
+            includeColumns: true,
+            addTests: false,
+            addFreshness: false,
+          }}
+          onRemoveTable={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('RAW.PROD.PUBLIC.ORDERS');
+    expect(
+      Array.from(container.querySelectorAll('[data-source-import-review-table]')).map((element) =>
+        element.getAttribute('data-source-import-review-table')
+      )
+    ).toEqual(['RAW.PROD.PUBLIC.ORDERS', 'RAW.PROD.PUBLIC.ORDERS']);
+    expect(
+      Array.from(container.querySelectorAll('[data-source-import-review-table-identity]')).map(
+        (element) => element.getAttribute('data-source-import-review-table-identity')
+      )
+    ).toEqual(selectedTableViewModels.map((table) => table.identityKey));
+  });
 });

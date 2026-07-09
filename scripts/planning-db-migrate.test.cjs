@@ -13473,12 +13473,16 @@ test('tracked migrations harden source import catalog schema-scope accessibility
     (migration) =>
       migration.fileName === '578_source_import_catalog_table_identity_manifest_symbols.sql'
   );
+  const reviewTableIdentityMigration = migrations.find(
+    (migration) => migration.fileName === '579_source_import_review_table_identity_selector.sql'
+  );
 
   assert.ok(schemaScopeMigration);
   assert.ok(schemaIdentityMigration);
   assert.ok(schemaDatabaseContextMigration);
   assert.ok(tableIdentityMigration);
   assert.ok(tableIdentityManifestMigration);
+  assert.ok(reviewTableIdentityMigration);
   assert.match(schemaScopeMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
   assert.match(schemaScopeMigration.sql, /RenderSourceImportCatalogView/);
   assert.match(schemaScopeMigration.sql, /schemaScopeInvariant/);
@@ -13532,4 +13536,12 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   assert.match(tableIdentityManifestMigration.sql, /display text is not selection authority/);
   assert.doesNotMatch(tableIdentityManifestMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(tableIdentityManifestMigration.sql, /truncate\s+/i);
+  assert.match(reviewTableIdentityMigration.sql, /reviewTableIdentityInvariant/);
+  assert.match(reviewTableIdentityMigration.sql, /data-source-import-review-table-identity/);
+  assert.match(reviewTableIdentityMigration.sql, /SourceImportTableViewModel\.identityKey/);
+  assert.match(reviewTableIdentityMigration.sql, /EV-SOURCE-IMPORT-REVIEW-TABLE-IDENTITY-SELECTOR/);
+  assert.match(reviewTableIdentityMigration.sql, /E-CANVAS-ADD-SOURCE-REVIEW-TEMPLATE-1/);
+  assert.match(reviewTableIdentityMigration.sql, /ImportWarehouseSources/);
+  assert.doesNotMatch(reviewTableIdentityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(reviewTableIdentityMigration.sql, /truncate\s+/i);
 });
