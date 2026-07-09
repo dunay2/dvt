@@ -230,6 +230,7 @@ function SourceImportReviewSourceTableRow({
     <div
       className={sourceImportReviewViewClassNames.tableRow}
       data-source-import-review-table={table.canonicalName}
+      data-source-import-review-table-identity={table.identityKey}
     >
       <span className={sourceImportReviewViewClassNames.tableName}>{table.canonicalName}</span>
       <span className={sourceImportReviewViewClassNames.tableMeta}>
