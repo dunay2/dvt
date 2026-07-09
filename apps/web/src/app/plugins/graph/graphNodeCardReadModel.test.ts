@@ -60,7 +60,7 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
-  it('keeps imported source operational details useful when only rows and columns are recorded', () => {
+  it('keeps imported source static rail metrics non-interactive when only rows and columns are recorded', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
         kind: 'dvt:source',
@@ -87,10 +87,7 @@ describe('buildGraphNodeCardReadModel', () => {
       { id: 'rows', label: 'Rows', value: '3', icon: 'rows' },
       { id: 'columns', label: 'Columns', value: '3', icon: 'columns' },
     ]);
-    expect(model.operationalDetail?.rows).toEqual([
-      { id: 'rows', label: 'Rows', value: '3', icon: 'rows' },
-      { id: 'columns', label: 'Columns', value: '3', icon: 'columns' },
-    ]);
+    expect(model.operationalDetail).toBeNull();
   });
 
   it('uses imported DVT source table metadata in the technical path', () => {
