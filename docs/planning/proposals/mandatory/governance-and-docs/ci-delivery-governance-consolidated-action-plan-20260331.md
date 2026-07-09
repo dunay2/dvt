@@ -188,6 +188,145 @@ symbols:
     path: docs/architecture/components/ci-governance/ci-delivery-governance-component.md
 ```
 
+## 2026-07-09 Release Please Pre-1.0 Governance
+
+The project is still in product development and does not have external
+consumers that require a public `1.x` compatibility line. Release Please must
+therefore operate from an explicit repository-owned manifest/config instead of
+falling back to action defaults that can reopen a stale `1.0.0` release PR.
+
+Command/query rail:
+
+| Rail                                  | Type    | Owning bounded context        | DDD owner                    | Application port / adapter      | Negative tests                                                              |
+| ------------------------------------- | ------- | ----------------------------- | ---------------------------- | ------------------------------- | --------------------------------------------------------------------------- |
+| `ConfigureReleasePleasePreMajorState` | command | Repository release governance | `ReleasePleasePreMajorState` | `.github/workflows/release.yml` | Release PR title validation rejects lowercase subjects; JSON config parses. |
+
+```feature-mechanization
+version: 1
+featureId: RELEASE-PLEASE-PREMAJOR-GOVERNANCE-20260709
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+componentGuides:
+  - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+userStories:
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+allowedImplementationSurfaces:
+  - .github/workflows/release.yml
+  - .release-please-manifest.json
+  - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
+  - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - docs/planning/status/system-governance-unit-index.units.yaml
+  - package.json
+  - release-please-config.json
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/@dvt/contracts/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/adapter-*/**
+  - specs/**
+commandQueryRails:
+  - name: ConfigureReleasePleasePreMajorState
+    type: command
+    dddOwner: ReleasePleasePreMajorState
+domainObjects:
+  - name: ReleasePleasePreMajorState
+    type: policy-object
+    owner: Repository release governance
+fowlerSignals:
+  - Explicit Gate
+  - Release governance ownership
+  - Configuration as Policy
+architectureGuards:
+  - 'node -e "const fs=require(''fs''); for (const p of [''release-please-config.json'',''.release-please-manifest.json'',''package.json'']) JSON.parse(fs.readFileSync(p,''utf8''));"'
+  - 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+cypressFlows:
+  - not-applicable: Repository release governance has no browser workflow.
+completionGate:
+  - 'node -e "const fs=require(''fs''); for (const p of [''release-please-config.json'',''.release-please-manifest.json'',''package.json'']) JSON.parse(fs.readFileSync(p,''utf8''));"'
+  - 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+  - 'pnpm docs:feature-mechanization -- --feature RELEASE-PLEASE-PREMAJOR-GOVERNANCE-20260709'
+  - 'pnpm docs:feature-mechanization:implementation'
+  - 'pnpm verify:prepush'
+redGreenCycles:
+  - id: release-please-premajor-manifest
+    redTest: 'node -e "const fs=require(''fs''); JSON.parse(fs.readFileSync(''release-please-config.json'',''utf8'')); JSON.parse(fs.readFileSync(''.release-please-manifest.json'',''utf8''));"'
+    expectedFailure: Release Please had no repository-owned manifest/config and could fall back to default 1.0.0 release PR behavior.
+    patchSurfaces:
+      - .github/workflows/release.yml
+      - .release-please-manifest.json
+      - docs/planning/status/system-governance-unit-index.units.yaml
+      - release-please-config.json
+      - package.json
+    greenTest: 'node -e "const fs=require(''fs''); JSON.parse(fs.readFileSync(''release-please-config.json'',''utf8'')); JSON.parse(fs.readFileSync(''.release-please-manifest.json'',''utf8''));"'
+  - id: release-please-semantic-pr-title
+    redTest: 'pnpm pr:validate-title "chore(main): release 0.2.0"'
+    expectedFailure: Lowercase Release Please PR subject violates the repository PR title gate.
+    patchSurfaces:
+      - release-please-config.json
+    greenTest: 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+symbols:
+  - name: ReleasePleasePreMajorState
+    path: release-please-config.json
+    dddOwner: ReleasePleasePreMajorState
+    cqRails:
+      - ConfigureReleasePleasePreMajorState
+    fowlerSignals:
+      - Explicit Gate
+      - Release governance ownership
+      - Configuration as Policy
+    architectureGuard: 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+    cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
+    unitTests:
+      - 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+  - name: ReleasePleaseManifestState
+    path: .release-please-manifest.json
+    dddOwner: ReleasePleasePreMajorState
+    cqRails:
+      - ConfigureReleasePleasePreMajorState
+    fowlerSignals:
+      - Explicit Gate
+      - Release governance ownership
+      - Configuration as Policy
+    architectureGuard: 'node -e "JSON.parse(require(''fs'').readFileSync(''.release-please-manifest.json'',''utf8''))"'
+    cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
+    unitTests:
+      - 'node -e "JSON.parse(require(''fs'').readFileSync(''.release-please-manifest.json'',''utf8''))"'
+  - name: ReleasePleaseWorkflow
+    path: .github/workflows/release.yml
+    dddOwner: ReleasePleasePreMajorState
+    cqRails:
+      - ConfigureReleasePleasePreMajorState
+    fowlerSignals:
+      - Explicit Gate
+      - Release governance ownership
+      - Configuration as Policy
+    architectureGuard: 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+    cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
+    unitTests:
+      - 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+  - name: ReleasePleaseGovernanceOwnership
+    path: docs/planning/status/system-governance-unit-index.units.yaml
+    dddOwner: ReleasePleasePreMajorState
+    cqRails:
+      - ConfigureReleasePleasePreMajorState
+    fowlerSignals:
+      - Explicit Gate
+      - Release governance ownership
+      - Configuration as Policy
+    architectureGuard: 'pnpm docs:governance:unit-coverage'
+    cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
+    unitTests:
+      - 'pnpm docs:governance:unit-coverage'
+```
+
 ## Residual Problem Set
 
 ### CDG-1: Scope authority is still split across workflows, hooks, and scripts

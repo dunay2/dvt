@@ -152,12 +152,16 @@ describe('Canvas interaction command surface architecture', () => {
     expect(viewportSource).not.toContain('role="menuitem"');
     expect(viewportSource).not.toContain("type: 'remove'");
 
+    expect(viewportSurfaceViewSource).toContain('const handlePaneContextMenu');
     expect(viewportSurfaceViewSource).toContain(
-      'onPaneContextMenu={contextMenuPresenter.handlePaneContextMenu}'
+      'contextMenuPresenter.handlePaneContextMenu(event)'
     );
+    expect(viewportSurfaceViewSource).toContain('onPaneContextMenu={handlePaneContextMenu}');
+    expect(viewportSurfaceViewSource).toContain('const handleEdgeContextMenu');
     expect(viewportSurfaceViewSource).toContain(
-      'onEdgeContextMenu={contextMenuPresenter.handleEdgeContextMenu}'
+      'contextMenuPresenter.handleEdgeContextMenu(event, edge)'
     );
+    expect(viewportSurfaceViewSource).toContain('onEdgeContextMenu={handleEdgeContextMenu}');
     expect(viewportSurfaceViewSource).toContain('CanvasContextMenuView');
     expect(viewportSurfaceViewSource).not.toContain('buildCanvasContextMenuModel');
     expect(viewportSurfaceViewSource).not.toContain('buildCanvasEdgeContextRemovalChange');

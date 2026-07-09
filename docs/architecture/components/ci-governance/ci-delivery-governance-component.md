@@ -16,19 +16,23 @@ assertion.
 
 ## Public API
 
-| Surface                                          | Owner               | Contract                                                                                                     |
-| ------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `pnpm test:ci-tools`                             | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                   |
-| `.github/workflows/ci.yml` `CI tool contracts`   | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                |
-| `tools/ci/workflow-pattern-parity.test.mjs`      | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters. |
-| `tools/ci/ci-delivery-governance-canon.test.mjs` | CI governance tests | Canonical absorption guard for the local component guide, user stories, and mandatory proposal state.        |
-| `docs/guides/testing-and-ci-capabilities.md`     | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                 |
+| Surface                                          | Owner               | Contract                                                                                                           |
+| ------------------------------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `pnpm test:ci-tools`                             | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                         |
+| `.github/workflows/ci.yml` `CI tool contracts`   | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                      |
+| `.github/workflows/release.yml`                  | Release governance  | Runs Release Please through the repository-owned manifest/config so development releases stay on the pre-1.0 line. |
+| `release-please-config.json`                     | Release governance  | Owns Release Please title/version behavior instead of relying on action defaults.                                  |
+| `.release-please-manifest.json`                  | Release governance  | Owns the current release base version used by Release Please manifest mode.                                        |
+| `tools/ci/workflow-pattern-parity.test.mjs`      | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters.       |
+| `tools/ci/ci-delivery-governance-canon.test.mjs` | CI governance tests | Canonical absorption guard for the local component guide, user stories, and mandatory proposal state.              |
+| `docs/guides/testing-and-ci-capabilities.md`     | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                       |
 
 Command/query rail:
 
-| Rail                                | Type  | Bounded context                | DDD owner                              | Port / adapter                                             | Negative guard                                                                                                                                                    |
-| ----------------------------------- | ----- | ------------------------------ | -------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ValidateCiDeliveryGovernanceCanon` | query | Repository delivery governance | `CiDeliveryGovernanceCanon` read model | `pnpm test:ci-tools` and `CI tool contracts` workflow lane | Fails when the plan claims an absorbed gate is still open, or when component docs lose public API, invariants, transitions, consumers, diagrams, or user stories. |
+| Rail                                  | Type    | Bounded context                | DDD owner                                  | Port / adapter                                             | Negative guard                                                                                                                                                    |
+| ------------------------------------- | ------- | ------------------------------ | ------------------------------------------ | ---------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ValidateCiDeliveryGovernanceCanon`   | query   | Repository delivery governance | `CiDeliveryGovernanceCanon` read model     | `pnpm test:ci-tools` and `CI tool contracts` workflow lane | Fails when the plan claims an absorbed gate is still open, or when component docs lose public API, invariants, transitions, consumers, diagrams, or user stories. |
+| `ConfigureReleasePleasePreMajorState` | command | Repository release governance  | `ReleasePleasePreMajorState` policy object | `.github/workflows/release.yml` and Release Please action  | Fails when Release Please falls back to default `1.0.0` behavior or opens a PR title that violates the semantic PR title gate.                                    |
 
 ## Invariants
 
@@ -43,6 +47,9 @@ Command/query rail:
    action plan text.
 5. The mandatory proposal may carry residual opportunities, but it must not
    describe already-absorbed gates as unimplemented current work.
+6. Release Please MUST run from the repository-owned config and manifest while
+   DVT is in pre-1.0 product development. Action defaults are not the release
+   source of truth.
 
 ## Transitions
 
