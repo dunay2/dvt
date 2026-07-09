@@ -191,7 +191,7 @@ export function SourceImportAttachmentPreview({
               </div>
               <div className={sourceImportReviewViewClassNames.tableList}>
                 {group.tables.slice(0, 3).map((table) => (
-                  <SourceImportReviewSourceTableRow key={table.canonicalName} table={table} />
+                  <SourceImportReviewSourceTableRow key={table.identityKey} table={table} />
                 ))}
                 {group.tables.length > 3 ? (
                   <div>
@@ -205,7 +205,7 @@ export function SourceImportAttachmentPreview({
           {previewGroups.length === 0
             ? selectedTables.map((table) => (
                 <div
-                  key={table.canonicalName}
+                  key={table.identityKey}
                   className={sourceImportReviewViewClassNames.selectedTable}
                 >
                   <span className={sourceImportReviewViewClassNames.tableName}>

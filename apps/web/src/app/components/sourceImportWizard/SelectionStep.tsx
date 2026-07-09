@@ -9,7 +9,7 @@ import { SourceImportActiveTableMetadata } from './SourceImportActiveTableMetada
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
-  buildWarehouseTableKey,
+  buildWarehouseTableIdentityKey,
   buildSourceImportCatalogViewModel,
   type SourceImportCatalogFilterId,
 } from './sourceImportCatalogModel';
@@ -53,7 +53,7 @@ export function SelectionStep({
   });
   const activeBrowseTable =
     tables.find(
-      (table) => buildWarehouseTableKey(table) === catalogViewModel.activeTable?.canonicalName
+      (table) => buildWarehouseTableIdentityKey(table) === catalogViewModel.activeTable?.identityKey
     ) ?? null;
 
   return (

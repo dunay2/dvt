@@ -216,7 +216,7 @@ export function SourceImportColumnPreviewList({
     <div className={sourceImportCatalogClassNames.columnList}>
       {table.columns.slice(0, 4).map((column) => (
         <div
-          key={`${table.canonicalName}.${column.name}`}
+          key={`${table.identityKey}.${column.name}`}
           className={sourceImportCatalogClassNames.columnRow}
         >
           <span className={sourceImportCatalogClassNames.columnName}>{column.name}</span>

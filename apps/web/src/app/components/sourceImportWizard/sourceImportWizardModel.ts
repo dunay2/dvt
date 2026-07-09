@@ -1,6 +1,6 @@
 import { WIZARD_STEPS } from './constants';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import { buildWarehouseTableKey } from './sourceImportCatalogModel';
+import { buildWarehouseTableIdentityKey } from './sourceImportCatalogModel';
 import type {
   SourceImportDatabaseIdentity,
   SourceImportSchemaIdentity,
@@ -40,7 +40,7 @@ export function toggleSourceImportSchemaSelection(
         ? { ...table, selected: !allSelected }
         : table
     ),
-    activeTableKey: firstSchemaTable ? buildWarehouseTableKey(firstSchemaTable) : null,
+    activeTableKey: firstSchemaTable ? buildWarehouseTableIdentityKey(firstSchemaTable) : null,
   };
 }
 
@@ -56,7 +56,7 @@ export function toggleSourceImportDatabaseSelection(
     tables: tables.map((table) =>
       table.database === databaseIdentity.database ? { ...table, selected: !allSelected } : table
     ),
-    activeTableKey: firstDatabaseTable ? buildWarehouseTableKey(firstDatabaseTable) : null,
+    activeTableKey: firstDatabaseTable ? buildWarehouseTableIdentityKey(firstDatabaseTable) : null,
   };
 }
 
@@ -88,7 +88,9 @@ export function resolveActiveTable(
   activeTableKey: string | null
 ): TableInfo | null {
   if (activeTableKey != null) {
-    const activeTable = tables.find((table) => buildWarehouseTableKey(table) === activeTableKey);
+    const activeTable = tables.find(
+      (table) => buildWarehouseTableIdentityKey(table) === activeTableKey
+    );
     if (activeTable) {
       return activeTable;
     }

@@ -48,7 +48,7 @@ export function SourceImportSelectionBasket({
       ) : (
         <div className={selectionBasketClassNames.list}>
           {selectedTables.map((table) => (
-            <div key={table.canonicalName} className={selectionBasketClassNames.item}>
+            <div key={table.identityKey} className={selectionBasketClassNames.item}>
               <div className={selectionBasketClassNames.itemHeader}>
                 <div className={selectionBasketClassNames.itemName}>{table.canonicalName}</div>
                 {onRemoveTable ? (
@@ -93,7 +93,7 @@ function SourceImportSelectedColumnPreview({
     <div className={selectionBasketClassNames.columnList}>
       {visibleColumns.map((column) => (
         <Badge
-          key={column.name}
+          key={`${table.identityKey}.${column.name}`}
           variant="outline"
           className={selectionBasketClassNames.columnBadge}
           data-source-import-selected-column={`${table.canonicalName}.${column.name}`}

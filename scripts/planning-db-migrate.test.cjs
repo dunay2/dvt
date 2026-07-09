@@ -13466,10 +13466,19 @@ test('tracked migrations harden source import catalog schema-scope accessibility
     (migration) =>
       migration.fileName === '576_source_import_catalog_schema_database_context_label.sql'
   );
+  const tableIdentityMigration = migrations.find(
+    (migration) => migration.fileName === '577_source_import_catalog_table_identity_keys.sql'
+  );
+  const tableIdentityManifestMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '578_source_import_catalog_table_identity_manifest_symbols.sql'
+  );
 
   assert.ok(schemaScopeMigration);
   assert.ok(schemaIdentityMigration);
   assert.ok(schemaDatabaseContextMigration);
+  assert.ok(tableIdentityMigration);
+  assert.ok(tableIdentityManifestMigration);
   assert.match(schemaScopeMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
   assert.match(schemaScopeMigration.sql, /RenderSourceImportCatalogView/);
   assert.match(schemaScopeMigration.sql, /schemaScopeInvariant/);
@@ -13506,4 +13515,21 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   );
   assert.doesNotMatch(schemaDatabaseContextMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(schemaDatabaseContextMigration.sql, /truncate\s+/i);
+  assert.match(tableIdentityMigration.sql, /tableIdentityInvariant/);
+  assert.match(tableIdentityMigration.sql, /structured \[database, schema, table\]/);
+  assert.match(tableIdentityMigration.sql, /buildWarehouseTableIdentityKey/);
+  assert.match(tableIdentityMigration.sql, /SourceImportTableViewModel\.identityKey/);
+  assert.match(tableIdentityMigration.sql, /EV-WEB-SOURCE-IMPORT-CATALOG-TABLE-IDENTITY-KEYS/);
+  assert.match(
+    tableIdentityMigration.sql,
+    /RAW\.PROD\/PUBLIC\/ORDERS and RAW\/PROD\.PUBLIC\/ORDERS/
+  );
+  assert.doesNotMatch(tableIdentityMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(tableIdentityMigration.sql, /truncate\s+/i);
+  assert.match(tableIdentityManifestMigration.sql, /raw_manifest -> 'symbols'/);
+  assert.match(tableIdentityManifestMigration.sql, /buildWarehouseTableIdentityKey/);
+  assert.match(tableIdentityManifestMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(tableIdentityManifestMigration.sql, /display text is not selection authority/);
+  assert.doesNotMatch(tableIdentityManifestMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(tableIdentityManifestMigration.sql, /truncate\s+/i);
 });

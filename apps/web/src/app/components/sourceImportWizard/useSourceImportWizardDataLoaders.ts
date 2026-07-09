@@ -3,7 +3,7 @@ import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
 import type { IWarehouseSourceImportPort, WarehouseTable } from '../../ports/workspace';
 import { sourceImportWizardCopy as copy } from './copy';
-import { buildWarehouseTableKey } from './sourceImportCatalogModel';
+import { buildWarehouseTableIdentityKey } from './sourceImportCatalogModel';
 import type { SourceImportWizardState } from './types';
 
 interface LoaderParams {
@@ -71,19 +71,21 @@ export function useTablesLoader({
       try {
         const tables = await warehouseSourceImport.listWarehouseTables(selectedConnection);
         if (!cancelled) {
-          const selectedTableKeys = new Set(initiallySelectedTables.map(buildWarehouseTableKey));
+          const selectedTableKeys = new Set(
+            initiallySelectedTables.map(buildWarehouseTableIdentityKey)
+          );
           const tableInfos = tables.map((table) => ({
             ...table,
-            selected: selectedTableKeys.has(buildWarehouseTableKey(table)),
+            selected: selectedTableKeys.has(buildWarehouseTableIdentityKey(table)),
           }));
           const selectedTable = tableInfos.find((table) => table.selected);
           setState((prev) => ({
             ...prev,
             tables: tableInfos,
             activeTableKey: selectedTable
-              ? buildWarehouseTableKey(selectedTable)
+              ? buildWarehouseTableIdentityKey(selectedTable)
               : tableInfos[0]
-                ? buildWarehouseTableKey(tableInfos[0])
+                ? buildWarehouseTableIdentityKey(tableInfos[0])
                 : null,
           }));
         }
