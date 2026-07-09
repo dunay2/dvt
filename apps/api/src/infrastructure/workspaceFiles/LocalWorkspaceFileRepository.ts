@@ -1,8 +1,8 @@
 /**
- * Owned concern: provide a bounded read-only local filesystem adapter for
- * workspace file queries.
+ * Owned concern: provide a bounded local filesystem adapter for workspace file
+ * reads and command-side file writes.
  */
-import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
@@ -94,6 +94,16 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
     await mkdir(path.dirname(resolved.absolutePath), { recursive: true });
     await writeFile(resolved.absolutePath, content, 'utf8');
     return this.getFileContent(resolved.workspacePath);
+  }
+
+  public async deleteFileContent(requestPath: string): Promise<void> {
+    const resolved = this.resolveWorkspacePath(requestPath);
+    const fileStat = await this.readFileStat(resolved.absolutePath, requestPath);
+    if (!fileStat.isFile()) {
+      throw new WorkspaceFileNotFoundError(requestPath);
+    }
+
+    await rm(resolved.absolutePath, { force: false });
   }
 
   private async listDirectory(

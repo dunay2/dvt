@@ -36,4 +36,5 @@ export interface IWorkspaceFileRepository {
   listFiles(): Promise<readonly WorkspaceFileEntry[]>;
   getFileContent(path: string): Promise<WorkspaceFileContent>;
   saveFileContent(path: string, content: string): Promise<WorkspaceFileContent>;
+  deleteFileContent(path: string): Promise<void>;
 }

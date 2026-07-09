@@ -105,9 +105,10 @@ export class ImportWarehouseSourcesUseCase {
       throw error;
     }
 
-    for (const update of sourceYamlUpdates) {
-      await this.workspaceFiles.saveFileContent(update.path, update.content);
-    }
+    const writtenSourceYamlUpdates = await this.saveSourceYamlUpdates(
+      sourceYamlUpdates,
+      existingSourceFiles
+    );
 
     const mutation = appendImportedSourceNodes(
       draft,
@@ -122,17 +123,24 @@ export class ImportWarehouseSourcesUseCase {
       .update(JSON.stringify({ scope: input.scope, importedNodeIds: mutation.importedNodeIds }))
       .digest('hex');
 
-    const saveResult = await this.draftStore.save({
-      scope: input.scope,
-      schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-      expectedRevision: stored?.revision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
-      idempotencyKey: randomUUID(),
-      draft: mutation.draft,
-      requestHash,
-      revision: randomUUID(),
-      nowIso: this.clock().toISOString(),
-    });
+    let saveResult;
+    try {
+      saveResult = await this.draftStore.save({
+        scope: input.scope,
+        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        expectedRevision: stored?.revision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+        idempotencyKey: randomUUID(),
+        draft: mutation.draft,
+        requestHash,
+        revision: randomUUID(),
+        nowIso: this.clock().toISOString(),
+      });
+    } catch (error) {
+      await this.rollbackSourceYamlUpdates(writtenSourceYamlUpdates, existingSourceFiles);
+      throw error;
+    }
     if (saveResult.kind !== 'saved') {
+      await this.rollbackSourceYamlUpdates(writtenSourceYamlUpdates, existingSourceFiles);
       throw new WarehouseSourceImportDraftConflictError();
     }
 
@@ -167,6 +175,53 @@ export class ImportWarehouseSourcesUseCase {
       }
     }
     return files;
+  }
+
+  private async saveSourceYamlUpdates(
+    updates: readonly WarehouseSourceYamlUpdate[],
+    existingFiles: ReadonlyMap<string, string>
+  ): Promise<readonly WarehouseSourceYamlUpdate[]> {
+    const writtenUpdates: WarehouseSourceYamlUpdate[] = [];
+    try {
+      for (const update of updates) {
+        await this.workspaceFiles.saveFileContent(update.path, update.content);
+        writtenUpdates.push(update);
+      }
+    } catch (error) {
+      await this.rollbackSourceYamlUpdates(writtenUpdates, existingFiles);
+      throw error;
+    }
+    return writtenUpdates;
+  }
+
+  private async rollbackSourceYamlUpdates(
+    updates: readonly WarehouseSourceYamlUpdate[],
+    existingFiles: ReadonlyMap<string, string>
+  ): Promise<void> {
+    for (const update of [...updates].reverse()) {
+      const currentContent = await this.readCurrentSourceYamlContent(update.path);
+      if (currentContent !== update.content) {
+        continue;
+      }
+
+      const previousContent = existingFiles.get(update.path);
+      if (previousContent !== undefined) {
+        await this.workspaceFiles.saveFileContent(update.path, previousContent);
+      } else {
+        await this.workspaceFiles.deleteFileContent(update.path);
+      }
+    }
+  }
+
+  private async readCurrentSourceYamlContent(path: string): Promise<string | null> {
+    try {
+      return (await this.workspaceFiles.getFileContent(path)).content;
+    } catch (error) {
+      if (error instanceof WorkspaceFileNotFoundError) {
+        return null;
+      }
+      throw error;
+    }
   }
 }
 

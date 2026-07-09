@@ -13454,6 +13454,56 @@ test('tracked migrations register source import atomic draft-file evidence', () 
   assert.doesNotMatch(userStoryMigration.sql, /truncate\s+/i);
 });
 
+test('tracked migrations register source import draft-conflict YAML rollback evidence', () => {
+  const migrations = readMigrationFiles();
+  const rollbackMigration = migrations.find(
+    (migration) => migration.fileName === '584_source_import_draft_conflict_yaml_rollback.sql'
+  );
+  const conditionalRollbackMigration = migrations.find(
+    (migration) => migration.fileName === '585_source_import_conditional_yaml_rollback.sql'
+  );
+
+  assert.ok(rollbackMigration);
+  assert.ok(conditionalRollbackMigration);
+  assert.match(rollbackMigration.sql, /SOURCE-IMPORT-ATOMICITY-002/);
+  assert.match(rollbackMigration.sql, /ImportWarehouseSourcesUseCase\.rollbackSourceYamlUpdates/);
+  assert.match(rollbackMigration.sql, /IWorkspaceFileRepository\.deleteFileContent/);
+  assert.match(conditionalRollbackMigration.sql, /SOURCE-IMPORT-ATOMICITY-003/);
+  assert.match(
+    conditionalRollbackMigration.sql,
+    /ImportWarehouseSourcesUseCase\.readCurrentSourceYamlContent/
+  );
+  assert.match(
+    conditionalRollbackMigration.sql,
+    /source_yaml_writes_are_compensated_only_when_current_content_matches_failed_write/
+  );
+  assert.match(rollbackMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(conditionalRollbackMigration.sql, /canvas-source-import-live-clean\.cy\.ts/);
+  assert.match(
+    rollbackMigration.sql,
+    /does not persist source YAML when the authoritative draft changed before save/
+  );
+  assert.match(
+    conditionalRollbackMigration.sql,
+    /does not roll back source YAML replaced by a concurrent winning import/
+  );
+  assert.match(rollbackMigration.sql, /apps\/api\/src\/application\/ports\/workspaceFiles\.ts/);
+  assert.match(
+    rollbackMigration.sql,
+    /apps\/api\/src\/infrastructure\/workspaceFiles\/LocalWorkspaceFileRepository\.ts/
+  );
+  assert.match(
+    rollbackMigration.sql,
+    /apps\/api\/test\/infrastructure\/warehouseSourceImport\/WorkspaceWarehouseConnectionCatalog\.test\.ts/
+  );
+  assert.match(
+    rollbackMigration.sql,
+    /local#E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1#command#importwarehousesources/
+  );
+  assert.doesNotMatch(rollbackMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(rollbackMigration.sql, /truncate\s+/i);
+});
+
 test('tracked migrations harden source import catalog schema-scope accessibility', () => {
   const migrations = readMigrationFiles();
   const schemaScopeMigration = migrations.find(
