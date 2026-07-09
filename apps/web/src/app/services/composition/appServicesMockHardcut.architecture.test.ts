@@ -176,4 +176,36 @@ describe('app services mock hardcut architecture', () => {
       }
     }
   });
+
+  it('keeps Source Import documentation aligned with implemented protected-runtime rails', () => {
+    const componentSource = readRepoFile(
+      '..',
+      '..',
+      'docs',
+      'architecture',
+      'components',
+      'web',
+      'workspace',
+      'workspace-port-decomposition-component.md'
+    );
+    const userStoriesSource = readRepoFile(
+      '..',
+      '..',
+      'docs',
+      'architecture',
+      'components',
+      'web',
+      'workspace',
+      'workspace-port-decomposition-user-stories.md'
+    );
+
+    for (const source of [componentSource, userStoriesSource]) {
+      expect(source).toContain('ListWarehouseConnections');
+      expect(source).toContain('ListWarehouseConnectionTables');
+      expect(source).toContain('ImportWarehouseSources');
+      expect(source).not.toContain('warehouse source rails do not exist');
+      expect(source).not.toContain('source import port returns unavailable capability');
+      expect(source).not.toContain('generated graph/file changes remain test-only');
+    }
+  });
 });

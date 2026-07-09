@@ -8747,6 +8747,23 @@ test('tracked migrations scope Source Import no-stub evidence to executable Sour
   assert.doesNotMatch(evidenceScopeMigration.sql, /apps\/api\/src'|apps\/web\/src\/app'/);
 });
 
+test('tracked migrations align Source Import architecture docs to implemented rails', () => {
+  const migrations = readMigrationFiles();
+  const docRailAlignmentMigration = migrations.find(
+    (migration) => migration.fileName === '586_source_import_documentation_rail_alignment.sql'
+  );
+
+  assert.ok(docRailAlignmentMigration);
+  assert.match(docRailAlignmentMigration.sql, /EV-WEB-CANVAS-SOURCE-IMPORT-DOC-RAIL-ALIGNMENT/);
+  assert.match(docRailAlignmentMigration.sql, /ListWarehouseConnections/);
+  assert.match(docRailAlignmentMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(docRailAlignmentMigration.sql, /ImportWarehouseSources/);
+  assert.match(docRailAlignmentMigration.sql, /workspace-port-decomposition-user-stories\.md/);
+  assert.match(docRailAlignmentMigration.sql, /graph-frontend-architecture\.md/);
+  assert.match(docRailAlignmentMigration.sql, /documentation_drift/);
+  assert.doesNotMatch(docRailAlignmentMigration.sql, /frontend-component-inventory\.md/);
+});
+
 test('tracked migrations complete Source Import component family ownership', () => {
   const migrations = readMigrationFiles();
   const familyOwnershipMigration = migrations.find(
