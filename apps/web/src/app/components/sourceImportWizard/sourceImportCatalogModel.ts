@@ -68,6 +68,7 @@ export type SourceImportCatalogCopy = Readonly<{
   selectSourceTable: string;
   selectSourceDatabase: string;
   selectSourceSchema: string;
+  inSourceDatabase: string;
   inspectSourceTableMetadata: string;
   metadata: string;
   rowsUnknown: string;
@@ -429,7 +430,7 @@ function buildSourceImportSchemaGroup(
 ): SourceImportSchemaGroupViewModel {
   return {
     schema,
-    accessibilityLabel: `${copy.selectSourceSchema} ${schema}. ${copy.selectSourceDatabase} ${database}. ${formatSourceImportTableCount(
+    accessibilityLabel: `${copy.selectSourceSchema} ${schema}. ${copy.inSourceDatabase} ${database}. ${formatSourceImportTableCount(
       groupTables.length,
       copy,
       numberFormatter

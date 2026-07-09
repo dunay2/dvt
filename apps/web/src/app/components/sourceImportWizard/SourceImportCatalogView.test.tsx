@@ -97,7 +97,7 @@ describe('SourceImportCatalogView', () => {
     });
 
     const schemaSelectAction = getByRole(container, 'button', {
-      name: 'Select source schema ERP. Select source database RAW. 1 table.',
+      name: 'Select source schema ERP. In source database RAW. 1 table.',
     });
 
     await act(async () => {
@@ -158,7 +158,7 @@ describe('SourceImportCatalogView', () => {
       fireEvent.click(container.querySelector('[data-source-import-database="RAW"]')!);
       fireEvent.click(
         getByRole(container, 'button', {
-          name: 'Select source schema CRM. Select source database RAW. 1 table.',
+          name: 'Select source schema CRM. In source database RAW. 1 table.',
         })
       );
     });
@@ -236,7 +236,7 @@ describe('SourceImportCatalogView', () => {
     await act(async () => {
       fireEvent.click(
         getByRole(container, 'button', {
-          name: 'Select source schema PUBLIC. Select source database MART. 1 table.',
+          name: 'Select source schema PUBLIC. In source database MART. 1 table.',
         })
       );
     });
@@ -284,12 +284,12 @@ describe('SourceImportCatalogView', () => {
     await act(async () => {
       fireEvent.click(
         getByRole(container, 'button', {
-          name: 'Select source schema PUBLIC. Select source database RAW.PROD. 1 table.',
+          name: 'Select source schema PUBLIC. In source database RAW.PROD. 1 table.',
         })
       );
       fireEvent.click(
         getByRole(container, 'button', {
-          name: 'Select source schema PROD.PUBLIC. Select source database RAW. 1 table.',
+          name: 'Select source schema PROD.PUBLIC. In source database RAW. 1 table.',
         })
       );
     });
