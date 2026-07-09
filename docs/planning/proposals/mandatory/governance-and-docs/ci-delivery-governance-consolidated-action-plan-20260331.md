@@ -223,6 +223,7 @@ allowedImplementationSurfaces:
   - .release-please-manifest.json
   - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
+  - docs/planning/status/system-governance-unit-index.units.yaml
   - package.json
   - release-please-config.json
 forbiddenImplementationSurfaces:
@@ -261,6 +262,7 @@ redGreenCycles:
     patchSurfaces:
       - .github/workflows/release.yml
       - .release-please-manifest.json
+      - docs/planning/status/system-governance-unit-index.units.yaml
       - release-please-config.json
       - package.json
     greenTest: 'node -e "const fs=require(''fs''); JSON.parse(fs.readFileSync(''release-please-config.json'',''utf8'')); JSON.parse(fs.readFileSync(''.release-please-manifest.json'',''utf8''));"'
@@ -310,6 +312,19 @@ symbols:
     cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
     unitTests:
       - 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+  - name: ReleasePleaseGovernanceOwnership
+    path: docs/planning/status/system-governance-unit-index.units.yaml
+    dddOwner: ReleasePleasePreMajorState
+    cqRails:
+      - ConfigureReleasePleasePreMajorState
+    fowlerSignals:
+      - Explicit Gate
+      - Release governance ownership
+      - Configuration as Policy
+    architectureGuard: 'pnpm docs:governance:unit-coverage'
+    cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
+    unitTests:
+      - 'pnpm docs:governance:unit-coverage'
 ```
 
 ## Residual Problem Set

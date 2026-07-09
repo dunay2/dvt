@@ -1335,7 +1335,9 @@ units:
     owns:
       - .github/**
       - .husky/**
+      - .release-please-manifest.json
       - .dependency-cruiser.cjs
+      - release-please-config.json
       - scripts/**
       - tools/**
       - packages/test/**
