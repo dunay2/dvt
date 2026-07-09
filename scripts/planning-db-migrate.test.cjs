@@ -13739,3 +13739,32 @@ test('tracked migrations declare draggable ordered canvas node workbench feature
   assert.doesNotMatch(workbenchSymbolsMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(workbenchSymbolsMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations record Graph node operational summary no duplicate detail policy', () => {
+  const migrations = readMigrationFiles();
+  const noDuplicateDetailMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '589_graph_node_operational_summary_no_duplicate_detail.sql'
+  );
+
+  assert.ok(noDuplicateDetailMigration);
+  assert.match(noDuplicateDetailMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(noDuplicateDetailMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(noDuplicateDetailMigration.sql, /noDuplicateDetailPolicy/);
+  assert.match(noDuplicateDetailMigration.sql, /buildAdditionalOperationalDetail/);
+  assert.match(
+    noDuplicateDetailMigration.sql,
+    /EV-GRAPH-NODE-OPERATIONAL-SUMMARY-NO-DUPLICATE-DETAIL/
+  );
+  assert.match(
+    noDuplicateDetailMigration.sql,
+    /static row column and size metrics do not open a duplicate health popover/
+  );
+  assert.match(noDuplicateDetailMigration.sql, /schema-drift-only detail to be null/);
+  assert.match(
+    noDuplicateDetailMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeOperationalSummary\.test\.ts/
+  );
+  assert.doesNotMatch(noDuplicateDetailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(noDuplicateDetailMigration.sql, /truncate\s+/i);
+});

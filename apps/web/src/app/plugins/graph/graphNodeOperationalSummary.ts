@@ -247,6 +247,16 @@ function buildSourceHealthRows(
   return { hasSourceHealthSignal, railMetrics, detailRows };
 }
 
+function buildAdditionalOperationalDetail(
+  title: string,
+  railMetrics: readonly GraphNodeCardMetric[],
+  detailRows: readonly GraphNodeCardMetric[]
+): GraphNodeOperationalDetail | null {
+  const railMetricIds = new Set(railMetrics.map((metric) => metric.id));
+  const hasAdditionalRows = detailRows.some((row) => !railMetricIds.has(row.id));
+  return hasAdditionalRows ? buildGraphNodeOperationalDetail(title, detailRows) : null;
+}
+
 function buildModelExecutionMetrics(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>,
@@ -333,7 +343,11 @@ export function buildGraphNodeOperationalSummary({
   if (sourceHealth.hasSourceHealthSignal) {
     return {
       metrics: sourceHealth.railMetrics,
-      detail: buildGraphNodeOperationalDetail(title, sourceHealth.detailRows),
+      detail: buildAdditionalOperationalDetail(
+        title,
+        sourceHealth.railMetrics,
+        sourceHealth.detailRows
+      ),
     };
   }
 
@@ -367,6 +381,6 @@ export function buildGraphNodeOperationalSummary({
 
   return {
     metrics,
-    detail: buildGraphNodeOperationalDetail(title, metrics),
+    detail: null,
   };
 }

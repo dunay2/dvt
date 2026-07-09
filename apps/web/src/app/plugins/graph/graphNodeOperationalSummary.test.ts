@@ -23,14 +23,10 @@ describe('buildGraphNodeOperationalSummary', () => {
       { id: 'duration', label: 'Duration', value: '1m 15s', icon: 'timer' },
       { id: 'rows', label: 'Rows', value: '1.2k', icon: 'rows' },
     ]);
-    expect(summary.detail).toEqual({
-      title: 'Orders Model health',
-      ariaLabel: 'Open Orders Model health metrics',
-      rows: summary.metrics,
-    });
+    expect(summary.detail).toBeNull();
   });
 
-  it('projects static row and size metrics when no runtime metrics are recorded', () => {
+  it('keeps static row and size metrics non-interactive when no operational detail is recorded', () => {
     const summary = buildGraphNodeOperationalSummary({
       title: 'Postgres public',
       metadata: { rowCount: 18240, byteSize: 4096000 },
@@ -45,7 +41,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       { id: 'columns', label: 'Columns', value: '2', icon: 'columns' },
       { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
     ]);
-    expect(summary.detail?.rows).toBe(summary.metrics);
+    expect(summary.detail).toBeNull();
   });
 
   it('projects source health metrics from recorded warehouse freshness data', () => {
@@ -125,19 +121,7 @@ describe('buildGraphNodeOperationalSummary', () => {
         icon: 'drift',
       },
     ]);
-    expect(summary.detail).toEqual({
-      title: 'Raw Orders health',
-      ariaLabel: 'Open Raw Orders health metrics',
-      rows: [
-        {
-          id: 'schema-drift',
-          label: 'Schema drift',
-          value: 'Drift detected',
-          tone: 'warning',
-          icon: 'drift',
-        },
-      ],
-    });
+    expect(summary.detail).toBeNull();
   });
 
   it('does not invent placeholder metrics when operational data is absent', () => {
@@ -194,7 +178,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       { id: 'cost', label: 'Cost', value: '$0.18', icon: 'cost' },
       { id: 'tests', label: 'Tests', value: 'passed' },
     ]);
-    expect(summary.detail?.rows).toBe(summary.metrics);
+    expect(summary.detail).toBeNull();
   });
 
   it('projects model execution cost from the canonical lastCost field', () => {
