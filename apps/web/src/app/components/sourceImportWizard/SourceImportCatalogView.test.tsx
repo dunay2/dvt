@@ -97,7 +97,7 @@ describe('SourceImportCatalogView', () => {
     });
 
     const schemaSelectAction = getByRole(container, 'button', {
-      name: 'Select source schema RAW.ERP. 1 table.',
+      name: 'Select source schema ERP. In source database RAW. 1 table.',
     });
 
     await act(async () => {
@@ -156,7 +156,11 @@ describe('SourceImportCatalogView', () => {
         getByRole(container, 'button', { name: 'Filter source catalog by All. 3 tables.' })
       );
       fireEvent.click(container.querySelector('[data-source-import-database="RAW"]')!);
-      fireEvent.click(container.querySelector('[data-source-import-schema="RAW.CRM"]')!);
+      fireEvent.click(
+        getByRole(container, 'button', {
+          name: 'Select source schema CRM. In source database RAW. 1 table.',
+        })
+      );
     });
 
     expect(onSelectFilter).toHaveBeenCalledWith('all');
@@ -229,16 +233,74 @@ describe('SourceImportCatalogView', () => {
       );
     });
 
-    const martPublic = container.querySelector('[data-source-import-schema="MART.PUBLIC"]');
-    expect(martPublic).not.toBeNull();
-
     await act(async () => {
-      fireEvent.click(martPublic!);
+      fireEvent.click(
+        getByRole(container, 'button', {
+          name: 'Select source schema PUBLIC. In source database MART. 1 table.',
+        })
+      );
     });
 
     expect(onToggleSchema).toHaveBeenCalledWith({
       database: 'MART',
       schema: 'PUBLIC',
+    });
+  });
+
+  it('keeps schema DOM identities and accessible labels collision-free when identifiers contain dots', async () => {
+    const onToggleSchema = vi.fn();
+    const catalog = buildSourceImportCatalogViewModel({
+      activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter: sourceImportCatalogNumberFormatter,
+      tables: [
+        buildTable({ database: 'RAW.PROD', schema: 'PUBLIC', table: 'ORDERS' }),
+        buildTable({ database: 'RAW', schema: 'PROD.PUBLIC', table: 'CUSTOMERS' }),
+      ],
+    });
+
+    await act(async () => {
+      root.render(
+        <SourceImportCatalogView
+          catalog={catalog}
+          emptyLabel="No source tables"
+          onToggleDatabase={vi.fn()}
+          onToggleSchema={onToggleSchema}
+          onToggleTable={vi.fn()}
+          onActivateTable={vi.fn()}
+          onSelectFilter={vi.fn()}
+        />
+      );
+    });
+
+    const schemaHeaders = Array.from(container.querySelectorAll('[data-source-import-schema]'));
+    const schemaIdentityKeys = schemaHeaders.map((element) =>
+      element.getAttribute('data-source-import-schema')
+    );
+
+    expect(schemaIdentityKeys).toHaveLength(2);
+    expect(new Set(schemaIdentityKeys).size).toBe(2);
+
+    await act(async () => {
+      fireEvent.click(
+        getByRole(container, 'button', {
+          name: 'Select source schema PUBLIC. In source database RAW.PROD. 1 table.',
+        })
+      );
+      fireEvent.click(
+        getByRole(container, 'button', {
+          name: 'Select source schema PROD.PUBLIC. In source database RAW. 1 table.',
+        })
+      );
+    });
+
+    expect(onToggleSchema).toHaveBeenNthCalledWith(1, {
+      database: 'RAW.PROD',
+      schema: 'PUBLIC',
+    });
+    expect(onToggleSchema).toHaveBeenNthCalledWith(2, {
+      database: 'RAW',
+      schema: 'PROD.PUBLIC',
     });
   });
 

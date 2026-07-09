@@ -105,6 +105,7 @@ export const sourceImportWizardCopy = {
     selectSourceTable: 'Select source table',
     selectSourceDatabase: 'Select source database',
     selectSourceSchema: 'Select source schema',
+    inSourceDatabase: 'In source database',
     inspectSourceTableMetadata: 'Inspect source table',
     metadata: 'metadata',
     rowsUnknown: 'Rows unknown',

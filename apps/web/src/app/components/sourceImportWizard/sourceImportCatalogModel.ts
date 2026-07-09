@@ -68,6 +68,7 @@ export type SourceImportCatalogCopy = Readonly<{
   selectSourceTable: string;
   selectSourceDatabase: string;
   selectSourceSchema: string;
+  inSourceDatabase: string;
   inspectSourceTableMetadata: string;
   metadata: string;
   rowsUnknown: string;
@@ -102,7 +103,7 @@ export function buildWarehouseTableKey(
 }
 
 export function buildSourceImportSchemaKey(schema: SourceImportSchemaIdentity): string {
-  return [schema.database, schema.schema].join('.');
+  return JSON.stringify([schema.database, schema.schema]);
 }
 
 function formatNumber(value: number, numberFormatter: Intl.NumberFormat): string {
@@ -429,7 +430,7 @@ function buildSourceImportSchemaGroup(
 ): SourceImportSchemaGroupViewModel {
   return {
     schema,
-    accessibilityLabel: `${copy.selectSourceSchema} ${database}.${schema}. ${formatSourceImportTableCount(
+    accessibilityLabel: `${copy.selectSourceSchema} ${schema}. ${copy.inSourceDatabase} ${database}. ${formatSourceImportTableCount(
       groupTables.length,
       copy,
       numberFormatter

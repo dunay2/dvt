@@ -302,12 +302,12 @@ describe('sourceImportCatalogModel', () => {
     expect(viewModel.schemaGroups).toEqual([
       expect.objectContaining({
         schema: 'PUBLIC',
-        accessibilityLabel: 'Select source schema MART.PUBLIC. 1 table.',
+        accessibilityLabel: 'Select source schema PUBLIC. In source database MART. 1 table.',
         tables: [expect.objectContaining({ canonicalName: 'MART.PUBLIC.ORDERS' })],
       }),
       expect.objectContaining({
         schema: 'PUBLIC',
-        accessibilityLabel: 'Select source schema RAW.PUBLIC. 1 table.',
+        accessibilityLabel: 'Select source schema PUBLIC. In source database RAW. 1 table.',
         tables: [expect.objectContaining({ canonicalName: 'RAW.PUBLIC.ORDERS' })],
       }),
     ]);
@@ -337,12 +337,12 @@ describe('sourceImportCatalogModel', () => {
     expect(viewModel.schemaGroups).toEqual([
       expect.objectContaining({
         schema: 'PROD.PUBLIC',
-        accessibilityLabel: 'Select source schema RAW.PROD.PUBLIC. 1 table.',
+        accessibilityLabel: 'Select source schema PROD.PUBLIC. In source database RAW. 1 table.',
         tables: [expect.objectContaining({ canonicalName: 'RAW.PROD.PUBLIC.CUSTOMERS' })],
       }),
       expect.objectContaining({
         schema: 'PUBLIC',
-        accessibilityLabel: 'Select source schema RAW.PROD.PUBLIC. 1 table.',
+        accessibilityLabel: 'Select source schema PUBLIC. In source database RAW.PROD. 1 table.',
         tables: [expect.objectContaining({ canonicalName: 'RAW.PROD.PUBLIC.ORDERS' })],
       }),
     ]);
@@ -353,6 +353,7 @@ describe('sourceImportCatalogModel', () => {
       selectSourceTable: 'Seleccionar tabla origen',
       selectSourceDatabase: 'Seleccionar base origen',
       selectSourceSchema: 'Seleccionar esquema origen',
+      inSourceDatabase: 'En base origen',
       inspectSourceTableMetadata: 'Inspeccionar tabla origen',
       metadata: 'metadata',
       rowsUnknown: 'Filas desconocidas',
@@ -405,6 +406,9 @@ describe('sourceImportCatalogModel', () => {
     expect(viewModel.resultCountLabel).toBe('Mostrando 1 de 2 tablas');
     expect(viewModel.databaseGroups[0]?.schemaCountLabel).toBe('1 esquema');
     expect(viewModel.databaseGroups[0]?.tableCountLabel).toBe('1 tabla');
+    expect(viewModel.schemaGroups[0]?.accessibilityLabel).toBe(
+      'Seleccionar esquema origen ERP. En base origen RAW. 1 tabla.'
+    );
     expect(viewModel.activeTable).toEqual(
       expect.objectContaining({
         canonicalName: 'RAW.ERP.CUSTOMERS',
