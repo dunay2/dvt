@@ -98,7 +98,9 @@ export type InspectWarehouseConnectionResult =
       readonly checkedAt: string;
     };
 
-export type SourceImportGrouping = 'schema' | 'database' | 'custom';
+export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = ['schema', 'database'] as const;
+
+export type SourceImportGrouping = (typeof SUPPORTED_SOURCE_IMPORT_GROUPINGS)[number];
 
 export type ImportWarehouseSourcesInput = {
   readonly scope: WorkspaceGraphDraftScope;

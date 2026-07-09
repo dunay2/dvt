@@ -5,7 +5,7 @@ import {
   type SourceImportTableViewModel,
 } from './sourceImportCatalogModel';
 import { buildSourceImportRegistryPath } from './sourceImportWizardModel';
-import type { TableInfo } from './types';
+import type { SourceImportGroupingStrategy, TableInfo } from './types';
 
 export type SourceImportReviewPreviewGroupViewModel = Readonly<{
   registryPath: string;
@@ -20,7 +20,7 @@ export function buildSourceImportReviewPreviewGroups({
   numberFormatter = new Intl.NumberFormat(),
 }: Readonly<{
   tables: readonly TableInfo[];
-  groupingStrategy: 'schema' | 'database' | 'custom';
+  groupingStrategy: SourceImportGroupingStrategy;
   copy: SourceImportCatalogCopy;
   numberFormatter?: Intl.NumberFormat;
 }>): readonly SourceImportReviewPreviewGroupViewModel[] {

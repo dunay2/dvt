@@ -1,15 +1,15 @@
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import type { TableInfo } from './types';
+import type { SourceImportGroupingStrategy, TableInfo } from './types';
 import { GroupingStep } from './GroupingStep';
 import { OptionsStep } from './OptionsStep';
 import { SourceImportActiveTableMetadata } from './SourceImportActiveTableMetadata';
 
 type SourceImportMetadataPanelProps = Readonly<{
   activeTable: TableInfo | null;
-  groupingStrategy: 'schema' | 'database' | 'custom';
+  groupingStrategy: SourceImportGroupingStrategy;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
-  onGroupingChange: (grouping: 'schema' | 'database' | 'custom') => void;
+  onGroupingChange: (grouping: SourceImportGroupingStrategy) => void;
   onSourceImportOptionChange: (optionId: SourceImportOptionId, value: boolean) => void;
 }>;
 

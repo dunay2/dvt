@@ -162,6 +162,15 @@ describe('sourceImportWizardModel', () => {
     ).toBe('models/sources/src_raw.yml');
   });
 
+  it('rejects unsupported grouping strategies instead of aliasing them to schema grouping', () => {
+    expect(() =>
+      buildSourceImportRegistryPath(
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+        'custom'
+      )
+    ).toThrow('Unsupported source import grouping strategy: custom');
+  });
+
   it('normalizes governed source registry paths from warehouse identifiers', () => {
     const table = buildTable({
       database: 'Raw Lake',

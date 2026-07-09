@@ -9,6 +9,7 @@ import { sourceImportWizardCopy as copy } from './copy';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
 import type { SourceImportReviewPreviewGroupViewModel } from './sourceImportReviewModel';
+import type { SourceImportGroupingStrategy } from './types';
 
 export const sourceImportReviewViewClassNames = {
   root: 'space-y-4',
@@ -40,7 +41,7 @@ type SourceImportReviewViewProps = Readonly<{
   selectedTables: readonly SourceImportTableViewModel[];
   previewGroups: readonly SourceImportReviewPreviewGroupViewModel[];
   selectedCount: number;
-  groupingStrategy: 'schema' | 'database' | 'custom';
+  groupingStrategy: SourceImportGroupingStrategy;
   selectedConnectionName: string;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
@@ -87,7 +88,7 @@ type SourceImportReviewSummaryCardProps = Readonly<{
   selectedConnectionName: string;
   selectedCount: number;
   dataObjectGroupCount: number;
-  groupingStrategy: 'schema' | 'database' | 'custom';
+  groupingStrategy: SourceImportGroupingStrategy;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
 }>;

@@ -9,6 +9,7 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import {
   InvalidWarehouseSourceImportRequestError,
   DuplicateWarehouseConnectionError,
+  SUPPORTED_SOURCE_IMPORT_GROUPINGS,
   SUPPORTED_WAREHOUSE_CONNECTION_TYPES,
   WarehouseConnectionTestFailedError,
   WarehouseConnectionNotFoundError,
@@ -420,9 +421,7 @@ function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
 }
 
 function parseGrouping(input: unknown): RouteParseResult<SourceImportGrouping> {
-  return input === 'schema' || input === 'database' || input === 'custom'
-    ? { ok: true, value: input }
-    : invalidBody();
+  return isSupportedSourceImportGrouping(input) ? { ok: true, value: input } : invalidBody();
 }
 
 function invalidBody(): RouteParseResult<never> {
@@ -430,6 +429,13 @@ function invalidBody(): RouteParseResult<never> {
     ok: false,
     issue: badRequestIssue(HTTP_ERROR_REASON.invalidBody, { target: 'body' }),
   };
+}
+
+function isSupportedSourceImportGrouping(input: unknown): input is SourceImportGrouping {
+  return (
+    typeof input === 'string' &&
+    SUPPORTED_SOURCE_IMPORT_GROUPINGS.some((grouping) => grouping === input)
+  );
 }
 
 function parseRequestedScope(

@@ -3,11 +3,23 @@ import { Card } from '../ui/card';
 import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { sourceImportWizardCopy as copy } from './copy';
+import { SOURCE_IMPORT_GROUPING_STRATEGIES, type SourceImportGroupingStrategy } from './types';
 
 interface GroupingStepProps {
-  groupingStrategy: 'schema' | 'database' | 'custom';
-  onGroupingChange: (grouping: 'schema' | 'database' | 'custom') => void;
+  groupingStrategy: SourceImportGroupingStrategy;
+  onGroupingChange: (grouping: SourceImportGroupingStrategy) => void;
 }
+
+type GroupingOption = Readonly<{
+  id: SourceImportGroupingStrategy;
+  label: string;
+  description: string;
+  badge?: string;
+}>;
+
+const GROUPING_OPTIONS: readonly GroupingOption[] = SOURCE_IMPORT_GROUPING_STRATEGIES.map(
+  (strategy) => copy.grouping.options[strategy]
+);
 
 export function GroupingStep({ groupingStrategy, onGroupingChange }: GroupingStepProps) {
   return (
@@ -19,51 +31,41 @@ export function GroupingStep({ groupingStrategy, onGroupingChange }: GroupingSte
 
       <RadioGroup
         value={groupingStrategy}
-        onValueChange={(value) => onGroupingChange(value as 'schema' | 'database' | 'custom')}
+        onValueChange={(value) => {
+          if (isSourceImportGroupingStrategy(value)) {
+            onGroupingChange(value);
+          }
+        }}
       >
-        <Card className="border-slate-600 p-4">
-          <div className="flex items-start gap-3">
-            <RadioGroupItem value="schema" id="schema" />
-            <div className="flex-1">
-              <Label htmlFor="schema" className="cursor-pointer font-medium">
-                Group by Schema (Recommended)
-              </Label>
-              <p className="mt-1 text-xs text-slate-300">
-                Creates one source per schema. Example: RAW.ERP.ORDERS -&gt; source(erp)
-              </p>
-              <div className="mt-2 text-xs">
-                <Badge variant="outline" className="border-green-400 text-green-400">
-                  Enterprise-friendly
-                </Badge>
+        {GROUPING_OPTIONS.map((option) => (
+          <Card
+            key={option.id}
+            className="border-slate-600 p-4"
+            data-source-import-grouping-option={option.id}
+          >
+            <div className="flex items-start gap-3">
+              <RadioGroupItem value={option.id} id={option.id} />
+              <div className="flex-1">
+                <Label htmlFor={option.id} className="cursor-pointer font-medium">
+                  {option.label}
+                </Label>
+                <p className="mt-1 text-xs text-slate-300">{option.description}</p>
+                {option.badge ? (
+                  <div className="mt-2 text-xs">
+                    <Badge variant="outline" className="border-green-400 text-green-400">
+                      {option.badge}
+                    </Badge>
+                  </div>
+                ) : null}
               </div>
             </div>
-          </div>
-        </Card>
-        <Card className="border-slate-600 p-4">
-          <div className="flex items-start gap-3">
-            <RadioGroupItem value="database" id="database" />
-            <div className="flex-1">
-              <Label htmlFor="database" className="cursor-pointer font-medium">
-                Group by Database
-              </Label>
-              <p className="mt-1 text-xs text-slate-300">
-                Creates one source per database. Best for small projects.
-              </p>
-            </div>
-          </div>
-        </Card>
-        <Card className="border-slate-600 p-4">
-          <div className="flex items-start gap-3">
-            <RadioGroupItem value="custom" id="custom" />
-            <div className="flex-1">
-              <Label htmlFor="custom" className="cursor-pointer font-medium">
-                Custom Grouping
-              </Label>
-              <p className="mt-1 text-xs text-slate-300">Manually organize sources (advanced)</p>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        ))}
       </RadioGroup>
     </div>
   );
+}
+
+function isSourceImportGroupingStrategy(value: string): value is SourceImportGroupingStrategy {
+  return SOURCE_IMPORT_GROUPING_STRATEGIES.some((strategy) => strategy === value);
 }

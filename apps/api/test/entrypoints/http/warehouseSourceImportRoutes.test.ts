@@ -722,6 +722,30 @@ describe('warehouseSourceImportRoutes', () => {
     });
   });
 
+  it('rejects unsupported custom grouping instead of importing with schema semantics', async () => {
+    const { app, draftStore, workspaceFiles } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sources/import?${SCOPE_QUERY}`,
+      payload: {
+        connectionId: 'warehouse-prod',
+        tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        groupingStrategy: 'custom',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: { type: 'bad_request', reason: 'invalid_body', target: 'body' },
+    });
+    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
+    expect(draftStore.save).not.toHaveBeenCalled();
+  });
+
   it('keeps schema-grouped YAML sources and imported node metadata distinct when database names disambiguate nodes', async () => {
     const { app, draftStore, workspaceFiles } = buildApp({
       catalogEntries: [

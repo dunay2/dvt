@@ -24,6 +24,10 @@ export type WizardStep = 'connection' | 'selection' | 'grouping' | 'options' | '
 
 export type SourceImportSection = 'connections' | 'browse' | 'metadata' | 'selected';
 
+export const SOURCE_IMPORT_GROUPING_STRATEGIES = ['schema', 'database'] as const;
+
+export type SourceImportGroupingStrategy = (typeof SOURCE_IMPORT_GROUPING_STRATEGIES)[number];
+
 export interface TableInfo {
   database: string;
   schema: string;
@@ -50,7 +54,7 @@ export interface SourceImportWizardState {
   createConnectionFormOpen: boolean;
   createConnectionForm: CreateWarehouseConnectionInput;
   tables: TableInfo[];
-  groupingStrategy: 'schema' | 'database' | 'custom';
+  groupingStrategy: SourceImportGroupingStrategy;
   includeColumns: boolean;
   addTests: boolean;
   addFreshness: boolean;
