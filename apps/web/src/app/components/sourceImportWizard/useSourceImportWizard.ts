@@ -10,7 +10,7 @@ import type {
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { sourceImportWizardCopy as copy } from './copy';
-import { buildWarehouseTableKey } from './sourceImportCatalogModel';
+import { buildWarehouseTableIdentityKey } from './sourceImportCatalogModel';
 import {
   applySourceImportOptionDefaults,
   buildSourceImportOptionValues,
@@ -374,14 +374,18 @@ export function useSourceImportWizard({
       tables: prev.tables.map((table, i) =>
         i === index ? { ...table, selected: !table.selected } : table
       ),
-      activeTableKey: prev.tables[index] ? buildWarehouseTableKey(prev.tables[index]) : null,
+      activeTableKey: prev.tables[index]
+        ? buildWarehouseTableIdentityKey(prev.tables[index])
+        : null,
     }));
   };
 
   const activateTable = (index: number) => {
     setState((prev) => ({
       ...prev,
-      activeTableKey: prev.tables[index] ? buildWarehouseTableKey(prev.tables[index]) : null,
+      activeTableKey: prev.tables[index]
+        ? buildWarehouseTableIdentityKey(prev.tables[index])
+        : null,
     }));
   };
 

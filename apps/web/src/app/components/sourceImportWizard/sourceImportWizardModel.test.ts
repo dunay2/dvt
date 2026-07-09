@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { TableInfo } from './types';
+import { buildWarehouseTableIdentityKey } from './sourceImportCatalogModel';
 import {
   applySourceImportOptionDefaults,
   buildSourceImportRegistryPath,
@@ -44,7 +45,13 @@ describe('sourceImportWizardModel', () => {
       { database: 'MART', schema: 'PUBLIC' }
     );
 
-    expect(result.activeTableKey).toBe('MART.PUBLIC.CUSTOMERS');
+    expect(result.activeTableKey).toBe(
+      buildWarehouseTableIdentityKey({
+        database: 'MART',
+        schema: 'PUBLIC',
+        table: 'CUSTOMERS',
+      })
+    );
     expect(result.tables).toEqual([
       expect.objectContaining({ database: 'RAW', schema: 'PUBLIC', selected: false }),
       expect.objectContaining({ database: 'MART', schema: 'PUBLIC', selected: true }),
@@ -62,7 +69,13 @@ describe('sourceImportWizardModel', () => {
       { database: 'RAW' }
     );
 
-    expect(result.activeTableKey).toBe('RAW.ERP.ORDERS');
+    expect(result.activeTableKey).toBe(
+      buildWarehouseTableIdentityKey({
+        database: 'RAW',
+        schema: 'ERP',
+        table: 'ORDERS',
+      })
+    );
     expect(result.tables).toEqual([
       expect.objectContaining({ database: 'RAW', schema: 'ERP', table: 'ORDERS', selected: true }),
       expect.objectContaining({
@@ -108,8 +121,29 @@ describe('sourceImportWizardModel', () => {
     const customers = buildTable({ table: 'CUSTOMERS' });
 
     expect(getSelectedTables([orders, customers])).toEqual([orders]);
-    expect(resolveActiveTable([orders, customers], 'RAW.ERP.CUSTOMERS')).toEqual(customers);
+    expect(
+      resolveActiveTable([orders, customers], buildWarehouseTableIdentityKey(customers))
+    ).toEqual(customers);
     expect(resolveActiveTable([orders, customers], null)).toEqual(orders);
+  });
+
+  it('resolves active table metadata by structured table identity', () => {
+    const first = buildTable({
+      database: 'RAW.PROD',
+      schema: 'PUBLIC',
+      table: 'ORDERS',
+      selected: false,
+    });
+    const second = buildTable({
+      database: 'RAW',
+      schema: 'PROD.PUBLIC',
+      table: 'ORDERS',
+      selected: false,
+    });
+
+    expect(resolveActiveTable([first, second], buildWarehouseTableIdentityKey(second))).toEqual(
+      second
+    );
   });
 
   it('resolves governed source registry paths with the same grouping posture as import', () => {

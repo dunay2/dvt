@@ -9,6 +9,7 @@ export type SourceImportColumnViewModel = Readonly<{
 
 export type SourceImportTableViewModel = Readonly<{
   index: number;
+  identityKey: string;
   canonicalName: string;
   displayName: string;
   accessibilityLabel: string;
@@ -100,6 +101,12 @@ export function buildWarehouseTableKey(
   table: Pick<TableInfo, 'database' | 'schema' | 'table'>
 ): string {
   return [table.database, table.schema, table.table].join('.');
+}
+
+export function buildWarehouseTableIdentityKey(
+  table: Pick<TableInfo, 'database' | 'schema' | 'table'>
+): string {
+  return JSON.stringify([table.database, table.schema, table.table]);
 }
 
 export function buildSourceImportSchemaKey(schema: SourceImportSchemaIdentity): string {
@@ -259,6 +266,7 @@ export function buildSourceImportTableViewModel(
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): SourceImportTableViewModel {
+  const identityKey = buildWarehouseTableIdentityKey(table);
   const canonicalName = buildWarehouseTableKey(table);
   const rowCountLabel = formatSourceImportRowCount(table.rowCount, copy, numberFormatter);
   const byteSizeLabel = formatSourceImportByteSize(table.byteSize);
@@ -273,6 +281,7 @@ export function buildSourceImportTableViewModel(
 
   return {
     index,
+    identityKey,
     canonicalName,
     displayName: table.table,
     accessibilityLabel: `${copy.selectSourceTable} ${canonicalName}. ${accessibilityMetrics}.`,
@@ -339,7 +348,7 @@ export function buildSourceImportCatalogViewModel({
 
   const activeTable =
     (activeTableKey
-      ? tableViewModels.find((table) => table.canonicalName === activeTableKey)
+      ? tableViewModels.find((table) => table.identityKey === activeTableKey)
       : undefined) ??
     tableViewModels.find((table) => table.selected) ??
     tableViewModels[0] ??

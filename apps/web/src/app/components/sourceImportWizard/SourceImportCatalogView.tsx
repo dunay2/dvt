@@ -86,7 +86,7 @@ export function SourceImportCatalogView({
               <SourceImportSchemaTableList>
                 {schemaGroup.tables.map((table) => (
                   <SourceImportTableCard
-                    key={table.canonicalName}
+                    key={table.identityKey}
                     table={table}
                     onActivate={() => onActivateTable(table.index)}
                     onToggle={() => onToggleTable(table.index)}

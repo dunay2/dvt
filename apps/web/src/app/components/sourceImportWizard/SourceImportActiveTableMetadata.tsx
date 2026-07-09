@@ -74,7 +74,7 @@ export function SourceImportActiveTableMetadata({
             <div className={sourceImportActiveMetadataClassNames.columnList}>
               {activeTableViewModel.columns.map((column) => (
                 <div
-                  key={`${tableName}.${column.name}`}
+                  key={`${activeTableViewModel.identityKey}.${column.name}`}
                   className={sourceImportActiveMetadataClassNames.columnRow}
                   data-source-import-metadata-column={`${tableName}.${column.name}`}
                 >

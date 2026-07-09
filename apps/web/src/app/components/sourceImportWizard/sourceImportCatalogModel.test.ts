@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildWarehouseTableIdentityKey,
   buildWarehouseTableKey,
   buildSourceImportCatalogViewModel,
   type SourceImportCatalogCopy,
@@ -24,6 +25,40 @@ describe('sourceImportCatalogModel', () => {
 
   it('resolves canonical warehouse table keys', () => {
     expect(buildWarehouseTableKey(buildTable({ table: 'ORDERS' }))).toBe('RAW.ERP.ORDERS');
+  });
+
+  it('keeps table identity separate from the user-facing canonical name', () => {
+    const rawProdOrders = buildTable({
+      database: 'RAW.PROD',
+      schema: 'PUBLIC',
+      table: 'ORDERS',
+      selected: false,
+    });
+    const rawProdPublicOrders = buildTable({
+      database: 'RAW',
+      schema: 'PROD.PUBLIC',
+      table: 'ORDERS',
+      selected: false,
+    });
+    const activeTableKey = buildWarehouseTableIdentityKey(rawProdPublicOrders);
+
+    expect(buildWarehouseTableKey(rawProdOrders)).toBe('RAW.PROD.PUBLIC.ORDERS');
+    expect(buildWarehouseTableKey(rawProdPublicOrders)).toBe('RAW.PROD.PUBLIC.ORDERS');
+    expect(buildWarehouseTableIdentityKey(rawProdOrders)).not.toBe(activeTableKey);
+
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [rawProdOrders, rawProdPublicOrders],
+      activeTableKey,
+      copy: catalogCopy,
+      numberFormatter,
+    });
+
+    expect(viewModel.activeTable).toEqual(
+      expect.objectContaining({
+        identityKey: activeTableKey,
+        canonicalName: 'RAW.PROD.PUBLIC.ORDERS',
+      })
+    );
   });
 
   it('projects a professional source catalog view model for browse, metadata, and selected surfaces', () => {
@@ -50,7 +85,9 @@ describe('sourceImportCatalogModel', () => {
           columns: [{ name: 'customer_id', type: 'INTEGER', nullable: false }],
         }),
       ],
-      activeTableKey: 'RAW.ERP.ORDERS',
+      activeTableKey: buildWarehouseTableIdentityKey(
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' })
+      ),
       copy: catalogCopy,
       numberFormatter,
     });
@@ -151,7 +188,9 @@ describe('sourceImportCatalogModel', () => {
           columns: [{ name: 'tracking_code', type: 'TEXT', nullable: false }],
         }),
       ],
-      activeTableKey: 'RAW.ERP.ORDERS',
+      activeTableKey: buildWarehouseTableIdentityKey(
+        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' })
+      ),
       searchQuery: 'email',
       copy: catalogCopy,
       numberFormatter,
