@@ -55,7 +55,41 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
     expect(model.operationalMetrics).toEqual([
       { id: 'rows', label: 'Rows', value: '18.2k', icon: 'rows' },
+      { id: 'columns', label: 'Columns', value: '2', icon: 'columns' },
       { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
+    ]);
+  });
+
+  it('keeps imported source operational details useful when only rows and columns are recorded', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dvt:source',
+        pluginId: 'dvt.warehouse-source',
+        name: 'src_local_postgres_dvt_public_source_1',
+        path: 'models/sources/src_public.yml',
+        metadata: {
+          database: 'dvt',
+          schema: 'public',
+          tableName: 'source_1',
+          rowCount: 3,
+          columns: [
+            { name: 'order_id', type: 'integer' },
+            { name: 'customer', type: 'text' },
+            { name: 'amount', type: 'numeric' },
+          ],
+        },
+      }),
+      {},
+      [dvtGraphNodeCardStrategy]
+    );
+
+    expect(model.operationalMetrics).toEqual([
+      { id: 'rows', label: 'Rows', value: '3', icon: 'rows' },
+      { id: 'columns', label: 'Columns', value: '3', icon: 'columns' },
+    ]);
+    expect(model.operationalDetail?.rows).toEqual([
+      { id: 'rows', label: 'Rows', value: '3', icon: 'rows' },
+      { id: 'columns', label: 'Columns', value: '3', icon: 'columns' },
     ]);
   });
 
@@ -281,6 +315,7 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
     expect(model.operationalMetrics).toEqual([
       { id: 'rows', label: 'Rows', value: '1.5k', icon: 'rows' },
+      { id: 'columns', label: 'Columns', value: '2', icon: 'columns' },
       { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
     ]);
   });

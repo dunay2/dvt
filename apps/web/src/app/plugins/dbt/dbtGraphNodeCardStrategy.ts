@@ -46,6 +46,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const rowCount = numericValue(metadata.rowCount) ?? numericValue(metadata.rows);
   const byteSize =
     numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
+  const columnCount = arrayCount(data.columns) ?? arrayCount(metadata.columns);
   const targetModel =
     stringValue(metadata.testTargetModel) ??
     stringValue(metadata.targetModel) ??
@@ -86,6 +87,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     data,
     rowCount,
     byteSize,
+    columnCount,
   });
 
   return {

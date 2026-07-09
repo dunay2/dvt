@@ -14,6 +14,7 @@ export type GraphNodeCardMetricIcon =
   | 'refresh'
   | 'throughput'
   | 'database'
+  | 'columns'
   | 'timer'
   | 'rows'
   | 'cost'

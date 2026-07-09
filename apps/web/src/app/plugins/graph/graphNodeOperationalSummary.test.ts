@@ -15,6 +15,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       data: {},
       rowCount: 1210,
       byteSize: 2048,
+      columnCount: null,
     });
 
     expect(summary.metrics).toEqual([
@@ -36,10 +37,12 @@ describe('buildGraphNodeOperationalSummary', () => {
       data: {},
       rowCount: 18240,
       byteSize: 4096000,
+      columnCount: 2,
     });
 
     expect(summary.metrics).toEqual([
       { id: 'rows', label: 'Rows', value: '18.2k', icon: 'rows' },
+      { id: 'columns', label: 'Columns', value: '2', icon: 'columns' },
       { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
     ]);
     expect(summary.detail?.rows).toBe(summary.metrics);
@@ -60,6 +63,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       data: {},
       rowCount: 124_000_000,
       byteSize: null,
+      columnCount: null,
     });
 
     expect(summary.metrics).toEqual([
@@ -109,6 +113,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       data: {},
       rowCount: null,
       byteSize: null,
+      columnCount: null,
     });
 
     expect(summary.metrics).toEqual([
@@ -142,6 +147,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       data: {},
       rowCount: null,
       byteSize: null,
+      columnCount: null,
     });
 
     expect(summary.metrics).toEqual([]);
@@ -156,6 +162,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       runtimeData: { durationMs: 75000 },
       rowCount: 4200,
       byteSize: null,
+      columnCount: null,
     });
 
     expect(summary.metrics).toEqual([
@@ -177,6 +184,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       data: {},
       rowCount: 2_100_000,
       byteSize: null,
+      columnCount: null,
     });
 
     expect(summary.metrics).toEqual([
@@ -200,6 +208,7 @@ describe('buildGraphNodeOperationalSummary', () => {
       },
       rowCount: 2_100_000,
       byteSize: null,
+      columnCount: null,
     });
 
     expect(summary.metrics).toEqual([

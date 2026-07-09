@@ -285,4 +285,42 @@ describe('GraphNodeCardView', () => {
     );
     expect(onCardClick).not.toHaveBeenCalled();
   });
+
+  it('keeps the operational rail non-interactive when the detail model has no rows', () => {
+    const onOpenOperationalDetails = vi.fn();
+    const onCardClick = vi.fn();
+
+    act(() => {
+      root.render(
+        <div onClick={onCardClick}>
+          <GraphNodeCardView
+            {...BASE_PROPS}
+            cardModel={{
+              ...BASE_PROPS.cardModel,
+              operationalMetrics: [{ id: 'rows', label: 'Rows', value: '3' }],
+              operationalDetail: {
+                title: 'Source health',
+                ariaLabel: 'Open source health metrics',
+                rows: [],
+              },
+            }}
+            onOpenOperationalDetails={onOpenOperationalDetails}
+          />
+        </div>
+      );
+    });
+
+    const rail = container.querySelector('[data-slot="graph-node-operational-rail"]');
+
+    expect(rail).not.toBeNull();
+    expect(rail?.tagName).toBe('DIV');
+    expect(rail?.textContent).toBe('Rows3');
+
+    act(() => {
+      fireEvent.click(rail!);
+    });
+
+    expect(onOpenOperationalDetails).not.toHaveBeenCalled();
+    expect(onCardClick).toHaveBeenCalledOnce();
+  });
 });

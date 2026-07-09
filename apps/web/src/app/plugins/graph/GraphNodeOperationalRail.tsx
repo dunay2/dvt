@@ -8,6 +8,7 @@ import {
   DollarSign,
   List,
   RefreshCw,
+  Table2,
   Timer,
   type LucideIcon,
 } from 'lucide-react';
@@ -24,6 +25,7 @@ const metricIconByName: Record<GraphNodeCardMetricIcon, LucideIcon> = {
   refresh: RefreshCw,
   throughput: Activity,
   database: Database,
+  columns: Table2,
   timer: Timer,
   rows: List,
   cost: DollarSign,

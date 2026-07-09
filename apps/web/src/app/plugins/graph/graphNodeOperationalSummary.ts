@@ -27,6 +27,7 @@ export type GraphNodeOperationalSummaryInput = Readonly<{
   runtimeData?: Record<string, unknown>;
   rowCount: number | null;
   byteSize: number | null;
+  columnCount: number | null;
 }>;
 
 function firstNumericValue(
@@ -131,7 +132,8 @@ function buildSourceHealthRows(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>,
   rowCount: number | null,
-  byteSize: number | null
+  byteSize: number | null,
+  columnCount: number | null
 ): {
   hasSourceHealthSignal: boolean;
   railMetrics: GraphNodeCardMetric[];
@@ -194,6 +196,13 @@ function buildSourceHealthRows(
   );
   pushOperationalMetric(
     railMetrics,
+    'columns',
+    'Columns',
+    columnCount == null ? null : formatCompactNumber(columnCount),
+    { icon: 'columns' }
+  );
+  pushOperationalMetric(
+    railMetrics,
     'size',
     'Size',
     datasetSizeBytes == null ? null : formatBytes(datasetSizeBytes),
@@ -216,6 +225,15 @@ function buildSourceHealthRows(
     rowCount == null ? null : formatCompactNumber(rowCount),
     { icon: 'rows' }
   );
+  if (!railMetrics.some((metric) => metric.id === 'columns')) {
+    pushOperationalMetric(
+      detailRows,
+      'columns',
+      'Columns',
+      columnCount == null ? null : formatCompactNumber(columnCount),
+      { icon: 'columns' }
+    );
+  }
   if (!schemaDriftRailOnly) {
     pushOperationalMetric(
       detailRows,
@@ -306,9 +324,10 @@ export function buildGraphNodeOperationalSummary({
   runtimeData = data,
   rowCount,
   byteSize,
+  columnCount,
 }: GraphNodeOperationalSummaryInput): GraphNodeOperationalSummary {
   const metrics: GraphNodeCardMetric[] = [];
-  const sourceHealth = buildSourceHealthRows(metadata, data, rowCount, byteSize);
+  const sourceHealth = buildSourceHealthRows(metadata, data, rowCount, byteSize, columnCount);
   const modelExecutionMetrics = buildModelExecutionMetrics(metadata, data, runtimeData, rowCount);
 
   if (sourceHealth.hasSourceHealthSignal) {
@@ -327,6 +346,13 @@ export function buildGraphNodeOperationalSummary({
       'Rows',
       rowCount == null ? null : formatCompactNumber(rowCount),
       { icon: 'rows' }
+    );
+    pushOperationalMetric(
+      metrics,
+      'columns',
+      'Columns',
+      columnCount == null ? null : formatCompactNumber(columnCount),
+      { icon: 'columns' }
     );
     pushOperationalMetric(
       metrics,

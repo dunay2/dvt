@@ -9,6 +9,7 @@ import { graphNodeCardCopyTokens } from '../graph/graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
+  arrayCount,
   formatBytes,
   formatCompactNumber,
   metadataOf,
@@ -73,6 +74,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const rowCount = numericValue(metadata.rowCount) ?? numericValue(data.rowCount);
   const byteSize =
     numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
+  const columnCount = arrayCount(data.columns) ?? arrayCount(metadata.columns);
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
     pluginId: node.pluginId,
@@ -98,6 +100,7 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     runtimeData,
     rowCount,
     byteSize,
+    columnCount,
   });
 
   return {

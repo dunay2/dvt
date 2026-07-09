@@ -71,6 +71,8 @@ export function GraphNodeCardView({
   onOpenOperationalDetails,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
+  const interactiveOperationalDetail =
+    operationalDetail != null && operationalDetail.rows.length > 0 ? operationalDetail : null;
 
   return (
     <div
@@ -153,13 +155,15 @@ export function GraphNodeCardView({
         {showColumns && <GraphNodeColumnSection columns={columns} />}
       </div>
 
-      {onOpenOperationalDetails == null || operationalDetail == null ? (
+      {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (
         <GraphNodeOperationalRail metrics={cardModel.operationalMetrics} />
       ) : (
         <GraphNodeOperationalRail
           metrics={cardModel.operationalMetrics}
-          ariaLabel={operationalDetail.ariaLabel}
-          onOpen={(anchorRect) => onOpenOperationalDetails(operationalDetail, anchorRect)}
+          ariaLabel={interactiveOperationalDetail.ariaLabel}
+          onOpen={(anchorRect) =>
+            onOpenOperationalDetails(interactiveOperationalDetail, anchorRect)
+          }
         />
       )}
     </div>
