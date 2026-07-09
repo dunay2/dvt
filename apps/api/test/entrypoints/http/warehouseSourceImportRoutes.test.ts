@@ -180,6 +180,7 @@ function buildApp(
   readonly workspaceFiles: {
     readonly getFileContent: ReturnType<typeof vi.fn>;
     readonly saveFileContent: ReturnType<typeof vi.fn>;
+    readonly deleteFileContent: ReturnType<typeof vi.fn>;
   };
 } {
   const app = Fastify({ logger: false });
@@ -262,6 +263,7 @@ function buildApp(
         lastModified: '2026-05-30T00:00:01.000Z',
       })
     ),
+    deleteFileContent: vi.fn<(path: string) => Promise<void>>(async (_path) => undefined),
   };
   const catalog = new TestWarehouseConnectionCatalog(catalogEntries, async (_input, entries) => {
     await workspaceFiles.saveFileContent(
@@ -579,7 +581,7 @@ describe('warehouseSourceImportRoutes', () => {
             database: 'analytics',
             schema: 'erp',
             table: 'orders',
-            columns: [{ name: 'fake_admin_token', type: 'string', nullable: false }],
+            columns: [{ name: 'client_supplied_admin_token', type: 'string', nullable: false }],
           },
         ],
         groupingStrategy: 'schema',

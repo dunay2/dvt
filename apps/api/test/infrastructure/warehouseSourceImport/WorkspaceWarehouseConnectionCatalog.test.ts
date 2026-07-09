@@ -47,6 +47,11 @@ class MemoryWorkspaceFileRepository implements IWorkspaceFileRepository {
       lastModified: '2026-05-31T00:00:01.000Z',
     };
   }
+
+  public async deleteFileContent(path: string): Promise<void> {
+    delete this.savedFiles[path];
+    delete this.files[path];
+  }
 }
 
 function repositoryWithCatalog(catalog: unknown): IWorkspaceFileRepository {
