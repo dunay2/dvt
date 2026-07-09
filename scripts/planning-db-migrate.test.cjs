@@ -13476,6 +13476,12 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   const reviewTableIdentityMigration = migrations.find(
     (migration) => migration.fileName === '579_source_import_review_table_identity_selector.sql'
   );
+  const groupingStrategyContractMigration = migrations.find(
+    (migration) => migration.fileName === '580_source_import_grouping_strategy_contract.sql'
+  );
+  const groupingStrategySymbolsMigration = migrations.find(
+    (migration) => migration.fileName === '581_source_import_grouping_strategy_manifest_symbols.sql'
+  );
 
   assert.ok(schemaScopeMigration);
   assert.ok(schemaIdentityMigration);
@@ -13483,6 +13489,8 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   assert.ok(tableIdentityMigration);
   assert.ok(tableIdentityManifestMigration);
   assert.ok(reviewTableIdentityMigration);
+  assert.ok(groupingStrategyContractMigration);
+  assert.ok(groupingStrategySymbolsMigration);
   assert.match(schemaScopeMigration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
   assert.match(schemaScopeMigration.sql, /RenderSourceImportCatalogView/);
   assert.match(schemaScopeMigration.sql, /schemaScopeInvariant/);
@@ -13544,4 +13552,50 @@ test('tracked migrations harden source import catalog schema-scope accessibility
   assert.match(reviewTableIdentityMigration.sql, /ImportWarehouseSources/);
   assert.doesNotMatch(reviewTableIdentityMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(reviewTableIdentityMigration.sql, /truncate\s+/i);
+  assert.match(groupingStrategyContractMigration.sql, /groupingStrategyContract/);
+  assert.match(
+    groupingStrategyContractMigration.sql,
+    /supported', jsonb_build_array\('schema', 'database'\)/
+  );
+  assert.match(
+    groupingStrategyContractMigration.sql,
+    /unsupported', jsonb_build_array\('custom'\)/
+  );
+  assert.match(groupingStrategyContractMigration.sql, /GroupingStep\.test\.tsx/);
+  assert.match(groupingStrategyContractMigration.sql, /warehouseSourceImportRoutes\.test\.ts/);
+  assert.match(
+    groupingStrategyContractMigration.sql,
+    /EV-SOURCE-IMPORT-GROUPING-STRATEGY-PRESENTATION/
+  );
+  assert.match(groupingStrategyContractMigration.sql, /EV-SOURCE-IMPORT-GROUPING-STRATEGY-MODEL/);
+  assert.match(groupingStrategyContractMigration.sql, /EV-SOURCE-IMPORT-GROUPING-STRATEGY-HTTP/);
+  assert.match(groupingStrategyContractMigration.sql, /'presentation-test'/);
+  assert.match(groupingStrategyContractMigration.sql, /'unit-test'/);
+  assert.match(groupingStrategyContractMigration.sql, /'integration-test'/);
+  assert.match(groupingStrategyContractMigration.sql, /ImportWarehouseSources/);
+  assert.doesNotMatch(
+    groupingStrategyContractMigration.sql,
+    /EV-SOURCE-IMPORT-GROUPING-STRATEGY-CONTRACT/
+  );
+  assert.doesNotMatch(groupingStrategyContractMigration.sql, /frontend-component-inventory\.md/);
+  assert.doesNotMatch(groupingStrategyContractMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(groupingStrategyContractMigration.sql, /truncate\s+/i);
+  assert.match(groupingStrategySymbolsMigration.sql, /raw_manifest/);
+  assert.match(groupingStrategySymbolsMigration.sql, /symbols/);
+  assert.match(groupingStrategySymbolsMigration.sql, /SUPPORTED_SOURCE_IMPORT_GROUPINGS/);
+  assert.match(groupingStrategySymbolsMigration.sql, /SourceImportGroupingStrategy/);
+  assert.match(groupingStrategySymbolsMigration.sql, /isSourceImportGroupingStrategy/);
+  assert.match(groupingStrategySymbolsMigration.sql, /sourceImportGroupingValue/);
+  assert.match(groupingStrategySymbolsMigration.sql, /ImportWarehouseSources/);
+  assert.match(
+    groupingStrategySymbolsMigration.sql,
+    /scripts\/run-canvas-source-import-live-proof\.cjs/
+  );
+  assert.match(
+    groupingStrategySymbolsMigration.sql,
+    /\(symbol ->> 'path'\) \|\| '#' \|\| \(symbol ->> 'name'\)/
+  );
+  assert.doesNotMatch(groupingStrategySymbolsMigration.sql, /frontend-component-inventory\.md/);
+  assert.doesNotMatch(groupingStrategySymbolsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(groupingStrategySymbolsMigration.sql, /truncate\s+/i);
 });

@@ -62,13 +62,25 @@ export function toggleSourceImportDatabaseSelection(
 
 export function buildSourceImportRegistryPath(
   table: Pick<TableInfo, 'database' | 'schema'>,
-  groupingStrategy: 'schema' | 'database' | 'custom'
+  groupingStrategy: string
 ): string {
-  const groupKey =
-    groupingStrategy === 'database'
-      ? toStableSourceImportIdentifierPart(table.database)
-      : toStableSourceImportIdentifierPart(table.schema);
+  const groupKey = toStableSourceImportIdentifierPart(
+    sourceImportGroupingValue(table, groupingStrategy)
+  );
   return `models/sources/src_${groupKey}.yml`;
+}
+
+function sourceImportGroupingValue(
+  table: Pick<TableInfo, 'database' | 'schema'>,
+  groupingStrategy: string
+): string {
+  if (groupingStrategy === 'database') {
+    return table.database;
+  }
+  if (groupingStrategy === 'schema') {
+    return table.schema;
+  }
+  throw new Error(`Unsupported source import grouping strategy: ${groupingStrategy}`);
 }
 
 export function toStableSourceImportIdentifierPart(part: string): string {

@@ -70,6 +70,19 @@ export const sourceImportWizardCopy = {
   grouping: {
     title: 'Grouping Strategy',
     description: 'Choose how discovered tables should be grouped into registered data objects',
+    options: {
+      schema: {
+        id: 'schema',
+        label: 'Group by Schema (Recommended)',
+        description: 'Creates one source per schema. Example: RAW.ERP.ORDERS -> source(erp)',
+        badge: 'Enterprise-friendly',
+      },
+      database: {
+        id: 'database',
+        label: 'Group by Database',
+        description: 'Creates one source per database. Best for small projects.',
+      },
+    },
   },
   options: {
     title: 'Metadata Options',

@@ -30,6 +30,7 @@ import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDa
 import type {
   SourceImportInitialSelection,
   SourceImportDatabaseIdentity,
+  SourceImportGroupingStrategy,
   SourceImportSchemaIdentity,
   SourceImportSection,
   SourceImportWizardState,
@@ -201,7 +202,7 @@ export function useSourceImportWizard({
         selectedConnection === prev.selectedConnection ? prev.connectionTestResult : null,
       importResult: null,
     }));
-  const setGroupingStrategy = (groupingStrategy: 'schema' | 'database' | 'custom') =>
+  const setGroupingStrategy = (groupingStrategy: SourceImportGroupingStrategy) =>
     setState((prev) => ({ ...prev, groupingStrategy }));
   const setIncludeColumns = (includeColumns: boolean) =>
     setState((prev) => ({ ...prev, includeColumns }));

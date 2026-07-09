@@ -3,12 +3,12 @@ import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } fr
 import { SourceImportReviewView } from './SourceImportReviewView';
 import { buildSourceImportCatalogViewModel } from './sourceImportCatalogModel';
 import { buildSourceImportReviewPreviewGroups } from './sourceImportReviewModel';
-import type { TableInfo } from './types';
+import type { SourceImportGroupingStrategy, TableInfo } from './types';
 
 interface ReviewStepProps {
   tables: TableInfo[];
   selectedCount: number;
-  groupingStrategy: 'schema' | 'database' | 'custom';
+  groupingStrategy: SourceImportGroupingStrategy;
   selectedConnectionName: string;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
