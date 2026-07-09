@@ -155,8 +155,9 @@ As of 2026-04-25:
 - `transformation` uses `transformation-sql-first-v1`; `dbt` uses the
   TF-C3-backed `planner-generic-v1` posture. DBT preview/run is available only
   through generated workspace artifacts, a dbt `GenericGraphSourceV1`, and a
-  persisted `PlanRef`; API-mode warehouse source import remains unavailable
-  unless the workspace port advertises it.
+  persisted `PlanRef`; API-mode warehouse source import is available only when
+  the workspace port advertises the implemented protected-runtime source-import
+  rails.
 - route shell composition applies the effective fail-closed route posture to
   Inspector authoring, so an unsupported or blocked canvas cannot reopen
   side-panel mutation even if a lower-level controller value drifts

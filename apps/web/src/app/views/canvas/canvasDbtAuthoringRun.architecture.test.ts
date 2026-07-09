@@ -22,9 +22,13 @@ const DBT_GRAPH_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDbtPlannerGraphSource.ts'
 );
-const INSPECTOR_SECTION_SOURCE = readArchitectureSiblingSource(
+const DBT_AUTHORING_FIELDS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'DbtAuthoringFields.tsx'
+);
+const DBT_MODEL_AUTHORING_SECTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'DbtModelAuthoringSection.tsx'
 );
 const COMMAND_CATALOG_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
@@ -60,16 +64,21 @@ describe('canvas dbt authoring/code/run architecture', () => {
   });
 
   it('keeps dbt card configuration in route-owned inspector authoring', () => {
-    expect(INSPECTOR_SECTION_SOURCE).toContain('name="dbt-origin"');
-    expect(INSPECTOR_SECTION_SOURCE).toContain('name="dbt-materialized"');
-    expect(INSPECTOR_SECTION_SOURCE).toContain('data-slot="dbt-generated-model-sql"');
-    expect(INSPECTOR_SECTION_SOURCE).not.toContain('name="dbt-model-sql"');
-    expect(INSPECTOR_SECTION_SOURCE).not.toContain('workspaceService');
+    expect(DBT_AUTHORING_FIELDS_SOURCE).toContain('DbtModelAuthoringSection');
+    expect(DBT_AUTHORING_FIELDS_SOURCE).not.toContain('workspaceService');
+    expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).toContain('name="dbt-origin"');
+    expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).toContain('name="dbt-materialized"');
+    expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).toContain('data-slot="dbt-generated-model-sql"');
+    expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).not.toContain('name="dbt-model-sql"');
+    expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).not.toContain('workspaceService');
     expect(COMMAND_CATALOG_SOURCE).toContain('ConfigureCanvasDbtNode');
     expect(COMMAND_CATALOG_SOURCE).toContain('SelectDbtModelOrigin');
     expect(COMMAND_CATALOG_SOURCE).toContain('GenerateDbtWorkspaceArtifacts');
     expect(COMMAND_CATALOG_SOURCE).toContain('BuildDbtPlannerGraphSource');
     expect(GRAPH_FRONTEND_ARCHITECTURE_SOURCE).toContain('planner-generic-v1');
     expect(GRAPH_FRONTEND_ARCHITECTURE_SOURCE).toContain('persisted `PlanRef`');
+    expect(GRAPH_FRONTEND_ARCHITECTURE_SOURCE).not.toContain(
+      'API-mode warehouse source import remains unavailable'
+    );
   });
 });
