@@ -13718,3 +13718,24 @@ test('tracked migrations register draggable ordered canvas node workbench eviden
   assert.doesNotMatch(workbenchMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(workbenchMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations declare draggable ordered canvas node workbench feature symbols', () => {
+  const migrations = readMigrationFiles();
+  const workbenchSymbolsMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '588_canvas_node_workbench_draggable_ordered_feature_symbols.sql'
+  );
+
+  assert.ok(workbenchSymbolsMigration);
+  assert.match(workbenchSymbolsMigration.sql, /CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604/);
+  assert.match(workbenchSymbolsMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(workbenchSymbolsMigration.sql, /CanvasNodeWorkbenchDragState/);
+  assert.match(workbenchSymbolsMigration.sql, /CanvasNodeWorkbenchDragHandleProps/);
+  assert.match(workbenchSymbolsMigration.sql, /buildNodeWorkbenchReadModel/);
+  assert.match(workbenchSymbolsMigration.sql, /resolveNodeWorkbenchHiddenGeneralRowLabels/);
+  assert.match(workbenchSymbolsMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(workbenchSymbolsMigration.sql, /redGreenCycles/);
+  assert.match(workbenchSymbolsMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(workbenchSymbolsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(workbenchSymbolsMigration.sql, /truncate\s+/i);
+});
