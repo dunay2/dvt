@@ -220,12 +220,16 @@ governingSources:
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
 allowedImplementationSurfaces:
   - .github/workflows/release.yml
+  - .markdownlintignore
   - .release-please-manifest.json
+  - CHANGELOG.md
   - docs/architecture/components/ci-governance/ci-delivery-governance-component.md
   - docs/planning/proposals/mandatory/governance-and-docs/ci-delivery-governance-consolidated-action-plan-20260331.md
   - docs/planning/status/system-governance-unit-index.units.yaml
   - package.json
   - release-please-config.json
+  - scripts/lint-markdown-changed.cjs
+  - scripts/lint-markdown-changed.test.cjs
 forbiddenImplementationSurfaces:
   - apps/**
   - packages/@dvt/contracts/**
@@ -236,21 +240,29 @@ commandQueryRails:
   - name: ConfigureReleasePleasePreMajorState
     type: command
     dddOwner: ReleasePleasePreMajorState
+  - name: LintChangedMarkdownFiles
+    type: query
+    dddOwner: ChangedMarkdownFileSet
 domainObjects:
   - name: ReleasePleasePreMajorState
     type: policy-object
     owner: Repository release governance
+  - name: ChangedMarkdownFileSet
+    type: read-model
+    owner: Repository Markdown governance
 fowlerSignals:
   - Explicit Gate
   - Release governance ownership
   - Configuration as Policy
 architectureGuards:
   - 'node -e "const fs=require(''fs''); for (const p of [''release-please-config.json'',''.release-please-manifest.json'',''package.json'']) JSON.parse(fs.readFileSync(p,''utf8''));"'
+  - 'node --test scripts/lint-markdown-changed.test.cjs'
   - 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
 cypressFlows:
   - not-applicable: Repository release governance has no browser workflow.
 completionGate:
   - 'node -e "const fs=require(''fs''); for (const p of [''release-please-config.json'',''.release-please-manifest.json'',''package.json'']) JSON.parse(fs.readFileSync(p,''utf8''));"'
+  - 'node --test scripts/lint-markdown-changed.test.cjs'
   - 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
   - 'pnpm docs:feature-mechanization -- --feature RELEASE-PLEASE-PREMAJOR-GOVERNANCE-20260709'
   - 'pnpm docs:feature-mechanization:implementation'
@@ -272,6 +284,14 @@ redGreenCycles:
     patchSurfaces:
       - release-please-config.json
     greenTest: 'pnpm pr:validate-title "chore(main): Release 0.2.0"'
+  - id: release-please-generated-changelog-markdownlint
+    redTest: 'pnpm verify:prepush'
+    expectedFailure: Release Please generated CHANGELOG.md was passed explicitly to markdownlint-cli2 and failed hand-authored Markdown spacing rules.
+    patchSurfaces:
+      - .markdownlintignore
+      - scripts/lint-markdown-changed.cjs
+      - scripts/lint-markdown-changed.test.cjs
+    greenTest: 'node --test scripts/lint-markdown-changed.test.cjs'
 symbols:
   - name: ReleasePleasePreMajorState
     path: release-please-config.json
@@ -325,6 +345,114 @@ symbols:
     cypressCoverage: "not-applicable: Repository release governance has no browser workflow."
     unitTests:
       - 'pnpm docs:governance:unit-coverage'
+  - name: fs
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
+  - name: markdownFilePattern
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
+  - name: toPosix
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
+  - name: parseIgnorePatterns
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
+  - name: readIgnorePatterns
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
+  - name: isIgnoredByPattern
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
+  - name: isIgnored
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
+  - name: listChangedMarkdownFiles
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
+  - name: main
+    path: scripts/lint-markdown-changed.cjs
+    dddOwner: ChangedMarkdownFileSet
+    cqRails:
+      - LintChangedMarkdownFiles
+    fowlerSignals:
+      - Explicit Gate
+      - Configuration as Policy
+    architectureGuard: 'node --test scripts/lint-markdown-changed.test.cjs'
+    cypressCoverage: "not-applicable: Repository Markdown governance has no browser workflow."
+    unitTests:
+      - 'node --test scripts/lint-markdown-changed.test.cjs'
 ```
 
 ## Residual Problem Set
