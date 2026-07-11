@@ -1,6 +1,7 @@
 /** Owned concern: render one node property section from the Inspector read model. */
 import type { ReactNode } from 'react';
 
+import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import { inspectorVisualClasses } from './inspectorVisualTokens';
 import { Badge } from '../ui/badge';
 import { cn } from '../ui/utils';
@@ -127,7 +128,16 @@ function renderSectionBody(
                 surface === 'workbench' && 'text-(--text-primary)'
               )}
             >
-              {row.value}
+              {row.detail == null ? (
+                row.value
+              ) : (
+                <MetricEvidenceHotspot
+                  dataSlot="node-property-metric-evidence"
+                  detail={row.detail}
+                  tone={row.tone ?? 'neutral'}
+                  value={row.value}
+                />
+              )}
             </dd>
           </div>
         ))}

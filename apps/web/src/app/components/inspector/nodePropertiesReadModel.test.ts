@@ -172,6 +172,55 @@ describe('nodePropertiesReadModel', () => {
     expect(sectionById(model, 'code').code).toBe('select * from analytics.raw.orders');
   });
 
+  it('shows calculated source object size distinctly from measured byte size', () => {
+    const model = buildSourceModel(
+      buildSourceNode({
+        metadata: {
+          sourceName: 'warehouse_prod_analytics_raw',
+          database: 'analytics',
+          schema: 'raw',
+          tableName: 'orders',
+          sourceMetricEvidence: {
+            observedAt: '2026-07-10T21:00:00.000Z',
+            observationScope: { kind: 'snapshot' },
+            rowCount: {
+              value: 1500,
+              provenance: 'estimated',
+              method: 'query-plan',
+              confidence: 'low',
+            },
+            byteSize: {
+              value: 102000,
+              provenance: 'estimated',
+              method: 'schema-width',
+              confidence: 'low',
+              basis: 'logical-payload',
+            },
+          },
+        },
+      })
+    );
+
+    const general = sectionById(model, 'general');
+    expectRows(general, {
+      Rows: '1,500',
+      Size: 'Estimated 99.6 KB',
+    });
+    expect(general.rows.find((row) => row.label === 'Rows')).toMatchObject({
+      tone: 'estimated',
+      detail:
+        '1,500 records. Estimated using query plan. Confidence: low. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+    });
+    expect(general.rows.find((row) => row.label === 'Size')).toMatchObject({
+      tone: 'estimated',
+      detail:
+        '102,000 B (99.6 KB). Estimated using schema width. Logical payload. Confidence: low. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+    });
+    expect(general.rows.map((row) => row.label)).not.toEqual(
+      expect.arrayContaining(['Row evidence', 'Size evidence', 'Size basis', 'Metrics observed'])
+    );
+  });
+
   it('keeps the expected table-modeler section vocabulary without requiring records', () => {
     const model = buildNodePropertiesReadModel({
       node: buildSourceNode(),

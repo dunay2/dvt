@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import type { SourceObjectMetricEvidence } from '@dvt/contracts';
-import { describeSourceObjectMetricEvidence } from './sourceObjectMetricEvidencePresentation';
+import {
+  describeSourceObjectMetricEvidence,
+  formatSourceObjectMetricByteDetail,
+  formatSourceObjectMetricByteSize,
+} from './sourceObjectMetricEvidencePresentation';
 
 const snapshotEvidence: SourceObjectMetricEvidence = {
   observedAt: '2026-07-11T12:00:00.000Z',
@@ -22,6 +26,21 @@ const snapshotEvidence: SourceObjectMetricEvidence = {
 };
 
 describe('describeSourceObjectMetricEvidence', () => {
+  it.each([
+    [0, '0 B'],
+    [1024, '1 KB'],
+    [4096000, '3.9 MB'],
+    [1073741824, '1 GB'],
+  ])('formats %d bytes consistently across source-object surfaces', (value, expected) => {
+    expect(formatSourceObjectMetricByteSize(value)).toBe(expected);
+  });
+
+  it('combines exact and compact byte values for evidence details', () => {
+    expect(formatSourceObjectMetricByteDetail(102000, new Intl.NumberFormat('en-US'))).toBe(
+      '102,000 B (99.6 KB)'
+    );
+  });
+
   it('explains provenance, method, confidence, storage basis, and snapshot time', () => {
     expect(
       describeSourceObjectMetricEvidence({

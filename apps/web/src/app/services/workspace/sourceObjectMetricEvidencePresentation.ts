@@ -22,6 +22,28 @@ const byteSizeBasisLabels: Record<SourceObjectByteSizeBasis, string> = {
   'lower-bound': 'Lower bound',
 };
 
+export function formatSourceObjectMetricByteSize(value: number): string {
+  if (Math.abs(value) >= 1024 * 1024 * 1024) {
+    return `${(value / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
+  }
+  if (Math.abs(value) >= 1024 * 1024) {
+    return `${(value / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
+  }
+  if (Math.abs(value) >= 1024) {
+    return `${(value / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
+  }
+  return `${value} B`;
+}
+
+export function formatSourceObjectMetricByteDetail(
+  value: number,
+  numberFormatter = new Intl.NumberFormat()
+): string {
+  const compact = formatSourceObjectMetricByteSize(value);
+  const exact = `${numberFormatter.format(Math.round(value))} B`;
+  return exact === compact ? exact : `${exact} (${compact})`;
+}
+
 function describeObservation(evidence: SourceObjectMetricEvidence): string {
   const { observationScope } = evidence;
   return observationScope.kind === 'snapshot'

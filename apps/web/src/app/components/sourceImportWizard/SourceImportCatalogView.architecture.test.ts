@@ -31,11 +31,13 @@ describe('SourceImportCatalogView architecture', () => {
 
     expect(catalogModel).toContain('SourceImportCatalogViewModel');
     expect(catalogModel).toContain('buildSourceImportCatalogViewModel');
-    expect(catalogModel).toContain('formatSourceImportByteSize');
+    expect(catalogModel).toContain('formatSourceObjectMetricByteSize');
+    expect(catalogModel).toContain('sourceObjectMetricEvidencePresentation');
+    expect(catalogModel).not.toContain('function formatSourceImportByteSize');
 
     expect(wizardModel).not.toContain('SourceImportCatalogViewModel');
     expect(wizardModel).not.toContain('buildSourceImportCatalogViewModel');
-    expect(wizardModel).not.toContain('formatSourceImportByteSize');
+    expect(wizardModel).not.toContain('formatSourceObjectMetricByteSize');
   });
 
   it('keeps wizard footer commands in the governed copy catalog', () => {

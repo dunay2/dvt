@@ -9,7 +9,11 @@ import type {
   SelectableSourceObject,
   SourceImportSchemaIdentity,
 } from './types';
-import { describeSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
+import {
+  describeSourceObjectMetricEvidence,
+  formatSourceObjectMetricByteDetail,
+  formatSourceObjectMetricByteSize,
+} from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 
 export type SourceImportColumnViewModel = Readonly<{
   name: string;
@@ -191,33 +195,11 @@ export function formatSourceImportColumnCount(
   return `${formatNumber(columnCount, numberFormatter)} ${suffix}`;
 }
 
-export function formatSourceImportByteSize(byteSize: number): string {
-  if (byteSize >= 1024 * 1024 * 1024) {
-    return `${(byteSize / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
-  }
-  if (byteSize >= 1024 * 1024) {
-    return `${(byteSize / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
-  }
-  if (byteSize >= 1024) {
-    return `${(byteSize / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
-  }
-  return `${byteSize} B`;
-}
-
-function formatSourceImportByteDetail(
-  byteSize: number,
-  compact: string,
-  numberFormatter: Intl.NumberFormat
-): string {
-  const exact = `${numberFormatter.format(Math.round(byteSize))} B`;
-  return exact === compact ? exact : `${exact} (${compact})`;
-}
-
 export function formatSourceImportSizeEvidence(
   sourceObject: Pick<SelectableSourceObject, 'metricEvidence'>,
   copy: Pick<SourceImportCatalogCopy, 'estimatedSizePrefix'>
 ): string {
-  const size = formatSourceImportByteSize(sourceObject.metricEvidence.byteSize.value);
+  const size = formatSourceObjectMetricByteSize(sourceObject.metricEvidence.byteSize.value);
   return sourceObject.metricEvidence.byteSize.provenance === 'estimated'
     ? `${copy.estimatedSizePrefix} ${size}`
     : size;
@@ -343,7 +325,6 @@ export function buildSourceImportObjectViewModel(
     numberFormatter
   );
   const byteSizeLabel = formatSourceImportSizeEvidence(sourceObject, copy);
-  const compactByteSize = formatSourceImportByteSize(sourceObject.metricEvidence.byteSize.value);
   const columnCountLabel = formatSourceImportColumnCount(
     sourceObject.columns?.length ?? 0,
     copy,
@@ -373,9 +354,8 @@ export function buildSourceImportObjectViewModel(
     byteSizeLabel,
     byteSizeDetail: describeSourceObjectMetricEvidence({
       metric: sourceObject.metricEvidence.byteSize,
-      subject: formatSourceImportByteDetail(
+      subject: formatSourceObjectMetricByteDetail(
         sourceObject.metricEvidence.byteSize.value,
-        compactByteSize,
         numberFormatter
       ),
       evidence: sourceObject.metricEvidence,
