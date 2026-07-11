@@ -1,167 +1,2253 @@
 ---
-title: dbt Project Round-Trip Product Plan
+title: DVT dbt Project Round-Trip — Hard Fowler QA and Revised Architecture Specification
 status: Review
-date: 2026-05-27
-last_reviewed: 2026-05-27
+version: 2.0
+date: 2026-07-10
+last_reviewed: 2026-07-10
+reviewed_repository: dunay2/dvt
+reviewed_ref: main
+reviewed_commit: 800be353aee4bf85c03be671e142fe7d5dd11df1
+revalidated_commit: 46f878ea7d3bca394bf4233ed830ab5adb760e43
 owners:
-  - apps/web
-  - apps/api
+  - Web
+  - API
+  - Project Workspace I/O
+  - dbt Integration
 planning_type: mandatory-proposal
 task_ids:
   - E-DBT-PROJECT-ROUNDTRIP-1
-  - E-DBT-PROJECT-ROUNDTRIP-1A
-  - E-DBT-PROJECT-ROUNDTRIP-1B
-  - E-DBT-PROJECT-ROUNDTRIP-1C
-  - E-DBT-PROJECT-ROUNDTRIP-1D
-  - E-DBT-PROJECT-ROUNDTRIP-1E
+refines:
+  - docs/planning/proposals/mandatory/frontend-and-ux/dbt-authoring-code-run-vertical-plan-20260526.md
+canonical_path: docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
 ---
 
-# dbt Project Round-Trip Product Plan
+# DVT dbt Project Round-Trip
 
-## Purpose
+## Hard Fowler QA and Revised Architecture Specification
 
-This plan canonizes the product requirement that a user can import an existing
-dbt project, inspect and edit it in the workbench, save it through governed
-workspace files and Canvas draft rails, execute it through the persisted PlanRef
-path, and export a dbt-compatible project without DVT-only metadata leaking into
-the exported dbt artifact.
+## 1. Executive verdict
 
-The Planning DB remains the source of truth for execution state. This proposal
-is the source document and user-story package for `E-DBT-PROJECT-ROUNDTRIP-1`
-and its implementation slices.
+The previous draft had the correct product instinct:
 
-## Governing Sources
+> DVT must not create a new user-facing language for dbt projects. A dbt user
+> must see and edit normal dbt files, while Canvas acts as a visual projection
+> and governed editing surface.
+
+That direction is valid.
+
+The draft was **not implementation-ready**, however, because it silently
+overrode several accepted repository boundaries and proposed new commands,
+routes, persistence locations, and transaction guarantees that do not match the
+current codebase.
+
+This revision keeps the product direction and changes the implementation model
+to fit DVT's actual architecture.
+
+### 1.1 Final target
+
+For an explicitly file-backed dbt canvas:
+
+```text
+dbt project files
+  -> dbt analysis adapter
+  -> DbtProjectGraphProjection
+  -> Canvas
+  -> governed visual edits when lossless
+  -> the same dbt project files
+  -> persisted Execution Preview
+  -> PlanRef
+  -> StartRun
+```
+
+For the current graph-draft bootstrap dbt canvas:
+
+```text
+Canvas graph draft
+  -> GenerateDbtWorkspaceArtifacts
+  -> dbt project files
+  -> adopt file-backed authority
+```
+
+The transition from graph-authored bootstrap to file-backed dbt authority must
+be explicit and one-way. DVT must never switch between those authority models
+silently.
+
+### 1.2 Main corrections to the previous draft
+
+1. File authority requires an explicit authority-mode decision and an ADR.
+2. The existing graph-first draft contract cannot quietly become a projection.
+3. `.dvt/` is removed from the MVP because Canvas layout already has an
+   accepted route-local owner.
+4. Existing workspace-file commands are reused and hardened instead of
+   introducing a duplicate dbt file-save route.
+5. `StartRun`, `PreviewExecutionPlan`, and `ObservePlanRunReadiness` remain the
+   runtime rails; no dbt-specific run synonym is introduced.
+6. dbt analysis is a new outbound adapter capability, not a new browser parser.
+7. Imported arbitrary SQL is read/projected first; visual mutation is limited to
+   provably lossless edits.
+8. Source Import must follow the active authority mode instead of always writing
+   both YAML and graph-draft semantics.
+9. Workspace file revisions, conditional writes, and batch mutation are explicit
+   infrastructure prerequisites.
+10. The current runtime bundle must stop including `profiles.yml` and must bind
+    to a specific dbt project root and project revision.
+
+---
+
+# 2. Review scope and source evidence
+
+## 2.1 Governing repository sources
+
+The review used:
 
 - `AGENTS.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
-- `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- `docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/dbt-authoring-code-run-vertical-plan-20260526.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md`
+- `docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md`
+- `docs/architecture/components/web/code-workbench-workspace-files-component.md`
+- `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`
+- `docs/architecture/components/web/graph/canvas-plan-run-readiness-component.md`
+- `docs/adr/ADR-0059-canonical-node-identity.md`
 
-## User Role Pairing
+## 2.2 Current implementation surfaces inspected
 
-Demanding user role:
+### Canvas and dbt authoring
 
-The user does not care that dbt, Canvas, Code, Artifacts, Plan, Run, and Export
-are separate implementation surfaces. The user expects one coherent project
-workflow: choose a dbt project, see the files and graph, edit a model or source,
-save, run, inspect events, and export something that a normal dbt tool accepts.
+- `packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts`
+- `apps/web/src/app/views/canvas/canvasDbtAuthoringModel.ts`
+- `apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts`
+- `apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts`
+- `apps/web/src/app/views/canvas/canvasPlanAction.ts`
+- `apps/web/src/app/plugins/dbt/dbtContributions.ts`
 
-Architect/developer role:
+### Code and workspace files
 
-The implementation must not fake the round trip. Import, edit, save, run, and
-export must flow through named rails, have negative tests, preserve tenant and
-project scope, and record out-of-scope findings as DB-linked tasks or risks.
+- `apps/web/src/app/views/CodeView.tsx`
+- `apps/web/src/app/ports/workspace.ts`
+- `apps/api/src/application/ports/workspaceFiles.ts`
+- `apps/api/src/application/services/saveWorkspaceFileContentUseCase.ts`
+- `apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts`
+- `apps/api/src/entrypoints/http/workspaceFilesRoutes.ts`
 
-## Mature-System Comparison
+### Source Import
 
-| Mature system behavior                                                                           | Product expectation for DVT                                                      | DVT convergence criterion                                                                |
-| ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| dbt Cloud imports a project from Git and keeps files as project truth.                           | Imported dbt files become workspace files, not browser-only Canvas state.        | `ImportDbtProject` writes a scoped workspace-file projection with provenance.            |
-| VS Code/dbt extensions let users edit files and see project artifacts.                           | Code, Artifacts, and Canvas describe the same dbt project.                       | `ListWorkspaceFiles` and Canvas graph projection use the same source import receipt.     |
-| SQL Developer-style tools expose object properties and fields without hiding the underlying DDL. | dbt cards expose source/model properties and generated SQL/YAML.                 | Inspector changes persist to files or graph metadata through explicit commands.          |
-| Mature build tools distinguish validation, compile, run, and export.                             | User can run full dbt graph or SQL-only work without ambiguous disabled buttons. | Plan/run readiness explains unavailable modes and offers a valid execution-capable path. |
-| Exported projects do not contain editor-private state.                                           | DVT metadata remains in manifests, not in dbt-compatible exports.                | `ExportDbtProject` filters DVT-only fields and proves dbt file compatibility.            |
+- `apps/api/src/application/services/importWarehouseSourcesUseCase.ts`
+- `apps/web/src/app/components/sourceImportWizard/**`
 
-## Current State
+### Preview and runtime binding
 
-```mermaid
-flowchart TD
-  Canvas["Canvas dbt graph"]
-  Code["Code tab"]
-  Artifacts["Artifacts tab"]
-  Runs["Runs"]
-  Export["Export"]
-  Files["Workspace files"]
+- `apps/web/src/app/views/canvas/canvasPlanReadiness.ts`
+- `apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts`
+- current dbt live Cypress proofs.
 
-  Canvas -. "partial authoring" .-> Files
-  Code -. "file editing surface" .-> Files
-  Artifacts -. "artifact browsing" .-> Files
-  Canvas -. "plan/run rail exists" .-> Runs
-  Files -. "no full dbt import/export plan" .-> Export
+---
+
+# 3. Current-state truth
+
+## 3.1 The graph draft is currently authoritative
+
+`WorkspaceGraphAuthoringDraft.v1` describes itself as the graph-first editable
+aggregate and says that planner and Canvas share one editable authoring truth.
+
+It stores:
+
+- semantic nodes;
+- semantic edges;
+- visible node IDs;
+- node positions;
+- canvas documents.
+
+The current Canvas architecture also treats the protected semantic graph as the
+first authority.
+
+Therefore this statement from the previous draft:
+
+```text
+dbt files are authoritative and Canvas is only a projection
 ```
 
-## Target State
+is a **target-state architectural change**, not a description of current code.
 
-```mermaid
-flowchart LR
-  Import["ImportDbtProject"]
-  Validate["ValidateDbtProjectImport"]
-  Files["Workspace dbt files"]
-  Graph["Canvas dbt graph"]
-  Code["Code editor"]
-  Inspector["Card inspector"]
-  PlanRun["Persisted PlanRef run"]
-  Export["ExportDbtProject"]
+It requires:
 
-  Import --> Validate
-  Validate --> Files
-  Files --> Graph
-  Graph --> Inspector
-  Files --> Code
-  Code --> Files
-  Inspector --> Files
-  Graph --> PlanRun
-  Files --> Export
+- an authority-mode policy;
+- canonical documentation changes;
+- an ADR or accepted equivalent decision;
+- contract and architecture guards;
+- migration behavior for existing canvases.
+
+## 3.2 Current dbt authoring generates files from Canvas
+
+`canvasDbtWorkspaceArtifacts.ts`:
+
+- reads canonical nodes and edges;
+- reads `DbtNodeAuthoringMetadata`;
+- generates `dbt_project.yml`;
+- generates `models/<name>.sql`;
+- generates `models/schema.yml`.
+
+Generated SQL is deliberately simple:
+
+```sql
+{{ config(materialized='view') }}
+
+select *
+from {{ source('source_name', 'table_name') }}
 ```
 
-## Command And Query Rails
+This is a bootstrap generator, not a round-trip editor for arbitrary dbt code.
 
-| Rail                       | Type    | Owner                  | DDD object or read model     | Scope and authorization                                        | Negative tests                                                                          |
-| -------------------------- | ------- | ---------------------- | ---------------------------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `ValidateDbtProjectImport` | query   | dbt project import     | `DbtProjectImportReport`     | Project-scoped read of a selected local/remote artifact source | Missing `dbt_project.yml`, unsupported version, malformed YAML, duplicate package names |
-| `ImportDbtProject`         | command | dbt project import     | `DbtProjectImportReceipt`    | Project write permission and workspace-file write permission   | Read-only project, malformed source, stale workspace, unsupported file kind             |
-| `ProjectDbtGraphFromFiles` | query   | Canvas dbt projection  | `DbtGraphProjection`         | Project-scoped read of imported workspace files                | Missing source file, invalid refs, cycle, unsupported macro expansion                   |
-| `SaveDbtProjectFileEdit`   | command | workspace file editing | `WorkspaceDbtFileEdit`       | File write permission and expected file revision               | Stale revision, invalid path, invalid dbt YAML/SQL policy, read-only workspace          |
-| `RunPersistedDbtProject`   | command | run execution          | `PersistedPlanRefRunRequest` | Execution-capable project scope and selected run mode          | Read-only mode, missing PlanRef, invalid selection, provider unavailable                |
-| `ExportDbtProject`         | command | dbt project export     | `DbtProjectExportArtifact`   | Project read plus export permission                            | DVT metadata leak, missing required files, unsupported target adapter                   |
+## 3.3 Preview currently rewrites files from the graph draft
 
-## User Stories
+For `planner_generic_preview`, `executeCanvasPlanAction(...)` currently:
 
-| Story         | Role                | Scenario                                                                                                              | Acceptance                                                                                                      |
-| ------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| US-DBT-RT-001 | Demanding dbt user  | [Task: E-DBT-PROJECT-ROUNDTRIP-1B] I import an existing dbt project from a selected source.                           | The UI validates the source, shows file counts and warnings, and creates workspace files only after acceptance. |
-| US-DBT-RT-002 | Demanding dbt user  | [Task: E-DBT-PROJECT-ROUNDTRIP-1B] I see sources, models, tests, macros, and seeds in the project explorer and graph. | Explorer rows, Canvas nodes, Code files, and Artifacts share the same import receipt.                           |
-| US-DBT-RT-003 | Demanding dbt user  | [Task: E-DBT-PROJECT-ROUNDTRIP-1C] I edit a model SQL file in Code and see the graph/card reflect the change.         | Save uses file revision checks and updates graph projection without browser-only authority.                     |
-| US-DBT-RT-004 | Demanding dbt user  | [Task: E-DBT-PROJECT-ROUNDTRIP-1C] I configure a dbt card origin and generated code remains inspectable.              | The card references workspace files and source origin explicitly; no hidden generated blob becomes truth.       |
-| US-DBT-RT-005 | Demanding dbt user  | [Task: E-DBT-PROJECT-ROUNDTRIP-1D] I execute the imported project or selected SQL through an execution-capable mode.  | Read-only mode cannot execute; the UI offers a clear transition or unavailable reason before run.               |
-| US-DBT-RT-006 | Demanding dbt user  | [Task: E-DBT-PROJECT-ROUNDTRIP-1D] I watch import, save, plan, run, and error events in the console.                  | Event entries are correlated by project, PlanRef, run id, and file/artifact receipt.                            |
-| US-DBT-RT-007 | Demanding dbt user  | [Task: E-DBT-PROJECT-ROUNDTRIP-1E] I export the current project and open it with a normal dbt-compatible tool.        | Export contains dbt files and supported metadata only; DVT-private state remains outside the dbt artifact.      |
-| US-DBT-RT-008 | Architect/developer | [Task: E-DBT-PROJECT-ROUNDTRIP-1A] I can trace every import/edit/save/run/export behavior to one rail.                | The command/query catalog names owner, port, scope, negative tests, and implementation surface before code.     |
+1. resolves the execution scope from Canvas nodes;
+2. calls `buildDbtWorkspaceArtifacts(...)`;
+3. writes every generated file through `SaveWorkspaceFileContent`;
+4. builds the planner graph source from Canvas nodes and edges;
+5. requests the persisted preview.
 
-## Fowler Opportunity Matrix
+That behavior is correct for the current graph-authored mode, but it would be
+destructive for an imported file-backed project.
 
-| Scenario                                          | Opportunity         | Fowler pattern         | DDD owner                    | Rail                       | Implementation surface                             | Unit or package test                     | Architecture test                | User-flow test                     | Out of scope                             |
-| ------------------------------------------------- | ------------------- | ---------------------- | ---------------------------- | -------------------------- | -------------------------------------------------- | ---------------------------------------- | -------------------------------- | ---------------------------------- | ---------------------------------------- |
-| Existing dbt project becomes UI-only graph state. | Hidden authority    | Repository and Gateway | `DbtProjectImportReceipt`    | `ImportDbtProject`         | Import adapter, workspace files, Canvas projection | Import rejection tests                   | No browser-only import authority | Import project and inspect files   | Git clone implementation unless selected |
-| Code and Canvas drift after edits.                | Duplicate semantics | Read Model projection  | `DbtGraphProjection`         | `ProjectDbtGraphFromFiles` | Code save adapter, graph projection                | File revision and graph projection tests | No parallel dbt graph store      | Edit SQL and see graph/card update | Full dbt compiler                        |
-| Run button is disabled without a work path.       | Hidden authority    | Policy Object          | `PersistedPlanRefRunRequest` | `RunPersistedDbtProject`   | Run readiness, console events                      | Read-only and unavailable tests          | Read-only cannot execute         | Enter execution mode and run       | Permission bypass                        |
-| Export leaks DVT editor metadata.                 | Boundary drift      | Anti-corruption Layer  | `DbtProjectExportArtifact`   | `ExportDbtProject`         | Export adapter and artifact writer                 | Metadata filtering tests                 | Export cannot read UI-only state | Export and compatibility proof     | Provider-specific deploy                 |
+## 3.4 Code is currently a local editable buffer
 
-## Delivery Slices
+`CodeView`:
 
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1A] Design the accepted rail catalog, dbt compatibility proof, double-role QA protocol, and out-of-scope closeout template before implementation.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1B] Import an existing dbt project into workspace files and a Canvas projection with malformed-source rejection.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1C] Make Code, Canvas cards, and workspace files persist edits through one file/draft authority.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1D] Execute imported and edited dbt projects through persisted PlanRef readiness and console events.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1E] Export the workspace dbt project as a dbt-compatible artifact with metadata filtering proof.
+- lists workspace files;
+- reads file content;
+- opens Monaco in editable mode;
+- keeps edits in `CodeEditableBuffer`;
+- does not expose a governed Save command.
 
-## TDD And UX Proof
+The shared backend write rail exists, but the browser does not yet persist
+manual edits.
 
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1A] Red tests must fail first for missing rail catalog entries and missing user stories.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1B] Red tests must fail first for dbt project validation and import rejection paths.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1C] Red tests must fail first for stale file revisions and graph/file drift.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1D] Red tests must fail first for read-only execution rejection and missing PlanRef.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1E] Red tests must fail first for DVT metadata leakage in exported dbt artifacts.
-- [Task: E-DBT-PROJECT-ROUNDTRIP-1] User-flow proof must demonstrate import -> edit -> save -> run -> export in the browser with console evidence.
+## 3.5 Workspace file writes have no revision guard
 
-## Archive And Canon Rules
+`WorkspaceFileContent` currently exposes:
 
-This document is the canonical planning surface for dbt project round-trip work.
-Older proposal fragments that describe dbt import/export without task lineage
-must be updated to point here or archived with a backlink. They must not remain
-active as separate product plans.
+- path;
+- name;
+- language;
+- content;
+- lastModified.
+
+`SaveWorkspaceFileContent` accepts only:
+
+```text
+path + content
+```
+
+`LocalWorkspaceFileRepository.saveFileContent(...)` performs an unconditional
+write.
+
+There is no:
+
+- expected revision;
+- expected content hash;
+- compare-and-swap;
+- conflict receipt;
+- atomic multi-file mutation.
+
+## 3.6 Source Import currently writes two authorities
+
+`ImportWarehouseSourcesUseCase`:
+
+1. writes dbt source YAML;
+2. appends imported source nodes to the authoritative graph draft;
+3. rolls back YAML when draft save fails.
+
+This is correct for the current graph-authoritative model.
+
+In a file-backed dbt model, that same command must not append semantic nodes to
+the draft. The node must appear through file analysis and graph projection.
+
+## 3.7 Runtime bundling is project-root unaware
+
+`DbtRunExecutionContextBindingUseCase` currently:
+
+- scans one configured workspace root;
+- selects known dbt files/directories;
+- builds a tarball;
+- binds it to the run context.
+
+It does not bind the bundle to:
+
+- a declared dbt project root;
+- a project revision;
+- a manifest hash.
+
+## 3.8 Runtime bundling currently includes profiles.yml
+
+The runtime bundle allowlist includes `profiles.yml`.
+
+That is incompatible with the intended security posture. dbt execution
+credentials must remain server-owned and reference-based; they must not enter a
+portable project bundle by default.
+
+## 3.9 No dbt project analyzer currently exists
+
+The reviewed source does not implement a repository-owned:
+
+- `dbt parse` adapter;
+- manifest projection service;
+- project compatibility report;
+- file-to-Canvas graph projector.
+
+The target architecture therefore requires a real new outbound adapter and
+application query path.
+
+---
+
+# 4. Hard Fowler QA findings
+
+## 4.1 Severity model
+
+- **P0** — blocks adoption of the specification or creates security/data-loss risk.
+- **P1** — blocks a reliable implementation slice.
+- **P2** — important maturity or maintainability issue.
+- **P3** — improvement that can follow after the core boundary is safe.
+
+## 4.2 Findings summary
+
+| ID   | Severity | Finding                                                                                              |
+| ---- | -------: | ---------------------------------------------------------------------------------------------------- |
+| F-01 |       P0 | File authority contradicts the current graph-first public contract unless authority mode is explicit |
+| F-02 |       P0 | Preview would overwrite imported dbt code through the current Canvas artifact generator              |
+| F-03 |       P0 | Runtime project bundle currently includes `profiles.yml`                                             |
+| F-04 |       P1 | The previous draft introduced duplicate file-save commands and routes                                |
+| F-05 |       P1 | Workspace files lack revision/CAS semantics                                                          |
+| F-06 |       P1 | The previous draft promised a dbt analyzer that does not exist                                       |
+| F-07 |       P1 | `.dvt/` sidecar persistence conflicts with accepted route-local layout ownership                     |
+| F-08 |       P1 | Visual SQL/Jinja mutation scope was materially overpromised                                          |
+| F-09 |       P1 | Source Import is hard-wired to graph-draft authority                                                 |
+| F-10 |       P1 | Planner graph source is derived from draft nodes, not a dbt manifest projection                      |
+| F-11 |       P1 | Runtime bundle is not bound to project root or project revision                                      |
+| F-12 |       P1 | Local workspace repository is not yet generally dbt-project compatible                               |
+| F-13 |       P1 | Atomic import and multi-file visual edits have no repository transaction boundary                    |
+| F-14 |       P2 | Current dbt authoring silently normalizes unsupported values                                         |
+| F-15 |       P2 | Code initial-file selection favors DVT pipeline YAML over dbt project context                        |
+| F-16 |       P2 | Several proposed query names duplicated the same analysis intent                                     |
+| F-17 |       P2 | Several proposed command results were screen-shaped read models                                      |
+| F-18 |       P2 | The previous draft did not define a safe graph-draft adoption transition                             |
+
+---
+
+## 4.3 Detailed findings
+
+### F-01 — Hidden authority and contract contradiction
+
+**Signal:** Hidden authority, duplicate semantics, documentation drift.
+
+The public graph draft contract currently says the graph is the editable
+authoring truth. The previous specification changed authority to files without
+changing that contract.
+
+**Required response:**
+
+Introduce a typed authority policy:
+
+```ts
+type CanvasAuthoringAuthority =
+  | { kind: 'graph-draft' }
+  | {
+      kind: 'dbt-project-files';
+      projectRoot: string;
+    };
+```
+
+This policy must be accepted before file-backed behavior is implemented.
+
+**Pattern:**
+
+- Policy Object
+- Explicit State
+- Read Model Projection
+- Anti-Corruption Layer
+
+**DDD owner:**
+
+`CanvasAuthoringAuthorityPolicy`.
+
+**Architecture guard:**
+
+A file-backed canvas must not consume draft semantic nodes/edges as execution
+truth.
+
+---
+
+### F-02 — Destructive Preview path
+
+**Signal:** Hidden authority and destructive projection.
+
+Current Preview writes generated dbt files from Canvas every time. If an
+imported user file already exists, this can destroy arbitrary SQL, comments,
+Jinja, CTEs, and project configuration.
+
+**Required response:**
+
+Branch Preview by authority:
+
+```text
+graph-draft authority
+  -> GenerateDbtWorkspaceArtifacts
+  -> Preview
+
+dbt-project-files authority
+  -> analyze existing project files
+  -> BuildDbtPlannerGraphSource from projection
+  -> Preview
+```
+
+`GenerateDbtWorkspaceArtifacts` must never run during normal Preview for a
+file-backed project.
+
+---
+
+### F-03 — profiles.yml bundle leakage
+
+**Signal:** Boundary drift and security leakage.
+
+The current runtime bundle includes `profiles.yml`.
+
+**Required response:**
+
+- exclude `profiles.yml` from project bundles;
+- resolve execution target through server-owned credential references;
+- add a negative test that scans bundle entries;
+- add a security/risk update when implementation begins.
+
+**Pattern:**
+
+- Anti-Corruption Layer
+- Secret Reference
+- Explicit Gateway
+
+---
+
+### F-04 — Duplicate file-save semantics
+
+**Signal:** Duplicate semantics.
+
+The previous specification proposed both:
+
+- `SaveWorkspaceFileContent`;
+- `SaveDbtProjectFileEdit`;
+- a new dbt-specific file-save HTTP route.
+
+The core user intent is still saving a workspace file.
+
+**Required response:**
+
+Evolve and reuse `SaveWorkspaceFileContent`:
+
+```ts
+type SaveWorkspaceFileContentInput = {
+  path: string;
+  content: string;
+  expectedContentSha256?: string;
+  idempotencyKey: string;
+};
+```
+
+After save, the dbt projection query is invalidated and refetched.
+
+Do not add `/workspace/dbt/files/:path`.
+
+No generic visual-edit exception is accepted in Phase 0. A concrete lossless
+mutation may justify a distinct command later, after its DDD owner, file
+mutation boundary, and preservation fixtures exist.
+
+---
+
+### F-05 — Missing concurrency policy
+
+**Signal:** Anemic domain and unsafe gateway.
+
+The current save use case delegates an unconditional write.
+
+**Required response:**
+
+Add:
+
+- `WorkspaceFileRevision` value object;
+- content SHA on reads;
+- expected SHA on writes;
+- `WorkspaceFileConflictError`;
+- conditional atomic file replacement;
+- conflict UI.
+
+A stale Code buffer must never overwrite a newer file silently.
+
+---
+
+### F-06 — Missing analyzer adapter
+
+**Signal:** Proposed architecture without implementation boundary.
+
+The target requires a dbt analysis capability, but the repo has no such adapter.
+
+**Required response:**
+
+Add an outbound port:
+
+```ts
+interface IDbtProjectAnalyzerPort {
+  analyze(input: AnalyzeDbtProjectInput): Promise<DbtProjectAnalysis>;
+}
+```
+
+The adapter runs server-side in a constrained environment. Browser code must not
+implement authoritative Jinja parsing.
+
+The analyzer is an internal dependency of `ProjectDbtGraphFromFiles`; it is not
+a separate product route by itself.
+
+---
+
+### F-07 — Unplanned `.dvt/` sidecar
+
+**Signal:** Boundary drift and scope expansion.
+
+Canvas layout already belongs to:
+
+- `PersistCanvasLayout`;
+- `GetCanvasLayout`;
+- route-local frontend state.
+
+Adding `.dvt/` would create a new shared-persistence rail and conflict with the
+accepted component boundary.
+
+**Required response:**
+
+MVP keeps current route-local layout persistence and keys positions by stable dbt
+resource identity.
+
+A future collaborative/shared-layout feature needs a separate proposal and rail.
+
+No `.dvt/` directory is introduced by this specification.
+
+---
+
+### F-08 — Unsafe visual mutation promise
+
+**Signal:** Responsibility overload and false completeness.
+
+Arbitrary dbt SQL/Jinja cannot be safely rewritten by replacing a dependency or
+materialization string.
+
+**Required response:**
+
+Phase visual editing:
+
+1. project and inspect arbitrary projects;
+2. save code directly;
+3. support only lossless, unambiguous visual edits;
+4. mark everything else `code_only`.
+
+MVP visual edits should prioritize CST-preserving YAML operations. SQL/Jinja
+edits require an explicit mutation strategy and preservation proof.
+
+---
+
+### F-09 — Source Import authority mismatch
+
+**Signal:** Duplicate authority.
+
+Current Source Import writes both YAML and draft nodes.
+
+**Required response:**
+
+```text
+graph-draft authority:
+  current behavior remains
+
+dbt-project-files authority:
+  write/merge source YAML
+  analyze project
+  project source nodes into Canvas
+  do not append semantic draft nodes
+```
+
+The same `ImportWarehouseSources` rail may branch through the authority policy;
+no duplicate Source Import rail is needed.
+
+---
+
+### F-10 — Planner projection uses the draft graph
+
+**Signal:** Feature envy and hidden authority.
+
+`BuildDbtPlannerGraphSource` currently consumes Canvas nodes and edges.
+
+**Required response:**
+
+Keep the rail but change its file-backed input to `DbtProjectGraphProjection`.
+
+The generic Canvas layer must not infer dbt dependencies independently of the
+dbt analysis owner.
+
+---
+
+### F-11 — Bundle lacks project identity
+
+**Signal:** Primitive obsession and broad workspace coupling.
+
+The bundle builder scans one workspace root.
+
+**Required response:**
+
+Bind execution to:
+
+```ts
+type DbtProjectExecutionIdentity = {
+  projectRoot: string;
+  projectRevision: string;
+  analysisSha256: string;
+};
+```
+
+Only files beneath the bound project root enter the bundle.
+
+---
+
+### F-12 — Workspace repository compatibility gaps
+
+**Signal:** Hidden constraints.
+
+Current local repository:
+
+- allows only a limited extension set;
+- excludes `.csv` and `.py`;
+- caps listed files at 500;
+- caps file size at 1 MB;
+- performs direct writes.
+
+**Required response:**
+
+Define explicit dbt compatibility limits and update the repository or add a
+dbt-project repository adapter.
+
+At minimum, preserve:
+
+- SQL;
+- YAML;
+- CSV seeds;
+- Python models when declared supported;
+- Markdown docs;
+- project/package files.
+
+Limits must produce diagnostics, not silently omit resources.
+
+---
+
+### F-13 — Missing batch mutation boundary
+
+**Signal:** Transaction Script without transaction ownership.
+
+Import, rename, and some visual edits affect multiple files.
+
+**Required response:**
+
+Add an internal outbound port:
+
+```ts
+interface IWorkspaceFileBatchMutationPort {
+  apply(input: WorkspaceFileBatchMutation): Promise<WorkspaceFileBatchReceipt>;
+}
+```
+
+This is not a new UI rail. It is a Gateway used by:
+
+- `ImportDbtProject`;
+- any accepted future cross-file visual mutation;
+- graph-draft adoption.
+
+MVP visual edits may be restricted to one file until this port exists.
+
+---
+
+### F-14 — Silent normalization
+
+**Signal:** Primitive obsession and data loss.
+
+Current dbt authoring metadata normalizes identifiers and replaces unknown
+materializations with `view`.
+
+That behavior is acceptable only for generated bootstrap content.
+
+It is not acceptable for imported projects.
+
+**Required response:**
+
+File-backed projection must preserve exact dbt values. Unsupported values become
+`code_only`; they are not coerced.
+
+---
+
+### F-15 — Code selection policy is DVT-oriented
+
+**Signal:** Context leakage.
+
+Code currently prefers `pipelines/*.yaml|yml`.
+
+**Required response:**
+
+Selection policy must depend on canvas authority:
+
+```text
+DVT transformation -> pipelines first
+dbt file-backed -> selected resource path, then dbt_project.yml, then first model
+```
+
+---
+
+### F-16 — Duplicate analysis queries
+
+**Signal:** Duplicate semantics.
+
+The previous draft proposed:
+
+- `GetDbtProjectCompatibility`;
+- `ValidateDbtProject`;
+- `ProjectDbtGraphFromFiles`.
+
+All depend on the same project analysis.
+
+**Required response:**
+
+Use:
+
+- `ValidateDbtProjectImport` before import;
+- `ProjectDbtGraphFromFiles` for the active project, returning projection plus
+  diagnostics and compatibility posture.
+
+A UI “Validate” action forces a fresh projection query. It does not need another
+product query name.
+
+---
+
+### F-17 — Screen-shaped command results
+
+**Signal:** Command/query mixing.
+
+The previous save command returned a full graph projection.
+
+**Required response:**
+
+Commands return receipts:
+
+```ts
+type SaveWorkspaceFileContentReceipt = {
+  path: string;
+  contentSha256: string;
+  projectRevisionHint?: string;
+};
+```
+
+The UI then calls/refetches `ProjectDbtGraphFromFiles`.
+
+---
+
+### F-18 — Missing graph-draft transition
+
+**Signal:** Incomplete lifecycle.
+
+Existing dbt canvases depend on draft metadata and generated files.
+
+**Required response:**
+
+Define an explicit adoption flow:
+
+```text
+graph-draft-authored canvas
+  -> generate bootstrap files
+  -> validate files
+  -> bind project root
+  -> switch authority to dbt-project-files
+  -> stop treating dbt node metadata as semantic authority
+```
+
+Failure leaves the canvas in graph-draft mode.
+
+---
+
+# 5. Fowler opportunity matrix
+
+| Scenario                                         | Opportunity                      | Fowler response                             | DDD owner                        | Rail                                                          | Required proof                     |
+| ------------------------------------------------ | -------------------------------- | ------------------------------------------- | -------------------------------- | ------------------------------------------------------------- | ---------------------------------- |
+| Files and graph both claim dbt meaning           | Hidden authority                 | Explicit authority Policy Object            | `CanvasAuthoringAuthorityPolicy` | authority transition within existing Canvas lifecycle         | architecture guard + migration E2E |
+| Preview overwrites imported SQL                  | Boundary drift                   | Strategy split by authority                 | `DbtPreviewSourcePolicy`         | `GenerateDbtWorkspaceArtifacts`, `BuildDbtPlannerGraphSource` | preservation test                  |
+| Code save overwrites newer content               | Anemic command                   | CAS value object and conditional repository | `WorkspaceFileRevision`          | `SaveWorkspaceFileContent`                                    | stale-write integration test       |
+| Browser parses Jinja                             | Boundary drift                   | Outbound analyzer port                      | `DbtProjectAnalysis`             | `ProjectDbtGraphFromFiles`                                    | architecture test                  |
+| dbt-specific file save duplicates workspace save | Duplicate semantics              | Reuse existing command                      | `WorkspaceFileContent`           | `SaveWorkspaceFileContent`                                    | C&Q catalog guard                  |
+| Visual edit rewrites arbitrary SQL               | Responsibility overload          | Conservative mutation policy                | `DbtVisualEditPolicy`            | deferred until a concrete lossless operation exists           | preservation fixtures              |
+| Source Import writes two authorities             | Hidden authority                 | Authority-aware application service         | `WarehouseSourceImport`          | `ImportWarehouseSources`                                      | mode-specific integration tests    |
+| Runtime bundles broad workspace                  | Data clump / primitive obsession | Project execution identity                  | `DbtProjectExecutionIdentity`    | existing `StartRun` binding                                   | bundle content tests               |
+| profiles.yml enters bundle                       | Boundary drift                   | Secret-reference boundary                   | execution target policy          | existing StartRun binding                                     | secret leakage test                |
+| `.dvt/` added for layout                         | Duplicate persistence            | Reuse local layout projection               | `CanvasLayoutProjection`         | `PersistCanvasLayout`                                         | no-sidecar architecture guard      |
+| Import needs multi-file atomicity                | Transaction script               | Batch mutation Gateway                      | `WorkspaceFileBatchMutation`     | `ImportDbtProject`                                            | injected-failure rollback test     |
+| Multiple validation query names                  | Duplicate semantics              | One analysis read model                     | `DbtProjectGraphProjection`      | `ProjectDbtGraphFromFiles`                                    | catalog test                       |
+
+---
+
+# 6. Revised product decision
+
+## 6.1 No new DVT language
+
+A dbt user edits normal dbt assets:
+
+```text
+dbt_project.yml
+models/**/*.sql
+models/**/*.yml
+seeds/**
+snapshots/**
+macros/**
+tests/**
+packages.yml
+dependencies.yml
+```
+
+DVT may maintain internal normalized objects, but they are not a user-facing
+language or a second project definition.
+
+## 6.2 Two explicit authority modes
+
+```ts
+type CanvasAuthoringAuthority =
+  | {
+      kind: 'graph-draft';
+    }
+  | {
+      kind: 'dbt-project-files';
+      projectRoot: string;
+    };
+```
+
+### graph-draft
+
+Current behavior:
+
+- protected draft owns semantic nodes and edges;
+- dbt files are generated for Preview/Run;
+- intended for empty-canvas bootstrap and graph-draft canvases.
+
+### dbt-project-files
+
+Target behavior:
+
+- workspace dbt files own dbt semantics;
+- Canvas reads `DbtProjectGraphProjection`;
+- Code edits workspace files;
+- graph draft does not own projected dbt resources or dependencies;
+- layout remains route-local.
+
+## 6.3 Authority transition
+
+Allowed transitions:
+
+```text
+none -> graph-draft
+none -> dbt-project-files through import/open
+graph-draft -> dbt-project-files through successful adoption
+```
+
+Forbidden transition:
+
+```text
+dbt-project-files -> graph-draft as an automatic fallback
+```
+
+If analysis fails, the file-backed project remains file-backed and enters an
+invalid/degraded state.
+
+---
+
+# 7. Required architecture decision
+
+Before implementation, create an accepted ADR or equivalent normative decision
+covering:
+
+1. authority modes;
+2. ownership of dbt semantics;
+3. treatment of the existing graph draft contract;
+4. transition rules;
+5. file-backed Canvas projection;
+6. project-root binding;
+7. Source Import behavior by mode;
+8. Preview/Run provenance;
+9. backward compatibility.
+
+Because `WorkspaceGraphAuthoringDraft.v1` lives under `@dvt/contracts`, changing
+its public semantics activates ARC-2 review requirements.
+
+## 7.1 Contract approach
+
+Accepted approach, governed by `ADR-0060`:
+
+Introduce a versioned Canvas authoring authority binding:
+
+```ts
+type WorkspaceGraphAuthoringCanvasAuthority =
+  | {
+      kind: 'graph-draft';
+    }
+  | {
+      kind: 'dbt-project-files';
+      projectRoot: string;
+    };
+```
+
+For `dbt-project-files`:
+
+- `WorkspaceGraphAuthoringDraft.v1` is not used to persist shadow semantic
+  nodes/edges;
+- the route obtains nodes/edges from `ProjectDbtGraphFromFiles`;
+- local layout maps positions by dbt `unique_id`.
+
+`WorkspaceGraphAuthoringDraft.v1` remains graph-draft only. The authority
+binding belongs to a versioned Canvas authoring document boundary so that a
+file-backed Canvas does not carry ignored graph state. Contract implementation
+still requires planner/contracts ARC-2 evidence before code changes.
+
+---
+
+# 8. Canonical command/query rail set
+
+## 8.1 Reused rails
+
+| Rail                            | Type    | Required change                                    |
+| ------------------------------- | ------- | -------------------------------------------------- |
+| `ListWorkspaceFiles`            | query   | expose dbt-compatible files and explicit limits    |
+| `GetWorkspaceFileContent`       | query   | return content SHA/revision                        |
+| `SaveWorkspaceFileContent`      | command | add expected SHA, idempotency, conflict receipt    |
+| `GenerateDbtWorkspaceArtifacts` | command | restrict to graph-draft bootstrap/adoption         |
+| `BuildDbtPlannerGraphSource`    | query   | accept file-derived projection in file-backed mode |
+| `ImportWarehouseSources`        | command | branch by authority mode                           |
+| `PreviewExecutionPlan`          | command | reuse                                              |
+| `ObservePlanRunReadiness`       | query   | reuse and map dbt analysis blockers                |
+| `StartRun`                      | command | reuse                                              |
+| `GetRunStatus`                  | query   | reuse                                              |
+| `GetRunEvents`                  | query   | reuse                                              |
+
+## 8.2 Product intents not yet implemented
+
+| Rail                       | Type    | Owner                           | Status          |
+| -------------------------- | ------- | ------------------------------- | --------------- |
+| `ValidateDbtProjectImport` | query   | dbt project import              | not implemented |
+| `ImportDbtProject`         | command | dbt project import              | not implemented |
+| `ProjectDbtGraphFromFiles` | query   | dbt project analysis/projection | not implemented |
+| `ExportDbtProject`         | command | dbt project export              | not implemented |
+
+The three historical import/export intents remain retired in the executable
+catalog until their implementation slices establish real ownership and ports.
+`ProjectDbtGraphFromFiles` is a required future query intent, but it is not an
+active rail or implemented capability in the current system.
+
+## 8.3 Deferred visual-edit rail decision
+
+No generic visual-edit command is accepted in Phase 0. A command may be
+cataloged only when a concrete lossless mutation has a DDD owner, file mutation
+contract, conflict policy, and preservation fixtures. This prevents a broad
+generic visual-edit transaction script from becoming an unbounded editing API.
+
+## 8.4 Names rejected as duplicate or unnecessary
+
+Do not add:
+
+```text
+GetDbtProjectCompatibility
+ValidateDbtProject
+RunPersistedDbtProject
+POST /workspace/dbt/files/:path
+```
+
+Update the existing round-trip plan so that:
+
+- `SaveDbtProjectFileEdit` is replaced by the enhanced
+  `SaveWorkspaceFileContent`;
+- `RunPersistedDbtProject` is replaced by the existing Preview/Readiness/StartRun
+  rails.
+
+---
+
+# 9. Domain model
+
+## 9.1 Authority
+
+```ts
+type CanvasAuthoringAuthority =
+  | { kind: 'graph-draft' }
+  | {
+      kind: 'dbt-project-files';
+      projectRoot: WorkspaceRelativePath;
+    };
+```
+
+## 9.2 File revision
+
+```ts
+type WorkspaceFileRevision = {
+  contentSha256: string;
+  lastModified: string;
+};
+```
+
+## 9.3 Project revision
+
+```ts
+type DbtProjectRevision = {
+  projectRoot: string;
+  contentSetSha256: string;
+  analyzedAt: string;
+  analyzerVersion: string;
+  dbtVersion?: string;
+};
+```
+
+The project revision is derived from the relevant file path/hash set. It is not
+a mutable browser-generated ID.
+
+## 9.4 Analysis read model
+
+```ts
+type DbtProjectAnalysis = {
+  projectRoot: string;
+  projectRevision: DbtProjectRevision;
+  status: 'valid' | 'invalid' | 'unavailable';
+  resources: readonly DbtProjectedResource[];
+  dependencies: readonly DbtProjectedDependency[];
+  diagnostics: readonly DbtDiagnostic[];
+  capabilities: DbtProjectCapabilities;
+};
+```
+
+## 9.5 Graph projection
+
+```ts
+type DbtProjectGraphProjection = {
+  projectRevision: DbtProjectRevision;
+  nodes: readonly DbtProjectedNode[];
+  edges: readonly DbtProjectedEdge[];
+  diagnostics: readonly DbtDiagnostic[];
+};
+```
+
+## 9.6 Visual edit policy
+
+```ts
+type DbtVisualEditability =
+  | {
+      status: 'editable';
+      operations: readonly DbtVisualEditKind[];
+    }
+  | {
+      status: 'partially_editable';
+      operations: readonly DbtVisualEditKind[];
+      reasons: readonly string[];
+    }
+  | {
+      status: 'code_only';
+      reasons: readonly string[];
+    };
+```
+
+## 9.7 Execution identity
+
+```ts
+type DbtProjectExecutionIdentity = {
+  projectRoot: string;
+  projectRevisionSha256: string;
+  analysisSha256: string;
+};
+```
+
+---
+
+# 10. dbt analysis boundary
+
+## 10.1 Outbound port
+
+```ts
+interface IDbtProjectAnalyzerPort {
+  analyze(input: {
+    workspaceScope: WorkspaceScope;
+    projectRoot: string;
+    expectedProjectRevision?: string;
+  }): Promise<DbtProjectAnalysis>;
+}
+```
+
+This is an outbound port, not a transport API.
+
+## 10.2 Adapter behavior
+
+The first production adapter should:
+
+- execute server-side;
+- operate under the active workspace scope;
+- use a constrained temporary target/log path;
+- prevent ungoverned network access;
+- avoid importing credentials from project files;
+- return normalized diagnostics;
+- produce a deterministic analysis hash;
+- clean temporary artifacts.
+
+## 10.3 Analysis source
+
+Preferred semantic source:
+
+1. dbt-produced manifest when analysis succeeds;
+2. structural project inspection for preflight/import diagnostics;
+3. no authoritative browser regex parser.
+
+## 10.4 Invalid project behavior
+
+A file save may leave the project temporarily invalid.
+
+That is an accepted IDE state:
+
+```text
+files remain saved
+Canvas shows invalid/stale projection
+Preview and Run are blocked
+Code remains editable
+Problems show diagnostics
+```
+
+Do not roll back a user's raw Code save only because dbt analysis fails.
+
+---
+
+# 11. Workspace file hardening
+
+## 11.1 Read model change
+
+```ts
+type WorkspaceFileContent = {
+  path: string;
+  name: string;
+  language: string;
+  content: string;
+  lastModified: string;
+  contentSha256: string;
+};
+```
+
+## 11.2 Command input
+
+```ts
+type SaveWorkspaceFileContentInput = {
+  path: string;
+  content: string;
+  expectedContentSha256?: string;
+  idempotencyKey: string;
+};
+```
+
+## 11.3 Command receipt
+
+```ts
+type SaveWorkspaceFileContentReceipt = {
+  path: string;
+  contentSha256: string;
+  lastModified: string;
+};
+```
+
+## 11.4 Conflict
+
+```text
+workspace_file_revision_conflict
+```
+
+A conflict returns the current SHA but does not expose content unless the caller
+is authorized to read it.
+
+## 11.5 Atomic file write
+
+The local adapter must:
+
+1. write to a temporary sibling file;
+2. flush/close;
+3. conditionally verify expected SHA;
+4. rename atomically;
+5. return the new content hash.
+
+## 11.6 dbt file compatibility
+
+The project file layer must explicitly support or diagnose:
+
+- `.sql`;
+- `.yml`;
+- `.yaml`;
+- `.csv`;
+- `.py` when Python models are supported;
+- `.md`;
+- `dbt_project.yml`;
+- `packages.yml`;
+- `dependencies.yml`;
+- `selectors.yml`.
+
+File-count and size limits must be part of the compatibility report.
+
+Silent omission is forbidden.
+
+---
+
+# 12. Batch mutation gateway
+
+## 12.1 Need
+
+The current repository writes one file at a time.
+
+Import and some visual edits need multiple-file consistency.
+
+## 12.2 Port
+
+```ts
+interface IWorkspaceFileBatchMutationPort {
+  apply(input: {
+    expectedFiles: readonly {
+      path: string;
+      expectedContentSha256?: string;
+    }[];
+    writes: readonly {
+      path: string;
+      content: string;
+    }[];
+    deletes: readonly string[];
+    idempotencyKey: string;
+  }): Promise<WorkspaceFileBatchReceipt>;
+}
+```
+
+## 12.3 Scope
+
+This is an internal outbound Gateway, not a UI command/query rail.
+
+## 12.4 MVP constraint
+
+Until this port exists:
+
+- import may target only an empty project root with full rollback;
+- visual edits must affect one file;
+- rename and cross-file dependency rewrites remain out of scope.
+
+---
+
+# 13. File-backed Canvas projection
+
+## 13.1 Query flow
+
+```mermaid
+sequenceDiagram
+  participant Canvas
+  participant Query as ProjectDbtGraphFromFiles
+  participant Files as Workspace file queries
+  participant Analyzer as IDbtProjectAnalyzerPort
+  participant Layout as GetCanvasLayout
+
+  Canvas->>Query: project root + scope
+  Query->>Files: read project file inventory
+  Query->>Analyzer: analyze project revision
+  Analyzer-->>Query: resources + dependencies + diagnostics
+  Query->>Layout: positions keyed by unique_id
+  Layout-->>Query: local coordinates
+  Query-->>Canvas: DbtProjectGraphProjection
+```
+
+## 13.2 Identity
+
+Use dbt `unique_id` when available:
+
+```text
+model.<package>.<name>
+source.<package>.<source>.<table>
+seed.<package>.<name>
+snapshot.<package>.<name>
+test.<package>.<name>
+exposure.<package>.<name>
+metric.<package>.<name>
+```
+
+Do not derive stable identity from display names.
+
+## 13.3 Layout
+
+MVP continues to use:
+
+- `PersistCanvasLayout`;
+- `GetCanvasLayout`;
+- route-local storage.
+
+Positions are keyed by stable resource identity.
+
+No `.dvt/` directory is created.
+
+## 13.4 Graph draft behavior
+
+In file-backed mode:
+
+- draft canvas identity and authority binding remain available;
+- draft semantic dbt nodes and edges are not consumed;
+- file projection owns visible dbt resources;
+- route-local layout owns coordinates.
+
+Architecture tests must prevent accidental merging of stale draft semantics into
+the file projection.
+
+---
+
+# 14. Code workbench
+
+## 14.1 Default content
+
+For file-backed dbt canvases, Code shows actual project files.
+
+It does not display a generated DVT language.
+
+## 14.2 Context-aware initial selection
+
+```text
+selected Canvas resource path
+  -> last selected dbt file
+  -> dbt_project.yml
+  -> first model file
+  -> first reachable project file
+```
+
+The current `pipelines/` preference remains for DVT transformation canvases only.
+
+## 14.3 Save interaction
+
+```text
+Edit
+-> dirty local buffer
+-> SaveWorkspaceFileContent(expected SHA)
+-> receipt
+-> invalidate ProjectDbtGraphFromFiles
+-> refetch projection
+-> synchronized / invalid / conflict state
+```
+
+## 14.4 States
+
+```ts
+type DbtCodeSyncState =
+  | 'synchronized'
+  | 'dirty'
+  | 'saving'
+  | 'analyzing'
+  | 'saved_invalid'
+  | 'conflict'
+  | 'read_only';
+```
+
+## 14.5 Commands return receipts
+
+Code does not receive a graph projection as the Save command response. It
+refetches the graph query.
+
+---
+
+# 15. Visual editing policy
+
+## 15.1 Principle
+
+Canvas may mutate dbt files only when the operation is:
+
+- semantically explicit;
+- structurally unambiguous;
+- lossless for unrelated content;
+- covered by preservation fixtures;
+- revision guarded.
+
+## 15.2 MVP operations
+
+Preferred initial operations:
+
+1. YAML description changes through a comment-preserving YAML/CST editor.
+2. YAML tags through the same mechanism.
+3. `not_null` and `unique` generic tests.
+4. Materialization changes only when one unambiguous editable source exists.
+
+## 15.3 Deferred operations
+
+Initially `code_only`:
+
+- inserting/replacing arbitrary `ref()` calls;
+- inserting/replacing arbitrary `source()` calls;
+- CTE rewrites;
+- join construction;
+- macro edits;
+- custom materializations;
+- dynamic dependencies;
+- Python model mutation;
+- cross-file rename.
+
+## 15.4 Materialization rules
+
+A visual materialization edit is allowed only when the effective config source
+is known and safely patchable.
+
+If materialization is inherited or conflicted across:
+
+- inline config;
+- model YAML;
+- `dbt_project.yml`;
+- package defaults;
+
+the UI must explain the effective source and remain code-only until an explicit
+mutation policy exists.
+
+## 15.5 Future command acceptance boundary
+
+No generic visual mutation command is part of the current catalog. A concrete
+operation can be proposed only when it names the exact lossless edit, expected
+project revision, changed-file receipt, idempotency policy, and preservation
+fixtures. The UI must refetch `ProjectDbtGraphFromFiles` after any future
+accepted mutation.
+
+---
+
+# 16. Source Import integration
+
+## 16.1 Existing rail
+
+Reuse:
+
+```text
+ImportWarehouseSources
+```
+
+## 16.2 graph-draft mode
+
+Current behavior remains:
+
+- merge/write source YAML;
+- append source nodes to draft;
+- coordinate rollback.
+
+## 16.3 file-backed mode
+
+New behavior:
+
+1. merge/write source YAML under the bound project root;
+2. do not append semantic source nodes to the graph draft;
+3. invalidate project analysis;
+4. refetch file graph projection;
+5. focus the newly projected source resources in Canvas.
+
+## 16.4 Identity
+
+The imported node identity in file-backed mode comes from dbt analysis, not from
+the temporary warehouse-source draft node ID.
+
+## 16.5 Atomicity
+
+If Source Import changes several YAML files, it uses the batch mutation Gateway.
+
+---
+
+# 17. Preview and planner projection
+
+## 17.1 graph-draft mode
+
+Reuse current path:
+
+```text
+GenerateDbtWorkspaceArtifacts
+-> BuildDbtPlannerGraphSource
+-> PreviewExecutionPlan
+```
+
+## 17.2 file-backed mode
+
+```text
+ProjectDbtGraphFromFiles
+-> select executable dbt unique_ids
+-> BuildDbtPlannerGraphSource
+-> PreviewExecutionPlan
+```
+
+No generated file overwrite occurs.
+
+## 17.3 BuildDbtPlannerGraphSource
+
+The rail remains, but its file-backed adapter input changes from authored draft
+nodes to the normalized dbt projection.
+
+Generic Canvas code must not reinterpret dbt manifest semantics.
+
+## 17.4 Preview provenance
+
+Persist:
+
+```text
+project root
+project revision SHA
+analysis SHA
+dbt version
+selected dbt unique_ids
+adapter/provider identity
+credential reference identity, never secret material
+```
+
+## 17.5 Readiness
+
+Reuse `ObservePlanRunReadiness`.
+
+Map:
+
+| dbt condition              | readiness blocker      |
+| -------------------------- | ---------------------- |
+| invalid analysis           | `plan_integrity`       |
+| stale project revision     | `plan_integrity`       |
+| missing adapter capability | `capability_mismatch`  |
+| target unavailable         | `adapter_degraded`     |
+| denied execution           | `authorization_denied` |
+
+---
+
+# 18. Runtime bundle hardening
+
+## 18.1 Bound root
+
+Bundle only the active `projectRoot`.
+
+## 18.2 Bound revision
+
+Before bundling:
+
+- recompute project revision;
+- reject when it differs from Preview provenance;
+- never bundle a different file set under an old PlanRef.
+
+## 18.3 Included project material
+
+Include supported dbt project source files beneath the root.
+
+## 18.4 Excluded material
+
+Always exclude:
+
+```text
+profiles.yml
+logs/
+target/
+.dvt/
+.git/
+node_modules/
+dist/
+temporary editor files
+credentials and tokens
+```
+
+## 18.5 Execution target
+
+Resolve through a server-owned reference, such as:
+
+```ts
+type DbtExecutionTargetRef = {
+  adapter: string;
+  targetName: string;
+  credentialRef: string;
+};
+```
+
+The exact public contract placement requires a separate contract review if it
+crosses existing runtime boundaries.
+
+---
+
+# 19. Import
+
+## 19.1 ValidateDbtProjectImport
+
+Returns a read model with:
+
+- project name;
+- root candidate;
+- file inventory;
+- resource counts when analysis is safe;
+- diagnostics;
+- unsupported/code-only features;
+- size and file-count violations;
+- adapter requirements;
+- excluded sensitive files.
+
+It does not write workspace state.
+
+## 19.2 ImportDbtProject
+
+Requirements:
+
+- accepted validation receipt;
+- explicit conflict policy;
+- idempotency key;
+- staging/batch mutation;
+- no graph semantic write;
+- authority binding after successful import;
+- first projection query before presenting success.
+
+## 19.3 MVP source
+
+MVP may support:
+
+- ZIP archive;
+- existing workspace directory/project root.
+
+Git and dbt Cloud imports are later adapters.
+
+## 19.4 Security
+
+Import validation must reject:
+
+- path traversal;
+- absolute paths;
+- symlink escape;
+- oversized archive;
+- excessive files;
+- binary/unapproved file classes;
+- embedded secrets;
+- attempts to make `profiles.yml` the credential authority.
+
+Untrusted project analysis runs in a constrained environment.
+
+---
+
+# 20. Export
+
+## 20.1 Export source
+
+Export the authoritative project files.
+
+Do not regenerate a simplified project from Canvas.
+
+## 20.2 Exclusions
+
+Exclude:
+
+- runtime artifacts;
+- temporary analysis output;
+- local layout storage;
+- credentials;
+- profiles;
+- project caches;
+- Planning DB data;
+- graph-draft internals.
+
+## 20.3 Compatibility proof
+
+Export result includes:
+
+- project revision;
+- archive SHA;
+- validation level;
+- diagnostics;
+- resource inventory summary.
+
+A test fixture must prove that the archive can be parsed by the supported dbt
+toolchain under a safe test target.
+
+## 20.4 ExportDbtProject receipt
+
+Commands return an artifact receipt/reference, not the full compatibility screen
+model.
+
+---
+
+# 21. Graph-draft canvas adoption
+
+## 21.1 Purpose
+
+Convert an existing graph-authored dbt canvas into a file-backed project without
+losing its current bootstrap capability.
+
+## 21.2 Flow
+
+```text
+graph-draft canvas
+-> GenerateDbtWorkspaceArtifacts
+-> write files with revision receipts
+-> analyze generated project
+-> verify projected graph parity
+-> persist authority binding
+-> switch to dbt-project-files
+-> stop Preview regeneration
+```
+
+## 21.3 Failure
+
+Any failure leaves the original graph-draft authority unchanged.
+
+## 21.4 Parity gate
+
+Before switching authority, compare:
+
+- executable model/test/snapshot count;
+- dependency count;
+- selected source bindings;
+- materialization values;
+- generated file inventory.
+
+## 21.5 Metadata retirement
+
+After adoption:
+
+- graph-draft dbt metadata may remain for compatibility reads during the
+  atomic transition;
+- it cannot overwrite file content;
+- it is marked deprecated;
+- removal is a separate migration slice.
+
+---
+
+# 22. HTTP adapter posture
+
+## 22.1 Reuse existing workspace file routes
+
+Continue using:
+
+```text
+GET  /workspace/files
+GET  /workspace/files/:path
+POST /workspace/files/:path
+```
+
+Extend the save body with revision/idempotency fields.
+
+## 22.2 New dbt project routes
+
+Transport names are provisional adapter surfaces:
+
+```text
+POST /workspace/dbt/import/validate
+POST /workspace/dbt/import
+GET  /workspace/dbt/graph
+POST /workspace/dbt/visual-edits
+POST /workspace/dbt/export
+```
+
+No separate dbt file-content route is introduced.
+
+## 22.3 Query freshness
+
+`GET /workspace/dbt/graph` returns:
+
+- project revision;
+- analysis freshness;
+- diagnostics;
+- projection.
+
+It may return:
+
+```text
+fresh
+stale-last-valid
+invalid
+unavailable
+```
+
+---
+
+# 23. Error vocabulary
+
+Proposed errors:
+
+```text
+workspace_file_revision_conflict
+dbt_project_not_found
+dbt_project_invalid
+dbt_project_analysis_failed
+dbt_project_revision_conflict
+dbt_project_read_only
+dbt_project_root_invalid
+dbt_visual_edit_unsupported
+dbt_visual_edit_ambiguous
+dbt_import_invalid_archive
+dbt_import_path_traversal
+dbt_import_limit_exceeded
+dbt_export_validation_failed
+dbt_export_sensitive_file_detected
+dbt_adapter_unavailable
+dbt_execution_project_revision_mismatch
+```
+
+Errors must use the existing canonical HTTP error envelope.
+
+---
+
+# 24. Architecture guards
+
+Add semantic guards proving:
+
+1. file-backed Preview does not call `buildDbtWorkspaceArtifacts`;
+2. graph-draft Preview still may call it;
+3. file-backed Canvas graph comes from `ProjectDbtGraphFromFiles`;
+4. draft semantic nodes do not override file projection;
+5. Code Save uses `SaveWorkspaceFileContent`;
+6. no `/workspace/dbt/files/:path` route exists;
+7. no browser-owned dbt/Jinja parser becomes authority;
+8. no generic visual-edit transaction script exists; any accepted concrete edit
+   has losslessness and preservation evidence;
+9. unsupported materializations are not normalized to `view`;
+10. runtime project bundles exclude `profiles.yml`;
+11. bundle root is the bound project root;
+12. bundle project revision matches Preview provenance;
+13. `.dvt/` is not created by this feature;
+14. Source Import branches by authority mode;
+15. command receipts do not return graph-shaped read models;
+16. `StartRun` remains the run command;
+17. `ObservePlanRunReadiness` remains the readiness query.
+
+---
+
+# 25. Required test fixtures
+
+| Fixture                         | Purpose                              |
+| ------------------------------- | ------------------------------------ |
+| `dbt-basic`                     | sources, models, refs, generic tests |
+| `dbt-comments-cte`              | SQL preservation                     |
+| `dbt-inline-materialization`    | safe materialization mutation        |
+| `dbt-inherited-materialization` | code-only ambiguity                  |
+| `dbt-complex-jinja`             | analyzer and code-only degradation   |
+| `dbt-custom-materialization`    | no silent normalization              |
+| `dbt-seeds`                     | CSV preservation                     |
+| `dbt-python-model`              | explicit support/unavailable posture |
+| `dbt-snapshots`                 | resource projection                  |
+| `dbt-exposures-metrics`         | non-executable projections           |
+| `dbt-packages`                  | package identity                     |
+| `dbt-invalid-yaml`              | diagnostics                          |
+| `dbt-missing-ref`               | invalid dependency                   |
+| `dbt-cycle`                     | cycle diagnostics                    |
+| `dbt-large-project`             | repository and Canvas limits         |
+| `dbt-sensitive-profile`         | profiles/secrets exclusion           |
+
+---
+
+# 26. Test plan
+
+## 26.1 Unit/package tests
+
+### Workspace file revision
+
+- content SHA returned;
+- expected SHA accepted;
+- stale SHA rejected;
+- idempotent retry;
+- direct-write failure preserves original;
+- temporary file cleanup.
+
+### Analyzer
+
+- resource identity;
+- source/ref dependencies;
+- diagnostics;
+- code-only capability;
+- invalid project;
+- deterministic analysis hash.
+
+### Visual edit policy
+
+- safe YAML description;
+- generic tests;
+- unambiguous materialization;
+- inherited materialization rejected;
+- custom materialization preserved;
+- unrelated SQL unchanged.
+
+### Bundle
+
+- project root scoping;
+- revision mismatch rejection;
+- profiles exclusion;
+- target/log exclusion;
+- deterministic bundle hash.
+
+## 26.2 API/integration tests
+
+- import validation;
+- unauthorized scope;
+- atomic import;
+- project graph query;
+- raw Code save conflict;
+- invalid save remains persisted but blocks run;
+- Source Import in both authority modes;
+- visual edit receipt and projection refresh;
+- export validation and sensitive-file scan.
+
+## 26.3 Architecture tests
+
+Use the guards in section 24.
+
+## 26.4 E2E proofs
+
+### RT-001 — Import and project
+
+```text
+validate ZIP
+-> import
+-> open Canvas
+-> nodes and edges from files
+-> Code shows original SQL
+```
+
+### RT-002 — Code to Canvas
+
+```text
+edit a ref in Code
+-> save with expected SHA
+-> analysis refresh
+-> Canvas dependency changes
+-> reload
+-> same result
+```
+
+This proof may use a controlled fixture with analyzable static refs.
+
+### RT-003 — Safe Canvas edit
+
+```text
+change an unambiguous inline materialization
+-> review file diff
+-> apply
+-> Code shows preserved SQL
+-> reload
+-> same Canvas property
+```
+
+### RT-004 — Code-only degradation
+
+```text
+open custom materialization / complex Jinja
+-> Canvas displays resource
+-> visual edit disabled with reason
+-> Code remains editable
+```
+
+### RT-005 — Source Import file-backed
+
+```text
+open file-backed project
+-> Add Source
+-> write YAML
+-> analyzer refresh
+-> new projected source appears
+-> draft semantic node is not appended
+```
+
+### RT-006 — Preview and Run
+
+```text
+file-backed project
+-> Preview without regeneration
+-> provenance contains project revision
+-> StartRun
+-> bundle revision matches
+-> terminal run evidence
+```
+
+### RT-007 — Export
+
+```text
+export
+-> unzip
+-> no profiles / secrets / runtime artifacts
+-> supported dbt parse proof
+-> resource inventory parity
+```
+
+### RT-008 — Conflict
+
+```text
+two Code sessions
+-> A saves
+-> B saves stale content
+-> conflict
+-> no overwrite
+```
+
+### RT-009 — Graph-draft adoption
+
+```text
+graph-draft canvas
+-> generate
+-> parity check
+-> adopt
+-> subsequent Preview does not regenerate
+```
+
+---
+
+# 27. Implementation sequence
+
+## Phase 0 — Canon and contract decision
+
+Deliver:
+
+- authority-mode ADR;
+- revised round-trip product plan;
+- revised C&Q catalogs;
+- Planning DB architecture decision, scope, and gap records;
+- contract migration decision;
+- Planning DB records;
+- red architecture guards.
+
+No behavior change.
+
+## Phase 1 — Workspace revision safety
+
+Deliver:
+
+- content SHA on reads;
+- conditional Save;
+- atomic local write;
+- Code Save button;
+- dirty/saved/conflict UI;
+- query invalidation.
+
+Still graph-authored.
+
+## Phase 2 — dbt analysis and read-only file projection
+
+Deliver:
+
+- analyzer port/adapter;
+- `ProjectDbtGraphFromFiles`;
+- file-backed Canvas read model;
+- authority binding;
+- route-local layout keyed by unique_id;
+- diagnostics and code-only states.
+
+No arbitrary visual mutation.
+
+## Phase 3 — Import and file-backed Source Import
+
+Deliver:
+
+- import validation;
+- batch/staging support;
+- import command;
+- Source Import mode split;
+- import E2E.
+
+## Phase 4 — File-backed Preview and Run
+
+Deliver:
+
+- no-regeneration Preview path;
+- planner projection from dbt analysis;
+- project-revision provenance;
+- project-root bundle;
+- profiles exclusion;
+- run E2E.
+
+## Phase 5 — Conservative visual edits
+
+Order:
+
+1. YAML descriptions;
+2. tags;
+3. generic tests;
+4. unambiguous materialization.
+
+Each operation is a separate governed slice if its mutation strategy differs.
+
+## Phase 6 — Export
+
+Deliver:
+
+- authoritative-file export;
+- exclusion policy;
+- validation receipt;
+- parse proof;
+- sensitive-file negative tests.
+
+## Phase 7 — Graph-draft adoption
+
+Deliver explicit authority transition and retirement plan for graph-draft dbt
+projection metadata.
+
+---
+
+# 28. Allowed implementation surfaces by phase
+
+## Phase 0
+
+```text
+docs/adr/**
+docs/architecture/components/web/**
+docs/planning/proposals/mandatory/frontend-and-ux/**
+tools/planning-db/migrations/**
+packages/@dvt/contracts/** only after accepted contract decision
+```
+
+## Phase 1
+
+```text
+apps/api/src/application/ports/workspaceFiles.ts
+apps/api/src/application/services/saveWorkspaceFileContentUseCase.ts
+apps/api/src/infrastructure/workspaceFiles/**
+apps/api/src/entrypoints/http/workspaceFilesRoutes.ts
+apps/web/src/app/ports/workspace.ts
+apps/web/src/app/services/workspace/**
+apps/web/src/app/views/CodeView.tsx
+apps/web/src/app/views/code/**
+```
+
+## Phase 2 onward
+
+```text
+apps/api/src/application/ports/dbtProject*.ts
+apps/api/src/application/services/dbtProject/**
+apps/api/src/infrastructure/dbt/**
+apps/api/src/entrypoints/http/dbtProjectRoutes.ts
+apps/web/src/app/ports/dbtProject*.ts
+apps/web/src/app/services/dbtProject/**
+apps/web/src/app/queries/dbtProjectQueries.ts
+apps/web/src/app/views/canvas/**
+apps/web/src/app/plugins/dbt/**
+apps/web/cypress/e2e/dbt/**
+```
+
+Contract, adapter, or engine paths require the repository's ARC policy process.
+
+---
+
+# 29. Explicit out of scope
+
+The first implementation does not include:
+
+- a new DVT language;
+- collaborative/shared Canvas layout persistence;
+- arbitrary SQL AST editing;
+- arbitrary Jinja mutation;
+- macro mutation;
+- custom materialization editing;
+- Python model visual editing;
+- cross-file rename;
+- Git clone/push;
+- dbt Cloud project management;
+- automatic dependency installation with unrestricted network access;
+- multiple dbt project roots in one workspace before project-root binding is
+  proven;
+- replacing dbt Core.
+
+---
+
+# 30. Global acceptance criteria
+
+The round-trip capability is not complete until:
+
+1. authority mode is explicit and accepted;
+2. imported dbt files remain byte-preserved unless directly edited;
+3. Code saves with revision protection;
+4. Canvas derives dependencies from dbt analysis;
+5. file-backed Preview never regenerates project files;
+6. Source Import behaves correctly in both authority modes;
+7. unsupported constructs are preserved and shown as code-only;
+8. Preview records project revision and analysis hash;
+9. runtime bundle uses the same project revision;
+10. `profiles.yml` and secrets never enter the bundle/export;
+11. export uses authoritative files;
+12. the supported dbt validation proof passes;
+13. graph-draft adoption is explicit and rollback-safe;
+14. docs, Planning DB, code, and tests name the same rails;
+15. no duplicate Save, readiness, or run rails are introduced;
+16. `pnpm verify:prepush` passes on every implementation slice.
+
+---
+
+# 31. Required repository updates before implementation
+
+The following current documents must be reconciled in Phase 0:
+
+1. `dbt-project-roundtrip-product-plan-20260527.md`
+   - remove duplicate save/run rail names;
+   - add explicit authority transition;
+   - add Source Import and runtime bundle constraints.
+
+2. `dbt-authoring-code-run-vertical-plan-20260526.md`
+   - classify existing generation as graph-draft bootstrap behavior;
+   - record the file-backed migration path.
+
+3. `canvas-workbench-command-query-catalog.md`
+   - add authority-mode ownership;
+   - refine `GenerateDbtWorkspaceArtifacts`;
+   - keep generic visual mutation deferred until a concrete lossless operation
+     is designed;
+   - document file-backed `BuildDbtPlannerGraphSource`.
+
+4. `code-workbench-workspace-files-component.md`
+   - add revision/CAS;
+   - add Code Save;
+   - make selection authority-aware.
+
+5. `canvas-layout-persistence-component.md`
+   - state that dbt round-trip reuses route-local layout;
+   - explicitly reject `.dvt/` persistence in this slice.
+
+6. `frontend-command-query-rail-inventory.md`
+   - reconcile current and proposed rails.
+
+7. runtime bundle component/evidence docs
+   - exclude profiles;
+   - bind root/revision.
+
+---
+
+# 32. QA verdict
+
+## 32.1 What from the previous draft survives
+
+- no new language;
+- dbt files as target authority;
+- Canvas as visual projection;
+- Code shows real dbt files;
+- server-side dbt analysis;
+- code-only degradation;
+- import/export compatibility proof;
+- project revision and conflict handling;
+- Preview/Run reuse.
+
+## 32.2 What was rejected or changed
+
+- `.dvt/` sidecar in MVP;
+- silent replacement of graph-draft authority;
+- duplicate dbt file-save endpoint;
+- duplicate dbt run command;
+- multiple overlapping analysis queries;
+- full graph projection returned from commands;
+- broad visual SQL mutation in the first phase;
+- claims of atomicity without a batch mutation port;
+- unrestricted project compatibility claims;
+- bundling profiles with project files.
+
+## 32.3 Final assessment
+
+The revised specification now fits the repository's actual boundaries, but it is
+still a **Review** document.
+
+Implementation should not begin until Phase 0 resolves the authority-mode ADR
+and the public graph-draft contract implications.
+
+The correct architectural direction is:
+
+```text
+explicit authority mode
+  + existing workspace-file rails with CAS
+  + server-owned dbt analysis
+  + Canvas projection
+  + conservative semantic edits
+  + existing Preview/PlanRef/StartRun
+```
+
+This gives DVT real dbt compatibility without creating a second language, a
+second file-save system, or a hidden second source of truth.
