@@ -225,25 +225,28 @@ function importLocalPostgresSource(): void {
   createLivePostgresConnection();
   cy.contains('[role="dialog"] button', 'Test connection').should('be.enabled').click();
   cy.contains('[role="dialog"]', 'Connection passed', { timeout: 20_000 }).should('be.visible');
-  cy.contains('[role="dialog"]', 'tables reachable').should('be.visible');
+  cy.contains('[role="dialog"]', 'objects reachable').should('be.visible');
 
   cy.contains('[role="tab"]', 'Browse').click();
-  cy.get('[data-slot="source-import-table-search"]', { timeout: 20_000 })
+  cy.get('[data-slot="source-import-object-search"]', { timeout: 20_000 })
     .should('be.visible')
     .clear()
     .type('source_1');
   cy.contains('[role="dialog"]', 'Source metadata').should('be.visible');
   cy.contains('[role="dialog"]', 'dvt', { timeout: 20_000 }).should('be.visible');
   cy.contains('[role="dialog"]', 'public').should('be.visible');
-  cy.get('[data-source-import-table="dvt.public.source_1"]', { timeout: 20_000 })
+  cy.get('[data-source-import-object="relation/dvt/public/source_1"]', { timeout: 20_000 })
     .should('be.visible')
     .within(() => {
       cy.contains('order_id').should('be.visible');
       cy.contains('3 rows').should('be.visible');
       cy.contains('32 KB').should('be.visible');
     })
+    .find('button[aria-label^="Inspect source object"]')
     .click();
-  cy.get('[data-source-import-table-select="dvt.public.source_1"]', { timeout: 20_000 }).click();
+  cy.get('[data-source-import-object-select="relation/dvt/public/source_1"]', {
+    timeout: 20_000,
+  }).click();
   cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
   cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
   cy.contains('[role="dialog"]', 'dvt.public.source_1').should('be.visible');
@@ -257,7 +260,9 @@ function importLocalPostgresSource(): void {
 
   cy.contains('[role="tab"]', 'Selected').click();
   cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
-  cy.get('[data-source-import-review-table="dvt.public.source_1"]', { timeout: 20_000 })
+  cy.get('[data-source-import-review-object="relation/dvt/public/source_1"]', {
+    timeout: 20_000,
+  })
     .should('be.visible')
     .and('contain.text', '3 rows')
     .and('contain.text', '32 KB')
@@ -305,6 +310,46 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', '32 KB')
       .and('contain.text', 'models/sources/src_public.yml');
     cy.contains('Stale version').should('not.exist');
+
+    cy.contains('.react-flow__node', 'Postgres')
+      .find('[data-slot="graph-node-operational-metric"]')
+      .contains('Rows')
+      .closest('[data-slot="graph-node-operational-metric"]')
+      .should('have.attr', 'data-tone', 'warning')
+      .find('[data-slot="graph-node-metric-hotspot"]')
+      .trigger('pointermove', { pointerType: 'mouse' });
+    cy.get('[data-slot="graph-node-metric-hotspot-detail"]', { timeout: 5_000 })
+      .should('be.visible')
+      .and('contain.text', 'Estimated using provider statistics')
+      .and('contain.text', 'Confidence: medium')
+      .and('contain.text', 'Observed:');
+
+    cy.contains('.react-flow__node', 'Postgres')
+      .find('[data-slot="graph-node-operational-metric"]')
+      .contains('Size')
+      .closest('[data-slot="graph-node-operational-metric"]')
+      .should('have.attr', 'data-tone', 'success')
+      .find('[data-slot="graph-node-metric-hotspot"]')
+      .trigger('pointermove', { pointerType: 'mouse' });
+    cy.get('[data-slot="graph-node-metric-hotspot-detail"]', { timeout: 5_000 })
+      .should('be.visible')
+      .and('contain.text', 'Measured using provider storage metadata')
+      .and('contain.text', 'Physical allocation')
+      .and('contain.text', 'Confidence: exact')
+      .and('contain.text', 'Observed:');
+
+    cy.contains('.react-flow__node', 'Postgres')
+      .find('button[data-slot="graph-node-operational-rail"]')
+      .click();
+    cy.get('[data-slot="graph-node-health-popover"]')
+      .should('be.visible')
+      .and('have.focus')
+      .and('contain.text', 'Columns')
+      .and('contain.text', 'Allocated size')
+      .and('contain.text', 'Observed')
+      .and('not.contain.text', 'Avg row size');
+    cy.focused().trigger('keydown', { key: 'Escape' });
+    cy.get('[data-slot="graph-node-health-popover"]').should('not.exist');
 
     readLiveWorkspaceFile('models/sources/src_public.yml', session).then((sourceYamlResponse) => {
       expect(sourceYamlResponse.status).to.equal(200);
