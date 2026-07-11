@@ -87,8 +87,8 @@ export function GraphNodeRenderer({
       playAction={playAction}
       onOpenOperationalDetails={
         typeof openOperationalDetails === 'function'
-          ? (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
-              openOperationalDetails(detail, anchorRect);
+          ? (detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {
+              openOperationalDetails(detail, anchorElement);
             }
           : undefined
       }

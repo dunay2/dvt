@@ -233,7 +233,6 @@ describe('GraphNodeCardView', () => {
   it('opens operational details from the rail without bubbling to the node card', () => {
     const onOpenOperationalDetails = vi.fn();
     const onCardClick = vi.fn();
-    const anchorRect = new DOMRect(20, 30, 120, 40);
 
     act(() => {
       root.render(
@@ -266,8 +265,6 @@ describe('GraphNodeCardView', () => {
     );
     expect(rail).not.toBeNull();
     expect(rail?.getAttribute('aria-label')).toBe('Open Orders model health metrics');
-    vi.spyOn(rail!, 'getBoundingClientRect').mockReturnValue(anchorRect);
-
     act(() => {
       fireEvent.click(rail!);
     });
@@ -281,7 +278,7 @@ describe('GraphNodeCardView', () => {
           { id: 'size', label: 'Size', value: '18.2 GB' },
         ],
       },
-      anchorRect
+      rail
     );
     expect(onCardClick).not.toHaveBeenCalled();
   });

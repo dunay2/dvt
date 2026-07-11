@@ -2,6 +2,7 @@
 import { useState, type ReactElement } from 'react';
 import { ChevronDown, ChevronUp, Table } from 'lucide-react';
 
+import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { graphNodeColumnClasses } from './graphVisualTokens';
 
 export type GraphNodeColumn = Readonly<{
@@ -21,6 +22,7 @@ export function GraphNodeColumnSection({ columns }: GraphNodeColumnSectionProps)
       <button
         type="button"
         data-slot="graph-node-column-toggle"
+        {...canvasNodeEmbeddedControlProps}
         aria-expanded={columnsExpanded}
         onClick={() => setColumnsExpanded((value) => !value)}
         className={graphNodeColumnClasses.toggle}

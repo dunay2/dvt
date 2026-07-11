@@ -36,7 +36,13 @@ describe('GraphNodeHealthPopoverView', () => {
             ariaLabel: 'Open Postgres · public health metrics',
             rows: [
               { id: 'freshness', label: 'Freshness', value: '12 min' },
-              { id: 'size', label: 'Dataset size', value: '18.2 GB' },
+              {
+                id: 'size',
+                label: 'Dataset size',
+                value: '18.2 GB',
+                detail:
+                  '19,542,101,197 B. Measured physical allocation. Observed: 2026-07-10T21:00:00.000Z.',
+              },
               {
                 id: 'schema-drift',
                 label: 'Schema drift',
@@ -53,11 +59,13 @@ describe('GraphNodeHealthPopoverView', () => {
 
     const popover = container.querySelector<HTMLElement>('[data-slot="graph-node-health-popover"]');
     expect(popover).not.toBeNull();
+    expect(document.activeElement).toBe(popover);
     expect(popover?.style.getPropertyValue('--graph-node-health-popover-x')).toBe('120px');
     expect(popover?.style.getPropertyValue('--graph-node-health-popover-y')).toBe('220px');
     expect(container.textContent).toContain('Postgres · public health');
     expect(container.textContent).toContain('Freshness');
     expect(container.textContent).toContain('18.2 GB');
+    expect(container.textContent).toContain('Measured physical allocation');
     expect(
       container.querySelector('[data-slot="graph-node-health-popover-value"][data-tone="success"]')
         ?.textContent
@@ -67,6 +75,35 @@ describe('GraphNodeHealthPopoverView', () => {
       fireEvent.keyDown(popover!, { key: 'Escape' });
     });
 
-    expect(onClose).toHaveBeenCalledOnce();
+    expect(onClose).toHaveBeenCalledWith('escape');
+  });
+
+  it('restores dialog focus when the displayed node detail changes', () => {
+    const onClose = vi.fn();
+    const renderDetail = (title: string): void => {
+      root.render(
+        <GraphNodeHealthPopoverView
+          detail={{
+            title,
+            ariaLabel: `Open ${title}`,
+            rows: [{ id: 'rows', label: 'Rows', value: '1,500' }],
+          }}
+          position={{ x: 120, y: 220 }}
+          onClose={onClose}
+        />
+      );
+    };
+
+    act(() => renderDetail('Orders health'));
+    const outsideControl = document.createElement('button');
+    document.body.append(outsideControl);
+    outsideControl.focus();
+
+    act(() => renderDetail('Customers health'));
+
+    expect(document.activeElement).toBe(
+      container.querySelector('[data-slot="graph-node-health-popover"]')
+    );
+    outsideControl.remove();
   });
 });

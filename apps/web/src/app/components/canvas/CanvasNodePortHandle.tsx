@@ -2,6 +2,7 @@
 import { Handle, Position } from '@xyflow/react';
 import { Fragment, useId } from 'react';
 
+import { canvasNodeEmbeddedControlProps } from './canvasNodeInteractionBoundary';
 import styles from './CanvasNodeShell.module.css';
 
 export type CanvasNodePortHandleKind = 'source' | 'target';
@@ -51,6 +52,7 @@ export function CanvasNodePortHandle({
         type={kind}
         position={kind === 'source' ? Position.Right : Position.Left}
         data-slot="canvas-node-port-handle"
+        {...canvasNodeEmbeddedControlProps}
         data-port={kind}
         data-tone={tone}
         data-port-compatibility={compatibility?.state}

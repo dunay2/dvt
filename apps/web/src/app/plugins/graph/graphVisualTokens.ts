@@ -40,6 +40,14 @@ export const graphNodeMetricRowClasses = {
   item: 'inline-flex items-baseline gap-1',
   label: 'text-slate-500',
   value: 'font-medium text-slate-200',
+  valueTone: {
+    neutral: 'text-slate-200',
+    info: 'text-blue-200',
+    success: 'text-green-300',
+    warning: 'text-amber-200',
+    danger: 'text-red-200',
+    running: 'text-sky-200',
+  },
 } as const;
 
 export const graphNodeTagListClasses = {
@@ -73,15 +81,17 @@ export const graphNodeOperationalRailClasses = {
     danger: 'text-red-200',
     running: 'text-sky-200',
   },
+  accessibleDescription: 'sr-only',
 } as const;
 
 export const graphNodeHealthPopoverClasses = {
   root: 'absolute z-40 w-72 rounded-md border border-slate-700 bg-slate-950/95 p-3 text-xs text-slate-100 shadow-2xl shadow-slate-950/40 outline-none',
   title: 'text-sm font-semibold text-slate-50',
   rows: 'mt-3 space-y-2',
-  row: 'flex items-center justify-between gap-4',
+  row: 'grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-1',
   label: 'text-slate-400',
   value: 'text-right font-medium text-slate-100',
+  detail: 'col-span-2 text-[11px] leading-4 text-slate-500',
   valueTone: {
     neutral: 'text-slate-100',
     info: 'text-blue-200',

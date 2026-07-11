@@ -70,4 +70,40 @@ describe('GraphNodeMetricRow', () => {
 
     expect(container.textContent).toBe('Rows10Rows8');
   });
+
+  it('marks measured and estimated values as accessible tone-aware hotspots', () => {
+    act(() => {
+      root.render(
+        <GraphNodeMetricRow
+          metrics={[
+            {
+              id: 'bytes',
+              label: 'Size',
+              value: '3.9 MB',
+              tone: 'success',
+              detail: '4,096,000 B (3.9 MB). Measured from provider metadata.',
+            },
+            {
+              id: 'estimated-bytes',
+              label: 'Est. size',
+              value: '8.5 KB',
+              tone: 'warning',
+              detail: '8,704 B (8.5 KB). Estimated from schema width.',
+            },
+          ]}
+        />
+      );
+    });
+
+    const values = Array.from(
+      container.querySelectorAll('[data-slot="graph-node-metric-hotspot"]')
+    );
+    expect(container.querySelectorAll('[title]')).toHaveLength(0);
+    expect(values.map((value) => value.getAttribute('aria-label'))).toEqual([
+      '4,096,000 B (3.9 MB). Measured from provider metadata.',
+      '8,704 B (8.5 KB). Estimated from schema width.',
+    ]);
+    expect(container.querySelector('[data-tone="success"]')).not.toBeNull();
+    expect(container.querySelector('[data-tone="warning"]')).not.toBeNull();
+  });
 });
