@@ -14089,3 +14089,20 @@ test('tracked migrations make live SourceObject discovery and exact identity can
   assert.match(migration.sql, /source-object-constraints/);
   assert.match(migration.sql, /WarehouseConnectionSourceObjectReader\.test\.ts/);
 });
+
+test('tracked migrations hard cut the source import catalog to SourceObject semantics', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '612_source_import_catalog_source_object_semantic_hardcut.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
+  assert.match(migration.sql, /RenderSourceImportCatalogView/);
+  assert.match(migration.sql, /ListWarehouseConnectionSourceObjects/);
+  assert.match(migration.sql, /never silently filtered/);
+  assert.match(migration.sql, /relation', 'file', 'endpoint', 'stream/);
+  assert.match(migration.sql, /capability-aware/);
+  assert.match(migration.sql, /CONTRACT-SOURCE-OBJECT-CATALOG-V1/);
+});
