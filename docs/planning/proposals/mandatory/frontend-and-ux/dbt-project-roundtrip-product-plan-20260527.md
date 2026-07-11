@@ -449,10 +449,14 @@ Evolve and reuse `SaveWorkspaceFileContent`:
 type SaveWorkspaceFileContentInput = {
   path: string;
   content: string;
-  expectedContentSha256?: string;
-  idempotencyKey: string;
+  expectedRevision: { kind: 'absent' } | { kind: 'content_sha256'; value: string };
 };
 ```
+
+The expected revision is mandatory. A retry is naturally idempotent when the
+current content SHA already equals the requested content SHA; a separate
+cross-store idempotency ledger would create a non-atomic database/filesystem
+write and is therefore rejected for this single-file command.
 
 After save, the dbt projection query is invalidated and refetched.
 
@@ -743,6 +747,8 @@ Commands return receipts:
 
 ```ts
 type SaveWorkspaceFileContentReceipt = {
+  kind: 'saved' | 'unchanged';
+  disposition: 'created' | 'updated' | null;
   path: string;
   contentSha256: string;
   projectRevisionHint?: string;
@@ -925,7 +931,7 @@ still requires planner/contracts ARC-2 evidence before code changes.
 | ------------------------------- | ------- | -------------------------------------------------- |
 | `ListWorkspaceFiles`            | query   | expose dbt-compatible files and explicit limits    |
 | `GetWorkspaceFileContent`       | query   | return content SHA/revision                        |
-| `SaveWorkspaceFileContent`      | command | add expected SHA, idempotency, conflict receipt    |
+| `SaveWorkspaceFileContent`      | command | add mandatory expected SHA and conflict receipt    |
 | `GenerateDbtWorkspaceArtifacts` | command | restrict to graph-draft bootstrap/adoption         |
 | `BuildDbtPlannerGraphSource`    | query   | accept file-derived projection in file-backed mode |
 | `ImportWarehouseSources`        | command | branch by authority mode                           |
@@ -1145,8 +1151,7 @@ type WorkspaceFileContent = {
 type SaveWorkspaceFileContentInput = {
   path: string;
   content: string;
-  expectedContentSha256?: string;
-  idempotencyKey: string;
+  expectedRevision: { kind: 'absent' } | { kind: 'content_sha256'; value: string };
 };
 ```
 
@@ -1154,6 +1159,8 @@ type SaveWorkspaceFileContentInput = {
 
 ```ts
 type SaveWorkspaceFileContentReceipt = {
+  kind: 'saved' | 'unchanged';
+  disposition: 'created' | 'updated' | null;
   path: string;
   contentSha256: string;
   lastModified: string;
@@ -1721,7 +1728,9 @@ GET  /workspace/files/:path
 POST /workspace/files/:path
 ```
 
-Extend the save body with revision/idempotency fields.
+Extend the save body with the mandatory expected-revision field. The current
+content hash provides retry idempotence for a single-file replacement; do not
+add a second idempotency ledger for this rail.
 
 ## 22.2 New dbt project routes
 
