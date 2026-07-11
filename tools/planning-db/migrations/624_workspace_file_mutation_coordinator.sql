@@ -76,7 +76,9 @@ values
   ('SYS-API-INFRA-WORKSPACE-FILE-MUTATIONS', 'invariant', 'All repository instances in one API process serialize mutations by resolved absolute path.', 0),
   ('SYS-API-INFRA-WORKSPACE-FILE-MUTATIONS', 'invariant', 'A failed temporary write or rename never replaces the current target and attempts temporary-file cleanup.', 1),
   ('SYS-API-INFRA-WORKSPACE-FILE-MUTATIONS', 'fowler_signal', 'Gateway; Unit of Work boundary; Separated Interface', 0),
-  ('SYS-API-INFRA-WORKSPACE-FILE-MUTATIONS', 'public_api', 'runExclusive;replaceFileAtomically;deleteFile', 0)
+  ('SYS-API-INFRA-WORKSPACE-FILE-MUTATIONS', 'public_api', 'runExclusive;replaceFileAtomically;deleteFile', 0),
+  ('SYS-API-INFRA-WORKSPACE-FILE-MUTATIONS', 'transition', 'The component is canonical after cross-instance CAS and failed-mutation cleanup evidence pass.', 0),
+  ('SYS-API-INFRA-WORKSPACE-FILE-MUTATIONS', 'consumer', 'SYS-API-INFRA-WORKSPACE-FILES', 0)
 on conflict (component_id, item_kind, item_value) do update set
   item_order = excluded.item_order;
 
