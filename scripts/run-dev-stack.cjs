@@ -3,7 +3,6 @@
 const { spawn } = require('node:child_process');
 const { spawnSync } = require('node:child_process');
 const { once } = require('node:events');
-const fs = require('node:fs');
 const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
@@ -35,7 +34,6 @@ const DEFAULT_LOCAL_WORKSPACE_FILES_ROOT = path.resolve(
   '../.dvt/dev-stack/workspace-files'
 );
 const DEFAULT_LOCAL_DBT_BUNDLE_FILE_ROOT = path.resolve(__dirname, '../.dvt/dev-stack/dbt-bundles');
-const LOCAL_WAREHOUSE_CATALOG_RELATIVE_PATH = path.join('.dvt', 'warehouse-connections.json');
 
 function parseArgs(argv) {
   const parsed = {
@@ -201,6 +199,7 @@ INSERT INTO public.source_1 (order_id, customer, amount) VALUES
   (1, 'Ada', 125.50),
   (2, 'Grace', 98.00),
   (3, 'Linus', 212.75);
+ANALYZE public.source_1;
 
 DROP TABLE IF EXISTS raw.orders;
 CREATE TABLE raw.orders (
@@ -212,51 +211,17 @@ INSERT INTO raw.orders (order_id, customer, amount) VALUES
   (1, 'Ada', 125.50),
   (2, 'Grace', 98.00),
   (3, 'Linus', 212.75);
+ANALYZE raw.orders;
 `.trim();
 }
 
-function buildLocalWarehouseConnectionCatalog() {
-  return `${JSON.stringify(
-    {
-      connections: [
-        {
-          id: 'local-postgres',
-          name: 'Local Postgres proof',
-          type: 'postgres',
-          database: 'dvt',
-          credentialRef: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
-          tables: [
-            {
-              database: 'dvt',
-              schema: 'public',
-              table: 'source_1',
-              rowCount: 3,
-              byteSize: 4096000,
-              columns: [
-                { name: 'order_id', type: 'integer', nullable: false },
-                { name: 'customer', type: 'text', nullable: false },
-                { name: 'amount', type: 'numeric', nullable: false },
-              ],
-            },
-            {
-              database: 'dvt',
-              schema: 'raw',
-              table: 'orders',
-              rowCount: 3,
-              byteSize: 4096000,
-              columns: [
-                { name: 'order_id', type: 'integer', nullable: false },
-                { name: 'customer', type: 'text', nullable: false },
-                { name: 'amount', type: 'numeric', nullable: false },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-    null,
-    2
-  )}\n`;
+function buildLocalWarehouseConnectionRequest() {
+  return {
+    name: 'Local Postgres proof',
+    type: 'postgres',
+    database: 'dvt',
+    credentialRef: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
+  };
 }
 
 async function seedLocalPostgresProofData(databaseUrl) {
@@ -268,12 +233,6 @@ async function seedLocalPostgresProofData(databaseUrl) {
   } finally {
     await client.end();
   }
-}
-
-function seedLocalWorkspaceWarehouseCatalog(workspaceFilesRoot) {
-  const catalogPath = path.join(workspaceFilesRoot, LOCAL_WAREHOUSE_CATALOG_RELATIVE_PATH);
-  fs.mkdirSync(path.dirname(catalogPath), { recursive: true });
-  fs.writeFileSync(catalogPath, buildLocalWarehouseConnectionCatalog(), 'utf8');
 }
 
 function pipePrefixedOutput(stream, prefix) {
@@ -318,6 +277,75 @@ function request(url) {
     });
     req.on('error', reject);
   });
+}
+
+function sendJsonCommand(url, bearerToken, payload) {
+  const body = JSON.stringify(payload);
+  const endpoint = new URL(url);
+  const transport = endpoint.protocol === 'https:' ? https : http;
+
+  return new Promise((resolve, reject) => {
+    const req = transport.request(
+      endpoint,
+      {
+        method: 'POST',
+        timeout: 15_000,
+        headers: {
+          Accept: 'application/json',
+          Authorization: `Bearer ${bearerToken}`,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(body),
+        },
+      },
+      (response) => {
+        const chunks = [];
+        response.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+        response.on('end', () => {
+          resolve({
+            statusCode: response.statusCode ?? 500,
+            body: Buffer.concat(chunks).toString('utf8'),
+          });
+        });
+      }
+    );
+
+    req.on('timeout', () => {
+      req.destroy(new Error(`Timeout while sending command to ${url}`));
+    });
+    req.on('error', reject);
+    req.end(body);
+  });
+}
+
+async function ensureLocalWarehouseConnectionViaApi(args) {
+  const endpoint = new URL('/workspace/warehouse/connections', `${args.apiBaseUrl}/`);
+  endpoint.searchParams.set('tenantId', args.workspaceScope.tenantId);
+  endpoint.searchParams.set('projectId', args.workspaceScope.projectId);
+  endpoint.searchParams.set('environmentId', args.workspaceScope.environmentId);
+
+  const response = await sendJsonCommand(
+    endpoint.href,
+    args.bearerToken,
+    buildLocalWarehouseConnectionRequest()
+  );
+  if (response.statusCode === 201) {
+    return response.statusCode;
+  }
+
+  let responseReason;
+  try {
+    responseReason = JSON.parse(response.body)?.error?.reason;
+  } catch {
+    responseReason = undefined;
+  }
+
+  if (response.statusCode !== 409 || responseReason !== 'warehouse_connection_duplicate') {
+    throw new Error(
+      `Local warehouse connection command failed with ${response.statusCode}: ${response.body}`
+    );
+  }
+
+  return response.statusCode;
 }
 
 async function waitForUrl(url, validator, timeoutMs, pollIntervalMs, label) {
@@ -422,6 +450,9 @@ async function main() {
   const apiBaseUrl = `http://${options.host}:${options.apiPort}`;
   const webBaseUrl = `http://${options.host}:${options.webPort}`;
   const databaseUrl = resolveDatabaseUrl(options);
+  const seedLocalWarehouseProof = Boolean(
+    databaseUrl && shouldBootstrapLocalPostgres(options, process.env)
+  );
   let localProtectedRuntimeAuth;
   let localTemporalService;
 
@@ -459,10 +490,9 @@ async function main() {
         }
       : {}),
   });
-  if (apiEnv.DATABASE_URL && shouldBootstrapLocalPostgres(options, process.env)) {
+  if (seedLocalWarehouseProof && apiEnv.DATABASE_URL) {
     console.log('[dev-stack] Seeding local Postgres proof source data');
     await seedLocalPostgresProofData(apiEnv.DATABASE_URL);
-    seedLocalWorkspaceWarehouseCatalog(apiEnv.DVT_WORKSPACE_FILES_ROOT);
   }
   const processHandles = [];
   let shuttingDown = false;
@@ -557,6 +587,17 @@ async function main() {
           `(${seededGrant.workspaceScope.tenantId}/${seededGrant.workspaceScope.projectId}/` +
           `${seededGrant.workspaceScope.environmentId})`
       );
+
+      if (seedLocalWarehouseProof) {
+        const statusCode = await ensureLocalWarehouseConnectionViaApi({
+          apiBaseUrl,
+          bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
+          workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+        });
+        console.log(
+          `[dev-stack] Local warehouse connection ${statusCode === 201 ? 'created' : 'already exists'}`
+        );
+      }
     }
 
     if (processStartupOrder.includes('temporal-worker')) {
@@ -638,9 +679,9 @@ module.exports = {
   shouldStartTemporalWorker,
   resolveProcessStartupOrder,
   buildLocalPostgresProofSeedSql,
-  buildLocalWarehouseConnectionCatalog,
+  buildLocalWarehouseConnectionRequest,
   seedLocalPostgresProofData,
-  seedLocalWorkspaceWarehouseCatalog,
+  ensureLocalWarehouseConnectionViaApi,
   waitForUrlOrProcessExit,
 };
 

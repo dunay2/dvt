@@ -13,11 +13,7 @@ const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
-const {
-  buildLocalDbtArtifactEnv,
-  seedLocalPostgresProofData,
-  seedLocalWorkspaceWarehouseCatalog,
-} = require('./run-dev-stack.cjs');
+const { buildLocalDbtArtifactEnv, seedLocalPostgresProofData } = require('./run-dev-stack.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   resolveDevWorkspaceScope,
@@ -355,7 +351,6 @@ class CanvasSourceImportLiveProofRunner {
 
     try {
       await seedLocalPostgresProofData(defaultPgUrl);
-      seedLocalWorkspaceWarehouseCatalog(workspaceFilesRoot);
 
       processContext.temporalEnv = await this.createTemporalEnvironment(TestWorkflowEnvironment);
       processContext.localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({

@@ -15,8 +15,8 @@ const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 const {
   buildCoordinatedTemporalWorkerEnv,
   buildLocalDbtArtifactEnv,
+  ensureLocalWarehouseConnectionViaApi,
   seedLocalPostgresProofData,
-  seedLocalWorkspaceWarehouseCatalog,
   waitForUrlOrProcessExit,
 } = require('./run-dev-stack.cjs');
 const {
@@ -267,26 +267,17 @@ async function seedSelectedClosureLocalWarehouseProof(
   apiEnv,
   deps = {
     seedLocalPostgresProofData,
-    seedLocalWorkspaceWarehouseCatalog,
     log: console.log,
   }
 ) {
   const databaseUrl = readNonEmptyEnv(apiEnv.DATABASE_URL);
-  const workspaceFilesRoot = readNonEmptyEnv(apiEnv.DVT_WORKSPACE_FILES_ROOT);
 
   if (!databaseUrl) {
     throw new Error('Selected-closure live proof requires DATABASE_URL before source seeding.');
   }
 
-  if (!workspaceFilesRoot) {
-    throw new Error(
-      'Selected-closure live proof requires DVT_WORKSPACE_FILES_ROOT before catalog seeding.'
-    );
-  }
-
   deps.log('[selected-closure-live] Seeding local Postgres proof source data');
   await deps.seedLocalPostgresProofData(databaseUrl);
-  deps.seedLocalWorkspaceWarehouseCatalog(workspaceFilesRoot);
 }
 
 async function runCypress(args) {
@@ -391,6 +382,12 @@ async function main() {
       schema: liveProofSchema,
       principalId: localProtectedRuntimeAuth.principalId,
       tenantActions: LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
+      workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+    });
+
+    await ensureLocalWarehouseConnectionViaApi({
+      apiBaseUrl: `http://127.0.0.1:${DEFAULT_API_PORT}`,
+      bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
     });
 
