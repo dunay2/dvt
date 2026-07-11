@@ -9,6 +9,7 @@ import {
   SourceObjectSelectionSchema,
   buildRelationalSourceObjectId,
   isRelationalSourceObject,
+  resolveSourceObjectColumnConstraintSemantics,
   type SourceObject,
 } from '../../src/contracts/source-import/SourceObjectCatalog.v1.js';
 
@@ -213,8 +214,8 @@ describe('SourceObjectCatalog v1', () => {
       ...sourceObject(locator),
       objectId: buildRelationalSourceObjectId(locator),
       columns: [
-        { name: 'tenant_id', type: 'uuid', nullable: false, primaryKey: true },
-        { name: 'order_id', type: 'bigint', nullable: false, primaryKey: true },
+        { name: 'tenant_id', type: 'uuid', nullable: false },
+        { name: 'order_id', type: 'bigint', nullable: false },
       ],
       constraints: [
         {
@@ -226,6 +227,19 @@ describe('SourceObjectCatalog v1', () => {
     };
 
     expect(SourceObjectSchema.parse(relation).constraints).toEqual(relation.constraints);
+    expect(resolveSourceObjectColumnConstraintSemantics(relation, 'tenant_id')).toEqual({
+      primaryKey: true,
+      independentlyUnique: false,
+    });
+    expect(() =>
+      SourceObjectSchema.parse({
+        ...relation,
+        columns: [
+          { name: 'tenant_id', type: 'uuid', nullable: false, primaryKey: true },
+          { name: 'order_id', type: 'bigint', nullable: false },
+        ],
+      })
+    ).toThrow();
     expect(() =>
       SourceObjectSchema.parse({
         ...relation,

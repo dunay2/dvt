@@ -1,30 +1,23 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildWarehouseTableIdentityKey,
-  buildWarehouseTableKey,
+  buildRelationalSourceObjectName,
+  buildSourceObjectIdentityKey,
   buildSourceImportCatalogViewModel,
   type SourceImportCatalogCopy,
 } from './sourceImportCatalogModel';
 import { sourceImportWizardCopy } from './copy';
-import type { TableInfo } from './types';
-
-function buildTable(overrides?: Partial<TableInfo>): TableInfo {
-  return {
-    database: 'RAW',
-    schema: 'ERP',
-    table: 'ORDERS',
-    selected: false,
-    ...overrides,
-  };
-}
+import {
+  buildSourceImportTestMetricEvidence,
+  buildSourceImportTestObject as buildTable,
+} from './sourceImportWizard.testFixtures';
 
 describe('sourceImportCatalogModel', () => {
   const catalogCopy = sourceImportWizardCopy.catalog;
   const numberFormatter = new Intl.NumberFormat('en-US');
 
   it('resolves canonical warehouse table keys', () => {
-    expect(buildWarehouseTableKey(buildTable({ table: 'ORDERS' }))).toBe('RAW.ERP.ORDERS');
+    expect(buildRelationalSourceObjectName(buildTable({ table: 'ORDERS' }))).toBe('RAW.ERP.ORDERS');
   });
 
   it('keeps table identity separate from the user-facing canonical name', () => {
@@ -40,11 +33,11 @@ describe('sourceImportCatalogModel', () => {
       table: 'ORDERS',
       selected: false,
     });
-    const activeTableKey = buildWarehouseTableIdentityKey(rawProdPublicOrders);
+    const activeTableKey = buildSourceObjectIdentityKey(rawProdPublicOrders);
 
-    expect(buildWarehouseTableKey(rawProdOrders)).toBe('RAW.PROD.PUBLIC.ORDERS');
-    expect(buildWarehouseTableKey(rawProdPublicOrders)).toBe('RAW.PROD.PUBLIC.ORDERS');
-    expect(buildWarehouseTableIdentityKey(rawProdOrders)).not.toBe(activeTableKey);
+    expect(buildRelationalSourceObjectName(rawProdOrders)).toBe('RAW.PROD.PUBLIC.ORDERS');
+    expect(buildRelationalSourceObjectName(rawProdPublicOrders)).toBe('RAW.PROD.PUBLIC.ORDERS');
+    expect(buildSourceObjectIdentityKey(rawProdOrders)).not.toBe(activeTableKey);
 
     const viewModel = buildSourceImportCatalogViewModel({
       tables: [rawProdOrders, rawProdPublicOrders],
@@ -68,24 +61,22 @@ describe('sourceImportCatalogModel', () => {
           database: 'RAW',
           schema: 'ERP',
           table: 'ORDERS',
-          rowCount: 1500,
-          byteSize: 4096000,
           selected: true,
           columns: [
-            { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true, unique: true },
+            { name: 'order_id', type: 'INTEGER', nullable: false },
             { name: 'discount_code', type: 'TEXT', nullable: true },
           ],
+          constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
         }),
         buildTable({
           database: 'RAW',
           schema: 'ERP',
           table: 'CUSTOMERS',
-          rowCount: undefined,
           selected: false,
           columns: [{ name: 'customer_id', type: 'INTEGER', nullable: false }],
         }),
       ],
-      activeTableKey: buildWarehouseTableIdentityKey(
+      activeTableKey: buildSourceObjectIdentityKey(
         buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' })
       ),
       copy: catalogCopy,
@@ -118,7 +109,13 @@ describe('sourceImportCatalogModel', () => {
             accessibilityLabel:
               'Select source table RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 2 columns.',
             rowCountLabel: '1,500 rows',
+            rowCountTone: 'estimated',
+            rowCountDetail:
+              '1,500 rows. Estimated using provider statistics. Confidence: medium. Snapshot observed: 2026-07-10T21:00:00.000Z.',
             byteSizeLabel: '3.9 MB',
+            byteSizeTone: 'measured',
+            byteSizeDetail:
+              '4,096,000 B (3.9 MB). Measured using provider storage metadata. Physical allocation. Confidence: exact. Snapshot observed: 2026-07-10T21:00:00.000Z.',
             columnCountLabel: '2 columns',
             columns: [
               {
@@ -137,8 +134,10 @@ describe('sourceImportCatalogModel', () => {
           }),
           expect.objectContaining({
             canonicalName: 'RAW.ERP.CUSTOMERS',
-            accessibilityLabel: 'Select source table RAW.ERP.CUSTOMERS. Rows unknown. 1 column.',
-            rowCountLabel: 'Rows unknown',
+            accessibilityLabel:
+              'Select source table RAW.ERP.CUSTOMERS. 1,500 rows. 3.9 MB. 1 column.',
+            rowCountLabel: '1,500 rows',
+            byteSizeLabel: '3.9 MB',
             columnCountLabel: '1 column',
           }),
         ],
@@ -188,7 +187,7 @@ describe('sourceImportCatalogModel', () => {
           columns: [{ name: 'tracking_code', type: 'TEXT', nullable: false }],
         }),
       ],
-      activeTableKey: buildWarehouseTableIdentityKey(
+      activeTableKey: buildSourceObjectIdentityKey(
         buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' })
       ),
       searchQuery: 'email',
@@ -228,20 +227,17 @@ describe('sourceImportCatalogModel', () => {
         buildTable({
           table: 'ORDERS',
           selected: true,
-          rowCount: 1500,
-          byteSize: 4096000,
           columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
         }),
         buildTable({
           table: 'CUSTOMERS',
           selected: false,
-          rowCount: undefined,
+          metricEvidence: buildSourceImportTestMetricEvidence(50, 8704, 'estimated'),
           columns: [{ name: 'customer_id', type: 'INTEGER', nullable: false }],
         }),
         buildTable({
           table: 'SHIPMENTS',
           selected: false,
-          rowCount: undefined,
           columns: [],
         }),
       ],
@@ -268,17 +264,43 @@ describe('sourceImportCatalogModel', () => {
         countLabel: '2',
         active: true,
       }),
-      expect.objectContaining({
-        id: 'withSize',
-        label: 'With size',
-        countLabel: '1',
-        active: false,
-      }),
     ]);
     expect(viewModel.databaseGroups[0]?.schemaGroups[0]?.tables).toEqual([
       expect.objectContaining({ canonicalName: 'RAW.ERP.ORDERS' }),
       expect.objectContaining({ canonicalName: 'RAW.ERP.CUSTOMERS' }),
     ]);
+  });
+
+  it('labels calculated source object size without treating it as measured warehouse bytes', () => {
+    const viewModel = buildSourceImportCatalogViewModel({
+      tables: [
+        buildTable({
+          table: 'EVENTS',
+          metricEvidence: buildSourceImportTestMetricEvidence(128, 8704, 'estimated'),
+          selected: false,
+          columns: [
+            { name: 'event_id', type: 'INTEGER', nullable: false },
+            { name: 'payload', type: 'TEXT', nullable: true },
+          ],
+        }),
+      ],
+      activeTableKey: null,
+      copy: catalogCopy,
+      numberFormatter,
+    });
+
+    expect(viewModel.visibleTableCount).toBe(1);
+    expect(viewModel.activeTable).toEqual(
+      expect.objectContaining({
+        canonicalName: 'RAW.ERP.EVENTS',
+        rowCountLabel: '128 rows',
+        rowCountTone: 'estimated',
+        byteSizeLabel: 'Estimated 8.5 KB',
+        byteSizeTone: 'estimated',
+        accessibilityLabel:
+          'Select source table RAW.ERP.EVENTS. 128 rows. Estimated 8.5 KB. 2 columns.',
+      })
+    );
   });
 
   it('groups visible source catalog entries by database and schema for categorized browsing', () => {
@@ -395,9 +417,9 @@ describe('sourceImportCatalogModel', () => {
       inSourceDatabase: 'En base origen',
       inspectSourceTableMetadata: 'Inspeccionar tabla origen',
       metadata: 'metadata',
-      rowsUnknown: 'Filas desconocidas',
       rowSingular: 'fila',
       rowPlural: 'filas',
+      estimatedSizePrefix: 'Estimado',
       columnSingular: 'columna',
       columnPlural: 'columnas',
       tableSingular: 'tabla',
@@ -415,7 +437,6 @@ describe('sourceImportCatalogModel', () => {
       filterAll: 'Todas',
       filterSelected: 'Seleccionadas',
       filterWithColumns: 'Con columnas',
-      filterWithSize: 'Con tamano',
       filterListLabel: 'Filtros del catalogo origen',
       filterAccessibilityPrefix: 'Filtrar catalogo origen por',
     };
@@ -424,9 +445,9 @@ describe('sourceImportCatalogModel', () => {
       tables: [
         buildTable({
           table: 'ORDERS',
-          rowCount: 1500,
           selected: false,
-          columns: [{ name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true }],
+          columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+          constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
         }),
         buildTable({
           table: 'CUSTOMERS',
@@ -452,9 +473,9 @@ describe('sourceImportCatalogModel', () => {
       expect.objectContaining({
         canonicalName: 'RAW.ERP.CUSTOMERS',
         accessibilityLabel:
-          'Seleccionar tabla origen RAW.ERP.CUSTOMERS. Filas desconocidas. 1 columna.',
+          'Seleccionar tabla origen RAW.ERP.CUSTOMERS. 1500 filas. 3.9 MB. 1 columna.',
         inspectionAccessibilityLabel:
-          'Inspeccionar tabla origen RAW.ERP.CUSTOMERS metadata. Filas desconocidas. 1 columna.',
+          'Inspeccionar tabla origen RAW.ERP.CUSTOMERS metadata. 1500 filas. 3.9 MB. 1 columna.',
       })
     );
   });

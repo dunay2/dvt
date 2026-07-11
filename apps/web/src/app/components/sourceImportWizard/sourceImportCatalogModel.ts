@@ -1,4 +1,7 @@
+import { resolveSourceObjectColumnConstraintSemantics } from '@dvt/contracts';
+
 import type { SourceImportSchemaIdentity, TableInfo } from './types';
+import { describeSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 
 export type SourceImportColumnViewModel = Readonly<{
   name: string;
@@ -15,14 +18,18 @@ export type SourceImportTableViewModel = Readonly<{
   accessibilityLabel: string;
   inspectionAccessibilityLabel: string;
   rowCountLabel: string;
-  byteSizeLabel: string | null;
+  rowCountDetail: string;
+  rowCountTone: 'measured' | 'estimated';
+  byteSizeLabel: string;
+  byteSizeDetail: string;
+  byteSizeTone: 'measured' | 'estimated';
   columnCountLabel: string;
   selected: boolean;
   selectedLabel: string;
   columns: readonly SourceImportColumnViewModel[];
 }>;
 
-export type SourceImportCatalogFilterId = 'all' | 'selected' | 'withColumns' | 'withSize';
+export type SourceImportCatalogFilterId = 'all' | 'selected' | 'withColumns';
 
 export type SourceImportCatalogFilterViewModel = Readonly<{
   id: SourceImportCatalogFilterId;
@@ -72,9 +79,9 @@ export type SourceImportCatalogCopy = Readonly<{
   inSourceDatabase: string;
   inspectSourceTableMetadata: string;
   metadata: string;
-  rowsUnknown: string;
   rowSingular: string;
   rowPlural: string;
+  estimatedSizePrefix: string;
   columnSingular: string;
   columnPlural: string;
   tableSingular: string;
@@ -92,21 +99,20 @@ export type SourceImportCatalogCopy = Readonly<{
   filterAll: string;
   filterSelected: string;
   filterWithColumns: string;
-  filterWithSize: string;
   filterListLabel: string;
   filterAccessibilityPrefix: string;
 }>;
 
-export function buildWarehouseTableKey(
-  table: Pick<TableInfo, 'database' | 'schema' | 'table'>
-): string {
-  return [table.database, table.schema, table.table].join('.');
+export function buildRelationalSourceObjectName(sourceObject: Pick<TableInfo, 'locator'>): string {
+  return [
+    sourceObject.locator.catalog,
+    sourceObject.locator.schema,
+    sourceObject.locator.name,
+  ].join('.');
 }
 
-export function buildWarehouseTableIdentityKey(
-  table: Pick<TableInfo, 'database' | 'schema' | 'table'>
-): string {
-  return JSON.stringify([table.database, table.schema, table.table]);
+export function buildSourceObjectIdentityKey(sourceObject: Pick<TableInfo, 'objectId'>): string {
+  return sourceObject.objectId;
 }
 
 export function buildSourceImportSchemaKey(schema: SourceImportSchemaIdentity): string {
@@ -118,14 +124,10 @@ function formatNumber(value: number, numberFormatter: Intl.NumberFormat): string
 }
 
 export function formatSourceImportRowCount(
-  rowCount: number | undefined,
+  rowCount: number,
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): string {
-  if (rowCount == null) {
-    return copy.rowsUnknown;
-  }
-
   const suffix = rowCount === 1 ? copy.rowSingular : copy.rowPlural;
   return `${formatNumber(rowCount, numberFormatter)} ${suffix}`;
 }
@@ -139,10 +141,7 @@ export function formatSourceImportColumnCount(
   return `${formatNumber(columnCount, numberFormatter)} ${suffix}`;
 }
 
-export function formatSourceImportByteSize(byteSize: number | undefined): string | null {
-  if (byteSize == null) {
-    return null;
-  }
+export function formatSourceImportByteSize(byteSize: number): string {
   if (byteSize >= 1024 * 1024 * 1024) {
     return `${(byteSize / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
   }
@@ -155,13 +154,32 @@ export function formatSourceImportByteSize(byteSize: number | undefined): string
   return `${byteSize} B`;
 }
 
+function formatSourceImportByteDetail(
+  byteSize: number,
+  compact: string,
+  numberFormatter: Intl.NumberFormat
+): string {
+  const exact = `${numberFormatter.format(Math.round(byteSize))} B`;
+  return exact === compact ? exact : `${exact} (${compact})`;
+}
+
+export function formatSourceImportSizeEvidence(
+  table: Pick<TableInfo, 'metricEvidence'>,
+  copy: Pick<SourceImportCatalogCopy, 'estimatedSizePrefix'>
+): string {
+  const size = formatSourceImportByteSize(table.metricEvidence.byteSize.value);
+  return table.metricEvidence.byteSize.provenance === 'estimated'
+    ? `${copy.estimatedSizePrefix} ${size}`
+    : size;
+}
+
 export function formatSourceImportTableCount(
-  tableCount: number,
+  objectCount: number,
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): string {
-  const suffix = tableCount === 1 ? copy.tableSingular : copy.tablePlural;
-  return `${formatNumber(tableCount, numberFormatter)} ${suffix}`;
+  const suffix = objectCount === 1 ? copy.tableSingular : copy.tablePlural;
+  return `${formatNumber(objectCount, numberFormatter)} ${suffix}`;
 }
 
 export function formatSourceImportSchemaCount(
@@ -185,9 +203,9 @@ function tableMatchesSourceImportSearch(table: TableInfo, normalizedSearchQuery:
   }
 
   const searchableValues = [
-    table.database,
-    table.schema,
-    table.table,
+    table.locator.catalog,
+    table.locator.schema,
+    table.locator.name,
     ...(table.columns?.flatMap((column) => [column.name, column.type]) ?? []),
   ];
 
@@ -205,8 +223,6 @@ function tableMatchesSourceImportFilter(
       return table.selected;
     case 'withColumns':
       return (table.columns?.length ?? 0) > 0;
-    case 'withSize':
-      return table.byteSize != null;
     case 'all':
       return true;
     default:
@@ -232,7 +248,6 @@ function buildSourceImportCatalogFilters({
     { id: 'all', label: copy.filterAll },
     { id: 'selected', label: copy.filterSelected },
     { id: 'withColumns', label: copy.filterWithColumns },
-    { id: 'withSize', label: copy.filterWithSize },
   ];
 
   return filterDefinitions.map((filter) => {
@@ -266,37 +281,61 @@ export function buildSourceImportTableViewModel(
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): SourceImportTableViewModel {
-  const identityKey = buildWarehouseTableIdentityKey(table);
-  const canonicalName = buildWarehouseTableKey(table);
-  const rowCountLabel = formatSourceImportRowCount(table.rowCount, copy, numberFormatter);
-  const byteSizeLabel = formatSourceImportByteSize(table.byteSize);
+  const identityKey = buildSourceObjectIdentityKey(table);
+  const canonicalName = buildRelationalSourceObjectName(table);
+  const rowCountLabel = formatSourceImportRowCount(
+    table.metricEvidence.rowCount.value,
+    copy,
+    numberFormatter
+  );
+  const byteSizeLabel = formatSourceImportSizeEvidence(table, copy);
+  const compactByteSize = formatSourceImportByteSize(table.metricEvidence.byteSize.value);
   const columnCountLabel = formatSourceImportColumnCount(
     table.columns?.length ?? 0,
     copy,
     numberFormatter
   );
-  const accessibilityMetrics = [rowCountLabel, byteSizeLabel, columnCountLabel]
-    .filter((label): label is string => label != null)
-    .join('. ');
+  const accessibilityMetrics = [rowCountLabel, byteSizeLabel, columnCountLabel].join('. ');
 
   return {
     index,
     identityKey,
     canonicalName,
-    displayName: table.table,
+    displayName: table.displayName,
     accessibilityLabel: `${copy.selectSourceTable} ${canonicalName}. ${accessibilityMetrics}.`,
     inspectionAccessibilityLabel: `${copy.inspectSourceTableMetadata} ${canonicalName} ${copy.metadata}. ${accessibilityMetrics}.`,
     rowCountLabel,
+    rowCountDetail: describeSourceObjectMetricEvidence({
+      metric: table.metricEvidence.rowCount,
+      subject: rowCountLabel,
+      evidence: table.metricEvidence,
+    }),
+    rowCountTone: table.metricEvidence.rowCount.provenance,
     byteSizeLabel,
+    byteSizeDetail: describeSourceObjectMetricEvidence({
+      metric: table.metricEvidence.byteSize,
+      subject: formatSourceImportByteDetail(
+        table.metricEvidence.byteSize.value,
+        compactByteSize,
+        numberFormatter
+      ),
+      evidence: table.metricEvidence,
+      basis: table.metricEvidence.byteSize.basis,
+    }),
+    byteSizeTone: table.metricEvidence.byteSize.provenance,
     columnCountLabel,
     selected: table.selected,
     selectedLabel: copy.filterSelected,
     columns:
       table.columns?.map((column) => {
         const nullabilityLabel = formatSourceImportNullability(column.nullable, copy);
+        const constraintSemantics = resolveSourceObjectColumnConstraintSemantics(
+          table,
+          column.name
+        );
         const constraintLabels = [
-          ...(column.primaryKey === true ? [copy.primaryKey] : []),
-          ...(column.unique === true ? [copy.unique] : []),
+          ...(constraintSemantics.primaryKey ? [copy.primaryKey] : []),
+          ...(constraintSemantics.independentlyUnique ? [copy.unique] : []),
           nullabilityLabel,
         ];
 
@@ -339,11 +378,11 @@ export function buildSourceImportCatalogViewModel({
   const databaseGroupsByName = new Map<string, Map<string, SourceImportTableViewModel[]>>();
 
   visibleTableEntries.forEach(({ table, viewModel }) => {
-    const databaseSchemas = databaseGroupsByName.get(table.database) ?? new Map();
-    const databaseSchemaGroup = databaseSchemas.get(table.schema) ?? [];
+    const databaseSchemas = databaseGroupsByName.get(table.locator.catalog) ?? new Map();
+    const databaseSchemaGroup = databaseSchemas.get(table.locator.schema) ?? [];
     databaseSchemaGroup.push(viewModel);
-    databaseSchemas.set(table.schema, databaseSchemaGroup);
-    databaseGroupsByName.set(table.database, databaseSchemas);
+    databaseSchemas.set(table.locator.schema, databaseSchemaGroup);
+    databaseGroupsByName.set(table.locator.catalog, databaseSchemas);
   });
 
   const activeTable =

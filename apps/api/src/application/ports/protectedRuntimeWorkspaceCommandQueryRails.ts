@@ -249,12 +249,12 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
-    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listTablesName,
+    name: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listSourceObjectsName,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.boundedContext,
-    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.tableCatalogReadModel,
-    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listTablesPort,
-    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listTablesSurface,
+    dddObject: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.sourceObjectCatalogReadModel,
+    applicationPort: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listSourceObjectsPort,
+    adapterSurface: PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.listSourceObjectsSurface,
     scopeAndAuthorization:
       PROTECTED_RUNTIME_WORKSPACE_RAIL.warehouseSourceImport.scopeAndAuthorization,
     coverage: [

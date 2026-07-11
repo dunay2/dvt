@@ -37,6 +37,7 @@ export function readExistingSourceDocument(content: string | undefined): SourceY
               .map(
                 (table): SourceYamlTable => ({
                   name: typeof table.name === 'string' ? table.name : '',
+                  ...(typeof table.identifier === 'string' ? { identifier: table.identifier } : {}),
                   columns: readExistingColumns(table.columns),
                   metadata: readYamlMetadata(
                     table,

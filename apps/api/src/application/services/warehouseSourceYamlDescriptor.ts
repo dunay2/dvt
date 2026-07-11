@@ -1,23 +1,26 @@
 /** Owned concern: define dbt source YAML naming and path policy. */
 import { createHash } from 'node:crypto';
 
-import type { SourceImportGrouping, WarehouseTable } from '../ports/warehouseSourceImport.js';
+import type { SourceImportGrouping } from '../ports/warehouseSourceImport.js';
 
-import type { WarehouseSourceYamlArtifactDescriptor } from './warehouseSourceYamlTypes.js';
+import type {
+  ConnectedRelationalSourceObject,
+  WarehouseSourceYamlArtifactDescriptor,
+} from './warehouseSourceYamlTypes.js';
 
 export const DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR: WarehouseSourceYamlArtifactDescriptor = {
   pluginId: 'dbt',
   artifactKind: 'dbt-source-yaml',
-  pathForTable: (table, groupingStrategy) => {
+  pathForSourceObject: (sourceObject, groupingStrategy) => {
     return buildWarehouseSourceYamlPathFromPart(
-      toStableYamlIdentifierPart(groupingValue(table, groupingStrategy))
+      toStableYamlIdentifierPart(groupingValue(sourceObject, groupingStrategy))
     );
   },
-  sourceNameForTable: (table) =>
-    (table.connectionId ? [table.connectionId, table.database, table.schema] : [table.schema])
+  sourceNameForSourceObject: (sourceObject) =>
+    [sourceObject.connectionId, sourceObject.locator.catalog, sourceObject.locator.schema]
       .map(toStableYamlIdentifierPart)
       .join('_'),
-  tableNameForTable: (table) => table.table.toLowerCase(),
+  tableNameForSourceObject: (sourceObject) => toStableYamlIdentifierPart(sourceObject.locator.name),
   generatedFreshness: {
     warnAfterCount: 24,
     warnAfterPeriod: 'hour',
@@ -27,27 +30,27 @@ export const DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR: WarehouseSourceYamlArtifactDes
   reservedKeys: {
     document: ['sources'],
     source: ['name', 'database', 'schema', 'freshness', 'tables'],
-    table: ['name', 'columns'],
+    table: ['name', 'identifier', 'columns'],
     column: ['name', 'data_type', 'tests'],
   },
 };
 
 export function buildWarehouseSourceYamlPath(
-  table: WarehouseTable,
+  sourceObject: ConnectedRelationalSourceObject,
   groupingStrategy: SourceImportGrouping
 ): string {
-  return DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.pathForTable(table, groupingStrategy);
+  return DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.pathForSourceObject(sourceObject, groupingStrategy);
 }
 
-export function groupTablesForYaml(
-  tables: readonly WarehouseTable[],
+export function groupSourceObjectsForYaml(
+  sourceObjects: readonly ConnectedRelationalSourceObject[],
   groupingStrategy: SourceImportGrouping
-): ReadonlyMap<string, readonly WarehouseTable[]> {
-  const grouped = new Map<string, WarehouseTable[]>();
+): ReadonlyMap<string, readonly ConnectedRelationalSourceObject[]> {
+  const grouped = new Map<string, ConnectedRelationalSourceObject[]>();
   const rawValuesByStablePart = new Map<string, Set<string>>();
 
-  for (const table of tables) {
-    const value = groupingValue(table, groupingStrategy);
+  for (const sourceObject of sourceObjects) {
+    const value = groupingValue(sourceObject, groupingStrategy);
     const stablePart = toStableYamlIdentifierPart(value);
     const rawValues = rawValuesByStablePart.get(stablePart) ?? new Set<string>();
     rawValues.add(value.toLowerCase());
@@ -60,8 +63,8 @@ export function groupTablesForYaml(
       .map(([stablePart]) => stablePart)
   );
 
-  for (const table of tables) {
-    const value = groupingValue(table, groupingStrategy);
+  for (const sourceObject of sourceObjects) {
+    const value = groupingValue(sourceObject, groupingStrategy);
     const stablePart = toStableYamlIdentifierPart(value);
     const path = buildWarehouseSourceYamlPathFromPart(
       collidingStableParts.has(stablePart)
@@ -69,7 +72,7 @@ export function groupTablesForYaml(
         : stablePart
     );
     const group = grouped.get(path) ?? [];
-    group.push(table);
+    group.push(sourceObject);
     grouped.set(path, group);
   }
   return grouped;
@@ -85,7 +88,7 @@ export function toStableYamlIdentifierPart(part: string): string {
 
 export function toCollisionResistantYamlIdentifierPart(part: string): string {
   const stablePart = toStableYamlIdentifierPart(part);
-  const canonicalInput = part.trim().toLowerCase();
+  const canonicalInput = part.trim();
   if (canonicalInput === stablePart) {
     return stablePart;
   }
@@ -96,8 +99,13 @@ export function toCollisionResistantYamlIdentifierPart(part: string): string {
   return `${stablePart}_${hash}`;
 }
 
-function groupingValue(table: WarehouseTable, groupingStrategy: SourceImportGrouping): string {
-  return groupingStrategy === 'database' ? table.database : table.schema;
+function groupingValue(
+  sourceObject: ConnectedRelationalSourceObject,
+  groupingStrategy: SourceImportGrouping
+): string {
+  return groupingStrategy === 'database'
+    ? sourceObject.locator.catalog
+    : sourceObject.locator.schema;
 }
 
 function buildWarehouseSourceYamlPathFromPart(groupPart: string): string {

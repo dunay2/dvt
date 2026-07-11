@@ -1,4 +1,9 @@
 /** Owned concern: read warehouse source-import catalog metadata from workspace-owned files. */
+import {
+  SourceObjectListSchema,
+  type SourceObject,
+  type WorkspaceGraphDraftScope,
+} from '@dvt/contracts';
 import { z } from 'zod';
 
 import type {
@@ -6,7 +11,6 @@ import type {
   IWarehouseConnectionCatalog,
   WarehouseConnection,
   WarehouseConnectionCatalogEntry,
-  WarehouseTable,
 } from '../../application/ports/warehouseSourceImport.js';
 import {
   DuplicateWarehouseConnectionError,
@@ -18,30 +22,13 @@ import { WorkspaceFileNotFoundError } from '../../application/ports/workspaceFil
 
 export const WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH = '.dvt/warehouse-connections.json';
 
-export const WarehouseColumnCatalogSchema = z.object({
-  name: z.string().min(1),
-  type: z.string().min(1),
-  nullable: z.boolean(),
-  primaryKey: z.boolean().optional(),
-  unique: z.boolean().optional(),
-});
-
-export const WarehouseTableCatalogSchema = z.object({
-  database: z.string().min(1),
-  schema: z.string().min(1),
-  table: z.string().min(1),
-  rowCount: z.number().nonnegative().optional(),
-  byteSize: z.number().nonnegative().optional(),
-  columns: z.array(WarehouseColumnCatalogSchema).optional(),
-});
-
 export const WarehouseConnectionCatalogSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   type: z.enum(SUPPORTED_WAREHOUSE_CONNECTION_TYPES),
   database: z.string().min(1),
   credentialRef: z.string().min(1).optional(),
-  tables: z.array(WarehouseTableCatalogSchema),
+  sourceObjects: z.array(z.unknown()),
 });
 
 export const WorkspaceWarehouseConnectionCatalogSchema = z.object({
@@ -51,17 +38,25 @@ export const WorkspaceWarehouseConnectionCatalogSchema = z.object({
 export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnectionCatalog {
   public constructor(private readonly options: { readonly repository: IWorkspaceFileRepository }) {}
 
-  public async listConnections(): Promise<readonly WarehouseConnection[]> {
-    const entries = await resolveWorkspaceWarehouseCatalog(this.options.repository);
-    return entries.map(({ tables: _tables, ...connection }) => connection);
+  public async listConnections(
+    scope: WorkspaceGraphDraftScope
+  ): Promise<readonly WarehouseConnection[]> {
+    const entries = await resolveWorkspaceWarehouseCatalog(this.options.repository, scope);
+    return entries.map(({ sourceObjects: _sourceObjects, ...connection }) => connection);
   }
 
-  public async listTables(connectionId: string): Promise<readonly WarehouseTable[]> {
-    return (await this.getConnection(connectionId)).tables;
+  public async listSourceObjects(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string
+  ): Promise<readonly SourceObject[]> {
+    return (await this.getConnection(scope, connectionId)).sourceObjects;
   }
 
-  public async getConnection(connectionId: string): Promise<WarehouseConnectionCatalogEntry> {
-    const entries = await resolveWorkspaceWarehouseCatalog(this.options.repository);
+  public async getConnection(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string
+  ): Promise<WarehouseConnectionCatalogEntry> {
+    const entries = await resolveWorkspaceWarehouseCatalog(this.options.repository, scope);
     const connection = entries.find((entry) => entry.id === connectionId);
     if (!connection) {
       throw new WarehouseConnectionNotFoundError(connectionId);
@@ -71,9 +66,10 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
   }
 
   public async createConnection(
+    scope: WorkspaceGraphDraftScope,
     input: CreateWarehouseConnectionCatalogInput
   ): Promise<WarehouseConnection> {
-    const entries = [...(await resolveWorkspaceWarehouseCatalog(this.options.repository))];
+    const entries = [...(await resolveWorkspaceWarehouseCatalog(this.options.repository, scope))];
     const id = toWarehouseConnectionId(input.name);
     const normalizedName = input.name.trim().toLowerCase();
 
@@ -92,27 +88,34 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
       type: input.type,
       database: input.database.trim(),
       credentialRef: input.credentialRef.trim(),
-      tables: input.tables,
+      sourceObjects: input.sourceObjects,
     });
     const nextEntries = [...entries, nextEntry].sort((left, right) =>
       left.name.localeCompare(right.name)
     );
     await this.options.repository.saveFileContent(
+      scope,
       WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
       serializeWorkspaceWarehouseCatalog(nextEntries)
     );
 
-    const { tables: _tables, credentialRef: _credentialRef, ...connection } = nextEntry;
+    const {
+      sourceObjects: _sourceObjects,
+      credentialRef: _credentialRef,
+      ...connection
+    } = nextEntry;
     return connection;
   }
 }
 
 export async function resolveWorkspaceWarehouseCatalog(
-  repository: IWorkspaceFileRepository
+  repository: IWorkspaceFileRepository,
+  scope: WorkspaceGraphDraftScope
 ): Promise<readonly WarehouseConnectionCatalogEntry[]> {
   let raw: string;
   try {
-    raw = (await repository.getFileContent(WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH)).content;
+    raw = (await repository.getFileContent(scope, WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH))
+      .content;
   } catch (error) {
     if (error instanceof WorkspaceFileNotFoundError) {
       return [];
@@ -134,53 +137,34 @@ export async function resolveWorkspaceWarehouseCatalog(
         type: entry.type,
         database: entry.database,
         ...(entry.credentialRef !== undefined ? { credentialRef: entry.credentialRef } : {}),
-        tables: entry.tables.map(
-          (table): WarehouseTable => ({
-            database: table.database,
-            schema: table.schema,
-            table: table.table,
-            ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
-            ...(table.byteSize !== undefined ? { byteSize: table.byteSize } : {}),
-            ...(table.columns !== undefined
-              ? {
-                  columns: table.columns.map((column) => ({
-                    name: column.name,
-                    type: column.type,
-                    nullable: column.nullable,
-                    ...(typeof column.primaryKey === 'boolean'
-                      ? { primaryKey: column.primaryKey }
-                      : {}),
-                    ...(typeof column.unique === 'boolean' ? { unique: column.unique } : {}),
-                  })),
-                }
-              : {}),
-          })
-        ),
+        sourceObjects: SourceObjectListSchema.parse(entry.sourceObjects),
       });
     })
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-export function buildCatalogTableKey(table: WarehouseTable): string {
-  return `${table.database.toLowerCase()}.${table.schema.toLowerCase()}.${table.table.toLowerCase()}`;
+export function buildCatalogSourceObjectKey(sourceObject: SourceObject): string {
+  return sourceObject.objectId;
 }
 
 export function normalizeCatalogEntry(
   entry: WarehouseConnectionCatalogEntry
 ): WarehouseConnectionCatalogEntry {
-  const tableKeys = new Set<string>();
-  const tables = entry.tables
-    .map((table) => {
-      const tableKey = buildCatalogTableKey(table);
-      if (tableKeys.has(tableKey)) {
-        throw new Error(`Duplicate warehouse table in workspace catalog: ${tableKey}`);
+  const objectKeys = new Set<string>();
+  const sourceObjects = SourceObjectListSchema.parse(entry.sourceObjects)
+    .map((sourceObject) => {
+      const objectKey = buildCatalogSourceObjectKey(sourceObject);
+      if (objectKeys.has(objectKey)) {
+        throw new Error(`Duplicate source object in workspace catalog: ${objectKey}`);
       }
-      tableKeys.add(tableKey);
-      return table;
+      objectKeys.add(objectKey);
+      return sourceObject;
     })
-    .sort((left, right) => buildCatalogTableKey(left).localeCompare(buildCatalogTableKey(right)));
+    .sort((left, right) =>
+      buildCatalogSourceObjectKey(left).localeCompare(buildCatalogSourceObjectKey(right))
+    );
 
-  return { ...entry, tables };
+  return { ...entry, sourceObjects };
 }
 
 export function toWarehouseConnectionId(name: string): string {

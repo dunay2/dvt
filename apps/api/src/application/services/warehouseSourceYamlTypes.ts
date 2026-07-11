@@ -1,5 +1,11 @@
 /** Owned concern: define dbt source YAML artifact DTOs for warehouse source import. */
-import type { SourceImportGrouping, WarehouseTable } from '../ports/warehouseSourceImport.js';
+import type { RelationalSourceObject } from '@dvt/contracts';
+
+import type { SourceImportGrouping } from '../ports/warehouseSourceImport.js';
+
+export type ConnectedRelationalSourceObject = RelationalSourceObject & {
+  readonly connectionId: string;
+};
 
 export type SourceYamlMetadata = Readonly<Record<string, unknown>>;
 
@@ -12,6 +18,7 @@ export type SourceYamlColumn = {
 
 export type SourceYamlTable = {
   readonly name: string;
+  readonly identifier?: string;
   readonly columns: readonly SourceYamlColumn[];
   readonly metadata: SourceYamlMetadata;
 };
@@ -42,9 +49,12 @@ export type SourceYamlDocument = {
 export type WarehouseSourceYamlArtifactDescriptor = {
   readonly pluginId: string;
   readonly artifactKind: string;
-  readonly pathForTable: (table: WarehouseTable, groupingStrategy: SourceImportGrouping) => string;
-  readonly sourceNameForTable: (table: WarehouseTable) => string;
-  readonly tableNameForTable: (table: WarehouseTable) => string;
+  readonly pathForSourceObject: (
+    sourceObject: ConnectedRelationalSourceObject,
+    groupingStrategy: SourceImportGrouping
+  ) => string;
+  readonly sourceNameForSourceObject: (sourceObject: ConnectedRelationalSourceObject) => string;
+  readonly tableNameForSourceObject: (sourceObject: ConnectedRelationalSourceObject) => string;
   readonly generatedFreshness: GeneratedSourceYamlFreshness;
   readonly reservedKeys: {
     readonly document: readonly string[];
@@ -73,13 +83,13 @@ export type WarehouseSourceYamlBinding = {
 };
 
 export type BuildWarehouseSourceYamlBindingsInput = {
-  readonly tables: readonly WarehouseTable[];
+  readonly sourceObjects: readonly ConnectedRelationalSourceObject[];
   readonly groupingStrategy: SourceImportGrouping;
   readonly existingFiles: ReadonlyMap<string, string>;
 };
 
 export type BuildWarehouseSourceYamlUpdatesInput = {
-  readonly tables: readonly WarehouseTable[];
+  readonly sourceObjects: readonly ConnectedRelationalSourceObject[];
   readonly groupingStrategy: SourceImportGrouping;
   readonly includeColumns: boolean;
   readonly addTests: boolean;

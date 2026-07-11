@@ -6,9 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildWarehouseSourceImportPort,
-  buildWarehouseTable,
+  buildSourceObject,
   createSourceImportWizardHarness,
 } from './SourceImportWizard.testHarness';
+import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
 
 describe('SourceImportWizard metadata exploration', () => {
   let harness: ReturnType<typeof createSourceImportWizardHarness>;
@@ -24,14 +25,18 @@ describe('SourceImportWizard metadata exploration', () => {
   it('uses contextual tabs to inspect source metadata without leaving the add-source surface', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listWarehouseTables: async () => [
-          buildWarehouseTable({
+        listSourceObjects: async () => [
+          buildSourceObject({
             table: 'ORDERS',
-            rowCount: 1500,
+            metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
             columns: [
-              { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true },
+              { name: 'order_id', type: 'INTEGER', nullable: false },
               { name: 'customer_id', type: 'INTEGER', nullable: false },
-              { name: 'discount_code', type: 'TEXT', nullable: true, unique: true },
+              { name: 'discount_code', type: 'TEXT', nullable: true },
+            ],
+            constraints: [
+              { name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] },
+              { name: 'orders_discount_code_key', kind: 'unique', columns: ['discount_code'] },
             ],
           }),
         ],
@@ -70,9 +75,9 @@ describe('SourceImportWizard metadata exploration', () => {
       initialSelection: {
         connectionId: 'conn-1',
         tables: [
-          buildWarehouseTable({
+          buildSourceObject({
             table: 'CUSTOMERS',
-            rowCount: 45000,
+            metricEvidence: buildSourceImportTestMetricEvidence(45000, 8700000),
             columns: [
               { name: 'customer_id', type: 'NUMBER', nullable: false },
               { name: 'email', type: 'VARCHAR', nullable: true },
@@ -81,11 +86,11 @@ describe('SourceImportWizard metadata exploration', () => {
         ],
       },
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listWarehouseTables: async () => [
-          buildWarehouseTable({ table: 'ORDERS' }),
-          buildWarehouseTable({
+        listSourceObjects: async () => [
+          buildSourceObject({ table: 'ORDERS' }),
+          buildSourceObject({
             table: 'CUSTOMERS',
-            rowCount: 45000,
+            metricEvidence: buildSourceImportTestMetricEvidence(45000, 8700000),
             columns: [
               { name: 'customer_id', type: 'NUMBER', nullable: false },
               { name: 'email', type: 'VARCHAR', nullable: true },
@@ -113,12 +118,12 @@ describe('SourceImportWizard metadata exploration', () => {
   });
 
   it('does not carry explorer preselection into a different warehouse connection', async () => {
-    const listWarehouseTables = vi.fn(async () => [buildWarehouseTable({ table: 'CUSTOMERS' })]);
+    const listSourceObjects = vi.fn(async () => [buildSourceObject({ table: 'CUSTOMERS' })]);
 
     await harness.renderWizard({
       initialSelection: {
         connectionId: 'conn-1',
-        tables: [buildWarehouseTable({ table: 'CUSTOMERS' })],
+        tables: [buildSourceObject({ table: 'CUSTOMERS' })],
       },
       warehouseSourceImport: buildWarehouseSourceImportPort({
         listWarehouseConnections: async () => [
@@ -135,7 +140,7 @@ describe('SourceImportWizard metadata exploration', () => {
             database: 'RAW',
           },
         ],
-        listWarehouseTables,
+        listSourceObjects,
       }),
     });
     await harness.flushPendingWork();
@@ -147,7 +152,7 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickTab('Browse');
     await harness.flushPendingWork();
 
-    expect(listWarehouseTables).toHaveBeenLastCalledWith('conn-2');
+    expect(listSourceObjects).toHaveBeenLastCalledWith('conn-2');
     expect(document.body.textContent).toContain('Selected: 0');
   });
 
@@ -190,26 +195,55 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).not.toContain('Sandbox warehouse');
   });
 
+  it('keeps relational sources selectable when the catalog also contains unsupported objects', async () => {
+    await harness.renderWizard({
+      warehouseSourceImport: buildWarehouseSourceImportPort({
+        listSourceObjects: async () => [
+          buildSourceObject({ table: 'ORDERS' }),
+          {
+            objectId: 'file/s3%3A%2F%2Fwarehouse%2Forders.parquet',
+            displayName: 'orders.parquet',
+            locator: {
+              kind: 'file' as const,
+              path: 's3://warehouse/orders.parquet',
+              format: 'parquet' as const,
+            },
+            metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
+          },
+        ],
+      }),
+    });
+
+    await harness.clickConnectionOption('Local Postgres proof');
+    await harness.clickTab('Browse');
+
+    expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain(
+      '1 object is available in this connection but cannot be attached by the DBT relational importer.'
+    );
+    expect(document.body.textContent).not.toContain('Failed to load warehouse tables.');
+  });
+
   it('searches source tables by column metadata and keeps the active metadata visible while browsing', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listWarehouseTables: async () => [
-          buildWarehouseTable({
+        listSourceObjects: async () => [
+          buildSourceObject({
             table: 'ORDERS',
-            rowCount: 1500,
+            metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
             columns: [
               { name: 'order_id', type: 'INTEGER', nullable: false },
               { name: 'customer_id', type: 'INTEGER', nullable: false },
             ],
           }),
-          buildWarehouseTable({
+          buildSourceObject({
             table: 'CUSTOMERS',
-            rowCount: 45000,
-            byteSize: 7340032,
+            metricEvidence: buildSourceImportTestMetricEvidence(45000, 7340032),
             columns: [
               { name: 'customer_id', type: 'INTEGER', nullable: false },
-              { name: 'email', type: 'VARCHAR', nullable: true, unique: true },
+              { name: 'email', type: 'VARCHAR', nullable: true },
             ],
+            constraints: [{ name: 'customers_email_key', kind: 'unique', columns: ['email'] }],
           }),
         ],
       }),
@@ -247,19 +281,19 @@ describe('SourceImportWizard metadata exploration', () => {
   it('keeps a selected-source basket visible while browsing before import', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listWarehouseTables: async () => [
-          buildWarehouseTable({
+        listSourceObjects: async () => [
+          buildSourceObject({
             database: 'RAW',
             schema: 'ERP',
             table: 'ORDERS',
-            rowCount: 1500,
+            metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
             columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
           }),
-          buildWarehouseTable({
+          buildSourceObject({
             database: 'RAW',
             schema: 'CRM',
             table: 'CUSTOMERS',
-            rowCount: 45000,
+            metricEvidence: buildSourceImportTestMetricEvidence(45000, 8700000),
             columns: [{ name: 'email', type: 'VARCHAR', nullable: true }],
           }),
         ],
@@ -277,19 +311,18 @@ describe('SourceImportWizard metadata exploration', () => {
     expect(document.body.textContent).toContain('1 column');
   });
 
-  it('preserves selected table byte size in the import command payload', async () => {
+  it('sends only selected source identity in the import command payload', async () => {
     const importSources = vi.fn(buildWarehouseSourceImportPort().importSources);
 
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
         importSources,
-        listWarehouseTables: async () => [
-          buildWarehouseTable({
+        listSourceObjects: async () => [
+          buildSourceObject({
             database: 'RAW',
             schema: 'ERP',
             table: 'ORDERS',
-            rowCount: 1500,
-            byteSize: 7340032,
+            metricEvidence: buildSourceImportTestMetricEvidence(1500, 7340032),
             columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
           }),
         ],
@@ -302,31 +335,25 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 
-    expect(importSources).toHaveBeenCalledWith(
-      expect.objectContaining({
-        connectionId: 'conn-1',
-        tables: [
-          expect.objectContaining({
-            database: 'RAW',
-            schema: 'ERP',
-            table: 'ORDERS',
-            rowCount: 1500,
-            byteSize: 7340032,
-          }),
-        ],
-      })
-    );
+    expect(importSources).toHaveBeenCalledWith({
+      connectionId: 'conn-1',
+      objects: [{ objectId: 'relation/RAW/ERP/ORDERS' }],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
   });
 
   it('lets users remove selected sources from the basket without losing active metadata', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listWarehouseTables: async () => [
-          buildWarehouseTable({
+        listSourceObjects: async () => [
+          buildSourceObject({
             database: 'RAW',
             schema: 'ERP',
             table: 'ORDERS',
-            rowCount: 1500,
+            metricEvidence: buildSourceImportTestMetricEvidence(1500, 4096000),
             columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
           }),
         ],

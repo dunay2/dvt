@@ -5,22 +5,18 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { SourceImportActiveTableMetadata } from './SourceImportActiveTableMetadata';
+import { buildSourceImportTestObject } from './sourceImportWizard.testFixtures';
 import type { TableInfo } from './types';
 
 function buildTable(overrides?: Partial<TableInfo>): TableInfo {
-  return {
-    database: 'RAW',
-    schema: 'ERP',
-    table: 'ORDERS',
-    selected: false,
-    rowCount: 1500,
-    byteSize: 4096000,
+  return buildSourceImportTestObject({
     columns: [
-      { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true },
+      { name: 'order_id', type: 'INTEGER', nullable: false },
       { name: 'discount_code', type: 'TEXT', nullable: true },
     ],
+    constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
     ...overrides,
-  };
+  });
 }
 
 describe('SourceImportActiveTableMetadata', () => {

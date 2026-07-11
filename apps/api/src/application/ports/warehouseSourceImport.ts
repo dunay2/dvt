@@ -9,55 +9,38 @@
  *
  * Owned concern: define warehouse source import catalog and command DTOs.
  */
-import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphDraftScope } from '@dvt/contracts';
+import type {
+  CreateWarehouseConnectionRequest,
+  ImportSourceObjectsRequest,
+  ImportSourceObjectsResult,
+  SourceObject,
+  SourceImportGrouping as ContractSourceImportGrouping,
+  TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
+  WarehouseConnection as ContractWarehouseConnection,
+  WarehouseConnectionTestFailureReason as ContractWarehouseConnectionTestFailureReason,
+  WarehouseConnectionType as ContractWarehouseConnectionType,
+  WorkspaceGraphAuthoringDraft,
+  WorkspaceGraphDraftScope,
+} from '@dvt/contracts';
+import { SOURCE_IMPORT_GROUPING, WAREHOUSE_CONNECTION_TYPE } from '@dvt/contracts';
 
-export const SUPPORTED_WAREHOUSE_CONNECTION_TYPES = ['postgres'] as const;
+export const SUPPORTED_WAREHOUSE_CONNECTION_TYPES = WAREHOUSE_CONNECTION_TYPE;
 
-export type WarehouseConnectionType = (typeof SUPPORTED_WAREHOUSE_CONNECTION_TYPES)[number];
+export type WarehouseConnectionType = ContractWarehouseConnectionType;
 
-export type WarehouseColumn = {
-  readonly name: string;
-  readonly type: string;
-  readonly nullable: boolean;
-  readonly primaryKey?: boolean;
-  readonly unique?: boolean;
-};
-
-export type WarehouseTable = {
-  readonly connectionId?: string;
-  readonly database: string;
-  readonly schema: string;
-  readonly table: string;
-  readonly rowCount?: number;
-  readonly byteSize?: number;
-  readonly columns?: readonly WarehouseColumn[];
-};
-
-export type WarehouseConnection = {
-  readonly id: string;
-  readonly name: string;
-  readonly type: WarehouseConnectionType;
-  readonly database: string;
-};
+export type WarehouseConnection = ContractWarehouseConnection;
 
 export type WarehouseConnectionCatalogEntry = WarehouseConnection & {
   readonly credentialRef?: string;
-  readonly tables: readonly WarehouseTable[];
+  readonly sourceObjects: readonly SourceObject[];
 };
 
-export type CreateWarehouseConnectionInput = {
+export type CreateWarehouseConnectionInput = CreateWarehouseConnectionRequest & {
   readonly scope: WorkspaceGraphDraftScope;
-  readonly name: string;
-  readonly type: WarehouseConnectionType;
-  readonly database: string;
-  readonly credentialRef: string;
 };
 
-export type CreateWarehouseConnectionCatalogInput = Omit<
-  CreateWarehouseConnectionInput,
-  'scope'
-> & {
-  readonly tables: readonly WarehouseTable[];
+export type CreateWarehouseConnectionCatalogInput = CreateWarehouseConnectionRequest & {
+  readonly sourceObjects: readonly SourceObject[];
 };
 
 export type TestWarehouseConnectionInput = {
@@ -65,31 +48,15 @@ export type TestWarehouseConnectionInput = {
   readonly connectionId: string;
 };
 
-export type WarehouseConnectionTestFailureReason =
-  | 'invalid_credentials'
-  | 'unsupported_adapter'
-  | 'connection_failed';
+export type WarehouseConnectionTestFailureReason = ContractWarehouseConnectionTestFailureReason;
 
-export type TestWarehouseConnectionResult =
-  | {
-      readonly connectionId: string;
-      readonly status: 'passed';
-      readonly checkedAt: string;
-      readonly tableCount: number;
-    }
-  | {
-      readonly connectionId: string;
-      readonly status: 'failed';
-      readonly reason: WarehouseConnectionTestFailureReason;
-      readonly message: string;
-      readonly checkedAt: string;
-    };
+export type TestWarehouseConnectionResult = ContractTestWarehouseConnectionResult;
 
 export type InspectWarehouseConnectionResult =
   | {
       readonly status: 'passed';
       readonly checkedAt: string;
-      readonly tables: readonly WarehouseTable[];
+      readonly sourceObjects: readonly SourceObject[];
     }
   | {
       readonly status: 'failed';
@@ -98,45 +65,43 @@ export type InspectWarehouseConnectionResult =
       readonly checkedAt: string;
     };
 
-export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = ['schema', 'database'] as const;
+export type WarehouseConnectionProbeTarget = Readonly<{
+  type: WarehouseConnectionType;
+  database: string;
+  credentialRef: string;
+  scope?: WorkspaceGraphDraftScope;
+  name?: string;
+}>;
 
-export type SourceImportGrouping = (typeof SUPPORTED_SOURCE_IMPORT_GROUPINGS)[number];
+export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = SOURCE_IMPORT_GROUPING;
 
-export type ImportWarehouseSourcesInput = {
+export type SourceImportGrouping = ContractSourceImportGrouping;
+
+export type ImportWarehouseSourcesInput = ImportSourceObjectsRequest & {
   readonly scope: WorkspaceGraphDraftScope;
-  readonly connectionId: string;
-  readonly tables: readonly WarehouseTable[];
-  readonly groupingStrategy: SourceImportGrouping;
-  readonly includeColumns: boolean;
-  readonly addTests: boolean;
-  readonly addFreshness: boolean;
 };
 
-export type ImportWarehouseSourcesResult = {
-  readonly success: true;
-  readonly draftRevision: string;
-  readonly sourcesCreated: number;
-  readonly tablesImported: number;
-  readonly yamlFiles: readonly string[];
-  readonly importedNodeIds: readonly string[];
-  readonly grouping: SourceImportGrouping;
-  readonly options: {
-    readonly includeColumns: boolean;
-    readonly addTests: boolean;
-    readonly addFreshness: boolean;
-  };
-};
+export type ImportWarehouseSourcesResult = ImportSourceObjectsResult;
 
 export interface IWarehouseConnectionCatalog {
-  listConnections(): Promise<readonly WarehouseConnection[]>;
-  listTables(connectionId: string): Promise<readonly WarehouseTable[]>;
-  getConnection(connectionId: string): Promise<WarehouseConnectionCatalogEntry>;
-  createConnection(input: CreateWarehouseConnectionCatalogInput): Promise<WarehouseConnection>;
+  listConnections(scope: WorkspaceGraphDraftScope): Promise<readonly WarehouseConnection[]>;
+  listSourceObjects(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string
+  ): Promise<readonly SourceObject[]>;
+  getConnection(
+    scope: WorkspaceGraphDraftScope,
+    connectionId: string
+  ): Promise<WarehouseConnectionCatalogEntry>;
+  createConnection(
+    scope: WorkspaceGraphDraftScope,
+    input: CreateWarehouseConnectionCatalogInput
+  ): Promise<WarehouseConnection>;
 }
 
 export interface IWarehouseConnectionProbe {
   inspectConnection(
-    input: CreateWarehouseConnectionInput
+    input: WarehouseConnectionProbeTarget
   ): Promise<InspectWarehouseConnectionResult>;
   testConnection(input: WarehouseConnectionCatalogEntry): Promise<TestWarehouseConnectionResult>;
 }
@@ -148,10 +113,20 @@ export class WarehouseConnectionNotFoundError extends Error {
   }
 }
 
-export class WarehouseTableNotFoundError extends Error {
-  public constructor(table: WarehouseTable) {
-    super(`Warehouse table not found: ${table.database}.${table.schema}.${table.table}`);
-    this.name = 'WarehouseTableNotFoundError';
+export class SourceObjectNotFoundError extends Error {
+  public constructor(readonly objectId: string) {
+    super(`Source object not found: ${objectId}`);
+    this.name = 'SourceObjectNotFoundError';
+  }
+}
+
+export class UnsupportedSourceObjectImportError extends Error {
+  public constructor(
+    readonly objectId: string,
+    readonly locatorKind: SourceObject['locator']['kind']
+  ) {
+    super(`Source object is not importable by the relational dbt source rail: ${objectId}`);
+    this.name = 'UnsupportedSourceObjectImportError';
   }
 }
 
@@ -175,6 +150,16 @@ export class WarehouseConnectionTestFailedError extends Error {
   ) {
     super(result.message);
     this.name = 'WarehouseConnectionTestFailedError';
+  }
+}
+
+export class WarehouseSourceDiscoveryFailedError extends Error {
+  public constructor(
+    readonly reason: WarehouseConnectionTestFailureReason,
+    message: string
+  ) {
+    super(message);
+    this.name = 'WarehouseSourceDiscoveryFailedError';
   }
 }
 

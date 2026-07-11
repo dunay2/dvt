@@ -177,8 +177,6 @@ export const SourceObjectColumnSchema = z
     name: OpaqueNonBlankStringSchema,
     type: OpaqueNonBlankStringSchema,
     nullable: z.boolean(),
-    primaryKey: z.boolean().optional(),
-    unique: z.boolean().optional(),
   })
   .strict();
 
@@ -311,6 +309,10 @@ export type RelationalSourceObjectLocator = z.infer<typeof RelationalSourceObjec
 export type SourceObjectLocator = z.infer<typeof SourceObjectLocatorSchema>;
 export type SourceObjectColumn = z.infer<typeof SourceObjectColumnSchema>;
 export type SourceObjectConstraint = z.infer<typeof SourceObjectConstraintSchema>;
+export type SourceObjectColumnConstraintSemantics = Readonly<{
+  primaryKey: boolean;
+  independentlyUnique: boolean;
+}>;
 export type SourceObjectSelection = z.infer<typeof SourceObjectSelectionSchema>;
 export type SourceObjectCatalogResponse = z.infer<typeof SourceObjectCatalogResponseSchema>;
 export type SourceObject = z.infer<typeof SourceObjectSchema>;
@@ -334,4 +336,22 @@ export function isRelationalSourceObject(
   sourceObject: SourceObject
 ): sourceObject is RelationalSourceObject {
   return sourceObject.locator.kind === 'relation';
+}
+
+export function resolveSourceObjectColumnConstraintSemantics(
+  sourceObject: Pick<SourceObject, 'constraints'>,
+  columnName: string
+): SourceObjectColumnConstraintSemantics {
+  const constraints = sourceObject.constraints ?? [];
+  return {
+    primaryKey: constraints.some(
+      (constraint) => constraint.kind === 'primary-key' && constraint.columns.includes(columnName)
+    ),
+    independentlyUnique: constraints.some(
+      (constraint) =>
+        constraint.columns.length === 1 &&
+        constraint.columns[0] === columnName &&
+        (constraint.kind === 'primary-key' || constraint.kind === 'unique')
+    ),
+  };
 }

@@ -1,4 +1,6 @@
 /** Owned concern: execute the ListWarehouseConnections query rail. */
+import type { WorkspaceGraphDraftScope } from '@dvt/contracts';
+
 import type {
   IWarehouseConnectionCatalog,
   WarehouseConnection,
@@ -7,7 +9,7 @@ import type {
 export class ListWarehouseConnectionsUseCase {
   public constructor(private readonly catalog: IWarehouseConnectionCatalog) {}
 
-  public execute(): Promise<readonly WarehouseConnection[]> {
-    return this.catalog.listConnections();
+  public execute(scope: WorkspaceGraphDraftScope): Promise<readonly WarehouseConnection[]> {
+    return this.catalog.listConnections(scope);
   }
 }

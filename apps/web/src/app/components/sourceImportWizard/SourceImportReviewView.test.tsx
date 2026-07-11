@@ -9,19 +9,16 @@ import { SourceImportReviewView } from './SourceImportReviewView';
 import { buildSourceImportTableViewModel } from './sourceImportCatalogModel';
 import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
 import { buildSourceImportReviewPreviewGroups } from './sourceImportReviewModel';
+import { buildSourceImportTestObject } from './sourceImportWizard.testFixtures';
 import type { TableInfo } from './types';
 
-function buildTable(overrides?: Partial<TableInfo>): TableInfo {
-  return {
-    database: 'RAW',
-    schema: 'ERP',
-    table: 'ORDERS',
+function buildTable(overrides?: Parameters<typeof buildSourceImportTestObject>[0]): TableInfo {
+  return buildSourceImportTestObject({
     selected: true,
-    rowCount: 1500,
-    byteSize: 4096000,
-    columns: [{ name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true }],
+    columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+    constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
     ...overrides,
-  };
+  });
 }
 
 function buildSelectedTable(table: TableInfo, index = 0): SourceImportTableViewModel {

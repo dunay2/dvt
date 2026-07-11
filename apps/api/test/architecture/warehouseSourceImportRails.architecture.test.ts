@@ -15,7 +15,10 @@ describe('warehouse source import command/query rails architecture', () => {
     const routeModule = read('apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts');
 
     expect(port).toContain('SUPPORTED_WAREHOUSE_CONNECTION_TYPES');
-    expect(port).toContain("['postgres'] as const");
+    expect(port).toContain(
+      'export const SUPPORTED_WAREHOUSE_CONNECTION_TYPES = WAREHOUSE_CONNECTION_TYPE'
+    );
+    expect(port).toContain("from '@dvt/contracts'");
     expect(port).not.toContain(
       "export type WarehouseConnectionType = 'snowflake' | 'bigquery' | 'redshift' | 'postgres'"
     );
@@ -32,7 +35,7 @@ describe('warehouse source import command/query rails architecture', () => {
     );
 
     expect(vocabulary).toContain('ListWarehouseConnections');
-    expect(vocabulary).toContain('ListWarehouseConnectionTables');
+    expect(vocabulary).toContain('ListWarehouseConnectionSourceObjects');
     expect(vocabulary).toContain('CreateWarehouseConnection');
     expect(vocabulary).toContain('TestWarehouseConnection');
     expect(vocabulary).toContain('ImportWarehouseSources');
@@ -57,7 +60,7 @@ describe('warehouse source import command/query rails architecture', () => {
     expect(routeGroup).not.toContain('createDefaultWarehouseConnectionCatalog');
     expect(routeGroup).not.toContain('InMemoryWarehouseConnectionCatalog');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnections');
-    expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnectionTables');
+    expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnectionSourceObjects');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnectionTest');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseSourcesImport');
     expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceSourceImportView');
