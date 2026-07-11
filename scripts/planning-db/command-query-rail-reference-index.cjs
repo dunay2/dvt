@@ -64,9 +64,31 @@ function createCommandQueryRailReferenceIndexComponent(deps = {}) {
     return normalizeRailName(raw).includes(normalizedNeedle);
   }
 
+  function isCommandQueryImplementationSourcePath(sourcePath) {
+    const normalizedPath = normalizeText(sourcePath).replace(/\\/g, '/').toLowerCase();
+    if (!normalizedPath) {
+      return false;
+    }
+
+    if (normalizedPath.startsWith('tools/planning-db/migrations/')) {
+      return false;
+    }
+
+    if (normalizedPath.includes('/cypress/')) {
+      return false;
+    }
+
+    if (/(^|\/)(__tests__|test|tests|fixtures?)(\/|$)/.test(normalizedPath)) {
+      return false;
+    }
+
+    return !/\.(test|spec|fixture)\.(cjs|js|jsx|mjs|ts|tsx)$/.test(normalizedPath);
+  }
+
   function collectSourceImplementationRefs(railName, sourceFiles) {
     return normalizeArray(sourceFiles)
       .map(normalizeFeatureMechanizationDocument)
+      .filter((source) => isCommandQueryImplementationSourcePath(source.sourcePath))
       .filter((source) => railNameAppearsInSource(railName, source.raw))
       .map((source) => ({
         name: railName,
@@ -183,7 +205,9 @@ function createCommandQueryRailReferenceIndexComponent(deps = {}) {
       return index;
     }
 
-    for (const source of normalizeArray(sourceFiles).map(normalizeFeatureMechanizationDocument)) {
+    for (const source of normalizeArray(sourceFiles)
+      .map(normalizeFeatureMechanizationDocument)
+      .filter((candidate) => isCommandQueryImplementationSourcePath(candidate.sourcePath))) {
       const candidateKeys = sourceRailCandidateTokens(source.raw).map(normalizeRailName);
       for (const [targetKey, railName] of targets) {
         if (!candidateKeys.some((candidateKey) => candidateKey.includes(targetKey))) {
@@ -308,6 +332,7 @@ function createCommandQueryRailReferenceIndexComponent(deps = {}) {
     collectGovernanceImplementationRefs,
     collectSourceImplementationRefs,
     dedupeCommandQueryRefs,
+    isCommandQueryImplementationSourcePath,
     railNameAppearsInSource,
     refsFromIndex,
     sourceRailCandidateTokens,
