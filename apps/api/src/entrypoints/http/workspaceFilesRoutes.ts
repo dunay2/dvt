@@ -11,6 +11,7 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import {
   InvalidWorkspacePathError,
   WorkspaceFileNotFoundError,
+  type WorkspaceStorageScope,
 } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { GetWorkspaceFileContentUseCase } from '../../application/services/getWorkspaceFileContentUseCase.js';
@@ -63,7 +64,7 @@ export function registerWorkspaceFilesRoutes(
       const authorized = await authorizeWorkspaceFilesRequest(request, reply, deps);
       if (!authorized) return;
 
-      reply.code(200).send(await deps.listUseCase.execute());
+      reply.code(200).send(await deps.listUseCase.execute(authorized.scope));
     }
   );
 
@@ -75,7 +76,7 @@ export function registerWorkspaceFilesRoutes(
       if (!authorized) return;
 
       try {
-        reply.code(200).send(await deps.getUseCase.execute(request.params.path));
+        reply.code(200).send(await deps.getUseCase.execute(authorized.scope, request.params.path));
       } catch (error) {
         if (error instanceof WorkspaceFileNotFoundError) {
           httpErrorTranslation.respond(reply, httpErrorTranslation.workspaceFiles.notFound());
@@ -116,7 +117,11 @@ export function registerWorkspaceFilesRoutes(
       }
 
       try {
-        reply.code(200).send(await deps.saveUseCase.execute(request.params.path, content.value));
+        reply
+          .code(200)
+          .send(
+            await deps.saveUseCase.execute(authorized.scope, request.params.path, content.value)
+          );
       } catch (error) {
         if (error instanceof InvalidWorkspacePathError) {
           httpErrorTranslation.respond(
@@ -139,7 +144,7 @@ async function authorizeWorkspaceFilesRequest(
   reply: FastifyReply,
   deps: Pick<WorkspaceFilesRouteDeps, 'authenticator' | 'authorizer'>,
   options: { readonly action?: WorkspaceFilesAction } = {}
-): Promise<boolean> {
+): Promise<{ readonly scope: WorkspaceStorageScope } | false> {
   const parsed = parseRequestedScope(request.query);
   if (!parsed.ok) {
     httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
@@ -161,7 +166,13 @@ async function authorizeWorkspaceFilesRequest(
     return false;
   }
 
-  return true;
+  return {
+    scope: {
+      tenantId: parsed.value.tenantId.value,
+      projectId: parsed.value.projectId.value,
+      environmentId: parsed.value.environmentId.value,
+    },
+  };
 }
 
 function parseSaveWorkspaceFileContentBody(

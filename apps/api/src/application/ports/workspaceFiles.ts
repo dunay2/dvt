@@ -18,6 +18,12 @@ export type WorkspaceFileContent = {
   readonly lastModified: string;
 };
 
+export type WorkspaceStorageScope = Readonly<{
+  tenantId: string;
+  projectId: string;
+  environmentId: string;
+}>;
+
 export class WorkspaceFileNotFoundError extends Error {
   public constructor(readonly path: string) {
     super(`Workspace file was not found: ${path}`);
@@ -33,8 +39,12 @@ export class InvalidWorkspacePathError extends Error {
 }
 
 export interface IWorkspaceFileRepository {
-  listFiles(): Promise<readonly WorkspaceFileEntry[]>;
-  getFileContent(path: string): Promise<WorkspaceFileContent>;
-  saveFileContent(path: string, content: string): Promise<WorkspaceFileContent>;
-  deleteFileContent(path: string): Promise<void>;
+  listFiles(scope: WorkspaceStorageScope): Promise<readonly WorkspaceFileEntry[]>;
+  getFileContent(scope: WorkspaceStorageScope, path: string): Promise<WorkspaceFileContent>;
+  saveFileContent(
+    scope: WorkspaceStorageScope,
+    path: string,
+    content: string
+  ): Promise<WorkspaceFileContent>;
+  deleteFileContent(scope: WorkspaceStorageScope, path: string): Promise<void>;
 }

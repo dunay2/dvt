@@ -11,7 +11,10 @@ import {
   type IWorkspaceFileRepository,
   type WorkspaceFileContent,
   type WorkspaceFileEntry,
+  type WorkspaceStorageScope,
 } from '../../application/ports/workspaceFiles.js';
+
+import { resolveWorkspaceScopeStorageRoot } from './workspaceScopeStoragePath.js';
 
 const EXCLUDED_NAMES = new Set([
   '.git',
@@ -59,12 +62,15 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
     this.maxFileBytes = options.maxFileBytes ?? MAX_FILE_BYTES;
   }
 
-  public async listFiles(): Promise<readonly WorkspaceFileEntry[]> {
-    return this.listDirectory(this.root, '', { value: 0 });
+  public async listFiles(scope: WorkspaceStorageScope): Promise<readonly WorkspaceFileEntry[]> {
+    return this.listDirectory(this.resolveScopeRoot(scope), '', { value: 0 });
   }
 
-  public async getFileContent(requestPath: string): Promise<WorkspaceFileContent> {
-    const resolved = this.resolveWorkspacePath(requestPath);
+  public async getFileContent(
+    scope: WorkspaceStorageScope,
+    requestPath: string
+  ): Promise<WorkspaceFileContent> {
+    const resolved = this.resolveWorkspacePath(scope, requestPath);
     const fileStat = await this.readFileStat(resolved.absolutePath, requestPath);
     if (!fileStat.isFile()) {
       throw new WorkspaceFileNotFoundError(requestPath);
@@ -83,21 +89,22 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
   }
 
   public async saveFileContent(
+    scope: WorkspaceStorageScope,
     requestPath: string,
     content: string
   ): Promise<WorkspaceFileContent> {
-    const resolved = this.resolveWorkspacePath(requestPath);
+    const resolved = this.resolveWorkspacePath(scope, requestPath);
     if (Buffer.byteLength(content, 'utf8') > this.maxFileBytes) {
       throw new InvalidWorkspacePathError(requestPath);
     }
 
     await mkdir(path.dirname(resolved.absolutePath), { recursive: true });
     await writeFile(resolved.absolutePath, content, 'utf8');
-    return this.getFileContent(resolved.workspacePath);
+    return this.getFileContent(scope, resolved.workspacePath);
   }
 
-  public async deleteFileContent(requestPath: string): Promise<void> {
-    const resolved = this.resolveWorkspacePath(requestPath);
+  public async deleteFileContent(scope: WorkspaceStorageScope, requestPath: string): Promise<void> {
+    const resolved = this.resolveWorkspacePath(scope, requestPath);
     const fileStat = await this.readFileStat(resolved.absolutePath, requestPath);
     if (!fileStat.isFile()) {
       throw new WorkspaceFileNotFoundError(requestPath);
@@ -154,10 +161,14 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
     return result;
   }
 
-  private resolveWorkspacePath(requestPath: string): {
+  private resolveWorkspacePath(
+    scope: WorkspaceStorageScope,
+    requestPath: string
+  ): {
     readonly absolutePath: string;
     readonly workspacePath: string;
   } {
+    const scopeRoot = this.resolveScopeRoot(scope);
     const workspacePath = decodeURIComponent(requestPath).replaceAll('\\', '/').trim();
     const segments = workspacePath.split('/');
     if (
@@ -169,13 +180,17 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
       throw new InvalidWorkspacePathError(requestPath);
     }
 
-    const absolutePath = path.resolve(this.root, workspacePath);
-    const relativePath = path.relative(this.root, absolutePath);
+    const absolutePath = path.resolve(scopeRoot, workspacePath);
+    const relativePath = path.relative(scopeRoot, absolutePath);
     if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
       throw new InvalidWorkspacePathError(requestPath);
     }
 
     return { absolutePath, workspacePath };
+  }
+
+  private resolveScopeRoot(scope: WorkspaceStorageScope): string {
+    return resolveWorkspaceScopeStorageRoot(this.root, scope);
   }
 
   private async readFileStat(absolutePath: string, requestPath: string) {

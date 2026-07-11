@@ -11,8 +11,14 @@ import { ListWorkspaceFilesUseCase } from '../../../src/application/services/lis
 import { SaveWorkspaceFileContentUseCase } from '../../../src/application/services/saveWorkspaceFileContentUseCase.js';
 import { registerWorkspaceFilesRoutes } from '../../../src/entrypoints/http/workspaceFilesRoutes.js';
 import { LocalWorkspaceFileRepository } from '../../../src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
+import { resolveWorkspaceScopeStorageRoot } from '../../../src/infrastructure/workspaceFiles/workspaceScopeStoragePath.js';
 
 const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
+const ROUTE_SCOPE = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'env-a',
+} as const;
 
 function principal(): Record<string, unknown> {
   return {
@@ -30,13 +36,15 @@ function principal(): Record<string, unknown> {
 
 describe('workspaceFilesRoutes', () => {
   let root: string;
+  let scopeRoot: string;
 
   beforeEach(async () => {
     root = await mkdtemp(path.join(tmpdir(), 'dvt-workspace-files-'));
-    await mkdir(path.join(root, 'models', 'staging'), { recursive: true });
-    await writeFile(path.join(root, 'README.md'), '# Workspace', 'utf8');
+    scopeRoot = resolveWorkspaceScopeStorageRoot(root, ROUTE_SCOPE);
+    await mkdir(path.join(scopeRoot, 'models', 'staging'), { recursive: true });
+    await writeFile(path.join(scopeRoot, 'README.md'), '# Workspace', 'utf8');
     await writeFile(
-      path.join(root, 'models', 'staging', 'stg_orders.sql'),
+      path.join(scopeRoot, 'models', 'staging', 'stg_orders.sql'),
       'select * from orders',
       'utf8'
     );
@@ -118,6 +126,18 @@ describe('workspaceFilesRoutes', () => {
       expect.objectContaining({ action: { kind: 'query', name: 'workspace:files:view' } }),
       expect.any(String)
     );
+  });
+
+  it('does not expose files from another authorized workspace scope', async () => {
+    const { app } = buildApp();
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/workspace/files?tenantId=tenant-a&projectId=project-a&environmentId=env-b',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual([]);
   });
 
   it('returns scoped workspace file content', async () => {
@@ -237,7 +257,7 @@ describe('workspaceFilesRoutes', () => {
 
   it('rejects unsupported workspace file types before reading content', async () => {
     const { app } = buildApp();
-    await writeFile(path.join(root, 'image.png'), 'not a text source file', 'utf8');
+    await writeFile(path.join(scopeRoot, 'image.png'), 'not a text source file', 'utf8');
 
     const response = await app.inject({
       method: 'GET',
