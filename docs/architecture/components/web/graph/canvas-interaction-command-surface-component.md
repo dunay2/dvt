@@ -224,7 +224,7 @@ seams. It does not create a second graph aggregate.
 - Do not create another node properties command for the context menu; use the
   existing Inspector selection/opening behavior.
 - Do not fabricate source connectivity in the context menu; source import
-  remains behind `ListWarehouseConnections`, `ListWarehouseConnectionTables`,
+  remains behind `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`,
   and `ImportWarehouseSources`.
 - Do not let edge deletion bypass `canvasGraphLifecycle.edge`.
 
