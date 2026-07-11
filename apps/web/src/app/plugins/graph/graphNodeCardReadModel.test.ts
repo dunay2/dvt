@@ -1,9 +1,32 @@
 import { describe, expect, it } from 'vitest';
 
+import type { SourceObjectMetricEvidence } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import { dbtGraphNodeCardStrategy } from '../dbt/dbtGraphNodeCardStrategy';
 import { dvtGraphNodeCardStrategy } from '../dvt/dvtGraphNodeCardStrategy';
 import { buildGraphNodeCardReadModel } from './graphNodeCardReadModel';
+
+const SOURCE_METRICS_OBSERVED_AT = '2026-07-10T21:00:00.000Z';
+
+function sourceMetricEvidence(rowCount: number): SourceObjectMetricEvidence {
+  return {
+    observedAt: SOURCE_METRICS_OBSERVED_AT,
+    observationScope: { kind: 'snapshot' },
+    rowCount: {
+      value: rowCount,
+      provenance: 'estimated',
+      method: 'provider-statistics',
+      confidence: 'medium',
+    },
+    byteSize: {
+      value: 4096000,
+      provenance: 'measured',
+      method: 'provider-storage-metadata',
+      confidence: 'exact',
+      basis: 'physical-allocation',
+    },
+  };
+}
 
 function buildNode(partial: Partial<CanonicalNode>): CanonicalNode {
   return {
@@ -29,8 +52,7 @@ describe('buildGraphNodeCardReadModel', () => {
           database: 'warehouse',
           schema: 'public',
           table: 'orders',
-          rowCount: 18240,
-          byteSize: 4096000,
+          sourceMetricEvidence: sourceMetricEvidence(18240),
           columns: [
             { name: 'order_id', type: 'integer' },
             { name: 'customer_id', type: 'text' },
@@ -48,19 +70,30 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.nodeActionsLabel).toBe('Más acciones del nodo');
     expect(model.subtitle).toBe('warehouse.public.orders');
     expect(model.path).toBe('warehouse.public.orders');
-    expect(model.metrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '18.2k' },
-      { id: 'bytes', label: 'Size', value: '3.9 MB' },
-      { id: 'columns', label: 'Columns', value: '2' },
-    ]);
+    expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '2' }]);
     expect(model.operationalMetrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '18.2k', icon: 'rows' },
-      { id: 'columns', label: 'Columns', value: '2', icon: 'columns' },
-      { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
+      {
+        id: 'rows',
+        label: 'Rows',
+        value: '18.2k',
+        icon: 'rows',
+        tone: 'warning',
+        detail:
+          '18,240 rows. Estimated using provider statistics. Confidence: medium. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+      },
+      {
+        id: 'size',
+        label: 'Size',
+        value: '3.9 MB',
+        icon: 'database',
+        tone: 'success',
+        detail:
+          '4,096,000 B (3.9 MB). Measured using provider storage metadata. Physical allocation. Confidence: exact. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+      },
     ]);
   });
 
-  it('keeps imported source static rail metrics non-interactive when only rows and columns are recorded', () => {
+  it('suppresses unverified flat source volume instead of presenting it as evidence', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({
         kind: 'dvt:source',
@@ -83,10 +116,8 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
-    expect(model.operationalMetrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '3', icon: 'rows' },
-      { id: 'columns', label: 'Columns', value: '3', icon: 'columns' },
-    ]);
+    expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '3' }]);
+    expect(model.operationalMetrics).toEqual([]);
     expect(model.operationalDetail).toBeNull();
   });
 
@@ -101,8 +132,7 @@ describe('buildGraphNodeCardReadModel', () => {
           database: 'dvt',
           schema: 'public',
           tableName: 'source_1',
-          rowCount: 1500,
-          byteSize: 4096000,
+          sourceMetricEvidence: sourceMetricEvidence(1500),
           columns: [
             { name: 'order_id', type: 'integer' },
             { name: 'customer', type: 'text' },
@@ -114,15 +144,44 @@ describe('buildGraphNodeCardReadModel', () => {
       [dvtGraphNodeCardStrategy]
     );
 
+    expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '3' }]);
     expect(model.operationalMetrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '1.5k', icon: 'rows' },
-      { id: 'columns', label: 'Columns', value: '3', icon: 'columns' },
-      { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
+      {
+        id: 'rows',
+        label: 'Rows',
+        value: '1.5k',
+        icon: 'rows',
+        tone: 'warning',
+        detail:
+          '1,500 rows. Estimated using provider statistics. Confidence: medium. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+      },
+      {
+        id: 'size',
+        label: 'Size',
+        value: '3.9 MB',
+        icon: 'database',
+        tone: 'success',
+        detail:
+          '4,096,000 B (3.9 MB). Measured using provider storage metadata. Physical allocation. Confidence: exact. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+      },
     ]);
     expect(model.operationalDetail?.rows).toEqual([
-      { id: 'dataset-size', label: 'Dataset size', value: '3.9 MB', icon: 'database' },
-      { id: 'bytes', label: 'Bytes', value: '4,096,000 B', icon: 'database' },
-      { id: 'avg-row-size', label: 'Avg row size', value: '2.7 KB', icon: 'throughput' },
+      { id: 'columns', label: 'Columns', value: '3', icon: 'columns' },
+      {
+        id: 'dataset-size',
+        label: 'Allocated size',
+        value: '3.9 MB',
+        icon: 'database',
+        tone: 'success',
+        detail:
+          '4,096,000 B (3.9 MB). Measured using provider storage metadata. Physical allocation. Confidence: exact. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+      },
+      {
+        id: 'observed-at',
+        label: 'Observed',
+        value: SOURCE_METRICS_OBSERVED_AT,
+        icon: 'clock',
+      },
     ]);
   });
 
@@ -158,6 +217,7 @@ describe('buildGraphNodeCardReadModel', () => {
       buildNode({
         kind: 'dvt:sql_transform',
         pluginId: 'dvt',
+        role: 'transform',
         name: 'customer_rollup',
         metadata: {
           database: 'warehouse',
@@ -178,8 +238,6 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.status).toEqual({ label: 'Completed', tone: 'success' });
     expect(model.accentTone).toBe('model');
     expect(model.metrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '1.2k' },
-      { id: 'bytes', label: 'Size', value: '2 KB' },
       { id: 'columns', label: 'Columns', value: '0' },
       { id: 'status', label: 'Status', value: 'completed' },
       { id: 'last-run', label: 'Last run', value: '2026-06-12T20:45:00Z' },
@@ -198,6 +256,7 @@ describe('buildGraphNodeCardReadModel', () => {
       buildNode({
         kind: 'dvt:sql_transform',
         pluginId: 'dvt',
+        role: 'transform',
         name: 'customer_rollup',
         lastDuration: 75,
         lastCost: 0.42,
@@ -214,8 +273,6 @@ describe('buildGraphNodeCardReadModel', () => {
     );
 
     expect(model.metrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '1.2k' },
-      { id: 'bytes', label: 'Size', value: '2 KB' },
       { id: 'columns', label: 'Columns', value: '0' },
       { id: 'duration', label: 'Duration', value: '1m 15s' },
       { id: 'cost', label: 'Cost', value: '$0.42' },
@@ -323,8 +380,7 @@ describe('buildGraphNodeCardReadModel', () => {
           database: 'RAW',
           schema: 'ERP',
           tableName: 'ORDERS',
-          rowCount: 1500,
-          byteSize: 4096000,
+          sourceMetricEvidence: sourceMetricEvidence(1500),
           columns: [
             { name: 'order_id', type: 'INTEGER' },
             { name: 'discount_code', type: 'TEXT' },
@@ -341,15 +397,26 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
     expect(model.subtitle).toBe('RAW.ERP.ORDERS');
     expect(model.path).toBe('RAW.ERP.ORDERS');
-    expect(model.metrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '1.5k' },
-      { id: 'bytes', label: 'Size', value: '3.9 MB' },
-      { id: 'columns', label: 'Columns', value: '2' },
-    ]);
+    expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '2' }]);
     expect(model.operationalMetrics).toEqual([
-      { id: 'rows', label: 'Rows', value: '1.5k', icon: 'rows' },
-      { id: 'columns', label: 'Columns', value: '2', icon: 'columns' },
-      { id: 'size', label: 'Size', value: '3.9 MB', icon: 'database' },
+      {
+        id: 'rows',
+        label: 'Rows',
+        value: '1.5k',
+        icon: 'rows',
+        tone: 'warning',
+        detail:
+          '1,500 rows. Estimated using provider statistics. Confidence: medium. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+      },
+      {
+        id: 'size',
+        label: 'Size',
+        value: '3.9 MB',
+        icon: 'database',
+        tone: 'success',
+        detail:
+          '4,096,000 B (3.9 MB). Measured using provider storage metadata. Physical allocation. Confidence: exact. Snapshot observed: 2026-07-10T21:00:00.000Z.',
+      },
     ]);
   });
 
@@ -402,15 +469,7 @@ describe('buildGraphNodeCardReadModel', () => {
         icon: 'refresh',
       },
     ]);
-    expect(model.operationalDetail?.rows).toEqual([
-      {
-        id: 'last-refresh',
-        label: 'Last refresh',
-        value: '2026-06-28T10:15:00Z',
-        icon: 'refresh',
-      },
-      { id: 'rows', label: 'Rows', value: '124M', icon: 'rows' },
-    ]);
+    expect(model.operationalDetail).toBeNull();
   });
 
   it('adds DBT test target and severity metrics from recorded metadata', () => {

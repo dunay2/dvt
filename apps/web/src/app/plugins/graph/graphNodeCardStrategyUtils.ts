@@ -10,6 +10,7 @@ import type {
 } from './graphNodeCardStrategyContracts';
 
 type PushMetricOptions = Readonly<{
+  detail?: string;
   icon?: GraphNodeCardMetricIcon;
   tone?: GraphNodeCardStatusTone;
 }>;

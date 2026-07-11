@@ -7,11 +7,10 @@ import type {
 } from '../graph/graphNodeCardStrategyContracts';
 import { graphNodeCardCopyTokens } from '../graph/graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
+import { buildGraphNodeVolumeMetricProjection } from '../graph/graphNodeSourceMetricProjection';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
   arrayCount,
-  formatBytes,
-  formatCompactNumber,
   metadataOf,
   numericValue,
   pushMetric,
@@ -71,9 +70,12 @@ function pushCanonicalCostMetric(
 function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): GraphNodeCardReadModel {
   const metadata = metadataOf(node);
   const metrics: GraphNodeCardMetric[] = [];
-  const rowCount = numericValue(metadata.rowCount) ?? numericValue(data.rowCount);
-  const byteSize =
-    numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
+  const isSourceObject = node.role === 'input' || node.kind.endsWith(':source');
+  const volumeMetricProjection = buildGraphNodeVolumeMetricProjection({
+    isSourceObject,
+    metadata,
+    data,
+  });
   const columnCount = arrayCount(data.columns) ?? arrayCount(metadata.columns);
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
@@ -87,19 +89,17 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     durationMs: numericValue(data.durationMs) ?? resolveCanonicalDurationMs(node, metadata, data),
   };
 
-  pushMetric(metrics, 'rows', 'Rows', rowCount == null ? null : formatCompactNumber(rowCount));
-  pushMetric(metrics, 'bytes', 'Size', byteSize == null ? null : formatBytes(byteSize));
   pushMetric(metrics, 'columns', 'Columns', resolveColumnCount(metadata, data));
   pushRuntimeMetrics(metrics, metadata, runtimeData);
   pushCanonicalCostMetric(metrics, node, metadata, data);
 
   const operationalSummary = buildGraphNodeOperationalSummary({
+    projectionKind: isSourceObject ? 'source' : 'execution',
     title: titlePresentation.title,
     metadata,
     data,
     runtimeData,
-    rowCount,
-    byteSize,
+    volumeMetricProjection,
     columnCount,
   });
 
