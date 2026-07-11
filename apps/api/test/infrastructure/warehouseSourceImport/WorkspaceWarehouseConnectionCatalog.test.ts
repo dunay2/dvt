@@ -55,6 +55,7 @@ class MemoryWorkspaceFileRepository implements IWorkspaceFileRepository {
       name: path.split('/').at(-1) ?? path,
       language: 'json',
       content,
+      contentSha256: 'a'.repeat(64),
       lastModified: '2026-05-31T00:00:00.000Z',
     };
   }
@@ -70,6 +71,7 @@ class MemoryWorkspaceFileRepository implements IWorkspaceFileRepository {
       name: path.split('/').at(-1) ?? path,
       language: 'json',
       content,
+      contentSha256: 'b'.repeat(64),
       lastModified: '2026-05-31T00:00:01.000Z',
     };
   }

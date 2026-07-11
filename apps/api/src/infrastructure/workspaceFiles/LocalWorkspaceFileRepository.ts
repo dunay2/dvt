@@ -2,6 +2,7 @@
  * Owned concern: provide a bounded local filesystem adapter for workspace file
  * reads and command-side file writes.
  */
+import { createHash } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -79,11 +80,13 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
       throw new InvalidWorkspacePathError(requestPath);
     }
 
+    const content = await readFile(resolved.absolutePath, 'utf8');
     return {
       path: resolved.workspacePath,
       name: path.basename(resolved.workspacePath),
       language: inferLanguage(resolved.workspacePath),
-      content: await readFile(resolved.absolutePath, 'utf8'),
+      content,
+      contentSha256: createHash('sha256').update(content, 'utf8').digest('hex'),
       lastModified: fileStat.mtime.toISOString(),
     };
   }

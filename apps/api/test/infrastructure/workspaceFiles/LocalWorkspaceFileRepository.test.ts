@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -64,5 +65,17 @@ describe('LocalWorkspaceFileRepository', () => {
     expect(namespaceRelativePath).toBe(path.join('scopes', storageKey));
     expect(namespaceRelativePath.startsWith('..')).toBe(false);
     expect(path.isAbsolute(namespaceRelativePath)).toBe(false);
+  });
+
+  it('returns a stable SHA-256 revision for the exact file content', async () => {
+    const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
+    const content = 'select 1 as order_id\n';
+
+    await repository.saveFileContent(SCOPE_A, 'models/orders.sql', content);
+
+    await expect(repository.getFileContent(SCOPE_A, 'models/orders.sql')).resolves.toMatchObject({
+      content,
+      contentSha256: createHash('sha256').update(content, 'utf8').digest('hex'),
+    });
   });
 });

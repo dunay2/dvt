@@ -154,6 +154,7 @@ describe('workspaceFilesRoutes', () => {
       name: 'stg_orders.sql',
       language: 'sql',
       content: 'select * from orders',
+      contentSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
       lastModified: expect.any(String),
     });
   });

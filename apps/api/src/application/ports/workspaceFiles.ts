@@ -15,6 +15,7 @@ export type WorkspaceFileContent = {
   readonly name: string;
   readonly language: string;
   readonly content: string;
+  readonly contentSha256: string;
   readonly lastModified: string;
 };
 

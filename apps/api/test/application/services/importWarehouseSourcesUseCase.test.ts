@@ -206,6 +206,7 @@ function createWorkspaceFiles(initialFiles: Record<string, string> = {}): Worksp
           name: path.split('/').at(-1) ?? path,
           language: 'yaml',
           content,
+          contentSha256: 'a'.repeat(64),
           lastModified: '2026-06-26T00:00:00.000Z',
         };
       }
@@ -218,6 +219,7 @@ function createWorkspaceFiles(initialFiles: Record<string, string> = {}): Worksp
         name: path.split('/').at(-1) ?? path,
         language: 'yaml',
         content,
+        contentSha256: 'b'.repeat(64),
         lastModified: '2026-06-26T00:00:00.000Z',
       };
     }),

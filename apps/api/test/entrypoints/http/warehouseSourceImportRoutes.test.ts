@@ -344,6 +344,7 @@ function buildApp(
             name: path.split('/').at(-1) ?? path,
             language: 'yaml',
             content: options.existingSourceFileContent,
+            contentSha256: 'a'.repeat(64),
             lastModified: '2026-05-30T00:00:00.000Z',
           };
         }
@@ -356,6 +357,7 @@ function buildApp(
       name: path.split('/').at(-1) ?? path,
       language: 'yaml',
       content,
+      contentSha256: 'b'.repeat(64),
       lastModified: '2026-05-30T00:00:01.000Z',
     })),
     deleteFileContent: vi.fn<(scope: WorkspaceStorageScope, path: string) => Promise<void>>(
