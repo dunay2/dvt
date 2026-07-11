@@ -282,34 +282,59 @@ describe('workspace ports api warehouse source import', () => {
     );
   });
 
-  it('loads warehouse tables through the scoped protected runtime endpoint', async () => {
+  it('loads source objects through the scoped protected runtime endpoint', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
+    const sourceObject = {
+      objectId: 'relation/analytics/erp/orders',
+      displayName: 'orders',
+      locator: {
+        kind: 'relation',
+        catalog: 'analytics',
+        schema: 'erp',
+        name: 'orders',
+        relationType: 'table',
+      },
+      metricEvidence: {
+        observedAt: '2026-07-10T21:00:00.000Z',
+        observationScope: { kind: 'snapshot' },
+        rowCount: {
+          value: 42,
+          provenance: 'estimated',
+          method: 'provider-statistics',
+          confidence: 'medium',
+        },
+        byteSize: {
+          value: 4096,
+          provenance: 'measured',
+          method: 'provider-storage-metadata',
+          confidence: 'exact',
+          basis: 'physical-allocation',
+        },
+      },
+      columns: [{ name: 'id', type: 'number', nullable: false }],
+    };
     const { getJson, warehouseSourceImport } = createApiWorkspacePortHarness({
       getJson: async <TResponse>() =>
-        [
-          {
-            database: 'analytics',
-            schema: 'erp',
-            table: 'orders',
-            rowCount: 42,
-            columns: [{ name: 'id', type: 'number', nullable: false }],
-          },
-        ] as TResponse,
+        ({ contractVersion: 1, objects: [sourceObject] }) as TResponse,
     });
 
-    await expect(warehouseSourceImport.listWarehouseTables('warehouse-prod')).resolves.toEqual([
-      {
-        database: 'analytics',
-        schema: 'erp',
-        table: 'orders',
-        rowCount: 42,
-        columns: [{ name: 'id', type: 'number', nullable: false }],
-      },
+    await expect(warehouseSourceImport.listSourceObjects('warehouse-prod')).resolves.toEqual([
+      sourceObject,
     ]);
     expect(getJson).toHaveBeenCalledWith(
-      `/workspace/warehouse/connections/warehouse-prod/tables?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
+      `/workspace/warehouse/connections/warehouse-prod/objects?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
     );
+  });
+
+  it('rejects an unversioned source-object catalog response', async () => {
+    const scope = buildWorkspaceScope();
+    setWorkspaceScope(scope);
+    const { warehouseSourceImport } = createApiWorkspacePortHarness({
+      getJson: async <TResponse>() => [] as TResponse,
+    });
+
+    await expect(warehouseSourceImport.listSourceObjects('warehouse-prod')).rejects.toThrow();
   });
 
   it('imports selected warehouse sources through the scoped protected runtime command endpoint', async () => {
@@ -319,8 +344,9 @@ describe('workspace ports api warehouse source import', () => {
       postJson: async <_TRequest, TResponse>() =>
         ({
           success: true,
+          draftRevision: 'draft-revision-2',
           sourcesCreated: 1,
-          tablesImported: 1,
+          objectsImported: 1,
           yamlFiles: ['models/sources/src_erp.yml'],
           importedNodeIds: ['src_erp_orders'],
           grouping: 'schema',
@@ -331,7 +357,7 @@ describe('workspace ports api warehouse source import', () => {
     await expect(
       warehouseSourceImport.importSources({
         connectionId: 'warehouse-prod',
-        tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        objects: [{ objectId: 'relation/analytics/erp/orders' }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
@@ -345,13 +371,38 @@ describe('workspace ports api warehouse source import', () => {
       `/workspace/sources/import?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
       {
         connectionId: 'warehouse-prod',
-        tables: [{ database: 'analytics', schema: 'erp', table: 'orders' }],
+        objects: [{ objectId: 'relation/analytics/erp/orders' }],
         groupingStrategy: 'schema',
         includeColumns: true,
         addTests: false,
         addFreshness: false,
       }
     );
+  });
+
+  it('rejects an incomplete import receipt before updating canvas state', async () => {
+    const { warehouseSourceImport } = createApiWorkspacePortHarness({
+      postJson: async <_TRequest, TResponse>() =>
+        ({
+          success: true,
+          sourcesCreated: 1,
+          objectsImported: 1,
+          yamlFiles: [],
+          grouping: 'schema',
+          options: { includeColumns: true, addTests: false, addFreshness: false },
+        }) as TResponse,
+    });
+
+    await expect(
+      warehouseSourceImport.importSources({
+        connectionId: 'warehouse-prod',
+        objects: [{ objectId: 'relation/analytics/erp/orders' }],
+        groupingStrategy: 'schema',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      })
+    ).rejects.toThrow();
   });
 
   it('creates a warehouse connection through the scoped protected runtime command endpoint', async () => {
@@ -409,7 +460,7 @@ describe('workspace ports api warehouse source import', () => {
           connectionId: 'finance-warehouse',
           status: 'passed',
           checkedAt: '2026-06-08T00:00:00.000Z',
-          tableCount: 3,
+          objectCount: 3,
         }) as TResponse,
     });
 
@@ -423,7 +474,7 @@ describe('workspace ports api warehouse source import', () => {
       connectionId: 'finance-warehouse',
       status: 'passed',
       checkedAt: '2026-06-08T00:00:00.000Z',
-      tableCount: 3,
+      objectCount: 3,
     });
     expect(postJson).toHaveBeenCalledWith(
       `/workspace/warehouse/connections/finance-warehouse/test?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,

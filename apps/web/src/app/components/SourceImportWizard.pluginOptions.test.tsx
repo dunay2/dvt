@@ -3,6 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  buildSourceObject,
   buildWarehouseSourceImportPort,
   createSourceImportWizardHarness,
 } from './SourceImportWizard.testHarness';
@@ -27,7 +28,7 @@ describe('SourceImportWizard plugin options', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 
@@ -55,7 +56,7 @@ describe('SourceImportWizard plugin options', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickClickableDivByText('ORDERS');
+    await harness.clickSourceObjectInspectionButton('ORDERS');
     await harness.clickTab('Metadata');
 
     expect(document.body.textContent).toContain('Include Column Metadata');
@@ -86,7 +87,7 @@ describe('SourceImportWizard plugin options', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Metadata');
     await harness.clickButtonContaining('Attach sources to canvas');
 

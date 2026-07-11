@@ -45,7 +45,7 @@ describe('SourceImportWizard metadata exploration', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickClickableDivByText('ORDERS');
+    await harness.clickSourceObjectInspectionButton('ORDERS');
     await harness.clickTab('Metadata');
 
     expect(harness.findTab('Metadata')?.getAttribute('aria-selected')).toBe('true');
@@ -70,11 +70,11 @@ describe('SourceImportWizard metadata exploration', () => {
     );
   });
 
-  it('opens at the selected warehouse tables when launched from the source explorer', async () => {
+  it('opens at the selected source objects when launched from the source explorer', async () => {
     await harness.renderWizard({
       initialSelection: {
         connectionId: 'conn-1',
-        tables: [
+        sourceObjects: [
           buildSourceObject({
             table: 'CUSTOMERS',
             metricEvidence: buildSourceImportTestMetricEvidence(45000, 8700000),
@@ -101,7 +101,7 @@ describe('SourceImportWizard metadata exploration', () => {
     });
     await harness.flushPendingWork();
 
-    expect(document.body.textContent).toContain('Browse source tables');
+    expect(document.body.textContent).toContain('Browse source objects');
     expect(document.body.textContent).toContain('CUSTOMERS');
     expect(document.body.textContent).toContain('Selected: 1');
     expect(document.body.textContent).toContain('RAW.ERP.CUSTOMERS');
@@ -123,7 +123,7 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.renderWizard({
       initialSelection: {
         connectionId: 'conn-1',
-        tables: [buildSourceObject({ table: 'CUSTOMERS' })],
+        sourceObjects: [buildSourceObject({ table: 'CUSTOMERS' })],
       },
       warehouseSourceImport: buildWarehouseSourceImportPort({
         listWarehouseConnections: async () => [
@@ -218,13 +218,14 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickTab('Browse');
 
     expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
+    expect(document.body.textContent).toContain('Files');
     expect(document.body.textContent).toContain(
-      '1 object is available in this connection but cannot be attached by the DBT relational importer.'
+      'Visible for inspection. This importer currently attaches relational source objects only.'
     );
     expect(document.body.textContent).not.toContain('Failed to load warehouse tables.');
   });
 
-  it('searches source tables by column metadata and keeps the active metadata visible while browsing', async () => {
+  it('searches source objects by column metadata and keeps active metadata visible while browsing', async () => {
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
         listSourceObjects: async () => [
@@ -253,11 +254,11 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickTab('Browse');
 
     const search = document.querySelector<HTMLInputElement>(
-      '[data-slot="source-import-table-search"]'
+      '[data-slot="source-import-object-search"]'
     );
 
     expect(search).not.toBeNull();
-    expect(document.body.textContent).toContain('2 tables available');
+    expect(document.body.textContent).toContain('2 objects available');
     expect(document.body.textContent).toContain('Source metadata');
     expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
 
@@ -267,7 +268,7 @@ describe('SourceImportWizard metadata exploration', () => {
       }
     });
 
-    expect(document.body.textContent).toContain('Showing 1 of 2 tables');
+    expect(document.body.textContent).toContain('Showing 1 of 2 objects');
     expect(document.body.textContent).toContain('CUSTOMERS');
     expect(document.body.textContent).not.toContain('ORDERS');
     expect(document.body.textContent).toContain('RAW.ERP.CUSTOMERS');
@@ -302,7 +303,7 @@ describe('SourceImportWizard metadata exploration', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
 
     expect(document.body.textContent).toContain('Selected sources');
     expect(document.body.textContent).toContain('1 selected');
@@ -331,7 +332,7 @@ describe('SourceImportWizard metadata exploration', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 
@@ -362,7 +363,7 @@ describe('SourceImportWizard metadata exploration', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
 
     expect(document.body.textContent).toContain('Selected: 1');
     expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
@@ -371,7 +372,7 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickButtonByLabel('Remove RAW.ERP.ORDERS');
 
     expect(document.body.textContent).toContain('Selected: 0');
-    expect(document.body.textContent).toContain('No source tables selected yet.');
+    expect(document.body.textContent).toContain('No source objects selected yet.');
     expect(document.body.textContent).toContain('RAW.ERP.ORDERS');
     expect(document.body.textContent).toContain('order_id');
   });

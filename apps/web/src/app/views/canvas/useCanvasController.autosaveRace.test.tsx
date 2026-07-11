@@ -122,7 +122,7 @@ describe('useCanvasController autosave race guards', () => {
       targetHarness.getLatestResult()?.handleSourceImportComplete({
         success: true,
         sourcesCreated: 1,
-        tablesImported: 1,
+        objectsImported: 1,
         yamlFiles: ['models/sources/src_erp.yml'],
         importedNodeIds: ['src_erp_orders'],
         grouping: 'schema',

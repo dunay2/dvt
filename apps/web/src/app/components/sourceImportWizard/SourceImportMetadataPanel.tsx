@@ -1,11 +1,14 @@
+import { isRelationalSourceObject } from '@dvt/contracts';
+
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import type { SourceImportGroupingStrategy, TableInfo } from './types';
+import { sourceImportWizardCopy as copy } from './copy';
+import type { SourceImportGroupingStrategy, SelectableSourceObject } from './types';
 import { GroupingStep } from './GroupingStep';
 import { OptionsStep } from './OptionsStep';
-import { SourceImportActiveTableMetadata } from './SourceImportActiveTableMetadata';
+import { SourceImportActiveObjectMetadata } from './SourceImportActiveObjectMetadata';
 
 type SourceImportMetadataPanelProps = Readonly<{
-  activeTable: TableInfo | null;
+  activeSourceObject: SelectableSourceObject | null;
   groupingStrategy: SourceImportGroupingStrategy;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
@@ -13,27 +16,44 @@ type SourceImportMetadataPanelProps = Readonly<{
   onSourceImportOptionChange: (optionId: SourceImportOptionId, value: boolean) => void;
 }>;
 
+export const sourceImportMetadataPanelClassNames = {
+  root: 'grid gap-4 lg:grid-cols-[1.05fr_0.95fr]',
+  options: 'space-y-4 lg:order-2',
+  metadata: 'space-y-4 lg:order-1',
+  unavailable:
+    'rounded border border-amber-500/40 bg-amber-950/20 p-4 text-sm text-amber-200 lg:order-2',
+} as const;
+
 export function SourceImportMetadataPanel({
-  activeTable,
+  activeSourceObject,
   groupingStrategy,
   sourceImportOptions,
   sourceImportOptionValues,
   onGroupingChange,
   onSourceImportOptionChange,
 }: SourceImportMetadataPanelProps) {
-  return (
-    <div id="source-import-section-metadata" className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-      <div className="space-y-4 lg:order-2">
-        <OptionsStep
-          sourceImportOptions={sourceImportOptions}
-          sourceImportOptionValues={sourceImportOptionValues}
-          onSourceImportOptionChange={onSourceImportOptionChange}
-        />
-        <GroupingStep groupingStrategy={groupingStrategy} onGroupingChange={onGroupingChange} />
-      </div>
+  const supportsRelationalImport =
+    activeSourceObject != null && isRelationalSourceObject(activeSourceObject);
 
-      <div className="space-y-4 lg:order-1">
-        <SourceImportActiveTableMetadata activeTable={activeTable} />
+  return (
+    <div id="source-import-section-metadata" className={sourceImportMetadataPanelClassNames.root}>
+      {supportsRelationalImport ? (
+        <div className={sourceImportMetadataPanelClassNames.options}>
+          <OptionsStep
+            sourceImportOptions={sourceImportOptions}
+            sourceImportOptionValues={sourceImportOptionValues}
+            onSourceImportOptionChange={onSourceImportOptionChange}
+          />
+          <GroupingStep groupingStrategy={groupingStrategy} onGroupingChange={onGroupingChange} />
+        </div>
+      ) : (
+        <p className={sourceImportMetadataPanelClassNames.unavailable}>
+          {copy.metadata.optionsUnavailable}
+        </p>
+      )}
+
+      <div className={sourceImportMetadataPanelClassNames.metadata}>
+        <SourceImportActiveObjectMetadata activeSourceObject={activeSourceObject} />
       </div>
     </div>
   );

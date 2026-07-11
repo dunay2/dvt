@@ -1,9 +1,10 @@
-/** Owned concern: render selected source tables without owning wizard flow state. */
+/** Owned concern: render selected source objects without owning wizard flow state. */
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
+import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import { sourceImportWizardCopy as copy } from './copy';
-import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
+import type { SourceImportObjectViewModel } from './sourceImportCatalogModel';
 
 const selectionBasketClassNames = {
   card: 'border-slate-700 bg-slate-950/40 p-3',
@@ -27,48 +28,58 @@ const selectionBasketClassNames = {
 const selectedSourceColumnPreviewLimit = 4;
 
 type SourceImportSelectionBasketProps = Readonly<{
-  selectedTables: readonly SourceImportTableViewModel[];
-  onRemoveTable?: (tableIndex: number) => void;
+  selectedSourceObjects: readonly SourceImportObjectViewModel[];
+  onRemoveSourceObject?: (sourceObjectIndex: number) => void;
 }>;
 
 export function SourceImportSelectionBasket({
-  selectedTables,
-  onRemoveTable,
+  selectedSourceObjects,
+  onRemoveSourceObject,
 }: SourceImportSelectionBasketProps): JSX.Element {
   return (
     <Card className={selectionBasketClassNames.card}>
       <div className={selectionBasketClassNames.header}>
         <h4 className={selectionBasketClassNames.title}>{copy.selectionBasket.title}</h4>
         <Badge variant="outline">
-          {selectedTables.length} {copy.selectionBasket.selected}
+          {selectedSourceObjects.length} {copy.selectionBasket.selected}
         </Badge>
       </div>
-      {selectedTables.length === 0 ? (
+      {selectedSourceObjects.length === 0 ? (
         <p className={selectionBasketClassNames.empty}>{copy.selectionBasket.empty}</p>
       ) : (
         <div className={selectionBasketClassNames.list}>
-          {selectedTables.map((table) => (
-            <div key={table.identityKey} className={selectionBasketClassNames.item}>
+          {selectedSourceObjects.map((sourceObject) => (
+            <div key={sourceObject.identityKey} className={selectionBasketClassNames.item}>
               <div className={selectionBasketClassNames.itemHeader}>
-                <div className={selectionBasketClassNames.itemName}>{table.canonicalName}</div>
-                {onRemoveTable ? (
+                <div className={selectionBasketClassNames.itemName}>
+                  {sourceObject.canonicalName}
+                </div>
+                {onRemoveSourceObject ? (
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    aria-label={`${copy.selectionBasket.remove} ${table.canonicalName}`}
-                    onClick={() => onRemoveTable(table.index)}
+                    aria-label={`${copy.selectionBasket.remove} ${sourceObject.canonicalName}`}
+                    onClick={() => onRemoveSourceObject(sourceObject.index)}
                   >
                     {copy.selectionBasket.remove}
                   </Button>
                 ) : null}
               </div>
               <div className={selectionBasketClassNames.itemMeta}>
-                <span>{table.rowCountLabel}</span>
-                {table.byteSizeLabel == null ? null : <span>{table.byteSizeLabel}</span>}
-                <span>{table.columnCountLabel}</span>
+                <MetricEvidenceHotspot
+                  detail={sourceObject.rowCountDetail}
+                  tone={sourceObject.rowCountTone}
+                  value={sourceObject.rowCountLabel}
+                />
+                <MetricEvidenceHotspot
+                  detail={sourceObject.byteSizeDetail}
+                  tone={sourceObject.byteSizeTone}
+                  value={sourceObject.byteSizeLabel}
+                />
+                <span>{sourceObject.columnCountLabel}</span>
               </div>
-              <SourceImportSelectedColumnPreview table={table} />
+              <SourceImportSelectedColumnPreview sourceObject={sourceObject} />
             </div>
           ))}
         </div>
@@ -78,25 +89,25 @@ export function SourceImportSelectionBasket({
 }
 
 function SourceImportSelectedColumnPreview({
-  table,
-}: Readonly<{ table: SourceImportTableViewModel }>): JSX.Element {
-  if (table.columns.length === 0) {
+  sourceObject,
+}: Readonly<{ sourceObject: SourceImportObjectViewModel }>): JSX.Element {
+  if (sourceObject.columns.length === 0) {
     return (
       <p className={selectionBasketClassNames.columnEmpty}>{copy.selectionBasket.noColumns}</p>
     );
   }
 
-  const visibleColumns = table.columns.slice(0, selectedSourceColumnPreviewLimit);
-  const overflowColumnCount = table.columns.length - visibleColumns.length;
+  const visibleColumns = sourceObject.columns.slice(0, selectedSourceColumnPreviewLimit);
+  const overflowColumnCount = sourceObject.columns.length - visibleColumns.length;
 
   return (
     <div className={selectionBasketClassNames.columnList}>
       {visibleColumns.map((column) => (
         <Badge
-          key={`${table.identityKey}.${column.name}`}
+          key={`${sourceObject.identityKey}.${column.name}`}
           variant="outline"
           className={selectionBasketClassNames.columnBadge}
-          data-source-import-selected-column={`${table.canonicalName}.${column.name}`}
+          data-source-import-selected-column={`${sourceObject.canonicalName}.${column.name}`}
         >
           <span className={selectionBasketClassNames.columnName}>{column.name}</span>
           <span className={selectionBasketClassNames.columnType}>{column.type}</span>

@@ -20,7 +20,7 @@ describe('SourceImportCatalogView architecture', () => {
     expect(source).not.toContain('className=');
 
     expect(primitives).toContain('sourceImportCatalogClassNames');
-    expect(primitives).toContain('SourceImportTableCard');
+    expect(primitives).toContain('SourceImportObjectCard');
     expect(primitives).toContain('SourceImportSchemaHeader');
     expect(primitives).toContain('SourceImportColumnPreviewList');
   });

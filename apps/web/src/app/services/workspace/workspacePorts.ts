@@ -25,8 +25,10 @@ import {
 export type {
   WorkspaceGraphSnapshot,
   WarehouseConnection,
-  WarehouseColumn,
-  WarehouseTable,
+  SourceObject,
+  SourceObjectColumn,
+  SourceObjectSelection,
+  RelationalSourceObject,
   SourceImportGrouping,
   ImportSourcesInput,
   ImportSourcesResult,

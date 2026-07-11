@@ -201,7 +201,7 @@ describe('app services mock hardcut architecture', () => {
 
     for (const source of [componentSource, userStoriesSource]) {
       expect(source).toContain('ListWarehouseConnections');
-      expect(source).toContain('ListWarehouseConnectionTables');
+      expect(source).toContain('ListWarehouseConnectionSourceObjects');
       expect(source).toContain('ImportWarehouseSources');
       expect(source).not.toContain('warehouse source rails do not exist');
       expect(source).not.toContain('source import port returns unavailable capability');

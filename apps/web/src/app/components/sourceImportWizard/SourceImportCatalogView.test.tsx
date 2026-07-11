@@ -5,24 +5,21 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildSourceImportCatalogViewModel } from './sourceImportCatalogModel';
-import { SourceImportCatalogView } from './SourceImportCatalogView';
 import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy } from './copy';
-import type { TableInfo } from './types';
-
-function buildTable(overrides?: Partial<TableInfo>): TableInfo {
-  return {
-    database: 'RAW',
-    schema: 'ERP',
-    table: 'ORDERS',
-    selected: false,
-    columns: [],
-    ...overrides,
-  };
-}
+import {
+  buildSourceImportCatalogViewModel,
+  type SourceImportCatalogViewModel,
+} from './sourceImportCatalogModel';
+import { SourceImportCatalogView } from './SourceImportCatalogView';
+import {
+  buildSourceImportTestEndpointObject,
+  buildSourceImportTestFileObject,
+  buildSourceImportTestObject,
+  buildSourceImportTestStreamObject,
+} from './sourceImportWizard.testFixtures';
+import type { SelectableSourceObject } from './types';
 
 describe('SourceImportCatalogView', () => {
-  const catalogCopy = sourceImportWizardCopy.catalog;
   let container: HTMLDivElement;
   let root: Root;
 
@@ -36,324 +33,169 @@ describe('SourceImportCatalogView', () => {
   });
 
   afterEach(() => {
-    act(() => {
-      root.unmount();
-    });
+    act(() => root.unmount());
     container.remove();
   });
 
-  it('renders source table metrics and delegates table/schema selection by model identity', async () => {
-    const onToggleSchema = vi.fn();
-    const onToggleTable = vi.fn();
-    const onActivateTable = vi.fn();
-    const catalog = buildSourceImportCatalogViewModel({
-      activeTableKey: null,
-      copy: catalogCopy,
+  function buildCatalog(
+    sourceObjects: readonly SelectableSourceObject[] = [buildSourceImportTestObject()]
+  ): SourceImportCatalogViewModel {
+    return buildSourceImportCatalogViewModel({
+      sourceObjects,
+      activeSourceObjectKey: null,
+      copy: sourceImportWizardCopy.catalog,
       numberFormatter: sourceImportCatalogNumberFormatter,
-      tables: [
-        buildTable({
-          table: 'ORDERS',
-          rowCount: 1500,
-          byteSize: 4096000,
-          columns: [
-            { name: 'order_id', type: 'INTEGER', nullable: false },
-            { name: 'discount_code', type: 'TEXT', nullable: true },
-          ],
-        }),
-      ],
+    });
+  }
+
+  it('keeps relational selection and inspection as separate accessible interactions', async () => {
+    const onActivateSourceObject = vi.fn();
+    const onToggleSourceObject = vi.fn();
+    const onToggleSchema = vi.fn();
+    const relation = buildSourceImportTestObject({
+      columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
     });
 
     await act(async () => {
       root.render(
         <SourceImportCatalogView
-          catalog={catalog}
-          emptyLabel="No source tables"
+          catalog={buildCatalog([relation])}
+          emptyLabel="No source objects"
+          onActivateSourceObject={onActivateSourceObject}
+          onSelectFilter={vi.fn()}
           onToggleDatabase={vi.fn()}
           onToggleSchema={onToggleSchema}
-          onToggleTable={onToggleTable}
-          onActivateTable={onActivateTable}
-          onSelectFilter={vi.fn()}
+          onToggleSourceObject={onToggleSourceObject}
         />
       );
     });
 
-    expect(container.textContent).toContain('ERP');
-    expect(container.textContent).toContain('RAW');
-    expect(container.textContent).toContain('1 table');
     expect(container.textContent).toContain('RAW.ERP.ORDERS');
     expect(container.textContent).toContain('1,500 rows');
     expect(container.textContent).toContain('3.9 MB');
-    expect(container.textContent).toContain('2 columns');
-    expect(container.textContent).toContain('order_id');
-    expect(container.textContent).toContain('Required');
-    expect(container.textContent).toContain('discount_code');
-    expect(container.textContent).toContain('Nullable');
+    expect(container.textContent).toContain('1 column');
+    expect(container.querySelectorAll('[data-slot="metric-evidence-hotspot"]')).toHaveLength(2);
 
     const inspectAction = getByRole(container, 'button', {
-      name: 'Inspect source table RAW.ERP.ORDERS metadata. 1,500 rows. 3.9 MB. 2 columns.',
+      name: 'Inspect source object RAW.ERP.ORDERS metadata. 1,500 rows. 3.9 MB. 1 column.',
     });
     const selectAction = getByRole(container, 'checkbox', {
-      name: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 2 columns.',
+      name: 'Select source object RAW.ERP.ORDERS. 1,500 rows. 3.9 MB. 1 column.',
     });
-
-    const schemaSelectAction = getByRole(container, 'button', {
-      name: 'Select source schema ERP. In source database RAW. 1 table.',
+    const schemaSelectAction = getByRole(container, 'checkbox', {
+      name: 'Select source schema ERP. In source database RAW. 1 object.',
     });
 
     await act(async () => {
-      fireEvent.click(schemaSelectAction);
-      fireEvent.keyDown(inspectAction, { key: 'Enter' });
+      fireEvent.click(inspectAction);
       fireEvent.click(selectAction);
+      fireEvent.click(schemaSelectAction);
     });
 
+    expect(onActivateSourceObject).toHaveBeenCalledWith(0);
+    expect(onToggleSourceObject).toHaveBeenCalledWith(0);
     expect(onToggleSchema).toHaveBeenCalledWith({ database: 'RAW', schema: 'ERP' });
-    expect(onActivateTable).toHaveBeenCalledWith(0);
-    expect(onToggleTable).toHaveBeenCalledWith(0);
   });
 
-  it('renders database categories above schema groups without changing table selection behavior', async () => {
-    const onToggleDatabase = vi.fn();
-    const onSelectFilter = vi.fn();
-    const onToggleSchema = vi.fn();
-    const onToggleTable = vi.fn();
-    const onActivateTable = vi.fn();
-    const catalog = buildSourceImportCatalogViewModel({
-      activeTableKey: null,
-      copy: catalogCopy,
-      numberFormatter: sourceImportCatalogNumberFormatter,
-      tables: [
-        buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
-        buildTable({ database: 'RAW', schema: 'CRM', table: 'CUSTOMERS' }),
-        buildTable({ database: 'MART', schema: 'FINANCE', table: 'REVENUE' }),
-      ],
-    });
+  it('renders every SourceObject kind and disables unsupported imports without hiding inspection', async () => {
+    const onActivateSourceObject = vi.fn();
+    const file = buildSourceImportTestFileObject();
 
     await act(async () => {
       root.render(
         <SourceImportCatalogView
-          catalog={catalog}
-          emptyLabel="No source tables"
-          onToggleSchema={onToggleSchema}
-          onToggleDatabase={onToggleDatabase}
-          onToggleTable={onToggleTable}
-          onActivateTable={onActivateTable}
-          onSelectFilter={onSelectFilter}
-        />
-      );
-    });
-
-    expect(container.textContent).toContain('All');
-    expect(container.textContent).toContain('With columns');
-    expect(container.textContent).toContain('MART');
-    expect(container.textContent).toContain('RAW');
-    expect(container.textContent).toContain('2 schemas');
-    expect(container.textContent).toContain('FINANCE');
-    expect(container.textContent).toContain('ERP');
-    expect(container.textContent).toContain('CRM');
-
-    await act(async () => {
-      fireEvent.click(
-        getByRole(container, 'button', { name: 'Filter source catalog by All. 3 tables.' })
-      );
-      fireEvent.click(container.querySelector('[data-source-import-database="RAW"]')!);
-      fireEvent.click(
-        getByRole(container, 'button', {
-          name: 'Select source schema CRM. In source database RAW. 1 table.',
-        })
-      );
-    });
-
-    expect(onSelectFilter).toHaveBeenCalledWith('all');
-    expect(onToggleDatabase).toHaveBeenCalledWith({ database: 'RAW' });
-    expect(onToggleSchema).toHaveBeenCalledWith({ database: 'RAW', schema: 'CRM' });
-  });
-
-  it('keeps catalog filters available when the active filter has no table matches', async () => {
-    const onSelectFilter = vi.fn();
-    const catalog = buildSourceImportCatalogViewModel({
-      activeTableKey: null,
-      copy: catalogCopy,
-      filterId: 'selected',
-      numberFormatter: sourceImportCatalogNumberFormatter,
-      tables: [buildTable({ table: 'ORDERS', selected: false })],
-    });
-
-    await act(async () => {
-      root.render(
-        <SourceImportCatalogView
-          catalog={catalog}
-          emptyLabel="No source tables"
+          catalog={buildCatalog([
+            buildSourceImportTestObject(),
+            file,
+            buildSourceImportTestEndpointObject(),
+            buildSourceImportTestStreamObject(),
+          ])}
+          emptyLabel="No source objects"
+          onActivateSourceObject={onActivateSourceObject}
+          onSelectFilter={vi.fn()}
           onToggleDatabase={vi.fn()}
           onToggleSchema={vi.fn()}
-          onToggleTable={vi.fn()}
-          onActivateTable={vi.fn()}
-          onSelectFilter={onSelectFilter}
+          onToggleSourceObject={vi.fn()}
         />
       );
     });
 
-    expect(container.textContent).toContain('No source tables');
-    expect(container.textContent).toContain('All');
-    expect(container.textContent).toContain('Selected');
+    expect(container.textContent).toContain('Relations');
+    expect(container.textContent).toContain('Files');
+    expect(container.textContent).toContain('Endpoints');
+    expect(container.textContent).toContain('Streams');
+    const fileSelection = container.querySelector<HTMLButtonElement>(
+      `[data-source-import-object-select="${file.objectId}"]`
+    );
+    expect(fileSelection?.disabled).toBe(true);
+    expect(container.textContent).toContain('This importer currently attaches relational');
 
     await act(async () => {
       fireEvent.click(
-        getByRole(container, 'button', { name: 'Filter source catalog by All. 1 table.' })
+        getByRole(container, 'button', {
+          name: 'Inspect source object /landing/orders.parquet metadata. 1,500 rows. 3.9 MB. 0 columns.',
+        })
       );
     });
 
+    expect(onActivateSourceObject).toHaveBeenCalledWith(1);
+  });
+
+  it('keeps filters usable when the active category has no matches', async () => {
+    const onSelectFilter = vi.fn();
+    const catalog = buildSourceImportCatalogViewModel({
+      sourceObjects: [buildSourceImportTestObject()],
+      activeSourceObjectKey: null,
+      filterId: 'selected',
+      copy: sourceImportWizardCopy.catalog,
+      numberFormatter: sourceImportCatalogNumberFormatter,
+    });
+
+    await act(async () => {
+      root.render(
+        <SourceImportCatalogView
+          catalog={catalog}
+          emptyLabel="No source objects"
+          onActivateSourceObject={vi.fn()}
+          onSelectFilter={onSelectFilter}
+          onToggleDatabase={vi.fn()}
+          onToggleSchema={vi.fn()}
+          onToggleSourceObject={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('No source objects');
+    await act(async () => {
+      fireEvent.click(
+        getByRole(container, 'button', { name: 'Filter source catalog by All. 1 object.' })
+      );
+    });
     expect(onSelectFilter).toHaveBeenCalledWith('all');
   });
 
-  it('delegates schema selection with database scope when schemas share the same name', async () => {
-    const onToggleSchema = vi.fn();
-    const onToggleTable = vi.fn();
-    const onActivateTable = vi.fn();
-    const catalog = buildSourceImportCatalogViewModel({
-      activeTableKey: null,
-      copy: catalogCopy,
-      numberFormatter: sourceImportCatalogNumberFormatter,
-      tables: [
-        buildTable({ database: 'RAW', schema: 'PUBLIC', table: 'ORDERS' }),
-        buildTable({ database: 'MART', schema: 'PUBLIC', table: 'CUSTOMERS' }),
-      ],
-    });
-
+  it('uses collision-free schema identities for dotted database and schema names', async () => {
     await act(async () => {
       root.render(
         <SourceImportCatalogView
-          catalog={catalog}
-          emptyLabel="No source tables"
-          onToggleDatabase={vi.fn()}
-          onToggleSchema={onToggleSchema}
-          onToggleTable={onToggleTable}
-          onActivateTable={onActivateTable}
+          catalog={buildCatalog([
+            buildSourceImportTestObject({ database: 'RAW.PROD', schema: 'PUBLIC' }),
+            buildSourceImportTestObject({ database: 'RAW', schema: 'PROD.PUBLIC' }),
+          ])}
+          emptyLabel="No source objects"
+          onActivateSourceObject={vi.fn()}
           onSelectFilter={vi.fn()}
+          onToggleDatabase={vi.fn()}
+          onToggleSchema={vi.fn()}
+          onToggleSourceObject={vi.fn()}
         />
       );
     });
 
-    await act(async () => {
-      fireEvent.click(
-        getByRole(container, 'button', {
-          name: 'Select source schema PUBLIC. In source database MART. 1 table.',
-        })
-      );
-    });
-
-    expect(onToggleSchema).toHaveBeenCalledWith({
-      database: 'MART',
-      schema: 'PUBLIC',
-    });
-  });
-
-  it('keeps schema DOM identities and accessible labels collision-free when identifiers contain dots', async () => {
-    const onToggleSchema = vi.fn();
-    const catalog = buildSourceImportCatalogViewModel({
-      activeTableKey: null,
-      copy: catalogCopy,
-      numberFormatter: sourceImportCatalogNumberFormatter,
-      tables: [
-        buildTable({ database: 'RAW.PROD', schema: 'PUBLIC', table: 'ORDERS' }),
-        buildTable({ database: 'RAW', schema: 'PROD.PUBLIC', table: 'CUSTOMERS' }),
-      ],
-    });
-
-    await act(async () => {
-      root.render(
-        <SourceImportCatalogView
-          catalog={catalog}
-          emptyLabel="No source tables"
-          onToggleDatabase={vi.fn()}
-          onToggleSchema={onToggleSchema}
-          onToggleTable={vi.fn()}
-          onActivateTable={vi.fn()}
-          onSelectFilter={vi.fn()}
-        />
-      );
-    });
-
-    const schemaHeaders = Array.from(container.querySelectorAll('[data-source-import-schema]'));
-    const schemaIdentityKeys = schemaHeaders.map((element) =>
-      element.getAttribute('data-source-import-schema')
+    const identities = Array.from(container.querySelectorAll('[data-source-import-schema]')).map(
+      (element) => element.getAttribute('data-source-import-schema')
     );
-
-    expect(schemaIdentityKeys).toHaveLength(2);
-    expect(new Set(schemaIdentityKeys).size).toBe(2);
-
-    await act(async () => {
-      fireEvent.click(
-        getByRole(container, 'button', {
-          name: 'Select source schema PUBLIC. In source database RAW.PROD. 1 table.',
-        })
-      );
-      fireEvent.click(
-        getByRole(container, 'button', {
-          name: 'Select source schema PROD.PUBLIC. In source database RAW. 1 table.',
-        })
-      );
-    });
-
-    expect(onToggleSchema).toHaveBeenNthCalledWith(1, {
-      database: 'RAW.PROD',
-      schema: 'PUBLIC',
-    });
-    expect(onToggleSchema).toHaveBeenNthCalledWith(2, {
-      database: 'RAW',
-      schema: 'PROD.PUBLIC',
-    });
-  });
-
-  it('keeps table inspection separate from source selection', async () => {
-    const onToggleSchema = vi.fn();
-    const onToggleTable = vi.fn();
-    const onActivateTable = vi.fn();
-    const catalog = buildSourceImportCatalogViewModel({
-      activeTableKey: null,
-      copy: catalogCopy,
-      numberFormatter: sourceImportCatalogNumberFormatter,
-      tables: [
-        buildTable({
-          table: 'ORDERS',
-          rowCount: 1500,
-          columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
-        }),
-      ],
-    });
-
-    await act(async () => {
-      root.render(
-        <SourceImportCatalogView
-          catalog={catalog}
-          emptyLabel="No source tables"
-          onToggleDatabase={vi.fn()}
-          onToggleSchema={onToggleSchema}
-          onToggleTable={onToggleTable}
-          onActivateTable={onActivateTable}
-          onSelectFilter={vi.fn()}
-        />
-      );
-    });
-
-    await act(async () => {
-      fireEvent.click(
-        getByRole(container, 'button', {
-          name: 'Inspect source table RAW.ERP.ORDERS metadata. 1,500 rows. 1 column.',
-        })
-      );
-    });
-
-    expect(onActivateTable).toHaveBeenCalledWith(0);
-    expect(onToggleTable).not.toHaveBeenCalled();
-
-    await act(async () => {
-      fireEvent.click(
-        getByRole(container, 'checkbox', {
-          name: 'Select source table RAW.ERP.ORDERS. 1,500 rows. 1 column.',
-        })
-      );
-    });
-
-    expect(onToggleTable).toHaveBeenCalledWith(0);
+    expect(identities).toHaveLength(2);
+    expect(new Set(identities).size).toBe(2);
   });
 });

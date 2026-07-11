@@ -3,35 +3,35 @@ import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } fr
 import { SourceImportReviewView } from './SourceImportReviewView';
 import { buildSourceImportCatalogViewModel } from './sourceImportCatalogModel';
 import { buildSourceImportReviewPreviewGroups } from './sourceImportReviewModel';
-import type { SourceImportGroupingStrategy, TableInfo } from './types';
+import type { SourceImportGroupingStrategy, SelectableSourceObject } from './types';
 
 interface ReviewStepProps {
-  tables: TableInfo[];
+  sourceObjects: SelectableSourceObject[];
   selectedCount: number;
   groupingStrategy: SourceImportGroupingStrategy;
   selectedConnectionName: string;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
-  onRemoveTable: (tableIndex: number) => void;
+  onRemoveSourceObject: (sourceObjectIndex: number) => void;
 }
 
 export function ReviewStep({
-  tables,
+  sourceObjects,
   selectedCount,
   groupingStrategy,
   selectedConnectionName,
   sourceImportOptions,
   sourceImportOptionValues,
-  onRemoveTable,
+  onRemoveSourceObject,
 }: ReviewStepProps) {
   const catalogViewModel = buildSourceImportCatalogViewModel({
-    tables,
-    activeTableKey: null,
+    sourceObjects,
+    activeSourceObjectKey: null,
     copy: copy.catalog,
     numberFormatter: sourceImportCatalogNumberFormatter,
   });
   const previewGroups = buildSourceImportReviewPreviewGroups({
-    tables,
+    sourceObjects,
     groupingStrategy,
     copy: copy.catalog,
     numberFormatter: sourceImportCatalogNumberFormatter,
@@ -39,14 +39,14 @@ export function ReviewStep({
 
   return (
     <SourceImportReviewView
-      selectedTables={catalogViewModel.selectedTables}
+      selectedSourceObjects={catalogViewModel.selectedSourceObjects}
       previewGroups={previewGroups}
       selectedCount={selectedCount}
       groupingStrategy={groupingStrategy}
       selectedConnectionName={selectedConnectionName}
       sourceImportOptions={sourceImportOptions}
       sourceImportOptionValues={sourceImportOptionValues}
-      onRemoveTable={onRemoveTable}
+      onRemoveSourceObject={onRemoveSourceObject}
     />
   );
 }

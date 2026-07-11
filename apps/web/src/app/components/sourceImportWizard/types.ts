@@ -1,9 +1,10 @@
 import type {
   CreateWarehouseConnectionInput,
   ImportSourcesResult,
+  RelationalSourceObject,
+  SourceObject,
   TestWarehouseConnectionResult,
   WarehouseConnection,
-  WarehouseTable,
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution } from '../../plugins/registry';
 
@@ -17,7 +18,7 @@ export interface SourceImportWizardProps {
 
 export type SourceImportInitialSelection = Readonly<{
   connectionId: string;
-  tables: readonly WarehouseTable[];
+  sourceObjects: readonly SourceObject[];
 }>;
 
 export type WizardStep = 'connection' | 'selection' | 'grouping' | 'options' | 'review' | 'result';
@@ -28,15 +29,13 @@ export const SOURCE_IMPORT_GROUPING_STRATEGIES = ['schema', 'database'] as const
 
 export type SourceImportGroupingStrategy = (typeof SOURCE_IMPORT_GROUPING_STRATEGIES)[number];
 
-export interface TableInfo {
-  database: string;
-  schema: string;
-  table: string;
-  rowCount?: number;
-  byteSize?: number;
-  columns?: WarehouseTable['columns'];
+export type SelectableSourceObject = SourceObject & {
   selected: boolean;
-}
+};
+
+export type SelectableRelationalSourceObject = RelationalSourceObject & {
+  selected: boolean;
+};
 
 export type SourceImportSchemaIdentity = Readonly<{
   database: string;
@@ -53,20 +52,20 @@ export interface SourceImportWizardState {
   selectedConnection: string | null;
   createConnectionFormOpen: boolean;
   createConnectionForm: CreateWarehouseConnectionInput;
-  tables: TableInfo[];
+  sourceObjects: SelectableSourceObject[];
   groupingStrategy: SourceImportGroupingStrategy;
   includeColumns: boolean;
   addTests: boolean;
   addFreshness: boolean;
   isProcessing: boolean;
   isLoadingConnections: boolean;
-  isLoadingTables: boolean;
+  isLoadingSourceObjects: boolean;
   isCreatingConnection: boolean;
   isTestingConnection: boolean;
   connectionTestResult: TestWarehouseConnectionResult | null;
   loadError: string | null;
   createConnectionError: string | null;
   importResult: ImportSourcesResult | null;
-  activeTableKey: string | null;
-  tableSearchQuery: string;
+  activeSourceObjectKey: string | null;
+  sourceObjectSearchQuery: string;
 }

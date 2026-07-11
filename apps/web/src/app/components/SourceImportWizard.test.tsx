@@ -4,9 +4,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildWarehouseSourceImportPort,
+  buildSourceObject,
   createSourceImportWizardHarness,
 } from './SourceImportWizard.testHarness';
 import type { ImportSourcesInput } from '../ports/workspace';
+import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
 
 describe('SourceImportWizard', () => {
   let harness: ReturnType<typeof createSourceImportWizardHarness>;
@@ -53,7 +55,7 @@ describe('SourceImportWizard', () => {
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
 
-    expect(document.body.textContent).toContain('Browse source tables');
+    expect(document.body.textContent).toContain('Browse source objects');
     expect(document.body.textContent).toContain('ORDERS');
   });
 
@@ -62,7 +64,7 @@ describe('SourceImportWizard', () => {
       connectionId,
       status: 'passed' as const,
       checkedAt: '2026-06-08T00:00:00.000Z',
-      tableCount: 12,
+      objectCount: 12,
     }));
 
     await harness.renderWizard({
@@ -75,7 +77,7 @@ describe('SourceImportWizard', () => {
 
     expect(testWarehouseConnection).toHaveBeenCalledWith('conn-1');
     expect(document.body.textContent).toContain('Connection passed');
-    expect(document.body.textContent).toContain('12 tables reachable');
+    expect(document.body.textContent).toContain('12 objects reachable');
   });
 
   it('creates a governed warehouse connection before browsing source tables', async () => {
@@ -87,13 +89,13 @@ describe('SourceImportWizard', () => {
       type: 'postgres' as const,
       database: 'dvt',
     }));
-    const listWarehouseTables = vi.fn(async () => [
-      {
+    const listSourceObjects = vi.fn(async () => [
+      buildSourceObject({
         database: 'dvt',
         schema: 'public',
         table: 'orders',
-        rowCount: 42,
-      },
+        metricEvidence: buildSourceImportTestMetricEvidence(42, 4096),
+      }),
     ]);
 
     HTMLElement.prototype.scrollIntoView =
@@ -104,7 +106,7 @@ describe('SourceImportWizard', () => {
         warehouseSourceImport: buildWarehouseSourceImportPort({
           listWarehouseConnections: async () => [],
           createWarehouseConnection,
-          listWarehouseTables,
+          listSourceObjects,
         }),
       });
 
@@ -132,7 +134,7 @@ describe('SourceImportWizard', () => {
       await harness.clickTab('Browse');
       await harness.flushPendingWork();
 
-      expect(listWarehouseTables).toHaveBeenCalledWith('local-postgres-proof');
+      expect(listSourceObjects).toHaveBeenCalledWith('local-postgres-proof');
       expect(document.body.textContent).toContain('dvt.public.orders');
     } finally {
       if (originalScrollIntoView) {
@@ -196,7 +198,7 @@ describe('SourceImportWizard', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 
@@ -223,10 +225,11 @@ describe('SourceImportWizard', () => {
   it('selects all visible source tables in a database category before attaching sources', async () => {
     const importSources = vi.fn(async (input: ImportSourcesInput) => ({
       success: true as const,
-      sourcesCreated: input.tables.length,
-      tablesImported: input.tables.length,
+      draftRevision: 'draft-revision-2',
+      sourcesCreated: input.objects.length,
+      objectsImported: input.objects.length,
       yamlFiles: ['models/sources/raw.yml'],
-      importedNodeIds: input.tables.map((table) => `src_${table.schema}_${table.table}`),
+      importedNodeIds: input.objects.map((sourceObject) => `src_${sourceObject.objectId}`),
       grouping: 'database' as const,
       options: {
         includeColumns: input.includeColumns,
@@ -237,10 +240,25 @@ describe('SourceImportWizard', () => {
 
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        listWarehouseTables: async () => [
-          { database: 'RAW', schema: 'ERP', table: 'ORDERS', rowCount: 100 },
-          { database: 'RAW', schema: 'CRM', table: 'CUSTOMERS', rowCount: 50 },
-          { database: 'MART', schema: 'ERP', table: 'ORDERS', rowCount: 10 },
+        listSourceObjects: async () => [
+          buildSourceObject({
+            database: 'RAW',
+            schema: 'ERP',
+            table: 'ORDERS',
+            metricEvidence: buildSourceImportTestMetricEvidence(100, 4096),
+          }),
+          buildSourceObject({
+            database: 'RAW',
+            schema: 'CRM',
+            table: 'CUSTOMERS',
+            metricEvidence: buildSourceImportTestMetricEvidence(50, 2048),
+          }),
+          buildSourceObject({
+            database: 'MART',
+            schema: 'ERP',
+            table: 'ORDERS',
+            metricEvidence: buildSourceImportTestMetricEvidence(10, 1024),
+          }),
         ],
         importSources,
       }),
@@ -252,14 +270,22 @@ describe('SourceImportWizard', () => {
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 
-    expect(importSources).toHaveBeenCalledWith(
-      expect.objectContaining({
-        tables: [
-          expect.objectContaining({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
-          expect.objectContaining({ database: 'RAW', schema: 'CRM', table: 'CUSTOMERS' }),
-        ],
-      })
-    );
+    expect(importSources).toHaveBeenCalledWith({
+      connectionId: 'conn-1',
+      objects: [
+        {
+          objectId: buildSourceObject({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }).objectId,
+        },
+        {
+          objectId: buildSourceObject({ database: 'RAW', schema: 'CRM', table: 'CUSTOMERS' })
+            .objectId,
+        },
+      ],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
   });
 
   it('surfaces a no-op result when the selected sources already exist and does not fire the canvas handoff', async () => {
@@ -270,8 +296,9 @@ describe('SourceImportWizard', () => {
       warehouseSourceImport: buildWarehouseSourceImportPort({
         importSources: async () => ({
           success: true,
+          draftRevision: 'draft-revision-2',
           sourcesCreated: 0,
-          tablesImported: 1,
+          objectsImported: 1,
           yamlFiles: ['models/sources/erp.yml'],
           importedNodeIds: [],
           grouping: 'schema',
@@ -286,7 +313,7 @@ describe('SourceImportWizard', () => {
 
     await harness.clickConnectionOption('Local Postgres proof');
     await harness.clickTab('Browse');
-    await harness.clickTableSelectionCheckbox('RAW.ERP.ORDERS');
+    await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
 

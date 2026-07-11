@@ -1,5 +1,33 @@
 /** Owned concern: define web-facing workspace DTOs and capability-specific ports. */
+import {
+  SOURCE_IMPORT_GROUPING,
+  WAREHOUSE_CONNECTION_TYPE,
+  type CreateWarehouseConnectionRequest,
+  type ImportSourceObjectsRequest,
+  type ImportSourceObjectsResult,
+  type SourceObject,
+  type TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
+  type WarehouseConnection as ContractWarehouseConnection,
+  type WarehouseConnectionType as ContractWarehouseConnectionType,
+} from '@dvt/contracts';
+
 import type { AuditLogEntry, DbtEdge, DbtNode, DiffChange, Plugin, Role } from '../types/dbt';
+
+export type {
+  RelationalSourceObject,
+  RelationalSourceObjectLocator,
+  SourceObject,
+  SourceObjectByteSizeBasis,
+  SourceObjectByteSizeMetricValue,
+  SourceObjectColumn,
+  SourceObjectMetricConfidence,
+  SourceObjectMetricEvidence,
+  SourceObjectMetricMethod,
+  SourceObjectMetricObservationScope,
+  SourceObjectMetricProvenance,
+  SourceObjectRowCountMetric,
+  SourceObjectSelection,
+} from '@dvt/contracts';
 
 // ---------------------------------------------------------------------------
 // Presentation-facing DTOs for the workspace domain
@@ -34,83 +62,23 @@ export type WorkspaceGraphSnapshot = {
   edges: DbtEdge[];
 };
 
-export const SUPPORTED_WAREHOUSE_CONNECTION_TYPES = ['postgres'] as const;
+export const SUPPORTED_WAREHOUSE_CONNECTION_TYPES = WAREHOUSE_CONNECTION_TYPE;
 
-export type WarehouseConnectionType = (typeof SUPPORTED_WAREHOUSE_CONNECTION_TYPES)[number];
+export type WarehouseConnectionType = ContractWarehouseConnectionType;
 
-export type WarehouseConnection = {
-  id: string;
-  name: string;
-  type: WarehouseConnectionType;
-  database: string;
-};
+export type WarehouseConnection = ContractWarehouseConnection;
 
-export type CreateWarehouseConnectionInput = {
-  name: string;
-  type: WarehouseConnection['type'];
-  database: string;
-  credentialRef: string;
-};
+export type CreateWarehouseConnectionInput = CreateWarehouseConnectionRequest;
 
-export type TestWarehouseConnectionResult =
-  | {
-      connectionId: string;
-      status: 'passed';
-      checkedAt: string;
-      tableCount: number;
-    }
-  | {
-      connectionId: string;
-      status: 'failed';
-      reason: 'invalid_credentials' | 'unsupported_adapter' | 'connection_failed';
-      message: string;
-      checkedAt: string;
-    };
+export type TestWarehouseConnectionResult = ContractTestWarehouseConnectionResult;
 
-export type WarehouseColumn = {
-  name: string;
-  type: string;
-  nullable: boolean;
-  primaryKey?: boolean;
-  unique?: boolean;
-};
+export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = SOURCE_IMPORT_GROUPING;
 
-export type WarehouseTable = {
-  database: string;
-  schema: string;
-  table: string;
-  rowCount?: number;
-  byteSize?: number;
-  columns?: WarehouseColumn[];
-};
+export type SourceImportGrouping = ImportSourceObjectsRequest['groupingStrategy'];
 
-export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = ['schema', 'database'] as const;
+export type ImportSourcesInput = ImportSourceObjectsRequest;
 
-export type SourceImportGrouping = (typeof SUPPORTED_SOURCE_IMPORT_GROUPINGS)[number];
-
-export type ImportSourcesInput = {
-  connectionId: string;
-  tables: WarehouseTable[];
-  groupingStrategy: SourceImportGrouping;
-  includeColumns: boolean;
-  addTests: boolean;
-  addFreshness: boolean;
-};
-
-export type ImportSourcesResult = {
-  success: true;
-  draftRevision?: string;
-  sourcesCreated: number;
-  tablesImported: number;
-  yamlFiles: string[];
-  importedNodeIds?: string[];
-  grouping: SourceImportGrouping;
-  options: {
-    includeColumns: boolean;
-    addTests: boolean;
-    addFreshness: boolean;
-  };
-};
+export type ImportSourcesResult = ImportSourceObjectsResult;
 
 // ---------------------------------------------------------------------------
 // Workspace port — presentation-layer contract for workspace operations
@@ -156,7 +124,7 @@ export interface IWorkspaceAdminReadPort {
 /** Owns warehouse source discovery queries and source import command access. */
 export interface IWarehouseSourceImportPort {
   listWarehouseConnections: () => Promise<WarehouseConnection[]>;
-  listWarehouseTables: (connectionId: string) => Promise<WarehouseTable[]>;
+  listSourceObjects: (connectionId: string) => Promise<SourceObject[]>;
   createWarehouseConnection: (
     input: CreateWarehouseConnectionInput
   ) => Promise<WarehouseConnection>;

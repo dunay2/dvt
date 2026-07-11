@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { TableInfo } from './types';
-import { buildWarehouseTableIdentityKey } from './sourceImportCatalogModel';
+import { buildSourceObjectIdentityKey } from './sourceImportCatalogModel';
+import { buildSourceImportTestObject as buildTable } from './sourceImportWizard.testFixtures';
 import {
   applySourceImportOptionDefaults,
   buildSourceImportRegistryPath,
@@ -11,28 +11,18 @@ import {
   getNextStep,
   getPreviousStep,
   getSelectedCount,
-  getSelectedTables,
-  resolveActiveTable,
+  getSelectedSourceObjects,
+  resolveActiveSourceObject,
   resolveSectionForStep,
   resolveStepForSection,
   toggleSourceImportDatabaseSelection,
   toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
 
-function buildTable(overrides?: Partial<TableInfo>): TableInfo {
-  return {
-    database: 'RAW',
-    schema: 'ERP',
-    table: 'ORDERS',
-    selected: false,
-    ...overrides,
-  };
-}
-
 describe('sourceImportWizardModel', () => {
-  it('counts selected tables', () => {
-    const tables = [buildTable({ selected: true }), buildTable({ table: 'CUSTOMERS' })];
-    expect(getSelectedCount(tables)).toBe(1);
+  it('counts selected sourceObjects', () => {
+    const sourceObjects = [buildTable({ selected: true }), buildTable({ table: 'CUSTOMERS' })];
+    expect(getSelectedCount(sourceObjects)).toBe(1);
   });
 
   it('toggles only the selected database and schema scope when schema names repeat', () => {
@@ -45,21 +35,28 @@ describe('sourceImportWizardModel', () => {
       { database: 'MART', schema: 'PUBLIC' }
     );
 
-    expect(result.activeTableKey).toBe(
-      buildWarehouseTableIdentityKey({
-        database: 'MART',
-        schema: 'PUBLIC',
-        table: 'CUSTOMERS',
-      })
+    expect(result.activeSourceObjectKey).toBe(
+      buildSourceObjectIdentityKey(
+        buildTable({ database: 'MART', schema: 'PUBLIC', table: 'CUSTOMERS' })
+      )
     );
-    expect(result.tables).toEqual([
-      expect.objectContaining({ database: 'RAW', schema: 'PUBLIC', selected: false }),
-      expect.objectContaining({ database: 'MART', schema: 'PUBLIC', selected: true }),
-      expect.objectContaining({ database: 'MART', schema: 'FINANCE', selected: false }),
+    expect(result.sourceObjects).toEqual([
+      expect.objectContaining({
+        locator: expect.objectContaining({ catalog: 'RAW', schema: 'PUBLIC' }),
+        selected: false,
+      }),
+      expect.objectContaining({
+        locator: expect.objectContaining({ catalog: 'MART', schema: 'PUBLIC' }),
+        selected: true,
+      }),
+      expect.objectContaining({
+        locator: expect.objectContaining({ catalog: 'MART', schema: 'FINANCE' }),
+        selected: false,
+      }),
     ]);
   });
 
-  it('toggles all tables in the selected database without affecting another database', () => {
+  it('toggles all sourceObjects in the selected database without affecting another database', () => {
     const result = toggleSourceImportDatabaseSelection(
       [
         buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
@@ -69,48 +66,39 @@ describe('sourceImportWizardModel', () => {
       { database: 'RAW' }
     );
 
-    expect(result.activeTableKey).toBe(
-      buildWarehouseTableIdentityKey({
-        database: 'RAW',
-        schema: 'ERP',
-        table: 'ORDERS',
-      })
+    expect(result.activeSourceObjectKey).toBe(
+      buildSourceObjectIdentityKey(buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }))
     );
-    expect(result.tables).toEqual([
-      expect.objectContaining({ database: 'RAW', schema: 'ERP', table: 'ORDERS', selected: true }),
+    expect(result.sourceObjects).toEqual([
       expect.objectContaining({
-        database: 'RAW',
-        schema: 'CRM',
-        table: 'CUSTOMERS',
+        locator: expect.objectContaining({ catalog: 'RAW', schema: 'ERP', name: 'ORDERS' }),
         selected: true,
       }),
       expect.objectContaining({
-        database: 'MART',
-        schema: 'ERP',
-        table: 'ORDERS',
+        locator: expect.objectContaining({ catalog: 'RAW', schema: 'CRM', name: 'CUSTOMERS' }),
+        selected: true,
+      }),
+      expect.objectContaining({
+        locator: expect.objectContaining({ catalog: 'MART', schema: 'ERP', name: 'ORDERS' }),
         selected: false,
       }),
     ]);
 
-    const deselected = toggleSourceImportDatabaseSelection(result.tables, { database: 'RAW' });
+    const deselected = toggleSourceImportDatabaseSelection(result.sourceObjects, {
+      database: 'RAW',
+    });
 
-    expect(deselected.tables).toEqual([
+    expect(deselected.sourceObjects).toEqual([
       expect.objectContaining({
-        database: 'RAW',
-        schema: 'ERP',
-        table: 'ORDERS',
+        locator: expect.objectContaining({ catalog: 'RAW', schema: 'ERP', name: 'ORDERS' }),
         selected: false,
       }),
       expect.objectContaining({
-        database: 'RAW',
-        schema: 'CRM',
-        table: 'CUSTOMERS',
+        locator: expect.objectContaining({ catalog: 'RAW', schema: 'CRM', name: 'CUSTOMERS' }),
         selected: false,
       }),
       expect.objectContaining({
-        database: 'MART',
-        schema: 'ERP',
-        table: 'ORDERS',
+        locator: expect.objectContaining({ catalog: 'MART', schema: 'ERP', name: 'ORDERS' }),
         selected: false,
       }),
     ]);
@@ -120,11 +108,11 @@ describe('sourceImportWizardModel', () => {
     const orders = buildTable({ selected: true, table: 'ORDERS' });
     const customers = buildTable({ table: 'CUSTOMERS' });
 
-    expect(getSelectedTables([orders, customers])).toEqual([orders]);
+    expect(getSelectedSourceObjects([orders, customers])).toEqual([orders]);
     expect(
-      resolveActiveTable([orders, customers], buildWarehouseTableIdentityKey(customers))
+      resolveActiveSourceObject([orders, customers], buildSourceObjectIdentityKey(customers))
     ).toEqual(customers);
-    expect(resolveActiveTable([orders, customers], null)).toEqual(orders);
+    expect(resolveActiveSourceObject([orders, customers], null)).toEqual(orders);
   });
 
   it('resolves active table metadata by structured table identity', () => {
@@ -141,9 +129,9 @@ describe('sourceImportWizardModel', () => {
       selected: false,
     });
 
-    expect(resolveActiveTable([first, second], buildWarehouseTableIdentityKey(second))).toEqual(
-      second
-    );
+    expect(
+      resolveActiveSourceObject([first, second], buildSourceObjectIdentityKey(second))
+    ).toEqual(second);
   });
 
   it('resolves governed source registry paths with the same grouping posture as import', () => {

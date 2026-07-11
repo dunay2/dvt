@@ -5,110 +5,138 @@ import { Card } from '../ui/card';
 import { Input } from '../ui/input';
 import { ScrollArea } from '../ui/scroll-area';
 import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
-import { SourceImportActiveTableMetadata } from './SourceImportActiveTableMetadata';
+import { SourceImportActiveObjectMetadata } from './SourceImportActiveObjectMetadata';
 import { SourceImportCatalogView } from './SourceImportCatalogView';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
 import {
-  buildWarehouseTableIdentityKey,
+  buildSourceObjectIdentityKey,
   buildSourceImportCatalogViewModel,
   type SourceImportCatalogFilterId,
 } from './sourceImportCatalogModel';
-import type { SourceImportDatabaseIdentity, SourceImportSchemaIdentity, TableInfo } from './types';
+import type {
+  SelectableSourceObject,
+  SourceImportDatabaseIdentity,
+  SourceImportSchemaIdentity,
+} from './types';
 
 interface SelectionStepProps {
-  tables: TableInfo[];
+  sourceObjects: SelectableSourceObject[];
   selectedCount: number;
-  activeTableKey: string | null;
-  tableSearchQuery: string;
-  isLoadingTables: boolean;
+  activeSourceObjectKey: string | null;
+  sourceObjectSearchQuery: string;
+  isLoadingSourceObjects: boolean;
   loadError: string | null;
-  onTableSearchQueryChange: (query: string) => void;
-  onActivateTable: (index: number) => void;
+  onSourceObjectSearchQueryChange: (query: string) => void;
+  onActivateSourceObject: (index: number) => void;
   onToggleDatabase: (database: SourceImportDatabaseIdentity) => void;
   onToggleSchema: (schema: SourceImportSchemaIdentity) => void;
-  onToggleTable: (index: number) => void;
+  onToggleSourceObject: (index: number) => void;
 }
 
+export const sourceImportSelectionStepClassNames = {
+  root: 'space-y-4',
+  title: 'mb-2 text-lg font-medium',
+  description: 'mb-4 text-sm text-slate-300',
+  destination:
+    'rounded border border-amber-800/70 bg-amber-950/20 px-3 py-2 text-xs text-amber-100/80',
+  error: 'border-red-700 bg-red-950/30 p-3 text-sm text-red-200',
+  loading: 'flex items-center gap-3 border-slate-600 p-4 text-slate-300',
+  content: 'grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]',
+  catalog: 'space-y-3',
+  search: 'grid gap-2',
+  searchLabel: 'text-xs font-medium uppercase tracking-wide text-slate-400',
+  resultCount: 'text-xs text-slate-400',
+  detail: 'space-y-4',
+} as const;
+
 export function SelectionStep({
-  tables,
+  sourceObjects,
   selectedCount,
-  activeTableKey,
-  tableSearchQuery,
-  isLoadingTables,
+  activeSourceObjectKey,
+  sourceObjectSearchQuery,
+  isLoadingSourceObjects,
   loadError,
-  onTableSearchQueryChange,
-  onActivateTable,
+  onSourceObjectSearchQueryChange,
+  onActivateSourceObject,
   onToggleDatabase,
   onToggleSchema,
-  onToggleTable,
+  onToggleSourceObject,
 }: SelectionStepProps) {
   const [catalogFilterId, setCatalogFilterId] = useState<SourceImportCatalogFilterId>('all');
   const catalogViewModel = buildSourceImportCatalogViewModel({
-    tables,
-    activeTableKey,
-    searchQuery: tableSearchQuery,
+    sourceObjects,
+    activeSourceObjectKey,
+    searchQuery: sourceObjectSearchQuery,
     filterId: catalogFilterId,
     copy: copy.catalog,
     numberFormatter: sourceImportCatalogNumberFormatter,
   });
-  const activeBrowseTable =
-    tables.find(
-      (table) => buildWarehouseTableIdentityKey(table) === catalogViewModel.activeTable?.identityKey
+  const activeBrowseSourceObject =
+    sourceObjects.find(
+      (sourceObject) =>
+        buildSourceObjectIdentityKey(sourceObject) ===
+        catalogViewModel.activeSourceObject?.identityKey
     ) ?? null;
 
   return (
-    <div className="space-y-4">
+    <div className={sourceImportSelectionStepClassNames.root}>
       <div>
-        <h3 className="mb-2 text-lg font-medium">{copy.selection.title}</h3>
-        <p className="mb-4 text-sm text-slate-300">
+        <h3 className={sourceImportSelectionStepClassNames.title}>{copy.selection.title}</h3>
+        <p className={sourceImportSelectionStepClassNames.description}>
           {copy.selection.descriptionPrefix} {selectedCount}
         </p>
-        <div className="rounded border border-amber-800/70 bg-amber-950/20 px-3 py-2 text-xs text-amber-100/80">
+        <div className={sourceImportSelectionStepClassNames.destination}>
           {copy.selection.destinationPosture}
         </div>
       </div>
 
       {loadError ? (
-        <Card className="border-red-700 bg-red-950/30 p-3 text-sm text-red-200">{loadError}</Card>
+        <Card className={sourceImportSelectionStepClassNames.error}>{loadError}</Card>
       ) : null}
 
-      {isLoadingTables ? (
-        <Card className="flex items-center gap-3 border-slate-600 p-4 text-slate-300">
+      {isLoadingSourceObjects ? (
+        <Card className={sourceImportSelectionStepClassNames.loading}>
           <Loader2 className="size-4 animate-spin" />
           {copy.selection.loading}
         </Card>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-          <div className="space-y-3">
-            <div className="grid gap-2">
-              <label className="text-xs font-medium uppercase tracking-wide text-slate-400">
+        <div className={sourceImportSelectionStepClassNames.content}>
+          <div className={sourceImportSelectionStepClassNames.catalog}>
+            <div className={sourceImportSelectionStepClassNames.search}>
+              <label
+                htmlFor="source-import-object-search"
+                className={sourceImportSelectionStepClassNames.searchLabel}
+              >
                 {copy.selection.searchLabel}
               </label>
               <Input
-                data-slot="source-import-table-search"
-                value={tableSearchQuery}
+                id="source-import-object-search"
+                data-slot="source-import-object-search"
+                value={sourceObjectSearchQuery}
                 placeholder={copy.selection.searchPlaceholder}
-                onChange={(event) => onTableSearchQueryChange(event.target.value)}
+                onChange={(event) => onSourceObjectSearchQueryChange(event.target.value)}
               />
-              <div className="text-xs text-slate-400">{catalogViewModel.resultCountLabel}</div>
+              <div className={sourceImportSelectionStepClassNames.resultCount}>
+                {catalogViewModel.resultCountLabel}
+              </div>
             </div>
             <ScrollArea className="h-96">
               <SourceImportCatalogView
                 catalog={catalogViewModel}
                 emptyLabel={copy.selection.empty}
-                onActivateTable={onActivateTable}
+                onActivateSourceObject={onActivateSourceObject}
                 onSelectFilter={setCatalogFilterId}
                 onToggleDatabase={onToggleDatabase}
                 onToggleSchema={onToggleSchema}
-                onToggleTable={onToggleTable}
+                onToggleSourceObject={onToggleSourceObject}
               />
             </ScrollArea>
           </div>
-          <div className="space-y-4">
-            <SourceImportActiveTableMetadata activeTable={activeBrowseTable} />
+          <div className={sourceImportSelectionStepClassNames.detail}>
+            <SourceImportActiveObjectMetadata activeSourceObject={activeBrowseSourceObject} />
             <SourceImportSelectionBasket
-              selectedTables={catalogViewModel.selectedTables}
-              onRemoveTable={onToggleTable}
+              selectedSourceObjects={catalogViewModel.selectedSourceObjects}
+              onRemoveSourceObject={onToggleSourceObject}
             />
           </div>
         </div>

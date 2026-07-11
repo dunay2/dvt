@@ -182,7 +182,7 @@ describe('AppServicesProvider', () => {
     };
     const warehouseSourceImport: IWarehouseSourceImportPort = {
       listWarehouseConnections: async () => [],
-      listWarehouseTables: async () => [],
+      listSourceObjects: async () => [],
       createWarehouseConnection: async (input) => ({
         id: 'conn-created',
         name: input.name,
@@ -193,13 +193,15 @@ describe('AppServicesProvider', () => {
         connectionId,
         status: 'passed',
         checkedAt: '2026-06-08T00:00:00.000Z',
-        tableCount: 0,
+        objectCount: 0,
       }),
       importSources: async () => ({
         success: true as const,
+        draftRevision: 'draft-revision-1',
         sourcesCreated: 0,
-        tablesImported: 0,
+        objectsImported: 0,
         yamlFiles: [],
+        importedNodeIds: [],
         grouping: 'schema' as const,
         options: {
           includeColumns: false,

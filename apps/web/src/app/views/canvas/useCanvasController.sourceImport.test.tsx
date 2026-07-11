@@ -90,8 +90,9 @@ describe('useCanvasController source import contract', () => {
     await act(async () => {
       harness.getLatestResult()?.handleSourceImportComplete({
         success: true,
+        draftRevision: 'draft-revision-2',
         sourcesCreated: 2,
-        tablesImported: 2,
+        objectsImported: 2,
         yamlFiles: ['models/sources/src_erp.yml'],
         importedNodeIds: ['src_erp_orders', 'src_erp_customers'],
         grouping: 'schema',
@@ -146,8 +147,9 @@ describe('useCanvasController source import contract', () => {
       complete?.(
         {
           success: true,
+          draftRevision: 'draft-revision-2',
           sourcesCreated: 2,
-          tablesImported: 2,
+          objectsImported: 2,
           yamlFiles: ['models/sources/src_erp.yml'],
           importedNodeIds: ['src_erp_orders', 'src_erp_customers'],
           grouping: 'schema',
@@ -215,8 +217,9 @@ describe('useCanvasController source import contract', () => {
     await act(async () => {
       harness.getLatestResult()?.handleSourceImportComplete({
         success: true,
+        draftRevision: 'draft-revision-2',
         sourcesCreated: 1,
-        tablesImported: 1,
+        objectsImported: 1,
         yamlFiles: ['models/sources/src_erp.yml'],
         importedNodeIds: ['node_3'],
         grouping: 'schema',
@@ -317,7 +320,7 @@ describe('useCanvasController source import contract', () => {
       harness.getLatestResult()?.handleSourceImportComplete({
         success: true,
         sourcesCreated: 1,
-        tablesImported: 1,
+        objectsImported: 1,
         yamlFiles: ['models/sources/src_public.yml'],
         importedNodeIds: [importedWarehouseSourceNode.id],
         grouping: 'schema',

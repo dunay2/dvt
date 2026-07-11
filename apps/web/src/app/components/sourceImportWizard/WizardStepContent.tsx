@@ -44,17 +44,17 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
       return (
         <div id="source-import-section-browse">
           <SelectionStep
-            tables={state.tables}
+            sourceObjects={state.sourceObjects}
             selectedCount={controller.selectedCount}
-            activeTableKey={state.activeTableKey}
-            tableSearchQuery={state.tableSearchQuery}
-            isLoadingTables={state.isLoadingTables}
+            activeSourceObjectKey={state.activeSourceObjectKey}
+            sourceObjectSearchQuery={state.sourceObjectSearchQuery}
+            isLoadingSourceObjects={state.isLoadingSourceObjects}
             loadError={state.loadError}
-            onTableSearchQueryChange={controller.setTableSearchQuery}
-            onActivateTable={controller.activateTable}
+            onSourceObjectSearchQueryChange={controller.setSourceObjectSearchQuery}
+            onActivateSourceObject={controller.activateSourceObject}
             onToggleDatabase={controller.toggleDatabase}
             onToggleSchema={controller.toggleSchema}
-            onToggleTable={controller.toggleTable}
+            onToggleSourceObject={controller.toggleSourceObject}
           />
         </div>
       );
@@ -62,7 +62,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
     case 'options':
       return (
         <SourceImportMetadataPanel
-          activeTable={controller.activeTable}
+          activeSourceObject={controller.activeSourceObject}
           groupingStrategy={state.groupingStrategy}
           sourceImportOptions={controller.sourceImportOptions}
           sourceImportOptionValues={controller.sourceImportOptionValues}
@@ -74,7 +74,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
       return (
         <div id="source-import-section-selected">
           <ReviewStep
-            tables={state.tables}
+            sourceObjects={state.sourceObjects}
             selectedCount={controller.selectedCount}
             groupingStrategy={state.groupingStrategy}
             selectedConnectionName={
@@ -82,7 +82,7 @@ export function WizardStepContent({ controller }: WizardStepContentProps) {
             }
             sourceImportOptions={controller.sourceImportOptions}
             sourceImportOptionValues={controller.sourceImportOptionValues}
-            onRemoveTable={controller.toggleTable}
+            onRemoveSourceObject={controller.toggleSourceObject}
           />
         </div>
       );
