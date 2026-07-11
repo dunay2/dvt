@@ -134,6 +134,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ED-20260422-start-run-boundary-and-runtime-seams.md)
 - [Summary](ED-20260601-execution-plan-prealpha-schema-hardcut.md)
 - [Summary](ED-20260612-contracts-compat-schema-parity.md)
+- [Summary](ED-20260711-source-object-catalog-contract.md)
 - [Summary](ed-20260423-access-decision-vocabulary-hardening.md)
 - [Summary](ed-20260423-rc-c2-turbo-ci-governance.md)
 - [Summary](ed-20260423-runtime-boundary-hardening.md)
