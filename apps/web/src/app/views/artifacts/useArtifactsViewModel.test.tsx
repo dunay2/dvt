@@ -19,6 +19,7 @@ function buildWorkspaceFilesQueryPort(
       name: path.split('/').at(-1) ?? path,
       language: 'json',
       content: '{}',
+      contentSha256: 'a'.repeat(64),
       lastModified: '2026-04-06T00:00:00Z',
     }),
     ...overrides,
@@ -91,6 +92,7 @@ describe('useArtifactsViewModel', () => {
               name: path.split('/').at(-1) ?? path,
               language: 'json',
               content: JSON.stringify({ metadata: { source: 'workspace', path } }),
+              contentSha256: 'a'.repeat(64),
               lastModified: '2026-04-06T10:00:00Z',
             }),
           }),
@@ -162,6 +164,7 @@ describe('useArtifactsViewModel', () => {
               content: path.endsWith('.sql')
                 ? 'select * from raw.orders'
                 : 'executionTarget: warehouse\nentrypoint: models/analytics/model_orders.sql',
+              contentSha256: 'a'.repeat(64),
               lastModified: '2026-04-06T10:00:00Z',
             }),
           }),

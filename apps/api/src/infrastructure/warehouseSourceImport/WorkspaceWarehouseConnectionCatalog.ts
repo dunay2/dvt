@@ -17,8 +17,14 @@ import {
   SUPPORTED_WAREHOUSE_CONNECTION_TYPES,
   WarehouseConnectionNotFoundError,
 } from '../../application/ports/warehouseSourceImport.js';
-import type { IWorkspaceFileRepository } from '../../application/ports/workspaceFiles.js';
-import { WorkspaceFileNotFoundError } from '../../application/ports/workspaceFiles.js';
+import type {
+  IWorkspaceFileRepository,
+  WorkspaceFileContent,
+} from '../../application/ports/workspaceFiles.js';
+import {
+  WorkspaceFileNotFoundError,
+  WorkspaceFileRevisionConflictError,
+} from '../../application/ports/workspaceFiles.js';
 
 export const WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH = '.dvt/warehouse-connections.json';
 
@@ -69,7 +75,8 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
     scope: WorkspaceGraphDraftScope,
     input: CreateWarehouseConnectionCatalogInput
   ): Promise<WarehouseConnection> {
-    const entries = [...(await resolveWorkspaceWarehouseCatalog(this.options.repository, scope))];
+    const currentFile = await readWorkspaceWarehouseCatalogFile(this.options.repository, scope);
+    const entries = currentFile ? [...parseWorkspaceWarehouseCatalog(currentFile.content)] : [];
     const id = toWarehouseConnectionId(input.name);
     const normalizedName = input.name.trim().toLowerCase();
 
@@ -93,11 +100,19 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
     const nextEntries = [...entries, nextEntry].sort((left, right) =>
       left.name.localeCompare(right.name)
     );
-    await this.options.repository.saveFileContent(
-      scope,
-      WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
-      serializeWorkspaceWarehouseCatalog(nextEntries)
-    );
+    const saveResult = await this.options.repository.saveFileContent(scope, {
+      path: WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+      content: serializeWorkspaceWarehouseCatalog(nextEntries),
+      expectedRevision: currentFile
+        ? { kind: 'content_sha256', value: currentFile.contentSha256 }
+        : { kind: 'absent' },
+    });
+    if (saveResult.kind === 'conflict') {
+      throw new WorkspaceFileRevisionConflictError(
+        WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+        saveResult.currentContentSha256
+      );
+    }
 
     const {
       sourceObjects: _sourceObjects,
@@ -112,17 +127,25 @@ export async function resolveWorkspaceWarehouseCatalog(
   repository: IWorkspaceFileRepository,
   scope: WorkspaceGraphDraftScope
 ): Promise<readonly WarehouseConnectionCatalogEntry[]> {
-  let raw: string;
+  const file = await readWorkspaceWarehouseCatalogFile(repository, scope);
+  return file ? parseWorkspaceWarehouseCatalog(file.content) : [];
+}
+
+async function readWorkspaceWarehouseCatalogFile(
+  repository: IWorkspaceFileRepository,
+  scope: WorkspaceGraphDraftScope
+): Promise<WorkspaceFileContent | null> {
   try {
-    raw = (await repository.getFileContent(scope, WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH))
-      .content;
+    return await repository.getFileContent(scope, WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH);
   } catch (error) {
     if (error instanceof WorkspaceFileNotFoundError) {
-      return [];
+      return null;
     }
     throw error;
   }
+}
 
+function parseWorkspaceWarehouseCatalog(raw: string): readonly WarehouseConnectionCatalogEntry[] {
   const parsed = WorkspaceWarehouseConnectionCatalogSchema.parse(JSON.parse(raw));
   const connectionIds = new Set<string>();
   return parsed.connections

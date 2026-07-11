@@ -93,6 +93,12 @@ export const httpErrorTranslation = {
         reason: HTTP_ERROR_REASON.workspaceFileNotFound,
       });
     },
+    revisionConflict(): HttpResponseModel {
+      return createHttpErrorResponse({
+        type: HTTP_ERROR_TYPE.conflict,
+        reason: HTTP_ERROR_REASON.workspaceFileRevisionConflict,
+      });
+    },
   },
   runtime: {
     domainError: mapRuntimeDomainError,

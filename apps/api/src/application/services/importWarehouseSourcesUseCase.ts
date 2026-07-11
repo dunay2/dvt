@@ -23,8 +23,16 @@ import {
   UnsupportedSourceObjectImportError,
   WarehouseSourceImportDraftConflictError,
 } from '../ports/warehouseSourceImport.js';
-import type { IWorkspaceFileRepository } from '../ports/workspaceFiles.js';
-import { WorkspaceFileNotFoundError } from '../ports/workspaceFiles.js';
+import type {
+  IWorkspaceFileRepository,
+  WorkspaceFileContent,
+  WorkspaceFileSaveReceipt,
+  WorkspaceFileSaveResult,
+} from '../ports/workspaceFiles.js';
+import {
+  WorkspaceFileNotFoundError,
+  WorkspaceFileRevisionConflictError,
+} from '../ports/workspaceFiles.js';
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
@@ -101,13 +109,16 @@ export class ImportWarehouseSourcesUseCase {
       groupSourceObjectsForYaml(authoritativeSourceObjects, input.groupingStrategy).keys()
     );
     const existingSourceFiles = await this.readExistingSourceFiles(input.scope, yamlFiles);
+    const existingSourceFileContents = new Map(
+      [...existingSourceFiles].map(([filePath, file]) => [filePath, file.content])
+    );
     let sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>;
     let sourceYamlUpdates: readonly WarehouseSourceYamlUpdate[];
     try {
       sourceYamlBindings = buildWarehouseSourceYamlBindings({
         sourceObjects: authoritativeSourceObjects,
         groupingStrategy: input.groupingStrategy,
-        existingFiles: existingSourceFiles,
+        existingFiles: existingSourceFileContents,
       });
       sourceYamlUpdates = buildWarehouseSourceYamlUpdates({
         sourceObjects: authoritativeSourceObjects,
@@ -115,7 +126,7 @@ export class ImportWarehouseSourcesUseCase {
         includeColumns: input.includeColumns,
         addTests: input.addTests,
         addFreshness: input.addFreshness,
-        existingFiles: existingSourceFiles,
+        existingFiles: existingSourceFileContents,
       });
     } catch (error) {
       if (error instanceof InvalidWarehouseSourceYamlError) {
@@ -194,11 +205,11 @@ export class ImportWarehouseSourcesUseCase {
   private async readExistingSourceFiles(
     scope: ImportWarehouseSourcesInput['scope'],
     paths: readonly string[]
-  ): Promise<ReadonlyMap<string, string>> {
-    const files = new Map<string, string>();
+  ): Promise<ReadonlyMap<string, WorkspaceFileContent>> {
+    const files = new Map<string, WorkspaceFileContent>();
     for (const filePath of paths) {
       try {
-        files.set(filePath, (await this.workspaceFiles.getFileContent(scope, filePath)).content);
+        files.set(filePath, await this.workspaceFiles.getFileContent(scope, filePath));
       } catch (error) {
         if (error instanceof WorkspaceFileNotFoundError) {
           continue;
@@ -212,13 +223,20 @@ export class ImportWarehouseSourcesUseCase {
   private async saveSourceYamlUpdates(
     scope: ImportWarehouseSourcesInput['scope'],
     updates: readonly WarehouseSourceYamlUpdate[],
-    existingFiles: ReadonlyMap<string, string>
-  ): Promise<readonly WarehouseSourceYamlUpdate[]> {
-    const writtenUpdates: WarehouseSourceYamlUpdate[] = [];
+    existingFiles: ReadonlyMap<string, WorkspaceFileContent>
+  ): Promise<readonly WrittenSourceYamlUpdate[]> {
+    const writtenUpdates: WrittenSourceYamlUpdate[] = [];
     try {
       for (const update of updates) {
-        await this.workspaceFiles.saveFileContent(scope, update.path, update.content);
-        writtenUpdates.push(update);
+        const previous = existingFiles.get(update.path);
+        const result = await this.workspaceFiles.saveFileContent(scope, {
+          path: update.path,
+          content: update.content,
+          expectedRevision: previous
+            ? { kind: 'content_sha256', value: previous.contentSha256 }
+            : { kind: 'absent' },
+        });
+        writtenUpdates.push({ update, receipt: requireSavedWorkspaceFile(update.path, result) });
       }
     } catch (error) {
       await this.rollbackSourceYamlUpdates(scope, writtenUpdates, existingFiles);
@@ -229,37 +247,49 @@ export class ImportWarehouseSourcesUseCase {
 
   private async rollbackSourceYamlUpdates(
     scope: ImportWarehouseSourcesInput['scope'],
-    updates: readonly WarehouseSourceYamlUpdate[],
-    existingFiles: ReadonlyMap<string, string>
+    updates: readonly WrittenSourceYamlUpdate[],
+    existingFiles: ReadonlyMap<string, WorkspaceFileContent>
   ): Promise<void> {
-    for (const update of [...updates].reverse()) {
-      const currentContent = await this.readCurrentSourceYamlContent(scope, update.path);
-      if (currentContent !== update.content) {
-        continue;
-      }
-
-      const previousContent = existingFiles.get(update.path);
-      if (previousContent !== undefined) {
-        await this.workspaceFiles.saveFileContent(scope, update.path, previousContent);
+    for (const written of [...updates].reverse()) {
+      const previous = existingFiles.get(written.update.path);
+      if (previous) {
+        const result = await this.workspaceFiles.saveFileContent(scope, {
+          path: written.update.path,
+          content: previous.content,
+          expectedRevision: {
+            kind: 'content_sha256',
+            value: written.receipt.contentSha256,
+          },
+        });
+        if (result.kind === 'conflict') {
+          continue;
+        }
       } else {
-        await this.workspaceFiles.deleteFileContent(scope, update.path);
+        await this.workspaceFiles.deleteFileContent(scope, {
+          path: written.update.path,
+          expectedRevision: {
+            kind: 'content_sha256',
+            value: written.receipt.contentSha256,
+          },
+        });
       }
     }
   }
+}
 
-  private async readCurrentSourceYamlContent(
-    scope: ImportWarehouseSourcesInput['scope'],
-    path: string
-  ): Promise<string | null> {
-    try {
-      return (await this.workspaceFiles.getFileContent(scope, path)).content;
-    } catch (error) {
-      if (error instanceof WorkspaceFileNotFoundError) {
-        return null;
-      }
-      throw error;
-    }
+type WrittenSourceYamlUpdate = Readonly<{
+  update: WarehouseSourceYamlUpdate;
+  receipt: WorkspaceFileSaveReceipt;
+}>;
+
+function requireSavedWorkspaceFile(
+  path: string,
+  result: WorkspaceFileSaveResult
+): WorkspaceFileSaveReceipt {
+  if (result.kind === 'conflict') {
+    throw new WorkspaceFileRevisionConflictError(path, result.currentContentSha256);
   }
+  return result;
 }
 
 function appendImportedSourceNodes(

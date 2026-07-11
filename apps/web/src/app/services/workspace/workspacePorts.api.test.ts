@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { ApiError } from '../api/createApiClient';
+import { WorkspaceFileRevisionConflictError } from './workspaceErrors';
 import { buildDraftReadOkResponse } from './workspaceGraphDraftProtocol.test.fixtures';
 import {
   buildWorkspaceDiffChangesEndpoint,
@@ -230,24 +232,54 @@ describe('workspace ports api file content command', () => {
     const { postJson, workspaceFileContentCommand } = createApiWorkspacePortHarness({
       postJson: async <_TRequest, TResponse>() =>
         ({
+          kind: 'saved',
+          disposition: 'created',
           path: 'pipelines/sales_pipeline.yaml',
-          name: 'sales_pipeline.yaml',
-          language: 'yaml',
-          content: 'nodes: []',
+          contentSha256: 'a'.repeat(64),
           lastModified: '2026-05-24T00:00:00.000Z',
         }) as TResponse,
     });
 
     await expect(
-      workspaceFileContentCommand.saveFileContent('pipelines/sales_pipeline.yaml', 'nodes: []')
+      workspaceFileContentCommand.saveFileContent({
+        path: 'pipelines/sales_pipeline.yaml',
+        content: 'nodes: []',
+        expectedRevision: { kind: 'absent' },
+      })
     ).resolves.toMatchObject({
+      kind: 'saved',
       path: 'pipelines/sales_pipeline.yaml',
-      content: 'nodes: []',
+      contentSha256: 'a'.repeat(64),
     });
     expect(postJson).toHaveBeenCalledWith(
       `/workspace/files/pipelines%2Fsales_pipeline.yaml?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
-      { content: 'nodes: []' }
+      { content: 'nodes: []', expectedRevision: { kind: 'absent' } }
     );
+  });
+
+  it('maps a canonical stale-revision response to a typed command error', async () => {
+    setWorkspaceScope(buildWorkspaceScope());
+    const { workspaceFileContentCommand } = createApiWorkspacePortHarness({
+      postJson: async () => {
+        throw new ApiError({
+          message: 'Workspace file revision conflict',
+          endpoint: '/workspace/files/models%2Forders.sql',
+          statusCode: 409,
+          category: 'client',
+          responseBody: {
+            error: { type: 'conflict', reason: 'workspace_file_revision_conflict' },
+          },
+        });
+      },
+    });
+
+    await expect(
+      workspaceFileContentCommand.saveFileContent({
+        path: 'models/orders.sql',
+        content: 'select 2',
+        expectedRevision: { kind: 'content_sha256', value: 'a'.repeat(64) },
+      })
+    ).rejects.toBeInstanceOf(WorkspaceFileRevisionConflictError);
   });
 });
 
@@ -510,6 +542,5 @@ describe('workspace ports api route parity posture', () => {
     expect(source).not.toContain(`getJson<DiffChange[]>('${WORKSPACE_DIFF_CHANGES_ENDPOINT}')`);
     expect(source).not.toContain('/admin/roles');
     expect(source).not.toContain('/admin/audit');
-    expect(source).toContain('postJson<{ content: string }, FileContent>');
   });
 });

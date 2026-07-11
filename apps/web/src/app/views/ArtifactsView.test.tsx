@@ -70,6 +70,7 @@ describe('ArtifactsView', () => {
         name: path.split('/').at(-1) ?? path,
         language: 'json',
         content: JSON.stringify({ metadata: { dbt_schema_version: 'workspace', path } }),
+        contentSha256: 'a'.repeat(64),
         lastModified: '2026-04-06T00:00:00Z',
       }),
       ...overrides,
@@ -189,6 +190,7 @@ describe('ArtifactsView', () => {
               content: path.endsWith('.sql')
                 ? 'select * from raw.orders'
                 : 'executionTarget: warehouse\nentrypoint: models/analytics/model_orders.sql',
+              contentSha256: 'a'.repeat(64),
               lastModified: '2026-04-06T00:00:00Z',
             }),
           }),
@@ -258,6 +260,7 @@ describe('ArtifactsView', () => {
               content: path.includes('fct_payments')
                 ? 'select * from raw.payments'
                 : 'select * from raw.orders',
+              contentSha256: 'a'.repeat(64),
               lastModified: '2026-04-06T00:00:00Z',
             }),
           }),

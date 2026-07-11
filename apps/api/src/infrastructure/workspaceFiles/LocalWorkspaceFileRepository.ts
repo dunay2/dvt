@@ -3,18 +3,26 @@
  * reads and command-side file writes.
  */
 import { createHash } from 'node:crypto';
-import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
   InvalidWorkspacePathError,
   WorkspaceFileNotFoundError,
+  type DeleteWorkspaceFileContentInput,
   type IWorkspaceFileRepository,
+  type SaveWorkspaceFileContentInput,
   type WorkspaceFileContent,
+  type WorkspaceFileDeleteResult,
   type WorkspaceFileEntry,
+  type WorkspaceFileSaveResult,
   type WorkspaceStorageScope,
 } from '../../application/ports/workspaceFiles.js';
 
+import {
+  type LocalWorkspaceFileMutationCoordinator,
+  sharedLocalWorkspaceFileMutationCoordinator,
+} from './LocalWorkspaceFileMutationCoordinator.js';
 import { resolveWorkspaceScopeStorageRoot } from './workspaceScopeStoragePath.js';
 
 const EXCLUDED_NAMES = new Set([
@@ -50,17 +58,21 @@ export type LocalWorkspaceFileRepositoryOptions = Readonly<{
   root: string;
   maxListedFiles?: number;
   maxFileBytes?: number;
+  mutationCoordinator?: LocalWorkspaceFileMutationCoordinator;
 }>;
 
 export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
   private readonly root: string;
   private readonly maxListedFiles: number;
   private readonly maxFileBytes: number;
+  private readonly mutationCoordinator: LocalWorkspaceFileMutationCoordinator;
 
   public constructor(options: LocalWorkspaceFileRepositoryOptions) {
     this.root = path.resolve(options.root);
     this.maxListedFiles = options.maxListedFiles ?? MAX_LISTED_FILES;
     this.maxFileBytes = options.maxFileBytes ?? MAX_FILE_BYTES;
+    this.mutationCoordinator =
+      options.mutationCoordinator ?? sharedLocalWorkspaceFileMutationCoordinator;
   }
 
   public async listFiles(scope: WorkspaceStorageScope): Promise<readonly WorkspaceFileEntry[]> {
@@ -93,27 +105,63 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
 
   public async saveFileContent(
     scope: WorkspaceStorageScope,
-    requestPath: string,
-    content: string
-  ): Promise<WorkspaceFileContent> {
-    const resolved = this.resolveWorkspacePath(scope, requestPath);
-    if (Buffer.byteLength(content, 'utf8') > this.maxFileBytes) {
-      throw new InvalidWorkspacePathError(requestPath);
+    input: SaveWorkspaceFileContentInput
+  ): Promise<WorkspaceFileSaveResult> {
+    const resolved = this.resolveWorkspacePath(scope, input.path);
+    if (Buffer.byteLength(input.content, 'utf8') > this.maxFileBytes) {
+      throw new InvalidWorkspacePathError(input.path);
     }
 
     await mkdir(path.dirname(resolved.absolutePath), { recursive: true });
-    await writeFile(resolved.absolutePath, content, 'utf8');
-    return this.getFileContent(scope, resolved.workspacePath);
+    return this.mutationCoordinator.runExclusive(resolved.absolutePath, async () => {
+      const current = await this.readOptionalFileContent(scope, resolved.workspacePath);
+      const requestedContentSha256 = contentSha256(input.content);
+      if (current?.contentSha256 === requestedContentSha256) {
+        return {
+          kind: 'unchanged',
+          disposition: null,
+          path: current.path,
+          contentSha256: current.contentSha256,
+          lastModified: current.lastModified,
+        };
+      }
+
+      if (!matchesExpectedRevision(input.expectedRevision, current?.contentSha256 ?? null)) {
+        return {
+          kind: 'conflict',
+          currentContentSha256: current?.contentSha256 ?? null,
+        };
+      }
+
+      await this.mutationCoordinator.replaceFileAtomically(resolved.absolutePath, input.content);
+      const saved = await this.getFileContent(scope, resolved.workspacePath);
+      return {
+        kind: 'saved',
+        disposition: current ? 'updated' : 'created',
+        path: saved.path,
+        contentSha256: saved.contentSha256,
+        lastModified: saved.lastModified,
+      };
+    });
   }
 
-  public async deleteFileContent(scope: WorkspaceStorageScope, requestPath: string): Promise<void> {
-    const resolved = this.resolveWorkspacePath(scope, requestPath);
-    const fileStat = await this.readFileStat(resolved.absolutePath, requestPath);
-    if (!fileStat.isFile()) {
-      throw new WorkspaceFileNotFoundError(requestPath);
-    }
+  public async deleteFileContent(
+    scope: WorkspaceStorageScope,
+    input: DeleteWorkspaceFileContentInput
+  ): Promise<WorkspaceFileDeleteResult> {
+    const resolved = this.resolveWorkspacePath(scope, input.path);
+    return this.mutationCoordinator.runExclusive(resolved.absolutePath, async () => {
+      const current = await this.readOptionalFileContent(scope, resolved.workspacePath);
+      if (!current) {
+        return { kind: 'unchanged' };
+      }
+      if (current.contentSha256 !== input.expectedRevision.value) {
+        return { kind: 'conflict', currentContentSha256: current.contentSha256 };
+      }
 
-    await rm(resolved.absolutePath, { force: false });
+      await this.mutationCoordinator.deleteFile(resolved.absolutePath);
+      return { kind: 'deleted' };
+    });
   }
 
   private async listDirectory(
@@ -196,6 +244,20 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
     return resolveWorkspaceScopeStorageRoot(this.root, scope);
   }
 
+  private async readOptionalFileContent(
+    scope: WorkspaceStorageScope,
+    requestPath: string
+  ): Promise<WorkspaceFileContent | null> {
+    try {
+      return await this.getFileContent(scope, requestPath);
+    } catch (error) {
+      if (error instanceof WorkspaceFileNotFoundError) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   private async readFileStat(absolutePath: string, requestPath: string) {
     try {
       return await stat(absolutePath);
@@ -203,6 +265,19 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
       throw new WorkspaceFileNotFoundError(requestPath);
     }
   }
+}
+
+function contentSha256(content: string): string {
+  return createHash('sha256').update(content, 'utf8').digest('hex');
+}
+
+function matchesExpectedRevision(
+  expected: SaveWorkspaceFileContentInput['expectedRevision'],
+  currentContentSha256: string | null
+): boolean {
+  return expected.kind === 'absent'
+    ? currentContentSha256 === null
+    : currentContentSha256 === expected.value;
 }
 
 function joinWorkspacePath(directoryPath: string, name: string): string {

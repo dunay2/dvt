@@ -217,15 +217,16 @@ describe('AppServicesProvider', () => {
         name: path.split('/').at(-1) ?? path,
         language: 'plaintext',
         content: '',
+        contentSha256: 'a'.repeat(64),
         lastModified: '2026-04-06T00:00:00Z',
       }),
     };
     const workspaceFileContentCommand: IWorkspaceFileContentCommandPort = {
-      saveFileContent: async (path: string, content: string) => ({
-        path,
-        name: path.split('/').at(-1) ?? path,
-        language: 'plaintext',
-        content,
+      saveFileContent: async (input) => ({
+        kind: 'saved',
+        disposition: 'updated',
+        path: input.path,
+        contentSha256: 'b'.repeat(64),
         lastModified: '2026-04-06T00:00:00Z',
       }),
     };

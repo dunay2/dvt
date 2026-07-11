@@ -24,6 +24,7 @@ import {
   type ImportWarehouseSourcesInput,
   type WarehouseConnectionType,
 } from '../../application/ports/warehouseSourceImport.js';
+import { WorkspaceFileRevisionConflictError } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { CreateWarehouseConnectionUseCase } from '../../application/services/createWarehouseConnectionUseCase.js';
 import type { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
@@ -157,6 +158,13 @@ export function registerWarehouseSourceImportRoutes(
           });
           return;
         }
+        if (error instanceof WorkspaceFileRevisionConflictError) {
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceFiles.revisionConflict()
+          );
+          return;
+        }
 
         throw error;
       }
@@ -252,6 +260,13 @@ export function registerWarehouseSourceImportRoutes(
           reply.code(409).send({
             error: { type: 'conflict', reason: 'workspace_source_import_draft_conflict' },
           });
+          return;
+        }
+        if (error instanceof WorkspaceFileRevisionConflictError) {
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceFiles.revisionConflict()
+          );
           return;
         }
 

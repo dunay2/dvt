@@ -4,7 +4,8 @@
  */
 import type {
   IWorkspaceFileRepository,
-  WorkspaceFileContent,
+  SaveWorkspaceFileContentInput,
+  WorkspaceFileSaveResult,
   WorkspaceStorageScope,
 } from '../ports/workspaceFiles.js';
 
@@ -13,9 +14,8 @@ export class SaveWorkspaceFileContentUseCase {
 
   public async execute(
     scope: WorkspaceStorageScope,
-    path: string,
-    content: string
-  ): Promise<WorkspaceFileContent> {
-    return this.repository.saveFileContent(scope, path, content);
+    input: SaveWorkspaceFileContentInput
+  ): Promise<WorkspaceFileSaveResult> {
+    return this.repository.saveFileContent(scope, input);
   }
 }

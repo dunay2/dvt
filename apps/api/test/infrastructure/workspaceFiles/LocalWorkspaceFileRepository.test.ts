@@ -38,13 +38,21 @@ describe('LocalWorkspaceFileRepository', () => {
   it('isolates the same logical file path between workspace scopes', async () => {
     const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
 
-    await repository.saveFileContent(SCOPE_A, 'models/orders.sql', 'select 1 as scope_a');
+    await repository.saveFileContent(SCOPE_A, {
+      path: 'models/orders.sql',
+      content: 'select 1 as scope_a',
+      expectedRevision: { kind: 'absent' },
+    });
 
     await expect(repository.getFileContent(SCOPE_B, 'models/orders.sql')).rejects.toBeInstanceOf(
       WorkspaceFileNotFoundError
     );
 
-    await repository.saveFileContent(SCOPE_B, 'models/orders.sql', 'select 2 as scope_b');
+    await repository.saveFileContent(SCOPE_B, {
+      path: 'models/orders.sql',
+      content: 'select 2 as scope_b',
+      expectedRevision: { kind: 'absent' },
+    });
 
     await expect(repository.getFileContent(SCOPE_A, 'models/orders.sql')).resolves.toMatchObject({
       content: 'select 1 as scope_a',
@@ -71,11 +79,111 @@ describe('LocalWorkspaceFileRepository', () => {
     const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
     const content = 'select 1 as order_id\n';
 
-    await repository.saveFileContent(SCOPE_A, 'models/orders.sql', content);
+    await repository.saveFileContent(SCOPE_A, {
+      path: 'models/orders.sql',
+      content,
+      expectedRevision: { kind: 'absent' },
+    });
 
     await expect(repository.getFileContent(SCOPE_A, 'models/orders.sql')).resolves.toMatchObject({
       content,
       contentSha256: createHash('sha256').update(content, 'utf8').digest('hex'),
     });
+  });
+
+  it('returns unchanged when a retried command already produced the requested content', async () => {
+    const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
+    const command = {
+      path: 'models/orders.sql',
+      content: 'select 1 as order_id\n',
+      expectedRevision: { kind: 'absent' as const },
+    };
+
+    await expect(repository.saveFileContent(SCOPE_A, command)).resolves.toMatchObject({
+      kind: 'saved',
+      disposition: 'created',
+    });
+    await expect(repository.saveFileContent(SCOPE_A, command)).resolves.toMatchObject({
+      kind: 'unchanged',
+      disposition: null,
+    });
+  });
+
+  it('allows exactly one concurrent writer across repository instances', async () => {
+    const firstRepository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
+    const secondRepository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
+    const initial = await firstRepository.saveFileContent(SCOPE_A, {
+      path: 'models/orders.sql',
+      content: 'select 1 as order_id\n',
+      expectedRevision: { kind: 'absent' },
+    });
+    expect(initial.kind).toBe('saved');
+    if (initial.kind !== 'saved') throw new Error('Expected the fixture write to succeed.');
+
+    const results = await Promise.all([
+      firstRepository.saveFileContent(SCOPE_A, {
+        path: 'models/orders.sql',
+        content: 'select 2 as order_id\n',
+        expectedRevision: { kind: 'content_sha256', value: initial.contentSha256 },
+      }),
+      secondRepository.saveFileContent(SCOPE_A, {
+        path: 'models/orders.sql',
+        content: 'select 3 as order_id\n',
+        expectedRevision: { kind: 'content_sha256', value: initial.contentSha256 },
+      }),
+    ]);
+
+    expect(results.filter((result) => result.kind === 'saved')).toHaveLength(1);
+    expect(results.filter((result) => result.kind === 'conflict')).toHaveLength(1);
+    await expect(
+      firstRepository.getFileContent(SCOPE_A, 'models/orders.sql')
+    ).resolves.toMatchObject({
+      contentSha256: results.find((result) => result.kind === 'saved')?.contentSha256,
+    });
+  });
+
+  it('deletes only the file revision named by the command', async () => {
+    const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
+    const created = await repository.saveFileContent(SCOPE_A, {
+      path: 'models/orders.sql',
+      content: 'select 1 as order_id\n',
+      expectedRevision: { kind: 'absent' },
+    });
+    expect(created.kind).toBe('saved');
+    if (created.kind !== 'saved') throw new Error('Expected the fixture write to succeed.');
+
+    const updated = await repository.saveFileContent(SCOPE_A, {
+      path: 'models/orders.sql',
+      content: 'select 2 as order_id\n',
+      expectedRevision: { kind: 'content_sha256', value: created.contentSha256 },
+    });
+    expect(updated.kind).toBe('saved');
+    if (updated.kind !== 'saved') throw new Error('Expected the fixture update to succeed.');
+
+    await expect(
+      repository.deleteFileContent(SCOPE_A, {
+        path: 'models/orders.sql',
+        expectedRevision: { kind: 'content_sha256', value: created.contentSha256 },
+      })
+    ).resolves.toMatchObject({
+      kind: 'conflict',
+      currentContentSha256: updated.contentSha256,
+    });
+    await expect(repository.getFileContent(SCOPE_A, 'models/orders.sql')).resolves.toMatchObject({
+      content: 'select 2 as order_id\n',
+    });
+
+    await expect(
+      repository.deleteFileContent(SCOPE_A, {
+        path: 'models/orders.sql',
+        expectedRevision: { kind: 'content_sha256', value: updated.contentSha256 },
+      })
+    ).resolves.toEqual({ kind: 'deleted' });
+    await expect(
+      repository.deleteFileContent(SCOPE_A, {
+        path: 'models/orders.sql',
+        expectedRevision: { kind: 'content_sha256', value: updated.contentSha256 },
+      })
+    ).resolves.toEqual({ kind: 'unchanged' });
   });
 });

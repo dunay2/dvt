@@ -11,6 +11,8 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import {
   InvalidWorkspacePathError,
   WorkspaceFileNotFoundError,
+  type ExpectedWorkspaceFileRevision,
+  type SaveWorkspaceFileContentInput,
   type WorkspaceStorageScope,
 } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
@@ -38,6 +40,7 @@ type WorkspaceFilePathParams = {
 
 type SaveWorkspaceFileContentBody = {
   readonly content?: unknown;
+  readonly expectedRevision?: unknown;
 };
 
 type WorkspaceFilesAction =
@@ -110,18 +113,26 @@ export function registerWorkspaceFilesRoutes(
       });
       if (!authorized) return;
 
-      const content = parseSaveWorkspaceFileContentBody(request.body);
-      if (!content.ok) {
-        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(content.issue));
+      const input = parseSaveWorkspaceFileContentBody(request.body);
+      if (!input.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(input.issue));
         return;
       }
 
       try {
-        reply
-          .code(200)
-          .send(
-            await deps.saveUseCase.execute(authorized.scope, request.params.path, content.value)
+        const result = await deps.saveUseCase.execute(authorized.scope, {
+          path: request.params.path,
+          ...input.value,
+        });
+        if (result.kind === 'conflict') {
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceFiles.revisionConflict()
           );
+          return;
+        }
+
+        reply.code(200).send(result);
       } catch (error) {
         if (error instanceof InvalidWorkspacePathError) {
           httpErrorTranslation.respond(
@@ -177,7 +188,7 @@ async function authorizeWorkspaceFilesRequest(
 
 function parseSaveWorkspaceFileContentBody(
   body: SaveWorkspaceFileContentBody | undefined
-): RouteParseResult<string> {
+): RouteParseResult<Omit<SaveWorkspaceFileContentInput, 'path'>> {
   if (typeof body?.content !== 'string') {
     return {
       ok: false,
@@ -185,7 +196,37 @@ function parseSaveWorkspaceFileContentBody(
     };
   }
 
-  return { ok: true, value: body.content };
+  const expectedRevision = parseExpectedWorkspaceFileRevision(body.expectedRevision);
+  if (!expectedRevision) {
+    return {
+      ok: false,
+      issue: badRequestIssue(HTTP_ERROR_REASON.invalidWorkspaceFileRevision, {
+        target: 'expectedRevision',
+      }),
+    };
+  }
+
+  return { ok: true, value: { content: body.content, expectedRevision } };
+}
+
+function parseExpectedWorkspaceFileRevision(value: unknown): ExpectedWorkspaceFileRevision | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  if (record.kind === 'absent') {
+    return { kind: 'absent' };
+  }
+  if (
+    record.kind === 'content_sha256' &&
+    typeof record.value === 'string' &&
+    /^[a-f0-9]{64}$/.test(record.value)
+  ) {
+    return { kind: 'content_sha256', value: record.value };
+  }
+
+  return null;
 }
 
 function parseRequestedScope(

@@ -1,4 +1,5 @@
 import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
+import { sha256HexUtf8 } from '@dvt/contracts';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { vi } from 'vitest';
@@ -14,6 +15,10 @@ import type {
   IWorkspaceFilesQueryPort,
 } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
+import {
+  WorkspaceFileLoadError,
+  WorkspaceFileRevisionConflictError,
+} from '../../services/workspace/workspaceErrors';
 import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
@@ -361,13 +366,14 @@ export function createWorkspaceFilePortMocks(
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 } {
+  const files = new Map(Object.entries(fileContents));
   return {
     workspaceFilesQuery: {
       listFiles: vi.fn(async () => []),
       getFileContent: vi.fn(async (path: string) => {
-        const content = fileContents[path];
+        const content = files.get(path);
         if (content === undefined) {
-          throw new Error(`Workspace file not found: ${path}`);
+          throw new WorkspaceFileLoadError('not_found', path);
         }
 
         return {
@@ -375,18 +381,50 @@ export function createWorkspaceFilePortMocks(
           name: path.split('/').at(-1) ?? path,
           language: path.endsWith('.sql') ? 'sql' : 'yaml',
           content,
+          contentSha256: sha256HexUtf8(content),
           lastModified: '2026-04-08T00:00:00Z',
         };
       }),
     },
     workspaceFileContentCommand: {
-      saveFileContent: vi.fn(async (path: string, content: string) => ({
-        path,
-        name: path.split('/').at(-1) ?? path,
-        language: path.endsWith('.sql') ? 'sql' : 'yaml',
-        content,
-        lastModified: '2026-04-08T00:00:00Z',
-      })),
+      saveFileContent: vi.fn(async (input) => {
+        const currentContent = files.get(input.path);
+        const contentSha256 = sha256HexUtf8(input.content);
+        const file = {
+          path: input.path,
+          name: input.path.split('/').at(-1) ?? input.path,
+          language: input.path.endsWith('.sql') ? 'sql' : 'yaml',
+          content: input.content,
+          contentSha256,
+          lastModified: '2026-04-08T00:00:00Z',
+        };
+        if (currentContent !== undefined && sha256HexUtf8(currentContent) === contentSha256) {
+          return {
+            kind: 'unchanged' as const,
+            disposition: null,
+            path: file.path,
+            contentSha256: file.contentSha256,
+            lastModified: file.lastModified,
+          };
+        }
+        const revisionMatches =
+          input.expectedRevision.kind === 'absent'
+            ? currentContent === undefined
+            : currentContent !== undefined &&
+              sha256HexUtf8(currentContent) === input.expectedRevision.value;
+        if (!revisionMatches) {
+          throw new WorkspaceFileRevisionConflictError(input.path);
+        }
+
+        files.set(input.path, input.content);
+        return {
+          kind: 'saved' as const,
+          disposition: currentContent === undefined ? ('created' as const) : ('updated' as const),
+          path: file.path,
+          contentSha256: file.contentSha256,
+          lastModified: file.lastModified,
+        };
+      }),
     },
   };
 }

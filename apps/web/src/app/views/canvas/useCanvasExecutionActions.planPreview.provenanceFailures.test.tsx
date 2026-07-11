@@ -38,6 +38,7 @@ describe('useCanvasExecutionActions plan preview provenance failures', () => {
     const plansService = createPlansServiceMock();
     const workspaceFilePorts = createWorkspaceFilePortMocks({
       'models/transform.sql': 'select * from analytics.orders',
+      'pipelines/sales_pipeline.yaml': 'name: sales_pipeline\nsteps: []',
     });
     const workspaceFileContentCommand = {
       saveFileContent: vi.fn(async () => {

@@ -1,6 +1,4 @@
 /** Owned concern: resolve plan preview provenance through workspace file read/write ports. */
-import { sha256HexUtf8 } from '@dvt/contracts';
-
 import type { PlanPreviewProvenance } from '../../ports/plans';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type {
@@ -13,6 +11,7 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   hasExplicitGitRevision,
   normalizeGitRef,
+  readExpectedWorkspaceFileRevision,
   readPreviewSqlArtifact,
 } from './canvasGitProvenance';
 import { canvasViewCopy } from './copy';
@@ -137,6 +136,7 @@ function resolveTransformArtifactSource(
 
 async function savePreviewGraphArtifact(args: {
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceScope: WorkspaceScope;
   graphArtifactPath: string;
   gitRepo: string;
@@ -158,17 +158,21 @@ async function savePreviewGraphArtifact(args: {
       environmentId: args.workspaceScope.environmentId,
     },
   });
-  const graphArtifactFile = await args.workspaceFileContentCommand.saveFileContent(
-    args.graphArtifactPath,
-    graphArtifactContent
-  );
+  const graphArtifactReceipt = await args.workspaceFileContentCommand.saveFileContent({
+    path: args.graphArtifactPath,
+    content: graphArtifactContent,
+    expectedRevision: await readExpectedWorkspaceFileRevision(
+      args.workspaceFilesQuery,
+      args.graphArtifactPath
+    ),
+  });
 
   return {
     repo: args.gitRepo,
     path: args.graphArtifactPath,
     ref: args.gitRef,
     commitSha: args.gitSha,
-    contentSha256: sha256HexUtf8(graphArtifactFile.content),
+    contentSha256: graphArtifactReceipt.contentSha256,
   };
 }
 
@@ -191,19 +195,23 @@ async function resolvePreviewSqlArtifact(args: {
     const draftSqlText = readTransformationSqlMirrorState(transformArtifactSource.node).draftSql;
     if (draftSqlText) {
       const sqlText = draftSqlText.endsWith('\n') ? draftSqlText : `${draftSqlText}\n`;
-      const savedSqlArtifact = await args.workspaceFileContentCommand.saveFileContent(
-        transformArtifactSource.path,
-        sqlText
-      );
+      const savedSqlArtifactReceipt = await args.workspaceFileContentCommand.saveFileContent({
+        path: transformArtifactSource.path,
+        content: sqlText,
+        expectedRevision: await readExpectedWorkspaceFileRevision(
+          args.workspaceFilesQuery,
+          transformArtifactSource.path
+        ),
+      });
 
       return {
-        sqlText: savedSqlArtifact.content,
+        sqlText,
         sqlArtifact: {
           repo: args.gitRepo,
           path: transformArtifactSource.path,
           ref: args.gitRef,
           commitSha: args.gitSha,
-          contentSha256: sha256HexUtf8(savedSqlArtifact.content),
+          contentSha256: savedSqlArtifactReceipt.contentSha256,
         },
       };
     }
@@ -228,19 +236,23 @@ async function resolvePreviewSqlArtifact(args: {
     canonicalNodes: args.canonicalNodes,
     scopedNodeIds: args.scopedNodeIds,
   });
-  const savedSqlArtifact = await args.workspaceFileContentCommand.saveFileContent(
-    transformArtifactSource.path,
-    sqlText
-  );
+  const savedSqlArtifactReceipt = await args.workspaceFileContentCommand.saveFileContent({
+    path: transformArtifactSource.path,
+    content: sqlText,
+    expectedRevision: await readExpectedWorkspaceFileRevision(
+      args.workspaceFilesQuery,
+      transformArtifactSource.path
+    ),
+  });
 
   return {
-    sqlText: savedSqlArtifact.content,
+    sqlText,
     sqlArtifact: {
       repo: args.gitRepo,
       path: transformArtifactSource.path,
       ref: args.gitRef,
       commitSha: args.gitSha,
-      contentSha256: sha256HexUtf8(savedSqlArtifact.content),
+      contentSha256: savedSqlArtifactReceipt.contentSha256,
     },
   };
 }
@@ -314,6 +326,7 @@ export async function resolvePreviewProvenance({
     });
     const graphArtifact = await savePreviewGraphArtifact({
       workspaceFileContentCommand,
+      workspaceFilesQuery,
       workspaceScope,
       graphArtifactPath: previewWorkspaceConfig.graphArtifactPath,
       gitRepo: previewWorkspaceConfig.gitRepo,

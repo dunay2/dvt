@@ -111,6 +111,7 @@ function buildWorkspacePortStubs(): {
         name: path,
         language: 'sql',
         content: '',
+        contentSha256: 'a'.repeat(64),
         lastModified: '2026-04-23T00:00:00Z',
       })),
     },
@@ -151,11 +152,11 @@ function buildWorkspacePortStubs(): {
       })),
     },
     workspaceFileContentCommand: {
-      saveFileContent: vi.fn(async (path: string, content: string) => ({
-        path,
-        name: path,
-        language: 'sql',
-        content,
+      saveFileContent: vi.fn(async (input) => ({
+        kind: 'saved' as const,
+        disposition: 'updated' as const,
+        path: input.path,
+        contentSha256: 'b'.repeat(64),
         lastModified: '2026-04-23T00:00:00Z',
       })),
     },

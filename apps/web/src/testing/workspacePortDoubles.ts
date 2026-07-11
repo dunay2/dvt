@@ -1,5 +1,5 @@
 /** Owned concern: provide test-only workspace capability ports backed by fixture state. */
-import { buildRelationalSourceObjectId } from '@dvt/contracts';
+import { buildRelationalSourceObjectId, sha256HexUtf8 } from '@dvt/contracts';
 
 import {
   mockAuditLog,
@@ -35,7 +35,10 @@ import type {
   WorkspaceFileHistoryEntry,
   WorkspaceGraphSnapshot,
 } from '../app/ports/workspace';
-import { WorkspaceFileLoadError } from '../app/services/workspace/workspaceErrors';
+import {
+  WorkspaceFileLoadError,
+  WorkspaceFileRevisionConflictError,
+} from '../app/services/workspace/workspaceErrors';
 
 export const mockWorkspacePortCapabilities = {
   sourceImportAvailable: true,
@@ -474,7 +477,7 @@ const mockFileTree: WorkspaceFileEntry[] = [
   { path: 'README.md', name: 'README.md', kind: 'file' },
 ];
 
-const defaultFileContents: Record<string, FileContent> = {
+const defaultFileContentSeeds: Record<string, Omit<FileContent, 'contentSha256'>> = {
   'models/staging/stg_orders.sql': {
     path: 'models/staging/stg_orders.sql',
     name: 'stg_orders.sql',
@@ -668,6 +671,13 @@ const defaultFileContents: Record<string, FileContent> = {
   },
 };
 
+const defaultFileContents: Record<string, FileContent> = Object.fromEntries(
+  Object.entries(defaultFileContentSeeds).map(([path, file]) => [
+    path,
+    { ...file, contentSha256: sha256HexUtf8(file.content) },
+  ])
+);
+
 function inferLanguage(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase() ?? '';
   const langMap: Record<string, string> = {
@@ -797,19 +807,44 @@ export function createMockWorkspaceFileContentCommandPort(
   state: MockWorkspaceState = createMockWorkspaceState()
 ): IWorkspaceFileContentCommandPort {
   return {
-    saveFileContent: async (path, content) => {
-      const existing = state.fileContents[path];
-      const name = path.split('/').pop() ?? path;
+    saveFileContent: async (input) => {
+      const existing = state.fileContents[input.path];
+      const contentSha256 = sha256HexUtf8(input.content);
+      if (existing?.contentSha256 === contentSha256) {
+        return {
+          kind: 'unchanged',
+          disposition: null,
+          path: existing.path,
+          contentSha256: existing.contentSha256,
+          lastModified: existing.lastModified,
+        };
+      }
+      const revisionMatches =
+        input.expectedRevision.kind === 'absent'
+          ? existing == null
+          : existing?.contentSha256 === input.expectedRevision.value;
+      if (!revisionMatches) {
+        throw new WorkspaceFileRevisionConflictError(input.path);
+      }
+
+      const name = input.path.split('/').pop() ?? input.path;
       const updated: FileContent = {
-        path,
+        path: input.path,
         name,
-        language: existing?.language ?? inferLanguage(path),
-        content,
+        language: existing?.language ?? inferLanguage(input.path),
+        content: input.content,
+        contentSha256,
         lastModified: new Date().toISOString(),
       };
-      state.fileContents[path] = updated;
-      ensureWorkspaceFileEntry(state.fileTree, path);
-      return cloneFileContent(updated);
+      state.fileContents[input.path] = updated;
+      ensureWorkspaceFileEntry(state.fileTree, input.path);
+      return {
+        kind: 'saved',
+        disposition: existing ? 'updated' : 'created',
+        path: updated.path,
+        contentSha256: updated.contentSha256,
+        lastModified: updated.lastModified,
+      };
     },
   };
 }

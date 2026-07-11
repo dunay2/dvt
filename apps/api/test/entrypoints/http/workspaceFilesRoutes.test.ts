@@ -177,15 +177,18 @@ describe('workspaceFilesRoutes', () => {
     const response = await app.inject({
       method: 'POST',
       url: `/workspace/files/models%2Fgenerated%2Forders_daily.sql?${SCOPE_QUERY}`,
-      payload: { content: 'select * from raw.orders' },
+      payload: {
+        content: 'select * from raw.orders',
+        expectedRevision: { kind: 'absent' },
+      },
     });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
+      kind: 'saved',
+      disposition: 'created',
       path: 'models/generated/orders_daily.sql',
-      name: 'orders_daily.sql',
-      language: 'sql',
-      content: 'select * from raw.orders',
+      contentSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
       lastModified: expect.any(String),
     });
     expect(authorize).toHaveBeenCalledWith(
@@ -200,6 +203,60 @@ describe('workspaceFilesRoutes', () => {
     });
     expect(readResponse.statusCode).toBe(200);
     expect(readResponse.json().content).toBe('select * from raw.orders');
+  });
+
+  it('rejects a stale workspace file revision without overwriting newer content', async () => {
+    const { app } = buildApp();
+    const path = 'models%2Fstaging%2Fstg_orders.sql';
+    const initial = await app.inject({
+      method: 'GET',
+      url: `/workspace/files/${path}?${SCOPE_QUERY}`,
+    });
+    const expectedRevision = {
+      kind: 'content_sha256',
+      value: initial.json().contentSha256,
+    };
+
+    const first = await app.inject({
+      method: 'POST',
+      url: `/workspace/files/${path}?${SCOPE_QUERY}`,
+      payload: { content: 'select order_id from orders', expectedRevision },
+    });
+    const stale = await app.inject({
+      method: 'POST',
+      url: `/workspace/files/${path}?${SCOPE_QUERY}`,
+      payload: { content: 'select customer_id from orders', expectedRevision },
+    });
+
+    expect(first.statusCode).toBe(200);
+    expect(stale.statusCode).toBe(409);
+    expect(stale.json()).toEqual({
+      error: { type: 'conflict', reason: 'workspace_file_revision_conflict' },
+    });
+    const current = await app.inject({
+      method: 'GET',
+      url: `/workspace/files/${path}?${SCOPE_QUERY}`,
+    });
+    expect(current.json().content).toBe('select order_id from orders');
+  });
+
+  it('requires an explicit expected revision for every save command', async () => {
+    const { app } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/files/models%2Fgenerated%2Forders_daily.sql?${SCOPE_QUERY}`,
+      payload: { content: 'select * from raw.orders' },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        type: 'bad_request',
+        reason: 'invalid_workspace_file_revision',
+        target: 'expectedRevision',
+      },
+    });
   });
 
   it('rejects invalid save bodies before writing content', async () => {

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import React from 'react';
+import { sha256HexUtf8 } from '@dvt/contracts';
 import { fireEvent } from '@testing-library/dom';
 import { act } from 'react';
 import { vi } from 'vitest';
@@ -63,37 +64,41 @@ export function installDiffViewDomDoubles(): () => void {
 
 export function buildFileContent(path: string): FileContent {
   if (path.includes('dim_store')) {
+    const content = [
+      'SELECT',
+      '  s.store_id,',
+      '  s.store_name,',
+      '  s.store_city',
+      'FROM raw.store_dim s',
+    ].join('\n');
     return {
       path,
       name: path.split('/').at(-1) ?? path,
       language: 'sql',
-      content: [
-        'SELECT',
-        '  s.store_id,',
-        '  s.store_name,',
-        '  s.store_city',
-        'FROM raw.store_dim s',
-      ].join('\n'),
+      content,
+      contentSha256: sha256HexUtf8(content),
       lastModified: '2026-04-06T00:00:00Z',
     };
   }
 
+  const content = [
+    'SELECT',
+    '  o.order_id,',
+    '  o.customer_id,',
+    '  o.order_date,',
+    '  s.store_id,',
+    '  o.total_amount',
+    'FROM {{ ref("stg_orders") }} o',
+    'LEFT JOIN {{ ref("dim_store") }} s',
+    '  ON o.store_id = s.store_id',
+    "WHERE o.order_date >= '2020-01-01'",
+  ].join('\n');
   return {
     path,
     name: path.split('/').at(-1) ?? path,
     language: 'sql',
-    content: [
-      'SELECT',
-      '  o.order_id,',
-      '  o.customer_id,',
-      '  o.order_date,',
-      '  s.store_id,',
-      '  o.total_amount',
-      'FROM {{ ref("stg_orders") }} o',
-      'LEFT JOIN {{ ref("dim_store") }} s',
-      '  ON o.store_id = s.store_id',
-      "WHERE o.order_date >= '2020-01-01'",
-    ].join('\n'),
+    content,
+    contentSha256: sha256HexUtf8(content),
     lastModified: '2026-04-06T00:00:00Z',
   };
 }

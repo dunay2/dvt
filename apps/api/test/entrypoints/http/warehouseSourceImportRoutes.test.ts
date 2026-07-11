@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import {
   buildRelationalSourceObjectId,
   type SourceObject,
@@ -25,9 +27,13 @@ import type {
 } from '../../../src/application/ports/warehouseSourceImport.js';
 import { WorkspaceFileNotFoundError } from '../../../src/application/ports/workspaceFiles.js';
 import type {
+  DeleteWorkspaceFileContentInput,
   IWorkspaceFileRepository,
+  SaveWorkspaceFileContentInput,
   WorkspaceFileContent,
+  WorkspaceFileDeleteResult,
   WorkspaceFileEntry,
+  WorkspaceFileSaveResult,
   WorkspaceStorageScope,
 } from '../../../src/application/ports/workspaceFiles.js';
 import { CreateWarehouseConnectionUseCase } from '../../../src/application/services/createWarehouseConnectionUseCase.js';
@@ -344,34 +350,39 @@ function buildApp(
             name: path.split('/').at(-1) ?? path,
             language: 'yaml',
             content: options.existingSourceFileContent,
-            contentSha256: 'a'.repeat(64),
+            contentSha256: sha256(options.existingSourceFileContent),
             lastModified: '2026-05-30T00:00:00.000Z',
           };
         }
         throw new WorkspaceFileNotFoundError('models/sources/src_erp.yml');
       }),
     saveFileContent: vi.fn<
-      (scope: WorkspaceStorageScope, path: string, content: string) => Promise<WorkspaceFileContent>
-    >(async (_scope, path, content) => ({
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'yaml',
-      content,
-      contentSha256: 'b'.repeat(64),
+      (
+        scope: WorkspaceStorageScope,
+        input: SaveWorkspaceFileContentInput
+      ) => Promise<WorkspaceFileSaveResult>
+    >(async (_scope, input) => ({
+      kind: 'saved',
+      disposition: 'created',
+      path: input.path,
+      contentSha256: sha256(input.content),
       lastModified: '2026-05-30T00:00:01.000Z',
     })),
-    deleteFileContent: vi.fn<(scope: WorkspaceStorageScope, path: string) => Promise<void>>(
-      async (_scope, _path) => undefined
-    ),
+    deleteFileContent: vi.fn<
+      (
+        scope: WorkspaceStorageScope,
+        input: DeleteWorkspaceFileContentInput
+      ) => Promise<WorkspaceFileDeleteResult>
+    >(async (_scope, _input) => ({ kind: 'deleted' })),
   };
   const catalog = new TestWarehouseConnectionCatalog(
     catalogEntries,
     async (scope, _input, entries) => {
-      await workspaceFiles.saveFileContent(
-        scope,
-        WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
-        JSON.stringify({ connections: entries }, null, 2)
-      );
+      await workspaceFiles.saveFileContent(scope, {
+        path: WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH,
+        content: JSON.stringify({ connections: entries }, null, 2),
+        expectedRevision: { kind: 'absent' },
+      });
     }
   );
   const probe = new TestWarehouseConnectionProbe(
@@ -424,6 +435,10 @@ function buildApp(
   return { app, authorize, draftStore, workspaceFiles };
 }
 
+function sha256(content: string): string {
+  return createHash('sha256').update(content, 'utf8').digest('hex');
+}
+
 describe('warehouseSourceImportRoutes', () => {
   it('creates a warehouse connection through the protected command rail before listing it', async () => {
     const { app, authorize, workspaceFiles } = buildApp({ catalogEntries: [] });
@@ -455,8 +470,11 @@ describe('warehouseSourceImportRoutes', () => {
     );
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
       ROUTE_SCOPE,
-      '.dvt/warehouse-connections.json',
-      expect.not.stringContaining('DVT_FINANCE_WAREHOUSE_URL=')
+      expect.objectContaining({
+        path: '.dvt/warehouse-connections.json',
+        content: expect.not.stringContaining('DVT_FINANCE_WAREHOUSE_URL='),
+        expectedRevision: { kind: 'absent' },
+      })
     );
   });
 
@@ -694,21 +712,24 @@ describe('warehouseSourceImportRoutes', () => {
     );
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
       ROUTE_SCOPE,
-      'models/sources/src_erp.yml',
-      [
-        'version: 2',
-        '',
-        'sources:',
-        '  - name: warehouse_prod_analytics_erp',
-        '    database: analytics',
-        '    schema: erp',
-        '    tables:',
-        '      - name: orders',
-        '        columns:',
-        '          - name: id',
-        '            data_type: number',
-        '',
-      ].join('\n')
+      expect.objectContaining({
+        path: 'models/sources/src_erp.yml',
+        content: [
+          'version: 2',
+          '',
+          'sources:',
+          '  - name: warehouse_prod_analytics_erp',
+          '    database: analytics',
+          '    schema: erp',
+          '    tables:',
+          '      - name: orders',
+          '        columns:',
+          '          - name: id',
+          '            data_type: number',
+          '',
+        ].join('\n'),
+        expectedRevision: { kind: 'absent' },
+      })
     );
   });
 
@@ -816,8 +837,11 @@ describe('warehouseSourceImportRoutes', () => {
     });
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
       ROUTE_SCOPE,
-      'models/sources/src_erp.yml',
-      expect.stringContaining('  - name: warehouse_sandbox_analytics_erp')
+      expect.objectContaining({
+        path: 'models/sources/src_erp.yml',
+        content: expect.stringContaining('  - name: warehouse_sandbox_analytics_erp'),
+        expectedRevision: { kind: 'absent' },
+      })
     );
     expect(draftStore.save).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -967,29 +991,32 @@ describe('warehouseSourceImportRoutes', () => {
     });
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
       ROUTE_SCOPE,
-      'models/sources/src_erp.yml',
-      [
-        'version: 2',
-        '',
-        'sources:',
-        '  - name: warehouse_prod_analytics_erp',
-        '    database: analytics',
-        '    schema: erp',
-        '    tables:',
-        '      - name: orders',
-        '        columns:',
-        '          - name: id',
-        '            data_type: number',
-        '  - name: warehouse_prod_finance_erp',
-        '    database: finance',
-        '    schema: erp',
-        '    tables:',
-        '      - name: orders',
-        '        columns:',
-        '          - name: id',
-        '            data_type: number',
-        '',
-      ].join('\n')
+      expect.objectContaining({
+        path: 'models/sources/src_erp.yml',
+        content: [
+          'version: 2',
+          '',
+          'sources:',
+          '  - name: warehouse_prod_analytics_erp',
+          '    database: analytics',
+          '    schema: erp',
+          '    tables:',
+          '      - name: orders',
+          '        columns:',
+          '          - name: id',
+          '            data_type: number',
+          '  - name: warehouse_prod_finance_erp',
+          '    database: finance',
+          '    schema: erp',
+          '    tables:',
+          '      - name: orders',
+          '        columns:',
+          '          - name: id',
+          '            data_type: number',
+          '',
+        ].join('\n'),
+        expectedRevision: { kind: 'absent' },
+      })
     );
     expect(draftStore.save).toHaveBeenCalledWith(
       expect.objectContaining({

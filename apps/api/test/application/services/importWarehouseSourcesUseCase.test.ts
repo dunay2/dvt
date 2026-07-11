@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import {
   buildRelationalSourceObjectId,
   type SourceObject,
@@ -206,31 +208,63 @@ function createWorkspaceFiles(initialFiles: Record<string, string> = {}): Worksp
           name: path.split('/').at(-1) ?? path,
           language: 'yaml',
           content,
-          contentSha256: 'a'.repeat(64),
+          contentSha256: sha256(content),
           lastModified: '2026-06-26T00:00:00.000Z',
         };
       }
       throw new WorkspaceFileNotFoundError(path);
     }),
-    saveFileContent: vi.fn(async (_scope, path: string, content: string) => {
-      files.set(path, content);
+    saveFileContent: vi.fn(async (_scope, input) => {
+      const currentContent = files.get(input.path);
+      const currentContentSha256 = currentContent === undefined ? null : sha256(currentContent);
+      const requestedContentSha256 = sha256(input.content);
+      if (currentContentSha256 === requestedContentSha256) {
+        return {
+          kind: 'unchanged' as const,
+          disposition: null,
+          path: input.path,
+          contentSha256: requestedContentSha256,
+          lastModified: '2026-06-26T00:00:00.000Z',
+        };
+      }
+      const matchesExpectedRevision =
+        input.expectedRevision.kind === 'absent'
+          ? currentContentSha256 === null
+          : input.expectedRevision.value === currentContentSha256;
+      if (!matchesExpectedRevision) {
+        return { kind: 'conflict' as const, currentContentSha256 };
+      }
+      const disposition: 'created' | 'updated' = files.has(input.path) ? 'updated' : 'created';
+      files.set(input.path, input.content);
       return {
-        path,
-        name: path.split('/').at(-1) ?? path,
-        language: 'yaml',
-        content,
-        contentSha256: 'b'.repeat(64),
+        kind: 'saved' as const,
+        disposition,
+        path: input.path,
+        contentSha256: sha256(input.content),
         lastModified: '2026-06-26T00:00:00.000Z',
       };
     }),
-    deleteFileContent: vi.fn(async (_scope, path: string) => {
-      files.delete(path);
+    deleteFileContent: vi.fn(async (_scope, input) => {
+      const currentContent = files.get(input.path);
+      if (currentContent === undefined) {
+        return { kind: 'unchanged' as const };
+      }
+      const currentContentSha256 = sha256(currentContent);
+      if (currentContentSha256 !== input.expectedRevision.value) {
+        return { kind: 'conflict' as const, currentContentSha256 };
+      }
+      files.delete(input.path);
+      return { kind: 'deleted' as const };
     }),
     readSavedFile: (path: string) => files.get(path),
     writeSavedFile: (path: string, content: string) => {
       files.set(path, content);
     },
   };
+}
+
+function sha256(content: string): string {
+  return createHash('sha256').update(content, 'utf8').digest('hex');
 }
 
 describe('ImportWarehouseSourcesUseCase', () => {
@@ -307,8 +341,11 @@ describe('ImportWarehouseSourcesUseCase', () => {
 
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
       scope,
-      'models/sources/src_erp.yml',
-      expect.stringContaining('name: orders')
+      expect.objectContaining({
+        path: 'models/sources/src_erp.yml',
+        content: expect.stringContaining('name: orders'),
+        expectedRevision: { kind: 'absent' },
+      })
     );
     expect(draftStore.save).not.toHaveBeenCalled();
   });
@@ -343,12 +380,18 @@ describe('ImportWarehouseSourcesUseCase', () => {
     expect(draftStore.save).toHaveBeenCalled();
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
       scope,
-      'models/sources/src_erp.yml',
-      expect.stringContaining('name: orders')
+      expect.objectContaining({
+        path: 'models/sources/src_erp.yml',
+        content: expect.stringContaining('name: orders'),
+        expectedRevision: { kind: 'absent' },
+      })
     );
     expect(workspaceFiles.deleteFileContent).toHaveBeenCalledWith(
       scope,
-      'models/sources/src_erp.yml'
+      expect.objectContaining({
+        path: 'models/sources/src_erp.yml',
+        expectedRevision: { kind: 'content_sha256', value: expect.any(String) },
+      })
     );
   });
 
@@ -394,7 +437,13 @@ describe('ImportWarehouseSourcesUseCase', () => {
       })
     ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
 
-    expect(workspaceFiles.deleteFileContent).not.toHaveBeenCalled();
+    expect(workspaceFiles.deleteFileContent).toHaveBeenCalledWith(
+      scope,
+      expect.objectContaining({
+        path: sourceYamlPath,
+        expectedRevision: { kind: 'content_sha256', value: expect.any(String) },
+      })
+    );
     expect(workspaceFiles.readSavedFile(sourceYamlPath)).toBe(concurrentWinnerContent);
   });
 

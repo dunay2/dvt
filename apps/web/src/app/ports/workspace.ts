@@ -38,8 +38,35 @@ export type FileContent = {
   name: string;
   language: string;
   content: string;
+  contentSha256: string;
   lastModified: string;
 };
+
+export type ExpectedWorkspaceFileRevision =
+  | { readonly kind: 'absent' }
+  | { readonly kind: 'content_sha256'; readonly value: string };
+
+export type SaveWorkspaceFileContentInput = {
+  readonly path: string;
+  readonly content: string;
+  readonly expectedRevision: ExpectedWorkspaceFileRevision;
+};
+
+export type WorkspaceFileSaveReceipt =
+  | {
+      readonly kind: 'saved';
+      readonly disposition: 'created' | 'updated';
+      readonly path: string;
+      readonly contentSha256: string;
+      readonly lastModified: string;
+    }
+  | {
+      readonly kind: 'unchanged';
+      readonly disposition: null;
+      readonly path: string;
+      readonly contentSha256: string;
+      readonly lastModified: string;
+    };
 
 export type WorkspaceFileEntry = {
   path: string;
@@ -134,5 +161,5 @@ export interface IWarehouseSourceImportPort {
 
 /** Owns workspace file content writes when an accepted backend command exists. */
 export interface IWorkspaceFileContentCommandPort {
-  saveFileContent: (path: string, content: string) => Promise<FileContent>;
+  saveFileContent: (input: SaveWorkspaceFileContentInput) => Promise<WorkspaceFileSaveReceipt>;
 }

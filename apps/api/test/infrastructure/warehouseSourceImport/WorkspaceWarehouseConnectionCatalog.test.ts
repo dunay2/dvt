@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 import {
   buildRelationalSourceObjectId,
   type SourceObject,
@@ -9,9 +11,13 @@ import { describe, expect, it } from 'vitest';
 import { WarehouseConnectionNotFoundError } from '../../../src/application/ports/warehouseSourceImport.js';
 import { WorkspaceFileNotFoundError } from '../../../src/application/ports/workspaceFiles.js';
 import type {
+  DeleteWorkspaceFileContentInput,
   IWorkspaceFileRepository,
+  SaveWorkspaceFileContentInput,
   WorkspaceFileContent,
+  WorkspaceFileDeleteResult,
   WorkspaceFileEntry,
+  WorkspaceFileSaveResult,
   WorkspaceStorageScope,
 } from '../../../src/application/ports/workspaceFiles.js';
 import {
@@ -55,29 +61,62 @@ class MemoryWorkspaceFileRepository implements IWorkspaceFileRepository {
       name: path.split('/').at(-1) ?? path,
       language: 'json',
       content,
-      contentSha256: 'a'.repeat(64),
+      contentSha256: sha256(content),
       lastModified: '2026-05-31T00:00:00.000Z',
     };
   }
 
   public async saveFileContent(
     scope: WorkspaceStorageScope,
-    path: string,
-    content: string
-  ): Promise<WorkspaceFileContent> {
-    this.files.set(this.key(scope, path), content);
+    input: SaveWorkspaceFileContentInput
+  ): Promise<WorkspaceFileSaveResult> {
+    const key = this.key(scope, input.path);
+    const currentContent = this.files.get(key);
+    const currentContentSha256 = currentContent === undefined ? null : sha256(currentContent);
+    if (currentContentSha256 === sha256(input.content)) {
+      const file = this.toFileContent(input.path, input.content);
+      return {
+        kind: 'unchanged',
+        disposition: null,
+        path: file.path,
+        contentSha256: file.contentSha256,
+        lastModified: file.lastModified,
+      };
+    }
+    const matches =
+      input.expectedRevision.kind === 'absent'
+        ? currentContentSha256 === null
+        : input.expectedRevision.value === currentContentSha256;
+    if (!matches) {
+      return { kind: 'conflict', currentContentSha256 };
+    }
+
+    this.files.set(key, input.content);
+    const file = this.toFileContent(input.path, input.content);
     return {
-      path,
-      name: path.split('/').at(-1) ?? path,
-      language: 'json',
-      content,
-      contentSha256: 'b'.repeat(64),
-      lastModified: '2026-05-31T00:00:01.000Z',
+      kind: 'saved',
+      disposition: currentContent === undefined ? 'created' : 'updated',
+      path: file.path,
+      contentSha256: file.contentSha256,
+      lastModified: file.lastModified,
     };
   }
 
-  public async deleteFileContent(scope: WorkspaceStorageScope, path: string): Promise<void> {
-    this.files.delete(this.key(scope, path));
+  public async deleteFileContent(
+    scope: WorkspaceStorageScope,
+    input: DeleteWorkspaceFileContentInput
+  ): Promise<WorkspaceFileDeleteResult> {
+    const key = this.key(scope, input.path);
+    const currentContent = this.files.get(key);
+    if (currentContent === undefined) {
+      return { kind: 'unchanged' };
+    }
+    const currentContentSha256 = sha256(currentContent);
+    if (currentContentSha256 !== input.expectedRevision.value) {
+      return { kind: 'conflict', currentContentSha256 };
+    }
+    this.files.delete(key);
+    return { kind: 'deleted' };
   }
 
   public readSavedFile(scope: WorkspaceStorageScope, path: string): string | undefined {
@@ -87,6 +126,21 @@ class MemoryWorkspaceFileRepository implements IWorkspaceFileRepository {
   private key(scope: WorkspaceStorageScope, path: string): string {
     return `${scope.tenantId}\u0000${scope.projectId}\u0000${scope.environmentId}\u0000${path}`;
   }
+
+  private toFileContent(path: string, content: string): WorkspaceFileContent {
+    return {
+      path,
+      name: path.split('/').at(-1) ?? path,
+      language: 'json',
+      content,
+      contentSha256: sha256(content),
+      lastModified: '2026-05-31T00:00:01.000Z',
+    };
+  }
+}
+
+function sha256(content: string): string {
+  return createHash('sha256').update(content, 'utf8').digest('hex');
 }
 
 function repositoryWithCatalog(catalog: unknown): IWorkspaceFileRepository {
