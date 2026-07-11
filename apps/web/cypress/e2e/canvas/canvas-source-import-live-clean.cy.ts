@@ -235,18 +235,29 @@ function importLocalPostgresSource(): void {
   cy.contains('[role="dialog"]', 'Source metadata').should('be.visible');
   cy.contains('[role="dialog"]', 'dvt', { timeout: 20_000 }).should('be.visible');
   cy.contains('[role="dialog"]', 'public').should('be.visible');
-  cy.get('[data-source-import-object="relation/dvt/public/source_1"]', { timeout: 20_000 })
-    .should('be.visible')
+  cy.get('[role="dialog"][data-state="open"]')
+    .last()
     .within(() => {
-      cy.contains('order_id').should('be.visible');
-      cy.contains('3 rows').should('be.visible');
-      cy.contains('32 KB').should('be.visible');
-    })
-    .find('button[aria-label^="Inspect source object"]')
-    .click();
-  cy.get('[data-source-import-object-select="relation/dvt/public/source_1"]', {
-    timeout: 20_000,
-  }).click();
+      cy.get('[data-source-import-object="relation/dvt/public/source_1"]', {
+        timeout: 20_000,
+      })
+        .scrollIntoView()
+        .within(() => {
+          cy.contains('order_id').should('be.visible');
+          cy.contains('3 rows').should('be.visible');
+          cy.contains('32 KB').should('be.visible');
+          cy.get('button[aria-label^="Inspect source object"]')
+            .scrollIntoView()
+            .should('be.visible')
+            .click();
+        });
+      cy.get('[data-source-import-object-select="relation/dvt/public/source_1"]', {
+        timeout: 20_000,
+      })
+        .scrollIntoView()
+        .should('be.visible')
+        .click();
+    });
   cy.contains('[role="dialog"]', 'Selected: 1').should('be.visible');
   cy.contains('[role="dialog"]', 'Selected sources').should('be.visible');
   cy.contains('[role="dialog"]', 'dvt.public.source_1').should('be.visible');
@@ -319,10 +330,12 @@ describe('Canvas source import live clean proof', () => {
       .find('[data-slot="graph-node-metric-hotspot"]')
       .trigger('pointermove', { pointerType: 'mouse' });
     cy.get('[data-slot="graph-node-metric-hotspot-detail"]', { timeout: 5_000 })
+      .filter(':visible')
+      .should('have.length', 1)
       .should('be.visible')
       .and('contain.text', 'Estimated using provider statistics')
       .and('contain.text', 'Confidence: medium')
-      .and('contain.text', 'Observed:');
+      .and('contain.text', 'Snapshot observed:');
 
     cy.contains('.react-flow__node', 'Postgres')
       .find('[data-slot="graph-node-operational-metric"]')
@@ -332,11 +345,13 @@ describe('Canvas source import live clean proof', () => {
       .find('[data-slot="graph-node-metric-hotspot"]')
       .trigger('pointermove', { pointerType: 'mouse' });
     cy.get('[data-slot="graph-node-metric-hotspot-detail"]', { timeout: 5_000 })
+      .filter(':visible')
+      .should('have.length', 1)
       .should('be.visible')
       .and('contain.text', 'Measured using provider storage metadata')
       .and('contain.text', 'Physical allocation')
       .and('contain.text', 'Confidence: exact')
-      .and('contain.text', 'Observed:');
+      .and('contain.text', 'Snapshot observed:');
 
     cy.contains('.react-flow__node', 'Postgres')
       .find('button[data-slot="graph-node-operational-rail"]')

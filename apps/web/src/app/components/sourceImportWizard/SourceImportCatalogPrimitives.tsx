@@ -31,12 +31,12 @@ export const sourceImportCatalogClassNames = {
   schemaTitle: 'text-sm font-medium',
   objectList: 'ml-6 space-y-1',
   objectCard:
-    'cursor-pointer rounded border border-slate-700 bg-slate-950/30 p-3 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
+    'rounded border border-slate-700 bg-slate-950/30 p-3 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
   selectedObjectCard: 'border-sky-400 bg-sky-950/30 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]',
   objectHeader: 'flex items-start justify-between gap-3',
   objectIdentity: 'flex min-w-0 items-start gap-2',
   objectInspectButton:
-    'flex min-w-0 items-start gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40',
+    'flex min-w-0 cursor-pointer items-start gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40',
   objectIcon: 'mt-0.5 size-4 shrink-0 text-slate-300',
   objectNameBlock: 'min-w-0',
   objectName: 'block truncate font-mono text-sm',
