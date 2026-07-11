@@ -1,4 +1,4 @@
-import { buildRelationalSourceObjectId } from '@dvt/contracts';
+import { buildRelationalSourceObjectId, type RelationalSourceObjectLocator } from '@dvt/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pgMock = vi.hoisted(() => {
@@ -21,7 +21,14 @@ vi.mock('pg', () => ({
 
 import { WorkspaceWarehouseConnectionProbe } from '../../../src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 
-function expectedRelationIdentity(name: string, relationType: 'table' | 'view' = 'table') {
+function expectedRelationIdentity(
+  name: string,
+  relationType: 'table' | 'view' = 'table'
+): Readonly<{
+  objectId: string;
+  displayName: string;
+  locator: RelationalSourceObjectLocator;
+}> {
   const locator = {
     kind: 'relation' as const,
     catalog: 'dvt',
