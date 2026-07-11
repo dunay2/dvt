@@ -14073,3 +14073,19 @@ test('tracked migrations close scoped workspace storage with cross-scope evidenc
   );
   assert.doesNotMatch(implementationMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations make live SourceObject discovery and exact identity canonical', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '611_source_object_live_discovery_and_identity_authority.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-API-APPLICATION-SOURCE-OBJECT-READER/);
+  assert.match(migration.sql, /ListWarehouseConnectionSourceObjects;ImportWarehouseSources/);
+  assert.match(migration.sql, /live-provider-discovery/);
+  assert.match(migration.sql, /exact-case-sensitive/);
+  assert.match(migration.sql, /source-object-constraints/);
+  assert.match(migration.sql, /WarehouseConnectionSourceObjectReader\.test\.ts/);
+});
