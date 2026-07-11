@@ -33,7 +33,7 @@ mechanization.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/adr/ADR-0051-access-decision-service-and-openfga-adapter.md`
-- `docs/adr/ADR-0055-server-owned-effective-workspace-context.md`
+- `docs/adr/ADR-0055a-server-owned-effective-workspace-context.md`
 - `docs/adr/ADR-0056-web-ui-authority-is-server-projected.md`
 - `docs/planning/reviews/20260510-web-api-integration-gap-review.md`
 
@@ -113,7 +113,7 @@ governingSources:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/adr/ADR-0051-access-decision-service-and-openfga-adapter.md
-  - docs/adr/ADR-0055-server-owned-effective-workspace-context.md
+  - docs/adr/ADR-0055a-server-owned-effective-workspace-context.md
   - docs/adr/ADR-0056-web-ui-authority-is-server-projected.md
   - docs/planning/reviews/20260510-web-api-integration-gap-review.md
 allowedImplementationSurfaces:

@@ -8,7 +8,7 @@ owners:
 arc_level: ARC-1
 ---
 
-# ADR-0055: Server-owned Effective Workspace Context
+# ADR-0055a: Server-owned Effective Workspace Context
 
 ## Status
 
