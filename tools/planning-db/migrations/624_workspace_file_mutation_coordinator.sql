@@ -28,7 +28,7 @@ values (
   'SYS-API-INFRA-WORKSPACE-FILES',
   'SYS-DVT',
   'SYS-API-INFRASTRUCTURE',
-  'implemented',
+  'canonical',
   false,
   'Serialize same-path local mutations across repository instances and perform durable temporary-file replacement and revision-guarded deletion.',
   'LocalWorkspaceFileMutationCoordinator',
