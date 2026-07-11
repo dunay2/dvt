@@ -62,6 +62,10 @@ class CanvasSourceImportLiveProofRunner {
     return scopes.map((scope) => `${scope[key]}|${scope[key]}`).join(',');
   }
 
+  buildApiProcessArgs() {
+    return ['--filter', 'dvt-api', 'exec', 'tsx', 'watch', 'src/server.ts'];
+  }
+
   pipePrefixedOutput(stream, prefix) {
     const lineReader = readline.createInterface({ input: stream });
     lineReader.on('line', (line) => {
@@ -359,29 +363,25 @@ class CanvasSourceImportLiveProofRunner {
         additionalProjectIds: [sourceImportWorkspaceScope.projectId],
       });
 
-      const apiHandle = this.spawnProcess(
-        'api-source-import-proof',
-        ['--filter', 'dvt-api', 'dev'],
-        {
-          HOST: this.apiBindHost,
-          PORT: String(this.apiPort),
-          DATABASE_URL: defaultPgUrl,
-          DVT_LOCAL_POSTGRES_WAREHOUSE_URL: defaultPgUrl,
-          DVT_PG_SCHEMA: liveProofSchema,
-          DVT_READYZ_ENABLED: 'true',
-          DVT_VERSION_ENABLED: 'true',
-          DVT_DB_READY_ENABLED: 'true',
-          DVT_TEMPORAL_DBT_ENABLED: 'true',
-          TEMPORAL_ADDRESS: processContext.temporalEnv.connection.options.address,
-          TEMPORAL_NAMESPACE: processContext.temporalEnv.namespace,
-          TEMPORAL_TASK_QUEUE: 'dvt-temporal',
-          ...buildLocalDbtArtifactEnv({
-            ...this.env,
-            DVT_WORKSPACE_FILES_ROOT: workspaceFilesRoot,
-          }),
-          ...processContext.localProtectedRuntimeAuth.oidcEnv,
-        }
-      );
+      const apiHandle = this.spawnProcess('api-source-import-proof', this.buildApiProcessArgs(), {
+        HOST: this.apiBindHost,
+        PORT: String(this.apiPort),
+        DATABASE_URL: defaultPgUrl,
+        DVT_LOCAL_POSTGRES_WAREHOUSE_URL: defaultPgUrl,
+        DVT_PG_SCHEMA: liveProofSchema,
+        DVT_READYZ_ENABLED: 'true',
+        DVT_VERSION_ENABLED: 'true',
+        DVT_DB_READY_ENABLED: 'true',
+        DVT_TEMPORAL_DBT_ENABLED: 'true',
+        TEMPORAL_ADDRESS: processContext.temporalEnv.connection.options.address,
+        TEMPORAL_NAMESPACE: processContext.temporalEnv.namespace,
+        TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+        ...buildLocalDbtArtifactEnv({
+          ...this.env,
+          DVT_WORKSPACE_FILES_ROOT: workspaceFilesRoot,
+        }),
+        ...processContext.localProtectedRuntimeAuth.oidcEnv,
+      });
       this.processHandles.push(apiHandle);
 
       await this.waitForUrl(
