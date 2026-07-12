@@ -44,8 +44,9 @@ describe('useCanvasController active draft source import', () => {
     await act(async () => {
       harness.getLatestResult()?.handleSourceImportComplete({
         success: true,
+        draftRevision: 'draft-revision-2',
         sourcesCreated: 1,
-        tablesImported: 1,
+        objectsImported: 1,
         yamlFiles: ['models/sources/src_erp.yml'],
         importedNodeIds: ['node_3'],
         grouping: 'schema',

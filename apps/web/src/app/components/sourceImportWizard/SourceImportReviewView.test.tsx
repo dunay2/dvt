@@ -6,27 +6,29 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy } from './copy';
 import { SourceImportReviewView } from './SourceImportReviewView';
-import { buildSourceImportTableViewModel } from './sourceImportCatalogModel';
-import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
+import { buildSourceImportObjectViewModel } from './sourceImportCatalogModel';
+import type { SourceImportObjectViewModel } from './sourceImportCatalogModel';
 import { buildSourceImportReviewPreviewGroups } from './sourceImportReviewModel';
-import type { TableInfo } from './types';
+import { buildSourceImportTestObject } from './sourceImportWizard.testFixtures';
+import type { SelectableRelationalSourceObject } from './types';
 
-function buildTable(overrides?: Partial<TableInfo>): TableInfo {
-  return {
-    database: 'RAW',
-    schema: 'ERP',
-    table: 'ORDERS',
+function buildRelation(
+  overrides?: Parameters<typeof buildSourceImportTestObject>[0]
+): SelectableRelationalSourceObject {
+  return buildSourceImportTestObject({
     selected: true,
-    rowCount: 1500,
-    byteSize: 4096000,
-    columns: [{ name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true }],
+    columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
+    constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
     ...overrides,
-  };
+  });
 }
 
-function buildSelectedTable(table: TableInfo, index = 0): SourceImportTableViewModel {
-  return buildSourceImportTableViewModel(
-    table,
+function buildSelectedObject(
+  sourceObject: SelectableRelationalSourceObject,
+  index = 0
+): SourceImportObjectViewModel {
+  return buildSourceImportObjectViewModel(
+    sourceObject,
     index,
     sourceImportWizardCopy.catalog,
     sourceImportCatalogNumberFormatter
@@ -54,17 +56,19 @@ describe('SourceImportReviewView', () => {
   });
 
   it('renders the governed source registry path for each selected attachment group', async () => {
-    const selectedTables = [
-      buildTable({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
-      buildTable({ database: 'RAW', schema: 'ERP', table: 'CUSTOMERS' }),
+    const selectedSourceObjects = [
+      buildRelation({ database: 'RAW', schema: 'ERP', table: 'ORDERS' }),
+      buildRelation({ database: 'RAW', schema: 'ERP', table: 'CUSTOMERS' }),
     ];
 
     await act(async () => {
       root.render(
         <SourceImportReviewView
-          selectedTables={selectedTables.map((table, index) => buildSelectedTable(table, index))}
+          selectedSourceObjects={selectedSourceObjects.map((sourceObject, index) =>
+            buildSelectedObject(sourceObject, index)
+          )}
           previewGroups={buildSourceImportReviewPreviewGroups({
-            tables: selectedTables,
+            sourceObjects: selectedSourceObjects,
             groupingStrategy: 'schema',
             copy: sourceImportWizardCopy.catalog,
             numberFormatter: sourceImportCatalogNumberFormatter,
@@ -78,7 +82,7 @@ describe('SourceImportReviewView', () => {
             addTests: false,
             addFreshness: false,
           }}
-          onRemoveTable={vi.fn()}
+          onRemoveSourceObject={vi.fn()}
         />
       );
     });
@@ -91,7 +95,9 @@ describe('SourceImportReviewView', () => {
     expect(container.textContent).toContain('3.9 MB');
     expect(container.textContent).toContain('1 column');
     expect(
-      container.querySelector('[data-source-import-review-table="RAW.ERP.ORDERS"]')
+      container.querySelector(
+        `[data-source-import-review-object="${selectedSourceObjects[0]?.objectId}"]`
+      )
     ).not.toBeNull();
     expect(
       container.querySelector('[data-source-import-registry-path="models/sources/src_erp.yml"]')
@@ -99,20 +105,20 @@ describe('SourceImportReviewView', () => {
   });
 
   it('keeps review automation selectors separate from display names when identifiers contain dots', async () => {
-    const selectedTables = [
-      buildTable({ database: 'RAW.PROD', schema: 'PUBLIC', table: 'ORDERS' }),
-      buildTable({ database: 'RAW', schema: 'PROD.PUBLIC', table: 'ORDERS' }),
+    const selectedSourceObjects = [
+      buildRelation({ database: 'RAW.PROD', schema: 'PUBLIC', table: 'ORDERS' }),
+      buildRelation({ database: 'RAW', schema: 'PROD.PUBLIC', table: 'ORDERS' }),
     ];
-    const selectedTableViewModels = selectedTables.map((table, index) =>
-      buildSelectedTable(table, index)
+    const selectedObjectViewModels = selectedSourceObjects.map((sourceObject, index) =>
+      buildSelectedObject(sourceObject, index)
     );
 
     await act(async () => {
       root.render(
         <SourceImportReviewView
-          selectedTables={selectedTableViewModels}
+          selectedSourceObjects={selectedObjectViewModels}
           previewGroups={buildSourceImportReviewPreviewGroups({
-            tables: selectedTables,
+            sourceObjects: selectedSourceObjects,
             groupingStrategy: 'database',
             copy: sourceImportWizardCopy.catalog,
             numberFormatter: sourceImportCatalogNumberFormatter,
@@ -126,21 +132,16 @@ describe('SourceImportReviewView', () => {
             addTests: false,
             addFreshness: false,
           }}
-          onRemoveTable={vi.fn()}
+          onRemoveSourceObject={vi.fn()}
         />
       );
     });
 
     expect(container.textContent).toContain('RAW.PROD.PUBLIC.ORDERS');
     expect(
-      Array.from(container.querySelectorAll('[data-source-import-review-table]')).map((element) =>
-        element.getAttribute('data-source-import-review-table')
+      Array.from(container.querySelectorAll('[data-source-import-review-object]')).map((element) =>
+        element.getAttribute('data-source-import-review-object')
       )
-    ).toEqual(['RAW.PROD.PUBLIC.ORDERS', 'RAW.PROD.PUBLIC.ORDERS']);
-    expect(
-      Array.from(container.querySelectorAll('[data-source-import-review-table-identity]')).map(
-        (element) => element.getAttribute('data-source-import-review-table-identity')
-      )
-    ).toEqual(selectedTableViewModels.map((table) => table.identityKey));
+    ).toEqual(selectedObjectViewModels.map((sourceObject) => sourceObject.identityKey));
   });
 });

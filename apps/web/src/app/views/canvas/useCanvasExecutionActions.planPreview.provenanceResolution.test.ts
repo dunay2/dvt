@@ -1,6 +1,8 @@
 import { sha256HexUtf8 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { SaveWorkspaceFileContentInput } from '../../ports/workspace';
+import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 
@@ -56,20 +58,27 @@ describe('resolvePreviewProvenance', () => {
     ];
     const workspaceFilesQuery = {
       listFiles: vi.fn(async () => []),
-      getFileContent: vi.fn(async () => ({
-        path: transformPath,
-        name: 'preview_transform.sql',
-        language: 'sql',
-        content: 'select stale_column from old_workspace_file',
-        lastModified: '2026-04-08T00:00:00Z',
-      })),
+      getFileContent: vi.fn(async (path: string) => {
+        if (path !== transformPath) {
+          throw new WorkspaceFileLoadError('not_found', path);
+        }
+        const content = 'select stale_column from old_workspace_file';
+        return {
+          path: transformPath,
+          name: 'preview_transform.sql',
+          language: 'sql',
+          content,
+          contentSha256: sha256HexUtf8(content),
+          lastModified: '2026-04-08T00:00:00Z',
+        };
+      }),
     };
     const workspaceFileContentCommand = {
-      saveFileContent: vi.fn(async (path: string, content: string) => ({
-        path,
-        name: path.split('/').at(-1) ?? path,
-        language: path.endsWith('.sql') ? 'sql' : 'yaml',
-        content,
+      saveFileContent: vi.fn(async (input: SaveWorkspaceFileContentInput) => ({
+        kind: 'saved' as const,
+        disposition: 'updated' as const,
+        path: input.path,
+        contentSha256: sha256HexUtf8(input.content),
         lastModified: '2026-04-08T00:00:00Z',
       })),
     };
@@ -105,12 +114,15 @@ describe('resolvePreviewProvenance', () => {
         }),
       })
     );
-    expect(workspaceFileContentCommand.saveFileContent).toHaveBeenNthCalledWith(
-      1,
-      transformPath,
-      sqlArtifactContent
-    );
-    expect(workspaceFilesQuery.getFileContent).not.toHaveBeenCalled();
+    expect(workspaceFileContentCommand.saveFileContent).toHaveBeenNthCalledWith(1, {
+      path: transformPath,
+      content: sqlArtifactContent,
+      expectedRevision: {
+        kind: 'content_sha256',
+        value: sha256HexUtf8('select stale_column from old_workspace_file'),
+      },
+    });
+    expect(workspaceFilesQuery.getFileContent).toHaveBeenCalledWith(transformPath);
   });
 
   it('fails closed when generated authoring transforms carry draft and compiled SQL together', async () => {

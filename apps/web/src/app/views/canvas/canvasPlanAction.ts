@@ -18,6 +18,7 @@ import {
   resolveDbtExecutionScopeNodeIds,
 } from './canvasDbtPlannerGraphSource';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
+import { readExpectedWorkspaceFileRevision } from './canvasGitProvenance';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { collectPreviewSelection } from './canvasRunSelection';
 import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
@@ -124,7 +125,14 @@ export async function executeCanvasPlanAction({
       }
 
       for (const artifact of artifactProjection.artifacts) {
-        await workspaceFileContentCommand.saveFileContent(artifact.path, artifact.content);
+        await workspaceFileContentCommand.saveFileContent({
+          path: artifact.path,
+          content: artifact.content,
+          expectedRevision: await readExpectedWorkspaceFileRevision(
+            workspaceFilesQuery,
+            artifact.path
+          ),
+        });
       }
 
       const plan = await plansService.previewPlan({

@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-06-01",
+  "generated": "2026-07-12",
   "repo": {
     "sha": "local"
   },
@@ -1075,12 +1075,32 @@
       "number": "ADR-0058",
       "decisions": [
         "Define warehouse connection discovery queries and source import command DTOs.",
-        "Keep source import scope bound to protected runtime workspace authorization."
+        "Keep protected source discovery and import request/response DTOs in one canonical contract component.",
+        "Keep source import scope bound to protected runtime workspace authorization.",
+        "Re-export only source-object catalog and source-import operation contracts from this barrel.",
+        "Represent discoverable inputs as source objects instead of relational-table-only DTOs."
       ],
       "implemented_by": [
-        "apps/api/src/application/ports/warehouseSourceImport.ts"
+        "apps/api/src/application/ports/warehouseSourceImport.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v1.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.v1.ts",
+        "packages/@dvt/contracts/src/contracts/source-import/index.ts"
       ],
       "title": "ADR-0058: Warehouse Source Import Rails"
+    },
+    {
+      "number": "ADR-0060",
+      "decisions": [
+        "Enforce scoped compare-and-swap before atomically replacing authoritative workspace files.",
+        "Expose stable content revisions and compare-and-swap writes at the workspace-file port.",
+        "Serialize mutations per scoped path and publish writes through atomic replacement."
+      ],
+      "implemented_by": [
+        "apps/api/src/application/ports/workspaceFiles.ts",
+        "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileMutationCoordinator.ts",
+        "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts"
+      ],
+      "title": "ADR-0060: dbt Project Authoring Authority"
     }
   ]
 }

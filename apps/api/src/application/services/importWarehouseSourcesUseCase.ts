@@ -5,69 +5,98 @@ import {
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
   WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,
   WorkspaceGraphAuthoringDraftSchema,
+  isRelationalSourceObject,
+  ImportSourceObjectsRequestSchema,
   type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
 
 import type {
-  IWarehouseConnectionCatalog,
   ImportWarehouseSourcesInput,
   ImportWarehouseSourcesResult,
   SourceImportGrouping,
   WarehouseConnection,
-  WarehouseTable,
 } from '../ports/warehouseSourceImport.js';
 import {
   InvalidWarehouseSourceImportRequestError,
+  SourceObjectNotFoundError,
+  UnsupportedSourceObjectImportError,
   WarehouseSourceImportDraftConflictError,
-  WarehouseTableNotFoundError,
 } from '../ports/warehouseSourceImport.js';
-import type { IWorkspaceFileRepository } from '../ports/workspaceFiles.js';
-import { WorkspaceFileNotFoundError } from '../ports/workspaceFiles.js';
+import type {
+  IWorkspaceFileRepository,
+  WorkspaceFileContent,
+  WorkspaceFileSaveReceipt,
+  WorkspaceFileSaveResult,
+} from '../ports/workspaceFiles.js';
+import {
+  WorkspaceFileNotFoundError,
+  WorkspaceFileRevisionConflictError,
+} from '../ports/workspaceFiles.js';
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 import {
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../ports/workspaceGraphDraft.js';
 
+import type { WarehouseConnectionSourceObjectReader } from './WarehouseConnectionSourceObjectReader.js';
 import {
   InvalidWarehouseSourceYamlError,
   buildWarehouseSourceYamlBindings,
   buildWarehouseSourceYamlPath,
   buildWarehouseSourceYamlUpdates,
-  groupTablesForYaml,
-  toCollisionResistantYamlIdentifierPart,
+  groupSourceObjectsForYaml,
   toStableYamlIdentifierPart,
+  type ConnectedRelationalSourceObject,
   type WarehouseSourceYamlBinding,
   type WarehouseSourceYamlUpdate,
 } from './warehouseSourceYaml.js';
 
 export class ImportWarehouseSourcesUseCase {
   public constructor(
-    private readonly catalog: IWarehouseConnectionCatalog,
+    private readonly sourceObjectReader: WarehouseConnectionSourceObjectReader,
     private readonly draftStore: IWorkspaceGraphDraftStore,
     private readonly workspaceFiles: IWorkspaceFileRepository,
     private readonly clock: () => Date
   ) {}
 
   public async execute(input: ImportWarehouseSourcesInput): Promise<ImportWarehouseSourcesResult> {
-    if (input.tables.length === 0) {
+    const parsedRequest = ImportSourceObjectsRequestSchema.safeParse({
+      connectionId: input.connectionId,
+      objects: input.objects,
+      groupingStrategy: input.groupingStrategy,
+      includeColumns: input.includeColumns,
+      addTests: input.addTests,
+      addFreshness: input.addFreshness,
+    });
+    if (!parsedRequest.success) {
       throw new InvalidWarehouseSourceImportRequestError(
-        'At least one warehouse table is required.'
+        'Source import requests must use a known grouping, boolean options, and non-empty unique object-id-only selections.'
       );
     }
 
-    const connection = await this.catalog.getConnection(input.connectionId);
-    const catalogTables = await this.catalog.listTables(input.connectionId);
-    const authoritativeTables: WarehouseTable[] = [];
-    for (const selectedTable of input.tables) {
-      const authoritativeTable = catalogTables.find((catalogTable) =>
-        sameTable(catalogTable, selectedTable)
+    const { connection, sourceObjects: catalogSourceObjects } = await this.sourceObjectReader.read(
+      input.scope,
+      input.connectionId
+    );
+    const authoritativeSourceObjects: ConnectedRelationalSourceObject[] = [];
+    for (const selection of parsedRequest.data.objects) {
+      const sourceObject = catalogSourceObjects.find(
+        (catalogObject) => catalogObject.objectId === selection.objectId
       );
-      if (!authoritativeTable) {
-        throw new WarehouseTableNotFoundError(selectedTable);
+      if (!sourceObject) {
+        throw new SourceObjectNotFoundError(selection.objectId);
       }
-      authoritativeTables.push({ ...authoritativeTable, connectionId: input.connectionId });
+      if (!isRelationalSourceObject(sourceObject)) {
+        throw new UnsupportedSourceObjectImportError(
+          sourceObject.objectId,
+          sourceObject.locator.kind
+        );
+      }
+      authoritativeSourceObjects.push({
+        ...sourceObject,
+        connectionId: input.connectionId,
+      });
     }
 
     const stored = await this.draftStore.read(input.scope);
@@ -76,24 +105,27 @@ export class ImportWarehouseSourcesUseCase {
         ? createInitialDraft(input.scope.environmentId)
         : WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload);
     const yamlFiles = Array.from(
-      groupTablesForYaml(authoritativeTables, input.groupingStrategy).keys()
+      groupSourceObjectsForYaml(authoritativeSourceObjects, input.groupingStrategy).keys()
     );
-    const existingSourceFiles = await this.readExistingSourceFiles(yamlFiles);
+    const existingSourceFiles = await this.readExistingSourceFiles(input.scope, yamlFiles);
+    const existingSourceFileContents = new Map(
+      [...existingSourceFiles].map(([filePath, file]) => [filePath, file.content])
+    );
     let sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>;
     let sourceYamlUpdates: readonly WarehouseSourceYamlUpdate[];
     try {
       sourceYamlBindings = buildWarehouseSourceYamlBindings({
-        tables: authoritativeTables,
+        sourceObjects: authoritativeSourceObjects,
         groupingStrategy: input.groupingStrategy,
-        existingFiles: existingSourceFiles,
+        existingFiles: existingSourceFileContents,
       });
       sourceYamlUpdates = buildWarehouseSourceYamlUpdates({
-        tables: authoritativeTables,
+        sourceObjects: authoritativeSourceObjects,
         groupingStrategy: input.groupingStrategy,
         includeColumns: input.includeColumns,
         addTests: input.addTests,
         addFreshness: input.addFreshness,
-        existingFiles: existingSourceFiles,
+        existingFiles: existingSourceFileContents,
       });
     } catch (error) {
       if (error instanceof InvalidWarehouseSourceYamlError) {
@@ -106,6 +138,7 @@ export class ImportWarehouseSourcesUseCase {
     }
 
     const writtenSourceYamlUpdates = await this.saveSourceYamlUpdates(
+      input.scope,
       sourceYamlUpdates,
       existingSourceFiles
     );
@@ -114,7 +147,7 @@ export class ImportWarehouseSourcesUseCase {
       draft,
       {
         ...input,
-        tables: authoritativeTables,
+        sourceObjects: authoritativeSourceObjects,
       },
       connection,
       sourceYamlBindings
@@ -136,11 +169,19 @@ export class ImportWarehouseSourcesUseCase {
         nowIso: this.clock().toISOString(),
       });
     } catch (error) {
-      await this.rollbackSourceYamlUpdates(writtenSourceYamlUpdates, existingSourceFiles);
+      await this.rollbackSourceYamlUpdates(
+        input.scope,
+        writtenSourceYamlUpdates,
+        existingSourceFiles
+      );
       throw error;
     }
     if (saveResult.kind !== 'saved') {
-      await this.rollbackSourceYamlUpdates(writtenSourceYamlUpdates, existingSourceFiles);
+      await this.rollbackSourceYamlUpdates(
+        input.scope,
+        writtenSourceYamlUpdates,
+        existingSourceFiles
+      );
       throw new WarehouseSourceImportDraftConflictError();
     }
 
@@ -148,9 +189,9 @@ export class ImportWarehouseSourcesUseCase {
       success: true,
       draftRevision: saveResult.revision,
       sourcesCreated: mutation.importedNodeIds.length,
-      tablesImported: input.tables.length,
+      objectsImported: parsedRequest.data.objects.length,
       yamlFiles: sourceYamlUpdates.map((update) => update.path),
-      importedNodeIds: mutation.importedNodeIds,
+      importedNodeIds: [...mutation.importedNodeIds],
       grouping: input.groupingStrategy,
       options: {
         includeColumns: input.includeColumns,
@@ -161,12 +202,13 @@ export class ImportWarehouseSourcesUseCase {
   }
 
   private async readExistingSourceFiles(
+    scope: ImportWarehouseSourcesInput['scope'],
     paths: readonly string[]
-  ): Promise<ReadonlyMap<string, string>> {
-    const files = new Map<string, string>();
+  ): Promise<ReadonlyMap<string, WorkspaceFileContent>> {
+    const files = new Map<string, WorkspaceFileContent>();
     for (const filePath of paths) {
       try {
-        files.set(filePath, (await this.workspaceFiles.getFileContent(filePath)).content);
+        files.set(filePath, await this.workspaceFiles.getFileContent(scope, filePath));
       } catch (error) {
         if (error instanceof WorkspaceFileNotFoundError) {
           continue;
@@ -178,56 +220,82 @@ export class ImportWarehouseSourcesUseCase {
   }
 
   private async saveSourceYamlUpdates(
+    scope: ImportWarehouseSourcesInput['scope'],
     updates: readonly WarehouseSourceYamlUpdate[],
-    existingFiles: ReadonlyMap<string, string>
-  ): Promise<readonly WarehouseSourceYamlUpdate[]> {
-    const writtenUpdates: WarehouseSourceYamlUpdate[] = [];
+    existingFiles: ReadonlyMap<string, WorkspaceFileContent>
+  ): Promise<readonly WrittenSourceYamlUpdate[]> {
+    const writtenUpdates: WrittenSourceYamlUpdate[] = [];
     try {
       for (const update of updates) {
-        await this.workspaceFiles.saveFileContent(update.path, update.content);
-        writtenUpdates.push(update);
+        const previous = existingFiles.get(update.path);
+        const result = await this.workspaceFiles.saveFileContent(scope, {
+          path: update.path,
+          content: update.content,
+          expectedRevision: previous
+            ? { kind: 'content_sha256', value: previous.contentSha256 }
+            : { kind: 'absent' },
+        });
+        writtenUpdates.push({ update, receipt: requireSavedWorkspaceFile(update.path, result) });
       }
     } catch (error) {
-      await this.rollbackSourceYamlUpdates(writtenUpdates, existingFiles);
+      await this.rollbackSourceYamlUpdates(scope, writtenUpdates, existingFiles);
       throw error;
     }
     return writtenUpdates;
   }
 
   private async rollbackSourceYamlUpdates(
-    updates: readonly WarehouseSourceYamlUpdate[],
-    existingFiles: ReadonlyMap<string, string>
+    scope: ImportWarehouseSourcesInput['scope'],
+    updates: readonly WrittenSourceYamlUpdate[],
+    existingFiles: ReadonlyMap<string, WorkspaceFileContent>
   ): Promise<void> {
-    for (const update of [...updates].reverse()) {
-      const currentContent = await this.readCurrentSourceYamlContent(update.path);
-      if (currentContent !== update.content) {
-        continue;
-      }
-
-      const previousContent = existingFiles.get(update.path);
-      if (previousContent !== undefined) {
-        await this.workspaceFiles.saveFileContent(update.path, previousContent);
+    for (const written of [...updates].reverse()) {
+      const previous = existingFiles.get(written.update.path);
+      if (previous) {
+        const result = await this.workspaceFiles.saveFileContent(scope, {
+          path: written.update.path,
+          content: previous.content,
+          expectedRevision: {
+            kind: 'content_sha256',
+            value: written.receipt.contentSha256,
+          },
+        });
+        if (result.kind === 'conflict') {
+          continue;
+        }
       } else {
-        await this.workspaceFiles.deleteFileContent(update.path);
+        await this.workspaceFiles.deleteFileContent(scope, {
+          path: written.update.path,
+          expectedRevision: {
+            kind: 'content_sha256',
+            value: written.receipt.contentSha256,
+          },
+        });
       }
-    }
-  }
-
-  private async readCurrentSourceYamlContent(path: string): Promise<string | null> {
-    try {
-      return (await this.workspaceFiles.getFileContent(path)).content;
-    } catch (error) {
-      if (error instanceof WorkspaceFileNotFoundError) {
-        return null;
-      }
-      throw error;
     }
   }
 }
 
+type WrittenSourceYamlUpdate = Readonly<{
+  update: WarehouseSourceYamlUpdate;
+  receipt: WorkspaceFileSaveReceipt;
+}>;
+
+function requireSavedWorkspaceFile(
+  path: string,
+  result: WorkspaceFileSaveResult
+): WorkspaceFileSaveReceipt {
+  if (result.kind === 'conflict') {
+    throw new WorkspaceFileRevisionConflictError(path, result.currentContentSha256);
+  }
+  return result;
+}
+
 function appendImportedSourceNodes(
   draft: WorkspaceGraphAuthoringDraft,
-  input: ImportWarehouseSourcesInput,
+  input: Omit<ImportWarehouseSourcesInput, 'objects'> & {
+    readonly sourceObjects: readonly ConnectedRelationalSourceObject[];
+  },
   connection: WarehouseConnection,
   sourceYamlBindings: ReadonlyMap<string, WarehouseSourceYamlBinding>
 ): {
@@ -236,20 +304,41 @@ function appendImportedSourceNodes(
   readonly yamlFiles: readonly string[];
 } {
   const existingIds = new Set(draft.nodeIds);
+  const existingNodeIdBySourceObjectId = new Map<string, string>();
+  for (const node of draft.nodes) {
+    const sourceObjectId = readSourceObjectId(node);
+    if (sourceObjectId) {
+      existingNodeIdBySourceObjectId.set(sourceObjectId, node.id);
+    }
+  }
+  const requestedSourceObjectIdsByStableNodeId = new Map<string, Set<string>>();
+  for (const sourceObject of input.sourceObjects) {
+    const stableNodeId = toStableSourceNodeId(sourceObject);
+    const sourceObjectIds = requestedSourceObjectIdsByStableNodeId.get(stableNodeId) ?? new Set();
+    sourceObjectIds.add(sourceObject.objectId);
+    requestedSourceObjectIdsByStableNodeId.set(stableNodeId, sourceObjectIds);
+  }
   const importedNodes: WorkspaceGraphAuthoringNode[] = [];
   const importedNodeIds: string[] = [];
   const yamlFiles = new Set<string>();
   const nextPositions = { ...draft.nodePositions };
 
-  for (const table of input.tables) {
-    const nodeId = toSourceNodeId(table);
-    const candidateNodeIds = toSourceNodeIdCandidates(table);
+  for (const sourceObject of input.sourceObjects) {
     yamlFiles.add(
-      sourceYamlBindings.get(toSourceTableKey(table))?.path ??
-        buildWarehouseSourceYamlPath(table, input.groupingStrategy)
+      sourceYamlBindings.get(sourceObject.objectId)?.path ??
+        buildWarehouseSourceYamlPath(sourceObject, input.groupingStrategy)
     );
-    if (candidateNodeIds.some((candidateNodeId) => existingIds.has(candidateNodeId))) {
-      existingIds.add(nodeId);
+    if (existingNodeIdBySourceObjectId.has(sourceObject.objectId)) {
+      continue;
+    }
+    const stableNodeId = toStableSourceNodeId(sourceObject);
+    const hasRequestedCollision =
+      (requestedSourceObjectIdsByStableNodeId.get(stableNodeId)?.size ?? 0) > 1;
+    const nodeId =
+      hasRequestedCollision || existingIds.has(stableNodeId)
+        ? toCollisionResistantSourceNodeId(sourceObject)
+        : stableNodeId;
+    if (existingIds.has(nodeId)) {
       continue;
     }
 
@@ -257,11 +346,12 @@ function appendImportedSourceNodes(
     importedNodeIds.push(nodeId);
     importedNodes.push(
       toSourceNode(
-        table,
+        nodeId,
+        sourceObject,
         connection,
         input.groupingStrategy,
         input.includeColumns,
-        sourceYamlBindings.get(toSourceTableKey(table))
+        sourceYamlBindings.get(sourceObject.objectId)
       )
     );
     nextPositions[nodeId] = { x: 80 + importedNodeIds.length * 40, y: 120 };
@@ -292,35 +382,44 @@ function appendImportedSourceNodes(
 }
 
 function toSourceNode(
-  table: WarehouseTable,
+  nodeId: string,
+  sourceObject: ConnectedRelationalSourceObject,
   connection: WarehouseConnection,
   groupingStrategy: SourceImportGrouping,
   includeColumns: boolean,
   sourceYamlBinding: WarehouseSourceYamlBinding | undefined
 ): WorkspaceGraphAuthoringNode {
-  const schema = table.schema.toLowerCase();
-  const tableName = sourceYamlBinding?.tableName ?? table.table.toLowerCase();
+  const schema = sourceObject.locator.schema.toLowerCase();
+  const tableName = sourceYamlBinding?.tableName ?? sourceObject.locator.name.toLowerCase();
+  const sourceName =
+    sourceYamlBinding?.sourceName ??
+    [sourceObject.connectionId, sourceObject.locator.catalog, sourceObject.locator.schema]
+      .map(toStableYamlIdentifierPart)
+      .join('_');
 
   return {
-    id: toSourceNodeId(table),
-    name: toSourceNodeId(table),
+    id: nodeId,
+    name: sourceObject.displayName,
     pluginId: 'dvt.warehouse-source',
     kind: 'dvt:source',
     role: WORKSPACE_GRAPH_AUTHORING_NODE_ROLE.input,
     status: WORKSPACE_GRAPH_AUTHORING_NODE_STATUS.idle,
     tags: ['source', schema],
-    path: sourceYamlBinding?.path ?? buildWarehouseSourceYamlPath(table, groupingStrategy),
-    description: `Imported source for ${table.database}.${table.schema}.${table.table}`,
+    path: sourceYamlBinding?.path ?? buildWarehouseSourceYamlPath(sourceObject, groupingStrategy),
+    description: `Imported source for ${sourceObject.locator.catalog}.${sourceObject.locator.schema}.${sourceObject.locator.name}`,
     metadata: {
-      sourceName: sourceYamlBinding?.sourceName ?? schema,
+      sourceObjectId: sourceObject.objectId,
+      sourceName,
       tableName,
+      tableIdentifier: sourceObject.locator.name,
       connectionName: connection.name,
       connectionType: connection.type,
-      database: table.database,
-      schema: table.schema,
-      ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
-      ...(table.byteSize !== undefined ? { byteSize: table.byteSize } : {}),
-      columns: includeColumns ? table.columns : undefined,
+      database: sourceObject.locator.catalog,
+      schema: sourceObject.locator.schema,
+      relationType: sourceObject.locator.relationType,
+      sourceMetricEvidence: sourceObject.metricEvidence,
+      columns: includeColumns ? sourceObject.columns : undefined,
+      constraints: includeColumns ? sourceObject.constraints : undefined,
     },
   };
 }
@@ -345,63 +444,27 @@ function createInitialDraft(environmentId: string): WorkspaceGraphAuthoringDraft
   };
 }
 
-function sameTable(left: WarehouseTable, right: WarehouseTable): boolean {
-  return (
-    left.database === right.database && left.schema === right.schema && left.table === right.table
-  );
-}
-
-function toSourceNodeId(table: WarehouseTable): string {
+function toStableSourceNodeId(sourceObject: ConnectedRelationalSourceObject): string {
   return [
     'src',
-    table.connectionId ? toStableYamlIdentifierPart(table.connectionId) : undefined,
-    toCollisionResistantYamlIdentifierPart(table.database),
-    toCollisionResistantYamlIdentifierPart(table.schema),
-    toCollisionResistantYamlIdentifierPart(table.table),
+    toStableYamlIdentifierPart(sourceObject.connectionId),
+    toStableYamlIdentifierPart(sourceObject.locator.catalog),
+    toStableYamlIdentifierPart(sourceObject.locator.schema),
+    toStableYamlIdentifierPart(sourceObject.locator.name),
   ]
     .filter((part): part is string => typeof part === 'string' && part.length > 0)
     .join('_');
 }
 
-function toSourceNodeIdCandidates(table: WarehouseTable): readonly string[] {
-  return Array.from(
-    new Set([
-      toSourceNodeId(table),
-      toRetiredStableSourceNodeId(table),
-      toRetiredRawSourceNodeId(table),
-    ])
-  );
+function toCollisionResistantSourceNodeId(sourceObject: ConnectedRelationalSourceObject): string {
+  const suffix = createHash('sha256')
+    .update(JSON.stringify([sourceObject.connectionId, sourceObject.objectId]))
+    .digest('hex')
+    .slice(0, 8);
+  return `${toStableSourceNodeId(sourceObject)}_${suffix}`;
 }
 
-function toRetiredStableSourceNodeId(table: WarehouseTable): string {
-  return [
-    'src',
-    table.connectionId ? toStableYamlIdentifierPart(table.connectionId) : undefined,
-    toStableYamlIdentifierPart(table.database),
-    toStableYamlIdentifierPart(table.schema),
-    toStableYamlIdentifierPart(table.table),
-  ]
-    .filter((part): part is string => typeof part === 'string' && part.length > 0)
-    .join('_');
-}
-
-function toRetiredRawSourceNodeId(table: WarehouseTable): string {
-  return [
-    'src',
-    table.connectionId ? toStableYamlIdentifierPart(table.connectionId) : undefined,
-    table.database.toLowerCase(),
-    table.schema.toLowerCase(),
-    table.table.toLowerCase(),
-  ]
-    .filter((part): part is string => typeof part === 'string' && part.length > 0)
-    .join('_');
-}
-
-function toSourceTableKey(table: WarehouseTable): string {
-  return JSON.stringify([
-    table.connectionId?.toLowerCase() ?? '',
-    table.database.toLowerCase(),
-    table.schema.toLowerCase(),
-    table.table.toLowerCase(),
-  ]);
+function readSourceObjectId(node: WorkspaceGraphAuthoringNode): string | null {
+  const sourceObjectId = node.metadata?.sourceObjectId;
+  return typeof sourceObjectId === 'string' && sourceObjectId.length > 0 ? sourceObjectId : null;
 }

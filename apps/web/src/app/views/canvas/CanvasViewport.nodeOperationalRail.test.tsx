@@ -2,7 +2,7 @@
 
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import {
@@ -59,14 +59,28 @@ describe('CanvasViewport node operational rail', () => {
       ],
     };
 
+    const viewport = container.querySelector<HTMLElement>('[data-testid="canvas-viewport"]');
+    if (viewport == null) {
+      throw new Error('Expected the Canvas viewport surface.');
+    }
+    vi.spyOn(viewport, 'getBoundingClientRect').mockReturnValue(new DOMRect(40, 60, 800, 600));
+    const anchor = document.createElement('button');
+    container.append(anchor);
+    vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue(new DOMRect(120, 180, 80, 24));
+
     await act(async () => {
-      (openOperationalDetails as (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => void)(
-        detail,
-        new DOMRect(120, 180, 80, 24)
-      );
+      (
+        openOperationalDetails as (
+          detail: GraphNodeOperationalDetail,
+          anchorElement: HTMLElement
+        ) => void
+      )(detail, anchor);
     });
 
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
+    const popover = container.querySelector<HTMLElement>('[data-slot="graph-node-health-popover"]');
+    expect(popover?.style.getPropertyValue('--graph-node-health-popover-x')).toBe('80px');
+    expect(popover?.style.getPropertyValue('--graph-node-health-popover-y')).toBe('152px');
     expect(container.textContent).toContain('Orders source health');
     expect(container.textContent).toContain('18.2 GB');
 
@@ -92,7 +106,7 @@ describe('CanvasViewport node operational rail', () => {
       ] as CanvasViewportProps['nodesWithImpact'],
     });
 
-    await openOperationalDetails('source_orders');
+    const anchor = await openOperationalDetails('source_orders');
 
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
 
@@ -101,9 +115,52 @@ describe('CanvasViewport node operational rail', () => {
     });
 
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
+    expect(document.activeElement).toBe(anchor);
   });
 
-  it('closes the popover when the user clicks outside the canvas viewport', async () => {
+  it('does not replace health details when an embedded node control emits a node click', async () => {
+    const onNodeClick = vi.fn();
+    await renderViewport({
+      onNodeClick,
+      nodesWithImpact: [
+        {
+          id: 'source_orders',
+          position: { x: 40, y: 80 },
+          data: { name: 'Orders source', selectedForExecution: false },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await openOperationalDetails('source_orders');
+    const selectedNode = (
+      xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact']
+    )[0];
+    const handleNodeClick = xyflowState.lastReactFlowProps?.onNodeClick as
+      | ((event: React.MouseEvent<Element>, graphNode: NonNullable<typeof selectedNode>) => void)
+      | undefined;
+    const nodeElement = document.createElement('div');
+    const embeddedControl = document.createElement('button');
+    embeddedControl.setAttribute('data-canvas-node-control', '');
+    nodeElement.append(embeddedControl);
+
+    await act(async () => {
+      handleNodeClick?.(
+        {
+          currentTarget: nodeElement,
+          target: embeddedControl,
+          clientX: 120,
+          clientY: 180,
+        } as unknown as React.MouseEvent<Element>,
+        selectedNode!
+      );
+    });
+
+    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
+    expect(onNodeClick).not.toHaveBeenCalled();
+  });
+
+  it('closes the popover when the user clicks outside it within the canvas viewport', async () => {
     await renderViewport({
       nodesWithImpact: [
         {
@@ -119,8 +176,10 @@ describe('CanvasViewport node operational rail', () => {
 
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
 
+    const viewport = container.querySelector<HTMLElement>('[data-testid="canvas-viewport"]');
+    expect(viewport).not.toBeNull();
     const outsideTarget = document.createElement('button');
-    document.body.append(outsideTarget);
+    viewport!.append(outsideTarget);
     try {
       await act(async () => {
         fireEvent.pointerDown(outsideTarget);
@@ -163,6 +222,12 @@ describe('CanvasViewport node operational rail', () => {
     const nodes = xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact'];
 
     await act(async () => {
+      onSelectionChange?.({ nodes: [], edges: [] });
+    });
+
+    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
+
+    await act(async () => {
       onSelectionChange?.({
         nodes: nodes.filter((node) => node.id === 'source_orders'),
         edges: [],
@@ -178,7 +243,7 @@ describe('CanvasViewport node operational rail', () => {
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
   });
 
-  async function openOperationalDetails(nodeId: string): Promise<void> {
+  async function openOperationalDetails(nodeId: string): Promise<HTMLButtonElement> {
     const node = (
       xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact']
     ).find((candidate) => candidate.id === nodeId);
@@ -198,11 +263,18 @@ describe('CanvasViewport node operational rail', () => {
       ],
     };
 
+    const anchor = document.createElement('button');
+    container.append(anchor);
+    vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue(new DOMRect(120, 180, 80, 24));
+
     await act(async () => {
-      (openOperationalDetails as (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => void)(
-        detail,
-        new DOMRect(120, 180, 80, 24)
-      );
+      (
+        openOperationalDetails as (
+          detail: GraphNodeOperationalDetail,
+          anchorElement: HTMLElement
+        ) => void
+      )(detail, anchor);
     });
+    return anchor;
   }
 });

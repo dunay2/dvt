@@ -90,10 +90,10 @@ Acceptance:
 
 - Given API mode is active, when the wizard opens, then the source import port
   lists connections through `ListWarehouseConnections`.
-- Given a connection is selected, when tables are requested, then the source
-  import port lists authorized table metadata through
-  `ListWarehouseConnectionTables`.
-- Given selected tables are imported, then the source import port executes
+- Given a connection is selected, when source objects are requested, then the
+  source import port lists authorized provider-neutral object metadata through
+  `ListWarehouseConnectionSourceObjects`.
+- Given supported source objects are selected, then the source import port executes
   `ImportWarehouseSources` against the protected runtime draft and workspace
   file rails.
 - Given source-import doubles are used, then they remain explicit test-only

@@ -3,6 +3,7 @@ import { type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactEleme
 import { MoreHorizontal, Play } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { cn } from '../../components/ui/utils';
 import { GraphNodeColumnSection, type GraphNodeColumn } from './GraphNodeColumnSection';
 import { GraphNodeMetricRow } from './GraphNodeMetricRow';
@@ -32,7 +33,10 @@ export type GraphNodeCardViewProps = Readonly<{
   dimmed: boolean;
   overlayStyle?: CSSProperties;
   playAction?: GraphNodeCardPlayAction | null;
-  onOpenOperationalDetails?: (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => void;
+  onOpenOperationalDetails?: (
+    detail: GraphNodeOperationalDetail,
+    anchorElement: HTMLElement
+  ) => void;
 }>;
 
 function openGovernedNodeActions(event: ReactMouseEvent<HTMLButtonElement>): void {
@@ -71,6 +75,8 @@ export function GraphNodeCardView({
   onOpenOperationalDetails,
 }: GraphNodeCardViewProps): ReactElement {
   const operationalDetail = cardModel.operationalDetail;
+  const interactiveOperationalDetail =
+    operationalDetail != null && operationalDetail.rows.length > 0 ? operationalDetail : null;
 
   return (
     <div
@@ -113,6 +119,7 @@ export function GraphNodeCardView({
               <button
                 type="button"
                 data-slot="graph-node-card-play"
+                {...canvasNodeEmbeddedControlProps}
                 aria-label={playAction.label}
                 title={playAction.label}
                 disabled={playAction.disabled}
@@ -128,6 +135,7 @@ export function GraphNodeCardView({
             <button
               type="button"
               data-slot="graph-node-card-actions"
+              {...canvasNodeEmbeddedControlProps}
               aria-label={cardModel.nodeActionsLabel}
               title={cardModel.nodeActionsLabel}
               onClick={openGovernedNodeActions}
@@ -153,13 +161,15 @@ export function GraphNodeCardView({
         {showColumns && <GraphNodeColumnSection columns={columns} />}
       </div>
 
-      {onOpenOperationalDetails == null || operationalDetail == null ? (
+      {onOpenOperationalDetails == null || interactiveOperationalDetail == null ? (
         <GraphNodeOperationalRail metrics={cardModel.operationalMetrics} />
       ) : (
         <GraphNodeOperationalRail
           metrics={cardModel.operationalMetrics}
-          ariaLabel={operationalDetail.ariaLabel}
-          onOpen={(anchorRect) => onOpenOperationalDetails(operationalDetail, anchorRect)}
+          ariaLabel={interactiveOperationalDetail.ariaLabel}
+          onOpen={(anchorElement) =>
+            onOpenOperationalDetails(interactiveOperationalDetail, anchorElement)
+          }
         />
       )}
     </div>

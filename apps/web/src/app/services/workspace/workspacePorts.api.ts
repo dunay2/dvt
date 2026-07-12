@@ -1,5 +1,12 @@
 /** Owned concern: adapt workspace capability ports to protected API rails. */
-import { parseWorkspaceGraphDraftReadResponse } from '@dvt/contracts';
+import {
+  ImportSourceObjectsResultSchema,
+  SourceObjectCatalogResponseSchema,
+  TestWarehouseConnectionResultSchema,
+  WarehouseConnectionListSchema,
+  WarehouseConnectionSchema,
+  parseWorkspaceGraphDraftReadResponse,
+} from '@dvt/contracts';
 
 import type {
   FileContent,
@@ -10,7 +17,9 @@ import type {
   IWorkspaceFileHistoryQueryPort,
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
+  SaveWorkspaceFileContentInput,
   WorkspaceFileEntry,
+  WorkspaceFileSaveReceipt,
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
 import type { DiffChange } from '../../types/dbt';
@@ -18,6 +27,7 @@ import { ApiError, type ApiClient } from '../api/createApiClient';
 import {
   WorkspaceApiCapabilityUnsupportedError,
   WorkspaceFileLoadError,
+  WorkspaceFileRevisionConflictError,
   type WorkspaceApiUnsupportedCapability,
   type WorkspaceApiUnsupportedRail,
 } from './workspaceErrors';
@@ -54,6 +64,14 @@ function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
   return (
     error.responseBody.error.type === 'not_found' &&
     error.responseBody.error.reason === WORKSPACE_FILES_HTTP_ERROR_REASON.fileNotFound
+  );
+}
+
+function isWorkspaceFileRevisionConflictApiError(error: ApiError): boolean {
+  return (
+    isWorkspaceHttpErrorEnvelope(error.responseBody) &&
+    error.responseBody.error.type === 'conflict' &&
+    error.responseBody.error.reason === WORKSPACE_FILES_HTTP_ERROR_REASON.revisionConflict
   );
 }
 
@@ -128,11 +146,11 @@ function buildWarehouseConnectionsEndpoint(): string {
   )}`;
 }
 
-function buildWarehouseConnectionTablesEndpoint(connectionId: string): string {
+function buildWarehouseConnectionSourceObjectsEndpoint(connectionId: string): string {
   const scope = readWorkspaceGraphDraftScope();
   return `/workspace/warehouse/connections/${encodeURIComponent(
     connectionId
-  )}/tables?tenantId=${encodeURIComponent(scope.tenantId)}&projectId=${encodeURIComponent(
+  )}/objects?tenantId=${encodeURIComponent(scope.tenantId)}&projectId=${encodeURIComponent(
     scope.projectId
   )}&environmentId=${encodeURIComponent(scope.environmentId)}`;
 }
@@ -159,14 +177,26 @@ export function createApiWarehouseSourceImportPort(
   apiClient: ApiClient
 ): IWarehouseSourceImportPort {
   return {
-    listWarehouseConnections: () => apiClient.getJson(buildWarehouseConnectionsEndpoint()),
-    listWarehouseTables: (connectionId) =>
-      apiClient.getJson(buildWarehouseConnectionTablesEndpoint(connectionId)),
-    createWarehouseConnection: (input) =>
-      apiClient.postJson(buildWarehouseConnectionsEndpoint(), input),
-    testWarehouseConnection: (connectionId) =>
-      apiClient.postJson(buildWarehouseConnectionTestEndpoint(connectionId), {}),
-    importSources: (input) => apiClient.postJson(buildWarehouseSourcesImportEndpoint(), input),
+    listWarehouseConnections: async () =>
+      WarehouseConnectionListSchema.parse(
+        await apiClient.getJson(buildWarehouseConnectionsEndpoint())
+      ),
+    listSourceObjects: async (connectionId) =>
+      SourceObjectCatalogResponseSchema.parse(
+        await apiClient.getJson(buildWarehouseConnectionSourceObjectsEndpoint(connectionId))
+      ).objects,
+    createWarehouseConnection: async (input) =>
+      WarehouseConnectionSchema.parse(
+        await apiClient.postJson(buildWarehouseConnectionsEndpoint(), input)
+      ),
+    testWarehouseConnection: async (connectionId) =>
+      TestWarehouseConnectionResultSchema.parse(
+        await apiClient.postJson(buildWarehouseConnectionTestEndpoint(connectionId), {})
+      ),
+    importSources: async (input) =>
+      ImportSourceObjectsResultSchema.parse(
+        await apiClient.postJson(buildWarehouseSourcesImportEndpoint(), input)
+      ),
   };
 }
 
@@ -196,10 +226,19 @@ export function createApiWorkspaceFileContentCommandPort(
   apiClient: ApiClient
 ): IWorkspaceFileContentCommandPort {
   return {
-    saveFileContent: (path, content) =>
-      apiClient.postJson<{ content: string }, FileContent>(
-        buildWorkspaceFileContentEndpoint(path, readWorkspaceFilesScope()),
-        { content }
-      ),
+    saveFileContent: async (input) => {
+      const { path, ...request } = input;
+      try {
+        return await apiClient.postJson<
+          Omit<SaveWorkspaceFileContentInput, 'path'>,
+          WorkspaceFileSaveReceipt
+        >(buildWorkspaceFileContentEndpoint(path, readWorkspaceFilesScope()), request);
+      } catch (error) {
+        if (error instanceof ApiError && isWorkspaceFileRevisionConflictApiError(error)) {
+          throw new WorkspaceFileRevisionConflictError(path);
+        }
+        throw error;
+      }
+    },
   };
 }

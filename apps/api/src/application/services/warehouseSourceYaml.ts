@@ -3,10 +3,10 @@
 import { buildWarehouseSourceYamlBindings } from './warehouseSourceYamlBindings.js';
 import {
   DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR,
-  groupTablesForYaml,
+  groupSourceObjectsForYaml,
 } from './warehouseSourceYamlDescriptor.js';
 import { readExistingSourceDocument } from './warehouseSourceYamlDocument.js';
-import { tableIdentity } from './warehouseSourceYamlIdentity.js';
+import { sourceObjectIdentity } from './warehouseSourceYamlIdentity.js';
 import { upsertSourceTable } from './warehouseSourceYamlMerge.js';
 import { serializeSourceDocument } from './warehouseSourceYamlSerializer.js';
 import type {
@@ -16,13 +16,13 @@ import type {
 
 export {
   buildWarehouseSourceYamlBindings,
-  buildSourceTableDatabaseIndex,
-  findExistingSourceNameForTable,
+  findExistingSourceNameForSourceObject,
+  findExistingTableNameForSourceObject,
 } from './warehouseSourceYamlBindings.js';
 export {
   DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR,
   buildWarehouseSourceYamlPath,
-  groupTablesForYaml,
+  groupSourceObjectsForYaml,
   toCollisionResistantYamlIdentifierPart,
   toStableYamlIdentifierPart,
 } from './warehouseSourceYamlDescriptor.js';
@@ -34,9 +34,10 @@ export {
 } from './warehouseSourceYamlDocument.js';
 export {
   buildCanonicalSourceName,
-  isRetiredSourceNameForTable,
-  sourceTableIdentity,
-  tableIdentity,
+  buildCanonicalTableName,
+  buildCollisionResistantSourceName,
+  buildCollisionResistantTableName,
+  sourceObjectIdentity,
 } from './warehouseSourceYamlIdentity.js';
 export {
   buildColumns,
@@ -53,6 +54,7 @@ export {
 export type {
   BuildWarehouseSourceYamlBindingsInput,
   BuildWarehouseSourceYamlUpdatesInput,
+  ConnectedRelationalSourceObject,
   GeneratedSourceYamlFreshness,
   SourceYamlColumn,
   SourceYamlDocument,
@@ -69,22 +71,28 @@ export { InvalidWarehouseSourceYamlError } from './warehouseSourceYamlTypes.js';
 export function buildWarehouseSourceYamlUpdates(
   input: BuildWarehouseSourceYamlUpdatesInput
 ): readonly WarehouseSourceYamlUpdate[] {
-  const tablesByPath = groupTablesForYaml(input.tables, input.groupingStrategy);
+  const sourceObjectsByPath = groupSourceObjectsForYaml(
+    input.sourceObjects,
+    input.groupingStrategy
+  );
   const bindings = buildWarehouseSourceYamlBindings(input);
-  return Array.from(tablesByPath.entries())
+  return Array.from(sourceObjectsByPath.entries())
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([path, tables]) => {
+    .map(([path, sourceObjects]) => {
       const existingDocument = readExistingSourceDocument(input.existingFiles.get(path));
 
-      const nextDocument = tables.reduce(
-        (document, table) =>
-          upsertSourceTable(document, table, {
+      const nextDocument = sourceObjects.reduce(
+        (document, sourceObject) =>
+          upsertSourceTable(document, sourceObject, {
             includeColumns: input.includeColumns,
             addTests: input.addTests,
             addFreshness: input.addFreshness,
             sourceName:
-              bindings.get(tableIdentity(table))?.sourceName ??
-              DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table),
+              bindings.get(sourceObjectIdentity(sourceObject))?.sourceName ??
+              DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForSourceObject(sourceObject),
+            tableName:
+              bindings.get(sourceObjectIdentity(sourceObject))?.tableName ??
+              DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForSourceObject(sourceObject),
           }),
         existingDocument
       );

@@ -15,6 +15,8 @@ export class TestWarehouseConnectionUseCase {
   public async execute(
     input: TestWarehouseConnectionInput
   ): Promise<TestWarehouseConnectionResult> {
-    return this.probe.testConnection(await this.catalog.getConnection(input.connectionId));
+    return this.probe.testConnection(
+      await this.catalog.getConnection(input.scope, input.connectionId)
+    );
   }
 }

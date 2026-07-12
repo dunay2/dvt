@@ -13698,3 +13698,411 @@ test('tracked migrations register source import list connections DB-first rail',
   assert.doesNotMatch(listConnectionsRailMigration.sql, /delete\s+from/i);
   assert.doesNotMatch(listConnectionsRailMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations register draggable ordered canvas node workbench evidence', () => {
+  const migrations = readMigrationFiles();
+  const workbenchMigration = migrations.find(
+    (migration) => migration.fileName === '587_canvas_node_workbench_draggable_ordered_manifest.sql'
+  );
+
+  assert.ok(workbenchMigration);
+  assert.match(workbenchMigration.sql, /web\.component\.canvas\.CanvasNodeWorkbenchPanel/);
+  assert.match(workbenchMigration.sql, /draggableOverlay/);
+  assert.match(workbenchMigration.sql, /presentationOrderInvariant/);
+  assert.match(workbenchMigration.sql, /duplicateRowPolicy/);
+  assert.match(workbenchMigration.sql, /NodePropertiesTabs\.tsx/);
+  assert.match(workbenchMigration.sql, /NodePropertySectionView\.tsx/);
+  assert.match(workbenchMigration.sql, /CanvasNodeWorkbenchOverlay\.test\.tsx/);
+  assert.match(workbenchMigration.sql, /EV-WEB-CANVAS-NODE-WORKBENCH-DRAGGABLE-OVERLAY/);
+  assert.match(workbenchMigration.sql, /EV-WEB-CANVAS-NODE-WORKBENCH-SHARED-PRESENTATION/);
+  assert.doesNotMatch(workbenchMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(workbenchMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare draggable ordered canvas node workbench feature symbols', () => {
+  const migrations = readMigrationFiles();
+  const workbenchSymbolsMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '588_canvas_node_workbench_draggable_ordered_feature_symbols.sql'
+  );
+
+  assert.ok(workbenchSymbolsMigration);
+  assert.match(workbenchSymbolsMigration.sql, /CANVAS-NODE-CONTEXT-PROPERTIES-PANEL-20260604/);
+  assert.match(workbenchSymbolsMigration.sql, /InspectCanvasNodeProperties/);
+  assert.match(workbenchSymbolsMigration.sql, /CanvasNodeWorkbenchDragState/);
+  assert.match(workbenchSymbolsMigration.sql, /CanvasNodeWorkbenchDragHandleProps/);
+  assert.match(workbenchSymbolsMigration.sql, /buildNodeWorkbenchReadModel/);
+  assert.match(workbenchSymbolsMigration.sql, /resolveNodeWorkbenchHiddenGeneralRowLabels/);
+  assert.match(workbenchSymbolsMigration.sql, /allowedImplementationSurfaces/);
+  assert.match(workbenchSymbolsMigration.sql, /redGreenCycles/);
+  assert.match(workbenchSymbolsMigration.sql, /pnpm verify:prepush/);
+  assert.doesNotMatch(workbenchSymbolsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(workbenchSymbolsMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations record Graph node operational summary no duplicate detail policy', () => {
+  const migrations = readMigrationFiles();
+  const noDuplicateDetailMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '589_graph_node_operational_summary_no_duplicate_detail.sql'
+  );
+
+  assert.ok(noDuplicateDetailMigration);
+  assert.match(noDuplicateDetailMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(noDuplicateDetailMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(noDuplicateDetailMigration.sql, /noDuplicateDetailPolicy/);
+  assert.match(noDuplicateDetailMigration.sql, /buildAdditionalOperationalDetail/);
+  assert.match(
+    noDuplicateDetailMigration.sql,
+    /EV-GRAPH-NODE-OPERATIONAL-SUMMARY-NO-DUPLICATE-DETAIL/
+  );
+  assert.match(
+    noDuplicateDetailMigration.sql,
+    /static row column and size metrics do not open a duplicate health popover/
+  );
+  assert.match(noDuplicateDetailMigration.sql, /schema-drift-only detail to be null/);
+  assert.match(
+    noDuplicateDetailMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeOperationalSummary\.test\.ts/
+  );
+  assert.doesNotMatch(noDuplicateDetailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(noDuplicateDetailMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations preserve Graph node byte-level health detail policy', () => {
+  const migrations = readMigrationFiles();
+  const byteDetailMigration = migrations.find(
+    (migration) => migration.fileName === '590_graph_node_operational_summary_byte_detail.sql'
+  );
+
+  assert.ok(byteDetailMigration);
+  assert.match(byteDetailMigration.sql, /RenderGraphNodeCardMetrics/);
+  assert.match(byteDetailMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(byteDetailMigration.sql, /byteLevelDetailPolicy/);
+  assert.match(byteDetailMigration.sql, /pushByteLevelDetailRows/);
+  assert.match(byteDetailMigration.sql, /formatExactBytes/);
+  assert.match(byteDetailMigration.sql, /formatAverageBytes/);
+  assert.match(byteDetailMigration.sql, /EV-GRAPH-NODE-OPERATIONAL-SUMMARY-BYTE-DETAIL/);
+  assert.match(byteDetailMigration.sql, /rowColumnOnlyStaysNonInteractive/);
+  assert.match(byteDetailMigration.sql, /byteSizeCreatesComplementaryDetail/);
+  assert.match(
+    byteDetailMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeCardReadModel\.test\.ts/
+  );
+  assert.doesNotMatch(byteDetailMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(byteDetailMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations declare Graph node byte formatter feature symbols', () => {
+  const migrations = readMigrationFiles();
+  const byteFormatterSymbolsMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '591_graph_node_operational_summary_byte_formatter_symbols.sql'
+  );
+
+  assert.ok(byteFormatterSymbolsMigration);
+  assert.match(byteFormatterSymbolsMigration.sql, /raw_manifest/);
+  assert.match(byteFormatterSymbolsMigration.sql, /formatExactBytes/);
+  assert.match(byteFormatterSymbolsMigration.sql, /formatAverageBytes/);
+  assert.match(byteFormatterSymbolsMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(byteFormatterSymbolsMigration.sql, /symbol_refs/);
+  assert.match(
+    byteFormatterSymbolsMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeOperationalSummary\.test\.ts/
+  );
+  assert.doesNotMatch(byteFormatterSymbolsMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(byteFormatterSymbolsMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile source-object metric evidence and component ownership', () => {
+  const migrations = readMigrationFiles();
+  const sourceObjectMetricBaseline = migrations.find(
+    (migration) => migration.fileName === '592_source_import_source_object_metric_evidence.sql'
+  );
+  const sourceObjectMetricMigration = migrations.find(
+    (migration) => migration.fileName === '593_source_import_source_object_metric_architecture.sql'
+  );
+  const sourceObjectMetricIntegrityMigration = migrations.find(
+    (migration) => migration.fileName === '594_source_object_metric_component_integrity.sql'
+  );
+
+  assert.ok(sourceObjectMetricBaseline);
+  assert.ok(sourceObjectMetricMigration);
+  assert.ok(sourceObjectMetricIntegrityMigration);
+  assert.match(sourceObjectMetricBaseline.sql, /mandatory-transition/);
+  assert.match(sourceObjectMetricMigration.sql, /ImportWarehouseSources/);
+  assert.match(sourceObjectMetricMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(sourceObjectMetricMigration.sql, /WarehouseTable/);
+  assert.match(sourceObjectMetricMigration.sql, /WarehouseSourceObject\/DataSourceObject/);
+  assert.match(sourceObjectMetricMigration.sql, /mandatory-transition/);
+  assert.match(sourceObjectMetricMigration.sql, /parquet, JSON, service resources/);
+  assert.match(sourceObjectMetricMigration.sql, /SourceObjectMetricEvidence/);
+  assert.match(sourceObjectMetricMigration.sql, /sourceMetricEvidence/);
+  assert.match(sourceObjectMetricMigration.sql, /measuredTone', 'success/);
+  assert.match(sourceObjectMetricMigration.sql, /estimatedTone', 'warning/);
+  assert.match(sourceObjectMetricMigration.sql, /buildPostgresSourceObjectMetricEvidence/);
+  assert.match(sourceObjectMetricMigration.sql, /loadPostgresPlanRowCount/);
+  assert.match(sourceObjectMetricMigration.sql, /loadPostgresColumnsFromDataPlane/);
+  assert.match(sourceObjectMetricMigration.sql, /GraphNodeVolumeMetricProjection/);
+  assert.match(sourceObjectMetricMigration.sql, /GraphNodeMetricHotspot/);
+  assert.match(sourceObjectMetricMigration.sql, /CONTRACT-SOURCE-OBJECT-METRIC-EVIDENCE/);
+  assert.match(sourceObjectMetricMigration.sql, /REL-GRAPH-METRIC-ROW-USES-HOTSPOT/);
+  assert.match(sourceObjectMetricMigration.sql, /frontend_component_local_files/);
+  assert.match(sourceObjectMetricMigration.sql, /EV-GRAPH-NODE-SOURCE-OBJECT-ESTIMATED-SIZE/);
+  assert.match(
+    sourceObjectMetricMigration.sql,
+    /apps\/web\/src\/app\/plugins\/graph\/graphNodeOperationalSummary\.test\.ts/
+  );
+  assert.match(
+    sourceObjectMetricMigration.sql,
+    /apps\/api\/test\/infrastructure\/warehouseSourceImport\/WorkspaceWarehouseConnectionProbe\.test\.ts/
+  );
+  assert.doesNotMatch(sourceObjectMetricMigration.sql, /normalizeWarehouseTableSizeEvidence/);
+  assert.match(
+    sourceObjectMetricMigration.sql,
+    /- 'apps\/web\/src\/app\/plugins\/graph\/graphNodeSourceMetricProjection\.ts#projectGraphNodeSourceMetricEvidence'/
+  );
+  assert.match(sourceObjectMetricIntegrityMigration.sql, /SYS-API-INFRA-WAREHOUSE-SOURCES/);
+  assert.match(
+    sourceObjectMetricIntegrityMigration.sql,
+    /SYS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES/
+  );
+  assert.match(
+    sourceObjectMetricIntegrityMigration.sql,
+    /governance_component_local_ownership_patterns/
+  );
+  assert.match(sourceObjectMetricIntegrityMigration.sql, /architecture\.component_port/);
+  assert.match(sourceObjectMetricIntegrityMigration.sql, /architecture\.component_test/);
+  assert.match(sourceObjectMetricIntegrityMigration.sql, /architecture\.component_observability/);
+  assert.match(
+    sourceObjectMetricIntegrityMigration.sql,
+    /delete from architecture\.component[\s\S]*api\.component\.warehouseSourceImport\.WorkspaceWarehouseConnectionProbe/
+  );
+  assert.doesNotMatch(sourceObjectMetricMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(sourceObjectMetricMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(sourceObjectMetricIntegrityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations canonicalize source-object metric manifests per feature', () => {
+  const migrations = readMigrationFiles();
+  const canonicalizationMigration = migrations.find(
+    (migration) =>
+      migration.fileName === '601_source_object_metric_feature_mechanization_canonicalization.sql'
+  );
+
+  assert.ok(canonicalizationMigration);
+  assert.match(canonicalizationMigration.sql, /canonical_manifests/);
+  assert.match(canonicalizationMigration.sql, /deduplicated_symbols/);
+  assert.match(canonicalizationMigration.sql, /E-CANVAS-SOURCE-IMPORT-BYTE-SIZE-1/);
+  assert.match(canonicalizationMigration.sql, /E-CANVAS-SOURCE-IMPORT-METADATA-PROBE-1/);
+  assert.match(canonicalizationMigration.sql, /cypressCoverage/);
+  assert.doesNotMatch(canonicalizationMigration.sql, /delete\s+from/i);
+  assert.doesNotMatch(canonicalizationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile embedded Canvas control component integrity', () => {
+  const migrations = readMigrationFiles();
+  const integrityMigration = migrations.find(
+    (migration) => migration.fileName === '602_canvas_embedded_control_component_integrity.sql'
+  );
+
+  assert.ok(integrityMigration);
+  assert.match(integrityMigration.sql, /SYS-WEB-CANVAS-GRAPH-VIEWPORT/);
+  assert.match(integrityMigration.sql, /RESP-CANVAS-NODE-PORT-HANDLE/);
+  assert.match(integrityMigration.sql, /RESP-CANVAS-NODE-INTERACTION-BOUNDARY/);
+  assert.match(integrityMigration.sql, /TEST-CANVAS-NODE-PORT-HANDLE/);
+  assert.match(integrityMigration.sql, /component_engineering_component_tree_projection/);
+  assert.match(
+    integrityMigration.sql,
+    /delete from architecture\.component\s+where component_id = 'web\.component\.canvas\.CanvasViewport'/
+  );
+  assert.doesNotMatch(integrityMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations assign source-object metric symbols to semantic owners', () => {
+  const migrations = readMigrationFiles();
+  const ownershipMigration = migrations.find(
+    (migration) => migration.fileName === '603_source_object_metric_semantic_ownership.sql'
+  );
+
+  assert.ok(ownershipMigration);
+  assert.match(ownershipMigration.sql, /feature_symbol_assignment/);
+  assert.match(ownershipMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(ownershipMigration.sql, /E-CANVAS-UXDB-COMPONENT-SLICES-1/);
+  assert.match(ownershipMigration.sql, /E-CANVAS-ADD-SOURCE-REVIEW-TEMPLATE-1/);
+  assert.match(ownershipMigration.sql, /formatter-consumer-only/);
+  assert.match(ownershipMigration.sql, /relationalSymbolRefsAligned/);
+  assert.match(
+    ownershipMigration.sql,
+    /where version = '592_source_import_source_object_metric_evidence'/
+  );
+  assert.doesNotMatch(ownershipMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations distinguish metadata fallback and browser evidence', () => {
+  const migrations = readMigrationFiles();
+  const evidenceMigration = migrations.find(
+    (migration) => migration.fileName === '604_source_metadata_fallback_evidence_scope.sql'
+  );
+
+  assert.ok(evidenceMigration);
+  assert.match(evidenceMigration.sql, /metadataPermissionFallbackEvidence/);
+  assert.match(evidenceMigration.sql, /provider-adapter-negative-branch/);
+  assert.match(evidenceMigration.sql, /browserFlowDoesNotClaim/);
+  assert.match(evidenceMigration.sql, /WorkspaceWarehouseConnectionProbe\.test\.ts/);
+  assert.doesNotMatch(evidenceMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations hard cut source discovery to the provider-neutral SourceObject contract', () => {
+  const migrations = readMigrationFiles();
+  const sourceObjectContractMigration = migrations.find(
+    (migration) => migration.fileName === '605_source_object_catalog_contract_hard_cut.sql'
+  );
+
+  assert.ok(sourceObjectContractMigration);
+  assert.match(sourceObjectContractMigration.sql, /E-SOURCE-OBJECT-METRICS-PROD-1/);
+  assert.match(sourceObjectContractMigration.sql, /SYS-CONTRACTS-SOURCE-OBJECT-CATALOG/);
+  assert.match(sourceObjectContractMigration.sql, /SourceObjectCatalog\.v1\.ts/);
+  assert.match(sourceObjectContractMigration.sql, /ListWarehouseConnectionSourceObjects/);
+  assert.match(sourceObjectContractMigration.sql, /ListWarehouseConnectionTables/);
+  assert.match(sourceObjectContractMigration.sql, /SourceObjectSchema/);
+  assert.match(sourceObjectContractMigration.sql, /SourceObjectSelectionSchema/);
+  assert.match(sourceObjectContractMigration.sql, /relation, file, endpoint, and stream/);
+  assert.match(sourceObjectContractMigration.sql, /ImportWarehouseSources/);
+  assert.match(sourceObjectContractMigration.sql, /unsupported non-relational object/);
+  assert.doesNotMatch(sourceObjectContractMigration.sql, /parallel rail/i);
+  assert.doesNotMatch(sourceObjectContractMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile SourceObject ownership and active feature manifests', () => {
+  const migrations = readMigrationFiles();
+  const reconciliationMigration = migrations.find(
+    (migration) => migration.fileName === '606_source_object_catalog_component_reconciliation.sql'
+  );
+
+  assert.ok(reconciliationMigration);
+  assert.match(reconciliationMigration.sql, /SYS-CONTRACTS-SOURCE-OBJECT-CATALOG/);
+  assert.match(reconciliationMigration.sql, /CONTRACT-SOURCE-OBJECT-CATALOG-V1/);
+  assert.match(reconciliationMigration.sql, /listWarehouseConnectionSourceObjectsUseCase\.ts/);
+  assert.match(reconciliationMigration.sql, /TEST-SOURCE-OBJECT-CATALOG-CONTRACT/);
+  assert.match(reconciliationMigration.sql, /PORT-WEB-SOURCE-OBJECT-CATALOG-READ/);
+  assert.match(reconciliationMigration.sql, /REL-SOURCE-OBJECT-CATALOG-CONTRACT-TO-INFRA/);
+  assert.match(reconciliationMigration.sql, /source_object_manifest_reconciliation/);
+  assert.match(reconciliationMigration.sql, /deduplicated_symbols/);
+  assert.match(reconciliationMigration.sql, /localMetricComponentsRetired/);
+  assert.match(
+    reconciliationMigration.sql,
+    /delete from architecture\.component[\s\S]*api\.component\.sourceImport\.SourceObjectMetricEvidence/
+  );
+  assert.match(
+    reconciliationMigration.sql,
+    /web\.component\.workspace\.SourceObjectMetricEvidenceModel/
+  );
+  assert.doesNotMatch(reconciliationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations version the SourceObject catalog response and reject duplicate selections', () => {
+  const migrations = readMigrationFiles();
+  const versionedResponseMigration = migrations.find(
+    (migration) => migration.fileName === '607_source_object_catalog_versioned_response.sql'
+  );
+
+  assert.ok(versionedResponseMigration);
+  assert.match(versionedResponseMigration.sql, /SourceObjectCatalogResponseSchema/);
+  assert.match(versionedResponseMigration.sql, /SourceObjectSelectionListSchema/);
+  assert.match(versionedResponseMigration.sql, /contractVersion', 1/);
+  assert.match(versionedResponseMigration.sql, /unversionedResponseAccepted', false/);
+  assert.match(versionedResponseMigration.sql, /duplicateSelectionAccepted', false/);
+  assert.match(versionedResponseMigration.sql, /SourceObjectRowCountMetric/);
+  assert.match(versionedResponseMigration.sql, /SourceObjectMetricValue/);
+  assert.doesNotMatch(versionedResponseMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations model source import operations and metric evidence presentation', () => {
+  const migrations = readMigrationFiles();
+  const architectureMigration = migrations.find(
+    (migration) => migration.fileName === '608_source_import_operations_and_metric_presentation.sql'
+  );
+
+  assert.ok(architectureMigration);
+  assert.match(architectureMigration.sql, /SYS-CONTRACTS-SOURCE-IMPORT-OPERATIONS/);
+  assert.match(architectureMigration.sql, /CONTRACT-SOURCE-IMPORT-OPERATIONS-V1/);
+  assert.match(architectureMigration.sql, /SourceObjectMetricEvidencePresenter/);
+  assert.match(architectureMigration.sql, /MetricEvidenceHotspot/);
+  assert.match(architectureMigration.sql, /RenderCanvasGraphNodeOperationalSummary/);
+  assert.match(architectureMigration.sql, /RenderSourceImportCatalogView/);
+  assert.match(architectureMigration.sql, /canonicalRail', 'ListWarehouseConnectionSourceObjects'/);
+  assert.match(
+    architectureMigration.sql,
+    /ddd_owner = 'SYS-API-APPLICATION-SERVICES-WAREHOUSE-SOURCES'/
+  );
+});
+
+test('tracked migrations require authorized workspace scope at the storage boundary', () => {
+  const migrations = readMigrationFiles();
+  const scopeBoundaryMigration = migrations.find(
+    (migration) => migration.fileName === '609_workspace_scope_storage_boundary.sql'
+  );
+
+  assert.ok(scopeBoundaryMigration);
+  assert.match(scopeBoundaryMigration.sql, /SYS-API-INFRA-WORKSPACE-FILES/);
+  assert.match(scopeBoundaryMigration.sql, /CONTRACT-WORKSPACE-FILE-SCOPE-PORT-V1/);
+  assert.match(scopeBoundaryMigration.sql, /authorized_scope_equals_storage_scope/);
+  assert.match(scopeBoundaryMigration.sql, /tenantId', 'projectId', 'environmentId/);
+  assert.match(scopeBoundaryMigration.sql, /REL-WAREHOUSE-CATALOG-USES-SCOPED-WORKSPACE-FILES/);
+  assert.match(scopeBoundaryMigration.sql, /TEST-SCOPED-WORKSPACE-FILE-STORAGE/);
+  assert.match(scopeBoundaryMigration.sql, /ADR-0058-WORKSPACE-SCOPE-STORAGE-BOUNDARY/);
+  assert.doesNotMatch(scopeBoundaryMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations close scoped workspace storage with cross-scope evidence', () => {
+  const migrations = readMigrationFiles();
+  const implementationMigration = migrations.find(
+    (migration) => migration.fileName === '610_workspace_scope_storage_implementation.sql'
+  );
+
+  assert.ok(implementationMigration);
+  assert.match(implementationMigration.sql, /storageBoundaryStatus', 'implemented'/);
+  assert.match(implementationMigration.sql, /REL-DBT-RUN-BINDING-USES-SCOPED-WORKSPACE-ROOT/);
+  assert.match(implementationMigration.sql, /LocalWorkspaceFileRepository\.test\.ts/);
+  assert.match(implementationMigration.sql, /WorkspaceWarehouseConnectionCatalog\.test\.ts/);
+  assert.match(implementationMigration.sql, /EV-SCOPED-WORKSPACE-FILE-STORAGE-IMPLEMENTED/);
+  assert.match(
+    implementationMigration.sql,
+    /source_path = 'tools\/planning-db\/migrations\/608_source_import_operations_and_metric_presentation\.sql'/
+  );
+  assert.doesNotMatch(implementationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations make live SourceObject discovery and exact identity canonical', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '611_source_object_live_discovery_and_identity_authority.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-API-APPLICATION-SOURCE-OBJECT-READER/);
+  assert.match(migration.sql, /ListWarehouseConnectionSourceObjects;ImportWarehouseSources/);
+  assert.match(migration.sql, /live-provider-discovery/);
+  assert.match(migration.sql, /exact-case-sensitive/);
+  assert.match(migration.sql, /source-object-constraints/);
+  assert.match(migration.sql, /WarehouseConnectionSourceObjectReader\.test\.ts/);
+});
+
+test('tracked migrations hard cut the source import catalog to SourceObject semantics', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '612_source_import_catalog_source_object_semantic_hardcut.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-SOURCE-IMPORT-CATALOG-VIEW/);
+  assert.match(migration.sql, /RenderSourceImportCatalogView/);
+  assert.match(migration.sql, /ListWarehouseConnectionSourceObjects/);
+  assert.match(migration.sql, /never silently filtered/);
+  assert.match(migration.sql, /relation', 'file', 'endpoint', 'stream/);
+  assert.match(migration.sql, /capability-aware/);
+  assert.match(migration.sql, /CONTRACT-SOURCE-OBJECT-CATALOG-V1/);
+});

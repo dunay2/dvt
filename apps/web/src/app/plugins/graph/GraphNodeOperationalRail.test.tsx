@@ -83,9 +83,10 @@ describe('GraphNodeOperationalRail', () => {
     });
 
     const metric = container.querySelector('[data-slot="graph-node-operational-metric"]');
-    const value = container.querySelector('[data-slot="graph-node-operational-value"]');
+    const value = container.querySelector('[data-slot="graph-node-metric-hotspot"]');
 
     expect(metric?.getAttribute('data-tone')).toBe('warning');
+    expect(value?.getAttribute('data-tone')).toBe('estimated');
     expect(value?.className).toContain('text-amber');
   });
 
@@ -109,10 +110,38 @@ describe('GraphNodeOperationalRail', () => {
     ).toBe('Open source health metrics');
   });
 
+  it('exposes complete metric evidence through the interactive rail description', () => {
+    act(() => {
+      root.render(
+        <GraphNodeOperationalRail
+          metrics={[
+            {
+              id: 'size',
+              label: 'Size',
+              value: '18.2 GB',
+              detail:
+                '19,542,101,197 B. Measured physical allocation. Observed: 2026-07-10T21:00:00.000Z.',
+            },
+          ]}
+          ariaLabel="Open source health metrics"
+          onOpen={vi.fn()}
+        />
+      );
+    });
+
+    const rail = container.querySelector<HTMLButtonElement>(
+      'button[data-slot="graph-node-operational-rail"]'
+    );
+    const descriptionId = rail?.getAttribute('aria-describedby');
+    expect(descriptionId).toBeTruthy();
+    expect(document.getElementById(descriptionId!)?.textContent).toContain(
+      'Measured physical allocation'
+    );
+  });
+
   it('opens with the rail anchor on click without bubbling to the card', () => {
     const onOpen = vi.fn();
     const onCardClick = vi.fn();
-    const anchorRect = new DOMRect(12, 24, 120, 32);
 
     act(() => {
       root.render(
@@ -130,20 +159,17 @@ describe('GraphNodeOperationalRail', () => {
       'button[data-slot="graph-node-operational-rail"]'
     );
     expect(rail).not.toBeNull();
-    vi.spyOn(rail!, 'getBoundingClientRect').mockReturnValue(anchorRect);
-
     act(() => {
       fireEvent.click(rail!);
     });
 
     expect(onOpen).toHaveBeenCalledOnce();
-    expect(onOpen).toHaveBeenLastCalledWith(anchorRect);
+    expect(onOpen).toHaveBeenLastCalledWith(rail);
     expect(onCardClick).not.toHaveBeenCalled();
   });
 
   it('does not open twice for one native keyboard button activation', () => {
     const onOpen = vi.fn();
-    const anchorRect = new DOMRect(12, 24, 120, 32);
 
     act(() => {
       root.render(
@@ -159,14 +185,12 @@ describe('GraphNodeOperationalRail', () => {
       'button[data-slot="graph-node-operational-rail"]'
     );
     expect(rail).not.toBeNull();
-    vi.spyOn(rail!, 'getBoundingClientRect').mockReturnValue(anchorRect);
-
     act(() => {
       fireEvent.keyDown(rail!, { key: 'Enter' });
       fireEvent.click(rail!);
     });
 
     expect(onOpen).toHaveBeenCalledOnce();
-    expect(onOpen).toHaveBeenCalledWith(anchorRect);
+    expect(onOpen).toHaveBeenCalledWith(rail);
   });
 });

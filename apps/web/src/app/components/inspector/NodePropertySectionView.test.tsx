@@ -100,4 +100,25 @@ describe('NodePropertySectionView', () => {
       'select * from orders'
     );
   });
+
+  it('renders compact metric values as accessible evidence hotspots', () => {
+    ({ container, root } = renderSection({
+      id: 'general',
+      label: 'General',
+      rows: [
+        {
+          label: 'Size',
+          value: 'Estimated 99.6 KB',
+          tone: 'estimated',
+          detail: '102,000 B (99.6 KB). Estimated using schema width. Confidence: low.',
+        },
+      ],
+      tableRows: [],
+    }));
+
+    const hotspot = container.querySelector('[data-slot="node-property-metric-evidence"]');
+    expect(hotspot?.textContent).toBe('Estimated 99.6 KB');
+    expect(hotspot?.getAttribute('data-tone')).toBe('estimated');
+    expect(hotspot?.getAttribute('aria-label')).toContain('Estimated using schema width');
+  });
 });

@@ -1,4 +1,8 @@
 /** Owned concern: adapt warehouse source import command/query rails to HTTP. */
+import {
+  CreateWarehouseConnectionRequestSchema,
+  ImportSourceObjectsRequestSchema,
+} from '@dvt/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import {
@@ -9,24 +13,23 @@ import type { IAuthenticator } from '../../application/ports/auth.js';
 import {
   InvalidWarehouseSourceImportRequestError,
   DuplicateWarehouseConnectionError,
-  SUPPORTED_SOURCE_IMPORT_GROUPINGS,
   SUPPORTED_WAREHOUSE_CONNECTION_TYPES,
   WarehouseConnectionTestFailedError,
   WarehouseConnectionNotFoundError,
   WarehouseSourceImportDraftConflictError,
-  WarehouseTableNotFoundError,
+  SourceObjectNotFoundError,
+  UnsupportedSourceObjectImportError,
+  WarehouseSourceDiscoveryFailedError,
   type CreateWarehouseConnectionInput,
   type ImportWarehouseSourcesInput,
-  type SourceImportGrouping,
-  type WarehouseColumn,
   type WarehouseConnectionType,
-  type WarehouseTable,
 } from '../../application/ports/warehouseSourceImport.js';
+import { WorkspaceFileRevisionConflictError } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { CreateWarehouseConnectionUseCase } from '../../application/services/createWarehouseConnectionUseCase.js';
 import type { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
+import type { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import type { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
-import type { ListWarehouseConnectionTablesUseCase } from '../../application/services/listWarehouseConnectionTablesUseCase.js';
 import type { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 
@@ -56,7 +59,7 @@ type CreateWarehouseConnectionBody = {
 
 type ImportWarehouseSourcesBody = {
   readonly connectionId?: unknown;
-  readonly tables?: unknown;
+  readonly objects?: unknown;
   readonly groupingStrategy?: unknown;
   readonly includeColumns?: unknown;
   readonly addTests?: unknown;
@@ -67,7 +70,7 @@ type WarehouseSourceImportRouteDeps = {
   readonly authenticator: IAuthenticator;
   readonly authorizer: AuthorizeCommandScopeService;
   readonly listConnectionsUseCase: ListWarehouseConnectionsUseCase;
-  readonly listTablesUseCase: ListWarehouseConnectionTablesUseCase;
+  readonly listSourceObjectsUseCase: ListWarehouseConnectionSourceObjectsUseCase;
   readonly createConnectionUseCase: CreateWarehouseConnectionUseCase;
   readonly testConnectionUseCase: TestWarehouseConnectionUseCase;
   readonly importSourcesUseCase: ImportWarehouseSourcesUseCase;
@@ -85,19 +88,28 @@ export function registerWarehouseSourceImportRoutes(
       const authorized = await authorizeWarehouseSourceImportRequest(request, reply, deps);
       if (!authorized) return;
 
-      reply.code(200).send(await deps.listConnectionsUseCase.execute());
+      reply
+        .code(200)
+        .send(await deps.listConnectionsUseCase.execute(toDraftScope(authorized.scope)));
     }
   );
 
   app.get<{ Params: WarehouseConnectionParams; Querystring: WarehouseSourceImportQuery }>(
-    RUNTIME_ROUTE_PATH.warehouseConnectionTables,
+    RUNTIME_ROUTE_PATH.warehouseConnectionSourceObjects,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
       const authorized = await authorizeWarehouseSourceImportRequest(request, reply, deps);
       if (!authorized) return;
 
       try {
-        reply.code(200).send(await deps.listTablesUseCase.execute(request.params.connectionId));
+        reply
+          .code(200)
+          .send(
+            await deps.listSourceObjectsUseCase.execute(
+              toDraftScope(authorized.scope),
+              request.params.connectionId
+            )
+          );
       } catch (error) {
         if (error instanceof WarehouseConnectionNotFoundError) {
           reply.code(404).send({
@@ -105,7 +117,12 @@ export function registerWarehouseSourceImportRoutes(
           });
           return;
         }
-
+        if (error instanceof WarehouseSourceDiscoveryFailedError) {
+          reply.code(422).send({
+            error: { type: 'unprocessable_entity', reason: 'warehouse_source_discovery_failed' },
+          });
+          return;
+        }
         throw error;
       }
     }
@@ -141,6 +158,13 @@ export function registerWarehouseSourceImportRoutes(
           });
           return;
         }
+        if (error instanceof WorkspaceFileRevisionConflictError) {
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceFiles.revisionConflict()
+          );
+          return;
+        }
 
         throw error;
       }
@@ -170,7 +194,6 @@ export function registerWarehouseSourceImportRoutes(
           });
           return;
         }
-
         throw error;
       }
     }
@@ -200,9 +223,21 @@ export function registerWarehouseSourceImportRoutes(
           });
           return;
         }
-        if (error instanceof WarehouseTableNotFoundError) {
+        if (error instanceof WarehouseSourceDiscoveryFailedError) {
+          reply.code(422).send({
+            error: { type: 'unprocessable_entity', reason: 'warehouse_source_discovery_failed' },
+          });
+          return;
+        }
+        if (error instanceof SourceObjectNotFoundError) {
           reply.code(404).send({
-            error: { type: 'not_found', reason: 'warehouse_table_not_found' },
+            error: { type: 'not_found', reason: 'source_object_not_found' },
+          });
+          return;
+        }
+        if (error instanceof UnsupportedSourceObjectImportError) {
+          reply.code(422).send({
+            error: { type: 'unprocessable_entity', reason: 'unsupported_source_object_import' },
           });
           return;
         }
@@ -225,6 +260,13 @@ export function registerWarehouseSourceImportRoutes(
           reply.code(409).send({
             error: { type: 'conflict', reason: 'workspace_source_import_draft_conflict' },
           });
+          return;
+        }
+        if (error instanceof WorkspaceFileRevisionConflictError) {
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceFiles.revisionConflict()
+          );
           return;
         }
 
@@ -274,28 +316,21 @@ function parseCreateWarehouseConnectionBody(
   body: CreateWarehouseConnectionBody | undefined,
   scope: ReturnType<typeof buildEnvironmentAccessScope>
 ): RouteParseResult<CreateWarehouseConnectionInput> {
-  if (
-    hasForbiddenSecretField(body) ||
-    typeof body?.name !== 'string' ||
-    typeof body?.database !== 'string' ||
-    typeof body?.credentialRef !== 'string'
-  ) {
+  if (hasForbiddenSecretField(body)) {
     return invalidBody();
   }
 
-  const type = parseWarehouseConnectionType(body.type);
-  if (!type.ok) {
-    return type;
+  const parsed = CreateWarehouseConnectionRequestSchema.safeParse(body);
+  if (!parsed.success) {
+    const type = parseWarehouseConnectionType(body?.type);
+    return type.ok ? invalidBody() : type;
   }
 
   return {
     ok: true,
     value: {
       scope: toDraftScope(scope),
-      name: body.name,
-      type: type.value,
-      database: body.database,
-      credentialRef: body.credentialRef,
+      ...parsed.data,
     },
   };
 }
@@ -334,21 +369,8 @@ function parseImportWarehouseSourcesBody(
   body: ImportWarehouseSourcesBody | undefined,
   scope: ReturnType<typeof buildEnvironmentAccessScope>
 ): RouteParseResult<ImportWarehouseSourcesInput> {
-  if (typeof body?.connectionId !== 'string' || !Array.isArray(body.tables)) {
-    return invalidBody();
-  }
-  const grouping = parseGrouping(body.groupingStrategy);
-  if (!grouping.ok) return grouping;
-  if (
-    typeof body.includeColumns !== 'boolean' ||
-    typeof body.addTests !== 'boolean' ||
-    typeof body.addFreshness !== 'boolean'
-  ) {
-    return invalidBody();
-  }
-
-  const tables = parseTables(body.tables);
-  if (!tables.ok) return tables;
+  const parsed = ImportSourceObjectsRequestSchema.safeParse(body);
+  if (!parsed.success) return invalidBody();
 
   return {
     ok: true,
@@ -356,82 +378,13 @@ function parseImportWarehouseSourcesBody(
       scope: {
         ...toDraftScope(scope),
       },
-      connectionId: body.connectionId,
-      tables: tables.value,
-      groupingStrategy: grouping.value,
-      includeColumns: body.includeColumns,
-      addTests: body.addTests,
-      addFreshness: body.addFreshness,
+      ...parsed.data,
     },
   };
 }
 
-function parseTables(input: readonly unknown[]): RouteParseResult<readonly WarehouseTable[]> {
-  const tables: WarehouseTable[] = [];
-  for (const item of input) {
-    if (!isRecord(item)) {
-      return invalidBody();
-    }
-    const { database, schema, table, rowCount, byteSize, columns } = item;
-    if (typeof database !== 'string' || typeof schema !== 'string' || typeof table !== 'string') {
-      return invalidBody();
-    }
-
-    let parsed: WarehouseTable = { database, schema, table };
-    if (rowCount !== undefined) {
-      if (!isNonNegativeFiniteNumber(rowCount)) {
-        return invalidBody();
-      }
-      parsed = { ...parsed, rowCount };
-    }
-    if (byteSize !== undefined) {
-      if (!isNonNegativeFiniteNumber(byteSize)) {
-        return invalidBody();
-      }
-      parsed = { ...parsed, byteSize };
-    }
-    if (Array.isArray(columns)) {
-      const parsedColumns = parseColumns(columns);
-      if (!parsedColumns.ok) return parsedColumns;
-      parsed = { ...parsed, columns: parsedColumns.value };
-    }
-    tables.push(parsed);
-  }
-  return { ok: true, value: tables };
-}
-
-function parseColumns(input: readonly unknown[]): RouteParseResult<readonly WarehouseColumn[]> {
-  const columns = [];
-  for (const item of input) {
-    if (
-      !isRecord(item) ||
-      typeof item.name !== 'string' ||
-      typeof item.type !== 'string' ||
-      typeof item.nullable !== 'boolean'
-    ) {
-      return invalidBody();
-    }
-    columns.push({
-      name: item.name,
-      type: item.type,
-      nullable: item.nullable,
-      ...(typeof item.primaryKey === 'boolean' ? { primaryKey: item.primaryKey } : {}),
-      ...(typeof item.unique === 'boolean' ? { unique: item.unique } : {}),
-    });
-  }
-  return { ok: true, value: columns };
-}
-
-function isNonNegativeFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value) && value >= 0;
-}
-
 function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
   return typeof value === 'object' && value !== null;
-}
-
-function parseGrouping(input: unknown): RouteParseResult<SourceImportGrouping> {
-  return isSupportedSourceImportGrouping(input) ? { ok: true, value: input } : invalidBody();
 }
 
 function invalidBody(): RouteParseResult<never> {
@@ -439,13 +392,6 @@ function invalidBody(): RouteParseResult<never> {
     ok: false,
     issue: badRequestIssue(HTTP_ERROR_REASON.invalidBody, { target: 'body' }),
   };
-}
-
-function isSupportedSourceImportGrouping(input: unknown): input is SourceImportGrouping {
-  return (
-    typeof input === 'string' &&
-    SUPPORTED_SOURCE_IMPORT_GROUPINGS.some((grouping) => grouping === input)
-  );
 }
 
 function parseRequestedScope(

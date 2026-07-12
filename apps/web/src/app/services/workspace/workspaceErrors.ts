@@ -29,6 +29,16 @@ export class WorkspaceFileLoadError extends Error {
   }
 }
 
+export class WorkspaceFileRevisionConflictError extends Error {
+  readonly path: string;
+
+  constructor(path: string) {
+    super(`Workspace file changed before save: ${path}`);
+    this.name = 'WorkspaceFileRevisionConflictError';
+    this.path = path;
+  }
+}
+
 export class WorkspaceGraphDraftConflictError extends Error {
   readonly currentRevision: string;
 

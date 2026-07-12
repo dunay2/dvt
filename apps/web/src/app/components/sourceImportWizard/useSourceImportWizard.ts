@@ -10,7 +10,7 @@ import type {
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { sourceImportWizardCopy as copy } from './copy';
-import { buildWarehouseTableIdentityKey } from './sourceImportCatalogModel';
+import { buildSourceObjectIdentityKey, isSourceObjectImportable } from './sourceImportCatalogModel';
 import {
   applySourceImportOptionDefaults,
   buildSourceImportOptionValues,
@@ -19,14 +19,14 @@ import {
   getNextStep,
   getPreviousStep,
   getSelectedCount,
-  getSelectedTables,
-  resolveActiveTable,
+  getSelectedSourceObjects,
+  resolveActiveSourceObject,
   resolveSectionForStep,
   resolveStepForSection,
   toggleSourceImportDatabaseSelection,
   toggleSourceImportSchemaSelection,
 } from './sourceImportWizardModel';
-import { useConnectionsLoader, useTablesLoader } from './useSourceImportWizardDataLoaders';
+import { useConnectionsLoader, useSourceObjectsLoader } from './useSourceImportWizardDataLoaders';
 import type {
   SourceImportInitialSelection,
   SourceImportDatabaseIdentity,
@@ -57,22 +57,22 @@ const initialState: SourceImportWizardState = {
     database: '',
     credentialRef: '',
   },
-  tables: [],
+  sourceObjects: [],
   groupingStrategy: 'schema',
   includeColumns: false,
   addTests: false,
   addFreshness: false,
   isProcessing: false,
   isLoadingConnections: false,
-  isLoadingTables: false,
+  isLoadingSourceObjects: false,
   isCreatingConnection: false,
   isTestingConnection: false,
   connectionTestResult: null,
   loadError: null,
   createConnectionError: null,
   importResult: null,
-  activeTableKey: null,
-  tableSearchQuery: '',
+  activeSourceObjectKey: null,
+  sourceObjectSearchQuery: '',
 };
 
 function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
@@ -138,18 +138,21 @@ export function useSourceImportWizard({
       selectedConnection: initialSelection.connectionId,
       createConnectionFormOpen: false,
       createConnectionError: null,
-      tables: [],
-      activeTableKey: null,
-      tableSearchQuery: '',
+      sourceObjects: [],
+      activeSourceObjectKey: null,
+      sourceObjectSearchQuery: '',
       loadError: null,
       importResult: null,
     }));
   }, [initialSelection, open]);
-  const selectedCount = useMemo(() => getSelectedCount(state.tables), [state.tables]);
-  const selectedTables = useMemo(() => getSelectedTables(state.tables), [state.tables]);
-  const activeTable = useMemo(
-    () => resolveActiveTable(state.tables, state.activeTableKey),
-    [state.activeTableKey, state.tables]
+  const selectedCount = useMemo(() => getSelectedCount(state.sourceObjects), [state.sourceObjects]);
+  const selectedSourceObjects = useMemo(
+    () => getSelectedSourceObjects(state.sourceObjects),
+    [state.sourceObjects]
+  );
+  const activeSourceObject = useMemo(
+    () => resolveActiveSourceObject(state.sourceObjects, state.activeSourceObjectKey),
+    [state.activeSourceObjectKey, state.sourceObjects]
   );
   const activeSection = resolveSectionForStep(state.currentStep);
   const sourceImportOptionValues = useMemo(
@@ -160,16 +163,16 @@ export function useSourceImportWizard({
     () => state.connections.find((connection) => connection.id === state.selectedConnection),
     [state.connections, state.selectedConnection]
   );
-  const initiallySelectedTablesForConnection =
+  const initiallySelectedSourceObjectsForConnection =
     state.selectedConnection === initialSelection?.connectionId
-      ? initialSelection.tables
+      ? initialSelection.sourceObjects
       : undefined;
 
   useConnectionsLoader({ open, warehouseSourceImport, setState });
-  useTablesLoader({
+  useSourceObjectsLoader({
     open,
     selectedConnection: state.selectedConnection,
-    initiallySelectedTables: initiallySelectedTablesForConnection,
+    initiallySelectedSourceObjects: initiallySelectedSourceObjectsForConnection,
     warehouseSourceImport,
     setState,
   });
@@ -182,7 +185,7 @@ export function useSourceImportWizard({
         section,
         state.selectedConnection,
         selectedCount,
-        activeTable != null
+        activeSourceObject != null
       )
     ) {
       return;
@@ -195,9 +198,11 @@ export function useSourceImportWizard({
       ...prev,
       selectedConnection,
       createConnectionError: null,
-      tables: selectedConnection === prev.selectedConnection ? prev.tables : [],
-      activeTableKey: selectedConnection === prev.selectedConnection ? prev.activeTableKey : null,
-      tableSearchQuery: selectedConnection === prev.selectedConnection ? prev.tableSearchQuery : '',
+      sourceObjects: selectedConnection === prev.selectedConnection ? prev.sourceObjects : [],
+      activeSourceObjectKey:
+        selectedConnection === prev.selectedConnection ? prev.activeSourceObjectKey : null,
+      sourceObjectSearchQuery:
+        selectedConnection === prev.selectedConnection ? prev.sourceObjectSearchQuery : '',
       connectionTestResult:
         selectedConnection === prev.selectedConnection ? prev.connectionTestResult : null,
       importResult: null,
@@ -211,8 +216,8 @@ export function useSourceImportWizard({
     setState((prev) => ({ ...prev, addFreshness }));
   const setSourceImportOption = (optionId: SourceImportOptionId, value: boolean) =>
     setState((prev) => ({ ...prev, [optionId]: value }));
-  const setTableSearchQuery = (tableSearchQuery: string) =>
-    setState((prev) => ({ ...prev, tableSearchQuery }));
+  const setSourceObjectSearchQuery = (sourceObjectSearchQuery: string) =>
+    setState((prev) => ({ ...prev, sourceObjectSearchQuery }));
   const openCreateConnectionForm = () =>
     setState((prev) => ({
       ...prev,
@@ -245,7 +250,7 @@ export function useSourceImportWizard({
       return;
     }
     if (state.currentStep === 'selection' && selectedCount === 0) {
-      toast.error(copy.selectAtLeastOneTableError);
+      toast.error(copy.selectAtLeastOneObjectError);
       return;
     }
     setCurrentStep(getNextStep(state.currentStep));
@@ -304,9 +309,9 @@ export function useSourceImportWizard({
         selectedConnection: connection.id,
         createConnectionFormOpen: false,
         createConnectionForm: initialWizardState.createConnectionForm,
-        tables: [],
-        activeTableKey: null,
-        tableSearchQuery: '',
+        sourceObjects: [],
+        activeSourceObjectKey: null,
+        sourceObjectSearchQuery: '',
         connectionTestResult: null,
         importResult: null,
       }));
@@ -329,16 +334,9 @@ export function useSourceImportWizard({
     try {
       const result = await warehouseSourceImport.importSources({
         connectionId: state.selectedConnection,
-        tables: state.tables
-          .filter((table) => table.selected)
-          .map((table) => ({
-            database: table.database,
-            schema: table.schema,
-            table: table.table,
-            rowCount: table.rowCount,
-            byteSize: table.byteSize,
-            columns: table.columns,
-          })),
+        objects: selectedSourceObjects.map((sourceObject) => ({
+          objectId: sourceObject.objectId,
+        })),
         groupingStrategy: state.groupingStrategy,
         includeColumns: state.includeColumns,
         addTests: state.addTests,
@@ -369,47 +367,52 @@ export function useSourceImportWizard({
     setState(initialWizardState);
   };
 
-  const toggleTable = (index: number) => {
-    setState((prev) => ({
-      ...prev,
-      tables: prev.tables.map((table, i) =>
-        i === index ? { ...table, selected: !table.selected } : table
-      ),
-      activeTableKey: prev.tables[index]
-        ? buildWarehouseTableIdentityKey(prev.tables[index])
-        : null,
-    }));
+  const toggleSourceObject = (index: number) => {
+    setState((prev) => {
+      const sourceObject = prev.sourceObjects[index];
+      if (sourceObject == null || !isSourceObjectImportable(sourceObject)) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        sourceObjects: prev.sourceObjects.map((candidate, candidateIndex) =>
+          candidateIndex === index ? { ...candidate, selected: !candidate.selected } : candidate
+        ),
+        activeSourceObjectKey: buildSourceObjectIdentityKey(sourceObject),
+      };
+    });
   };
 
-  const activateTable = (index: number) => {
+  const activateSourceObject = (index: number) => {
     setState((prev) => ({
       ...prev,
-      activeTableKey: prev.tables[index]
-        ? buildWarehouseTableIdentityKey(prev.tables[index])
+      activeSourceObjectKey: prev.sourceObjects[index]
+        ? buildSourceObjectIdentityKey(prev.sourceObjects[index])
         : null,
     }));
   };
 
   const toggleSchema = (schema: SourceImportSchemaIdentity) => {
     setState((prev) => {
-      const schemaSelection = toggleSourceImportSchemaSelection(prev.tables, schema);
+      const schemaSelection = toggleSourceImportSchemaSelection(prev.sourceObjects, schema);
 
       return {
         ...prev,
-        tables: schemaSelection.tables,
-        activeTableKey: schemaSelection.activeTableKey,
+        sourceObjects: schemaSelection.sourceObjects,
+        activeSourceObjectKey: schemaSelection.activeSourceObjectKey,
       };
     });
   };
 
   const toggleDatabase = (database: SourceImportDatabaseIdentity) => {
     setState((prev) => {
-      const databaseSelection = toggleSourceImportDatabaseSelection(prev.tables, database);
+      const databaseSelection = toggleSourceImportDatabaseSelection(prev.sourceObjects, database);
 
       return {
         ...prev,
-        tables: databaseSelection.tables,
-        activeTableKey: databaseSelection.activeTableKey,
+        sourceObjects: databaseSelection.sourceObjects,
+        activeSourceObjectKey: databaseSelection.activeSourceObjectKey,
       };
     });
   };
@@ -420,8 +423,8 @@ export function useSourceImportWizard({
   return {
     state,
     selectedCount,
-    selectedTables,
-    activeTable,
+    selectedSourceObjects,
+    activeSourceObject,
     activeSection,
     selectedConnectionObject,
     sourceImportOptions,
@@ -433,7 +436,7 @@ export function useSourceImportWizard({
         section,
         state.selectedConnection,
         selectedCount,
-        activeTable != null
+        activeSourceObject != null
       ),
     setCurrentSection,
     setSelectedConnection,
@@ -445,15 +448,15 @@ export function useSourceImportWizard({
     setAddTests,
     setAddFreshness,
     setSourceImportOption,
-    setTableSearchQuery,
+    setSourceObjectSearchQuery,
     handleNext,
     handleBack,
     handleCreateConnection,
     handleTestConnection,
     handleImport,
     handleComplete,
-    activateTable,
-    toggleTable,
+    activateSourceObject,
+    toggleSourceObject,
     toggleDatabase,
     toggleSchema,
   };

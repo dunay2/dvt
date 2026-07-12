@@ -25,21 +25,18 @@ describe('workspace ports source import', () => {
   it('imports selected warehouse tables into the mock workspace graph', async () => {
     const ports = createMockWorkspacePorts();
     const before = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
+    const events = (await ports.warehouseSourceImport.listSourceObjects('conn-1')).find(
+      (sourceObject) =>
+        sourceObject.locator.kind === 'relation' &&
+        sourceObject.locator.catalog === 'RAW' &&
+        sourceObject.locator.schema === 'MARKETING' &&
+        sourceObject.locator.name === 'EVENTS'
+    );
+    expect(events).toBeDefined();
 
     const result = await ports.warehouseSourceImport.importSources({
       connectionId: 'conn-1',
-      tables: [
-        {
-          database: 'RAW',
-          schema: 'FINANCE',
-          table: 'INVOICES',
-          rowCount: 1200,
-          columns: [
-            { name: 'invoice_id', type: 'INTEGER', nullable: false },
-            { name: 'customer_id', type: 'INTEGER', nullable: false },
-          ],
-        },
-      ],
+      objects: [{ objectId: events!.objectId }],
       groupingStrategy: 'schema',
       includeColumns: true,
       addTests: false,
@@ -47,72 +44,47 @@ describe('workspace ports source import', () => {
     });
 
     const after = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
-    const importedNode = after.nodes.find((node) => node.id === 'src_finance_invoices');
+    const importedNode = after.nodes.find((node) => node.id === 'src_marketing_events');
 
     expect(result.success).toBe(true);
     expect(result.sourcesCreated).toBe(1);
-    expect(result.tablesImported).toBe(1);
-    expect(result.yamlFiles).toEqual(['models/sources/src_finance.yml']);
-    expect(result.importedNodeIds).toEqual(['src_finance_invoices']);
+    expect(result.objectsImported).toBe(1);
+    expect(result.yamlFiles).toEqual(['models/sources/src_marketing.yml']);
+    expect(result.importedNodeIds).toEqual(['src_marketing_events']);
     expect(after.nodes).toHaveLength(before.nodes.length + 1);
     expect(importedNode).toMatchObject({
-      id: 'src_finance_invoices',
+      id: 'src_marketing_events',
       type: 'SOURCE',
-      path: 'models/sources/src_finance.yml',
+      path: 'models/sources/src_marketing.yml',
+      metadata: {
+        sourceMetricEvidence: expect.objectContaining({
+          rowCount: expect.objectContaining({ value: 45000 }),
+          byteSize: expect.objectContaining({ value: 6_800_000 }),
+        }),
+      },
     });
     expect(importedNode?.columns).toEqual([
-      { name: 'invoice_id', type: 'INTEGER', nullable: false },
-      { name: 'customer_id', type: 'INTEGER', nullable: false },
+      { name: 'event_id', type: 'INTEGER', nullable: false },
+      { name: 'campaign_id', type: 'INTEGER', nullable: false },
+      { name: 'occurred_at', type: 'TIMESTAMP', nullable: false },
     ]);
-  });
-
-  it('uses stable source import identifiers in the mock workspace graph', async () => {
-    const ports = createMockWorkspacePorts();
-
-    const result = await ports.warehouseSourceImport.importSources({
-      connectionId: 'conn-1',
-      tables: [
-        {
-          database: 'Raw Lake',
-          schema: 'Sales/ERP Ops',
-          table: 'Open Orders',
-          rowCount: 1200,
-          columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
-        },
-      ],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
-
-    const graph = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
-    const importedNode = graph.nodes.find((node) => node.id === 'src_sales_erp_ops_open_orders');
-
-    expect(result.yamlFiles).toEqual(['models/sources/src_sales_erp_ops.yml']);
-    expect(result.importedNodeIds).toEqual(['src_sales_erp_ops_open_orders']);
-    expect(importedNode).toMatchObject({
-      id: 'src_sales_erp_ops_open_orders',
-      path: 'models/sources/src_sales_erp_ops.yml',
-    });
   });
 
   it('isolates graph mutations between default mock service instances', async () => {
     const firstPorts = createMockWorkspacePorts();
     const secondPorts = createMockWorkspacePorts();
     const secondBefore = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
+    const campaigns = (await firstPorts.warehouseSourceImport.listSourceObjects('conn-1')).find(
+      (sourceObject) =>
+        sourceObject.locator.kind === 'relation' &&
+        sourceObject.locator.schema === 'MARKETING' &&
+        sourceObject.locator.name === 'CAMPAIGNS'
+    );
+    expect(campaigns).toBeDefined();
 
     await firstPorts.warehouseSourceImport.importSources({
       connectionId: 'conn-1',
-      tables: [
-        {
-          database: 'RAW',
-          schema: 'OPERATIONS',
-          table: 'SHIPMENTS',
-          rowCount: 6400,
-          columns: [{ name: 'shipment_id', type: 'INTEGER', nullable: false }],
-        },
-      ],
+      objects: [{ objectId: campaigns!.objectId }],
       groupingStrategy: 'schema',
       includeColumns: true,
       addTests: false,
@@ -122,8 +94,8 @@ describe('workspace ports source import', () => {
     const firstAfter = await firstPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
     const secondAfter = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
-    expect(firstAfter.nodes.some((node) => node.id === 'src_operations_shipments')).toBe(true);
-    expect(secondAfter.nodes.some((node) => node.id === 'src_operations_shipments')).toBe(false);
+    expect(firstAfter.nodes.some((node) => node.id === 'src_marketing_campaigns')).toBe(true);
+    expect(secondAfter.nodes.some((node) => node.id === 'src_marketing_campaigns')).toBe(false);
     expect(secondAfter.nodes).toHaveLength(secondBefore.nodes.length);
   });
 
@@ -131,18 +103,17 @@ describe('workspace ports source import', () => {
     const sharedState = createMockWorkspaceState();
     const firstPorts = createMockWorkspacePorts(sharedState);
     const secondPorts = createMockWorkspacePorts(sharedState);
+    const contacts = (await firstPorts.warehouseSourceImport.listSourceObjects('conn-1')).find(
+      (sourceObject) =>
+        sourceObject.locator.kind === 'relation' &&
+        sourceObject.locator.schema === 'CRM' &&
+        sourceObject.locator.name === 'CONTACTS'
+    );
+    expect(contacts).toBeDefined();
 
     await firstPorts.warehouseSourceImport.importSources({
       connectionId: 'conn-1',
-      tables: [
-        {
-          database: 'RAW',
-          schema: 'SUPPORT',
-          table: 'TICKETS',
-          rowCount: 1500,
-          columns: [{ name: 'ticket_id', type: 'INTEGER', nullable: false }],
-        },
-      ],
+      objects: [{ objectId: contacts!.objectId }],
       groupingStrategy: 'schema',
       includeColumns: true,
       addTests: false,
@@ -151,7 +122,7 @@ describe('workspace ports source import', () => {
 
     const secondAfter = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
-    expect(secondAfter.nodes.some((node) => node.id === 'src_support_tickets')).toBe(true);
+    expect(secondAfter.nodes.some((node) => node.id === 'src_crm_contacts')).toBe(true);
   });
 
   it('uses protected API mode warehouse endpoints when source import is available', async () => {
@@ -170,8 +141,9 @@ describe('workspace ports source import', () => {
       postJson: async <_TRequest, TResponse>() =>
         ({
           success: true,
+          draftRevision: 'draft-revision-2',
           sourcesCreated: 0,
-          tablesImported: 0,
+          objectsImported: 0,
           yamlFiles: [],
           importedNodeIds: [],
           grouping: 'schema',
@@ -184,7 +156,7 @@ describe('workspace ports source import', () => {
     await expect(
       ports.warehouseSourceImport.importSources({
         connectionId: 'conn-1',
-        tables: [],
+        objects: [],
         groupingStrategy: 'schema',
         includeColumns: false,
         addTests: false,
@@ -200,23 +172,23 @@ describe('workspace ports source import', () => {
     );
   });
 
-  it('does not import warehouse sources before server-granted scope resolves', () => {
+  it('does not import source objects before server-granted scope resolves', async () => {
     clearGrantedWorkspaceScope();
     const { apiClient, postJson } = createApiClientHarness({
       postJson: async <_TRequest, TResponse>() => ({}) as TResponse,
     });
     const ports = createWorkspacePorts(apiClient);
 
-    expect(() =>
+    await expect(
       ports.warehouseSourceImport.importSources({
         connectionId: 'conn-1',
-        tables: [],
+        objects: [],
         groupingStrategy: 'schema',
         includeColumns: false,
         addTests: false,
         addFreshness: false,
       })
-    ).toThrow('workspace_scope_unresolved');
+    ).rejects.toThrow('workspace_scope_unresolved');
     expect(postJson).not.toHaveBeenCalled();
   });
 });

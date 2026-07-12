@@ -56,6 +56,7 @@ function buildWorkspaceFilesQueryPort(
         : path.endsWith('.yaml')
           ? 'executionTarget: "postgres"\nentrypoint: "models/analytics/model_orders.sql"'
           : '# Workspace',
+      contentSha256: 'a'.repeat(64),
       lastModified: '2026-04-06T00:00:00Z',
     }),
   };
@@ -352,6 +353,7 @@ describe('CodeView', () => {
                     path === 'models/payments_model.sql'
                       ? "{{ config(materialized='table') }}\n\nselect *\nfrom {{ source('finance_warehouse', 'payments_final') }}"
                       : 'version: 2',
+                  contentSha256: 'a'.repeat(64),
                   lastModified: '2026-06-01T00:00:00.000Z',
                 }),
               }),

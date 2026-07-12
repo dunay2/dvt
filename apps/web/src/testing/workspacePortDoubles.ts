@@ -1,4 +1,6 @@
 /** Owned concern: provide test-only workspace capability ports backed by fixture state. */
+import { buildRelationalSourceObjectId, sha256HexUtf8 } from '@dvt/contracts';
+
 import {
   mockAuditLog,
   mockDiffChanges,
@@ -24,14 +26,19 @@ import type {
   IWorkspaceFilesQueryPort,
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
+  SourceObjectMetricEvidence,
+  SourceObjectColumn,
+  RelationalSourceObject,
   SourceImportGrouping,
   WarehouseConnection,
-  WarehouseTable,
   WorkspaceFileEntry,
   WorkspaceFileHistoryEntry,
   WorkspaceGraphSnapshot,
 } from '../app/ports/workspace';
-import { WorkspaceFileLoadError } from '../app/services/workspace/workspaceErrors';
+import {
+  WorkspaceFileLoadError,
+  WorkspaceFileRevisionConflictError,
+} from '../app/services/workspace/workspaceErrors';
 
 export const mockWorkspacePortCapabilities = {
   sourceImportAvailable: true,
@@ -43,14 +50,41 @@ const mockConnections: WarehouseConnection[] = [
   { id: 'conn-3', name: 'Dev Postgres', type: 'postgres', database: 'dev' },
 ];
 
-const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
+function sourceMetricEvidence(rowCount: number, byteSize: number): SourceObjectMetricEvidence {
+  return {
+    observedAt: '2026-07-10T21:00:00.000Z',
+    observationScope: { kind: 'snapshot' },
+    rowCount: {
+      value: rowCount,
+      provenance: 'estimated',
+      method: 'provider-statistics',
+      confidence: 'medium',
+    },
+    byteSize: {
+      value: byteSize,
+      provenance: 'measured',
+      method: 'provider-storage-metadata',
+      confidence: 'exact',
+      basis: 'physical-allocation',
+    },
+  };
+}
+
+type MockRelationDefinition = Readonly<{
+  database: string;
+  schema: string;
+  table: string;
+  metricEvidence: SourceObjectMetricEvidence;
+  columns?: readonly SourceObjectColumn[];
+}>;
+
+const mockRelationDefinitionsByConnectionId: Record<string, MockRelationDefinition[]> = {
   'conn-1': [
     {
       database: 'RAW',
       schema: 'ERP',
       table: 'ORDERS',
-      rowCount: 125000,
-      byteSize: 18_200_000,
+      metricEvidence: sourceMetricEvidence(125000, 18_200_000),
       columns: [
         { name: 'order_id', type: 'INTEGER', nullable: false },
         { name: 'customer_id', type: 'INTEGER', nullable: false },
@@ -62,8 +96,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       database: 'RAW',
       schema: 'ERP',
       table: 'CUSTOMERS',
-      rowCount: 45000,
-      byteSize: 8_700_000,
+      metricEvidence: sourceMetricEvidence(45000, 8_700_000),
       columns: [
         { name: 'customer_id', type: 'INTEGER', nullable: false },
         { name: 'customer_name', type: 'VARCHAR', nullable: false },
@@ -74,8 +107,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       database: 'RAW',
       schema: 'ERP',
       table: 'PRODUCTS',
-      rowCount: 3500,
-      byteSize: 1_100_000,
+      metricEvidence: sourceMetricEvidence(3500, 1_100_000),
       columns: [
         { name: 'product_id', type: 'INTEGER', nullable: false },
         { name: 'product_name', type: 'VARCHAR', nullable: false },
@@ -86,8 +118,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       database: 'RAW',
       schema: 'CRM',
       table: 'CONTACTS',
-      rowCount: 89000,
-      byteSize: 12_400_000,
+      metricEvidence: sourceMetricEvidence(89000, 12_400_000),
       columns: [
         { name: 'contact_id', type: 'INTEGER', nullable: false },
         { name: 'account_id', type: 'INTEGER', nullable: false },
@@ -98,8 +129,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       database: 'RAW',
       schema: 'CRM',
       table: 'ACTIVITIES',
-      rowCount: 230000,
-      byteSize: 42_000_000,
+      metricEvidence: sourceMetricEvidence(230000, 42_000_000),
       columns: [
         { name: 'activity_id', type: 'INTEGER', nullable: false },
         { name: 'contact_id', type: 'INTEGER', nullable: false },
@@ -110,8 +140,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       database: 'RAW',
       schema: 'MARKETING',
       table: 'CAMPAIGNS',
-      rowCount: 1200,
-      byteSize: 640_000,
+      metricEvidence: sourceMetricEvidence(1200, 640_000),
       columns: [
         { name: 'campaign_id', type: 'INTEGER', nullable: false },
         { name: 'campaign_name', type: 'VARCHAR', nullable: false },
@@ -122,8 +151,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       database: 'RAW',
       schema: 'MARKETING',
       table: 'EVENTS',
-      rowCount: 45000,
-      byteSize: 6_800_000,
+      metricEvidence: sourceMetricEvidence(45000, 6_800_000),
       columns: [
         { name: 'event_id', type: 'INTEGER', nullable: false },
         { name: 'campaign_id', type: 'INTEGER', nullable: false },
@@ -136,8 +164,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       database: 'analytics',
       schema: 'public',
       table: 'sessions',
-      rowCount: 920000,
-      byteSize: 128_000_000,
+      metricEvidence: sourceMetricEvidence(920000, 128_000_000),
       columns: [
         { name: 'session_id', type: 'STRING', nullable: false },
         { name: 'user_id', type: 'STRING', nullable: true },
@@ -149,8 +176,7 @@ const mockWarehouseTablesByConnectionId: Record<string, WarehouseTable[]> = {
       database: 'dev',
       schema: 'sandbox',
       table: 'sample_orders',
-      rowCount: 3000,
-      byteSize: 920_000,
+      metricEvidence: sourceMetricEvidence(3000, 920_000),
       columns: [
         { name: 'id', type: 'INTEGER', nullable: false },
         { name: 'amount', type: 'DECIMAL', nullable: false },
@@ -263,43 +289,46 @@ function createDefaultWorkspaceFileTree(): WorkspaceFileEntry[] {
   return fileTree;
 }
 
-function toSourceNodeId(table: WarehouseTable): string {
-  return `src_${toStableSourceImportIdentifierPart(table.schema)}_${toStableSourceImportIdentifierPart(
-    table.table
+function toSourceNodeId(sourceObject: RelationalSourceObject): string {
+  return `src_${toStableSourceImportIdentifierPart(sourceObject.locator.schema)}_${toStableSourceImportIdentifierPart(
+    sourceObject.locator.name
   )}`;
 }
 
-function buildYamlFileName(table: WarehouseTable, groupingStrategy: SourceImportGrouping): string {
-  return buildSourceImportRegistryPath(table, groupingStrategy);
+function buildYamlFileName(
+  sourceObject: RelationalSourceObject,
+  groupingStrategy: SourceImportGrouping
+): string {
+  return buildSourceImportRegistryPath(sourceObject, groupingStrategy);
 }
 
 function createImportedSourceNode(
-  table: WarehouseTable,
+  sourceObject: RelationalSourceObject,
   groupingStrategy: SourceImportGrouping,
   includeColumns: boolean
 ): DbtNode {
-  const schemaLower = table.schema.toLowerCase();
-  const tableLower = table.table.toLowerCase();
+  const schemaLower = sourceObject.locator.schema.toLowerCase();
+  const tableLower = sourceObject.locator.name.toLowerCase();
 
   return {
-    id: toSourceNodeId(table),
-    name: toSourceNodeId(table),
+    id: toSourceNodeId(sourceObject),
+    name: toSourceNodeId(sourceObject),
     type: 'SOURCE',
     package: 'imported_sources',
-    path: buildYamlFileName(table, groupingStrategy),
+    path: buildYamlFileName(sourceObject, groupingStrategy),
     tags: ['source', schemaLower],
     status: 'idle',
-    description: `Imported source for ${table.database}.${table.schema}.${table.table}`,
+    description: `Imported source for ${sourceObject.locator.catalog}.${sourceObject.locator.schema}.${sourceObject.locator.name}`,
     dependencies: [],
     metadata: {
-      database: table.database,
-      schema: table.schema,
+      sourceObjectId: sourceObject.objectId,
+      database: sourceObject.locator.catalog,
+      schema: sourceObject.locator.schema,
       tableName: tableLower,
-      ...(table.rowCount !== undefined ? { rowCount: table.rowCount } : {}),
-      ...(table.byteSize !== undefined ? { byteSize: table.byteSize } : {}),
-      ...(includeColumns && table.columns
+      sourceMetricEvidence: sourceObject.metricEvidence,
+      ...(includeColumns && sourceObject.columns
         ? {
-            columns: table.columns.map((column) => ({
+            columns: sourceObject.columns.map((column) => ({
               name: column.name,
               type: column.type,
               nullable: column.nullable,
@@ -308,7 +337,7 @@ function createImportedSourceNode(
         : {}),
     },
     columns: includeColumns
-      ? table.columns?.map((column) => ({
+      ? sourceObject.columns?.map((column) => ({
           name: column.name,
           type: column.type,
           nullable: column.nullable,
@@ -317,25 +346,27 @@ function createImportedSourceNode(
     config: {
       sourceName: schemaLower,
       tableName: tableLower,
-      database: table.database,
-      schema: table.schema,
+      database: sourceObject.locator.catalog,
+      schema: sourceObject.locator.schema,
     },
   };
 }
 
 function buildImportResult(
   input: ImportSourcesInput,
+  selectedSourceObjects: readonly RelationalSourceObject[],
   importedNodes: DbtNode[]
 ): ImportSourcesResult {
   const yamlFiles = new Set<string>();
-  for (const table of input.tables) {
-    yamlFiles.add(buildYamlFileName(table, input.groupingStrategy));
+  for (const sourceObject of selectedSourceObjects) {
+    yamlFiles.add(buildYamlFileName(sourceObject, input.groupingStrategy));
   }
 
   return {
     success: true,
+    draftRevision: 'mock-source-import-revision',
     sourcesCreated: importedNodes.length,
-    tablesImported: input.tables.length,
+    objectsImported: input.objects.length,
     yamlFiles: Array.from(yamlFiles),
     importedNodeIds: importedNodes.map((node) => node.id),
     grouping: input.groupingStrategy,
@@ -353,15 +384,26 @@ function importMockSources(
 ): ImportSourcesResult {
   const existingNodeIds = new Set(state.graphSnapshot.nodes.map((node) => node.id));
   const importedNodes: DbtNode[] = [];
+  const availableSourceObjects = (
+    mockRelationDefinitionsByConnectionId[input.connectionId] ?? []
+  ).map(toMockSourceObject);
+  const selectedSourceObjects: RelationalSourceObject[] = [];
 
-  for (const table of input.tables) {
-    const nodeId = toSourceNodeId(table);
+  for (const selection of input.objects) {
+    const sourceObject = availableSourceObjects.find(
+      (candidate) => candidate.objectId === selection.objectId
+    );
+    if (sourceObject == null) {
+      continue;
+    }
+    selectedSourceObjects.push(sourceObject);
+    const nodeId = toSourceNodeId(sourceObject);
     if (existingNodeIds.has(nodeId)) {
       continue;
     }
 
     importedNodes.push(
-      createImportedSourceNode(table, input.groupingStrategy, input.includeColumns)
+      createImportedSourceNode(sourceObject, input.groupingStrategy, input.includeColumns)
     );
     existingNodeIds.add(nodeId);
   }
@@ -371,7 +413,24 @@ function importMockSources(
     edges: [...state.graphSnapshot.edges],
   };
 
-  return buildImportResult(input, importedNodes);
+  return buildImportResult(input, selectedSourceObjects, importedNodes);
+}
+
+function toMockSourceObject(definition: MockRelationDefinition): RelationalSourceObject {
+  const locator = {
+    kind: 'relation' as const,
+    catalog: definition.database,
+    schema: definition.schema,
+    name: definition.table,
+    relationType: 'table' as const,
+  };
+  return {
+    objectId: buildRelationalSourceObjectId(locator),
+    displayName: definition.table,
+    locator,
+    metricEvidence: definition.metricEvidence,
+    ...(definition.columns ? { columns: [...definition.columns] } : {}),
+  };
 }
 
 const mockFileTree: WorkspaceFileEntry[] = [
@@ -418,7 +477,7 @@ const mockFileTree: WorkspaceFileEntry[] = [
   { path: 'README.md', name: 'README.md', kind: 'file' },
 ];
 
-const defaultFileContents: Record<string, FileContent> = {
+const defaultFileContentSeeds: Record<string, Omit<FileContent, 'contentSha256'>> = {
   'models/staging/stg_orders.sql': {
     path: 'models/staging/stg_orders.sql',
     name: 'stg_orders.sql',
@@ -612,6 +671,13 @@ const defaultFileContents: Record<string, FileContent> = {
   },
 };
 
+const defaultFileContents: Record<string, FileContent> = Object.fromEntries(
+  Object.entries(defaultFileContentSeeds).map(([path, file]) => [
+    path,
+    { ...file, contentSha256: sha256HexUtf8(file.content) },
+  ])
+);
+
 function inferLanguage(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase() ?? '';
   const langMap: Record<string, string> = {
@@ -671,11 +737,8 @@ export function createMockWarehouseSourceImportPort(
 ): IWarehouseSourceImportPort {
   return {
     listWarehouseConnections: async () => mockConnections.map((connection) => ({ ...connection })),
-    listWarehouseTables: async (connectionId) =>
-      (mockWarehouseTablesByConnectionId[connectionId] ?? []).map((table) => ({
-        ...table,
-        columns: table.columns?.map((column) => ({ ...column })),
-      })),
+    listSourceObjects: async (connectionId) =>
+      (mockRelationDefinitionsByConnectionId[connectionId] ?? []).map(toMockSourceObject),
     createWarehouseConnection: async (input) => ({
       id: toMockWarehouseConnectionId(input.name),
       name: input.name,
@@ -686,7 +749,7 @@ export function createMockWarehouseSourceImportPort(
       connectionId,
       status: 'passed',
       checkedAt: '2026-06-08T00:00:00.000Z',
-      tableCount: mockWarehouseTablesByConnectionId[connectionId]?.length ?? 0,
+      objectCount: mockRelationDefinitionsByConnectionId[connectionId]?.length ?? 0,
     }),
     importSources: async (input) => importMockSources(state, input),
   };
@@ -744,19 +807,44 @@ export function createMockWorkspaceFileContentCommandPort(
   state: MockWorkspaceState = createMockWorkspaceState()
 ): IWorkspaceFileContentCommandPort {
   return {
-    saveFileContent: async (path, content) => {
-      const existing = state.fileContents[path];
-      const name = path.split('/').pop() ?? path;
+    saveFileContent: async (input) => {
+      const existing = state.fileContents[input.path];
+      const contentSha256 = sha256HexUtf8(input.content);
+      if (existing?.contentSha256 === contentSha256) {
+        return {
+          kind: 'unchanged',
+          disposition: null,
+          path: existing.path,
+          contentSha256: existing.contentSha256,
+          lastModified: existing.lastModified,
+        };
+      }
+      const revisionMatches =
+        input.expectedRevision.kind === 'absent'
+          ? existing == null
+          : existing?.contentSha256 === input.expectedRevision.value;
+      if (!revisionMatches) {
+        throw new WorkspaceFileRevisionConflictError(input.path);
+      }
+
+      const name = input.path.split('/').pop() ?? input.path;
       const updated: FileContent = {
-        path,
+        path: input.path,
         name,
-        language: existing?.language ?? inferLanguage(path),
-        content,
+        language: existing?.language ?? inferLanguage(input.path),
+        content: input.content,
+        contentSha256,
         lastModified: new Date().toISOString(),
       };
-      state.fileContents[path] = updated;
-      ensureWorkspaceFileEntry(state.fileTree, path);
-      return cloneFileContent(updated);
+      state.fileContents[input.path] = updated;
+      ensureWorkspaceFileEntry(state.fileTree, input.path);
+      return {
+        kind: 'saved',
+        disposition: existing ? 'updated' : 'created',
+        path: updated.path,
+        contentSha256: updated.contentSha256,
+        lastModified: updated.lastModified,
+      };
     },
   };
 }

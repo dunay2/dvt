@@ -61,7 +61,7 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, apiEnv.DVT_DBT_BUNDLE_FILE_ROOT);
 });
 
-test('seedSelectedClosureLocalWarehouseProof seeds source data and the governed connection catalog', async () => {
+test('seedSelectedClosureLocalWarehouseProof seeds source data before the API command creates the catalog', async () => {
   const calls = [];
 
   await seedSelectedClosureLocalWarehouseProof(
@@ -73,9 +73,6 @@ test('seedSelectedClosureLocalWarehouseProof seeds source data and the governed 
       seedLocalPostgresProofData: async (databaseUrl) => {
         calls.push(['postgres', databaseUrl]);
       },
-      seedLocalWorkspaceWarehouseCatalog: (workspaceRoot) => {
-        calls.push(['catalog', workspaceRoot]);
-      },
       log: (message) => {
         calls.push(['log', message]);
       },
@@ -85,6 +82,5 @@ test('seedSelectedClosureLocalWarehouseProof seeds source data and the governed 
   assert.deepEqual(calls, [
     ['log', '[selected-closure-live] Seeding local Postgres proof source data'],
     ['postgres', 'postgresql://user:pass@localhost:5432/dvt'],
-    ['catalog', 'C:\\workspace-files'],
   ]);
 });

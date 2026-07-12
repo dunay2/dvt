@@ -359,10 +359,18 @@ describe('CanvasViewport node floating toolbar', () => {
             title: string;
             rows: readonly { id: string; label: string; value: string }[];
           },
-          anchorRect: DOMRect
+          anchorElement: HTMLElement
         ) => void)
       | undefined;
     expect(typeof onOpenOperationalDetails).toBe('function');
+
+    const anchorElement = document.createElement('button');
+    anchorElement.getBoundingClientRect = () =>
+      ({
+        left: 320,
+        bottom: 260,
+      }) as DOMRect;
+    container.append(anchorElement);
 
     await act(async () => {
       onOpenOperationalDetails?.(
@@ -373,10 +381,7 @@ describe('CanvasViewport node floating toolbar', () => {
             { id: 'size', label: 'Dataset size', value: '18.2 GB' },
           ],
         },
-        {
-          left: 320,
-          bottom: 260,
-        } as DOMRect
+        anchorElement
       );
     });
   }

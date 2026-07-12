@@ -25,6 +25,7 @@ import { StartRunAuthorizedFacade } from '../../application/services/startRunAut
 import { StoredPlanExecutabilityValidator } from '../../application/services/StoredPlanExecutabilityValidator.js';
 import { ObservabilityAdmissionTelemetry } from '../../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
 import { ObservabilityStartRunSlaTelemetry } from '../../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
+import { resolveWorkspaceScopeStorageRoot } from '../../infrastructure/workspaceFiles/workspaceScopeStoragePath.js';
 import { buildPlanCompilePlanner } from '../planCompileBoundary.js';
 
 export type BuildProtectedStartRunRuntimeDeps = {
@@ -74,7 +75,7 @@ export function buildProtectedStartRunRuntime(
   const dbtRunExecutionContextBindingUseCase = new DbtRunExecutionContextBindingUseCase({
     delegate: engineStartRunUseCase,
     planStore: deps.planStore,
-    workspaceRoot: deps.workspaceRoot,
+    resolveWorkspaceRoot: (scope) => resolveWorkspaceScopeStorageRoot(deps.workspaceRoot, scope),
     dbtBundleStore: deps.dbtBundleStore,
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({

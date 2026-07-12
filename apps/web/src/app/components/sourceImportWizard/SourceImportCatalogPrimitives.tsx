@@ -1,26 +1,27 @@
 /** Owned concern: present Add Source catalog structure without owning selection state. */
-import { Table } from 'lucide-react';
+import { Database, FileJson, Globe2, RadioTower, Table2, type LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { Checkbox } from '../ui/checkbox';
+import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import type {
   SourceImportCatalogFilterId,
   SourceImportCatalogFilterViewModel,
-  SourceImportTableViewModel,
+  SourceImportLocatorGroupViewModel,
+  SourceImportObjectViewModel,
 } from './sourceImportCatalogModel';
 
 export const sourceImportCatalogClassNames = {
   emptyState: 'border-slate-600 p-4 text-sm text-slate-300',
-  schemaGroups: 'space-y-4',
-  databaseGroup: 'space-y-3',
-  databaseHeader:
-    'rounded border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100',
-  databaseHeaderContent: 'flex items-center justify-between gap-3',
-  databaseIdentity: 'flex min-w-0 items-center gap-2',
-  databaseTitle: 'font-mono font-medium',
-  databaseMetrics: 'flex flex-wrap justify-end gap-2 text-xs text-slate-400',
+  groups: 'space-y-4',
+  group: 'space-y-3',
+  groupHeader: 'rounded border border-slate-700 bg-slate-950/50 px-3 py-2 text-sm text-slate-100',
+  groupHeaderContent: 'flex items-center justify-between gap-3',
+  groupIdentity: 'flex min-w-0 items-center gap-2',
+  groupTitle: 'font-mono font-medium',
+  groupMetrics: 'flex flex-wrap justify-end gap-2 text-xs text-slate-400',
   filterList: 'flex flex-wrap gap-2',
   filterButton:
     'rounded border border-slate-700 bg-slate-950/50 px-2.5 py-1 text-xs text-slate-300 transition hover:border-sky-500 hover:text-slate-100 disabled:cursor-not-allowed disabled:opacity-40',
@@ -28,17 +29,20 @@ export const sourceImportCatalogClassNames = {
   filterCount: 'ml-1 text-slate-500',
   schemaHeader: 'mb-2 flex items-center gap-2',
   schemaTitle: 'text-sm font-medium',
-  schemaTableList: 'ml-6 space-y-1',
-  tableCard:
-    'cursor-pointer rounded border border-slate-700 bg-slate-950/30 p-3 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
-  selectedTableCard: 'border-sky-400 bg-sky-950/30 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]',
-  tableHeader: 'flex items-start justify-between gap-3',
-  tableIdentity: 'flex min-w-0 items-start gap-2',
-  tableIcon: 'mt-0.5 size-4 shrink-0 text-slate-300',
-  tableNameBlock: 'min-w-0',
-  tableName: 'block truncate font-mono text-sm',
-  tableCanonicalName: 'block truncate font-mono text-xs text-slate-400',
-  tableMetrics: 'shrink-0 text-right text-xs text-slate-400',
+  objectList: 'ml-6 space-y-1',
+  objectCard:
+    'rounded border border-slate-700 bg-slate-950/30 p-3 outline-none hover:bg-slate-950 focus-visible:border-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400/40',
+  selectedObjectCard: 'border-sky-400 bg-sky-950/30 shadow-[0_0_0_1px_rgba(56,189,248,0.35)]',
+  objectHeader: 'flex items-start justify-between gap-3',
+  objectIdentity: 'flex min-w-0 items-start gap-2',
+  objectInspectButton:
+    'flex min-w-0 cursor-pointer items-start gap-2 rounded text-left outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40',
+  objectIcon: 'mt-0.5 size-4 shrink-0 text-slate-300',
+  objectNameBlock: 'min-w-0',
+  objectName: 'block truncate font-mono text-sm',
+  objectCanonicalName: 'block truncate font-mono text-xs text-slate-400',
+  objectMetrics: 'shrink-0 text-right text-xs text-slate-400',
+  importability: 'mt-2 text-[11px] leading-4 text-amber-300',
   columnList: 'mt-3 grid gap-1',
   columnRow:
     'grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded border border-slate-800 bg-slate-950/60 px-2 py-1.5',
@@ -47,12 +51,21 @@ export const sourceImportCatalogClassNames = {
   columnNullability: 'text-[11px] text-slate-400',
 } as const;
 
+const sourceObjectIconByKind: Readonly<
+  Record<SourceImportObjectViewModel['locatorKind'], LucideIcon>
+> = {
+  relation: Table2,
+  file: FileJson,
+  endpoint: Globe2,
+  stream: RadioTower,
+};
+
 type SourceImportSchemaHeaderProps = Readonly<{
   schema: string;
   accessibilityLabel: string;
   schemaIdentityKey: string;
   selected: boolean;
-  tableCountLabel: string;
+  objectCountLabel: string;
   onToggle: () => void;
 }>;
 
@@ -60,14 +73,14 @@ type SourceImportDatabaseHeaderProps = Readonly<{
   database: string;
   accessibilityLabel: string;
   schemaCountLabel: string;
-  tableCountLabel: string;
+  objectCountLabel: string;
   selected: boolean;
   selectedLabel: string | null;
   onToggle: () => void;
 }>;
 
-type SourceImportTableCardProps = Readonly<{
-  table: SourceImportTableViewModel;
+type SourceImportObjectCardProps = Readonly<{
+  sourceObject: SourceImportObjectViewModel;
   onActivate: () => void;
   onToggle: () => void;
 }>;
@@ -84,16 +97,16 @@ export function SourceImportCatalogEmptyState({
   return <Card className={sourceImportCatalogClassNames.emptyState}>{children}</Card>;
 }
 
-export function SourceImportSchemaGroups({
+export function SourceImportCatalogGroups({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
-  return <div className={sourceImportCatalogClassNames.schemaGroups}>{children}</div>;
+  return <div className={sourceImportCatalogClassNames.groups}>{children}</div>;
 }
 
-export function SourceImportDatabaseGroup({
+export function SourceImportCatalogGroup({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
-  return <div className={sourceImportCatalogClassNames.databaseGroup}>{children}</div>;
+  return <div className={sourceImportCatalogClassNames.group}>{children}</div>;
 }
 
 export function SourceImportCatalogFilterList({
@@ -132,38 +145,56 @@ export function SourceImportDatabaseHeader({
   database,
   accessibilityLabel,
   schemaCountLabel,
-  tableCountLabel,
+  objectCountLabel,
   selected,
   selectedLabel,
   onToggle,
 }: SourceImportDatabaseHeaderProps): JSX.Element {
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={accessibilityLabel}
       data-source-import-database={database}
-      className={sourceImportCatalogClassNames.databaseHeader}
-      onClick={onToggle}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onToggle();
-        }
-      }}
+      className={sourceImportCatalogClassNames.groupHeader}
     >
-      <div className={sourceImportCatalogClassNames.databaseHeaderContent}>
-        <span className={sourceImportCatalogClassNames.databaseIdentity}>
-          <Checkbox checked={selected} />
-          <span className={sourceImportCatalogClassNames.databaseTitle}>{database}</span>
+      <div className={sourceImportCatalogClassNames.groupHeaderContent}>
+        <span className={sourceImportCatalogClassNames.groupIdentity}>
+          <Checkbox aria-label={accessibilityLabel} checked={selected} onCheckedChange={onToggle} />
+          <Database className={sourceImportCatalogClassNames.objectIcon} aria-hidden="true" />
+          <span className={sourceImportCatalogClassNames.groupTitle}>{database}</span>
         </span>
-        <span className={sourceImportCatalogClassNames.databaseMetrics}>
+        <span className={sourceImportCatalogClassNames.groupMetrics}>
           <Badge variant="secondary">{schemaCountLabel}</Badge>
-          <Badge variant="secondary">{tableCountLabel}</Badge>
+          <Badge variant="secondary">{objectCountLabel}</Badge>
           {selectedLabel ? <Badge variant="outline">{selectedLabel}</Badge> : null}
         </span>
       </div>
     </div>
+  );
+}
+
+export function SourceImportLocatorGroup({
+  group,
+  children,
+}: Readonly<{
+  group: SourceImportLocatorGroupViewModel;
+  children: ReactNode;
+}>): JSX.Element {
+  const Icon = sourceObjectIconByKind[group.locatorKind];
+  return (
+    <SourceImportCatalogGroup>
+      <div
+        data-source-import-locator-kind={group.locatorKind}
+        className={sourceImportCatalogClassNames.groupHeader}
+      >
+        <div className={sourceImportCatalogClassNames.groupHeaderContent}>
+          <span className={sourceImportCatalogClassNames.groupIdentity}>
+            <Icon className={sourceImportCatalogClassNames.objectIcon} aria-hidden="true" />
+            <span className={sourceImportCatalogClassNames.groupTitle}>{group.label}</span>
+          </span>
+          <Badge variant="secondary">{group.objectCountLabel}</Badge>
+        </div>
+      </div>
+      {children}
+    </SourceImportCatalogGroup>
   );
 }
 
@@ -172,51 +203,41 @@ export function SourceImportSchemaHeader({
   accessibilityLabel,
   schemaIdentityKey,
   selected,
-  tableCountLabel,
+  objectCountLabel,
   onToggle,
 }: SourceImportSchemaHeaderProps): JSX.Element {
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-label={accessibilityLabel}
       data-source-import-schema={schemaIdentityKey}
       className={sourceImportCatalogClassNames.schemaHeader}
-      onClick={onToggle}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onToggle();
-        }
-      }}
     >
-      <Checkbox checked={selected} />
+      <Checkbox aria-label={accessibilityLabel} checked={selected} onCheckedChange={onToggle} />
       <h4 className={sourceImportCatalogClassNames.schemaTitle}>{schema}</h4>
       <Badge variant="secondary" className="text-xs">
-        {tableCountLabel}
+        {objectCountLabel}
       </Badge>
     </div>
   );
 }
 
-export function SourceImportSchemaTableList({
+export function SourceImportObjectList({
   children,
 }: Readonly<{ children: ReactNode }>): JSX.Element {
-  return <div className={sourceImportCatalogClassNames.schemaTableList}>{children}</div>;
+  return <div className={sourceImportCatalogClassNames.objectList}>{children}</div>;
 }
 
 export function SourceImportColumnPreviewList({
-  table,
-}: Readonly<{ table: SourceImportTableViewModel }>): JSX.Element | null {
-  if (table.columns.length === 0) {
+  sourceObject,
+}: Readonly<{ sourceObject: SourceImportObjectViewModel }>): JSX.Element | null {
+  if (sourceObject.columns.length === 0) {
     return null;
   }
 
   return (
     <div className={sourceImportCatalogClassNames.columnList}>
-      {table.columns.slice(0, 4).map((column) => (
+      {sourceObject.columns.slice(0, 4).map((column) => (
         <div
-          key={`${table.identityKey}.${column.name}`}
+          key={`${sourceObject.identityKey}.${column.name}`}
           className={sourceImportCatalogClassNames.columnRow}
         >
           <span className={sourceImportCatalogClassNames.columnName}>{column.name}</span>
@@ -230,57 +251,74 @@ export function SourceImportColumnPreviewList({
   );
 }
 
-export function SourceImportTableCard({
-  table,
+export function SourceImportObjectCard({
+  sourceObject,
   onActivate,
   onToggle,
-}: SourceImportTableCardProps): JSX.Element {
-  const tableCardClassName = table.selected
-    ? `${sourceImportCatalogClassNames.tableCard} ${sourceImportCatalogClassNames.selectedTableCard}`
-    : sourceImportCatalogClassNames.tableCard;
+}: SourceImportObjectCardProps): JSX.Element {
+  const Icon = sourceObjectIconByKind[sourceObject.locatorKind];
+  const objectCardClassName = sourceObject.selected
+    ? `${sourceImportCatalogClassNames.objectCard} ${sourceImportCatalogClassNames.selectedObjectCard}`
+    : sourceImportCatalogClassNames.objectCard;
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
-      aria-label={table.inspectionAccessibilityLabel}
-      data-source-import-table={table.canonicalName}
-      className={tableCardClassName}
-      onClick={onActivate}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          onActivate();
-        }
-      }}
-    >
-      <div className={sourceImportCatalogClassNames.tableHeader}>
-        <div className={sourceImportCatalogClassNames.tableIdentity}>
+    <article data-source-import-object={sourceObject.identityKey} className={objectCardClassName}>
+      <div className={sourceImportCatalogClassNames.objectHeader}>
+        <div className={sourceImportCatalogClassNames.objectIdentity}>
           <Checkbox
-            aria-label={table.accessibilityLabel}
-            data-source-import-table-select={table.canonicalName}
-            checked={table.selected}
-            onClick={(event) => {
-              event.stopPropagation();
-              onToggle();
-            }}
+            aria-label={sourceObject.accessibilityLabel}
+            data-source-import-object-select={sourceObject.identityKey}
+            checked={sourceObject.selected}
+            disabled={!sourceObject.selectable}
+            onCheckedChange={onToggle}
           />
-          <Table className={sourceImportCatalogClassNames.tableIcon} />
-          <div className={sourceImportCatalogClassNames.tableNameBlock}>
-            <span className={sourceImportCatalogClassNames.tableName}>{table.displayName}</span>
-            <span className={sourceImportCatalogClassNames.tableCanonicalName}>
-              {table.canonicalName}
+          <button
+            type="button"
+            aria-label={sourceObject.inspectionAccessibilityLabel}
+            className={sourceImportCatalogClassNames.objectInspectButton}
+            onClick={onActivate}
+          >
+            <Icon className={sourceImportCatalogClassNames.objectIcon} aria-hidden="true" />
+            <span className={sourceImportCatalogClassNames.objectNameBlock}>
+              <span className={sourceImportCatalogClassNames.objectName}>
+                {sourceObject.displayName}
+              </span>
+              <span className={sourceImportCatalogClassNames.objectCanonicalName}>
+                {sourceObject.canonicalName}
+              </span>
             </span>
-          </div>
+          </button>
         </div>
-        <div className={sourceImportCatalogClassNames.tableMetrics}>
-          {table.selected ? <Badge variant="outline">{table.selectedLabel}</Badge> : null}
-          <div>{table.rowCountLabel}</div>
-          {table.byteSizeLabel == null ? null : <div>{table.byteSizeLabel}</div>}
-          <div>{table.columnCountLabel}</div>
+        <div className={sourceImportCatalogClassNames.objectMetrics}>
+          <Badge variant="secondary">{sourceObject.kindLabel}</Badge>
+          {sourceObject.selected ? (
+            <Badge variant="outline">{sourceObject.selectedLabel}</Badge>
+          ) : null}
+          <div>
+            <MetricEvidenceHotspot
+              detail={sourceObject.rowCountDetail}
+              focusable={false}
+              tone={sourceObject.rowCountTone}
+              value={sourceObject.rowCountLabel}
+            />
+          </div>
+          <div>
+            <MetricEvidenceHotspot
+              detail={sourceObject.byteSizeDetail}
+              focusable={false}
+              tone={sourceObject.byteSizeTone}
+              value={sourceObject.byteSizeLabel}
+            />
+          </div>
+          <div>{sourceObject.columnCountLabel}</div>
         </div>
       </div>
-      <SourceImportColumnPreviewList table={table} />
-    </div>
+      {sourceObject.importabilityLabel ? (
+        <p className={sourceImportCatalogClassNames.importability}>
+          {sourceObject.importabilityLabel}
+        </p>
+      ) : null}
+      <SourceImportColumnPreviewList sourceObject={sourceObject} />
+    </article>
   );
 }

@@ -8,12 +8,16 @@ import { vi } from 'vitest';
 import type {
   ImportSourcesResult,
   IWarehouseSourceImportPort,
-  WarehouseTable,
+  RelationalSourceObject,
 } from '../ports/workspace';
 import type { SourceImportOptionContribution } from '../plugins/registry';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import SourceImportWizard from './SourceImportWizard';
 import type { SourceImportInitialSelection } from './sourceImportWizard/types';
+import {
+  buildSourceImportTestMetricEvidence,
+  buildSourceImportTestObject,
+} from './sourceImportWizard/sourceImportWizard.testFixtures';
 
 class TestResizeObserver implements ResizeObserver {
   observe(): void {
@@ -49,13 +53,13 @@ export function buildWarehouseSourceImportPort(
         database: 'dvt',
       },
     ],
-    listWarehouseTables: async () => [
-      {
+    listSourceObjects: async () => [
+      buildSourceObject({
         database: 'RAW',
         schema: 'ERP',
         table: 'ORDERS',
-        rowCount: 100,
-      },
+        metricEvidence: buildSourceImportTestMetricEvidence(100, 4096),
+      }),
     ],
     createWarehouseConnection: async (input) => ({
       id: 'conn-created',
@@ -67,12 +71,13 @@ export function buildWarehouseSourceImportPort(
       connectionId,
       status: 'passed',
       checkedAt: '2026-06-08T00:00:00.000Z',
-      tableCount: 1,
+      objectCount: 1,
     }),
     importSources: async (input) => ({
       success: true,
+      draftRevision: 'draft-revision-2',
       sourcesCreated: 1,
-      tablesImported: 1,
+      objectsImported: 1,
       yamlFiles: ['models/sources/erp.yml'],
       importedNodeIds: ['src_erp_orders'],
       grouping: 'schema',
@@ -86,15 +91,14 @@ export function buildWarehouseSourceImportPort(
   };
 }
 
-export function buildWarehouseTable(overrides: Partial<WarehouseTable>): WarehouseTable {
-  return {
-    database: 'RAW',
-    schema: 'ERP',
-    table: 'ORDERS',
-    rowCount: 100,
+export function buildSourceObject(
+  overrides: Parameters<typeof buildSourceImportTestObject>[0] = {}
+): RelationalSourceObject {
+  return buildSourceImportTestObject({
+    metricEvidence: buildSourceImportTestMetricEvidence(100, 4096),
     columns: [{ name: 'order_id', type: 'INTEGER', nullable: false }],
     ...overrides,
-  };
+  });
 }
 
 export function createSourceImportWizardHarness() {
@@ -181,19 +185,19 @@ export function createSourceImportWizardHarness() {
       document.querySelectorAll<HTMLButtonElement>('[data-slot="source-import-connection-option"]')
     ).find((button) => button.textContent?.includes(text));
 
-  const findClickableDivByText = (text: string): HTMLDivElement | undefined =>
-    Array.from(document.querySelectorAll<HTMLDivElement>('div.cursor-pointer')).find((node) =>
-      node.textContent?.includes(text)
-    );
+  const findSourceObjectInspectionButton = (text: string): HTMLButtonElement | undefined =>
+    Array.from(
+      document.querySelectorAll<HTMLButtonElement>('[data-source-import-object] button')
+    ).find((button) => button.textContent?.includes(text));
 
-  const findTableSelectionCheckbox = (canonicalName: string): HTMLButtonElement | undefined =>
-    document.querySelector<HTMLButtonElement>(
-      `[data-source-import-table-select="${canonicalName}"]`
-    ) ?? undefined;
-
-  const findDatabaseSelection = (database: string): HTMLDivElement | undefined =>
-    document.querySelector<HTMLDivElement>(`[data-source-import-database="${database}"]`) ??
+  const findSourceObjectSelectionCheckbox = (objectId: string): HTMLButtonElement | undefined =>
+    document.querySelector<HTMLButtonElement>(`[data-source-import-object-select="${objectId}"]`) ??
     undefined;
+
+  const findDatabaseSelection = (database: string): HTMLButtonElement | undefined =>
+    document.querySelector<HTMLButtonElement>(
+      `[data-source-import-database="${database}"] [role="checkbox"]`
+    ) ?? undefined;
 
   async function clickTab(name: string): Promise<void> {
     const tab = requireElement(findTab(name), `EXPECTED_TAB:${name}`);
@@ -202,17 +206,20 @@ export function createSourceImportWizardHarness() {
     });
   }
 
-  async function clickClickableDivByText(text: string): Promise<void> {
-    const node = requireElement(findClickableDivByText(text), `EXPECTED_CLICKABLE_DIV:${text}`);
+  async function clickSourceObjectInspectionButton(text: string): Promise<void> {
+    const node = requireElement(
+      findSourceObjectInspectionButton(text),
+      `EXPECTED_SOURCE_OBJECT_INSPECTION:${text}`
+    );
     await act(async () => {
       node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
   }
 
-  async function clickTableSelectionCheckbox(canonicalName: string): Promise<void> {
+  async function clickSourceObjectSelectionCheckbox(objectId: string): Promise<void> {
     const checkbox = requireElement(
-      findTableSelectionCheckbox(canonicalName),
-      `EXPECTED_TABLE_SELECTION:${canonicalName}`
+      findSourceObjectSelectionCheckbox(objectId),
+      `EXPECTED_SOURCE_OBJECT_SELECTION:${objectId}`
     );
     await act(async () => {
       checkbox.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -287,9 +294,9 @@ export function createSourceImportWizardHarness() {
     findConnectionOption,
     clickTab,
     clickConnectionOption,
-    clickClickableDivByText,
+    clickSourceObjectInspectionButton,
     clickDatabaseSelection,
-    clickTableSelectionCheckbox,
+    clickSourceObjectSelectionCheckbox,
     clickButtonContaining,
     clickButtonByLabel,
     fillInputByLabel,

@@ -27,6 +27,7 @@ import { TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS } from '@dvt/temporal-dbt-plu
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 import type { IStartRunUseCase, StartRunUseCaseResult } from '../ports/startRunUseCasePort.js';
+import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
 
 import { parseStoredExecutablePlan } from './storedExecutablePlan.js';
 
@@ -90,7 +91,7 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
     private readonly deps: {
       readonly delegate: IStartRunUseCase;
       readonly planStore: StoredPlanArtifactReaderForRunBinding;
-      readonly workspaceRoot: string;
+      readonly resolveWorkspaceRoot: (scope: WorkspaceStorageScope) => string;
       readonly dbtBundleStore: DbtProjectBundleArtifactStore | undefined;
     }
   ) {}
@@ -151,7 +152,14 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
       };
     }
 
-    const files = await collectDbtWorkspaceFiles(this.deps.workspaceRoot);
+    const workspaceScope = toWorkspaceStorageScope(input.context);
+    if (workspaceScope === null) {
+      return {
+        ok: false,
+        reason: 'dbt project bundle requires tenant, project, and environment scope',
+      };
+    }
+    const files = await collectDbtWorkspaceFiles(this.deps.resolveWorkspaceRoot(workspaceScope));
     if (files.some((file) => DBT_PROJECT_FILENAMES.has(file.workspacePath)) === false) {
       return { ok: false, reason: 'dbt project bundle requires dbt_project.yml' };
     }
@@ -212,6 +220,22 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
       }),
     };
   }
+}
+
+function toWorkspaceStorageScope(
+  context: AuthorizedCommandExecutionContext
+): WorkspaceStorageScope | null {
+  const projectId = context.scope.projectId?.value;
+  const environmentId = context.scope.environmentId?.value;
+  if (projectId === undefined || environmentId === undefined) {
+    return null;
+  }
+
+  return {
+    tenantId: context.scope.tenantId.value,
+    projectId,
+    environmentId,
+  };
 }
 
 function toScopedPlanRef(

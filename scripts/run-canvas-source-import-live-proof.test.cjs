@@ -3,6 +3,19 @@ const assert = require('node:assert/strict');
 
 const { CanvasSourceImportLiveProofRunner } = require('./run-canvas-source-import-live-proof.cjs');
 
+test('source import live proof starts the API without the package predev lifecycle', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+
+  assert.deepEqual(runner.buildApiProcessArgs(), [
+    '--filter',
+    'dvt-api',
+    'exec',
+    'tsx',
+    'watch',
+    'src/server.ts',
+  ]);
+});
+
 test('source import live proof uses an explicit local Temporal test server binary', async () => {
   const temporalServerPath = 'C:\\tools\\temporal-test-server.exe';
   const calls = [];

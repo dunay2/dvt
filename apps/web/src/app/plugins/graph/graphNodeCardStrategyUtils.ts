@@ -1,5 +1,6 @@
 /** Owned concern: share pure graph card projection helpers across plugin strategies. */
 import type { CanonicalNode } from '../../types/canonical';
+import { formatSourceObjectMetricByteSize } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 import type {
   GraphNodeCardAccentTone,
   GraphNodeCardMetric,
@@ -10,6 +11,7 @@ import type {
 } from './graphNodeCardStrategyContracts';
 
 type PushMetricOptions = Readonly<{
+  detail?: string;
   icon?: GraphNodeCardMetricIcon;
   tone?: GraphNodeCardStatusTone;
 }>;
@@ -48,18 +50,7 @@ export function formatCompactNumber(value: number): string {
   return String(value);
 }
 
-export function formatBytes(value: number): string {
-  if (Math.abs(value) >= 1024 * 1024 * 1024) {
-    return `${(value / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
-  }
-  if (Math.abs(value) >= 1024 * 1024) {
-    return `${(value / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
-  }
-  if (Math.abs(value) >= 1024) {
-    return `${(value / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
-  }
-  return `${value} B`;
-}
+export const formatBytes = formatSourceObjectMetricByteSize;
 
 export function formatDurationMs(value: number): string {
   const totalSeconds = Math.max(0, Math.round(value / 1000));

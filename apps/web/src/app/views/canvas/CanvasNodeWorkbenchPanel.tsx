@@ -1,5 +1,5 @@
 /** Owned concern: render the Canvas-owned contextual node workbench panel. */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type HTMLAttributes } from 'react';
 
 import { getInspectorPanels } from '../../plugins/registry';
 import {
@@ -29,8 +29,18 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   preferredTabRequestId?: number;
   primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[];
   authoring: CanvasInspectorAuthoringContract;
+  dragHandleProps?: CanvasNodeWorkbenchDragHandleProps;
   onClose: () => void;
 }>;
+
+export type CanvasNodeWorkbenchDragHandleProps = HTMLAttributes<HTMLDivElement> &
+  Readonly<{
+    'data-slot'?: string;
+  }>;
+
+const GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_LABELS = new Set(['Name']);
+const DVT_SOURCE_TARGET_ROW_LABELS = new Set(['Database', 'Schema', 'Table', 'Source']);
+const DVT_SINK_TARGET_ROW_LABELS = new Set(['Database', 'Schema', 'Table', 'Materialization']);
 
 function resolveActiveNodeWorkbenchTab({
   activeTab,
@@ -51,6 +61,54 @@ function resolveActiveNodeWorkbenchTab({
   return model.sections[0]?.id ?? 'general';
 }
 
+function resolveNodeWorkbenchHiddenGeneralRowLabels(node: CanonicalNode): ReadonlySet<string> {
+  const labels = new Set(GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_LABELS);
+
+  if (node.id === node.name) {
+    labels.add('Node ID');
+  }
+
+  if (node.kind === 'dvt:source') {
+    for (const label of DVT_SOURCE_TARGET_ROW_LABELS) {
+      labels.add(label);
+    }
+  }
+
+  if (node.kind === 'dvt:sink') {
+    for (const label of DVT_SINK_TARGET_ROW_LABELS) {
+      labels.add(label);
+    }
+  }
+
+  return labels;
+}
+
+function buildNodeWorkbenchReadModel({
+  model,
+  node,
+}: Readonly<{
+  model: NodePropertiesReadModel;
+  node: CanonicalNode;
+}>): NodePropertiesReadModel {
+  const hiddenGeneralRowLabels = resolveNodeWorkbenchHiddenGeneralRowLabels(node);
+
+  if (hiddenGeneralRowLabels.size === 0) {
+    return model;
+  }
+
+  return {
+    ...model,
+    sections: model.sections.map((section) =>
+      section.id === 'general'
+        ? {
+            ...section,
+            rows: section.rows.filter((row) => !hiddenGeneralRowLabels.has(row.label)),
+          }
+        : section
+    ),
+  };
+}
+
 export function CanvasNodeWorkbenchPanel({
   node,
   nodes,
@@ -61,6 +119,7 @@ export function CanvasNodeWorkbenchPanel({
   preferredTabRequestId = 0,
   primarySectionIds,
   authoring,
+  dragHandleProps,
   onClose,
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
@@ -69,7 +128,8 @@ export function CanvasNodeWorkbenchPanel({
   const [authoringTagsText, setAuthoringTagsText] = useState(() =>
     createCanvasInspectorNodeDraft(node).tags.join(', ')
   );
-  const model = buildNodePropertiesReadModel({ node, nodes, edges });
+  const baseModel = buildNodePropertiesReadModel({ node, nodes, edges });
+  const model = buildNodeWorkbenchReadModel({ model: baseModel, node });
   const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
   const resolvedPrimarySectionIds =
     primarySectionIds == null
@@ -127,7 +187,14 @@ export function CanvasNodeWorkbenchPanel({
 
   return (
     <div data-slot="canvas-node-workbench-panel" className="flex h-full min-h-0 flex-col">
-      <div className={inspectorVisualClasses.contextPanelHeaderRow}>
+      <div
+        {...dragHandleProps}
+        className={cn(
+          inspectorVisualClasses.contextPanelHeaderRow,
+          dragHandleProps?.className,
+          dragHandleProps != null && 'cursor-move select-none'
+        )}
+      >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
@@ -139,7 +206,13 @@ export function CanvasNodeWorkbenchPanel({
             {node.kind}
           </p>
         </div>
-        <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          data-workbench-drag-excluded="true"
+          onClick={onClose}
+        >
           Close
         </Button>
       </div>
@@ -158,6 +231,9 @@ export function CanvasNodeWorkbenchPanel({
               columns: renderAuthoringSection('columns'),
               code: renderAuthoringSection('code'),
               sink: renderAuthoringSection('sink'),
+            }}
+            sectionChildrenPlacement={{
+              general: 'before-body',
             }}
             slotPrefix="canvas-node-workbench"
             surface="workbench"

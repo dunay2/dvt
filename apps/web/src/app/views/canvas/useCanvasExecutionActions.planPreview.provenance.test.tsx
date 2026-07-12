@@ -96,13 +96,17 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
 
     await harness.clickPlan();
 
+    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith({
+      path: 'models/dvt-sql-transform-1.sql',
+      content: 'select *\nfrom public.source_2;\n',
+      expectedRevision: { kind: 'absent' },
+    });
     expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
-      'models/dvt-sql-transform-1.sql',
-      'select *\nfrom public.source_2;\n'
-    );
-    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
-      'pipelines/project-transformation-preview.yaml',
-      expect.stringContaining('entrypoint: "models/dvt-sql-transform-1.sql"')
+      expect.objectContaining({
+        path: 'pipelines/project-transformation-preview.yaml',
+        content: expect.stringContaining('entrypoint: "models/dvt-sql-transform-1.sql"'),
+        expectedRevision: { kind: 'absent' },
+      })
     );
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -217,10 +221,11 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
     await harness.clickPlan();
 
     expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
-    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
-      'models/dvt-sql-transform-1.sql',
-      'select *\nfrom public.source_1;\n'
-    );
+    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith({
+      path: 'models/dvt-sql-transform-1.sql',
+      content: 'select *\nfrom public.source_1;\n',
+      expectedRevision: { kind: 'absent' },
+    });
     expect(harness.shellFeedback.error).not.toHaveBeenCalled();
   });
 
@@ -293,9 +298,13 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         },
       })
     );
-    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
-      'pipelines/sales_pipeline.yaml',
-      expectedGraphArtifactContent
-    );
+    expect(workspaceFilePorts.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith({
+      path: 'pipelines/sales_pipeline.yaml',
+      content: expectedGraphArtifactContent,
+      expectedRevision: {
+        kind: 'content_sha256',
+        value: sha256HexUtf8('name: sales_pipeline\nsteps: []'),
+      },
+    });
   });
 });

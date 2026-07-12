@@ -1,5 +1,13 @@
 /** Owned concern: render graph-node operational health details from a resolved detail model. */
-import type { CSSProperties, KeyboardEvent, ReactElement } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactElement,
+} from 'react';
 
 import { cn } from '../../components/ui/utils';
 import type { GraphNodeOperationalDetail } from './graphNodeCardStrategyContracts';
@@ -11,7 +19,7 @@ export type GraphNodeHealthPopoverViewProps = Readonly<{
     x: number;
     y: number;
   }>;
-  onClose: () => void;
+  onClose: (reason: 'escape') => void;
 }>;
 
 function buildPopoverStyle(position: GraphNodeHealthPopoverViewProps['position']): CSSProperties {
@@ -28,21 +36,53 @@ export function GraphNodeHealthPopoverView({
   position,
   onClose,
 }: GraphNodeHealthPopoverViewProps): ReactElement {
+  const popoverRef = useRef<HTMLElement>(null);
+  const [positionCorrection, setPositionCorrection] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    popoverRef.current?.focus();
+  }, [detail]);
+
+  useLayoutEffect(() => {
+    const popover = popoverRef.current;
+    const container = popover?.offsetParent;
+    if (!(popover instanceof HTMLElement) || !(container instanceof HTMLElement)) {
+      return;
+    }
+    if (container.clientWidth === 0 || container.clientHeight === 0) {
+      return;
+    }
+    const margin = 8;
+    const maxX = Math.max(margin, container.clientWidth - popover.offsetWidth - margin);
+    const maxY = Math.max(margin, container.clientHeight - popover.offsetHeight - margin);
+    const corrected = {
+      x: Math.min(0, maxX - position.x),
+      y: Math.min(0, maxY - position.y),
+    };
+    setPositionCorrection((current) =>
+      current.x === corrected.x && current.y === corrected.y ? current : corrected
+    );
+  }, [detail, position]);
+
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>): void => {
     if (event.key === 'Escape') {
       event.stopPropagation();
-      onClose();
+      onClose('escape');
     }
   };
 
   return (
     <aside
+      ref={popoverRef}
       data-slot="graph-node-health-popover"
       role="dialog"
       aria-label={detail.title}
       tabIndex={-1}
       className={graphNodeHealthPopoverClasses.root}
-      style={buildPopoverStyle(position)}
+      style={buildPopoverStyle({
+        x: position.x + positionCorrection.x,
+        y: position.y + positionCorrection.y,
+      })}
       onKeyDown={handleKeyDown}
     >
       <div className={graphNodeHealthPopoverClasses.title}>{detail.title}</div>
@@ -60,6 +100,14 @@ export function GraphNodeHealthPopoverView({
             >
               {row.value}
             </dd>
+            {row.detail == null ? null : (
+              <dd
+                data-slot="graph-node-health-popover-detail"
+                className={graphNodeHealthPopoverClasses.detail}
+              >
+                {row.detail}
+              </dd>
+            )}
           </div>
         ))}
       </dl>

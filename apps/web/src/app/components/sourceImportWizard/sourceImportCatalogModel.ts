@@ -1,4 +1,19 @@
-import type { SourceImportSchemaIdentity, TableInfo } from './types';
+import {
+  isRelationalSourceObject,
+  resolveSourceObjectColumnConstraintSemantics,
+  type SourceObjectLocatorKind,
+} from '@dvt/contracts';
+
+import type {
+  SelectableRelationalSourceObject,
+  SelectableSourceObject,
+  SourceImportSchemaIdentity,
+} from './types';
+import {
+  describeSourceObjectMetricEvidence,
+  formatSourceObjectMetricByteDetail,
+  formatSourceObjectMetricByteSize,
+} from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 
 export type SourceImportColumnViewModel = Readonly<{
   name: string;
@@ -7,22 +22,30 @@ export type SourceImportColumnViewModel = Readonly<{
   constraintLabels: readonly string[];
 }>;
 
-export type SourceImportTableViewModel = Readonly<{
+export type SourceImportObjectViewModel = Readonly<{
   index: number;
   identityKey: string;
+  locatorKind: SourceObjectLocatorKind;
+  kindLabel: string;
   canonicalName: string;
   displayName: string;
   accessibilityLabel: string;
   inspectionAccessibilityLabel: string;
   rowCountLabel: string;
-  byteSizeLabel: string | null;
+  rowCountDetail: string;
+  rowCountTone: 'measured' | 'estimated';
+  byteSizeLabel: string;
+  byteSizeDetail: string;
+  byteSizeTone: 'measured' | 'estimated';
   columnCountLabel: string;
   selected: boolean;
   selectedLabel: string;
+  selectable: boolean;
+  importabilityLabel: string | null;
   columns: readonly SourceImportColumnViewModel[];
 }>;
 
-export type SourceImportCatalogFilterId = 'all' | 'selected' | 'withColumns' | 'withSize';
+export type SourceImportCatalogFilterId = 'all' | 'selected' | 'withColumns' | 'importable';
 
 export type SourceImportCatalogFilterViewModel = Readonly<{
   id: SourceImportCatalogFilterId;
@@ -36,29 +59,38 @@ export type SourceImportCatalogFilterViewModel = Readonly<{
 export type SourceImportSchemaGroupViewModel = Readonly<{
   schema: string;
   accessibilityLabel: string;
-  tableCountLabel: string;
+  objectCountLabel: string;
   selected: boolean;
-  tables: readonly SourceImportTableViewModel[];
+  sourceObjects: readonly SourceImportObjectViewModel[];
 }>;
 
 export type SourceImportDatabaseGroupViewModel = Readonly<{
   database: string;
   accessibilityLabel: string;
   schemaCountLabel: string;
-  tableCountLabel: string;
+  objectCountLabel: string;
   selectedLabel: string | null;
   selected: boolean;
   schemaGroups: readonly SourceImportSchemaGroupViewModel[];
 }>;
 
+export type SourceImportLocatorGroupViewModel = Readonly<{
+  locatorKind: SourceObjectLocatorKind;
+  label: string;
+  objectCountLabel: string;
+  sourceObjects: readonly SourceImportObjectViewModel[];
+}>;
+
 export type SourceImportCatalogViewModel = Readonly<{
   databaseGroups: readonly SourceImportDatabaseGroupViewModel[];
   schemaGroups: readonly SourceImportSchemaGroupViewModel[];
-  activeTable: SourceImportTableViewModel | null;
-  selectedTables: readonly SourceImportTableViewModel[];
-  totalTableCount: number;
-  visibleTableCount: number;
-  selectedTableCount: number;
+  relationGroup: SourceImportLocatorGroupViewModel | null;
+  locatorGroups: readonly SourceImportLocatorGroupViewModel[];
+  activeSourceObject: SourceImportObjectViewModel | null;
+  selectedSourceObjects: readonly SourceImportObjectViewModel[];
+  totalObjectCount: number;
+  visibleObjectCount: number;
+  selectedObjectCount: number;
   resultCountLabel: string;
   activeFilterId: SourceImportCatalogFilterId;
   filterListLabel: string;
@@ -66,19 +98,19 @@ export type SourceImportCatalogViewModel = Readonly<{
 }>;
 
 export type SourceImportCatalogCopy = Readonly<{
-  selectSourceTable: string;
+  selectSourceObject: string;
   selectSourceDatabase: string;
   selectSourceSchema: string;
   inSourceDatabase: string;
-  inspectSourceTableMetadata: string;
+  inspectSourceObjectMetadata: string;
   metadata: string;
-  rowsUnknown: string;
   rowSingular: string;
   rowPlural: string;
+  estimatedSizePrefix: string;
   columnSingular: string;
   columnPlural: string;
-  tableSingular: string;
-  tablePlural: string;
+  objectSingular: string;
+  objectPlural: string;
   schemaSingular: string;
   schemaPlural: string;
   allSelected: string;
@@ -92,25 +124,53 @@ export type SourceImportCatalogCopy = Readonly<{
   filterAll: string;
   filterSelected: string;
   filterWithColumns: string;
-  filterWithSize: string;
+  filterImportable: string;
   filterListLabel: string;
   filterAccessibilityPrefix: string;
+  locatorKindLabels: Readonly<Record<SourceObjectLocatorKind, string>>;
+  unsupportedImport: string;
 }>;
 
-export function buildWarehouseTableKey(
-  table: Pick<TableInfo, 'database' | 'schema' | 'table'>
+export function buildRelationalSourceObjectName(
+  sourceObject: Pick<SelectableRelationalSourceObject, 'locator'>
 ): string {
-  return [table.database, table.schema, table.table].join('.');
+  return [
+    sourceObject.locator.catalog,
+    sourceObject.locator.schema,
+    sourceObject.locator.name,
+  ].join('.');
 }
 
-export function buildWarehouseTableIdentityKey(
-  table: Pick<TableInfo, 'database' | 'schema' | 'table'>
+export function buildSourceObjectDisplayPath(
+  sourceObject: Pick<SelectableSourceObject, 'locator'>
 ): string {
-  return JSON.stringify([table.database, table.schema, table.table]);
+  switch (sourceObject.locator.kind) {
+    case 'relation':
+      return [
+        sourceObject.locator.catalog,
+        sourceObject.locator.schema,
+        sourceObject.locator.name,
+      ].join('.');
+    case 'file':
+      return sourceObject.locator.path;
+    case 'endpoint':
+    case 'stream':
+      return `${sourceObject.locator.protocol}:${sourceObject.locator.resource}`;
+  }
+}
+
+export function buildSourceObjectIdentityKey(
+  sourceObject: Pick<SelectableSourceObject, 'objectId'>
+): string {
+  return sourceObject.objectId;
 }
 
 export function buildSourceImportSchemaKey(schema: SourceImportSchemaIdentity): string {
   return JSON.stringify([schema.database, schema.schema]);
+}
+
+export function isSourceObjectImportable(sourceObject: SelectableSourceObject): boolean {
+  return isRelationalSourceObject(sourceObject);
 }
 
 function formatNumber(value: number, numberFormatter: Intl.NumberFormat): string {
@@ -118,14 +178,10 @@ function formatNumber(value: number, numberFormatter: Intl.NumberFormat): string
 }
 
 export function formatSourceImportRowCount(
-  rowCount: number | undefined,
+  rowCount: number,
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): string {
-  if (rowCount == null) {
-    return copy.rowsUnknown;
-  }
-
   const suffix = rowCount === 1 ? copy.rowSingular : copy.rowPlural;
   return `${formatNumber(rowCount, numberFormatter)} ${suffix}`;
 }
@@ -139,29 +195,23 @@ export function formatSourceImportColumnCount(
   return `${formatNumber(columnCount, numberFormatter)} ${suffix}`;
 }
 
-export function formatSourceImportByteSize(byteSize: number | undefined): string | null {
-  if (byteSize == null) {
-    return null;
-  }
-  if (byteSize >= 1024 * 1024 * 1024) {
-    return `${(byteSize / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
-  }
-  if (byteSize >= 1024 * 1024) {
-    return `${(byteSize / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
-  }
-  if (byteSize >= 1024) {
-    return `${(byteSize / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
-  }
-  return `${byteSize} B`;
+export function formatSourceImportSizeEvidence(
+  sourceObject: Pick<SelectableSourceObject, 'metricEvidence'>,
+  copy: Pick<SourceImportCatalogCopy, 'estimatedSizePrefix'>
+): string {
+  const size = formatSourceObjectMetricByteSize(sourceObject.metricEvidence.byteSize.value);
+  return sourceObject.metricEvidence.byteSize.provenance === 'estimated'
+    ? `${copy.estimatedSizePrefix} ${size}`
+    : size;
 }
 
-export function formatSourceImportTableCount(
-  tableCount: number,
+export function formatSourceImportObjectCount(
+  objectCount: number,
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): string {
-  const suffix = tableCount === 1 ? copy.tableSingular : copy.tablePlural;
-  return `${formatNumber(tableCount, numberFormatter)} ${suffix}`;
+  const suffix = objectCount === 1 ? copy.objectSingular : copy.objectPlural;
+  return `${formatNumber(objectCount, numberFormatter)} ${suffix}`;
 }
 
 export function formatSourceImportSchemaCount(
@@ -173,22 +223,25 @@ export function formatSourceImportSchemaCount(
   return `${formatNumber(schemaCount, numberFormatter)} ${suffix}`;
 }
 
-function normalizeCatalogSearchValue(value: string | null | undefined): string {
+function normalizeCatalogSearchValue(value: unknown): string {
   return String(value ?? '')
     .trim()
     .toLowerCase();
 }
 
-function tableMatchesSourceImportSearch(table: TableInfo, normalizedSearchQuery: string): boolean {
+function sourceObjectMatchesSearch(
+  sourceObject: SelectableSourceObject,
+  normalizedSearchQuery: string
+): boolean {
   if (normalizedSearchQuery.length === 0) {
     return true;
   }
 
   const searchableValues = [
-    table.database,
-    table.schema,
-    table.table,
-    ...(table.columns?.flatMap((column) => [column.name, column.type]) ?? []),
+    sourceObject.objectId,
+    sourceObject.displayName,
+    ...Object.values(sourceObject.locator),
+    ...(sourceObject.columns?.flatMap((column) => [column.name, column.type]) ?? []),
   ];
 
   return searchableValues.some((value) =>
@@ -196,31 +249,29 @@ function tableMatchesSourceImportSearch(table: TableInfo, normalizedSearchQuery:
   );
 }
 
-function tableMatchesSourceImportFilter(
-  table: TableInfo,
+function sourceObjectMatchesFilter(
+  sourceObject: SelectableSourceObject,
   filterId: SourceImportCatalogFilterId
 ): boolean {
   switch (filterId) {
     case 'selected':
-      return table.selected;
+      return isSourceObjectImportable(sourceObject) && sourceObject.selected;
     case 'withColumns':
-      return (table.columns?.length ?? 0) > 0;
-    case 'withSize':
-      return table.byteSize != null;
+      return (sourceObject.columns?.length ?? 0) > 0;
+    case 'importable':
+      return isSourceObjectImportable(sourceObject);
     case 'all':
-      return true;
-    default:
       return true;
   }
 }
 
 function buildSourceImportCatalogFilters({
-  searchableTables,
+  searchableSourceObjects,
   activeFilterId,
   copy,
   numberFormatter,
 }: Readonly<{
-  searchableTables: readonly TableInfo[];
+  searchableSourceObjects: readonly SelectableSourceObject[];
   activeFilterId: SourceImportCatalogFilterId;
   copy: SourceImportCatalogCopy;
   numberFormatter: Intl.NumberFormat;
@@ -232,15 +283,15 @@ function buildSourceImportCatalogFilters({
     { id: 'all', label: copy.filterAll },
     { id: 'selected', label: copy.filterSelected },
     { id: 'withColumns', label: copy.filterWithColumns },
-    { id: 'withSize', label: copy.filterWithSize },
+    { id: 'importable', label: copy.filterImportable },
   ];
 
   return filterDefinitions.map((filter) => {
-    const count = searchableTables.filter((table) =>
-      tableMatchesSourceImportFilter(table, filter.id)
+    const count = searchableSourceObjects.filter((sourceObject) =>
+      sourceObjectMatchesFilter(sourceObject, filter.id)
     ).length;
     const countLabel = formatNumber(count, numberFormatter);
-    const tableCountLabel = formatSourceImportTableCount(count, copy, numberFormatter);
+    const objectCountLabel = formatSourceImportObjectCount(count, copy, numberFormatter);
 
     return {
       id: filter.id,
@@ -248,7 +299,7 @@ function buildSourceImportCatalogFilters({
       countLabel,
       active: filter.id === activeFilterId,
       disabled: count === 0,
-      accessibilityLabel: `${copy.filterAccessibilityPrefix} ${filter.label}. ${tableCountLabel}.`,
+      accessibilityLabel: `${copy.filterAccessibilityPrefix} ${filter.label}. ${objectCountLabel}.`,
     };
   });
 }
@@ -260,43 +311,72 @@ export function formatSourceImportNullability(
   return nullable ? copy.nullable : copy.required;
 }
 
-export function buildSourceImportTableViewModel(
-  table: TableInfo,
+export function buildSourceImportObjectViewModel(
+  sourceObject: SelectableSourceObject,
   index: number,
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
-): SourceImportTableViewModel {
-  const identityKey = buildWarehouseTableIdentityKey(table);
-  const canonicalName = buildWarehouseTableKey(table);
-  const rowCountLabel = formatSourceImportRowCount(table.rowCount, copy, numberFormatter);
-  const byteSizeLabel = formatSourceImportByteSize(table.byteSize);
-  const columnCountLabel = formatSourceImportColumnCount(
-    table.columns?.length ?? 0,
+): SourceImportObjectViewModel {
+  const identityKey = buildSourceObjectIdentityKey(sourceObject);
+  const canonicalName = buildSourceObjectDisplayPath(sourceObject);
+  const rowCountLabel = formatSourceImportRowCount(
+    sourceObject.metricEvidence.rowCount.value,
     copy,
     numberFormatter
   );
-  const accessibilityMetrics = [rowCountLabel, byteSizeLabel, columnCountLabel]
-    .filter((label): label is string => label != null)
-    .join('. ');
+  const byteSizeLabel = formatSourceImportSizeEvidence(sourceObject, copy);
+  const columnCountLabel = formatSourceImportColumnCount(
+    sourceObject.columns?.length ?? 0,
+    copy,
+    numberFormatter
+  );
+  const accessibilityMetrics = [rowCountLabel, byteSizeLabel, columnCountLabel].join('. ');
+  const selectable = isSourceObjectImportable(sourceObject);
 
   return {
     index,
     identityKey,
+    locatorKind: sourceObject.locator.kind,
+    kindLabel: copy.locatorKindLabels[sourceObject.locator.kind],
     canonicalName,
-    displayName: table.table,
-    accessibilityLabel: `${copy.selectSourceTable} ${canonicalName}. ${accessibilityMetrics}.`,
-    inspectionAccessibilityLabel: `${copy.inspectSourceTableMetadata} ${canonicalName} ${copy.metadata}. ${accessibilityMetrics}.`,
+    displayName: sourceObject.displayName,
+    accessibilityLabel: selectable
+      ? `${copy.selectSourceObject} ${canonicalName}. ${accessibilityMetrics}.`
+      : `${copy.inspectSourceObjectMetadata} ${canonicalName} ${copy.metadata}. ${accessibilityMetrics}. ${copy.unsupportedImport}`,
+    inspectionAccessibilityLabel: `${copy.inspectSourceObjectMetadata} ${canonicalName} ${copy.metadata}. ${accessibilityMetrics}.`,
     rowCountLabel,
+    rowCountDetail: describeSourceObjectMetricEvidence({
+      metric: sourceObject.metricEvidence.rowCount,
+      subject: rowCountLabel,
+      evidence: sourceObject.metricEvidence,
+    }),
+    rowCountTone: sourceObject.metricEvidence.rowCount.provenance,
     byteSizeLabel,
+    byteSizeDetail: describeSourceObjectMetricEvidence({
+      metric: sourceObject.metricEvidence.byteSize,
+      subject: formatSourceObjectMetricByteDetail(
+        sourceObject.metricEvidence.byteSize.value,
+        numberFormatter
+      ),
+      evidence: sourceObject.metricEvidence,
+      basis: sourceObject.metricEvidence.byteSize.basis,
+    }),
+    byteSizeTone: sourceObject.metricEvidence.byteSize.provenance,
     columnCountLabel,
-    selected: table.selected,
+    selected: selectable && sourceObject.selected,
     selectedLabel: copy.filterSelected,
+    selectable,
+    importabilityLabel: selectable ? null : copy.unsupportedImport,
     columns:
-      table.columns?.map((column) => {
+      sourceObject.columns?.map((column) => {
         const nullabilityLabel = formatSourceImportNullability(column.nullable, copy);
+        const constraintSemantics = resolveSourceObjectColumnConstraintSemantics(
+          sourceObject,
+          column.name
+        );
         const constraintLabels = [
-          ...(column.primaryKey === true ? [copy.primaryKey] : []),
-          ...(column.unique === true ? [copy.unique] : []),
+          ...(constraintSemantics.primaryKey ? [copy.primaryKey] : []),
+          ...(constraintSemantics.independentlyUnique ? [copy.unique] : []),
           nullabilityLabel,
         ];
 
@@ -311,72 +391,75 @@ export function buildSourceImportTableViewModel(
 }
 
 export function buildSourceImportCatalogViewModel({
-  tables,
-  activeTableKey,
+  sourceObjects,
+  activeSourceObjectKey,
   searchQuery,
   filterId = 'all',
   copy,
   numberFormatter = new Intl.NumberFormat(),
 }: Readonly<{
-  tables: readonly TableInfo[];
-  activeTableKey: string | null;
+  sourceObjects: readonly SelectableSourceObject[];
+  activeSourceObjectKey: string | null;
   searchQuery?: string;
   filterId?: SourceImportCatalogFilterId;
   copy: SourceImportCatalogCopy;
   numberFormatter?: Intl.NumberFormat;
 }>): SourceImportCatalogViewModel {
   const normalizedSearchQuery = normalizeCatalogSearchValue(searchQuery);
-  const allTableViewModels = tables.map((table, index) =>
-    buildSourceImportTableViewModel(table, index, copy, numberFormatter)
+  const allObjectViewModels = sourceObjects.map((sourceObject, index) =>
+    buildSourceImportObjectViewModel(sourceObject, index, copy, numberFormatter)
   );
-  const searchableTableEntries = tables
-    .map((table, index) => ({ table, viewModel: allTableViewModels[index]! }))
-    .filter(({ table }) => tableMatchesSourceImportSearch(table, normalizedSearchQuery));
-  const visibleTableEntries = searchableTableEntries.filter(({ table }) =>
-    tableMatchesSourceImportFilter(table, filterId)
+  const searchableEntries = sourceObjects
+    .map((sourceObject, index) => ({ sourceObject, viewModel: allObjectViewModels[index]! }))
+    .filter(({ sourceObject }) => sourceObjectMatchesSearch(sourceObject, normalizedSearchQuery));
+  const visibleEntries = searchableEntries.filter(({ sourceObject }) =>
+    sourceObjectMatchesFilter(sourceObject, filterId)
   );
-  const tableViewModels = visibleTableEntries.map(({ viewModel }) => viewModel);
-  const databaseGroupsByName = new Map<string, Map<string, SourceImportTableViewModel[]>>();
+  const visibleViewModels = visibleEntries.map(({ viewModel }) => viewModel);
+  const relationalGroups = new Map<string, Map<string, SourceImportObjectViewModel[]>>();
 
-  visibleTableEntries.forEach(({ table, viewModel }) => {
-    const databaseSchemas = databaseGroupsByName.get(table.database) ?? new Map();
-    const databaseSchemaGroup = databaseSchemas.get(table.schema) ?? [];
-    databaseSchemaGroup.push(viewModel);
-    databaseSchemas.set(table.schema, databaseSchemaGroup);
-    databaseGroupsByName.set(table.database, databaseSchemas);
+  visibleEntries.forEach(({ sourceObject, viewModel }) => {
+    if (!isRelationalSourceObject(sourceObject)) {
+      return;
+    }
+    const databaseSchemas = relationalGroups.get(sourceObject.locator.catalog) ?? new Map();
+    const schemaObjects = databaseSchemas.get(sourceObject.locator.schema) ?? [];
+    schemaObjects.push(viewModel);
+    databaseSchemas.set(sourceObject.locator.schema, schemaObjects);
+    relationalGroups.set(sourceObject.locator.catalog, databaseSchemas);
   });
 
-  const activeTable =
-    (activeTableKey
-      ? tableViewModels.find((table) => table.identityKey === activeTableKey)
+  const activeSourceObject =
+    (activeSourceObjectKey
+      ? visibleViewModels.find((sourceObject) => sourceObject.identityKey === activeSourceObjectKey)
       : undefined) ??
-    tableViewModels.find((table) => table.selected) ??
-    tableViewModels[0] ??
+    visibleViewModels.find((sourceObject) => sourceObject.selected) ??
+    visibleViewModels[0] ??
     null;
-  const schemaGroups = Array.from(databaseGroupsByName.entries())
+  const schemaGroups = Array.from(relationalGroups.entries())
     .flatMap(([database, databaseSchemaGroups]) =>
-      Array.from(databaseSchemaGroups.entries()).map(([schema, groupTables]) => ({
+      Array.from(databaseSchemaGroups.entries()).map(([schema, groupObjects]) => ({
         database,
         schema,
-        groupTables,
+        groupObjects,
       }))
     )
     .sort(
       (left, right) =>
         left.database.localeCompare(right.database) || left.schema.localeCompare(right.schema)
     )
-    .map(({ database, schema, groupTables }) =>
-      buildSourceImportSchemaGroup(database, schema, groupTables, copy, numberFormatter)
+    .map(({ database, schema, groupObjects }) =>
+      buildSourceImportSchemaGroup(database, schema, groupObjects, copy, numberFormatter)
     );
-  const databaseGroups = Array.from(databaseGroupsByName.entries())
+  const databaseGroups = Array.from(relationalGroups.entries())
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([database, databaseSchemaGroups]) => {
       const databaseSchemas = Array.from(databaseSchemaGroups.entries())
         .sort(([left], [right]) => left.localeCompare(right))
-        .map(([schema, groupTables]) =>
-          buildSourceImportSchemaGroup(database, schema, groupTables, copy, numberFormatter)
+        .map(([schema, groupObjects]) =>
+          buildSourceImportSchemaGroup(database, schema, groupObjects, copy, numberFormatter)
         );
-      const databaseTables = databaseSchemas.flatMap((schemaGroup) => schemaGroup.tables);
+      const databaseObjects = databaseSchemas.flatMap((schemaGroup) => schemaGroup.sourceObjects);
 
       return {
         database,
@@ -384,45 +467,83 @@ export function buildSourceImportCatalogViewModel({
           databaseSchemas.length,
           copy,
           numberFormatter
-        )}. ${formatSourceImportTableCount(databaseTables.length, copy, numberFormatter)}.`,
+        )}. ${formatSourceImportObjectCount(databaseObjects.length, copy, numberFormatter)}.`,
         schemaCountLabel: formatSourceImportSchemaCount(
           databaseSchemas.length,
           copy,
           numberFormatter
         ),
-        tableCountLabel: formatSourceImportTableCount(databaseTables.length, copy, numberFormatter),
-        selected: databaseTables.length > 0 && databaseTables.every((table) => table.selected),
+        objectCountLabel: formatSourceImportObjectCount(
+          databaseObjects.length,
+          copy,
+          numberFormatter
+        ),
+        selected: databaseObjects.length > 0 && databaseObjects.every((object) => object.selected),
         selectedLabel:
-          databaseTables.length > 0 && databaseTables.every((table) => table.selected)
+          databaseObjects.length > 0 && databaseObjects.every((object) => object.selected)
             ? copy.allSelected
             : null,
         schemaGroups: databaseSchemas,
       };
     });
+  const locatorGroups = (['file', 'endpoint', 'stream'] as const)
+    .map((locatorKind) => {
+      const groupedObjects = visibleEntries
+        .filter(({ sourceObject }) => sourceObject.locator.kind === locatorKind)
+        .map(({ viewModel }) => viewModel);
+      return {
+        locatorKind,
+        label: copy.locatorKindLabels[locatorKind],
+        objectCountLabel: formatSourceImportObjectCount(
+          groupedObjects.length,
+          copy,
+          numberFormatter
+        ),
+        sourceObjects: groupedObjects,
+      };
+    })
+    .filter((group) => group.sourceObjects.length > 0);
+  const relationObjects = visibleEntries
+    .filter(({ sourceObject }) => sourceObject.locator.kind === 'relation')
+    .map(({ viewModel }) => viewModel);
 
   return {
     databaseGroups,
     schemaGroups,
-    activeTable,
-    selectedTables: allTableViewModels.filter((table) => table.selected),
-    totalTableCount: allTableViewModels.length,
-    visibleTableCount: tableViewModels.length,
-    selectedTableCount: allTableViewModels.filter((table) => table.selected).length,
+    relationGroup:
+      relationObjects.length > 0
+        ? {
+            locatorKind: 'relation',
+            label: copy.locatorKindLabels.relation,
+            objectCountLabel: formatSourceImportObjectCount(
+              relationObjects.length,
+              copy,
+              numberFormatter
+            ),
+            sourceObjects: relationObjects,
+          }
+        : null,
+    locatorGroups,
+    activeSourceObject,
+    selectedSourceObjects: allObjectViewModels.filter((sourceObject) => sourceObject.selected),
+    totalObjectCount: allObjectViewModels.length,
+    visibleObjectCount: visibleViewModels.length,
+    selectedObjectCount: allObjectViewModels.filter((sourceObject) => sourceObject.selected).length,
     resultCountLabel:
-      tableViewModels.length === allTableViewModels.length
-        ? `${formatSourceImportTableCount(
-            allTableViewModels.length,
+      visibleViewModels.length === allObjectViewModels.length
+        ? `${formatSourceImportObjectCount(
+            allObjectViewModels.length,
             copy,
             numberFormatter
           )} ${copy.available}`
-        : `${copy.showing} ${formatNumber(tableViewModels.length, numberFormatter)} ${copy.of} ${formatNumber(
-            allTableViewModels.length,
+        : `${copy.showing} ${formatNumber(visibleViewModels.length, numberFormatter)} ${copy.of} ${formatNumber(
+            allObjectViewModels.length,
             numberFormatter
-          )} ${copy.tablePlural}`,
+          )} ${copy.objectPlural}`,
     activeFilterId: filterId,
     filterListLabel: copy.filterListLabel,
     categoryFilters: buildSourceImportCatalogFilters({
-      searchableTables: searchableTableEntries.map(({ table }) => table),
+      searchableSourceObjects: searchableEntries.map(({ sourceObject }) => sourceObject),
       activeFilterId: filterId,
       copy,
       numberFormatter,
@@ -433,19 +554,20 @@ export function buildSourceImportCatalogViewModel({
 function buildSourceImportSchemaGroup(
   database: string,
   schema: string,
-  groupTables: readonly SourceImportTableViewModel[],
+  groupObjects: readonly SourceImportObjectViewModel[],
   copy: SourceImportCatalogCopy,
   numberFormatter: Intl.NumberFormat
 ): SourceImportSchemaGroupViewModel {
   return {
     schema,
-    accessibilityLabel: `${copy.selectSourceSchema} ${schema}. ${copy.inSourceDatabase} ${database}. ${formatSourceImportTableCount(
-      groupTables.length,
+    accessibilityLabel: `${copy.selectSourceSchema} ${schema}. ${copy.inSourceDatabase} ${database}. ${formatSourceImportObjectCount(
+      groupObjects.length,
       copy,
       numberFormatter
     )}.`,
-    tableCountLabel: formatSourceImportTableCount(groupTables.length, copy, numberFormatter),
-    selected: groupTables.length > 0 && groupTables.every((table) => table.selected),
-    tables: groupTables,
+    objectCountLabel: formatSourceImportObjectCount(groupObjects.length, copy, numberFormatter),
+    selected:
+      groupObjects.length > 0 && groupObjects.every((sourceObject) => sourceObject.selected),
+    sourceObjects: groupObjects,
   };
 }

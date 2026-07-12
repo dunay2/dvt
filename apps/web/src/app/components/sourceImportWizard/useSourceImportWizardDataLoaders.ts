@@ -1,9 +1,11 @@
 /** Owned concern: load warehouse source import choices through the source import port. */
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 
-import type { IWarehouseSourceImportPort, WarehouseTable } from '../../ports/workspace';
+import { isRelationalSourceObject } from '@dvt/contracts';
+
+import type { IWarehouseSourceImportPort, SourceObject } from '../../ports/workspace';
 import { sourceImportWizardCopy as copy } from './copy';
-import { buildWarehouseTableIdentityKey } from './sourceImportCatalogModel';
+import { buildSourceObjectIdentityKey } from './sourceImportCatalogModel';
 import type { SourceImportWizardState } from './types';
 
 interface LoaderParams {
@@ -47,62 +49,72 @@ export function useConnectionsLoader({ open, warehouseSourceImport, setState }: 
   }, [open, setState, warehouseSourceImport]);
 }
 
-interface TablesLoaderParams extends LoaderParams {
+interface SourceObjectsLoaderParams extends LoaderParams {
   selectedConnection: string | null;
-  initiallySelectedTables?: readonly WarehouseTable[];
+  initiallySelectedSourceObjects?: readonly SourceObject[];
 }
 
-const emptyInitiallySelectedTables: readonly WarehouseTable[] = [];
+const emptyInitiallySelectedSourceObjects: readonly SourceObject[] = [];
 
-export function useTablesLoader({
+export function useSourceObjectsLoader({
   open,
   selectedConnection,
-  initiallySelectedTables = emptyInitiallySelectedTables,
+  initiallySelectedSourceObjects = emptyInitiallySelectedSourceObjects,
   warehouseSourceImport,
   setState,
-}: TablesLoaderParams) {
+}: SourceObjectsLoaderParams) {
   useEffect(() => {
     if (!open || !selectedConnection) {
       return;
     }
     let cancelled = false;
-    const loadTables = async () => {
-      setState((prev) => ({ ...prev, isLoadingTables: true, loadError: null }));
+    const loadSourceObjects = async () => {
+      setState((prev) => ({ ...prev, isLoadingSourceObjects: true, loadError: null }));
       try {
-        const tables = await warehouseSourceImport.listWarehouseTables(selectedConnection);
+        const discoveredSourceObjects =
+          await warehouseSourceImport.listSourceObjects(selectedConnection);
         if (!cancelled) {
-          const selectedTableKeys = new Set(
-            initiallySelectedTables.map(buildWarehouseTableIdentityKey)
+          const selectedObjectKeys = new Set(
+            initiallySelectedSourceObjects.map(buildSourceObjectIdentityKey)
           );
-          const tableInfos = tables.map((table) => ({
-            ...table,
-            selected: selectedTableKeys.has(buildWarehouseTableIdentityKey(table)),
+          const selectableSourceObjects = discoveredSourceObjects.map((sourceObject) => ({
+            ...sourceObject,
+            selected:
+              isRelationalSourceObject(sourceObject) &&
+              selectedObjectKeys.has(buildSourceObjectIdentityKey(sourceObject)),
           }));
-          const selectedTable = tableInfos.find((table) => table.selected);
+          const selectedSourceObject = selectableSourceObjects.find(
+            (sourceObject) => sourceObject.selected
+          );
           setState((prev) => ({
             ...prev,
-            tables: tableInfos,
-            activeTableKey: selectedTable
-              ? buildWarehouseTableIdentityKey(selectedTable)
-              : tableInfos[0]
-                ? buildWarehouseTableIdentityKey(tableInfos[0])
+            sourceObjects: selectableSourceObjects,
+            activeSourceObjectKey: selectedSourceObject
+              ? buildSourceObjectIdentityKey(selectedSourceObject)
+              : selectableSourceObjects[0]
+                ? buildSourceObjectIdentityKey(selectableSourceObjects[0])
                 : null,
           }));
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : copy.loadTablesError;
+        const message = error instanceof Error ? error.message : copy.loadSourceObjectsError;
         if (!cancelled) {
-          setState((prev) => ({ ...prev, loadError: message, tables: [], activeTableKey: null }));
+          setState((prev) => ({
+            ...prev,
+            loadError: message,
+            sourceObjects: [],
+            activeSourceObjectKey: null,
+          }));
         }
       } finally {
         if (!cancelled) {
-          setState((prev) => ({ ...prev, isLoadingTables: false }));
+          setState((prev) => ({ ...prev, isLoadingSourceObjects: false }));
         }
       }
     };
-    void loadTables();
+    void loadSourceObjects();
     return () => {
       cancelled = true;
     };
-  }, [initiallySelectedTables, open, selectedConnection, setState, warehouseSourceImport]);
+  }, [initiallySelectedSourceObjects, open, selectedConnection, setState, warehouseSourceImport]);
 }

@@ -1,9 +1,10 @@
-/** Owned concern: merge generated warehouse source declarations into dbt source YAML documents. */
-import type { WarehouseTable } from '../ports/warehouseSourceImport.js';
+/** Owned concern: merge generated relational source declarations into dbt source YAML documents. */
+
+import { resolveSourceObjectColumnConstraintSemantics } from '@dvt/contracts';
 
 import { DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR } from './warehouseSourceYamlDescriptor.js';
-import { isRetiredSourceNameForTable } from './warehouseSourceYamlIdentity.js';
 import type {
+  ConnectedRelationalSourceObject,
   SourceYamlColumn,
   SourceYamlDocument,
   SourceYamlFreshness,
@@ -11,31 +12,24 @@ import type {
 
 export function upsertSourceTable(
   document: SourceYamlDocument,
-  table: WarehouseTable,
+  sourceObject: ConnectedRelationalSourceObject,
   options: {
     readonly includeColumns: boolean;
     readonly addTests: boolean;
     readonly addFreshness: boolean;
     readonly sourceName?: string;
+    readonly tableName?: string;
   }
 ): SourceYamlDocument {
-  const defaultSourceName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
+  const defaultSourceName =
+    DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForSourceObject(sourceObject);
   const sourceName = options.sourceName ?? defaultSourceName;
-  const tableName = DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table);
+  const tableName =
+    options.tableName ?? DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForSourceObject(sourceObject);
   const sourcesByName = new Map(document.sources.map((source) => [source.name, source]));
-  const legacySource = document.sources.find(
-    (source) =>
-      source.name !== sourceName &&
-      isRetiredSourceNameForTable(source.name, table, sourceName) &&
-      source.database?.toLowerCase() === table.database.toLowerCase() &&
-      source.schema?.toLowerCase() === table.schema.toLowerCase()
-  );
-  if (legacySource !== undefined) {
-    sourcesByName.delete(legacySource.name);
-  }
-  const existingSource = sourcesByName.get(sourceName) ?? legacySource;
-  const sourceDatabase = existingSource?.database ?? table.database;
-  const sourceSchema = existingSource?.schema ?? table.schema.toLowerCase();
+  const existingSource = sourcesByName.get(sourceName);
+  const sourceDatabase = existingSource?.database ?? sourceObject.locator.catalog;
+  const sourceSchema = existingSource?.schema ?? sourceObject.locator.schema;
   const existingTables = existingSource?.tables ?? [];
   const nextTablesByName = new Map(
     existingTables.map((existingTable) => [existingTable.name, existingTable])
@@ -43,8 +37,13 @@ export function upsertSourceTable(
   const existingTable = nextTablesByName.get(tableName);
   const nextTable = {
     name: tableName,
+    ...(existingTable?.identifier !== undefined
+      ? { identifier: existingTable.identifier }
+      : tableName !== sourceObject.locator.name
+        ? { identifier: sourceObject.locator.name }
+        : {}),
     columns: options.includeColumns
-      ? mergeColumns(existingTable?.columns ?? [], buildColumns(table, options.addTests))
+      ? mergeColumns(existingTable?.columns ?? [], buildColumns(sourceObject, options.addTests))
       : (existingTable?.columns ?? []),
     metadata: existingTable?.metadata ?? {},
   };
@@ -77,14 +76,18 @@ export function upsertSourceTable(
 }
 
 export function buildColumns(
-  table: WarehouseTable,
+  sourceObject: ConnectedRelationalSourceObject,
   addTests: boolean
 ): readonly SourceYamlColumn[] {
-  return (table.columns ?? []).map((column): SourceYamlColumn => {
+  return (sourceObject.columns ?? []).map((column): SourceYamlColumn => {
+    const constraintSemantics = resolveSourceObjectColumnConstraintSemantics(
+      sourceObject,
+      column.name
+    );
     const tests = addTests
       ? [
-          ...(!column.nullable || column.primaryKey === true ? ['not_null'] : []),
-          ...(column.primaryKey === true || column.unique === true ? ['unique'] : []),
+          ...(!column.nullable || constraintSemantics.primaryKey ? ['not_null'] : []),
+          ...(constraintSemantics.independentlyUnique ? ['unique'] : []),
         ]
       : [];
 

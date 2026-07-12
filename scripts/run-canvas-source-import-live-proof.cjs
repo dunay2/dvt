@@ -13,11 +13,7 @@ const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
 
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
-const {
-  buildLocalDbtArtifactEnv,
-  seedLocalPostgresProofData,
-  seedLocalWorkspaceWarehouseCatalog,
-} = require('./run-dev-stack.cjs');
+const { buildLocalDbtArtifactEnv, seedLocalPostgresProofData } = require('./run-dev-stack.cjs');
 const {
   LOCAL_PROTECTED_RUNTIME_TENANT_ACTIONS,
   resolveDevWorkspaceScope,
@@ -64,6 +60,10 @@ class CanvasSourceImportLiveProofRunner {
 
   formatWorkspaceOptions(scopes, key) {
     return scopes.map((scope) => `${scope[key]}|${scope[key]}`).join(',');
+  }
+
+  buildApiProcessArgs() {
+    return ['--filter', 'dvt-api', 'exec', 'tsx', 'watch', 'src/server.ts'];
   }
 
   pipePrefixedOutput(stream, prefix) {
@@ -355,7 +355,6 @@ class CanvasSourceImportLiveProofRunner {
 
     try {
       await seedLocalPostgresProofData(defaultPgUrl);
-      seedLocalWorkspaceWarehouseCatalog(workspaceFilesRoot);
 
       processContext.temporalEnv = await this.createTemporalEnvironment(TestWorkflowEnvironment);
       processContext.localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
@@ -364,29 +363,25 @@ class CanvasSourceImportLiveProofRunner {
         additionalProjectIds: [sourceImportWorkspaceScope.projectId],
       });
 
-      const apiHandle = this.spawnProcess(
-        'api-source-import-proof',
-        ['--filter', 'dvt-api', 'dev'],
-        {
-          HOST: this.apiBindHost,
-          PORT: String(this.apiPort),
-          DATABASE_URL: defaultPgUrl,
-          DVT_LOCAL_POSTGRES_WAREHOUSE_URL: defaultPgUrl,
-          DVT_PG_SCHEMA: liveProofSchema,
-          DVT_READYZ_ENABLED: 'true',
-          DVT_VERSION_ENABLED: 'true',
-          DVT_DB_READY_ENABLED: 'true',
-          DVT_TEMPORAL_DBT_ENABLED: 'true',
-          TEMPORAL_ADDRESS: processContext.temporalEnv.connection.options.address,
-          TEMPORAL_NAMESPACE: processContext.temporalEnv.namespace,
-          TEMPORAL_TASK_QUEUE: 'dvt-temporal',
-          ...buildLocalDbtArtifactEnv({
-            ...this.env,
-            DVT_WORKSPACE_FILES_ROOT: workspaceFilesRoot,
-          }),
-          ...processContext.localProtectedRuntimeAuth.oidcEnv,
-        }
-      );
+      const apiHandle = this.spawnProcess('api-source-import-proof', this.buildApiProcessArgs(), {
+        HOST: this.apiBindHost,
+        PORT: String(this.apiPort),
+        DATABASE_URL: defaultPgUrl,
+        DVT_LOCAL_POSTGRES_WAREHOUSE_URL: defaultPgUrl,
+        DVT_PG_SCHEMA: liveProofSchema,
+        DVT_READYZ_ENABLED: 'true',
+        DVT_VERSION_ENABLED: 'true',
+        DVT_DB_READY_ENABLED: 'true',
+        DVT_TEMPORAL_DBT_ENABLED: 'true',
+        TEMPORAL_ADDRESS: processContext.temporalEnv.connection.options.address,
+        TEMPORAL_NAMESPACE: processContext.temporalEnv.namespace,
+        TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+        ...buildLocalDbtArtifactEnv({
+          ...this.env,
+          DVT_WORKSPACE_FILES_ROOT: workspaceFilesRoot,
+        }),
+        ...processContext.localProtectedRuntimeAuth.oidcEnv,
+      });
       this.processHandles.push(apiHandle);
 
       await this.waitForUrl(

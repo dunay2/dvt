@@ -4,8 +4,8 @@
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { resolveWebVitestChangedSuitePlan } from '../vitest.suites';
 
@@ -151,12 +151,12 @@ function shouldRunTestDeps(requiresDependencies: boolean): boolean {
   return process.env.CI === 'true' || requiresDependencies;
 }
 
-function main(): void {
-  const repoRoot = gitOutput(['rev-parse', '--show-toplevel'], process.cwd())[0];
-  if (!repoRoot) {
-    throw new Error('Unable to resolve repository root.');
-  }
+export function resolveRepositoryRoot(scriptPath: string = fileURLToPath(import.meta.url)): string {
+  return resolve(dirname(scriptPath), '..', '..', '..');
+}
 
+function main(): void {
+  const repoRoot = resolveRepositoryRoot();
   const webRoot = resolve(repoRoot, 'apps/web');
   if (!existsSync(webRoot)) {
     throw new Error(`Unable to resolve web workspace at ${webRoot}.`);

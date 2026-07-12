@@ -232,8 +232,10 @@ describe('Canvas preview-run live protected runtime', () => {
 
     getOpenSourceImportDialog().within(() => {
       cy.contains('[role="tab"]', 'Browse').click();
-      cy.contains('Browse source tables', { timeout: 20_000 }).should('be.visible');
-      cy.get('[data-source-import-table="dvt.raw.orders"]', { timeout: 20_000 }).click();
+      cy.contains('Browse source objects', { timeout: 20_000 }).should('be.visible');
+      cy.get('[data-source-import-object-select="relation/dvt/raw/orders"]', {
+        timeout: 20_000,
+      }).click();
     });
     getOpenSourceImportDialog().should('contain.text', 'Selected: 1');
 
@@ -249,7 +251,7 @@ describe('Canvas preview-run live protected runtime', () => {
     getOpenSourceImportDialog().within(() => {
       cy.contains('[role="tab"]', 'Selected').click();
       cy.contains('Connection:').parent().should('contain.text', 'Local Postgres proof');
-      cy.contains('Tables Selected:').parent().should('contain.text', '1');
+      cy.contains('Source objects selected:').parent().should('contain.text', '1');
       cy.contains('Add Generic Tests').parent().should('contain.text', 'Yes');
     });
     clickButtonNatively('Attach sources to canvas');

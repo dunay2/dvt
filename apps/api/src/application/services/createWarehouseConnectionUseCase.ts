@@ -19,12 +19,12 @@ export class CreateWarehouseConnectionUseCase {
       throw new WarehouseConnectionTestFailedError(inspected);
     }
 
-    return this.catalog.createConnection({
+    return this.catalog.createConnection(input.scope, {
       name: input.name,
       type: input.type,
       database: input.database,
       credentialRef: input.credentialRef,
-      tables: inspected.tables,
+      sourceObjects: inspected.sourceObjects,
     });
   }
 }

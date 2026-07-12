@@ -1,11 +1,13 @@
 import { WIZARD_STEPS } from './constants';
+import { isRelationalSourceObject } from '@dvt/contracts';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
-import { buildWarehouseTableIdentityKey } from './sourceImportCatalogModel';
+import { buildSourceObjectIdentityKey } from './sourceImportCatalogModel';
 import type {
   SourceImportDatabaseIdentity,
   SourceImportSchemaIdentity,
   SourceImportSection,
-  TableInfo,
+  SelectableRelationalSourceObject,
+  SelectableSourceObject,
   WizardStep,
 } from './types';
 
@@ -20,65 +22,85 @@ export const SOURCE_IMPORT_SECTIONS: readonly {
   { id: 'selected', label: 'Selected', step: 'review' },
 ];
 
-export function getSelectedCount(tables: TableInfo[]): number {
-  return tables.filter((table) => table.selected).length;
+export function getSelectedCount(sourceObjects: SelectableSourceObject[]): number {
+  return getSelectedSourceObjects(sourceObjects).length;
 }
 
 export function toggleSourceImportSchemaSelection(
-  tables: readonly TableInfo[],
+  sourceObjects: readonly SelectableSourceObject[],
   schemaIdentity: SourceImportSchemaIdentity
-): Readonly<{ tables: TableInfo[]; activeTableKey: string | null }> {
-  const schemaTables = tables.filter(
-    (table) => table.database === schemaIdentity.database && table.schema === schemaIdentity.schema
+): Readonly<{ sourceObjects: SelectableSourceObject[]; activeSourceObjectKey: string | null }> {
+  const schemaSourceObjects = sourceObjects.filter(
+    (sourceObject): sourceObject is SelectableRelationalSourceObject =>
+      isRelationalSourceObject(sourceObject) &&
+      sourceObject.locator.catalog === schemaIdentity.database &&
+      sourceObject.locator.schema === schemaIdentity.schema
   );
-  const allSelected = schemaTables.length > 0 && schemaTables.every((table) => table.selected);
-  const firstSchemaTable = schemaTables[0];
+  const allSelected =
+    schemaSourceObjects.length > 0 &&
+    schemaSourceObjects.every((sourceObject) => sourceObject.selected);
+  const firstSchemaObject = schemaSourceObjects[0];
 
   return {
-    tables: tables.map((table) =>
-      table.database === schemaIdentity.database && table.schema === schemaIdentity.schema
-        ? { ...table, selected: !allSelected }
-        : table
+    sourceObjects: sourceObjects.map((sourceObject) =>
+      isRelationalSourceObject(sourceObject) &&
+      sourceObject.locator.catalog === schemaIdentity.database &&
+      sourceObject.locator.schema === schemaIdentity.schema
+        ? { ...sourceObject, selected: !allSelected }
+        : sourceObject
     ),
-    activeTableKey: firstSchemaTable ? buildWarehouseTableIdentityKey(firstSchemaTable) : null,
+    activeSourceObjectKey: firstSchemaObject
+      ? buildSourceObjectIdentityKey(firstSchemaObject)
+      : null,
   };
 }
 
 export function toggleSourceImportDatabaseSelection(
-  tables: readonly TableInfo[],
+  sourceObjects: readonly SelectableSourceObject[],
   databaseIdentity: SourceImportDatabaseIdentity
-): Readonly<{ tables: TableInfo[]; activeTableKey: string | null }> {
-  const databaseTables = tables.filter((table) => table.database === databaseIdentity.database);
-  const allSelected = databaseTables.length > 0 && databaseTables.every((table) => table.selected);
-  const firstDatabaseTable = databaseTables[0];
+): Readonly<{ sourceObjects: SelectableSourceObject[]; activeSourceObjectKey: string | null }> {
+  const databaseSourceObjects = sourceObjects.filter(
+    (sourceObject): sourceObject is SelectableRelationalSourceObject =>
+      isRelationalSourceObject(sourceObject) &&
+      sourceObject.locator.catalog === databaseIdentity.database
+  );
+  const allSelected =
+    databaseSourceObjects.length > 0 &&
+    databaseSourceObjects.every((sourceObject) => sourceObject.selected);
+  const firstDatabaseObject = databaseSourceObjects[0];
 
   return {
-    tables: tables.map((table) =>
-      table.database === databaseIdentity.database ? { ...table, selected: !allSelected } : table
+    sourceObjects: sourceObjects.map((sourceObject) =>
+      isRelationalSourceObject(sourceObject) &&
+      sourceObject.locator.catalog === databaseIdentity.database
+        ? { ...sourceObject, selected: !allSelected }
+        : sourceObject
     ),
-    activeTableKey: firstDatabaseTable ? buildWarehouseTableIdentityKey(firstDatabaseTable) : null,
+    activeSourceObjectKey: firstDatabaseObject
+      ? buildSourceObjectIdentityKey(firstDatabaseObject)
+      : null,
   };
 }
 
 export function buildSourceImportRegistryPath(
-  table: Pick<TableInfo, 'database' | 'schema'>,
+  sourceObject: Pick<SelectableRelationalSourceObject, 'locator'>,
   groupingStrategy: string
 ): string {
   const groupKey = toStableSourceImportIdentifierPart(
-    sourceImportGroupingValue(table, groupingStrategy)
+    sourceImportGroupingValue(sourceObject, groupingStrategy)
   );
   return `models/sources/src_${groupKey}.yml`;
 }
 
 function sourceImportGroupingValue(
-  table: Pick<TableInfo, 'database' | 'schema'>,
+  sourceObject: Pick<SelectableRelationalSourceObject, 'locator'>,
   groupingStrategy: string
 ): string {
   if (groupingStrategy === 'database') {
-    return table.database;
+    return sourceObject.locator.catalog;
   }
   if (groupingStrategy === 'schema') {
-    return table.schema;
+    return sourceObject.locator.schema;
   }
   throw new Error(`Unsupported source import grouping strategy: ${groupingStrategy}`);
 }
@@ -91,24 +113,29 @@ export function toStableSourceImportIdentifierPart(part: string): string {
   return normalized.length > 0 ? normalized : 'unnamed';
 }
 
-export function getSelectedTables(tables: readonly TableInfo[]): readonly TableInfo[] {
-  return tables.filter((table) => table.selected);
+export function getSelectedSourceObjects(
+  sourceObjects: readonly SelectableSourceObject[]
+): readonly SelectableRelationalSourceObject[] {
+  return sourceObjects.filter(
+    (sourceObject): sourceObject is SelectableRelationalSourceObject =>
+      sourceObject.selected && isRelationalSourceObject(sourceObject)
+  );
 }
 
-export function resolveActiveTable(
-  tables: readonly TableInfo[],
-  activeTableKey: string | null
-): TableInfo | null {
-  if (activeTableKey != null) {
-    const activeTable = tables.find(
-      (table) => buildWarehouseTableIdentityKey(table) === activeTableKey
+export function resolveActiveSourceObject(
+  sourceObjects: readonly SelectableSourceObject[],
+  activeSourceObjectKey: string | null
+): SelectableSourceObject | null {
+  if (activeSourceObjectKey != null) {
+    const activeSourceObject = sourceObjects.find(
+      (sourceObject) => buildSourceObjectIdentityKey(sourceObject) === activeSourceObjectKey
     );
-    if (activeTable) {
-      return activeTable;
+    if (activeSourceObject) {
+      return activeSourceObject;
     }
   }
 
-  return tables.find((table) => table.selected) ?? tables[0] ?? null;
+  return sourceObjects.find((sourceObject) => sourceObject.selected) ?? sourceObjects[0] ?? null;
 }
 
 export function resolveSectionForStep(step: WizardStep): SourceImportSection {
@@ -133,7 +160,7 @@ export function canEnterSourceImportSection(
   section: SourceImportSection,
   selectedConnection: string | null,
   selectedCount: number,
-  hasActiveTable = selectedCount > 0
+  hasActiveSourceObject = selectedCount > 0
 ): boolean {
   if (section === 'connections') {
     return true;
@@ -142,7 +169,7 @@ export function canEnterSourceImportSection(
     return selectedConnection != null;
   }
   if (section === 'metadata') {
-    return selectedConnection != null && hasActiveTable;
+    return selectedConnection != null && hasActiveSourceObject;
   }
 
   return selectedConnection != null && selectedCount > 0;

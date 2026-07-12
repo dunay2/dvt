@@ -275,13 +275,13 @@ commands or queries are still needed for a mature end-to-end workflow.
 - Frontend surface: `IWarehouseSourceImportPort.listWarehouseConnections`.
 - Backend surface: `GET /workspace/warehouse/connections`.
 
-### `ListWarehouseConnectionTables`
+### `ListWarehouseConnectionSourceObjects`
 
 - Type: query.
 - Status: `implemented-api`.
-- Owner: warehouse table catalog read model.
-- Frontend surface: `IWarehouseSourceImportPort.listWarehouseTables`.
-- Backend surface: `GET /workspace/warehouse/connections/:connectionId/tables`.
+- Owner: provider-neutral source object catalog read model.
+- Frontend surface: `IWarehouseSourceImportPort.listSourceObjects`.
+- Backend surface: `GET /workspace/warehouse/connections/:connectionId/objects`.
 
 ### `ImportWarehouseSources`
 

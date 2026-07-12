@@ -111,6 +111,7 @@ function buildWorkspacePortStubs(): {
         name: path,
         language: 'sql',
         content: '',
+        contentSha256: 'a'.repeat(64),
         lastModified: '2026-04-23T00:00:00Z',
       })),
     },
@@ -126,7 +127,7 @@ function buildWorkspacePortStubs(): {
     },
     warehouseSourceImport: {
       listWarehouseConnections: vi.fn(async () => []),
-      listWarehouseTables: vi.fn(async () => []),
+      listSourceObjects: vi.fn(async () => []),
       createWarehouseConnection: vi.fn(async (input) => ({
         id: 'conn-created',
         name: input.name,
@@ -137,23 +138,25 @@ function buildWorkspacePortStubs(): {
         connectionId,
         status: 'passed' as const,
         checkedAt: '2026-06-08T00:00:00.000Z',
-        tableCount: 0,
+        objectCount: 0,
       })),
       importSources: vi.fn(async () => ({
         success: true as const,
+        draftRevision: 'draft-revision-1',
         sourcesCreated: 0,
-        tablesImported: 0,
+        objectsImported: 0,
         yamlFiles: [],
+        importedNodeIds: [],
         grouping: 'schema' as const,
         options: { includeColumns: false, addTests: false, addFreshness: false },
       })),
     },
     workspaceFileContentCommand: {
-      saveFileContent: vi.fn(async (path: string, content: string) => ({
-        path,
-        name: path,
-        language: 'sql',
-        content,
+      saveFileContent: vi.fn(async (input) => ({
+        kind: 'saved' as const,
+        disposition: 'updated' as const,
+        path: input.path,
+        contentSha256: 'b'.repeat(64),
         lastModified: '2026-04-23T00:00:00Z',
       })),
     },
@@ -211,18 +214,17 @@ describe('buildAppServices', () => {
     const firstServices = buildAppServices(createAppServicesTestOverrides());
     const secondServices = buildAppServices(createAppServicesTestOverrides());
     const secondBefore = await secondServices.workspaceGraphSnapshotQuery.getGraphSnapshot();
+    const orders = (await firstServices.warehouseSourceImport.listSourceObjects('conn-1')).find(
+      (sourceObject) =>
+        sourceObject.locator.kind === 'relation' &&
+        sourceObject.locator.schema === 'ERP' &&
+        sourceObject.locator.name === 'ORDERS'
+    );
+    expect(orders).toBeDefined();
 
     await firstServices.warehouseSourceImport.importSources({
       connectionId: 'conn-1',
-      tables: [
-        {
-          database: 'RAW',
-          schema: 'FINANCE',
-          table: 'LEDGER_ENTRIES',
-          rowCount: 42,
-          columns: [{ name: 'entry_id', type: 'INTEGER', nullable: false }],
-        },
-      ],
+      objects: [{ objectId: orders!.objectId }],
       groupingStrategy: 'schema',
       includeColumns: true,
       addTests: false,

@@ -14,7 +14,8 @@ const {
   shouldStartTemporalWorker,
   resolveProcessStartupOrder,
   buildLocalPostgresProofSeedSql,
-  buildLocalWarehouseConnectionCatalog,
+  buildLocalWarehouseConnectionRequest,
+  ensureLocalWarehouseConnectionViaApi,
   waitForUrlOrProcessExit,
 } = require('./run-dev-stack.cjs');
 const {
@@ -326,21 +327,120 @@ test('buildLocalPostgresProofSeedSql creates real default source tables for Canv
   assert.match(sql, /CREATE TABLE raw\.orders/);
   assert.match(sql, /INSERT INTO public\.source_1/);
   assert.match(sql, /INSERT INTO raw\.orders/);
+  assert.match(sql, /ANALYZE public\.source_1/);
+  assert.match(sql, /ANALYZE raw\.orders/);
 });
 
-test('buildLocalWarehouseConnectionCatalog advertises the seeded local source tables', () => {
-  const catalog = JSON.parse(buildLocalWarehouseConnectionCatalog());
+test('buildLocalWarehouseConnectionRequest uses the protected connection command contract', () => {
+  assert.deepEqual(buildLocalWarehouseConnectionRequest(), {
+    name: 'Local Postgres proof',
+    type: 'postgres',
+    database: 'dvt',
+    credentialRef: 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL',
+  });
+});
 
-  assert.equal(catalog.connections[0].id, 'local-postgres');
-  assert.equal(catalog.connections[0].credentialRef, 'env:DVT_LOCAL_POSTGRES_WAREHOUSE_URL');
-  assert.deepEqual(
-    catalog.connections[0].tables.map((table) => `${table.schema}.${table.table}`),
-    ['public.source_1', 'raw.orders']
-  );
-  assert.deepEqual(
-    catalog.connections[0].tables.map((table) => table.byteSize),
-    [4096000, 4096000]
-  );
+test('ensureLocalWarehouseConnectionViaApi scopes and authenticates the real command rail', async () => {
+  const received = {};
+  const server = http.createServer((request, response) => {
+    const chunks = [];
+    request.on('data', (chunk) => chunks.push(Buffer.from(chunk)));
+    request.on('end', () => {
+      received.url = request.url;
+      received.authorization = request.headers.authorization;
+      received.body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+      response.writeHead(201, { 'content-type': 'application/json' });
+      response.end('{}');
+    });
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+    const statusCode = await ensureLocalWarehouseConnectionViaApi({
+      apiBaseUrl: `http://127.0.0.1:${address.port}`,
+      bearerToken: 'proof-token',
+      workspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'env-a',
+      },
+    });
+
+    assert.equal(statusCode, 201);
+    assert.equal(received.authorization, 'Bearer proof-token');
+    assert.match(
+      received.url,
+      /^\/workspace\/warehouse\/connections\?tenantId=tenant-a&projectId=project-a&environmentId=env-a$/
+    );
+    assert.deepEqual(received.body, buildLocalWarehouseConnectionRequest());
+  } finally {
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve()))
+    );
+  }
+});
+
+test('ensureLocalWarehouseConnectionViaApi accepts only the canonical duplicate conflict', async () => {
+  const server = http.createServer((_request, response) => {
+    response.writeHead(409, { 'content-type': 'application/json' });
+    response.end(
+      JSON.stringify({
+        error: { type: 'conflict', reason: 'warehouse_connection_duplicate' },
+      })
+    );
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+    const statusCode = await ensureLocalWarehouseConnectionViaApi({
+      apiBaseUrl: `http://127.0.0.1:${address.port}`,
+      bearerToken: 'proof-token',
+      workspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'env-a',
+      },
+    });
+
+    assert.equal(statusCode, 409);
+  } finally {
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve()))
+    );
+  }
+});
+
+test('ensureLocalWarehouseConnectionViaApi rejects unrelated conflicts', async () => {
+  const server = http.createServer((_request, response) => {
+    response.writeHead(409, { 'content-type': 'application/json' });
+    response.end(JSON.stringify({ error: { type: 'conflict', reason: 'revision_conflict' } }));
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+    await assert.rejects(
+      ensureLocalWarehouseConnectionViaApi({
+        apiBaseUrl: `http://127.0.0.1:${address.port}`,
+        bearerToken: 'proof-token',
+        workspaceScope: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'env-a',
+        },
+      }),
+      /Local warehouse connection command failed with 409/
+    );
+  } finally {
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve()))
+    );
+  }
 });
 
 test('resolveTemporalCliExecutable prefers an explicit operator-provided CLI path', () => {

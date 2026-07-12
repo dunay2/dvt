@@ -10,10 +10,6 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
     return `case when jsonb_typeof(${valueExpression}) = 'array' then ${valueExpression} else '[]'::jsonb end`;
   }
 
-  function jsonArrayLength(valueExpression) {
-    return `jsonb_array_length(${jsonArray(valueExpression)})`;
-  }
-
   function featureMechanizationRailSourceSelect(activeSchemaName = defaultSchemaName) {
     return `
     select distinct on (rail.rail_id)
@@ -69,7 +65,7 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
       row.rail_count ?? row.railCount ?? 0,
       row.symbol_count ?? row.symbolCount ?? 0,
       row.validation_count ?? row.validationCount ?? 0,
-      row.source_path ?? row.sourcePath,
+      JSON.stringify(row.source_paths ?? row.sourcePaths ?? []),
     ]);
   }
 
@@ -126,59 +122,131 @@ function createFeatureMechanizationReadModelComponent(deps = {}) {
 
     const result = await client.query(
       `with manifests as (
-       ${featureMechanizationManifestSelect()}
+       ${featureMechanizationRailSourceSelect()}
      ),
-     manifest_counts as (
-       select
-         manifest.feature_id,
-         manifest.mechanization_status,
-         manifest.implementation_plan,
-         manifest.source_path,
-         sum(${jsonArrayLength("manifest.raw_manifest->'componentGuides'")})::int as component_count,
-         sum(${jsonArrayLength("manifest.raw_manifest->'symbols'")})::int as symbol_count,
-         sum(
-           ${jsonArrayLength("manifest.raw_manifest->'architectureGuards'")}
-           + ${jsonArrayLength("manifest.raw_manifest->'cypressFlows'")}
-           + ${jsonArrayLength("manifest.raw_manifest->'completionGate'")}
-           + ${jsonArrayLength("manifest.raw_manifest->'redGreenCycles'")}
-         )::int as validation_count
+     filtered_rails as (
+       select manifest.*
        from manifests manifest
        ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-       group by
-         manifest.feature_id,
-         manifest.mechanization_status,
-         manifest.implementation_plan,
-         manifest.source_path
      ),
-     rail_counts as (
+     feature_summary as (
        select
-         rail.feature_id,
-         rail.mechanization_status,
-         rail.source_path,
-         count(*)::int as rail_count
-       from (
-         ${featureMechanizationRailSourceSelect()}
-       ) rail
-       group by rail.feature_id, rail.mechanization_status, rail.source_path
+         filtered_rails.feature_id,
+         case
+           when count(distinct filtered_rails.mechanization_status) = 1
+             then min(filtered_rails.mechanization_status)
+           else 'mixed:' || string_agg(
+             distinct filtered_rails.mechanization_status,
+             ',' order by filtered_rails.mechanization_status
+           )
+         end as mechanization_status,
+         coalesce(
+           string_agg(
+             distinct nullif(filtered_rails.raw_manifest->>'implementationPlan', ''),
+             ' | ' order by nullif(filtered_rails.raw_manifest->>'implementationPlan', '')
+           ),
+           '-'
+         ) as implementation_plan,
+         count(distinct filtered_rails.rail_id)::int as rail_count,
+         jsonb_agg(
+           distinct filtered_rails.source_path order by filtered_rails.source_path
+         ) as source_paths
+       from filtered_rails
+       group by filtered_rails.feature_id
+     ),
+     component_counts as (
+       select
+         filtered_rails.feature_id,
+         count(distinct component_ref.value)::int as component_count
+       from filtered_rails
+       cross join lateral jsonb_array_elements_text(${jsonArray(
+         "filtered_rails.raw_manifest->'componentGuides'"
+       )}) as component_ref(value)
+       group by filtered_rails.feature_id
+     ),
+     symbol_rows as (
+       select
+         filtered_rails.feature_id,
+         concat_ws(
+           '#',
+           symbol_ref.value->>'path',
+           symbol_ref.value->>'name'
+         ) as symbol_key
+       from filtered_rails
+       cross join lateral jsonb_array_elements(${jsonArray(
+         "filtered_rails.raw_manifest->'symbols'"
+       )}) as symbol_ref(value)
+     ),
+     symbol_counts as (
+       select
+         symbol_rows.feature_id,
+         count(distinct symbol_key)::int as symbol_count
+       from symbol_rows
+       group by symbol_rows.feature_id
+     ),
+     validation_rows as (
+       select
+         filtered_rails.feature_id,
+         validation_ref.value as validation_ref
+       from filtered_rails
+       cross join lateral jsonb_array_elements_text(${jsonArray(
+         "filtered_rails.raw_manifest->'architectureGuards'"
+       )}) as validation_ref(value)
+       union all
+       select
+         filtered_rails.feature_id,
+         validation_ref.value as validation_ref
+       from filtered_rails
+       cross join lateral jsonb_array_elements_text(${jsonArray(
+         "filtered_rails.raw_manifest->'cypressFlows'"
+       )}) as validation_ref(value)
+       union all
+       select
+         filtered_rails.feature_id,
+         validation_ref.value as validation_ref
+       from filtered_rails
+       cross join lateral jsonb_array_elements_text(${jsonArray(
+         "filtered_rails.raw_manifest->'completionGate'"
+       )}) as validation_ref(value)
+       union all
+       select
+         filtered_rails.feature_id,
+         validation_ref.value->>'redTest' as validation_ref
+       from filtered_rails
+       cross join lateral jsonb_array_elements(${jsonArray(
+         "filtered_rails.raw_manifest->'redGreenCycles'"
+       )}) as validation_ref(value)
+       union all
+       select
+         filtered_rails.feature_id,
+         validation_ref.value->>'greenTest' as validation_ref
+       from filtered_rails
+       cross join lateral jsonb_array_elements(${jsonArray(
+         "filtered_rails.raw_manifest->'redGreenCycles'"
+       )}) as validation_ref(value)
+     ),
+     validation_counts as (
+       select
+         validation_rows.feature_id,
+         count(distinct validation_ref)::int as validation_count
+       from validation_rows
+       where validation_ref is not null and validation_ref <> ''
+       group by validation_rows.feature_id
      )
      select
-       manifest_counts.feature_id,
-       manifest_counts.mechanization_status,
-       manifest_counts.implementation_plan,
-       manifest_counts.component_count,
-       coalesce(rail_counts.rail_count, 0)::int as rail_count,
-       manifest_counts.symbol_count,
-       manifest_counts.validation_count,
-       manifest_counts.source_path
-     from manifest_counts
-     left join rail_counts
-       on rail_counts.feature_id = manifest_counts.feature_id
-      and rail_counts.mechanization_status = manifest_counts.mechanization_status
-      and rail_counts.source_path = manifest_counts.source_path
-     order by
-       manifest_counts.mechanization_status,
-       manifest_counts.feature_id,
-       manifest_counts.source_path
+       feature_summary.feature_id,
+       feature_summary.mechanization_status,
+       feature_summary.implementation_plan,
+       coalesce(component_counts.component_count, 0)::int as component_count,
+       feature_summary.rail_count,
+       coalesce(symbol_counts.symbol_count, 0)::int as symbol_count,
+       coalesce(validation_counts.validation_count, 0)::int as validation_count,
+       feature_summary.source_paths
+     from feature_summary
+     left join component_counts using (feature_id)
+     left join symbol_counts using (feature_id)
+     left join validation_counts using (feature_id)
+     order by feature_summary.mechanization_status, feature_summary.feature_id
      limit $${params.length}`,
       params
     );

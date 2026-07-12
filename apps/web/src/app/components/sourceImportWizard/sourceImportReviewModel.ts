@@ -1,47 +1,49 @@
 import {
-  buildSourceImportTableViewModel,
-  formatSourceImportTableCount,
+  buildSourceImportObjectViewModel,
+  formatSourceImportObjectCount,
   type SourceImportCatalogCopy,
-  type SourceImportTableViewModel,
+  type SourceImportObjectViewModel,
 } from './sourceImportCatalogModel';
-import { buildSourceImportRegistryPath } from './sourceImportWizardModel';
-import type { SourceImportGroupingStrategy, TableInfo } from './types';
+import { buildSourceImportRegistryPath, getSelectedSourceObjects } from './sourceImportWizardModel';
+import type { SourceImportGroupingStrategy, SelectableSourceObject } from './types';
 
 export type SourceImportReviewPreviewGroupViewModel = Readonly<{
   registryPath: string;
-  tableCountLabel: string;
-  tables: readonly SourceImportTableViewModel[];
+  objectCountLabel: string;
+  sourceObjects: readonly SourceImportObjectViewModel[];
 }>;
 
 export function buildSourceImportReviewPreviewGroups({
-  tables,
+  sourceObjects,
   groupingStrategy,
   copy,
   numberFormatter = new Intl.NumberFormat(),
 }: Readonly<{
-  tables: readonly TableInfo[];
+  sourceObjects: readonly SelectableSourceObject[];
   groupingStrategy: SourceImportGroupingStrategy;
   copy: SourceImportCatalogCopy;
   numberFormatter?: Intl.NumberFormat;
 }>): readonly SourceImportReviewPreviewGroupViewModel[] {
-  const groups = new Map<string, SourceImportTableViewModel[]>();
+  const groups = new Map<string, SourceImportObjectViewModel[]>();
 
-  tables.forEach((table, index) => {
-    if (!table.selected) {
-      return;
-    }
-
-    const registryPath = buildSourceImportRegistryPath(table, groupingStrategy);
-    const groupTables = groups.get(registryPath) ?? [];
-    groupTables.push(buildSourceImportTableViewModel(table, index, copy, numberFormatter));
-    groups.set(registryPath, groupTables);
+  getSelectedSourceObjects(sourceObjects).forEach((sourceObject, index) => {
+    const registryPath = buildSourceImportRegistryPath(sourceObject, groupingStrategy);
+    const groupSourceObjects = groups.get(registryPath) ?? [];
+    groupSourceObjects.push(
+      buildSourceImportObjectViewModel(sourceObject, index, copy, numberFormatter)
+    );
+    groups.set(registryPath, groupSourceObjects);
   });
 
   return Array.from(groups.entries())
     .sort(([left], [right]) => left.localeCompare(right))
-    .map(([registryPath, groupTables]) => ({
+    .map(([registryPath, groupSourceObjects]) => ({
       registryPath,
-      tableCountLabel: formatSourceImportTableCount(groupTables.length, copy, numberFormatter),
-      tables: groupTables,
+      objectCountLabel: formatSourceImportObjectCount(
+        groupSourceObjects.length,
+        copy,
+        numberFormatter
+      ),
+      sourceObjects: groupSourceObjects,
     }));
 }

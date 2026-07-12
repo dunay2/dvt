@@ -3,9 +3,10 @@ import type { FastifyInstance } from 'fastify';
 
 import { CreateWarehouseConnectionUseCase } from '../../application/services/createWarehouseConnectionUseCase.js';
 import { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
+import { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
-import { ListWarehouseConnectionTablesUseCase } from '../../application/services/listWarehouseConnectionTablesUseCase.js';
 import { TestWarehouseConnectionUseCase } from '../../application/services/testWarehouseConnectionUseCase.js';
+import { WarehouseConnectionSourceObjectReader } from '../../application/services/WarehouseConnectionSourceObjectReader.js';
 import { WorkspaceWarehouseConnectionCatalog } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.js';
 import {
   EnvironmentWarehouseCredentialResolver,
@@ -37,14 +38,15 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
     credentialResolver: new EnvironmentWarehouseCredentialResolver(),
     now: () => new Date(),
   });
+  const sourceObjectReader = new WarehouseConnectionSourceObjectReader(catalog, probe);
   registerWarehouseSourceImportRoutes(app, {
     ...options.runtimeAuth,
     listConnectionsUseCase: new ListWarehouseConnectionsUseCase(catalog),
-    listTablesUseCase: new ListWarehouseConnectionTablesUseCase(catalog),
+    listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
     importSourcesUseCase: new ImportWarehouseSourcesUseCase(
-      catalog,
+      sourceObjectReader,
       options.protectedModule.workspaceGraphDraftStore,
       workspaceFiles,
       () => new Date()

@@ -1,0 +1,28 @@
+---
+id: R-20260711-SOURCE-OBJECT-CATALOG-CONTRACT
+title: Source adapters can drift from the provider-neutral catalog contract
+status: Open
+date: 2026-07-11
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: Medium
+probability: Low
+context: >
+  Source discovery now uses a versioned shared SourceObject contract while the first production
+  acquisition adapter is Postgres and the current DBT import strategy accepts relational objects.
+risk: >
+  A future file, endpoint, stream, or warehouse adapter could leak provider-specific fields into
+  application or presentation code, emit incomplete metric evidence, or falsely expose an object as
+  importable by the relation-only DBT strategy.
+mitigations:
+  - 'Validate every catalog response through `SourceObjectCatalogResponseSchema` in API/Web boundary
+    tests.'
+  - 'Keep provider acquisition and estimates behind adapter-owned helpers and emit the shared metric
+    evidence value.'
+  - 'Resolve import selections server-side by unique object ID and reject unsupported locators
+    before side effects.'
+  - 'Require a dedicated adapter and strategy slice before claiming non-relational import support.'
+review_after: 2026-08-11
+---

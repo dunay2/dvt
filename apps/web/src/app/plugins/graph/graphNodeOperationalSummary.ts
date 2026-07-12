@@ -4,6 +4,10 @@ import type {
   GraphNodeCardStatusTone,
   GraphNodeOperationalDetail,
 } from './graphNodeCardStrategyContracts';
+import type {
+  GraphNodeSizeEvidenceProjection,
+  GraphNodeVolumeMetricProjection,
+} from './graphNodeSourceMetricProjection';
 import {
   buildGraphNodeOperationalDetail,
   formatBytes,
@@ -21,12 +25,13 @@ export type GraphNodeOperationalSummary = Readonly<{
 }>;
 
 export type GraphNodeOperationalSummaryInput = Readonly<{
+  projectionKind: 'source' | 'execution';
   title: string;
   metadata: Record<string, unknown>;
   data: Record<string, unknown>;
   runtimeData?: Record<string, unknown>;
-  rowCount: number | null;
-  byteSize: number | null;
+  volumeMetricProjection: GraphNodeVolumeMetricProjection;
+  columnCount: number | null;
 }>;
 
 function firstNumericValue(
@@ -53,6 +58,13 @@ function formatCadenceMinutes(value: number): string {
 
 function formatThroughputBytesPerMinute(value: number): string {
   return `${formatBytes(value)}/min`;
+}
+
+function formatAverageBytes(value: number): string {
+  if (Math.abs(value) < 1024) {
+    return `${value.toFixed(1).replace(/\.0$/, '')} B`;
+  }
+  return formatBytes(value);
 }
 
 function formatCost(value: number): string {
@@ -96,6 +108,10 @@ type SchemaDriftProjection = Readonly<{
   tone: GraphNodeCardStatusTone;
 }>;
 
+function sizeEvidenceTone(sizeEvidence: GraphNodeSizeEvidenceProjection): GraphNodeCardStatusTone {
+  return sizeEvidence.provenance === 'measured' ? 'success' : 'warning';
+}
+
 function resolveSchemaDriftProjection(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>
@@ -130,10 +146,9 @@ function resolveSchemaDriftProjection(
 function buildSourceHealthRows(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>,
-  rowCount: number | null,
-  byteSize: number | null
+  volumeMetricProjection: GraphNodeVolumeMetricProjection,
+  columnCount: number | null
 ): {
-  hasSourceHealthSignal: boolean;
   railMetrics: GraphNodeCardMetric[];
   detailRows: GraphNodeCardMetric[];
 } {
@@ -151,18 +166,12 @@ function buildSourceHealthRows(
     'throughputBytesPerMinute',
     'bytesPerMinute',
   ]);
-  const datasetSizeBytes =
-    firstNumericValue(metadata, data, ['datasetSizeBytes', 'sourceSizeBytes']) ?? byteSize;
+  const { rowCount, sizeEvidence } = volumeMetricProjection;
+  const rowMetric = volumeMetricProjection.metrics.find((metric) => metric.id === 'rows');
+  const sizeMetric = volumeMetricProjection.metrics.find(
+    (metric) => metric.id === 'bytes' || metric.id === 'estimated-bytes'
+  );
   const schemaDrift = resolveSchemaDriftProjection(metadata, data);
-  const hasExplicitDatasetSize =
-    firstNumericValue(metadata, data, ['datasetSizeBytes', 'sourceSizeBytes']) !== null;
-  const hasSourceHealthSignal =
-    freshnessMinutes !== null ||
-    lastRefreshAt !== null ||
-    cadenceMinutes !== null ||
-    throughputBytesPerMinute !== null ||
-    hasExplicitDatasetSize ||
-    schemaDrift !== null;
   const railMetrics: GraphNodeCardMetric[] = [];
   const detailRows: GraphNodeCardMetric[] = [];
 
@@ -194,10 +203,27 @@ function buildSourceHealthRows(
   );
   pushOperationalMetric(
     railMetrics,
+    'rows',
+    'Rows',
+    rowCount == null || sizeEvidence == null ? null : formatCompactNumber(rowCount),
+    {
+      icon: 'rows',
+      ...(rowMetric?.detail == null ? {} : { detail: rowMetric.detail }),
+      ...(rowMetric?.tone == null ? {} : { tone: rowMetric.tone }),
+    }
+  );
+  pushOperationalMetric(
+    railMetrics,
     'size',
-    'Size',
-    datasetSizeBytes == null ? null : formatBytes(datasetSizeBytes),
-    { icon: 'database' }
+    sizeEvidence?.provenance === 'estimated' ? 'Est. size' : 'Size',
+    sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes),
+    sizeEvidence == null
+      ? { icon: 'database' }
+      : {
+          icon: 'database',
+          tone: sizeEvidenceTone(sizeEvidence),
+          ...(sizeMetric?.detail == null ? {} : { detail: sizeMetric.detail }),
+        }
   );
 
   const schemaDriftRailOnly = railMetrics.length === 0 && schemaDrift !== null;
@@ -209,13 +235,29 @@ function buildSourceHealthRows(
   }
 
   detailRows.push(...railMetrics);
-  pushOperationalMetric(
-    detailRows,
-    'rows',
-    'Rows',
-    rowCount == null ? null : formatCompactNumber(rowCount),
-    { icon: 'rows' }
-  );
+  if (sizeEvidence !== null && !railMetrics.some((metric) => metric.id === 'columns')) {
+    pushOperationalMetric(
+      detailRows,
+      'columns',
+      'Columns',
+      columnCount == null ? null : formatCompactNumber(columnCount),
+      { icon: 'columns' }
+    );
+  }
+  pushByteLevelDetailRows(detailRows, rowCount, sizeEvidence, sizeMetric?.detail);
+  if (!railMetrics.some((metric) => metric.id === 'rows')) {
+    pushOperationalMetric(
+      detailRows,
+      'rows',
+      'Rows',
+      rowCount == null || sizeEvidence == null ? null : formatCompactNumber(rowCount),
+      {
+        icon: 'rows',
+        ...(rowMetric?.detail == null ? {} : { detail: rowMetric.detail }),
+        ...(rowMetric?.tone == null ? {} : { tone: rowMetric.tone }),
+      }
+    );
+  }
   if (!schemaDriftRailOnly) {
     pushOperationalMetric(
       detailRows,
@@ -226,7 +268,68 @@ function buildSourceHealthRows(
     );
   }
 
-  return { hasSourceHealthSignal, railMetrics, detailRows };
+  return { railMetrics, detailRows };
+}
+
+function detailedSizeLabel(sizeEvidence: GraphNodeSizeEvidenceProjection | null): string {
+  if (sizeEvidence?.basis === 'physical-allocation') {
+    return 'Allocated size';
+  }
+  if (sizeEvidence?.basis === 'lower-bound') {
+    return 'Minimum size';
+  }
+  return sizeEvidence?.provenance === 'estimated' ? 'Estimated payload size' : 'Dataset size';
+}
+
+function pushByteLevelDetailRows(
+  detailRows: GraphNodeCardMetric[],
+  rowCount: number | null,
+  sizeEvidence: GraphNodeSizeEvidenceProjection | null,
+  detail?: string
+): void {
+  pushOperationalMetric(
+    detailRows,
+    'dataset-size',
+    detailedSizeLabel(sizeEvidence),
+    sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes),
+    sizeEvidence == null
+      ? { icon: 'database' }
+      : {
+          icon: 'database',
+          tone: sizeEvidenceTone(sizeEvidence),
+          ...(detail == null ? {} : { detail }),
+        }
+  );
+  pushOperationalMetric(detailRows, 'observed-at', 'Observed', sizeEvidence?.observedAt ?? null, {
+    icon: 'clock',
+  });
+
+  const averageRowSize =
+    rowCount == null ||
+    rowCount <= 0 ||
+    sizeEvidence == null ||
+    sizeEvidence.basis !== 'logical-payload'
+      ? null
+      : sizeEvidence.bytes / rowCount;
+  pushOperationalMetric(
+    detailRows,
+    'avg-row-size',
+    sizeEvidence?.provenance === 'estimated' ? 'Est. avg row size' : 'Avg row size',
+    averageRowSize == null ? null : formatAverageBytes(averageRowSize),
+    sizeEvidence == null
+      ? { icon: 'throughput' }
+      : { icon: 'throughput', tone: sizeEvidenceTone(sizeEvidence) }
+  );
+}
+
+function buildAdditionalOperationalDetail(
+  title: string,
+  railMetrics: readonly GraphNodeCardMetric[],
+  detailRows: readonly GraphNodeCardMetric[]
+): GraphNodeOperationalDetail | null {
+  const railMetricIds = new Set(railMetrics.map((metric) => metric.id));
+  const additionalRows = detailRows.filter((row) => !railMetricIds.has(row.id));
+  return additionalRows.length > 0 ? buildGraphNodeOperationalDetail(title, additionalRows) : null;
 }
 
 function buildModelExecutionMetrics(
@@ -300,47 +403,78 @@ function buildModelExecutionMetrics(
 }
 
 export function buildGraphNodeOperationalSummary({
+  projectionKind,
   title,
   metadata,
   data,
   runtimeData = data,
-  rowCount,
-  byteSize,
+  volumeMetricProjection,
+  columnCount,
 }: GraphNodeOperationalSummaryInput): GraphNodeOperationalSummary {
   const metrics: GraphNodeCardMetric[] = [];
-  const sourceHealth = buildSourceHealthRows(metadata, data, rowCount, byteSize);
+  const { rowCount, sizeEvidence } = volumeMetricProjection;
+  const volumeRowMetric = volumeMetricProjection.metrics.find((metric) => metric.id === 'rows');
+  const volumeSizeMetric = volumeMetricProjection.metrics.find(
+    (metric) => metric.id === 'bytes' || metric.id === 'estimated-bytes'
+  );
+  const sourceHealth = buildSourceHealthRows(metadata, data, volumeMetricProjection, columnCount);
   const modelExecutionMetrics = buildModelExecutionMetrics(metadata, data, runtimeData, rowCount);
 
-  if (sourceHealth.hasSourceHealthSignal) {
+  if (projectionKind === 'source') {
     return {
       metrics: sourceHealth.railMetrics,
-      detail: buildGraphNodeOperationalDetail(title, sourceHealth.detailRows),
+      detail: buildAdditionalOperationalDetail(
+        title,
+        sourceHealth.railMetrics,
+        sourceHealth.detailRows
+      ),
     };
   }
 
-  if (modelExecutionMetrics.length > 0) {
+  const hasModelExecutionMetrics = modelExecutionMetrics.length > 0;
+  if (hasModelExecutionMetrics) {
     metrics.push(...modelExecutionMetrics);
   } else {
     pushOperationalMetric(
       metrics,
       'rows',
       'Rows',
-      rowCount == null ? null : formatCompactNumber(rowCount),
-      { icon: 'rows' }
+      rowCount == null || sizeEvidence == null ? null : formatCompactNumber(rowCount),
+      {
+        icon: 'rows',
+        ...(volumeRowMetric?.detail == null ? {} : { detail: volumeRowMetric.detail }),
+        ...(volumeRowMetric?.tone == null ? {} : { tone: volumeRowMetric.tone }),
+      }
     );
     pushOperationalMetric(
       metrics,
       'size',
-      'Size',
-      byteSize == null ? null : formatBytes(byteSize),
-      {
-        icon: 'database',
-      }
+      sizeEvidence?.provenance === 'estimated' ? 'Est. size' : 'Size',
+      sizeEvidence == null ? null : formatBytes(sizeEvidence.bytes),
+      sizeEvidence == null
+        ? { icon: 'database' }
+        : {
+            icon: 'database',
+            tone: sizeEvidenceTone(sizeEvidence),
+            ...(volumeSizeMetric?.detail == null ? {} : { detail: volumeSizeMetric.detail }),
+          }
     );
+  }
+
+  const staticDetailRows: GraphNodeCardMetric[] = [];
+  if (!hasModelExecutionMetrics && sizeEvidence !== null) {
+    pushOperationalMetric(
+      staticDetailRows,
+      'columns',
+      'Columns',
+      columnCount == null ? null : formatCompactNumber(columnCount),
+      { icon: 'columns' }
+    );
+    pushByteLevelDetailRows(staticDetailRows, rowCount, sizeEvidence, volumeSizeMetric?.detail);
   }
 
   return {
     metrics,
-    detail: buildGraphNodeOperationalDetail(title, metrics),
+    detail: buildGraphNodeOperationalDetail(title, staticDetailRows),
   };
 }

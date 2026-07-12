@@ -1,85 +1,39 @@
-/** Owned concern: resolve stable dbt source YAML identities and retired source names. */
-import type { WarehouseTable } from '../ports/warehouseSourceImport.js';
+/** Owned concern: resolve stable dbt source YAML identities. */
 
 import {
-  DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR,
   toCollisionResistantYamlIdentifierPart,
   toStableYamlIdentifierPart,
 } from './warehouseSourceYamlDescriptor.js';
+import type { ConnectedRelationalSourceObject } from './warehouseSourceYamlTypes.js';
 
-export function tableIdentity(table: WarehouseTable): string {
-  return JSON.stringify([
-    table.connectionId?.toLowerCase() ?? '',
-    table.database.toLowerCase(),
-    table.schema.toLowerCase(),
-    table.table.toLowerCase(),
-  ]);
+export function sourceObjectIdentity(sourceObject: ConnectedRelationalSourceObject): string {
+  return sourceObject.objectId;
 }
 
-export function sourceTableIdentity(table: WarehouseTable): string {
-  return JSON.stringify([
-    table.connectionId?.toLowerCase() ?? '',
-    table.schema.toLowerCase(),
-    DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.tableNameForTable(table),
-  ]);
+export function buildCanonicalSourceName(sourceObject: ConnectedRelationalSourceObject): string {
+  return [
+    toStableYamlIdentifierPart(sourceObject.connectionId),
+    toStableYamlIdentifierPart(sourceObject.locator.catalog),
+    toStableYamlIdentifierPart(sourceObject.locator.schema),
+  ].join('_');
 }
 
-export function sourceOwnerIdentity(table: WarehouseTable): string {
-  return JSON.stringify([
-    table.connectionId?.toLowerCase() ?? '',
-    table.database.toLowerCase(),
-    table.schema.toLowerCase(),
-  ]);
+export function buildCanonicalTableName(sourceObject: ConnectedRelationalSourceObject): string {
+  return toStableYamlIdentifierPart(sourceObject.locator.name);
 }
 
-export function buildCanonicalSourceName(
-  table: WarehouseTable,
-  collidesAcrossDatabases: boolean,
-  collidesAcrossDefaultSourceName = false
+export function buildCollisionResistantSourceName(
+  sourceObject: ConnectedRelationalSourceObject
 ): string {
-  if (collidesAcrossDefaultSourceName) {
-    return (
-      table.connectionId
-        ? [
-            toStableYamlIdentifierPart(table.connectionId),
-            toCollisionResistantYamlIdentifierPart(table.database),
-            toCollisionResistantYamlIdentifierPart(table.schema),
-          ]
-        : [
-            toCollisionResistantYamlIdentifierPart(table.database),
-            toCollisionResistantYamlIdentifierPart(table.schema),
-          ]
-    ).join('_');
-  }
-  if (!collidesAcrossDatabases) {
-    return DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR.sourceNameForTable(table);
-  }
-  return (
-    table.connectionId
-      ? [table.connectionId, table.database, table.schema]
-      : [table.database, table.schema]
-  )
-    .map(toStableYamlIdentifierPart)
-    .join('_');
+  return [
+    toCollisionResistantYamlIdentifierPart(sourceObject.connectionId),
+    toCollisionResistantYamlIdentifierPart(sourceObject.locator.catalog),
+    toCollisionResistantYamlIdentifierPart(sourceObject.locator.schema),
+  ].join('_');
 }
 
-export function isRetiredSourceNameForTable(
-  sourceName: string,
-  table: WarehouseTable,
-  canonicalSourceName: string
-): boolean {
-  if (sourceName === canonicalSourceName) {
-    return false;
-  }
-  return new Set(
-    [
-      toStableYamlIdentifierPart(table.schema),
-      [table.database, table.schema].map(toStableYamlIdentifierPart).join('_'),
-      table.connectionId
-        ? [table.connectionId, table.database, table.schema]
-            .map(toStableYamlIdentifierPart)
-            .join('_')
-        : undefined,
-    ].filter((name): name is string => typeof name === 'string' && name.length > 0)
-  ).has(sourceName);
+export function buildCollisionResistantTableName(
+  sourceObject: ConnectedRelationalSourceObject
+): string {
+  return toCollisionResistantYamlIdentifierPart(sourceObject.locator.name);
 }

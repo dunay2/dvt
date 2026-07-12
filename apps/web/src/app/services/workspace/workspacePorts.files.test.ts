@@ -20,10 +20,11 @@ describe('workspace ports files', () => {
     const secondPorts = createMockWorkspacePorts();
     const original = await secondPorts.workspaceFilesQuery.getFileContent('README.md');
 
-    await firstPorts.workspaceFileContentCommand.saveFileContent(
-      'README.md',
-      '# Mutated in first instance only'
-    );
+    await firstPorts.workspaceFileContentCommand.saveFileContent({
+      path: 'README.md',
+      content: '# Mutated in first instance only',
+      expectedRevision: { kind: 'content_sha256', value: original.contentSha256 },
+    });
 
     const firstAfter = await firstPorts.workspaceFilesQuery.getFileContent('README.md');
     const secondAfter = await secondPorts.workspaceFilesQuery.getFileContent('README.md');
@@ -50,7 +51,11 @@ describe('workspace ports files', () => {
     const secondPorts = createMockWorkspacePorts();
     const newFilePath = 'models/generated/new_model.sql';
 
-    await firstPorts.workspaceFileContentCommand.saveFileContent(newFilePath, 'select 1 as id');
+    await firstPorts.workspaceFileContentCommand.saveFileContent({
+      path: newFilePath,
+      content: 'select 1 as id',
+      expectedRevision: { kind: 'absent' },
+    });
 
     const firstTree = flattenWorkspaceEntries(await firstPorts.workspaceFilesQuery.listFiles());
     const secondTree = flattenWorkspaceEntries(await secondPorts.workspaceFilesQuery.listFiles());

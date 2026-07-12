@@ -11,8 +11,14 @@ import { ListWorkspaceFilesUseCase } from '../../../src/application/services/lis
 import { SaveWorkspaceFileContentUseCase } from '../../../src/application/services/saveWorkspaceFileContentUseCase.js';
 import { registerWorkspaceFilesRoutes } from '../../../src/entrypoints/http/workspaceFilesRoutes.js';
 import { LocalWorkspaceFileRepository } from '../../../src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
+import { resolveWorkspaceScopeStorageRoot } from '../../../src/infrastructure/workspaceFiles/workspaceScopeStoragePath.js';
 
 const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
+const ROUTE_SCOPE = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'env-a',
+} as const;
 
 function principal(): Record<string, unknown> {
   return {
@@ -30,13 +36,15 @@ function principal(): Record<string, unknown> {
 
 describe('workspaceFilesRoutes', () => {
   let root: string;
+  let scopeRoot: string;
 
   beforeEach(async () => {
     root = await mkdtemp(path.join(tmpdir(), 'dvt-workspace-files-'));
-    await mkdir(path.join(root, 'models', 'staging'), { recursive: true });
-    await writeFile(path.join(root, 'README.md'), '# Workspace', 'utf8');
+    scopeRoot = resolveWorkspaceScopeStorageRoot(root, ROUTE_SCOPE);
+    await mkdir(path.join(scopeRoot, 'models', 'staging'), { recursive: true });
+    await writeFile(path.join(scopeRoot, 'README.md'), '# Workspace', 'utf8');
     await writeFile(
-      path.join(root, 'models', 'staging', 'stg_orders.sql'),
+      path.join(scopeRoot, 'models', 'staging', 'stg_orders.sql'),
       'select * from orders',
       'utf8'
     );
@@ -120,6 +128,18 @@ describe('workspaceFilesRoutes', () => {
     );
   });
 
+  it('does not expose files from another authorized workspace scope', async () => {
+    const { app } = buildApp();
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/workspace/files?tenantId=tenant-a&projectId=project-a&environmentId=env-b',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual([]);
+  });
+
   it('returns scoped workspace file content', async () => {
     const { app } = buildApp();
 
@@ -134,6 +154,7 @@ describe('workspaceFilesRoutes', () => {
       name: 'stg_orders.sql',
       language: 'sql',
       content: 'select * from orders',
+      contentSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
       lastModified: expect.any(String),
     });
   });
@@ -156,15 +177,18 @@ describe('workspaceFilesRoutes', () => {
     const response = await app.inject({
       method: 'POST',
       url: `/workspace/files/models%2Fgenerated%2Forders_daily.sql?${SCOPE_QUERY}`,
-      payload: { content: 'select * from raw.orders' },
+      payload: {
+        content: 'select * from raw.orders',
+        expectedRevision: { kind: 'absent' },
+      },
     });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
+      kind: 'saved',
+      disposition: 'created',
       path: 'models/generated/orders_daily.sql',
-      name: 'orders_daily.sql',
-      language: 'sql',
-      content: 'select * from raw.orders',
+      contentSha256: expect.stringMatching(/^[a-f0-9]{64}$/),
       lastModified: expect.any(String),
     });
     expect(authorize).toHaveBeenCalledWith(
@@ -179,6 +203,60 @@ describe('workspaceFilesRoutes', () => {
     });
     expect(readResponse.statusCode).toBe(200);
     expect(readResponse.json().content).toBe('select * from raw.orders');
+  });
+
+  it('rejects a stale workspace file revision without overwriting newer content', async () => {
+    const { app } = buildApp();
+    const path = 'models%2Fstaging%2Fstg_orders.sql';
+    const initial = await app.inject({
+      method: 'GET',
+      url: `/workspace/files/${path}?${SCOPE_QUERY}`,
+    });
+    const expectedRevision = {
+      kind: 'content_sha256',
+      value: initial.json().contentSha256,
+    };
+
+    const first = await app.inject({
+      method: 'POST',
+      url: `/workspace/files/${path}?${SCOPE_QUERY}`,
+      payload: { content: 'select order_id from orders', expectedRevision },
+    });
+    const stale = await app.inject({
+      method: 'POST',
+      url: `/workspace/files/${path}?${SCOPE_QUERY}`,
+      payload: { content: 'select customer_id from orders', expectedRevision },
+    });
+
+    expect(first.statusCode).toBe(200);
+    expect(stale.statusCode).toBe(409);
+    expect(stale.json()).toEqual({
+      error: { type: 'conflict', reason: 'workspace_file_revision_conflict' },
+    });
+    const current = await app.inject({
+      method: 'GET',
+      url: `/workspace/files/${path}?${SCOPE_QUERY}`,
+    });
+    expect(current.json().content).toBe('select order_id from orders');
+  });
+
+  it('requires an explicit expected revision for every save command', async () => {
+    const { app } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/files/models%2Fgenerated%2Forders_daily.sql?${SCOPE_QUERY}`,
+      payload: { content: 'select * from raw.orders' },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: {
+        type: 'bad_request',
+        reason: 'invalid_workspace_file_revision',
+        target: 'expectedRevision',
+      },
+    });
   });
 
   it('rejects invalid save bodies before writing content', async () => {
@@ -237,7 +315,7 @@ describe('workspaceFilesRoutes', () => {
 
   it('rejects unsupported workspace file types before reading content', async () => {
     const { app } = buildApp();
-    await writeFile(path.join(root, 'image.png'), 'not a text source file', 'utf8');
+    await writeFile(path.join(scopeRoot, 'image.png'), 'not a text source file', 'utf8');
 
     const response = await app.inject({
       method: 'GET',

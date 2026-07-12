@@ -1,5 +1,5 @@
 /** Owned concern: render graph-node operational metrics as an optional detail affordance. */
-import type { MouseEvent, ReactElement } from 'react';
+import { useId, type MouseEvent, type ReactElement } from 'react';
 import {
   Activity,
   AlertTriangle,
@@ -8,15 +8,21 @@ import {
   DollarSign,
   List,
   RefreshCw,
+  Table2,
   Timer,
   type LucideIcon,
 } from 'lucide-react';
 
+import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { cn } from '../../components/ui/utils';
 import type {
   GraphNodeCardMetric,
   GraphNodeCardMetricIcon,
 } from './graphNodeCardStrategyContracts';
+import {
+  GraphNodeMetricHotspot,
+  resolveGraphNodeMetricEvidenceTone,
+} from './GraphNodeMetricHotspot';
 import { graphNodeOperationalRailClasses } from './graphVisualTokens';
 
 const metricIconByName: Record<GraphNodeCardMetricIcon, LucideIcon> = {
@@ -24,6 +30,7 @@ const metricIconByName: Record<GraphNodeCardMetricIcon, LucideIcon> = {
   refresh: RefreshCw,
   throughput: Activity,
   database: Database,
+  columns: Table2,
   timer: Timer,
   rows: List,
   cost: DollarSign,
@@ -43,16 +50,19 @@ type GraphNodeOperationalRailStaticProps = GraphNodeOperationalRailBaseProps &
 type GraphNodeOperationalRailInteractiveProps = GraphNodeOperationalRailBaseProps &
   Readonly<{
     ariaLabel: string;
-    onOpen: (anchorRect: DOMRect) => void;
+    onOpen: (anchorElement: HTMLElement) => void;
   }>;
 
 export type GraphNodeOperationalRailProps =
   | GraphNodeOperationalRailStaticProps
   | GraphNodeOperationalRailInteractiveProps;
 
-function stopAndOpen(event: MouseEvent<HTMLElement>, onOpen: (anchorRect: DOMRect) => void): void {
+function stopAndOpen(
+  event: MouseEvent<HTMLElement>,
+  onOpen: (anchorElement: HTMLElement) => void
+): void {
   event.stopPropagation();
-  onOpen(event.currentTarget.getBoundingClientRect());
+  onOpen(event.currentTarget);
 }
 
 function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] {
@@ -79,15 +89,16 @@ function renderMetrics(metrics: readonly GraphNodeCardMetric[]): ReactElement[] 
         )}
         <span className={graphNodeOperationalRailClasses.metricText}>
           <span className={graphNodeOperationalRailClasses.label}>{metric.label}</span>
-          <span
-            data-slot="graph-node-operational-value"
+          <GraphNodeMetricHotspot
             className={cn(
               graphNodeOperationalRailClasses.value,
               graphNodeOperationalRailClasses.valueTone[tone]
             )}
-          >
-            {metric.value}
-          </span>
+            detail={metric.detail ?? `${metric.label}: ${metric.value}`}
+            focusable={false}
+            tone={resolveGraphNodeMetricEvidenceTone(metric.tone)}
+            value={metric.value}
+          />
         </span>
       </span>
     );
@@ -99,6 +110,7 @@ export function GraphNodeOperationalRail({
   ariaLabel,
   onOpen,
 }: GraphNodeOperationalRailProps): ReactElement | null {
+  const descriptionId = useId();
   if (metrics.length === 0) {
     return null;
   }
@@ -115,11 +127,16 @@ export function GraphNodeOperationalRail({
     <button
       type="button"
       data-slot="graph-node-operational-rail"
+      {...canvasNodeEmbeddedControlProps}
       aria-label={ariaLabel}
+      aria-describedby={descriptionId}
       className={graphNodeOperationalRailClasses.button}
       onClick={(event) => stopAndOpen(event, onOpen)}
     >
       {renderMetrics(metrics)}
+      <span id={descriptionId} className={graphNodeOperationalRailClasses.accessibleDescription}>
+        {metrics.map((metric) => metric.detail ?? `${metric.label}: ${metric.value}`).join(' ')}
+      </span>
     </button>
   );
 }

@@ -35,7 +35,7 @@ const RUNTIME_ROUTE_METHOD_BY_KEY = {
   workspaceGraphDraft: ['GET', 'PUT'],
   workspaceDiffChanges: ['GET'],
   warehouseConnections: ['GET', 'POST'],
-  warehouseConnectionTables: ['GET'],
+  warehouseConnectionSourceObjects: ['GET'],
   warehouseConnectionTest: ['POST'],
   warehouseSourcesImport: ['POST'],
   workspaceFiles: ['GET'],

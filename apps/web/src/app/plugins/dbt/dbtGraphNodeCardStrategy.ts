@@ -7,11 +7,10 @@ import type {
 } from '../graph/graphNodeCardStrategyContracts';
 import { graphNodeCardCopyTokens } from '../graph/graphNodeCardCopyTokens';
 import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalSummary';
+import { buildGraphNodeVolumeMetricProjection } from '../graph/graphNodeSourceMetricProjection';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
   arrayCount,
-  formatBytes,
-  formatCompactNumber,
   metadataOf,
   numericValue,
   pushMetric,
@@ -43,9 +42,7 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   const relationPath = resolveGraphNodeRelationPath(metadata, data);
   const metrics: GraphNodeCardMetric[] = [];
   const materialization = resolveDbtMaterialization(metadata);
-  const rowCount = numericValue(metadata.rowCount) ?? numericValue(metadata.rows);
-  const byteSize =
-    numericValue(metadata.byteSize) ?? numericValue(metadata.bytes) ?? numericValue(data.byteSize);
+  const columnCount = arrayCount(data.columns) ?? arrayCount(metadata.columns);
   const targetModel =
     stringValue(metadata.testTargetModel) ??
     stringValue(metadata.targetModel) ??
@@ -62,9 +59,13 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     stringValue(data.testTarget) ??
     (composedTestTarget.length > 0 ? composedTestTarget : null);
   const severity = stringValue(metadata.severity) ?? stringValue(data.severity);
+  const isSource = node.kind === 'dbt:source';
+  const volumeMetricProjection = buildGraphNodeVolumeMetricProjection({
+    isSourceObject: isSource || node.role === 'input',
+    metadata,
+    data,
+  });
 
-  pushMetric(metrics, 'rows', 'Rows', rowCount == null ? null : formatCompactNumber(rowCount));
-  pushMetric(metrics, 'bytes', 'Size', byteSize == null ? null : formatBytes(byteSize));
   pushMetric(metrics, 'materialization', 'Mat.', materialization);
   pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
   pushMetric(metrics, 'test-target', 'Target', testTarget);
@@ -72,7 +73,6 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
   pushMetric(metrics, 'columns', 'Columns', resolveColumnCount(metadata, data));
   pushRuntimeMetrics(metrics, metadata, data);
 
-  const isSource = node.kind === 'dbt:source';
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
     pluginId: node.pluginId,
@@ -81,11 +81,12 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     data,
   });
   const operationalSummary = buildGraphNodeOperationalSummary({
+    projectionKind: isSource || node.role === 'input' ? 'source' : 'execution',
     title: titlePresentation.title,
     metadata,
     data,
-    rowCount,
-    byteSize,
+    volumeMetricProjection,
+    columnCount,
   });
 
   return {

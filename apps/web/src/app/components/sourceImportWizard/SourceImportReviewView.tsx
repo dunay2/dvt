@@ -7,7 +7,7 @@ import type { SourceImportOptionContribution, SourceImportOptionId } from '../..
 import { resolveString } from '../../plugins/contracts/PluginManifest';
 import { sourceImportWizardCopy as copy } from './copy';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
-import type { SourceImportTableViewModel } from './sourceImportCatalogModel';
+import type { SourceImportObjectViewModel } from './sourceImportCatalogModel';
 import type { SourceImportReviewPreviewGroupViewModel } from './sourceImportReviewModel';
 import type { SourceImportGroupingStrategy } from './types';
 
@@ -29,34 +29,34 @@ export const sourceImportReviewViewClassNames = {
   groupHeader: 'mb-2 flex items-center justify-between',
   registryPath: 'text-xs text-slate-300',
   groupCode: 'text-sm text-blue-400',
-  tableList: 'space-y-1 text-xs text-slate-400',
-  tableRow: 'flex min-w-0 items-center justify-between gap-2',
-  tableName: 'truncate font-mono',
-  tableMeta: 'flex shrink-0 flex-wrap justify-end gap-2 text-right',
-  selectedTable:
+  objectList: 'space-y-1 text-xs text-slate-400',
+  objectRow: 'flex min-w-0 items-center justify-between gap-2',
+  objectName: 'truncate font-mono',
+  objectMeta: 'flex shrink-0 flex-wrap justify-end gap-2 text-right',
+  selectedObject:
     'flex min-w-0 items-center justify-between gap-2 rounded border border-slate-700 px-2 py-1',
 } as const;
 
 type SourceImportReviewViewProps = Readonly<{
-  selectedTables: readonly SourceImportTableViewModel[];
+  selectedSourceObjects: readonly SourceImportObjectViewModel[];
   previewGroups: readonly SourceImportReviewPreviewGroupViewModel[];
   selectedCount: number;
   groupingStrategy: SourceImportGroupingStrategy;
   selectedConnectionName: string;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   sourceImportOptionValues: Readonly<Record<SourceImportOptionId, boolean>>;
-  onRemoveTable: (tableIndex: number) => void;
+  onRemoveSourceObject: (sourceObjectIndex: number) => void;
 }>;
 
 export function SourceImportReviewView({
-  selectedTables,
+  selectedSourceObjects,
   previewGroups,
   selectedCount,
   groupingStrategy,
   selectedConnectionName,
   sourceImportOptions,
   sourceImportOptionValues,
-  onRemoveTable,
+  onRemoveSourceObject,
 }: SourceImportReviewViewProps): JSX.Element {
   return (
     <div className={sourceImportReviewViewClassNames.root}>
@@ -75,11 +75,14 @@ export function SourceImportReviewView({
       />
 
       <SourceImportAttachmentPreview
-        selectedTables={selectedTables}
+        selectedSourceObjects={selectedSourceObjects}
         previewGroups={previewGroups}
       />
 
-      <SourceImportSelectionBasket selectedTables={selectedTables} onRemoveTable={onRemoveTable} />
+      <SourceImportSelectionBasket
+        selectedSourceObjects={selectedSourceObjects}
+        onRemoveSourceObject={onRemoveSourceObject}
+      />
     </div>
   );
 }
@@ -110,7 +113,7 @@ export function SourceImportReviewSummaryCard({
         />
         <Separator />
         <SourceImportReviewSummaryRow
-          label={copy.review.tablesSelectedLabel}
+          label={copy.review.sourceObjectsSelectedLabel}
           value={String(selectedCount)}
         />
         <SourceImportReviewSummaryRow
@@ -155,12 +158,12 @@ function SourceImportReviewSummaryRow({
 }
 
 type SourceImportAttachmentPreviewProps = Readonly<{
-  selectedTables: readonly SourceImportTableViewModel[];
+  selectedSourceObjects: readonly SourceImportObjectViewModel[];
   previewGroups: readonly SourceImportReviewPreviewGroupViewModel[];
 }>;
 
 export function SourceImportAttachmentPreview({
-  selectedTables,
+  selectedSourceObjects,
   previewGroups,
 }: SourceImportAttachmentPreviewProps): JSX.Element {
   return (
@@ -187,33 +190,36 @@ export function SourceImportAttachmentPreview({
                   </code>
                 </div>
                 <Badge variant="secondary" className="text-xs">
-                  {group.tableCountLabel}
+                  {group.objectCountLabel}
                 </Badge>
               </div>
-              <div className={sourceImportReviewViewClassNames.tableList}>
-                {group.tables.slice(0, 3).map((table) => (
-                  <SourceImportReviewSourceTableRow key={table.identityKey} table={table} />
+              <div className={sourceImportReviewViewClassNames.objectList}>
+                {group.sourceObjects.slice(0, 3).map((sourceObject) => (
+                  <SourceImportReviewSourceObjectRow
+                    key={sourceObject.identityKey}
+                    sourceObject={sourceObject}
+                  />
                 ))}
-                {group.tables.length > 3 ? (
+                {group.sourceObjects.length > 3 ? (
                   <div>
-                    {copy.review.moreTablesPrefix} {group.tables.length - 3}{' '}
-                    {copy.review.moreTablesSuffix}
+                    {copy.review.moreSourceObjectsPrefix} {group.sourceObjects.length - 3}{' '}
+                    {copy.review.moreSourceObjectsSuffix}
                   </div>
                 ) : null}
               </div>
             </div>
           ))}
           {previewGroups.length === 0
-            ? selectedTables.map((table) => (
+            ? selectedSourceObjects.map((sourceObject) => (
                 <div
-                  key={table.identityKey}
-                  className={sourceImportReviewViewClassNames.selectedTable}
+                  key={sourceObject.identityKey}
+                  className={sourceImportReviewViewClassNames.selectedObject}
                 >
-                  <span className={sourceImportReviewViewClassNames.tableName}>
-                    {table.canonicalName}
+                  <span className={sourceImportReviewViewClassNames.objectName}>
+                    {sourceObject.canonicalName}
                   </span>
-                  <span className={sourceImportReviewViewClassNames.tableMeta}>
-                    {table.columnCountLabel}
+                  <span className={sourceImportReviewViewClassNames.objectMeta}>
+                    {sourceObject.columnCountLabel}
                   </span>
                 </div>
               ))
@@ -224,20 +230,21 @@ export function SourceImportAttachmentPreview({
   );
 }
 
-function SourceImportReviewSourceTableRow({
-  table,
-}: Readonly<{ table: SourceImportTableViewModel }>): JSX.Element {
+function SourceImportReviewSourceObjectRow({
+  sourceObject,
+}: Readonly<{ sourceObject: SourceImportObjectViewModel }>): JSX.Element {
   return (
     <div
-      className={sourceImportReviewViewClassNames.tableRow}
-      data-source-import-review-table={table.canonicalName}
-      data-source-import-review-table-identity={table.identityKey}
+      className={sourceImportReviewViewClassNames.objectRow}
+      data-source-import-review-object={sourceObject.identityKey}
     >
-      <span className={sourceImportReviewViewClassNames.tableName}>{table.canonicalName}</span>
-      <span className={sourceImportReviewViewClassNames.tableMeta}>
-        <span>{table.rowCountLabel}</span>
-        {table.byteSizeLabel == null ? null : <span>{table.byteSizeLabel}</span>}
-        <span>{table.columnCountLabel}</span>
+      <span className={sourceImportReviewViewClassNames.objectName}>
+        {sourceObject.canonicalName}
+      </span>
+      <span className={sourceImportReviewViewClassNames.objectMeta}>
+        <span>{sourceObject.rowCountLabel}</span>
+        <span>{sourceObject.byteSizeLabel}</span>
+        <span>{sourceObject.columnCountLabel}</span>
       </span>
     </div>
   );

@@ -6,31 +6,33 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy } from './copy';
 import {
-  buildSourceImportTableViewModel,
-  type SourceImportTableViewModel,
+  buildSourceImportObjectViewModel,
+  type SourceImportObjectViewModel,
 } from './sourceImportCatalogModel';
 import { SourceImportSelectionBasket } from './SourceImportSelectionBasket';
-import type { TableInfo } from './types';
+import { buildSourceImportTestObject } from './sourceImportWizard.testFixtures';
+import type { SelectableRelationalSourceObject } from './types';
 
-function buildTable(overrides?: Partial<TableInfo>): TableInfo {
-  return {
-    database: 'RAW',
-    schema: 'ERP',
-    table: 'ORDERS',
+function buildRelation(
+  overrides?: Parameters<typeof buildSourceImportTestObject>[0]
+): SelectableRelationalSourceObject {
+  return buildSourceImportTestObject({
     selected: true,
-    rowCount: 1500,
-    byteSize: 4096000,
     columns: [
-      { name: 'order_id', type: 'INTEGER', nullable: false, primaryKey: true },
+      { name: 'order_id', type: 'INTEGER', nullable: false },
       { name: 'discount_code', type: 'TEXT', nullable: true },
     ],
+    constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['order_id'] }],
     ...overrides,
-  };
+  });
 }
 
-function buildSelectedTable(table: TableInfo, index = 0): SourceImportTableViewModel {
-  return buildSourceImportTableViewModel(
-    table,
+function buildSelectedObject(
+  sourceObject: SelectableRelationalSourceObject,
+  index = 0
+): SourceImportObjectViewModel {
+  return buildSourceImportObjectViewModel(
+    sourceObject,
     index,
     sourceImportWizardCopy.catalog,
     sourceImportCatalogNumberFormatter
@@ -58,25 +60,23 @@ describe('SourceImportSelectionBasket', () => {
   });
 
   it('renders selected source columns and missing-column metadata before import', async () => {
-    const onRemoveTable = vi.fn();
+    const onRemoveSourceObject = vi.fn();
 
     await act(async () => {
       root.render(
         <SourceImportSelectionBasket
-          selectedTables={[
-            buildSelectedTable(buildTable()),
-            buildSelectedTable(
-              buildTable({
+          selectedSourceObjects={[
+            buildSelectedObject(buildRelation()),
+            buildSelectedObject(
+              buildRelation({
                 schema: 'CRM',
                 table: 'CUSTOMERS',
-                rowCount: undefined,
-                byteSize: undefined,
                 columns: [],
               }),
               1
             ),
           ]}
-          onRemoveTable={onRemoveTable}
+          onRemoveSourceObject={onRemoveSourceObject}
         />
       );
     });

@@ -8,6 +8,7 @@ import {
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEventHandler } from 'react';
 
+import { isCanvasNodeEmbeddedControlTarget } from '../../components/canvas/canvasNodeInteractionBoundary';
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
@@ -82,6 +83,7 @@ function CanvasViewportWithPresenter({
     useState<CanvasNodeFloatingToolbarModel | null>(null);
   const [nodeHealthPopoverModel, setNodeHealthPopoverModel] =
     useState<NodeHealthPopoverModel | null>(null);
+  const nodeHealthPopoverTriggerRef = useRef<HTMLElement | null>(null);
   const resolvedCanvasPalette = normalizeCanvasPaletteId(props.canvasPalette);
   const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, props.gridSize, {
     gridVisible: props.canvasGridVisible,
@@ -90,19 +92,27 @@ function CanvasViewportWithPresenter({
   const closeNodeFloatingToolbar = useCallback(() => {
     setNodeFloatingToolbarModel(null);
   }, []);
-  const closeNodeHealthPopover = useCallback(() => {
+  const closeNodeHealthPopover = useCallback((restoreTriggerFocus = false) => {
     setNodeHealthPopoverModel(null);
+    const trigger = nodeHealthPopoverTriggerRef.current;
+    nodeHealthPopoverTriggerRef.current = null;
+    if (restoreTriggerFocus && trigger?.isConnected) {
+      trigger.focus();
+    }
   }, []);
 
   const openNodeHealthPopover = useCallback(
-    (nodeId: string, detail: GraphNodeOperationalDetail, anchorRect: DOMRect) => {
+    (nodeId: string, detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {
+      const anchorRect = anchorElement.getBoundingClientRect();
+      const viewportRect = viewportRef.current?.getBoundingClientRect();
+      nodeHealthPopoverTriggerRef.current = anchorElement;
       setNodeFloatingToolbarModel(null);
       setNodeHealthPopoverModel({
         nodeId,
         detail,
         position: {
-          x: Math.max(8, anchorRect.left),
-          y: Math.max(8, anchorRect.bottom + 8),
+          x: Math.max(8, anchorRect.left - (viewportRect?.left ?? 0)),
+          y: Math.max(8, anchorRect.bottom - (viewportRect?.top ?? 0) + 8),
         },
       });
     },
@@ -115,8 +125,10 @@ function CanvasViewportWithPresenter({
         ...node,
         data: {
           ...node.data,
-          onOpenOperationalDetails: (detail: GraphNodeOperationalDetail, anchorRect: DOMRect) =>
-            openNodeHealthPopover(node.id, detail, anchorRect),
+          onOpenOperationalDetails: (
+            detail: GraphNodeOperationalDetail,
+            anchorElement: HTMLElement
+          ) => openNodeHealthPopover(node.id, detail, anchorElement),
         },
       })),
     [openNodeHealthPopover, props.nodesWithImpact]
@@ -144,6 +156,7 @@ function CanvasViewportWithPresenter({
       (node) => node.id === nodeHealthPopoverModel.nodeId
     );
     if (!popoverOwnerStillExists) {
+      nodeHealthPopoverTriggerRef.current = null;
       setNodeHealthPopoverModel(null);
     }
   }, [nodeHealthPopoverModel, props.nodesWithImpact]);
@@ -156,17 +169,20 @@ function CanvasViewportWithPresenter({
     const closeOnOutsidePointerDown = (event: PointerEvent): void => {
       const viewportElement = viewportRef.current;
       const eventTarget = event.target;
+      const popoverElement = viewportElement?.querySelector(
+        '[data-slot="graph-node-health-popover"]'
+      );
       if (
-        viewportElement != null &&
+        popoverElement != null &&
         eventTarget instanceof globalThis.Node &&
-        !viewportElement.contains(eventTarget)
+        !popoverElement.contains(eventTarget)
       ) {
-        setNodeHealthPopoverModel(null);
+        closeNodeHealthPopover(false);
       }
     };
     const closeOnEscape = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
-        setNodeHealthPopoverModel(null);
+        closeNodeHealthPopover(true);
       }
     };
 
@@ -176,13 +192,17 @@ function CanvasViewportWithPresenter({
       document.removeEventListener('pointerdown', closeOnOutsidePointerDown, true);
       document.removeEventListener('keydown', closeOnEscape);
     };
-  }, [nodeHealthPopoverModel]);
+  }, [closeNodeHealthPopover, nodeHealthPopoverModel]);
 
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
     (event, node) => {
-      closeNodeHealthPopover();
       const eventTarget = event.currentTarget instanceof Element ? event.currentTarget : null;
       const clickedTarget = event.target instanceof Element ? event.target : null;
+      if (isCanvasNodeEmbeddedControlTarget(event.target)) {
+        return;
+      }
+
+      closeNodeHealthPopover(false);
       const contextMenuTrigger =
         clickedTarget?.closest('[data-slot="context-menu-trigger"]') ??
         eventTarget?.querySelector('[data-slot="context-menu-trigger"]') ??

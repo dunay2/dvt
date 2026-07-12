@@ -2,12 +2,13 @@
 import { Badge } from '../ui/badge';
 import { Card } from '../ui/card';
 import { ScrollArea } from '../ui/scroll-area';
+import { MetricEvidenceHotspot } from '../metrics/MetricEvidenceHotspot';
 import { sourceImportCatalogNumberFormatter, sourceImportWizardCopy as copy } from './copy';
-import { buildSourceImportTableViewModel } from './sourceImportCatalogModel';
-import type { TableInfo } from './types';
+import { buildSourceImportObjectViewModel } from './sourceImportCatalogModel';
+import type { SelectableSourceObject } from './types';
 
-type SourceImportActiveTableMetadataProps = Readonly<{
-  activeTable: TableInfo | null;
+type SourceImportActiveObjectMetadataProps = Readonly<{
+  activeSourceObject: SelectableSourceObject | null;
 }>;
 
 export const sourceImportActiveMetadataClassNames = {
@@ -17,8 +18,8 @@ export const sourceImportActiveMetadataClassNames = {
   card: 'border-slate-600 p-4',
   summary: 'mb-3 flex flex-wrap items-start justify-between gap-3',
   identity: 'min-w-0',
-  tableName: 'font-mono text-sm text-slate-100',
-  metrics: 'mt-1 text-xs text-slate-400',
+  objectName: 'font-mono text-sm text-slate-100',
+  metrics: 'mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400',
   columnList: 'space-y-2',
   columnRow:
     'grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 rounded border border-slate-800 bg-slate-950/50 px-3 py-2',
@@ -27,20 +28,21 @@ export const sourceImportActiveMetadataClassNames = {
   constraintList: 'mt-1 flex flex-wrap gap-1',
   columnType: 'font-mono text-[11px] text-slate-300',
   unavailable: 'rounded border border-slate-800 bg-slate-950/40 p-3 text-sm text-slate-300',
+  importability: 'rounded border border-amber-500/40 bg-amber-950/20 p-3 text-sm text-amber-200',
 } as const;
 
-export function SourceImportActiveTableMetadata({
-  activeTable,
-}: SourceImportActiveTableMetadataProps): JSX.Element {
-  const activeTableViewModel = activeTable
-    ? buildSourceImportTableViewModel(
-        activeTable,
+export function SourceImportActiveObjectMetadata({
+  activeSourceObject,
+}: SourceImportActiveObjectMetadataProps): JSX.Element {
+  const activeObjectViewModel = activeSourceObject
+    ? buildSourceImportObjectViewModel(
+        activeSourceObject,
         0,
         copy.catalog,
         sourceImportCatalogNumberFormatter
       )
     : null;
-  const tableName = activeTableViewModel?.canonicalName ?? copy.metadata.noTableSelected;
+  const objectName = activeObjectViewModel?.canonicalName ?? copy.metadata.noObjectSelected;
 
   return (
     <div className={sourceImportActiveMetadataClassNames.root}>
@@ -53,30 +55,53 @@ export function SourceImportActiveTableMetadata({
 
       <Card
         className={sourceImportActiveMetadataClassNames.card}
-        data-source-import-active-table={activeTableViewModel?.canonicalName}
+        data-source-import-active-object={activeObjectViewModel?.identityKey}
       >
         <div className={sourceImportActiveMetadataClassNames.summary}>
           <div className={sourceImportActiveMetadataClassNames.identity}>
-            <div className={sourceImportActiveMetadataClassNames.tableName}>{tableName}</div>
+            <div className={sourceImportActiveMetadataClassNames.objectName}>{objectName}</div>
             <div className={sourceImportActiveMetadataClassNames.metrics}>
-              {activeTableViewModel?.rowCountLabel ?? copy.metadata.rowsUnknown} /{' '}
-              {activeTableViewModel?.byteSizeLabel ?? copy.metadata.sizeUnknown} /{' '}
-              {activeTableViewModel?.columnCountLabel ?? copy.metadata.noColumns}
+              {activeObjectViewModel ? (
+                <>
+                  <MetricEvidenceHotspot
+                    detail={activeObjectViewModel.rowCountDetail}
+                    tone={activeObjectViewModel.rowCountTone}
+                    value={activeObjectViewModel.rowCountLabel}
+                  />
+                  <MetricEvidenceHotspot
+                    detail={activeObjectViewModel.byteSizeDetail}
+                    tone={activeObjectViewModel.byteSizeTone}
+                    value={activeObjectViewModel.byteSizeLabel}
+                  />
+                  <span>{activeObjectViewModel.columnCountLabel}</span>
+                </>
+              ) : (
+                <span>
+                  {copy.metadata.rowsUnknown} / {copy.metadata.sizeUnknown} /{' '}
+                  {copy.metadata.noColumns}
+                </span>
+              )}
             </div>
           </div>
-          {activeTableViewModel ? (
-            <Badge variant="outline">{copy.metadata.warehouseSource}</Badge>
+          {activeObjectViewModel ? (
+            <Badge variant="outline">{activeObjectViewModel.kindLabel}</Badge>
           ) : null}
         </div>
 
-        {activeTableViewModel && activeTableViewModel.columns.length > 0 ? (
+        {activeObjectViewModel?.importabilityLabel ? (
+          <p className={sourceImportActiveMetadataClassNames.importability}>
+            {activeObjectViewModel.importabilityLabel}
+          </p>
+        ) : null}
+
+        {activeObjectViewModel && activeObjectViewModel.columns.length > 0 ? (
           <ScrollArea className="h-64">
             <div className={sourceImportActiveMetadataClassNames.columnList}>
-              {activeTableViewModel.columns.map((column) => (
+              {activeObjectViewModel.columns.map((column) => (
                 <div
-                  key={`${activeTableViewModel.identityKey}.${column.name}`}
+                  key={`${activeObjectViewModel.identityKey}.${column.name}`}
                   className={sourceImportActiveMetadataClassNames.columnRow}
-                  data-source-import-metadata-column={`${tableName}.${column.name}`}
+                  data-source-import-metadata-column={`${objectName}.${column.name}`}
                 >
                   <div className={sourceImportActiveMetadataClassNames.columnIdentity}>
                     <div className={sourceImportActiveMetadataClassNames.columnName}>

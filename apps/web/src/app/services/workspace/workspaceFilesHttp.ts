@@ -6,6 +6,7 @@ export const WORKSPACE_FILES_ENDPOINT = '/workspace/files';
 export const WORKSPACE_FILES_HTTP_ERROR_REASON = Object.freeze({
   fileNotFound: 'workspace_file_not_found',
   invalidPath: 'invalid_workspace_path',
+  revisionConflict: 'workspace_file_revision_conflict',
 } as const);
 
 export type WorkspaceFilesScope = {

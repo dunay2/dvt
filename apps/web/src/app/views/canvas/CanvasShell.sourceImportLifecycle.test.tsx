@@ -50,7 +50,7 @@ describe('CanvasShell source import lifecycle', () => {
   it('opens the source import wizard from the viewport contextual source command', async () => {
     const warehouseSourceImport = {
       listWarehouseConnections: vi.fn(),
-      listWarehouseTables: vi.fn(),
+      listSourceObjects: vi.fn(),
       createWarehouseConnection: vi.fn(),
       testWarehouseConnection: vi.fn(),
       importSources: vi.fn(),
@@ -94,9 +94,10 @@ describe('CanvasShell source import lifecycle', () => {
         | undefined;
       complete?.({
         success: true,
+        draftRevision: 'draft-revision-2',
         importedNodeIds: ['src_erp_orders'],
         sourcesCreated: 1,
-        tablesImported: 1,
+        objectsImported: 1,
         yamlFiles: ['models/sources/src_erp.yml'],
         grouping: 'schema',
         options: {

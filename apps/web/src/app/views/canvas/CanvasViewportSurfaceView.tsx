@@ -49,7 +49,7 @@ type CanvasViewportSurfaceViewProps = Readonly<{
     detail: GraphNodeOperationalDetail;
     position: { x: number; y: number };
   } | null;
-  onCloseNodeHealthPopover: () => void;
+  onCloseNodeHealthPopover: (restoreTriggerFocus?: boolean) => void;
 }>;
 
 function resolveMiniMapNodeColor(node: { data?: unknown }): string {
@@ -98,6 +98,7 @@ function CanvasViewportReactFlowSurface({
   ) => {
     if (
       nodeHealthPopoverModel != null &&
+      selection.nodes.length > 0 &&
       !selection.nodes.some((node) => node.id === nodeHealthPopoverModel.nodeId)
     ) {
       onCloseNodeHealthPopover();
@@ -231,7 +232,7 @@ export function CanvasViewportSurfaceView({
         <GraphNodeHealthPopoverView
           detail={nodeHealthPopoverModel.detail}
           position={nodeHealthPopoverModel.position}
-          onClose={onCloseNodeHealthPopover}
+          onClose={() => onCloseNodeHealthPopover(true)}
         />
       )}
       {renderContextMenuView ? (

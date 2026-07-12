@@ -39,6 +39,9 @@ export function serializeSourceDocument(document: SourceYamlDocument): string {
     lines.push('    tables:');
     for (const table of source.tables) {
       lines.push(`      - name: ${table.name}`);
+      if (table.identifier !== undefined) {
+        appendYamlEntry(lines, 'identifier', table.identifier, 8);
+      }
       appendYamlMetadata(lines, table.metadata, 8);
       if (table.columns.length > 0) {
         lines.push('        columns:');

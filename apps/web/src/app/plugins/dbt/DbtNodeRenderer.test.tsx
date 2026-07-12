@@ -196,9 +196,19 @@ describe('DbtNodeRenderer history panel', () => {
     expect(document.body.textContent).toContain('Mat.');
     expect(document.body.textContent).toContain('Deps');
     expect(document.body.textContent).toContain('Columns');
-    expect(document.querySelector('[title="Mat."]')?.textContent).toBe('incremental');
-    expect(document.querySelector('[title="Deps"]')?.textContent).toBe('2');
-    expect(document.querySelector('[title="Columns"]')?.textContent).toBe('1');
+    expect(
+      document.querySelector(
+        '[data-slot="graph-node-metric-hotspot"][aria-label="Mat.: incremental"]'
+      )?.textContent
+    ).toBe('incremental');
+    expect(
+      document.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label="Deps: 2"]')
+        ?.textContent
+    ).toBe('2');
+    expect(
+      document.querySelector('[data-slot="graph-node-metric-hotspot"][aria-label="Columns: 1"]')
+        ?.textContent
+    ).toBe('1');
   });
 
   it('routes the card play affordance through execution selection', async () => {

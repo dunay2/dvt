@@ -43,10 +43,11 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       planId,
       planVersion: '1.0',
     });
+    const resolveWorkspaceRoot = vi.fn(() => workspaceRoot);
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
       planStore: makePlanStore('DBT_MODEL', planId),
-      workspaceRoot,
+      resolveWorkspaceRoot,
       dbtBundleStore: {
         kind: 'file' as const,
         rootPath: bundleRoot,
@@ -66,6 +67,11 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       value: { kind: 'accepted', runId: 'run-test-1', accepted: true },
     });
     expect(delegate.execute).toHaveBeenCalledTimes(1);
+    expect(resolveWorkspaceRoot).toHaveBeenCalledWith({
+      tenantId: 'tenant-1',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+    });
     const enrichedCommand = delegate.execute.mock.calls[0]?.[0] as StartRunCommand;
     expect(enrichedCommand.runExecutionContextRef).toMatchObject({
       schemaVersion: 'v1.0',
@@ -136,7 +142,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
       planStore: makePlanStore(undefined, planId),
-      workspaceRoot,
+      resolveWorkspaceRoot: () => workspaceRoot,
       dbtBundleStore: {
         kind: 'file' as const,
         rootPath: bundleRoot,
@@ -160,7 +166,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
         })),
       },
       planStore: makePlanStore('DBT_MODEL', 'f'.repeat(64)),
-      workspaceRoot,
+      resolveWorkspaceRoot: () => workspaceRoot,
       dbtBundleStore: undefined,
     });
 
@@ -203,7 +209,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
         })),
       },
       planStore: makePlanStore('DBT_MODEL', planId),
-      workspaceRoot,
+      resolveWorkspaceRoot: () => workspaceRoot,
       dbtBundleStore: {
         kind: 's3' as const,
         bucket: 'dbt-bundles',

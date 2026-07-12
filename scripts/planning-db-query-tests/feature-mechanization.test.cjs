@@ -146,7 +146,10 @@ test('feature mechanization row builders expose DB-first operator views', () => 
         rail_count: 3,
         symbol_count: 4,
         validation_count: 5,
-        source_path: 'docs/planning/example.md',
+        source_paths: [
+          'docs/planning/example.md',
+          'tools/planning-db/migrations/620_feature_mechanization_feature_set_union.sql',
+        ],
       },
     ]),
     [
@@ -158,7 +161,7 @@ test('feature mechanization row builders expose DB-first operator views', () => 
         3,
         4,
         5,
-        'docs/planning/example.md',
+        '["docs/planning/example.md","tools/planning-db/migrations/620_feature_mechanization_feature_set_union.sql"]',
       ],
     ]
   );
@@ -286,6 +289,14 @@ test('feature mechanization readers query DB-first manifest projections', async 
   assert.match(captured[0].sql, /manifest\.feature_id = \$1/);
   assert.match(captured[0].sql, /manifest\.mechanization_status = \$2/);
   assert.match(captured[0].sql, /manifest\.source_path = \$3/);
+  assert.match(captured[0].sql, /count\(distinct filtered_rails\.rail_id\)/);
+  assert.match(captured[0].sql, /count\(distinct component_ref\.value\)/);
+  assert.match(captured[0].sql, /count\(distinct symbol_key\)/);
+  assert.match(captured[0].sql, /count\(distinct validation_ref\)/);
+  assert.match(
+    captured[0].sql,
+    /jsonb_agg\(\s*distinct filtered_rails\.source_path order by filtered_rails\.source_path\s*\)/
+  );
   assert.deepEqual(captured[0].params, [
     'FEATURE-ONE',
     'implemented',

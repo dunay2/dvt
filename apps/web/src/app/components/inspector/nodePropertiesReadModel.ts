@@ -1,5 +1,11 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { readSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidence';
+import {
+  describeSourceObjectMetricEvidence,
+  formatSourceObjectMetricByteDetail,
+  formatSourceObjectMetricByteSize,
+} from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 import { buildDbtTestRows } from './dbtTestRowsReadModel';
 import { buildTransformColumnOptions, readSelectedColumnRefs } from './dvtTransformColumnModel';
 
@@ -20,6 +26,8 @@ export type NodePropertySectionId =
 export type NodePropertyRow = Readonly<{
   label: string;
   value: string;
+  detail?: string;
+  tone?: 'measured' | 'estimated';
 }>;
 
 export type NodePropertyTableRow = Readonly<{
@@ -150,21 +158,10 @@ function buildGeneralRows(
   node: CanonicalNode,
   metadata: Record<string, unknown>
 ): NodePropertyRow[] {
-  const formatBytes = (value: number): string => {
-    if (Math.abs(value) >= 1024 * 1024 * 1024) {
-      return `${(value / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '')} GB`;
-    }
-    if (Math.abs(value) >= 1024 * 1024) {
-      return `${(value / (1024 * 1024)).toFixed(1).replace(/\.0$/, '')} MB`;
-    }
-    if (Math.abs(value) >= 1024) {
-      return `${(value / 1024).toFixed(1).replace(/\.0$/, '')} KB`;
-    }
-    return `${value} B`;
-  };
   const config = asRecord(metadata.config);
   const dbt = asRecord(metadata.dbt);
   const rows: NodePropertyRow[] = [];
+  const numberFormatter = new Intl.NumberFormat('en-US');
 
   addRow(rows, 'Name', node.name);
   addRow(rows, 'Node ID', node.id);
@@ -191,18 +188,60 @@ function buildGeneralRows(
   addRow(rows, 'Path', node.path ?? readString(metadata.path));
   addRow(rows, 'Owner', readString(metadata.owner));
 
-  const rowCount = readNumber(metadata.rowCount) ?? readNumber(metadata.rows);
+  const sourceMetricEvidence = readSourceObjectMetricEvidence(metadata.sourceMetricEvidence);
+  const rowCount =
+    sourceMetricEvidence?.rowCount.value ??
+    readNumber(metadata.rowCount) ??
+    readNumber(metadata.rows);
   if (rowCount != null) {
-    addRow(rows, 'Rows', new Intl.NumberFormat('en-US').format(rowCount));
+    const value = numberFormatter.format(rowCount);
+    rows.push(
+      sourceMetricEvidence === null
+        ? { label: 'Rows', value }
+        : {
+            label: 'Rows',
+            value,
+            tone: sourceMetricEvidence.rowCount.provenance,
+            detail: describeSourceObjectMetricEvidence({
+              metric: sourceMetricEvidence.rowCount,
+              subject: `${value} ${rowCount === 1 ? 'record' : 'records'}`,
+              evidence: sourceMetricEvidence,
+            }),
+          }
+    );
   }
 
-  const byteSize = readNumber(metadata.byteSize) ?? readNumber(metadata.bytes);
-  addRow(
-    rows,
-    'Size',
-    readFirstString(metadata.size, metadata.sizeLabel) ??
-      (byteSize == null ? undefined : formatBytes(byteSize))
-  );
+  if (sourceMetricEvidence !== null) {
+    const byteSize = sourceMetricEvidence.byteSize.value;
+    const compactSize = formatSourceObjectMetricByteSize(byteSize);
+    rows.push({
+      label: 'Size',
+      value:
+        sourceMetricEvidence.byteSize.provenance === 'estimated'
+          ? `Estimated ${compactSize}`
+          : compactSize,
+      tone: sourceMetricEvidence.byteSize.provenance,
+      detail: describeSourceObjectMetricEvidence({
+        metric: sourceMetricEvidence.byteSize,
+        subject: formatSourceObjectMetricByteDetail(byteSize, numberFormatter),
+        evidence: sourceMetricEvidence,
+        basis: sourceMetricEvidence.byteSize.basis,
+      }),
+    });
+  } else {
+    const byteSize = readNumber(metadata.byteSize) ?? readNumber(metadata.bytes);
+    const estimatedByteSize = readNumber(metadata.estimatedByteSize);
+    addRow(
+      rows,
+      'Size',
+      readFirstString(metadata.size, metadata.sizeLabel) ??
+        (byteSize == null
+          ? estimatedByteSize == null
+            ? undefined
+            : `Estimated ${formatSourceObjectMetricByteSize(estimatedByteSize)}`
+          : formatSourceObjectMetricByteSize(byteSize))
+    );
+  }
 
   if (node.lastDuration != null) {
     addRow(rows, 'Duration', `${node.lastDuration}s`);

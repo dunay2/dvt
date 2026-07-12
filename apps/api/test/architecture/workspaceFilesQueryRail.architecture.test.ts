@@ -51,6 +51,7 @@ describe('workspace files command/query rail architecture', () => {
     expect(apiAdapter).not.toContain("getJson<WorkspaceFileEntry[]>('/workspace/files')");
     expect(apiAdapter).toContain('buildWorkspaceFilesEndpoint');
     expect(apiAdapter).toContain('buildWorkspaceFileContentEndpoint');
-    expect(apiAdapter).toContain('postJson<{ content: string }, FileContent>');
+    expect(apiAdapter).toContain("Omit<SaveWorkspaceFileContentInput, 'path'>");
+    expect(apiAdapter).toContain('WorkspaceFileSaveReceipt');
   });
 });

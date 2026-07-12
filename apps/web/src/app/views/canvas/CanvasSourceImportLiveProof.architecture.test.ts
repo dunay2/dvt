@@ -59,7 +59,9 @@ describe('Canvas source import live proof architecture', () => {
       "clickCanvasAddCatalogAction('open-source-import', 'dbt:source')"
     );
     expect(cypressSpecSource).toContain('source-import-connection-option');
-    expect(cypressSpecSource).toContain('data-source-import-table');
+    expect(cypressSpecSource).toContain('data-source-import-object');
+    expect(cypressSpecSource).toContain('data-source-import-review-object');
+    expect(cypressSpecSource).not.toContain('data-source-import-table');
     expect(cypressSpecSource).toContain("readLiveWorkspaceFile('models/sources/src_public.yml'");
     expect(cypressSpecSource).toContain("cy.contains('Stale version').should('not.exist')");
     expect(cypressSpecSource).toContain("cy.contains('[role=\"dialog\"]', 'Add source'");

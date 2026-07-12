@@ -2,11 +2,18 @@
  * @ownedConcern Validate Git changed-file discovery for the web Vitest suite
  * router as an isolated adapter contract.
  */
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
-import { readChangedFiles } from '../../scripts/run-vitest-changed-suites';
+import { readChangedFiles, resolveRepositoryRoot } from '../../scripts/run-vitest-changed-suites';
 
 describe('web Vitest changed-file discovery', () => {
+  it('resolves the repository from the runner location instead of the inherited hook cwd', () => {
+    const scriptPath = resolve('/repo', 'apps/web/scripts/run-vitest-changed-suites.ts');
+
+    expect(resolveRepositoryRoot(scriptPath)).toBe(resolve('/repo'));
+  });
+
   it('uses the CI-provided base and head refs without requiring a merge base', () => {
     const calls: string[] = [];
     const files = readChangedFiles('/repo', {

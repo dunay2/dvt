@@ -36,8 +36,8 @@ export function ResultStep({ result }: ResultStepProps) {
             <span className="font-medium text-green-400">{result.sourcesCreated}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-300">Tables registered:</span>
-            <span className="font-medium text-green-400">{result.tablesImported}</span>
+            <span className="text-slate-300">Objects registered:</span>
+            <span className="font-medium text-green-400">{result.objectsImported}</span>
           </div>
         </div>
       </Card>

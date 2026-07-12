@@ -1,3 +1,9 @@
+import {
+  buildRelationalSourceObjectId,
+  type SourceObjectColumn,
+  type SourceObjectConstraint,
+  type SourceObjectMetricEvidence,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -5,466 +11,297 @@ import {
   InvalidWarehouseSourceYamlError,
   buildWarehouseSourceYamlPath,
   buildWarehouseSourceYamlUpdates,
-  groupTablesForYaml,
+  groupSourceObjectsForYaml,
   readExistingSourceDocument,
+  type ConnectedRelationalSourceObject,
 } from '../../../src/application/services/warehouseSourceYaml.js';
 
-describe('warehouse source YAML builder', () => {
-  it('declares dbt source artifact ownership and path semantics in one descriptor', () => {
+function measuredMetrics(): SourceObjectMetricEvidence {
+  return {
+    observedAt: '2026-07-10T21:00:00.000Z',
+    observationScope: { kind: 'snapshot' },
+    rowCount: {
+      value: 42,
+      provenance: 'estimated',
+      method: 'provider-statistics',
+      confidence: 'medium',
+    },
+    byteSize: {
+      value: 4096,
+      provenance: 'measured',
+      method: 'provider-storage-metadata',
+      confidence: 'exact',
+      basis: 'physical-allocation',
+    },
+  };
+}
+
+function sourceObject(
+  input: Readonly<{
+    connectionId?: string;
+    catalog?: string;
+    schema?: string;
+    name?: string;
+    columns?: readonly SourceObjectColumn[];
+    constraints?: readonly SourceObjectConstraint[];
+  }> = {}
+): ConnectedRelationalSourceObject {
+  const locator = {
+    kind: 'relation' as const,
+    catalog: input.catalog ?? 'analytics',
+    schema: input.schema ?? 'erp',
+    name: input.name ?? 'orders',
+    relationType: 'table' as const,
+  };
+  return {
+    connectionId: input.connectionId ?? 'warehouse-prod',
+    objectId: buildRelationalSourceObjectId(locator),
+    displayName: locator.name,
+    locator,
+    metricEvidence: measuredMetrics(),
+    ...(input.columns ? { columns: [...input.columns] } : {}),
+    ...(input.constraints ? { constraints: [...input.constraints] } : {}),
+  };
+}
+
+describe('warehouse source YAML projection', () => {
+  it('owns dbt source artifact naming and grouping policy in one descriptor', () => {
+    const orders = sourceObject({ catalog: 'Raw Lake', schema: 'Sales/ERP Ops' });
+
     expect(DBT_SOURCE_YAML_ARTIFACT_DESCRIPTOR).toMatchObject({
       pluginId: 'dbt',
       artifactKind: 'dbt-source-yaml',
     });
-    expect(
-      buildWarehouseSourceYamlPath(
-        {
-          database: 'analytics',
-          schema: 'ERP',
-          table: 'ORDERS',
-        },
-        'schema'
-      )
-    ).toBe('models/sources/src_erp.yml');
-    expect(
-      buildWarehouseSourceYamlPath(
-        {
-          database: 'ANALYTICS',
-          schema: 'erp',
-          table: 'orders',
-        },
-        'database'
-      )
-    ).toBe('models/sources/src_analytics.yml');
+    expect(buildWarehouseSourceYamlPath(orders, 'schema')).toBe(
+      'models/sources/src_sales_erp_ops.yml'
+    );
+    expect(buildWarehouseSourceYamlPath(orders, 'database')).toBe(
+      'models/sources/src_raw_lake.yml'
+    );
   });
 
-  it('normalizes dbt source artifact paths from warehouse identifiers', () => {
-    expect(
-      buildWarehouseSourceYamlPath(
-        {
-          database: 'Raw Lake',
-          schema: 'Sales/ERP Ops',
-          table: 'Orders',
-        },
-        'schema'
-      )
-    ).toBe('models/sources/src_sales_erp_ops.yml');
-
-    expect(
-      buildWarehouseSourceYamlPath(
-        {
-          database: 'Raw Lake',
-          schema: 'Sales/ERP Ops',
-          table: 'Orders',
-        },
-        'database'
-      )
-    ).toBe('models/sources/src_raw_lake.yml');
-  });
-
-  it('disambiguates path groups and source names when warehouse identifiers share the same slug', () => {
-    const tables = [
-      {
-        connectionId: 'warehouse-prod',
-        database: 'Raw Lake',
-        schema: 'Sales/ERP Ops',
-        table: 'Open Orders',
-      },
-      {
-        connectionId: 'warehouse-prod',
-        database: 'Raw Lake',
-        schema: 'Sales ERP Ops',
-        table: 'Open Orders',
-      },
+  it('assigns distinct paths when raw group values normalize to the same slug', () => {
+    const sourceObjects = [
+      sourceObject({ schema: 'Sales/ERP Ops', name: 'open_orders' }),
+      sourceObject({ schema: 'Sales ERP Ops', name: 'closed_orders' }),
     ];
 
-    expect(Array.from(groupTablesForYaml(tables, 'schema').keys())).toEqual(
+    const paths = Array.from(groupSourceObjectsForYaml(sourceObjects, 'schema').keys());
+
+    expect(new Set(paths).size).toBe(2);
+    expect(paths).toEqual(
       expect.arrayContaining([
         expect.stringMatching(/^models\/sources\/src_sales_erp_ops_[a-f0-9]{8}\.yml$/),
       ])
     );
-    expect(new Set(groupTablesForYaml(tables, 'schema').keys()).size).toBe(2);
+  });
 
-    const updates = buildWarehouseSourceYamlUpdates({
+  it('keeps colliding physical schemas distinct when they are imported in separate batches', () => {
+    const first = sourceObject({ schema: 'Sales/ERP Ops', name: 'open_orders' });
+    const second = sourceObject({ schema: 'Sales ERP Ops', name: 'closed_orders' });
+    const [firstUpdate] = buildWarehouseSourceYamlUpdates({
       existingFiles: new Map(),
       groupingStrategy: 'schema',
       includeColumns: false,
       addTests: false,
       addFreshness: false,
-      tables,
+      sourceObjects: [first],
     });
 
-    const rendered = updates.map((update) => update.content).join('\n');
-    expect(
-      new Set(
-        rendered.match(/name: warehouse_prod_raw_lake_[a-f0-9]{8}_sales_erp_ops_[a-f0-9]{8}/g)
-      )
-    ).toHaveProperty('size', 2);
-  });
+    const [secondUpdate] = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map([[firstUpdate!.path, firstUpdate!.content]]),
+      groupingStrategy: 'schema',
+      includeColumns: false,
+      addTests: false,
+      addFreshness: false,
+      sourceObjects: [second],
+    });
 
-  it('rejects malformed existing YAML instead of rewriting it as an empty source file', () => {
-    expect(() => readExistingSourceDocument('version: 2\nsources:\n  - name: [')).toThrow(
-      InvalidWarehouseSourceYamlError
+    const sources = readExistingSourceDocument(secondUpdate?.content).sources;
+    expect(sources).toHaveLength(2);
+    expect(new Set(sources.map((source) => source.name)).size).toBe(2);
+    expect(sources.map((source) => source.schema)).toEqual(
+      expect.arrayContaining(['Sales/ERP Ops', 'Sales ERP Ops'])
     );
   });
 
-  it('creates deterministic dbt source YAML with columns, tests, and freshness', () => {
+  it('projects columns, tests, and freshness into deterministic dbt source YAML', () => {
     const updates = buildWarehouseSourceYamlUpdates({
       existingFiles: new Map(),
       groupingStrategy: 'schema',
       includeColumns: true,
       addTests: true,
       addFreshness: true,
-      tables: [
-        {
-          database: 'analytics',
-          schema: 'erp',
-          table: 'orders',
+      sourceObjects: [
+        sourceObject({
           columns: [
-            { name: 'id', type: 'integer', nullable: false, primaryKey: true, unique: true },
-            { name: 'created_at', type: 'timestamp', nullable: false },
+            { name: 'id', type: 'integer', nullable: false },
             { name: 'notes', type: 'text', nullable: true },
           ],
-        },
+          constraints: [{ name: 'orders_pkey', kind: 'primary-key', columns: ['id'] }],
+        }),
       ],
     });
 
-    expect(updates).toEqual([
-      {
-        path: 'models/sources/src_erp.yml',
-        content: [
-          'version: 2',
-          '',
-          'sources:',
-          '  - name: erp',
-          '    database: analytics',
-          '    schema: erp',
-          '    freshness:',
-          '      warn_after:',
-          '        count: 24',
-          '        period: hour',
-          '      error_after:',
-          '        count: 48',
-          '        period: hour',
-          '    tables:',
-          '      - name: orders',
-          '        columns:',
-          '          - name: id',
-          '            data_type: integer',
-          '            tests:',
-          '              - not_null',
-          '              - unique',
-          '          - name: created_at',
-          '            data_type: timestamp',
-          '            tests:',
-          '              - not_null',
-          '          - name: notes',
-          '            data_type: text',
-          '',
-        ].join('\n'),
-      },
+    expect(updates).toHaveLength(1);
+    expect(updates[0]?.path).toBe('models/sources/src_erp.yml');
+    const document = readExistingSourceDocument(updates[0]?.content);
+    expect(document.sources).toEqual([
+      expect.objectContaining({
+        name: 'warehouse_prod_analytics_erp',
+        database: 'analytics',
+        schema: 'erp',
+        freshness: {
+          warn_after: { count: 24, period: 'hour' },
+          error_after: { count: 48, period: 'hour' },
+        },
+        tables: [
+          expect.objectContaining({
+            name: 'orders',
+            columns: [
+              expect.objectContaining({
+                name: 'id',
+                dataType: 'integer',
+                tests: ['not_null', 'unique'],
+              }),
+              expect.objectContaining({ name: 'notes', dataType: 'text' }),
+            ],
+          }),
+        ],
+      }),
     ]);
   });
 
-  it('merges new tables into existing source YAML without duplicating known tables', () => {
-    const updates = buildWarehouseSourceYamlUpdates({
-      existingFiles: new Map([
-        [
-          'models/sources/src_erp.yml',
-          [
-            'version: 2',
-            '',
-            'sources:',
-            '  - name: erp',
-            '    database: analytics',
-            '    schema: erp',
-            '    tables:',
-            '      - name: orders',
-            '',
-          ].join('\n'),
-        ],
-      ]),
+  it('preserves physical schema and relation identifiers behind stable dbt aliases', () => {
+    const [update] = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map(),
       groupingStrategy: 'schema',
       includeColumns: false,
       addTests: false,
       addFreshness: false,
-      tables: [
-        { database: 'analytics', schema: 'erp', table: 'orders' },
-        { database: 'analytics', schema: 'erp', table: 'customers' },
+      sourceObjects: [sourceObject({ schema: 'Sales Data', name: 'Order Lines' })],
+    });
+
+    const document = readExistingSourceDocument(update?.content);
+    expect(document.sources[0]?.schema).toBe('Sales Data');
+    expect(document.sources[0]?.tables[0]).toMatchObject({
+      name: 'order_lines',
+      identifier: 'Order Lines',
+    });
+  });
+
+  it('does not generate false single-column unique tests for a composite primary key', () => {
+    const [update] = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map(),
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: true,
+      addFreshness: false,
+      sourceObjects: [
+        sourceObject({
+          columns: [
+            { name: 'tenant_id', type: 'uuid', nullable: false },
+            { name: 'order_id', type: 'bigint', nullable: false },
+          ],
+          constraints: [
+            {
+              name: 'orders_pkey',
+              kind: 'primary-key',
+              columns: ['tenant_id', 'order_id'],
+            },
+          ],
+        }),
       ],
     });
 
-    expect(updates).toEqual([
-      {
-        path: 'models/sources/src_erp.yml',
-        content: [
-          'version: 2',
-          '',
-          'sources:',
-          '  - name: erp',
-          '    database: analytics',
-          '    schema: erp',
-          '    tables:',
-          '      - name: customers',
-          '      - name: orders',
-          '',
-        ].join('\n'),
-      },
+    const columns = readExistingSourceDocument(update?.content).sources[0]?.tables[0]?.columns;
+    expect(columns).toEqual([
+      expect.objectContaining({ name: 'tenant_id', tests: ['not_null'] }),
+      expect.objectContaining({ name: 'order_id', tests: ['not_null'] }),
     ]);
   });
 
-  it('preserves existing dbt metadata when adding tables to a source file', () => {
-    const updates = buildWarehouseSourceYamlUpdates({
-      existingFiles: new Map([
-        [
-          'models/sources/src_erp.yml',
-          [
-            'version: 2',
-            '',
-            'sources:',
-            '  - name: erp',
-            '    database: "{{ env_var(\'RAW_DATABASE\') }}"',
-            '    schema: ERP_CUSTOM',
-            '    description: ERP source metadata maintained by analytics',
-            '    meta:',
-            '      owner: finance',
-            '    freshness:',
-            '      warn_after:',
-            '        count: 12',
-            '        period: hour',
-            "      filter: loaded_at >= current_timestamp - interval '7 days'",
-            '    tables:',
-            '      - name: orders',
-            '        description: Existing orders table description',
-            '        tests:',
-            '          - dbt_utils.unique_combination_of_columns:',
-            '              combination_of_columns:',
-            '                - id',
-            '                - created_at',
-            '        config:',
-            '          tags:',
-            '            - critical',
-            '        columns:',
-            '          - name: id',
-            '            description: Stable order id',
-            '            tests:',
-            '              - not_null',
-            '              - unique',
-            '',
-          ].join('\n'),
-        ],
-      ]),
+  it('preserves existing dbt metadata while adding a selected source object', () => {
+    const path = 'models/sources/src_erp.yml';
+    const existing = [
+      'version: 2',
+      'sources:',
+      '  - name: warehouse_prod_analytics_erp',
+      '    database: analytics',
+      '    schema: erp',
+      '    description: Maintained by analytics',
+      '    meta:',
+      '      owner: finance',
+      '    tables:',
+      '      - name: orders',
+      '        description: Stable orders',
+      '',
+    ].join('\n');
+
+    const [update] = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map([[path, existing]]),
       groupingStrategy: 'schema',
       includeColumns: false,
       addTests: false,
-      addFreshness: true,
-      tables: [{ database: 'analytics', schema: 'erp', table: 'customers' }],
+      addFreshness: false,
+      sourceObjects: [sourceObject({ name: 'customers' })],
     });
 
-    const content = updates[0]?.content ?? '';
-    expect(content).toContain("database: '{{ env_var(''RAW_DATABASE'') }}'");
-    expect(content).toContain('schema: ERP_CUSTOM');
-    expect(content).toContain('description: ERP source metadata maintained by analytics');
-    expect(content).toContain('owner: finance');
-    expect(content).toContain('count: 12');
-    expect(content).toContain('filter:');
-    expect(content).toContain('description: Existing orders table description');
-    expect(content).toContain('dbt_utils.unique_combination_of_columns:');
-    expect(content).toContain('tags:');
-    expect(content).toContain('description: Stable order id');
-    expect(content).toContain('- name: customers');
+    expect(update?.content).toContain('description: Maintained by analytics');
+    expect(update?.content).toContain('owner: finance');
+    expect(update?.content).toContain('description: Stable orders');
+    const document = readExistingSourceDocument(update?.content);
+    expect(document.sources[0]?.tables.map((table) => table.name)).toEqual(['customers', 'orders']);
   });
 
-  it('updates existing disambiguated source names when re-importing one side of a database collision', () => {
-    const updates = buildWarehouseSourceYamlUpdates({
-      existingFiles: new Map([
-        [
-          'models/sources/src_erp.yml',
-          [
-            'version: 2',
-            '',
-            'sources:',
-            '  - name: analytics_erp',
-            '    database: analytics',
-            '    schema: erp',
-            '    tables:',
-            '      - name: orders',
-            '  - name: finance_erp',
-            '    database: finance',
-            '    schema: erp',
-            '    tables:',
-            '      - name: orders',
-            '',
-          ].join('\n'),
-        ],
-      ]),
+  it('updates only the source owned by the selected connection', () => {
+    const path = 'models/sources/src_erp.yml';
+    const existing = [
+      'version: 2',
+      'sources:',
+      '  - name: warehouse_prod_analytics_erp',
+      '    database: analytics',
+      '    schema: erp',
+      '    tables:',
+      '      - name: orders',
+      '  - name: warehouse_sandbox_analytics_erp',
+      '    database: analytics',
+      '    schema: erp',
+      '    tables:',
+      '      - name: orders',
+      '',
+    ].join('\n');
+
+    const [update] = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map([[path, existing]]),
       groupingStrategy: 'schema',
       includeColumns: true,
       addTests: false,
       addFreshness: false,
-      tables: [
-        {
-          database: 'finance',
-          schema: 'erp',
-          table: 'orders',
-          columns: [{ name: 'id', type: 'number', nullable: false }],
-        },
-      ],
-    });
-
-    expect(updates).toEqual([
-      {
-        path: 'models/sources/src_erp.yml',
-        content: [
-          'version: 2',
-          '',
-          'sources:',
-          '  - name: analytics_erp',
-          '    database: analytics',
-          '    schema: erp',
-          '    tables:',
-          '      - name: orders',
-          '  - name: finance_erp',
-          '    database: finance',
-          '    schema: erp',
-          '    tables:',
-          '      - name: orders',
-          '        columns:',
-          '          - name: id',
-          '            data_type: number',
-          '',
-        ].join('\n'),
-      },
-    ]);
-  });
-
-  it('removes legacy schema-only source names when a database collision requires canonical names', () => {
-    const updates = buildWarehouseSourceYamlUpdates({
-      existingFiles: new Map([
-        [
-          'models/sources/src_erp.yml',
-          [
-            'version: 2',
-            '',
-            'sources:',
-            '  - name: analytics_erp',
-            '    database: analytics',
-            '    schema: erp',
-            '    tables:',
-            '      - name: orders',
-            '  - name: erp',
-            '    database: finance',
-            '    schema: erp',
-            '    description: Legacy finance source name',
-            '    tables:',
-            '      - name: orders',
-            '        description: Legacy orders table metadata',
-            '',
-          ].join('\n'),
-        ],
-      ]),
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-      tables: [
-        {
-          database: 'finance',
-          schema: 'erp',
-          table: 'orders',
-          columns: [{ name: 'id', type: 'number', nullable: false }],
-        },
-      ],
-    });
-
-    expect(updates).toEqual([
-      {
-        path: 'models/sources/src_erp.yml',
-        content: [
-          'version: 2',
-          '',
-          'sources:',
-          '  - name: analytics_erp',
-          '    database: analytics',
-          '    schema: erp',
-          '    tables:',
-          '      - name: orders',
-          '  - name: finance_erp',
-          '    database: finance',
-          '    schema: erp',
-          '    description: Legacy finance source name',
-          '    tables:',
-          '      - name: orders',
-          '        description: Legacy orders table metadata',
-          '        columns:',
-          '          - name: id',
-          '            data_type: number',
-          '',
-        ].join('\n'),
-      },
-    ]);
-  });
-
-  it('updates the source owned by the selected connection when physical table names match', () => {
-    const updates = buildWarehouseSourceYamlUpdates({
-      existingFiles: new Map([
-        [
-          'models/sources/src_erp.yml',
-          [
-            'version: 2',
-            '',
-            'sources:',
-            '  - name: warehouse_prod_analytics_erp',
-            '    database: analytics',
-            '    schema: erp',
-            '    tables:',
-            '      - name: orders',
-            '  - name: warehouse_sandbox_analytics_erp',
-            '    database: analytics',
-            '    schema: erp',
-            '    tables:',
-            '      - name: orders',
-            '',
-          ].join('\n'),
-        ],
-      ]),
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-      tables: [
-        {
+      sourceObjects: [
+        sourceObject({
           connectionId: 'warehouse-sandbox',
-          database: 'analytics',
-          schema: 'erp',
-          table: 'orders',
-          columns: [{ name: 'id', type: 'number', nullable: false }],
-        },
+          columns: [{ name: 'id', type: 'integer', nullable: false }],
+        }),
       ],
     });
+    const document = readExistingSourceDocument(update?.content);
+    const production = document.sources.find(
+      (source) => source.name === 'warehouse_prod_analytics_erp'
+    );
+    const sandbox = document.sources.find(
+      (source) => source.name === 'warehouse_sandbox_analytics_erp'
+    );
 
-    expect(updates).toEqual([
-      {
-        path: 'models/sources/src_erp.yml',
-        content: [
-          'version: 2',
-          '',
-          'sources:',
-          '  - name: warehouse_prod_analytics_erp',
-          '    database: analytics',
-          '    schema: erp',
-          '    tables:',
-          '      - name: orders',
-          '  - name: warehouse_sandbox_analytics_erp',
-          '    database: analytics',
-          '    schema: erp',
-          '    tables:',
-          '      - name: orders',
-          '        columns:',
-          '          - name: id',
-          '            data_type: number',
-          '',
-        ].join('\n'),
-      },
+    expect(production?.tables[0]?.columns).toEqual([]);
+    expect(sandbox?.tables[0]?.columns).toEqual([
+      expect.objectContaining({ name: 'id', dataType: 'integer' }),
     ]);
+  });
+
+  it('rejects malformed existing YAML instead of replacing it with an empty document', () => {
+    expect(() => readExistingSourceDocument('version: 2\nsources:\n  - name: [')).toThrow(
+      InvalidWarehouseSourceYamlError
+    );
   });
 });
