@@ -139,5 +139,3 @@ on conflict (evidence_id) do update set
   source_ref = excluded.source_ref,
   result_state = excluded.result_state,
   recorded_at = now();
-
-refresh materialized view planning_query_store.component_engineering_component_tree_projection;
