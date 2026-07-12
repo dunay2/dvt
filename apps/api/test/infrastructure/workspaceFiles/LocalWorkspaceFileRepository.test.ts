@@ -91,7 +91,7 @@ describe('LocalWorkspaceFileRepository', () => {
     });
   });
 
-  it('returns unchanged when a retried command already produced the requested content', async () => {
+  it('rejects a stale absent revision even when the requested content already exists', async () => {
     const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
     const command = {
       path: 'models/orders.sql',
@@ -104,8 +104,8 @@ describe('LocalWorkspaceFileRepository', () => {
       disposition: 'created',
     });
     await expect(repository.saveFileContent(SCOPE_A, command)).resolves.toMatchObject({
-      kind: 'unchanged',
-      disposition: null,
+      kind: 'conflict',
+      currentContentSha256: createHash('sha256').update(command.content, 'utf8').digest('hex'),
     });
   });
 

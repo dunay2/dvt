@@ -116,6 +116,12 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
     return this.mutationCoordinator.runExclusive(resolved.absolutePath, async () => {
       const current = await this.readOptionalFileContent(scope, resolved.workspacePath);
       const requestedContentSha256 = contentSha256(input.content);
+      if (!matchesExpectedRevision(input.expectedRevision, current?.contentSha256 ?? null)) {
+        return {
+          kind: 'conflict',
+          currentContentSha256: current?.contentSha256 ?? null,
+        };
+      }
       if (current?.contentSha256 === requestedContentSha256) {
         return {
           kind: 'unchanged',
@@ -123,13 +129,6 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
           path: current.path,
           contentSha256: current.contentSha256,
           lastModified: current.lastModified,
-        };
-      }
-
-      if (!matchesExpectedRevision(input.expectedRevision, current?.contentSha256 ?? null)) {
-        return {
-          kind: 'conflict',
-          currentContentSha256: current?.contentSha256 ?? null,
         };
       }
 
