@@ -1,11 +1,13 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { URL } from 'node:url';
-import { promisify } from 'node:util';
-import { gunzip } from 'node:zlib';
 
-import { parseExecutionSelection, parsePlanRef, type StartRunCommand } from '@dvt/contracts';
+import {
+  parseExecutionSelection,
+  parsePlanRef,
+  parseRunExecutionContextRef,
+  type StartRunCommand,
+} from '@dvt/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DbtRunExecutionContextBindingUseCase } from '../../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
@@ -13,7 +15,6 @@ import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/typ
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
 
-const gunzipAsync = promisify(gunzip);
 const tempRoots: string[] = [];
 
 describe('DBT runtime bundle security boundary', () => {
@@ -23,7 +24,7 @@ describe('DBT runtime bundle security boundary', () => {
     );
   });
 
-  it('excludes profiles.yml entries and secret bytes at every path depth', async () => {
+  it('rejects workspace profiles before bundle materialization or engine dispatch', async () => {
     const workspaceRoot = await makeTempRoot('dvt-api-dbt-secret-workspace-');
     const bundleRoot = await makeTempRoot('dvt-api-dbt-secret-bundles-');
     const rootSecret = 'root-profile-secret-sentinel';
@@ -36,23 +37,65 @@ describe('DBT runtime bundle security boundary', () => {
       `password: ${nestedSecret}\n`
     );
 
-    const entries = await executeBindingAndReadBundleEntries({ workspaceRoot, bundleRoot });
+    const execution = await executeBinding({ workspaceRoot, bundleRoot });
 
-    expect([...entries.keys()]).toEqual(
-      expect.arrayContaining(['bundle/dbt_project.yml', 'bundle/models/model_1.sql'])
-    );
-    expect([...entries.keys()]).not.toContain('bundle/profiles.yml');
-    expect([...entries.keys()]).not.toContain('bundle/models/private/profiles.yml');
-    const bundledContent = Buffer.concat([...entries.values()]).toString('utf8');
-    expect(bundledContent).not.toContain(rootSecret);
-    expect(bundledContent).not.toContain(nestedSecret);
+    expect(execution.result).toEqual({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'REJECTED',
+        reason:
+          'dbt workspace profiles.yml requires a server-owned profile reference before runtime execution',
+        cause: 'run_execution_context',
+      },
+    });
+    expect(execution.delegate.execute).not.toHaveBeenCalled();
+    expect(await readdir(bundleRoot)).toEqual([]);
+  });
+
+  it('rejects caller-provided DBT run context references before engine dispatch', async () => {
+    const workspaceRoot = await makeTempRoot('dvt-api-dbt-ref-workspace-');
+    const bundleRoot = await makeTempRoot('dvt-api-dbt-ref-bundles-');
+    await writeWorkspaceFiles(workspaceRoot);
+    const planId = '9'.repeat(64);
+
+    const execution = await executeBinding({
+      workspaceRoot,
+      bundleRoot,
+      runExecutionContextRef: parseRunExecutionContextRef({
+        uri: 'file:///caller/run-context.json',
+        sha256: '7'.repeat(64),
+        schemaVersion: 'v1.0',
+        planId,
+        planVersion: '1.0',
+      }),
+    });
+
+    expect(execution.result).toEqual({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'REJECTED',
+        reason:
+          'caller-provided run execution context references are not accepted for dbt execution',
+        cause: 'run_execution_context',
+      },
+    });
+    expect(execution.delegate.execute).not.toHaveBeenCalled();
+    expect(await readdir(bundleRoot)).toEqual([]);
   });
 });
 
-async function executeBindingAndReadBundleEntries(input: {
+async function executeBinding(input: {
   readonly workspaceRoot: string;
   readonly bundleRoot: string;
-}): Promise<ReadonlyMap<string, Buffer>> {
+  readonly runExecutionContextRef?: StartRunCommand['runExecutionContextRef'];
+}): Promise<{
+  readonly delegate: { readonly execute: ReturnType<typeof vi.fn> };
+  readonly result: Awaited<ReturnType<DbtRunExecutionContextBindingUseCase['execute']>>;
+}> {
   const planId = '9'.repeat(64);
   const delegate = {
     execute: vi.fn(
@@ -74,18 +117,17 @@ async function executeBindingAndReadBundleEntries(input: {
     dbtBundleStore: { kind: 'file' as const, rootPath: input.bundleRoot },
   });
 
-  await useCase.execute(buildCommand(planId), buildContext());
+  const result = await useCase.execute(
+    {
+      ...buildCommand(planId),
+      ...(input.runExecutionContextRef === undefined
+        ? {}
+        : { runExecutionContextRef: input.runExecutionContextRef }),
+    },
+    buildContext()
+  );
 
-  const enrichedCommand = delegate.execute.mock.calls[0]?.[0] as StartRunCommand | undefined;
-  expect(enrichedCommand?.runExecutionContextRef).toBeDefined();
-  const contextBytes = await readFile(new URL(enrichedCommand!.runExecutionContextRef!.uri));
-  const contextPayload = JSON.parse(contextBytes.toString('utf8')) as {
-    pluginContexts: { dbt?: { projectBundleRef?: { uri: string } } };
-  };
-  const bundleUri = contextPayload.pluginContexts.dbt?.projectBundleRef?.uri;
-  expect(bundleUri).toBeDefined();
-  const bundleBytes = await readFile(new URL(bundleUri!));
-  return readTarFileEntries(await gunzipAsync(bundleBytes));
+  return { delegate, result };
 }
 
 async function makeTempRoot(prefix: string): Promise<string> {
@@ -131,7 +173,6 @@ function buildCommand(planId: string): StartRunCommand {
     }),
   };
 }
-
 function buildContext(): ReturnType<typeof buildAuthorizedContext> {
   return {
     ...buildAuthorizedContext('tenant-1'),
@@ -143,30 +184,4 @@ function buildContext(): ReturnType<typeof buildAuthorizedContext> {
     },
     authorizedAt: new Date('2026-07-12T00:00:00.000Z'),
   };
-}
-
-function readTarFileEntries(tarBytes: Buffer): ReadonlyMap<string, Buffer> {
-  const entries = new Map<string, Buffer>();
-  const blockSize = 512;
-  let offset = 0;
-
-  while (offset + blockSize <= tarBytes.byteLength) {
-    const header = tarBytes.subarray(offset, offset + blockSize);
-    const name = readTarString(header.subarray(0, 100));
-    if (name.length === 0) break;
-    const sizeText = readTarString(header.subarray(124, 136)).trim();
-    const size = sizeText.length === 0 ? 0 : Number.parseInt(sizeText, 8);
-    const payloadOffset = offset + blockSize;
-    if (String.fromCharCode(header[156] ?? 0) !== '5') {
-      entries.set(name, tarBytes.subarray(payloadOffset, payloadOffset + size));
-    }
-    offset = payloadOffset + Math.ceil(size / blockSize) * blockSize;
-  }
-
-  return entries;
-}
-
-function readTarString(bytes: Buffer): string {
-  const terminator = bytes.indexOf(0);
-  return bytes.subarray(0, terminator === -1 ? bytes.byteLength : terminator).toString('utf8');
 }
