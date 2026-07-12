@@ -12,7 +12,6 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   authenticationFailed: 'authentication failed',
   clientRunId: 'client runId',
   compatibilityDisabled: 'compatibility disabled',
-  credentialMaterialInDbtBundle: 'credential material in dbt bundle',
   disabledRoute: 'disabled route',
   invalidGraphSource: 'invalid graph source',
   invalidPath: 'invalid path',
@@ -28,6 +27,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   missingScope: 'missing scope',
   missingToken: 'missing token',
   nonEmptyReason: 'non-empty reason',
+  profilesFileInDbtBundle: 'profiles.yml in dbt bundle',
   staleAuthority: 'stale authority',
   tenantMismatch: 'tenant mismatch',
   tenantWorkspaceMismatch: 'tenant/workspace mismatch',
@@ -68,6 +68,8 @@ export const PROTECTED_RUNTIME_TEST_REF = {
     'apps/api/test/application/services/startRunAuthorizedFacade.auth.test.ts',
   startRunDbtRunExecutionContextBinding:
     'apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts',
+  startRunDbtBundleSecurity:
+    'apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.bundleSecurity.test.ts',
   startRunPlanSourcePolicy: 'apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts',
   startRunValidation: 'apps/api/test/entrypoints/http/startRunRoute.validation.test.ts',
   workspaceDraftAuth:

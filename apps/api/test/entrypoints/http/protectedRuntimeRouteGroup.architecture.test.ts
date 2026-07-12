@@ -147,8 +147,8 @@ describe('protected runtime route group architecture', () => {
     );
 
     expect(startRunRail?.negativeCoverage).toContainEqual({
-      case: PROTECTED_RUNTIME_NEGATIVE_CASE.credentialMaterialInDbtBundle,
-      testRefs: [PROTECTED_RUNTIME_TEST_REF.startRunDbtRunExecutionContextBinding],
+      case: PROTECTED_RUNTIME_NEGATIVE_CASE.profilesFileInDbtBundle,
+      testRefs: [PROTECTED_RUNTIME_TEST_REF.startRunDbtBundleSecurity],
     });
   });
 
