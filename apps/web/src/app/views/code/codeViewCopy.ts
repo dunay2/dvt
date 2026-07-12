@@ -9,9 +9,20 @@ export type CodeViewCopy = Readonly<{
   explorerTitle: string;
   editorLoadingMessage: string;
   editorAriaLabelPrefix: string;
-  localBufferTitle: string;
-  localBufferMessage: string;
-  localBufferNote: string;
+  workingTreeSynchronizedLabel: string;
+  workingTreeSynchronizedMessage: string;
+  workingTreeModifiedLabel: string;
+  workingTreeModifiedMessage: string;
+  workingTreeSyncingLabel: string;
+  workingTreeSyncingMessage: string;
+  workingTreeConflictLabel: string;
+  workingTreeConflictMessage: string;
+  workingTreeFailedLabel: string;
+  workingTreeFailedMessage: string;
+  workingTreeReadOnlyLabel: string;
+  workingTreeReadOnlyMessage: string;
+  workingTreeRetryLabel: string;
+  workingTreeReloadLabel: string;
   routeLoadingMessage: string;
   routeEmptyTitle: string;
   routeEmptyMessage: string;
@@ -48,16 +59,41 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
     fallback: 'Loading Monaco editor...',
   },
   editorAriaLabelPrefix: { key: 'code.editorAriaLabelPrefix', fallback: 'Editing' },
-  localBufferTitle: { key: 'code.localBufferTitle', fallback: 'Editable local buffer' },
-  localBufferMessage: {
-    key: 'code.localBufferMessage',
-    fallback: 'Type in Monaco while reviewing workspace files.',
+  workingTreeSynchronizedLabel: {
+    key: 'code.workingTreeSynchronizedLabel',
+    fallback: 'Synchronized',
   },
-  localBufferNote: {
-    key: 'code.localBufferNote',
-    fallback:
-      'Changes in Code stay local; workflow artifact saves use the governed workspace command.',
+  workingTreeSynchronizedMessage: {
+    key: 'code.workingTreeSynchronizedMessage',
+    fallback: 'Working tree matches the editor.',
   },
+  workingTreeModifiedLabel: { key: 'code.workingTreeModifiedLabel', fallback: 'Modified' },
+  workingTreeModifiedMessage: {
+    key: 'code.workingTreeModifiedMessage',
+    fallback: 'Changes are waiting to synchronize.',
+  },
+  workingTreeSyncingLabel: { key: 'code.workingTreeSyncingLabel', fallback: 'Syncing' },
+  workingTreeSyncingMessage: {
+    key: 'code.workingTreeSyncingMessage',
+    fallback: 'Updating the working tree.',
+  },
+  workingTreeConflictLabel: { key: 'code.workingTreeConflictLabel', fallback: 'Conflict' },
+  workingTreeConflictMessage: {
+    key: 'code.workingTreeConflictMessage',
+    fallback: 'Reload the newer working-tree revision before continuing.',
+  },
+  workingTreeFailedLabel: { key: 'code.workingTreeFailedLabel', fallback: 'Update failed' },
+  workingTreeFailedMessage: {
+    key: 'code.workingTreeFailedMessage',
+    fallback: 'The working tree could not be updated.',
+  },
+  workingTreeReadOnlyLabel: { key: 'code.workingTreeReadOnlyLabel', fallback: 'Read only' },
+  workingTreeReadOnlyMessage: {
+    key: 'code.workingTreeReadOnlyMessage',
+    fallback: 'This file cannot be changed.',
+  },
+  workingTreeRetryLabel: { key: 'code.workingTreeRetryLabel', fallback: 'Retry' },
+  workingTreeReloadLabel: { key: 'code.workingTreeReloadLabel', fallback: 'Reload file' },
   routeLoadingMessage: { key: 'code.routeLoadingMessage', fallback: 'Loading workspace files...' },
   routeEmptyTitle: {
     key: 'code.routeEmptyTitle',
@@ -138,14 +174,24 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
 
 const SPANISH_COPY: CodeViewCopy = {
   title: 'Codigo',
-  subtitle: 'Explora archivos del workspace y edita un buffer local en Monaco.',
+  subtitle: 'Explora archivos del workspace y edita el arbol de trabajo en Monaco.',
   explorerTitle: 'Explorador',
   editorLoadingMessage: 'Cargando editor Monaco...',
   editorAriaLabelPrefix: 'Editando',
-  localBufferTitle: 'Buffer local editable',
-  localBufferMessage: 'Escribe en Monaco mientras revisas archivos del workspace.',
-  localBufferNote:
-    'Los cambios en Code son locales; los artefactos de workflow se guardan con el comando gobernado.',
+  workingTreeSynchronizedLabel: 'Sincronizado',
+  workingTreeSynchronizedMessage: 'El arbol de trabajo coincide con el editor.',
+  workingTreeModifiedLabel: 'Modificado',
+  workingTreeModifiedMessage: 'Los cambios esperan sincronizacion.',
+  workingTreeSyncingLabel: 'Sincronizando',
+  workingTreeSyncingMessage: 'Actualizando el arbol de trabajo.',
+  workingTreeConflictLabel: 'Conflicto',
+  workingTreeConflictMessage: 'Recarga la revision mas reciente antes de continuar.',
+  workingTreeFailedLabel: 'Actualizacion fallida',
+  workingTreeFailedMessage: 'No se pudo actualizar el arbol de trabajo.',
+  workingTreeReadOnlyLabel: 'Solo lectura',
+  workingTreeReadOnlyMessage: 'Este archivo no se puede modificar.',
+  workingTreeRetryLabel: 'Reintentar',
+  workingTreeReloadLabel: 'Recargar archivo',
   routeLoadingMessage: 'Cargando archivos del workspace...',
   routeEmptyTitle: 'No hay archivos del workspace disponibles',
   routeEmptyMessage: 'Este workspace todavia no expone archivos para explorar.',

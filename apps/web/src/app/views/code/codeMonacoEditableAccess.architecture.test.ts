@@ -1,4 +1,4 @@
-/** Owned concern: guard Code Monaco editable-buffer access semantics and documentation closure. */
+/** Owned concern: guard Code Monaco working-tree synchronization boundaries. */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -16,28 +16,24 @@ function readRepoDoc(relativePathFromRepo: string): string {
 }
 
 describe('Code Monaco editable access architecture', () => {
-  it('documents local editable buffer semantics without inventing a save command', () => {
+  it('documents working-tree synchronization through the existing command rail', () => {
     const componentGuide = readRepoDoc(
       'docs/architecture/components/web/code-workbench-workspace-files-component.md'
     );
     const userStories = readRepoDoc(
       'docs/architecture/components/web/code-workbench-workspace-files-user-stories.md'
     );
-    const rationale = readRepoDoc(
-      'docs/planning/proposals/monaco-workbench-integration-rationale-20260402.md'
-    );
-    const implementationPlan = readRepoDoc(
-      'docs/planning/proposals/mandatory/frontend-and-ux/f17g-code-monaco-editable-workspace-access-plan-20260520.md'
-    );
+    const authorityDecision = readRepoDoc('docs/adr/ADR-0060-dbt-project-authoring-authority.md');
 
     for (const requiredText of [
-      'CodeEditableBuffer',
+      'CodeWorkingTreeSync',
       'MonacoCodeEditor',
-      'local editable buffer',
+      'project working tree',
       'SaveWorkspaceFileContent',
       'ListWorkspaceFiles',
       'GetWorkspaceFileContent',
-      'Any persisted content must',
+      'expectedRevision',
+      'no Save button',
     ]) {
       expect(componentGuide).toContain(requiredText);
     }
@@ -45,26 +41,23 @@ describe('Code Monaco editable access architecture', () => {
     for (const requiredStory of [
       'CODE-FILES-2',
       'CODE-FILES-6',
-      'editable local-buffer mode',
-      'Monaco accepts typed text',
+      'revision-guarded sync',
+      'no Save UI',
     ]) {
       expect(userStories).toContain(requiredStory);
     }
 
-    expect(rationale).toContain('route-local editable buffer without persistence');
-    expect(rationale).toContain('Code is a Canvas workbench tab');
-    expect(implementationPlan).toContain(
-      'featureId: F17G-CODE-MONACO-EDITABLE-WORKSPACE-ACCESS-20260520'
-    );
-    expect(implementationPlan).toContain('MonacoCodeEditor');
-    expect(implementationPlan).toContain('Semantic fitness function');
+    expect(authorityDecision).toContain('It is not a user-facing `Save` action');
+    expect(authorityDecision).toContain('does not imply staging, committing, pushing');
   });
 
-  it('keeps Code editable, Artifacts read-only, and persistence outside the route', () => {
+  it('keeps Code editable and delegates conditional writes to one orchestrator', () => {
     const codeView = readAppSource('views/CodeView.tsx');
     const codeEditor = readAppSource('components/monaco/MonacoCodeEditor.tsx');
     const codeViewer = readAppSource('components/monaco/MonacoCodeViewer.tsx');
     const codeSurface = readAppSource('components/monaco/MonacoCodeSurface.tsx');
+    const workingTreeSync = readAppSource('views/code/useCodeWorkingTreeSync.ts');
+    const workingTreeStatus = readAppSource('views/code/CodeWorkingTreeStatus.tsx');
     const canvasShell = readAppSource('views/canvas/CanvasShell.tsx');
     const dbtContributions = readAppSource('plugins/dbt/dbtContributions.ts');
     const cypressSpec = readFileSync(
@@ -77,6 +70,8 @@ describe('Code Monaco editable access architecture', () => {
       ['components/monaco/MonacoCodeEditor.tsx', codeEditor],
       ['components/monaco/MonacoCodeViewer.tsx', codeViewer],
       ['components/monaco/MonacoCodeSurface.tsx', codeSurface],
+      ['views/code/useCodeWorkingTreeSync.ts', workingTreeSync],
+      ['views/code/CodeWorkingTreeStatus.tsx', workingTreeStatus],
     ] as const) {
       expect(source.trimStart().startsWith('/** Owned concern:'), modulePath).toBe(true);
     }
@@ -88,14 +83,21 @@ describe('Code Monaco editable access architecture', () => {
     expect(codeView).toContain('MonacoCodeEditor');
     expect(codeView).toContain('publishRouteBootstrap = true');
     expect(codeView).toContain('resolveCodeViewCopy');
-    expect(codeView).toContain('useCodeEditableBuffer');
+    expect(codeView).toContain('useCodeWorkingTreeSync');
+    expect(codeView).toContain('CodeWorkingTreeStatus');
     expect(codeView).not.toContain('useState<Record<string, string>>');
+    expect(codeView).not.toContain('useCodeEditableBuffer');
     expect(codeView).not.toContain('MonacoCodeViewer');
     expect(codeView).not.toContain('function flattenFiles');
     expect(codeView).not.toContain('function firstFilePath');
     expect(codeView).not.toContain('Editing ');
     expect(codeView).not.toContain('SaveWorkspaceFileContent');
     expect(codeView).not.toContain('saveFileContent');
+
+    expect(workingTreeSync).toMatch(/commandPort\s*\.saveFileContent/);
+    expect(workingTreeSync).toContain("kind: 'content_sha256'");
+    expect(workingTreeSync).toContain('WorkspaceFileRevisionConflictError');
+    expect(workingTreeStatus).not.toContain('Save');
 
     expect(codeEditor).toContain("lazy(() => import('./MonacoCodeSurface'))");
     expect(codeEditor).toContain('readOnly={false}');
@@ -115,9 +117,10 @@ describe('Code Monaco editable access architecture', () => {
     expect(canvasShell).toContain('<CodeWorkbench publishRouteBootstrap={false} />');
 
     expect(cypressSpec).toContain(
-      'Owned concern: prove retired Canvas Code workbench routes redirect to Graph without file queries'
+      'Owned concern: prove retired Code routes and contextual Canvas Code working-tree synchronization'
     );
-    expect(cypressSpec).toContain("visitWithE2eWorkspaceSession('/canvas/code')");
-    expect(cypressSpec).toContain("cy.location('pathname').should('eq', '/canvas')");
+    expect(cypressSpec).toContain("visitWithE2eWorkspaceSession('/canvas')");
+    expect(cypressSpec).toContain('canvas-workspace-open-project-code-command');
+    expect(cypressSpec).toContain('code-working-tree-status');
   });
 });

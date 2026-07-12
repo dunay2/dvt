@@ -21,8 +21,9 @@ own implementation details and tests.
   context through `GetEffectiveWorkspaceContext`.
 - `US-F27-003`: as an internal tester, I need Canvas graph truth through
   `GetWorkspaceGraphDraft` and `SaveWorkspaceGraphDraft`.
-- `US-F27-004`: as an internal tester, I need read-only Code inspection through
-  `ListWorkspaceFiles` and `GetWorkspaceFileContent`.
+- `US-F27-004`: as an internal tester, I need contextual Code inspection and
+  revision-guarded working-tree editing through `ListWorkspaceFiles`,
+  `GetWorkspaceFileContent`, and `SaveWorkspaceFileContent`.
 - `US-F27-005`: as an internal tester, I need plan/run controls to explain
   enabled or blocked posture through `ObservePlanRunReadiness`.
 - `US-F27-006`: as an internal tester, I need consistent recovery language

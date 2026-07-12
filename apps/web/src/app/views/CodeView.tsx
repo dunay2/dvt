@@ -9,7 +9,7 @@ import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
 } from '../components/workbench/RouteWorkbenchFrame';
-import { WorkbenchDegradedState } from '../components/workbench/state/WorkbenchStates';
+import { useWorkspaceFileContentCommandPort } from '../services/AppServicesContext';
 import {
   useWorkspaceFileContentQuery,
   useWorkspaceFileHistoryQuery,
@@ -27,6 +27,7 @@ import {
 } from './code/CodeStateViews';
 import { resolveCodeViewCopy } from './code/codeViewCopy';
 import { CodeFileHistoryPanel } from './code/CodeFileHistoryPanel';
+import { CodeWorkingTreeStatus } from './code/CodeWorkingTreeStatus';
 import {
   hasCodeWorkspaceFilePath,
   hasCodeWorkspaceFiles,
@@ -35,7 +36,7 @@ import {
 } from './code/codeViewFileSelection';
 import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
 import FileTreePanel from './code/FileTreePanel';
-import { useCodeEditableBuffer } from './code/useCodeEditableBuffer';
+import { useCodeWorkingTreeSync } from './code/useCodeWorkingTreeSync';
 
 const CODE_GRAPH_FILE_SCOPE_VIEW_ID = 'canvas-code-file-scope';
 
@@ -44,6 +45,7 @@ export default function CodeView({
   routeBootstrapId = CANVAS_ROUTE_ID,
 }: Readonly<{ publishRouteBootstrap?: boolean; routeBootstrapId?: string }> = {}) {
   const copy = resolveCodeViewCopy();
+  const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const graphSnapshotQuery = useWorkspaceGraphForViewQuery(CODE_GRAPH_FILE_SCOPE_VIEW_ID);
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
@@ -80,7 +82,38 @@ export default function CodeView({
         selectedPath: resolvedPath,
       })
     : null;
-  const editableBuffer = useCodeEditableBuffer(fileContentQuery.data);
+  const workingTreeSync = useCodeWorkingTreeSync({
+    file: fileContentQuery.data,
+    commandPort: workspaceFileContentCommand,
+  });
+  const workingTreeStatusCopy = {
+    synchronized: {
+      label: copy.workingTreeSynchronizedLabel,
+      message: copy.workingTreeSynchronizedMessage,
+    },
+    modified: {
+      label: copy.workingTreeModifiedLabel,
+      message: copy.workingTreeModifiedMessage,
+    },
+    syncing: {
+      label: copy.workingTreeSyncingLabel,
+      message: copy.workingTreeSyncingMessage,
+    },
+    conflict: {
+      label: copy.workingTreeConflictLabel,
+      message: copy.workingTreeConflictMessage,
+    },
+    failed: {
+      label: copy.workingTreeFailedLabel,
+      message: copy.workingTreeFailedMessage,
+    },
+    read_only: {
+      label: copy.workingTreeReadOnlyLabel,
+      message: copy.workingTreeReadOnlyMessage,
+    },
+    retryLabel: copy.workingTreeRetryLabel,
+    reloadLabel: copy.workingTreeReloadLabel,
+  } as const;
 
   usePublishedRouteBootstrap(
     routeBootstrapId,
@@ -123,9 +156,9 @@ export default function CodeView({
       ariaLabel={`${copy.editorAriaLabelPrefix} ${fileContentQuery.data.name}`}
       language={fileContentQuery.data.language}
       loadingLabel={copy.editorLoadingMessage}
-      onChange={editableBuffer.updateValue}
+      onChange={workingTreeSync.updateValue}
       path={fileContentQuery.data.path}
-      value={editableBuffer.value}
+      value={workingTreeSync.value}
     />
   );
 
@@ -133,6 +166,7 @@ export default function CodeView({
     <RouteWorkbenchFrame
       scroll={false}
       bodyClassName="flex min-h-0 flex-1"
+      presentationMode={publishRouteBootstrap ? 'route' : 'embedded'}
       header={
         <div className={routeWorkbenchHeaderBandClassName}>
           <ViewHeader
@@ -150,13 +184,17 @@ export default function CodeView({
             tree={graphScopedWorkspaceFileTree}
             selectedPath={resolvedPath}
             onSelect={(entry) => {
-              if (entry.kind === 'file') {
-                setSelectedPath(entry.path);
+              if (entry.kind === 'file' && entry.path !== resolvedPath) {
+                void workingTreeSync.flush().then((flushed) => {
+                  if (flushed) {
+                    setSelectedPath(entry.path);
+                  }
+                });
               }
             }}
           />
         ),
-        rightPanel: (
+        rightPanel: publishRouteBootstrap ? (
           <CodeFileHistoryPanel
             copy={copy}
             selectedPath={resolvedPath}
@@ -164,17 +202,21 @@ export default function CodeView({
             isLoading={fileHistoryQuery.isPending}
             error={fileHistoryQuery.error instanceof Error ? fileHistoryQuery.error : null}
           />
-        ),
+        ) : undefined,
         primarySurface: (
           <div className="min-w-0 flex h-full flex-1 flex-col">
-            <div className="shrink-0 p-4 pb-0">
-              <WorkbenchDegradedState
-                dataSlot="code-local-buffer-state"
-                title={copy.localBufferTitle}
-                message={copy.localBufferMessage}
-                note={copy.localBufferNote}
-              />
-            </div>
+            <CodeWorkingTreeStatus
+              phase={workingTreeSync.phase}
+              copy={workingTreeStatusCopy}
+              onRetry={workingTreeSync.retry}
+              onReload={() => {
+                void fileContentQuery.refetch().then((result) => {
+                  if (result.data) {
+                    workingTreeSync.loadAuthoritative(result.data);
+                  }
+                });
+              }}
+            />
             <div className="min-h-0 flex-1 p-4">{previewPane}</div>
           </div>
         ),

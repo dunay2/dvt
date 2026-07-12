@@ -59,15 +59,15 @@ Out of scope:
 
 ## Route Authority Model
 
-| Surface               | Role                                 | Rule                                                                                   |
-| --------------------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
-| This plan             | Route-level planning authority       | Owns `F-27` routing and alpha closure prerequisites.                                   |
-| Internal alpha review | Route review and gap model           | Names the route stages, current proof posture, and remaining gaps.                     |
-| Architecture view     | Route boundary lens                  | Explains route, rail, state, evidence, and risk boundaries without creating a backlog. |
-| Critique v3           | Accepted intake history              | Records source-grounded findings already absorbed into the route review and this plan. |
-| Workspace-files plan  | Child-slice implementation authority | Owns only `ListWorkspaceFiles` and `GetWorkspaceFileContent` work.                     |
-| Lane E YAML           | Primary execution registry           | Owns the user-visible route closure task.                                              |
-| Lane C YAML           | Runtime safety dependency registry   | Names protected runtime and admission inputs consumed by the route.                    |
+| Surface                   | Role                                 | Rule                                                                                                        |
+| ------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| This plan                 | Route-level planning authority       | Owns `F-27` routing and alpha closure prerequisites.                                                        |
+| Internal alpha review     | Route review and gap model           | Names the route stages, current proof posture, and remaining gaps.                                          |
+| Architecture view         | Route boundary lens                  | Explains route, rail, state, evidence, and risk boundaries without creating a backlog.                      |
+| Critique v3               | Accepted intake history              | Records source-grounded findings already absorbed into the route review and this plan.                      |
+| Workspace-files component | Child-slice implementation authority | Owns `ListWorkspaceFiles`, `GetWorkspaceFileContent`, and revision-guarded `SaveWorkspaceFileContent` work. |
+| Lane E YAML               | Primary execution registry           | Owns the user-visible route closure task.                                                                   |
+| Lane C YAML               | Runtime safety dependency registry   | Names protected runtime and admission inputs consumed by the route.                                         |
 
 ## Command And Query Rail Binding
 
@@ -82,6 +82,7 @@ command or query rail.
 | `SaveWorkspaceGraphDraft`           | command | Workspace graph drafting             | `WorkspaceGraphDraft` aggregate        | Canvas             |
 | `ListWorkspaceFiles`                | query   | Operational evidence read models     | `WorkspaceFileTree`                    | Code tab           |
 | `GetWorkspaceFileContent`           | query   | Operational evidence read models     | `WorkspaceFileContent`                 | Code tab           |
+| `SaveWorkspaceFileContent`          | command | Project workspace I/O                | `WorkspaceFileContent`                 | Code tab           |
 | `ObservePlanRunReadiness`           | query   | Runtime admission and plan readiness | `PlanRunReadinessReadModel`            | Plan/run readiness |
 | `MapRouteRecoveryState`             | query   | Web route presentation               | `RouteRecoveryState` read model        | Recovery states    |
 
@@ -102,16 +103,16 @@ reuse existing rails or update the catalog before code.
 
 ## Required Child-Slice Closure
 
-| Stage              | Required owner before implementation                   | Minimum closure evidence                                                                    |
-| ------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Startup gate       | Lane E, with runtime readiness input from Lane C       | Stable startup terminal and blocker states plus browser proof.                              |
-| Workspace context  | Lane E, with protected runtime scope input from Lane C | Tenant, project, and environment visible and fail-closed.                                   |
-| Canvas             | Lane E, with `TF-C4` protected draft input             | Draggable graph, draft retry/recovery, and no local persistence authority.                  |
-| Code tab           | Existing workspace-files child plan                    | Tree, preview, empty, unavailable, unauthorized, not-found, and filesystem safety proofs.   |
-| Plan/run readiness | Lane E plus Lane C/A inputs                            | Distinct copy for integrity, backpressure, capability, adapter, and authorization blockers. |
-| Recovery states    | Lane E                                                 | Source-owned vocabulary and tests across startup, Canvas, Code, and plan/run.               |
-| Alpha cadence      | Product / Architecture                                 | Tester audience, duration, entry date, exit owner, and extension rules.                     |
-| Risk triage        | Architecture / Docs                                    | Route-stage triage of `docs/risk-register/quality/**` with inclusion/exclusion rationale.   |
+| Stage              | Required owner before implementation                   | Minimum closure evidence                                                                                                              |
+| ------------------ | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Startup gate       | Lane E, with runtime readiness input from Lane C       | Stable startup terminal and blocker states plus browser proof.                                                                        |
+| Workspace context  | Lane E, with protected runtime scope input from Lane C | Tenant, project, and environment visible and fail-closed.                                                                             |
+| Canvas             | Lane E, with `TF-C4` protected draft input             | Draggable graph, draft retry/recovery, and no local persistence authority.                                                            |
+| Code tab           | Workspace-files component plus ADR-0060                | Tree, preview, revision-guarded synchronization, conflict, empty, unavailable, unauthorized, not-found, and filesystem safety proofs. |
+| Plan/run readiness | Lane E plus Lane C/A inputs                            | Distinct copy for integrity, backpressure, capability, adapter, and authorization blockers.                                           |
+| Recovery states    | Lane E                                                 | Source-owned vocabulary and tests across startup, Canvas, Code, and plan/run.                                                         |
+| Alpha cadence      | Product / Architecture                                 | Tester audience, duration, entry date, exit owner, and extension rules.                                                               |
+| Risk triage        | Architecture / Docs                                    | Route-stage triage of `docs/risk-register/quality/**` with inclusion/exclusion rationale.                                             |
 
 ## Implementation Order
 
@@ -221,6 +222,9 @@ commandQueryRails:
     dddOwner: WorkspaceFileTree
   - name: GetWorkspaceFileContent
     type: query
+    dddOwner: WorkspaceFileContent
+  - name: SaveWorkspaceFileContent
+    type: command
     dddOwner: WorkspaceFileContent
   - name: ObservePlanRunReadiness
     type: query

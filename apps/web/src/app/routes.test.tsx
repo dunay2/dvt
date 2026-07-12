@@ -422,6 +422,9 @@ describe('app routes', () => {
 
     expect(findChildRouteByPath(rootRoute, 'canvas/:workbenchTab')).toBeUndefined();
     expect(retiredWorkbenchRedirect?.id).toBe('dbt.canvas.retired-workbench-redirect');
+    expect(retiredWorkbenchRedirect?.handle).toMatchObject({
+      routeBootstrap: { mode: 'static' },
+    });
     expect(retiredWorkbenchRedirect?.element).toBeTruthy();
   });
 

@@ -63,6 +63,26 @@ an embedded full Git client.
 - `Diff` owns revision comparison and rendered review;
 - no left-nav Git explorer, staging model, or repository console is introduced.
 
+## Working Tree Versus Git Lifecycle
+
+The Code workbench automatically synchronizes accepted editor changes into the
+scoped project working tree through the existing revision-guarded
+`SaveWorkspaceFileContent` command. This is workspace-file persistence, not a
+user-facing Save workflow and not a Git operation.
+
+The UI must distinguish these facts:
+
+```text
+modified -> syncing -> synchronized
+                    -> conflict
+                    -> failed
+```
+
+`synchronized` means only that the editor value matches the working-tree file.
+It does not mean staged, committed, pushed, or synchronized with a remote.
+Repository operations remain unavailable until the planned project source
+control rails have real server-side connector implementations.
+
 ## UX Rules
 
 - summary and severity should appear before raw diff detail;
@@ -88,13 +108,15 @@ and editor primitives, not to build a bespoke diff engine from scratch.
 ## Current Constraints
 
 - the current route is still early and partially mock-backed;
-- `Code` now has governed read-only treatment, but still stops at browsing and
-  has no governed history panel yet;
+- `Code` has file browsing and governed file history, while automatic
+  working-tree synchronization is delivered as a separate revision-guarded
+  component slice;
 - route-root and preview-error states are explicit now, but file-history review
   and handoff controls still belong to the later `F-23` slice;
 - `Diff` now has governed route-root states, but file-history handoff and richer
   compare presets still belong to `F-23`;
-- there is no staged/unstaged/conflict workbench yet;
+- workspace revision conflicts are distinct from Git merge conflicts;
+- there is no staged/unstaged or Git merge-conflict workbench yet;
 - change review is present, but repository operations are not yet modeled as a
   full frontend subsystem.
 

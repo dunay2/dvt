@@ -1,4 +1,4 @@
-/** Owned concern: lazy-load the Monaco code surface behind a route-local editable buffer API. */
+/** Owned concern: lazy-load the Monaco code surface behind an editable working-tree API. */
 import { Suspense, lazy } from 'react';
 
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';

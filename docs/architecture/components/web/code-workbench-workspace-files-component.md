@@ -10,10 +10,10 @@ planning_type: architecture
 
 ## Purpose
 
-This component governs the Code tab file explorer, file content query flow,
-route-local Monaco editor buffer, and the shared workspace-file persistence rail
-used by product workflows that must publish project artifacts before preview or
-execution.
+This component governs the Code workbench file explorer, file content query
+flow, Monaco working-tree buffer, and the shared workspace-file mutation rail
+used by both editor synchronization and product workflows that publish project
+artifacts before preview or execution.
 
 The component exists because the web Code route consumes workspace file queries
 and product workflows can persist generated workspace artifacts through the live
@@ -31,9 +31,10 @@ Use with:
 ## Owned Concern
 
 Owned concern: expose tenant/project-scoped workspace files as operational
-evidence for the Code workbench, let the browser hold a local editable buffer
-for the selected file, and provide the governed `SaveWorkspaceFileContent`
-command for workflow artifacts that must be persisted before backend admission.
+evidence for the Code workbench, synchronize selected-file edits into the
+project working tree through revision-guarded writes, and provide the governed
+`SaveWorkspaceFileContent` command for internal file mutations that must be
+persisted before backend admission.
 
 The component does not own project creation, graph draft mutation, or
 authorization policy design. It consumes the protected runtime authorization
@@ -51,9 +52,9 @@ workspace file command rail.
 
 ### Commands
 
-| Command                    | Type    | Input                                                                | Output                 | Failure states                                                   |
-| -------------------------- | ------- | -------------------------------------------------------------------- | ---------------------- | ---------------------------------------------------------------- |
-| `SaveWorkspaceFileContent` | command | `tenantId`, `projectId`, `environmentId`, `WorkspacePath`, `content` | `WorkspaceFileContent` | unauthenticated, unauthorized, missing scope, invalid path, size |
+| Command                    | Type    | Input                                                                                    | Output                     | Failure states                                                                      |
+| -------------------------- | ------- | ---------------------------------------------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------- |
+| `SaveWorkspaceFileContent` | command | `tenantId`, `projectId`, `environmentId`, `WorkspacePath`, `content`, `expectedRevision` | `WorkspaceFileSaveReceipt` | unauthenticated, unauthorized, missing scope, invalid path, size, revision conflict |
 
 ### HTTP Adapter
 
@@ -77,12 +78,13 @@ semantics.
 
 ### Web Presentation API
 
-| Surface              | Type                 | Responsibility                                                          |
-| -------------------- | -------------------- | ----------------------------------------------------------------------- |
-| `CodeEditableBuffer` | presentation model   | Holds unsaved editor text per selected workspace path in the browser.   |
-| `CodeFileSelection`  | read-model projector | Resolves the first selectable file from the authorized workspace tree.  |
-| `MonacoCodeEditor`   | presentation gateway | Opens the shared Monaco surface in editable mode for Code.              |
-| `MonacoCodeViewer`   | presentation gateway | Opens the shared Monaco surface in read-only mode for Artifacts/review. |
+| Surface                 | Type                 | Responsibility                                                                                                |
+| ----------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `CodeWorkingTreeSync`   | presentation model   | Holds editor text and synchronizes the latest revision-guarded value per selected workspace path.             |
+| `CodeWorkingTreeStatus` | presentation view    | Renders honest modified, syncing, synchronized, conflict, failed, or read-only posture without a Save action. |
+| `CodeFileSelection`     | read-model projector | Resolves the first selectable file from the authorized workspace tree.                                        |
+| `MonacoCodeEditor`      | presentation gateway | Opens the shared Monaco surface in editable mode for Code.                                                    |
+| `MonacoCodeViewer`      | presentation gateway | Opens the shared Monaco surface in read-only mode for Artifacts/review.                                       |
 
 ### Initial Selection Policy
 
@@ -94,16 +96,17 @@ tree.
 
 ## DDD Model
 
-| Object                     | Kind               | Responsibility                                                         |
-| -------------------------- | ------------------ | ---------------------------------------------------------------------- |
-| `WorkspaceFileTree`        | read model         | File hierarchy under an authorized workspace root.                     |
-| `WorkspaceFileContent`     | read model         | Text content, language, path, name, and last modified metadata.        |
-| `WorkspacePath`            | value object       | Normalized relative path; rejects absolute paths and parent traversal. |
-| `WorkspaceFileReadPolicy`  | policy             | Allows only authenticated, tenant/project/environment-scoped reads.    |
-| `WorkspaceFileWritePolicy` | policy             | Allows only authenticated, tenant/project/environment-scoped writes.   |
-| `WorkspaceFileRepository`  | outbound port      | Lists files and reads content from the configured backing store.       |
-| `CodeFileSelection`        | read model         | Keeps file-tree traversal out of route rendering components.           |
-| `CodeEditableBuffer`       | presentation model | Unsaved browser-local editor text keyed by workspace path.             |
+| Object                     | Kind               | Responsibility                                                                            |
+| -------------------------- | ------------------ | ----------------------------------------------------------------------------------------- |
+| `WorkspaceFileTree`        | read model         | File hierarchy under an authorized workspace root.                                        |
+| `WorkspaceFileContent`     | read model         | Text content, language, path, name, revision, and last modified metadata.                 |
+| `WorkspaceFileRevision`    | value object       | Content SHA used as the mandatory compare-and-swap precondition.                          |
+| `WorkspacePath`            | value object       | Normalized relative path; rejects absolute paths and parent traversal.                    |
+| `WorkspaceFileReadPolicy`  | policy             | Allows only authenticated, tenant/project/environment-scoped reads.                       |
+| `WorkspaceFileWritePolicy` | policy             | Allows only authenticated, tenant/project/environment-scoped writes.                      |
+| `WorkspaceFileRepository`  | outbound port      | Lists files and reads content from the configured backing store.                          |
+| `CodeFileSelection`        | read model         | Keeps file-tree traversal out of route rendering components.                              |
+| `CodeWorkingTreeSync`      | presentation model | Serializes debounced file mutations and preserves later edits while a write is in flight. |
 
 ## Invariants
 
@@ -114,8 +117,18 @@ tree.
 - Invalid path maps to `invalid_workspace_path`.
 - The repository adapter rejects parent traversal, absolute paths, unsupported
   file types, and oversized files.
-- The Code workbench may edit a browser-local buffer. Any persisted content must
-  use `SaveWorkspaceFileContent` and must not bypass the scoped command rail.
+- The Code workbench automatically synchronizes edited content through
+  `SaveWorkspaceFileContent`; it must not expose a second manual Save lifecycle
+  or bypass the scoped command rail.
+- Every synchronization supplies the SHA returned by
+  `GetWorkspaceFileContent`; stale writes become an explicit conflict and never
+  overwrite the current workspace file.
+- Edits made while a write is in flight remain modified and are synchronized in
+  a subsequent serialized write.
+- Selecting another file flushes the current modified buffer before changing
+  selection. A failed or conflicting flush keeps the current file selected.
+- `synchronized` means working-tree content matches the editor. It does not mean
+  staged, committed, pushed, or remotely synchronized.
 - Initial Code file selection must prioritize workflow artifacts under
   `pipelines/` so the Code tab opens the artifact that matches the visible graph
   before lower-context project configuration files.
@@ -137,10 +150,15 @@ stateDiagram-v2
   TreeLoaded --> LoadingContent: first or selected file exists
   LoadingContent --> PreviewLoaded: GetWorkspaceFileContent succeeds
   LoadingContent --> PreviewError: file missing or invalid
-  PreviewLoaded --> DirtyLocalBuffer: user types in Monaco
-  PreviewLoaded --> PersistingFile: command saves workspace artifact
-  PersistingFile --> PreviewLoaded: SaveWorkspaceFileContent succeeds
-  DirtyLocalBuffer --> PreviewLoaded: user reloads or selects another file
+  PreviewLoaded --> Modified: user types in Monaco
+  Modified --> Syncing: debounce expires or selection requests a flush
+  Syncing --> Synchronized: SaveWorkspaceFileContent succeeds and no newer edit exists
+  Syncing --> Modified: save succeeds while a newer edit exists
+  Syncing --> Conflict: expected revision is stale
+  Syncing --> SyncFailed: command fails
+  Conflict --> LoadingContent: user reloads authoritative content
+  SyncFailed --> Modified: user edits or retries
+  Synchronized --> LoadingContent: user selects another file
   PreviewLoaded --> LoadingContent: user selects another file
   PreviewError --> LoadingContent: user selects another file
 ```
@@ -154,7 +172,9 @@ flowchart LR
   Workflow{"Has pipelines/*.yaml|yml?"}
   WorkflowFile["Open workflow artifact"]
   FirstFile["Open first reachable file"]
-  Editor["MonacoCodeEditor local buffer"]
+  Editor["MonacoCodeEditor working-tree buffer"]
+  Sync["CodeWorkingTreeSync"]
+  Command["SaveWorkspaceFileContent with expected SHA"]
 
   Tree --> Flatten
   Flatten --> Workflow
@@ -162,6 +182,8 @@ flowchart LR
   Workflow -->|no| FirstFile
   WorkflowFile --> Editor
   FirstFile --> Editor
+  Editor --> Sync
+  Sync --> Command
 ```
 
 ## Component Diagram
@@ -192,7 +214,8 @@ flowchart TB
   CodeView --> Selection
   CodeView --> Editor
   Queries --> FileQueryPort
-  CodeView -. local buffer only .-> FileCommandPort
+  CodeView --> Sync["CodeWorkingTreeSync"]
+  Sync --> FileCommandPort
   FileQueryPort --> ApiWorkspacePorts
   FileCommandPort --> ApiWorkspacePorts
   ApiWorkspacePorts --> Routes
@@ -208,16 +231,17 @@ flowchart TB
 
 ## Consumers
 
-| Consumer                | Uses                                                                 | Rule                                                                  |
-| ----------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `CodeView`              | file tree, content queries, local buffer, `RouteWorkbenchFrameSlots` | May render loading, empty, error, local edit, and preview states.     |
-| `useCodeEditableBuffer` | selected file content                                                | Owns browser-local edit state keyed by workspace path.                |
-| `FileTreePanel`         | localized title, selected path, entries                              | Must render tree controls only; it does not own Code copy or queries. |
-| `resolveCodeViewCopy`   | locale                                                               | Supplies Code route copy; Spanish text exists only in the locale map. |
-| `Diff` views            | selected file content                                                | Must keep read-only posture and canonical error handling.             |
-| Artifact views          | workspace tree                                                       | Must not infer authorization from file presence.                      |
-| Canvas preview/run path | `SaveWorkspaceFileContent`                                           | Must persist graph artifacts before protected plan preview.           |
-| Cypress Code happy path | browser proof                                                        | Must prove real route behavior in live API mode.                      |
+| Consumer                 | Uses                                                                      | Rule                                                                              |
+| ------------------------ | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `CodeView`               | file tree, content queries, working-tree sync, `RouteWorkbenchFrameSlots` | May render loading, empty, error, edit, synchronization, and history states.      |
+| `useCodeWorkingTreeSync` | selected file content and workspace command port                          | Owns debounced serialized synchronization, conflict posture, and selection flush. |
+| `CodeWorkingTreeStatus`  | synchronization presentation model                                        | Renders status only and owns no command or persistence decision.                  |
+| `FileTreePanel`          | localized title, selected path, entries                                   | Must render tree controls only; it does not own Code copy or queries.             |
+| `resolveCodeViewCopy`    | locale                                                                    | Supplies Code route copy; Spanish text exists only in the locale map.             |
+| `Diff` views             | selected file content                                                     | Must keep read-only posture and canonical error handling.                         |
+| Artifact views           | workspace tree                                                            | Must not infer authorization from file presence.                                  |
+| Canvas preview/run path  | `SaveWorkspaceFileContent`                                                | Must persist graph artifacts before protected plan preview.                       |
+| Cypress Code happy path  | browser proof                                                             | Must prove real route behavior in live API mode.                                  |
 
 ## Architecture Test Requirement
 
@@ -235,10 +259,16 @@ Add a semantic architecture test that checks:
   of owning file-tree traversal logic, and `CodeFileSelection` prefers
   `pipelines/*.yaml|yml` workflow artifacts before generic project config
   files;
-- `CodeView` delegates local edit storage to `CodeEditableBuffer` instead of
-  owning a path-keyed buffer map inline;
+- `CodeView` delegates edit state and command orchestration to
+  `CodeWorkingTreeSync` instead of owning timers, revisions, or mutation state
+  inline;
+- the synchronization model proves that edits arriving during an in-flight
+  write are not lost and stale revisions stop automatic writes;
+- the presentation contains no Save button and does not label a working-tree
+  write as a Git commit or push;
 - `CodeView` delegates route frame semantics to `RouteWorkbenchFrameSlots` so
-  file navigation is `leftPanel` and local-buffer preview is `primarySurface`;
+  file navigation is `leftPanel` and the revision-guarded editor is
+  `primarySurface`;
 - Code bootstrap/error tests assert resolved copy objects, not fixed-language
   literals outside the locale catalog tests;
 - `saveFileContent` is wired only to the scoped live API write route.
@@ -257,6 +287,9 @@ Allowed surfaces:
 - `apps/api/test/architecture/**`
 - `apps/web/src/app/services/workspace/**`
 - `apps/web/src/app/views/CodeView.test.tsx`
+- `apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts`
+- `apps/web/src/app/views/code/useCodeWorkingTreeSync.ts`
+- `apps/web/src/app/views/code/CodeWorkingTreeStatus.tsx`
 - `apps/web/cypress/e2e/code/**` or existing Cypress workbench path
 - this component doc and associated generated governance docs
 

@@ -4,7 +4,12 @@ import { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import type { IWorkspaceFilesQueryPort, WorkspaceGraphSnapshot } from '../ports/workspace';
+import type {
+  IWorkspaceFileContentCommandPort,
+  IWorkspaceFilesQueryPort,
+  WorkspaceFileSaveReceipt,
+  WorkspaceGraphSnapshot,
+} from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
 import CodeView from './CodeView';
@@ -43,7 +48,11 @@ function buildWorkspaceFilesQueryPort(
         kind: 'directory',
         children: [
           { path: 'models/staging/stg_orders.sql', name: 'stg_orders.sql', kind: 'file' },
-          { path: 'README.md', name: 'README.md', kind: 'file' },
+          {
+            path: 'models/staging/stg_customers.sql',
+            name: 'stg_customers.sql',
+            kind: 'file',
+          },
         ],
       },
     ],
@@ -78,6 +87,7 @@ describe('CodeView', () => {
     container?.remove();
     root = null;
     container = null;
+    vi.useRealTimers();
   });
 
   async function waitFor(predicate: () => boolean): Promise<void> {
@@ -115,7 +125,10 @@ describe('CodeView', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
   }
 
-  async function renderCodeView(): Promise<void> {
+  async function renderCodeView(
+    workspaceFileContentCommand?: IWorkspaceFileContentCommandPort,
+    publishRouteBootstrap = true
+  ): Promise<void> {
     await act(async () => {
       root?.render(
         <QueryClientProvider client={createTestQueryClient()}>
@@ -124,10 +137,11 @@ describe('CodeView', () => {
             overrides={{
               ...createAppServicesTestOverrides(),
               workspaceFilesQuery: buildWorkspaceFilesQueryPort(),
+              ...(workspaceFileContentCommand ? { workspaceFileContentCommand } : {}),
             }}
           >
             {' '}
-            <CodeView />{' '}
+            <CodeView publishRouteBootstrap={publishRouteBootstrap} />{' '}
           </AppServicesProvider>{' '}
         </QueryClientProvider>
       );
@@ -146,15 +160,15 @@ describe('CodeView', () => {
     const currentContainer = getContainer();
     expect(currentContainer.textContent).toContain('stg_orders.sql');
     expect(
-      currentContainer.querySelector('[data-slot="code-local-buffer-state"]')?.textContent
-    ).toContain(copy.localBufferTitle);
-    expect(currentContainer.textContent).toContain(copy.localBufferNote);
+      currentContainer.querySelector('[data-slot="code-working-tree-status"]')?.textContent
+    ).toContain(copy.workingTreeSynchronizedLabel);
+    expect(currentContainer.textContent).toContain(copy.workingTreeSynchronizedMessage);
     expect(
       currentContainer.querySelector('[data-slot="route-workbench-left-panel"]')?.textContent
     ).toContain(copy.explorerTitle);
     expect(
       currentContainer.querySelector('[data-slot="route-workbench-primary-surface"]')?.textContent
-    ).toContain(copy.localBufferTitle);
+    ).toContain(copy.workingTreeSynchronizedLabel);
     expect(
       currentContainer.querySelector('[data-slot="route-workbench-right-panel"]')?.textContent
     ).toContain(copy.historyTitle);
@@ -173,19 +187,106 @@ describe('CodeView', () => {
       if (!editor) {
         throw new Error('expected Monaco editor test double');
       }
-      editor.value = 'select 1 as edited_value';
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype,
+        'value'
+      )?.set;
+      valueSetter?.call(editor, 'select 1 as edited_value');
       editor.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
     expect(editor?.value).toBe('select 1 as edited_value');
   }
 
-  it('renders the workspace tree and previews the first file', async () => {
+  it('renders the workspace tree and synchronizes edited content without a Save action', async () => {
+    const saveFileContent = vi.fn(async (): Promise<WorkspaceFileSaveReceipt> => ({
+      kind: 'saved',
+      disposition: 'updated',
+      path: 'models/staging/stg_orders.sql',
+      contentSha256: 'b'.repeat(64),
+      lastModified: '2026-07-12T00:00:01.000Z',
+    }));
     setupContainer();
-    await renderCodeView();
+    await renderCodeView({ saveFileContent });
+    await waitForInitialRender();
+    const editor = verifyInitialState();
+
+    vi.useFakeTimers();
+    await editAndVerifyEditor(editor);
+    expect(
+      getContainer().querySelector('[data-slot="code-working-tree-status"]')?.textContent
+    ).toContain(copy.workingTreeModifiedLabel);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(400);
+    });
+
+    expect(saveFileContent).toHaveBeenCalledWith({
+      path: 'models/staging/stg_orders.sql',
+      content: 'select 1 as edited_value',
+      expectedRevision: { kind: 'content_sha256', value: 'a'.repeat(64) },
+    });
+    expect(
+      getContainer().querySelector('[data-slot="code-working-tree-status"]')?.textContent
+    ).toContain(copy.workingTreeSynchronizedLabel);
+    expect(getContainer().textContent).not.toContain('Save');
+  });
+
+  it('flushes the modified file before changing the selected file', async () => {
+    let resolveSave!: (receipt: WorkspaceFileSaveReceipt) => void;
+    const saveFileContent = vi.fn(
+      () =>
+        new Promise<WorkspaceFileSaveReceipt>((resolve) => {
+          resolveSave = resolve;
+        })
+    );
+    setupContainer();
+    await renderCodeView({ saveFileContent });
     await waitForInitialRender();
     const editor = verifyInitialState();
     await editAndVerifyEditor(editor);
+
+    const nextFileButton = getContainer().querySelector<HTMLButtonElement>(
+      '[data-slot="code-workspace-file-entry"][data-workspace-path="models/staging/stg_customers.sql"]'
+    );
+    expect(nextFileButton).not.toBeNull();
+    await act(async () => nextFileButton?.click());
+
+    expect(saveFileContent).toHaveBeenCalledOnce();
+    expect(editor?.getAttribute('data-path')).toBe('models/staging/stg_orders.sql');
+
+    await act(async () => {
+      resolveSave({
+        kind: 'saved',
+        disposition: 'updated',
+        path: 'models/staging/stg_orders.sql',
+        contentSha256: 'b'.repeat(64),
+        lastModified: '2026-07-12T00:00:01.000Z',
+      });
+    });
+    await waitFor(
+      () =>
+        getContainer()
+          .querySelector('[data-testid="monaco-code-editor"]')
+          ?.getAttribute('data-path') === 'models/staging/stg_customers.sql'
+    );
+  });
+
+  it('uses embedded geometry without the history rail inside Canvas', async () => {
+    setupContainer();
+    await renderCodeView(undefined, false);
+    await waitForInitialRender();
+
+    expect(
+      getContainer()
+        .querySelector('[data-slot="route-workbench-frame"]')
+        ?.getAttribute('data-presentation-mode')
+    ).toBe('embedded');
+    expect(getContainer().querySelector('[data-slot="route-workbench-left-panel"]')).not.toBeNull();
+    expect(
+      getContainer().querySelector('[data-slot="route-workbench-primary-surface"]')
+    ).not.toBeNull();
+    expect(getContainer().querySelector('[data-slot="route-workbench-right-panel"]')).toBeNull();
   });
 
   it('renders selected-file history and hands revision review to Diff', async () => {
