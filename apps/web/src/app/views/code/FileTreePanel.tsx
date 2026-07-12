@@ -30,6 +30,8 @@ function FileTreeNode({
     <div>
       <button
         type="button"
+        data-slot="code-workspace-file-entry"
+        data-workspace-path={entry.path}
         className={cn(
           'flex w-full items-center gap-1.5 rounded px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition-colors',
           isSelected && 'bg-slate-800 text-white',

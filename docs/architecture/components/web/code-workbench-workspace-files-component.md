@@ -267,7 +267,8 @@ Add a semantic architecture test that checks:
 - the presentation contains no Save button and does not label a working-tree
   write as a Git commit or push;
 - `CodeView` delegates route frame semantics to `RouteWorkbenchFrameSlots` so
-  file navigation is `leftPanel` and local-buffer preview is `primarySurface`;
+  file navigation is `leftPanel` and the revision-guarded editor is
+  `primarySurface`;
 - Code bootstrap/error tests assert resolved copy objects, not fixed-language
   literals outside the locale catalog tests;
 - `saveFileContent` is wired only to the scoped live API write route.

@@ -38,27 +38,36 @@ Tests:
 - architecture test: adapter does not call bare `/workspace/files`;
 - Cypress: Code tab displays the file tree in live mode.
 
-### CODE-FILES-2: Open First Or Selected File In Monaco
+### CODE-FILES-2: Open And Synchronize A Workspace File In Monaco
 
 As a project user, I want the Code tab to open the first available file in
-Monaco and let me select another file so that I can inspect and locally edit
-source contents quickly.
+Monaco and synchronize accepted edits into the project working tree so that
+the graph and project files retain one revision-guarded authority.
 
 Acceptance criteria:
 
 - after the tree loads, the first file is previewed;
 - selecting a file calls `GetWorkspaceFileContent`;
 - the query includes scope and encoded `WorkspacePath`;
-- successful response renders Monaco in editable local-buffer mode;
-- the Code route shows the local-buffer warning instead of a read-only banner;
-- typing changes the local editor buffer without calling a save API.
+- successful response renders Monaco in editable working-tree mode;
+- typing transitions the file through `modified`, `syncing`, and
+  `synchronized` states;
+- synchronization calls the existing `SaveWorkspaceFileContent` command with
+  the last authoritative content SHA;
+- selecting another file flushes the current edit before changing selection;
+- a stale revision stops automatic writes and exposes an explicit reload path;
+- the workbench has no user-facing Save action and never represents a
+  working-tree write as a Git stage, commit, push, or remote sync.
 
 Tests:
 
 - API route test: scoped file request returns content and language;
 - web adapter test: file-content endpoint includes scope;
-- CodeView test: first file renders and the local-buffer state remains visible;
-- Cypress: selecting a file opens Monaco and accepts typing.
+- synchronization-model test: in-flight edits serialize without data loss;
+- CodeView test: typing synchronizes through the command rail and file
+  selection waits for the pending write;
+- Cypress: contextual project Code accepts an edit, reaches synchronized
+  state, and sends a revision-guarded command without a Save button.
 
 ### CODE-FILES-3: Missing File Does Not Break Explorer
 
@@ -120,8 +129,8 @@ Tests:
 ### CODE-FILES-6: Code Is Reachable Before First Canvas Document
 
 As a user entering a workspace without a persisted canvas document, I want Code
-to appear beside Graph so I can inspect and type in workspace files before
-choosing a canvas template.
+to open contextually over Graph so I can inspect and update workspace files
+before choosing a canvas template.
 
 Acceptance criteria:
 
@@ -129,8 +138,9 @@ Acceptance criteria:
   strip;
 - Code activation preserves the graph context rather than selecting a route
   tab;
-- `/canvas/code` loads `ListWorkspaceFiles` and `GetWorkspaceFileContent`;
-- Monaco accepts typed text in the local buffer;
+- the contextual workbench loads `ListWorkspaceFiles` and
+  `GetWorkspaceFileContent`;
+- Monaco edits synchronize through `SaveWorkspaceFileContent`;
 - Lineage, Diff, Artifacts, and Runs remain hidden until their scopes are ready.
 
 Tests:
@@ -141,11 +151,11 @@ Tests:
 
 ## Scenario Matrix
 
-| Story        | Query                     | DDD owner                 | Happy path            | Negative path          | Architecture guard              |
-| ------------ | ------------------------- | ------------------------- | --------------------- | ---------------------- | ------------------------------- |
-| CODE-FILES-1 | `ListWorkspaceFiles`      | `WorkspaceFileTree`       | file tree renders     | missing scope          | no unscoped endpoint            |
-| CODE-FILES-2 | `GetWorkspaceFileContent` | `WorkspaceFileContent`    | editable local buffer | malformed path         | route uses query rail           |
-| CODE-FILES-3 | `GetWorkspaceFileContent` | `WorkspaceFileReadPolicy` | explorer preserved    | canonical missing file | strict reason mapping           |
-| CODE-FILES-4 | `GetWorkspaceFileContent` | `WorkspacePath`           | valid relative path   | traversal rejected     | policy owns validation          |
-| CODE-FILES-5 | both queries              | `WorkspaceFileReadPolicy` | authorized read       | 401/403                | repository not called on denial |
-| CODE-FILES-6 | both queries              | `CodeEditableBuffer`      | Monaco accepts typing | canvas draft missing   | no save command invented        |
+| Story        | Rail                                                  | DDD owner                 | Happy path                 | Negative path          | Architecture guard                      |
+| ------------ | ----------------------------------------------------- | ------------------------- | -------------------------- | ---------------------- | --------------------------------------- |
+| CODE-FILES-1 | `ListWorkspaceFiles`                                  | `WorkspaceFileTree`       | file tree renders          | missing scope          | no unscoped endpoint                    |
+| CODE-FILES-2 | `GetWorkspaceFileContent`; `SaveWorkspaceFileContent` | `WorkspaceFileContent`    | revision-guarded sync      | revision conflict      | one internal command; no Save UI        |
+| CODE-FILES-3 | `GetWorkspaceFileContent`                             | `WorkspaceFileReadPolicy` | explorer preserved         | canonical missing file | strict reason mapping                   |
+| CODE-FILES-4 | `GetWorkspaceFileContent`                             | `WorkspacePath`           | valid relative path        | traversal rejected     | policy owns validation                  |
+| CODE-FILES-5 | both read queries                                     | `WorkspaceFileReadPolicy` | authorized read            | 401/403                | repository not called on denial         |
+| CODE-FILES-6 | both read queries; `SaveWorkspaceFileContent`         | `CodeWorkingTreeSync`     | contextual Monaco autosync | canvas draft missing   | no duplicate command or Git-state claim |

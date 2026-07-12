@@ -92,6 +92,7 @@ describe('internal alpha route gate architecture', () => {
       'SaveWorkspaceGraphDraft',
       'ListWorkspaceFiles',
       'GetWorkspaceFileContent',
+      'SaveWorkspaceFileContent',
       'ObservePlanRunReadiness',
       'MapRouteRecoveryState',
     ]) {
@@ -205,7 +206,7 @@ describe('internal alpha route gate architecture', () => {
       expect(stage.evidenceAcceptance).toMatch(/^(planned|accepted)$/);
       for (const rail of stage.rails) {
         expect(rail).toMatch(
-          /^(ObserveAppBootstrapRouteReadiness|GetEffectiveWorkspaceContext|GetWorkspaceGraphDraft|SaveWorkspaceGraphDraft|ListWorkspaceFiles|GetWorkspaceFileContent|ObservePlanRunReadiness|MapRouteRecoveryState)$/
+          /^(ObserveAppBootstrapRouteReadiness|GetEffectiveWorkspaceContext|GetWorkspaceGraphDraft|SaveWorkspaceGraphDraft|ListWorkspaceFiles|GetWorkspaceFileContent|SaveWorkspaceFileContent|ObservePlanRunReadiness|MapRouteRecoveryState)$/
         );
       }
       for (const evidenceRef of stage.evidenceRefs) {
@@ -228,6 +229,7 @@ describe('internal alpha route gate architecture', () => {
       'SaveWorkspaceGraphDraft',
       'ListWorkspaceFiles',
       'GetWorkspaceFileContent',
+      'SaveWorkspaceFileContent',
       'ObservePlanRunReadiness',
       'MapRouteRecoveryState',
     ]);
@@ -342,7 +344,7 @@ describe('internal alpha route gate architecture', () => {
     );
   });
 
-  it('accepts Code workbench evidence only with scoped file rails and retired Canvas route proof', () => {
+  it('accepts Code evidence only with scoped file rails, contextual sync, and retired route proof', () => {
     const codeStage = internalAlphaCombinedRouteFixture.stages.find(
       (stage) => stage.stage === 'Code workbench'
     );
@@ -354,7 +356,11 @@ describe('internal alpha route gate architecture', () => {
     );
 
     expect(codeStage?.evidenceAcceptance).toBe('accepted');
-    expect(codeStage?.rails).toEqual(['ListWorkspaceFiles', 'GetWorkspaceFileContent']);
+    expect(codeStage?.rails).toEqual([
+      'ListWorkspaceFiles',
+      'GetWorkspaceFileContent',
+      'SaveWorkspaceFileContent',
+    ]);
     expect(codeStage?.evidenceRefs).toEqual(
       expect.arrayContaining([
         'docs/architecture/components/web/code-workbench-workspace-files-component.md',
@@ -366,11 +372,14 @@ describe('internal alpha route gate architecture', () => {
       ])
     );
     expect(codeWorkbenchCypress).toContain(
-      'Owned concern: prove retired Canvas Code workbench routes redirect to Graph without file queries'
+      'Owned concern: prove retired Code routes and contextual Canvas Code working-tree synchronization'
     );
     expect(codeWorkbenchCypress).toContain("visitWithE2eWorkspaceSession('/canvas/code')");
     expect(codeWorkbenchCypress).toContain("cy.location('pathname').should('eq', '/canvas')");
     expect(codeWorkbenchCypress).toContain("getE2eApiCalls('/workspace/files', 'GET')");
+    expect(codeWorkbenchCypress).toContain('canvas-workspace-open-project-code-command');
+    expect(codeWorkbenchCypress).toContain('code-working-tree-status');
+    expect(codeWorkbenchCypress).toContain("kind: 'content_sha256'");
     for (const proof of [
       'rejects path traversal before reading from the repository',
       'rejects unsupported workspace file types before reading content',
@@ -380,9 +389,11 @@ describe('internal alpha route gate architecture', () => {
     ]) {
       expect(workspaceFilesRoutesTest).toContain(proof);
     }
-    expect(codeStage?.happyPathProof).toMatch(/scoped|tree|preview|read-only|freshness|retired/);
+    expect(codeStage?.happyPathProof).toMatch(
+      /scoped|tree|preview|working-tree|revision-guarded|retired/
+    );
     expect(codeStage?.failClosedProof).toMatch(
-      /unauthorized|traversal|oversize|unsupported|not-found|unavailable/
+      /unauthorized|traversal|oversize|unsupported|not-found|unavailable|revision conflict/
     );
     expect(evaluateInternalAlphaCombinedRouteFixture(internalAlphaCombinedRouteFixture)).toEqual(
       expect.objectContaining({

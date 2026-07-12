@@ -154,11 +154,19 @@ export function useCodeWorkingTreeSync({
     transition({ type: 'retry_requested' });
   }, [transition]);
 
+  const loadAuthoritative = useCallback(
+    (nextFile: FileContent) => {
+      replaceState(createCodeWorkingTreeSyncState(nextFile));
+    },
+    [replaceState]
+  );
+
   return {
     value: state?.value ?? '',
     phase: state?.phase ?? ('read_only' as const),
     updateValue,
     flush,
     retry,
+    loadAuthoritative,
   };
 }

@@ -19,16 +19,12 @@ export type InternalAlphaRouteRail =
   | 'SaveWorkspaceGraphDraft'
   | 'ListWorkspaceFiles'
   | 'GetWorkspaceFileContent'
+  | 'SaveWorkspaceFileContent'
   | 'ObservePlanRunReadiness'
   | 'MapRouteRecoveryState';
 
 export type InternalAlphaRecoveryState =
-  | 'ready'
-  | 'blocked'
-  | 'unauthorized'
-  | 'unavailable'
-  | 'stale'
-  | 'not-found';
+  'ready' | 'blocked' | 'unauthorized' | 'unavailable' | 'stale' | 'not-found';
 
 export type InternalAlphaEvidenceAcceptance = 'planned' | 'accepted';
 
@@ -170,10 +166,10 @@ export const internalAlphaCombinedRouteFixture: InternalAlphaCombinedRouteFixtur
         'apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts',
       ],
       failClosedProof:
-        'empty, unavailable, unauthorized, not-found, traversal, oversize, and unsupported binary-like file types are explicit',
+        'empty, unavailable, unauthorized, not-found, traversal, oversize, unsupported binary-like file types, and revision conflicts are explicit',
       happyPathProof:
-        'scoped authorized tree and first-file preview are covered by component/query rail tests; the retired Canvas Code route redirects to Graph without querying files',
-      rails: ['ListWorkspaceFiles', 'GetWorkspaceFileContent'],
+        'scoped authorized tree, first-file preview, and revision-guarded working-tree synchronization are covered; the retired Canvas Code route redirects to Graph without querying files',
+      rails: ['ListWorkspaceFiles', 'GetWorkspaceFileContent', 'SaveWorkspaceFileContent'],
       recoveryState: 'ready',
       recoveryStates: ['ready', 'unauthorized', 'unavailable', 'not-found', 'stale'],
       stage: 'Code workbench',

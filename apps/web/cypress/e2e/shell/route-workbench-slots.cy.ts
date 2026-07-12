@@ -49,8 +49,10 @@ function stubCodeWorkbenchApis(): void {
     name: 'stg_orders.sql',
     language: 'sql',
     content: 'select * from orders',
+    contentSha256: 'a'.repeat(64),
     lastModified: '2026-05-04T00:00:00.000Z',
   });
+  stubE2eJsonApi('GET', /\/workspace\/file-history\/.+/, []);
 }
 
 function assertPrimaryRouteWorkbench(): void {
@@ -86,9 +88,12 @@ describe('Route workbench semantic slots', () => {
     cy.get('[data-slot="route-workbench-primary-surface"]').contains('Roles').should('be.visible');
   });
 
-  it('keeps the Code explorer in the left slot and editable buffer in the primary slot', () => {
+  it('keeps the contextual Code explorer left and working-tree editor primary', () => {
     stubCodeWorkbenchApis();
-    visitWithE2eWorkspaceSession('/canvas/code');
+    visitWithE2eWorkspaceSession('/canvas');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
 
     waitForE2eApiCall('/workspace/files', 'GET');
     waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
@@ -101,18 +106,9 @@ describe('Route workbench semantic slots', () => {
       .contains('stg_orders.sql')
       .should('be.visible');
     cy.get('[data-slot="route-workbench-primary-surface"]')
-      .contains(/Editable local buffer|Buffer local editable/)
+      .contains(/Synchronized|Sincronizado/)
       .should('be.visible');
     cy.get('[data-slot="route-workbench-right-panel"]').should('not.exist');
-
-    cy.get('[data-testid="monaco-code-editor"]').within(() => {
-      cy.get('.monaco-editor textarea')
-        .first()
-        .focus()
-        .type('{ctrl+a}select 7 as slot_verified', { force: true, delay: 0 });
-    });
-    cy.get('[data-slot="route-workbench-primary-surface"]')
-      .contains('select 7 as slot_verified')
-      .should('be.visible');
+    cy.get('[data-testid="monaco-code-editor"]').should('be.visible');
   });
 });
