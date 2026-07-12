@@ -106,14 +106,18 @@ describe('Retired Canvas Code workbench routes', () => {
       .within(() => {
         cy.get('[data-slot="code-working-tree-status"]')
           .should('be.visible')
-          .and('contain.text', 'Synchronized');
+          .should(($status) => {
+            expect($status.text()).to.match(/Synchronized|Sincronizado/);
+          });
         cy.contains('button', 'Save').should('not.exist');
         cy.get('[data-testid="monaco-code-editor"]')
           .find('.monaco-editor textarea')
           .first()
           .focus()
           .type('{ctrl+a}select 7 as working_tree_verified', { force: true, delay: 0 });
-        cy.get('[data-slot="code-working-tree-status"]').should('contain.text', 'Synchronized');
+        cy.get('[data-slot="code-working-tree-status"]').should(($status) => {
+          expect($status.text()).to.match(/Synchronized|Sincronizado/);
+        });
       });
 
     waitForE2eApiCall(/\/workspace\/files\/.+/, 'POST');

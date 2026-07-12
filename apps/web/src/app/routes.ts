@@ -208,6 +208,7 @@ export function createAppRoutes(): RouteObject[] {
         {
           id: 'dbt.canvas.retired-workbench-redirect',
           path: 'canvas/*',
+          handle: createStaticShellRouteHandle('Canvas redirect'),
           element: createElement(Navigate, { to: '/canvas', replace: true }),
         },
         ...shellRoutes,
