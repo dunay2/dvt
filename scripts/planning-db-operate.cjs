@@ -100,6 +100,7 @@ const allowedArchitectureFowlerSignals = new Set([
 ]);
 const allowedArchitectureScopeSubjectKinds = new Set([
   'component',
+  'command',
   'relation',
   'contract',
   'port',

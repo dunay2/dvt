@@ -2350,6 +2350,8 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/internal-alpha-route-gate-user-stories.md
   - docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md
   - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+  - scripts/planning-db-operate.cjs
+  - scripts/planning-db-operate-tests/architecture-parse.test.cjs
   - tools/planning-db/migrations/634_code_working_tree_sync_design.sql
   - tools/planning-db/migrations/635_code_working_tree_sync_implementation_closeout.sql
   - tools/planning-db/migrations/636_code_working_tree_sync_local_overlay.sql
@@ -2362,6 +2364,9 @@ commandQueryRails:
   - name: SaveWorkspaceFileContent
     type: command
     dddOwner: WorkspaceFileContent
+  - name: CreateArchitectureDesign
+    type: command
+    dddOwner: ArchitectureDesign
 domainObjects:
   - name: CodeWorkingTreeSync
     type: presentation model
@@ -2381,6 +2386,7 @@ completionGate:
   - pnpm --filter @dvt/web test:presentation:run -- src/app/views/code/useCodeWorkingTreeSync.test.tsx src/app/views/code/CodeWorkingTreeStatus.test.tsx src/app/views/CodeView.test.tsx
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web lint
+  - node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs
   - pnpm docs:feature-mechanization:implementation -- --feature E-DBT-CODE-WORKING-TREE-SYNC-20260712
   - pnpm verify:prepush
 redGreenCycles:
@@ -2397,6 +2403,12 @@ redGreenCycles:
       - apps/web/src/app/views/code/useCodeWorkingTreeSync.ts
       - apps/web/src/app/views/CodeView.tsx
     greenTest: pnpm --filter @dvt/web test:presentation:run -- src/app/views/code/useCodeWorkingTreeSync.test.tsx src/app/views/CodeView.test.tsx
+  - id: architecture-command-scope-vocabulary
+    redTest: node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs
+    expectedFailure: Architecture design scopes reject the canonical command subject kind stored by Planning DB.
+    patchSurfaces:
+      - scripts/planning-db-operate.cjs
+    greenTest: node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs
 symbols:
   - name: createCodeWorkingTreeSyncState
     path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts

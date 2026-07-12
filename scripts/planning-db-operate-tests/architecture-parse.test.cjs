@@ -25,6 +25,8 @@ test('parseArgs builds an architecture design create command with scoped authori
     'component:SYS-RUNTIME-ENGINE-CORE:may_update:required',
     '--scope',
     'path:packages/@dvt/engine/**:may_update:required',
+    '--scope',
+    'command:SaveWorkspaceFileContent:must_prove:required',
     '--source-ref',
     'docs/planning/proposals/mandatory/governance-and-docs/db-first-architecture-authority-plan-20260515.md',
     '--source-content-sha256',
@@ -50,6 +52,12 @@ test('parseArgs builds an architecture design create command with scoped authori
       subjectKind: 'path',
       subjectId: 'packages/@dvt/engine/**',
       scopeKind: 'may_update',
+      required: true,
+    },
+    {
+      subjectKind: 'command',
+      subjectId: 'SaveWorkspaceFileContent',
+      scopeKind: 'must_prove',
       required: true,
     },
   ]);
