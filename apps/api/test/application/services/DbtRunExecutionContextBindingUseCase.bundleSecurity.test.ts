@@ -53,7 +53,10 @@ describe('DBT runtime bundle security boundary', () => {
 async function executeBinding(input: {
   readonly workspaceRoot: string;
   readonly bundleRoot: string;
-}) {
+}): Promise<{
+  readonly delegate: { readonly execute: ReturnType<typeof vi.fn> };
+  readonly result: Awaited<ReturnType<DbtRunExecutionContextBindingUseCase['execute']>>;
+}> {
   const planId = '9'.repeat(64);
   const delegate = {
     execute: vi.fn(
