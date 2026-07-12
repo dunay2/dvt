@@ -2384,6 +2384,14 @@ redGreenCycles:
       - apps/web/src/app/views/CodeView.tsx
     greenTest: pnpm --filter @dvt/web test:presentation:run -- src/app/views/code/useCodeWorkingTreeSync.test.tsx src/app/views/CodeView.test.tsx
 symbols:
+  - name: createCodeWorkingTreeSyncState
+    path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
+    dddOwner: CodeWorkingTreeSync
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Anemic state machine]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/codeWorkingTreeSyncModel.test.ts]
   - name: reduceCodeWorkingTreeSync
     path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
     dddOwner: CodeWorkingTreeSync
