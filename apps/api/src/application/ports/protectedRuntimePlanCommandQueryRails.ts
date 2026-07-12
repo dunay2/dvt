@@ -49,6 +49,10 @@ export const PROTECTED_RUNTIME_PLAN_COMMAND_QUERY_RAILS = [
         PROTECTED_RUNTIME_NEGATIVE_CASE.missingRunExecutionContextBinding,
         PROTECTED_RUNTIME_TEST_REF.startRunDbtRunExecutionContextBinding,
       ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.profilesFileInDbtBundle,
+        PROTECTED_RUNTIME_TEST_REF.startRunDbtBundleSecurity,
+      ],
     ],
   }),
   defineProtectedRuntimeRail({

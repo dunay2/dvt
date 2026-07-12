@@ -4,6 +4,11 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { PROTECTED_RUNTIME_COMMAND_QUERY_RAILS } from '../../../src/application/ports/protectedRuntimeCommandQueryRails.js';
+import {
+  PROTECTED_RUNTIME_NEGATIVE_CASE,
+  PROTECTED_RUNTIME_PLAN_RAIL,
+  PROTECTED_RUNTIME_TEST_REF,
+} from '../../../src/application/ports/protectedRuntimeRailVocabulary.js';
 import { RUNTIME_ROUTE_PATH } from '../../../src/entrypoints/http/runtimeRoutes.constants.js';
 
 const DOC_PATH = join(
@@ -134,6 +139,17 @@ describe('protected runtime route group architecture', () => {
         }
       }
     }
+  });
+
+  it('maps DBT credential bundle exclusion to StartRun test evidence', () => {
+    const startRunRail = PROTECTED_RUNTIME_COMMAND_QUERY_RAILS.find(
+      (rail) => rail.name === PROTECTED_RUNTIME_PLAN_RAIL.startRun.name
+    );
+
+    expect(startRunRail?.negativeCoverage).toContainEqual({
+      case: PROTECTED_RUNTIME_NEGATIVE_CASE.profilesFileInDbtBundle,
+      testRefs: [PROTECTED_RUNTIME_TEST_REF.startRunDbtBundleSecurity],
+    });
   });
 
   it('keeps compatibility wording only on rails with explicit compatibility posture', () => {

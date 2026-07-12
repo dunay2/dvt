@@ -66,8 +66,8 @@ const DBT_INCLUDED_EXACT_FILES = new Set([
   'dbt_project.yaml',
   'packages.yml',
   'selectors.yml',
-  'profiles.yml',
 ]);
+const DBT_EXCLUDED_FILENAMES = new Set(['profiles.yml']);
 const DBT_INCLUDED_DIRECTORIES = new Set([
   'analyses',
   'macros',
@@ -292,11 +292,17 @@ async function collectDbtWorkspaceFiles(
 }
 
 function shouldIncludeDbtWorkspacePath(workspacePath: string): boolean {
+  const pathSegments = workspacePath.split('/');
+  const fileName = pathSegments.at(-1);
+  if (fileName !== undefined && DBT_EXCLUDED_FILENAMES.has(fileName)) {
+    return false;
+  }
+
   if (DBT_INCLUDED_EXACT_FILES.has(workspacePath)) {
     return true;
   }
 
-  const topLevelDirectory = workspacePath.split('/')[0];
+  const topLevelDirectory = pathSegments[0];
   return topLevelDirectory !== undefined && DBT_INCLUDED_DIRECTORIES.has(topLevelDirectory);
 }
 
