@@ -90,6 +90,8 @@ const EXCLUDED_DIRECTORY_NAMES = new Set([
   'node_modules',
 ]);
 const TAR_BLOCK_SIZE = 512;
+const DBT_CALLER_CONTEXT_REF_REJECTION_REASON =
+  'caller-provided run execution context references are not accepted for dbt execution';
 const DBT_WORKSPACE_PROFILE_REJECTION_REASON =
   'dbt workspace profiles.yml requires a server-owned profile reference before runtime execution';
 
@@ -107,7 +109,7 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
     command: StartRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<StartRunUseCaseResult> {
-    if (command.planRef === undefined || command.runExecutionContextRef !== undefined) {
+    if (command.planRef === undefined) {
       return this.deps.delegate.execute(command, context);
     }
     const commandWithPlanRef: StartRunCommand & {
@@ -122,6 +124,9 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
     const plan = parseStoredExecutablePlan(artifact.bytes, { rejectUnknownStepKinds: false });
     if (!isDbtPlan(plan)) {
       return this.deps.delegate.execute(command, context);
+    }
+    if (command.runExecutionContextRef !== undefined) {
+      return rejectRunExecutionContext(DBT_CALLER_CONTEXT_REF_REJECTION_REASON);
     }
 
     const binding = await this.createDbtRunArtifactBinding({

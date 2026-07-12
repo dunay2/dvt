@@ -33,6 +33,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   tenantMismatch: 'tenant mismatch',
   tenantWorkspaceMismatch: 'tenant/workspace mismatch',
   unknownRun: 'unknown run',
+  untrustedDbtRunExecutionContextRef: 'untrusted DBT run execution context ref',
   unsupportedAdapter: 'unsupported adapter',
   duplicateConnection: 'duplicate connection',
   invalidCredential: 'invalid credential',

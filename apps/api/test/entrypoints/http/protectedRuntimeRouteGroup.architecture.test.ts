@@ -141,13 +141,17 @@ describe('protected runtime route group architecture', () => {
     }
   });
 
-  it('maps DBT workspace profile admission to StartRun test evidence', () => {
+  it('maps DBT runtime admission failures to StartRun test evidence', () => {
     const startRunRail = PROTECTED_RUNTIME_COMMAND_QUERY_RAILS.find(
       (rail) => rail.name === PROTECTED_RUNTIME_PLAN_RAIL.startRun.name
     );
 
     expect(startRunRail?.negativeCoverage).toContainEqual({
       case: PROTECTED_RUNTIME_NEGATIVE_CASE.workspaceProfileWithoutServerOwnedReference,
+      testRefs: [PROTECTED_RUNTIME_TEST_REF.startRunDbtBundleSecurity],
+    });
+    expect(startRunRail?.negativeCoverage).toContainEqual({
+      case: PROTECTED_RUNTIME_NEGATIVE_CASE.untrustedDbtRunExecutionContextRef,
       testRefs: [PROTECTED_RUNTIME_TEST_REF.startRunDbtBundleSecurity],
     });
   });

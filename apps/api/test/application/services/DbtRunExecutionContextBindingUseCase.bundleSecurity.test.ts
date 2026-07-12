@@ -2,7 +2,12 @@ import { mkdir, mkdtemp, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { parseExecutionSelection, parsePlanRef, type StartRunCommand } from '@dvt/contracts';
+import {
+  parseExecutionSelection,
+  parsePlanRef,
+  parseRunExecutionContextRef,
+  type StartRunCommand,
+} from '@dvt/contracts';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { DbtRunExecutionContextBindingUseCase } from '../../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
@@ -48,11 +53,45 @@ describe('DBT runtime bundle security boundary', () => {
     expect(execution.delegate.execute).not.toHaveBeenCalled();
     expect(await readdir(bundleRoot)).toEqual([]);
   });
+
+  it('rejects caller-provided DBT run context references before engine dispatch', async () => {
+    const workspaceRoot = await makeTempRoot('dvt-api-dbt-ref-workspace-');
+    const bundleRoot = await makeTempRoot('dvt-api-dbt-ref-bundles-');
+    await writeWorkspaceFiles(workspaceRoot);
+    const planId = '9'.repeat(64);
+
+    const execution = await executeBinding({
+      workspaceRoot,
+      bundleRoot,
+      runExecutionContextRef: parseRunExecutionContextRef({
+        uri: 'file:///caller/run-context.json',
+        sha256: '7'.repeat(64),
+        schemaVersion: 'v1.0',
+        planId,
+        planVersion: '1.0',
+      }),
+    });
+
+    expect(execution.result).toEqual({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'REJECTED',
+        reason:
+          'caller-provided run execution context references are not accepted for dbt execution',
+        cause: 'run_execution_context',
+      },
+    });
+    expect(execution.delegate.execute).not.toHaveBeenCalled();
+    expect(await readdir(bundleRoot)).toEqual([]);
+  });
 });
 
 async function executeBinding(input: {
   readonly workspaceRoot: string;
   readonly bundleRoot: string;
+  readonly runExecutionContextRef?: StartRunCommand['runExecutionContextRef'];
 }): Promise<{
   readonly delegate: { readonly execute: ReturnType<typeof vi.fn> };
   readonly result: Awaited<ReturnType<DbtRunExecutionContextBindingUseCase['execute']>>;
@@ -78,7 +117,15 @@ async function executeBinding(input: {
     dbtBundleStore: { kind: 'file' as const, rootPath: input.bundleRoot },
   });
 
-  const result = await useCase.execute(buildCommand(planId), buildContext());
+  const result = await useCase.execute(
+    {
+      ...buildCommand(planId),
+      ...(input.runExecutionContextRef === undefined
+        ? {}
+        : { runExecutionContextRef: input.runExecutionContextRef }),
+    },
+    buildContext()
+  );
 
   return { delegate, result };
 }
