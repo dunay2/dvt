@@ -110,4 +110,30 @@ describe('RouteWorkbenchFrame', () => {
     );
     expect(bottomDrawer?.closest('[data-slot="route-workbench-body-content"]')).not.toBeNull();
   });
+
+  it('uses compact panel geometry when embedded in another workbench', async () => {
+    await act(async () => {
+      root.render(
+        <RouteWorkbenchFrame
+          presentationMode="embedded"
+          scroll={false}
+          slots={{
+            leftPanel: <aside>Explorer</aside>,
+            primarySurface: <main>Editor</main>,
+            rightPanel: <aside>History</aside>,
+          }}
+        />
+      );
+    });
+
+    expect(
+      container.querySelector('[data-slot="route-workbench-slot-layout"]')?.className
+    ).toContain('gap-3');
+    expect(
+      container.querySelector('[data-slot="route-workbench-left-panel"]')?.className
+    ).toContain('w-48');
+    expect(
+      container.querySelector('[data-slot="route-workbench-right-panel"]')?.className
+    ).toContain('w-56');
+  });
 });

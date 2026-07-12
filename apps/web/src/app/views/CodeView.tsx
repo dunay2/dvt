@@ -166,6 +166,7 @@ export default function CodeView({
     <RouteWorkbenchFrame
       scroll={false}
       bodyClassName="flex min-h-0 flex-1"
+      presentationMode={publishRouteBootstrap ? 'route' : 'embedded'}
       header={
         <div className={routeWorkbenchHeaderBandClassName}>
           <ViewHeader
@@ -193,7 +194,7 @@ export default function CodeView({
             }}
           />
         ),
-        rightPanel: (
+        rightPanel: publishRouteBootstrap ? (
           <CodeFileHistoryPanel
             copy={copy}
             selectedPath={resolvedPath}
@@ -201,7 +202,7 @@ export default function CodeView({
             isLoading={fileHistoryQuery.isPending}
             error={fileHistoryQuery.error instanceof Error ? fileHistoryQuery.error : null}
           />
-        ),
+        ) : undefined,
         primarySurface: (
           <div className="min-w-0 flex h-full flex-1 flex-col">
             <CodeWorkingTreeStatus

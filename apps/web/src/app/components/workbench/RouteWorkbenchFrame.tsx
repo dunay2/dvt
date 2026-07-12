@@ -36,11 +36,14 @@ export const routeWorkbenchTabTriggerClassName =
 type RouteWorkbenchFrameProps = {
   readonly header?: ReactNode;
   readonly slots: RouteWorkbenchFrameSlots;
+  readonly presentationMode?: RouteWorkbenchPresentationMode;
   readonly className?: string;
   readonly bodyClassName?: string;
   readonly bodyContainerClassName?: string;
   readonly scroll?: boolean;
 };
+
+export type RouteWorkbenchPresentationMode = 'route' | 'embedded';
 
 export type RouteWorkbenchFrameSlots = Readonly<{
   leftPanel?: ReactNode;
@@ -52,17 +55,27 @@ export type RouteWorkbenchFrameSlots = Readonly<{
 function RouteWorkbenchSlotLayout({
   slots,
   primarySurfaceClassName,
+  presentationMode,
 }: {
   readonly slots: RouteWorkbenchFrameSlots;
   readonly primarySurfaceClassName?: string;
+  readonly presentationMode: RouteWorkbenchPresentationMode;
 }) {
+  const isEmbedded = presentationMode === 'embedded';
+
   return (
-    <div data-slot="route-workbench-slot-stack" className="flex h-full min-h-0 flex-col gap-4">
-      <div data-slot="route-workbench-slot-layout" className="flex min-h-0 flex-1 gap-4">
+    <div
+      data-slot="route-workbench-slot-stack"
+      className={cn('flex h-full min-h-0 flex-col', isEmbedded ? 'gap-3' : 'gap-4')}
+    >
+      <div
+        data-slot="route-workbench-slot-layout"
+        className={cn('flex min-h-0 flex-1', isEmbedded ? 'gap-3' : 'gap-4')}
+      >
         {slots.leftPanel ? (
           <aside
             data-slot="route-workbench-left-panel"
-            className="min-h-0 w-72 shrink-0 overflow-hidden"
+            className={cn('min-h-0 shrink-0 overflow-hidden', isEmbedded ? 'w-48' : 'w-72')}
           >
             {slots.leftPanel}
           </aside>
@@ -76,7 +89,7 @@ function RouteWorkbenchSlotLayout({
         {slots.rightPanel ? (
           <aside
             data-slot="route-workbench-right-panel"
-            className="min-h-0 w-80 shrink-0 overflow-hidden"
+            className={cn('min-h-0 shrink-0 overflow-hidden', isEmbedded ? 'w-56' : 'w-80')}
           >
             {slots.rightPanel}
           </aside>
@@ -97,17 +110,26 @@ function RouteWorkbenchSlotLayout({
 export function RouteWorkbenchFrame({
   header,
   slots,
+  presentationMode = 'route',
   className,
   bodyClassName,
   bodyContainerClassName,
   scroll = true,
 }: RouteWorkbenchFrameProps) {
   const bodyContent = (
-    <RouteWorkbenchSlotLayout slots={slots} primarySurfaceClassName={bodyContainerClassName} />
+    <RouteWorkbenchSlotLayout
+      slots={slots}
+      primarySurfaceClassName={bodyContainerClassName}
+      presentationMode={presentationMode}
+    />
   );
 
   return (
-    <div data-slot="route-workbench-frame" className={cn(routeWorkbenchClassName, className)}>
+    <div
+      data-slot="route-workbench-frame"
+      data-presentation-mode={presentationMode}
+      className={cn(routeWorkbenchClassName, className)}
+    >
       {header ? (
         <div data-slot="route-workbench-header" className="shrink-0">
           {header}

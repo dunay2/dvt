@@ -108,7 +108,7 @@ describe('Route workbench semantic slots', () => {
     cy.get('[data-slot="route-workbench-primary-surface"]')
       .contains(/Synchronized|Sincronizado/)
       .should('be.visible');
-    cy.get('[data-slot="route-workbench-right-panel"]').should('be.visible');
+    cy.get('[data-slot="route-workbench-right-panel"]').should('not.exist');
     cy.get('[data-testid="monaco-code-editor"]').should('be.visible');
   });
 });

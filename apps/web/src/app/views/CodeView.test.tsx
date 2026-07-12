@@ -126,7 +126,8 @@ describe('CodeView', () => {
   }
 
   async function renderCodeView(
-    workspaceFileContentCommand?: IWorkspaceFileContentCommandPort
+    workspaceFileContentCommand?: IWorkspaceFileContentCommandPort,
+    publishRouteBootstrap = true
   ): Promise<void> {
     await act(async () => {
       root?.render(
@@ -140,7 +141,7 @@ describe('CodeView', () => {
             }}
           >
             {' '}
-            <CodeView />{' '}
+            <CodeView publishRouteBootstrap={publishRouteBootstrap} />{' '}
           </AppServicesProvider>{' '}
         </QueryClientProvider>
       );
@@ -269,6 +270,23 @@ describe('CodeView', () => {
           .querySelector('[data-testid="monaco-code-editor"]')
           ?.getAttribute('data-path') === 'models/staging/stg_customers.sql'
     );
+  });
+
+  it('uses embedded geometry without the history rail inside Canvas', async () => {
+    setupContainer();
+    await renderCodeView(undefined, false);
+    await waitForInitialRender();
+
+    expect(
+      getContainer()
+        .querySelector('[data-slot="route-workbench-frame"]')
+        ?.getAttribute('data-presentation-mode')
+    ).toBe('embedded');
+    expect(getContainer().querySelector('[data-slot="route-workbench-left-panel"]')).not.toBeNull();
+    expect(
+      getContainer().querySelector('[data-slot="route-workbench-primary-surface"]')
+    ).not.toBeNull();
+    expect(getContainer().querySelector('[data-slot="route-workbench-right-panel"]')).toBeNull();
   });
 
   it('renders selected-file history and hands revision review to Diff', async () => {
