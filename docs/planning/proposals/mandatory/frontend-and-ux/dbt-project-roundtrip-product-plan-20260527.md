@@ -2317,7 +2317,7 @@ Git connector exists would introduce unimplemented rails.
 ```feature-mechanization
 version: 1
 featureId: E-DBT-CODE-WORKING-TREE-SYNC-20260712
-mechanizationStatus: closed
+mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 owner: Frontend / Project Workspace I/O
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
@@ -2334,13 +2334,25 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/CodeView.tsx
   - apps/web/src/app/views/CodeView.test.tsx
   - apps/web/src/app/views/code/**
+  - apps/web/src/app/components/monaco/MonacoCodeEditor.tsx
+  - apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx
+  - apps/web/src/app/components/workbench/RouteWorkbenchFrame.test.tsx
+  - apps/web/src/app/routes.ts
+  - apps/web/src/app/routes.test.tsx
+  - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
+  - apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
   - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+  - apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts
   - docs/adr/ADR-0060-dbt-project-authoring-authority.md
   - docs/architecture/components/web/code-workbench-workspace-files-component.md
+  - docs/architecture/components/web/code-workbench-workspace-files-user-stories.md
   - docs/architecture/components/web/git/git-mode-architecture.md
+  - docs/architecture/components/web/internal-alpha-route-gate-user-stories.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/internal-alpha-product-route-plan-20260505.md
   - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
   - tools/planning-db/migrations/634_code_working_tree_sync_design.sql
-  - tools/planning-db/migrations/635_code_working_tree_sync_evidence.sql
+  - tools/planning-db/migrations/635_code_working_tree_sync_implementation_closeout.sql
+  - tools/planning-db/migrations/636_code_working_tree_sync_local_overlay.sql
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
@@ -2360,8 +2372,10 @@ fowlerSignals:
   - Published-language drift
 architectureGuards:
   - pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+  - pnpm --filter @dvt/web test:architecture:run -- src/app/routes/internalAlphaRouteGate.architecture.test.ts
 cypressFlows:
   - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+  - apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts
 completionGate:
   - pnpm --filter @dvt/web test:unit:run -- src/app/views/code/codeWorkingTreeSyncModel.test.ts
   - pnpm --filter @dvt/web test:presentation:run -- src/app/views/code/useCodeWorkingTreeSync.test.tsx src/app/views/code/CodeWorkingTreeStatus.test.tsx src/app/views/CodeView.test.tsx
@@ -2416,4 +2430,140 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
     cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
     unitTests: [apps/web/src/app/views/code/CodeWorkingTreeStatus.test.tsx]
+  - name: CodeWorkingTreeSyncPhase
+    path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
+    dddOwner: CodeWorkingTreeSync state model
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Anemic state machine]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/codeWorkingTreeSyncModel.test.ts]
+  - name: CodeWorkingTreeSyncState
+    path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
+    dddOwner: CodeWorkingTreeSync state model
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Anemic state machine]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/codeWorkingTreeSyncModel.test.ts]
+  - name: CodeWorkingTreeSyncEvent
+    path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
+    dddOwner: CodeWorkingTreeSync state model
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Anemic state machine]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/codeWorkingTreeSyncModel.test.ts]
+  - name: reduceEditedValue
+    path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
+    dddOwner: CodeWorkingTreeSync state model
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Anemic state machine]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/codeWorkingTreeSyncModel.test.ts]
+  - name: CodeWorkingTreeSyncState
+    path: apps/web/src/app/views/code/useCodeWorkingTreeSync.ts
+    dddOwner: CodeWorkingTreeSync orchestration
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/useCodeWorkingTreeSync.test.tsx]
+  - name: CodeWorkingTreeSyncEvent
+    path: apps/web/src/app/views/code/useCodeWorkingTreeSync.ts
+    dddOwner: CodeWorkingTreeSync orchestration
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/useCodeWorkingTreeSync.test.tsx]
+  - name: DEFAULT_DEBOUNCE_MS
+    path: apps/web/src/app/views/code/useCodeWorkingTreeSync.ts
+    dddOwner: CodeWorkingTreeSync orchestration
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/useCodeWorkingTreeSync.test.tsx]
+  - name: UseCodeWorkingTreeSyncInput
+    path: apps/web/src/app/views/code/useCodeWorkingTreeSync.ts
+    dddOwner: CodeWorkingTreeSync input contract
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/useCodeWorkingTreeSync.test.tsx]
+  - name: CodeWorkingTreeStatusPhase
+    path: apps/web/src/app/views/code/CodeWorkingTreeStatus.tsx
+    dddOwner: CodeWorkingTreeSync presentation contract
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Published-language drift]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/CodeWorkingTreeStatus.test.tsx]
+  - name: CodeWorkingTreeStatusCopy
+    path: apps/web/src/app/views/code/CodeWorkingTreeStatus.tsx
+    dddOwner: CodeWorkingTreeSync presentation contract
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Published-language drift]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/CodeWorkingTreeStatus.test.tsx]
+  - name: STATUS_TONE
+    path: apps/web/src/app/views/code/CodeWorkingTreeStatus.tsx
+    dddOwner: CodeWorkingTreeSync presentation policy
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Published-language drift]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/CodeWorkingTreeStatus.test.tsx]
+  - name: RouteWorkbenchPresentationMode
+    path: apps/web/src/app/components/workbench/RouteWorkbenchFrame.tsx
+    dddOwner: RouteWorkbenchFrame presentation contract
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts
+    unitTests: [apps/web/src/app/components/workbench/RouteWorkbenchFrame.test.tsx]
+  - name: INITIAL_REVISION
+    path: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    dddOwner: Code working-tree Cypress fixture
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts]
+  - name: SYNCHRONIZED_REVISION
+    path: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    dddOwner: Code working-tree Cypress fixture
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts]
+  - name: stubCodeWorkbenchBootstrapApis
+    path: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    dddOwner: Code working-tree Cypress fixture
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts]
+  - name: stubRetiredCodeRouteApis
+    path: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    dddOwner: Code working-tree Cypress fixture
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts]
+  - name: stubContextualCodeWorkbenchApis
+    path: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    dddOwner: Code working-tree Cypress fixture
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts]
 ```
