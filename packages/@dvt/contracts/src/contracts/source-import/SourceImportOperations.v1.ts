@@ -1,3 +1,12 @@
+/**
+ * Owned concern: define versioned warehouse-connection discovery and
+ * source-object import operation contracts.
+ *
+ * @baseline ADR-0058: Warehouse Source Import Rails
+ * @decision Keep protected source discovery and import request/response DTOs in one canonical contract component.
+ * @consequence API and web rails exchange validated operation payloads without local transport vocabularies.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import { SourceObjectSelectionListSchema } from './SourceObjectCatalog.v1.js';

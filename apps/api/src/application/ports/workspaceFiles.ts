@@ -1,6 +1,11 @@
 /**
  * Owned concern: define the protected workspace-file query read models, path
  * policy errors, and outbound repository port.
+ *
+ * @baseline ADR-0060: dbt Project Authoring Authority
+ * @decision Expose stable content revisions and compare-and-swap writes at the workspace-file port.
+ * @consequence File-backed authoring cannot silently overwrite a newer authoritative project revision.
+ * @version 1.0.0
  */
 
 export type WorkspaceFileEntry = {

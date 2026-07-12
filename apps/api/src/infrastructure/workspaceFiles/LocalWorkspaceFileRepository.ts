@@ -1,6 +1,11 @@
 /**
  * Owned concern: provide a bounded local filesystem adapter for workspace file
  * reads and command-side file writes.
+ *
+ * @baseline ADR-0060: dbt Project Authoring Authority
+ * @decision Enforce scoped compare-and-swap before atomically replacing authoritative workspace files.
+ * @consequence Local development preserves the same stale-write rejection required by file-backed Canvas authoring.
+ * @version 1.0.0
  */
 import { createHash } from 'node:crypto';
 import { mkdir, readdir, readFile, stat } from 'node:fs/promises';

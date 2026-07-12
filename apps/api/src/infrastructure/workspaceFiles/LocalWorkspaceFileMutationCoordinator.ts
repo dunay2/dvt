@@ -1,4 +1,11 @@
-/** Owned concern: coordinate and atomically apply local workspace file mutations. */
+/**
+ * Owned concern: coordinate and atomically apply local workspace file mutations.
+ *
+ * @baseline ADR-0060: dbt Project Authoring Authority
+ * @decision Serialize mutations per scoped path and publish writes through atomic replacement.
+ * @consequence Concurrent file-backed authoring cannot expose partial writes or bypass mutation ordering.
+ * @version 1.0.0
+ */
 import { randomUUID } from 'node:crypto';
 import { open, rename, rm } from 'node:fs/promises';
 
