@@ -55,10 +55,12 @@ async function executeBindingAndReadBundleEntries(input: {
 }): Promise<ReadonlyMap<string, Buffer>> {
   const planId = '9'.repeat(64);
   const delegate = {
-    execute: vi.fn(async () => ({
-      ok: true as const,
-      value: { kind: 'accepted' as const, runId: 'run-secret-test', accepted: true as const },
-    })),
+    execute: vi.fn(
+      async (_command: StartRunCommand, _context: ReturnType<typeof buildContext>) => ({
+        ok: true as const,
+        value: { kind: 'accepted' as const, runId: 'run-secret-test', accepted: true as const },
+      })
+    ),
   };
   const useCase = new DbtRunExecutionContextBindingUseCase({
     delegate,
