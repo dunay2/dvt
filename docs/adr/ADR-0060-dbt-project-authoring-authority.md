@@ -147,6 +147,18 @@ File-backed authoring requires the existing workspace-file rails to gain:
 The browser may hold an editable buffer, but it cannot overwrite a newer
 workspace revision silently.
 
+`SaveWorkspaceFileContent` is the internal application command that performs a
+conditional workspace-file mutation. It is not a user-facing `Save` action.
+The Code workbench automatically synchronizes accepted edits into the project
+working tree, serializes writes per file, and exposes `modified`, `syncing`,
+`synchronized`, `conflict`, or `read-only` posture. A manual Save button would
+create a second persistence lifecycle and is therefore rejected.
+
+Git lifecycle operations remain distinct product intents. Writing the working
+tree does not imply staging, committing, pushing, or claiming remote
+synchronization. Those actions require their own accepted rails and a real Git
+connector before they can be exposed.
+
 ## Source Import
 
 `ImportWarehouseSources` remains the single command intent and consults the
@@ -195,6 +207,10 @@ Each implementation phase must prove:
 - no Canvas has two active semantic authorities;
 - file-backed preview does not call `GenerateDbtWorkspaceArtifacts`;
 - stale file writes fail without changing content;
+- Code edits reach the working tree through the existing conditional command
+  without a user-facing Save action;
+- working-tree synchronization never claims that content is staged, committed,
+  pushed, or remotely synchronized;
 - analyzer failure preserves files and authority mode;
 - Source Import writes only the active authority;
 - runtime bundle revision equals preview revision;

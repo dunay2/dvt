@@ -1,9 +1,9 @@
 ---
 title: DVT dbt Project Round-Trip — Hard Fowler QA and Revised Architecture Specification
-status: Review
+status: Accepted
 version: 2.0
 date: 2026-07-10
-last_reviewed: 2026-07-10
+last_reviewed: 2026-07-12
 reviewed_repository: dunay2/dvt
 reviewed_ref: main
 reviewed_commit: 800be353aee4bf85c03be671e142fe7d5dd11df1
@@ -1331,28 +1331,34 @@ selected Canvas resource path
 
 The current `pipelines/` preference remains for DVT transformation canvases only.
 
-## 14.3 Save interaction
+## 14.3 Working-tree synchronization
 
 ```text
 Edit
--> dirty local buffer
--> SaveWorkspaceFileContent(expected SHA)
+-> modified working-tree buffer
+-> automatic SaveWorkspaceFileContent(expected SHA)
 -> receipt
 -> invalidate ProjectDbtGraphFromFiles
 -> refetch projection
 -> synchronized / invalid / conflict state
 ```
 
+`SaveWorkspaceFileContent` is the internal command name, not a visible Save
+action. Code synchronizes after a short debounce and flushes before changing
+the selected file. The UI never equates a successful file mutation with Git
+stage, commit, push, or remote synchronization.
+
 ## 14.4 States
 
 ```ts
 type DbtCodeSyncState =
   | 'synchronized'
-  | 'dirty'
-  | 'saving'
+  | 'modified'
+  | 'syncing'
   | 'analyzing'
-  | 'saved_invalid'
+  | 'synchronized_invalid'
   | 'conflict'
+  | 'failed'
   | 'read_only';
 ```
 
@@ -1801,7 +1807,8 @@ Add semantic guards proving:
 2. graph-draft Preview still may call it;
 3. file-backed Canvas graph comes from `ProjectDbtGraphFromFiles`;
 4. draft semantic nodes do not override file projection;
-5. Code Save uses `SaveWorkspaceFileContent`;
+5. Code working-tree synchronization uses `SaveWorkspaceFileContent` without a
+   visible Save action;
 6. no `/workspace/dbt/files/:path` route exists;
 7. no browser-owned dbt/Jinja parser becomes authority;
 8. no generic visual-edit transaction script exists; any accepted concrete edit
@@ -2016,10 +2023,10 @@ No behavior change.
 Deliver:
 
 - content SHA on reads;
-- conditional Save;
+- conditional workspace-file mutation;
 - atomic local write;
-- Code Save button;
-- dirty/saved/conflict UI;
+- automatic Code working-tree synchronization;
+- modified/syncing/synchronized/conflict UI;
 - query invalidation.
 
 Still graph-authored.
@@ -2157,7 +2164,8 @@ The round-trip capability is not complete until:
 
 1. authority mode is explicit and accepted;
 2. imported dbt files remain byte-preserved unless directly edited;
-3. Code saves with revision protection;
+3. Code synchronizes working-tree edits with revision protection and no manual
+   Save lifecycle;
 4. Canvas derives dependencies from dbt analysis;
 5. file-backed Preview never regenerates project files;
 6. Source Import behaves correctly in both authority modes;
@@ -2196,7 +2204,7 @@ The following current documents must be reconciled in Phase 0:
 
 4. `code-workbench-workspace-files-component.md`
    - add revision/CAS;
-   - add Code Save;
+   - add automatic Code working-tree synchronization and conflict posture;
    - make selection authority-aware.
 
 5. `canvas-layout-persistence-component.md`
@@ -2241,11 +2249,10 @@ The following current documents must be reconciled in Phase 0:
 
 ## 32.3 Final assessment
 
-The revised specification now fits the repository's actual boundaries, but it is
-still a **Review** document.
-
-Implementation should not begin until Phase 0 resolves the authority-mode ADR
-and the public graph-draft contract implications.
+The revised specification fits the repository's actual boundaries and is
+**Accepted**. ADR-0060 and the revisioned workspace-file contract complete the
+Phase 0 authority prerequisites. Later phases remain independently gated by
+their declared command/query rails and negative proof.
 
 The correct architectural direction is:
 
@@ -2260,3 +2267,145 @@ explicit authority mode
 
 This gives DVT real dbt compatibility without creating a second language, a
 second file-save system, or a hidden second source of truth.
+
+---
+
+# 33. Active slice: Code working-tree synchronization
+
+## 33.1 Think-first analysis
+
+**Problem.** Code currently edits a route-local buffer that is discarded on
+navigation. Adding a Save button would create a second persistence lifecycle
+even though the project working tree is already authoritative.
+
+**Root cause.** The web route never consumes the implemented conditional
+`SaveWorkspaceFileContent` command. Presentation state and command orchestration
+are therefore disconnected.
+
+**Selected option.** Reuse the existing command as an internal debounced,
+serialized working-tree mutation. Keep state transitions in a pure presentation
+model, orchestration in a hook, and status rendering in a presentation
+component. Flush before file selection changes and fail closed on revision
+conflict.
+
+**Rejected options.** A manual Save action duplicates project persistence. A
+browser-only Git client is fake authority. Adding stage/commit/push before a real
+Git connector exists would introduce unimplemented rails.
+
+## 33.2 Fowler matrix
+
+| Scenario                                         | Opportunity              | Pattern                                     | DDD owner               | Rail                       | Required proof                            |
+| ------------------------------------------------ | ------------------------ | ------------------------------------------- | ----------------------- | -------------------------- | ----------------------------------------- |
+| Monaco edits disappear on navigation             | Hidden authority         | Presentation Model + Application Controller | `CodeWorkingTreeSync`   | `SaveWorkspaceFileContent` | model, hook, component, and browser tests |
+| A later edit arrives while a write is running    | Anemic state machine     | Explicit State Model + serialized command   | `CodeWorkingTreeSync`   | `SaveWorkspaceFileContent` | no-lost-edit unit test                    |
+| Workspace content changed elsewhere              | Stale write              | Compare-and-Swap                            | `WorkspaceFileRevision` | `SaveWorkspaceFileContent` | conflict test; no overwrite               |
+| UI claims Git synchronization after a file write | Published-language drift | Honest status projection                    | `CodeWorkingTreeStatus` | none - presentation only   | no Save/stage/commit/push claim guard     |
+
+## 33.3 Definition of done
+
+- no user-facing Save action exists;
+- edits synchronize to the working tree through the existing CAS command;
+- later edits are not lost while a write is in flight;
+- conflict and failed writes remain visible and do not change file selection;
+- selection flushes modified content before opening another file;
+- status copy is localized and does not claim stage, commit, push, or remote
+  synchronization;
+- Planning DB maps the component, files, rail, relationships, and evidence;
+- focused web tests, typecheck, lint, feature mechanization, browser proof, and
+  `pnpm verify:prepush` pass.
+
+```feature-mechanization
+version: 1
+featureId: E-DBT-CODE-WORKING-TREE-SYNC-20260712
+mechanizationStatus: closed
+noHumanDecisionsRemaining: true
+owner: Frontend / Project Workspace I/O
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+componentGuides:
+  - docs/architecture/components/web/code-workbench-workspace-files-component.md
+userStories:
+  - docs/architecture/components/web/code-workbench-workspace-files-user-stories.md
+governingSources:
+  - AGENTS.md
+  - docs/adr/ADR-0060-dbt-project-authoring-authority.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+allowedImplementationSurfaces:
+  - apps/web/src/app/views/CodeView.tsx
+  - apps/web/src/app/views/CodeView.test.tsx
+  - apps/web/src/app/views/code/**
+  - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+  - docs/adr/ADR-0060-dbt-project-authoring-authority.md
+  - docs/architecture/components/web/code-workbench-workspace-files-component.md
+  - docs/architecture/components/web/git/git-mode-architecture.md
+  - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+  - tools/planning-db/migrations/634_code_working_tree_sync_design.sql
+  - tools/planning-db/migrations/635_code_working_tree_sync_evidence.sql
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/**
+  - packages/@dvt/engine/**
+  - packages/@dvt/adapter-*/**
+  - packages/@dvt/planner/**
+commandQueryRails:
+  - name: SaveWorkspaceFileContent
+    type: command
+    dddOwner: WorkspaceFileContent
+domainObjects:
+  - name: CodeWorkingTreeSync
+    type: presentation model
+    owner: apps/web
+fowlerSignals:
+  - Hidden authority
+  - Anemic state machine
+  - Published-language drift
+architectureGuards:
+  - pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+cypressFlows:
+  - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+completionGate:
+  - pnpm --filter @dvt/web test:unit:run -- src/app/views/code/codeWorkingTreeSyncModel.test.ts
+  - pnpm --filter @dvt/web test:presentation:run -- src/app/views/code/useCodeWorkingTreeSync.test.tsx src/app/views/code/CodeWorkingTreeStatus.test.tsx src/app/views/CodeView.test.tsx
+  - pnpm --filter @dvt/web typecheck
+  - pnpm --filter @dvt/web lint
+  - pnpm docs:feature-mechanization:implementation -- --feature E-DBT-CODE-WORKING-TREE-SYNC-20260712
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: code-working-tree-state-model
+    redTest: pnpm --filter @dvt/web test:unit:run -- src/app/views/code/codeWorkingTreeSyncModel.test.ts
+    expectedFailure: Missing serialized synchronization state and no-lost-edit transitions.
+    patchSurfaces:
+      - apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
+    greenTest: pnpm --filter @dvt/web test:unit:run -- src/app/views/code/codeWorkingTreeSyncModel.test.ts
+  - id: code-working-tree-orchestration
+    redTest: pnpm --filter @dvt/web test:presentation:run -- src/app/views/code/useCodeWorkingTreeSync.test.tsx src/app/views/CodeView.test.tsx
+    expectedFailure: Code does not invoke the conditional workspace-file command or flush selection.
+    patchSurfaces:
+      - apps/web/src/app/views/code/useCodeWorkingTreeSync.ts
+      - apps/web/src/app/views/CodeView.tsx
+    greenTest: pnpm --filter @dvt/web test:presentation:run -- src/app/views/code/useCodeWorkingTreeSync.test.tsx src/app/views/CodeView.test.tsx
+symbols:
+  - name: reduceCodeWorkingTreeSync
+    path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
+    dddOwner: CodeWorkingTreeSync
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Anemic state machine]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/codeWorkingTreeSyncModel.test.ts]
+  - name: useCodeWorkingTreeSync
+    path: apps/web/src/app/views/code/useCodeWorkingTreeSync.ts
+    dddOwner: CodeWorkingTreeSync
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/useCodeWorkingTreeSync.test.tsx]
+  - name: CodeWorkingTreeStatus
+    path: apps/web/src/app/views/code/CodeWorkingTreeStatus.tsx
+    dddOwner: CodeWorkingTreeSync
+    cqRails: [SaveWorkspaceFileContent]
+    fowlerSignals: [Published-language drift]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
+    unitTests: [apps/web/src/app/views/code/CodeWorkingTreeStatus.test.tsx]
+```
