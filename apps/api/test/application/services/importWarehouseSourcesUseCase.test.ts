@@ -481,9 +481,9 @@ describe('ImportWarehouseSourcesUseCase', () => {
     });
 
     expect(result.yamlFiles).toEqual(['models/sources/src_sales_erp_ops.yml']);
-    expect(result.importedNodeIds[0]).toMatch(
-      /^src_warehouse_prod_raw_lake_[a-f0-9]{8}_sales_erp_ops_[a-f0-9]{8}_open_orders_[a-f0-9]{8}$/
-    );
+    expect(result.importedNodeIds).toEqual([
+      'src_warehouse_prod_raw_lake_sales_erp_ops_open_orders',
+    ]);
     expect(draftStore.save).toHaveBeenCalledWith(
       expect.objectContaining({
         draft: expect.objectContaining({
@@ -496,6 +496,42 @@ describe('ImportWarehouseSourcesUseCase', () => {
         }),
       })
     );
+  });
+
+  it('adds a deterministic suffix only when distinct source objects share one stable node id', async () => {
+    const draftStore = createDraftStore();
+    const spacedOrders = relationalSourceObject({ name: 'Open Orders' });
+    const hyphenatedOrders = relationalSourceObject({ name: 'Open-Orders' });
+    const catalog: IWarehouseConnectionCatalog = {
+      ...createCatalog(),
+      listSourceObjects: vi.fn(async () => [spacedOrders, hyphenatedOrders]),
+      getConnection: vi.fn(async () => ({
+        ...catalogEntry,
+        sourceObjects: [spacedOrders, hyphenatedOrders],
+      })),
+    };
+    const useCase = new ImportWarehouseSourcesUseCase(
+      createSourceObjectReader(catalog),
+      draftStore,
+      createWorkspaceFiles(),
+      () => new Date('2026-06-26T00:00:00.000Z')
+    );
+
+    const result = await useCase.execute({
+      scope,
+      connectionId: catalogEntry.id,
+      objects: [{ objectId: spacedOrders.objectId }, { objectId: hyphenatedOrders.objectId }],
+      groupingStrategy: 'schema',
+      includeColumns: true,
+      addTests: false,
+      addFreshness: false,
+    });
+
+    expect(new Set(result.importedNodeIds).size).toBe(2);
+    expect(result.importedNodeIds).toEqual([
+      expect.stringMatching(/^src_warehouse_prod_analytics_erp_open_orders_[a-f0-9]{8}$/),
+      expect.stringMatching(/^src_warehouse_prod_analytics_erp_open_orders_[a-f0-9]{8}$/),
+    ]);
   });
 
   it('persists estimated source metric evidence separately from measured evidence', async () => {

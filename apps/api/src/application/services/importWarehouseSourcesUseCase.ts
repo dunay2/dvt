@@ -46,7 +46,6 @@ import {
   buildWarehouseSourceYamlPath,
   buildWarehouseSourceYamlUpdates,
   groupSourceObjectsForYaml,
-  toCollisionResistantYamlIdentifierPart,
   toStableYamlIdentifierPart,
   type ConnectedRelationalSourceObject,
   type WarehouseSourceYamlBinding,
@@ -305,17 +304,40 @@ function appendImportedSourceNodes(
   readonly yamlFiles: readonly string[];
 } {
   const existingIds = new Set(draft.nodeIds);
+  const existingNodeIdBySourceObjectId = new Map<string, string>();
+  for (const node of draft.nodes) {
+    const sourceObjectId = readSourceObjectId(node);
+    if (sourceObjectId) {
+      existingNodeIdBySourceObjectId.set(sourceObjectId, node.id);
+    }
+  }
+  const requestedSourceObjectIdsByStableNodeId = new Map<string, Set<string>>();
+  for (const sourceObject of input.sourceObjects) {
+    const stableNodeId = toStableSourceNodeId(sourceObject);
+    const sourceObjectIds = requestedSourceObjectIdsByStableNodeId.get(stableNodeId) ?? new Set();
+    sourceObjectIds.add(sourceObject.objectId);
+    requestedSourceObjectIdsByStableNodeId.set(stableNodeId, sourceObjectIds);
+  }
   const importedNodes: WorkspaceGraphAuthoringNode[] = [];
   const importedNodeIds: string[] = [];
   const yamlFiles = new Set<string>();
   const nextPositions = { ...draft.nodePositions };
 
   for (const sourceObject of input.sourceObjects) {
-    const nodeId = toSourceNodeId(sourceObject);
     yamlFiles.add(
       sourceYamlBindings.get(sourceObject.objectId)?.path ??
         buildWarehouseSourceYamlPath(sourceObject, input.groupingStrategy)
     );
+    if (existingNodeIdBySourceObjectId.has(sourceObject.objectId)) {
+      continue;
+    }
+    const stableNodeId = toStableSourceNodeId(sourceObject);
+    const hasRequestedCollision =
+      (requestedSourceObjectIdsByStableNodeId.get(stableNodeId)?.size ?? 0) > 1;
+    const nodeId =
+      hasRequestedCollision || existingIds.has(stableNodeId)
+        ? toCollisionResistantSourceNodeId(sourceObject)
+        : stableNodeId;
     if (existingIds.has(nodeId)) {
       continue;
     }
@@ -324,6 +346,7 @@ function appendImportedSourceNodes(
     importedNodeIds.push(nodeId);
     importedNodes.push(
       toSourceNode(
+        nodeId,
         sourceObject,
         connection,
         input.groupingStrategy,
@@ -359,6 +382,7 @@ function appendImportedSourceNodes(
 }
 
 function toSourceNode(
+  nodeId: string,
   sourceObject: ConnectedRelationalSourceObject,
   connection: WarehouseConnection,
   groupingStrategy: SourceImportGrouping,
@@ -374,7 +398,7 @@ function toSourceNode(
       .join('_');
 
   return {
-    id: toSourceNodeId(sourceObject),
+    id: nodeId,
     name: sourceObject.displayName,
     pluginId: 'dvt.warehouse-source',
     kind: 'dvt:source',
@@ -420,14 +444,27 @@ function createInitialDraft(environmentId: string): WorkspaceGraphAuthoringDraft
   };
 }
 
-function toSourceNodeId(sourceObject: ConnectedRelationalSourceObject): string {
+function toStableSourceNodeId(sourceObject: ConnectedRelationalSourceObject): string {
   return [
     'src',
     toStableYamlIdentifierPart(sourceObject.connectionId),
-    toCollisionResistantYamlIdentifierPart(sourceObject.locator.catalog),
-    toCollisionResistantYamlIdentifierPart(sourceObject.locator.schema),
-    toCollisionResistantYamlIdentifierPart(sourceObject.locator.name),
+    toStableYamlIdentifierPart(sourceObject.locator.catalog),
+    toStableYamlIdentifierPart(sourceObject.locator.schema),
+    toStableYamlIdentifierPart(sourceObject.locator.name),
   ]
     .filter((part): part is string => typeof part === 'string' && part.length > 0)
     .join('_');
+}
+
+function toCollisionResistantSourceNodeId(sourceObject: ConnectedRelationalSourceObject): string {
+  const suffix = createHash('sha256')
+    .update(JSON.stringify([sourceObject.connectionId, sourceObject.objectId]))
+    .digest('hex')
+    .slice(0, 8);
+  return `${toStableSourceNodeId(sourceObject)}_${suffix}`;
+}
+
+function readSourceObjectId(node: WorkspaceGraphAuthoringNode): string | null {
+  const sourceObjectId = node.metadata?.sourceObjectId;
+  return typeof sourceObjectId === 'string' && sourceObjectId.length > 0 ? sourceObjectId : null;
 }

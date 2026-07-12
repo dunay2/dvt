@@ -89,9 +89,6 @@ export function toStableYamlIdentifierPart(part: string): string {
 export function toCollisionResistantYamlIdentifierPart(part: string): string {
   const stablePart = toStableYamlIdentifierPart(part);
   const canonicalInput = part.trim();
-  if (canonicalInput === stablePart) {
-    return stablePart;
-  }
   const hash = createHash('sha256')
     .update(canonicalInput.length > 0 ? canonicalInput : part)
     .digest('hex')

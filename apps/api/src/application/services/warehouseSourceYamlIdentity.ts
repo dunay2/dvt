@@ -13,11 +13,27 @@ export function sourceObjectIdentity(sourceObject: ConnectedRelationalSourceObje
 export function buildCanonicalSourceName(sourceObject: ConnectedRelationalSourceObject): string {
   return [
     toStableYamlIdentifierPart(sourceObject.connectionId),
+    toStableYamlIdentifierPart(sourceObject.locator.catalog),
+    toStableYamlIdentifierPart(sourceObject.locator.schema),
+  ].join('_');
+}
+
+export function buildCanonicalTableName(sourceObject: ConnectedRelationalSourceObject): string {
+  return toStableYamlIdentifierPart(sourceObject.locator.name);
+}
+
+export function buildCollisionResistantSourceName(
+  sourceObject: ConnectedRelationalSourceObject
+): string {
+  return [
+    toCollisionResistantYamlIdentifierPart(sourceObject.connectionId),
     toCollisionResistantYamlIdentifierPart(sourceObject.locator.catalog),
     toCollisionResistantYamlIdentifierPart(sourceObject.locator.schema),
   ].join('_');
 }
 
-export function buildCanonicalTableName(sourceObject: ConnectedRelationalSourceObject): string {
+export function buildCollisionResistantTableName(
+  sourceObject: ConnectedRelationalSourceObject
+): string {
   return toCollisionResistantYamlIdentifierPart(sourceObject.locator.name);
 }

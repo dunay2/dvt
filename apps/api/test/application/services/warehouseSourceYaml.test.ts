@@ -185,7 +185,7 @@ describe('warehouse source YAML projection', () => {
     const document = readExistingSourceDocument(update?.content);
     expect(document.sources[0]?.schema).toBe('Sales Data');
     expect(document.sources[0]?.tables[0]).toMatchObject({
-      name: expect.stringMatching(/^order_lines_[a-f0-9]{8}$/),
+      name: 'order_lines',
       identifier: 'Order Lines',
     });
   });

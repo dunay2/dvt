@@ -35,6 +35,8 @@ export {
 export {
   buildCanonicalSourceName,
   buildCanonicalTableName,
+  buildCollisionResistantSourceName,
+  buildCollisionResistantTableName,
   sourceObjectIdentity,
 } from './warehouseSourceYamlIdentity.js';
 export {
