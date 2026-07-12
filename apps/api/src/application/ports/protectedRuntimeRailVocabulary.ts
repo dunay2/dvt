@@ -27,7 +27,8 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   missingScope: 'missing scope',
   missingToken: 'missing token',
   nonEmptyReason: 'non-empty reason',
-  profilesFileInDbtBundle: 'profiles.yml in dbt bundle',
+  workspaceProfileWithoutServerOwnedReference:
+    'workspace profiles.yml without server-owned profile reference',
   staleAuthority: 'stale authority',
   tenantMismatch: 'tenant mismatch',
   tenantWorkspaceMismatch: 'tenant/workspace mismatch',

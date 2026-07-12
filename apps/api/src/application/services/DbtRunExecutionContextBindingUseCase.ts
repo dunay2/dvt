@@ -47,6 +47,11 @@ type DbtWorkspaceBundleFile = {
   readonly bytes: Buffer;
 };
 
+type DbtWorkspaceBundleInspection = {
+  readonly files: readonly DbtWorkspaceBundleFile[];
+  readonly hasProfile: boolean;
+};
+
 type DbtRunArtifactBinding =
   | {
       readonly ok: true;
@@ -67,7 +72,7 @@ const DBT_INCLUDED_EXACT_FILES = new Set([
   'packages.yml',
   'selectors.yml',
 ]);
-const DBT_EXCLUDED_FILENAMES = new Set(['profiles.yml']);
+const DBT_PROFILE_FILENAMES = new Set(['profiles.yml']);
 const DBT_INCLUDED_DIRECTORIES = new Set([
   'analyses',
   'macros',
@@ -85,6 +90,8 @@ const EXCLUDED_DIRECTORY_NAMES = new Set([
   'node_modules',
 ]);
 const TAR_BLOCK_SIZE = 512;
+const DBT_WORKSPACE_PROFILE_REJECTION_REASON =
+  'dbt workspace profiles.yml requires a server-owned profile reference before runtime execution';
 
 export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
   public constructor(
@@ -159,12 +166,19 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
         reason: 'dbt project bundle requires tenant, project, and environment scope',
       };
     }
-    const files = await collectDbtWorkspaceFiles(this.deps.resolveWorkspaceRoot(workspaceScope));
-    if (files.some((file) => DBT_PROJECT_FILENAMES.has(file.workspacePath)) === false) {
+    const workspaceBundle = await inspectDbtWorkspaceBundle(
+      this.deps.resolveWorkspaceRoot(workspaceScope)
+    );
+    if (workspaceBundle.hasProfile) {
+      return { ok: false, reason: DBT_WORKSPACE_PROFILE_REJECTION_REASON };
+    }
+    if (
+      workspaceBundle.files.some((file) => DBT_PROJECT_FILENAMES.has(file.workspacePath)) === false
+    ) {
       return { ok: false, reason: 'dbt project bundle requires dbt_project.yml' };
     }
 
-    const bundleBytes = await createGzippedTarball(files);
+    const bundleBytes = await createGzippedTarball(workspaceBundle.files);
     const bundleSha256 = sha256Hex(bundleBytes);
     const tenantId = input.context.scope.tenantId.value;
     const bundleRelativePath = buildCanonicalDbtProjectBundleRelativePath(tenantId, bundleSha256);
@@ -254,11 +268,12 @@ function isDbtPlan(plan: ExecutionPlan): boolean {
   return plan.steps.some((step) => DBT_EXECUTABLE_STEP_KINDS.has(step.kind));
 }
 
-async function collectDbtWorkspaceFiles(
+async function inspectDbtWorkspaceBundle(
   workspaceRoot: string
-): Promise<readonly DbtWorkspaceBundleFile[]> {
+): Promise<DbtWorkspaceBundleInspection> {
   const root = resolve(workspaceRoot);
   const files: DbtWorkspaceBundleFile[] = [];
+  let hasProfile = false;
 
   async function visit(directory: string): Promise<void> {
     const entries = await readdir(directory, { withFileTypes: true }).catch(() => []);
@@ -276,6 +291,10 @@ async function collectDbtWorkspaceFiles(
 
       const absolutePath = join(directory, entry.name);
       const workspacePath = normalizeWorkspacePath(relative(root, absolutePath));
+      if (isDbtProfilePath(workspacePath)) {
+        hasProfile = true;
+        continue;
+      }
       if (!shouldIncludeDbtWorkspacePath(workspacePath)) {
         continue;
       }
@@ -288,16 +307,20 @@ async function collectDbtWorkspaceFiles(
   }
 
   await visit(root);
-  return files.sort((left, right) => left.workspacePath.localeCompare(right.workspacePath));
+  return {
+    files: files.sort((left, right) => left.workspacePath.localeCompare(right.workspacePath)),
+    hasProfile,
+  };
+}
+
+function isDbtProfilePath(workspacePath: string): boolean {
+  const pathSegments = workspacePath.split('/');
+  const fileName = pathSegments.at(-1);
+  return fileName !== undefined && DBT_PROFILE_FILENAMES.has(fileName);
 }
 
 function shouldIncludeDbtWorkspacePath(workspacePath: string): boolean {
   const pathSegments = workspacePath.split('/');
-  const fileName = pathSegments.at(-1);
-  if (fileName !== undefined && DBT_EXCLUDED_FILENAMES.has(fileName)) {
-    return false;
-  }
-
   if (DBT_INCLUDED_EXACT_FILES.has(workspacePath)) {
     return true;
   }
