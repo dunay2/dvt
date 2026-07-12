@@ -12,6 +12,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   authenticationFailed: 'authentication failed',
   clientRunId: 'client runId',
   compatibilityDisabled: 'compatibility disabled',
+  credentialMaterialInDbtBundle: 'credential material in dbt bundle',
   disabledRoute: 'disabled route',
   invalidGraphSource: 'invalid graph source',
   invalidPath: 'invalid path',
