@@ -72,11 +72,11 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     let projectDirectory: string;
     try {
       projectDirectory = await this.resolveProjectDirectory(input);
-    } catch (error) {
+    } catch {
       return this.unavailable(
         unavailableRevision(`missing:${input.projectRoot}`),
         'dbt_project_not_found',
-        errorMessage(error, 'The dbt project is not available in the authorized workspace.')
+        'The dbt project is not available in the authorized workspace.'
       );
     }
 
@@ -88,21 +88,17 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           maxBytes: this.maxProjectBytes,
         })
       ).sha256;
-    } catch (error) {
+    } catch {
       return this.unavailable(
         unavailableRevision(`unreadable:${input.projectRoot}`),
         'dbt_project_unreadable',
-        errorMessage(error, 'The dbt project could not be read safely.')
+        'The dbt project could not be read safely.'
       );
     }
 
     const projectRevision = this.buildRevision(input.projectRoot, contentSetSha256, analyzedAt);
-    const profilesDirectory = this.profilesDirectory;
-    if (
-      profilesDirectory === null ||
-      (!(await isFile(path.join(profilesDirectory, 'profiles.yml'))) &&
-        !(await isFile(path.join(profilesDirectory, 'profiles.yaml'))))
-    ) {
+    const profilesDirectory = await this.resolveProfilesDirectory();
+    if (profilesDirectory === null) {
       return this.unavailable(
         projectRevision,
         'dbt_analyzer_profiles_unavailable',
@@ -142,7 +138,11 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           {
             code: 'dbt_project_invalid',
             severity: 'error' as const,
-            message: normalizeProcessDiagnostic(processResult),
+            message: normalizeProcessDiagnostic(processResult, [
+              [projectDirectory, '<project>'],
+              [profilesDirectory, '<profiles>'],
+              [analysisRoot, '<analysis>'],
+            ]),
           },
         ];
         return {
@@ -176,11 +176,11 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         dependencies: projection.dependencies,
         diagnostics: projection.diagnostics,
       };
-    } catch (error) {
+    } catch {
       return this.unavailable(
         projectRevision,
         'dbt_analyzer_unavailable',
-        errorMessage(error, 'The dbt analyzer could not produce a fresh manifest.')
+        'The dbt analyzer could not produce a fresh manifest.'
       );
     } finally {
       await rm(analysisRoot, { recursive: true, force: true });
@@ -201,6 +201,23 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       throw new Error('dbt_project.yml was not found.');
     }
     return realProjectDirectory;
+  }
+
+  private async resolveProfilesDirectory(): Promise<string | null> {
+    if (this.profilesDirectory === null) return null;
+    try {
+      const [realWorkspaceFilesRoot, realProfilesDirectory] = await Promise.all([
+        realpath(this.workspaceFilesRoot),
+        realpath(this.profilesDirectory),
+      ]);
+      if (isContainedPath(realWorkspaceFilesRoot, realProfilesDirectory)) return null;
+      const hasProfile =
+        (await isFile(path.join(realProfilesDirectory, 'profiles.yml'))) ||
+        (await isFile(path.join(realProfilesDirectory, 'profiles.yaml')));
+      return hasProfile ? realProfilesDirectory : null;
+    } catch {
+      return null;
+    }
   }
 
   private buildRevision(projectRoot: string, contentSetSha256: string, analyzedAt: string) {
@@ -236,18 +253,18 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
 }
 
 function assertContainedPath(root: string, candidate: string): void {
-  const relative = path.relative(root, candidate);
-  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+  if (!isContainedPath(root, candidate)) {
     throw new Error('The dbt project root escaped the authorized workspace scope.');
   }
+}
+
+function isContainedPath(root: string, candidate: string): boolean {
+  const relative = path.relative(root, candidate);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
 }
 
 async function isFile(candidate: string): Promise<boolean> {
   return stat(candidate)
     .then((value) => value.isFile())
     .catch(() => false);
-}
-
-function errorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message.trim().length > 0 ? error.message : fallback;
 }

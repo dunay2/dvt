@@ -195,6 +195,34 @@ describe('DbtCliProjectAnalyzer', () => {
     ]);
   });
 
+  it('removes invocation timestamps and local paths from deterministic invalid diagnostics', async () => {
+    let invocation = 0;
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: {
+        run: vi.fn().mockImplementation(async () => {
+          invocation += 1;
+          return {
+            exitCode: 2,
+            stdout: '',
+            stderr: `${invocation === 1 ? '2026-07-13T10:00:00.000Z' : '2026-07-13T10:01:00.000Z'} Compilation Error at ${projectDirectory}\\models\\orders.sql`,
+          };
+        }),
+      },
+      now: () => new Date('2026-07-13T10:00:00.000Z'),
+    });
+
+    const first = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+    const second = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(second.analysisSha256).toBe(first.analysisSha256);
+    expect(second.diagnostics).toEqual(first.diagnostics);
+    expect(first.diagnostics[0]?.message).toContain('<timestamp>');
+    expect(first.diagnostics[0]?.message).toContain('<project>');
+    expect(first.diagnostics[0]?.message).not.toContain(workspaceFilesRoot);
+  });
+
   it('treats a missing current-run manifest as unavailable instead of a valid empty graph', async () => {
     const analyzer = new DbtCliProjectAnalyzer({
       workspaceFilesRoot,
@@ -222,6 +250,24 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(run).not.toHaveBeenCalled();
   });
 
+  it('rejects an analysis profile stored inside the workspace-file authority root', async () => {
+    const workspaceProfile = path.join(workspaceFilesRoot, 'server-profile');
+    await mkdir(workspaceProfile, { recursive: true });
+    await writeFile(path.join(workspaceProfile, 'profiles.yml'), 'analytics: {}\n', 'utf8');
+    const run = vi.fn();
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory: workspaceProfile,
+      processRunner: { run },
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('unavailable');
+    expect(result.diagnostics[0]?.code).toBe('dbt_analyzer_profiles_unavailable');
+    expect(run).not.toHaveBeenCalled();
+  });
+
   it('returns unavailable without invoking dbt when the authorized project is absent', async () => {
     const run = vi.fn();
     const analyzer = new DbtCliProjectAnalyzer({
@@ -234,6 +280,7 @@ describe('DbtCliProjectAnalyzer', () => {
 
     expect(result.status).toBe('unavailable');
     expect(result.diagnostics[0]?.code).toBe('dbt_project_not_found');
+    expect(result.diagnostics[0]?.message).not.toContain(workspaceFilesRoot);
     expect(run).not.toHaveBeenCalled();
   });
 });
