@@ -54,8 +54,11 @@ const WORKSPACE_PORT_SOURCE = readFileSync(
 
 describe('SourceImportWizard architecture', () => {
   it('drives create-connection provider options from the supported provider catalog', () => {
-    expect(WORKSPACE_PORT_SOURCE).toContain('SUPPORTED_WAREHOUSE_CONNECTION_TYPES');
-    expect(WORKSPACE_PORT_SOURCE).toContain("['postgres'] as const");
+    expect(WORKSPACE_PORT_SOURCE).toContain('WAREHOUSE_CONNECTION_TYPE,');
+    expect(WORKSPACE_PORT_SOURCE).toContain(
+      'SUPPORTED_WAREHOUSE_CONNECTION_TYPES = WAREHOUSE_CONNECTION_TYPE'
+    );
+    expect(WORKSPACE_PORT_SOURCE).not.toContain("['postgres'] as const");
     expect(WORKSPACE_PORT_SOURCE).not.toContain(
       "type: 'snowflake' | 'bigquery' | 'redshift' | 'postgres'"
     );

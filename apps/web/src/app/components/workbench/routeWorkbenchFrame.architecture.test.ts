@@ -75,10 +75,16 @@ describe('RouteWorkbenchFrame architecture', () => {
       expect(userStories).toContain(requiredStory);
     }
 
-    expect(cypressProof).toContain('visitWithE2eWorkspaceSession');
-    expect(cypressProof).toContain('route-workbench-primary-surface');
-    expect(cypressProof).toContain('route-workbench-left-panel');
-    expect(cypressProof).toContain('select 7 as slot_verified');
+    for (const requiredCypressSignal of [
+      'visitWithE2eWorkspaceSession',
+      'route-workbench-primary-surface',
+      'route-workbench-left-panel',
+      'stg_orders.sql',
+      'Synchronized|Sincronizado',
+      'monaco-code-editor',
+    ]) {
+      expect(cypressProof).toContain(requiredCypressSignal);
+    }
 
     for (const requiredPlanSignal of [
       'featureId: F15-ROUTE-WORKBENCH-FRAME-SEMANTIC-SLOTS-20260521',
