@@ -14328,3 +14328,19 @@ test('tracked migrations harden dbt analyzer diagnostics and project input budge
   assert.match(migration.sql, /650_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations expose dbt projection coverage and directory limits', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '649_dbt_project_file_projection_phase2_coverage_limits.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /dbt_resource_not_projected/);
+  assert.match(migration.sql, /directory-count overflow/);
+  assert.match(migration.sql, /directory-depth overflow/);
+  assert.match(migration.sql, /650_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /651_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});

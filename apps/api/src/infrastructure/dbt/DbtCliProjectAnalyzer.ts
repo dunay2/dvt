@@ -34,6 +34,8 @@ type DbtCliProjectAnalyzerOptions = Readonly<{
   maxOutputBytes?: number;
   maxProjectFiles?: number;
   maxProjectBytes?: number;
+  maxProjectDirectories?: number;
+  maxProjectDepth?: number;
   processRunner?: DbtProcessRunner;
   processEnvironment?: NodeJS.ProcessEnv;
   now?: () => Date;
@@ -47,6 +49,8 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
   private readonly maxOutputBytes: number;
   private readonly maxProjectFiles: number;
   private readonly maxProjectBytes: number;
+  private readonly maxProjectDirectories: number;
+  private readonly maxProjectDepth: number;
   private readonly processRunner: DbtProcessRunner;
   private readonly processEnvironment: NodeJS.ProcessEnv;
   private readonly now: () => Date;
@@ -60,6 +64,8 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     this.maxOutputBytes = options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
     this.maxProjectFiles = options.maxProjectFiles ?? DEFAULT_MAX_PROJECT_FILES;
     this.maxProjectBytes = options.maxProjectBytes ?? DEFAULT_MAX_PROJECT_BYTES;
+    this.maxProjectDirectories = options.maxProjectDirectories ?? 5_000;
+    this.maxProjectDepth = options.maxProjectDepth ?? 64;
     this.processRunner = options.processRunner ?? NODE_DBT_PROCESS_RUNNER;
     this.processEnvironment = options.processEnvironment ?? process.env;
     this.now = options.now ?? (() => new Date());
@@ -87,6 +93,8 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         await hashProjectContent(projectDirectory, {
           maxFiles: this.maxProjectFiles,
           maxBytes: this.maxProjectBytes,
+          maxDirectories: this.maxProjectDirectories,
+          maxDepth: this.maxProjectDepth,
         })
       ).sha256;
     } catch {

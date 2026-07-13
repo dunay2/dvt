@@ -168,6 +168,47 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(second.analysisSha256).toBe(first.analysisSha256);
   });
 
+  it('reports dbt resources that the Canvas projection does not represent', async () => {
+    const parsedManifest = manifest();
+    const nodes = parsedManifest.nodes as Record<string, unknown>;
+    nodes['analysis.analytics.audit'] = {
+      unique_id: 'analysis.analytics.audit',
+      resource_type: 'analysis',
+      name: 'audit',
+      package_name: 'analytics',
+      depends_on: { nodes: ['model.analytics.orders'] },
+    };
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: {
+        run: vi.fn().mockImplementation(async (input: { args: readonly string[] }) => {
+          const targetPath = readFlag(input.args, '--target-path');
+          await mkdir(targetPath, { recursive: true });
+          await writeFile(
+            path.join(targetPath, 'manifest.json'),
+            JSON.stringify(parsedManifest),
+            'utf8'
+          );
+          return { kind: 'completed' as const, exitCode: 0, stdout: '', stderr: '' };
+        }),
+      },
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('valid');
+    expect(result.resources.map((resource) => resource.uniqueId)).not.toContain(
+      'analysis.analytics.audit'
+    );
+    expect(result.diagnostics).toContainEqual({
+      code: 'dbt_resource_not_projected',
+      severity: 'warning',
+      message:
+        'analysis.analytics.audit uses unsupported dbt resource type analysis and is not represented on the Canvas.',
+    });
+  });
+
   it('returns a safe invalid diagnostic without exposing project-controlled dbt output', async () => {
     const profileSecret = 'warehouse-password-from-target';
     const analyzer = new DbtCliProjectAnalyzer({
@@ -384,6 +425,44 @@ describe('DbtCliProjectAnalyzer', () => {
       profilesDirectory,
       processRunner: { run },
       maxProjectBytes: 1_000,
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('unavailable');
+    expect(result.diagnostics[0]?.code).toBe('dbt_project_unreadable');
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('rejects projects that exceed the directory-count budget before invoking dbt', async () => {
+    await Promise.all(
+      ['one', 'two', 'three'].map((name) =>
+        mkdir(path.join(projectDirectory, 'empty', name), { recursive: true })
+      )
+    );
+    const run = vi.fn();
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: { run },
+      maxProjectDirectories: 3,
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('unavailable');
+    expect(result.diagnostics[0]?.code).toBe('dbt_project_unreadable');
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('rejects projects that exceed the directory-depth budget before invoking dbt', async () => {
+    await mkdir(path.join(projectDirectory, 'one', 'two', 'three'), { recursive: true });
+    const run = vi.fn();
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: { run },
+      maxProjectDepth: 2,
     });
 
     const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });

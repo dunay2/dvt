@@ -11,11 +11,19 @@ export type ProjectContentRevision = Readonly<{
 
 export async function hashProjectContent(
   projectDirectory: string,
-  limits: { readonly maxFiles: number; readonly maxBytes: number }
+  limits: {
+    readonly maxFiles: number;
+    readonly maxBytes: number;
+    readonly maxDirectories: number;
+    readonly maxDepth: number;
+  }
 ): Promise<ProjectContentRevision> {
   const entries: Array<{ path: string; sha256: string; bytes: number }> = [];
-  const state = { bytes: 0 };
-  await visitProjectDirectory(projectDirectory, projectDirectory, entries, limits, state);
+  const state = { bytes: 0, directories: 1 };
+  if (state.directories > limits.maxDirectories || limits.maxDepth < 0) {
+    throw new Error('The dbt project exceeds configured analysis limits.');
+  }
+  await visitProjectDirectory(projectDirectory, projectDirectory, entries, limits, state, 0);
   entries.sort((left, right) => left.path.localeCompare(right.path));
   return {
     sha256: createHash('sha256').update(stableJson(entries), 'utf8').digest('hex'),
@@ -28,8 +36,14 @@ async function visitProjectDirectory(
   projectDirectory: string,
   currentDirectory: string,
   entries: Array<{ path: string; sha256: string; bytes: number }>,
-  limits: { readonly maxFiles: number; readonly maxBytes: number },
-  state: { bytes: number }
+  limits: {
+    readonly maxFiles: number;
+    readonly maxBytes: number;
+    readonly maxDirectories: number;
+    readonly maxDepth: number;
+  },
+  state: { bytes: number; directories: number },
+  depth: number
 ): Promise<void> {
   const directoryEntries = await readdir(currentDirectory, { withFileTypes: true });
   for (const entry of directoryEntries.sort((left, right) => left.name.localeCompare(right.name))) {
@@ -37,12 +51,18 @@ async function visitProjectDirectory(
       throw new Error(`Symbolic links are not accepted in analyzed dbt projects: ${entry.name}`);
     }
     if (entry.isDirectory()) {
+      const nextDepth = depth + 1;
+      state.directories += 1;
+      if (state.directories > limits.maxDirectories || nextDepth > limits.maxDepth) {
+        throw new Error('The dbt project exceeds configured analysis limits.');
+      }
       await visitProjectDirectory(
         projectDirectory,
         path.join(currentDirectory, entry.name),
         entries,
         limits,
-        state
+        state,
+        nextDepth
       );
       continue;
     }

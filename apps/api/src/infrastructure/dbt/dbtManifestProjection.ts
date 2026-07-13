@@ -36,16 +36,40 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
     ...collectionValues(manifest.exposures),
     ...collectionValues(manifest.metrics),
   ];
-  const resources = candidates
-    .map(projectResource)
-    .filter((resource): resource is DbtProjectAnalysisResource => resource !== null)
-    .sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
-  const resourceIds = new Set(resources.map((resource) => resource.uniqueId));
-  const dependencies: DbtProjectAnalysisDependency[] = [];
   const diagnostics: DbtProjectAnalysis['diagnostics'][number][] = [];
-
+  const resources: DbtProjectAnalysisResource[] = [];
   for (const candidate of candidates) {
     const resource = projectResource(candidate);
+    if (resource !== null) {
+      resources.push(resource);
+      continue;
+    }
+
+    const rawResource = record(candidate);
+    const resourceType = stringValue(rawResource.resource_type);
+    const uniqueId = stringValue(rawResource.unique_id);
+    if (
+      resourceType !== undefined &&
+      uniqueId !== undefined &&
+      !SUPPORTED_RESOURCE_TYPES.has(resourceType)
+    ) {
+      diagnostics.push({
+        code: 'dbt_resource_not_projected',
+        severity: 'warning',
+        message: `${uniqueId} uses unsupported dbt resource type ${resourceType} and is not represented on the Canvas.`,
+      });
+      continue;
+    }
+
+    throw new Error('dbt parse produced a malformed graph resource.');
+  }
+  resources.sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
+  const resourceIds = new Set(resources.map((resource) => resource.uniqueId));
+  const resourceById = new Map(resources.map((resource) => [resource.uniqueId, resource]));
+  const dependencies: DbtProjectAnalysisDependency[] = [];
+
+  for (const candidate of candidates) {
+    const resource = resourceById.get(stringValue(record(candidate).unique_id) ?? '');
     if (!resource) continue;
     for (const dependencyId of stringArray(record(record(candidate).depends_on).nodes)) {
       if (!resourceIds.has(dependencyId)) {
