@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { NODE_DBT_PROCESS_RUNNER } from '../../../src/infrastructure/dbt/dbtAnalyzerProcess.js';
 import { DbtCliProjectAnalyzer } from '../../../src/infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { resolveWorkspaceScopeStorageRoot } from '../../../src/infrastructure/workspaceFiles/workspaceScopeStoragePath.js';
 
@@ -84,7 +85,7 @@ describe('DbtCliProjectAnalyzer', () => {
         JSON.stringify(manifest()),
         'utf8'
       );
-      return { exitCode: 0, stdout: '', stderr: '' };
+      return { kind: 'completed' as const, exitCode: 0, stdout: '', stderr: '' };
     });
     const analyzer = new DbtCliProjectAnalyzer({
       workspaceFilesRoot,
@@ -150,7 +151,7 @@ describe('DbtCliProjectAnalyzer', () => {
         const targetPath = readFlag(input.args, '--target-path');
         await mkdir(targetPath, { recursive: true });
         await writeFile(path.join(targetPath, 'manifest.json'), JSON.stringify(manifest()), 'utf8');
-        return { exitCode: 0, stdout: '', stderr: '' };
+        return { kind: 'completed' as const, exitCode: 0, stdout: '', stderr: '' };
       }),
     };
     const analyzer = new DbtCliProjectAnalyzer({
@@ -173,6 +174,7 @@ describe('DbtCliProjectAnalyzer', () => {
       profilesDirectory,
       processRunner: {
         run: vi.fn().mockResolvedValue({
+          kind: 'completed',
           exitCode: 2,
           stdout: '',
           stderr:
@@ -204,6 +206,7 @@ describe('DbtCliProjectAnalyzer', () => {
         run: vi.fn().mockImplementation(async () => {
           invocation += 1;
           return {
+            kind: 'completed',
             exitCode: 2,
             stdout: '',
             stderr: `${invocation === 1 ? '2026-07-13T10:00:00.000Z' : '2026-07-13T10:01:00.000Z'} Compilation Error at ${projectDirectory}\\models\\orders.sql`,
@@ -228,7 +231,7 @@ describe('DbtCliProjectAnalyzer', () => {
       workspaceFilesRoot,
       profilesDirectory,
       processRunner: {
-        run: vi.fn().mockResolvedValue({ exitCode: 0, stdout: '', stderr: '' }),
+        run: vi.fn().mockResolvedValue({ kind: 'completed', exitCode: 0, stdout: '', stderr: '' }),
       },
       now: () => new Date('2026-07-13T10:00:00.000Z'),
     });
@@ -281,6 +284,83 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(result.status).toBe('unavailable');
     expect(result.diagnostics[0]?.code).toBe('dbt_project_not_found');
     expect(result.diagnostics[0]?.message).not.toContain(workspaceFilesRoot);
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('classifies a missing analyzer executable as an unavailable process boundary', async () => {
+    const result = await NODE_DBT_PROCESS_RUNNER.run({
+      executable: `missing-dbt-${process.pid}-${Date.now()}`,
+      args: ['parse'],
+      cwd: projectDirectory,
+      env: process.env,
+      timeoutMs: 1_000,
+      maxOutputBytes: 1_024,
+    });
+
+    expect(result).toMatchObject({ kind: 'unavailable', reason: 'spawn_failure' });
+  });
+
+  it('classifies analyzer timeout as an unavailable process boundary', async () => {
+    const result = await NODE_DBT_PROCESS_RUNNER.run({
+      executable: process.execPath,
+      args: ['-e', 'setTimeout(() => {}, 10_000)'],
+      cwd: projectDirectory,
+      env: process.env,
+      timeoutMs: 10,
+      maxOutputBytes: 1_024,
+    });
+
+    expect(result).toMatchObject({ kind: 'unavailable', reason: 'timeout' });
+  });
+
+  it('classifies analyzer output overflow as an unavailable process boundary', async () => {
+    const result = await NODE_DBT_PROCESS_RUNNER.run({
+      executable: process.execPath,
+      args: ['-e', "process.stdout.write('x'.repeat(4_096))"],
+      cwd: projectDirectory,
+      env: process.env,
+      timeoutMs: 1_000,
+      maxOutputBytes: 128,
+    });
+
+    expect(result).toMatchObject({ kind: 'unavailable', reason: 'output_limit' });
+  });
+
+  it('returns unavailable when the analyzer process boundary cannot run dbt', async () => {
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: {
+        run: vi.fn().mockResolvedValue({
+          kind: 'unavailable',
+          reason: 'spawn_failure',
+          stdout: '',
+          stderr: '',
+        }),
+      },
+      now: () => new Date('2026-07-13T10:00:00.000Z'),
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('unavailable');
+    expect(result.diagnostics[0]?.code).toBe('dbt_analyzer_unavailable');
+  });
+
+  it('rejects project content that exceeds the byte budget before invoking dbt', async () => {
+    await writeFile(path.join(projectDirectory, 'models', 'oversized.sql'), 'x'.repeat(1_024));
+    const run = vi.fn();
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: { run },
+      maxProjectBytes: 100,
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('unavailable');
+    expect(result.diagnostics[0]?.code).toBe('dbt_project_unreadable');
     expect(run).not.toHaveBeenCalled();
   });
 });

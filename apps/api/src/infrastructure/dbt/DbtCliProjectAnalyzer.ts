@@ -133,6 +133,14 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         maxOutputBytes: this.maxOutputBytes,
       });
 
+      if (processResult.kind === 'unavailable') {
+        return this.unavailable(
+          projectRevision,
+          'dbt_analyzer_unavailable',
+          'The server-managed dbt analyzer process is unavailable.'
+        );
+      }
+
       if (processResult.exitCode !== 0) {
         const diagnostics = [
           {

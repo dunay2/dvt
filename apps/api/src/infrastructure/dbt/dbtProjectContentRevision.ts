@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
-import { readFile, readdir } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 const EXCLUDED_DIRECTORY_NAMES = new Set([
@@ -64,17 +65,33 @@ async function visitProjectDirectory(
     if (!entry.isFile() || EXCLUDED_FILE_NAMES.has(entry.name)) continue;
 
     const absolutePath = path.join(currentDirectory, entry.name);
-    const content = await readFile(absolutePath);
-    const nextBytes = state.bytes + content.byteLength;
-    if (entries.length + 1 > limits.maxFiles || nextBytes > limits.maxBytes) {
+    if (entries.length + 1 > limits.maxFiles) {
       throw new Error('The dbt project exceeds configured analysis limits.');
     }
+
+    const remainingBytes = limits.maxBytes - state.bytes;
+    const fileState = await stat(absolutePath);
+    if (!fileState.isFile() || fileState.size > remainingBytes) {
+      throw new Error('The dbt project exceeds configured analysis limits.');
+    }
+
+    const contentHash = createHash('sha256');
+    let contentBytes = 0;
+    for await (const chunk of createReadStream(absolutePath)) {
+      const contentChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      contentBytes += contentChunk.byteLength;
+      if (contentBytes > remainingBytes) {
+        throw new Error('The dbt project exceeds configured analysis limits.');
+      }
+      contentHash.update(contentChunk);
+    }
+
     entries.push({
       path: path.relative(projectDirectory, absolutePath).replaceAll('\\', '/'),
-      sha256: createHash('sha256').update(content).digest('hex'),
-      bytes: content.byteLength,
+      sha256: contentHash.digest('hex'),
+      bytes: contentBytes,
     });
-    state.bytes = nextBytes;
+    state.bytes += contentBytes;
   }
 }
 

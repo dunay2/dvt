@@ -11,11 +11,20 @@ export type ProcessRunInput = Readonly<{
   maxOutputBytes: number;
 }>;
 
-export type ProcessRunResult = Readonly<{
-  exitCode: number;
-  stdout: string;
-  stderr: string;
-}>;
+export type ProcessRunResult = Readonly<
+  | {
+      kind: 'completed';
+      exitCode: number;
+      stdout: string;
+      stderr: string;
+    }
+  | {
+      kind: 'unavailable';
+      reason: 'spawn_failure' | 'timeout' | 'output_limit';
+      stdout: string;
+      stderr: string;
+    }
+>;
 
 export type DbtProcessRunner = Readonly<{
   run(input: ProcessRunInput): Promise<ProcessRunResult>;
@@ -36,8 +45,25 @@ export const NODE_DBT_PROCESS_RUNNER: DbtProcessRunner = {
           encoding: 'utf8',
         },
         (error, stdout, stderr) => {
+          const exitCode = numericExitCode(error?.code);
+          if (error !== null && exitCode === null) {
+            resolve({
+              kind: 'unavailable',
+              reason:
+                error.code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER'
+                  ? 'output_limit'
+                  : error.killed
+                    ? 'timeout'
+                    : 'spawn_failure',
+              stdout,
+              stderr,
+            });
+            return;
+          }
+
           resolve({
-            exitCode: error === null ? 0 : numericExitCode(error.code),
+            kind: 'completed',
+            exitCode: exitCode ?? 0,
             stdout,
             stderr,
           });
@@ -67,7 +93,7 @@ export function buildSanitizedProcessEnvironment(
 }
 
 export function normalizeProcessDiagnostic(
-  result: ProcessRunResult,
+  result: ProcessRunResult & { readonly kind: 'completed' },
   pathReplacements: readonly (readonly [string, string])[] = []
 ): string {
   const rawDiagnostic = result.stderr.trim() || result.stdout.trim();
@@ -98,6 +124,6 @@ function extractDbtMessages(raw: string): string {
     .join('\n');
 }
 
-function numericExitCode(value: string | number | null | undefined): number {
-  return typeof value === 'number' ? value : 1;
+function numericExitCode(value: string | number | null | undefined): number | null {
+  return typeof value === 'number' ? value : null;
 }
