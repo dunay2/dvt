@@ -1,0 +1,99 @@
+/** Owned concern: map a server-analyzed dbt project to canonical Canvas read models. */
+import type { DbtProjectGraphProjection } from '@dvt/contracts';
+
+import type {
+  CanonicalEdge,
+  CanonicalEdgeRelation,
+  CanonicalNode,
+  CoreNodeRole,
+  PluginNodeKind,
+} from '../../types/canonical';
+
+type DbtProjectedNode = DbtProjectGraphProjection['nodes'][number];
+
+const RESOURCE_PRESENTATION: Record<
+  DbtProjectedNode['resourceType'],
+  Readonly<{ kind: PluginNodeKind; role: CoreNodeRole }>
+> = {
+  source: { kind: 'dbt:source', role: 'input' },
+  model: { kind: 'dbt:model', role: 'transform' },
+  seed: { kind: 'dbt:seed', role: 'input' },
+  snapshot: { kind: 'dbt:snapshot', role: 'transform' },
+  test: { kind: 'dbt:test', role: 'check' },
+  exposure: { kind: 'dbt:exposure', role: 'output' },
+  metric: { kind: 'dbt:metric', role: 'output' },
+};
+
+const EDGE_RELATION: Record<
+  DbtProjectGraphProjection['edges'][number]['relation'],
+  CanonicalEdgeRelation
+> = {
+  dependency: 'lineage',
+  test_target: 'validation',
+  exposure: 'consumption',
+  metric: 'metric',
+};
+
+export type DbtProjectFileCanvasProjection = Readonly<{
+  nodes: CanonicalNode[];
+  edges: CanonicalEdge[];
+  freshness: DbtProjectGraphProjection['freshness'];
+  diagnostics: DbtProjectGraphProjection['diagnostics'];
+  projectRevision: DbtProjectGraphProjection['projectRevision'];
+}>;
+
+function projectNode(
+  node: DbtProjectedNode,
+  freshness: DbtProjectGraphProjection['freshness']
+): CanonicalNode {
+  const presentation = RESOURCE_PRESENTATION[node.resourceType];
+  const hasProjectionWarning =
+    freshness !== 'fresh' || node.visualEditability.status !== 'editable';
+
+  return {
+    id: node.uniqueId,
+    name: node.name,
+    pluginId: 'dbt',
+    kind: presentation.kind,
+    role: presentation.role,
+    status: hasProjectionWarning ? 'warn' : 'idle',
+    tags: [...node.tags],
+    ...(node.originalFilePath === undefined ? {} : { path: node.originalFilePath }),
+    metadata: {
+      dbtUniqueId: node.uniqueId,
+      resourceType: node.resourceType,
+      packageName: node.packageName,
+      ...(node.sourceName === undefined ? {} : { sourceName: node.sourceName }),
+      ...(node.materialized === undefined ? {} : { materialized: node.materialized }),
+      columns: node.columns.map((column) => ({
+        name: column.name,
+        ...(column.dataType === undefined ? {} : { type: column.dataType }),
+        ...(column.description === undefined ? {} : { description: column.description }),
+      })),
+      visualEditability: node.visualEditability,
+      ...(node.testMetadata === undefined ? {} : { testMetadata: node.testMetadata }),
+      authority: 'dbt-project-files',
+    },
+  };
+}
+
+export function projectDbtProjectGraphToCanonicalCanvas(
+  source: DbtProjectGraphProjection
+): DbtProjectFileCanvasProjection {
+  return {
+    nodes: source.nodes.map((node) => projectNode(node, source.freshness)),
+    edges: source.edges.map((edge) => ({
+      id: edge.id,
+      sourceId: edge.sourceUniqueId,
+      targetId: edge.targetUniqueId,
+      relation: EDGE_RELATION[edge.relation],
+      metadata: {
+        dbtRelation: edge.relation,
+        authority: 'dbt-project-files',
+      },
+    })),
+    freshness: source.freshness,
+    diagnostics: [...source.diagnostics],
+    projectRevision: source.projectRevision,
+  };
+}
