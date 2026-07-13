@@ -23,6 +23,8 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
   resolvedCanvasPalette: CanvasPaletteId;
   canEditEdges: boolean;
+  canMoveNodes: boolean;
+  canSelectNodes: boolean;
   nodesWithImpact: Node[];
   edges: Edge[];
   nodeTypes: NodeTypes;
@@ -59,6 +61,8 @@ function resolveMiniMapNodeColor(node: { data?: unknown }): string {
 
 function CanvasViewportReactFlowSurface({
   canEditEdges,
+  canMoveNodes,
+  canSelectNodes,
   nodesWithImpact,
   edges,
   nodeTypes,
@@ -151,27 +155,27 @@ function CanvasViewportReactFlowSurface({
       <ReactFlow
         nodes={nodesWithImpact}
         edges={edges}
-        onNodesChange={canEditEdges ? onNodesChange : undefined}
+        onNodesChange={canMoveNodes ? onNodesChange : undefined}
         onEdgesChange={canEditEdges ? onEdgesChange : undefined}
-        onConnect={onConnect}
+        onConnect={canEditEdges ? onConnect : undefined}
         onReconnect={canEditEdges ? onReconnect : undefined}
         onNodeClick={handleNodeClick}
         onPaneClick={handlePaneClick}
         onNodeDragStop={handleNodeDragStop}
         onSelectionChange={handleSelectionChange}
         nodeTypes={nodeTypes}
-        nodesDraggable={canEditEdges}
+        nodesDraggable={canMoveNodes}
         nodesConnectable={canEditEdges}
         snapToGrid={canvasSnapToGrid}
         snapGrid={[gridSize, gridSize]}
-        nodesFocusable={canEditEdges}
+        nodesFocusable={canSelectNodes}
         edgesFocusable={canEditEdges}
         edgesReconnectable={canEditEdges}
-        elementsSelectable={canEditEdges}
+        elementsSelectable={canSelectNodes}
         selectNodesOnDrag
         multiSelectionKeyCode="Shift"
         deleteKeyCode={canEditEdges ? undefined : null}
-        disableKeyboardA11y={!canEditEdges}
+        disableKeyboardA11y={!canSelectNodes}
         fitView={viewport == null}
         fitViewOptions={{ padding: 0.2, maxZoom: 0.82 }}
         minZoom={0.35}

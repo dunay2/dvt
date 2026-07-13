@@ -61,7 +61,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   selectedForExecution?: boolean;
   onInspectNode?: (
     nodeId: string,
-    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | null
+    preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null
   ) => void;
   onDuplicateNode?: (nodeId: string) => void;
   onRemoveNode?: (nodeId: string) => void;

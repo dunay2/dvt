@@ -20,7 +20,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     const onPreviewExecutionPlan = vi.fn();
 
     const contribution = buildCanvasOperationalDrawerContribution({
-      policy: props.layout.surfaceStrategy!.operationalDrawer,
+      policy: props.layout.surfaceStrategy!.operationalDrawer!,
       panels: props.panels,
       chromeState: props.chromeState,
       onPreviewExecutionPlan,
@@ -78,7 +78,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     });
 
     const contribution = buildCanvasOperationalDrawerContribution({
-      policy: props.layout.surfaceStrategy!.operationalDrawer,
+      policy: props.layout.surfaceStrategy!.operationalDrawer!,
       panels: props.panels,
       chromeState: props.chromeState,
       onPreviewExecutionPlan: vi.fn(),

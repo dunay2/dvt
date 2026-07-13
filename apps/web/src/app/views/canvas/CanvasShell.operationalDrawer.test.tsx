@@ -66,4 +66,28 @@ describe('CanvasShell operational drawer registration', () => {
     contribution?.runs.onStartRun();
     expect(onRun).toHaveBeenCalledTimes(1);
   });
+
+  it('publishes no execution drawer for a surface strategy without execution operations', async () => {
+    await renderShell({
+      layout: {
+        surfaceStrategy: {
+          id: 'read-only-file-canvas',
+          sourceImport: { placement: 'contextual-modal', openedFrom: [] },
+          nodeWorkbench: {
+            placement: 'contextual-overlay',
+            openedFrom: ['double-click'],
+            sections: ['properties', 'columns', 'tests', 'code'],
+          },
+          operationalDrawer: null,
+          globalNavigation: {
+            workbenchTabs: 'retired',
+            fixedResourcePanel: 'retired',
+            fixedInspectorPanel: 'retired',
+          },
+        },
+      },
+    });
+
+    expect(useOperationalDrawerContributionStore.getState().contribution).toBeNull();
+  });
 });

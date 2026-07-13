@@ -27,6 +27,8 @@ import { useCanvasViewportLifecycle } from './useCanvasViewportLifecycle';
 
 type CanvasViewportProps = {
   readonly canEditEdges: boolean;
+  readonly canMoveNodes?: boolean;
+  readonly canSelectNodes?: boolean;
   readonly nodesWithImpact: Node[];
   readonly edges: Edge[];
   readonly nodeTypes: NodeTypes;
@@ -267,6 +269,8 @@ function CanvasViewportWithPresenter({
       viewportRef={viewportRef}
       resolvedCanvasPalette={resolvedCanvasPalette}
       canEditEdges={props.canEditEdges}
+      canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
+      canSelectNodes={props.canSelectNodes ?? props.canEditEdges}
       nodesWithImpact={nodesWithOperationalDetails}
       edges={props.edges}
       nodeTypes={props.nodeTypes}

@@ -116,6 +116,8 @@ function CanvasShellViewport({
   return (
     <CanvasViewport
       canEditEdges={panels.userPermissions.canEditEdges}
+      canMoveNodes={layout.canMoveNodes}
+      canSelectNodes={layout.canSelectNodes}
       nodesWithImpact={graph.nodesWithImpact}
       edges={graph.edges}
       nodeTypes={graph.nodeTypes}

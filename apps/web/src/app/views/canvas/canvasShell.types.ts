@@ -41,6 +41,8 @@ export type CanvasShellLayout = {
   focusMode: boolean;
   inspectorPanelVisible: boolean;
   canOpenSourceImport: boolean;
+  canMoveNodes?: boolean;
+  canSelectNodes?: boolean;
   surfaceStrategy: CanvasSurfaceStrategy | null;
   contextualWorkbench?: CanvasShellContextualWorkbench;
   centerSurfaceMode: 'replace' | 'overlay';
@@ -153,6 +155,11 @@ export type CanvasShellCanvasCommands = {
   onDeleteActiveCanvas: () => void;
 };
 
+export type CanvasShellWorkspaceCommands = Readonly<{
+  canOpenProjectExplorer?: boolean;
+  onOpenProjectCode?: () => void;
+}>;
+
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -161,6 +168,7 @@ export type CanvasShellProps = Readonly<{
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   canvasCommands: CanvasShellCanvasCommands;
+  workspaceCommands?: CanvasShellWorkspaceCommands;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition

@@ -100,19 +100,26 @@ describe('CanvasViewport', () => {
     );
   });
 
-  it('disables graph mutation, selection, and keyboard shortcuts when graph edits are gated', async () => {
-    await renderViewport({ canEditEdges: false });
+  it('keeps read-only nodes movable and inspectable without enabling semantic graph edits', async () => {
+    const onNodesChange = vi.fn();
+    await renderViewport({
+      canEditEdges: false,
+      canMoveNodes: true,
+      canSelectNodes: true,
+      onNodesChange,
+    });
 
     expect(xyflowState.lastReactFlowProps).toMatchObject({
-      nodesDraggable: false,
+      nodesDraggable: true,
       nodesConnectable: false,
-      nodesFocusable: false,
+      nodesFocusable: true,
       edgesFocusable: false,
-      elementsSelectable: false,
+      elementsSelectable: true,
       deleteKeyCode: null,
-      disableKeyboardA11y: true,
-      onNodesChange: undefined,
+      disableKeyboardA11y: false,
+      onNodesChange,
       onEdgesChange: undefined,
+      onConnect: undefined,
       onReconnect: undefined,
       edgesReconnectable: false,
     });
