@@ -14260,3 +14260,32 @@ test('tracked migrations govern dbt project file projection phase two before imp
   assert.match(migration.sql, /feature_mechanization_local_rails/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations close dbt project projection API integrity without phantom Web evidence', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '646_dbt_project_file_projection_phase2_integrity.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /architecture\.component_observability/);
+  assert.match(migration.sql, /OBS-CANVAS-AUTHORITY-BINDING-CONTRACT-VALIDATION/);
+  assert.match(migration.sql, /OBS-DBT-PROJECT-GRAPH-PROJECTION-RESULT/);
+  assert.match(migration.sql, /OBS-DBT-PROJECT-ANALYZER-RESULT/);
+  assert.match(migration.sql, /delete from architecture\.component_test/);
+  assert.match(migration.sql, /delete from architecture\.component_relation/);
+  assert.match(migration.sql, /delete from architecture\.component_responsibility/);
+  assert.match(migration.sql, /delete from architecture\.component/);
+  assert.match(migration.sql, /and status = 'proposed'/);
+  assert.match(
+    migration.sql,
+    /delete from planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.match(
+    migration.sql,
+    /delete from planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(migration.sql, /647_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /648_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
