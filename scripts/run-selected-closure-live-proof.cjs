@@ -211,6 +211,13 @@ function resolveLiveProofSpecPath(argv = process.argv.slice(2)) {
     throw new Error('Live proof spec must end in .cy.ts.');
   }
 
+  if (
+    pathSegments.some((segment) => segment.length === 0) ||
+    !/^[A-Za-z0-9._/-]+$/.test(relativeSpecPath)
+  ) {
+    throw new Error('Live proof requires exactly one literal Cypress spec path.');
+  }
+
   return `/repo/${relativeSpecPath}`;
 }
 

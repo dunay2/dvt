@@ -49,6 +49,21 @@ test('resolveLiveProofSpecPath rejects paths outside the governed Cypress E2E su
   );
 });
 
+test('resolveLiveProofSpecPath rejects spec lists and glob patterns', () => {
+  assert.throws(
+    () =>
+      resolveLiveProofSpecPath([
+        '--spec',
+        'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts,apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts',
+      ]),
+    /exactly one literal Cypress spec path/
+  );
+  assert.throws(
+    () => resolveLiveProofSpecPath(['--spec', 'apps/web/cypress/e2e/**/*.cy.ts']),
+    /exactly one literal Cypress spec path/
+  );
+});
+
 test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catalog discovery', () => {
   const apiEnv = buildLiveProofApiEnv({
     databaseUrl: defaultPgUrl,

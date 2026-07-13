@@ -14210,3 +14210,33 @@ test('tracked migrations reconcile the complete Code working-tree live feature m
   assert.match(migration.sql, /waitForLiveWorkspaceFileContent/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reject live proof spec lists and globs before runtime startup', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '642_code_working_tree_live_proof_single_spec_guard.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /RunDbtAuthorCodeRunLiveProof/);
+  assert.match(migration.sql, /comma-separated Cypress spec lists/);
+  assert.match(migration.sql, /Cypress glob expressions/);
+  assert.match(migration.sql, /before runtime startup/);
+  assert.match(migration.sql, /code-working-tree-live-single-spec-review-hardening/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations keep live proof review hardening inside allowed surfaces', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '643_code_working_tree_live_proof_guard_surface_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /allowed_implementation_surfaces/);
+  assert.match(migration.sql, /allowedImplementationSurfaces/);
+  assert.match(migration.sql, /642_code_working_tree_live_proof_single_spec_guard\.sql/);
+  assert.match(migration.sql, /643_code_working_tree_live_proof_guard_surface_reconciliation\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
