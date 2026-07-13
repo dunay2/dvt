@@ -2314,6 +2314,59 @@ Git connector exists would introduce unimplemented rails.
 - focused web tests, typecheck, lint, feature mechanization, browser proof, and
   `pnpm verify:prepush` pass.
 
+## 34. Active verification slice: live Code working-tree vertical
+
+### 34.1 Think-first analysis
+
+**Problem.** The browser proof for Code working-tree synchronization currently
+stubs workspace-file reads and writes. It proves UI orchestration but does not
+prove that a Monaco edit crosses the protected API, satisfies the CAS contract,
+reaches the scoped filesystem, and is visible after a fresh browser read.
+
+**Root cause.** The existing DBT authoring live spec is not wired to a dedicated
+package command, and it inspects generated files through the API without editing
+and reopening them through the Code workbench. The selected-closure runner also
+hardcodes one Cypress spec, so reusing the live stack requires manual command
+construction.
+
+**Selected option.** Reuse the selected-closure protected-runtime harness and
+make its spec selection an explicit validated runner input. Add a dedicated
+repository command that runs the DBT author/Code/Run spec. Extend that live spec
+to edit a generated model in Monaco, observe the synchronized posture, read the
+persisted content through `GetWorkspaceFileContent`, reload the browser, reopen
+the same file, and see the edited content. The proof owns an isolated workspace
+root, so no restoration or shared-project mutation is required.
+
+**Rejected options.** More API stubs would preserve test-only confidence. A
+second live stack would duplicate process, auth, Temporal, Postgres, and cleanup
+orchestration. Direct filesystem assertions from Cypress would bypass the query
+rail and prove the adapter implementation rather than the product vertical.
+
+### 34.2 Fowler matrix
+
+| Scenario                                                           | Opportunity          | Pattern                                | DDD owner                   | Rail                           | Required proof                    |
+| ------------------------------------------------------------------ | -------------------- | -------------------------------------- | --------------------------- | ------------------------------ | --------------------------------- |
+| Stubbed browser write passes while API/filesystem wiring is broken | Test-only confidence | Vertical Slice Test                    | `CodeWorkingTreeSync`       | `SaveWorkspaceFileContent`     | live Monaco edit and CAS receipt  |
+| Persisted API content is not visible after route reload            | Hidden authority     | Repository + Query Model               | `WorkspaceFileContent`      | `GetWorkspaceFileContent`      | API read plus browser reopen      |
+| A second live stack repeats runtime boot logic                     | Duplicate semantics  | Parameter Object + reused Test Harness | `ProtectedRuntimeLiveProof` | `RunDbtAuthorCodeRunLiveProof` | runner unit test and live command |
+
+### 34.3 Definition of done
+
+- the existing protected-runtime runner accepts only a governed repo-local
+  Cypress spec path;
+- one package command runs the DBT author/Code/Run live vertical;
+- the browser edits a real workspace file through Monaco with no Save action;
+- the POST carries the real content SHA revision and the API accepts it;
+- `GetWorkspaceFileContent` returns the edited content;
+- after browser reload, the Code workbench reopens the same file and renders the
+  persisted edit;
+- the live proof uses no workspace-file intercepts, direct filesystem seeding,
+  or fake success path;
+- Planning DB records the runner, spec, rails, component relation, and live
+  evidence status;
+- focused runner tests, Cypress live proof, feature mechanization, governance,
+  and `pnpm verify:prepush` pass.
+
 ```feature-mechanization
 version: 1
 featureId: E-DBT-CODE-WORKING-TREE-SYNC-20260712
@@ -2341,8 +2394,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/routes.test.tsx
   - apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts
   - apps/web/src/app/routes/internalAlphaRouteGate.test.fixtures.ts
+  - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
   - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
   - apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts
+  - apps/web/package.json
+  - package.json
   - docs/adr/ADR-0060-dbt-project-authoring-authority.md
   - docs/architecture/components/web/code-workbench-workspace-files-component.md
   - docs/architecture/components/web/code-workbench-workspace-files-user-stories.md
@@ -2352,9 +2408,14 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
   - scripts/planning-db-operate.cjs
   - scripts/planning-db-operate-tests/architecture-parse.test.cjs
+  - scripts/planning-db-migrate.test.cjs
+  - scripts/run-selected-closure-live-proof.cjs
+  - scripts/run-selected-closure-live-proof.test.cjs
   - tools/planning-db/migrations/634_code_working_tree_sync_design.sql
   - tools/planning-db/migrations/635_code_working_tree_sync_implementation_closeout.sql
   - tools/planning-db/migrations/636_code_working_tree_sync_local_overlay.sql
+  - tools/planning-db/migrations/637_code_working_tree_live_vertical_design.sql
+  - tools/planning-db/migrations/638_code_working_tree_live_vertical_closeout.sql
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
@@ -2367,6 +2428,12 @@ commandQueryRails:
   - name: CreateArchitectureDesign
     type: command
     dddOwner: ArchitectureDesign
+  - name: GetWorkspaceFileContent
+    type: query
+    dddOwner: WorkspaceFileContentReadModel
+  - name: RunDbtAuthorCodeRunLiveProof
+    type: command
+    dddOwner: ProtectedRuntimeLiveProof
 domainObjects:
   - name: CodeWorkingTreeSync
     type: presentation model
@@ -2375,10 +2442,12 @@ fowlerSignals:
   - Hidden authority
   - Anemic state machine
   - Published-language drift
+  - Test-only confidence
 architectureGuards:
   - pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
   - pnpm --filter @dvt/web test:architecture:run -- src/app/routes/internalAlphaRouteGate.architecture.test.ts
 cypressFlows:
+  - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
   - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
   - apps/web/cypress/e2e/shell/route-workbench-slots.cy.ts
 completionGate:
@@ -2387,6 +2456,9 @@ completionGate:
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web lint
   - node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs
+  - node --test scripts/planning-db-migrate.test.cjs
+  - node --test scripts/run-selected-closure-live-proof.test.cjs
+  - pnpm test:web:e2e:dbt-author-code-run:live
   - pnpm docs:feature-mechanization:implementation -- --feature E-DBT-CODE-WORKING-TREE-SYNC-20260712
   - pnpm verify:prepush
 redGreenCycles:
@@ -2409,6 +2481,21 @@ redGreenCycles:
     patchSurfaces:
       - scripts/planning-db-operate.cjs
     greenTest: node --test scripts/planning-db-operate-tests/architecture-parse.test.cjs
+  - id: code-working-tree-live-runner-selection
+    redTest: node --test scripts/run-selected-closure-live-proof.test.cjs
+    expectedFailure: The protected-runtime runner hardcodes the selected-closure spec and cannot execute the DBT Code vertical through a governed command.
+    patchSurfaces:
+      - scripts/run-selected-closure-live-proof.cjs
+      - scripts/run-selected-closure-live-proof.test.cjs
+      - apps/web/package.json
+      - package.json
+    greenTest: node --test scripts/run-selected-closure-live-proof.test.cjs
+  - id: code-working-tree-live-browser-round-trip
+    redTest: pnpm test:web:e2e:dbt-author-code-run:live
+    expectedFailure: The live DBT spec does not edit, persist, reload, and reopen a workspace file through the Code workbench.
+    patchSurfaces:
+      - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    greenTest: pnpm test:web:e2e:dbt-author-code-run:live
 symbols:
   - name: createCodeWorkingTreeSyncState
     path: apps/web/src/app/views/code/codeWorkingTreeSyncModel.ts
@@ -2578,4 +2665,28 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/code/codeMonacoEditableAccess.architecture.test.ts
     cypressCoverage: apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
     unitTests: [apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts]
+  - name: resolveLiveProofSpecPath
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: ProtectedRuntimeLiveProof command input
+    cqRails: [RunDbtAuthorCodeRunLiveProof]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [scripts/run-selected-closure-live-proof.test.cjs]
+  - name: openLiveProjectCodeFile
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    dddOwner: CodeWorkingTreeSync live browser proof
+    cqRails: [GetWorkspaceFileContent, SaveWorkspaceFileContent]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts]
+  - name: waitForLiveWorkspaceFileContent
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    dddOwner: WorkspaceFileContent live read model proof
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts]
 ```

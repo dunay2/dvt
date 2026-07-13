@@ -243,6 +243,30 @@ flowchart TB
 | Canvas preview/run path  | `SaveWorkspaceFileContent`                                                | Must persist graph artifacts before protected plan preview.                       |
 | Cypress Code happy path  | browser proof                                                             | Must prove real route behavior in live API mode.                                  |
 
+## Strict Live Vertical
+
+The stubbed Code Cypress spec proves presentation and request orchestration, but
+it is not sufficient evidence for the workspace-file vertical. The required
+live proof is:
+
+```text
+Monaco edit
+  -> CodeWorkingTreeSync
+  -> IWorkspaceFileContentCommandPort
+  -> POST /workspace/files/:path with expected content SHA
+  -> SaveWorkspaceFileContentUseCase
+  -> scoped WorkspaceFileRepository
+  -> atomic filesystem mutation
+  -> GET /workspace/files/:path
+  -> browser reload and Code reopen
+```
+
+The proof MUST run against the protected API and an isolated workspace root. It
+MUST NOT intercept workspace-file routes, seed the edited content directly, or
+use filesystem inspection as a substitute for `GetWorkspaceFileContent`. The
+runner may reuse the selected-closure live stack, but the chosen Cypress spec is
+a validated command input rather than a second process-orchestration copy.
+
 ## Architecture Test Requirement
 
 Add a semantic architecture test that checks:
