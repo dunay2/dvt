@@ -379,6 +379,29 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(result.diagnostics[0]?.code).toBe('dbt_project_unreadable');
     expect(run).not.toHaveBeenCalled();
   });
+
+  it('rejects snapshot-escaping dbt paths before invoking the analyzer process', async () => {
+    await writeFile(
+      path.join(projectDirectory, 'dbt_project.yml'),
+      'name: analytics\nversion: 1.0.0\nprofile: analytics\nmodel-paths: [../outside]\n',
+      'utf8'
+    );
+    const run = vi.fn();
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: { run },
+      now: () => new Date('2026-07-13T10:00:00.000Z'),
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('invalid');
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({ code: 'dbt_project_invalid', severity: 'error' }),
+    ]);
+    expect(run).not.toHaveBeenCalled();
+  });
 });
 
 function readFlag(args: readonly string[], flag: string): string {

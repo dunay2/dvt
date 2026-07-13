@@ -17,6 +17,7 @@ import {
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
 import { snapshotProjectContent } from './dbtProjectContentRevision.js';
+import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js';
 
 const ANALYZER_VERSION = 'dvt-dbt-analyzer.v1';
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -120,6 +121,11 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       }
 
       projectRevision = this.buildRevision(input.projectRoot, contentSetSha256, analyzedAt);
+      const pathPolicy = await evaluateDbtProjectSnapshotPathPolicy(snapshotDirectory);
+      if (!pathPolicy.ok) {
+        return this.invalid(projectRevision, contentSetSha256);
+      }
+
       const profilesDirectory = await this.resolveProfilesDirectory();
       if (profilesDirectory === null) {
         return this.unavailable(
@@ -163,21 +169,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       }
 
       if (processResult.exitCode !== 0) {
-        const diagnostics = [
-          {
-            code: 'dbt_project_invalid',
-            severity: 'error' as const,
-            message: INVALID_PROJECT_DIAGNOSTIC_MESSAGE,
-          },
-        ];
-        return {
-          status: 'invalid',
-          projectRevision,
-          analysisSha256: hashDbtAnalysis('invalid', contentSetSha256, [], [], diagnostics),
-          resources: [],
-          dependencies: [],
-          diagnostics,
-        };
+        return this.invalid(projectRevision, contentSetSha256);
       }
 
       const manifest = JSON.parse(
@@ -270,6 +262,27 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         [],
         diagnostics
       ),
+      resources: [],
+      dependencies: [],
+      diagnostics,
+    };
+  }
+
+  private invalid(
+    projectRevision: DbtProjectAnalysis['projectRevision'],
+    contentSetSha256: string
+  ): DbtProjectAnalysis {
+    const diagnostics = [
+      {
+        code: 'dbt_project_invalid',
+        severity: 'error' as const,
+        message: INVALID_PROJECT_DIAGNOSTIC_MESSAGE,
+      },
+    ];
+    return {
+      status: 'invalid',
+      projectRevision,
+      analysisSha256: hashDbtAnalysis('invalid', contentSetSha256, [], [], diagnostics),
       resources: [],
       dependencies: [],
       diagnostics,

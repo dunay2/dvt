@@ -116,6 +116,10 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
         PROTECTED_RUNTIME_TEST_REF.dbtProjectGraphRoutes,
       ],
       [PROTECTED_RUNTIME_NEGATIVE_CASE.missingFile, PROTECTED_RUNTIME_TEST_REF.dbtProjectAnalyzer],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingWorkspaceFileReadAuthority,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectGraphRoutes,
+      ],
     ],
   }),
   defineProtectedRuntimeRail({

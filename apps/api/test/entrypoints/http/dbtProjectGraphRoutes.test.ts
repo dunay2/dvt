@@ -10,21 +10,20 @@ const VALID_QUERY =
 describe('dbtProjectGraphRoutes', () => {
   it('authorizes and returns the scoped file-backed dbt projection', async () => {
     const execute = vi.fn().mockResolvedValue(projection());
-    const authorize = vi.fn().mockResolvedValue({
+    const authenticateBearerToken = vi.fn().mockResolvedValue({ ok: true, principal: principal() });
+    const authorize = vi.fn().mockImplementation((_principal, requestedScope) => ({
       ok: true,
       context: {
         principal: principal(),
         scope: { resource: 'environment', tenantId: { value: 'tenant-a' } },
-        action: { kind: 'query', name: 'workspace:graph-draft:view' },
+        action: requestedScope.action,
         requestId: 'req-1',
         authorizedAt: new Date('2026-07-13T00:00:00Z'),
       },
-    });
+    }));
     const app = Fastify({ logger: false });
     registerDbtProjectGraphRoutes(app, {
-      authenticator: {
-        authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: principal() }),
-      } as never,
+      authenticator: { authenticateBearerToken } as never,
       authorizer: { authorize } as never,
       useCase: { execute } as never,
       rateLimit: { max: 100, timeWindow: 60_000 },
@@ -37,11 +36,11 @@ describe('dbtProjectGraphRoutes', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual(projection());
-    expect(authorize).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ action: { kind: 'query', name: 'workspace:graph-draft:view' } }),
-      expect.any(String)
-    );
+    expect(authenticateBearerToken).toHaveBeenCalledTimes(1);
+    expect(authorize.mock.calls.map(([, requestedScope]) => requestedScope.action)).toEqual([
+      { kind: 'query', name: 'workspace:graph-draft:view' },
+      { kind: 'query', name: 'workspace:files:view' },
+    ]);
     expect(execute).toHaveBeenCalledWith({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
       authorityBinding: {
@@ -50,6 +49,42 @@ describe('dbtProjectGraphRoutes', () => {
         authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
       },
     });
+  });
+
+  it('denies analysis when the caller cannot read workspace files', async () => {
+    const execute = vi.fn();
+    const authenticateBearerToken = vi.fn().mockResolvedValue({ ok: true, principal: principal() });
+    const authorize = vi.fn().mockImplementation((_principal, requestedScope) =>
+      requestedScope.action.name === 'workspace:graph-draft:view'
+        ? {
+            ok: true,
+            context: {
+              principal: principal(),
+              scope: { resource: 'environment', tenantId: { value: 'tenant-a' } },
+              action: requestedScope.action,
+              requestId: 'req-1',
+              authorizedAt: new Date('2026-07-13T00:00:00Z'),
+            },
+          }
+        : { ok: false, reason: 'ACTION_NOT_GRANTED' }
+    );
+    const app = Fastify({ logger: false });
+    registerDbtProjectGraphRoutes(app, {
+      authenticator: { authenticateBearerToken } as never,
+      authorizer: { authorize } as never,
+      useCase: { execute } as never,
+      rateLimit: { max: 100, timeWindow: 60_000 },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/dbt/graph?${VALID_QUERY}`,
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(authenticateBearerToken).toHaveBeenCalledTimes(1);
+    expect(authorize).toHaveBeenCalledTimes(2);
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it.each([

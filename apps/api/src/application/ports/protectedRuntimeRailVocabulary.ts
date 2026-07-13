@@ -24,6 +24,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   missingRunExecutionContextBinding: 'missing run execution context binding',
   missingAction: 'missing action',
   missingFile: 'missing file',
+  missingWorkspaceFileReadAuthority: 'missing workspace-file read authority',
   missingIdempotencyKey: 'missing idempotency key',
   missingScope: 'missing scope',
   missingToken: 'missing token',
@@ -180,7 +181,8 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     dddObject: 'DbtProjectGraphProjection',
     applicationPort: 'ProjectDbtGraphFromFilesUseCase via IDbtProjectAnalyzerPort',
     adapterSurface: 'GET /workspace/dbt/graph',
-    scopeAndAuthorization: 'workspace:graph-draft:view, tenant/project/environment scope',
+    scopeAndAuthorization:
+      'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope',
   },
   workspaceFiles: {
     listName: 'ListWorkspaceFiles',

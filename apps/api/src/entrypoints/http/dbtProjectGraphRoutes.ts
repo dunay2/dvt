@@ -118,6 +118,22 @@ async function authorizeDbtProjectGraphRequest(
     return false;
   }
 
+  const fileReadAuthorization = await deps.authorizer.authorize(
+    auth.context.principal,
+    {
+      ...parsed.accessScope,
+      action: AUTHORIZATION_ACTION.workspaceFilesView,
+    },
+    request.id
+  );
+  if (!fileReadAuthorization.ok) {
+    httpErrorTranslation.respond(
+      reply,
+      httpErrorTranslation.auth.unauthorized(fileReadAuthorization.reason)
+    );
+    return false;
+  }
+
   return {
     scope: {
       tenantId: parsed.accessScope.tenantId.value,
