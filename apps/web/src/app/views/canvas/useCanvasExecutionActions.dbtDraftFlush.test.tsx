@@ -210,12 +210,14 @@ describe('useCanvasExecutionActions dbt draft flush', () => {
 
     expect(flushDraftForExecution).toHaveBeenCalledTimes(1);
     expect(harness.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
-      'models/payments_model.sql',
-      expect.stringContaining("{{ source('finance_warehouse', 'payments_final') }}")
+      expect.objectContaining({
+        path: 'models/payments_model.sql',
+        content: expect.stringContaining("{{ source('finance_warehouse', 'payments_final') }}"),
+        expectedRevision: { kind: 'absent' },
+      })
     );
     expect(harness.workspaceFileContentCommand.saveFileContent).not.toHaveBeenCalledWith(
-      'models/orders_model.sql',
-      expect.any(String)
+      expect.objectContaining({ path: 'models/orders_model.sql' })
     );
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({

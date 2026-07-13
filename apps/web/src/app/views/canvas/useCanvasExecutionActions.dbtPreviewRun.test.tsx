@@ -135,8 +135,11 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
     await harness.clickPlan();
 
     expect(harness.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
-      'models/orders_model.sql',
-      expect.stringContaining("{{ source('raw', 'orders') }}")
+      expect.objectContaining({
+        path: 'models/orders_model.sql',
+        content: expect.stringContaining("{{ source('raw', 'orders') }}"),
+        expectedRevision: { kind: 'absent' },
+      })
     );
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({

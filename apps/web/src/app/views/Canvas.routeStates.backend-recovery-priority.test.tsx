@@ -72,14 +72,7 @@ describe('Canvas route backend and recovery priority', () => {
     });
     expectPrimaryCanvasActionsBlocked(harness.container);
     expectCanvasRegistryClosed();
-    expect(harness.container.textContent).toContain(
-      'Node details are read-only for this workspace state.'
-    );
-    expect(
-      harness.container
-        .querySelector<HTMLInputElement>('input[name="node-name"]')
-        ?.getAttribute('disabled')
-    ).not.toBeNull();
+    expect(harness.container.querySelector('input[name="node-name"]')).toBeNull();
     expectCanvasBootstrapState({
       routeState: 'error_graph',
       bootstrapStatus: 'failed',
