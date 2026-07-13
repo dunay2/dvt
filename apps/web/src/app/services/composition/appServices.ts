@@ -17,6 +17,7 @@ import type {
   IWorkspacePluginCatalogQueryPort,
 } from '../../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
+import type { IDbtProjectGraphQueryPort } from '../../ports/dbtProjectGraph';
 import { createApiClient, type ApiClient } from '../api/createApiClient';
 import { createCapabilitiesPort } from '../capabilities/capabilitiesPort';
 import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
@@ -28,6 +29,7 @@ import { createRunsService } from '../runs/runsService';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import { createWorkspaceScopeSelectionPort } from '../session/workspaceScopeSelectionPort';
 import { createApiWorkspaceGraphDraftAuthoringPort } from '../workspace/workspaceGraphDraftAuthoring.api';
+import { createApiDbtProjectGraphQueryPort } from '../dbtProject/dbtProjectGraph.api';
 import { createApiWorkspacePluginCatalogQueryPort } from '../workspace/workspacePluginCatalog.api';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
 
@@ -43,6 +45,7 @@ export interface AppServices {
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   readonly workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
+  readonly dbtProjectGraphQueryPort: IDbtProjectGraphQueryPort;
   readonly runsService: IRunsPort;
   readonly plansService: IPlansPort;
   readonly costAttributionSummaryPort: ICostAttributionSummaryPort;
@@ -63,6 +66,7 @@ export interface AppServicesOverrides {
   readonly warehouseSourceImport?: IWarehouseSourceImportPort;
   readonly workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
   readonly workspaceGraphDraftAuthoringPort?: IWorkspaceGraphDraftAuthoringPort;
+  readonly dbtProjectGraphQueryPort?: IDbtProjectGraphQueryPort;
   readonly runsService?: IRunsPort;
   readonly plansService?: IPlansPort;
   readonly costAttributionSummaryPort?: ICostAttributionSummaryPort;
@@ -96,6 +100,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   const workspaceGraphDraftAuthoringPort =
     overrides.workspaceGraphDraftAuthoringPort ??
     createApiWorkspaceGraphDraftAuthoringPort(apiClient);
+  const dbtProjectGraphQueryPort =
+    overrides.dbtProjectGraphQueryPort ?? createApiDbtProjectGraphQueryPort(apiClient);
 
   return {
     dataSourceMode,
@@ -109,6 +115,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     warehouseSourceImport,
     workspaceFileContentCommand,
     workspaceGraphDraftAuthoringPort,
+    dbtProjectGraphQueryPort,
     runsService: overrides.runsService ?? createRunsService(apiClient, { sessionContext }),
     plansService: overrides.plansService ?? createPlansService(apiClient),
     costAttributionSummaryPort:

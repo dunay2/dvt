@@ -19,6 +19,7 @@ import type {
   IWorkspacePluginCatalogQueryPort,
 } from '../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
+import type { IDbtProjectGraphQueryPort } from '../ports/dbtProjectGraph';
 import type { AppServices, AppServicesOverrides } from './composition/appServices';
 import { buildAppServices } from './composition/appServices';
 
@@ -56,6 +57,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.warehouseSourceImport,
       overrides?.workspaceFileContentCommand,
       overrides?.workspaceGraphDraftAuthoringPort,
+      overrides?.dbtProjectGraphQueryPort,
       overrides?.capabilitiesPort,
       overrides?.sessionContext,
       overrides?.workspaceScopeSelection,
@@ -112,6 +114,10 @@ export function useWorkspaceFileContentCommandPort(): IWorkspaceFileContentComma
 
 export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAuthoringPort {
   return useRequiredAppServicesContext().workspaceGraphDraftAuthoringPort;
+}
+
+export function useDbtProjectGraphQueryPort(): IDbtProjectGraphQueryPort {
+  return useRequiredAppServicesContext().dbtProjectGraphQueryPort;
 }
 
 export function useRunsService(): IRunsPort {
