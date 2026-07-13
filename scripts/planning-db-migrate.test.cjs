@@ -14481,3 +14481,24 @@ test('tracked migrations close the live Web dbt file projection without closing 
   assert.doesNotMatch(migration.sql, /E-DBT-PROJECT-ROUNDTRIP-1[^\n]*done/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile the complete Web dbt projection symbol manifest', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '659_dbt_project_file_projection_phase2_web_symbols.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /declared_symbol/);
+  assert.match(migration.sql, /IDbtProjectGraphQueryPort/);
+  assert.match(migration.sql, /projectDbtProjectGraphToCanonicalCanvas/);
+  assert.match(migration.sql, /useDbtProjectFileCanvasController/);
+  assert.match(migration.sql, /DbtProjectFileCanvasView/);
+  assert.match(migration.sql, /expectProjectedCardsNotToOverlap/);
+  assert.match(migration.sql, /allowed_implementation_surfaces/);
+  assert.match(migration.sql, /DbtNodeComponent\.tsx/);
+  assert.match(migration.sql, /CodeView\.test\.tsx/);
+  assert.doesNotMatch(migration.sql, /SourceImportWizard\.architecture\.test\.tsx/);
+  assert.doesNotMatch(migration.sql, /routeWorkbenchFrame\.architecture\.test\.ts/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
