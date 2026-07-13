@@ -14,6 +14,7 @@
     "test:e2e:first-authoring:live": "node ../../scripts/run-canvas-first-authoring-live-proof.cjs",
     "test:e2e:source-import:live": "node ../../scripts/run-canvas-source-import-live-proof.cjs",
     "test:e2e:selected-closure:live": "node ../../scripts/run-selected-closure-live-proof.cjs",
+    "test:e2e:dbt-author-code-run:live": "node ../../scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
     "test:e2e:native": "node ../../tools/ci/run-web-cypress-native.mjs",
     "test:e2e:startup-route-readiness": "node ../../tools/ci/run-web-cypress-native.mjs --spec cypress/e2e/shell/startup-route-readiness.cy.ts",
     "test:e2e:open": "node ../../tools/ci/run-web-cypress-native.mjs open",

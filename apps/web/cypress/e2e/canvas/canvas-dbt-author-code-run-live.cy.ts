@@ -16,11 +16,11 @@ import {
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
-function selectNodeForInspector(nodeName: string): void {
-  cy.contains('.react-flow__node', nodeName, { timeout: 20_000 }).should('be.visible').click();
+function openNodeWorkbench(nodeId: string): void {
+  cy.get(`.react-flow__node[data-id="${nodeId}"]`, { timeout: 20_000 })
+    .should('be.visible')
+    .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
-  cy.contains('Node details', { timeout: 20_000 }).should('be.visible');
-  cy.contains('dbt card').should('be.visible');
 }
 
 function replaceInput(name: string, value: string): void {
@@ -49,14 +49,14 @@ function waitForPersistedWarehousePaymentsConfig(attempt = 0): Cypress.Chainable
     ).record?.draft?.nodes;
     const source = nodes?.find((node) => node.id === 'warehouse_payments');
     const metadata = source?.metadata?.dbt as
-      | { packageName?: string; sourceName?: string; schema?: string; tableName?: string }
+      | { packageName?: string; sourceName?: string; schemaName?: string; tableName?: string }
       | undefined;
 
     if (
       metadata?.packageName === 'finance analytics' &&
-      metadata.sourceName === 'finance warehouse' &&
-      metadata.schema === 'warehouse raw' &&
-      metadata.tableName === 'payments final'
+      metadata.sourceName === 'finance_warehouse' &&
+      metadata.schemaName === 'warehouse raw' &&
+      metadata.tableName === 'payments_final'
     ) {
       return;
     }
@@ -83,8 +83,7 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
     ).record?.draft?.nodes;
     const model = nodes?.find((node) => node.id === 'orders_model');
     const metadata = model?.metadata?.dbt as
-      | { materialized?: string; selectedSourceId?: string; packageName?: string }
-      | undefined;
+      { materialized?: string; selectedSourceId?: string; packageName?: string } | undefined;
 
     if (
       model?.name === 'payments model' &&
@@ -100,6 +99,46 @@ function waitForPersistedDbtModelConfig(attempt = 0): Cypress.Chainable<void> {
     }
 
     return cy.wait(250).then(() => waitForPersistedDbtModelConfig(attempt + 1));
+  });
+}
+
+function openLiveProjectCodeFile(path: string): void {
+  cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 }).click();
+  cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
+    .should('be.visible')
+    .and(($item) => {
+      expect($item.attr('data-disabled')).to.be.undefined;
+    })
+    .click();
+  cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
+  cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${path}"]`, {
+    timeout: 30_000,
+  })
+    .should('be.visible')
+    .click();
+  cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 }).should('be.visible');
+}
+
+function waitForLiveWorkspaceFileContent(
+  path: string,
+  expectedContent: string,
+  attempt = 0
+): Cypress.Chainable<void> {
+  return readLiveWorkspaceFile(path).then((response) => {
+    expect(response.status).to.equal(200);
+    const content = String((response.body as { content?: unknown }).content ?? '');
+
+    if (content === expectedContent) {
+      return;
+    }
+
+    if (attempt >= 30) {
+      throw new Error(`Timed out waiting for live workspace content at ${path}.`);
+    }
+
+    return cy
+      .wait(250)
+      .then(() => waitForLiveWorkspaceFileContent(path, expectedContent, attempt + 1));
   });
 }
 
@@ -121,11 +160,17 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     visitWithLiveWorkspaceSession('/canvas');
 
     cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
-    cy.contains('.react-flow__node', 'raw_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'warehouse_payments').should('be.visible');
-    cy.contains('.react-flow__node', 'orders_model').should('be.visible');
+    cy.get('.react-flow__node[data-id="raw_orders"]')
+      .should('be.visible')
+      .and('contain.text', 'Raw Orders');
+    cy.get('.react-flow__node[data-id="warehouse_payments"]')
+      .should('be.visible')
+      .and('contain.text', 'Warehouse Payments');
+    cy.get('.react-flow__node[data-id="orders_model"]')
+      .should('be.visible')
+      .and('contain.text', 'Orders Model');
 
-    selectNodeForInspector('warehouse_payments');
+    openNodeWorkbench('warehouse_payments');
     replaceInput('dbt-package', 'finance analytics');
     replaceInput('dbt-source', 'finance warehouse');
     replaceInput('dbt-schema', 'warehouse raw');
@@ -133,7 +178,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     clickButtonNatively('Apply');
     waitForPersistedWarehousePaymentsConfig();
 
-    selectNodeForInspector('orders_model');
+    openNodeWorkbench('orders_model');
     replaceInput('node-name', 'payments model');
     replaceInput('dbt-package', 'finance analytics');
     cy.get('select[name="dbt-materialized"]').should('be.enabled').select('table');
@@ -156,9 +201,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       expect(content).to.contain("{{ source('finance_warehouse', 'payments_final') }}");
     });
 
-    visitWithLiveWorkspaceSession('/canvas');
-    cy.location('pathname').should('eq', '/canvas');
-    clickCommandSlotNatively('canvas-toolbar-run-command');
+    clickCommandSlotNatively('shell-run-command');
 
     cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
     cy.location('pathname').then((pathname) => {
@@ -176,5 +219,35 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     });
 
     cy.contains(/^Run /, { timeout: 20_000 }).should('exist');
+
+    const workingTreePath = 'models/payments_model.sql';
+    const workingTreeContent = 'select 7 as live_working_tree_verified';
+
+    visitWithLiveWorkspaceSession('/canvas');
+    cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
+    openLiveProjectCodeFile(workingTreePath);
+    cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
+      cy.contains('button', 'Save').should('not.exist');
+      cy.get('[data-testid="monaco-code-editor"]')
+        .find('.monaco-editor textarea')
+        .first()
+        .focus()
+        .type(`{ctrl+a}${workingTreeContent}`, { force: true, delay: 0 });
+      cy.get('[data-slot="code-working-tree-status"]').should(($status) => {
+        expect($status.text()).to.match(/Synchronized|Sincronizado/);
+      });
+    });
+    waitForLiveWorkspaceFileContent(workingTreePath, workingTreeContent);
+
+    cy.reload();
+    cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
+    openLiveProjectCodeFile(workingTreePath);
+    cy.get('[data-slot="canvas-contextual-workbench"]').within(() => {
+      cy.contains('button', 'Save').should('not.exist');
+      cy.get('[data-testid="monaco-code-editor"]')
+        .find('.view-lines')
+        .should('contain.text', 'live_working_tree_verified');
+    });
+    waitForLiveWorkspaceFileContent(workingTreePath, workingTreeContent);
   });
 });

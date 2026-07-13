@@ -14106,3 +14106,107 @@ test('tracked migrations hard cut the source import catalog to SourceObject sema
   assert.match(migration.sql, /capability-aware/);
   assert.match(migration.sql, /CONTRACT-SOURCE-OBJECT-CATALOG-V1/);
 });
+
+test('tracked migrations approve the Code working-tree strict live vertical before implementation', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '637_code_working_tree_live_vertical_design.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /CODE-WORKING-TREE-LIVE-VERTICAL-20260713/);
+  assert.match(migration.sql, /GetWorkspaceFileContent;SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /RunDbtAuthorCodeRunLiveProof/);
+  assert.match(migration.sql, /EV-CODE-WORKING-TREE-LIVE-VERTICAL/);
+  assert.match(migration.sql, /'planned'/);
+  assert.match(migration.sql, /canvas-dbt-author-code-run-live\.cy\.ts/);
+  assert.match(migration.sql, /run-selected-closure-live-proof\.test\.cjs/);
+  assert.doesNotMatch(migration.sql, /'passing'/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations register the Code working-tree live proof command as a canonical planned rail', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '638_code_working_tree_live_vertical_command_rail.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /RunDbtAuthorCodeRunLiveProof/);
+  assert.match(migration.sql, /CodeWorkingTreeLiveProofRun/);
+  assert.match(migration.sql, /run-selected-closure-live-proof CLI --spec/);
+  assert.match(migration.sql, /GetWorkspaceFileContent/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /createsProductPersistencePath', false/);
+  assert.match(migration.sql, /\n\s*'planned',/);
+  assert.doesNotMatch(migration.sql, /cy\.intercept/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations close the Code working-tree vertical with relational live evidence', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '639_code_working_tree_live_vertical_closeout.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /CODE-WORKING-TREE-LIVE-VERTICAL-20260713/);
+  assert.match(migration.sql, /RunDbtAuthorCodeRunLiveProof/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /GetWorkspaceFileContent/);
+  assert.match(migration.sql, /EV-CODE-WORKING-TREE-LIVE-VERTICAL/);
+  assert.match(migration.sql, /canvas-dbt-author-code-run-live\.cy\.ts/);
+  assert.match(migration.sql, /browser reopen/);
+  assert.match(migration.sql, /evidence_status = 'passing'/);
+  assert.match(migration.sql, /'current'/);
+  assert.doesNotMatch(migration.sql, /cy\.intercept/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations map both Code working-tree read and mutation rails', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '640_code_working_tree_read_rail_component_mapping.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /web\.component\.code\.CodeWorkingTreeSync/);
+  assert.match(migration.sql, /GetWorkspaceFileContent/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /WorkspaceFileContentReadModel/);
+  assert.match(migration.sql, /IWorkspaceFilesQueryPort\.getFileContent/);
+  assert.match(migration.sql, /unauthorized workspace scope fails closed/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile the complete Code working-tree live feature manifest', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '641_code_working_tree_live_vertical_manifest_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  for (const requiredField of [
+    'componentGuides',
+    'userStories',
+    'allowedImplementationSurfaces',
+    'forbiddenImplementationSurfaces',
+    'commandQueryRails',
+    'domainObjects',
+    'fowlerSignals',
+    'architectureGuards',
+    'cypressFlows',
+    'completionGate',
+    'redGreenCycles',
+    'symbols',
+  ]) {
+    assert.match(migration.sql, new RegExp(`'${requiredField}'`));
+  }
+  assert.match(migration.sql, /docs\/architecture\/fowler-opportunity-planning-governance\.md/);
+  assert.match(migration.sql, /DEFAULT_SPEC_RELATIVE_PATH/);
+  assert.match(migration.sql, /openNodeWorkbench/);
+  assert.match(migration.sql, /openLiveProjectCodeFile/);
+  assert.match(migration.sql, /waitForLiveWorkspaceFileContent/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
