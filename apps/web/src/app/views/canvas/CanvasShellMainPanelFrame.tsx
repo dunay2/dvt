@@ -11,7 +11,7 @@ const canvasShellMainPanelFrameClassNames = {
   overlayLayer: 'pointer-events-none absolute inset-0',
   overlayContent: 'pointer-events-none h-full',
   workbenchSplit: 'flex min-h-0 flex-1',
-  workbenchBaseSurface: 'min-w-0 flex-1',
+  workbenchBaseSurface: 'flex min-h-0 min-w-0 flex-1',
 } as const;
 
 export function CanvasShellMainPanelFrame({
@@ -66,7 +66,12 @@ export function CanvasShellContextualWorkbenchSplit({
 }>): JSX.Element {
   return (
     <div className={canvasShellMainPanelFrameClassNames.workbenchSplit}>
-      <div className={canvasShellMainPanelFrameClassNames.workbenchBaseSurface}>{baseSurface}</div>
+      <div
+        data-slot="canvas-contextual-workbench-base-surface"
+        className={canvasShellMainPanelFrameClassNames.workbenchBaseSurface}
+      >
+        {baseSurface}
+      </div>
       <CanvasContextualWorkbenchPanel title={title} description={description} onClose={onClose}>
         {children}
       </CanvasContextualWorkbenchPanel>

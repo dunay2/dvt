@@ -25,6 +25,22 @@ export const queryKeys = {
     graphDraftTransport: (workspaceLayoutKey: string) =>
       ['workspace', 'graph-draft-transport', workspaceLayoutKey] as const,
     graphForView: (viewId: string) => ['workspace', 'graph', viewId] as const,
+    dbtProjectGraph: (
+      tenantId: string,
+      projectId: string,
+      environmentId: string,
+      canvasId: string,
+      projectRoot: string
+    ) =>
+      [
+        'workspace',
+        'dbt-project-graph',
+        tenantId,
+        projectId,
+        environmentId,
+        canvasId,
+        projectRoot,
+      ] as const,
     diffChanges: () => ['workspace', 'diff-changes'] as const,
     plugins: () => ['workspace', 'plugins'] as const,
     roles: () => ['workspace', 'roles'] as const,

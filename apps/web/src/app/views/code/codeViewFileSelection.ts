@@ -120,11 +120,65 @@ function filterCodeWorkspaceFilesByPathScope(
   });
 }
 
+function resolveProjectPath(projectRoot: string, path: string): string {
+  if (projectRoot === '.' || path === projectRoot || path.startsWith(`${projectRoot}/`)) {
+    return path;
+  }
+  return `${projectRoot}/${path}`;
+}
+
+function filterCodeWorkspaceFilesByProjectRoot(
+  entries: readonly WorkspaceFileEntry[],
+  projectRoot: string
+): WorkspaceFileEntry[] {
+  if (projectRoot === '.') {
+    return [...entries];
+  }
+
+  return entries.flatMap((entry) => {
+    if (entry.kind === 'file') {
+      return entry.path.startsWith(`${projectRoot}/`) ? [entry] : [];
+    }
+
+    if (entry.path === projectRoot) {
+      return [entry];
+    }
+
+    const children = filterCodeWorkspaceFilesByProjectRoot(entry.children ?? [], projectRoot);
+    return children.length > 0 ? [{ ...entry, children }] : [];
+  });
+}
+
 export function resolveInitialCodeFilePath(
   entries: readonly WorkspaceFileEntry[]
 ): string | undefined {
   const files = flattenCodeWorkspaceFiles(entries);
   return (files.find(isWorkflowArtifactFile) ?? files.find(isModelArtifactFile) ?? files[0])?.path;
+}
+
+export function resolveProjectRootScopedCodeWorkspaceFileTree(
+  entries: readonly WorkspaceFileEntry[],
+  projectRoot: string
+): WorkspaceFileEntry[] {
+  return filterCodeWorkspaceFilesByProjectRoot(entries, projectRoot);
+}
+
+export function resolveInitialDbtProjectFilePath(
+  entries: readonly WorkspaceFileEntry[],
+  options: Readonly<{ projectRoot: string; preferredPath?: string }>
+): string | undefined {
+  const files = flattenCodeWorkspaceFiles(entries);
+  const preferredPath = options.preferredPath
+    ? resolveProjectPath(options.projectRoot, options.preferredPath)
+    : undefined;
+  const projectFilePath = resolveProjectPath(options.projectRoot, DBT_PROJECT_FILE_PATH);
+
+  return (
+    files.find((entry) => entry.path === preferredPath) ??
+    files.find((entry) => entry.path === projectFilePath) ??
+    files.find((entry) => entry.path.toLowerCase().endsWith('.sql')) ??
+    files[0]
+  )?.path;
 }
 
 export function hasCodeWorkspaceFiles(entries: readonly WorkspaceFileEntry[]): boolean {

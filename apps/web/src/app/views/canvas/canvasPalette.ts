@@ -73,6 +73,10 @@ export function normalizeCanvasHexColor(
   return resolveHexPaletteId(value) ?? fallback;
 }
 
+export function deriveCanvasGridStroke(color: CanvasPaletteId): string {
+  return toRgba(hexToRgb(normalizeCanvasHexColor(color, DEFAULT_CANVAS_GRID_COLOR)), 0.18);
+}
+
 function clampChannel(value: number): number {
   return Math.max(0, Math.min(255, Math.round(value)));
 }

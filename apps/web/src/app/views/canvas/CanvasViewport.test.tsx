@@ -57,7 +57,7 @@ describe('CanvasViewport', () => {
     expect(container.querySelectorAll('button')).toHaveLength(0);
     expect(viewportDataset?.canvasPalette).toBe(normalizedCanvasPalette);
     expect(viewportStyle.getPropertyValue('--canvas-surface')).toBe(expectedPaletteTokens.surface);
-    expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe('#94a3b8');
+    expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe('rgba(148, 163, 184, 0.18)');
     expect(viewportStyle.getPropertyValue('--canvas-grid-gap')).toBe('32px');
     expect(xyflowState.miniMapNodeColor).toBeTypeOf('function');
     expect(xyflowState.miniMapNodeColor?.({ data: { pluginKind: 'dbt:model' } })).toBe('#22c55e');
@@ -100,19 +100,26 @@ describe('CanvasViewport', () => {
     );
   });
 
-  it('disables graph mutation, selection, and keyboard shortcuts when graph edits are gated', async () => {
-    await renderViewport({ canEditEdges: false });
+  it('keeps read-only nodes movable and inspectable without enabling semantic graph edits', async () => {
+    const onNodesChange = vi.fn();
+    await renderViewport({
+      canEditEdges: false,
+      canMoveNodes: true,
+      canSelectNodes: true,
+      onNodesChange,
+    });
 
     expect(xyflowState.lastReactFlowProps).toMatchObject({
-      nodesDraggable: false,
+      nodesDraggable: true,
       nodesConnectable: false,
-      nodesFocusable: false,
+      nodesFocusable: true,
       edgesFocusable: false,
-      elementsSelectable: false,
+      elementsSelectable: true,
       deleteKeyCode: null,
-      disableKeyboardA11y: true,
-      onNodesChange: undefined,
+      disableKeyboardA11y: false,
+      onNodesChange,
       onEdgesChange: undefined,
+      onConnect: undefined,
       onReconnect: undefined,
       edgesReconnectable: false,
     });
@@ -163,7 +170,7 @@ describe('CanvasViewport', () => {
     ) as HTMLDivElement | null;
 
     expect(container.querySelector('[data-testid="background"]')).toBeNull();
-    expect(viewport?.style.getPropertyValue('--canvas-grid')).toBe('#f97316');
+    expect(viewport?.style.getPropertyValue('--canvas-grid')).toBe('rgba(249, 115, 22, 0.18)');
     expect(viewport?.style.getPropertyValue('--canvas-grid-gap')).toBe('16px');
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       snapToGrid: true,

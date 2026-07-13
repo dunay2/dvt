@@ -84,7 +84,16 @@ export function buildSanitizedProcessEnvironment(
     TMP: isolatedHome,
     PYTHONIOENCODING: 'utf-8',
   };
-  for (const key of ['PATH', 'Path', 'PATHEXT', 'SystemRoot', 'SYSTEMROOT', 'WINDIR', 'COMSPEC']) {
+  for (const key of [
+    'PATH',
+    'Path',
+    'PATHEXT',
+    'SystemRoot',
+    'SYSTEMROOT',
+    'WINDIR',
+    'COMSPEC',
+    'APPDATA',
+  ]) {
     if (source[key] !== undefined) env[key] = source[key];
   }
   return env;

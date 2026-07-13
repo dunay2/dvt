@@ -42,6 +42,7 @@ const EXCLUDED_NAMES = new Set([
 
 const ALLOWED_EXTENSIONS = new Set([
   '.cjs',
+  '.csv',
   '.css',
   '.html',
   '.js',
@@ -294,6 +295,7 @@ function isAllowedFileName(fileName: string): boolean {
 
 function inferLanguage(filePath: string): string {
   const extension = path.extname(filePath).toLowerCase();
+  if (extension === '.csv') return 'csv';
   if (extension === '.sql') return 'sql';
   if (extension === '.md') return 'markdown';
   if (extension === '.json') return 'json';

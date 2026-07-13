@@ -1,9 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { mkdtemp, readFile, rm } = require('node:fs/promises');
+const { tmpdir } = require('node:os');
+const path = require('node:path');
+const yaml = require('js-yaml');
 
 const {
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
+  prepareLiveProofDbtAnalyzerProfile,
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
@@ -87,7 +92,45 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
     apiEnv.DVT_WORKSPACE_FILES_ROOT,
     /[\\/]\.dvt[\\/]live-proofs[\\/]selected-closure[\\/]dvt_live_selected_closure_test[\\/]workspace-files$/
   );
+  assert.match(
+    apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR,
+    /[\\/]\.dvt[\\/]live-proofs[\\/]selected-closure[\\/]dvt_live_selected_closure_test[\\/]server-dbt-profiles$/
+  );
   assert.equal(apiEnv.OIDC_ISSUER, 'https://issuer.local.dvt/');
+});
+
+test('prepareLiveProofDbtAnalyzerProfile creates an isolated server-owned analysis profile', async () => {
+  const proofRoot = await mkdtemp(path.join(tmpdir(), 'dvt-selected-closure-profile-'));
+  const profilesDirectory = path.join(proofRoot, 'server-dbt-profiles');
+
+  try {
+    await prepareLiveProofDbtAnalyzerProfile({
+      DATABASE_URL: 'postgresql://proof-user:proof-pass@127.0.0.1:5544/proof-db',
+      DVT_PG_SCHEMA: 'proof_schema',
+      DVT_DBT_ANALYZER_PROFILES_DIR: profilesDirectory,
+    });
+
+    const profile = yaml.load(await readFile(path.join(profilesDirectory, 'profiles.yml'), 'utf8'));
+    assert.deepEqual(profile, {
+      dvt_live_proof: {
+        target: 'analysis',
+        outputs: {
+          analysis: {
+            type: 'postgres',
+            host: '127.0.0.1',
+            port: 5544,
+            user: 'proof-user',
+            password: 'proof-pass',
+            dbname: 'proof-db',
+            schema: 'proof_schema',
+            threads: 1,
+          },
+        },
+      },
+    });
+  } finally {
+    await rm(proofRoot, { recursive: true, force: true });
+  }
 });
 
 test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live API posture', () => {

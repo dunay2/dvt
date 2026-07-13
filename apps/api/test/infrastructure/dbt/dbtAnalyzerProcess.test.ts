@@ -1,6 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import { NODE_DBT_PROCESS_RUNNER } from '../../../src/infrastructure/dbt/dbtAnalyzerProcess.js';
+import {
+  buildSanitizedProcessEnvironment,
+  NODE_DBT_PROCESS_RUNNER,
+} from '../../../src/infrastructure/dbt/dbtAnalyzerProcess.js';
+
+describe('buildSanitizedProcessEnvironment', () => {
+  it('preserves Windows runtime discovery without inheriting credentials', () => {
+    const environment = buildSanitizedProcessEnvironment(
+      {
+        APPDATA: 'C:\\Users\\service\\AppData\\Roaming',
+        DATABASE_URL: 'must-not-leak',
+        SNOWFLAKE_PASSWORD: 'must-not-leak',
+      },
+      'C:\\isolated-dbt-home'
+    );
+
+    expect(environment.APPDATA).toBe('C:\\Users\\service\\AppData\\Roaming');
+    expect(environment).not.toHaveProperty('DATABASE_URL');
+    expect(environment).not.toHaveProperty('SNOWFLAKE_PASSWORD');
+  });
+});
 
 describe('NODE_DBT_PROCESS_RUNNER', () => {
   it('classifies a missing analyzer executable as unavailable', async () => {

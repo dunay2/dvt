@@ -286,6 +286,25 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).not.toBeNull();
   });
 
+  it('keeps a read-only workbench factual without rendering disabled authoring controls', () => {
+    renderNodePanel(root, SOURCE_NODE, 'general', {
+      canEditNode: false,
+      onApplyNodeDraft: vi.fn(),
+    });
+
+    const generalSection = container.querySelector(
+      '[data-slot="canvas-node-workbench-general-section"]'
+    );
+    const readonlyLabels = Array.from(generalSection?.querySelectorAll('dt') ?? []).map((label) =>
+      label.textContent?.trim()
+    );
+
+    expect(container.querySelector('[data-slot="canvas-node-workbench-authoring"]')).toBeNull();
+    expect(generalSection?.querySelector('input[name="node-name"]')).toBeNull();
+    expect(generalSection?.textContent).not.toContain('Editable properties');
+    expect(readonlyLabels).toEqual(expect.arrayContaining(['Database', 'Schema', 'Table']));
+  });
+
   it('orders editable identity before readonly facts without repeating source target rows', () => {
     renderPanel(root, 'general');
 

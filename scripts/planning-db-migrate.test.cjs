@@ -14398,3 +14398,131 @@ test('tracked migrations reconcile all dbt projection implementation surfaces', 
   assert.match(migration.sql, /654_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations model the Web dbt file projection family before implementation', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '655_dbt_project_file_projection_phase2_web_design.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-WEB-SERVICES-DBT-PROJECT-GRAPH/);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-DBT-FILE-PROJECTION-MODEL/);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-DBT-FILE-PROJECTION/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /PersistCanvasLayout/);
+  assert.match(migration.sql, /InspectCanvasNodeProperties/);
+  assert.match(migration.sql, /ReadWorkspaceFiles/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /Inspectability and layout movement are independent/);
+  assert.match(
+    migration.sql,
+    /no source import, graph mutation, Preview, Run, or graph-draft request/
+  );
+  assert.match(migration.sql, /component_status[\s\S]*'needed'/);
+  assert.doesNotMatch(migration.sql, /evidence_status[\s\S]*'current'/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations authorize only the shared Web composition seams for file projection', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '656_dbt_project_file_projection_phase2_web_composition_design.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /services\/composition\/appServices\.ts/);
+  assert.match(migration.sql, /views\/Canvas\.tsx/);
+  assert.match(migration.sql, /views\/CodeView\.tsx/);
+  assert.match(migration.sql, /canvasSurfaceStrategyContracts\.ts/);
+  assert.match(migration.sql, /CanvasViewportSurfaceView\.tsx/);
+  assert.match(migration.sql, /hooks from both authorities never run in one render branch/);
+  assert.match(migration.sql, /without querying WorkspaceGraphAuthoringDraft\.v1/);
+  assert.match(migration.sql, /Transfer ownership/);
+  assert.match(migration.sql, /657_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations admit dbt seed files through the existing scoped workspace rails', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '657_dbt_project_file_projection_phase2_seed_file_support.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-API-INFRA-WORKSPACE-FILES/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /ListWorkspaceFiles/);
+  assert.match(migration.sql, /LocalWorkspaceFileRepository\.ts/);
+  assert.match(migration.sql, /LocalWorkspaceFileHistoryRepository\.ts/);
+  assert.match(migration.sql, /dbt seed CSV/);
+  assert.match(migration.sql, /658_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations close the live Web dbt file projection without closing later phases', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '658_dbt_project_file_projection_phase2_live_closeout.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /status = 'implemented'/);
+  assert.match(migration.sql, /frontend_component_local_files/);
+  assert.match(migration.sql, /frontend_component_validation_evidence/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /dbtProjectFileLayout\.test\.ts/);
+  assert.match(migration.sql, /dbt-project-file-projection-live\.cy\.ts/);
+  assert.match(migration.sql, /noGraphDraftFallback/);
+  assert.match(migration.sql, /factualReadOnlyWorkbench/);
+  assert.match(migration.sql, /contextualCodeGraphHeight/);
+  assert.doesNotMatch(migration.sql, /E-DBT-PROJECT-ROUNDTRIP-1[^\n]*done/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile the complete Web dbt projection symbol manifest', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '659_dbt_project_file_projection_phase2_web_symbols.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /declared_symbol/);
+  assert.match(migration.sql, /IDbtProjectGraphQueryPort/);
+  assert.match(migration.sql, /projectDbtProjectGraphToCanonicalCanvas/);
+  assert.match(migration.sql, /useDbtProjectFileCanvasController/);
+  assert.match(migration.sql, /DbtProjectFileCanvasView/);
+  assert.match(migration.sql, /expectProjectedCardsNotToOverlap/);
+  assert.match(migration.sql, /allowed_implementation_surfaces/);
+  assert.match(migration.sql, /DbtNodeComponent\.tsx/);
+  assert.match(migration.sql, /CodeView\.test\.tsx/);
+  assert.doesNotMatch(migration.sql, /SourceImportWizard\.architecture\.test\.tsx/);
+  assert.doesNotMatch(migration.sql, /routeWorkbenchFrame\.architecture\.test\.ts/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations promote the dbt file projection family to architecture authority', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '660_dbt_project_file_projection_component_authority.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-DBT-FILE-PROJECTION-SURFACE/);
+  assert.match(migration.sql, /insert into architecture\.component/);
+  assert.match(migration.sql, /insert into architecture\.component_responsibility/);
+  assert.match(migration.sql, /insert into architecture\.component_relation/);
+  assert.match(migration.sql, /insert into architecture\.component_test/);
+  assert.match(migration.sql, /children_required = true/);
+  assert.match(migration.sql, /frontend_component_local_files/);
+  assert.match(migration.sql, /frontend_component_validation_evidence/);
+  assert.match(migration.sql, /componentFamily/);
+  assert.match(migration.sql, /insert into architecture\.component_port/);
+  assert.match(migration.sql, /component_engineering_component_tree_projection/);
+  assert.match(migration.sql, /component_engineering_file_ownership_projection/);
+  assert.match(migration.sql, /component_engineering_rule_evaluation_projection/);
+  assert.doesNotMatch(migration.sql, /legacy/i);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});

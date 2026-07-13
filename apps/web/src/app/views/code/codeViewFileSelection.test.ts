@@ -7,9 +7,69 @@ import {
   hasCodeWorkspaceFiles,
   resolveGraphScopedCodeWorkspaceFileTree,
   resolveInitialCodeFilePath,
+  resolveInitialDbtProjectFilePath,
+  resolveProjectRootScopedCodeWorkspaceFileTree,
 } from './codeViewFileSelection';
 
 describe('codeViewFileSelection', () => {
+  it('scopes file-backed Code to one dbt project root and prefers the requested resource path', () => {
+    const tree: WorkspaceFileEntry[] = [
+      {
+        path: 'analytics',
+        name: 'analytics',
+        kind: 'directory',
+        children: [
+          {
+            path: 'analytics/dbt',
+            name: 'dbt',
+            kind: 'directory',
+            children: [
+              {
+                path: 'analytics/dbt/dbt_project.yml',
+                name: 'dbt_project.yml',
+                kind: 'file',
+              },
+              {
+                path: 'analytics/dbt/models/orders.sql',
+                name: 'orders.sql',
+                kind: 'file',
+              },
+            ],
+          },
+          {
+            path: 'analytics/other.sql',
+            name: 'other.sql',
+            kind: 'file',
+          },
+        ],
+      },
+    ];
+
+    const scopedTree = resolveProjectRootScopedCodeWorkspaceFileTree(tree, 'analytics/dbt');
+
+    expect(hasCodeWorkspaceFilePath(scopedTree, 'analytics/dbt/models/orders.sql')).toBe(true);
+    expect(hasCodeWorkspaceFilePath(scopedTree, 'analytics/other.sql')).toBe(false);
+    expect(
+      resolveInitialDbtProjectFilePath(scopedTree, {
+        projectRoot: 'analytics/dbt',
+        preferredPath: 'models/orders.sql',
+      })
+    ).toBe('analytics/dbt/models/orders.sql');
+  });
+
+  it('opens dbt_project.yml when a file-backed resource has no original path', () => {
+    const tree: WorkspaceFileEntry[] = [
+      { path: 'dbt_project.yml', name: 'dbt_project.yml', kind: 'file' },
+      { path: 'models/orders.sql', name: 'orders.sql', kind: 'file' },
+    ];
+
+    expect(
+      resolveInitialDbtProjectFilePath(resolveProjectRootScopedCodeWorkspaceFileTree(tree, '.'), {
+        projectRoot: '.',
+      })
+    ).toBe('dbt_project.yml');
+  });
+
   it('selects the first reachable file from a nested workspace tree', () => {
     const tree: WorkspaceFileEntry[] = [
       {

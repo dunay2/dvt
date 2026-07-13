@@ -24,6 +24,7 @@ export default function CanvasShell({
   graphCommands,
   chromeCommands,
   canvasCommands,
+  workspaceCommands,
   canvasContextScreenToFlowPosition,
 }: CanvasShellProps): JSX.Element {
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
@@ -41,7 +42,7 @@ export default function CanvasShell({
   const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const canOpenDataRegistry = canEditGraph && canBrowseDataRegistry;
   const sourceImportDialog = useCanvasSourceImportDialogState(canOpenDataRegistry);
-  const contextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
+  const internalContextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
     if (contextualWorkbenchId !== 'project-code') {
       return undefined;
     }
@@ -66,14 +67,20 @@ export default function CanvasShell({
   }, [contextualWorkbenchId]);
   const shellLayout = useMemo(
     () =>
-      contextualWorkbench == null
+      internalContextualWorkbench == null
         ? layout
         : {
             ...layout,
-            contextualWorkbench,
+            contextualWorkbench: internalContextualWorkbench,
           },
-    [contextualWorkbench, layout]
+    [internalContextualWorkbench, layout]
   );
+  const onOpenProjectCode =
+    workspaceCommands?.onOpenProjectCode ?? (() => setContextualWorkbenchId('project-code'));
+  const onOpenProjectExplorer =
+    workspaceCommands?.canOpenProjectExplorer === false
+      ? undefined
+      : () => setProjectExplorerOpen(true);
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: canEditGraph,
     canOpenSourceImport: canOpenDataRegistry,
@@ -100,7 +107,7 @@ export default function CanvasShell({
       direction="horizontal"
       className="h-full min-w-0"
     >
-      {layout.surfaceStrategy == null ? null : (
+      {layout.surfaceStrategy?.operationalDrawer == null ? null : (
         <CanvasOperationalDrawerContributionRegistrar
           policy={layout.surfaceStrategy.operationalDrawer}
           panels={panels}
@@ -117,8 +124,8 @@ export default function CanvasShell({
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
         onOpenSourceImport={sourceImportDialog.openCommand}
-        onOpenProjectExplorer={() => setProjectExplorerOpen(true)}
-        onOpenProjectCode={() => setContextualWorkbenchId('project-code')}
+        onOpenProjectExplorer={onOpenProjectExplorer}
+        onOpenProjectCode={onOpenProjectCode}
         onOpenCanvasSettings={() => setCanvasSettingsOpen(true)}
         contextMenuPresenter={contextMenuPresenter}
       />
