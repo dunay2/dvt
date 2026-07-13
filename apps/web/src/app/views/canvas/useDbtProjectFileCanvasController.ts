@@ -16,6 +16,8 @@ import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
+const EMPTY_CANONICAL_NODES: CanonicalNode[] = [];
+const EMPTY_CANONICAL_EDGES: CanonicalEdge[] = [];
 const DBT_PROJECT_FILE_NODE_TYPES: NodeTypes = {
   dbtNode: DbtNodeComponent,
 };
@@ -82,14 +84,12 @@ export function useDbtProjectFileCanvasController(
     inspectorPanelVisible,
     inspectorPreferredTabId,
     inspectorPreferredTabRequestId,
-    selectedNodeIds,
     setCanvasGridColor,
     setCanvasGridVisible,
     setCanvasNodePositions,
     setCanvasSnapToGrid,
     setCanvasViewport,
     setInspectorNode,
-    setSelectedNodes,
     showInspectorPanel,
     toggleColumnLevelLineage,
     toggleFrozenCanvasNode,
@@ -110,8 +110,8 @@ export function useDbtProjectFileCanvasController(
     () => (query.data == null ? null : projectDbtProjectGraphToCanonicalCanvas(query.data)),
     [query.data]
   );
-  const canonicalNodes = projection?.nodes ?? [];
-  const canonicalEdges = projection?.edges ?? [];
+  const canonicalNodes = projection?.nodes ?? EMPTY_CANONICAL_NODES;
+  const canonicalEdges = projection?.edges ?? EMPTY_CANONICAL_EDGES;
   const canonicalNodesById = useMemo(() => buildCanonicalNodeMap(canonicalNodes), [canonicalNodes]);
   const canonicalEdgeIdBySignature = useMemo(
     () => buildCanonicalEdgeIdMap(canonicalEdges),
@@ -153,7 +153,6 @@ export function useDbtProjectFileCanvasController(
         return;
       }
 
-      setSelectedNodes([nodeId]);
       if (preferredTabId === 'code') {
         setInspectorNode(null);
         hideInspectorPanel();
@@ -165,7 +164,7 @@ export function useDbtProjectFileCanvasController(
       setInspectorNode(nodeId, preferredTabId ?? 'general');
       showInspectorPanel();
     },
-    [canonicalNodesById, hideInspectorPanel, setInspectorNode, setSelectedNodes, showInspectorPanel]
+    [canonicalNodesById, hideInspectorPanel, setInspectorNode, showInspectorPanel]
   );
   const nodesWithCommands = useMemo<Node[]>(
     () =>
@@ -182,37 +181,18 @@ export function useDbtProjectFileCanvasController(
   );
 
   useEffect(() => {
-    const nextSelectedNodeIds = selectedNodeIds.filter((nodeId) => canonicalNodesById.has(nodeId));
-    if (nextSelectedNodeIds.length !== selectedNodeIds.length) {
-      setSelectedNodes(nextSelectedNodeIds);
-    }
-
     if (inspectorNodeId != null && !canonicalNodesById.has(inspectorNodeId)) {
       setInspectorNode(null);
       hideInspectorPanel();
     }
-  }, [
-    canonicalNodesById,
-    hideInspectorPanel,
-    inspectorNodeId,
-    selectedNodeIds,
-    setInspectorNode,
-    setSelectedNodes,
-  ]);
+  }, [canonicalNodesById, hideInspectorPanel, inspectorNodeId, setInspectorNode]);
 
   const handleSelectionChange = useCallback<
     NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>
-  >(
-    ({ nodes }) => {
-      setSelectedNodes(nodes.map((node) => node.id));
-    },
-    [setSelectedNodes]
-  );
+  >(() => undefined, []);
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
-    (_event, node) => {
-      setSelectedNodes([node.id]);
-    },
-    [setSelectedNodes]
+    () => undefined,
+    []
   );
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
     event.dataTransfer.dropEffect = 'none';
