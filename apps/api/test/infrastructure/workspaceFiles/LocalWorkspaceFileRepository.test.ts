@@ -91,6 +91,49 @@ describe('LocalWorkspaceFileRepository', () => {
     });
   });
 
+  it('saves, lists, and reads dbt seed CSV files through the scoped repository', async () => {
+    const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
+    const content = 'code,name\nES,Spain\nPT,Portugal\n';
+
+    await expect(
+      repository.saveFileContent(SCOPE_A, {
+        path: 'analytics/seeds/country_codes.csv',
+        content,
+        expectedRevision: { kind: 'absent' },
+      })
+    ).resolves.toMatchObject({
+      kind: 'saved',
+      disposition: 'created',
+    });
+    await expect(repository.listFiles(SCOPE_A)).resolves.toEqual([
+      {
+        path: 'analytics',
+        name: 'analytics',
+        kind: 'directory',
+        children: [
+          {
+            path: 'analytics/seeds',
+            name: 'seeds',
+            kind: 'directory',
+            children: [
+              {
+                path: 'analytics/seeds/country_codes.csv',
+                name: 'country_codes.csv',
+                kind: 'file',
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    await expect(
+      repository.getFileContent(SCOPE_A, 'analytics/seeds/country_codes.csv')
+    ).resolves.toMatchObject({
+      language: 'csv',
+      content,
+    });
+  });
+
   it('rejects a stale absent revision even when the requested content already exists', async () => {
     const repository = new LocalWorkspaceFileRepository({ root: namespaceRoot });
     const command = {

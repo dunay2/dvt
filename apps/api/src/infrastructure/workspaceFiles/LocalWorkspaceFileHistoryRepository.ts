@@ -18,6 +18,7 @@ const FIELD_SEPARATOR = '\u001f';
 
 const ALLOWED_EXTENSIONS = new Set([
   '.cjs',
+  '.csv',
   '.css',
   '.html',
   '.js',

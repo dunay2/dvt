@@ -14443,3 +14443,21 @@ test('tracked migrations authorize only the shared Web composition seams for fil
   assert.match(migration.sql, /657_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations admit dbt seed files through the existing scoped workspace rails', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '657_dbt_project_file_projection_phase2_seed_file_support.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-API-INFRA-WORKSPACE-FILES/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /ListWorkspaceFiles/);
+  assert.match(migration.sql, /LocalWorkspaceFileRepository\.ts/);
+  assert.match(migration.sql, /LocalWorkspaceFileHistoryRepository\.ts/);
+  assert.match(migration.sql, /dbt seed CSV/);
+  assert.match(migration.sql, /658_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
