@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { readdir, stat } from 'node:fs/promises';
+import { mkdir, open, readdir, stat, type FileHandle } from 'node:fs/promises';
 import path from 'node:path';
 
 export type ProjectContentRevision = Readonly<{
@@ -9,21 +9,48 @@ export type ProjectContentRevision = Readonly<{
   bytes: number;
 }>;
 
+type ProjectContentLimits = Readonly<{
+  maxFiles: number;
+  maxBytes: number;
+  maxDirectories: number;
+  maxDepth: number;
+}>;
+
 export async function hashProjectContent(
   projectDirectory: string,
-  limits: {
-    readonly maxFiles: number;
-    readonly maxBytes: number;
-    readonly maxDirectories: number;
-    readonly maxDepth: number;
-  }
+  limits: ProjectContentLimits
+): Promise<ProjectContentRevision> {
+  return collectProjectContent(projectDirectory, null, limits);
+}
+
+export async function snapshotProjectContent(
+  projectDirectory: string,
+  snapshotDirectory: string,
+  limits: ProjectContentLimits
+): Promise<ProjectContentRevision> {
+  await mkdir(snapshotDirectory, { recursive: true });
+  return collectProjectContent(projectDirectory, snapshotDirectory, limits);
+}
+
+async function collectProjectContent(
+  projectDirectory: string,
+  snapshotDirectory: string | null,
+  limits: ProjectContentLimits
 ): Promise<ProjectContentRevision> {
   const entries: Array<{ path: string; sha256: string; bytes: number }> = [];
   const state = { bytes: 0, directories: 1 };
   if (state.directories > limits.maxDirectories || limits.maxDepth < 0) {
     throw new Error('The dbt project exceeds configured analysis limits.');
   }
-  await visitProjectDirectory(projectDirectory, projectDirectory, entries, limits, state, 0);
+  await visitProjectDirectory(
+    projectDirectory,
+    projectDirectory,
+    snapshotDirectory,
+    entries,
+    limits,
+    state,
+    0
+  );
   entries.sort((left, right) => left.path.localeCompare(right.path));
   return {
     sha256: createHash('sha256').update(stableJson(entries), 'utf8').digest('hex'),
@@ -35,13 +62,9 @@ export async function hashProjectContent(
 async function visitProjectDirectory(
   projectDirectory: string,
   currentDirectory: string,
+  currentSnapshotDirectory: string | null,
   entries: Array<{ path: string; sha256: string; bytes: number }>,
-  limits: {
-    readonly maxFiles: number;
-    readonly maxBytes: number;
-    readonly maxDirectories: number;
-    readonly maxDepth: number;
-  },
+  limits: ProjectContentLimits,
   state: { bytes: number; directories: number },
   depth: number
 ): Promise<void> {
@@ -56,9 +79,15 @@ async function visitProjectDirectory(
       if (state.directories > limits.maxDirectories || nextDepth > limits.maxDepth) {
         throw new Error('The dbt project exceeds configured analysis limits.');
       }
+      const nextSnapshotDirectory =
+        currentSnapshotDirectory === null ? null : path.join(currentSnapshotDirectory, entry.name);
+      if (nextSnapshotDirectory !== null) {
+        await mkdir(nextSnapshotDirectory);
+      }
       await visitProjectDirectory(
         projectDirectory,
         path.join(currentDirectory, entry.name),
+        nextSnapshotDirectory,
         entries,
         limits,
         state,
@@ -83,13 +112,24 @@ async function visitProjectDirectory(
 
     const contentHash = createHash('sha256');
     let contentBytes = 0;
-    for await (const chunk of createReadStream(absolutePath)) {
-      const contentChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-      contentBytes += contentChunk.byteLength;
-      if (contentBytes > remainingBytes) {
-        throw new Error('The dbt project exceeds configured analysis limits.');
+    const snapshotHandle =
+      currentSnapshotDirectory === null
+        ? null
+        : await open(path.join(currentSnapshotDirectory, entry.name), 'wx');
+    try {
+      for await (const chunk of createReadStream(absolutePath)) {
+        const contentChunk = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+        contentBytes += contentChunk.byteLength;
+        if (contentBytes > remainingBytes) {
+          throw new Error('The dbt project exceeds configured analysis limits.');
+        }
+        contentHash.update(contentChunk);
+        if (snapshotHandle !== null) {
+          await writeAll(snapshotHandle, contentChunk);
+        }
       }
-      contentHash.update(contentChunk);
+    } finally {
+      await snapshotHandle?.close();
     }
 
     entries.push({
@@ -98,6 +138,17 @@ async function visitProjectDirectory(
       bytes: contentBytes,
     });
     state.bytes += contentBytes;
+  }
+}
+
+async function writeAll(handle: FileHandle, content: Buffer): Promise<void> {
+  let offset = 0;
+  while (offset < content.byteLength) {
+    const { bytesWritten } = await handle.write(content, offset, content.byteLength - offset, null);
+    if (bytesWritten === 0) {
+      throw new Error('The dbt project snapshot could not be written safely.');
+    }
+    offset += bytesWritten;
   }
 }
 

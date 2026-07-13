@@ -1,10 +1,11 @@
-import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DbtCliProjectAnalyzer } from '../../../src/infrastructure/dbt/DbtCliProjectAnalyzer.js';
+import { hashProjectContent } from '../../../src/infrastructure/dbt/dbtProjectContentRevision.js';
 import { resolveWorkspaceScopeStorageRoot } from '../../../src/infrastructure/workspaceFiles/workspaceScopeStoragePath.js';
 
 const SCOPE = {
@@ -73,9 +74,11 @@ describe('DbtCliProjectAnalyzer', () => {
   });
 
   it('runs dbt parse in isolated target/log paths and ignores stale project artifacts', async () => {
+    let isolatedProjectDirectory = '';
     let isolatedTargetPath = '';
     let isolatedLogPath = '';
     const run = vi.fn().mockImplementation(async (input: { args: readonly string[] }) => {
+      isolatedProjectDirectory = readFlag(input.args, '--project-dir');
       isolatedTargetPath = readFlag(input.args, '--target-path');
       isolatedLogPath = readFlag(input.args, '--log-path');
       await mkdir(isolatedTargetPath, { recursive: true });
@@ -124,12 +127,12 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(run).toHaveBeenCalledWith(
       expect.objectContaining({
         executable: 'dbt',
-        cwd: projectDirectory,
+        cwd: isolatedProjectDirectory,
         args: expect.arrayContaining([
           'parse',
           '--no-partial-parse',
           '--project-dir',
-          projectDirectory,
+          isolatedProjectDirectory,
           '--profiles-dir',
           profilesDirectory,
         ]),
@@ -141,7 +144,9 @@ describe('DbtCliProjectAnalyzer', () => {
     );
     expect(path.relative(projectDirectory, isolatedTargetPath)).toMatch(/^\.\./);
     expect(path.relative(projectDirectory, isolatedLogPath)).toMatch(/^\.\./);
+    expect(path.relative(projectDirectory, isolatedProjectDirectory)).toMatch(/^\.\./);
     await expect(stat(isolatedTargetPath)).rejects.toThrow();
+    await expect(stat(isolatedProjectDirectory)).rejects.toThrow();
   });
 
   it('returns deterministic hashes for unchanged project content and normalized analysis', async () => {
@@ -165,6 +170,54 @@ describe('DbtCliProjectAnalyzer', () => {
 
     expect(second.projectRevision.contentSetSha256).toBe(first.projectRevision.contentSetSha256);
     expect(second.analysisSha256).toBe(first.analysisSha256);
+  });
+
+  it('hashes and parses the same isolated project snapshot', async () => {
+    const originalSql = "select * from {{ source('raw', 'orders') }}\n";
+    const changedSql = 'select 1 as changed_while_parsing\n';
+    let analyzedProjectDirectory = '';
+    let analyzedSql = '';
+    const run = vi
+      .fn()
+      .mockImplementation(async (input: { args: readonly string[]; cwd: string }) => {
+        analyzedProjectDirectory = readFlag(input.args, '--project-dir');
+        analyzedSql = await readFile(
+          path.join(analyzedProjectDirectory, 'models', 'orders.sql'),
+          'utf8'
+        );
+        await writeFile(path.join(projectDirectory, 'models', 'orders.sql'), changedSql, 'utf8');
+        const targetPath = readFlag(input.args, '--target-path');
+        await mkdir(targetPath, { recursive: true });
+        await writeFile(path.join(targetPath, 'manifest.json'), JSON.stringify(manifest()), 'utf8');
+        return { kind: 'completed' as const, exitCode: 0, stdout: '', stderr: '' };
+      });
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: { run },
+      now: () => new Date('2026-07-13T10:00:00.000Z'),
+    });
+    const expectedRevision = await hashProjectContent(projectDirectory, {
+      maxFiles: 10_000,
+      maxBytes: 50_000_000,
+      maxDirectories: 5_000,
+      maxDepth: 64,
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('valid');
+    expect(result.projectRevision.contentSetSha256).toBe(expectedRevision.sha256);
+    expect(analyzedSql).toBe(originalSql);
+    expect(analyzedProjectDirectory).not.toBe(projectDirectory);
+    expect(path.relative(projectDirectory, analyzedProjectDirectory)).toMatch(/^\.\./);
+    expect(run).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cwd: analyzedProjectDirectory,
+        args: expect.arrayContaining(['--project-dir', analyzedProjectDirectory]),
+      })
+    );
+    await expect(stat(analyzedProjectDirectory)).rejects.toThrow();
   });
 
   it('returns a safe invalid diagnostic without exposing project-controlled dbt output', async () => {

@@ -16,7 +16,7 @@ import {
   type DbtProcessRunner,
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
-import { hashProjectContent } from './dbtProjectContentRevision.js';
+import { snapshotProjectContent } from './dbtProjectContentRevision.js';
 
 const ANALYZER_VERSION = 'dvt-dbt-analyzer.v1';
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -77,6 +77,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       this.buildRevision(input.projectRoot, sha256Hex(reason), analyzedAt);
 
     let projectDirectory: string;
+    let projectRevision = unavailableRevision(`analysis:${input.projectRoot}`);
     try {
       projectDirectory = await this.resolveProjectDirectory(input);
     } catch {
@@ -87,40 +88,51 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       );
     }
 
-    let contentSetSha256: string;
+    let analysisRoot: string;
     try {
-      contentSetSha256 = (
-        await hashProjectContent(projectDirectory, {
-          maxFiles: this.maxProjectFiles,
-          maxBytes: this.maxProjectBytes,
-          maxDirectories: this.maxProjectDirectories,
-          maxDepth: this.maxProjectDepth,
-        })
-      ).sha256;
+      analysisRoot = await mkdtemp(path.join(tmpdir(), 'dvt-dbt-analysis-'));
     } catch {
       return this.unavailable(
-        unavailableRevision(`unreadable:${input.projectRoot}`),
-        'dbt_project_unreadable',
-        'The dbt project could not be read safely.'
+        unavailableRevision(`analysis-root:${input.projectRoot}`),
+        'dbt_analyzer_unavailable',
+        'The server-managed dbt analyzer process is unavailable.'
       );
     }
-
-    const projectRevision = this.buildRevision(input.projectRoot, contentSetSha256, analyzedAt);
-    const profilesDirectory = await this.resolveProfilesDirectory();
-    if (profilesDirectory === null) {
-      return this.unavailable(
-        projectRevision,
-        'dbt_analyzer_profiles_unavailable',
-        'The server-managed dbt profiles directory is unavailable.'
-      );
-    }
-
-    const analysisRoot = await mkdtemp(path.join(tmpdir(), 'dvt-dbt-analysis-'));
-    const targetPath = path.join(analysisRoot, 'target');
-    const logPath = path.join(analysisRoot, 'logs');
-    await Promise.all([mkdir(targetPath), mkdir(logPath)]);
 
     try {
+      const snapshotDirectory = path.join(analysisRoot, 'project');
+      let contentSetSha256: string;
+      try {
+        contentSetSha256 = (
+          await snapshotProjectContent(projectDirectory, snapshotDirectory, {
+            maxFiles: this.maxProjectFiles,
+            maxBytes: this.maxProjectBytes,
+            maxDirectories: this.maxProjectDirectories,
+            maxDepth: this.maxProjectDepth,
+          })
+        ).sha256;
+      } catch {
+        return this.unavailable(
+          unavailableRevision(`unreadable:${input.projectRoot}`),
+          'dbt_project_unreadable',
+          'The dbt project could not be read safely.'
+        );
+      }
+
+      projectRevision = this.buildRevision(input.projectRoot, contentSetSha256, analyzedAt);
+      const profilesDirectory = await this.resolveProfilesDirectory();
+      if (profilesDirectory === null) {
+        return this.unavailable(
+          projectRevision,
+          'dbt_analyzer_profiles_unavailable',
+          'The server-managed dbt profiles directory is unavailable.'
+        );
+      }
+
+      const targetPath = path.join(analysisRoot, 'target');
+      const logPath = path.join(analysisRoot, 'logs');
+      await Promise.all([mkdir(targetPath), mkdir(logPath)]);
+
       const processResult = await this.processRunner.run({
         executable: this.dbtExecutable,
         args: [
@@ -128,7 +140,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           '--no-partial-parse',
           '--no-use-colors',
           '--project-dir',
-          projectDirectory,
+          snapshotDirectory,
           '--profiles-dir',
           profilesDirectory,
           '--target-path',
@@ -136,7 +148,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           '--log-path',
           logPath,
         ],
-        cwd: projectDirectory,
+        cwd: snapshotDirectory,
         env: buildSanitizedProcessEnvironment(this.processEnvironment, analysisRoot),
         timeoutMs: this.timeoutMs,
         maxOutputBytes: this.maxOutputBytes,

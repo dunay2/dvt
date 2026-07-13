@@ -1,10 +1,13 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { hashProjectContent } from '../../../src/infrastructure/dbt/dbtProjectContentRevision.js';
+import {
+  hashProjectContent,
+  snapshotProjectContent,
+} from '../../../src/infrastructure/dbt/dbtProjectContentRevision.js';
 
 const DEFAULT_LIMITS = {
   maxFiles: 100,
@@ -57,5 +60,27 @@ describe('hashProjectContent', () => {
     await expect(
       hashProjectContent(projectDirectory, { ...DEFAULT_LIMITS, maxDepth: 2 })
     ).rejects.toThrow('The dbt project exceeds configured analysis limits.');
+  });
+
+  it('copies exactly the bytes represented by the returned revision', async () => {
+    const snapshotDirectory = await mkdtemp(path.join(tmpdir(), 'dvt-dbt-project-snapshot-'));
+    await mkdir(path.join(projectDirectory, 'models'));
+    await writeFile(path.join(projectDirectory, 'models', 'orders.sql'), 'select 1\n', 'utf8');
+
+    try {
+      const revision = await snapshotProjectContent(
+        projectDirectory,
+        snapshotDirectory,
+        DEFAULT_LIMITS
+      );
+      const snapshotRevision = await hashProjectContent(snapshotDirectory, DEFAULT_LIMITS);
+
+      expect(snapshotRevision).toEqual(revision);
+      await expect(
+        readFile(path.join(snapshotDirectory, 'models', 'orders.sql'), 'utf8')
+      ).resolves.toBe('select 1\n');
+    } finally {
+      await rm(snapshotDirectory, { recursive: true, force: true });
+    }
   });
 });

@@ -14362,3 +14362,21 @@ test('tracked migrations map focused dbt analyzer test ownership', () => {
   assert.match(migration.sql, /652_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations bind dbt projection revisions to stable project snapshots', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '651_dbt_project_file_projection_phase2_stable_snapshot.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /same bounded ephemeral project snapshot/);
+  assert.match(migration.sql, /snapshotProjectContent/);
+  assert.match(migration.sql, /collectProjectContent/);
+  assert.match(migration.sql, /writeAll/);
+  assert.match(migration.sql, /revision\/manifest consistency/);
+  assert.match(migration.sql, /652_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /653_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
