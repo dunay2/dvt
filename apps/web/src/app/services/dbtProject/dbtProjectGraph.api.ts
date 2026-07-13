@@ -13,6 +13,20 @@ import { readGrantedWorkspaceScope } from '../session/workspaceScopeSelectionPor
 
 const DBT_PROJECT_GRAPH_ENDPOINT = '/workspace/dbt/graph';
 
+function assertProjectionMatchesAuthority(
+  binding: DbtProjectFilesAuthorityBinding,
+  projection: ReturnType<typeof DbtProjectGraphProjectionSchema.parse>
+): void {
+  const projectedAuthority = projection.authorityBinding.authority;
+  if (
+    projectedAuthority.kind !== 'dbt-project-files' ||
+    projection.authorityBinding.canvasId !== binding.canvasId ||
+    projectedAuthority.projectRoot !== binding.authority.projectRoot
+  ) {
+    throw new Error('ProjectDbtGraphFromFiles returned a projection for a different authority.');
+  }
+}
+
 function buildDbtProjectGraphEndpoint(binding: DbtProjectFilesAuthorityBinding): string {
   const parsedBinding = CanvasAuthoringAuthorityBindingSchema.parse(binding);
   if (parsedBinding.authority.kind !== 'dbt-project-files') {
@@ -46,7 +60,9 @@ export function createApiDbtProjectGraphQueryPort(apiClient: ApiClient): IDbtPro
         });
       }
 
-      return DbtProjectGraphProjectionSchema.parse(payload);
+      const projection = DbtProjectGraphProjectionSchema.parse(payload);
+      assertProjectionMatchesAuthority(authorityBinding, projection);
+      return projection;
     },
   };
 }

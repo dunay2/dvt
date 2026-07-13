@@ -78,6 +78,25 @@ describe('dbtProjectGraph api query port', () => {
     ).rejects.toThrowError();
   });
 
+  it('rejects a valid projection bound to another Canvas authority', async () => {
+    const requestedProjection = buildProjection();
+    const mismatchedProjection = DbtProjectGraphProjectionSchema.parse({
+      ...requestedProjection,
+      authorityBinding: {
+        ...requestedProjection.authorityBinding,
+        canvasId: 'another-canvas',
+      },
+    });
+    const { apiClient } = createApiClientHarness({
+      requestRaw: async () => jsonResponse(mismatchedProjection),
+    });
+    const port = createApiDbtProjectGraphQueryPort(apiClient);
+
+    await expect(
+      port.getProjectGraph(readFileAuthorityBinding(requestedProjection))
+    ).rejects.toThrow('returned a projection for a different authority');
+  });
+
   it('does not issue a graph-draft request', async () => {
     const requestRaw = vi.fn(async () => jsonResponse(buildProjection()));
     const { apiClient } = createApiClientHarness({ requestRaw });
