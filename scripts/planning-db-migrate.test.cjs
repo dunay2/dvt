@@ -14380,3 +14380,21 @@ test('tracked migrations bind dbt projection revisions to stable project snapsho
   assert.match(migration.sql, /653_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile all dbt projection implementation surfaces', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '652_dbt_project_file_projection_phase2_surface_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /protectedRuntimeRailVocabulary\.ts/);
+  assert.match(migration.sql, /runtimeRoutes\.constants\.ts/);
+  assert.match(migration.sql, /protectedRuntimeRouteGroup\.architecture\.test\.ts/);
+  assert.match(migration.sql, /docs\/\.manifest\.json/);
+  assert.match(migration.sql, /646_dbt_project_file_projection_phase2_integrity\.sql/);
+  assert.match(migration.sql, /653_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /654_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
