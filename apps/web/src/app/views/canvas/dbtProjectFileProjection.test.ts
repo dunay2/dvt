@@ -164,6 +164,10 @@ describe('projectDbtProjectGraphToCanonicalCanvas', () => {
       },
     });
     expect(projection.nodes[4]?.metadata).toMatchObject({
+      testType: 'not_null',
+      testTarget: 'model.analytics.orders',
+      testTargetColumn: 'order_id',
+      severity: 'error',
       testMetadata: {
         name: 'not_null',
         targetUniqueId: 'model.analytics.orders',

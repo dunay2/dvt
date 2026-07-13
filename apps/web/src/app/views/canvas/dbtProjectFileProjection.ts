@@ -67,11 +67,20 @@ function projectNode(
       ...(node.materialized === undefined ? {} : { materialized: node.materialized }),
       columns: node.columns.map((column) => ({
         name: column.name,
-        ...(column.dataType === undefined ? {} : { type: column.dataType }),
+        type: column.dataType ?? 'unknown',
         ...(column.description === undefined ? {} : { description: column.description }),
       })),
       visualEditability: node.visualEditability,
-      ...(node.testMetadata === undefined ? {} : { testMetadata: node.testMetadata }),
+      ...(node.testMetadata === undefined
+        ? {}
+        : {
+            testMetadata: node.testMetadata,
+            testType: node.testMetadata.name,
+            testTarget: node.testMetadata.targetUniqueId,
+            testTargetModel: node.testMetadata.targetUniqueId,
+            testTargetColumn: node.testMetadata.columnName,
+            severity: node.testMetadata.severity,
+          }),
       authority: 'dbt-project-files',
     },
   };
