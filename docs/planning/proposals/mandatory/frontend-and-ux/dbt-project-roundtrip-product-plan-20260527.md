@@ -2419,6 +2419,8 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/639_code_working_tree_live_vertical_closeout.sql
   - tools/planning-db/migrations/640_code_working_tree_read_rail_component_mapping.sql
   - tools/planning-db/migrations/641_code_working_tree_live_vertical_manifest_reconciliation.sql
+  - tools/planning-db/migrations/642_code_working_tree_live_proof_single_spec_guard.sql
+  - tools/planning-db/migrations/643_code_working_tree_live_proof_guard_surface_reconciliation.sql
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
