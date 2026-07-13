@@ -1,0 +1,28 @@
+---
+id: R-20260713-DBT-PROJECT-FILE-PROJECTION
+title: dbt manifest or analysis-profile drift can make file projection unavailable
+status: Open
+date: 2026-07-13
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: Medium
+probability: Medium
+context: >
+  Phase two derives a read-only Canvas projection from a fresh server-side dbt parse using an
+  explicitly configured analysis profile and normalized manifest resources.
+risk: >
+  A future dbt manifest version, adapter-specific profile requirement, unsupported resource type, or
+  deployment misconfiguration could make analysis unavailable or omit semantics without an
+  intentional contract evolution.
+mitigations:
+  - 'Reject unsupported manifest shapes and return an explicit unavailable projection rather than a
+    valid empty graph or graph-draft fallback.'
+  - 'Require a server-managed analysis profile; never read workspace profiles.yml or inherit secret
+    environment variables into dbt parse.'
+  - 'Keep manifest normalization behind IDbtProjectAnalyzerPort and cover source, model, test,
+    dependency, stale-target, invalid-project, and cleanup behavior.'
+  - 'Version Canvas authority and graph projection contracts and fail closed on duplicate unique_id
+    or missing edge endpoints.'
+review_after: 2026-08-13
+---

@@ -59,6 +59,286 @@ dbt project files
   -> StartRun
 ```
 
+---
+
+### 1.2 Active phase two: dbt analysis and read-only file projection
+
+#### 1.2.1 Think-first analysis
+
+**Problem.** The repository has no authoritative server-side path that turns a
+scoped dbt project into the graph read model consumed by Canvas. The current
+Canvas can only project `WorkspaceGraphAuthoringDraft.v1`, so treating workspace
+files as authoritative would either require browser-owned dbt parsing or merge
+file semantics with stale draft nodes and edges.
+
+**Root cause.** Phase one closed conditional workspace-file mutation, but the
+analysis boundary, project-revision model, file-backed graph query, and
+authority-binding contract remain absent. `BuildDbtPlannerGraphSource` is an
+execution projection and cannot own the authoring read model without mixing
+reasons to change.
+
+**Selected option.** Introduce the versioned
+`CanvasAuthoringAuthorityBinding.v1` contract without changing
+`WorkspaceGraphAuthoringDraft.v1`. Implement one protected query,
+`ProjectDbtGraphFromFiles`, backed by an application service and an outbound
+`IDbtProjectAnalyzerPort`. The production adapter runs `dbt parse` server-side,
+reads the generated manifest from an isolated target directory, normalizes
+resources, dependencies, diagnostics, capabilities, project revision, and
+analysis hash, and removes temporary artifacts. Web consumes that query through
+a typed port and projects nodes and edges by dbt `unique_id`; route-local layout
+remains the only coordinate authority.
+
+**Authority activation boundary.** Phase two implements and consumes the typed
+binding but does not invent a public bind command. Persisting `none ->
+dbt-project-files` belongs to the existing Canvas lifecycle during the phase
+three open/import flow. Tests may construct a binding as contract input; product
+runtime must not infer file authority from the presence of `dbt_project.yml`.
+
+**Rejected alternatives.** Browser regex/Jinja parsing creates hidden authority.
+Reusing `BuildDbtPlannerGraphSource` for the editor couples authoring to
+execution. Persisting projected nodes in the graph draft creates a second
+semantic authority. Reading a pre-existing `target/manifest.json` accepts stale
+or user-controlled analysis. Creating `ValidateDbtProject` duplicates the
+analysis query.
+
+#### 1.2.2 Pre-implementation brief
+
+- **Mode:** Full.
+- **Scope:** authority-binding and graph-projection contracts; server analyzer
+  port/adapter; protected query route; typed Web query port; read-only Canvas
+  projection; route-local layout by `unique_id`; diagnostics and code-only
+  posture; live vertical evidence.
+- **Expected outcome:** a scoped, existing dbt project can be analyzed into a
+  deterministic file-backed Canvas graph without reading or writing draft
+  semantic nodes and without exposing credentials.
+- **Risks and mitigations:** untrusted project code is constrained to `dbt
+parse`, controlled profiles/target/log directories, disabled partial parse,
+  bounded process output and timeout, scope-root validation, deterministic
+  manifest normalization, and temporary-artifact cleanup. Analyzer failure
+  returns an explicit invalid or unavailable projection and never changes
+  authority.
+- **Out of scope:** project import, binding persistence/transition command,
+  Source Import mode split, visual mutation, planner projection, Preview/Run,
+  bundle changes, export, graph-draft adoption, `.dvt/` sidecars, networked
+  package installation, and browser-owned parsing.
+- **Libraries evaluated:** dbt Core is the semantic analyzer required by the
+  product decision; Node standard process/filesystem APIs and existing `zod`
+  contracts are sufficient. No second parser library is introduced.
+- **Command/query impact:** add only the accepted query
+  `ProjectDbtGraphFromFiles`; reuse workspace scope authorization and
+  `GetCanvasLayout`; no command is added.
+
+#### 1.2.3 Fowler matrix
+
+| Scenario                                  | Opportunity             | Fowler response                               | DDD owner                         | Rail                       | Required proof                         |
+| ----------------------------------------- | ----------------------- | --------------------------------------------- | --------------------------------- | -------------------------- | -------------------------------------- |
+| Browser would infer dbt refs and sources  | Boundary drift          | Separated Interface and server-side Gateway   | `DbtProjectAnalysis`              | `ProjectDbtGraphFromFiles` | analyzer and architecture tests        |
+| Draft nodes can shadow file resources     | Hidden authority        | Explicit State plus read-model Strategy       | `CanvasAuthoringAuthorityBinding` | `ProjectDbtGraphFromFiles` | no-draft-merge architecture test       |
+| Analysis and execution projection compete | Responsibility overload | Application Service plus dedicated read model | `DbtProjectGraphProjection`       | `ProjectDbtGraphFromFiles` | component/rail ownership query         |
+| Display names are used as graph identity  | Primitive obsession     | Stable resource identity value                | dbt `unique_id`                   | `ProjectDbtGraphFromFiles` | identity and duplicate rejection tests |
+| Stale target manifest is treated as truth | Hidden authority        | Fresh analysis Gateway                        | `DbtProjectAnalysis`              | `ProjectDbtGraphFromFiles` | isolated-target negative test          |
+| Invalid projects make Canvas fall back    | Documentation drift     | Explicit unavailable/invalid states           | `DbtProjectGraphProjection`       | `ProjectDbtGraphFromFiles` | invalid project and no-fallback tests  |
+
+#### 1.2.4 Phase-two definition of done
+
+- `CanvasAuthoringAuthorityBinding.v1` is versioned and mutually exclusive;
+- `WorkspaceGraphAuthoringDraft.v1` remains graph-draft only and unchanged;
+- Planning DB exposes the query, components, files, relations, tests, gaps, and
+  evidence relationally;
+- the analyzer is an outbound port and production server adapter, not browser
+  parsing or route logic;
+- analysis is scoped to the authorized workspace and bound project root;
+- project revision and analysis hashes are deterministic;
+- nodes and edges use dbt `unique_id` and preserve source, model, seed,
+  snapshot, test, exposure, and metric semantics when present;
+- unsupported or dynamic constructs remain visible with `code_only` reasons;
+- invalid/unavailable analysis preserves file authority and returns diagnostics;
+- file-backed Canvas never merges draft semantic nodes or edges;
+- layout coordinates remain route-local and keyed by stable resource identity;
+- no `.dvt/` sidecar, dbt-specific save rail, generic visual-edit command, or
+  file-backed Preview/Run path is added;
+- contract, API, Web, architecture, and strict live vertical tests pass;
+- ARC-2 evidence/risk, feature mechanization, governance refresh, and
+  `pnpm verify:prepush` pass before closeout.
+
+```feature-mechanization
+version: 1
+featureId: E-DBT-PROJECT-FILE-PROJECTION-PHASE2-20260713
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+owner: dbt Project Analysis / Canvas Authoring
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+componentGuides:
+  - docs/adr/ADR-0060-dbt-project-authoring-authority.md
+userStories:
+  - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+governingSources:
+  - AGENTS.md
+  - docs/adr/ADR-0060-dbt-project-authoring-authority.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+allowedImplementationSurfaces:
+  - packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts
+  - packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts
+  - packages/@dvt/contracts/src/index.ts
+  - packages/@dvt/contracts/test/**
+  - apps/api/src/application/ports/dbtProjectAnalysis.ts
+  - apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts
+  - apps/api/src/infrastructure/dbt/**
+  - apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts
+  - apps/api/src/entrypoints/http/dbtProjectGraphRouteGroup.ts
+  - apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts
+  - apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts
+  - apps/api/src/plugins/env.ts
+  - apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts
+  - apps/api/test/infrastructure/dbt/**
+  - apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts
+  - apps/web/src/app/ports/dbtProjectGraph.ts
+  - apps/web/src/app/services/dbtProject/**
+  - apps/web/src/app/queries/dbtProjectQueries.ts
+  - apps/web/src/app/views/canvas/**
+  - apps/web/src/app/plugins/dbt/**
+  - apps/web/cypress/e2e/dbt/**
+  - docs/architecture/components/web/**
+  - docs/evidence/**
+  - docs/risk-register/quality/**
+  - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+  - scripts/planning-db-migrate.test.cjs
+  - tools/planning-db/migrations/644_dbt_project_file_projection_phase2_design.sql
+  - tools/planning-db/migrations/645_dbt_project_file_projection_phase2_api_closeout.sql
+  - tools/planning-db/migrations/646_dbt_project_file_projection_phase2_web_closeout.sql
+  - tools/planning-db/migrations/647_dbt_project_file_projection_phase2_live_closeout.sql
+forbiddenImplementationSurfaces:
+  - packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts
+  - packages/@dvt/engine/**
+  - packages/@dvt/planner/**
+  - packages/@dvt/adapter-*/**
+  - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
+  - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
+commandQueryRails:
+  - name: ProjectDbtGraphFromFiles
+    type: query
+    dddOwner: DbtProjectGraphProjection
+domainObjects:
+  - name: CanvasAuthoringAuthorityBinding
+    type: value object
+    owner: Canvas Authoring
+  - name: DbtProjectAnalysis
+    type: read model
+    owner: dbt Project Analysis
+  - name: DbtProjectGraphProjection
+    type: projection
+    owner: dbt Project Analysis
+fowlerSignals:
+  - Boundary drift
+  - Hidden authority
+  - Responsibility overload
+  - Primitive obsession
+  - Test-only confidence
+architectureGuards:
+  - pnpm --filter dvt-api test:arch
+  - pnpm --filter @dvt/web test:architecture:run -- src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
+cypressFlows:
+  - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+completionGate:
+  - pnpm --filter @dvt/contracts test
+  - pnpm --filter dvt-api test
+  - pnpm --filter dvt-api typecheck
+  - pnpm --filter dvt-api lint
+  - pnpm --filter @dvt/web test:unit:run
+  - pnpm --filter @dvt/web test:presentation:run
+  - pnpm --filter @dvt/web typecheck
+  - pnpm --filter @dvt/web lint
+  - node --test scripts/planning-db-migrate.test.cjs
+  - pnpm docs:feature-mechanization:implementation -- --feature E-DBT-PROJECT-FILE-PROJECTION-PHASE2-20260713
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: dbt-project-analysis-contract
+    redTest: pnpm --filter @dvt/contracts test -- CanvasAuthoringAuthorityBinding DbtProjectGraphProjection
+    expectedFailure: Versioned authority binding and deterministic dbt projection contracts do not exist.
+    patchSurfaces:
+      - packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts
+      - packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts
+    greenTest: pnpm --filter @dvt/contracts test -- CanvasAuthoringAuthorityBinding DbtProjectGraphProjection
+  - id: dbt-server-analyzer
+    redTest: pnpm --filter dvt-api exec vitest run test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts
+    expectedFailure: No scoped server analyzer produces deterministic manifest-backed analysis or cleans isolated artifacts.
+    patchSurfaces:
+      - apps/api/src/application/ports/dbtProjectAnalysis.ts
+      - apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts
+    greenTest: pnpm --filter dvt-api exec vitest run test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts
+  - id: dbt-project-graph-query
+    redTest: pnpm --filter dvt-api exec vitest run test/application/projectDbtGraphFromFilesUseCase.test.ts test/entrypoints/http/dbtProjectGraphRoutes.test.ts
+    expectedFailure: The protected ProjectDbtGraphFromFiles query and explicit invalid/unavailable states do not exist.
+    patchSurfaces:
+      - apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts
+      - apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts
+    greenTest: pnpm --filter dvt-api exec vitest run test/application/projectDbtGraphFromFilesUseCase.test.ts test/entrypoints/http/dbtProjectGraphRoutes.test.ts
+  - id: dbt-file-backed-canvas-projection
+    redTest: pnpm --filter @dvt/web test:unit:run -- src/app/views/canvas/dbtProjectFileProjection.test.ts
+    expectedFailure: Canvas has no authority-aware read-only projection keyed by dbt unique_id.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/dbtProjectFileProjection.ts
+    greenTest: pnpm --filter @dvt/web test:unit:run -- src/app/views/canvas/dbtProjectFileProjection.test.ts
+symbols:
+  - name: CanvasAuthoringAuthorityBindingSchema
+    path: packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts
+    dddOwner: CanvasAuthoringAuthorityBinding
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/contracts test -- CanvasAuthoringAuthorityBinding
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts]
+  - name: DbtProjectGraphProjectionSchema
+    path: packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts
+    dddOwner: DbtProjectGraphProjection
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/contracts test -- DbtProjectGraphProjection
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [packages/@dvt/contracts/test/dbt-project-file-projection.contract.test.ts]
+  - name: IDbtProjectAnalyzerPort
+    path: apps/api/src/application/ports/dbtProjectAnalysis.ts
+    dddOwner: DbtProjectAnalysis
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter dvt-api test:arch
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts]
+  - name: ProjectDbtGraphFromFilesUseCase
+    path: apps/api/src/application/services/projectDbtGraphFromFilesUseCase.ts
+    dddOwner: DbtProjectGraphProjection
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Responsibility overload]
+    architectureGuard: pnpm --filter dvt-api test:arch
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [apps/api/test/application/projectDbtGraphFromFilesUseCase.test.ts]
+  - name: DbtCliProjectAnalyzer
+    path: apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts
+    dddOwner: DbtProjectAnalysis
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter dvt-api test:arch
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts]
+  - name: registerDbtProjectGraphRoutes
+    path: apps/api/src/entrypoints/http/dbtProjectGraphRoutes.ts
+    dddOwner: ProjectDbtGraphFromFiles HTTP adapter
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter dvt-api test:arch
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts]
+  - name: buildDbtProjectFileProjection
+    path: apps/web/src/app/views/canvas/dbtProjectFileProjection.ts
+    dddOwner: DbtProjectGraphProjection
+    cqRails: [ProjectDbtGraphFromFiles]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/views/canvas/dbtProjectFileProjection.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [apps/web/src/app/views/canvas/dbtProjectFileProjection.test.ts]
+```
+
 For the current graph-draft bootstrap dbt canvas:
 
 ```text
@@ -72,7 +352,7 @@ The transition from graph-authored bootstrap to file-backed dbt authority must
 be explicit and one-way. DVT must never switch between those authority models
 silently.
 
-### 1.2 Main corrections to the previous draft
+### 1.3 Main corrections to the previous draft
 
 1. File authority requires an explicit authority-mode decision and an ADR.
 2. The existing graph-first draft contract cannot quietly become a projection.

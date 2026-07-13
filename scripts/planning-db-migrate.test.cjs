@@ -14240,3 +14240,161 @@ test('tracked migrations keep live proof review hardening inside allowed surface
   assert.match(migration.sql, /643_code_working_tree_live_proof_guard_surface_reconciliation\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations govern dbt project file projection phase two before implementation', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '644_dbt_project_file_projection_phase2_design.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /CanvasAuthoringAuthorityBinding/);
+  assert.match(migration.sql, /DbtProjectGraphProjection/);
+  assert.match(migration.sql, /IDbtProjectAnalyzerPort/);
+  assert.match(migration.sql, /workspace:graph-draft:view/);
+  assert.match(migration.sql, /dbt_project_invalid/);
+  assert.match(migration.sql, /dbt_project_analysis_failed/);
+  assert.match(migration.sql, /browser-owned dbt or Jinja parsing/);
+  assert.match(migration.sql, /WorkspaceGraphAuthoringDraft\.v1 remains unchanged/);
+  assert.match(migration.sql, /feature_mechanization_local_rails/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations close dbt project projection API integrity without phantom Web evidence', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '646_dbt_project_file_projection_phase2_integrity.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /architecture\.component_observability/);
+  assert.match(migration.sql, /OBS-CANVAS-AUTHORITY-BINDING-CONTRACT-VALIDATION/);
+  assert.match(migration.sql, /OBS-DBT-PROJECT-GRAPH-PROJECTION-RESULT/);
+  assert.match(migration.sql, /OBS-DBT-PROJECT-ANALYZER-RESULT/);
+  assert.match(migration.sql, /delete from architecture\.component_test/);
+  assert.match(migration.sql, /delete from architecture\.component_relation/);
+  assert.match(migration.sql, /delete from architecture\.component_responsibility/);
+  assert.match(migration.sql, /delete from architecture\.component/);
+  assert.match(migration.sql, /and status = 'proposed'/);
+  assert.match(
+    migration.sql,
+    /delete from planning_query_store\.governance_component_local_ownership_patterns/
+  );
+  assert.match(
+    migration.sql,
+    /delete from planning_query_store\.governance_component_local_definitions/
+  );
+  assert.match(migration.sql, /647_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /648_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile dbt project projection production symbols', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '647_dbt_project_file_projection_phase2_symbol_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /with declared_symbol\(path, name\)/);
+  assert.match(migration.sql, /CanvasAuthoringAuthorityBindingSchema/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFilesUseCase/);
+  assert.match(migration.sql, /DbtCliProjectAnalyzer/);
+  assert.match(migration.sql, /projectDbtManifest/);
+  assert.match(migration.sql, /raw_manifest/);
+  assert.match(migration.sql, /'\{symbols\}'/);
+  assert.match(migration.sql, /symbol_refs = symbol_manifest\.symbol_refs/);
+  assert.match(migration.sql, /648_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /649_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations harden dbt analyzer diagnostics and project input budgets', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '648_dbt_project_file_projection_phase2_review_hardening.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /INVALID_PROJECT_DIAGNOSTIC_MESSAGE/);
+  assert.match(migration.sql, /normalizeProcessDiagnostic/);
+  assert.match(migration.sql, /EXCLUDED_DIRECTORY_NAMES/);
+  assert.match(migration.sql, /Arbitrary/);
+  assert.match(migration.sql, /resource paths are configurable/);
+  assert.match(migration.sql, /649_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /650_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations expose dbt projection coverage and directory limits', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '649_dbt_project_file_projection_phase2_coverage_limits.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /dbt_resource_not_projected/);
+  assert.match(migration.sql, /directory-count overflow/);
+  assert.match(migration.sql, /directory-depth overflow/);
+  assert.match(migration.sql, /650_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /651_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations map focused dbt analyzer test ownership', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '650_dbt_project_file_projection_phase2_test_ownership.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /TEST-DBT-ANALYZER-PROCESS-BOUNDARY/);
+  assert.match(migration.sql, /TEST-DBT-MANIFEST-PROJECTION/);
+  assert.match(migration.sql, /TEST-DBT-PROJECT-CONTENT-REVISION/);
+  assert.match(migration.sql, /governance_component_local_ownership_patterns/);
+  assert.match(migration.sql, /'\{unitTests\}'/);
+  assert.match(migration.sql, /651_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /652_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations bind dbt projection revisions to stable project snapshots', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '651_dbt_project_file_projection_phase2_stable_snapshot.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /same bounded ephemeral project snapshot/);
+  assert.match(migration.sql, /snapshotProjectContent/);
+  assert.match(migration.sql, /collectProjectContent/);
+  assert.match(migration.sql, /writeAll/);
+  assert.match(migration.sql, /revision\/manifest consistency/);
+  assert.match(migration.sql, /652_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /653_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations reconcile all dbt projection implementation surfaces', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '652_dbt_project_file_projection_phase2_surface_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /protectedRuntimeRailVocabulary\.ts/);
+  assert.match(migration.sql, /runtimeRoutes\.constants\.ts/);
+  assert.match(migration.sql, /protectedRuntimeRouteGroup\.architecture\.test\.ts/);
+  assert.match(migration.sql, /docs\/\.manifest\.json/);
+  assert.match(migration.sql, /646_dbt_project_file_projection_phase2_integrity\.sql/);
+  assert.match(migration.sql, /653_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /654_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
