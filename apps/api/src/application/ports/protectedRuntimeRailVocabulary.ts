@@ -14,6 +14,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   compatibilityDisabled: 'compatibility disabled',
   disabledRoute: 'disabled route',
   invalidGraphSource: 'invalid graph source',
+  invalidDbtProjectRoot: 'invalid dbt project root',
   invalidPath: 'invalid path',
   invalidPlanSource: 'invalid plan source',
   invalidPlanRef: 'invalid plan ref',
@@ -77,6 +78,8 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   workspaceDraftAuth:
     'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
   workspaceDraftRoutes: 'apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts',
+  dbtProjectGraphRoutes: 'apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts',
+  dbtProjectAnalyzer: 'apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts',
   workspaceContextRoute: 'apps/api/test/entrypoints/http/workspaceContextRoute.test.ts',
   workspacePluginCatalogRoutes:
     'apps/api/test/entrypoints/http/workspacePluginCatalogRoutes.test.ts',
@@ -170,6 +173,14 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     applicationPort: 'saveWorkspaceGraphDraftUseCase',
     adapterSurface: 'PUT /workspace/graph/draft',
     scopeAndAuthorization: 'workspace:graph-draft:save, tenant/project/environment scope',
+  },
+  projectDbtGraphFromFiles: {
+    name: 'ProjectDbtGraphFromFiles',
+    boundedContext: 'dbt project analysis and Canvas projection',
+    dddObject: 'DbtProjectGraphProjection',
+    applicationPort: 'ProjectDbtGraphFromFilesUseCase via IDbtProjectAnalyzerPort',
+    adapterSurface: 'GET /workspace/dbt/graph',
+    scopeAndAuthorization: 'workspace:graph-draft:view, tenant/project/environment scope',
   },
   workspaceFiles: {
     listName: 'ListWorkspaceFiles',

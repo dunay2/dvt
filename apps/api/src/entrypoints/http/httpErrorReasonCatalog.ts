@@ -11,6 +11,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   internalError: 'internal_error',
   invalidAfterSeq: 'invalid_after_seq',
   invalidBody: 'invalid_body',
+  invalidDbtProjectGraphRequest: 'invalid_dbt_project_graph_request',
   invalidEnrichedFlag: 'invalid_enriched_flag',
   invalidEnvironmentId: 'invalid_environment_id',
   invalidLimit: 'invalid_limit',

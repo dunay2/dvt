@@ -104,6 +104,21 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.projectDbtGraphFromFiles,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectGraphRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtProjectRoot,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectGraphRoutes,
+      ],
+      [PROTECTED_RUNTIME_NEGATIVE_CASE.missingFile, PROTECTED_RUNTIME_TEST_REF.dbtProjectAnalyzer],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     name: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFiles.listName,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     boundedContext: PROTECTED_RUNTIME_WORKSPACE_RAIL.workspaceFiles.boundedContext,
