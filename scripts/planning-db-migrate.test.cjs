@@ -14461,3 +14461,23 @@ test('tracked migrations admit dbt seed files through the existing scoped worksp
   assert.match(migration.sql, /658_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations close the live Web dbt file projection without closing later phases', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '658_dbt_project_file_projection_phase2_live_closeout.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /status = 'implemented'/);
+  assert.match(migration.sql, /frontend_component_local_files/);
+  assert.match(migration.sql, /frontend_component_validation_evidence/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /dbtProjectFileLayout\.test\.ts/);
+  assert.match(migration.sql, /dbt-project-file-projection-live\.cy\.ts/);
+  assert.match(migration.sql, /noGraphDraftFallback/);
+  assert.match(migration.sql, /factualReadOnlyWorkbench/);
+  assert.match(migration.sql, /contextualCodeGraphHeight/);
+  assert.doesNotMatch(migration.sql, /E-DBT-PROJECT-ROUNDTRIP-1[^\n]*done/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
