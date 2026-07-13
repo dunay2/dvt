@@ -17,7 +17,7 @@ const PROJECT_FILES: Readonly<Record<string, string>> = {
 name: analytics
 version: '1.0.0'
 config-version: 2
-profile: analytics
+profile: dvt_live_proof
 model-paths: ['models']
 seed-paths: ['seeds']
 snapshot-paths: ['snapshots']
@@ -80,7 +80,7 @@ select * from {{ ref('orders') }}
 name: analytics_invalid
 version: '1.0.0'
 config-version: 2
-profile: analytics
+profile: dvt_live_proof
 model-paths: ['../outside-project']
 `,
 };
@@ -125,6 +125,25 @@ function seedDbtProjectFiles(): Cypress.Chainable<void> {
     (chain, [path, content]) => chain.then(() => saveWorkspaceFile(path, content)),
     cy.wrap(undefined)
   );
+}
+
+function requestDbtProjectGraph(
+  projectRoot: string,
+  canvasId: string
+): Cypress.Chainable<Cypress.Response<unknown>> {
+  const scope = resolveLiveWorkspaceSession();
+  const query = new URLSearchParams({ ...scope, projectRoot, canvasId });
+  const bearer = readRequiredEnv('apiBearerToken');
+
+  return cy.request({
+    method: 'GET',
+    url: `${readRequiredEnv('apiBaseUrl')}/workspace/dbt/graph?${query.toString()}`,
+    auth: { bearer },
+    headers: {
+      Authorization: `Bearer ${bearer}`,
+      Accept: 'application/json',
+    },
+  });
 }
 
 function buildMouseEvent(
@@ -204,6 +223,14 @@ describe('dbt project file projection live vertical', () => {
   it('projects real dbt files without draft semantics and remains inspectable', () => {
     const observedRequests: string[] = [];
     cy.viewport(1500, 900);
+    requestDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
+      const body = response.body as {
+        readonly freshness?: unknown;
+        readonly diagnostics?: unknown;
+      };
+      expect(response.status).to.equal(200);
+      expect(body.freshness, JSON.stringify(body.diagnostics)).to.equal('fresh');
+    });
     visitWithLiveWorkspaceSession(
       `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
       {

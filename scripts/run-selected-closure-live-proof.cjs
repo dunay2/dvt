@@ -4,12 +4,14 @@
  */
 const { spawn, spawnSync } = require('node:child_process');
 const { once } = require('node:events');
+const { mkdir, rm, writeFile } = require('node:fs/promises');
 const http = require('node:http');
 const https = require('node:https');
 const path = require('node:path');
 const { Client } = require('pg');
 const readline = require('node:readline');
 const { pathToFileURL } = require('node:url');
+const yaml = require('js-yaml');
 
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
 const {
@@ -42,6 +44,7 @@ const SELECTED_CLOSURE_LIVE_PROOF_ROOT = path.resolve(
   __dirname,
   '../.dvt/live-proofs/selected-closure'
 );
+const LIVE_PROOF_DBT_PROFILE = 'dvt_live_proof';
 
 function quoteIdentifier(identifier) {
   return `"${identifier.replaceAll('"', '""')}"`;
@@ -228,6 +231,57 @@ function resolveLiveProofWorkspaceFilesRoot(liveProofSchema, sourceEnv = process
   );
 }
 
+function resolveLiveProofDbtAnalyzerProfilesDirectory(liveProofSchema, sourceEnv = process.env) {
+  return (
+    readNonEmptyEnv(sourceEnv.DVT_DBT_ANALYZER_PROFILES_DIR) ??
+    path.join(SELECTED_CLOSURE_LIVE_PROOF_ROOT, liveProofSchema, 'server-dbt-profiles')
+  );
+}
+
+async function prepareLiveProofDbtAnalyzerProfile(apiEnv) {
+  const profilesDirectory = readNonEmptyEnv(apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR);
+  const databaseUrl = readNonEmptyEnv(apiEnv.DATABASE_URL);
+  const schema = readNonEmptyEnv(apiEnv.DVT_PG_SCHEMA);
+  if (profilesDirectory === undefined || databaseUrl === undefined || schema === undefined) {
+    throw new Error(
+      'Selected-closure live proof requires analyzer profiles, DATABASE_URL, and DVT_PG_SCHEMA.'
+    );
+  }
+
+  const parsedDatabaseUrl = new URL(databaseUrl);
+  if (!['postgres:', 'postgresql:'].includes(parsedDatabaseUrl.protocol)) {
+    throw new Error('Selected-closure dbt analysis requires a PostgreSQL proof database URL.');
+  }
+  const databaseName = decodeURIComponent(parsedDatabaseUrl.pathname.replace(/^\//, ''));
+  if (!parsedDatabaseUrl.hostname || !parsedDatabaseUrl.username || !databaseName) {
+    throw new Error('Selected-closure dbt analysis received an incomplete proof database URL.');
+  }
+
+  const profile = {
+    [LIVE_PROOF_DBT_PROFILE]: {
+      target: 'analysis',
+      outputs: {
+        analysis: {
+          type: 'postgres',
+          host: parsedDatabaseUrl.hostname,
+          port: Number(parsedDatabaseUrl.port || '5432'),
+          user: decodeURIComponent(parsedDatabaseUrl.username),
+          password: decodeURIComponent(parsedDatabaseUrl.password),
+          dbname: databaseName,
+          schema,
+          threads: 1,
+        },
+      },
+    },
+  };
+
+  await mkdir(profilesDirectory, { recursive: true });
+  await writeFile(path.join(profilesDirectory, 'profiles.yml'), yaml.dump(profile), {
+    encoding: 'utf8',
+    mode: 0o600,
+  });
+}
+
 function buildLiveProofTemporalOptions() {
   return {
     host: LOCAL_AUTH_HOST,
@@ -279,6 +333,10 @@ function buildLiveProofApiEnv({
     DATABASE_URL: databaseUrl,
     DVT_LOCAL_POSTGRES_WAREHOUSE_URL: databaseUrl,
     DVT_PG_SCHEMA: liveProofSchema,
+    DVT_DBT_ANALYZER_PROFILES_DIR: resolveLiveProofDbtAnalyzerProfilesDirectory(
+      liveProofSchema,
+      temporalSourceEnv
+    ),
     DVT_READYZ_ENABLED: 'true',
     DVT_VERSION_ENABLED: 'true',
     DVT_DB_READY_ENABLED: 'true',
@@ -383,6 +441,8 @@ async function main() {
   }
 
   try {
+    const hasExternallyManagedAnalyzerProfile =
+      readNonEmptyEnv(process.env.DVT_DBT_ANALYZER_PROFILES_DIR) !== undefined;
     const apiEnv = buildLiveProofApiEnv({
       databaseUrl: defaultPgUrl,
       liveProofSchema,
@@ -391,6 +451,9 @@ async function main() {
       temporalNamespace: temporalEnv.namespace,
       oidcEnv: localProtectedRuntimeAuth.oidcEnv,
     });
+    if (!hasExternallyManagedAnalyzerProfile) {
+      await prepareLiveProofDbtAnalyzerProfile(apiEnv);
+    }
     await seedSelectedClosureLocalWarehouseProof(apiEnv);
 
     const apiHandle = spawnProcess('api-live-proof', ['--filter', 'dvt-api', 'dev'], apiEnv);
@@ -498,12 +561,17 @@ async function main() {
   } finally {
     await shutdown();
     await dropSchemaIfExists(defaultPgUrl, liveProofSchema);
+    await rm(path.join(SELECTED_CLOSURE_LIVE_PROOF_ROOT, liveProofSchema), {
+      recursive: true,
+      force: true,
+    });
   }
 }
 
 module.exports = {
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
+  prepareLiveProofDbtAnalyzerProfile,
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 };
