@@ -61,20 +61,23 @@ function resolveActiveNodeWorkbenchTab({
   return model.sections[0]?.id ?? 'general';
 }
 
-function resolveNodeWorkbenchHiddenGeneralRowLabels(node: CanonicalNode): ReadonlySet<string> {
+function resolveNodeWorkbenchHiddenGeneralRowLabels(
+  node: CanonicalNode,
+  canEditNode: boolean
+): ReadonlySet<string> {
   const labels = new Set(GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_LABELS);
 
   if (node.id === node.name) {
     labels.add('Node ID');
   }
 
-  if (node.kind === 'dvt:source') {
+  if (canEditNode && node.kind === 'dvt:source') {
     for (const label of DVT_SOURCE_TARGET_ROW_LABELS) {
       labels.add(label);
     }
   }
 
-  if (node.kind === 'dvt:sink') {
+  if (canEditNode && node.kind === 'dvt:sink') {
     for (const label of DVT_SINK_TARGET_ROW_LABELS) {
       labels.add(label);
     }
@@ -86,11 +89,13 @@ function resolveNodeWorkbenchHiddenGeneralRowLabels(node: CanonicalNode): Readon
 function buildNodeWorkbenchReadModel({
   model,
   node,
+  canEditNode,
 }: Readonly<{
   model: NodePropertiesReadModel;
   node: CanonicalNode;
+  canEditNode: boolean;
 }>): NodePropertiesReadModel {
-  const hiddenGeneralRowLabels = resolveNodeWorkbenchHiddenGeneralRowLabels(node);
+  const hiddenGeneralRowLabels = resolveNodeWorkbenchHiddenGeneralRowLabels(node, canEditNode);
 
   if (hiddenGeneralRowLabels.size === 0) {
     return model;
@@ -129,7 +134,11 @@ export function CanvasNodeWorkbenchPanel({
     createCanvasInspectorNodeDraft(node).tags.join(', ')
   );
   const baseModel = buildNodePropertiesReadModel({ node, nodes, edges });
-  const model = buildNodeWorkbenchReadModel({ model: baseModel, node });
+  const model = buildNodeWorkbenchReadModel({
+    model: baseModel,
+    node,
+    canEditNode: authoring.canEditNode,
+  });
   const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
   const resolvedPrimarySectionIds =
     primarySectionIds == null
@@ -226,12 +235,16 @@ export function CanvasNodeWorkbenchPanel({
             panels={panels}
             activeTab={resolvedActiveTab}
             primarySectionIds={resolvedPrimarySectionIds}
-            sectionChildren={{
-              general: renderAuthoringSection('general'),
-              columns: renderAuthoringSection('columns'),
-              code: renderAuthoringSection('code'),
-              sink: renderAuthoringSection('sink'),
-            }}
+            sectionChildren={
+              authoring.canEditNode
+                ? {
+                    general: renderAuthoringSection('general'),
+                    columns: renderAuthoringSection('columns'),
+                    code: renderAuthoringSection('code'),
+                    sink: renderAuthoringSection('sink'),
+                  }
+                : undefined
+            }
             sectionChildrenPlacement={{
               general: 'before-body',
             }}
