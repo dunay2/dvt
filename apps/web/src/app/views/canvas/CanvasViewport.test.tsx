@@ -57,7 +57,7 @@ describe('CanvasViewport', () => {
     expect(container.querySelectorAll('button')).toHaveLength(0);
     expect(viewportDataset?.canvasPalette).toBe(normalizedCanvasPalette);
     expect(viewportStyle.getPropertyValue('--canvas-surface')).toBe(expectedPaletteTokens.surface);
-    expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe('#94a3b8');
+    expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe('rgba(148, 163, 184, 0.18)');
     expect(viewportStyle.getPropertyValue('--canvas-grid-gap')).toBe('32px');
     expect(xyflowState.miniMapNodeColor).toBeTypeOf('function');
     expect(xyflowState.miniMapNodeColor?.({ data: { pluginKind: 'dbt:model' } })).toBe('#22c55e');
@@ -170,7 +170,7 @@ describe('CanvasViewport', () => {
     ) as HTMLDivElement | null;
 
     expect(container.querySelector('[data-testid="background"]')).toBeNull();
-    expect(viewport?.style.getPropertyValue('--canvas-grid')).toBe('#f97316');
+    expect(viewport?.style.getPropertyValue('--canvas-grid')).toBe('rgba(249, 115, 22, 0.18)');
     expect(viewport?.style.getPropertyValue('--canvas-grid-gap')).toBe('16px');
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       snapToGrid: true,

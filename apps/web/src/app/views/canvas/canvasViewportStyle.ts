@@ -1,7 +1,11 @@
 /** Owned concern: resolve Canvas viewport CSS variables from governed palette preferences. */
 import type { CSSProperties } from 'react';
 
-import { deriveCanvasPaletteTokens, type CanvasPaletteId } from './canvasPalette';
+import {
+  deriveCanvasGridStroke,
+  deriveCanvasPaletteTokens,
+  type CanvasPaletteId,
+} from './canvasPalette';
 
 export function resolveCanvasViewportStyle(
   canvasPalette: CanvasPaletteId,
@@ -16,7 +20,11 @@ export function resolveCanvasViewportStyle(
 
   return {
     '--canvas-surface': tokens.surface,
-    '--canvas-grid': gridVisible ? (options.gridColor ?? tokens.grid) : 'transparent',
+    '--canvas-grid': gridVisible
+      ? options.gridColor == null
+        ? tokens.grid
+        : deriveCanvasGridStroke(options.gridColor)
+      : 'transparent',
     '--canvas-controls-surface': tokens.controlsSurface,
     '--canvas-controls-button-surface': tokens.controlsButtonSurface,
     '--canvas-controls-button-hover': tokens.controlsButtonHover,
