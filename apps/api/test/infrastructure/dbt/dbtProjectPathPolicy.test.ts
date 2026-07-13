@@ -14,6 +14,7 @@ describe('dbtProjectPathPolicy', () => {
     ['parent traversal', 'model-paths: [../models]\n', 'escaping_path'],
     ['POSIX absolute path', 'macro-paths: [/srv/dbt/macros]\n', 'escaping_path'],
     ['Windows absolute path', "seed-paths: ['C:\\\\warehouse\\\\seeds']\n", 'escaping_path'],
+    ['Windows drive-relative path', "model-paths: ['C:models']\n", 'escaping_path'],
     [
       'templated path',
       'snapshot-paths: ["{{ env_var(\'SNAPSHOT_ROOT\') }}"]\n',

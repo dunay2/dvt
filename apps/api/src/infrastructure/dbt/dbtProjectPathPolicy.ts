@@ -71,7 +71,9 @@ function readConfiguredPaths(value: unknown): readonly string[] | null {
 
 function isSnapshotContainedRelativePath(configuredPath: string): boolean {
   const portablePath = configuredPath.replaceAll('\\', '/');
-  if (path.posix.isAbsolute(portablePath) || path.win32.isAbsolute(configuredPath)) return false;
+  if (path.posix.isAbsolute(portablePath) || path.win32.parse(configuredPath).root.length > 0) {
+    return false;
+  }
 
   const normalized = path.posix.normalize(portablePath);
   return normalized !== '..' && !normalized.startsWith('../');
