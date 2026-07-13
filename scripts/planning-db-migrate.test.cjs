@@ -14240,3 +14240,23 @@ test('tracked migrations keep live proof review hardening inside allowed surface
   assert.match(migration.sql, /643_code_working_tree_live_proof_guard_surface_reconciliation\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations govern dbt project file projection phase two before implementation', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '644_dbt_project_file_projection_phase2_design.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /CanvasAuthoringAuthorityBinding/);
+  assert.match(migration.sql, /DbtProjectGraphProjection/);
+  assert.match(migration.sql, /IDbtProjectAnalyzerPort/);
+  assert.match(migration.sql, /workspace:graph-draft:view/);
+  assert.match(migration.sql, /dbt_project_invalid/);
+  assert.match(migration.sql, /dbt_project_analysis_failed/);
+  assert.match(migration.sql, /browser-owned dbt or Jinja parsing/);
+  assert.match(migration.sql, /WorkspaceGraphAuthoringDraft\.v1 remains unchanged/);
+  assert.match(migration.sql, /feature_mechanization_local_rails/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
