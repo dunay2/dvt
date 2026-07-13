@@ -138,6 +138,11 @@ describe('CanvasShell graph base surface', () => {
     });
 
     expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
+    const baseSurface = container.querySelector(
+      '[data-slot="canvas-contextual-workbench-base-surface"]'
+    );
+    expect(baseSurface?.classList).toContain('flex');
+    expect(baseSurface?.classList).toContain('min-h-0');
     expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
   });
