@@ -34,6 +34,10 @@ const EDGE_RELATION: Record<
   metric: 'metric',
 };
 
+function normalizeWorkspacePath(path: string): string {
+  return path.replaceAll('\\', '/');
+}
+
 export type DbtProjectFileCanvasProjection = Readonly<{
   nodes: CanonicalNode[];
   edges: CanonicalEdge[];
@@ -58,7 +62,9 @@ function projectNode(
     role: presentation.role,
     status: hasProjectionWarning ? 'warn' : 'idle',
     tags: [...node.tags],
-    ...(node.originalFilePath === undefined ? {} : { path: node.originalFilePath }),
+    ...(node.originalFilePath === undefined
+      ? {}
+      : { path: normalizeWorkspacePath(node.originalFilePath) }),
     metadata: {
       dbtUniqueId: node.uniqueId,
       resourceType: node.resourceType,
