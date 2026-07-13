@@ -14178,3 +14178,35 @@ test('tracked migrations map both Code working-tree read and mutation rails', ()
   assert.match(migration.sql, /unauthorized workspace scope fails closed/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile the complete Code working-tree live feature manifest', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '641_code_working_tree_live_vertical_manifest_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  for (const requiredField of [
+    'componentGuides',
+    'userStories',
+    'allowedImplementationSurfaces',
+    'forbiddenImplementationSurfaces',
+    'commandQueryRails',
+    'domainObjects',
+    'fowlerSignals',
+    'architectureGuards',
+    'cypressFlows',
+    'completionGate',
+    'redGreenCycles',
+    'symbols',
+  ]) {
+    assert.match(migration.sql, new RegExp(`'${requiredField}'`));
+  }
+  assert.match(migration.sql, /docs\/architecture\/fowler-opportunity-planning-governance\.md/);
+  assert.match(migration.sql, /DEFAULT_SPEC_RELATIVE_PATH/);
+  assert.match(migration.sql, /openNodeWorkbench/);
+  assert.match(migration.sql, /openLiveProjectCodeFile/);
+  assert.match(migration.sql, /waitForLiveWorkspaceFileContent/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});

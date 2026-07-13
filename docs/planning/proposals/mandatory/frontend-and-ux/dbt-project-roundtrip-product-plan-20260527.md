@@ -2415,7 +2415,10 @@ allowedImplementationSurfaces:
   - tools/planning-db/migrations/635_code_working_tree_sync_implementation_closeout.sql
   - tools/planning-db/migrations/636_code_working_tree_sync_local_overlay.sql
   - tools/planning-db/migrations/637_code_working_tree_live_vertical_design.sql
-  - tools/planning-db/migrations/638_code_working_tree_live_vertical_closeout.sql
+  - tools/planning-db/migrations/638_code_working_tree_live_vertical_command_rail.sql
+  - tools/planning-db/migrations/639_code_working_tree_live_vertical_closeout.sql
+  - tools/planning-db/migrations/640_code_working_tree_read_rail_component_mapping.sql
+  - tools/planning-db/migrations/641_code_working_tree_live_vertical_manifest_reconciliation.sql
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
@@ -2673,6 +2676,22 @@ symbols:
     architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     unitTests: [scripts/run-selected-closure-live-proof.test.cjs]
+  - name: DEFAULT_SPEC_RELATIVE_PATH
+    path: scripts/run-selected-closure-live-proof.cjs
+    dddOwner: ProtectedRuntimeLiveProof command input
+    cqRails: [RunDbtAuthorCodeRunLiveProof]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: node --test scripts/run-selected-closure-live-proof.test.cjs
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [scripts/run-selected-closure-live-proof.test.cjs]
+  - name: openNodeWorkbench
+    path: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    dddOwner: Canvas node workbench live proof
+    cqRails: [RunDbtAuthorCodeRunLiveProof]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:architecture:run -- src/app/routes/internalAlphaRouteGate.architecture.test.ts
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts]
   - name: openLiveProjectCodeFile
     path: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
     dddOwner: CodeWorkingTreeSync live browser proof
