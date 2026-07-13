@@ -4,9 +4,50 @@ const assert = require('node:assert/strict');
 const {
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
+  resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
 const { defaultPgUrl } = require('./run-temporal-postgres-proof.cjs');
+
+test('resolveLiveProofSpecPath keeps the selected-closure proof as the default', () => {
+  assert.equal(
+    resolveLiveProofSpecPath([]),
+    '/repo/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
+  );
+});
+
+test('resolveLiveProofSpecPath maps a governed repository Cypress spec into the container', () => {
+  assert.equal(
+    resolveLiveProofSpecPath([
+      '--spec',
+      'apps\\web\\cypress\\e2e\\canvas\\canvas-dbt-author-code-run-live.cy.ts',
+    ]),
+    '/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts'
+  );
+});
+
+test('resolveLiveProofSpecPath rejects paths outside the governed Cypress E2E surface', () => {
+  assert.throws(
+    () => resolveLiveProofSpecPath(['--spec', '../canvas-dbt-author-code-run-live.cy.ts']),
+    /inside apps\/web\/cypress\/e2e/
+  );
+  assert.throws(
+    () =>
+      resolveLiveProofSpecPath([
+        '--spec',
+        'apps/web/src/app/views/code/useCodeWorkingTreeSync.test.tsx',
+      ]),
+    /inside apps\/web\/cypress\/e2e/
+  );
+  assert.throws(
+    () =>
+      resolveLiveProofSpecPath([
+        '--spec',
+        'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.ts',
+      ]),
+    /must end in \.cy\.ts/
+  );
+});
 
 test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catalog discovery', () => {
   const apiEnv = buildLiveProofApiEnv({

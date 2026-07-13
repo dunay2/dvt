@@ -33,7 +33,7 @@ const DEFAULT_READY_TIMEOUT_MS = 240_000;
 const DEFAULT_POLL_INTERVAL_MS = 500;
 const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
 const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
-const SPEC_PATH = '/repo/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts';
+const DEFAULT_SPEC_RELATIVE_PATH = 'apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts';
 const CYPRESS_IMAGE = 'cypress/included:13.17.0';
 const LOCAL_AUTH_HOST = '127.0.0.1';
 const API_BIND_HOST = '0.0.0.0';
@@ -185,6 +185,35 @@ function readNonEmptyEnv(value) {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 }
 
+function resolveLiveProofSpecPath(argv = process.argv.slice(2)) {
+  if (argv.length === 0) {
+    return `/repo/${DEFAULT_SPEC_RELATIVE_PATH}`;
+  }
+
+  if (argv.length !== 2 || argv[0] !== '--spec' || readNonEmptyEnv(argv[1]) === undefined) {
+    throw new Error(
+      'Usage: run-selected-closure-live-proof.cjs [--spec apps/web/cypress/e2e/<path>.cy.ts]'
+    );
+  }
+
+  const relativeSpecPath = argv[1].trim().replaceAll('\\', '/');
+  const pathSegments = relativeSpecPath.split('/');
+
+  if (
+    !relativeSpecPath.startsWith('apps/web/cypress/e2e/') ||
+    pathSegments.includes('..') ||
+    pathSegments.includes('.')
+  ) {
+    throw new Error('Live proof spec must stay inside apps/web/cypress/e2e.');
+  }
+
+  if (!relativeSpecPath.endsWith('.cy.ts')) {
+    throw new Error('Live proof spec must end in .cy.ts.');
+  }
+
+  return `/repo/${relativeSpecPath}`;
+}
+
 function resolveLiveProofWorkspaceFilesRoot(liveProofSchema, sourceEnv = process.env) {
   return (
     readNonEmptyEnv(sourceEnv.DVT_WORKSPACE_FILES_ROOT) ??
@@ -308,7 +337,7 @@ async function runCypress(args) {
     '--config-file',
     '/repo/apps/web/cypress.config.ts',
     '--spec',
-    SPEC_PATH,
+    args.specPath,
   ];
 
   const child = spawn('docker', dockerArgs, {
@@ -324,6 +353,7 @@ async function runCypress(args) {
 }
 
 async function main() {
+  const specPath = resolveLiveProofSpecPath();
   ensureLocalPostgresReady();
 
   const { TestWorkflowEnvironment } = await loadTemporalTesting();
@@ -453,6 +483,7 @@ async function main() {
       webPort: DEFAULT_WEB_PORT,
       apiBearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+      specPath,
     });
   } finally {
     await shutdown();
@@ -463,6 +494,7 @@ async function main() {
 module.exports = {
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
+  resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 };
 
