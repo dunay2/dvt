@@ -247,7 +247,10 @@ function buildLiveProofApiEnv({
   oidcEnv = {},
   sourceEnv = process.env,
 }) {
-  const temporalSourceEnv = buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort);
+  const temporalSourceEnv = {
+    ...buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort),
+    DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DBT_ENABLED) ?? 'true',
+  };
   const artifactEnv = buildLocalDbtArtifactEnv({
     ...temporalSourceEnv,
     DVT_WORKSPACE_FILES_ROOT: resolveLiveProofWorkspaceFilesRoot(

@@ -66,6 +66,7 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
   assert.equal(apiEnv.TEMPORAL_NAMESPACE, 'default');
   assert.equal(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL, 'http://127.0.0.1:9468/readyz');
   assert.equal(apiEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
+  assert.equal(apiEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
   assert.match(apiEnv.DVT_DBT_BUNDLE_FILE_ROOT, /[\\/]\.dvt[\\/]dev-stack[\\/]dbt-bundles$/);
   assert.match(
     apiEnv.DVT_WORKSPACE_FILES_ROOT,
@@ -99,6 +100,7 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
   assert.equal(workerEnv.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS, 'true');
   assert.equal(workerEnv.DVT_WORKSPACE_FILES_ROOT, apiEnv.DVT_WORKSPACE_FILES_ROOT);
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
+  assert.equal(workerEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, apiEnv.DVT_DBT_BUNDLE_FILE_ROOT);
 });
 
