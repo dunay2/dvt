@@ -1,3 +1,12 @@
+/**
+ * Owned concern: expose the deterministic server-analyzed dbt project graph
+ * consumed by a read-only file-backed Canvas.
+ *
+ * @baseline ADR-0060: dbt Project Authoring Authority
+ * @decision Keep dbt file analysis in a versioned projection separate from execution and draft persistence.
+ * @consequence Invalid analysis remains explicit and cannot fall back to graph-draft authority.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import {
