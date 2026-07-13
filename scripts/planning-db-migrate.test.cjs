@@ -14502,3 +14502,27 @@ test('tracked migrations reconcile the complete Web dbt projection symbol manife
   assert.doesNotMatch(migration.sql, /routeWorkbenchFrame\.architecture\.test\.ts/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations promote the dbt file projection family to architecture authority', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '660_dbt_project_file_projection_component_authority.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-DBT-FILE-PROJECTION-SURFACE/);
+  assert.match(migration.sql, /insert into architecture\.component/);
+  assert.match(migration.sql, /insert into architecture\.component_responsibility/);
+  assert.match(migration.sql, /insert into architecture\.component_relation/);
+  assert.match(migration.sql, /insert into architecture\.component_test/);
+  assert.match(migration.sql, /children_required = true/);
+  assert.match(migration.sql, /frontend_component_local_files/);
+  assert.match(migration.sql, /frontend_component_validation_evidence/);
+  assert.match(migration.sql, /componentFamily/);
+  assert.match(migration.sql, /insert into architecture\.component_port/);
+  assert.match(migration.sql, /component_engineering_component_tree_projection/);
+  assert.match(migration.sql, /component_engineering_file_ownership_projection/);
+  assert.match(migration.sql, /component_engineering_rule_evaluation_projection/);
+  assert.doesNotMatch(migration.sql, /legacy/i);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
