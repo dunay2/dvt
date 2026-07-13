@@ -14398,3 +14398,28 @@ test('tracked migrations reconcile all dbt projection implementation surfaces', 
   assert.match(migration.sql, /654_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations model the Web dbt file projection family before implementation', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '655_dbt_project_file_projection_phase2_web_design.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-WEB-SERVICES-DBT-PROJECT-GRAPH/);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-DBT-FILE-PROJECTION-MODEL/);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-DBT-FILE-PROJECTION/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /PersistCanvasLayout/);
+  assert.match(migration.sql, /InspectCanvasNodeProperties/);
+  assert.match(migration.sql, /ReadWorkspaceFiles/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /Inspectability and layout movement are independent/);
+  assert.match(
+    migration.sql,
+    /no source import, graph mutation, Preview, Run, or graph-draft request/
+  );
+  assert.match(migration.sql, /component_status[\s\S]*'needed'/);
+  assert.doesNotMatch(migration.sql, /evidence_status[\s\S]*'current'/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
