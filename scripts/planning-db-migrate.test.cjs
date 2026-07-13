@@ -14142,3 +14142,39 @@ test('tracked migrations register the Code working-tree live proof command as a 
   assert.doesNotMatch(migration.sql, /cy\.intercept/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations close the Code working-tree vertical with relational live evidence', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '639_code_working_tree_live_vertical_closeout.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /CODE-WORKING-TREE-LIVE-VERTICAL-20260713/);
+  assert.match(migration.sql, /RunDbtAuthorCodeRunLiveProof/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /GetWorkspaceFileContent/);
+  assert.match(migration.sql, /EV-CODE-WORKING-TREE-LIVE-VERTICAL/);
+  assert.match(migration.sql, /canvas-dbt-author-code-run-live\.cy\.ts/);
+  assert.match(migration.sql, /browser reopen/);
+  assert.match(migration.sql, /evidence_status = 'passing'/);
+  assert.match(migration.sql, /'current'/);
+  assert.doesNotMatch(migration.sql, /cy\.intercept/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations map both Code working-tree read and mutation rails', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '640_code_working_tree_read_rail_component_mapping.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /web\.component\.code\.CodeWorkingTreeSync/);
+  assert.match(migration.sql, /GetWorkspaceFileContent/);
+  assert.match(migration.sql, /SaveWorkspaceFileContent/);
+  assert.match(migration.sql, /WorkspaceFileContentReadModel/);
+  assert.match(migration.sql, /IWorkspaceFilesQueryPort\.getFileContent/);
+  assert.match(migration.sql, /unauthorized workspace scope fails closed/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
