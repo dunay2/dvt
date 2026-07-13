@@ -140,6 +140,14 @@ export type {
   WorkspaceGraphAuthoringNodePatch,
 } from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
 export {
+  CanvasAuthoringAuthorityBindingSchema,
+  type CanvasAuthoringAuthorityBinding,
+} from './contracts/planner/CanvasAuthoringAuthorityBinding.v1.js';
+export {
+  DbtProjectGraphProjectionSchema,
+  type DbtProjectGraphProjection,
+} from './contracts/planner/DbtProjectGraphProjection.v1.js';
+export {
   EXECUTABLE_SUBGRAPH_DIAGNOSTIC_CODE,
   EXECUTION_SELECTION_MODE,
   ExecutableSubgraphDiagnosticSchema,
