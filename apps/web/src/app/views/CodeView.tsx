@@ -1,6 +1,6 @@
 /** Owned concern: render workspace file queries as the Code workbench local Monaco buffer. */
 import { FileCode2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
@@ -33,6 +33,8 @@ import {
   hasCodeWorkspaceFiles,
   resolveGraphScopedCodeWorkspaceFileTree,
   resolveInitialCodeFilePath,
+  resolveInitialDbtProjectFilePath,
+  resolveProjectRootScopedCodeWorkspaceFileTree,
 } from './code/codeViewFileSelection';
 import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
 import FileTreePanel from './code/FileTreePanel';
@@ -40,30 +42,55 @@ import { useCodeWorkingTreeSync } from './code/useCodeWorkingTreeSync';
 
 const CODE_GRAPH_FILE_SCOPE_VIEW_ID = 'canvas-code-file-scope';
 
+export type CodeViewFileScope = Readonly<{
+  kind: 'dbt-project-files';
+  projectRoot: string;
+  initialPath?: string;
+}>;
+
 export default function CodeView({
   publishRouteBootstrap = true,
   routeBootstrapId = CANVAS_ROUTE_ID,
-}: Readonly<{ publishRouteBootstrap?: boolean; routeBootstrapId?: string }> = {}) {
+  fileScope,
+}: Readonly<{
+  publishRouteBootstrap?: boolean;
+  routeBootstrapId?: string;
+  fileScope?: CodeViewFileScope;
+}> = {}) {
   const copy = resolveCodeViewCopy();
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const fileTreeQuery = useWorkspaceFileTreeQuery();
-  const graphSnapshotQuery = useWorkspaceGraphForViewQuery(CODE_GRAPH_FILE_SCOPE_VIEW_ID);
+  const graphSnapshotQuery = useWorkspaceGraphForViewQuery(
+    CODE_GRAPH_FILE_SCOPE_VIEW_ID,
+    undefined,
+    { enabled: fileScope === undefined }
+  );
   const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
   const workspaceFileTree = fileTreeQuery.data ?? [];
-  const graphScopedWorkspaceFileTree = useMemo(
+  const scopedWorkspaceFileTree = useMemo(
     () =>
-      resolveGraphScopedCodeWorkspaceFileTree({
-        entries: workspaceFileTree,
-        graph: graphSnapshotQuery.data,
-      }),
-    [graphSnapshotQuery.data, workspaceFileTree]
+      fileScope
+        ? resolveProjectRootScopedCodeWorkspaceFileTree(workspaceFileTree, fileScope.projectRoot)
+        : resolveGraphScopedCodeWorkspaceFileTree({
+            entries: workspaceFileTree,
+            graph: graphSnapshotQuery.data,
+          }),
+    [fileScope, graphSnapshotQuery.data, workspaceFileTree]
   );
+  useEffect(() => {
+    setSelectedPath(fileScope?.initialPath);
+  }, [fileScope?.initialPath]);
   const resolvedPath = useMemo(
     () =>
-      hasCodeWorkspaceFilePath(graphScopedWorkspaceFileTree, selectedPath)
+      hasCodeWorkspaceFilePath(scopedWorkspaceFileTree, selectedPath)
         ? selectedPath
-        : resolveInitialCodeFilePath(graphScopedWorkspaceFileTree),
-    [graphScopedWorkspaceFileTree, selectedPath]
+        : fileScope
+          ? resolveInitialDbtProjectFilePath(scopedWorkspaceFileTree, {
+              projectRoot: fileScope.projectRoot,
+              preferredPath: fileScope.initialPath,
+            })
+          : resolveInitialCodeFilePath(scopedWorkspaceFileTree),
+    [fileScope, scopedWorkspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
   const fileHistoryQuery = useWorkspaceFileHistoryQuery(resolvedPath);
@@ -120,9 +147,10 @@ export default function CodeView({
     deriveCodeRouteBootstrapPresentation(
       {
         isLoadingFileTree:
-          fileTreeQuery.isPending || (fileTreeQuery.isSuccess && graphSnapshotQuery.isPending),
+          fileTreeQuery.isPending ||
+          (fileScope === undefined && fileTreeQuery.isSuccess && graphSnapshotQuery.isPending),
         fileTreeErrorMessage: fileTreeErrorPresentation?.message ?? null,
-        hasWorkspaceFiles: hasCodeWorkspaceFiles(graphScopedWorkspaceFileTree),
+        hasWorkspaceFiles: hasCodeWorkspaceFiles(scopedWorkspaceFileTree),
         isLoadingFilePreview: resolvedPath !== undefined && fileContentQuery.isPending,
         filePreviewErrorMessage: filePreviewErrorPresentation?.message ?? null,
       },
@@ -131,7 +159,10 @@ export default function CodeView({
     { enabled: publishRouteBootstrap }
   );
 
-  if (fileTreeQuery.isPending || (fileTreeQuery.isSuccess && graphSnapshotQuery.isPending)) {
+  if (
+    fileTreeQuery.isPending ||
+    (fileScope === undefined && fileTreeQuery.isSuccess && graphSnapshotQuery.isPending)
+  ) {
     return <CodeRouteLoadingStateView />;
   }
 
@@ -139,7 +170,7 @@ export default function CodeView({
     return <CodeRouteErrorStateView error={fileTreeErrorPresentation!} />;
   }
 
-  if (!hasCodeWorkspaceFiles(graphScopedWorkspaceFileTree)) {
+  if (!hasCodeWorkspaceFiles(scopedWorkspaceFileTree)) {
     return <CodeRouteEmptyStateView />;
   }
 
@@ -181,7 +212,7 @@ export default function CodeView({
         leftPanel: (
           <FileTreePanel
             title={copy.explorerTitle}
-            tree={graphScopedWorkspaceFileTree}
+            tree={scopedWorkspaceFileTree}
             selectedPath={resolvedPath}
             onSelect={(entry) => {
               if (entry.kind === 'file' && entry.path !== resolvedPath) {

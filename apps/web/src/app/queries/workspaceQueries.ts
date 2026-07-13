@@ -85,11 +85,16 @@ export function useWorkspacePluginCatalogQuery() {
   });
 }
 
-export function useWorkspaceGraphForViewQuery(viewId: string, staleTime?: number) {
+export function useWorkspaceGraphForViewQuery(
+  viewId: string,
+  staleTime?: number,
+  options: Readonly<{ enabled?: boolean }> = {}
+) {
   const workspaceGraphSnapshotQuery = useWorkspaceGraphSnapshotQueryPort();
   return useQuery({
     queryKey: queryKeys.workspace.graphForView(viewId),
     queryFn: () => workspaceGraphSnapshotQuery.getGraphSnapshot(),
+    enabled: options.enabled ?? true,
     ...(typeof staleTime === 'number' ? { staleTime } : {}),
   });
 }

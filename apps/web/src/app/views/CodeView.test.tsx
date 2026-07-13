@@ -604,4 +604,52 @@ describe('CodeView', () => {
     ).toContain('models/staging/stg_orders.sql');
     expect(container.querySelector('[data-testid="monaco-code-editor"]')).toBeNull();
   });
+
+  it('opens a project-scoped resource without querying the graph-draft snapshot', async () => {
+    const getGraphSnapshot = vi.fn(async () => {
+      throw new Error('file-backed Code must not query graph draft');
+    });
+    setupContainer();
+
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider client={createTestQueryClient()}>
+          <AppServicesProvider
+            overrides={{
+              ...createAppServicesTestOverrides(),
+              workspaceGraphSnapshotQuery: { getGraphSnapshot },
+              workspaceFilesQuery: buildWorkspaceFilesQueryPort({
+                listFiles: async () => [
+                  { path: 'dbt_project.yml', name: 'dbt_project.yml', kind: 'file' },
+                  {
+                    path: 'models',
+                    name: 'models',
+                    kind: 'directory',
+                    children: [{ path: 'models/orders.sql', name: 'orders.sql', kind: 'file' }],
+                  },
+                ],
+              }),
+            }}
+          >
+            <CodeView
+              publishRouteBootstrap={false}
+              fileScope={{
+                kind: 'dbt-project-files',
+                projectRoot: '.',
+                initialPath: 'models/orders.sql',
+              }}
+            />
+          </AppServicesProvider>
+        </QueryClientProvider>
+      );
+    });
+
+    await waitFor(
+      () =>
+        getContainer()
+          .querySelector('[data-testid="monaco-code-editor"]')
+          ?.getAttribute('data-path') === 'models/orders.sql'
+    );
+    expect(getGraphSnapshot).not.toHaveBeenCalled();
+  });
 });
