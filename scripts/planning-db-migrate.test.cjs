@@ -14344,3 +14344,21 @@ test('tracked migrations expose dbt projection coverage and directory limits', (
   assert.match(migration.sql, /651_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations map focused dbt analyzer test ownership', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '650_dbt_project_file_projection_phase2_test_ownership.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /TEST-DBT-ANALYZER-PROCESS-BOUNDARY/);
+  assert.match(migration.sql, /TEST-DBT-MANIFEST-PROJECTION/);
+  assert.match(migration.sql, /TEST-DBT-PROJECT-CONTENT-REVISION/);
+  assert.match(migration.sql, /governance_component_local_ownership_patterns/);
+  assert.match(migration.sql, /'\{unitTests\}'/);
+  assert.match(migration.sql, /651_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /652_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
