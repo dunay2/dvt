@@ -198,7 +198,7 @@ export function DbtProjectFileCanvasView({
       canvasGridVisible: controller.presentation.canvasGridVisible,
       canvasGridColor: controller.presentation.canvasGridColor,
       canvasSnapToGrid: controller.presentation.canvasSnapToGrid,
-      canvasEmptyStateGuideVisible: false,
+      canvasEmptyStateGuideVisible: controller.presentation.canvasEmptyStateGuideVisible,
       viewport: controller.persistedViewport,
       frozenNodeIds: controller.frozenNodeIds,
     },

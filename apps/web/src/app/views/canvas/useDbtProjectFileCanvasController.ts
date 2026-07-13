@@ -8,6 +8,10 @@ import { getRegisteredPluginIds } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import { observePlanRunReadiness } from './canvasPlanReadiness';
+import {
+  buildDbtProjectFileInitialNodePositions,
+  mergeDbtProjectFileNodePositions,
+} from './dbtProjectFileLayout';
 import { projectDbtProjectGraphToCanonicalCanvas } from './dbtProjectFileProjection';
 import { validateTransformationGraph } from './transformationGraphValidation';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
@@ -75,6 +79,7 @@ export function useDbtProjectFileCanvasController(
     canvasGridColor,
     canvasGridVisible,
     canvasSnapToGrid,
+    canvasEmptyStateGuideVisible,
     columnLevelLineageEnabled,
     focusMode,
     gridSize,
@@ -86,6 +91,7 @@ export function useDbtProjectFileCanvasController(
     inspectorPreferredTabRequestId,
     setCanvasGridColor,
     setCanvasGridVisible,
+    setCanvasEmptyStateGuideVisible,
     setCanvasNodePositions,
     setCanvasSnapToGrid,
     setCanvasViewport,
@@ -112,6 +118,14 @@ export function useDbtProjectFileCanvasController(
   );
   const canonicalNodes = projection?.nodes ?? EMPTY_CANONICAL_NODES;
   const canonicalEdges = projection?.edges ?? EMPTY_CANONICAL_EDGES;
+  const initialNodePositions = useMemo(
+    () => buildDbtProjectFileInitialNodePositions(canonicalNodes, canonicalEdges),
+    [canonicalEdges, canonicalNodes]
+  );
+  const viewportNodePositions = useMemo(
+    () => mergeDbtProjectFileNodePositions(initialNodePositions, persistedNodePositions),
+    [initialNodePositions, persistedNodePositions]
+  );
   const canonicalNodesById = useMemo(() => buildCanonicalNodeMap(canonicalNodes), [canonicalNodes]);
   const canonicalEdgeIdBySignature = useMemo(
     () => buildCanonicalEdgeIdMap(canonicalEdges),
@@ -132,7 +146,7 @@ export function useDbtProjectFileCanvasController(
     canonicalNodesById,
     canonicalEdgeIdBySignature,
     columnLevelLineageEnabled,
-    persistedNodePositions,
+    persistedNodePositions: viewportNodePositions,
     frozenNodeIds,
   });
   const persistence = useCanvasLayoutPersistence({
@@ -252,6 +266,7 @@ export function useDbtProjectFileCanvasController(
       canvasGridVisible,
       canvasGridColor,
       canvasSnapToGrid,
+      canvasEmptyStateGuideVisible,
       impactOverlayEnabled,
       columnLevelLineageEnabled,
     },
@@ -285,7 +300,7 @@ export function useDbtProjectFileCanvasController(
       onToggleGridVisible: () => setCanvasGridVisible(!canvasGridVisible),
       onGridColorChange: setCanvasGridColor,
       onToggleSnapToGrid: () => setCanvasSnapToGrid(!canvasSnapToGrid),
-      onSetCanvasEmptyStateGuideVisible: () => undefined,
+      onSetCanvasEmptyStateGuideVisible: setCanvasEmptyStateGuideVisible,
       onExportProjectSnapshot: () => unsupportedSemanticMutation('Export draft snapshot'),
       onImportProjectSnapshotFile: () => unsupportedSemanticMutation('Import draft snapshot'),
       onReloadLatestDraft: () => {
