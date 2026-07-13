@@ -14423,3 +14423,23 @@ test('tracked migrations model the Web dbt file projection family before impleme
   assert.doesNotMatch(migration.sql, /evidence_status[\s\S]*'current'/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations authorize only the shared Web composition seams for file projection', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '656_dbt_project_file_projection_phase2_web_composition_design.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /services\/composition\/appServices\.ts/);
+  assert.match(migration.sql, /views\/Canvas\.tsx/);
+  assert.match(migration.sql, /views\/CodeView\.tsx/);
+  assert.match(migration.sql, /canvasSurfaceStrategyContracts\.ts/);
+  assert.match(migration.sql, /CanvasViewportSurfaceView\.tsx/);
+  assert.match(migration.sql, /hooks from both authorities never run in one render branch/);
+  assert.match(migration.sql, /without querying WorkspaceGraphAuthoringDraft\.v1/);
+  assert.match(migration.sql, /Transfer ownership/);
+  assert.match(migration.sql, /657_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
