@@ -14289,3 +14289,24 @@ test('tracked migrations close dbt project projection API integrity without phan
   assert.match(migration.sql, /648_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations reconcile dbt project projection production symbols', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '647_dbt_project_file_projection_phase2_symbol_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /with declared_symbol\(path, name\)/);
+  assert.match(migration.sql, /CanvasAuthoringAuthorityBindingSchema/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFilesUseCase/);
+  assert.match(migration.sql, /DbtCliProjectAnalyzer/);
+  assert.match(migration.sql, /projectDbtManifest/);
+  assert.match(migration.sql, /raw_manifest/);
+  assert.match(migration.sql, /'\{symbols\}'/);
+  assert.match(migration.sql, /symbol_refs = symbol_manifest\.symbol_refs/);
+  assert.match(migration.sql, /648_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /649_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
