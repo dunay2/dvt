@@ -13,7 +13,6 @@ import { hashDbtAnalysis, sha256Hex } from './dbtAnalysisHash.js';
 import {
   buildSanitizedProcessEnvironment,
   NODE_DBT_PROCESS_RUNNER,
-  normalizeProcessDiagnostic,
   type DbtProcessRunner,
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
@@ -24,6 +23,8 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 1_000_000;
 const DEFAULT_MAX_PROJECT_FILES = 10_000;
 const DEFAULT_MAX_PROJECT_BYTES = 50_000_000;
+const INVALID_PROJECT_DIAGNOSTIC_MESSAGE =
+  'dbt parse rejected the project. Review it in a trusted dbt environment.';
 
 type DbtCliProjectAnalyzerOptions = Readonly<{
   workspaceFilesRoot: string;
@@ -146,11 +147,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           {
             code: 'dbt_project_invalid',
             severity: 'error' as const,
-            message: normalizeProcessDiagnostic(processResult, [
-              [projectDirectory, '<project>'],
-              [profilesDirectory, '<profiles>'],
-              [analysisRoot, '<analysis>'],
-            ]),
+            message: INVALID_PROJECT_DIAGNOSTIC_MESSAGE,
           },
         ];
         return {

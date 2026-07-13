@@ -168,7 +168,8 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(second.analysisSha256).toBe(first.analysisSha256);
   });
 
-  it('returns normalized invalid diagnostics when dbt parse fails', async () => {
+  it('returns a safe invalid diagnostic without exposing project-controlled dbt output', async () => {
+    const profileSecret = 'warehouse-password-from-target';
     const analyzer = new DbtCliProjectAnalyzer({
       workspaceFilesRoot,
       profilesDirectory,
@@ -177,8 +178,7 @@ describe('DbtCliProjectAnalyzer', () => {
           kind: 'completed',
           exitCode: 2,
           stdout: '',
-          stderr:
-            'Compilation Error in model orders (models/orders.sql)\nMissing source raw.orders',
+          stderr: `Compilation Error in model orders: ${profileSecret} at ${projectDirectory}\\models\\orders.sql`,
         }),
       },
       now: () => new Date('2026-07-13T10:00:00.000Z'),
@@ -192,12 +192,14 @@ describe('DbtCliProjectAnalyzer', () => {
       expect.objectContaining({
         code: 'dbt_project_invalid',
         severity: 'error',
-        message: expect.stringContaining('Compilation Error'),
+        message: 'dbt parse rejected the project. Review it in a trusted dbt environment.',
       }),
     ]);
+    expect(result.diagnostics[0]?.message).not.toContain(profileSecret);
+    expect(result.diagnostics[0]?.message).not.toContain(projectDirectory);
   });
 
-  it('removes invocation timestamps and local paths from deterministic invalid diagnostics', async () => {
+  it('keeps invalid diagnostics deterministic across process output changes', async () => {
     let invocation = 0;
     const analyzer = new DbtCliProjectAnalyzer({
       workspaceFilesRoot,
@@ -221,8 +223,9 @@ describe('DbtCliProjectAnalyzer', () => {
 
     expect(second.analysisSha256).toBe(first.analysisSha256);
     expect(second.diagnostics).toEqual(first.diagnostics);
-    expect(first.diagnostics[0]?.message).toContain('<timestamp>');
-    expect(first.diagnostics[0]?.message).toContain('<project>');
+    expect(first.diagnostics[0]?.message).toBe(
+      'dbt parse rejected the project. Review it in a trusted dbt environment.'
+    );
     expect(first.diagnostics[0]?.message).not.toContain(workspaceFilesRoot);
   });
 
@@ -355,6 +358,32 @@ describe('DbtCliProjectAnalyzer', () => {
       profilesDirectory,
       processRunner: { run },
       maxProjectBytes: 100,
+    });
+
+    const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.status).toBe('unavailable');
+    expect(result.diagnostics[0]?.code).toBe('dbt_project_unreadable');
+    expect(run).not.toHaveBeenCalled();
+  });
+
+  it('counts generated-name directories when enforcing the dbt project byte budget', async () => {
+    const configuredResourceDirectory = path.join(projectDirectory, 'target');
+    await mkdir(configuredResourceDirectory, { recursive: true });
+    await writeFile(
+      path.join(projectDirectory, 'dbt_project.yml'),
+      'name: analytics\nprofile: analytics\nmodel-paths: ["target"]\n'
+    );
+    await writeFile(
+      path.join(configuredResourceDirectory, 'project-controlled.sql'),
+      'x'.repeat(4_096)
+    );
+    const run = vi.fn();
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner: { run },
+      maxProjectBytes: 1_000,
     });
 
     const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });

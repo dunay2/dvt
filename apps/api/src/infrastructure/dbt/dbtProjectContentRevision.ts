@@ -3,20 +3,6 @@ import { createReadStream } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
-const EXCLUDED_DIRECTORY_NAMES = new Set([
-  '.git',
-  '.tox',
-  '.venv',
-  '__pycache__',
-  'build',
-  'dbt_packages',
-  'dist',
-  'logs',
-  'target',
-  'venv',
-]);
-const EXCLUDED_FILE_NAMES = new Set(['profiles.yml', 'profiles.yaml']);
-
 export type ProjectContentRevision = Readonly<{
   sha256: string;
   files: number;
@@ -51,18 +37,18 @@ async function visitProjectDirectory(
       throw new Error(`Symbolic links are not accepted in analyzed dbt projects: ${entry.name}`);
     }
     if (entry.isDirectory()) {
-      if (!EXCLUDED_DIRECTORY_NAMES.has(entry.name)) {
-        await visitProjectDirectory(
-          projectDirectory,
-          path.join(currentDirectory, entry.name),
-          entries,
-          limits,
-          state
-        );
-      }
+      await visitProjectDirectory(
+        projectDirectory,
+        path.join(currentDirectory, entry.name),
+        entries,
+        limits,
+        state
+      );
       continue;
     }
-    if (!entry.isFile() || EXCLUDED_FILE_NAMES.has(entry.name)) continue;
+    if (!entry.isFile()) {
+      throw new Error(`Unsupported file-system entry in analyzed dbt project: ${entry.name}`);
+    }
 
     const absolutePath = path.join(currentDirectory, entry.name);
     if (entries.length + 1 > limits.maxFiles) {

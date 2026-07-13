@@ -14310,3 +14310,21 @@ test('tracked migrations reconcile dbt project projection production symbols', (
   assert.match(migration.sql, /649_dbt_project_file_projection_phase2_live_closeout\.sql/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations harden dbt analyzer diagnostics and project input budgets', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '648_dbt_project_file_projection_phase2_review_hardening.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /INVALID_PROJECT_DIAGNOSTIC_MESSAGE/);
+  assert.match(migration.sql, /normalizeProcessDiagnostic/);
+  assert.match(migration.sql, /EXCLUDED_DIRECTORY_NAMES/);
+  assert.match(migration.sql, /Arbitrary/);
+  assert.match(migration.sql, /resource paths are configurable/);
+  assert.match(migration.sql, /649_dbt_project_file_projection_phase2_web_closeout\.sql/);
+  assert.match(migration.sql, /650_dbt_project_file_projection_phase2_live_closeout\.sql/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
