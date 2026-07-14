@@ -48,7 +48,7 @@ behavior:
 | Rail                                       | Type    | Current role in this review                         |
 | ------------------------------------------ | ------- | --------------------------------------------------- |
 | `ListWarehouseConnections`                 | query   | Source-origin discovery candidate.                  |
-| `ListWarehouseConnectionTables`            | query   | Source table and column discovery candidate.        |
+| `ListWarehouseConnectionSourceObjects`     | query   | Source table and column discovery candidate.        |
 | `ImportWarehouseSources`                   | command | Source import to authoritative graph draft.         |
 | `ListProjectWorkspaceResources`            | query   | Existing project resource exploration.              |
 | `CreateCanvasAuthoringNode`                | command | Node creation through the Canvas authoring surface. |
@@ -137,7 +137,7 @@ commandQueryRails:
   - name: ListWarehouseConnections
     type: query
     dddOwner: Warehouse source import
-  - name: ListWarehouseConnectionTables
+  - name: ListWarehouseConnectionSourceObjects
     type: query
     dddOwner: Warehouse source import
   - name: ImportWarehouseSources
@@ -205,7 +205,7 @@ symbols:
     dddOwner: Frontend planning review
     cqRails:
       - ListWarehouseConnections
-      - ListWarehouseConnectionTables
+      - ListWarehouseConnectionSourceObjects
       - ImportWarehouseSources
       - ConfigureCanvasDvtNode
       - PreviewExecutablePlan
@@ -222,7 +222,7 @@ symbols:
     dddOwner: Frontend planning review
     cqRails:
       - ListWarehouseConnections
-      - ListWarehouseConnectionTables
+      - ListWarehouseConnectionSourceObjects
       - ImportWarehouseSources
       - ConfigureCanvasDvtNode
       - PreviewExecutablePlan

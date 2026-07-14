@@ -66,7 +66,7 @@ Mode: Full.
 
 Scope:
 
-- Add `ListWarehouseConnections`, `ListWarehouseConnectionTables`, and
+- Add `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`, and
   `ImportWarehouseSources` rails to protected runtime workspace catalog.
 - Add API ports, use cases, route group, local catalog adapter, route constants,
   authorization actions, tests, and web adapter HTTP wiring.
@@ -91,20 +91,20 @@ Command/query rail impact:
 
 - Query: `ListWarehouseConnections`, owning bounded context
   `Warehouse source import`, read model `WarehouseConnectionCatalog`.
-- Query: `ListWarehouseConnectionTables`, owning bounded context
-  `Warehouse source import`, read model `WarehouseConnectionTableCatalog`.
+- Query: `ListWarehouseConnectionSourceObjects`, owning bounded context
+  `Warehouse source import`, read model `SourceObjectCatalogResponse`.
 - Command: `ImportWarehouseSources`, owning bounded context
   `Warehouse source import`, aggregate `WorkspaceGraphAuthoringDraft` via
   `WarehouseSourceRegistration`.
 
 ## Fowler Matrix
 
-| scenario                                                  | opportunity      | Fowler pattern                             | DDD owner                           | command/query rail                                                                    | implementation surfaces                                     | unit or package test                   | architecture test            | user-flow test                       | out of scope                 |
-| --------------------------------------------------------- | ---------------- | ------------------------------------------ | ----------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- | ---------------------------- | ------------------------------------ | ---------------------------- |
-| API mode source import is disabled by a frontend literal. | Hidden authority | Server-owned capability boundary           | Warehouse source import route group | `ListWarehouseConnections`, `ListWarehouseConnectionTables`, `ImportWarehouseSources` | `apps/api/src/**`, `apps/web/src/app/services/workspace/**` | route and adapter tests                | protected runtime rail guard | existing wizard flow against adapter | non-warehouse source types   |
-| Throw-only adapter occupies a real port.                  | Boundary drift   | Gateway + explicit protected runtime route | `IWarehouseSourceImportPort`        | same rails                                                                            | web API adapter                                             | adapter endpoint tests                 | no unimplemented throw guard | none                                 | connector driver credentials |
-| Backend has no owner for warehouse catalog.               | Anemic domain    | Service Layer + Repository/Gateway         | `WarehouseConnectionCatalog`        | list connections and tables                                                           | API application ports/use cases/infrastructure              | use case and route tests               | command/query catalog guard  | wizard E2E later                     | external warehouse drivers   |
-| Import must update canvas graph authority.                | Hidden authority | Aggregate update through store port        | `WorkspaceGraphAuthoringDraft`      | `ImportWarehouseSources`                                                              | source import use case + graph draft store                  | duplicate/noop and invalid table tests | route registration guard     | existing canvas refresh path         | full YAML file generation    |
+| scenario                                                  | opportunity      | Fowler pattern                             | DDD owner                           | command/query rail                                                                           | implementation surfaces                                     | unit or package test                   | architecture test            | user-flow test                       | out of scope                 |
+| --------------------------------------------------------- | ---------------- | ------------------------------------------ | ----------------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- | ---------------------------- | ------------------------------------ | ---------------------------- |
+| API mode source import is disabled by a frontend literal. | Hidden authority | Server-owned capability boundary           | Warehouse source import route group | `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`, `ImportWarehouseSources` | `apps/api/src/**`, `apps/web/src/app/services/workspace/**` | route and adapter tests                | protected runtime rail guard | existing wizard flow against adapter | non-warehouse source types   |
+| Throw-only adapter occupies a real port.                  | Boundary drift   | Gateway + explicit protected runtime route | `IWarehouseSourceImportPort`        | same rails                                                                                   | web API adapter                                             | adapter endpoint tests                 | no unimplemented throw guard | none                                 | connector driver credentials |
+| Backend has no owner for warehouse catalog.               | Anemic domain    | Service Layer + Repository/Gateway         | `WarehouseConnectionCatalog`        | list connections and tables                                                                  | API application ports/use cases/infrastructure              | use case and route tests               | command/query catalog guard  | wizard E2E later                     | external warehouse drivers   |
+| Import must update canvas graph authority.                | Hidden authority | Aggregate update through store port        | `WorkspaceGraphAuthoringDraft`      | `ImportWarehouseSources`                                                                     | source import use case + graph draft store                  | duplicate/noop and invalid table tests | route registration guard     | existing canvas refresh path         | full YAML file generation    |
 
 ## Closeout Evidence
 

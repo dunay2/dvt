@@ -376,7 +376,7 @@ commandQueryRails:
   - name: ListWarehouseConnections
     type: query
     dddOwner: Warehouse connection catalog read model
-  - name: ListWarehouseConnectionTables
+  - name: ListWarehouseConnectionSourceObjects
     type: query
     dddOwner: Warehouse table catalog read model
   - name: ImportWarehouseSources
@@ -1088,7 +1088,7 @@ symbols:
   - name: buildLocalWarehouseConnectionCatalog
     path: scripts/run-dev-stack.cjs
     dddOwner: WarehouseConnectionCatalog
-    cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
+    cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects, ImportWarehouseSources]
     fowlerSignals: [Local proof stack needs real source metadata without bypassing API rails.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs scripts/run-dev-stack.auth.test.cjs
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
@@ -1439,7 +1439,7 @@ symbols:
   - name: LOCAL_WAREHOUSE_CATALOG_RELATIVE_PATH
     path: scripts/run-dev-stack.cjs
     dddOwner: WarehouseConnectionCatalog
-    cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables]
+    cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects]
     fowlerSignals: [Local proof stack needs governed source catalog metadata.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
@@ -1457,7 +1457,7 @@ symbols:
   - name: buildLocalPostgresProofSeedSql
     path: scripts/run-dev-stack.cjs
     dddOwner: WarehouseConnectionCatalog
-    cqRails: [ListWarehouseConnectionTables, StartRun]
+    cqRails: [ListWarehouseConnectionSourceObjects, StartRun]
     fowlerSignals: [Local SQL execution needs real source relations.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
@@ -1484,7 +1484,7 @@ symbols:
   - name: seedLocalPostgresProofData
     path: scripts/run-dev-stack.cjs
     dddOwner: WarehouseConnectionCatalog
-    cqRails: [ListWarehouseConnectionTables, StartRun]
+    cqRails: [ListWarehouseConnectionSourceObjects, StartRun]
     fowlerSignals: [Local SQL execution needs real source relations.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts
@@ -1493,7 +1493,7 @@ symbols:
   - name: seedLocalWorkspaceWarehouseCatalog
     path: scripts/run-dev-stack.cjs
     dddOwner: WarehouseConnectionCatalog
-    cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables]
+    cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects]
     fowlerSignals: [Local proof stack needs governed source catalog metadata.]
     architectureGuard: node --test scripts/run-dev-stack.test.cjs
     cypressCoverage: apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts

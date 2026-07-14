@@ -56,7 +56,7 @@ commandQueryRails:
   - name: ListWarehouseConnections
     type: query
     dddOwner: Warehouse source import
-  - name: ListWarehouseConnectionTables
+  - name: ListWarehouseConnectionSourceObjects
     type: query
     dddOwner: Warehouse source import
   - name: ImportWarehouseSources
@@ -113,7 +113,7 @@ redGreenCycles:
     greenTest: pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts
 xApiSymbol: &api_symbol
   dddOwner: Warehouse source import
-  cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
+  cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects, ImportWarehouseSources]
   fowlerSignals: [API mode source import used a throw-only adapter]
   architectureGuard: pnpm --filter dvt-api test -- test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/architecture/warehouseSourceImportRails.architecture.test.ts
   cypressCoverage: N/A - backend rail and adapter slice only
@@ -122,7 +122,7 @@ xApiSymbol: &api_symbol
     - apps/api/test/architecture/warehouseSourceImportRails.architecture.test.ts
 xWebSymbol: &web_symbol
   dddOwner: Web workspace integration
-  cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
+  cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects, ImportWarehouseSources]
   fowlerSignals: [Frontend fixture authority was masking a missing backend rail]
   architectureGuard: pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts
   cypressCoverage: N/A - backend rail and adapter slice only
@@ -167,10 +167,10 @@ symbols:
     name: WarehouseSourceImportDraftConflictError
     path: apps/api/src/application/ports/warehouseSourceImport.ts
   - <<: *api_symbol
-    name: WarehouseTable
+    name: SourceObject
     path: apps/api/src/application/ports/warehouseSourceImport.ts
   - <<: *api_symbol
-    name: WarehouseTableNotFoundError
+    name: SourceObjectNotFoundError
     path: apps/api/src/application/ports/warehouseSourceImport.ts
   - <<: *api_symbol
     name: ImportWarehouseSourcesUseCase
@@ -194,8 +194,8 @@ symbols:
     name: toSourceNodeId
     path: apps/api/src/application/services/importWarehouseSourcesUseCase.ts
   - <<: *api_symbol
-    name: ListWarehouseConnectionTablesUseCase
-    path: apps/api/src/application/services/listWarehouseConnectionTablesUseCase.ts
+    name: ListWarehouseConnectionSourceObjectsUseCase
+    path: apps/api/src/application/services/listWarehouseConnectionSourceObjectsUseCase.ts
   - <<: *api_symbol
     name: ListWarehouseConnectionsUseCase
     path: apps/api/src/application/services/listWarehouseConnectionsUseCase.ts

@@ -34,7 +34,7 @@ Constraints and invariants:
 
 - `docs/architecture/command-query-rail-governance.md` requires externally
   observable behavior to stay on the existing `ListWarehouseConnections`,
-  `ListWarehouseConnectionTables`, and `ImportWarehouseSources` rails.
+  `ListWarehouseConnectionSourceObjects`, and `ImportWarehouseSources` rails.
 - `docs/architecture/fowler-opportunity-planning-governance.md` requires the
   hardening to name the boundary drift and hidden authority it removes.
 - `docs/planning/roadmap/strategic-product-roadmap.md` requires Lane E to turn
@@ -64,13 +64,13 @@ parallel source-import services outside the existing protected rails.
 
 ## Fowler Opportunity Matrix
 
-| Scenario                                                         | Opportunity                                  | Pattern                                | DDD owner                                 | Rail                                                        | Allowed surfaces                    | Tests                         | Out of scope                            |
-| ---------------------------------------------------------------- | -------------------------------------------- | -------------------------------------- | ----------------------------------------- | ----------------------------------------------------------- | ----------------------------------- | ----------------------------- | --------------------------------------- |
-| Hardcoded `local-analytics` catalog is production default.       | Hidden authority, test-only confidence       | Repository / Gateway                   | Warehouse source import                   | `ListWarehouseConnections`, `ListWarehouseConnectionTables` | API infrastructure and route group  | Route and architecture tests  | Catalog discovery from live credentials |
-| Import result names YAML files but does not persist source YAML. | Boundary drift, incomplete aggregate outcome | Service Layer + Aggregate update       | Warehouse source import + workspace files | `ImportWarehouseSources`                                    | API service and workspace file port | API service and route tests   | Full dbt project compilation            |
-| Client can attempt malicious metadata or duplicates.             | Primitive obsession, hidden authority        | Authoritative read model validation    | Warehouse source import                   | `ImportWarehouseSources`                                    | API use case and route group        | Negative route/use-case tests | UI redesign                             |
-| Wizard hardcodes dbt artifact options in app UI.                 | Shotgun surgery, hidden plugin authority     | Plugin / Registry + Presentation Model | dbt plugin + Canvas shell                 | `ImportWarehouseSources`                                    | Web plugin registry and wizard      | Registry, shell, wizard tests | Arbitrary plugin option DTOs            |
-| Graph explorer hardcodes active-row visual tokens.               | Divergent presentation authority             | Token component                        | Canvas graph visual system                | `ImportWarehouseSources`                                    | Graph token component + explorer    | Architecture token test       | Broader visual redesign                 |
+| Scenario                                                         | Opportunity                                  | Pattern                                | DDD owner                                 | Rail                                                               | Allowed surfaces                    | Tests                         | Out of scope                            |
+| ---------------------------------------------------------------- | -------------------------------------------- | -------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------ | ----------------------------------- | ----------------------------- | --------------------------------------- |
+| Hardcoded `local-analytics` catalog is production default.       | Hidden authority, test-only confidence       | Repository / Gateway                   | Warehouse source import                   | `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects` | API infrastructure and route group  | Route and architecture tests  | Catalog discovery from live credentials |
+| Import result names YAML files but does not persist source YAML. | Boundary drift, incomplete aggregate outcome | Service Layer + Aggregate update       | Warehouse source import + workspace files | `ImportWarehouseSources`                                           | API service and workspace file port | API service and route tests   | Full dbt project compilation            |
+| Client can attempt malicious metadata or duplicates.             | Primitive obsession, hidden authority        | Authoritative read model validation    | Warehouse source import                   | `ImportWarehouseSources`                                           | API use case and route group        | Negative route/use-case tests | UI redesign                             |
+| Wizard hardcodes dbt artifact options in app UI.                 | Shotgun surgery, hidden plugin authority     | Plugin / Registry + Presentation Model | dbt plugin + Canvas shell                 | `ImportWarehouseSources`                                           | Web plugin registry and wizard      | Registry, shell, wizard tests | Arbitrary plugin option DTOs            |
+| Graph explorer hardcodes active-row visual tokens.               | Divergent presentation authority             | Token component                        | Canvas graph visual system                | `ImportWarehouseSources`                                           | Graph token component + explorer    | Architecture token test       | Broader visual redesign                 |
 
 ## Pre-Implementation Brief
 
@@ -186,7 +186,7 @@ commandQueryRails:
   - name: ListWarehouseConnections
     type: query
     dddOwner: Warehouse source import
-  - name: ListWarehouseConnectionTables
+  - name: ListWarehouseConnectionSourceObjects
     type: query
     dddOwner: Warehouse source import
   - name: ImportWarehouseSources
@@ -307,9 +307,17 @@ redGreenCycles:
       - apps/web/src/app/plugins/graph/graphVisualTokens.ts
       - apps/web/src/app/components/DbtExplorer.tsx
     greenTest: pnpm --filter @dvt/web test -- src/app/plugins/graph/graphVisualTokenConvergence.architecture.test.ts
+xContractSymbol: &contract_symbol
+  dddOwner: Source import published language
+  cqRails: [ListWarehouseConnectionSourceObjects, ImportWarehouseSources]
+  fowlerSignals: [Provider-neutral source objects replace adapter-shaped table DTOs]
+  architectureGuard: pnpm --filter @dvt/contracts test -- test/source-import/SourceObjectCatalog.v1.test.ts
+  cypressCoverage: N/A - published language contract only
+  unitTests:
+    - packages/@dvt/contracts/test/source-import/SourceObjectCatalog.v1.test.ts
 xApiSymbol: &api_symbol
   dddOwner: Warehouse source import
-  cqRails: [ListWarehouseConnections, ListWarehouseConnectionTables, ImportWarehouseSources]
+  cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects, ImportWarehouseSources]
   fowlerSignals: [Hardcoded catalog created hidden authority, Durable artifact policy]
   architectureGuard: pnpm --filter dvt-api test -- test/application/services/warehouseSourceYaml.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.test.ts test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/architecture/warehouseSourceImportRails.architecture.test.ts
   cypressCoverage: N/A - backend hardening slice only
@@ -369,9 +377,9 @@ symbols:
   - <<: *api_symbol
     name: WarehouseColumnCatalogSchema
     path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts
-  - <<: *api_symbol
-    name: WarehouseTableCatalogSchema
-    path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts
+  - <<: *contract_symbol
+    name: SourceObjectCatalogResponseSchema
+    path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.v1.ts
   - <<: *api_symbol
     name: WarehouseConnectionCatalogSchema
     path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts
