@@ -14526,3 +14526,30 @@ test('tracked migrations promote the dbt file projection family to architecture 
   assert.doesNotMatch(migration.sql, /legacy/i);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations seed the graph-draft command before governance import', () => {
+  const migrations = readMigrationFiles();
+  const authorityMigration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '676_canvas_authoring_authority_transactional_exclusion.sql'
+  );
+  const rateLimitMigration = migrations.find(
+    (candidate) => candidate.fileName === '679_workspace_graph_draft_http_rate_limit.sql'
+  );
+  const canonicalRailId =
+    'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md#DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG#command#00121#saveworkspacegraphdraft';
+
+  assert.ok(authorityMigration);
+  assert.ok(rateLimitMigration);
+  assert.match(authorityMigration.sql, /with canonical_rail_identity as/);
+  assert.match(authorityMigration.sql, /where not exists/);
+  assert.ok(authorityMigration.sql.includes(canonicalRailId));
+  assert.match(
+    authorityMigration.sql,
+    /insert into planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.ok(rateLimitMigration.sql.includes(canonicalRailId));
+  assert.match(rateLimitMigration.sql, /updated_rail_count <> 1/);
+  assert.doesNotMatch(authorityMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(rateLimitMigration.sql, /truncate\s+/i);
+});

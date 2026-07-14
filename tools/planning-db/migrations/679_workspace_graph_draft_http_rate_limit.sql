@@ -88,7 +88,9 @@ begin
     source_content_sha256 = repeat(md5('SaveWorkspaceGraphDraft:http-rate-limit:679'), 2),
     revision = rail.revision + 1,
     updated_at = now()
-  where rail.rail_name = 'SaveWorkspaceGraphDraft'
+  where rail.rail_id =
+      'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md#DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG#command#00121#saveworkspacegraphdraft'
+    and rail.rail_name = 'SaveWorkspaceGraphDraft'
     and rail.rail_type = 'command'
     and lower(coalesce(rail.rail_status, '')) not in ('deprecated', 'retired');
 

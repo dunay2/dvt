@@ -138,14 +138,44 @@ on conflict (test_id) do update set
   required = excluded.required,
   validation_command = excluded.validation_command;
 
--- Promote the existing documented SaveWorkspaceGraphDraft rail through a
--- same-identity DB-local override. This survives documentation re-import and
--- does not create an alias or a second product command.
-with target_rail as (
-  select *
-  from planning_query_store.command_query_rails
-  where rail_id =
-    'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md#DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG#command#00121#saveworkspacegraphdraft'
+-- Promote the documented SaveWorkspaceGraphDraft rail through a same-identity
+-- DB-local override. Migrations run before governance import in clean CI, so
+-- the canonical identity must also be available without an imported row.
+with canonical_rail_identity as (
+  select
+    'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md#DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG#command#00121#saveworkspacegraphdraft'::text as rail_id,
+    'DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG'::text as feature_id,
+    'SaveWorkspaceGraphDraft'::text as rail_name,
+    'saveworkspacegraphdraft'::text as normalized_rail_name,
+    'command'::text as rail_type,
+    jsonb_build_array(
+      'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md'
+    ) as documentation_refs,
+    jsonb_build_object(
+      'sourceKind', 'documentation_scan',
+      'documentPath', 'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md'
+    ) as raw_manifest
+), target_rail as (
+  select
+    rail.rail_id,
+    rail.feature_id,
+    rail.rail_name,
+    rail.normalized_rail_name,
+    rail.rail_type,
+    rail.documentation_refs,
+    rail.raw_manifest
+  from planning_query_store.command_query_rails rail
+  join canonical_rail_identity canonical using (rail_id)
+
+  union all
+
+  select canonical.*
+  from canonical_rail_identity canonical
+  where not exists (
+    select 1
+    from planning_query_store.command_query_rails rail
+    where rail.rail_id = canonical.rail_id
+  )
 ), patch as (
   select
     jsonb_build_array(
