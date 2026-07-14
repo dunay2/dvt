@@ -1,28 +1,36 @@
-import {
-  DbtProjectGraphProjectionSchema,
-  type CanvasAuthoringAuthorityBinding,
-  type DbtProjectGraphProjection,
-} from '@dvt/contracts';
+import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
 
 import type { IDbtProjectAnalyzerPort } from '../ports/dbtProjectAnalysis.js';
+import { DbtProjectFileAuthorityRequiredError } from '../ports/dbtProjectImport.js';
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
+
+import type { CanvasAuthoringAuthorityPolicy } from './canvasAuthoringAuthorityPolicy.js';
 
 export type ProjectDbtGraphFromFilesInput = Readonly<{
   scope: WorkspaceStorageScope;
-  authorityBinding: CanvasAuthoringAuthorityBinding;
+  canvasId: string;
 }>;
 
 export class ProjectDbtGraphFromFilesUseCase {
-  public constructor(private readonly deps: { readonly analyzer: IDbtProjectAnalyzerPort }) {}
+  public constructor(
+    private readonly deps: {
+      readonly analyzer: IDbtProjectAnalyzerPort;
+      readonly authorityPolicy: Pick<CanvasAuthoringAuthorityPolicy, 'resolve'>;
+    }
+  ) {}
 
   public async execute(input: ProjectDbtGraphFromFilesInput): Promise<DbtProjectGraphProjection> {
-    if (input.authorityBinding.authority.kind !== 'dbt-project-files') {
-      throw new Error('ProjectDbtGraphFromFiles requires dbt-project-files authority.');
+    const authorityBinding = await this.deps.authorityPolicy.resolve({
+      ...input.scope,
+      canvasId: input.canvasId,
+    });
+    if (authorityBinding.authority.kind !== 'dbt-project-files') {
+      throw new DbtProjectFileAuthorityRequiredError();
     }
 
     const analysis = await this.deps.analyzer.analyze({
       scope: input.scope,
-      projectRoot: input.authorityBinding.authority.projectRoot,
+      projectRoot: authorityBinding.authority.projectRoot,
     });
     const nodes = analysis.resources
       .map(({ codeOnlyReasons, ...resource }) => ({
@@ -42,7 +50,7 @@ export class ProjectDbtGraphFromFilesUseCase {
 
     return DbtProjectGraphProjectionSchema.parse({
       schemaVersion: 'dbt-project-graph-projection.v1',
-      authorityBinding: input.authorityBinding,
+      authorityBinding,
       freshness: analysis.status === 'valid' ? 'fresh' : analysis.status,
       projectRevision: analysis.projectRevision,
       analysisSha256: analysis.analysisSha256,

@@ -80,16 +80,32 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
   };
 }
 
+function buildUseCase(
+  analyze: IDbtProjectAnalyzerPort['analyze'],
+  binding = FILE_AUTHORITY
+): {
+  readonly useCase: ProjectDbtGraphFromFilesUseCase;
+  readonly resolve: ReturnType<typeof vi.fn>;
+} {
+  const resolve = vi.fn().mockResolvedValue(binding);
+  return {
+    useCase: new ProjectDbtGraphFromFilesUseCase({
+      analyzer: { analyze },
+      authorityPolicy: { resolve },
+    }),
+    resolve,
+  };
+}
+
 describe('ProjectDbtGraphFromFilesUseCase', () => {
   it('projects analyzer resources by dbt unique_id without draft semantic input', async () => {
     const analyze = vi.fn().mockResolvedValue(analyzerResult());
-    const useCase = new ProjectDbtGraphFromFilesUseCase({
-      analyzer: { analyze } as IDbtProjectAnalyzerPort,
-    });
+    const { useCase, resolve } = buildUseCase(analyze);
 
-    const projection = await useCase.execute({ scope: SCOPE, authorityBinding: FILE_AUTHORITY });
+    const projection = await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
 
     expect(analyze).toHaveBeenCalledWith({ scope: SCOPE, projectRoot: 'analytics' });
+    expect(resolve).toHaveBeenCalledWith({ ...SCOPE, canvasId: FILE_AUTHORITY.canvasId });
     expect(projection.nodes.map((node) => node.uniqueId)).toEqual([
       'model.analytics.orders',
       'source.analytics.raw.orders',
@@ -115,11 +131,9 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
   it.each(['invalid', 'unavailable'] as const)(
     'returns explicit %s projection without executable fallback',
     async (status) => {
-      const useCase = new ProjectDbtGraphFromFilesUseCase({
-        analyzer: { analyze: vi.fn().mockResolvedValue(analyzerResult(status)) },
-      });
+      const { useCase } = buildUseCase(vi.fn().mockResolvedValue(analyzerResult(status)));
 
-      const projection = await useCase.execute({ scope: SCOPE, authorityBinding: FILE_AUTHORITY });
+      const projection = await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
 
       expect(projection.freshness).toBe(status);
       expect(projection.nodes).toEqual([]);
@@ -131,16 +145,16 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
 
   it('rejects graph-draft authority instead of inferring file authority', async () => {
     const analyze = vi.fn();
-    const useCase = new ProjectDbtGraphFromFilesUseCase({ analyzer: { analyze } });
+    const { useCase } = buildUseCase(analyze, {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId: 'canvas-orders',
+      authority: { kind: 'graph-draft' },
+    });
 
     await expect(
       useCase.execute({
         scope: SCOPE,
-        authorityBinding: {
-          schemaVersion: 'canvas-authoring-authority-binding.v1',
-          canvasId: 'canvas-orders',
-          authority: { kind: 'graph-draft' },
-        },
+        canvasId: 'canvas-orders',
       })
     ).rejects.toThrow('dbt-project-files authority');
     expect(analyze).not.toHaveBeenCalled();

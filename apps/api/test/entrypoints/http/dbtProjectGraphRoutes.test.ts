@@ -2,10 +2,11 @@ import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from 
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
+import { DbtProjectFileAuthorityRequiredError } from '../../../src/application/ports/dbtProjectImport.js';
 import { registerDbtProjectGraphRoutes } from '../../../src/entrypoints/http/dbtProjectGraphRoutes.js';
 
 const VALID_QUERY =
-  'tenantId=tenant-a&projectId=project-a&environmentId=env-a&canvasId=canvas-orders&projectRoot=analytics';
+  'tenantId=tenant-a&projectId=project-a&environmentId=env-a&canvasId=canvas-orders';
 
 describe('dbtProjectGraphRoutes', () => {
   it('authorizes and returns the scoped file-backed dbt projection', async () => {
@@ -43,11 +44,7 @@ describe('dbtProjectGraphRoutes', () => {
     ]);
     expect(execute).toHaveBeenCalledWith({
       scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
-      authorityBinding: {
-        schemaVersion: 'canvas-authoring-authority-binding.v1',
-        canvasId: 'canvas-orders',
-        authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
-      },
+      canvasId: 'canvas-orders',
     });
   });
 
@@ -88,14 +85,8 @@ describe('dbtProjectGraphRoutes', () => {
   });
 
   it.each([
-    [
-      'missing canvas',
-      'tenantId=tenant-a&projectId=project-a&environmentId=env-a&projectRoot=analytics',
-    ],
-    [
-      'unsafe project root',
-      'tenantId=tenant-a&projectId=project-a&environmentId=env-a&canvasId=canvas-orders&projectRoot=..%2Fanalytics',
-    ],
+    ['missing canvas', 'tenantId=tenant-a&projectId=project-a&environmentId=env-a'],
+    ['invalid canvas', 'tenantId=tenant-a&projectId=project-a&environmentId=env-a&canvasId='],
   ])('rejects %s before invoking the use case', async (_label, query) => {
     const execute = vi.fn();
     const app = Fastify({ logger: false });
@@ -110,6 +101,41 @@ describe('dbtProjectGraphRoutes', () => {
 
     expect(response.statusCode).toBe(400);
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('ignores caller project-root input and resolves file authority inside the use case', async () => {
+    const execute = vi.fn().mockResolvedValue(projection());
+    const app = Fastify({ logger: false });
+    registerDbtProjectGraphRoutes(app, {
+      authenticator: {
+        authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: principal() }),
+      } as never,
+      authorizer: {
+        authorize: vi.fn().mockImplementation((_principal, requestedScope) => ({
+          ok: true,
+          context: {
+            principal: principal(),
+            scope: { resource: 'environment', tenantId: { value: 'tenant-a' } },
+            action: requestedScope.action,
+            requestId: 'req-1',
+            authorizedAt: new Date('2026-07-13T00:00:00Z'),
+          },
+        })),
+      } as never,
+      useCase: { execute } as never,
+      rateLimit: { max: 100, timeWindow: 60_000 },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/dbt/graph?${VALID_QUERY}&projectRoot=attacker-selected`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(execute).toHaveBeenCalledWith({
+      scope: { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'env-a' },
+      canvasId: 'canvas-orders',
+    });
   });
 
   it('does not analyze a project without an authenticated bearer session', async () => {
@@ -131,6 +157,40 @@ describe('dbtProjectGraphRoutes', () => {
 
     expect(response.statusCode).toBe(401);
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('reports a Canvas without file authority as a conflict instead of an internal error', async () => {
+    const execute = vi.fn().mockRejectedValue(new DbtProjectFileAuthorityRequiredError());
+    const app = Fastify({ logger: false });
+    registerDbtProjectGraphRoutes(app, {
+      authenticator: {
+        authenticateBearerToken: vi.fn().mockResolvedValue({ ok: true, principal: principal() }),
+      } as never,
+      authorizer: {
+        authorize: vi.fn().mockImplementation((_principal, requestedScope) => ({
+          ok: true,
+          context: {
+            principal: principal(),
+            scope: { resource: 'environment', tenantId: { value: 'tenant-a' } },
+            action: requestedScope.action,
+            requestId: 'req-1',
+            authorizedAt: new Date('2026-07-13T00:00:00Z'),
+          },
+        })),
+      } as never,
+      useCase: { execute } as never,
+      rateLimit: { max: 100, timeWindow: 60_000 },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: `/workspace/dbt/graph?${VALID_QUERY}`,
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({
+      error: { type: 'conflict', reason: 'dbt_project_file_authority_required' },
+    });
   });
 });
 

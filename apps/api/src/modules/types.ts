@@ -24,6 +24,7 @@ import type { ListWorkspacePluginsUseCase } from '../application/services/listWo
 import type { SaveWorkspaceGraphDraftUseCase } from '../application/services/saveWorkspaceGraphDraftUseCase.js';
 import type { StartRunAuthorizedFacade } from '../application/services/startRunAuthorizedFacade.js';
 
+import type { DbtProjectImportRuntime } from './dbtProjectImport/buildDbtProjectImportRuntime.js';
 import type { StateStoreRoleBindings } from './stateStoreRoles.js';
 
 export interface ProtectedRuntimeModule {
@@ -55,6 +56,7 @@ export interface ProtectedRuntimeModule {
   workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
   canvasAuthoringAuthorityStore: ICanvasAuthoringAuthorityStore;
   canvasAuthoringAuthorityPolicy: CanvasAuthoringAuthorityPolicy;
+  dbtProjectImport: DbtProjectImportRuntime;
   workspaceGraphDraftCapabilityService: AuthorizeWorkspaceGraphDraftCapabilityService;
   getWorkspaceGraphDraftUseCase: GetWorkspaceGraphDraftUseCase;
   saveWorkspaceGraphDraftUseCase: SaveWorkspaceGraphDraftUseCase;

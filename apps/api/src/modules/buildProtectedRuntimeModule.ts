@@ -8,9 +8,12 @@ import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
 import { getPgPool } from '../db/pool.js';
+import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
+import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
+import { buildDbtProjectImportRuntime } from './dbtProjectImport/buildDbtProjectImportRuntime.js';
 import { buildProtectedAdmissionRuntime } from './protectedRuntime/buildProtectedAdmissionRuntime.js';
 import { buildProtectedExecutionCapacityPort } from './protectedRuntime/buildProtectedExecutionCapacityPort.js';
 import { buildProtectedExecutionRuntime } from './protectedRuntime/buildProtectedExecutionRuntime.js';
@@ -91,6 +94,25 @@ export async function buildProtectedRuntimeModule(
     schema: env.DVT_PG_SCHEMA,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
   });
+  const dbtProjectAnalyzer = new DbtCliProjectAnalyzer({
+    workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
+    ...(env.DVT_DBT_ANALYZER_PROFILES_DIR === undefined
+      ? {}
+      : { profilesDirectory: env.DVT_DBT_ANALYZER_PROFILES_DIR }),
+    dbtExecutable: env.DVT_DBT_ANALYZER_BIN,
+    timeoutMs: env.DVT_DBT_ANALYZER_TIMEOUT_MS,
+    maxOutputBytes: env.DVT_DBT_ANALYZER_MAX_OUTPUT_BYTES,
+  });
+  const dbtProjectImport = buildDbtProjectImportRuntime({
+    analyzer: dbtProjectAnalyzer,
+    inspector: new LocalDbtProjectImportInspector({
+      workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
+    }),
+    authorityStore: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore,
+    authorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
+    graphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
+    now: () => new Date(),
+  });
   const executionCapacity = buildProtectedExecutionCapacityPort(env);
   const startRunRuntime = buildProtectedStartRunRuntime({
     authenticator: securityRuntime.authenticator,
@@ -132,6 +154,7 @@ export async function buildProtectedRuntimeModule(
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
     canvasAuthoringAuthorityStore: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore,
     canvasAuthoringAuthorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
+    dbtProjectImport,
     workspaceGraphDraftCapabilityService:
       workspaceGraphDraftRuntime.workspaceGraphDraftCapabilityService,
     getWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.getWorkspaceGraphDraftUseCase,

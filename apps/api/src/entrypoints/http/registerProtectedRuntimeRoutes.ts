@@ -10,6 +10,7 @@ import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
 import { registerProtectedDbtProjectGraphRouteGroup } from './dbtProjectGraphRouteGroup.js';
+import { registerProtectedDbtProjectImportRouteGroup } from './dbtProjectImportRouteGroup.js';
 import { registerProjectOnboardingRouteGroup } from './projectOnboardingRouteGroup.js';
 import { registerProtectedAdminRouteGroup } from './protectedRuntimeAdminRouteGroup.js';
 import { registerProtectedPlanRoutes } from './protectedRuntimePlanRoutes.js';
@@ -45,6 +46,12 @@ export async function registerProtectedRuntimeRoutes(
   registerProtectedDbtProjectGraphRouteGroup(app, {
     env,
     runtimeAuth: dependencies.runtimeAuth,
+    protectedModule,
+  });
+  registerProtectedDbtProjectImportRouteGroup(app, {
+    env,
+    runtimeAuth: dependencies.runtimeAuth,
+    protectedModule,
   });
   registerProtectedWorkspaceDiffChangesRouteGroup(app, {
     env,

@@ -15,6 +15,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   disabledRoute: 'disabled route',
   invalidGraphSource: 'invalid graph source',
   invalidDbtProjectRoot: 'invalid dbt project root',
+  invalidDbtProjectImport: 'invalid dbt project import request',
   invalidPath: 'invalid path',
   invalidPlanSource: 'invalid plan source',
   invalidPlanRef: 'invalid plan ref',
@@ -32,6 +33,10 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   workspaceProfileWithoutServerOwnedReference:
     'workspace profiles.yml without server-owned profile reference',
   staleAuthority: 'stale authority',
+  staleValidationReceipt: 'stale validation receipt',
+  occupiedCanvas: 'occupied Canvas',
+  projectionFailure: 'projection failure',
+  missingFileAuthority: 'missing dbt project file authority',
   tenantMismatch: 'tenant mismatch',
   tenantWorkspaceMismatch: 'tenant/workspace mismatch',
   unknownRun: 'unknown run',
@@ -81,6 +86,10 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   workspaceDraftRoutes: 'apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts',
   dbtProjectGraphRoutes: 'apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts',
   dbtProjectAnalyzer: 'apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts',
+  dbtProjectImportRoutes: 'apps/api/test/entrypoints/http/dbtProjectImportRoutes.test.ts',
+  dbtProjectImportUseCases: 'apps/api/test/application/dbtProjectImportUseCases.test.ts',
+  dbtProjectImportInspector:
+    'apps/api/test/infrastructure/dbt/LocalDbtProjectImportInspector.test.ts',
   workspaceContextRoute: 'apps/api/test/entrypoints/http/workspaceContextRoute.test.ts',
   workspacePluginCatalogRoutes:
     'apps/api/test/entrypoints/http/workspacePluginCatalogRoutes.test.ts',
@@ -183,6 +192,22 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     adapterSurface: 'GET /workspace/dbt/graph',
     scopeAndAuthorization:
       'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope',
+  },
+  validateDbtProjectImport: {
+    name: 'ValidateDbtProjectImport',
+    boundedContext: 'dbt project import',
+    dddObject: 'DbtProjectImportValidationReport',
+    applicationPort: 'ValidateDbtProjectImportUseCase via IDbtProjectImportInspectorPort',
+    adapterSurface: 'POST /workspace/dbt/import/validate',
+    scopeAndAuthorization: 'workspace:files:view, tenant/project/environment scope',
+  },
+  importDbtProject: {
+    name: 'ImportDbtProject',
+    boundedContext: 'dbt project import',
+    dddObject: 'CanvasAuthoringAuthorityBinding',
+    applicationPort: 'ImportDbtProjectUseCase',
+    adapterSurface: 'POST /workspace/dbt/import',
+    scopeAndAuthorization: 'workspace:files:save, tenant/project/environment scope',
   },
   workspaceFiles: {
     listName: 'ListWorkspaceFiles',
