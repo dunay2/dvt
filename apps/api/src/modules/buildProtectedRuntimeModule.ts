@@ -10,6 +10,7 @@ import type { Logger } from 'pino';
 import { getPgPool } from '../db/pool.js';
 import type { Env } from '../plugins/env.js';
 
+import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
 import { buildProtectedAdmissionRuntime } from './protectedRuntime/buildProtectedAdmissionRuntime.js';
 import { buildProtectedExecutionCapacityPort } from './protectedRuntime/buildProtectedExecutionCapacityPort.js';
 import { buildProtectedExecutionRuntime } from './protectedRuntime/buildProtectedExecutionRuntime.js';
@@ -85,6 +86,11 @@ export async function buildProtectedRuntimeModule(
     env,
     pool,
   });
+  const canvasAuthoringAuthorityRuntime = buildCanvasAuthoringAuthorityRuntime({
+    pool,
+    schema: env.DVT_PG_SCHEMA,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
   const executionCapacity = buildProtectedExecutionCapacityPort(env);
   const startRunRuntime = buildProtectedStartRunRuntime({
     authenticator: securityRuntime.authenticator,
@@ -124,6 +130,8 @@ export async function buildProtectedRuntimeModule(
     planValidator: startRunRuntime.planValidator,
     executablePlanResolver: storageRuntime.executablePlanResolver,
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
+    canvasAuthoringAuthorityStore: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore,
+    canvasAuthoringAuthorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
     workspaceGraphDraftCapabilityService:
       workspaceGraphDraftRuntime.workspaceGraphDraftCapabilityService,
     getWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.getWorkspaceGraphDraftUseCase,
@@ -138,12 +146,14 @@ export async function buildProtectedRuntimeModule(
       });
       await storageRuntime.planStore.migrate();
       await workspaceGraphDraftRuntime.workspaceGraphDraftStore.migrate();
+      await canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore.migrate();
     },
     close: async () => {
       await closeAllClosers([
         () => executionRuntime.closeAdapters(),
         () => storageRuntime.planStore.close(),
         () => workspaceGraphDraftRuntime.workspaceGraphDraftStore.close(),
+        () => canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore.close(),
         () => storageRuntime.stateStore.close(),
         () => storageRuntime.intentStore.close(),
         () => pool.end(),

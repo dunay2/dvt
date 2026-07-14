@@ -10,11 +10,13 @@ import type {
 import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
+import type { ICanvasAuthoringAuthorityStore } from '../application/ports/canvasAuthoringAuthority.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
 import type { IWorkspaceContextQuery } from '../application/ports/workspaceContext.js';
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
 import type { AuthorizeWorkspaceGraphDraftCapabilityService } from '../application/services/authorizeWorkspaceGraphDraftCapabilityService.js';
+import type { CanvasAuthoringAuthorityPolicy } from '../application/services/canvasAuthoringAuthorityPolicy.js';
 import type { CreateProjectUseCase } from '../application/services/createProjectUseCase.js';
 import type { GetWorkspaceGraphDraftUseCase } from '../application/services/getWorkspaceGraphDraftUseCase.js';
 import type { ListProjectsUseCase } from '../application/services/listProjectsUseCase.js';
@@ -51,6 +53,8 @@ export interface ProtectedRuntimeModule {
     }): Promise<ExecutionPlan>;
   };
   workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
+  canvasAuthoringAuthorityStore: ICanvasAuthoringAuthorityStore;
+  canvasAuthoringAuthorityPolicy: CanvasAuthoringAuthorityPolicy;
   workspaceGraphDraftCapabilityService: AuthorizeWorkspaceGraphDraftCapabilityService;
   getWorkspaceGraphDraftUseCase: GetWorkspaceGraphDraftUseCase;
   saveWorkspaceGraphDraftUseCase: SaveWorkspaceGraphDraftUseCase;

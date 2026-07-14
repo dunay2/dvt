@@ -127,6 +127,8 @@ function createProtectedRuntimeModuleHarness(): {
         },
       } as never,
       workspaceGraphDraftStore: createWorkspaceGraphDraftStore(),
+      canvasAuthoringAuthorityStore: {} as never,
+      canvasAuthoringAuthorityPolicy: {} as never,
       workspaceGraphDraftCapabilityService: {
         async authorize() {
           return {} as never;

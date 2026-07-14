@@ -60,7 +60,9 @@ then compensated by application code.
 | `DbtProjectImportContract`           | Version validation reports, accepted receipts, import commands, and receipts.      | The cross-process import vocabulary changes.                |
 | `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                             | Import policy or command/query orchestration changes.       |
 | `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.    | Filesystem compatibility or import security policy changes. |
-| `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                  | Authority persistence or conflict semantics change.         |
+| `CanvasAuthoringAuthorityPolicy`     | Resolve the stored authority or the canonical graph-draft default.                 | Authority transition or default-resolution policy changes.  |
+| `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                  | PostgreSQL persistence or conflict mechanics change.        |
+| `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                         | Protected runtime dependency wiring changes.                |
 | `WorkspaceFileBatchMutation`         | Apply one scoped multi-file mutation with CAS, idempotency, staging, and rollback. | Local batch publication mechanics change.                   |
 | `DbtProjectImportDialog`             | Present validation, diagnostics, and explicit import confirmation.                 | The import interaction or presentation model changes.       |
 
@@ -77,7 +79,8 @@ flowchart LR
   Import[ImportDbtProject command]
   Inspector[IDbtProjectImportInspectorPort]
   Analyzer[IDbtProjectAnalyzerPort]
-  Authority[ICanvasAuthoringAuthorityStore]
+  AuthorityPolicy[CanvasAuthoringAuthorityPolicy]
+  AuthorityStore[ICanvasAuthoringAuthorityStore]
   Graph[ProjectDbtGraphFromFiles query]
   Source[ImportWarehouseSources command]
   Batch[IWorkspaceFileBatchMutationPort]
@@ -89,10 +92,11 @@ flowchart LR
   Dialog --> Import
   Import --> Inspector
   Import --> Analyzer
-  Import --> Authority
+  Import --> AuthorityPolicy
+  AuthorityPolicy --> AuthorityStore
   Import --> Graph
-  Graph --> Authority
-  Source --> Authority
+  Graph --> AuthorityPolicy
+  Source --> AuthorityPolicy
   Source --> Batch
   Source -. graph-draft only .-> Draft
   Source --> Analyzer
