@@ -193,6 +193,37 @@ describe('LocalWorkspaceFileBatchMutationGateway', () => {
     ).rejects.toBeInstanceOf(WorkspaceFileBatchIdempotencyConflictError);
   });
 
+  it('reapplies the same request after a compensating batch restores its preconditions', async () => {
+    const gateway = new LocalWorkspaceFileBatchMutationGateway({ root: namespaceRoot });
+    const path = 'analytics/models/sources/new.yml';
+    const content = 'version: 2\n';
+    const mutation: WorkspaceFileBatchMutation = {
+      idempotencyKey: 'source-import-retry:apply',
+      expectedFiles: [{ path }],
+      writes: [{ path, content }],
+      deletes: [],
+    };
+
+    const applied = await gateway.apply(SCOPE, mutation);
+    expect(applied).toMatchObject({ kind: 'applied', deduplicated: false });
+
+    await expect(
+      gateway.apply(SCOPE, {
+        idempotencyKey: 'source-import-retry:rollback',
+        expectedFiles: [{ path, expectedContentSha256: sha256(content) }],
+        writes: [],
+        deletes: [path],
+      })
+    ).resolves.toMatchObject({ kind: 'applied', deduplicated: false });
+    await expect(read(path)).rejects.toThrow();
+
+    await expect(gateway.apply(SCOPE, mutation)).resolves.toMatchObject({
+      kind: 'applied',
+      deduplicated: false,
+    });
+    await expect(read(path)).resolves.toBe(content);
+  });
+
   async function seed(workspacePath: string, content: string): Promise<void> {
     const absolutePath = path.join(
       resolveWorkspaceScopeStorageRoot(namespaceRoot, SCOPE),

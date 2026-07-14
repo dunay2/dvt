@@ -97,6 +97,10 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   workspaceFileHistoryRoutes: 'apps/api/test/entrypoints/http/workspaceFileHistoryRoutes.test.ts',
   workspaceDiffChangesRoutes: 'apps/api/test/entrypoints/http/workspaceDiffChangesRoutes.test.ts',
   warehouseSourceImportRoutes: 'apps/api/test/entrypoints/http/warehouseSourceImportRoutes.test.ts',
+  warehouseSourceImportGraphStrategy:
+    'apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts',
+  warehouseSourceImportDbtFilesStrategy:
+    'apps/api/test/application/services/dbtProjectFilesWarehouseSourceImportStrategy.test.ts',
 } as const;
 
 export const PROTECTED_RUNTIME_PLAN_RAIL = {
@@ -261,7 +265,7 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     sourceObjectCatalogReadModel: 'SourceObjectCatalog',
     connectionRegistryAggregate: 'WarehouseConnectionRegistry',
     connectionVerificationService: 'WarehouseConnectionVerification',
-    sourceRegistrationAggregate: 'WorkspaceGraphAuthoringDraft via WarehouseSourceRegistration',
+    sourceRegistrationAggregate: 'CanvasAuthoringAuthority via WarehouseSourceRegistration',
     listConnectionsPort: 'ListWarehouseConnectionsUseCase',
     listSourceObjectsPort: 'ListWarehouseConnectionSourceObjectsUseCase',
     createConnectionPort: 'CreateWarehouseConnectionUseCase',

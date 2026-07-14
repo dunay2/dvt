@@ -417,6 +417,21 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
         PROTECTED_RUNTIME_NEGATIVE_CASE.invalidSelection,
         PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
       ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingIdempotencyKey,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,
+        [
+          PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+          PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportGraphStrategy,
+        ],
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.projectionFailure,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportDbtFilesStrategy,
+      ],
     ],
   }),
 ] as const satisfies readonly ProtectedRuntimeCommandQueryRail[];

@@ -1,773 +1,249 @@
-import { createHash } from 'node:crypto';
-
 import {
-  buildRelationalSourceObjectId,
+  DbtProjectGraphProjectionSchema,
+  type CanvasAuthoringAuthorityBinding,
   type SourceObject,
-  type SourceObjectColumn,
-  type SourceObjectMetricEvidence,
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
-  IWarehouseConnectionCatalog,
-  IWarehouseConnectionProbe,
-  WarehouseConnection,
+  ImportWarehouseSourcesInput,
   WarehouseConnectionCatalogEntry,
 } from '../../../src/application/ports/warehouseSourceImport.js';
 import {
   InvalidWarehouseSourceImportRequestError,
   SourceObjectNotFoundError,
   UnsupportedSourceObjectImportError,
-  WarehouseSourceImportDraftConflictError,
 } from '../../../src/application/ports/warehouseSourceImport.js';
-import type { IWorkspaceFileRepository } from '../../../src/application/ports/workspaceFiles.js';
-import { WorkspaceFileNotFoundError } from '../../../src/application/ports/workspaceFiles.js';
-import type {
-  IWorkspaceGraphDraftStore,
-  WorkspaceGraphDraftSaveStoreResult,
-} from '../../../src/application/ports/workspaceGraphDraft.js';
 import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
-import { WarehouseConnectionSourceObjectReader } from '../../../src/application/services/WarehouseConnectionSourceObjectReader.js';
+import type { WarehouseSourceImportStrategyResult } from '../../../src/application/services/warehouseSourceImportPlan.js';
+import { InvalidWarehouseSourceYamlError } from '../../../src/application/services/warehouseSourceYaml.js';
 
-const scope = {
-  tenantId: 'tenant-api-it',
-  projectId: 'project-api-it',
-  environmentId: 'env-api-it',
-};
+const SCOPE = {
+  tenantId: 'tenant-source',
+  projectId: 'project-source',
+  environmentId: 'environment-source',
+} as const;
 
-function measuredMetrics(rowCount: number, byteSize: number): SourceObjectMetricEvidence {
-  return {
-    observedAt: '2026-07-10T21:00:00.000Z',
+const SOURCE_OBJECT: SourceObject = {
+  objectId: 'relation/analytics/erp/orders',
+  displayName: 'orders',
+  locator: {
+    kind: 'relation',
+    catalog: 'analytics',
+    schema: 'erp',
+    name: 'orders',
+    relationType: 'table',
+  },
+  columns: [{ name: 'order_id', type: 'integer', nullable: false }],
+  metricEvidence: {
+    observedAt: '2026-07-14T00:00:00.000Z',
     observationScope: { kind: 'snapshot' },
     rowCount: {
-      value: rowCount,
-      provenance: 'estimated',
-      method: 'provider-statistics',
-      confidence: 'medium',
+      value: 42,
+      provenance: 'measured',
+      method: 'data-scan',
+      confidence: 'exact',
     },
     byteSize: {
-      value: byteSize,
+      value: 2048,
       provenance: 'measured',
       method: 'provider-storage-metadata',
       confidence: 'exact',
       basis: 'physical-allocation',
     },
-  };
-}
+  },
+};
 
-function estimatedMetrics(rowCount: number, byteSize: number): SourceObjectMetricEvidence {
-  return {
-    observedAt: '2026-07-10T21:00:00.000Z',
-    observationScope: { kind: 'snapshot' },
-    rowCount: {
-      value: rowCount,
-      provenance: 'estimated',
-      method: 'query-plan',
-      confidence: 'low',
-    },
-    byteSize: {
-      value: byteSize,
-      provenance: 'estimated',
-      method: 'schema-width',
-      confidence: 'low',
-      basis: 'logical-payload',
-    },
-  };
-}
-
-function relationalSourceObject(
-  input: Readonly<{
-    catalog?: string;
-    schema?: string;
-    name?: string;
-    metricEvidence?: SourceObjectMetricEvidence;
-    columns?: readonly SourceObjectColumn[];
-  }> = {}
-): SourceObject {
-  const locator = {
-    kind: 'relation' as const,
-    catalog: input.catalog ?? 'analytics',
-    schema: input.schema ?? 'erp',
-    name: input.name ?? 'orders',
-    relationType: 'table' as const,
-  };
-  return {
-    objectId: buildRelationalSourceObjectId(locator),
-    displayName: locator.name,
-    locator,
-    metricEvidence: input.metricEvidence ?? measuredMetrics(42000, 18432000),
-    ...(input.columns ? { columns: [...input.columns] } : {}),
-  };
-}
-
-const ordersSourceObject = relationalSourceObject({
-  columns: [
-    { name: 'order_id', type: 'integer', nullable: false },
-    { name: 'customer_id', type: 'integer', nullable: false },
-  ],
-});
-
-const catalogEntry: WarehouseConnectionCatalogEntry = {
+const CONNECTION: WarehouseConnectionCatalogEntry = {
   id: 'warehouse-prod',
   name: 'Production warehouse',
   type: 'postgres',
   database: 'analytics',
   credentialRef: 'env:DVT_WAREHOUSE_URL',
-  sourceObjects: [ordersSourceObject],
+  sourceObjects: [SOURCE_OBJECT],
 };
 
-function createCatalog(): IWarehouseConnectionCatalog {
-  return {
-    listConnections: vi.fn(
-      async (): Promise<readonly WarehouseConnection[]> => [
-        {
-          id: catalogEntry.id,
-          name: catalogEntry.name,
-          type: catalogEntry.type,
-          database: catalogEntry.database,
-        },
-      ]
-    ),
-    listSourceObjects: vi.fn(async () => catalogEntry.sourceObjects),
-    getConnection: vi.fn(async () => catalogEntry),
-    createConnection: vi.fn(async () => ({
-      id: catalogEntry.id,
-      name: catalogEntry.name,
-      type: catalogEntry.type,
-      database: catalogEntry.database,
-    })),
-  };
-}
-
-function createSourceObjectReader(
-  catalog: IWarehouseConnectionCatalog = createCatalog()
-): WarehouseConnectionSourceObjectReader {
-  const probe: IWarehouseConnectionProbe = {
-    inspectConnection: vi.fn(
-      async (): Promise<Awaited<ReturnType<IWarehouseConnectionProbe['inspectConnection']>>> => ({
-        status: 'passed',
-        checkedAt: '2026-07-10T21:00:00.000Z',
-        sourceObjects: await catalog.listSourceObjects(scope, catalogEntry.id),
-      })
-    ),
-    testConnection: vi.fn(),
-  };
-  return new WarehouseConnectionSourceObjectReader(catalog, probe);
-}
-
-function createDraftStore(
-  storedDraft?: unknown,
-  saveResult?: WorkspaceGraphDraftSaveStoreResult,
-  onSave?: () => void | Promise<void>
-): IWorkspaceGraphDraftStore {
-  const save = vi.fn(async (): Promise<WorkspaceGraphDraftSaveStoreResult> => {
-    await onSave?.();
-    return (
-      saveResult ?? {
-        kind: 'saved',
-        schemaVersion: 'workspace-graph-draft.v1',
-        revision: 'rev-2',
-        updatedAt: '2026-06-26T00:00:00.000Z',
-        deduplicated: false,
-      }
-    );
-  });
-
-  return {
-    migrate: vi.fn(async () => undefined),
-    close: vi.fn(async () => undefined),
-    read: vi.fn(async () =>
-      storedDraft === undefined
-        ? null
-        : {
-            scope,
-            schemaVersion: 'workspace-graph-draft.v1',
-            revision: 'rev-1',
-            draftPayload: storedDraft,
-            updatedAt: '2026-06-26T00:00:00.000Z',
-          }
-    ),
-    save,
-  };
-}
-
-type WorkspaceFileTestDouble = IWorkspaceFileRepository & {
-  readonly readSavedFile: (path: string) => string | undefined;
-  readonly writeSavedFile: (path: string, content: string) => void;
+const INPUT: ImportWarehouseSourcesInput = {
+  schemaVersion: 'source-import-request.v2',
+  scope: SCOPE,
+  canvasId: 'orders-canvas',
+  idempotencyKey: 'source-import-1',
+  connectionId: CONNECTION.id,
+  objects: [{ objectId: SOURCE_OBJECT.objectId }],
+  groupingStrategy: 'schema',
+  includeColumns: true,
+  addTests: false,
+  addFreshness: false,
 };
 
-function createWorkspaceFiles(initialFiles: Record<string, string> = {}): WorkspaceFileTestDouble {
-  const files = new Map(Object.entries(initialFiles));
-  return {
-    listFiles: vi.fn(async () => []),
-    getFileContent: vi.fn(async (_scope, path: string) => {
-      const content = files.get(path);
-      if (content !== undefined) {
-        return {
-          path,
-          name: path.split('/').at(-1) ?? path,
-          language: 'yaml',
-          content,
-          contentSha256: sha256(content),
-          lastModified: '2026-06-26T00:00:00.000Z',
-        };
-      }
-      throw new WorkspaceFileNotFoundError(path);
-    }),
-    saveFileContent: vi.fn(async (_scope, input) => {
-      const currentContent = files.get(input.path);
-      const currentContentSha256 = currentContent === undefined ? null : sha256(currentContent);
-      const requestedContentSha256 = sha256(input.content);
-      if (currentContentSha256 === requestedContentSha256) {
-        return {
-          kind: 'unchanged' as const,
-          disposition: null,
-          path: input.path,
-          contentSha256: requestedContentSha256,
-          lastModified: '2026-06-26T00:00:00.000Z',
-        };
-      }
-      const matchesExpectedRevision =
-        input.expectedRevision.kind === 'absent'
-          ? currentContentSha256 === null
-          : input.expectedRevision.value === currentContentSha256;
-      if (!matchesExpectedRevision) {
-        return { kind: 'conflict' as const, currentContentSha256 };
-      }
-      const disposition: 'created' | 'updated' = files.has(input.path) ? 'updated' : 'created';
-      files.set(input.path, input.content);
-      return {
-        kind: 'saved' as const,
-        disposition,
-        path: input.path,
-        contentSha256: sha256(input.content),
-        lastModified: '2026-06-26T00:00:00.000Z',
-      };
-    }),
-    deleteFileContent: vi.fn(async (_scope, input) => {
-      const currentContent = files.get(input.path);
-      if (currentContent === undefined) {
-        return { kind: 'unchanged' as const };
-      }
-      const currentContentSha256 = sha256(currentContent);
-      if (currentContentSha256 !== input.expectedRevision.value) {
-        return { kind: 'conflict' as const, currentContentSha256 };
-      }
-      files.delete(input.path);
-      return { kind: 'deleted' as const };
-    }),
-    readSavedFile: (path: string) => files.get(path),
-    writeSavedFile: (path: string, content: string) => {
-      files.set(path, content);
-    },
-  };
-}
+const GRAPH_AUTHORITY: CanvasAuthoringAuthorityBinding = {
+  schemaVersion: 'canvas-authoring-authority-binding.v1',
+  canvasId: INPUT.canvasId,
+  authority: { kind: 'graph-draft' },
+};
 
-function sha256(content: string): string {
-  return createHash('sha256').update(content, 'utf8').digest('hex');
-}
+const FILE_AUTHORITY: CanvasAuthoringAuthorityBinding = {
+  schemaVersion: 'canvas-authoring-authority-binding.v1',
+  canvasId: INPUT.canvasId,
+  authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
+};
+
+const DBT_PROJECTION = DbtProjectGraphProjectionSchema.parse({
+  schemaVersion: 'dbt-project-graph-projection.v1',
+  authorityBinding: FILE_AUTHORITY,
+  freshness: 'fresh',
+  projectRevision: {
+    projectRoot: 'analytics',
+    contentSetSha256: 'c'.repeat(64),
+    analyzedAt: '2026-07-14T00:00:00.000Z',
+    analyzerVersion: 'test-analyzer',
+    dbtVersion: '1.10.0',
+  },
+  analysisSha256: 'b'.repeat(64),
+  nodes: [],
+  edges: [],
+  diagnostics: [],
+  capabilities: { canPreview: false, canRun: false, codeOnlyResourceCount: 0 },
+});
 
 describe('ImportWarehouseSourcesUseCase', () => {
-  it('persists catalog-owned source statistics and columns into imported graph nodes', async () => {
-    const draftStore = createDraftStore();
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(),
-      draftStore,
-      createWorkspaceFiles(),
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
+  it('resolves persisted graph authority and delegates only the graph strategy', async () => {
+    const harness = createHarness(GRAPH_AUTHORITY);
 
-    await useCase.execute({
-      scope,
-      connectionId: catalogEntry.id,
-      objects: [{ objectId: ordersSourceObject.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
+    const result = await harness.useCase.execute(INPUT);
+
+    expect(harness.authorityPolicy.resolve).toHaveBeenCalledWith({
+      ...SCOPE,
+      canvasId: INPUT.canvasId,
     });
-
-    expect(draftStore.save).toHaveBeenCalledWith(
+    expect(harness.graphDraftStrategy.execute).toHaveBeenCalledWith(
       expect.objectContaining({
-        draft: expect.objectContaining({
-          nodes: [
-            expect.objectContaining({
-              id: 'src_warehouse_prod_analytics_erp_orders',
-              metadata: expect.objectContaining({
-                connectionName: 'Production warehouse',
-                connectionType: 'postgres',
-                database: 'analytics',
-                schema: 'erp',
-                tableName: 'orders',
-                sourceMetricEvidence: measuredMetrics(42000, 18432000),
-                columns: [
-                  { name: 'order_id', type: 'integer', nullable: false },
-                  { name: 'customer_id', type: 'integer', nullable: false },
-                ],
-              }),
-            }),
-          ],
-        }),
-      })
-    );
-  });
-
-  it('does not accept the draft mutation when source YAML persistence fails', async () => {
-    const draftStore = createDraftStore();
-    const workspaceFiles: IWorkspaceFileRepository = {
-      ...createWorkspaceFiles(),
-      saveFileContent: vi.fn(async () => {
-        throw new Error('workspace file write failed');
+        scope: SCOPE,
+        canvasId: INPUT.canvasId,
+        idempotencyKey: INPUT.idempotencyKey,
+        sourceObjects: [expect.objectContaining({ connectionId: CONNECTION.id })],
       }),
-    };
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(),
-      draftStore,
-      workspaceFiles,
-      () => new Date('2026-06-26T00:00:00.000Z')
+      GRAPH_AUTHORITY
     );
-
-    await expect(
-      useCase.execute({
-        scope,
-        connectionId: catalogEntry.id,
-        objects: [{ objectId: ordersSourceObject.objectId }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      })
-    ).rejects.toThrow('workspace file write failed');
-
-    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
-      scope,
-      expect.objectContaining({
-        path: 'models/sources/src_erp.yml',
-        content: expect.stringContaining('name: orders'),
-        expectedRevision: { kind: 'absent' },
-      })
-    );
-    expect(draftStore.save).not.toHaveBeenCalled();
-  });
-
-  it('does not persist source YAML when the authoritative draft changed before save', async () => {
-    const draftStore = createDraftStore(undefined, {
-      kind: 'conflict',
-      currentRevision: 'rev-3',
-      storedSchemaVersion: 'workspace-graph-draft.v1',
-      updatedAt: '2026-06-26T00:00:01.000Z',
+    expect(harness.dbtProjectFilesStrategy.execute).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      schemaVersion: 'source-import-result.v2',
+      idempotencyKey: INPUT.idempotencyKey,
+      authorityBinding: GRAPH_AUTHORITY,
+      objectsImported: 1,
+      outcome: { kind: 'graph-draft', importedNodeIds: ['source-node-1'] },
     });
-    const workspaceFiles = createWorkspaceFiles();
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(),
-      draftStore,
-      workspaceFiles,
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
-
-    await expect(
-      useCase.execute({
-        scope,
-        connectionId: catalogEntry.id,
-        objects: [{ objectId: ordersSourceObject.objectId }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      })
-    ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
-
-    expect(draftStore.save).toHaveBeenCalled();
-    expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
-      scope,
-      expect.objectContaining({
-        path: 'models/sources/src_erp.yml',
-        content: expect.stringContaining('name: orders'),
-        expectedRevision: { kind: 'absent' },
-      })
-    );
-    expect(workspaceFiles.deleteFileContent).toHaveBeenCalledWith(
-      scope,
-      expect.objectContaining({
-        path: 'models/sources/src_erp.yml',
-        expectedRevision: { kind: 'content_sha256', value: expect.any(String) },
-      })
-    );
   });
 
-  it('does not roll back source YAML replaced by a concurrent winning import', async () => {
-    const sourceYamlPath = 'models/sources/src_erp.yml';
-    const concurrentWinnerContent = [
-      'version: 2',
-      'sources:',
-      '  - name: src_erp',
-      '    tables:',
-      '      - name: orders_from_winner',
-      '',
-    ].join('\n');
-    const workspaceFiles = createWorkspaceFiles();
-    const draftStore = createDraftStore(
-      undefined,
-      {
-        kind: 'conflict',
-        currentRevision: 'rev-3',
-        storedSchemaVersion: 'workspace-graph-draft.v1',
-        updatedAt: '2026-06-26T00:00:01.000Z',
+  it('delegates file authority without invoking graph-draft mutation', async () => {
+    const harness = createHarness(FILE_AUTHORITY);
+
+    const result = await harness.useCase.execute(INPUT);
+
+    expect(harness.graphDraftStrategy.execute).not.toHaveBeenCalled();
+    expect(harness.dbtProjectFilesStrategy.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ canvasId: INPUT.canvasId }),
+      FILE_AUTHORITY
+    );
+    expect(result).toMatchObject({
+      authorityBinding: FILE_AUTHORITY,
+      yamlFiles: ['analytics/models/sources/src_erp.yml'],
+      outcome: {
+        kind: 'dbt-project-files',
+        projectedSourceUniqueIds: ['source.analytics.erp.orders'],
       },
-      () => {
-        workspaceFiles.writeSavedFile(sourceYamlPath, concurrentWinnerContent);
-      }
-    );
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(),
-      draftStore,
-      workspaceFiles,
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
+    });
+  });
 
+  it('rejects an invalid V2 request before catalog or authority access', async () => {
+    const harness = createHarness(GRAPH_AUTHORITY);
+
+    await expect(harness.useCase.execute({ ...INPUT, canvasId: '' })).rejects.toBeInstanceOf(
+      InvalidWarehouseSourceImportRequestError
+    );
+    expect(harness.sourceObjectReader.read).not.toHaveBeenCalled();
+    expect(harness.authorityPolicy.resolve).not.toHaveBeenCalled();
+  });
+
+  it('rejects missing and non-relational source identities before mutation', async () => {
+    const missingHarness = createHarness(GRAPH_AUTHORITY);
     await expect(
-      useCase.execute({
-        scope,
-        connectionId: catalogEntry.id,
-        objects: [{ objectId: ordersSourceObject.objectId }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      })
-    ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
-
-    expect(workspaceFiles.deleteFileContent).toHaveBeenCalledWith(
-      scope,
-      expect.objectContaining({
-        path: sourceYamlPath,
-        expectedRevision: { kind: 'content_sha256', value: expect.any(String) },
-      })
-    );
-    expect(workspaceFiles.readSavedFile(sourceYamlPath)).toBe(concurrentWinnerContent);
-  });
-
-  it('persists normalized source node ids and yaml paths for non-slug warehouse names', async () => {
-    const draftStore = createDraftStore();
-    const rawOrders = relationalSourceObject({
-      catalog: 'Raw Lake',
-      schema: 'Sales/ERP Ops',
-      name: 'Open Orders',
-      metricEvidence: measuredMetrics(1200, 409600),
-    });
-    const catalog: IWarehouseConnectionCatalog = {
-      ...createCatalog(),
-      listSourceObjects: vi.fn(async () => [rawOrders]),
-      getConnection: vi.fn(async () => ({
-        ...catalogEntry,
-        sourceObjects: [rawOrders],
-      })),
-    };
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(catalog),
-      draftStore,
-      createWorkspaceFiles(),
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
-
-    const result = await useCase.execute({
-      scope,
-      connectionId: catalogEntry.id,
-      objects: [{ objectId: rawOrders.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
-
-    expect(result.yamlFiles).toEqual(['models/sources/src_sales_erp_ops.yml']);
-    expect(result.importedNodeIds).toEqual([
-      'src_warehouse_prod_raw_lake_sales_erp_ops_open_orders',
-    ]);
-    expect(draftStore.save).toHaveBeenCalledWith(
-      expect.objectContaining({
-        draft: expect.objectContaining({
-          nodes: [
-            expect.objectContaining({
-              id: result.importedNodeIds[0],
-              path: 'models/sources/src_sales_erp_ops.yml',
-            }),
-          ],
-        }),
-      })
-    );
-  });
-
-  it('adds a deterministic suffix only when distinct source objects share one stable node id', async () => {
-    const draftStore = createDraftStore();
-    const spacedOrders = relationalSourceObject({ name: 'Open Orders' });
-    const hyphenatedOrders = relationalSourceObject({ name: 'Open-Orders' });
-    const catalog: IWarehouseConnectionCatalog = {
-      ...createCatalog(),
-      listSourceObjects: vi.fn(async () => [spacedOrders, hyphenatedOrders]),
-      getConnection: vi.fn(async () => ({
-        ...catalogEntry,
-        sourceObjects: [spacedOrders, hyphenatedOrders],
-      })),
-    };
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(catalog),
-      draftStore,
-      createWorkspaceFiles(),
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
-
-    const result = await useCase.execute({
-      scope,
-      connectionId: catalogEntry.id,
-      objects: [{ objectId: spacedOrders.objectId }, { objectId: hyphenatedOrders.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
-
-    expect(new Set(result.importedNodeIds).size).toBe(2);
-    expect(result.importedNodeIds).toEqual([
-      expect.stringMatching(/^src_warehouse_prod_analytics_erp_open_orders_[a-f0-9]{8}$/),
-      expect.stringMatching(/^src_warehouse_prod_analytics_erp_open_orders_[a-f0-9]{8}$/),
-    ]);
-  });
-
-  it('persists estimated source metric evidence separately from measured evidence', async () => {
-    const draftStore = createDraftStore();
-    const estimatedOrders = relationalSourceObject({
-      metricEvidence: estimatedMetrics(1200, 111600),
-      columns: [
-        { name: 'order_id', type: 'integer', nullable: false },
-        { name: 'customer', type: 'text', nullable: true },
-      ],
-    });
-    const catalog: IWarehouseConnectionCatalog = {
-      ...createCatalog(),
-      listSourceObjects: vi.fn(async () => [estimatedOrders]),
-      getConnection: vi.fn(async () => ({
-        ...catalogEntry,
-        sourceObjects: [estimatedOrders],
-      })),
-    };
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(catalog),
-      draftStore,
-      createWorkspaceFiles(),
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
-
-    await useCase.execute({
-      scope,
-      connectionId: catalogEntry.id,
-      objects: [{ objectId: estimatedOrders.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
-
-    expect(draftStore.save).toHaveBeenCalledWith(
-      expect.objectContaining({
-        draft: expect.objectContaining({
-          nodes: [
-            expect.objectContaining({
-              metadata: expect.objectContaining({
-                sourceMetricEvidence: estimatedMetrics(1200, 111600),
-              }),
-            }),
-          ],
-        }),
-      })
-    );
-    expect(draftStore.save).toHaveBeenCalledWith(
-      expect.objectContaining({
-        draft: expect.objectContaining({
-          nodes: [
-            expect.objectContaining({
-              metadata: expect.not.objectContaining({ byteSize: expect.any(Number) }),
-            }),
-          ],
-        }),
-      })
-    );
-  });
-
-  it('keeps source imports idempotent for the canonical source-object node identity', async () => {
-    const nodeId = 'src_warehouse_prod_analytics_erp_orders';
-    const existingNode = {
-      id: nodeId,
-      name: ordersSourceObject.displayName,
-      pluginId: 'dvt.warehouse-source',
-      kind: 'dvt:source',
-      role: 'input',
-      status: 'idle',
-      tags: ['source', 'erp'],
-      path: 'models/sources/src_erp.yml',
-      description: 'Imported source for analytics.erp.orders',
-      metadata: {
-        sourceObjectId: ordersSourceObject.objectId,
-        sourceName: 'warehouse_prod_analytics_erp',
-        tableName: 'orders',
-        connectionName: 'Production warehouse',
-        connectionType: 'postgres',
-        database: 'analytics',
-        schema: 'erp',
-      },
-    };
-    const draftStore = createDraftStore({
-      canvas: {
-        id: 'default',
-        kind: 'canvas',
-        title: 'Canvas',
-        environmentId: scope.environmentId,
-      },
-      activeCanvasId: 'default',
-      nodeIds: [nodeId],
-      nodePositions: { [nodeId]: { x: 80, y: 120 } },
-      nodes: [existingNode],
-      edges: [],
-      canvases: [
-        {
-          canvas: {
-            id: 'default',
-            kind: 'canvas',
-            title: 'Canvas',
-            environmentId: scope.environmentId,
-          },
-          nodeIds: [nodeId],
-          nodePositions: { [nodeId]: { x: 80, y: 120 } },
-          nodes: [existingNode],
-          edges: [],
-        },
-      ],
-    });
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(),
-      draftStore,
-      createWorkspaceFiles(),
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
-
-    const result = await useCase.execute({
-      scope,
-      connectionId: catalogEntry.id,
-      objects: [{ objectId: ordersSourceObject.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
-
-    expect(result.sourcesCreated).toBe(0);
-    expect(result.importedNodeIds).toEqual([]);
-    expect(draftStore.save).toHaveBeenCalledWith(
-      expect.objectContaining({
-        draft: expect.objectContaining({
-          nodeIds: [nodeId],
-          nodes: [expect.objectContaining({ id: nodeId })],
-        }),
-      })
-    );
-  });
-
-  it('rejects an object identifier that is absent from the authoritative catalog', async () => {
-    const draftStore = createDraftStore();
-    const workspaceFiles = createWorkspaceFiles();
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(),
-      draftStore,
-      workspaceFiles,
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
-
-    await expect(
-      useCase.execute({
-        scope,
-        connectionId: catalogEntry.id,
+      missingHarness.useCase.execute({
+        ...INPUT,
         objects: [{ objectId: 'relation/analytics/erp/missing' }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
       })
     ).rejects.toBeInstanceOf(SourceObjectNotFoundError);
 
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-    expect(draftStore.save).not.toHaveBeenCalled();
-  });
-
-  it('rejects duplicate object selections at the application boundary before side effects', async () => {
-    const draftStore = createDraftStore();
-    const workspaceFiles = createWorkspaceFiles();
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(),
-      draftStore,
-      workspaceFiles,
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
-
-    await expect(
-      useCase.execute({
-        scope,
-        connectionId: catalogEntry.id,
-        objects: [
-          { objectId: ordersSourceObject.objectId },
-          { objectId: ordersSourceObject.objectId },
-        ],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      })
-    ).rejects.toBeInstanceOf(InvalidWarehouseSourceImportRequestError);
-
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-    expect(draftStore.save).not.toHaveBeenCalled();
-  });
-
-  it('rejects a non-relational object before mutating YAML or the graph draft', async () => {
-    const fileSourceObject: SourceObject = {
-      objectId: 'file/s3%3A%2F%2Flanding%2Forders.parquet',
-      displayName: 'orders.parquet',
-      locator: {
-        kind: 'file',
-        path: 's3://landing/orders.parquet',
-        format: 'parquet',
-      },
-      metricEvidence: measuredMetrics(42000, 18432000),
+    const fileObject: SourceObject = {
+      ...SOURCE_OBJECT,
+      objectId: 'file/orders',
+      locator: { kind: 'file', path: 'orders.parquet', format: 'parquet' },
     };
-    const catalog: IWarehouseConnectionCatalog = {
-      ...createCatalog(),
-      listSourceObjects: vi.fn(async () => [fileSourceObject]),
-      getConnection: vi.fn(async () => ({
-        ...catalogEntry,
-        sourceObjects: [fileSourceObject],
-      })),
-    };
-    const draftStore = createDraftStore();
-    const workspaceFiles = createWorkspaceFiles();
-    const useCase = new ImportWarehouseSourcesUseCase(
-      createSourceObjectReader(catalog),
-      draftStore,
-      workspaceFiles,
-      () => new Date('2026-06-26T00:00:00.000Z')
-    );
-
+    const fileHarness = createHarness(GRAPH_AUTHORITY, [fileObject]);
     await expect(
-      useCase.execute({
-        scope,
-        connectionId: catalogEntry.id,
-        objects: [{ objectId: fileSourceObject.objectId }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      })
+      fileHarness.useCase.execute({ ...INPUT, objects: [{ objectId: fileObject.objectId }] })
     ).rejects.toBeInstanceOf(UnsupportedSourceObjectImportError);
+    expect(fileHarness.graphDraftStrategy.execute).not.toHaveBeenCalled();
+  });
 
-    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
-    expect(draftStore.save).not.toHaveBeenCalled();
+  it('translates invalid existing YAML into the stable command error', async () => {
+    const harness = createHarness(GRAPH_AUTHORITY);
+    harness.graphDraftStrategy.execute.mockRejectedValueOnce(
+      new InvalidWarehouseSourceYamlError(new Error('invalid YAML'))
+    );
+
+    await expect(harness.useCase.execute(INPUT)).rejects.toMatchObject({
+      name: 'InvalidWarehouseSourceImportRequestError',
+      reason: 'invalid_existing_source_yaml',
+    });
   });
 });
+
+function createHarness(
+  authorityBinding: CanvasAuthoringAuthorityBinding,
+  sourceObjects: readonly SourceObject[] = [SOURCE_OBJECT]
+): Readonly<{
+  sourceObjectReader: { read: ReturnType<typeof vi.fn> };
+  authorityPolicy: { resolve: ReturnType<typeof vi.fn> };
+  graphDraftStrategy: { execute: ReturnType<typeof vi.fn> };
+  dbtProjectFilesStrategy: { execute: ReturnType<typeof vi.fn> };
+  useCase: ImportWarehouseSourcesUseCase;
+}> {
+  const sourceObjectReader = {
+    read: vi.fn(async () => ({ connection: CONNECTION, sourceObjects })),
+  };
+  const authorityPolicy = { resolve: vi.fn(async () => authorityBinding) };
+  const graphResult: WarehouseSourceImportStrategyResult = {
+    sourcesCreated: 1,
+    yamlFiles: ['models/sources/src_erp.yml'],
+    outcome: {
+      kind: 'graph-draft',
+      draftRevision: 'draft-revision-2',
+      importedNodeIds: ['source-node-1'],
+    },
+  };
+  const fileResult: WarehouseSourceImportStrategyResult = {
+    sourcesCreated: 1,
+    yamlFiles: ['analytics/models/sources/src_erp.yml'],
+    outcome: {
+      kind: 'dbt-project-files',
+      projectRevision: DBT_PROJECTION.projectRevision,
+      analysisSha256: DBT_PROJECTION.analysisSha256,
+      projectedSourceUniqueIds: ['source.analytics.erp.orders'],
+    },
+  };
+  const graphDraftStrategy = { execute: vi.fn(async () => graphResult) };
+  const dbtProjectFilesStrategy = { execute: vi.fn(async () => fileResult) };
+  return {
+    sourceObjectReader,
+    authorityPolicy,
+    graphDraftStrategy,
+    dbtProjectFilesStrategy,
+    useCase: new ImportWarehouseSourcesUseCase({
+      sourceObjectReader,
+      authorityPolicy,
+      graphDraftStrategy,
+      dbtProjectFilesStrategy,
+    }),
+  };
+}

@@ -1,7 +1,7 @@
 /** Owned concern: adapt warehouse source import command/query rails to HTTP. */
 import {
   CreateWarehouseConnectionRequestSchema,
-  ImportSourceObjectsRequestSchema,
+  ImportSourceObjectsRequestV2Schema,
 } from '@dvt/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
@@ -17,6 +17,7 @@ import {
   WarehouseConnectionTestFailedError,
   WarehouseConnectionNotFoundError,
   WarehouseSourceImportDraftConflictError,
+  WarehouseSourceImportIdempotencyMismatchError,
   SourceObjectNotFoundError,
   UnsupportedSourceObjectImportError,
   WarehouseSourceDiscoveryFailedError,
@@ -25,8 +26,11 @@ import {
   type WarehouseConnectionType,
 } from '../../application/ports/warehouseSourceImport.js';
 import { WorkspaceFileRevisionConflictError } from '../../application/ports/workspaceFiles.js';
+import { WorkspaceFileBatchIdempotencyConflictError } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { CreateWarehouseConnectionUseCase } from '../../application/services/createWarehouseConnectionUseCase.js';
+import { WarehouseSourceImportProjectionError } from '../../application/services/dbtProjectFilesWarehouseSourceImportStrategy.js';
+import { WarehouseSourceImportCanvasNotFoundError } from '../../application/services/graphDraftWarehouseSourceImportStrategy.js';
 import type { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import type { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import type { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
@@ -58,6 +62,9 @@ type CreateWarehouseConnectionBody = {
 };
 
 type ImportWarehouseSourcesBody = {
+  readonly schemaVersion?: unknown;
+  readonly canvasId?: unknown;
+  readonly idempotencyKey?: unknown;
   readonly connectionId?: unknown;
   readonly objects?: unknown;
   readonly groupingStrategy?: unknown;
@@ -262,6 +269,36 @@ export function registerWarehouseSourceImportRoutes(
           });
           return;
         }
+        if (error instanceof WarehouseSourceImportCanvasNotFoundError) {
+          reply.code(404).send({
+            error: {
+              type: 'not_found',
+              reason: HTTP_ERROR_REASON.workspaceSourceImportCanvasNotFound,
+            },
+          });
+          return;
+        }
+        if (error instanceof WarehouseSourceImportProjectionError) {
+          reply.code(422).send({
+            error: {
+              type: 'unprocessable_entity',
+              reason: HTTP_ERROR_REASON.workspaceSourceImportProjectionFailed,
+            },
+          });
+          return;
+        }
+        if (
+          error instanceof WorkspaceFileBatchIdempotencyConflictError ||
+          error instanceof WarehouseSourceImportIdempotencyMismatchError
+        ) {
+          reply.code(409).send({
+            error: {
+              type: 'conflict',
+              reason: HTTP_ERROR_REASON.workspaceSourceImportIdempotencyMismatch,
+            },
+          });
+          return;
+        }
         if (error instanceof WorkspaceFileRevisionConflictError) {
           httpErrorTranslation.respond(
             reply,
@@ -369,7 +406,7 @@ function parseImportWarehouseSourcesBody(
   body: ImportWarehouseSourcesBody | undefined,
   scope: ReturnType<typeof buildEnvironmentAccessScope>
 ): RouteParseResult<ImportWarehouseSourcesInput> {
-  const parsed = ImportSourceObjectsRequestSchema.safeParse(body);
+  const parsed = ImportSourceObjectsRequestV2Schema.safeParse(body);
   if (!parsed.success) return invalidBody();
 
   return {

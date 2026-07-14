@@ -39,7 +39,10 @@ describe('warehouse source import command/query rails architecture', () => {
     expect(vocabulary).toContain('CreateWarehouseConnection');
     expect(vocabulary).toContain('TestWarehouseConnection');
     expect(vocabulary).toContain('ImportWarehouseSources');
+    expect(vocabulary).toContain('CanvasAuthoringAuthority via WarehouseSourceRegistration');
     expect(rails).toContain('warehouseSourceImport');
+    expect(rails).toContain('idempotencyConflict');
+    expect(rails).toContain('projectionFailure');
     expect(vocabulary).toContain('workspace:source-import:view');
     expect(vocabulary).toContain('workspace:source-connection:create');
     expect(vocabulary).toContain('workspace:source-connection:test');
@@ -57,6 +60,9 @@ describe('warehouse source import command/query rails architecture', () => {
     expect(routeRegistration).toContain('registerProtectedWarehouseSourceImportRouteGroup');
     expect(routeGroup).toContain('WorkspaceWarehouseConnectionCatalog');
     expect(routeGroup).toContain('LocalWorkspaceFileRepository');
+    expect(routeGroup).toContain('LocalWorkspaceFileBatchMutationGateway');
+    expect(routeGroup).toContain('GraphDraftWarehouseSourceImportStrategy');
+    expect(routeGroup).toContain('DbtProjectFilesWarehouseSourceImportStrategy');
     expect(routeGroup).not.toContain('createDefaultWarehouseConnectionCatalog');
     expect(routeGroup).not.toContain('InMemoryWarehouseConnectionCatalog');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.warehouseConnections');
@@ -67,6 +73,7 @@ describe('warehouse source import command/query rails architecture', () => {
     expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceSourceConnectionCreate');
     expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceSourceConnectionTest');
     expect(routeModule).toContain('AUTHORIZATION_ACTION.workspaceSourceImportImport');
+    expect(routeModule).toContain('ImportSourceObjectsRequestV2Schema');
     expect(webAdapter).not.toContain('warehouseImportApiModeUnavailable');
     expect(webAdapter).not.toContain('sourceImportAvailable: false');
   });
