@@ -1,6 +1,7 @@
 import type { WorkspaceGraphDraftScope } from '@dvt/contracts';
 import type { Pool, PoolClient, QueryConfig, QueryResultRow } from 'pg';
 
+import { serializeCanvasAuthoringAuthorityKey } from '../../application/ports/canvasAuthoringAuthority.js';
 import type {
   IWorkspaceGraphDraftStore,
   WorkspaceGraphDraftSaveStoreResult,
@@ -31,6 +32,10 @@ interface IdempotencyRow extends QueryResultRow {
   readonly request_hash: string;
   readonly revision: string;
   readonly schema_version: string;
+}
+
+interface AuthorityConflictRow extends QueryResultRow {
+  readonly canvas_id: string;
 }
 
 export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftStore {
@@ -72,7 +77,9 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
 
   public async close(): Promise<void> {}
 
-  public async read(scope: WorkspaceGraphDraftScope): Promise<WorkspaceGraphDraftStoredRecord | null> {
+  public async read(
+    scope: WorkspaceGraphDraftScope
+  ): Promise<WorkspaceGraphDraftStoredRecord | null> {
     const result = await this.config.pool.query<DraftRow>(
       withTimeout(this.config.queryTimeoutMs, {
         text: `
@@ -101,6 +108,7 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
     readonly expectedRevision: string;
     readonly idempotencyKey: string;
     readonly draft: unknown;
+    readonly canvasIds: readonly string[];
     readonly requestHash: string;
     readonly revision: string;
     readonly nowIso: string;
@@ -108,6 +116,19 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
     const client = await this.config.pool.connect();
     try {
       await client.query('BEGIN');
+
+      const canvasIds = [...new Set(input.canvasIds)].sort((left, right) =>
+        left.localeCompare(right)
+      );
+      await this.lockCanvasAuthorities(client, input.scope, canvasIds);
+      const authorityConflicts = await this.readAuthorityConflicts(client, input.scope, canvasIds);
+      if (authorityConflicts.length > 0) {
+        await client.query('ROLLBACK');
+        return {
+          kind: 'authoring_authority_conflict',
+          canvasIds: authorityConflicts,
+        };
+      }
 
       const idempotency = await this.readIdempotency(client, input);
       if (idempotency) {
@@ -261,6 +282,45 @@ export class PostgresWorkspaceGraphDraftStore implements IWorkspaceGraphDraftSto
     );
 
     return result.rows[0] ? mapDraftRow(result.rows[0]) : null;
+  }
+
+  private async lockCanvasAuthorities(
+    client: PoolClient,
+    scope: WorkspaceGraphDraftScope,
+    canvasIds: readonly string[]
+  ): Promise<void> {
+    for (const canvasId of canvasIds) {
+      await client.query(
+        withTimeout(this.config.queryTimeoutMs, {
+          text: 'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
+          values: [serializeCanvasAuthoringAuthorityKey({ ...scope, canvasId })],
+        })
+      );
+    }
+  }
+
+  private async readAuthorityConflicts(
+    client: PoolClient,
+    scope: WorkspaceGraphDraftScope,
+    canvasIds: readonly string[]
+  ): Promise<readonly string[]> {
+    if (canvasIds.length === 0) return [];
+    const result = await client.query<AuthorityConflictRow>(
+      withTimeout(this.config.queryTimeoutMs, {
+        text: `
+          SELECT canvas_id
+          FROM ${quoteIdentifier(this.config.schema)}.canvas_authoring_authorities
+          WHERE tenant_id = $1
+            AND project_id = $2
+            AND environment_id = $3
+            AND canvas_id = ANY($4::text[])
+          ORDER BY canvas_id
+          FOR UPDATE
+        `,
+        values: [scope.tenantId, scope.projectId, scope.environmentId, canvasIds],
+      })
+    );
+    return result.rows.map((row) => row.canvas_id);
   }
 
   private async readIdempotency(

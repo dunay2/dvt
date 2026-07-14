@@ -1,4 +1,7 @@
-import { CanvasAuthoringAuthorityBindingSchema } from '@dvt/contracts';
+import {
+  CanvasAuthoringAuthorityBindingSchema,
+  WorkspaceGraphAuthoringDraftSchema,
+} from '@dvt/contracts';
 import type { Pool, PoolClient, QueryConfig, QueryResultRow } from 'pg';
 
 import type {
@@ -8,6 +11,7 @@ import type {
   CanvasAuthoringAuthorityStoredRecord,
   ICanvasAuthoringAuthorityStore,
 } from '../../application/ports/canvasAuthoringAuthority.js';
+import { serializeCanvasAuthoringAuthorityKey } from '../../application/ports/canvasAuthoringAuthority.js';
 
 interface Config {
   readonly pool: Pool;
@@ -30,6 +34,10 @@ interface IdempotencyRow extends QueryResultRow {
   readonly binding_json: unknown;
   readonly revision: string;
   readonly updated_at: Date | string;
+}
+
+interface DraftPayloadRow extends QueryResultRow {
+  readonly draft_json: unknown;
 }
 
 export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAuthorityStore {
@@ -117,6 +125,11 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
           record: mapIdempotencyRow(input.key, idempotency),
           deduplicated: true,
         };
+      }
+
+      if (await this.isCanvasOccupiedByGraphDraft(client, input.key)) {
+        await client.query('ROLLBACK');
+        return { kind: 'canvas_occupied' };
       }
 
       const current = await this.readForUpdate(client, input.key);
@@ -234,8 +247,34 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
     await client.query(
       withTimeout(this.config.queryTimeoutMs, {
         text: 'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
-        values: [keyValues(key).join('\u001f')],
+        values: [serializeCanvasAuthoringAuthorityKey(key)],
       })
+    );
+  }
+
+  private async isCanvasOccupiedByGraphDraft(
+    client: PoolClient,
+    key: CanvasAuthoringAuthorityKey
+  ): Promise<boolean> {
+    const result = await client.query<DraftPayloadRow>(
+      withTimeout(this.config.queryTimeoutMs, {
+        text: `
+          SELECT draft_json
+          FROM ${quoteIdentifier(this.config.schema)}.workspace_graph_drafts
+          WHERE tenant_id = $1 AND project_id = $2 AND environment_id = $3
+          FOR UPDATE
+        `,
+        values: keyValues(key).slice(0, 3),
+      })
+    );
+    const row = result.rows[0];
+    if (!row) return false;
+    const parsed = WorkspaceGraphAuthoringDraftSchema.safeParse(row.draft_json);
+    if (!parsed.success) return true;
+    return (
+      parsed.data.canvas.id === key.canvasId ||
+      parsed.data.activeCanvasId === key.canvasId ||
+      parsed.data.canvases?.some((workspace) => workspace.canvas.id === key.canvasId) === true
     );
   }
 

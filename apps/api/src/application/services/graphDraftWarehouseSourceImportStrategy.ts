@@ -19,6 +19,7 @@ import type {
 } from '../ports/workspaceFiles.js';
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 import {
+  resolveWorkspaceGraphDraftCanvasIds,
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../ports/workspaceGraphDraft.js';
@@ -96,6 +97,7 @@ export class GraphDraftWarehouseSourceImportStrategy {
         expectedRevision: stored?.revision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
         idempotencyKey: context.idempotencyKey,
         draft: mutation.draft,
+        canvasIds: resolveWorkspaceGraphDraftCanvasIds(mutation.draft),
         requestHash,
         revision: `source-import-${requestHash}`,
         nowIso: this.deps.now().toISOString(),

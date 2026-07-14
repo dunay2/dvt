@@ -63,15 +63,16 @@ export function registerWorkspaceGraphDraftRoutes(
         requestId: request.id,
         requestedScope: parsed.value,
       });
-      attachDecisionAttributes(span, decision.capability.mode, decision.capability.reason, decision);
+      attachDecisionAttributes(
+        span,
+        decision.capability.mode,
+        decision.capability.reason,
+        decision
+      );
 
       const result = await deps.getUseCase.execute(decision);
       if (result.kind === 'not_found') {
-        deps.telemetry.recordRead(
-          'not_found',
-          decision.capability.mode,
-          Date.now() - startedAt
-        );
+        deps.telemetry.recordRead('not_found', decision.capability.mode, Date.now() - startedAt);
         span.setAttributes({ outcome: 'not_found' });
         httpErrorTranslation.respond(
           reply,
@@ -126,19 +127,36 @@ export function registerWorkspaceGraphDraftRoutes(
         requestId: request.id,
         requestedScope: parsed.value.requestedScope,
       });
-      attachDecisionAttributes(span, decision.capability.mode, decision.capability.reason, decision);
+      attachDecisionAttributes(
+        span,
+        decision.capability.mode,
+        decision.capability.reason,
+        decision
+      );
 
       const result = await deps.saveUseCase.execute({
         request: parsed.value.request,
         decision,
       });
 
-      if (result.kind === 'unsupported_schema_version') {
-        deps.telemetry.recordWrite(
-          'denied',
-          decision.capability.mode,
-          Date.now() - startedAt
+      if (result.kind === 'authoring_authority_conflict') {
+        deps.telemetry.recordWrite('conflict', decision.capability.mode, Date.now() - startedAt);
+        span.setAttributes({ outcome: result.kind, httpStatus: 409 });
+        httpErrorTranslation.respond(
+          reply,
+          httpErrorTranslation.workspaceGraphDraft.write.authoringAuthorityConflict(
+            {
+              correlationId: decision.correlationId,
+              decisionId: decision.decisionId,
+            },
+            result.canvasIds
+          )
         );
+        return;
+      }
+
+      if (result.kind === 'unsupported_schema_version') {
+        deps.telemetry.recordWrite('denied', decision.capability.mode, Date.now() - startedAt);
         span.setAttributes({ outcome: 'unsupported_schema_version', httpStatus: 422 });
         httpErrorTranslation.respond(
           reply,
@@ -244,7 +262,9 @@ function parseSaveRequest(body: unknown): RouteParseResult<{
 
 function parseRequiredTenantId(
   value: string | undefined
-): { readonly ok: true; readonly value: TenantId } | { readonly ok: false; readonly issue: RouteParseIssue } {
+):
+  | { readonly ok: true; readonly value: TenantId }
+  | { readonly ok: false; readonly issue: RouteParseIssue } {
   if (value === undefined) {
     return {
       ok: false,
@@ -265,7 +285,9 @@ function parseRequiredTenantId(
 
 function parseRequiredProjectId(
   value: string | undefined
-): { readonly ok: true; readonly value: ProjectId } | { readonly ok: false; readonly issue: RouteParseIssue } {
+):
+  | { readonly ok: true; readonly value: ProjectId }
+  | { readonly ok: false; readonly issue: RouteParseIssue } {
   if (value === undefined) {
     return {
       ok: false,
@@ -328,7 +350,9 @@ function attachDecisionAttributes(
   });
 }
 
-function readTelemetryOutcome(kind: 'ok' | 'format_error' | 'denied'): 'ok' | 'format_error' | 'denied' {
+function readTelemetryOutcome(
+  kind: 'ok' | 'format_error' | 'denied'
+): 'ok' | 'format_error' | 'denied' {
   return kind;
 }
 

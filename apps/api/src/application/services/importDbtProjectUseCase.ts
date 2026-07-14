@@ -69,6 +69,9 @@ export class ImportDbtProjectUseCase {
       revision,
       nowIso: this.deps.now().toISOString(),
     });
+    if (bindResult.kind === 'canvas_occupied') {
+      throw new DbtProjectImportCanvasOccupiedError();
+    }
     if (bindResult.kind === 'conflict') throw new DbtProjectImportAuthorityConflictError();
     if (bindResult.kind === 'idempotency_mismatch') {
       throw new DbtProjectImportIdempotencyMismatchError();

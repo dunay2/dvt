@@ -21,6 +21,10 @@ mitigations:
   - 'Execute workspace file writes through one atomic batch gateway with deterministic rollback and
     restored preconditions.'
   - 'Resolve one persisted authority before Source Import and delegate to exactly one strategy.'
+  - 'Acquire one shared tenant/project/environment/Canvas transaction lock from both graph-draft
+    save and file-authority bind, then revalidate the competing store before commit.'
+  - 'Hash file-batch command intent independently from mutable CAS revision values and verify stored
+    receipt postconditions before replaying a completed retry.'
   - 'Use idempotency keys at protected command routes and test retries, conflicts, rollback, and
     projection refresh failures.'
   - 'Keep authority and import payloads versioned in @dvt/contracts and reject unsupported shapes.'

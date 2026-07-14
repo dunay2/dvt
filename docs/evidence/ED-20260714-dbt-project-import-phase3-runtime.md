@@ -13,7 +13,9 @@ code_refs:
   - apps/api/src/application/services/validateDbtProjectImportUseCase.ts
   - apps/api/src/application/services/importDbtProjectUseCase.ts
   - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
+  - apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts
   - apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts
+  - apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
   - apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts
   - apps/api/src/entrypoints/http/dbtProjectImportRoutes.ts
 evidence:
@@ -24,6 +26,7 @@ evidence:
     - pnpm --filter dvt-api test:arch
     - pnpm --filter dvt-api typecheck
     - pnpm --filter dvt-api lint
+    - DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api exec vitest run test/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.test.ts
     - node --test scripts/planning-db-migrate.test.cjs
     - pnpm verify:prepush
 ---
@@ -40,9 +43,11 @@ authority without dual writes.
 - Validation receipts bind the inspected project inventory to the later import
   command; an import cannot silently validate a different project state.
 - Canvas authoring authority is persisted and mutually exclusive between graph
-  draft and dbt project files.
+  draft and dbt project files. Both stores acquire the same scoped transaction
+  lock and revalidate the competing persistence state before commit.
 - Workspace file batches apply atomically and restore their original
-  preconditions after rollback.
+  preconditions after rollback. Equivalent retries also replay after successful
+  publication because changing CAS revisions do not redefine command intent.
 - Source Import V2 delegates to exactly one authority strategy. Graph authority
   mutates the draft; file authority writes governed dbt source files and refreshes
   the projection without mutating the draft.

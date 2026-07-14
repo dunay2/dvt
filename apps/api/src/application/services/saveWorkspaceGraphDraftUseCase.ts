@@ -25,6 +25,7 @@ import type {
   WorkspaceGraphDraftDecisionContext,
 } from '../ports/workspaceGraphDraft.js';
 import {
+  resolveWorkspaceGraphDraftCanvasIds,
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
   WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../ports/workspaceGraphDraft.js';
@@ -40,6 +41,10 @@ export type SaveWorkspaceGraphDraftUseCaseResult =
     }
   | {
       readonly kind: 'idempotency_mismatch';
+    }
+  | {
+      readonly kind: 'authoring_authority_conflict';
+      readonly canvasIds: readonly string[];
     };
 
 export class SaveWorkspaceGraphDraftUseCase {
@@ -96,10 +101,27 @@ export class SaveWorkspaceGraphDraftUseCase {
       expectedRevision: request.expectedRevision,
       idempotencyKey: request.idempotencyKey,
       draft: request.draft,
+      canvasIds: resolveWorkspaceGraphDraftCanvasIds(request.draft),
       requestHash: createSaveRequestHash(request),
       revision: randomUUID(),
       nowIso: this.clock().toISOString(),
     });
+
+    if (saveResult.kind === 'authoring_authority_conflict') {
+      await this.audit.record({
+        action: WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftWrite,
+        outcome: WORKSPACE_GRAPH_DRAFT_AUDIT_OUTCOME.conflict,
+        decision,
+        metadata: {
+          rejectionReason: 'authoring_authority_conflict',
+          canvasIds: saveResult.canvasIds,
+        },
+      });
+      return {
+        kind: 'authoring_authority_conflict',
+        canvasIds: saveResult.canvasIds,
+      };
+    }
 
     if (saveResult.kind === 'idempotency_mismatch') {
       await this.audit.record({

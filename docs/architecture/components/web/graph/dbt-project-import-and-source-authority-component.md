@@ -104,11 +104,12 @@ flowchart LR
 
 ## Command And Query Rails
 
-| Rail                       | Type            | DDD owner                          | Application port                          | Authorization                                              | Required negative evidence                                                                                       |
-| -------------------------- | --------------- | ---------------------------------- | ----------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `ValidateDbtProjectImport` | query           | `DbtProjectImportValidationReport` | `ValidateDbtProjectImportUseCase.execute` | `workspace:files:view` in tenant/project/environment scope | unauthenticated, forbidden, traversal, symlink, unsupported/binary file, profiles/secrets, limits, invalid dbt   |
-| `ImportDbtProject`         | command         | `CanvasAuthoringAuthorityBinding`  | `ImportDbtProjectUseCase.execute`         | `workspace:files:save` in tenant/project/environment scope | rejected/tampered/stale receipt, occupied Canvas, authority conflict, reused idempotency key, projection failure |
-| `ImportWarehouseSources`   | command, reused | authority-aware source import      | `ImportWarehouseSourcesUseCase.execute`   | `workspace:source-import:import`                           | file mode never writes draft; graph mode preserves existing behavior; batch conflict and rollback                |
+| Rail                       | Type            | DDD owner                          | Application port                          | Authorization                                              | Required negative evidence                                                                                                                     |
+| -------------------------- | --------------- | ---------------------------------- | ----------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ValidateDbtProjectImport` | query           | `DbtProjectImportValidationReport` | `ValidateDbtProjectImportUseCase.execute` | `workspace:files:view` in tenant/project/environment scope | unauthenticated, forbidden, traversal, symlink, unsupported/binary file, profiles/secrets, limits, invalid dbt                                 |
+| `ImportDbtProject`         | command         | `CanvasAuthoringAuthorityBinding`  | `ImportDbtProjectUseCase.execute`         | `workspace:files:save` in tenant/project/environment scope | rejected/tampered/stale receipt, occupied Canvas, concurrent graph-draft claim, authority conflict, reused idempotency key, projection failure |
+| `ImportWarehouseSources`   | command, reused | authority-aware source import      | `ImportWarehouseSourcesUseCase.execute`   | `workspace:source-import:import`                           | file mode never writes draft; graph mode rejects file authority; equivalent post-publication retry deduplicates; batch conflict and rollback   |
+| `SaveWorkspaceGraphDraft`  | command, reused | `WorkspaceGraphAuthoringDraft`     | `SaveWorkspaceGraphDraftUseCase.execute`  | `workspace:graph-draft:save`                               | stale revision, idempotency mismatch, file-authority conflict, concurrent file-authority claim                                                 |
 
 `IWorkspaceFileBatchMutationPort` is an outbound Gateway. It is not a product
 command or query rail.
@@ -135,7 +136,7 @@ sequenceDiagram
   UI->>Import: receipt, canvas id, conflict policy, idempotency key
   Import->>Inspect: revalidate current content
   Import->>Analyze: verify revision and analysis
-  Import->>Authority: bind dbt-project-files
+  Import->>Authority: transactionally bind dbt-project-files if the Canvas has no graph-draft owner
   Import->>Graph: first persisted-authority projection
   Graph-->>Import: fresh projection
   Import-->>UI: command receipt
@@ -158,7 +159,7 @@ sequenceDiagram
   Command->>Authority: resolve binding
   alt graph-draft
     Command->>Batch: write source YAML
-    Command->>Draft: append semantic source nodes
+    Command->>Draft: append semantic source nodes under the shared authority lock
   else dbt-project-files
     Command->>Batch: write source YAML below project root
     Command->>Analyzer: refresh project
@@ -173,6 +174,10 @@ sequenceDiagram
   establish authority.
 - An unbound Canvas is graph-draft by default. `ImportDbtProject` may bind only
   a Canvas id that is not already present in the graph-draft aggregate.
+- The two persistence paths enforce that rule symmetrically: file-authority
+  binding and graph-draft save acquire the same scoped transaction lock and
+  revalidate the competing store before commit. A concurrent claim has exactly
+  one winner.
 - Importing an existing directory does not copy or normalize project files.
 - Validation is a query and performs no persistent write.
 - Import requires a validation receipt whose project revision and validation
@@ -184,6 +189,10 @@ sequenceDiagram
 - Graph-draft Source Import retains its current semantic behavior.
 - Multi-file writes use one scoped batch gateway with preflight CAS,
   deterministic ordering, staging, rollback, and idempotency.
+- The batch command identity describes the desired file mutation and expected
+  path set. Expected revision values remain first-application CAS preconditions,
+  so an equivalent retry after successful publication replays its receipt
+  instead of conflicting with its own post-write revisions.
 - `profiles.yml`, credentials, binary files, traversal, absolute paths,
   symbolic links, excessive files, and excessive bytes fail closed.
 - Runtime artifacts are diagnosed explicitly; no project files are silently
@@ -201,8 +210,9 @@ sequenceDiagram
    graph-draft-shaped import payloads.
 4. The local batch adapter proves no partial publication under injected
    failure and rejects stale expected revisions before mutation.
-5. The authority store proves scope isolation, compare-and-swap, and
-   idempotency-key mismatch behavior.
+5. The authority and graph-draft stores prove scope isolation,
+   compare-and-swap, idempotency-key mismatch behavior, and one-winner
+   ownership under concurrent claims.
 6. API tests prove validation is read-only, import is explicit, and the first
    graph projection resolves persisted authority.
 7. Source Import tests prove both modes and prove zero graph-draft writes in

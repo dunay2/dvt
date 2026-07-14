@@ -81,6 +81,7 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     expect(draftStore.save).toHaveBeenCalledWith(
       expect.objectContaining({
         idempotencyKey: 'source-import-1',
+        canvasIds: ['orders-canvas'],
         draft: expect.objectContaining({
           activeCanvasId: 'orders-canvas',
           nodes: [

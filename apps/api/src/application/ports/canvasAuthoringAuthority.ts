@@ -21,6 +21,7 @@ export type CanvasAuthoringAuthorityBindResult =
       readonly kind: 'conflict';
       readonly current: CanvasAuthoringAuthorityStoredRecord;
     }
+  | { readonly kind: 'canvas_occupied' }
   | { readonly kind: 'idempotency_mismatch' };
 
 export type CanvasAuthoringAuthorityReleaseResult =
@@ -47,4 +48,8 @@ export interface ICanvasAuthoringAuthorityStore {
     readonly idempotencyKey: string;
     readonly requestHash: string;
   }): Promise<CanvasAuthoringAuthorityReleaseResult>;
+}
+
+export function serializeCanvasAuthoringAuthorityKey(key: CanvasAuthoringAuthorityKey): string {
+  return [key.tenantId, key.projectId, key.environmentId, key.canvasId].join('\u001f');
 }

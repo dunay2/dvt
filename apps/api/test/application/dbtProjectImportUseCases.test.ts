@@ -354,6 +354,7 @@ describe('ImportDbtProjectUseCase', () => {
 
   it.each([
     ['conflict', 'already has an authority binding'],
+    ['canvas_occupied', 'already has graph-draft authority'],
     ['idempotency_mismatch', 'idempotency key was reused'],
   ] as const)('fails closed on authority %s before projecting', async (kind, message) => {
     const report = await acceptedReport();

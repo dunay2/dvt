@@ -64,10 +64,11 @@ function createApp(options?: {
     execute: vi.fn(async () => options?.readResult ?? { kind: 'not_found' }),
   };
   const saveUseCase = {
-    execute: vi.fn(async () =>
-      options?.saveResult ?? {
-        kind: 'unsupported_schema_version',
-      }
+    execute: vi.fn(
+      async () =>
+        options?.saveResult ?? {
+          kind: 'unsupported_schema_version',
+        }
     ),
   };
   const telemetry = {
@@ -129,7 +130,11 @@ describe('workspaceGraphDraftRoutes', () => {
           },
         },
       });
-      expect(telemetry.recordRead).toHaveBeenCalledWith('not_found', 'writable', expect.any(Number));
+      expect(telemetry.recordRead).toHaveBeenCalledWith(
+        'not_found',
+        'writable',
+        expect.any(Number)
+      );
     } finally {
       await app.close();
     }
@@ -159,6 +164,43 @@ describe('workspaceGraphDraftRoutes', () => {
         },
       });
       expect(telemetry.recordWrite).toHaveBeenCalledWith('denied', 'writable', expect.any(Number));
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('maps file-authority conflicts on save to an actionable 409 envelope', async () => {
+    const { app, telemetry } = createApp({
+      saveResult: {
+        kind: 'authoring_authority_conflict',
+        canvasIds: ['orders-canvas'],
+      },
+    });
+
+    try {
+      const response = await app.inject({
+        method: 'PUT',
+        url: '/workspace/graph/draft',
+        payload: buildWorkspaceGraphDraftSaveRequest(),
+      });
+
+      expect(response.statusCode).toBe(409);
+      expect(response.json()).toEqual({
+        error: {
+          type: 'conflict',
+          reason: 'workspace_graph_draft_authoring_authority_conflict',
+          details: {
+            correlationId: 'req-1',
+            decisionId: 'dec-1',
+            canvasIds: ['orders-canvas'],
+          },
+        },
+      });
+      expect(telemetry.recordWrite).toHaveBeenCalledWith(
+        'conflict',
+        'writable',
+        expect.any(Number)
+      );
     } finally {
       await app.close();
     }
